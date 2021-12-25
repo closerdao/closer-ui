@@ -2,6 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-p a:not(.button) {
+p a:not(.button),li a:not(.button) {
    @apply underline text-blue-600 hover:text-blue-800 visited:text-blue-600
 }
