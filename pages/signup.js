@@ -1,50 +1,80 @@
 import React, { useState } from 'react'
-import axios from 'axios'
 import Head from 'next/head'
-import Link from 'next/link'
-import Router from 'next/router'
 import Layout from '../components/layout'
 import api from '../utils/api'
-import { login } from '../utils/auth'
-
-const attemptSignup = async (event, request, setSigninError) => {
-  event.preventDefault();
-  try {
-    const res = await api.post('/signup', request);
-    login(res.data);
-  } catch (error) {
-    setSigninError(error.response?.data?.error || error.message);
-  }
-}
 
 const signup = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [screenname, setScreenname] = useState('');
-  const [signinError, setSigninError] = useState(null);
+  const [submitted, setSubmitted] = useState(false);
+  const [application, setApplication] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    home: '',
+    dream: '',
+    source: typeof window !== 'undefined' ? window.location.href : 'traditionaldreamfactory.com'
+  });
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!application.email || !application.phone) {
+      alert('Please enter an email & phone.');
+      return;
+    }
+    try {
+      await api.post('/application', application);
+      setSubmitted(true);
+    } catch (err) {
+      alert('We couldn\'t send your dream to HQ');
+    }
+  }
+
+  const updateApplication = update => setApplication({ ...application, ...update });
 
   return (
     <Layout>
       <Head>
-        <title>Sign up</title>
+        <title>Join the dreamers - Become a member</title>
       </Head>
-      <main className="main-content intro center">
-        <p>Have an account account? <Link href="/login"><a>Log in</a></Link></p>
-        <form
-          onSubmit={e => attemptSignup(e, { email, screenname, password }, setSigninError)}
-        >
-          { signinError &&
-            <div className="error">{ signinError }</div>
-          }
-          <div className="FormRow"><input type="screenname" value={screenname} placeholder="Screenname" onChange={e => setScreenname(e.target.value)} required /></div>
-          <div className="FormRow"><input type="email" value={email} placeholder="Email" onChange={e => setEmail(e.target.value)} required /></div>
-          <div className="FormRow"><input type="password" value={password} placeholder="Password" onChange={e => setPassword(e.target.value)} required /></div>
-          <div className="FormRow">
-            <button type="submit" name="subscribe" id="mc-embedded-subscribe" className="button">
-              Sign up
-            </button>
-          </div>
-        </form>
+      <main className="mt-12">
+        <h1 className="text-xl mb-2">Join the dreamers + doers of tomorrow</h1>
+        
+        { submitted?
+          <h2 className="my-4 text-2xl">
+            Thank you, our community curator will reach out for an intro call.
+          </h2>:
+          <form className="join" onSubmit={ submit }>
+            <div className="w-full md:w-1/2 mb-4">
+              <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" htmlFor="screenname">
+                Name
+              </label>
+              <input className="border border-gray-200 w-full px-4 py-1" id="screenname" type="text" onChange={ e => updateApplication({ name: e.target.value }) } placeholder="Jane Birkin" />
+            </div>
+            <div className="w-full md:w-1/2 mb-4">
+              <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" htmlFor="home">
+                What is home to you?
+              </label>
+              <textarea className="border border-gray-200 resize-none w-full px-4 py-1" id="home" value={ application.home } onChange={ e => updateApplication({ home: e.target.value }) } placeholder="Home is where..." />
+            </div>
+            <div className="w-full md:w-1/2 mb-4">
+              <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" htmlFor="dream">
+                What do you dream of creating?
+              </label>
+              <textarea className="border border-gray-200 resize-none w-full px-4 py-1" id="dream" value={ application.dream } onChange={ e => updateApplication({ dream: e.target.value }) } placeholder="My dream is to..." />
+            </div>
+            <div className="w-full md:w-1/2 mb-4">
+              <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" htmlFor="phone">
+                Phone number
+              </label>
+              <input type="phone" className="border border-gray-200 w-full px-4 py-1" required id="phone" value={ application.phone } onChange={ e => updateApplication({ phone: e.target.value }) } placeholder="+351 777 888 999" />
+            </div>
+            <div className="w-full md:w-1/2 mb-4">
+              <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" htmlFor="email">
+                Email
+              </label>
+              <input type="email" className="border border-gray-200 w-full px-4 py-1" id="email" required value={ application.email } onChange={ e => updateApplication({ email: e.target.value }) } placeholder="you@project.co" />
+            </div>
+            <button className="button px-4 py-1 mr-2 mb-2 rounded-full bg-black hover:bg-pink-500 text-white text-xl font-bold" type="submit">Apply</button>
+          </form>
+        }
       </main>
     </Layout>
   );

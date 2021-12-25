@@ -5,14 +5,16 @@ import { trackEvent } from './analytics'
 import { logout, isSignedIn } from '../utils/auth'
 
 
-const nav = ({ projectsArticles, signedIn }) => {
+const nav = () => {
   const [navOpen, toggleNav] = useState(false);
   const router = useRouter();
 
   return (
     <div className="NavContainer">
-      <nav className={`${navOpen?'open':'closed'}`}>
-
+      <nav>
+        <h1 className="name flicker">
+          Traditional Dream Factory
+        </h1>
         {/* <div className="MenuItems">
           { signedIn ?
           [

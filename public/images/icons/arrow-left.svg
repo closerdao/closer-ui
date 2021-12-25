@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 41 22" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <use xlink:href="#_Image1" x="0" y="9" width="40px" height="4px"/>
+    <use xlink:href="#_Image2" x="0" y="0" width="13px" height="21px"/>
+    <defs>
+        <image id="_Image1" width="40px" height="4px" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAECAYAAAD8kH0gAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAKElEQVQokWNgGOSA8d+/f+YMDAz5A+0QXIDx379/cgwMDDYD7ZAhCwD6Mwb3vICbLgAAAABJRU5ErkJggg=="/>
+        <image id="_Image2" width="13px" height="21px" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAVCAYAAACdbmSKAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAqElEQVQ4jZXSuw3CQBCE4d/giByTIpHRCBk04OJ4tEHkXmgBslkSG519r2WlCz/NjTSYGbUnqZX0kHQCaKmcmbXADdgCA8DqD3BpmuZTRDmQRWa2zoFkpxHcgQ44L0GU5AEz5AU/FHToUh0iFIDdCN4lAICkq6RB0sazjul7T+AA7KsJ043b6iW9JB09SeEoXXCGvDBCHphENZhFJVhEOVhFKehCSwjwBXqExs1/OCeJAAAAAElFTkSuQmCC"/>
+    </defs>
+</svg>

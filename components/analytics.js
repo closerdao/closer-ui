@@ -1,7 +1,7 @@
 import ReactGA from 'react-ga';
 
 export const initAnalytics = () => {
-  ReactGA.initialize('UA-178334677-1');
+  ReactGA.initialize('UA-135630546-3');
 };
 
 export const trackPageView = () => {

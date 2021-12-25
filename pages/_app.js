@@ -2,11 +2,12 @@ import api, { formatSearch } from '../utils/api'
 import Head from 'next/head'
 import App from 'next/app'
 import Router, { useRouter } from 'next/router';
+import Header from '../components/header'
 import Footer from '../components/footer'
 import Nav from '../components/nav'
-import '../public/reset.css';
-import '../public/styles.css';
+import '../public/fonts/Satoshi.css';
 import '../public/fonts/OpenSans.css';
+import '../public/styles.css';
 import { isSignedIn, setSession } from '../utils/auth';
 
 const Application = ({ tags, query, signedIn, Component, pageProps, token, user }) => {
@@ -23,27 +24,30 @@ const Application = ({ tags, query, signedIn, Component, pageProps, token, user 
   return (
     <div className="App">
       <Head>
-        <title>Tradition Dream Factory</title>
+        <title>Traditional Dream Factory | Regenerative coliving space in Alentejo, Portugal</title>
         <meta charSet="utf-8" />
         <noscript>
           <link href="/reset.css" rel="stylesheet" />
-          <link href="/fonts/OpenSans.css" rel="stylesheet" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" />
+          <link href="https://fonts.googleapis.com/css2?family=Prata&display=swap" rel="stylesheet" />
+          <link href="/fonts/Avenir.css" rel="stylesheet" />
           <link href="/fonts/icons.css" rel="stylesheet" />
           <link href="/styles.css" rel="stylesheet" />
         </noscript>
-        <meta name="description" content="Countering the wave of disinformation." />
+        <meta name="description" content="Traditional Dream Factory is a creative coliving in rural Alentejo, Portugal with coworking, coliving, restaurant, cafe and cultural events." />
         <meta name="og:url" content={`https://traditionaldreamfactory.com${router.asPath}`} />
         <meta property="og:type" content="article" />
         <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
-        <meta name="theme-color" content="#119977" />
-        <meta property="og:image" content="https://traditionaldreamfactory.com/images/screen.png" />
-        {/* <meta property="fb:page_id" content="2042702885844305" /> */}
+        <meta name="theme-color" content="#4a21e8" />
+        <meta property="og:image" content="https://traditionaldreamfactory.com/images/logo-sheep.png" />
         <meta httpEquiv="content-language" content="en-us"/>
         <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
       </Head>
-      {/* <Nav query={ query } signedIn={ signedIn } /> */}
-      <Component {...pageProps} query={ query } user={ user } signedIn={ signedIn } />
-      {/* <Footer tags={ tags } /> */}
+      <div className="max-w-2xl m-auto">
+        <Header />
+        <Component {...pageProps} query={ query } user={ user } signedIn={ signedIn } />
+        <Footer />
+      </div>
     </div>
   );
 };
