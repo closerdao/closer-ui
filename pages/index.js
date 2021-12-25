@@ -43,7 +43,7 @@ const index = () => {
       </Head>
       <main className="foreground m-3">
         <section className="text-lg mb-20">
-          <h1 className="mt-24 italic mb-4 text-4xl font-display">A playground for living and creating together</h1>
+          {/* <h1 className="mt-24 italic mb-4 text-xl font-display">A playground for living and creating together</h1> */}
 
           <p className="mb-4">We are living in an age of transformation. Our species has built technology & tools enabling it to reign over the natural kingdom, but in the process we have exhausted the natural resources of the planet, and altered it's ecology to the point of entering the 6th mass extinction event. Earth has lost 50% of its wildlife in the past 40 years<sup><a href="#footnotes">[1]</a></sup>, and if we do not radically change the way that we live over the next few decades we will lose most natural species, including ourselves.</p>
 
@@ -51,21 +51,18 @@ const index = () => {
 
           <p className="mb-4">We believe that our creativity is our greatest asset, and that we can channel our collective inteligence towards planetary regeneration.</p>
 
-          <p className="mb-4">We are here to re:imagine how we live together, to put into practice years of research in creating abundant food systems that work with nature, to retain water in our soils and avoid erosion and droughts, to create human living systems that leave a positive trace on it's environment.</p>
+          <p className="mb-4">We are here to re:imagine how we live together, to put into practice years of research in creating abundant food systems that work with nature, to retain water in our soils and avoid erosion and droughts, to create human living systems that leave a positive trace on it's environment <sup><Link href="/impact-map"><a>(view our impact map)</a></Link></sup>.</p>
 
           <p className="mb-4">This is not idealism or optimism. We are realists, and it is time that our modern societies wake up to the call. A new Earth is waiting. In this new planet, we are the stewards of the land. In this new world, we thrive by promoting biodiversity and being in the service of the greater ecosystem that we are a part of. We must re:learn to be part of Nature, and to respect its delicate cycles.</p>
-
-          <p className="mb-4">We are engineers, artists, permaculturists, scientists, innovators, nomads.</p>
 
           <hr className="my-8"/>
 
           {/* <img className="w-full my-8" src="/images/backgrounds/tdf-courtyard.jpg" alt="TDF Courtyard" /> */}
 
-          <p>Join the dreamers & the makers of tomorrow.</p>
-          <p>We are a regenerative living & creation collective based in Alentejo, Portugal.</p>
-          <p>Come build with us, play with us, grow with us.</p>
-          <br />
-
+          <p className="mb-4">Join the dreamers & the makers of tomorrow.</p>
+          <p className="mb-4">We are a regenerative living & creation collective based in Alentejo, Portugal.</p>
+          <p className="mb-4">We are engineers, artists, permaculturists, scientists, innovators, nomads.</p>
+          <p className="mb-4">Come build with us, play with us, grow with us.</p>
 
           {/* <p>Once upon a time, humanity was a free roaming herd of nomad gatherers.</p>
           <p>Over the course of centuries, our path changed, with established global human systems increasingly capable of reigning over the natural kingdom.</p>

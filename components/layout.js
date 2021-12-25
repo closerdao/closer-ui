@@ -1,16 +1,26 @@
-import { Component } from 'react';
+import { useEffect } from 'react';
 import { initAnalytics, trackPageView } from './analytics';
+import Header from './header';
+import Footer from './footer';
 
-export default class Layout extends Component {
-  componentDidMount() {
-    if (!window.GA_INITIALIZED) {
+let GA_INITIALIZED = false;
+
+const Layout = ({ fullscreen, children }) => {
+  useEffect(() => {
+    if (!GA_INITIALIZED) {
       initAnalytics()
-      window.GA_INITIALIZED = true
+      GA_INITIALIZED = true
     }
     trackPageView()
-  }
+  }, []);
 
-  render() {
-    return this.props.children;
-  }
+  return (
+    <div className={ fullscreen ? 'w-full' : 'max-w-2xl m-auto'}>
+      <Header />
+      { children }
+      <Footer />
+    </div>
+  );
 }
+
+export default Layout;

@@ -2,9 +2,6 @@ import api, { formatSearch } from '../utils/api'
 import Head from 'next/head'
 import App from 'next/app'
 import Router, { useRouter } from 'next/router';
-import Header from '../components/header'
-import Footer from '../components/footer'
-import Nav from '../components/nav'
 import '../public/fonts/Satoshi.css';
 import '../public/fonts/OpenSans.css';
 import '../public/styles.css';
@@ -43,11 +40,7 @@ const Application = ({ tags, query, signedIn, Component, pageProps, token, user 
         <meta httpEquiv="content-language" content="en-us"/>
         <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
       </Head>
-      <div className="max-w-2xl m-auto">
-        <Header />
-        <Component {...pageProps} query={ query } user={ user } signedIn={ signedIn } />
-        <Footer />
-      </div>
+      <Component {...pageProps} query={ query } user={ user } signedIn={ signedIn } />
     </div>
   );
 };

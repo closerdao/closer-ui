@@ -10,7 +10,7 @@ const Timeline = () => {
           <div className="flex items-center lg:shadow-xl mb-2 lg:mb-0">
             <h3 className="mx-auto font-semibold bg-green-400 text-lg text-white px-4 rounded-full">Winter '20</h3>
           </div>
-          <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 p-2">
+          <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
               <li>🏭 Purchased Factory</li>
               <li>📝 Hired <a href="https://cruatelier.pt/" target="_blank">CRU architects</a> and drafted plans</li>
@@ -26,7 +26,7 @@ const Timeline = () => {
           <div className="flex items-center lg:shadow-xl mb-2 lg:mb-0">
             <h3 className="mx-auto font-semibold bg-green-400 text-lg text-white px-4 rounded-full">Spring '21</h3>
           </div>
-          <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 p-2">
+          <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
               <li>🏭 Connected electricity, city water, solar power, cleaned up house & warehouses, setup the glamping tents</li>
               <li>🍳 Temporary industrial kitchen setup</li>
@@ -43,7 +43,7 @@ const Timeline = () => {
           <div className="flex items-center lg:shadow-xl mb-2 lg:mb-0">
             <h3 className="mx-auto font-semibold bg-green-400 text-lg text-white px-4 rounded-full">Summer '21</h3>
           </div>
-          <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 p-2">
+          <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
               <li>⚡ Built basic infrastructure to host 100+ people: compost toilets, showers, bar, parking spaces</li>
               <li>🍻 Built bar and ran electricity lines throughout lands</li>
@@ -57,7 +57,7 @@ const Timeline = () => {
           <div className="flex items-center lg:shadow-xl mb-2 lg:mb-0">
             <h3 className="mx-auto font-semibold bg-green-400 text-lg text-white px-4 rounded-full">Fall '21</h3>
           </div>
-          <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 p-2">
+          <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
               <li>🌳 Covered deforested hill with nitrogen fixing crops & planted 1500 trees</li>
               <li>🔥 Built sauna </li>
@@ -75,7 +75,7 @@ const Timeline = () => {
           <div className="flex items-center lg:shadow-xl mb-2 lg:mb-0">
             <h3 className="mx-auto font-semibold bg-blue-400 text-lg text-white px-4 rounded-full">Winter '21</h3>
           </div>
-          <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 p-2">
+          <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
               <li>💤 TDF closed for the winter</li>
               <li>🏠️ Engineering review & prepare 2022 construction roadmap</li>
@@ -90,7 +90,7 @@ const Timeline = () => {
           <div className="flex items-center lg:shadow-xl mb-2 lg:mb-0">
             <h3 className="mx-auto font-semibold bg-blue-400 text-lg text-white px-4 rounded-full">Spring '22</h3>
           </div>
-          <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 p-2">
+          <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
               <li>🌳 Add additional biodiversity & cover crops to forest</li>
               <li>🖥️ Launch platform MVP to handle bookings, events & tasks</li>
@@ -106,7 +106,7 @@ const Timeline = () => {
           <div className="flex items-center lg:shadow-xl mb-2 lg:mb-0">
             <h3 className="mx-auto font-semibold bg-blue-400 text-lg text-white px-4 rounded-full">Summer '22 <span className="text-xs">(expected)</span></h3>
           </div>
-          <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 p-2">
+          <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
               <li>🏠️ Construction of first 6 suites</li>
               <li>💦 Setup gray & black water systems</li>
@@ -120,7 +120,7 @@ const Timeline = () => {
           <div className="flex items-center lg:shadow-xl mb-2 lg:mb-0">
             <h3 className="mx-auto font-semibold bg-blue-400 text-lg text-white px-4 rounded-full">Fall '22 <span className="text-xs">(expected)</span></h3>
           </div>
-          <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 p-2">
+          <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
               <li>🌳 Plant food forest in collaboration with <a href="http://www.growback.net/" target="_blank">Mark Leiber</a></li>
               <li>🏠️ Build out 8 additional suites, renovate cafe, event space & coworking</li>
@@ -133,7 +133,7 @@ const Timeline = () => {
           <div className="flex items-center lg:shadow-xl mb-2 lg:mb-0">
             <h3 className="mx-auto font-semibold bg-blue-400 text-lg text-white px-4 rounded-full">Summer '23 <span className="text-xs">(expected)</span></h3>
           </div>
-          <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 p-2">
+          <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <h2 className="text-lg font-bold mb-2 text-center">Go Live!</h2>
             <ol className="text-md">
               <li>🖊️ Execute purchase option on reminder 25Ha of land</li>
