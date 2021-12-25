@@ -122,7 +122,7 @@ const Timeline = () => {
           </div>
           <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
-              <li>🌳 Plant food forest in collaboration with <a href="http://www.growback.net/" target="_blank">Mark Leiber</a></li>
+              <li>🌳 Plant food forest in collaboration with <a href="http://www.growback.net/" target="_blank">Marc Leiber</a></li>
               <li>🏠️ Build out 8 additional suites, renovate cafe, event space & coworking</li>
             </ol>
           </div>
