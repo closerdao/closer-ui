@@ -7,24 +7,24 @@ const Timeline = () => {
         <h2 className="text-center mb-6 font-bold text-2xl">Milestones</h2>
         <div className="mb-4 lg:mb-8 lg:flex lg:justify-between items-center right-timeline">
           <div className="lg:w-12"></div>
-          <div className="flex items-center lg:shadow-xl mb-2 lg:mb-0">
-            <h3 className="mx-auto font-semibold bg-green-400 text-lg text-white px-4 rounded-full">Winter '20</h3>
+          <div className="flex items-center mb-2 lg:mb-0">
+            <h3 className="mx-auto font-semibold border-b-4 border-green-400 text-lg p-1">Winter '20</h3>
           </div>
           <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
               <li>🏭 Purchased Factory</li>
               <li>📝 Hired <a href="https://cruatelier.pt/" target="_blank">CRU architects</a> and drafted plans</li>
               <li>🏕️ Acquired 10 glamping tents</li>
-              <li>🖊️ Drafted and signed legal contracts on land</li>
-              <li>📜 Created Pink Paper, cost estimate & tokenization model</li>
+              <li>🖊️ Drafted and signed a lease on the 5ha of land next to the factory, with an option to buy 25ha.</li>
+              <li>📜 Created <a href="https://docs.google.com/document/d/177JkHCy0AhplsaEEYpFHBsiI6d4uLk0TgURSKfBIewE/mobilebasic" target="_blank">Pink Paper</a>, cost estimate & tokenization model</li>
             </ol>
           </div>
         </div>
 
         <div className="mb-4 lg:mb-8 lg:flex lg:justify-between flex-row-reverse items-center left-timeline">
           <div className="w-12"></div>
-          <div className="flex items-center lg:shadow-xl mb-2 lg:mb-0">
-            <h3 className="mx-auto font-semibold bg-green-400 text-lg text-white px-4 rounded-full">Spring '21</h3>
+          <div className="flex items-center mb-2 lg:mb-0">
+            <h3 className="mx-auto font-semibold border-b-4 border-green-400 text-lg p-1">Spring '21</h3>
           </div>
           <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
@@ -40,8 +40,8 @@ const Timeline = () => {
 
         <div className="mb-4 lg:mb-8 lg:flex lg:justify-between items-center right-timeline">
           <div className="w-12"></div>
-          <div className="flex items-center lg:shadow-xl mb-2 lg:mb-0">
-            <h3 className="mx-auto font-semibold bg-green-400 text-lg text-white px-4 rounded-full">Summer '21</h3>
+          <div className="flex items-center mb-2 lg:mb-0">
+            <h3 className="mx-auto font-semibold border-b-4 border-green-400 text-lg p-1">Summer '21</h3>
           </div>
           <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
@@ -54,8 +54,8 @@ const Timeline = () => {
 
         <div className="mb-4 lg:flex lg:justify-between flex-row-reverse items-center left-timeline">
           <div className="w-12"></div>
-          <div className="flex items-center lg:shadow-xl mb-2 lg:mb-0">
-            <h3 className="mx-auto font-semibold bg-green-400 text-lg text-white px-4 rounded-full">Fall '21</h3>
+          <div className="flex items-center mb-2 lg:mb-0">
+            <h3 className="mx-auto font-semibold border-b-4 border-green-400 text-lg p-1">Fall '21</h3>
           </div>
           <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
@@ -72,14 +72,14 @@ const Timeline = () => {
 
         <div className="mb-4 lg:mb-8 lg:flex lg:justify-between items-center right-timeline">
           <div className="w-12"></div>
-          <div className="flex items-center lg:shadow-xl mb-2 lg:mb-0">
-            <h3 className="mx-auto font-semibold bg-blue-400 text-lg text-white px-4 rounded-full">Winter '21</h3>
+          <div className="flex items-center mb-2 lg:mb-0">
+            <h3 className="mx-auto font-semibold border-b-4 border-green-400 text-lg p-1">Winter '21</h3>
           </div>
           <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
               <li>💤 TDF closed for the winter</li>
               <li>🏠️ Engineering review & prepare 2022 construction roadmap</li>
-              <li>🖥️ Develop the digital platform (<a href="https://closer.earth" target="_blank">Closer DAO</a>)</li>
+              <li>🖥️ Develop an MVP of <a href="https://closer.earth" target="_blank">Closer</a> platform <i>(we are building an operating system for land stewardship cmmunities!)</i></li>
               <li>🖊️ Preparation of DAO launch</li>
             </ol>
           </div>
@@ -87,13 +87,13 @@ const Timeline = () => {
 
         <div className="mb-4 lg:flex lg:justify-between flex-row-reverse items-center left-timeline">
           <div className="w-12"></div>
-          <div className="flex items-center lg:shadow-xl mb-2 lg:mb-0">
-            <h3 className="mx-auto font-semibold bg-blue-400 text-lg text-white px-4 rounded-full">Spring '22</h3>
+          <div className="flex items-center mb-2 lg:mb-0">
+            <h3 className="mx-auto font-semibold border-b-4 border-blue-400 text-lg p-1">Spring '22</h3>
           </div>
           <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
               <li>🌳 Add additional biodiversity & cover crops to forest</li>
-              <li>🖥️ Launch platform MVP to handle bookings, events & tasks</li>
+              <li>🖥️ Launch Closer MVP with ability to handle bookings, events & tasks</li>
               <li>🏠️ Complete renovation of house & start insulation of coliving building</li>
               <li>💰 Raise capital for the first phases of construction</li>
               <li>🗳️ Start onboarding community onto DAO governance systems</li>
@@ -103,8 +103,8 @@ const Timeline = () => {
 
         <div className="mb-4 lg:mb-8 lg:flex lg:justify-between items-center right-timeline">
           <div className="w-12"></div>
-          <div className="flex items-center lg:shadow-xl mb-2 lg:mb-0">
-            <h3 className="mx-auto font-semibold bg-blue-400 text-lg text-white px-4 rounded-full">Summer '22 <span className="text-xs">(expected)</span></h3>
+          <div className="flex items-center mb-2 lg:mb-0">
+            <h3 className="mx-auto font-semibold border-b-4 border-blue-400 text-lg p-1">Summer '22 <span className="text-xs">(expected)</span></h3>
           </div>
           <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
@@ -117,8 +117,8 @@ const Timeline = () => {
 
         <div className="mb-4 lg:flex lg:justify-between flex-row-reverse items-center left-timeline">
           <div className="w-12"></div>
-          <div className="flex items-center lg:shadow-xl mb-2 lg:mb-0">
-            <h3 className="mx-auto font-semibold bg-blue-400 text-lg text-white px-4 rounded-full">Fall '22 <span className="text-xs">(expected)</span></h3>
+          <div className="flex items-center mb-2 lg:mb-0">
+            <h3 className="mx-auto font-semibold border-b-4 border-blue-400 text-lg p-1">Fall '22 <span className="text-xs">(expected)</span></h3>
           </div>
           <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
@@ -130,8 +130,8 @@ const Timeline = () => {
 
         <div className="mb-4 lg:mb-8 lg:flex lg:justify-between items-center right-timeline">
           <div className="w-12"></div>
-          <div className="flex items-center lg:shadow-xl mb-2 lg:mb-0">
-            <h3 className="mx-auto font-semibold bg-blue-400 text-lg text-white px-4 rounded-full">Summer '23 <span className="text-xs">(expected)</span></h3>
+          <div className="flex items-center mb-2 lg:mb-0">
+            <h3 className="mx-auto font-semibold border-b-4 border-blue-400 text-lg p-1">Summer '23 <span className="text-xs">(expected)</span></h3>
           </div>
           <div className="lg:bg-gray-100 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <h2 className="text-lg font-bold mb-2 text-center">Go Live!</h2>

@@ -9,7 +9,7 @@ import { trackEvent } from './analytics'
  */
 
 const header = ({ articles, originalUrl, tags }) => (
-  <header className="max-w-2xl m-auto">
+  <header>
     <h2 className="text-lg lg:text-2xl font-display font-bold">
       <Link href="/"><a className="flex flex-row text-black items-center justify-items-center">
         <img src="/images/logo-sheep.png" width="60" alt="TDF"/>
