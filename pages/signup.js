@@ -36,7 +36,9 @@ const signup = () => {
       </Head>
       <main className="mt-12">
         <h1 className="text-xl mb-2">Join the dreamers + doers of tomorrow</h1>
-        
+        <p className="mb-2">
+          Becoming a member means that you want to join TDF dreamers and makers, that you want to come build, play and grow in this land 🤸🏽 The process starts with you filling this form. Once you press the red button our community curator will receive your words and connect with you for a short call. Before you hop into it, make sure that you read the Pink Paper and notice what it brings in you. During the call you will get to hear all about our regenerative community adventure, how to join the journey, and any questions you have are welcome 🤞🏽
+        </p>
         { submitted?
           <h2 className="my-4 text-2xl">
             Thank you, our community curator will reach out for an intro call.
