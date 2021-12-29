@@ -40,31 +40,39 @@ const index = () => (
         <h1 className="mt-24 italic mb-4 text-4xl font-display">A playground for living and creating together</h1>
         <p className="mb-4">Come build with us, play with us, grow with us. <sup><a href="#footnotes">[1]</a></sup></p>
 
-        <p className="mb-4">
-          <ol className="text-right">
-            <li className="py-8">
-              <p className="mr-2 italic">Step one,</p>
-              <h3 className="mt-4"><Link href={ pink_paper.url }>
-                  <a type="submit" className="button px-4 py-1 mr-2 mb-2 rounded-full bg-black hover:bg-white text-white hover:text-black font-bold" rel="nofollow noreferrer" target="_blank">
-                    Read Pink Paper
-                  </a>
-                </Link>
-              </h3>
-            </li>
-            <li className="py-8">
-              <p className="mr-2 italic">Step two,</p>
-              <h3 className="mt-4"><Link href="/signup">
-                <a type="submit" className="button px-4 py-1 mr-2 mb-2 rounded-full bg-pink-500 hover:bg-white text-white hover:text-pink-500 font-bold">
-                  Become Member
+        <ol className="text-right mb-4">
+          <li className="py-8">
+            <p className="mr-2 italic">Step one,</p>
+            <h3 className="mt-4">
+              <Link href="/welcome">
+                <a type="submit" className="button px-4 py-1 mr-2 mb-2 rounded-full hover:bg-black bg-white hover:text-white text-black font-bold" rel="nofollow noreferrer" target="_blank">
+                  Learn more
                 </a>
-              </Link></h3>
-            </li>
-          </ol>
-        </p>
+              </Link>
+            </h3>
+          </li>
+          <li className="py-8">
+            <p className="mr-2 italic">Step two,</p>
+            <h3 className="mt-4"><Link href={ pink_paper.url }>
+                <a type="submit" className="button px-4 py-1 mr-2 mb-2 rounded-full bg-black hover:bg-white text-white hover:text-black font-bold" rel="nofollow noreferrer" target="_blank">
+                  Read Pink Paper
+                </a>
+              </Link>
+            </h3>
+          </li>
+          <li className="py-8">
+            <p className="mr-2 italic">Step three,</p>
+            <h3 className="mt-4"><Link href="/signup">
+              <a type="submit" className="button px-4 py-1 mr-2 mb-2 rounded-full bg-pink-500 hover:bg-white text-white hover:text-pink-500 font-bold">
+                Become Member
+              </a>
+            </Link></h3>
+          </li>
+        </ol>
 
         <div id="footnotes" className="mt-8 italic text-sm">
           <ol className="list-decimal pl-6">
-            <li><p><h2 className="mt-24 italic mb-4 text-xl">Welcome home 🐇</h2></p></li>
+            <li><p><h2 className="mt-24 italic mb-4 text-xl"><Link href="/welcome"><a>Welcome home 🐇</a></Link></h2></p></li>
           </ol>
         </div>
       </section>
