@@ -10,7 +10,7 @@ import { trackEvent } from './analytics'
 
 const header = ({ articles, originalUrl, tags }) => (
   <header>
-    <h2 className="text-xl font-bold font-display font-black">
+    <h2 className="text-xl font-bold font-display font-black p-4">
       <Link href="/"><a className="flex flex-row no-underline justify-start tracking-widest items-center">
         <img src="/images/logo-sheep.png?transparent" width="60" alt="TDF"/>
         <span className="ml-2 text-black hover:text-gray-800">Traditional Dream Factory</span>

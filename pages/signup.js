@@ -35,7 +35,7 @@ const signup = () => {
       <Head>
         <title>Join the dreamers - Become a member</title>
       </Head>
-      <main className="mt-12">
+      <main className="mt-12 px-4">
         <h1 className="text-xl mb-2">Join the dreamers + doers of tomorrow</h1>
         <p className="mb-8">
           Becoming a member means that you want to join TDF dreamers and makers, that you want to come build, play and grow in this land 🤸🏽
