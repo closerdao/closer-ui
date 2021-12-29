@@ -57,6 +57,15 @@ const index = () => (
         <p className="mb-4">We are a regenerative living & creation collective based in Alentejo, Portugal.</p>
         <p className="mb-4">We are engineers, artists, permaculturists, scientists, innovators, nomads.</p>
 
+        <div className="flex flex-column items-center justify-end animate-bounce mt-20">
+          <a
+            href="#milestones"
+            className="flex flex-column items-center"
+          >
+            [read about our milestones below] <img src="/images/icons/arrow-down-black.svg" width="10" className="ml-1" alt="continue reading" />
+          </a>
+        </div>
+
         <ol className="text-right mb-4">
           <li className="py-8 line-through">
             <p className="mr-2 italic">Step one,</p>

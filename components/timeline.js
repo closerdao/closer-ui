@@ -4,7 +4,7 @@ const Timeline = () => {
   return (
     <section>
       <div className="relative wrap overflow-hidden h-full">
-        <h2 className="text-center mb-6 font-bold text-2xl">Milestones</h2>
+        <h2 className="text-center mb-6 font-bold text-2xl" id="milestones">Milestones</h2>
         <div className="mb-4 lg:mb-8 lg:flex lg:justify-between items-center right-timeline">
           <div className="lg:w-12"></div>
           <div className="flex items-center mb-2 lg:mb-0">
