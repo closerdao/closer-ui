@@ -45,7 +45,7 @@ const index = () => (
             <p className="mr-2 italic">Step one,</p>
             <h3 className="mt-4">
               <Link href="/welcome">
-                <a type="submit" className="button px-4 py-1 mr-2 mb-2 rounded-full hover:bg-black bg-white hover:text-white text-black font-bold" rel="nofollow noreferrer" target="_blank">
+                <a type="submit" className="button px-4 py-1 mr-2 mb-2 rounded-full hover:bg-black bg-white hover:text-white text-black font-bold" rel="nofollow noreferrer">
                   Learn more
                 </a>
               </Link>

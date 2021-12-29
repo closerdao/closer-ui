@@ -36,15 +36,19 @@ const signup = () => {
         <title>Join the dreamers - Become a member</title>
       </Head>
       <main className="mt-12 px-4">
-        <h1 className="text-xl mb-2">Join the dreamers + doers of tomorrow</h1>
+        <h1 className="text-xl mb-2">Join the dreamers + makers of tomorrow</h1>
         <p className="mb-8">
           Becoming a member means that you want to join TDF dreamers and makers, that you want to come build, play and grow in this land 🤸🏽
         </p>
         <p className="mb-8">
-          The process starts with you filling this form. Once you press the <span className="text-pink-500">pink button</span> our community curator will receive your words and connect with you for a short call.
+          The process starts with you filling this form. Once you press the <a className="text-pink-500" href="#sigupbutton">pink button</a> our community curator will receive your words and connect with you for a short call.
         </p>
         <p className="mb-8">
           Before you hop into it, make sure that you read the <a href={pink_paper.url} className="text-pink-500 visited:text-pink-500 hover:text-pink-800">pink paper</a> and notice what it brings in you. During the call you will get to hear all about our regenerative community adventure, how to join the journey, and any questions you have are welcome 🤞🏽
+        </p>
+        <p className="mb-8">
+          <a href="https://instagram.com/traditionaldreamfactory" target="_blank">Photos</a> you say?
+          Get your updates through our <a href="https://t.me/+7yBqlNOMbRtlZmFh" target="_blank">Telegram group</a> or <a href="https://twitter.com/tdfinyourdreams/" target="_blank">Twitter</a>.
         </p>
         { submitted?
           <h2 className="my-4 text-2xl">
@@ -81,7 +85,7 @@ const signup = () => {
               </label>
               <input type="email" className="border border-gray-200 w-full px-4 py-1" id="email" required value={ application.email } onChange={ e => updateApplication({ email: e.target.value }) } placeholder="you@project.co" />
             </div>
-            <button className="button px-4 py-1 mr-2 mb-2 rounded-full bg-black hover:bg-pink-500 text-white text-xl font-bold" type="submit">Apply</button>
+            <button id="sigupbutton" className="button px-4 py-1 mr-2 mb-2 rounded-full hover:bg-black bg-pink-500 text-white text-xl font-bold" type="submit">Apply</button>
           </form>
         }
       </main>
