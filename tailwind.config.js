@@ -6,7 +6,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        'display': ['Satoshi', 'Helvetica', 'Sans-Serif'],
+        'display': ['Gilroy', 'Segoe UI', 'Tahoma', 'Serif'],
         'sans': ['Satoshi', 'Helvetica', 'Sans-Serif']
       }
     },

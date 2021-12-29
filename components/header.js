@@ -11,8 +11,8 @@ import { trackEvent } from './analytics'
 const header = ({ articles, originalUrl, tags }) => (
   <header>
     <h2 className="text-xl font-bold font-display font-black">
-      <Link href="/"><a className="flex flex-row no-underline">
-        <img src="/images/logo-sheep.png" width="60" alt="TDF"/>
+      <Link href="/"><a className="flex flex-row no-underline justify-start tracking-widest items-center">
+        <img src="/images/logo-sheep.png?transparent" width="60" alt="TDF"/>
         <span className="ml-2">Traditional Dream Factory</span>
       </a></Link>
     </h2>

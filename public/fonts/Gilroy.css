@@ -1,16 +1,16 @@
 @font-face {
-  font-family: 'Metropolis';
-  src: url('/fonts/gilroy-bold/Gilroy-Bold.otf') format('otf'),
-       url('/fonts/Metropolis/Metropolis-Regular.woff') format('woff');
+  font-family: 'Gilroy';
+  src: url('/fonts/gilroy-bold/Gilroy-Heavy.otf') format('otf'),
+       url('/fonts/gilroy-bold/Gilroy-Heavy.woff') format('woff');
   font-weight:  300;
   font-style:   normal;
   font-stretch: normal;
 }
-@font-face {
-  font-family: 'Metropolis';
-  src: url('/fonts/Metropolis/Metropolis-Black.otf') format('otf'),
-       url('/fonts/Metropolis/Metropolis-Black.woff') format('woff');
+/* @font-face {
+  font-family: 'Gilroy';
+  src: url('/fonts/gilroy-bold/Gilroy-Heavy.otf') format('otf'),
+       url('/fonts/gilroy-bold/Gilroy-Heavy.woff') format('woff');
   font-weight:  800;
   font-style:   bold;
   font-stretch: bold;
-}
+} */

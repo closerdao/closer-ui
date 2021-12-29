@@ -4,6 +4,7 @@ import App from 'next/app'
 import Router, { useRouter } from 'next/router';
 import '../public/fonts/Satoshi.css';
 import '../public/fonts/OpenSans.css';
+import '../public/fonts/Gilroy.css';
 import '../public/styles.css';
 import { isSignedIn, setSession } from '../utils/auth';
 
@@ -19,7 +20,7 @@ const Application = ({ tags, query, signedIn, Component, pageProps, token, user 
   }
 
   return (
-    <div className="App">
+    <div className="App bg-pink-50 text-blue-500 underline-offset-2">
       <Head>
         <title>Traditional Dream Factory | Regenerative coliving space in Alentejo, Portugal</title>
         <meta charSet="utf-8" />
