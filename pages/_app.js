@@ -20,7 +20,7 @@ const Application = ({ tags, query, signedIn, Component, pageProps, token, user 
   }
 
   return (
-    <div className="App bg-pink-50 text-blue-500 underline-offset-2">
+    <div className="App bg-pink-50 text-black underline-offset-2">
       <Head>
         <title>Traditional Dream Factory | Regenerative coliving space in Alentejo, Portugal</title>
         <meta charSet="utf-8" />

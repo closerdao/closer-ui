@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import Head from 'next/head'
 import Layout from '../components/layout'
 import api from '../utils/api'
+import pink_paper from '../pink_paper';
 
 const signup = () => {
   const [submitted, setSubmitted] = useState(false);
@@ -36,39 +37,45 @@ const signup = () => {
       </Head>
       <main className="mt-12">
         <h1 className="text-xl mb-2">Join the dreamers + doers of tomorrow</h1>
-        <p className="mb-2">
-          Becoming a member means that you want to join TDF dreamers and makers, that you want to come build, play and grow in this land 🤸🏽 The process starts with you filling this form. Once you press the red button our community curator will receive your words and connect with you for a short call. Before you hop into it, make sure that you read the Pink Paper and notice what it brings in you. During the call you will get to hear all about our regenerative community adventure, how to join the journey, and any questions you have are welcome 🤞🏽
+        <p className="mb-8">
+          Becoming a member means that you want to join TDF dreamers and makers, that you want to come build, play and grow in this land 🤸🏽
+        </p>
+        <p className="mb-8">
+          The process starts with you filling this form. Once you press the <span className="text-pink-500">pink button</span> our community curator will receive your words and connect with you for a short call.
+        </p>
+        <p className="mb-8">
+          Before you hop into it, make sure that you read the <a href={pink_paper.url} className="text-pink-500 visited:text-pink-500 hover:text-pink-800">pink paper</a> and notice what it brings in you. During the call you will get to hear all about our regenerative community adventure, how to join the journey, and any questions you have are welcome 🤞🏽
         </p>
         { submitted?
           <h2 className="my-4 text-2xl">
             Thank you, our community curator will reach out for an intro call.
           </h2>:
-          <form className="join" onSubmit={ submit }>
-            <div className="w-full md:w-1/2 mb-4">
+          <form className="join mt-24 flex flex-col" onSubmit={ submit }>
+            <div className="w-full mb-4">
               <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" htmlFor="screenname">
                 Name
               </label>
               <input className="border border-gray-200 w-full px-4 py-1" id="screenname" type="text" onChange={ e => updateApplication({ name: e.target.value }) } placeholder="Jane Birkin" />
             </div>
-            <div className="w-full md:w-1/2 mb-4">
+            <div className="w-full mb-4">
               <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" htmlFor="home">
                 What is home to you?
               </label>
               <textarea className="border border-gray-200 resize-none w-full px-4 py-1" id="home" value={ application.home } onChange={ e => updateApplication({ home: e.target.value }) } placeholder="Home is where..." />
             </div>
-            <div className="w-full md:w-1/2 mb-4">
+            <div className="w-full mb-4">
               <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" htmlFor="dream">
                 What do you dream of creating?
               </label>
               <textarea className="border border-gray-200 resize-none w-full px-4 py-1" id="dream" value={ application.dream } onChange={ e => updateApplication({ dream: e.target.value }) } placeholder="My dream is to..." />
             </div>
-            <div className="w-full md:w-1/2 mb-4">
+            <div className="w-full mb-4">
               <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" htmlFor="phone">
                 Phone number
               </label>
               <input type="phone" className="border border-gray-200 w-full px-4 py-1" required id="phone" value={ application.phone } onChange={ e => updateApplication({ phone: e.target.value }) } placeholder="+351 777 888 999" />
             </div>
-            <div className="w-full md:w-1/2 mb-4">
+            <div className="w-full mb-4">
               <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" htmlFor="email">
                 Email
               </label>

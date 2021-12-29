@@ -4,6 +4,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import Layout from '../components/layout'
 import Timeline from '../components/timeline'
+import pink_paper from '../pink_paper';
 //
 // const title = 'Traditio   nal Dream  Factory ';
 // const start = Date.now();
@@ -43,7 +44,7 @@ const index = () => (
           <ol className="text-right">
             <li className="py-8">
               <p className="mr-2 italic">Step one,</p>
-              <h3 className="mt-4"><Link href="https://docs.google.com/document/d/177JkHCy0AhplsaEEYpFHBsiI6d4uLk0TgURSKfBIewE/mobilebasic">
+              <h3 className="mt-4"><Link href={ pink_paper.url }>
                   <a type="submit" className="button px-4 py-1 mr-2 mb-2 rounded-full bg-black hover:bg-white text-white hover:text-black font-bold" rel="nofollow noreferrer" target="_blank">
                     Read Pink Paper
                   </a>
