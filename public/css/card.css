@@ -1,5 +1,5 @@
 .card {
-  @apply bg-gray-100 rounded-md p-4 divide-y rounded overflow-hidden shadow-lg;
+  @apply bg-gray-100 rounded-md p-4 divide-y overflow-hidden shadow-lg;
 }
 .card .card-title {
   @apply mt-0 -ml-4 -mr-4 p-4 pt-0 flex flex-row justify-between items-center;
@@ -12,10 +12,11 @@
 .card .card-footer button {
   margin-right: 0.5rem;
 }
-.card input, .card textarea {
+.card input,
+.card textarea {
   background-color: #f2f4f3;
 }
-.card p:last-child{
+.card p:last-child {
   margin-bottom: 0;
 }
 .card .action-row {
