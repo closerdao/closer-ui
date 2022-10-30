@@ -162,7 +162,7 @@ const MemberPage = ({ member, loadError }) => {
         </>
           }
 
-          <Link  href={'/members'}>
+          <Link passHref href={'/members'}>
             <p className="text-lg cursor-pointer my-4">
               {'< All Profiles'}
             </p>

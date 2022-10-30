@@ -34,7 +34,7 @@ const EditEvent = ({ event }) => {
           { __('events_slug_edit_link') } <i>{ event.name }</i>
         </h1>
         { !config.STRIPE_PUB_KEY &&
-          <div className="p2 italic">This platform doesn't have a global Stripe integration. If you wish to set paid tickets for your event you must define a custom Stripe integration in the tickets tab below.</div>
+          <div className="p2 italic">This platform doesn&apos;t have a global Stripe integration. If you wish to set paid tickets for your event you must define a custom Stripe integration in the tickets tab below.</div>
         }
         <EditModel
           id={ event._id }
