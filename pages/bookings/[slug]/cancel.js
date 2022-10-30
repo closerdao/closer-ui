@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
@@ -7,18 +7,26 @@ import PageNotAllowed from '../../401';
 
 import { useAuth } from '../../../contexts/auth';
 
-import { priceFormat, __ } from '../../../utils/helpers';
+import { __ } from '../../../utils/helpers';
 import api from '../../../utils/api';
 
 import Layout from '../../../components/Layout';
 import CancelCompleted from '../../../components/CancelCompleted';
 import CancelBooking from '../../../components/CancelBooking';
 
-const BookingCancelPage = ({ booking, error, policy }) => {
+const BookingCancelPage = ({ booking, error }) => {
   const router = useRouter();
   const bookingId = router.query.slug
   const { isAuthenticated } = useAuth()
   const [isCancelCompleted, setCancelCompleted] = useState(false)
+  const [policy, setPolicy] = useState(null)
+  useEffect(() => {
+    const fetchPolicy = async () => {
+      const res = await api.get('/bookings/cancelation-policy')
+      setPolicy(res.data)
+    }
+    fetchPolicy()
+  }, [])
 
   if (!booking || error) {
     return <PageNotFound />;
@@ -49,12 +57,8 @@ const BookingCancelPage = ({ booking, error, policy }) => {
 
 BookingCancelPage.getInitialProps = async ({ query }) => {
   try {
-    // const policyPromise = api.get('/bookings/cancelation-policy');
-    const bookingPromise = api.get(`/booking/${query.slug}`);
-    const [bookingRes] = await Promise.all([bookingPromise])
-    // console.log(policyRes)
-    const props = { booking: bookingRes.data.results }
-    return props 
+    const { data: { results: booking } } = await api.get(`/booking/${query.slug}`);
+    return { booking };
   } catch (err) {
     console.error('Error', err.message);
     return {
