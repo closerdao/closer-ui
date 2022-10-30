@@ -10,8 +10,6 @@ import { __ } from '../../utils/helpers';
 import PageNotFound from '../404';
 
 const Bookings = () => {
-  const router = useRouter();
-
   const { user } = useAuth();
   const { platform } = usePlatform();
   const bookingFilter = user && { where: { createdBy: user._id } };
@@ -33,8 +31,7 @@ const Bookings = () => {
   }
 
   const bookings = platform.booking.find(bookingFilter);
-  console.log('bookings', bookings);
-
+  
   return (
     <Layout>
       <Head>
