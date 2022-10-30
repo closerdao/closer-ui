@@ -1,7 +1,6 @@
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
 import { useRouter } from 'next/router';
-import { isMap } from 'immutable';
 
 import relativeTime from 'dayjs/plugin/relativeTime';
 import duration from 'dayjs/plugin/duration';
