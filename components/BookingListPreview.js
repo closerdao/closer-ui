@@ -4,9 +4,12 @@ import dayjs from 'dayjs';
 import { __, priceFormat } from '../utils/helpers';
 
 const BookingListPreview = ({ booking }) => {
+  const bookingId = booking.get('_id')
+  const now = dayjs();
   const start = dayjs(booking.get('start'));
   const end = dayjs(booking.get('end'));
-  const bookingId = booking.get('_id')
+  const isBookingCancelable = now.isBefore(start);
+
   return (
     <div className="booking-list-preview card mb-4 last:mb-0 md:w-fit">
       <p>
@@ -41,8 +44,10 @@ const BookingListPreview = ({ booking }) => {
       )}
       <div className="my-2">
         <Link passHref href={`/bookings/${bookingId}/cancel`}>
-          <a className="btn">
-            {__('booking_cancel_button')}
+          <a>
+            <button disabled={!isBookingCancelable} className="btn disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed">
+              {__('booking_cancel_button')}
+            </button>
           </a>
         </Link>
       </div>
