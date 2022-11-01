@@ -35,14 +35,14 @@ const CancelBooking = ({ setCancelCompleted, bookingId, isMember, refundTotal })
       <p>
         {isMember ?__('booking_cancelation_policy_member') : __('booking_cancelation_policy')}
       </p>
-      <h2 className="text-2xl leading-10 font-normal my-16 border-b border-[#e1e1e1] border-solid pb-2">
+      <h2 className="text-2xl leading-10 font-normal mt-16 mb-3 border-b border-[#e1e1e1] border-solid pb-2">
         { __('cancel_booking_refund_total') }
       </h2>
       <div className="flex justify-between mb-16">
         <p>{ __('cancel_booking_fiat_description') }</p>
         <p className="font-black">{priceFormat(refundTotal)}</p>
       </div>
-      <div className="flex flex-col space-y-8">
+      <div className="flex flex-col space-y-8 md:flex-row md:space-y-0 md:space-x-4 md:justify-end">
         { error ? <p className="text-red-500">{error}</p> 
           : <button className="btn" onClick={cancelBooking}>
             { __('generic_yes').toUpperCase() }

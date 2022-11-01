@@ -17,17 +17,24 @@ import CancelBooking from '../../../components/CancelBooking';
 const BookingCancelPage = ({ booking, error }) => {
   const router = useRouter();
   const bookingId = router.query.slug
-  const { isAuthenticated } = useAuth()
+  const bookingPrice = booking?.price
+  const { isAuthenticated, user } = useAuth()
+  const isMember = user?.roles.includes('member')
   const [isCancelCompleted, setCancelCompleted] = useState(false)
   const [policy, setPolicy] = useState(null)
-  const { user } = useAuth()
-  const isMember = user?.roles.includes('member')
-  const bookingPrice = booking?.price
+  const [isPolicyLoading, setPolicyLoading] = useState(false)
 
   useEffect(() => {
     const fetchPolicy = async () => {
-      const res = await api.get('/bookings/cancelation-policy')
-      setPolicy(res.data)
+      try {
+        setPolicyLoading(true)
+        const { data } = await api.get('/policies/cancellation')
+        setPolicy(data)
+      } catch (error) {
+        console.log(error)
+      } finally {
+        setPolicyLoading(false)
+      }
     }
     if(user) {
       fetchPolicy()
@@ -56,7 +63,8 @@ const BookingCancelPage = ({ booking, error }) => {
           policy={policy} 
           setCancelCompleted={setCancelCompleted}
           isMember={isMember}
-          refundTotal={calculateRefundTotal(bookingPrice, policy)}
+          refundTotal={calculateRefundTotal(bookingPrice.val, policy)}
+          isPolicyLoading={isPolicyLoading}
         />
       }
     </Layout>
