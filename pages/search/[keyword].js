@@ -36,7 +36,7 @@ const Search = ({ articles, error, keyword, tags }) => console.log(error, articl
                     </Link>
                   </div>
                 )):
-                <div className="Loading">{ __('search_keyword_loading') }</div>
+                <div className="Loading">{ __('generic_loading') }</div>
               }
             </div>
           </section>
@@ -48,7 +48,7 @@ const Search = ({ articles, error, keyword, tags }) => console.log(error, articl
               tags.map(tag => (
                 <Link as={ `/search/${encodeURIComponent(tag)}` } href="/search/[keyword]" key={ tag }><a className="tag">{tag}</a></Link>
               )):
-              <span className="Loading">{ __('search_keyword_loading') }</span>
+              <span className="Loading">{ __('generic_loading') }</span>
             }
           </p>
           <h3><Link href="/search"><a>{ __('search_keyword_articles') }</a></Link></h3>

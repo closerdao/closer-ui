@@ -5,13 +5,21 @@ import Router, { useRouter } from 'next/router';
 import Footer from '../components/Footer';
 import Navigation from '../components/Navigation'
 import { AuthProvider } from '../contexts/auth';
-import { PlatformProvider } from '../contexts/platform'
+import { PlatformProvider } from '../contexts/platform';
+import { Web3ReactProvider } from '@web3-react/core';
+import { Web3Provider } from '@ethersproject/providers'
 import { DEFAULT_TITLE, SEMANTIC_URL, DEFAULT_DESCRIPTION, FB_DOMAIN_VERIFICATION } from '../config';
+import { BLOCKCHAIN_NETWORK_ID, BLOCKCHAIN_DAO_TOKEN, BLOCKCHAIN_STABLE_COIN } from '../config_blockchain';
 import { theme } from '../tailwind.config';
 import '../public/styles.css';
 
 const Application = ({ tags, query, signedIn, Component, pageProps, token, user }) => {
   const router = useRouter();
+
+  function getLibrary(provider) {
+    const library = new Web3Provider(provider)
+    return library
+  }
 
   if (query?.ref && typeof localStorage !== 'undefined') {
     localStorage.setItem('referrer', query.ref);
@@ -19,6 +27,10 @@ const Application = ({ tags, query, signedIn, Component, pageProps, token, user 
 
   if (typeof token !== 'undefined') {
     api.defaults.headers.Authorization = `Bearer ${token}`;
+  }
+
+  const tokensToWatch = {
+    [BLOCKCHAIN_NETWORK_ID]: [BLOCKCHAIN_DAO_TOKEN,BLOCKCHAIN_STABLE_COIN]
   }
 
   return (
@@ -37,10 +49,12 @@ const Application = ({ tags, query, signedIn, Component, pageProps, token, user 
       </Head>
       <AuthProvider>
         <PlatformProvider>
-          <Navigation query={ query } signedIn={ signedIn } />
-          <div className="content-wrapper">
-            <Component {...pageProps} query={ query } user={ user } signedIn={ signedIn } />
-          </div>
+          <Web3ReactProvider getLibrary={getLibrary}>
+            <Navigation query={ query } signedIn={ signedIn } />
+            <div className="content-wrapper">
+              <Component {...pageProps} query={ query } user={ user } signedIn={ signedIn } />
+            </div>
+          </Web3ReactProvider>
         </PlatformProvider>
       </AuthProvider>
       <Footer tags={ tags } />

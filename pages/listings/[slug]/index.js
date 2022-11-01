@@ -18,7 +18,7 @@ import PostList from '../../../components/PostList';
 import Slider from '../../../components/Slider';
 
 const Listing = ({ listing, error }) => {
-  const [photo, setPhoto] = useState(listing.photos && listing.photos[0]);
+  const [photo, setPhoto] = useState(listing && listing.photos && listing.photos[0]);
   const { isAuthenticated, user } = useAuth();
 
   if (!listing) {

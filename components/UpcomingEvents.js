@@ -11,8 +11,7 @@ const UpcomingEvents = ({
     where={{
       end: {
         $gt: now
-      },
-      visibility: 'public'
+      }
     }}
   />
 );

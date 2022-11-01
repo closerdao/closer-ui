@@ -44,8 +44,11 @@ const Book = ({ token }) => {
   const router = useRouter();
   const { user } = useAuth();
   const { platform } = usePlatform();
-  const [listings, setListings] = useState(fromJS([]));
+  const [listings, setListings] = useState(false);
   const [searchInProgress, setLoading] = useState(false);
+  const [isAvailable, setAvailability] = useState(false);
+  const [datesAvailable, setAvailableDates] = useState([]);
+  const [checkedAvailability, setAvailabilityChecked] = useState(false);
   const [booking, setBooking] = useState({
     start: defaultStart,
     end: defaultEnd,
@@ -59,8 +62,6 @@ const Book = ({ token }) => {
     booking.rate = booking.duration >= 30 ? 'monthlyRate' : booking.duration >= 7 ? 'weeklyRate' : 'dailyRate';
     setBooking(booking);
   }
-  const [isAvailable, setAvailability] = useState(false);
-  const [checkedAvailability, setAvailabilityChecked] = useState(false);
 
   const getBookingDays = (firstDay, duration) => {
     const start = dayjs(firstDay).set('hours', 0).set('seconds', 0).set('minutes', 0);
@@ -99,9 +100,16 @@ const Book = ({ token }) => {
   const loadInventory = async (booking) => {
     setLoading(true);
     try {
-      const { data: { results: availableListings } } = await api.post('/booking/availability', booking);
+      const { data: { results: availableListings, available: available, availability: availability } } = await api.post('/booking/availability', booking);
+      setLoading(false);
       setListings(fromJS(availableListings));
+      setAvailability(fromJS(available));
+      setAvailableDates(fromJS(availability));
+      setAvailabilityChecked(true);
+
+      console.log('availability', availability)
     } catch (err) {
+      setLoading(false);
       alert(err);
     }
   }
@@ -148,21 +156,29 @@ const Book = ({ token }) => {
                   />
                 </fieldset>
                 <fieldset>
-                  <button type="submit" className="btn-primary">Search</button>
+                  <button type="submit" className="btn-primary">{__('generic_search')}</button>
                 </fieldset>
               </div>
             </div>
 
             <div className="md:grid md:grid-cols-3 gap-6 mt-4">
-              { listings && listings.count() > 0 &&
-                listings.map(listing => (
-                  <ListingListPreview
-                    key={ listing.get('_id') }
-                    listing={ listing }
-                    rate={ booking.rate }
-                    book={ () => createBooking(listing, booking) }
-                  />
-                ))
+              { searchInProgress && <div className="loading">{__('generic_loading')}</div> }
+              { checkedAvailability && (
+                isAvailable ?
+                  listings && (
+                    listings.count() > 0 ?
+                      listings.map(listing => (
+                        <ListingListPreview
+                          key={ listing.get('_id') }
+                          listing={ listing }
+                          rate={ booking.rate }
+                          book={ () => createBooking(listing, booking) }
+                        />
+                      )):
+                      <div className="no-match">{__('booking_no_available_listings')}</div>
+                  ):
+                  <div className="no-match">{__('booking_no_available_listings')} ({(datesAvailable && datesAvailable.filter(d => d.available) || []).length}/{datesAvailable && datesAvailable.length})</div>
+              )
               }
             </div>
           </form>

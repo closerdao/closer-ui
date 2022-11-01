@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import Layout from '../../components/Layout';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
+import PageNotAllowed from '../401';
 import ListingListPreview from '../../components/ListingListPreview';
 import { __ } from '../../utils/helpers';
 
@@ -21,13 +22,13 @@ const Listings = () => {
   }
 
   useEffect(() => {
-    if (user && user.roles.includes('admin')){
+    if (user && user.roles.includes('space-host')){
       loadData();
     }
   }, [user]);
 
-  if (!user || !user.roles.includes('admin')) {
-    return null;
+  if (!user || !user.roles.includes('space-host')) {
+    return <PageNotAllowed error="Only space-host role may access this page." />;
   }
 
   const listings = platform.listing.find();

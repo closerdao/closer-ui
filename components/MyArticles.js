@@ -63,7 +63,7 @@ const MyArticles = () => {
               <p>{ article.summary }</p>
             </div>
           )):
-          <div className="Loading">{  __('my_articles_wait_message') }</div>
+          <div className="Loading">{  __('generic_loading') }</div>
         }
       </section>
 
@@ -76,7 +76,7 @@ const MyArticles = () => {
               <p>{ article.summary }</p>
             </div>
           )):
-          <div className="Loading">{  __('my_articles_wait_message') }</div>
+          <div className="Loading">{  __('generic_loading') }</div>
         }
       </section>
     </div>

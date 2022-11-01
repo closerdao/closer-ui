@@ -179,7 +179,7 @@ const EditModel = ({
       }
       <div className="mt-2">
         <button type="submit" className="btn-primary">
-          { data.visibility === 'private' ? 'Save draft' : !data._id ? 'Publish' : 'Save' }
+          {__('edit_model_save')}
         </button>
         { allowDelete && <a href="#" className="text-red-700 ml-2" onClick={ (e) => {
           e.preventDefault();

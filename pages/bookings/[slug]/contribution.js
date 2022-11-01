@@ -16,9 +16,11 @@ import { usePlatform } from '../../../contexts/platform';
 import { priceFormat, __ } from '../../../utils/helpers';
 import api, { formatSearch, cdn } from '../../../utils/api';
 import config from '../../../config';
+import { BLOCKCHAIN_NETWORK_ID } from '../../../config_blockchain';
 
 import Layout from '../../../components/Layout';
 import Switch from '../../../components/Switch';
+import { useWeb3React } from '@web3-react/core';
 
 dayjs.extend(LocalizedFormat);
 
@@ -28,10 +30,13 @@ const Booking = ({ booking, error }) => {
   const { isAuthenticated, user } = useAuth();
   const { platform } = usePlatform();
 
+  const { chainId, account, activate, deactivate, setError, active, library } = useWeb3React()
+
+
   const saveBooking = async (update) => {
     try {
       await platform.booking.patch(booking._id, update);
-      router.push(`/bookings/${booking._id}/checkout`);
+      active && typeof account === 'string' && chainId === BLOCKCHAIN_NETWORK_ID ? router.push(`/bookings/${booking._id}/checkout`) : router.push(`/bookings/${booking._id}/connectwallet`) 
     } catch (err) {
       alert('An error occured.')
       console.log(err);
@@ -102,6 +107,7 @@ const Booking = ({ booking, error }) => {
 Booking.getInitialProps = async ({ req, query }) => {
   try {
     const { data: { results: booking } } = await api.get(`/booking/${query.slug}`);
+    console.log(`contrib ${query.slug}`);
     return { booking };
   } catch (err) {
     console.log('Error', err.message);

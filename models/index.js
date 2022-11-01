@@ -33,6 +33,13 @@ export default {
       tab: 'general'
     },
     {
+      name: 'blocksBookingCalendar',
+      label: 'Should this event block the booking calendar?',
+      type: 'switch',
+      defaultValue: false,
+      tab: 'general'
+    },
+    {
       name: 'location',
       label: 'Event URL',
       defaultValue: '',

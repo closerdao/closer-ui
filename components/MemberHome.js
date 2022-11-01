@@ -19,7 +19,7 @@ const MemberHome = () => {
 
   if (isLoading || !user) {
     // Wait for user to be loaded in order to allow getting private data
-    return <div className="loading">{ __('member_home_wait_message') } </div>
+    return <div className="loading">{ __('generic_loading') } </div>
   }
 
   return (

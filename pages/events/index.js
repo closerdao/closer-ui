@@ -36,8 +36,7 @@ const Events = () => {
           where={{
             end: {
               $gt: now
-            },
-            visibility: 'public'
+            }
           }}
         />
       </div>

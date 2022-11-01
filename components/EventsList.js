@@ -48,7 +48,7 @@ const EventsList = ({
 
   useEffect(() => {
     loadData();
-  }, [eventsFilter]);
+  }, [eventsFilter, user]);
 
   return (
     <div className={ card ? 'card': '' }>

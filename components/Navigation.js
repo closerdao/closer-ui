@@ -5,12 +5,14 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import slugify from 'slugify';
 import { useRouter } from 'next/router';
-import { trackEvent } from './Analytics';
 import { FaTelegram } from '@react-icons/all-files/fa/FaTelegram';
+
+import { trackEvent } from './Analytics';
 import { useAuth } from '../contexts/auth.js';
 import ProfilePhoto from './ProfilePhoto';
 import Prompts from './Prompts';
 import FeaturedEvent from './FeaturedEvent';
+import ConnectInjected from './ConnectInjected';
 import { useStatic } from '../contexts/static';
 import { theme } from '../tailwind.config';
 import api, { formatSearch } from '../utils/api';
@@ -165,17 +167,20 @@ const Navigation = () => {
               <FaTelegram />
             </a> }
             { isAuthenticated &&
-              <Link
-                href="/members/[slug]"
-                as={ `/members/${ user.slug }` }
-              >
+              <>
+                <ConnectInjected />
+                <Link
+                  href="/members/[slug]"
+                  as={`/members/${user.slug}`}
+                >
 
-                <a title="View profile" className="hidden md:flex md:flex-row items-center" onClick={() => toggleNav(false)}>
-                  <span className='h-8 border-l mr-3' />
-                  <ProfilePhoto user={ user } />
-                  <p className='ml-3'>{user.screenname}</p>
-                </a>
-              </Link>
+                  <a title="View profile" className="hidden md:flex md:flex-row items-center" onClick={() => toggleNav(false)}>
+                    <span className='h-8 border-l mr-3' />
+                    <ProfilePhoto user={user} />
+                    <p className='ml-3'>{user.screenname}</p>
+                  </a>
+                </Link>
+              </>
             }
             <a
               className="space-y-2 md:hidden"

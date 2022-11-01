@@ -10,14 +10,14 @@ import { __ } from '../../utils/helpers';
 const Search = ({ tags, error, keyword, articles }) => (
   <Layout>
     <Head>
-      <title>{ __('search_title') } { PLATFORM_NAME }</title>
+      <title>{ __('generic_search') } { PLATFORM_NAME }</title>
     </Head>
     <div className="main-content fullwidth intro">
       <div className="columns">
         <main className="col lg">
           <section className="article limit-width">
             <h1 className="long">
-              { __('search_title') }
+              { __('generic_search') }
             </h1>
             <div className="article-previews two-col">
               { error ?
@@ -39,7 +39,7 @@ const Search = ({ tags, error, keyword, articles }) => (
                       </div>
                     );
                   }):
-                  <div className="Loading">{ __('search_loading') }</div>
+                  <div className="Loading">{ __('generic_loading') }</div>
               }
             </div>
           </section>
@@ -51,7 +51,7 @@ const Search = ({ tags, error, keyword, articles }) => (
               tags.map(tag => (
                 <Link as={ `/search/${encodeURIComponent(tag)}` } href="/search/[keyword]" key={ tag }><a className="tag">{tag}</a></Link>
               )):
-              !error && <span className="Loading">{ __('search_loading') }</span>
+              !error && <span className="Loading">{ __('generic_loading') }</span>
             }
           </p>
         </section>
