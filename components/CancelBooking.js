@@ -1,16 +1,22 @@
 import { priceFormat, __ } from '../utils/helpers';
 import { useState } from 'react'
 import api from '../utils/api';
+import Spinner from './Spinner';
 
-const CancelBooking = ({ setCancelCompleted, bookingId, isMember, refundTotal }) => {
+const CancelBooking = ({ setCancelCompleted, bookingId, isMember, refundTotal, isPolicyLoading }) => {
   const [error, setError] = useState(null)
+  const [isSendingCancelRequest, setSendingCancelRequest] = useState(false)
+  
   const cancelBooking = () => {
     try {
+      setSendingCancelRequest(true)
       api.post(`/bookings/${bookingId}/cancel`);
       setCancelCompleted(true)
     } catch (err) {
       console.error('Error', err.message);
       setError(err.message)
+    } finally {
+      setSendingCancelRequest(false)
     }
   }
 
@@ -40,14 +46,13 @@ const CancelBooking = ({ setCancelCompleted, bookingId, isMember, refundTotal })
       </h2>
       <div className="flex justify-between mb-16">
         <p>{ __('cancel_booking_fiat_description') }</p>
-        <p className="font-black">{priceFormat(refundTotal)}</p>
+        {isPolicyLoading ? <Spinner /> : <p className="font-black">{priceFormat(refundTotal)}</p>}
       </div>
+      { error && <p className="text-red-500 m-2 text-center">{error}</p> }
       <div className="flex flex-col space-y-8 md:flex-row md:space-y-0 md:space-x-4 md:justify-end">
-        { error ? <p className="text-red-500">{error}</p> 
-          : <button className="btn" onClick={cancelBooking}>
-            { __('generic_yes').toUpperCase() }
-          </button>
-        }
+        <button className="btn items-center" onClick={cancelBooking}>
+          {isSendingCancelRequest ? <Spinner className="w-fit mx-auto h-[24px] -top-1 relative" /> : __('generic_yes').toUpperCase() }
+        </button>
         <button className="btn" onClick={backToBookings}>
           { __('generic_no').toUpperCase() }
         </button>

@@ -20,9 +20,9 @@ const BookingCancelPage = ({ booking, error }) => {
   const bookingPrice = booking?.price
   const { isAuthenticated, user } = useAuth()
   const isMember = user?.roles.includes('member')
-  const [isCancelCompleted, setCancelCompleted] = useState(false)
   const [policy, setPolicy] = useState(null)
   const [isPolicyLoading, setPolicyLoading] = useState(false)
+  const [isCancelCompleted, setCancelCompleted] = useState(false)
 
   useEffect(() => {
     const fetchPolicy = async () => {
@@ -61,10 +61,10 @@ const BookingCancelPage = ({ booking, error }) => {
         : <CancelBooking 
           bookingId={bookingId} 
           policy={policy} 
-          setCancelCompleted={setCancelCompleted}
           isMember={isMember}
           refundTotal={calculateRefundTotal(bookingPrice.val, policy)}
           isPolicyLoading={isPolicyLoading}
+          setCancelCompleted={setCancelCompleted}
         />
       }
     </Layout>
