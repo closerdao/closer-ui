@@ -2,7 +2,7 @@ import { priceFormat, __ } from '../utils/helpers';
 import { useState } from 'react'
 import api from '../utils/api';
 
-const CancelBooking = ({ setCancelCompleted, bookingId }) => {
+const CancelBooking = ({ setCancelCompleted, bookingId, isMember, refundTotal }) => {
   const [error, setError] = useState(null)
   const cancelBooking = () => {
     try {
@@ -32,12 +32,15 @@ const CancelBooking = ({ setCancelCompleted, bookingId }) => {
       <h2 className="text-2xl leading-10 font-normal my-16">
         { __('cancel_booking_refund_policy') }
       </h2>
+      <p>
+        {isMember ?__('booking_cancelation_policy_member') : __('booking_cancelation_policy')}
+      </p>
       <h2 className="text-2xl leading-10 font-normal my-16 border-b border-[#e1e1e1] border-solid pb-2">
         { __('cancel_booking_refund_total') }
       </h2>
       <div className="flex justify-between mb-16">
         <p>{ __('cancel_booking_fiat_description') }</p>
-        <p className="font-black">{priceFormat(300)}</p>
+        <p className="font-black">{priceFormat(refundTotal)}</p>
       </div>
       <div className="flex flex-col space-y-8">
         { error ? <p className="text-red-500">{error}</p> 

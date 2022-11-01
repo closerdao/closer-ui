@@ -180,3 +180,16 @@ export const getSample = (field) => {
     throw new Error(`Invalid model type:${field.type}`);
   }
 }
+
+export const calculateRefundTotal = (value, policy) => {
+  if (!policy) {
+    return 0;
+  }
+  const { refundableUntil, refundablePercent } = policy;
+  const now = dayjs();
+  const refundableUntilDate = dayjs(refundableUntil);
+  if (now.isAfter(refundableUntilDate)) {
+    return 0;
+  }
+  return value * refundablePercent;
+}

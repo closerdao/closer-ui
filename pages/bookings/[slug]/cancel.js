@@ -7,7 +7,7 @@ import PageNotAllowed from '../../401';
 
 import { useAuth } from '../../../contexts/auth';
 
-import { __ } from '../../../utils/helpers';
+import { __, calculateRefundTotal } from '../../../utils/helpers';
 import api from '../../../utils/api';
 
 import Layout from '../../../components/Layout';
@@ -20,13 +20,19 @@ const BookingCancelPage = ({ booking, error }) => {
   const { isAuthenticated } = useAuth()
   const [isCancelCompleted, setCancelCompleted] = useState(false)
   const [policy, setPolicy] = useState(null)
+  const { user } = useAuth()
+  const isMember = user?.roles.includes('member')
+  const bookingPrice = booking?.price
+
   useEffect(() => {
     const fetchPolicy = async () => {
       const res = await api.get('/bookings/cancelation-policy')
       setPolicy(res.data)
     }
-    fetchPolicy()
-  }, [])
+    if(user) {
+      fetchPolicy()
+    }
+  }, [user])
 
   if (!booking || error) {
     return <PageNotFound />;
@@ -49,6 +55,8 @@ const BookingCancelPage = ({ booking, error }) => {
           bookingId={bookingId} 
           policy={policy} 
           setCancelCompleted={setCancelCompleted}
+          isMember={isMember}
+          refundTotal={calculateRefundTotal(bookingPrice, policy)}
         />
       }
     </Layout>
