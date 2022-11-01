@@ -2,6 +2,7 @@ import { priceFormat, __ } from '../utils/helpers';
 import { useState } from 'react'
 import api from '../utils/api';
 import Spinner from './Spinner';
+import CalculatorIcon from './icons/CalculatorIcon';
 
 const CancelBooking = ({ setCancelCompleted, bookingId, isMember, refundTotal, isPolicyLoading }) => {
   const [error, setError] = useState(null)
@@ -41,8 +42,11 @@ const CancelBooking = ({ setCancelCompleted, bookingId, isMember, refundTotal, i
       <p>
         {isMember ?__('booking_cancelation_policy_member') : __('booking_cancelation_policy')}
       </p>
-      <h2 className="text-2xl leading-10 font-normal mt-16 mb-3 border-b border-[#e1e1e1] border-solid pb-2">
-        { __('cancel_booking_refund_total') }
+      <h2 className="text-2xl leading-10 font-normal mt-16 mb-3 border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center">
+        <CalculatorIcon />
+        <p>
+          { __('cancel_booking_refund_total') }
+        </p>
       </h2>
       <div className="flex justify-between mb-16">
         <p>{ __('cancel_booking_fiat_description') }</p>
