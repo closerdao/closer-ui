@@ -4,7 +4,7 @@ import api from '../utils/api';
 import Spinner from './Spinner';
 import CalculatorIcon from './icons/CalculatorIcon';
 
-const CancelBooking = ({ setCancelCompleted, bookingId, isMember, refundTotal, isPolicyLoading }) => {
+const CancelBooking = ({ setCancelCompleted, bookingId, isMember, refundTotal, isPolicyLoading, policy }) => {
   const [error, setError] = useState(null)
   const [isSendingCancelRequest, setSendingCancelRequest] = useState(false)
   
@@ -50,7 +50,7 @@ const CancelBooking = ({ setCancelCompleted, bookingId, isMember, refundTotal, i
       </h2>
       <div className="flex justify-between mb-16">
         <p>{ __('cancel_booking_fiat_description') }</p>
-        {isPolicyLoading ? <Spinner /> : <p className="font-black">{priceFormat(refundTotal)}</p>}
+        {(isPolicyLoading || !policy) ? <Spinner /> : <p className="font-black">{priceFormat(refundTotal)}</p>}
       </div>
       { error && <p className="text-red-500 m-2 text-center">{error}</p> }
       <div className="flex flex-col space-y-8 md:flex-row md:space-y-0 md:space-x-4 md:justify-end">

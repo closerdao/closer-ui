@@ -181,16 +181,31 @@ export const getSample = (field) => {
   }
 }
 
-export const calculateRefundTotal = (value, policy) => {
-  // if (!policy) {
-  //   return 0;
-  // }
-  // const { refundableUntil, refundablePercent } = policy;
-  // const now = dayjs();
-  // const refundableUntilDate = dayjs(refundableUntil);
-  // if (now.isAfter(refundableUntilDate)) {
-  //   return 0;
-  // }
-  // return value * refundablePercent;
-  return value
+const REFUND_PERIOD = {
+  MONTH: 30,
+  WEEK: 7,
+  DAY: 1,
+  LASTDAY: 0
+}
+
+export const calculateRefundTotal = (args) => {
+  const { initialValue, policy, startDate } = args
+  const { default: defaultRefund, lastmonth, lastweek, lastday } = policy || {}
+  const bookingStartDate = dayjs(startDate)
+  const now = dayjs()
+  const daysUntilBookingStart = bookingStartDate.diff(now, 'days')
+
+  if (daysUntilBookingStart > REFUND_PERIOD.MONTH) {
+    return initialValue * defaultRefund
+  } 
+  if (daysUntilBookingStart > REFUND_PERIOD.WEEK) {
+    return initialValue * lastmonth
+  }  
+  if (daysUntilBookingStart > REFUND_PERIOD.DAY) {
+    return initialValue * lastweek
+  }
+  if (daysUntilBookingStart > REFUND_PERIOD.LASTDAY) {
+    return initialValue * lastday
+  }
+  return 0
 }
