@@ -7,7 +7,6 @@ const POLICY_MOCK = {
   lastday: 0.01
 }
 
-
 describe('calculateRefundTotal', () => {
   it('should return initialValue * defaultRefund if start date > 30 days ', () => {
     let targetDate = new Date();
