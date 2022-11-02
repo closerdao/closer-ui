@@ -8,6 +8,7 @@ import localizedFormat from 'dayjs/plugin/localizedFormat';
 
 import base from '../locales/base';
 import en from '../locales/en';
+import { REFUND_PERIODS } from '../constants';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(relativeTime);
@@ -181,13 +182,6 @@ export const getSample = (field) => {
   }
 }
 
-const REFUND_PERIOD = {
-  MONTH: 30,
-  WEEK: 7,
-  DAY: 1,
-  LASTDAY: 0
-}
-
 export const calculateRefundTotal = (args) => {
   const { initialValue, policy, startDate } = args
   const { default: defaultRefund, lastmonth, lastweek, lastday } = policy || {}
@@ -195,16 +189,16 @@ export const calculateRefundTotal = (args) => {
   const now = dayjs()
   const daysUntilBookingStart = bookingStartDate.diff(now, 'days')
 
-  if (daysUntilBookingStart > REFUND_PERIOD.MONTH) {
+  if (daysUntilBookingStart > REFUND_PERIODS.MONTH) {
     return initialValue * defaultRefund
   } 
-  if (daysUntilBookingStart >= REFUND_PERIOD.WEEK) {
+  if (daysUntilBookingStart >= REFUND_PERIODS.WEEK) {
     return initialValue * lastmonth
   }  
-  if (daysUntilBookingStart > REFUND_PERIOD.DAY) {
+  if (daysUntilBookingStart > REFUND_PERIODS.DAY) {
     return initialValue * lastweek
   }
-  if (daysUntilBookingStart > REFUND_PERIOD.LASTDAY) {
+  if (daysUntilBookingStart > REFUND_PERIODS.LASTDAY) {
     return initialValue * lastday
   }
   return 0
