@@ -48,7 +48,7 @@ const FieldsEditor = ({ value, onChange }) => {
         options && options.map((option, index) => (
           <div key={ option._id || option.id || index } className="mr-3 mb-4 p-3 shadow">
             <div className="mb-3">
-              <label>{ __('fields_editor_questions') }</label>
+              <label>{ __('fields_editor_question') }</label>
               <input
                 type="text"
                 value={ option.name }
