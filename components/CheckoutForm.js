@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
-import ReactDOM from 'react-dom';
-import {
-  CardElement,
-  useStripe,
-  useElements,
-} from '@stripe/react-stripe-js';
+
+import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
+
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
-import config from '../config';
 
 const CheckoutForm = ({
   type,
@@ -24,7 +20,7 @@ const CheckoutForm = ({
   total,
   currency,
   discountCode,
-  onSuccess
+  onSuccess,
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -36,7 +32,9 @@ const CheckoutForm = ({
     setProcessing(true);
 
     try {
-      const { error, token } = await stripe.createToken(elements.getElement(CardElement));
+      const { error, token } = await stripe.createToken(
+        elements.getElement(CardElement),
+      );
       if (error) {
         setProcessing(false);
         setError(error.message);
@@ -47,7 +45,9 @@ const CheckoutForm = ({
         setError('No token returned from Stripe.');
         return;
       }
-      const { data: { results: payment } } = await api.post('/payment', {
+      const {
+        data: { results: payment },
+      } = await api.post('/payment', {
         token: token.id,
         type,
         ticketOption,
@@ -59,7 +59,7 @@ const CheckoutForm = ({
         name,
         message,
         fields,
-        volunteer
+        volunteer,
       });
       if (onSuccess) {
         setProcessing(false);
@@ -68,17 +68,21 @@ const CheckoutForm = ({
     } catch (err) {
       setProcessing(false);
       console.log(err);
-      setError(err.response && err.response.data.error ? err.response.data.error : err.message);
+      setError(
+        err.response && err.response.data.error
+          ? err.response.data.error
+          : err.message,
+      );
     }
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      { error &&
+      {error && (
         <div className="text-red-500 mb-4">
-          <p>{ String(error) }</p>
+          <p>{String(error)}</p>
         </div>
-      }
+      )}
       <CardElement
         options={{
           style: {
@@ -95,20 +99,27 @@ const CheckoutForm = ({
             },
             invalid: {
               color: '#9f1f42',
-            }
-          }
+            },
+          },
         }}
         className="payment-card shadow-lg p-2 bg-white"
       />
-      <button type="submit" className="btn-primary mt-4" disabled={!stripe || buttonDisabled || processing}>
-        { processing? __('checkout_processing_payment') : buttonText || __('checkout_pay') }
+      <button
+        type="submit"
+        className="btn-primary mt-4"
+        disabled={!stripe || buttonDisabled || processing}
+      >
+        {processing
+          ? __('checkout_processing_payment')
+          : buttonText || __('checkout_pay')}
       </button>
-      { cancelUrl && <a href={ cancelUrl } className="mt-4 ml-2">
-        {__('generic_cancel')}
-      </a> }
+      {cancelUrl && (
+        <a href={cancelUrl} className="mt-4 ml-2">
+          {__('generic_cancel')}
+        </a>
+      )}
     </form>
   );
 };
-
 
 export default CheckoutForm;

@@ -1,17 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+
 import EventsList from './EventsList';
 
 const now = new Date();
 
-const UpcomingEvents = ({
-  ...props
-}) => (
+const UpcomingEvents = ({ ...props }) => (
   <EventsList
     {...props}
     where={{
       end: {
-        $gt: now
-      }
+        $gt: now,
+      },
     }}
   />
 );
@@ -19,7 +18,7 @@ UpcomingEvents.defaultProps = {
   showPagination: true,
   list: false,
   card: false,
-  queryParam: 'events'
+  queryParam: 'events',
 };
 
 export default UpcomingEvents;

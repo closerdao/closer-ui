@@ -16,10 +16,10 @@ https://heroicons.com/
 
 This platform is developed on top of the Closer API.
 
-
 ## Add new project
 
-* Add nginx config to /etc/nginx/MYDOMAIN.ORG
+- Add nginx config to /etc/nginx/MYDOMAIN.ORG
+
 ```
 server {
   server_name MYDOMAIN.ORG;
@@ -39,13 +39,17 @@ server {
   }
 }
 ```
-* Reload nginx `service nginx reload`
-* Start the pm2 process
+
+- Reload nginx `service nginx reload`
+- Start the pm2 process
+
 ```
 pm2 start --name "mydomain.co" npm -- start;
 pm2 save
 ```
-* Add an SSL cert
+
+- Add an SSL cert
+
 ```
 certbot --nginx -d MYDOMAIN.ORG
 ```

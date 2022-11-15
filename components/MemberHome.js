@@ -1,17 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import Head from 'next/head';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 
-import Layout from './Layout';
-import UpcomingEvents from './UpcomingEvents';
-import MemberList from './MemberList';
-import Post from './Post';
-import PostList from './PostList';
+import React, { useState } from 'react';
 
-import api, { formatSearch, cdn } from '../utils/api';
-import { useAuth } from '../contexts/auth.js'
+import { useAuth } from '../contexts/auth.js';
 import { __ } from '../utils/helpers';
+import MemberList from './MemberList';
+import PostList from './PostList';
+import UpcomingEvents from './UpcomingEvents';
 
 const MemberHome = () => {
   const { user, isLoading } = useAuth();
@@ -19,7 +14,7 @@ const MemberHome = () => {
 
   if (isLoading || !user) {
     // Wait for user to be loaded in order to allow getting private data
-    return <div className="loading">{ __('generic_loading') } </div>
+    return <div className="loading">{__('generic_loading')} </div>;
   }
 
   return (
@@ -28,44 +23,32 @@ const MemberHome = () => {
         <div className="md:w-2/3 md:mr-8">
           <div className="channel">
             <div className="channel-header mb-4">
-              <h3>{ __('member_home_title') } {user?.screenname || 'you'}!</h3>
+              <h3>
+                {__('member_home_title')} {user?.screenname || 'you'}!
+              </h3>
             </div>
             <div className="channel-sub-header">
-              { user.roles.includes('admin') &&
+              {user.roles.includes('admin') && (
                 <Link href="/channel/create" as="/channel/create">
-                  <a> { __('member_home_add_channel') } </a>
+                  <a> {__('member_home_add_channel')} </a>
                 </Link>
-              }
+              )}
             </div>
-            { error && <div className="error-box">{ error }</div> }
+            {error && <div className="error-box">{error}</div>}
             <section>
-              <PostList
-                channel={ null }
-                allowCreate
-              />
+              <PostList channel={null} allowCreate />
             </section>
           </div>
         </div>
         <div className="md:w-2/3">
           {/* Wait for user to be loaded in order to fetch private data */}
-          <MemberList
-            list
-            preview
-            card
-            title="Members"
-            limit={ 3 }
-          />
+          <MemberList list preview card title="Members" limit={3} />
           <br className="h-3" />
-          <UpcomingEvents
-            list
-            card
-            title="Events"
-            limit={ 3 }
-          />
+          <UpcomingEvents list card title="Events" limit={3} />
         </div>
       </div>
     </main>
   );
-}
+};
 
 export default MemberHome;

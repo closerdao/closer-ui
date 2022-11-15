@@ -1,23 +1,27 @@
-import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import objectPath from 'object-path';
-import { trackEvent } from './Analytics';
-import api, { formatSearch } from '../utils/api';
-import { getSample } from '../utils/helpers';
-import { useAuth } from '../contexts/auth.js';
-import { __ } from '../utils/helpers';
 
-import Tabs from './Tabs';
+import React, { useEffect, useState } from 'react';
+
+import objectPath from 'object-path';
+
+import { useAuth } from '../contexts/auth.js';
+import api from '../utils/api';
+import { getSample } from '../utils/helpers';
+import { __ } from '../utils/helpers';
+import { trackEvent } from './Analytics';
 import FormField from './FormField';
-const filterFields = (fields, data) => fields.filter((field) => {
-  if (field.showIf) {
-    if (field.showIf.every(({ field, value }) => data[field] === value)) {
-      return true;
+import Tabs from './Tabs';
+
+const filterFields = (fields, data) =>
+  fields.filter((field) => {
+    if (field.showIf) {
+      if (field.showIf.every(({ field, value }) => data[field] === value)) {
+        return true;
+      }
+      return false;
     }
-    return false;
-  }
-  return true;
-})
+    return true;
+  });
 
 // If no id is passed, we are creating a new model
 const EditModel = ({
@@ -32,23 +36,32 @@ const EditModel = ({
   onDelete,
   allowDelete,
   deleteButton,
-  isPublic
+  isPublic,
 }) => {
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
-  const initialModel = initialData || fields.reduce((acc, field) => ({ ...acc, [field.name]: field.default || getSample(field) }), {});
+  const initialModel =
+    initialData ||
+    fields.reduce(
+      (acc, field) => ({
+        ...acc,
+        [field.name]: field.default || getSample(field),
+      }),
+      {},
+    );
   const [data, setData] = useState(initialModel);
   const [error, setErrors] = useState(false);
   const fieldsByTab = {
-    general: []
+    general: [],
   };
-  fields && fields.forEach(field => {
-    if (field.tab) {
-      fieldsByTab[field.tab] = (fieldsByTab[field.tab] || []).concat(field);
-    } else {
-      fieldsByTab.general = (fieldsByTab.general || []).concat(field);
-    }
-  });
+  fields &&
+    fields.forEach((field) => {
+      if (field.tab) {
+        fieldsByTab[field.tab] = (fieldsByTab[field.tab] || []).concat(field);
+      } else {
+        fieldsByTab.general = (fieldsByTab.general || []).concat(field);
+      }
+    });
 
   // Name: visibleBy, value: [1], option: 1, actionType: ADD
   const update = (name, value, option, actionType) => {
@@ -61,17 +74,17 @@ const EditModel = ({
     }
   };
 
-  const validate = updatedData => {
+  const validate = (updatedData) => {
     const validationErrors = [];
-    fields.forEach(field => {
+    fields.forEach((field) => {
       if (field.required && !updatedData[field.name]) {
         validationErrors.push(field.name);
       }
-    })
+    });
     if (validationErrors.length > 0) {
       throw new Error(`Please set a valid ${validationErrors.join(', ')}`);
     }
-  }
+  };
   const save = async (updatedData) => {
     setErrors(null);
     try {
@@ -79,7 +92,9 @@ const EditModel = ({
       const method = id ? 'patch' : 'post';
       const route = id ? `${endpoint}/${id}` : endpoint;
       trackEvent(`EditModel:${endpoint}:${id ? id : 'new'}`, method);
-      const { data: { results: savedData } } = await api[method](route, updatedData);
+      const {
+        data: { results: savedData },
+      } = await api[method](route, updatedData);
       if (onSave) {
         onSave(savedData);
       }
@@ -94,7 +109,9 @@ const EditModel = ({
     setErrors(null);
     try {
       if (!data._id) {
-        throw new Error(`Attempting to delete ${endpoint} but no _id provided.`);
+        throw new Error(
+          `Attempting to delete ${endpoint} but no _id provided.`,
+        );
       }
       trackEvent(`EditModel:${endpoint}:${id ? id : 'new'}`, 'delete');
       await api.delete(`${endpoint}/${data._id}`);
@@ -112,24 +129,32 @@ const EditModel = ({
   const loadData = async () => {
     try {
       if (id && !initialData) {
-        const { data: { results: modelData } } = await api.get(`${endpoint}/${id}`);
+        const {
+          data: { results: modelData },
+        } = await api.get(`${endpoint}/${id}`);
         setData(modelData);
         // Look out for dependent data
-        await Promise.all(fields.map(async (field) => {
-          if (
-            field.type === 'autocomplete' &&
-            field.endpoint &&
-            modelData[field.name] &&
-            typeof modelData[field.name][0] !== 'object'
-          ) {
-            const params = { where: { _id: { $in: modelData[field.name] } } };
-            const { data: { results } } = await api.get(field.endpoint, { params });
-            update(field.name, results);
-          }
-        }));
+        await Promise.all(
+          fields.map(async (field) => {
+            if (
+              field.type === 'autocomplete' &&
+              field.endpoint &&
+              modelData[field.name] &&
+              typeof modelData[field.name][0] !== 'object'
+            ) {
+              const params = {
+                where: { _id: { $in: modelData[field.name] } },
+              };
+              const {
+                data: { results },
+              } = await api.get(field.endpoint, { params });
+              update(field.name, results);
+            }
+          }),
+        );
       }
     } catch (err) {
-      setErrors(err.response?.data?.error || err.message)
+      setErrors(err.response?.data?.error || err.message);
     }
   };
 
@@ -141,9 +166,23 @@ const EditModel = ({
   }, [endpoint, id, initialData, fields]);
 
   if (!isPublic && !isAuthenticated) {
-    return <div className="validation-error card">{ __('edit_model_auth_required') }</div>;
-  } else if (!isPublic && data.createdBy && user && (data.createdBy !== user._id && !user.roles.includes('admin'))) {
-    return <div className="validation-error card">{ __('edit_model_permission_denied') }</div>;
+    return (
+      <div className="validation-error card">
+        {__('edit_model_auth_required')}
+      </div>
+    );
+  } else if (
+    !isPublic &&
+    data.createdBy &&
+    user &&
+    data.createdBy !== user._id &&
+    !user.roles.includes('admin')
+  ) {
+    return (
+      <div className="validation-error card">
+        {__('edit_model_permission_denied')}
+      </div>
+    );
   }
 
   return (
@@ -154,42 +193,47 @@ const EditModel = ({
         save(data);
       }}
     >
-      { error &&
-        <div className="validation-error">{ error }</div>
-      }
-      {
-        Object.keys(fieldsByTab).length > 1?
-          <Tabs
-            tabs={
-              Object.keys(fieldsByTab).map(key => ({
-                title: key,
-                value: key,
-                content: filterFields(fieldsByTab[key], data)
-                  .map(field => (
-                    <FormField {...field} key={ field.name } data={ data} update={ update } />
-                  ))
-              }))
-            }
-          />:
-          fields && filterFields(fields, data)
-            .map(field => (
-              <FormField {...field} key={ field.name } data={ data} update={ update }
+      {error && <div className="validation-error">{error}</div>}
+      {Object.keys(fieldsByTab).length > 1 ? (
+        <Tabs
+          tabs={Object.keys(fieldsByTab).map((key) => ({
+            title: key,
+            value: key,
+            content: filterFields(fieldsByTab[key], data).map((field) => (
+              <FormField
+                {...field}
+                key={field.name}
+                data={data}
+                update={update}
               />
-            ))
-      }
+            )),
+          }))}
+        />
+      ) : (
+        fields &&
+        filterFields(fields, data).map((field) => (
+          <FormField {...field} key={field.name} data={data} update={update} />
+        ))
+      )}
       <div className="mt-2">
         <button type="submit" className="btn-primary">
           {__('edit_model_save')}
         </button>
-        { allowDelete && <a href="#" className="text-red-700 ml-2" onClick={ (e) => {
-          e.preventDefault();
-          deleteObject();
-        } }>
-          { deleteButton }
-        </a> }
+        {allowDelete && (
+          <a
+            href="#"
+            className="text-red-700 ml-2"
+            onClick={(e) => {
+              e.preventDefault();
+              deleteObject();
+            }}
+          >
+            {deleteButton}
+          </a>
+        )}
       </div>
     </form>
-  )
+  );
 };
 
 EditModel.defaultProps = {
@@ -197,7 +241,7 @@ EditModel.defaultProps = {
   buttonText: 'Save',
   allowDelete: false,
   deleteButton: 'Delete',
-  isPublic: false
+  isPublic: false,
 };
 
 export default EditModel;

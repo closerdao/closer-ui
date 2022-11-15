@@ -1,7 +1,18 @@
 export default {
   channel: [
-    { name: 'name', label: 'Channel Name', type: 'text', placeholder: 'Mauritius co-housing', required: true },
-    { name: 'description', label: 'Description', type: 'longtext', placeholder: 'A place to co-conspire' },
+    {
+      name: 'name',
+      label: 'Channel Name',
+      type: 'text',
+      placeholder: 'Mauritius co-housing',
+      required: true,
+    },
+    {
+      name: 'description',
+      label: 'Description',
+      type: 'longtext',
+      placeholder: 'A place to co-conspire',
+    },
     {
       name: 'visibility',
       label: 'Visibility',
@@ -9,35 +20,67 @@ export default {
       options: [
         { label: 'Public', value: 'public' },
         { label: 'Private', value: 'private' },
-      ]
+      ],
     },
   ],
   user: [
-    { name: 'screenname', label: 'Full name', type: 'text', placeholder: 'John Snow', required: true },
+    {
+      name: 'screenname',
+      label: 'Full name',
+      type: 'text',
+      placeholder: 'John Snow',
+      required: true,
+    },
     {
       name: 'settings.newsletter_weekly',
       label: 'Weekly summary email',
-      type: 'switch'
-    }
+      type: 'switch',
+    },
   ],
   event: [
-    { name: 'name', className: 'text-4xl font-bold', label: 'Event title', type: 'text', placeholder: 'My event', required: true, tab: 'general' },
-    { name: 'description', label: 'Description', type: 'longtext', placeholder: 'A gathering around...', tab: 'general' },
-    { name: 'start', label: 'When does the event start?', type: 'datetime', required: true, tab: 'general' },
-    { name: 'end', label: 'When does the event end?', type: 'datetime', required: true, tab: 'general' },
+    {
+      name: 'name',
+      className: 'text-4xl font-bold',
+      label: 'Event title',
+      type: 'text',
+      placeholder: 'My event',
+      required: true,
+      tab: 'general',
+    },
+    {
+      name: 'description',
+      label: 'Description',
+      type: 'longtext',
+      placeholder: 'A gathering around...',
+      tab: 'general',
+    },
+    {
+      name: 'start',
+      label: 'When does the event start?',
+      type: 'datetime',
+      required: true,
+      tab: 'general',
+    },
+    {
+      name: 'end',
+      label: 'When does the event end?',
+      type: 'datetime',
+      required: true,
+      tab: 'general',
+    },
     {
       name: 'virtual',
       label: 'Is this a virtual event?',
       type: 'switch',
       defaultValue: false,
-      tab: 'general'
+      tab: 'general',
     },
     {
       name: 'blocksBookingCalendar',
       label: 'Should this event block the booking calendar?',
       type: 'switch',
       defaultValue: false,
-      tab: 'general'
+      tab: 'general',
     },
     {
       name: 'location',
@@ -49,9 +92,9 @@ export default {
       showIf: [
         {
           field: 'virtual',
-          value: true
-        }
-      ]
+          value: true,
+        },
+      ],
     },
     {
       name: 'address',
@@ -63,9 +106,9 @@ export default {
       showIf: [
         {
           field: 'virtual',
-          value: false
-        }
-      ]
+          value: false,
+        },
+      ],
     },
     {
       name: 'recording',
@@ -73,7 +116,7 @@ export default {
       defaultValue: '',
       type: 'text',
       tab: 'general',
-      placeholder: 'https://www.youtube.com/watch?v=r2-Ux4RRMKE'
+      placeholder: 'https://www.youtube.com/watch?v=r2-Ux4RRMKE',
     },
     {
       name: 'visibility',
@@ -83,14 +126,14 @@ export default {
         { label: 'Public', value: 'public' },
         { label: 'Private', value: 'private' },
       ],
-      tab: 'general'
+      tab: 'general',
     },
     {
       name: 'paid',
       label: 'Is this a paid event?',
       type: 'switch',
       tab: 'tickets',
-      defaultValue: false
+      defaultValue: false,
     },
     {
       name: 'ticketOptions',
@@ -100,13 +143,13 @@ export default {
       showIf: [
         {
           field: 'paid',
-          value: true
+          value: true,
         },
         {
           field: 'ticket',
-          value: ''
-        }
-      ]
+          value: '',
+        },
+      ],
     },
     {
       name: 'discounts',
@@ -116,27 +159,27 @@ export default {
       showIf: [
         {
           field: 'paid',
-          value: true
-        }
-      ]
+          value: true,
+        },
+      ],
     },
     {
       name: 'stripePub',
       label: 'Custom Stripe Public Key',
       type: 'text',
-      tab: 'tickets'
+      tab: 'tickets',
     },
     {
       name: 'stripeKey',
       label: 'Custom Stripe Private Key',
       type: 'text',
-      tab: 'tickets'
+      tab: 'tickets',
     },
     {
       name: 'fields',
       label: 'Custom questions',
       type: 'fields',
-      tab: 'advanced'
+      tab: 'advanced',
     },
     {
       name: 'ticket',
@@ -145,30 +188,52 @@ export default {
       type: 'text',
       toggleFeature: true,
       placeholder: 'eventbrite.com/my-ticket',
-      tab: 'advanced'
+      tab: 'advanced',
     },
     {
       name: 'password',
       label: 'Event password',
       tab: 'advanced',
       type: 'text',
-      placeholder: '(If set, user will need the password to see)'
+      placeholder: '(If set, user will need the password to see)',
     },
     {
       name: 'participationGuideUrl',
       label: 'Participation guide',
       tab: 'advanced',
       type: 'text',
-      placeholder: 'https://event.com/participation'
+      placeholder: 'https://event.com/participation',
     },
   ],
   task: [
-    { name: 'title', label: 'Title', type: 'text', placeholder: 'Plant tomatoes in the garden', required: true },
-    { name: 'description', label: 'Summary of work', type: 'longtext', placeholder: `- Establish farming beds
+    {
+      name: 'title',
+      label: 'Title',
+      type: 'text',
+      placeholder: 'Plant tomatoes in the garden',
+      required: true,
+    },
+    {
+      name: 'description',
+      label: 'Summary of work',
+      type: 'longtext',
+      placeholder: `- Establish farming beds
 - Make soil
-- Plant seeds` },
-    { name: 'due', label: 'Due date', type: 'date', required: false, default: null },
-    { name: 'tags', label: 'Skills required', type: 'tags', placeholder: 'Add skill' },
+- Plant seeds`,
+    },
+    {
+      name: 'due',
+      label: 'Due date',
+      type: 'date',
+      required: false,
+      default: null,
+    },
+    {
+      name: 'tags',
+      label: 'Skills required',
+      type: 'tags',
+      placeholder: 'Add skill',
+    },
     {
       name: 'visibility',
       label: 'Visibility',
@@ -176,39 +241,83 @@ export default {
       options: [
         { label: 'Public (visible to anyone)', value: 'public' },
         { label: 'Private (only members can apply)', value: 'private' },
-      ]
+      ],
     },
-    { name: 'rewards', label: 'Reward', type: 'currency' }
+    { name: 'rewards', label: 'Reward', type: 'currency' },
   ],
   listing: [
-    { name: 'name', label: 'Listing name', type: 'text', placeholder: 'Spacious loft', required: true, tab: 'general' },
-    { name: 'description', label: 'Description', type: 'longtext', placeholder: 'A beautiful treehouse loft with hot tub.', tab: 'general' },
+    {
+      name: 'name',
+      label: 'Listing name',
+      type: 'text',
+      placeholder: 'Spacious loft',
+      required: true,
+      tab: 'general',
+    },
+    {
+      name: 'description',
+      label: 'Description',
+      type: 'longtext',
+      placeholder: 'A beautiful treehouse loft with hot tub.',
+      tab: 'general',
+    },
     { name: 'photos', label: 'Photos', type: 'photos', tab: 'photos' },
     {
       name: 'private',
       label: 'Is this a private space?',
       type: 'switch',
       defaultValue: false,
-      tab: 'general'
+      tab: 'general',
     },
     {
       name: 'kitchen',
       label: 'Does the space have a private kitchen?',
       type: 'switch',
-      defaultValue: false
+      defaultValue: false,
     },
     {
       name: 'bathroom',
       label: 'Does the space have a private bathroom?',
       type: 'switch',
-      defaultValue: false
+      defaultValue: false,
     },
-    { name: 'rooms', label: 'Number of rooms', type: 'number', min: 1, required: false },
-    { name: 'beds', label: 'Number of beds', type: 'number', min: 1, required: false },
-    { name: 'fiatPrice', label: 'Rental rate', type: 'currency', placeholder: '10.00', required: true, tab: 'prices' },
-    { name: 'tokenPrice', label: 'Weekly rate', type: 'cryptoCurrency', placeholder: '10.00', required: true, tab: 'prices' },
-    { name: 'dailyRate', label: 'Daily rate', type: 'currency', placeholder: '10.00', required: true, tab: 'prices' },
-    { name: 'quantity', label: 'Quantity available', type: 'number', min: 1, required: false },
+    {
+      name: 'rooms',
+      label: 'Number of rooms',
+      type: 'number',
+      min: 1,
+      required: false,
+    },
+    {
+      name: 'beds',
+      label: 'Number of beds',
+      type: 'number',
+      min: 1,
+      required: false,
+    },
+    {
+      name: 'fiatPrice',
+      label: 'Monthly rate',
+      type: 'currency',
+      placeholder: '10.00',
+      required: true,
+      tab: 'prices',
+    },
+    {
+      name: 'tokenPrice',
+      label: 'Weekly rate',
+      type: 'currency',
+      placeholder: '10.00',
+      required: true,
+      tab: 'prices',
+    },
+    {
+      name: 'quantity',
+      label: 'Quantity available',
+      type: 'number',
+      min: 1,
+      required: false,
+    },
   ],
   booking: [
     { name: 'start', label: 'Start date', type: 'date' },
@@ -217,30 +326,49 @@ export default {
   application: [
     {
       name: 'inspiration',
-      label: 'What is the most inspiring thing you\'ve seen recently? Any events/community/book/project etc.',
+      label:
+        "What is the most inspiring thing you've seen recently? Any events/community/book/project etc.",
       type: 'longtext',
-      placeholder: 'Project Heart in Tulum'
+      placeholder: 'Project Heart in Tulum',
     },
     {
       name: 'home',
       label: 'What does home mean to you?',
       type: 'longtext',
-      placeholder: ''
+      placeholder: '',
     },
     {
       name: 'gift',
       label: 'What will you bring to the community?',
       type: 'longtext',
-      placeholder: 'Any special skills? Workshops you can give? Can you help with construction? Or gardening?'
+      placeholder:
+        'Any special skills? Workshops you can give? Can you help with construction? Or gardening?',
     },
-    { name: 'name', label: 'What\'s your name?', type: 'text', placeholder: 'John Snow', required: true },
-    { name: 'phone', label: 'What\'s your phone number? (include country code)', type: 'phone', placeholder: '+35108892645' },
-    { name: 'email', label: 'What\'s your email?', type: 'text', placeholder: 'you@awesomeproject.org', required: true },
+    {
+      name: 'name',
+      label: "What's your name?",
+      type: 'text',
+      placeholder: 'John Snow',
+      required: true,
+    },
+    {
+      name: 'phone',
+      label: "What's your phone number? (include country code)",
+      type: 'phone',
+      placeholder: '+35108892645',
+    },
+    {
+      name: 'email',
+      label: "What's your email?",
+      type: 'text',
+      placeholder: 'you@awesomeproject.org',
+      required: true,
+    },
     {
       name: 'dream',
       label: 'What do you dream of?',
       type: 'longtext',
-      placeholder: ''
+      placeholder: '',
     },
-  ]
+  ],
 };

@@ -1,16 +1,23 @@
-import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import dayjs from 'dayjs';
 import { useRouter } from 'next/router';
-import api, { formatSearch } from '../utils/api';
-import ProfilePhoto from './ProfilePhoto';
-import Autocomplete from './Autocomplete';
+
+import React, { useEffect, useState } from 'react';
+
 
 import { useAuth } from '../contexts/auth';
+import api, { formatSearch } from '../utils/api';
 import { __ } from '../utils/helpers';
+import Autocomplete from './Autocomplete';
+import ProfilePhoto from './ProfilePhoto';
 
-const UserList = ({ channel, limit, title, titleLink, canInviteUsers, seeAllLink }) => {
-
+const UserList = ({
+  channel,
+  limit,
+  title,
+  titleLink,
+  canInviteUsers,
+  seeAllLink,
+}) => {
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
   const [error, setErrors] = useState(false);
@@ -22,7 +29,7 @@ const UserList = ({ channel, limit, title, titleLink, canInviteUsers, seeAllLink
       setUsers(users.concat(member));
     } catch (err) {
       console.error(err);
-      setErrors(err.message)
+      setErrors(err.message);
     }
   };
 
@@ -30,55 +37,70 @@ const UserList = ({ channel, limit, title, titleLink, canInviteUsers, seeAllLink
     const loadData = async () => {
       try {
         const where = channel && {
-          viewChannels: channel
+          viewChannels: channel,
         };
-        const params = { where: where && formatSearch(where), sort_by: '-created', limit };
-        const { data: { results } } = await api.get('/user', { params });
+        const params = {
+          where: where && formatSearch(where),
+          sort_by: '-created',
+          limit,
+        };
+        const {
+          data: { results },
+        } = await api.get('/user', { params });
         setUsers(results);
       } catch (err) {
         console.error(err);
-        setErrors(err.message)
+        setErrors(err.message);
       }
     };
     loadData();
   }, [channel, limit, setUsers]);
 
-
   return (
     <section className="new-users card">
       <h3 className="card-title">
-        { titleLink ?
-          <Link href={titleLink}><a>{title}</a></Link>:
+        {titleLink ? (
+          <Link href={titleLink}>
+            <a>{title}</a>
+          </Link>
+        ) : (
           title
-        }
+        )}
       </h3>
       <div className="card-body">
         <div className="user-list">
-          { users && users.length > 0?
-            users.map(user => (
-              <Link key={ user._id } as={`/members/${user.slug}`} href="/members/[slug]">
+          {users && users.length > 0 ? (
+            users.map((user) => (
+              <Link
+                key={user._id}
+                as={`/members/${user.slug}`}
+                href="/members/[slug]"
+              >
                 <a className="user-preview">
                   <ProfilePhoto user={user} size="sm" />
-                  <span className="ellipsis name">{ user.screenname }</span>
+                  <span className="ellipsis name">{user.screenname}</span>
                 </a>
               </Link>
-            )):
-            <p>{ __('user_list_empty') }</p>
-          }
+            ))
+          ) : (
+            <p>{__('user_list_empty')}</p>
+          )}
         </div>
-        { seeAllLink &&
+        {seeAllLink && (
           <div className="see-all">
-            <Link href={seeAllLink}><a>{ __('user_list_all') }</a></Link>
+            <Link href={seeAllLink}>
+              <a>{__('user_list_all')}</a>
+            </Link>
           </div>
-        }
+        )}
       </div>
-      { canInviteUsers &&
+      {canInviteUsers && (
         <div className="card-footer">
           <Autocomplete
             endpoint="/user"
             placeholder="Add Member"
-            where={ { viewChannels: { $nin: [channel] } } }
-            value={ users }
+            where={{ viewChannels: { $nin: [channel] } }}
+            value={users}
             onChange={(list, member, actionType) => {
               if (actionType === 'ADD') {
                 addMember(member);
@@ -86,15 +108,15 @@ const UserList = ({ channel, limit, title, titleLink, canInviteUsers, seeAllLink
             }}
           />
         </div>
-      }
+      )}
     </section>
-  )
+  );
 };
 UserList.defaultProps = {
   title: 'New Users',
   limit: 12,
   seeAllLink: null,
-  titleLink: null
+  titleLink: null,
 };
 
 export default UserList;

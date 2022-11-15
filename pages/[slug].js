@@ -1,85 +1,127 @@
-import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
+
+import React from 'react';
+
 import Layout from '../components/Layout';
-import PageNotFound from './404';
+
+import { useAuth } from '../contexts/auth.js';
 import api, { cdn } from '../utils/api';
-import { useAuth } from '../contexts/auth.js'
+import PageNotFound from './404';
 
 const Article = ({ article, error }) => {
   const { user, isAuthenticated } = useAuth();
 
-  const fullImageUrl = article && article.photo && (
-    !article.photo.startsWith('http') ?
-      `${cdn}/${article.photo}-max-lg.jpg`:
-      article.photo
-  );
+  const fullImageUrl =
+    article &&
+    article.photo &&
+    (!article.photo.startsWith('http')
+      ? `${cdn}/${article.photo}-max-lg.jpg`
+      : article.photo);
 
-  const createdAt = article && new Date(article.created).toLocaleDateString('en-US', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
+  const createdAt =
+    article &&
+    new Date(article.created).toLocaleDateString('en-US', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
 
   if (!article) {
-    return <PageNotFound error={ error } />
+    return <PageNotFound error={error} />;
   }
 
   return (
     <Layout>
       <Head>
         <title>{article.title}</title>
-        { article.summary && <meta name="description" content={article.summary} />}
+        {article.summary && (
+          <meta name="description" content={article.summary} />
+        )}
         <meta property="og:title" content={article.title} />
         <meta property="og:type" content="article" />
-        { article.summary && <meta property="og:description" content={article.summary} />}
-        { fullImageUrl && <meta key="og:image" property="og:image" content={fullImageUrl} />}
-        { fullImageUrl && <meta key="twitter:image" name="twitter:image" content={fullImageUrl} />}
+        {article.summary && (
+          <meta property="og:description" content={article.summary} />
+        )}
+        {fullImageUrl && (
+          <meta key="og:image" property="og:image" content={fullImageUrl} />
+        )}
+        {fullImageUrl && (
+          <meta
+            key="twitter:image"
+            name="twitter:image"
+            content={fullImageUrl}
+          />
+        )}
       </Head>
-      { article.photo ?
-        <section className={`main-content fullwidth hero ${article.photo ? 'hero-photo' : ''}`} style={{ backgroundImage: `url("${fullImageUrl}")` }}>
+      {article.photo ? (
+        <section
+          className={`main-content fullwidth hero ${
+            article.photo ? 'hero-photo' : ''
+          }`}
+          style={{ backgroundImage: `url("${fullImageUrl}")` }}
+        >
           <div className="background" />
           <div className="inner">
-            <h2 className="category"><span>{ article.category }</span></h2>
+            <h2 className="category">
+              <span>{article.category}</span>
+            </h2>
             <h1>
               {article.title}
-              { isAuthenticated && user._id === article.createdBy &&
-                <Link href={`/compose/${article.slug}`}><a className="edit-article">(Edit)</a></Link>
-              }
+              {isAuthenticated && user._id === article.createdBy && (
+                <Link href={`/compose/${article.slug}`}>
+                  <a className="edit-article">(Edit)</a>
+                </Link>
+              )}
             </h1>
           </div>
-        </section>:
+        </section>
+      ) : (
         <section className="main-content intro article">
-          <h2 className="category"><span>{ article.category }</span></h2>
+          <h2 className="category">
+            <span>{article.category}</span>
+          </h2>
           <h1>
             {article.title}
-            { isAuthenticated && user._id === article.createdBy &&
-              <Link href={`/compose/${article.slug}`}><a className="edit-article">(Edit)</a></Link>
-            }
+            {isAuthenticated && user._id === article.createdBy && (
+              <Link href={`/compose/${article.slug}`}>
+                <a className="edit-article">(Edit)</a>
+              </Link>
+            )}
           </h1>
         </section>
-      }
+      )}
       <div className="main-content fullwidth">
         <div className="columns">
           <main className="col lg">
-            <section className="article limit-width padding-right" dangerouslySetInnerHTML={{ __html: article.html }} />
+            <section
+              className="article limit-width padding-right"
+              dangerouslySetInnerHTML={{ __html: article.html }}
+            />
           </main>
           <section className="col right-col">
             <h3>Posted</h3>
-            <p>{ createdAt }</p>
+            <p>{createdAt}</p>
             <h3>Tags</h3>
             <p className="tags">
-              { article.tags && article.tags.length > 0 &&
-                  article.tags.map(tag => <Link key={tag} as={`/search/${tag}`} href="/search/[keyword]"><a className="tag">{tag}</a></Link>)
-              }
+              {article.tags &&
+                article.tags.length > 0 &&
+                article.tags.map((tag) => (
+                  <Link
+                    key={tag}
+                    as={`/search/${tag}`}
+                    href="/search/[keyword]"
+                  >
+                    <a className="tag">{tag}</a>
+                  </Link>
+                ))}
             </p>
           </section>
         </div>
       </div>
     </Layout>
   );
-}
+};
 
 Article.getInitialProps = async ({ req, query }) => {
   try {
@@ -87,13 +129,13 @@ Article.getInitialProps = async ({ req, query }) => {
     const res = await api.get(`/article/${slug}`);
 
     return {
-      article: res.data?.results
-    }
+      article: res.data?.results,
+    };
   } catch (err) {
     return {
-      error: err.message
+      error: err.message,
     };
   }
-}
+};
 
 export default Article;

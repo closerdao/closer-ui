@@ -12,10 +12,11 @@
 .card .card-footer button {
   margin-right: 0.5rem;
 }
-.card input, .card textarea {
+.card input,
+.card textarea {
   background-color: #f2f4f3;
 }
-.card p:last-child{
+.card p:last-child {
   margin-bottom: 0;
 }
 .card .action-row {

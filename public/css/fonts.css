@@ -1,4 +1,6 @@
 @import '../fonts/Roobert/Roobert.css';
-body, input, textarea {
+body,
+input,
+textarea {
   font-family: Roobert, sans-serif;
 }

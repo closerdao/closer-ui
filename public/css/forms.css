@@ -4,13 +4,16 @@
   .btn {
     @apply inline-block py-2 px-4 rounded-full focus:outline-none border-2 border-foreground focus:ring-2 focus:ring-primary focus:ring-opacity-75;
   }
-  .btn-primary, .btn-primary[type="submit"] {
+  .btn-primary,
+  .btn-primary[type='submit'] {
     @apply btn text-primary bg-transparent hover:text-white hover:bg-primary border-primary disabled:hover:bg-transparent disabled:border-gray-400 disabled:text-gray-400;
   }
-  .btn-small, .btn-small[type="submit"] {
+  .btn-small,
+  .btn-small[type='submit'] {
     @apply btn py-0 px-2 text-sm hover:bg-primary text-primary hover:text-white bg-transparent border-2 border-primary disabled:hover:bg-transparent disabled:border-gray-400 disabled:text-gray-400;
   }
-  .btn-secondary, .btn-secondary[type="submit"] {
+  .btn-secondary,
+  .btn-secondary[type='submit'] {
     @apply btn hover:bg-secondary text-secondary hover:text-white bg-transparent border-2 border-secondary disabled:hover:bg-transparent disabled:border-gray-400 disabled:text-gray-400;
   }
   .btn-primary.btn-large {
@@ -31,21 +34,31 @@
     @apply border-white;
   }
   input:checked + .toggle-bg {
-      @apply bg-blue-600 border-blue-600;
+    @apply bg-blue-600 border-blue-600;
   }
-  input, textarea {
+  input,
+  textarea {
     @apply w-full;
   }
-  textarea, .textarea {
+  textarea,
+  .textarea {
     @apply bg-transparent mt-0 block w-full border-0 border-b-2 border-gray-200 px-0.5 focus:ring-0 focus:border-black resize-none;
   }
-  .input, input[type="email"], input[type="password"], input[type="text"], input[type="phone"], input[type="number"], input[type="date"], input[type="time"] {
+  .input,
+  input[type='email'],
+  input[type='password'],
+  input[type='text'],
+  input[type='phone'],
+  input[type='number'],
+  input[type='date'],
+  input[type='time'] {
     @apply bg-transparent text-foreground mt-0 block w-full border-0 border-b-2 border-gray-200 px-0.5 focus:ring-0 focus:border-black max-w-full;
   }
   select {
     @apply h-10 pl-3 pr-6 text-base text-black placeholder-gray-600 border-b-2 border-gray-200 rounded-lg appearance-none focus:border-black outline-none max-w-full;
   }
-  label, .label {
+  label,
+  .label {
     @apply block uppercase tracking-wide text-gray-500 text-xs font-bold mb-2;
   }
   .switch .label {

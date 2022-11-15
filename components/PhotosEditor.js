@@ -1,10 +1,10 @@
-import react, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
 import { TiDelete } from '@react-icons/all-files/ti/TiDelete';
 
-import UploadPhoto from './UploadPhoto';
-import Photo from './Photo';
-
 import { __ } from '../utils/helpers';
+import Photo from './Photo';
+import UploadPhoto from './UploadPhoto';
 
 const PhotosEditor = ({ value, onChange, placeholder, required }) => {
   const [photos, setPhotos] = useState(value);
@@ -12,12 +12,12 @@ const PhotosEditor = ({ value, onChange, placeholder, required }) => {
     const update = (photos || []).concat(photo);
     setPhotos(update);
     onChange && onChange(update);
-  }
+  };
   const deletePhoto = (photo) => {
-    const update = (photos || []).filter(id => id !== photo);
+    const update = (photos || []).filter((id) => id !== photo);
     setPhotos(update);
     onChange && onChange(update);
-  }
+  };
 
   useEffect(() => {
     setPhotos(value);
@@ -26,10 +26,10 @@ const PhotosEditor = ({ value, onChange, placeholder, required }) => {
   return (
     <div className="photo-group">
       <div className="grid grid-cols-8 gap-4 mb-4">
-        { photos && photos.length > 0 ?
-          photos.map(photo => (
-            <div key={ photo } className="relative">
-              <Photo id={ photo } />
+        {photos && photos.length > 0 ? (
+          photos.map((photo) => (
+            <div key={photo} className="relative">
+              <Photo id={photo} />
               <a
                 href="#"
                 onClick={(e) => {
@@ -43,26 +43,23 @@ const PhotosEditor = ({ value, onChange, placeholder, required }) => {
                 <TiDelete className="text-white drop-shadow text-3xl hover:text-black" />
               </a>
             </div>
-          )):
+          ))
+        ) : (
           <div className="w-full py-4">
-            <p className="italic">{ __('photos_editor_no_photos') }</p>
+            <p className="italic">{__('photos_editor_no_photos')}</p>
           </div>
-        }
+        )}
       </div>
       <div className="actions">
-        <UploadPhoto
-          minimal
-          onSave={id => addPhoto(id)}
-          label="Add photo"
-        />
+        <UploadPhoto minimal onSave={(id) => addPhoto(id)} label="Add photo" />
       </div>
     </div>
   );
-}
+};
 
 PhotosEditor.defaultProps = {
   onChange: null,
-  value: []
-}
+  value: [],
+};
 
 export default PhotosEditor;
