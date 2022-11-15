@@ -1,24 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import dayjs from 'dayjs';
-import Loading from '../Loading';
-import api from '../../utils/api';
-import { useAuth } from '../../contexts/auth';
-import PageNotAllowed from '../../pages/401';
-import { usePlatform } from '../../contexts/platform';
-import { theme } from '../../tailwind.config';
+import React, { useEffect, useState } from 'react';
+import { Line } from 'react-chartjs-2';
 
 import {
-  Chart as ChartJS,
   CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LineElement,
   LinearScale,
   PointElement,
-  LineElement,
   Title,
   Tooltip,
-  Legend,
 } from 'chart.js';
-import { Line } from 'react-chartjs-2';
+import dayjs from 'dayjs';
+
+import { useAuth } from '../../contexts/auth';
+import { usePlatform } from '../../contexts/platform';
+import PageNotAllowed from '../../pages/401';
+import { theme } from '../../tailwind.config';
+import api from '../../utils/api';
+import Loading from '../Loading';
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -26,14 +27,14 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 );
 
 const metricsToPlot = ['user', 'ticket'];
 const last30days = dayjs().subtract(30, 'days').format();
 const metricFilter = { where: { created: { $gt: last30days } } };
 
-const Dashboard = ({ token }) => {
+const Dashboard = () => {
   const { platform } = usePlatform();
   const { user, isLoading } = useAuth();
   const [email, setInviteEmail] = useState('');
@@ -52,18 +53,21 @@ const Dashboard = ({ token }) => {
         throw new Error('No invite_url returned.');
       }
     } catch (err) {
-      setError(err.response?.data?.error || err.message)
+      setError(err.response?.data?.error || err.message);
     }
-  }
+  };
 
   const loadData = async () => {
-    await Promise.all(metricsToPlot.map(metric =>
-      platform[metric].getGraph(metricFilter)
-    ));
-  }
+    await Promise.all(
+      metricsToPlot.map((metric) => platform[metric].getGraph(metricFilter)),
+    );
+  };
 
   useEffect(() => {
-    if (user && (user.roles.includes('admin') || user.roles.includes('analyst'))){
+    if (
+      user &&
+      (user.roles.includes('admin') || user.roles.includes('analyst'))
+    ) {
       loadData();
     }
   }, [user]);
@@ -78,13 +82,13 @@ const Dashboard = ({ token }) => {
   return (
     <div className="admin-dashboard card">
       <div className="flex flex-row flex-wrap">
-        { metricsToPlot.map(metric => {
+        {metricsToPlot.map((metric) => {
           const data = platform[metric].findGraph(metricFilter);
           if (!data) {
-            return <h4>{ metric } not found.</h4>
+            return <h4 key={metric}>{metric} not found.</h4>;
           }
           return (
-            <div key={ metric }>
+            <div key={metric}>
               <Line
                 options={{
                   responsive: true,
@@ -99,19 +103,19 @@ const Dashboard = ({ token }) => {
                   },
                 }}
                 data={{
-                  labels: data.map(p => p.get('time')).toJS(),
+                  labels: data.map((p) => p.get('time')).toJS(),
                   datasets: [
                     {
                       label: '1',
-                      data: data.map(p => p.get('value')).toJS(),
-                      borderColor: theme.extend.colors.primary
-                    }
-                  ]
+                      data: data.map((p) => p.get('value')).toJS(),
+                      borderColor: theme.extend.colors.primary,
+                    },
+                  ],
                 }}
               />
             </div>
           );
-        }) }
+        })}
       </div>
       <form
         onSubmit={(e) => {
@@ -120,17 +124,13 @@ const Dashboard = ({ token }) => {
         }}
         className="mt-8 w-1/2"
       >
-        { invite &&
+        {invite && (
           <div className="success-box">
             Invite link:
-            <input value={ invite } className="copy-box" disabled />
+            <input value={invite} className="copy-box" disabled />
           </div>
-        }
-        { error &&
-          <div className="error-box">
-            { error }
-          </div>
-        }
+        )}
+        {error && <div className="error-box">{error}</div>}
         <div className="form-field">
           <label htmlFor="email">Get Invite Link</label>
           <input
@@ -138,7 +138,7 @@ const Dashboard = ({ token }) => {
             name="email"
             value={email}
             placeholder="name@awesomeproject.co"
-            onChange={e => setInviteEmail(e.target.value)}
+            onChange={(e) => setInviteEmail(e.target.value)}
             required
           />
         </div>
@@ -152,6 +152,6 @@ const Dashboard = ({ token }) => {
       </form>
     </div>
   );
-}
+};
 
 export default Dashboard;

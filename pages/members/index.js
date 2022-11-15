@@ -1,32 +1,32 @@
-import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
 import Head from 'next/head';
-import Link from 'next/link';
+
+import React from 'react';
+
 import Layout from '../../components/Layout';
 import MemberList from '../../components/MemberList';
-import api, { formatSearch } from '../../utils/api';
-import { useAuth } from '../../contexts/auth.js'
-import PageNotAllowed from '../401'
+
+
+import PageNotAllowed from '../401';
+import { useAuth } from '../../contexts/auth.js';
 import { __ } from '../../utils/helpers';
 
 const Settings = ({ token }) => {
-
   const { user } = useAuth();
 
   if (!user) {
-    return <PageNotAllowed />
+    return <PageNotAllowed />;
   }
 
   return (
     <Layout protect>
       <Head>
-        <title>{ __('members_title') }</title>
+        <title>{__('members_title')}</title>
       </Head>
       <div className="main-content fullheight">
         <MemberList />
       </div>
     </Layout>
   );
-}
+};
 
 export default Settings;

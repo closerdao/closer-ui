@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+
+import React, { useState } from 'react';
+
 import Layout from '../../components/Layout';
-import api from '../../utils/api';
+
 import { useAuth } from '../../contexts/auth';
 import { __ } from '../../utils/helpers';
 
@@ -22,7 +24,7 @@ const Login = () => {
   return (
     <Layout>
       <Head>
-        <title>{ __('login_title') }</title>
+        <title>{__('login_title')}</title>
       </Head>
       <div className="mural">
         <main className="main-content max-w-prose center intro">
@@ -33,8 +35,11 @@ const Login = () => {
             }}
           >
             <div className="w-full mb-4">
-              <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" htmlFor="email">
-                { __('login_email') }
+              <label
+                className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                htmlFor="email"
+              >
+                {__('login_email')}
               </label>
               <input
                 className="w-full"
@@ -43,13 +48,16 @@ const Login = () => {
                 id="email"
                 value={email}
                 placeholder="name@awesomeproject.co"
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="w-full mb-4">
-              <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" htmlFor="password">
-                { __('login_password') }
+              <label
+                className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+                htmlFor="password"
+              >
+                {__('login_password')}
               </label>
               <input
                 className="w-full"
@@ -58,18 +66,23 @@ const Login = () => {
                 id="password"
                 value={password}
                 placeholder="*****"
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
             <div className="card-footer">
               <div className="action-row">
                 <button type="submit" className="btn-primary">
-                  { __('login_submit') }
+                  {__('login_submit')}
                 </button>
-                <hr className="my-4"/>
+                <hr className="my-4" />
                 <p>
-                  <Link href="/login/forgot-password" as="/login/forgot-password"><a>{ __('login_link_forgot_password') }</a></Link>
+                  <Link
+                    href="/login/forgot-password"
+                    as="/login/forgot-password"
+                  >
+                    <a>{__('login_link_forgot_password')}</a>
+                  </Link>
                 </p>
               </div>
             </div>
@@ -78,6 +91,6 @@ const Login = () => {
       </div>
     </Layout>
   );
-}
+};
 
 export default Login;

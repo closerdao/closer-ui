@@ -1,14 +1,14 @@
-import React, { createContext, useState, useContext, useEffect } from 'react'
-import dayjs from 'dayjs';
-import PageNotAllowed from '../pages/401';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
-import api, { formatSearch } from '../utils/api';
+import dayjs from 'dayjs';
+
 import config from '../config';
+import PageNotAllowed from '../pages/401';
+import api, { formatSearch } from '../utils/api';
 
 const StaticContext = createContext({});
 
 export const StaticProvider = ({ children }) => {
-
   const [cache, setCache] = useState({});
   const [lastFetch, setLastFetch] = useState(null);
   const [staticLoadError, setError] = useState(null);
@@ -25,7 +25,7 @@ export const StaticProvider = ({ children }) => {
       return await getStaticContent();
     }
     return cache;
-  }
+  };
 
   const getStaticContent = async (signup_token, password, onSuccess) => {
     try {
@@ -37,19 +37,19 @@ export const StaticProvider = ({ children }) => {
       console.log('Error loading cache:', error);
       setError(error);
     }
-  }
+  };
 
   return (
     <StaticContext.Provider
       value={{
         cache,
         getStaticCache,
-        staticLoadError
+        staticLoadError,
       }}
     >
-      { children }
+      {children}
     </StaticContext.Provider>
-  )
-}
+  );
+};
 
-export const useStatic = () => useContext(StaticContext)
+export const useStatic = () => useContext(StaticContext);

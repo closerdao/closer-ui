@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+
 import { initAnalytics, trackPageView } from './Analytics';
 
 let GA_INITIALIZED;
@@ -13,5 +14,5 @@ const Layout = ({ children }) => {
   }, []);
 
   return children;
-}
+};
 export default Layout;

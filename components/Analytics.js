@@ -1,9 +1,10 @@
 import ReactGA from 'react-ga';
+
 import { GA_ANALYTICS } from '../config';
 
 export const initAnalytics = () => {
   if (GA_ANALYTICS) {
-    console.log(`Start Analytics ${GA_ANALYTICS}`)
+    console.log(`Start Analytics ${GA_ANALYTICS}`);
     ReactGA.initialize(GA_ANALYTICS);
   }
 };
@@ -16,6 +17,6 @@ export const trackPageView = () => {
 export const trackEvent = (category, action) => {
   ReactGA.event({
     category,
-    action
+    action,
   });
 };

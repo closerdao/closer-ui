@@ -1,96 +1,130 @@
-import react, { useState } from 'react';
+import { useState } from 'react';
 
-import PriceEditor from './PriceEditor';
 import { __ } from '../utils/helpers';
-
+import PriceEditor from './PriceEditor';
 
 const TicketOptionsEditor = ({ value, onChange, placeholder, required }) => {
   const [options, setOptions] = useState(value);
   const updateOptions = (update) => {
     setOptions(update);
     onChange && onChange(update);
-  }
+  };
   const updateOption = (index, option) => {
-    const update = options.map((o, i) => i === index ? option : o);
+    const update = options.map((o, i) => (i === index ? option : o));
     updateOptions(update);
-  }
-  const addOption = e => {
+  };
+  const addOption = (e) => {
     e.preventDefault();
-    updateOptions(options.concat({
-      id: Math.random(),
-      name: '',
-      icon: null,
-      price: 0,
-      currency: 'USD',
-      disclaimer: '',
-      limit: 0
-    }));
+    updateOptions(
+      options.concat({
+        id: Math.random(),
+        name: '',
+        icon: null,
+        price: 0,
+        currency: 'USD',
+        disclaimer: '',
+        limit: 0,
+      }),
+    );
   };
   const removeOption = (e, index) => {
     e.preventDefault();
-    updateOptions(options.filter((o, i) => index !== i))
-  }
+    updateOptions(options.filter((o, i) => index !== i));
+  };
 
   return (
     <div className="ticket-options flex justify-start items-center flex-wrap">
-      {
-        options && options.map((option, index) => (
-          <div key={ option._id || option.id || index } className="mr-3 mb-4 card">
+      {options &&
+        options.map((option, index) => (
+          <div
+            key={option._id || option.id || index}
+            className="mr-3 mb-4 card"
+          >
             <div className="mb-3">
-              <label>{ __('ticket_options_ticket_name') }</label>
+              <label>{__('ticket_options_ticket_name')}</label>
               <input
                 type="text"
-                value={ option.name }
+                value={option.name}
                 placeholder="Regular Ticket"
-                onChange={e => { e.preventDefault(); updateOption(index, { ...option, name: e.target.value }); }}
+                onChange={(e) => {
+                  e.preventDefault();
+                  updateOption(index, {
+                    ...option,
+                    name: e.target.value,
+                  });
+                }}
               />
             </div>
             <div className="mb-3">
-              <label>{ __('ticket_options_number_of_tickets') }</label>
-              <p className="italic text-gray-500 text-xs">{ __('ticket_options_promt_message')  }</p>
+              <label>{__('ticket_options_number_of_tickets')}</label>
+              <p className="italic text-gray-500 text-xs">
+                {__('ticket_options_promt_message')}
+              </p>
               <input
                 type="Number"
                 min="0"
                 max="10000"
                 step="1"
                 className="w-32"
-                value={ option.limit }
+                value={option.limit}
                 placeholder="Quantity"
-                onChange={e => { e.preventDefault(); updateOption(index, { ...option, limit: e.target.value }); }}
+                onChange={(e) => {
+                  e.preventDefault();
+                  updateOption(index, {
+                    ...option,
+                    limit: e.target.value,
+                  });
+                }}
               />
             </div>
             <div className="mb-3">
-              <label>{ __('ticket_options_ticket_details') }</label>
+              <label>{__('ticket_options_ticket_details')}</label>
               <textarea
-                value={ option.disclaimer }
+                value={option.disclaimer}
                 placeholder="This ticket provides you with..."
-                onChange={e => updateOption(index, { ...option, disclaimer: e.target.value })}
+                onChange={(e) =>
+                  updateOption(index, {
+                    ...option,
+                    disclaimer: e.target.value,
+                  })
+                }
                 className="textarea"
               />
             </div>
             <PriceEditor
-              value={ { cur: option.currency, val: option.price } }
-              onChange={ price => {
-                updateOption(index, { ...option, price: price.val, currency: price.cur });
-              } }
-              required={ required }
+              value={{ cur: option.currency, val: option.price }}
+              onChange={(price) => {
+                updateOption(index, {
+                  ...option,
+                  price: price.val,
+                  currency: price.cur,
+                });
+              }}
+              required={required}
             />
             <div className="mt-3">
-              <a href="#" className="danger-link" onClick={ e => removeOption(e, index) }>{ __('ticket_options_remove') }</a>
+              <a
+                href="#"
+                className="danger-link"
+                onClick={(e) => removeOption(e, index)}
+              >
+                {__('ticket_options_remove')}
+              </a>
             </div>
           </div>
-        ))
-      }
+        ))}
       <div className="flex justify-center items-center">
-        <a href="#" className="btn" onClick={ e => addOption(e) }>{ __('ticket_options_add_type') }</a>
+        <a href="#" className="btn" onClick={(e) => addOption(e)}>
+          {__('ticket_options_add_type')}
+        </a>
       </div>
     </div>
   );
-}
+};
 
 TicketOptionsEditor.defaultProps = {
   onChange: null,
-  value: []
-}
+  value: [],
+};
 
 export default TicketOptionsEditor;

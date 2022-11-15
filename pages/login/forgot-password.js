@@ -1,9 +1,11 @@
-import React, { useState } from 'react'
-import Head from 'next/head'
-import Link from 'next/link'
-import { useRouter } from 'next/router'
-import Layout from '../../components/Layout'
-import api from '../../utils/api'
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+
+import React, { useState } from 'react';
+
+import Layout from '../../components/Layout';
+
+import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
 
 const ForgotPasswordScreen = () => {
@@ -18,20 +20,21 @@ const ForgotPasswordScreen = () => {
     } catch (err) {
       setError(err.response?.data?.error || err.message);
     }
-  }
+  };
 
   return (
     <Layout>
       <Head>
-        <title>{ __('login_forgot_password_title') }</title>
+        <title>{__('login_forgot_password_title')}</title>
       </Head>
       <div className="mural">
         <main className="main-content center intro">
-          { resetCompleted ?
+          {resetCompleted ? (
             <div className="success card">
-              <h1>{ __('login_forgot_password_subtitle') }</h1>
-              <p>{ __('login_forgot_password_warning') }</p>
-            </div>:
+              <h1>{__('login_forgot_password_subtitle')}</h1>
+              <p>{__('login_forgot_password_warning')}</p>
+            </div>
+          ) : (
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -39,32 +42,34 @@ const ForgotPasswordScreen = () => {
               }}
               className="card"
             >
-              { error && <div className="validation-error">{ error }</div> }
+              {error && <div className="validation-error">{error}</div>}
               <div className="form-field">
-                <label htmlFor="email">{ __('login_forgot_password_email') }</label>
+                <label htmlFor="email">
+                  {__('login_forgot_password_email')}
+                </label>
                 <input
                   type="email"
                   name="email"
                   id="email"
                   value={email}
                   placeholder="you@awesomeproject.org"
-                  onChange={e => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
               <div className="card-footer">
                 <div className="action-row">
                   <button type="submit" className="button">
-                    { __('login_forgot_password_submit') }
+                    {__('login_forgot_password_submit')}
                   </button>
                 </div>
               </div>
             </form>
-          }
+          )}
         </main>
       </div>
     </Layout>
   );
-}
+};
 
 export default ForgotPasswordScreen;

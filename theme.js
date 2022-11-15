@@ -9,7 +9,7 @@ module.exports = {
       'foreground-dark': '#dadada',
       card: '#ebf1f6',
       error: '#9f1f42',
-      line: '#a3a3a3'
-    }
+      line: '#a3a3a3',
+    },
   },
-}
+};
