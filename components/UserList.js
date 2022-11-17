@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 
 import React, { useEffect, useState } from 'react';
 
-
 import { useAuth } from '../contexts/auth';
 import api, { formatSearch } from '../utils/api';
 import { __ } from '../utils/helpers';
@@ -68,6 +67,7 @@ const UserList = ({
         )}
       </h3>
       <div className="card-body">
+        { error && <div className="error">{ error }</div> }
         <div className="user-list">
           {users && users.length > 0 ? (
             users.map((user) => (

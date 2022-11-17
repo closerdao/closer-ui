@@ -1,8 +1,6 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-
-import { useAuth } from '../contexts/auth.js';
 import { usePlatform } from '../contexts/platform';
 import { __ } from '../utils/helpers';
 import Loading from './Loading';
@@ -12,7 +10,6 @@ import Tag from './Tag';
 import TimeSince from './TimeSince';
 
 const UsersTable = ({ where, limit }) => {
-  const { user } = useAuth();
   const { platform } = usePlatform();
   const [page, setPage] = useState(1);
   const [addRole, setAddRole] = useState({});
@@ -47,6 +44,7 @@ const UsersTable = ({ where, limit }) => {
         <Loading />
       ) : users && users.count() > 0 ? (
         <div className="users-table -mt-4 -ml-4 -mr-4">
+          { error && <div className="error">{ error }</div> }
           <table className="table-auto w-full">
             <thead className="card-header text-xs font-semibold uppercase text-gray-600 bg-gray-100 dark:bg-gray-900 dark:text-gray-300">
               <tr>
