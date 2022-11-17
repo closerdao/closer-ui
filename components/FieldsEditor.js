@@ -52,11 +52,11 @@ const FieldsEditor = ({ value, onChange }) => {
             className="mr-3 mb-4 p-3 shadow"
           >
             <div className="mb-3">
-              <label>{__('fields_editor_questions')}</label>
+              <label>{ __('fields_editor_questions') }</label>
               <input
                 type="text"
                 value={option.name}
-                placeholder="What time will you arrive?"
+                placeholder={ option.placeholder }
                 onChange={(e) => {
                   e.preventDefault();
                   updateOption(index, {

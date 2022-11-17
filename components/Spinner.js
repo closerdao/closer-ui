@@ -2,7 +2,7 @@ import React from 'react';
 
 import PropTypes from 'prop-types';
 
-const Spinner = ({ fixed }) => {
+const Spinner = ({ fixed, className }) => {
   return (
     <div className={fixed ? 'fixed top-24 right-4' : undefined}>
       <svg

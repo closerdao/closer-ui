@@ -31,15 +31,12 @@ const Booking = ({ booking, error }) => {
         <h1>{__('blockchain_interstitial_big_title')}</h1>
         <p>{__('blockchain_interstitial_subtitle')}</p>
 
-        <a className="hidden md:flex mr-3">
-          <span className="h-12 border-l mr-3" />
-          <button
-            className="btn-primary"
-            onClick={() => router.push(`/bookings/${booking}/checkout`)}
-          >
-            {__('blockchain_bypass_wallet')}
-          </button>
-        </a>
+        <button
+          className="btn-primary mt-3"
+          onClick={() => router.push(`/bookings/${booking}/checkout`)}
+        >
+          {__('blockchain_bypass_wallet')}
+        </button>
       </main>
     </Layout>
   );
