@@ -1,30 +1,31 @@
-import React, { useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+
+import React from 'react';
+
+import Layout from '../../components/Layout';
+import MemberHome from '../../components/MemberHome';
 
 import PageNotAllowed from '../401';
 import { useAuth } from '../../contexts/auth';
 import { __ } from '../../utils/helpers';
-
-import Layout from '../../components/Layout';
-import MemberHome from '../../components/MemberHome';
 
 const Home = () => {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
 
   if (!isAuthenticated) {
-    return <PageNotAllowed />
+    return <PageNotAllowed />;
   }
 
   return (
     <Layout>
       <Head>
-        <title>{ __('community_title') }</title>
+        <title>{__('community_title')}</title>
       </Head>
       <MemberHome />
     </Layout>
   );
-}
+};
 
-export default Home
+export default Home;

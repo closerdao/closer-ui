@@ -1,3 +1,4 @@
+
 import React from 'react';
 import dayjs from 'dayjs';
 import { __, priceFormat } from '../utils/helpers';
@@ -42,6 +43,6 @@ const BookingListPreview = ({ booking, listingName }) => {
       </div>
     </div>
   );
-}
+};
 
 export default BookingListPreview;

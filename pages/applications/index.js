@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
-import Link from 'next/link';
+
+import React, { useEffect, useState } from 'react';
+
+import ApplicationList from '../../components/ApplicationList';
 import Layout from '../../components/Layout';
 import Tabs from '../../components/Tabs';
-import ApplicationList from '../../components/ApplicationList';
-import api, { formatSearch } from '../../utils/api';
+
 import PageNotAllowed from '../401';
-import models from '../../models';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { __ } from '../../utils/helpers';
@@ -29,37 +29,54 @@ const Applications = () => {
         platform.application.getCount(inConversationApplications),
         platform.application.getCount(rejectedApplications),
       ]);
-    }
+    };
 
-    if (user && user.roles.includes('community-curator')){
+    if (user && user.roles.includes('community-curator')) {
       loadData();
     }
   }, [user, platform]);
 
-  if (!user || (!user.roles.includes('community-curator') && !user.roles.includes('admin'))) {
+  if (
+    !user ||
+    (!user.roles.includes('community-curator') && !user.roles.includes('admin'))
+  ) {
     return <PageNotAllowed />;
   }
 
   return (
     <Layout protect>
       <Head>
-        <title>{ __('applications_title') }</title>
+        <title>{__('applications_title')}</title>
       </Head>
       <main className="main-content">
         <div className="page-header mb-4">
           <div>
-            <h1>{ __('applications_title') }</h1>
+            <h1>{__('applications_title')}</h1>
           </div>
         </div>
         <div className="md:flex md:flex-row-reverse">
           <div className="md:w-1/3 md:ml-4">
             <div className="card">
-              <h3 className="card-title">{ __('applications_subtitle') }</h3>
+              <h3 className="card-title">{__('applications_subtitle')}</h3>
               <div className="card-body">
-                <p>{ __('applications_open') } <b>{platform.application.findCount(openApplications)}</b></p>
-                <p>{ __('applications_in_conversation') } <b>{platform.application.findCount(inConversationApplications)}</b></p>
-                <p>{ __('applications_accepted') } <b>{platform.application.findCount(approvedApplications)}</b></p>
-                <p>{ __('applications_rejected') } <b>{platform.application.findCount(rejectedApplications)}</b></p>
+                <p>
+                  {__('applications_open')}{' '}
+                  <b>{platform.application.findCount(openApplications)}</b>
+                </p>
+                <p>
+                  {__('applications_in_conversation')}{' '}
+                  <b>
+                    {platform.application.findCount(inConversationApplications)}
+                  </b>
+                </p>
+                <p>
+                  {__('applications_accepted')}{' '}
+                  <b>{platform.application.findCount(approvedApplications)}</b>
+                </p>
+                <p>
+                  {__('applications_rejected')}{' '}
+                  <b>{platform.application.findCount(rejectedApplications)}</b>
+                </p>
               </div>
             </div>
           </div>
@@ -69,32 +86,33 @@ const Applications = () => {
                 {
                   title: 'Open',
                   value: 'open',
-                  content: (
-                    <ApplicationList status="open" />
-                  )
+                  content: <ApplicationList status="open" />,
                 },
                 {
                   title: 'Chatting',
                   value: 'conversation',
                   content: (
-                    <ApplicationList status="conversation" managedBy={ user._id } />
-                  )
+                    <ApplicationList
+                      status="conversation"
+                      managedBy={user._id}
+                    />
+                  ),
                 },
                 {
                   title: 'Rejected',
                   value: 'rejected',
                   content: (
                     <ApplicationList status="rejected" hideRejectButton />
-                  )
+                  ),
                 },
               ]}
-              onChange={ tab => setStatus(tab.value) }
+              onChange={(tab) => setStatus(tab.value)}
             />
           </div>
         </div>
       </main>
     </Layout>
   );
-}
+};
 
 export default Applications;

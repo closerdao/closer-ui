@@ -1,6 +1,9 @@
 {
   "extends": ["next", "next/core-web-vitals", "prettier"],
+  "plugins": ["unused-imports"],
   "rules": {
+    "unused-imports/no-unused-imports": "error",
+    "no-unused-vars": "warn",
     "@next/next/no-img-element": "off",
     "react-hooks/exhaustive-deps": "off",
     "indent": ["error", 2],

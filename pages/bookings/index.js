@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Layout from '../../components/Layout';
+
+import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { __ } from '../../utils/helpers';
 import PageNotFound from '../404';
@@ -18,7 +19,7 @@ const Bookings = () => {
   return (
     <Layout>
       <Head>
-        <title>{ __('bookings_title') }</title>
+        <title>{__('bookings_title')}</title>
       </Head>
       <div className="main-content intro fullwidth">
         <Tabs
@@ -38,6 +39,6 @@ const Bookings = () => {
       </div>
     </Layout>
   );
-}
+};
 
 export default Bookings;
