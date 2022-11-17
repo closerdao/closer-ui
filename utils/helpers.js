@@ -100,9 +100,7 @@ export const priceFormat = (price, currency = 'EUR') => {
       currency: price.cur,
     });
   }
-  throw new Error(
-    `Invalid format passed to priceFormat: ${JSON.stringify(price)}`,
-  );
+  return '0.00';
 };
 
 export const prependHttp = (url, { https = true } = {}) => {

@@ -10,8 +10,8 @@ module.exports = {
   TEAM_EMAIL: 'team@closer.earth',
   START_TIME: '2021-04-30T15:00:00.000Z',
   EXPOSE_STORE: true,
-  // API_URL: 'http://localhost:4002',
-  API_URL: 'https://api.oasa.co',
+  API_URL: 'http://localhost:4002',
+  // API_URL: 'https://api.oasa.co',
   CDN_URL: 'https://cdn.oasa.co/photo/',
   NEWSLETTER: false,
   LOG_REQUESTS: false,
@@ -31,7 +31,7 @@ module.exports = {
   FEATURES: {
     events: true,
     booking: true,
-    bookingVolunteers: true,
+    bookingVolunteers: false,
   },
   // Set which roles are permitted to do certain actions
   PERMISSIONS: {

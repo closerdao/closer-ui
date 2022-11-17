@@ -297,7 +297,7 @@ export default {
     },
     {
       name: 'fiatPrice',
-      label: 'Monthly rate',
+      label: 'Rental price (fiat)',
       type: 'currency',
       placeholder: '10.00',
       required: true,
@@ -305,7 +305,7 @@ export default {
     },
     {
       name: 'tokenPrice',
-      label: 'Weekly rate',
+      label: 'Tokens to lock',
       type: 'currency',
       placeholder: '10.00',
       required: true,

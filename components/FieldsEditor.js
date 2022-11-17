@@ -56,7 +56,7 @@ const FieldsEditor = ({ value, onChange }) => {
               <input
                 type="text"
                 value={option.name}
-                placeholder="What time will you arrive?"
+                placeholder={ option.placeholder }
                 onChange={(e) => {
                   e.preventDefault();
                   updateOption(index, {

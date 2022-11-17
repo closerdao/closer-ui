@@ -54,7 +54,6 @@ const Book = ({ token }) => {
   const { platform } = usePlatform();
   const [listings, setListings] = useState(false);
   const [searchInProgress, setLoading] = useState(false);
-  const [isAvailable, setAvailability] = useState(false);
   const [datesAvailable, setAvailableDates] = useState([]);
   const [checkedAvailability, setAvailabilityChecked] = useState(false);
   const [booking, setBooking] = useState({
@@ -65,7 +64,6 @@ const Book = ({ token }) => {
   });
   const updateBooking = async (booking) => {
     setAvailabilityChecked(false);
-    setAvailability(false);
     booking.duration =
       Math.abs(Math.ceil(dayjs(booking.end).diff(booking.start, 'days'))) + 1;
     booking.rate =
@@ -84,7 +82,6 @@ const Book = ({ token }) => {
       .set('minutes', 0);
     const days = [start];
     if (duration < 1) {
-      setAvailability(false);
     }
     for (let i = 1; i <= duration; i++) {
       days.push(
@@ -115,7 +112,7 @@ const Book = ({ token }) => {
         price: getPrice(listing, booking),
       });
 
-      router.push(`/bookings/${newBooking._id}/contribution`);
+      router.push(`/bookings/${newBooking._id}/questions`);
     } catch (err) {
       console.log(err);
       alert('There was an error creating booking.');
@@ -131,18 +128,12 @@ const Book = ({ token }) => {
     try {
       const {
         data: {
-          results: availableListings,
-          available: available,
-          availability: availability,
+          results: availableListings
         },
-      } = await api.post('/booking/availability', booking);
+      } = await api.post('/bookings/availability', booking);
       setLoading(false);
       setListings(fromJS(availableListings));
-      setAvailability(fromJS(available));
-      setAvailableDates(fromJS(availability));
       setAvailabilityChecked(true);
-
-      console.log('availability', availability);
     } catch (err) {
       setLoading(false);
       alert(err);
@@ -218,36 +209,22 @@ const Book = ({ token }) => {
               {searchInProgress && (
                 <div className="loading">{__('generic_loading')}</div>
               )}
-              {checkedAvailability &&
-                (isAvailable ? (
-                  listings &&
-                  (listings.count() > 0 ? (
-                    listings.map((listing) => (
-                      <ListingListPreview
-                        key={listing.get('_id')}
-                        listing={listing}
-                        rate={booking.rate}
-                        book={() => createBooking(listing, booking)}
-                      />
-                    ))
-                  ) : (
-                    <div className="no-match">
-                      {__('booking_no_available_listings')}
-                    </div>
+              {checkedAvailability && (
+                listings.count() > 0 ? (
+                  listings.map((listing) => (
+                    <ListingListPreview
+                      key={listing.get('_id')}
+                      listing={listing}
+                      rate={booking.rate}
+                      book={() => createBooking(listing, booking)}
+                    />
                   ))
                 ) : (
                   <div className="no-match">
-                    {__('booking_no_available_listings')} (
-                    {
-                      (
-                        (datesAvailable &&
-                          datesAvailable.filter((d) => d.available)) ||
-                        []
-                      ).length
-                    }
-                    /{datesAvailable && datesAvailable.length})
+                    {__('booking_no_available_listings')}
                   </div>
-                ))}
+                )
+              )}
             </div>
           </form>
         </section>

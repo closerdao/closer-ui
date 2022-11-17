@@ -3,8 +3,6 @@ import { useRouter } from 'next/router';
 
 import React, { useState } from 'react';
 
-import { loadStripe } from '@stripe/stripe-js';
-
 import Layout from '../../../components/Layout';
 
 import dayjs from 'dayjs';
@@ -23,7 +21,6 @@ dayjs.extend(LocalizedFormat);
 const Booking = ({ booking, error }) => {
   const router = useRouter();
   const [editBooking, setBooking] = useState(booking);
-  const stripe = loadStripe(config.STRIPE_TEST_KEY);
   const { isAuthenticated, user } = useAuth();
   const { platform } = usePlatform();
 
