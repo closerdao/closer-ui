@@ -7,9 +7,9 @@ export const currencies = [
     symbol: '€',
   },
   {
-    value: 'USD',
-    label: 'US Dollars',
-    symbol: '$',
+    value: 'TDF',
+    label: '$TDF',
+    symbol: '$TDF',
   },
 ];
 
