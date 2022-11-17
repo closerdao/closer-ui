@@ -24,15 +24,12 @@ const BookingCancelPage = ({ booking, error }) => {
   const [isPolicyLoading, setPolicyLoading] = useState(false)
   const [isCancelCompleted, setCancelCompleted] = useState(false)
   const refundTotal = calculateRefundTotal({ initialValue: bookingPrice.val, policy, startDate: booking.start })
-  console.log('policy', policy)
-  console.log('refundTotal', refundTotal)
 
   useEffect(() => {
     const fetchPolicy = async () => {
       try {
         setPolicyLoading(true)
         const { data: { results: loadPolicy } } = await api.get('/bookings/cancelation-policy')
-        console.log('loadPolicy', loadPolicy)
         setPolicy(loadPolicy)
       } catch (error) {
         console.log(error)
