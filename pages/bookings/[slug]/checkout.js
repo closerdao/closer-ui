@@ -56,11 +56,9 @@ const Booking = ({ booking, error }) => {
     try {
       const {
         data: { results: payment },
-      } = await api.post('/payment', {
+      } = await api.post('/bookings/payment', {
         type: 'booking',
         _id: booking._id,
-        total: booking.price && booking.price.val,
-        currency: booking.price && booking.price.cur,
         email: user.email,
         name: user.screenname,
         message: booking.message,
@@ -245,28 +243,41 @@ const Booking = ({ booking, error }) => {
             <section className="mt-3">
               <h3>{__('bookings_summary')}</h3>
               <p>
-                {__('bookings_status')} <b>{editBooking.status}</b>
-              </p>
-              <p>
                 {__('bookings_checkin')} <b>{start.format('LLL')}</b>
               </p>
               <p>
                 {__('bookings_checkout')} <b>{end.format('LLL')}</b>
               </p>
+              <p>--</p>
               <p>
-                {__('bookings_total')}
-                <b
-                  className={
-                    booking.volunteer || canUseTokens ? 'line-through' : ''
-                  }
-                >
-                  {' '}
-                  {priceFormat(booking.price)}
-                </b>
+                {__('bookings_utility_fee')}
                 <b>
                   {' '}
-                  {booking.volunteer ||
-                    (canUseTokens && priceFormat(0, booking.price.cur))}
+                  {priceFormat(booking.utilityFiat)}
+                </b>
+              </p>
+              { booking.useTokens ?
+                <p>
+                  {__('bookings_tokens_lock')}
+                  <b>
+                    {' '}
+                    {priceFormat(booking.rentalToken)}
+                  </b>
+                </p>:
+                <p>
+                  {__('bookings_rental_cost')}
+                  <b>
+                    {' '}
+                    {priceFormat(booking.rentalFiat)}
+                  </b>
+                </p>
+              }
+              <p>--</p>
+              <p>
+                {__('bookings_total')}
+                <b>
+                  {' '}
+                  {priceFormat(booking.utilityFiat && booking.utilityFiat.val + (booking.useTokens || !booking.rentalFiat ? 0 : booking.rentalFiat.val))}
                 </b>
               </p>
             </section>
@@ -347,8 +358,6 @@ const Booking = ({ booking, error }) => {
                         <Elements stripe={stripe}>
                           <CheckoutForm
                             type="booking"
-                            total={booking.price.val}
-                            currency={booking.price.cur}
                             _id={booking._id}
                             onSuccess={(payment) => {
                               setBooking({

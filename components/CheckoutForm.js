@@ -47,7 +47,7 @@ const CheckoutForm = ({
       }
       const {
         data: { results: payment },
-      } = await api.post('/payment', {
+      } = await api.post(type === 'booking' ? '/bookings/payment' : '/payment', {
         token: token.id,
         type,
         ticketOption,

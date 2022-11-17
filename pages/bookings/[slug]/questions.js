@@ -3,9 +3,9 @@ import { useRouter } from 'next/router';
 
 import React, { useState } from 'react';
 
-
 import Layout from '../../../components/Layout';
 import Switch from '../../../components/Switch';
+import FieldsEditor from '../../../components/FieldsEditor';
 
 import { useWeb3React } from '@web3-react/core';
 import dayjs from 'dayjs';
@@ -22,11 +22,13 @@ import { __ } from '../../../utils/helpers';
 
 dayjs.extend(LocalizedFormat);
 
-const Booking = ({ booking, error }) => {
+const Booking = ({ booking, error, questions }) => {
   const router = useRouter();
   const [editBooking, setBooking] = useState(booking);
   const { isAuthenticated, user } = useAuth();
   const { platform } = usePlatform();
+
+  console.log('questions', questions);
 
   const { chainId, account, activate, deactivate, setError, active, library } =
     useWeb3React();
@@ -138,11 +140,20 @@ const Booking = ({ booking, error }) => {
 };
 Booking.getInitialProps = async ({ req, query }) => {
   try {
-    const {
+    const [{
       data: { results: booking },
-    } = await api.get(`/booking/${query.slug}`);
-    console.log(`contrib ${query.slug}`);
-    return { booking };
+    }, {
+      data: {
+        results: questions
+      }
+    }] = await Promise.all([
+      api.get(`/booking/${query.slug}`),
+      api.get('/bookings/questions')
+    ]);
+
+    console.log('// QUESTION: ', questions)
+
+    return { booking, questions };
   } catch (err) {
     console.log('Error', err.message);
 
