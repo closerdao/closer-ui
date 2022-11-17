@@ -4,7 +4,6 @@ import Layout from '../../components/Layout';
 import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { __ } from '../../utils/helpers';
-import PageNotFound from '../404';
 import Tabs from '../../components/Tabs';
 import MyBookings from '../../components/MyBookings';
 import PastBookings from '../../components/PastBookings';

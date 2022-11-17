@@ -16,9 +16,9 @@ module.exports = {
   NEWSLETTER: false,
   LOG_REQUESTS: false,
   CACHE_DURATION: 6000000, // 1h
-  STRIPE_TEST_KEY:
-    'pk_test_51Gv17cGtt5D0VKR2Gt2RUVIDfrHRGJTfMSwRFpdbF5B4VfZ2zFOxM62ckAj4aQN5q6mDexpjZAqQKLpKdmwcnQfJ00sJwfbVWK',
-  STRIPE_PUB_KEY: 'pk_live_YxOUUf7iOvQj104TG4JyWMAE003w80ISH6',
+  // STRIPE_PUB_KEY: 'pk_live_YxOUUf7iOvQj104TG4JyWMAE003w80ISH6',
+  // TODO remove test key
+  STRIPE_PUB_KEY: 'pk_test_51Gv17cGtt5D0VKR2Gt2RUVIDfrHRGJTfMSwRFpdbF5B4VfZ2zFOxM62ckAj4aQN5q6mDexpjZAqQKLpKdmwcnQfJ00sJwfbVWK',
   LOGO_HEADER: '/images/logo.png',
   LOGO_WIDTH: undefined,
   REGISTRATION_MODE: 'open', // curated, paid, open
@@ -31,7 +31,7 @@ module.exports = {
   FEATURES: {
     events: true,
     booking: true,
-    bookingVolunteers: true,
+    bookingVolunteers: false,
   },
   // Set which roles are permitted to do certain actions
   PERMISSIONS: {
