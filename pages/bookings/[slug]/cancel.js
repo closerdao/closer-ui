@@ -17,20 +17,23 @@ import CancelBooking from '../../../components/CancelBooking';
 const BookingCancelPage = ({ booking, error }) => {
   const router = useRouter();
   const bookingId = router.query.slug
-  const bookingPrice = booking?.price
+  const bookingPrice = booking?.total || { val: booking?.utilityFiat?.val + booking?.rentalFiat?.val, cur: booking?.rentalFiat?.cur }
   const { isAuthenticated, user } = useAuth()
   const isMember = user?.roles.includes('member')
   const [policy, setPolicy] = useState(null)
   const [isPolicyLoading, setPolicyLoading] = useState(false)
   const [isCancelCompleted, setCancelCompleted] = useState(false)
   const refundTotal = calculateRefundTotal({ initialValue: bookingPrice.val, policy, startDate: booking.start })
+  console.log('policy', policy)
+  console.log('refundTotal', refundTotal)
 
   useEffect(() => {
     const fetchPolicy = async () => {
       try {
         setPolicyLoading(true)
-        const { data } = await api.get('/policies/cancellation')
-        setPolicy(data)
+        const { data: { results: loadPolicy } } = await api.get('/bookings/cancelation-policy')
+        console.log('loadPolicy', loadPolicy)
+        setPolicy(loadPolicy)
       } catch (error) {
         console.log(error)
       } finally {
@@ -57,11 +60,11 @@ const BookingCancelPage = ({ booking, error }) => {
         <meta name="description" content={__('cancel_booking_page_title')} />
         <meta property="og:type" content="booking" />
       </Head>
-      {isCancelCompleted 
-        ? <CancelCompleted /> 
-        : <CancelBooking 
-          bookingId={bookingId} 
-          policy={policy} 
+      {isCancelCompleted
+        ? <CancelCompleted />
+        : <CancelBooking
+          bookingId={bookingId}
+          policy={policy}
           isMember={isMember}
           refundTotal={refundTotal}
           isPolicyLoading={isPolicyLoading}

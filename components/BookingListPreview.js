@@ -24,14 +24,8 @@ const BookingListPreview = ({ booking }) => {
       </p>
       <p>
         {__('bookings_total')}
-        <b className={booking.get('volunteer') ? 'line-through' : ''}>
-          {' '}
-          {priceFormat(booking.get('price'))}
-        </b>
         <b>
-          {' '}
-          {booking.get('volunteer') &&
-            priceFormat(0, booking.getIn(['price', 'cur']))}
+          {priceFormat(booking.get('total') || booking.get('utilityFiat'))}
         </b>
       </p>
       <p>
