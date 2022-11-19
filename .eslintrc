@@ -7,6 +7,7 @@
     "@next/next/no-img-element": "off",
     "react-hooks/exhaustive-deps": "off",
     "quotes": ["error", "single"],
-    "object-curly-spacing": ["error", "always"]
+    "object-curly-spacing": ["error", "always"],
+    "no-undef": "error"
   }
 }
