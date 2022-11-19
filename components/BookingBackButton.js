@@ -1,8 +1,6 @@
-// import all the required components
 import { useRouter } from 'next/router';
 
 import { useBookingState } from '../contexts/booking';
-// import the required components from the library
 import { __ } from '../utils/helpers';
 
 export const BookingBackButton = () => {
