@@ -13,11 +13,10 @@ export const BookingProvider = ({ children }) => {
   const router = useRouter();
   const [state, dispatch] = useReducer(bookingReducer, initialState);
   const currentStep = state.steps.find((step) => step.path === router.pathname);
-  console.log('BookingProvider -> currentStep', currentStep);
-  console.log('BookingProvider -> state', state);
+
   const saveStepData = (data) => {
     if (!data) {
-      console.error('saveStepData: path and data are required');
+      console.error('saveStepData: data are required');
       return;
     }
     dispatch({
