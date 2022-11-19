@@ -19,11 +19,11 @@ import {
 //   BLOCKCHAIN_STABLE_COIN,
 // } from '../config_blockchain';
 import { AuthProvider } from '../contexts/auth';
+import { BookingProvider } from '../contexts/booking/';
 import { PlatformProvider } from '../contexts/platform';
-import { BookingProvider } from '../contexts/booking'
+import '../public/styles.css';
 import { theme } from '../tailwind.config';
 import api from '../utils/api';
-import '../public/styles.css';
 
 const Application = ({
   tags,
