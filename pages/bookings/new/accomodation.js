@@ -29,19 +29,21 @@ const AccomodationSelector = () => {
 
   const [listings, setListings] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCreatingBooking, setIsCreatingBooking] = useState(false);
 
   useEffect(() => {
     const checkAvailability = async () => {
-      setIsLoading(true);
       try {
+        setIsLoading(true);
         const {
           data: { results: availableListings },
         } = await api.post('/bookings/availability', { start, end, ...guests });
         setListings(availableListings);
       } catch (err) {
-        console.log(err);
+        console.log(err); // TO DO handle error
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
     if (!dates.data.startDate || !guests.adults) {
       startNewBooking();
@@ -49,7 +51,31 @@ const AccomodationSelector = () => {
     checkAvailability();
   }, []);
 
-  const bookListing = (listing) => {};
+  const bookListing = async ({ listingId, useToken }) => {
+    saveStepData({
+      listingId,
+      useToken,
+    });
+    try {
+      setIsCreatingBooking(true);
+      const {
+        data: { results: newBooking },
+      } = await api.post('/bookings/request', {
+        listing: listingId,
+        useToken,
+        start,
+        end,
+        ...guests,
+      });
+      if (newBooking._id) {
+        goToNextStep();
+      }
+    } catch (err) {
+      console.log(err); // TO DO handle error
+    } finally {
+      setIsCreatingBooking(false);
+    }
+  };
 
   return (
     <Layout>
@@ -75,7 +101,6 @@ const AccomodationSelector = () => {
             )}`}</span>
           </div>
         </div>
-        {/* {JSON.stringify(listings, null, 2)} */}
         <div className="mt-16">
           {isLoading && <p>Loading...</p>}
           {!isLoading &&
@@ -84,6 +109,7 @@ const AccomodationSelector = () => {
                 key={listing._id}
                 listing={listing}
                 bookListing={bookListing}
+                isCreatingBooking={isCreatingBooking}
               />
             ))}
         </div>

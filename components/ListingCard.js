@@ -16,7 +16,10 @@ export const ListingCard = ({ listing, bookListing }) => {
   const selectToken = () => selectCurrency(CURRENCY_NAMES.token);
 
   const handleClick = () => {
-    bookListing(listing._id);
+    bookListing({
+      listingId: listing._id,
+      useToken: selectedCurrency === CURRENCY_NAMES.token,
+    });
   };
 
   if (!listing) return null;
