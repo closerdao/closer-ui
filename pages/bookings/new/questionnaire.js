@@ -65,9 +65,9 @@ const Questionnaire = () => {
     try {
       await api.patch(
         `/booking/${accomodation.bookingId}`,
-        JSON.stringify({
-          fields: Object.fromEntries(answers.size ? answers : []),
-        }),
+        Array.from(answers.size ? answers : [], ([key, value]) => ({
+          [key]: value,
+        })),
       );
       goToNextStep();
     } catch (err) {
