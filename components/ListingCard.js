@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import PropTypes from 'prop-types';
 
+import { __ } from '../utils/helpers';
 import { PriceSwitch } from './PriceSwitch';
 
 export const ListingCard = ({ listing, bookListing }) => {
@@ -39,7 +40,8 @@ export const ListingCard = ({ listing, bookListing }) => {
         />
       </div>
       <button className="btn mt-8 uppercase" onClick={handleClick}>
-        Book
+        {/* TO DO: check when it should be disabled */}
+        {__('listing_preview_book')}
       </button>
     </div>
   );
