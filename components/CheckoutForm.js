@@ -92,7 +92,7 @@ const CheckoutForm = ({
         options={{
           style: {
             base: {
-              fontSize: '20px',
+              fontSize: '16px',
               lineHeight: '1.6',
               color: 'black',
               padding: '0.2rem',
@@ -107,7 +107,7 @@ const CheckoutForm = ({
             },
           },
         }}
-        className={` ${cardElementClassName}`}
+        className={cardElementClassName}
       />
       <button
         type="submit"
