@@ -88,7 +88,7 @@ const Questionnaire = () => {
       <div className="max-w-screen-xl mx-auto p-8">
         <BookingBackButton />
         <h1 className="font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
-          <span className="mr-1">🏡</span>
+          <span className="mr-1">📄</span>
           <span>{__('bookings_questionnaire_step_title')}</span>
         </h1>
         <Progress progress={currentStepIndex + 1} total={steps.length} />

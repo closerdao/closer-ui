@@ -1,37 +1,24 @@
 import PropTypes from 'prop-types';
 
 import { __, priceFormat } from '../utils/helpers';
+import { CurrencySwitch } from './CurrencySwitch';
 import PlusIcon from './icons/PlusIcon';
 
-export const CurrencySelect = ({
+export const ListingPrice = ({
   fiatPrice,
   tokenPrice,
   utilityFiat,
-  isFiatSelected,
-  selectFiat,
-  selectToken,
+  selectedCurrency,
+  selectCurrency,
 }) => {
-  const activeClass =
-    'flex-1 bg-black text-white rounded-3xl text-center uppercase text-xs h-full flex items-center justify-center';
-  const inactiveClass =
-    'flex-1 bg-white text-black text-center uppercase text-xs';
-
+  const isFiatSelected = selectedCurrency === fiatPrice.cur;
   return (
     <div>
-      <div className="h-9 border border-solid border-neutral-400 rounded-3xl p-1 font-normal flex justify-between items-center">
-        <button
-          className={isFiatSelected ? activeClass : inactiveClass}
-          onClick={selectFiat}
-        >
-          {__('bookings_price_switch_euro_title')}
-        </button>
-        <button
-          className={isFiatSelected ? inactiveClass : activeClass}
-          onClick={selectToken}
-        >
-          {__('bookings_price_switch_token_title')}
-        </button>
-      </div>
+      <CurrencySwitch
+        selectedCurrency={selectedCurrency}
+        onSelect={selectCurrency}
+        currencies={[fiatPrice.cur, tokenPrice.cur]}
+      />
       <div className="flex items-center justify-center mt-8">
         <div className="flex-1 flex flex-col items-center">
           <p className="text-2xl leading-9">
@@ -51,7 +38,7 @@ export const CurrencySelect = ({
   );
 };
 
-CurrencySelect.propTypes = {
+ListingPrice.propTypes = {
   fiatPrice: PropTypes.shape({
     val: PropTypes.number,
     cur: PropTypes.string,
@@ -64,7 +51,4 @@ CurrencySelect.propTypes = {
     val: PropTypes.number,
     cur: PropTypes.string,
   }),
-  isFiatSelected: PropTypes.bool,
-  selectFiat: PropTypes.func,
-  selectToken: PropTypes.func,
 };

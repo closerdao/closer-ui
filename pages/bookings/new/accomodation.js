@@ -21,7 +21,7 @@ const AccomodationSelector = () => {
   const guests = steps.find(
     (step) => step.path === '/bookings/new/guests',
   ).data;
-  const totalGuests = guests.adults + guests.children; // TO DO check if total guests are indeed only adults + children
+  const totalGuests = guests.totalGuests;
   const { pathname } = useRouter();
   const currentStep = steps.find((step) => step.path === pathname);
   const currentStepIndex = steps.indexOf(currentStep);

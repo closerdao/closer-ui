@@ -3,7 +3,7 @@ import { useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { __ } from '../utils/helpers';
-import { PriceSwitch } from './PriceSwitch';
+import { ListingPrice } from './ListingPrice';
 
 export const ListingCard = ({ listing, bookListing }) => {
   const { name, description, fiatPrice, tokenPrice, utilityFiat } = listing;
@@ -13,8 +13,6 @@ export const ListingCard = ({ listing, bookListing }) => {
   };
 
   const [selectedCurrency, selectCurrency] = useState(CURRENCY_NAMES.fiat);
-  const selectFiat = () => selectCurrency(CURRENCY_NAMES.fiat);
-  const selectToken = () => selectCurrency(CURRENCY_NAMES.token);
 
   const handleClick = () => {
     bookListing({
@@ -30,13 +28,12 @@ export const ListingCard = ({ listing, bookListing }) => {
       <h2 className="text-2xl leading-10 font-normal mb-4">{name}</h2>
       <p>{description}</p>
       <div className="my-8">
-        <PriceSwitch
+        <ListingPrice
           fiatPrice={fiatPrice}
           utilityFiat={utilityFiat}
           tokenPrice={tokenPrice}
-          selectFiat={selectFiat}
-          selectToken={selectToken}
-          isFiatSelected={selectedCurrency === CURRENCY_NAMES.fiat}
+          selectCurrency={selectCurrency}
+          selectedCurrency={selectedCurrency}
         />
       </div>
       <button className="btn mt-8 uppercase" onClick={handleClick}>

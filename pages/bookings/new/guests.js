@@ -22,7 +22,13 @@ const GuestSelector = () => {
   const [pets, setPets] = useState(savedData.pets || 0);
 
   const handleNext = () => {
-    saveStepData({ adults, children, infants, pets });
+    saveStepData({
+      adults,
+      children,
+      infants,
+      pets,
+      totalGuests: adults + children, // TO DO check if total guests are indeed only adults + children
+    });
     goToNextStep();
   };
 
