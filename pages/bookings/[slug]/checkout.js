@@ -251,33 +251,31 @@ const Booking = ({ booking, error }) => {
               <p>--</p>
               <p>
                 {__('bookings_utility_fee')}
-                <b>
-                  {' '}
-                  {priceFormat(booking.utilityFiat)}
-                </b>
+                <b> {priceFormat(booking.utilityFiat)}</b>
               </p>
-              { booking.useTokens ?
+              {booking.useTokens ? (
                 <p>
                   {__('bookings_tokens_lock')}
-                  <b>
-                    {' '}
-                    {priceFormat(booking.rentalToken)}
-                  </b>
-                </p>:
+                  <b> {priceFormat(booking.rentalToken)}</b>
+                </p>
+              ) : (
                 <p>
                   {__('bookings_rental_cost')}
-                  <b>
-                    {' '}
-                    {priceFormat(booking.rentalFiat)}
-                  </b>
+                  <b> {priceFormat(booking.rentalFiat)}</b>
                 </p>
-              }
+              )}
               <p>--</p>
               <p>
                 {__('bookings_total')}
                 <b>
                   {' '}
-                  {priceFormat(booking.utilityFiat && booking.utilityFiat.val + (booking.useTokens || !booking.rentalFiat ? 0 : booking.rentalFiat.val))}
+                  {priceFormat(
+                    booking.utilityFiat &&
+                      booking.utilityFiat.val +
+                        (booking.useTokens || !booking.rentalFiat
+                          ? 0
+                          : booking.rentalFiat.val),
+                  )}
                 </b>
               </p>
             </section>
@@ -376,6 +374,7 @@ const Booking = ({ booking, error }) => {
                                 : 'Request to book'
                             }
                             buttonDisabled={false}
+                            cardElementClassName="payment-card shadow-lg p-2 bg-white"
                           />
                         </Elements>
                       </>

@@ -2,14 +2,20 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+
 import { BookingBackButton } from '../../../components/BookingBackButton';
 import { CheckoutAccomodation } from '../../../components/CheckoutAccomodation';
 import { CheckoutDates } from '../../../components/CheckoutDates';
+import CheckoutForm from '../../../components/CheckoutForm';
 import { CheckoutTotal } from '../../../components/CheckoutTotal';
 import { CheckoutUtility } from '../../../components/CheckoutUtility';
 import Layout from '../../../components/Layout';
 import { Progress } from '../../../components/Progress';
 
+import config from '../../../config';
+import { useAuth } from '../../../contexts/auth';
 import { useBookingActions, useBookingState } from '../../../contexts/booking';
 import { CURRENCIES } from '../../../utils/const';
 import { __ } from '../../../utils/helpers';
@@ -24,6 +30,7 @@ const Checkout = () => {
   ).data;
   const totalGuests = guests.totalGuests;
   const {
+    bookingId,
     listingName,
     useToken,
     totalCostFiat,
@@ -53,6 +60,9 @@ const Checkout = () => {
       startNewBooking();
     }
   }, []);
+
+  const stripe = loadStripe(config.STRIPE_PUB_KEY);
+  const { user } = useAuth();
 
   if (!startDate || !totalGuests || !listingName) {
     return null;
@@ -88,6 +98,27 @@ const Checkout = () => {
             totalCostUtility={totalCostUtility}
             selectedCurrency={selectedCurrency}
           />
+          <div>
+            <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3 flex items-center">
+              <span>💲</span>
+              <span>{__('bookings_checkout_step_payment_title')}</span>
+            </h2>
+            <Elements stripe={stripe}>
+              <CheckoutForm
+                type="booking"
+                _id={bookingId}
+                onSuccess={() => {
+                  console.log('success payment');
+                }}
+                email={user.email}
+                name={user.screenname}
+                buttonText={__('bookings_checkout_step_payment_button')}
+                submitButtonClassName="w-full btn uppercase mt-8"
+                cardElementClassName="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-2"
+                buttonDisabled={false}
+              />
+            </Elements>
+          </div>
         </div>
       </div>
     </Layout>

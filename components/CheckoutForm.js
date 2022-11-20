@@ -21,6 +21,8 @@ const CheckoutForm = ({
   currency,
   discountCode,
   onSuccess,
+  submitButtonClassName = '',
+  cardElementClassName = '',
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -47,20 +49,23 @@ const CheckoutForm = ({
       }
       const {
         data: { results: payment },
-      } = await api.post(type === 'booking' ? '/bookings/payment' : '/payment', {
-        token: token.id,
-        type,
-        ticketOption,
-        total,
-        currency,
-        discountCode,
-        _id,
-        email,
-        name,
-        message,
-        fields,
-        volunteer,
-      });
+      } = await api.post(
+        type === 'booking' ? '/bookings/payment' : '/payment',
+        {
+          token: token.id,
+          type,
+          ticketOption,
+          total,
+          currency,
+          discountCode,
+          _id,
+          email,
+          name,
+          message,
+          fields,
+          volunteer,
+        },
+      );
       if (onSuccess) {
         setProcessing(false);
         onSuccess(payment);
@@ -102,11 +107,11 @@ const CheckoutForm = ({
             },
           },
         }}
-        className="payment-card shadow-lg p-2 bg-white"
+        className={` ${cardElementClassName}`}
       />
       <button
         type="submit"
-        className="btn-primary mt-4"
+        className={`btn-primary mt-4 ${submitButtonClassName}`}
         disabled={!stripe || buttonDisabled || processing}
       >
         {processing
