@@ -63,12 +63,11 @@ const Questionnaire = () => {
   const handleSubmit = async () => {
     saveStepData(answers);
     try {
-      await api.patch(
-        `/booking/${accomodation.bookingId}`,
-        Array.from(answers.size ? answers : [], ([key, value]) => ({
+      await api.patch(`/booking/${accomodation.bookingId}`, {
+        fileds: Array.from(answers.size ? answers : [], ([key, value]) => ({
           [key]: value,
         })),
-      );
+      });
       goToNextStep();
     } catch (err) {
       console.log(err); // TO DO handle error
