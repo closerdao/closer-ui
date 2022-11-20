@@ -26,7 +26,7 @@ const formatName = (name) => name && name.split('_').join(' ');
 
 const EventCheckout = ({ event, error }) => {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, signup: register } = useAuth();
   const [ticketOption, setTicketOption] = useState(null);
   const [paymentReceived, setPaymentReceived] = useState(null);
   const [signup, updateSignup] = useState({
