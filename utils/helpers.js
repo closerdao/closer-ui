@@ -6,11 +6,10 @@ import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { isMap } from 'immutable';
 
+import { REFUND_PERIODS } from '../constants';
 import base from '../locales/base';
 import en from '../locales/en';
-import { REFUND_PERIODS } from '../constants';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(relativeTime);
@@ -96,7 +95,20 @@ export const priceFormat = (price, currency = 'EUR') => {
     });
   }
   if (typeof price === 'object' && price.val) {
-    return parseFloat(price.val).toLocaleString('en-US', {
+    const priceValue = parseFloat(price.val);
+    if (price.cur === 'TDF') {
+      const numberFormatParts = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'TDF',
+      }).formatToParts(priceValue);
+      return numberFormatParts.reduce((acc, part) => {
+        if (part.type === 'currency') {
+          return acc + 'TDF';
+        }
+        return acc + part.value;
+      }, '$');
+    }
+    return priceValue.toLocaleString('en-US', {
       style: 'currency',
       currency: price.cur,
     });
@@ -195,25 +207,25 @@ export const getSample = (field) => {
     default:
       throw new Error(`Invalid model type:${field.type}`);
   }
-}
+};
 
 export const calculateRefundTotal = ({ initialValue, policy, startDate }) => {
-  const { default: defaultRefund, lastmonth, lastweek, lastday } = policy || {}
-  const bookingStartDate = dayjs(startDate)
-  const now = dayjs()
-  const daysUntilBookingStart = bookingStartDate.diff(now, 'days')
+  const { default: defaultRefund, lastmonth, lastweek, lastday } = policy || {};
+  const bookingStartDate = dayjs(startDate);
+  const now = dayjs();
+  const daysUntilBookingStart = bookingStartDate.diff(now, 'days');
 
   if (daysUntilBookingStart > REFUND_PERIODS.MONTH) {
-    return initialValue * defaultRefund
+    return initialValue * defaultRefund;
   }
   if (daysUntilBookingStart >= REFUND_PERIODS.WEEK) {
-    return initialValue * lastmonth
+    return initialValue * lastmonth;
   }
   if (daysUntilBookingStart > REFUND_PERIODS.DAY) {
-    return initialValue * lastweek
+    return initialValue * lastweek;
   }
   if (daysUntilBookingStart > REFUND_PERIODS.LASTDAY) {
-    return initialValue * lastday
+    return initialValue * lastday;
   }
-  return 0
-}
+  return 0;
+};

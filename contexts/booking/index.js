@@ -12,6 +12,7 @@ const BookingDispatchContext = createContext();
 export const BookingProvider = ({ children }) => {
   const router = useRouter();
   const [state, dispatch] = useReducer(bookingReducer, initialState);
+  console.log('BookingProvider', state);
   const currentStep = state.steps.find((step) => step.path === router.pathname);
 
   const saveStepData = (data) => {
@@ -36,9 +37,17 @@ export const BookingProvider = ({ children }) => {
     router.push(nextStepPath);
   };
 
+  const startNewBooking = () => {
+    dispatch({
+      type: 'RESET_BOOKING',
+    });
+    router.push('/bookings/new/guests');
+  };
+
   const bookingActions = {
     saveStepData,
     goToNextStep,
+    startNewBooking,
   };
 
   return (
