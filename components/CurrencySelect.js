@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { __, priceFormat } from '../utils/helpers';
 import PlusIcon from './icons/PlusIcon';
 
-export const PriceSwitch = ({
+export const CurrencySelect = ({
   fiatPrice,
   tokenPrice,
   utilityFiat,
@@ -51,7 +51,7 @@ export const PriceSwitch = ({
   );
 };
 
-PriceSwitch.propTypes = {
+CurrencySelect.propTypes = {
   fiatPrice: PropTypes.shape({
     val: PropTypes.number,
     cur: PropTypes.string,
