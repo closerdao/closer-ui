@@ -66,7 +66,7 @@ const Questionnaire = () => {
       await api.patch(
         `/booking/${accomodation.bookingId}`,
         JSON.stringify({
-          fields: Object.fromEntries(answers),
+          fields: Object.fromEntries(answers.size ? answers : []),
         }),
       );
       goToNextStep();
@@ -77,12 +77,7 @@ const Questionnaire = () => {
 
   const handleAnswer = (name, answer) => {
     setAnswers((prevMap) => {
-      let newMap;
-      if (prevMap.size) {
-        newMap = new Map(prevMap);
-      } else {
-        newMap = new Map();
-      }
+      const newMap = prevMap.size ? new Map(prevMap) : new Map();
       newMap.set(name, answer);
       return newMap;
     });

@@ -50,6 +50,7 @@ const DatesSelector = () => {
     saveStepData({
       startDate,
       endDate,
+      totalNights,
     });
     goToNextStep();
   };
