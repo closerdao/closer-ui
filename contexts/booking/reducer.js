@@ -1,16 +1,9 @@
-const BOOKING_STEPS = [
-  '/bookings/new/guests',
-  '/bookings/new/dates',
-  '/bookings/new/accomodation',
-  '/bookings/new/questionnaire',
-  '/bookings/new/checkout',
-  '/bookings/new/confirmation',
-];
+import { BOOKING_PATHS } from '../../utils/const';
 
 export const initialState = {
-  steps: BOOKING_STEPS.map((path) => ({
+  steps: BOOKING_PATHS.map((path) => ({
     path,
-    next: BOOKING_STEPS[BOOKING_STEPS.indexOf(path) + 1] || null,
+    next: BOOKING_PATHS[BOOKING_PATHS.indexOf(path) + 1] || null,
     data: {},
   })),
 };

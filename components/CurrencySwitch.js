@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types';
+
 import { __ } from '../utils/helpers';
 
 export const CurrencySwitch = ({ currencies, selectedCurrency, onSelect }) => {
@@ -20,4 +22,10 @@ export const CurrencySwitch = ({ currencies, selectedCurrency, onSelect }) => {
       ))}
     </div>
   );
+};
+
+CurrencySwitch.propTypes = {
+  currencies: PropTypes.arrayOf(PropTypes.string),
+  selectedCurrency: PropTypes.string,
+  onSelect: PropTypes.func,
 };

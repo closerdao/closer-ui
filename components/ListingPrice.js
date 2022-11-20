@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 
+import { CURRENCIES } from '../utils/const';
 import { __, priceFormat } from '../utils/helpers';
 import { CurrencySwitch } from './CurrencySwitch';
 import PlusIcon from './icons/PlusIcon';
@@ -17,7 +18,7 @@ export const ListingPrice = ({
       <CurrencySwitch
         selectedCurrency={selectedCurrency}
         onSelect={selectCurrency}
-        currencies={[fiatPrice.cur, tokenPrice.cur]}
+        currencies={CURRENCIES}
       />
       <div className="flex items-center justify-center mt-8">
         <div className="flex-1 flex flex-col items-center">

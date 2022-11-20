@@ -51,7 +51,14 @@ const AccomodationSelector = () => {
     checkAvailability();
   }, []);
 
-  const bookListing = async ({ listingId, useToken }) => {
+  const bookListing = async ({
+    listingId,
+    listingName,
+    useToken,
+    rentalFiat,
+    rentalToken,
+    utilityFiat,
+  }) => {
     try {
       setIsCreatingBooking(true);
       const {
@@ -66,8 +73,12 @@ const AccomodationSelector = () => {
       if (newBooking._id) {
         saveStepData({
           listingId,
+          listingName,
           bookingId: newBooking._id,
           useToken,
+          totalCostFiat: rentalFiat,
+          totalCostToken: rentalToken,
+          totalCostUtility: utilityFiat,
         });
         goToNextStep();
       }

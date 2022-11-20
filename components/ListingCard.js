@@ -6,18 +6,17 @@ import { __ } from '../utils/helpers';
 import { ListingPrice } from './ListingPrice';
 
 export const ListingCard = ({ listing, bookListing }) => {
-  const { name, description, fiatPrice, tokenPrice, utilityFiat } = listing;
-  const CURRENCY_NAMES = {
-    fiat: fiatPrice.cur,
-    token: tokenPrice.cur,
-  };
+  const { name, description, rentalFiat, rentalToken, utilityFiat } = listing;
+  const [selectedCurrency, selectCurrency] = useState(rentalFiat.cur);
 
-  const [selectedCurrency, selectCurrency] = useState(CURRENCY_NAMES.fiat);
-
-  const handleClick = () => {
+  const handleBooking = () => {
     bookListing({
       listingId: listing._id,
-      useToken: selectedCurrency === CURRENCY_NAMES.token,
+      listingName: name,
+      useToken: selectedCurrency === 'TDF',
+      rentalFiat,
+      rentalToken,
+      utilityFiat,
     });
   };
 
@@ -29,14 +28,14 @@ export const ListingCard = ({ listing, bookListing }) => {
       <p>{description}</p>
       <div className="my-8">
         <ListingPrice
-          fiatPrice={fiatPrice}
+          fiatPrice={rentalFiat}
           utilityFiat={utilityFiat}
-          tokenPrice={tokenPrice}
+          tokenPrice={rentalToken}
           selectCurrency={selectCurrency}
           selectedCurrency={selectedCurrency}
         />
       </div>
-      <button className="btn mt-8 uppercase" onClick={handleClick}>
+      <button className="btn mt-8 uppercase" onClick={handleBooking}>
         {/* TO DO: check when it should be disabled */}
         {__('listing_preview_book')}
       </button>
@@ -53,6 +52,14 @@ ListingCard.propTypes = {
       cur: PropTypes.string,
     }),
     tokenPrice: PropTypes.shape({
+      val: PropTypes.number,
+      cur: PropTypes.string,
+    }),
+    rentalFiat: PropTypes.shape({
+      val: PropTypes.number,
+      cur: PropTypes.string,
+    }),
+    rentalToken: PropTypes.shape({
       val: PropTypes.number,
       cur: PropTypes.string,
     }),
