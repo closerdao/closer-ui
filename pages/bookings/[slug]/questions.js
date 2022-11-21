@@ -5,7 +5,6 @@ import React, { useState } from 'react';
 
 import Layout from '../../../components/Layout';
 import Switch from '../../../components/Switch';
-import FieldsEditor from '../../../components/FieldsEditor';
 
 import { useWeb3React } from '@web3-react/core';
 import dayjs from 'dayjs';
