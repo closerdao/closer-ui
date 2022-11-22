@@ -1,9 +1,10 @@
 import { useRouter } from 'next/router';
 
-import { createContext, useContext, useReducer } from 'react';
+import { createContext, useContext, useEffect, useReducer } from 'react';
 
 import PropTypes from 'prop-types';
 
+import api from '../../utils/api';
 import { bookingReducer, initialState } from './reducer';
 
 const BookingStateContext = createContext();
@@ -12,8 +13,17 @@ const BookingDispatchContext = createContext();
 export const BookingProvider = ({ children }) => {
   const router = useRouter();
   const [state, dispatch] = useReducer(bookingReducer, initialState);
-  console.log('BookingProvider', state);
   const currentStep = state.steps.find((step) => step.path === router.pathname);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const {
+        data: { results },
+      } = await api.get('/bookings/settings');
+      dispatch({ type: 'SET_SETTINGS', payload: results });
+    };
+    fetchSettings();
+  }, []);
 
   const saveStepData = (data) => {
     if (!data) {
