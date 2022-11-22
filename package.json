@@ -16,8 +16,6 @@
     "url": "git+https://github.com/closerearth/app.closer.earth.git"
   },
   "dependencies": {
-    "-": "^0.0.1",
-    "@next/swc-darwin-arm64": "^12.1.4",
     "@react-icons/all-files": "^4.1.0",
     "@stripe/react-stripe-js": "^1.4.1",
     "@stripe/stripe-js": "^1.16.0",
@@ -29,7 +27,6 @@
     "chart.js": "^3.7.1",
     "datejs": "^1.0.0-rc3",
     "dayjs": "^1.10.4",
-    "eslint-config-airbnb-base": "^15.0.0",
     "ethers": "^5.7.1",
     "fs-extra": "^10.0.0",
     "immutable": "^4.0.0-rc.12",
