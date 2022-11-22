@@ -44,7 +44,7 @@ export const ListingCard = ({ listing, bookListing }) => {
 };
 
 ListingCard.propTypes = {
-  listing: {
+  listing: PropTypes.shape({
     name: PropTypes.string,
     description: PropTypes.string,
     fiatPrice: PropTypes.shape({
@@ -67,6 +67,6 @@ ListingCard.propTypes = {
       val: PropTypes.number,
       cur: PropTypes.string,
     }),
-  },
+  }),
   bookListing: PropTypes.func,
 };
