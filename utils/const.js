@@ -7,6 +7,7 @@ export const BOOKING_PATHS = [
   '/bookings/new/dates',
   '/bookings/new/accomodation',
   '/bookings/new/questionnaire',
+  '/bookings/new/summary',
   '/bookings/new/checkout',
   '/bookings/new/confirmation',
 ];
