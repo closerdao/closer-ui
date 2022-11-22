@@ -19,7 +19,13 @@ let language = Object.assign({}, base, en);
 
 const ONE_HOUR = 60 * 60 * 1000;
 
-export const __ = (key) => language[key] || `__${key}_missing__`;
+export const __ = (key, paramValue) => {
+  if (paramValue) {
+    return language[key].replace('%s', paramValue);
+  }
+  return language[key] || `__${key}_missing__`;
+};
+
 export const switchLanguage = (lang) =>
   (language = Object.assign(language, lang));
 

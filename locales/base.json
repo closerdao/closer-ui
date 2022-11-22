@@ -119,6 +119,8 @@
   "listing_preview_per_month": "per month",
   "listing_preview_book": "Book",
   "listing_preview_edit": "Edit",
+  "listing_preview_private": "This is a private unit",
+  "listing_preview_beds": "This is a shared space with up to %s beds",
   "member_home_title": "Aloha",
   "member_home_add_channel": "+add-channel",
   "member_list_see_profile": "See profile",
