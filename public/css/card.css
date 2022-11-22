@@ -1,5 +1,5 @@
 .card {
-  @apply bg-gray-100 rounded-md p-4 divide-y overflow-hidden shadow-lg;
+  @apply bg-white rounded-md p-4 divide-y shadow-lg;
 }
 .card .card-title {
   @apply mt-0 -ml-4 -mr-4 p-4 pt-0 flex flex-row justify-between items-center;
