@@ -1,20 +1,16 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import React, { useEffect, useState } from 'react';
-import Linkify from 'react-linkify';
+import React from 'react';
 
-import EventsList from '../../components/EventsList';
 import Layout from '../../components/Layout';
-import UploadPhoto from '../../components/UploadPhoto';
+import PageNotAllowed from '../401';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
-import { TiDelete } from '@react-icons/all-files/ti/TiDelete';
 
 import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth.js';
-import { usePlatform } from '../../contexts/platform';
-import api, { cdn } from '../../utils/api';
+import { cdn } from '../../utils/api';
 import { __ } from '../../utils/helpers';
 import {
   FEATURES,
@@ -75,12 +71,7 @@ const dashbboardLinks = [
 ];
 
 const MemberPage = () => {
-  const [introMessage, setMessage] = useState('');
-  const [openIntro, setOpenIntro] = useState(false);
-  const [error, setErrors] = useState(false);
-  const [sendError, setSendErrors] = useState(false);
   const { user: currentUser, isAuthenticated } = useAuth();
-  const { platform } = usePlatform();
 
   const links = dashbboardLinks.filter(
     (link) =>

@@ -1,9 +1,7 @@
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 
 import React, { useEffect, useState } from 'react';
 
-import { useAuth } from '../contexts/auth';
 import api, { formatSearch } from '../utils/api';
 import { __ } from '../utils/helpers';
 import Autocomplete from './Autocomplete';
@@ -17,10 +15,8 @@ const UserList = ({
   canInviteUsers,
   seeAllLink,
 }) => {
-  const { user } = useAuth();
   const [users, setUsers] = useState([]);
   const [error, setErrors] = useState(false);
-  const router = useRouter();
 
   const addMember = async (member) => {
     try {

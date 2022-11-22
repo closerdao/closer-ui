@@ -10,7 +10,7 @@ import Layout from '../../components/Layout';
 import models from '../../models';
 import { __ } from '../../utils/helpers';
 
-const AddChannel = ({ token }) => {
+const AddChannel = () => {
   const router = useRouter();
 
   return (

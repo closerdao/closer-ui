@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 
 const Spinner = ({ fixed, className }) => {
   return (
-    <div className={fixed ? 'fixed top-24 right-4' : undefined}>
+    <div className={fixed ? `${className} fixed top-24 right-4` : className}>
       <svg
         role="status"
         className="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-primary"
