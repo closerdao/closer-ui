@@ -27,7 +27,7 @@ const GuestSelector = () => {
       children,
       infants,
       pets,
-      totalGuests: adults + children, // TO DO check if total guests are indeed only adults + children
+      totalGuests: adults,
     });
     goToNextStep();
   };
