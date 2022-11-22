@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { BookingBackButton } from '../../../components/BookingBackButton';
 import DateTimePicker from '../../../components/DateTimePicker';
@@ -34,11 +34,11 @@ const DatesSelector = () => {
   const isMember = user?.roles.includes('member');
 
   const { steps } = useBookingState();
-  const { pathname } = useRouter();
-  const currentStep = steps.find((step) => step.path === pathname);
+  const router = useRouter();
+  const currentStep = steps.find((step) => step.path === router.pathname);
   const savedData = currentStep.data;
   const currentStepIndex = steps.indexOf(currentStep);
-  const { saveStepData, goToNextStep } = useBookingActions();
+  const { saveStepData, goToNextStep, startNewBooking } = useBookingActions();
   const [startDate, setStartDate] = useState(
     savedData.startDate || defaultStart,
   );
@@ -54,6 +54,16 @@ const DatesSelector = () => {
     });
     goToNextStep();
   };
+
+  const guestsDataUndefined =
+    steps.find((step) => step.path === '/bookings/new/guests').data.adults ===
+    undefined;
+
+  useEffect(() => {
+    if (guestsDataUndefined) {
+      startNewBooking();
+    }
+  }, []);
 
   return (
     <Layout>
@@ -95,7 +105,6 @@ const DatesSelector = () => {
               minValue={dayjs(startDate).format('YYYY-MM-DD')}
               onChange={setEndDate}
               showTime={false}
-              dateClassName="peer"
             />
           </div>
         </div>
