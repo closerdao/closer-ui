@@ -5,11 +5,28 @@ import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { __ } from '../../utils/helpers';
 import Tabs from '../../components/Tabs';
-import MyBookings from '../../components/MyBookings';
-import PastBookings from '../../components/PastBookings';
+import Bookings from '../../components/Bookings';
 
-const Bookings = () => {
+const BookingsDirectory = () => {
   const { user } = useAuth();
+
+  const filters = {
+    myBookings: user && {
+      where: {
+        createdBy: user._id,
+        status: ['pending', 'confirmed', 'checkedIn'],
+        end: {
+          $gt: new Date()
+        }
+      }
+    },
+    pastBookings: user && {
+      where: {
+        createdBy: user._id,
+        end: { $lt: new Date() }
+      }
+    }
+  };
 
   if (!user) {
     return <PageNotFound error="User not logged in." />;
@@ -26,12 +43,12 @@ const Bookings = () => {
             {
               title: __('bookings_title'),
               value: 'my-bookings',
-              content: <MyBookings />
+              content: <Bookings filter={ filters.myBookings } />
             },
             {
               title: __('past_bookings_title'),
               value: 'past-bookings',
-              content: <PastBookings />
+              content: <Bookings filter={ filters.pastBookings } />
             },
           ] }
         />
@@ -40,4 +57,4 @@ const Bookings = () => {
   );
 };
 
-export default Bookings;
+export default BookingsDirectory;

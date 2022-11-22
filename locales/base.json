@@ -144,6 +144,7 @@
   "applications_accepted": "Accepted applications",
   "applications_rejected": "rejected",
   "booking_no_available_listings": "No available listings found for those dates.",
+  "booking_requests_title": "Pending booking requests",
   "bookings_edit_slug_title": "Edit",
   "bookings_edit_slug_not_found": "Event_not_found",
   "bookings_checkout_title": "Confirm payment",
