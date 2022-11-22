@@ -62,9 +62,12 @@ const Questionnaire = () => {
 
   const handleSubmit = async () => {
     saveStepData(answers);
+    if (!answers.size) {
+      return;
+    }
     try {
       await api.patch(`/booking/${accomodation.bookingId}`, {
-        fileds: Array.from(answers.size ? answers : [], ([key, value]) => ({
+        fileds: Array.from(answers, ([key, value]) => ({
           [key]: value,
         })),
       });
@@ -82,6 +85,8 @@ const Questionnaire = () => {
     });
   };
 
+  console.log('answers.size < 3', typeof answers.size, answers.size < 3);
+
   return (
     <Layout>
       <div className="max-w-screen-xl mx-auto p-8">
@@ -94,7 +99,7 @@ const Questionnaire = () => {
         <h2 className="text-2xl leading-10 font-normal mt-16 mb-4">
           {__('bookings_questionnaire_step_subtitle')}
         </h2>
-        <div className="my-16">
+        <div className="my-16 gap-16">
           {isLoading && <p>Loading...</p>}
           {!isLoading &&
             questions.map((question) => (
@@ -105,10 +110,14 @@ const Questionnaire = () => {
                 savedAnswer={answers.size && answers.get(question.name)}
               />
             ))}
+          <button
+            className="w-full btn uppercase disabled:cursor-not-allowed disabled:text-gray-400 disabled:border-gray-400"
+            onClick={handleSubmit}
+            disabled={!answers.size || answers.size < 3}
+          >
+            {__('buttons_submit')}
+          </button>
         </div>
-        <button className="w-full btn uppercase" onClick={handleSubmit}>
-          {__('buttons_submit')}
-        </button>
       </div>
     </Layout>
   );

@@ -9,10 +9,6 @@ export const CheckoutUtility = ({ totalCostUtility }) => {
         <span className="mr-1">🛠</span>
         <span>{__('bookings_checkout_step_utility_title')}</span>
       </h2>
-      <div className="flex justify-between items-center my-3">
-        <p> {__('bookings_checkout_step_utility_daily')}</p>
-        <p className="font-bold">{priceFormat(totalCostUtility)}</p>
-      </div>
       <div className="flex justify-between items-center mt-3">
         <p> {__('bookings_checkout_step_utility_total')}</p>
         <p className="font-bold">{priceFormat(totalCostUtility)}</p>

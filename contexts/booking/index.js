@@ -41,7 +41,7 @@ export const BookingProvider = ({ children }) => {
     dispatch({
       type: 'RESET_BOOKING',
     });
-    router.push('/bookings/new/guests');
+    router.push('/bookings/new');
   };
 
   const bookingActions = {

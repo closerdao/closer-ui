@@ -6,8 +6,6 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
 import { BookingBackButton } from '../../../components/BookingBackButton';
-import { CheckoutAccomodation } from '../../../components/CheckoutAccomodation';
-import { CheckoutDates } from '../../../components/CheckoutDates';
 import CheckoutForm from '../../../components/CheckoutForm';
 import { CheckoutTotal } from '../../../components/CheckoutTotal';
 import { CheckoutUtility } from '../../../components/CheckoutUtility';
@@ -78,19 +76,6 @@ const Checkout = () => {
         </h1>
         <Progress progress={currentStepIndex + 1} total={steps.length} />
         <div className="mt-16 flex flex-col gap-16">
-          <CheckoutDates
-            startDate={startDate}
-            endDate={endDate}
-            totalGuests={totalGuests}
-            totalNights={totalNights}
-          />
-          <CheckoutAccomodation
-            selectedCurrency={selectedCurrency}
-            selectCurrency={selectCurrency}
-            listingName={listingName}
-            totalCostFiat={totalCostFiat}
-            totalCostToken={totalCostToken}
-          />
           <CheckoutUtility totalCostUtility={totalCostUtility} />
           <CheckoutTotal
             totalCostFiat={totalCostFiat}
