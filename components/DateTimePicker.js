@@ -4,13 +4,7 @@ import dayjs from 'dayjs';
 
 const defaultTime = dayjs().add(7, 'days').set('hour', 12).set('minute', 0);
 
-const DateTimePicker = ({
-  value,
-  minValue,
-  onChange,
-  showTime,
-  dateClassName,
-}) => {
+const DateTimePicker = ({ value, minValue, onChange, showTime }) => {
   const [datetime, updateTime] = useState(value ? dayjs(value) : defaultTime);
 
   useEffect(() => {
@@ -31,11 +25,9 @@ const DateTimePicker = ({
           updateTime(newDate);
           onChange(newDate);
         }}
-        className={
-          'peer invalid:text-primary invalid:border-primary focus:invalid:text-primary focus:invalid:border-primary'
-        }
+        className="`peer invalid:text-primary invalid:border-primary focus:invalid:text-primary focus:invalid:border-primary"
       />
-      <p class="mt-2 invisible peer-invalid:visible text-primary text-sm">
+      <p className="mt-2 invisible peer-invalid:visible text-primary text-sm">
         Please set a valid date.
       </p>
       {showTime && (
