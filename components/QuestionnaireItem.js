@@ -10,7 +10,7 @@ export const QuestionnaireItem = ({
 }) => {
   const [answer, setAnswer] = React.useState(savedAnswer);
   const debouncedAnswer = useDebounce(answer, 500);
-  console.log('QuestionnaireItem', name, answer, debouncedAnswer);
+
   useEffect(() => {
     handleAnswer(name, debouncedAnswer);
   }, [debouncedAnswer]);

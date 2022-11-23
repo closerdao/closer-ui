@@ -2,31 +2,19 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
-import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
-
 import { BookingBackButton } from '../../../components/BookingBackButton';
 import { Checkbox } from '../../../components/Checkbox';
-import CheckoutForm from '../../../components/CheckoutForm';
+import { CheckoutPayment } from '../../../components/CheckoutPayment';
 import { CheckoutTotal } from '../../../components/CheckoutTotal';
 import Layout from '../../../components/Layout';
 import { Progress } from '../../../components/Progress';
 import { Wallet } from '../../../components/Wallet';
 
-import config from '../../../config';
-import { useAuth } from '../../../contexts/auth';
 import { useBookingActions, useBookingState } from '../../../contexts/booking';
 import { __, priceFormat } from '../../../utils/helpers';
 
 const Checkout = () => {
   const { steps } = useBookingState();
-
-  const dates = steps.find((step) => step.path === '/bookings/new/dates');
-  const { startDate } = dates.data;
-  const guests = steps.find(
-    (step) => step.path === '/bookings/new/guests',
-  ).data;
-  const totalGuests = guests.totalGuests;
   const {
     bookingId,
     listingName,
@@ -40,31 +28,25 @@ const Checkout = () => {
   const currentStep = steps.find((step) => step.path === router.pathname);
   const currentStepIndex = steps.indexOf(currentStep);
 
-  const { saveStepData, goToNextStep, startNewBooking } = useBookingActions();
-
+  const { startNewBooking } = useBookingActions();
   useEffect(() => {
-    // check if any step has undefined data
-    // redirect to the previous to that step if so
-    const hasPreviousUndefinedStep =
-      !startDate || !totalGuests || !listingName || !bookingId;
-    if (hasPreviousUndefinedStep) {
+    if (!bookingId || !listingName) {
       startNewBooking();
     }
   }, []);
 
-  const stripe = loadStripe(config.STRIPE_PUB_KEY);
-  const { user } = useAuth();
   const [hasAgreedToWalletDisclaimer, setWalletDisclaimer] = useState(false);
 
-  if (!startDate || !totalGuests || !listingName) {
+  if (!listingName) {
     return null;
   }
 
   const savedCurrency =
     totalCostToken && (useToken ? totalCostToken.cur : totalCostFiat.cur);
-  const isTokenSelected = savedCurrency === totalCostToken.cur;
-  const totalValue = isTokenSelected
-    ? totalCostToken.val
+  const accomodationValue = useToken ? totalCostToken.val : totalCostFiat.val;
+
+  const totalValueFiat = useToken
+    ? totalCostUtility.val
     : totalCostFiat.val + totalCostUtility.val;
 
   return (
@@ -86,7 +68,7 @@ const Checkout = () => {
               <p> {listingName}</p>
               <p className="font-bold">
                 {priceFormat({
-                  val: totalValue,
+                  val: accomodationValue,
                   cur: savedCurrency,
                 })}
               </p>
@@ -125,27 +107,13 @@ const Checkout = () => {
             totalCostUtility={totalCostUtility}
             selectedCurrency={savedCurrency}
           />
-          <div>
-            <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3 flex items-center">
-              <span>💲</span>
-              <span>{__('bookings_checkout_step_payment_title')}</span>
-            </h2>
-            <Elements stripe={stripe}>
-              <CheckoutForm
-                type="booking"
-                _id={bookingId}
-                onSuccess={() => {
-                  console.log('success payment');
-                }}
-                email={user.email}
-                name={user.screenname}
-                buttonText={__('bookings_checkout_step_payment_button')}
-                submitButtonClassName="w-full btn uppercase mt-8"
-                cardElementClassName="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-4"
-                buttonDisabled={false}
-              />
-            </Elements>
-          </div>
+          <CheckoutPayment
+            bookingId={bookingId}
+            buttonDisabled={!hasAgreedToWalletDisclaimer}
+            useToken={useToken}
+            totalValueToken={totalCostToken.val}
+            totalValueFiat={totalValueFiat}
+          />
         </div>
       </div>
     </Layout>

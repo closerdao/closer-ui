@@ -23,7 +23,7 @@ export const bookingReducer = (state, action) => {
           if (step.path === action.payload.path) {
             return {
               ...step,
-              data: action.payload.data,
+              data: { ...step.data, ...action.payload.data },
             };
           }
           return step;

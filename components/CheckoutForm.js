@@ -23,6 +23,8 @@ const CheckoutForm = ({
   onSuccess,
   submitButtonClassName = '',
   cardElementClassName = '',
+  onError = () => {},
+  prePayInTokens = () => {},
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -32,6 +34,10 @@ const CheckoutForm = ({
   const handleSubmit = async (event) => {
     event.preventDefault();
     setProcessing(true);
+
+    if (prePayInTokens) {
+      await prePayInTokens();
+    }
 
     try {
       const { error, token } = await stripe.createToken(
@@ -47,6 +53,7 @@ const CheckoutForm = ({
         setError('No token returned from Stripe.');
         return;
       }
+
       const {
         data: { results: payment },
       } = await api.post(
@@ -73,11 +80,12 @@ const CheckoutForm = ({
     } catch (err) {
       setProcessing(false);
       console.log(err);
-      setError(
+      const errorMessage =
         err.response && err.response.data.error
           ? err.response.data.error
-          : err.message,
-      );
+          : err.message;
+      setError(errorMessage);
+      onError(errorMessage);
     }
   };
 

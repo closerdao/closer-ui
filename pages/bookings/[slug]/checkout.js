@@ -82,6 +82,7 @@ const Booking = ({ booking, error }) => {
     ];
   }
 
+
   const { data: balanceDAOToken, mutate: mutateBD } = useSWR(
     [BLOCKCHAIN_DAO_TOKEN.address, 'balanceOf', account],
     {
