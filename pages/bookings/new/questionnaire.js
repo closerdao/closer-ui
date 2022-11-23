@@ -13,52 +13,54 @@ import { __ } from '../../../utils/helpers';
 
 const Questionnaire = () => {
   const router = useRouter();
-  const { steps } = useBookingState();
-  const currentStep = steps.find(
-    (step) => step.path === '/bookings/new/questionnaire',
-  );
+  const { steps, settings } = useBookingState();
+  const { questions } = settings;
   const accomodation = steps.find(
     (step) => step.path === '/bookings/new/accomodation',
   ).data;
-  const savedData = currentStep.data;
 
+  const currentStep = steps.find(
+    (step) => step.path === '/bookings/new/questionnaire',
+  );
+  const savedData = currentStep.data;
   const currentStepIndex = steps.indexOf(currentStep);
   const { saveStepData, goToNextStep } = useBookingActions();
-
-  const [questions, setQuestions] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [answers, setAnswers] = useState(new Map());
+  const [answers, setAnswers] = useState(
+    new Map(savedData.size ? savedData : []),
+  );
 
   useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        setIsLoading(true);
-        const {
-          data: { results },
-        } = await api.get('/bookings/questions');
-        setQuestions(results);
-        if (savedData) {
-          setAnswers(savedData);
-          return;
-        }
-        const newMap = new Map();
-        results.forEach((question) => {
-          if (!newMap.has(question.name)) {
-            newMap.set(question.name, '');
-          }
-        });
-        setAnswers(newMap);
-      } catch (err) {
-        console.log(err); // TO DO handle error
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    if (!questions) {
+      return;
+    }
+    const newMap = new Map();
+    questions.forEach((question) => {
+      newMap.set(question.name, '');
+    });
+    setAnswers(newMap);
     if (!accomodation.bookingId) {
       router.push('/bookings/new/accomodation');
     }
-    fetchQuestions();
-  }, []);
+  }, [settings.questions]);
+
+  const hasRequiredQuestions =
+    questions && questions.some((question) => question.required);
+  const [isSubmitDisabled, setSubmitDisabled] = useState(hasRequiredQuestions);
+
+  useEffect(() => {
+    if (!questions || !hasRequiredQuestions) {
+      return;
+    }
+    const allRequiredQuestionsCompleted = questions.some(
+      (question) => question.required && answers.get(question.name) !== '',
+    );
+    console.log('allRequiredQuestionsCompleted', allRequiredQuestionsCompleted);
+    setSubmitDisabled(!allRequiredQuestionsCompleted);
+  }, [answers]);
+
+  if (!questions) {
+    return null;
+  }
 
   const handleSubmit = async () => {
     saveStepData(answers);
@@ -85,8 +87,6 @@ const Questionnaire = () => {
     });
   };
 
-  console.log('answers.size < 3', typeof answers.size, answers.size < 3);
-
   return (
     <Layout>
       <div className="max-w-screen-xl mx-auto p-8">
@@ -100,20 +100,18 @@ const Questionnaire = () => {
           {__('bookings_questionnaire_step_subtitle')}
         </h2>
         <div className="my-16 gap-16">
-          {isLoading && <p>Loading...</p>}
-          {!isLoading &&
-            questions.map((question) => (
-              <QuestionnaireItem
-                question={question}
-                key={question.name}
-                handleAnswer={handleAnswer}
-                savedAnswer={answers.size && answers.get(question.name)}
-              />
-            ))}
+          {questions.map((question) => (
+            <QuestionnaireItem
+              question={question}
+              key={question.name}
+              handleAnswer={handleAnswer}
+              savedAnswer={answers.size ? answers.get(question.name) : ''}
+            />
+          ))}
           <button
             className="w-full btn uppercase disabled:cursor-not-allowed disabled:text-gray-400 disabled:border-gray-400"
             onClick={handleSubmit}
-            disabled={!answers.size || answers.size < 3}
+            disabled={isSubmitDisabled}
           >
             {__('buttons_submit')}
           </button>

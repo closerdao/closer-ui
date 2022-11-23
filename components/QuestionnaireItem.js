@@ -4,22 +4,24 @@ import { useDebounce } from '../hooks/useDebounce';
 import { __ } from '../utils/helpers';
 
 export const QuestionnaireItem = ({
-  question: { type, name, options },
+  question: { type, name, options, required },
   savedAnswer,
   handleAnswer,
 }) => {
   const [answer, setAnswer] = React.useState(savedAnswer);
   const debouncedAnswer = useDebounce(answer, 500);
-  console.log('QuestionnaireItem', name, answer);
+  console.log('QuestionnaireItem', name, answer, debouncedAnswer);
   useEffect(() => {
-    if (debouncedAnswer) {
-      handleAnswer(name, debouncedAnswer);
-    }
+    handleAnswer(name, debouncedAnswer);
   }, [debouncedAnswer]);
 
   const onChange = (e) => {
     setAnswer(e.target.value);
   };
+
+  if (!type || !name) {
+    return null;
+  }
   return (
     <div className="mb-16 last:mb-0">
       <label
@@ -27,6 +29,7 @@ export const QuestionnaireItem = ({
         className="border-solid border-b border-neutral-200 pb-1 capitalize font-normal text-base text-black"
       >
         {name}
+        {required && <span className="text-primary ml-1">*</span>}
       </label>
       {type === 'text' && (
         <>
@@ -37,7 +40,7 @@ export const QuestionnaireItem = ({
             className="border-solid !border border-neutral-400 !px-4 py-2 w-full !mt-3 rounded-xl bg-neutral-100 placeholder:text-xs placeholder:text-neutral-400 peer" // TO DO how to resolve class clash with forms.css?
             value={answer}
             onChange={onChange}
-            required
+            required={required}
           />
           <label className="invisible peer-invalid:visible normal-case font-normal text-xs text-primary">
             Please, enter an answer
@@ -48,10 +51,9 @@ export const QuestionnaireItem = ({
         <select
           type="text"
           className="rounded-xl border-solid !border border-neutral-400 bg-neutral-100 px-4 block w-full appearance-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent invalid:border-primary"
-          value={answer}
+          value={answer || ''}
           onChange={onChange}
-          defaultValue=""
-          required
+          required={required}
         >
           <option value="">{__('generic_select_placeholder')}</option>
           {options.map((option) => (

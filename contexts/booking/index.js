@@ -14,16 +14,21 @@ export const BookingProvider = ({ children }) => {
   const router = useRouter();
   const [state, dispatch] = useReducer(bookingReducer, initialState);
   const currentStep = state.steps.find((step) => step.path === router.pathname);
+  console.log('Booking Provider', state);
 
   useEffect(() => {
+    const hasNoSettings = Object.keys(state.settings).length === 0;
     const fetchSettings = async () => {
+      console.log('fetching settings');
       const {
         data: { results },
       } = await api.get('/bookings/settings');
       dispatch({ type: 'SET_SETTINGS', payload: results });
     };
-    fetchSettings();
-  }, []);
+    if (hasNoSettings) {
+      fetchSettings();
+    }
+  });
 
   const saveStepData = (data) => {
     if (!data) {

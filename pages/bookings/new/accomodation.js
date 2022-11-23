@@ -47,8 +47,9 @@ const AccomodationSelector = () => {
     };
     if (!dates.data.startDate || !guests.adults) {
       startNewBooking();
+    } else {
+      checkAvailability();
     }
-    checkAvailability();
   }, []);
 
   const bookListing = async ({
