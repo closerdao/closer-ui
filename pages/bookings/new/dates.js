@@ -33,7 +33,8 @@ const DatesSelector = () => {
   const { user } = useAuth();
   const isMember = user?.roles.includes('member');
 
-  const { steps } = useBookingState();
+  const { steps, settings } = useBookingState();
+
   const router = useRouter();
   const currentStep = steps.find((step) => step.path === router.pathname);
   const savedData = currentStep.data;
@@ -65,6 +66,13 @@ const DatesSelector = () => {
     }
   }, []);
 
+  if (!settings.conditions) {
+    return null;
+  }
+
+  const memberConditions = settings.conditions.member;
+  const guestConditions = settings.conditions.guest;
+
   return (
     <Layout>
       <div className="max-w-screen-xl mx-auto p-8 h-full">
@@ -78,9 +86,26 @@ const DatesSelector = () => {
           {__('bookings_dates_step_subtitle')}
         </h2>
         <p>
-          {isMember
-            ? __('bookings_dates_step_member_description')
-            : __('bookings_dates_step_guest_description')}
+          {isMember &&
+            __(
+              'bookings_dates_step_member_book_horizon',
+              memberConditions.maxBookingHorizon,
+            ) +
+              ', ' +
+              __(
+                'bookings_dates_step_book_duration',
+                memberConditions.maxDuration,
+              )}
+          {!isMember &&
+            __(
+              'bookings_dates_step_guest_book_horizon',
+              guestConditions.maxBookingHorizon,
+            ) +
+              ', ' +
+              __(
+                'bookings_dates_step_book_duration',
+                guestConditions.maxDuration,
+              )}
         </p>
         <div className="mt-16 flex justify-between items-center">
           <div>
@@ -91,6 +116,14 @@ const DatesSelector = () => {
               id="start"
               value={startDate}
               minValue={dayjs().format('YYYY-MM-DD')}
+              maxValue={dayjs()
+                .add(
+                  isMember
+                    ? memberConditions.maxBookingHorizon
+                    : guestConditions.maxBookingHorizon,
+                  'days',
+                )
+                .format('YYYY-MM-DD')}
               onChange={setStartDate}
               showTime={false}
             />
@@ -103,6 +136,14 @@ const DatesSelector = () => {
               id="end"
               value={endDate}
               minValue={dayjs(startDate).format('YYYY-MM-DD')}
+              maxValue={dayjs(startDate)
+                .add(
+                  isMember
+                    ? memberConditions.maxDuration
+                    : guestConditions.maxDuration,
+                  'days',
+                )
+                .format('YYYY-MM-DD')}
               onChange={setEndDate}
               showTime={false}
             />

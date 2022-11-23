@@ -4,7 +4,13 @@ import dayjs from 'dayjs';
 
 const defaultTime = dayjs().add(7, 'days').set('hour', 12).set('minute', 0);
 
-const DateTimePicker = ({ value, minValue, onChange, showTime }) => {
+const DateTimePicker = ({
+  value,
+  minValue,
+  maxValue = '180',
+  onChange,
+  showTime,
+}) => {
   const [datetime, updateTime] = useState(value ? dayjs(value) : defaultTime);
 
   useEffect(() => {
@@ -17,6 +23,7 @@ const DateTimePicker = ({ value, minValue, onChange, showTime }) => {
         type="date"
         value={datetime.format('YYYY-MM-DD')}
         min={minValue}
+        max={maxValue}
         placeholder="01/01/1975"
         onChange={(e) => {
           const newDate = dayjs(e.target.value)
