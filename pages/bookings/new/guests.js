@@ -35,7 +35,7 @@ const GuestSelector = () => {
   return (
     <Layout>
       <div className="max-w-screen-xl mx-auto p-8">
-        <h1 className="font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center">
+        <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center">
           <span className="mr-1">👨‍👩‍👦</span>
           <span>{__('bookings_guest_step_title')}</span>
         </h1>

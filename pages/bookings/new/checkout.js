@@ -8,15 +8,13 @@ import { loadStripe } from '@stripe/stripe-js';
 import { BookingBackButton } from '../../../components/BookingBackButton';
 import CheckoutForm from '../../../components/CheckoutForm';
 import { CheckoutTotal } from '../../../components/CheckoutTotal';
-import { CheckoutUtility } from '../../../components/CheckoutUtility';
 import Layout from '../../../components/Layout';
 import { Progress } from '../../../components/Progress';
 
 import config from '../../../config';
 import { useAuth } from '../../../contexts/auth';
 import { useBookingActions, useBookingState } from '../../../contexts/booking';
-import { CURRENCIES } from '../../../utils/const';
-import { __ } from '../../../utils/helpers';
+import { __, priceFormat } from '../../../utils/helpers';
 
 const Checkout = () => {
   const { steps } = useBookingState();
@@ -38,9 +36,10 @@ const Checkout = () => {
 
   const savedCurrency =
     totalCostToken && (useToken ? totalCostToken.cur : totalCostFiat.cur);
-  const [selectedCurrency, selectCurrency] = useState(
-    savedCurrency || CURRENCIES[1],
-  );
+  const isTokenSelected = savedCurrency === totalCostToken.cur;
+  const totalValue = isTokenSelected
+    ? totalCostToken.val
+    : totalCostFiat.val + totalCostUtility.val;
 
   const router = useRouter();
   const currentStep = steps.find((step) => step.path === router.pathname);
@@ -70,18 +69,48 @@ const Checkout = () => {
     <Layout>
       <div className="max-w-screen-xl mx-auto p-8">
         <BookingBackButton />
-        <h1 className="font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
+        <h1 className="step-title font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">💰</span>
           <span>{__('bookings_checkout_step_title')}</span>
         </h1>
         <Progress progress={currentStepIndex + 1} total={steps.length} />
         <div className="mt-16 flex flex-col gap-16">
-          <CheckoutUtility totalCostUtility={totalCostUtility} />
+          <div>
+            <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2">
+              <span className="mr-1">🏡</span>
+              <span>{__('bookings_checkout_step_accomodation')}</span>
+            </h2>
+            <div className="flex justify-between items-center mt-3">
+              <p> {listingName}</p>
+              <p className="font-bold">
+                {priceFormat({
+                  val: totalValue,
+                  cur: savedCurrency,
+                })}
+              </p>
+            </div>
+            <p className="text-right text-xs">
+              {__('bookings_checkout_step_accomodation_description')}
+            </p>
+          </div>
+          <div>
+            <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3">
+              <span className="mr-1">🛠</span>
+              <span>{__('bookings_checkout_step_utility_title')}</span>
+            </h2>
+            <div className="flex justify-between items-center mt-3">
+              <p> {__('bookings_summary_step_utility_total')}</p>
+              <p className="font-bold">{priceFormat(totalCostUtility)}</p>
+            </div>
+            <p className="text-right text-xs">
+              {__('bookings_summary_step_utility_description')}
+            </p>
+          </div>
           <CheckoutTotal
             totalCostFiat={totalCostFiat}
             totalCostToken={totalCostToken}
             totalCostUtility={totalCostUtility}
-            selectedCurrency={selectedCurrency}
+            selectedCurrency={savedCurrency}
           />
           <div>
             <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3 flex items-center">

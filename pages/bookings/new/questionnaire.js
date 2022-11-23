@@ -54,7 +54,6 @@ const Questionnaire = () => {
     const allRequiredQuestionsCompleted = questions.some(
       (question) => question.required && answers.get(question.name) !== '',
     );
-    console.log('allRequiredQuestionsCompleted', allRequiredQuestionsCompleted);
     setSubmitDisabled(!allRequiredQuestionsCompleted);
   }, [answers]);
 
@@ -91,7 +90,7 @@ const Questionnaire = () => {
     <Layout>
       <div className="max-w-screen-xl mx-auto p-8">
         <BookingBackButton />
-        <h1 className="font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
+        <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">📄</span>
           <span>{__('bookings_questionnaire_step_title')}</span>
         </h1>
