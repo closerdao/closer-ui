@@ -6,10 +6,12 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
 import { BookingBackButton } from '../../../components/BookingBackButton';
+import { Checkbox } from '../../../components/Checkbox';
 import CheckoutForm from '../../../components/CheckoutForm';
 import { CheckoutTotal } from '../../../components/CheckoutTotal';
 import Layout from '../../../components/Layout';
 import { Progress } from '../../../components/Progress';
+import { Wallet } from '../../../components/Wallet';
 
 import config from '../../../config';
 import { useAuth } from '../../../contexts/auth';
@@ -20,7 +22,7 @@ const Checkout = () => {
   const { steps } = useBookingState();
 
   const dates = steps.find((step) => step.path === '/bookings/new/dates');
-  const { startDate, endDate, totalNights } = dates.data;
+  const { startDate } = dates.data;
   const guests = steps.find(
     (step) => step.path === '/bookings/new/guests',
   ).data;
@@ -34,25 +36,17 @@ const Checkout = () => {
     totalCostUtility,
   } = steps.find((step) => step.path === '/bookings/new/accomodation').data;
 
-  const savedCurrency =
-    totalCostToken && (useToken ? totalCostToken.cur : totalCostFiat.cur);
-  const isTokenSelected = savedCurrency === totalCostToken.cur;
-  const totalValue = isTokenSelected
-    ? totalCostToken.val
-    : totalCostFiat.val + totalCostUtility.val;
-
   const router = useRouter();
   const currentStep = steps.find((step) => step.path === router.pathname);
   const currentStepIndex = steps.indexOf(currentStep);
 
   const { saveStepData, goToNextStep, startNewBooking } = useBookingActions();
 
-  const [isLoading, setIsLoading] = useState(false);
-
   useEffect(() => {
     // check if any step has undefined data
     // redirect to the previous to that step if so
-    const hasPreviousUndefinedStep = !startDate || !totalGuests || !listingName;
+    const hasPreviousUndefinedStep =
+      !startDate || !totalGuests || !listingName || !bookingId;
     if (hasPreviousUndefinedStep) {
       startNewBooking();
     }
@@ -60,10 +54,18 @@ const Checkout = () => {
 
   const stripe = loadStripe(config.STRIPE_PUB_KEY);
   const { user } = useAuth();
+  const [hasAgreedToWalletDisclaimer, setWalletDisclaimer] = useState(false);
 
   if (!startDate || !totalGuests || !listingName) {
     return null;
   }
+
+  const savedCurrency =
+    totalCostToken && (useToken ? totalCostToken.cur : totalCostFiat.cur);
+  const isTokenSelected = savedCurrency === totalCostToken.cur;
+  const totalValue = isTokenSelected
+    ? totalCostToken.val
+    : totalCostFiat.val + totalCostUtility.val;
 
   return (
     <Layout>
@@ -92,6 +94,17 @@ const Checkout = () => {
             <p className="text-right text-xs">
               {__('bookings_checkout_step_accomodation_description')}
             </p>
+            <div className="mt-4">
+              <Wallet />
+              <Checkbox
+                checked={hasAgreedToWalletDisclaimer}
+                onChange={() =>
+                  setWalletDisclaimer(!hasAgreedToWalletDisclaimer)
+                }
+                className="mt-8"
+                label={__('bookings_checkout_step_wallet_disclaimer')}
+              />
+            </div>
           </div>
           <div>
             <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3">
