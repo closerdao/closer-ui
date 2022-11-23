@@ -4,7 +4,6 @@ import Layout from '../../components/Layout';
 import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { __ } from '../../utils/helpers';
-import Tabs from '../../components/Tabs';
 import Bookings from '../../components/Bookings';
 
 const BookingsRequests = () => {
@@ -27,9 +26,10 @@ const BookingsRequests = () => {
   return (
     <Layout>
       <Head>
-        <title>{__('booking_requests_title')}</title>
+        <title>{ __('booking_requests_title') }</title>
       </Head>
       <div className="main-content intro fullwidth">
+        <h1 className="page-title">{ __('booking_requests_title') }</h1>
         <Bookings filter={ filters.openBookings } />
       </div>
     </Layout>

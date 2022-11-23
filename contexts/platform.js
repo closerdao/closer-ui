@@ -22,8 +22,7 @@ export const models = [
   'application',
   'listing',
   'booking',
-  'ticket',
-  'nest',
+  'ticket'
 ];
 const idList = (entry) =>
   Array.from(
@@ -104,15 +103,28 @@ const reducer = (state, action) => {
         }),
       );
     case constants.PATCH_SUCCESS:
-      return state.setIn(
-        [action.model, 'byId', action._id],
-        Map({
-          data: action.results,
-          loading: false,
-          error: null,
-          receivedAt: Date.now(),
-        }),
-      );
+      return state.withMutations((map) => {
+          if (action.filterKey && action.resultIndex) {
+            map.setIn(
+              [action.model, 'byFilter', action.filterKey, 'data', action.resultIndex],
+              Map({
+                data: action.results,
+                loading: false,
+                error: null,
+                receivedAt: Date.now(),
+              }),
+            );
+          }
+          map.setIn(
+            [action.model, 'byId', action._id],
+            Map({
+              data: action.results,
+              loading: false,
+              error: null,
+              receivedAt: Date.now(),
+            }),
+          )
+        });
     case constants.GET_INIT:
       return state.setIn(
         [action.model, 'byFilter', action.filterKey, 'loading'],
@@ -479,6 +491,37 @@ export const PlatformProvider = ({ children }) => {
       },
     };
   });
+
+  platform.bookings = {
+    confirm: (_id, filter) => (
+      api.post(`/bookings/${_id}/confirm`)
+      .then((res) => {
+        const results = fromJS(res.data.results);
+        const action = {
+          results,
+          _id,
+          model: 'booking',
+          type: constants.PATCH_SUCCESS,
+        };
+        dispatch(action);
+        return action;
+      })
+    ),
+    reject: (_id, filter) => (
+      api.post(`/bookings/${_id}/reject`)
+      .then((res) => {
+        const results = fromJS(res.data.results);
+        const action = {
+          results,
+          _id,
+          model: 'booking',
+          type: constants.PATCH_SUCCESS,
+        };
+        dispatch(action);
+        return action;
+      })
+    )
+  };
 
   return (
     <PlatformContext.Provider value={{ platform }}>

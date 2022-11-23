@@ -1,9 +1,7 @@
 import { useEffect } from 'react';
-import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
 import BookingListPreview from './BookingListPreview';
 import { __ } from '../utils/helpers';
-import dayjs from 'dayjs';
 
 const Bookings = ({ filter }) => {
   const { platform } = usePlatform();
@@ -46,8 +44,9 @@ const Bookings = ({ filter }) => {
           return (
             <BookingListPreview
               key={ booking.get('_id') }
-              booking={ booking }
-              listingName={listingName}
+              booking={ platform.booking.findOne(booking.get('_id')) }
+              listingName={ listingName }
+              filter={ filter }
             />
           )
         }) }
