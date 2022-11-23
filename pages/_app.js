@@ -13,11 +13,11 @@ import {
   FB_DOMAIN_VERIFICATION,
   SEMANTIC_URL,
 } from '../config';
-import {
-  BLOCKCHAIN_DAO_TOKEN,
-  BLOCKCHAIN_NETWORK_ID,
-  BLOCKCHAIN_STABLE_COIN,
-} from '../config_blockchain';
+// import {
+//   BLOCKCHAIN_DAO_TOKEN,
+//   BLOCKCHAIN_NETWORK_ID,
+//   BLOCKCHAIN_STABLE_COIN,
+// } from '../config_blockchain';
 import { AuthProvider } from '../contexts/auth';
 import { PlatformProvider } from '../contexts/platform';
 import '../public/styles.css';
@@ -48,9 +48,9 @@ const Application = ({
     api.defaults.headers.Authorization = `Bearer ${token}`;
   }
 
-  const tokensToWatch = {
-    [BLOCKCHAIN_NETWORK_ID]: [BLOCKCHAIN_DAO_TOKEN, BLOCKCHAIN_STABLE_COIN],
-  };
+  // const tokensToWatch = {
+  //   [BLOCKCHAIN_NETWORK_ID]: [BLOCKCHAIN_DAO_TOKEN, BLOCKCHAIN_STABLE_COIN],
+  // };
 
   return (
     <div className="App">

@@ -53,7 +53,7 @@ const Listings = () => {
             </Link>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-6">
           {listings && listings.count() > 0
             ? listings.map((listing) => (
               <ListingListPreview

@@ -31,10 +31,10 @@ const MemberNav = ({ token, user, children, toggleNav }) => {
   }
 
   return [
-    <li className="channel-link" key="community">
+    <li className="channel-link" key="dashboard">
       <h3>
-        <ActiveLink as="/community" href="/community">
-          <a onClick={() => toggleNav(false)}>{__('member_nav_community')}</a>
+        <ActiveLink as="/dashboard" href="/dashboard">
+          <a onClick={() => toggleNav(false)}>{__('member_nav_dashboard')}</a>
         </ActiveLink>
       </h3>
     </li>,
