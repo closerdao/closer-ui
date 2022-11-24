@@ -3,9 +3,9 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import { BookingBackButton } from '../../../components/BookingBackButton';
+import { BookingProgress } from '../../../components/BookingProgress';
 import DateTimePicker from '../../../components/DateTimePicker';
 import Layout from '../../../components/Layout';
-import { Progress } from '../../../components/Progress';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -38,7 +38,6 @@ const DatesSelector = () => {
   const router = useRouter();
   const currentStep = steps.find((step) => step.path === router.pathname);
   const savedData = currentStep.data;
-  const currentStepIndex = steps.indexOf(currentStep);
   const { saveStepData, goToNextStep, startNewBooking } = useBookingActions();
   const [startDate, setStartDate] = useState(
     savedData.startDate || defaultStart,
@@ -81,7 +80,7 @@ const DatesSelector = () => {
           <span className="mr-1">📆</span>
           <span>{__('bookings_dates_step_title')}</span>
         </h1>
-        <Progress progress={currentStepIndex + 1} total={steps.length} />
+        <BookingProgress />
         <h2 className="text-2xl leading-10 font-normal mt-16 mb-4">
           {__('bookings_dates_step_subtitle')}
         </h2>

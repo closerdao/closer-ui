@@ -4,18 +4,16 @@ import Link from 'next/link';
 import React from 'react';
 
 import Layout from '../../components/Layout';
-import PageNotAllowed from '../401';
+import { Wallet } from '../../components/Wallet';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 
+import PageNotAllowed from '../401';
 import PageNotFound from '../404';
+import { FEATURES, GOVERNANCE_URL } from '../../config';
 import { useAuth } from '../../contexts/auth.js';
 import { cdn } from '../../utils/api';
 import { __ } from '../../utils/helpers';
-import {
-  FEATURES,
-  GOVERNANCE_URL,
-} from '../../config';
 
 const dashbboardLinks = [
   {
@@ -45,7 +43,7 @@ const dashbboardLinks = [
   {
     label: 'Book a stay',
     url: '/bookings/new',
-    enabled: () => FEATURES.booking
+    enabled: () => FEATURES.booking,
   },
   {
     label: 'My bookings',
@@ -67,7 +65,7 @@ const dashbboardLinks = [
     label: 'Admin',
     url: '/admin',
     roles: ['admin'],
-  }
+  },
 ];
 
 const MemberPage = () => {
@@ -82,10 +80,10 @@ const MemberPage = () => {
   );
 
   if (!currentUser) {
-    return <PageNotFound error={ __('errors_user_not_found') } />;
+    return <PageNotFound error={__('errors_user_not_found')} />;
   }
   if (!isAuthenticated) {
-    return <PageNotAllowed error={ __('errors_please_login') } />;
+    return <PageNotAllowed error={__('errors_please_login')} />;
   }
 
   return (
@@ -134,12 +132,13 @@ const MemberPage = () => {
               </div>
             </div>
           </div>
+          <div className="my-4">
+            <Wallet />
+          </div>
           <div className="py-8">
             {links.map((link) => (
-              <Link key={link.url} href={link.url} target={ link.target }>
-                <a
-                  className="mb-4 btn uppercase text-center w-full"
-                >
+              <Link key={link.url} href={link.url} target={link.target}>
+                <a className="mb-4 btn uppercase text-center w-full">
                   {link.label}
                 </a>
               </Link>

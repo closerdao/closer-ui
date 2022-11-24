@@ -1,11 +1,9 @@
-import { useRouter } from 'next/router';
-
 import { useEffect, useState } from 'react';
 
 import { BookingBackButton } from '../../../components/BookingBackButton';
+import { BookingProgress } from '../../../components/BookingProgress';
 import Layout from '../../../components/Layout';
 import { ListingCard } from '../../../components/ListingCard';
-import { Progress } from '../../../components/Progress';
 
 import daysjs from 'dayjs';
 
@@ -22,9 +20,6 @@ const AccomodationSelector = () => {
     (step) => step.path === '/bookings/new/guests',
   ).data;
   const totalGuests = guests.totalGuests;
-  const { pathname } = useRouter();
-  const currentStep = steps.find((step) => step.path === pathname);
-  const currentStepIndex = steps.indexOf(currentStep);
   const { saveStepData, goToNextStep, startNewBooking } = useBookingActions();
 
   const [listings, setListings] = useState([]);
@@ -100,7 +95,7 @@ const AccomodationSelector = () => {
           <span className="mr-1">🏡</span>
           <span>{__('bookings_accomodation_step_title')}</span>
         </h1>
-        <Progress progress={currentStepIndex + 1} total={steps.length} />
+        <BookingProgress />
         <div className="mt-6 flex justify-between gap-2 flex-nowrap">
           <div className="border border-solid border-neutral-400 rounded-3xl px-4 py-2 font-normal flex justify-between items-center">
             <span className="mr-1">📆</span>

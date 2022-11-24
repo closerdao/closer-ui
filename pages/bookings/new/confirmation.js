@@ -1,8 +1,8 @@
 import { useRouter } from 'next/router';
 
 import { BookingBackButton } from '../../../components/BookingBackButton';
+import { BookingProgress } from '../../../components/BookingProgress';
 import Layout from '../../../components/Layout';
-import { Progress } from '../../../components/Progress';
 
 import { useBookingState } from '../../../contexts/booking';
 import { __ } from '../../../utils/helpers';
@@ -13,7 +13,6 @@ const ConfirmationStep = () => {
     (step) => step.path === '/bookings/new/checkout',
   ).data;
   const { fiatPayment, tokenPayment } = paymentData;
-  console.log('confirmation', paymentData);
   const paymentRejected =
     (fiatPayment && fiatPayment.error) || (tokenPayment && tokenPayment.error);
   const { bookingId } = steps.find(
@@ -21,8 +20,6 @@ const ConfirmationStep = () => {
   ).data;
 
   const router = useRouter();
-  const currentStep = steps.find((step) => step.path === router.pathname);
-  const currentStepIndex = steps.indexOf(currentStep);
 
   if (paymentRejected) {
     return (
@@ -33,7 +30,7 @@ const ConfirmationStep = () => {
             <span className="mr-1">❌</span>
             <span>{__('bookings_confirmation_step_error')}</span>
           </h1>
-          <Progress progress={currentStepIndex + 1} total={steps.length} />
+          <BookingProgress />
           <div className="mt-16 flex flex-col gap-4">
             {tokenPayment.error && (
               <>
@@ -69,7 +66,7 @@ const ConfirmationStep = () => {
           <span className="mr-1">🎊</span>
           <span>{__('bookings_confirmation_step_success')}</span>
         </h1>
-        <Progress progress={currentStepIndex + 1} total={steps.length} />
+        <BookingProgress />
         <div className="mt-16 flex flex-col gap-16 flex-nowrap">
           <h2 className="text-2xl leading-10 font-normal">
             <span className="mr-1">🏡</span>

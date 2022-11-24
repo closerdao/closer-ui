@@ -3,8 +3,8 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import { BookingBackButton } from '../../../components/BookingBackButton';
+import { BookingProgress } from '../../../components/BookingProgress';
 import Layout from '../../../components/Layout';
-import { Progress } from '../../../components/Progress';
 import { QuestionnaireItem } from '../../../components/QuestionnaireItem';
 
 import { useBookingActions, useBookingState } from '../../../contexts/booking';
@@ -23,7 +23,6 @@ const Questionnaire = () => {
     (step) => step.path === '/bookings/new/questionnaire',
   );
   const savedData = currentStep.data;
-  const currentStepIndex = steps.indexOf(currentStep);
   const { saveStepData, goToNextStep } = useBookingActions();
   const [answers, setAnswers] = useState(
     new Map(savedData.size ? savedData : []),
@@ -94,7 +93,7 @@ const Questionnaire = () => {
           <span className="mr-1">📄</span>
           <span>{__('bookings_questionnaire_step_title')}</span>
         </h1>
-        <Progress progress={currentStepIndex + 1} total={steps.length} />
+        <BookingProgress />
         <h2 className="text-2xl leading-10 font-normal mt-16 mb-4">
           {__('bookings_questionnaire_step_subtitle')}
         </h2>

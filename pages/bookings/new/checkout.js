@@ -1,13 +1,11 @@
-import { useRouter } from 'next/router';
-
 import { useEffect, useState } from 'react';
 
 import { BookingBackButton } from '../../../components/BookingBackButton';
+import { BookingProgress } from '../../../components/BookingProgress';
 import { Checkbox } from '../../../components/Checkbox';
 import { CheckoutPayment } from '../../../components/CheckoutPayment';
 import { CheckoutTotal } from '../../../components/CheckoutTotal';
 import Layout from '../../../components/Layout';
-import { Progress } from '../../../components/Progress';
 import { Wallet } from '../../../components/Wallet';
 
 import { useBookingActions, useBookingState } from '../../../contexts/booking';
@@ -24,10 +22,6 @@ const Checkout = () => {
     totalCostUtility,
     dailyRentalToken,
   } = steps.find((step) => step.path === '/bookings/new/accomodation').data;
-
-  const router = useRouter();
-  const currentStep = steps.find((step) => step.path === router.pathname);
-  const currentStepIndex = steps.indexOf(currentStep);
 
   const { startNewBooking } = useBookingActions();
   useEffect(() => {
@@ -58,7 +52,7 @@ const Checkout = () => {
           <span className="mr-1">💰</span>
           <span>{__('bookings_checkout_step_title')}</span>
         </h1>
-        <Progress progress={currentStepIndex + 1} total={steps.length} />
+        <BookingProgress />
         <div className="mt-16 flex flex-col gap-16">
           <div>
             <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2">

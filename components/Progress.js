@@ -1,6 +1,3 @@
-// make progress bar that contains a set of inline-blocks - divs with background: black
-// this component receives a prop called progress, which is a number and a prop called total, which is a number
-// the progress prop is the current step, and the total prop is the total number of steps
 import React from 'react';
 
 import PropTypes from 'prop-types';

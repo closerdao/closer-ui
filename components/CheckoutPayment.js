@@ -6,10 +6,12 @@ import { loadStripe } from '@stripe/stripe-js';
 import config from '../config';
 import { useAuth } from '../contexts/auth';
 import { useBookingActions, useBookingState } from '../contexts/booking';
-import { useTokenPayment } from '../hooks/useTokenPayment';
+import { useBookingSmartContract } from '../hooks/useBookingSmartContract';
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
 import CheckoutForm from './CheckoutForm';
+
+const stripe = loadStripe(config.STRIPE_PUB_KEY);
 
 export const CheckoutPayment = ({
   bookingId,
@@ -17,7 +19,7 @@ export const CheckoutPayment = ({
   useToken,
   totalValueToken,
   totalValueFiat,
-  dailyTokenValue
+  dailyTokenValue,
 }) => {
   const { steps } = useBookingState();
   const { saveStepData } = useBookingActions();
@@ -25,16 +27,15 @@ export const CheckoutPayment = ({
   const dates = steps.find((step) => step.path === '/bookings/new/dates');
   const { startDate, endDate, totalNights } = dates.data;
 
+  const { stakeTokens, isStaking, checkBookingOnBlockchain } =
+    useBookingSmartContract({
+      value: totalValueToken,
+      startDate,
+      endDate,
+      totalNights,
+      dailyValue: dailyTokenValue,
+    });
 
-  const { stakeTokens, isPending,  } = useTokenPayment({
-    value: totalValueToken,
-    startDate,
-    endDate,
-    totalNights,
-    dailyValue: dailyTokenValue
-  });
-
-  const stripe = loadStripe(config.STRIPE_PUB_KEY);
   const { user } = useAuth();
   const router = useRouter();
 
@@ -72,7 +73,21 @@ export const CheckoutPayment = ({
         useToken,
         transactionId: success.transactionId,
       });
-      return { success: true, error: null };
+
+      const { isBookingMatchBlockhainState, bookedNights } =
+        checkBookingOnBlockchain();
+
+      if (isBookingMatchBlockhainState) {
+        return { success: true, error: null };
+      } else {
+        return {
+          success: false,
+          error: {
+            message: 'Blockchain has no records of booked nights',
+            bookedNights,
+          },
+        };
+      }
     }
   };
 
@@ -95,7 +110,7 @@ export const CheckoutPayment = ({
           cardElementClassName="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-4"
           buttonDisabled={buttonDisabled}
           prePayInTokens={useToken ? payTokens : () => {}}
-          isProcessingTokenPayment={isPending}
+          isProcessingTokenPayment={isStaking}
           total={totalValueFiat}
           currency="EUR"
         />

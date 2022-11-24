@@ -2,9 +2,9 @@ import { useRouter } from 'next/router';
 
 import { useState } from 'react';
 
+import { BookingProgress } from '../../../components/BookingProgress';
 import { Counter } from '../../../components/Counter';
 import Layout from '../../../components/Layout';
-import { Progress } from '../../../components/Progress';
 
 import { useBookingActions, useBookingState } from '../../../contexts/booking';
 import { __ } from '../../../utils/helpers';
@@ -14,7 +14,6 @@ const GuestSelector = () => {
   const { pathname } = useRouter();
   const currentStep = steps.find((step) => step.path === pathname);
   const savedData = currentStep.data;
-  const currentStepIndex = steps.indexOf(currentStep);
   const { saveStepData, goToNextStep } = useBookingActions();
   const [adults, setAdults] = useState(savedData.adults || 1);
   const [children, setChildren] = useState(savedData.children || 0);
@@ -39,7 +38,7 @@ const GuestSelector = () => {
           <span className="mr-1">👨‍👩‍👦</span>
           <span>{__('bookings_guest_step_title')}</span>
         </h1>
-        <Progress progress={currentStepIndex + 1} total={steps.length} />
+        <BookingProgress />
         <div className="my-16">
           <div className="flex space-between items-center">
             <p className="flex-1">{__('bookings_guest_step_adults')}</p>
