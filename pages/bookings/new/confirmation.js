@@ -4,7 +4,7 @@ import { BookingBackButton } from '../../../components/BookingBackButton';
 import Layout from '../../../components/Layout';
 import { Progress } from '../../../components/Progress';
 
-import { useBookingState } from '../../../contexts/booking';
+import { useBookingActions, useBookingState } from '../../../contexts/booking';
 import { __ } from '../../../utils/helpers';
 
 const ConfirmationStep = () => {
@@ -22,6 +22,8 @@ const ConfirmationStep = () => {
   const router = useRouter();
   const currentStep = steps.find((step) => step.path === router.pathname);
   const currentStepIndex = steps.indexOf(currentStep);
+
+  const { startNewBooking } = useBookingActions();
 
   if (paymentRejected) {
     return (
@@ -55,6 +57,11 @@ const ConfirmationStep = () => {
   const viewBooking = () => {
     router.push(`/bookings/${bookingId}`);
   };
+
+  if (!bookingId) {
+    startNewBooking();
+    return null;
+  }
 
   return (
     <Layout>
