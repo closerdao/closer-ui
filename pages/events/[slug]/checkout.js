@@ -28,6 +28,7 @@ const EventCheckout = ({ event, error }) => {
   const router = useRouter();
   const { isAuthenticated, user, signup: register } = useAuth();
   const [ticketOption, setTicketOption] = useState(null);
+  const [paymentReceived, setPaymentReceived] = useState(null);
   const [signup, updateSignup] = useState({
     fields:
       event.fields && event.fields.map((f) => ({ name: f.name, value: '' })),
@@ -168,10 +169,7 @@ const EventCheckout = ({ event, error }) => {
                 {
                   title: 'Checkout as guest',
                   content: (
-                    <form
-                      onSubmit={(e) => e.preventDefault()}
-                      className="card"
-                    >
+                    <form onSubmit={(e) => e.preventDefault()} className="card">
                       <fieldset className="w-full mb-4">
                         <label
                           className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
