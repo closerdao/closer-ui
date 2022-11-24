@@ -14,7 +14,6 @@ export const BookingProvider = ({ children }) => {
   const router = useRouter();
   const [state, dispatch] = useReducer(bookingReducer, initialState);
   const currentStep = state.steps.find((step) => step.path === router.pathname);
-  console.log('Booking Provider', state);
 
   useEffect(() => {
     const hasNoSettings = Object.keys(state.settings).length === 0;
