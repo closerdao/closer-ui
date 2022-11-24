@@ -135,7 +135,7 @@ const DatesSelector = () => {
             <DateTimePicker
               id="end"
               value={endDate}
-              minValue={dayjs(startDate).format('YYYY-MM-DD')}
+              minValue={dayjs(startDate).add(1, 'days').format('YYYY-MM-DD')}
               maxValue={dayjs(startDate)
                 .add(
                   isMember

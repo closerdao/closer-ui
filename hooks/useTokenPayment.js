@@ -17,7 +17,6 @@ import { fetcher } from '../utils/blockchain';
 dayjs.extend(dayOfYear);
 
 export const useTokenPayment = ({ value, startDate, totalNights }) => {
-  console.log('useTokenPayment', value);
   const { account, library } = useWeb3React();
   const [pendingTransactions, setPendingTransactions] = useState([]); //In general the following pendingTransactions state should be moved to the root of the app, and should be used as a dependency by all hooks that read blockchain state
   const [isPending, setPending] = useState(false); //Used when need to make several blockchain transactions in a row
@@ -39,8 +38,6 @@ export const useTokenPayment = ({ value, startDate, totalNights }) => {
     },
   );
 
-  console.log('useTokenPayment balanceLocked', balanceLocked);
-
   const tokensToStake =
     balanceLocked &&
     BigNumber.from(value)
@@ -48,7 +45,7 @@ export const useTokenPayment = ({ value, startDate, totalNights }) => {
       .sub(balanceLocked);
 
   const stakeTokens = async () => {
-    if (!library || !account) {
+    if (!library || !account || !tokensToStake) {
       return;
     }
 
@@ -79,9 +76,12 @@ export const useTokenPayment = ({ value, startDate, totalNights }) => {
           pendingTransactions.filter((h) => h !== tx1.hash),
         );
       } catch (error) {
-        console.error(error);
+        console.error('useTokenPayment step 1', error);
         setPending(false);
-        return { error, success: null };
+        return {
+          error: { ...error, message: 'Error on step 1 ' + error.message },
+          success: null,
+        };
       }
     }
 
@@ -99,8 +99,12 @@ export const useTokenPayment = ({ value, startDate, totalNights }) => {
       return { error: null, success: { transactionId: tx3.hash } };
     } catch (error) {
       //User rejected transaction
+      console.error('useTokenPayment step 2', error);
       setPending(false);
-      return { error, success: null };
+      return {
+        error: { ...error, message: 'Error on step 2 ' + error.message },
+        success: null,
+      };
     }
   };
 

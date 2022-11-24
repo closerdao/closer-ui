@@ -25,11 +25,14 @@ const CheckoutForm = ({
   cardElementClassName = '',
   onError = () => {},
   prePayInTokens = () => {},
+  isProcessingTokenPayment = false,
 }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [error, setError] = useState(null);
   const [processing, setProcessing] = useState(false);
+  const isButtonDisabled =
+    !stripe || buttonDisabled || processing || isProcessingTokenPayment;
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -89,6 +92,16 @@ const CheckoutForm = ({
     }
   };
 
+  const getButtonText = () => {
+    if (isProcessingTokenPayment) {
+      return __('checkout_processing_token_payment');
+    }
+    if (processing) {
+      return __('checkout_processing_payment');
+    }
+    return buttonText || __('checkout_pay');
+  };
+
   return (
     <form onSubmit={handleSubmit}>
       {error && (
@@ -120,11 +133,9 @@ const CheckoutForm = ({
       <button
         type="submit"
         className={`btn-primary mt-4 ${submitButtonClassName}`}
-        disabled={!stripe || buttonDisabled || processing}
+        disabled={isButtonDisabled}
       >
-        {processing
-          ? __('checkout_processing_payment')
-          : buttonText || __('checkout_pay')}
+        {getButtonText()}
       </button>
       {cancelUrl && (
         <a href={cancelUrl} className="mt-4 ml-2">

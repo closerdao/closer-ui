@@ -24,7 +24,7 @@ export const CheckoutPayment = ({
   const dates = steps.find((step) => step.path === '/bookings/new/dates');
   const { startDate, endDate, totalNights } = dates.data;
 
-  const { stakeTokens } = useTokenPayment({
+  const { stakeTokens, isPending } = useTokenPayment({
     value: totalValueToken,
     startDate,
     endDate,
@@ -37,28 +37,31 @@ export const CheckoutPayment = ({
 
   const onSuccess = (payment) => {
     saveStepData({
-      payment,
+      fiatPayment: { ...payment, error: null },
     });
     router.push('/bookings/new/confirmation');
   };
 
   const onError = (error) => {
     saveStepData({
-      paymentError: error,
+      fiatPayment: { error },
     });
-    router.push('/bookings/new/confirmtion');
+    router.push('/bookings/new/confirmation');
   };
 
   const payTokens = async () => {
     const res = await stakeTokens(totalValueToken);
     const { error, success } = res;
     if (error) {
-      onError(error);
+      saveStepData({
+        tokenPayment: { error },
+      });
     }
     if (success) {
       saveStepData({
         tokenPayment: {
           transactionId: success.transactionId,
+          error: null,
         },
       });
       await api.patch(`/booking/${bookingId}`, {
@@ -87,6 +90,7 @@ export const CheckoutPayment = ({
           cardElementClassName="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-4"
           buttonDisabled={buttonDisabled}
           prePayInTokens={useToken ? payTokens : () => {}}
+          isProcessingTokenPayment={isPending}
           total={totalValueFiat}
           currency="EUR"
         />
