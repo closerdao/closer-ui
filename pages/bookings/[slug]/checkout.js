@@ -1,5 +1,4 @@
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import React, { useEffect, useState } from 'react';
@@ -16,7 +15,7 @@ import { useWeb3React } from '@web3-react/core';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
-import { BigNumber, Contract } from 'ethers';
+import { Contract } from 'ethers';
 import useSWR from 'swr';
 
 import PageNotAllowed from '../../401';
@@ -32,7 +31,7 @@ import {
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import api from '../../../utils/api';
-import { fetcher, formatBigNumberForDisplay } from '../../../utils/blockchain';
+import { fetcher } from '../../../utils/blockchain';
 import { __, priceFormat } from '../../../utils/helpers';
 
 dayjs.extend(LocalizedFormat);
@@ -70,7 +69,7 @@ const Booking = ({ booking, error }) => {
   };
 
   
-//Start blockchain interactions
+  //Start blockchain interactions
   const start = dayjs(booking.start);
   const end = dayjs(booking.end);
   const bookingYear = start.year();
@@ -193,157 +192,157 @@ const Booking = ({ booking, error }) => {
       </Head>
 
       <main className="main-content max-w-prose booking">
-            <h1 className="mb-4">{__('bookings_checkout_title')}</h1>
-            <section className="mt-3">
-              <h3>{__('bookings_summary')}</h3>
-              <p>
-                {__('bookings_checkin')} <b>{start.format('LLL')}</b>
-              </p>
-              <p>
-                {__('bookings_checkout')} <b>{end.format('LLL')}</b>
-              </p>
-              <p>--</p>
-              <p>
-                {__('bookings_utility_fee')}
-                <b>
-                  {' '}
-                  {priceFormat(booking.utilityFiat)}
-                </b>
-              </p>
-              { booking.useTokens ?
-                <p>
-                  {__('bookings_tokens_lock')}
-                  <b>
-                    {' '}
-                    {priceFormat(booking.rentalToken)}
-                  </b>
-                </p>:
-                <p>
-                  {__('bookings_rental_cost')}
-                  <b>
-                    {' '}
-                    {priceFormat(booking.rentalFiat)}
-                  </b>
-                </p>
-              }
-              <p>--</p>
-              <p>
-                {__('bookings_total')}
-                <b>
-                  {' '}
-                  {priceFormat(booking.utilityFiat && booking.utilityFiat.val + (booking.useTokens || !booking.rentalFiat ? 0 : booking.rentalFiat.val))}
-                </b>
-              </p>
-            </section>
-            {booking.status === 'open' && (
-              <div className="mt-2">
-                {account ? 
-                (
-                  <>
+        <h1 className="mb-4">{__('bookings_checkout_title')}</h1>
+        <section className="mt-3">
+          <h3>{__('bookings_summary')}</h3>
+          <p>
+            {__('bookings_checkin')} <b>{start.format('LLL')}</b>
+          </p>
+          <p>
+            {__('bookings_checkout')} <b>{end.format('LLL')}</b>
+          </p>
+          <p>--</p>
+          <p>
+            {__('bookings_utility_fee')}
+            <b>
+              {' '}
+              {priceFormat(booking.utilityFiat)}
+            </b>
+          </p>
+          { booking.useTokens ?
+            <p>
+              {__('bookings_tokens_lock')}
+              <b>
+                {' '}
+                {priceFormat(booking.rentalToken)}
+              </b>
+            </p>:
+            <p>
+              {__('bookings_rental_cost')}
+              <b>
+                {' '}
+                {priceFormat(booking.rentalFiat)}
+              </b>
+            </p>
+          }
+          <p>--</p>
+          <p>
+            {__('bookings_total')}
+            <b>
+              {' '}
+              {priceFormat(booking.utilityFiat && booking.utilityFiat.val + (booking.useTokens || !booking.rentalFiat ? 0 : booking.rentalFiat.val))}
+            </b>
+          </p>
+        </section>
+        {booking.status === 'open' && (
+          <div className="mt-2">
+            {account ? 
+              (
+                <>
                   {/* Book using crypto ==> Should add an additional condition above this thing for if the user has actively selected crypto */}
-                    <section>
-                        <section className='flex flex-col items-start'>
-                          <p>
+                  <section>
+                    <section className='flex flex-col items-start'>
+                      <p>
                             Staked tokens for nights are locked for one year. 
-                          </p>
-                          { BLOCKCHAIN_NETWORK_ID != chainId ? 
-                            (
-                              <div
-                              className='rounded-full p-2 border-red-700 border-2 text-red-800'>
+                      </p>
+                      { BLOCKCHAIN_NETWORK_ID != chainId ? 
+                        (
+                          <div
+                            className='rounded-full p-2 border-red-700 border-2 text-red-800'>
                                 You are on the wrong chain, switch chain
-                              </div>
-                            ):
-                            ( nightsBookedOnchain ? 
-                              (
-                              <div
+                          </div>
+                        ):
+                        ( nightsBookedOnchain ? 
+                          (
+                            <div
                               className='rounded-full p-2 border-green-700 border-2 text-green-700'>
                                 Your nights have been reserved with your tokens
-                              </div>
-                              ) : 
-                              (
-                              <button
-                                className="btn-primary px-4"
-                                disabled={pendingTransactions.length>0}
-                                onClick={async () => {
-                                  bookAccomodationOnchain();
-                                }}
-                              >
-                                {pendingTransactions.length>0 ? (
-                                  <div className="flex flex-row items-center">
-                                    <Spinner />
-                                    <p className="font-x-small ml-4 text-neutral-300">
+                            </div>
+                          ) : 
+                          (
+                            <button
+                              className="btn-primary px-4"
+                              disabled={pendingTransactions.length>0}
+                              onClick={async () => {
+                                bookAccomodationOnchain();
+                              }}
+                            >
+                              {pendingTransactions.length>0 ? (
+                                <div className="flex flex-row items-center">
+                                  <Spinner />
+                                  <p className="font-x-small ml-4 text-neutral-300">
                                       Wait for transaction validation
-                                    </p>
-                                  </div>
-                                ) : (
-                                  'Lock tokens for booking'
-                                )}
-                              </button>
-                              )
-                            )
-                          }
-                        </section>
-                      
+                                  </p>
+                                </div>
+                              ) : (
+                                'Lock tokens for booking'
+                              )}
+                            </button>
+                          )
+                        )
+                      }
                     </section>
-                  </>
-                ) : (
-                  <>
-                    {booking.volunteer ? (
-                      <div>
-                        <p>{__('booking_volunteering_details')}</p>
-                        <p className="mt-3">
-                          <a
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              processConfirmation();
-                            }}
-                            className="btn-primary"
-                          >
+                      
+                  </section>
+                </>
+              ) : (
+                <>
+                  {booking.volunteer ? (
+                    <div>
+                      <p>{__('booking_volunteering_details')}</p>
+                      <p className="mt-3">
+                        <a
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            processConfirmation();
+                          }}
+                          className="btn-primary"
+                        >
                             Confirm booking
-                          </a>
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        <Elements stripe={stripe}>
-                          <CheckoutForm
-                            type="booking"
-                            _id={booking._id}
-                            onSuccess={(payment) => {
-                              setBooking({
-                                ...booking,
-                                status: 'confirmed',
-                              });
-                              router.push(`/bookings/${booking._id}`);
-                            }}
-                            email={user.email}
-                            name={user.screenname}
-                            message={booking.message}
-                            cancelUrl={`/bookings/${booking._id}/contribution`}
-                            buttonText={
-                              user.roles.includes('member')
-                                ? 'Book'
-                                : 'Request to book'
-                            }
-                            buttonDisabled={false}
-                          />
-                        </Elements>
-                      </>
-                    )}
-                  </>
-                )}
-                {user.roles.includes('member') ? (
-                  <p className="mt-3 text-sm">
-                    <i>{__('booking_cancelation_policy_member')}</i>
-                  </p>
-                ) : (
-                  <p className="mt-3 text-sm">
-                    <i>{__('booking_cancelation_policy')}</i>
-                  </p>
-                )}
-              </div>
+                        </a>
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <Elements stripe={stripe}>
+                        <CheckoutForm
+                          type="booking"
+                          _id={booking._id}
+                          onSuccess={(payment) => {
+                            setBooking({
+                              ...booking,
+                              status: 'confirmed',
+                            });
+                            router.push(`/bookings/${booking._id}`);
+                          }}
+                          email={user.email}
+                          name={user.screenname}
+                          message={booking.message}
+                          cancelUrl={`/bookings/${booking._id}/contribution`}
+                          buttonText={
+                            user.roles.includes('member')
+                              ? 'Book'
+                              : 'Request to book'
+                          }
+                          buttonDisabled={false}
+                        />
+                      </Elements>
+                    </>
+                  )}
+                </>
+              )}
+            {user.roles.includes('member') ? (
+              <p className="mt-3 text-sm">
+                <i>{__('booking_cancelation_policy_member')}</i>
+              </p>
+            ) : (
+              <p className="mt-3 text-sm">
+                <i>{__('booking_cancelation_policy')}</i>
+              </p>
             )}
+          </div>
+        )}
       </main>
     </Layout>
   );
