@@ -28,6 +28,7 @@ module.exports = {
   DISCORD_URL: 'https://discord.gg/A5WFMwPRaK',
   TWITTER_URL: 'https://twitter.com/closerearth',
   TELEGRAM_URL: 'https://t.me/closerearth',
+  GOVERNANCE_URL: 'https://snapshot.org/#/traditionaldreamfactory.eth',
   FEATURES: {
     events: true,
     booking: true,

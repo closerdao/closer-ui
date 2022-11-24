@@ -28,7 +28,6 @@ const EventCheckout = ({ event, error }) => {
   const router = useRouter();
   const { isAuthenticated, user, signup: register } = useAuth();
   const [ticketOption, setTicketOption] = useState(null);
-  const [paymentReceived, setPaymentReceived] = useState(null);
   const [signup, updateSignup] = useState({
     fields:
       event.fields && event.fields.map((f) => ({ name: f.name, value: '' })),
@@ -36,7 +35,6 @@ const EventCheckout = ({ event, error }) => {
   const [signupError, setSignupError] = useState(null);
   const [ticketOptions, setTicketOptions] = useState([]);
   const [volunteerTicketsSold, setVolunteerTicketsSold] = useState(0);
-  const now = dayjs();
   const start = event.start && dayjs(event.start);
   const end = event.end && dayjs(event.end);
   const discount =
@@ -90,13 +88,6 @@ const EventCheckout = ({ event, error }) => {
       setSignupError('Passwords do not match');
     } else {
       setSignupError(null);
-    }
-  };
-
-  const submitSignupForm = (e) => {
-    e.preventDefault();
-    if (paymentReceived) {
-      register(signup);
     }
   };
 
@@ -178,7 +169,7 @@ const EventCheckout = ({ event, error }) => {
                   title: 'Checkout as guest',
                   content: (
                     <form
-                      onSubmit={(e) => submitSignupForm(e)}
+                      onSubmit={(e) => e.preventDefault()}
                       className="card"
                     >
                       <fieldset className="w-full mb-4">
@@ -442,7 +433,7 @@ const EventCheckout = ({ event, error }) => {
     </Layout>
   );
 };
-EventCheckout.getInitialProps = async ({ req, query }) => {
+EventCheckout.getInitialProps = async ({ query }) => {
   try {
     const {
       data: { results: event },
