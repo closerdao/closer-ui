@@ -1,9 +1,7 @@
 import { BigNumber, Contract, utils } from 'ethers';
 import { isAddress } from 'ethers/lib/utils.js';
 
-import blockchainConfig, {
-  BLOCKCHAIN_NETWORK_ID,
-} from '../config_blockchain.js';
+import blockchainConfig from '../config_blockchain.js';
 
 export const fetcher =
   (library, abi) =>

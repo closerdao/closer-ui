@@ -26,7 +26,7 @@ export const CheckoutPayment = ({
   const { startDate, endDate, totalNights } = dates.data;
 
 
-  const { stakeTokens, isPending } = useTokenPayment({
+  const { stakeTokens, isPending,  } = useTokenPayment({
     value: totalValueToken,
     startDate,
     endDate,
