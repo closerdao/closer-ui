@@ -59,6 +59,7 @@ const AccomodationSelector = () => {
     rentalFiat,
     rentalToken,
     utilityFiat,
+    dailyRentalToken,
   }) => {
     try {
       setIsCreatingBooking(true);
@@ -80,6 +81,7 @@ const AccomodationSelector = () => {
           totalCostFiat: rentalFiat,
           totalCostToken: rentalToken,
           totalCostUtility: utilityFiat,
+          dailyRentalToken,
         });
         goToNextStep();
       }

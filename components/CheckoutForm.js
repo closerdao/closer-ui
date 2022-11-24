@@ -39,7 +39,12 @@ const CheckoutForm = ({
     setProcessing(true);
 
     if (prePayInTokens) {
-      await prePayInTokens();
+      const res = await prePayInTokens();
+      const { error } = res;
+      if (error) {
+        setProcessing(false);
+        return;
+      }
     }
 
     try {

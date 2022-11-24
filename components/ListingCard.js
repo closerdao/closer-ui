@@ -9,7 +9,14 @@ import { __ } from '../utils/helpers';
 import { ListingPrice } from './ListingPrice';
 
 export const ListingCard = ({ listing, bookListing }) => {
-  const { name, description, rentalFiat, rentalToken, utilityFiat } = listing;
+  const {
+    name,
+    description,
+    rentalFiat,
+    rentalToken,
+    utilityFiat,
+    dailyRentalToken,
+  } = listing;
   const [selectedCurrency, selectCurrency] = useState(rentalFiat.cur);
 
   const handleBooking = () => {
@@ -20,6 +27,7 @@ export const ListingCard = ({ listing, bookListing }) => {
       rentalFiat,
       rentalToken,
       utilityFiat,
+      dailyRentalToken,
     });
   };
 

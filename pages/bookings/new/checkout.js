@@ -22,6 +22,7 @@ const Checkout = () => {
     totalCostFiat,
     totalCostToken,
     totalCostUtility,
+    dailyRentalToken,
   } = steps.find((step) => step.path === '/bookings/new/accomodation').data;
 
   const router = useRouter();
@@ -113,6 +114,7 @@ const Checkout = () => {
             useToken={useToken}
             totalValueToken={totalCostToken.val}
             totalValueFiat={totalValueFiat}
+            dailyTokenValue={dailyRentalToken.val}
           />
         </div>
       </div>

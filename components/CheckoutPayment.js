@@ -17,6 +17,7 @@ export const CheckoutPayment = ({
   useToken,
   totalValueToken,
   totalValueFiat,
+  dailyTokenValue
 }) => {
   const { steps } = useBookingState();
   const { saveStepData } = useBookingActions();
@@ -24,11 +25,13 @@ export const CheckoutPayment = ({
   const dates = steps.find((step) => step.path === '/bookings/new/dates');
   const { startDate, endDate, totalNights } = dates.data;
 
+
   const { stakeTokens, isPending } = useTokenPayment({
     value: totalValueToken,
     startDate,
     endDate,
     totalNights,
+    dailyValue: dailyTokenValue
   });
 
   const stripe = loadStripe(config.STRIPE_PUB_KEY);
@@ -56,6 +59,7 @@ export const CheckoutPayment = ({
       saveStepData({
         tokenPayment: { error },
       });
+      return { error, success: null };
     }
     if (success) {
       saveStepData({
@@ -68,6 +72,7 @@ export const CheckoutPayment = ({
         useToken,
         transactionId: success.transactionId,
       });
+      return { success: true, error: null };
     }
   };
 

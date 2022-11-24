@@ -18,7 +18,6 @@ export const BookingProvider = ({ children }) => {
   useEffect(() => {
     const hasNoSettings = Object.keys(state.settings).length === 0;
     const fetchSettings = async () => {
-      console.log('fetching settings');
       const {
         data: { results },
       } = await api.get('/bookings/settings');
