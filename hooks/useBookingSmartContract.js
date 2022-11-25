@@ -71,17 +71,11 @@ export const useBookingSmartContract = ({
       const pricePerNightBigNum = BigNumber.from(dailyValue).mul(
         BigNumber.from(10).pow(BLOCKCHAIN_DAO_TOKEN.decimals),
       );
-      console.log(
-        'stakeTokens',
-        dailyValue,
-        pricePerNightBigNum,
-        bookingNights,
-      );
+
       const tx3 = await Diamond.bookAccommodation(
         bookingNights,
         pricePerNightBigNum,
       );
-
       setPendingTransactions([...pendingTransactions, tx3.hash]);
       await tx3.wait();
       setPendingTransactions((pendingTransactions) =>
