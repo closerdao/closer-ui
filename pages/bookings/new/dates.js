@@ -45,7 +45,7 @@ const DatesSelector = () => {
     endDate: savedEndDate,
     guests: savedGuests,
   } = currentStep || {};
-  const { saveStepData, goToNextStep, startNewBooking } = useBookingActions();
+  const { saveStepData, goToNextStep } = useBookingActions();
   const [startDate, setStartDate] = useState(savedStartDate || defaultStart);
   const [endDate, setEndDate] = useState(savedEndDate || defaultEnd);
   const totalNights =

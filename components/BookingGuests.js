@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types';
+
 import { __ } from '../utils/helpers';
 import { Counter } from './Counter';
 
@@ -37,4 +39,15 @@ export const BookingGuests = ({
       </div>
     </div>
   );
+};
+
+BookingGuests.propTypes = {
+  adults: PropTypes.number,
+  kids: PropTypes.number,
+  infants: PropTypes.number,
+  pets: PropTypes.number,
+  setAdults: PropTypes.func,
+  setKids: PropTypes.func,
+  setInfants: PropTypes.func,
+  setPets: PropTypes.func,
 };

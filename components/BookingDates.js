@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import PropTypes from 'prop-types';
 
 import { __ } from '../utils/helpers';
 import DateTimePicker from './DateTimePicker';
@@ -77,4 +78,22 @@ export const BookingDates = ({
       </div>
     </div>
   );
+};
+
+BookingDates.propTypes = {
+  isMember: PropTypes.bool,
+  conditions: PropTypes.shape({
+    member: PropTypes.shape({
+      maxBookingHorizon: PropTypes.number,
+      maxDuration: PropTypes.number,
+    }),
+    guest: PropTypes.shape({
+      maxBookingHorizon: PropTypes.number,
+      maxDuration: PropTypes.number,
+    }),
+  }),
+  startDate: PropTypes.string,
+  endDate: PropTypes.string,
+  setStartDate: PropTypes.func,
+  setEndDate: PropTypes.func,
 };
