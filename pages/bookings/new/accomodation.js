@@ -89,14 +89,14 @@ const AccomodationSelector = () => {
 
   return (
     <Layout>
-      <div className="max-w-screen-xl mx-auto p-8">
+      <div className="max-w-screen-sm mx-auto p-8">
         <BookingBackButton />
         <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">🏡</span>
           <span>{__('bookings_accomodation_step_title')}</span>
         </h1>
         <BookingProgress />
-        <div className="mt-6 flex justify-between gap-2 flex-nowrap">
+        <div className="mt-6 flex justify-between gap-2 flex-nowrap md:justify-start">
           <div className="border border-solid border-neutral-400 rounded-3xl px-4 py-2 font-normal flex justify-between items-center">
             <span className="mr-1">📆</span>
             <span>
@@ -104,18 +104,14 @@ const AccomodationSelector = () => {
               {daysjs(dates.data.endDate).format('MMM DD')}
             </span>
           </div>
-          <div className="flex-1 border border-solid border-neutral-400 rounded-3xl px-4 py-2 font-normal flex justify-between items-center">
+          <div className="flex-1 border border-solid border-neutral-400 rounded-3xl px-4 py-2 font-normal flex justify-between items-center md:flex-initial md:w-40">
             <span className="mr-1">👨‍👩‍👦</span>
             <span>{`${totalGuests} ${__(
               'booking_accomodation_step_guest',
             )}`}</span>
           </div>
         </div>
-        <h2 className="text-2xl leading-10 font-normal mt-16 mb-4">
-          {__('bookings_accomodation_step_subtitle')}
-        </h2>
-        <p>{__('bookings_accomodation_step_description')}</p>
-        <div className="mt-16">
+        <div className="mt-16 md:flex md:items-start md:gap-2">
           {isLoading && <p>Loading...</p>}
           {!isLoading &&
             listings.map((listing) => (

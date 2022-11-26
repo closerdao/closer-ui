@@ -33,7 +33,7 @@ const GuestSelector = () => {
 
   return (
     <Layout>
-      <div className="max-w-screen-xl mx-auto p-8">
+      <div className="max-w-screen-sm mx-auto p-8">
         <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center">
           <span className="mr-1">👨‍👩‍👦</span>
           <span>{__('bookings_guest_step_title')}</span>
@@ -57,7 +57,7 @@ const GuestSelector = () => {
             <Counter value={pets} setFn={setPets} minValue={0} />
           </div>
         </div>
-        <button className="w-full btn uppercase" onClick={handleNext}>
+        <button className="booking-btn" onClick={handleNext}>
           {__('buttons_select')}
         </button>
       </div>

@@ -106,7 +106,7 @@ export const CheckoutPayment = ({
           email={user.email}
           name={user.screenname}
           buttonText={__('bookings_checkout_step_payment_button')}
-          submitButtonClassName="w-full btn uppercase mt-8"
+          submitButtonClassName="booking-btn mt-8"
           cardElementClassName="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-4"
           buttonDisabled={buttonDisabled}
           prePayInTokens={useToken ? payTokens : () => {}}

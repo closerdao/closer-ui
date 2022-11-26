@@ -74,7 +74,7 @@ const DatesSelector = () => {
 
   return (
     <Layout>
-      <div className="max-w-screen-xl mx-auto p-8 h-full">
+      <div className="max-w-screen-sm mx-auto p-8 h-full">
         <BookingBackButton />
         <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">📆</span>
@@ -106,7 +106,7 @@ const DatesSelector = () => {
                 guestConditions.maxDuration,
               )}
         </p>
-        <div className="mt-16 flex justify-between items-center">
+        <div className="mt-16 flex justify-between items-center md:px-20">
           <div>
             <label className="capitalize font-normal" htmlFor="start">
               {__('listings_book_check_in')}
@@ -128,7 +128,7 @@ const DatesSelector = () => {
             />
           </div>
           <div>
-            <label className="capitalize font-normal" htmlFor="end">
+            <label className="capitalize font-normal mb-0" htmlFor="end">
               {__('listings_book_check_out')}
             </label>
             <DateTimePicker
@@ -152,7 +152,7 @@ const DatesSelector = () => {
           <p>{__('bookings_dates_step_total')}</p>
           <p className="font-bold">{totalNights}</p>
         </div>
-        <button className="w-full btn uppercase" onClick={handleNext}>
+        <button className="booking-btn" onClick={handleNext}>
           {__('generic_search')}
         </button>
       </div>

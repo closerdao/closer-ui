@@ -40,7 +40,7 @@ const CheckoutForm = ({
 
     if (prePayInTokens) {
       const res = await prePayInTokens();
-      const { error } = res;
+      const { error } = res || {};
       if (error) {
         setProcessing(false);
         return;
@@ -137,7 +137,11 @@ const CheckoutForm = ({
       />
       <button
         type="submit"
-        className={`btn-primary mt-4 ${submitButtonClassName}`}
+        className={
+          submitButtonClassName.length
+            ? submitButtonClassName
+            : 'btn-primary mt-4'
+        }
         disabled={isButtonDisabled}
       >
         {getButtonText()}

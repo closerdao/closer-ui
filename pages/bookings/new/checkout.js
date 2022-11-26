@@ -46,7 +46,7 @@ const Checkout = () => {
 
   return (
     <Layout>
-      <div className="max-w-screen-xl mx-auto p-8">
+      <div className="max-w-screen-sm mx-auto p-8">
         <BookingBackButton />
         <h1 className="step-title font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">💰</span>
@@ -104,7 +104,7 @@ const Checkout = () => {
           />
           <CheckoutPayment
             bookingId={bookingId}
-            buttonDisabled={!hasAgreedToWalletDisclaimer}
+            buttonDisabled={useToken && !hasAgreedToWalletDisclaimer}
             useToken={useToken}
             totalValueToken={totalCostToken.val}
             totalValueFiat={totalValueFiat}

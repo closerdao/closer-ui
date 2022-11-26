@@ -16,6 +16,7 @@ export const ListingCard = ({ listing, bookListing }) => {
     rentalToken,
     utilityFiat,
     dailyRentalToken,
+    available,
   } = listing;
   const [selectedCurrency, selectCurrency] = useState(rentalFiat.cur);
 
@@ -34,7 +35,7 @@ export const ListingCard = ({ listing, bookListing }) => {
   if (!listing) return null;
 
   return (
-    <div className="flex flex-col rounded-lg p-4 mb-16 last:mb-0 shadow-4xl">
+    <div className="flex flex-col rounded-lg p-4 mb-16 last:mb-0 shadow-4xl md:mb-0 md:basis-2/4">
       <h2 className="text-2xl leading-10 font-normal">{name}</h2>
       {listing.photos && (
         <div className="relative h-48 rounded-lg my-4 overflow-hidden">
@@ -62,9 +63,14 @@ export const ListingCard = ({ listing, bookListing }) => {
           selectedCurrency={selectedCurrency}
         />
       </div>
-      <button className="btn uppercase" onClick={handleBooking}>
-        {/* TO DO: check when it should be disabled */}
-        {__('listing_preview_book')}
+      <button
+        className="btn uppercase disabled:cursor-not-allowed disabled:text-gray-400 disabled:border-gray-400"
+        onClick={handleBooking}
+        disabled={!available}
+      >
+        {available
+          ? __('listing_preview_book')
+          : __('listing_preview_not_available')}
       </button>
     </div>
   );

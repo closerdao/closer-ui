@@ -32,7 +32,7 @@ const DateTimePicker = ({
           updateTime(newDate);
           onChange(newDate);
         }}
-        className="`peer invalid:text-primary invalid:border-primary focus:invalid:text-primary focus:invalid:border-primary"
+        className="peer invalid:text-primary invalid:border-primary focus:invalid:text-primary focus:invalid:border-primary"
       />
       <p className="mt-2 invisible peer-invalid:visible text-primary text-sm">
         Please set a valid date.

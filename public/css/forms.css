@@ -3,7 +3,7 @@
 @layer components {
   .btn,
   .btn[type='submit'] {
-    @apply inline-block py-2 px-4 rounded-full text-foreground focus:outline-none border-2 border-foreground focus:ring-2 focus:ring-primary focus:ring-opacity-75;
+    @apply inline-block py-2 px-4 rounded-full text-foreground focus:outline-none border-2 border-foreground focus:ring-2 focus:ring-primary focus:ring-opacity-75 md:block;
   }
   .btn-primary,
   .btn-primary[type='submit'] {
@@ -22,6 +22,9 @@
   }
   .btn-primary.active {
     @apply bg-primary text-white hover:bg-transparent hover:text-primary;
+  }
+  .booking-btn {
+    @apply uppercase w-full inline-block py-2 px-4 rounded-full text-foreground focus:outline-none border border-foreground focus:ring-2 focus:ring-primary focus:ring-opacity-75 disabled:cursor-not-allowed disabled:text-gray-400 disabled:border-gray-400 md:block md:px-20 md:w-fit md:mx-auto;
   }
   .form-field {
     @apply mb-4;

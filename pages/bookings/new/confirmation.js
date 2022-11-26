@@ -24,7 +24,7 @@ const ConfirmationStep = () => {
   if (paymentRejected) {
     return (
       <Layout>
-        <div className="max-w-screen-xl mx-auto p-8">
+        <div className="max-w-screen-sm mx-auto p-8">
           <BookingBackButton />
           <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
             <span className="mr-1">❌</span>
@@ -60,7 +60,7 @@ const ConfirmationStep = () => {
 
   return (
     <Layout>
-      <div className="max-w-screen-xl mx-auto p-8">
+      <div className="max-w-screen-sm mx-auto p-8">
         <BookingBackButton />
         <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">🎊</span>
@@ -87,11 +87,7 @@ const ConfirmationStep = () => {
               {__('bookings_confirmation_step_success_when_payment_processed')}
             </p>
           </div>
-          <button
-            className="btn w-full uppercase"
-            type="button"
-            onClick={viewBooking}
-          >
+          <button className="booking-btn" type="button" onClick={viewBooking}>
             {__('bookings_confirmation_step_success_button')}
           </button>
         </div>
