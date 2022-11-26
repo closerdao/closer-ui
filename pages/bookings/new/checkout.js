@@ -56,27 +56,24 @@ const Checkout = () => {
             </h2>
             <div className="flex justify-between items-center mt-3">
               <p> {listingName}</p>
-              <p className="font-bold">
-                {priceFormat({
-                  val: accomodationCost,
-                  cur: savedCurrency,
-                })}
-              </p>
+              <p className="font-bold">{priceFormat(accomodationCost)}</p>
             </div>
             <p className="text-right text-xs">
               {__('bookings_checkout_step_accomodation_description')}
             </p>
-            <div className="mt-4">
-              <Wallet />
-              <Checkbox
-                checked={hasAgreedToWalletDisclaimer}
-                onChange={() =>
-                  setWalletDisclaimer(!hasAgreedToWalletDisclaimer)
-                }
-                className="mt-8"
-                label={__('bookings_checkout_step_wallet_disclaimer')}
-              />
-            </div>
+            {totalToPayInToken > 0 && (
+              <div className="mt-4">
+                <Wallet />
+                <Checkbox
+                  checked={hasAgreedToWalletDisclaimer}
+                  onChange={() =>
+                    setWalletDisclaimer(!hasAgreedToWalletDisclaimer)
+                  }
+                  className="mt-8"
+                  label={__('bookings_checkout_step_wallet_disclaimer')}
+                />
+              </div>
+            )}
           </div>
           <div>
             <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3">
@@ -91,10 +88,7 @@ const Checkout = () => {
               {__('bookings_summary_step_utility_description')}
             </p>
           </div>
-          <CheckoutTotal
-            selectedCurrency={savedCurrency}
-            accomodationCost={accomodationCost}
-          />
+          <CheckoutTotal totalToPayInFiat={totalToPayInFiat} />
           <CheckoutPayment
             bookingId={bookingId}
             buttonDisabled={useToken && !hasAgreedToWalletDisclaimer}

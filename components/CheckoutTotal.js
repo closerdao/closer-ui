@@ -1,9 +1,10 @@
 import PropTypes from 'prop-types';
 
+import { DEFAULT_CURRENCY } from '../utils/const';
 import { __, priceFormat } from '../utils/helpers';
 import CalculatorIcon from './icons/CalculatorIcon';
 
-export const CheckoutTotal = ({ selectedCurrency, accomodationCost }) => {
+export const CheckoutTotal = ({ totalToPayInFiat }) => {
   return (
     <div>
       <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3 flex items-center">
@@ -13,10 +14,7 @@ export const CheckoutTotal = ({ selectedCurrency, accomodationCost }) => {
       <div className="flex justify-between items-center mt-3">
         <p> {__('bookings_total')}</p>
         <p className="font-bold">
-          {priceFormat({
-            val: accomodationCost,
-            cur: selectedCurrency,
-          })}
+          {priceFormat(totalToPayInFiat, DEFAULT_CURRENCY)}
         </p>
       </div>
       <p className="text-right text-xs">
