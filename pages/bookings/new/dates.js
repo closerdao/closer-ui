@@ -1,17 +1,21 @@
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { BookingBackButton } from '../../../components/BookingBackButton';
+import { BookingDates } from '../../../components/BookingDates';
+import { BookingGuests } from '../../../components/BookingGuests';
 import { BookingProgress } from '../../../components/BookingProgress';
-import DateTimePicker from '../../../components/DateTimePicker';
+import { CurrencySwitch } from '../../../components/CurrencySwitch';
 import Layout from '../../../components/Layout';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
+import blockchainConfig from '../../../config_blockchain.js';
 import { useAuth } from '../../../contexts/auth';
 import { useBookingActions, useBookingState } from '../../../contexts/booking';
+import { CURRENCIES, DEFAULT_CURRENCY } from '../../../utils/const';
 import { __ } from '../../../utils/helpers';
 
 dayjs.extend(relativeTime);
@@ -30,131 +34,96 @@ const defaultEnd = dayjs()
   .toDate();
 
 const DatesSelector = () => {
+  const router = useRouter();
   const { user } = useAuth();
   const isMember = user?.roles.includes('member');
 
   const { steps, settings } = useBookingState();
-
-  const router = useRouter();
-  const currentStep = steps.find((step) => step.path === router.pathname);
-  const savedData = currentStep.data;
+  const currentStep = steps.find((step) => step.path === router.pathname).data;
+  const {
+    startDate: savedStartDate,
+    endDate: savedEndDate,
+    guests: savedGuests,
+  } = currentStep || {};
   const { saveStepData, goToNextStep, startNewBooking } = useBookingActions();
-  const [startDate, setStartDate] = useState(
-    savedData.startDate || defaultStart,
-  );
-  const [endDate, setEndDate] = useState(savedData.endDate || defaultEnd);
+  const [startDate, setStartDate] = useState(savedStartDate || defaultStart);
+  const [endDate, setEndDate] = useState(savedEndDate || defaultEnd);
   const totalNights =
     Math.abs(Math.ceil(dayjs(startDate).diff(endDate, 'days'))) + 1;
+
+  const [adults, setAdults] = useState(savedGuests?.adults || 1);
+  const [kids, setKids] = useState(savedGuests?.kids || 0);
+  const [infants, setInfants] = useState(savedGuests?.infants || 0);
+  const [pets, setPets] = useState(savedGuests?.pets || 0);
+
+  const [selectedCurrency, selectCurrency] = useState(DEFAULT_CURRENCY);
 
   const handleNext = () => {
     saveStepData({
       startDate,
       endDate,
       totalNights,
+      guests: {
+        adults,
+        kids,
+        infants,
+        pets,
+        totalGuests: adults,
+      },
+      useToken:
+        selectedCurrency === blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol,
+      savedCurrency: selectedCurrency,
     });
     goToNextStep();
   };
-
-  const guestsDataUndefined =
-    steps.find((step) => step.path === '/bookings/new/guests').data.adults ===
-    undefined;
-
-  useEffect(() => {
-    if (guestsDataUndefined) {
-      startNewBooking();
-    }
-  }, []);
 
   if (!settings.conditions) {
     return null;
   }
 
-  const memberConditions = settings.conditions.member;
-  const guestConditions = settings.conditions.guest;
-
   return (
     <Layout>
       <div className="max-w-screen-sm mx-auto p-8 h-full">
         <BookingBackButton />
-        <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
-          <span className="mr-1">📆</span>
+        <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
+          <span className="mr-1">🏡</span>
           <span>{__('bookings_dates_step_title')}</span>
         </h1>
         <BookingProgress />
-        <h2 className="text-2xl leading-10 font-normal mt-16 mb-4">
-          {__('bookings_dates_step_subtitle')}
-        </h2>
-        <p>
-          {isMember &&
-            __(
-              'bookings_dates_step_member_book_horizon',
-              memberConditions.maxBookingHorizon,
-            ) +
-              ', ' +
-              __(
-                'bookings_dates_step_book_duration',
-                memberConditions.maxDuration,
-              )}
-          {!isMember &&
-            __(
-              'bookings_dates_step_guest_book_horizon',
-              guestConditions.maxBookingHorizon,
-            ) +
-              ', ' +
-              __(
-                'bookings_dates_step_book_duration',
-                guestConditions.maxDuration,
-              )}
-        </p>
-        <div className="mt-16 flex justify-between items-center md:px-20">
+        <div className="mt-16 flex flex-col gap-16">
+          <BookingDates
+            conditions={settings.conditions}
+            startDate={startDate}
+            endDate={endDate}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+            isMember={isMember}
+          />
+          <BookingGuests
+            adults={adults}
+            kids={kids}
+            infants={infants}
+            pets={pets}
+            setAdults={setAdults}
+            setKids={setKids}
+            setInfants={setInfants}
+            setPets={setPets}
+          />
           <div>
-            <label className="capitalize font-normal" htmlFor="start">
-              {__('listings_book_check_in')}
-            </label>
-            <DateTimePicker
-              id="start"
-              value={startDate}
-              minValue={dayjs().format('YYYY-MM-DD')}
-              maxValue={dayjs()
-                .add(
-                  isMember
-                    ? memberConditions.maxBookingHorizon
-                    : guestConditions.maxBookingHorizon,
-                  'days',
-                )
-                .format('YYYY-MM-DD')}
-              onChange={setStartDate}
-              showTime={false}
+            <h2 className="text-2xl leading-10 font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center">
+              <span className="mr-1">💰</span>
+              <span>{__('bookings_dates_step_payment_title')}</span>
+            </h2>
+            <CurrencySwitch
+              selectedCurrency={selectedCurrency}
+              onSelect={selectCurrency}
+              currencies={CURRENCIES}
             />
           </div>
-          <div>
-            <label className="capitalize font-normal mb-0" htmlFor="end">
-              {__('listings_book_check_out')}
-            </label>
-            <DateTimePicker
-              id="end"
-              value={endDate}
-              minValue={dayjs(startDate).add(1, 'days').format('YYYY-MM-DD')}
-              maxValue={dayjs(startDate)
-                .add(
-                  isMember
-                    ? memberConditions.maxDuration
-                    : guestConditions.maxDuration,
-                  'days',
-                )
-                .format('YYYY-MM-DD')}
-              onChange={setEndDate}
-              showTime={false}
-            />
-          </div>
+          <button className="booking-btn" onClick={handleNext}>
+            {__('generic_search')}
+          </button>
         </div>
-        <div className="mt-8 mb-16 flex justify-between">
-          <p>{__('bookings_dates_step_total')}</p>
-          <p className="font-bold">{totalNights}</p>
-        </div>
-        <button className="booking-btn" onClick={handleNext}>
-          {__('generic_search')}
-        </button>
       </div>
     </Layout>
   );

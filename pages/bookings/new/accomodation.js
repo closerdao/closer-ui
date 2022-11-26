@@ -13,13 +13,12 @@ import { __ } from '../../../utils/helpers';
 
 const AccomodationSelector = () => {
   const { steps } = useBookingState();
-  const dates = steps.find((step) => step.path === '/bookings/new/dates');
-  const start = dates.data.startDate;
-  const end = dates.data.endDate;
-  const guests = steps.find(
-    (step) => step.path === '/bookings/new/guests',
-  ).data;
-  const totalGuests = guests.totalGuests;
+  const dates = steps.find((step) => step.path === '/bookings/new/dates').data;
+  const { startDate, endDate, guests, useToken } = dates || {};
+  const { adults, kids, infants, pets } = guests || {};
+  console.log('dates', dates);
+  console.log('guests', guests);
+  console.log('useToken', useToken);
   const { saveStepData, goToNextStep, startNewBooking } = useBookingActions();
 
   const [listings, setListings] = useState([]);
@@ -32,7 +31,15 @@ const AccomodationSelector = () => {
         setIsLoading(true);
         const {
           data: { results: availableListings },
-        } = await api.post('/bookings/availability', { start, end, ...guests });
+        } = await api.post('/bookings/availability', {
+          start: startDate,
+          end: endDate,
+          adults,
+          children: kids,
+          infants,
+          pets,
+          useToken,
+        });
         setListings(availableListings);
       } catch (err) {
         console.log(err); // TO DO handle error
@@ -40,17 +47,15 @@ const AccomodationSelector = () => {
         setIsLoading(false);
       }
     };
-    if (!dates.data.startDate || !guests.adults) {
-      startNewBooking();
-    } else {
+    console.log('useEffect', startDate, adults, useToken);
+    if (startDate && adults) {
       checkAvailability();
     }
-  }, []);
+  }, [startDate, adults, useToken]);
 
   const bookListing = async ({
     listingId,
     listingName,
-    useToken,
     rentalFiat,
     rentalToken,
     utilityFiat,
@@ -63,8 +68,8 @@ const AccomodationSelector = () => {
       } = await api.post('/bookings/request', {
         listing: listingId,
         useToken,
-        start,
-        end,
+        startDate,
+        endDate,
         ...guests,
       });
       if (newBooking._id) {
@@ -72,7 +77,6 @@ const AccomodationSelector = () => {
           listingId,
           listingName,
           bookingId: newBooking._id,
-          useToken,
           totalCostFiat: rentalFiat,
           totalCostToken: rentalToken,
           totalCostUtility: utilityFiat,
@@ -87,6 +91,10 @@ const AccomodationSelector = () => {
     }
   };
 
+  if (!startDate || !adults) {
+    return null;
+  }
+
   return (
     <Layout>
       <div className="max-w-screen-sm mx-auto p-8">
@@ -100,13 +108,13 @@ const AccomodationSelector = () => {
           <div className="border border-solid border-neutral-400 rounded-3xl px-4 py-2 font-normal flex justify-between items-center">
             <span className="mr-1">📆</span>
             <span>
-              {daysjs(dates.data.startDate).format('MMM DD')} -{' '}
-              {daysjs(dates.data.endDate).format('MMM DD')}
+              {daysjs(dates?.startDate).format('MMM DD')} -{' '}
+              {daysjs(dates?.endDate).format('MMM DD')}
             </span>
           </div>
           <div className="flex-1 border border-solid border-neutral-400 rounded-3xl px-4 py-2 font-normal flex justify-between items-center md:flex-initial md:w-40">
             <span className="mr-1">👨‍👩‍👦</span>
-            <span>{`${totalGuests} ${__(
+            <span>{`${guests?.totalGuests} ${__(
               'booking_accomodation_step_guest',
             )}`}</span>
           </div>
