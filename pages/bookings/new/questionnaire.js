@@ -14,33 +14,27 @@ import { __ } from '../../../utils/helpers';
 const Questionnaire = () => {
   const router = useRouter();
   const { steps, settings } = useBookingState();
-  const { questions } = settings;
+  const { questions } = settings || {};
   const accomodation = steps.find(
     (step) => step.path === '/bookings/new/accomodation',
   ).data;
 
-  const currentStep = steps.find(
-    (step) => step.path === '/bookings/new/questionnaire',
-  );
-  const savedData = currentStep.data;
+  const currentStep = steps.find((step) => step.path === router.pathname);
+  const savedAnswers = currentStep.data.answers;
   const { saveStepData, goToNextStep } = useBookingActions();
   const [answers, setAnswers] = useState(
-    new Map(savedData.size ? savedData : []),
+    savedAnswers
+      ? new Map(savedAnswers)
+      : new Map(
+          questions ? questions?.map((question) => [question.name, '']) : [],
+        ),
   );
 
   useEffect(() => {
-    if (!questions) {
-      return;
-    }
-    const newMap = new Map();
-    questions.forEach((question) => {
-      newMap.set(question.name, '');
-    });
-    setAnswers(newMap);
     if (!accomodation.bookingId) {
       router.push('/bookings/new/accomodation');
     }
-  }, [settings.questions]);
+  }, []);
 
   const hasRequiredQuestions =
     questions && questions.some((question) => question.required);
@@ -56,12 +50,8 @@ const Questionnaire = () => {
     setSubmitDisabled(!allRequiredQuestionsCompleted);
   }, [answers]);
 
-  if (!questions) {
-    return null;
-  }
-
   const handleSubmit = async () => {
-    saveStepData(answers);
+    saveStepData({ answers: [...answers] });
     if (!answers.size) {
       return;
     }
@@ -84,6 +74,10 @@ const Questionnaire = () => {
       return newMap;
     });
   };
+
+  if (!questions) {
+    return null;
+  }
 
   return (
     <Layout>

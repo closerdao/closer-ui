@@ -16,7 +16,7 @@ const AccomodationSelector = () => {
   const dates = steps.find((step) => step.path === '/bookings/new/dates').data;
   const { startDate, endDate, guests, useToken } = dates || {};
   const { adults, kids, infants, pets } = guests || {};
-  const { saveStepData, goToNextStep } = useBookingActions();
+  const { saveStepData, goToNextStep, startNewBooking } = useBookingActions();
 
   const [listings, setListings] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -46,6 +46,8 @@ const AccomodationSelector = () => {
 
     if (startDate && adults) {
       checkAvailability();
+    } else {
+      startNewBooking();
     }
   }, [startDate, adults, useToken]);
 
