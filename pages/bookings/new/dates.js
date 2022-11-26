@@ -44,6 +44,7 @@ const DatesSelector = () => {
     startDate: savedStartDate,
     endDate: savedEndDate,
     guests: savedGuests,
+    savedCurrency,
   } = currentStep || {};
   const { saveStepData, goToNextStep } = useBookingActions();
   const [startDate, setStartDate] = useState(savedStartDate || defaultStart);
@@ -56,7 +57,9 @@ const DatesSelector = () => {
   const [infants, setInfants] = useState(savedGuests?.infants || 0);
   const [pets, setPets] = useState(savedGuests?.pets || 0);
 
-  const [selectedCurrency, selectCurrency] = useState(DEFAULT_CURRENCY);
+  const [selectedCurrency, selectCurrency] = useState(
+    savedCurrency || DEFAULT_CURRENCY,
+  );
 
   const handleNext = () => {
     saveStepData({
@@ -110,7 +113,7 @@ const DatesSelector = () => {
             setPets={setPets}
           />
           <div>
-            <h2 className="text-2xl leading-10 font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center">
+            <h2 className="mb-3 text-2xl leading-10 font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center">
               <span className="mr-1">💰</span>
               <span>{__('bookings_dates_step_payment_title')}</span>
             </h2>

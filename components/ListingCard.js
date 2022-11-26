@@ -1,14 +1,12 @@
 import Image from 'next/image';
 
-import { useState } from 'react';
-
 import PropTypes from 'prop-types';
 
 import { cdn } from '../utils/api';
 import { __ } from '../utils/helpers';
 import { ListingPrice } from './ListingPrice';
 
-export const ListingCard = ({ listing, bookListing }) => {
+export const ListingCard = ({ listing, bookListing, useToken }) => {
   const {
     name,
     description,
@@ -18,13 +16,11 @@ export const ListingCard = ({ listing, bookListing }) => {
     dailyRentalToken,
     available,
   } = listing;
-  const [selectedCurrency, selectCurrency] = useState(rentalFiat.cur);
 
   const handleBooking = () => {
     bookListing({
       listingId: listing._id,
       listingName: name,
-      useToken: selectedCurrency === 'TDF',
       rentalFiat,
       rentalToken,
       utilityFiat,
@@ -57,10 +53,9 @@ export const ListingCard = ({ listing, bookListing }) => {
       <div className="my-8">
         <ListingPrice
           fiatPrice={rentalFiat}
-          utilityFiat={utilityFiat}
           tokenPrice={rentalToken}
-          selectCurrency={selectCurrency}
-          selectedCurrency={selectedCurrency}
+          utilityFiat={utilityFiat}
+          useToken={useToken}
         />
       </div>
       <button
@@ -102,4 +97,5 @@ ListingCard.propTypes = {
     }),
   }),
   bookListing: PropTypes.func,
+  useToken: PropTypes.bool,
 };

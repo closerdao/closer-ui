@@ -5,7 +5,7 @@ import { loadStripe } from '@stripe/stripe-js';
 
 import config from '../config';
 import { useAuth } from '../contexts/auth';
-import { useBookingActions, useBookingState } from '../contexts/booking';
+import { useBookingActions } from '../contexts/booking';
 import { useBookingSmartContract } from '../hooks/useBookingSmartContract';
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
@@ -17,19 +17,17 @@ export const CheckoutPayment = ({
   bookingId,
   buttonDisabled,
   useToken,
-  totalValueToken,
-  totalValueFiat,
+  totalToPayInToken,
+  totalToPayInFiat,
   dailyTokenValue,
+  startDate,
+  endDate,
+  totalNights,
 }) => {
-  const { steps } = useBookingState();
   const { saveStepData } = useBookingActions();
-
-  const dates = steps.find((step) => step.path === '/bookings/new/dates');
-  const { startDate, endDate, totalNights } = dates.data;
-
   const { stakeTokens, isStaking, checkBookingOnBlockchain } =
     useBookingSmartContract({
-      value: totalValueToken,
+      value: totalToPayInToken,
       startDate,
       endDate,
       totalNights,
@@ -54,7 +52,7 @@ export const CheckoutPayment = ({
   };
 
   const payTokens = async () => {
-    const res = await stakeTokens(totalValueToken);
+    const res = await stakeTokens(totalToPayInToken);
     const { error, success } = res;
     if (error) {
       saveStepData({
@@ -109,9 +107,9 @@ export const CheckoutPayment = ({
           submitButtonClassName="booking-btn mt-8"
           cardElementClassName="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-4"
           buttonDisabled={buttonDisabled}
-          prePayInTokens={useToken ? payTokens : () => {}}
+          prePayInTokens={useToken ? payTokens : () => null}
           isProcessingTokenPayment={isStaking}
-          total={totalValueFiat}
+          total={totalToPayInFiat}
           currency="EUR"
         />
       </Elements>

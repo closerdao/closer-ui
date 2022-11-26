@@ -20,7 +20,6 @@ const AccomodationSelector = () => {
 
   const [listings, setListings] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isCreatingBooking, setIsCreatingBooking] = useState(false);
 
   useEffect(() => {
     const checkAvailability = async () => {
@@ -59,14 +58,13 @@ const AccomodationSelector = () => {
     dailyRentalToken,
   }) => {
     try {
-      setIsCreatingBooking(true);
       const {
         data: { results: newBooking },
       } = await api.post('/bookings/request', {
         listing: listingId,
         useToken,
-        startDate,
-        endDate,
+        start: startDate,
+        end: endDate,
         ...guests,
       });
       if (newBooking._id) {
@@ -74,17 +72,19 @@ const AccomodationSelector = () => {
           listingId,
           listingName,
           bookingId: newBooking._id,
-          totalCostFiat: rentalFiat,
-          totalCostToken: rentalToken,
-          totalCostUtility: utilityFiat,
+          utilityFiat,
           dailyRentalToken,
+          accomodationCost: useToken ? rentalToken : rentalFiat,
+          totalToPayInToken: useToken ? rentalToken : 0,
+          totalToPayInFiat: useToken
+            ? utilityFiat.val
+            : rentalFiat.val + utilityFiat.val,
         });
         goToNextStep();
       }
     } catch (err) {
       console.log(err); // TO DO handle error
     } finally {
-      setIsCreatingBooking(false);
     }
   };
 
@@ -124,7 +124,7 @@ const AccomodationSelector = () => {
                 key={listing._id}
                 listing={listing}
                 bookListing={bookListing}
-                isCreatingBooking={isCreatingBooking}
+                useToken={useToken}
               />
             ))}
         </div>

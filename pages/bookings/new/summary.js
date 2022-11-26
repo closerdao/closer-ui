@@ -1,10 +1,8 @@
-import { useRouter } from 'next/router';
-
 import { useEffect } from 'react';
 
 import { BookingBackButton } from '../../../components/BookingBackButton';
+import { BookingProgress } from '../../../components/BookingProgress';
 import Layout from '../../../components/Layout';
-import { Progress } from '../../../components/Progress';
 import { SummaryCosts } from '../../../components/SummaryCosts';
 import { SummaryDates } from '../../../components/SummaryDates';
 
@@ -15,32 +13,15 @@ const Summary = () => {
   const { steps } = useBookingState();
 
   const dates = steps.find((step) => step.path === '/bookings/new/dates').data;
-  const { startDate, endDate } = dates;
-  const guests = steps.find(
-    (step) => step.path === '/bookings/new/guests',
+  const { startDate, endDate, guests, savedCurrency, useToken } = dates || {};
+  const { listingName, accomodationCost, totalToPayInToken, totalToPayInFiat, utilityFiat } = steps.find(
+    (step) => step.path === '/bookings/new/accomodation',
   ).data;
-  const totalGuests = guests.totalGuests;
-  const {
-    listingName,
-    useToken,
-    totalCostFiat,
-    totalCostToken,
-    totalCostUtility,
-  } = steps.find((step) => step.path === '/bookings/new/accomodation').data;
-
-  const savedCurrency =
-    totalCostToken && (useToken ? totalCostToken.cur : totalCostFiat.cur);
-
-  const router = useRouter();
-  const currentStep = steps.find((step) => step.path === router.pathname);
-  const currentStepIndex = steps.indexOf(currentStep);
 
   const { goToNextStep, startNewBooking } = useBookingActions();
 
   useEffect(() => {
-    const hasUndefinedDataFromPreviousSteps =
-      !startDate || !totalGuests || !listingName;
-    if (hasUndefinedDataFromPreviousSteps) {
+    if (!startDate || !listingName) {
       startNewBooking();
     }
   }, []);
@@ -49,7 +30,7 @@ const Summary = () => {
     goToNextStep();
   };
 
-  if (!startDate || !totalGuests || !listingName) {
+  if (!startDate || !guests || !listingName) {
     return null;
   }
 
@@ -61,25 +42,22 @@ const Summary = () => {
           <span className="mr-1">📑</span>
           <span>{__('bookings_summary_step_title')}</span>
         </h1>
-        <Progress progress={currentStepIndex + 1} total={steps.length} />
+        <BookingProgress />
         <div className="mt-16 flex flex-col gap-16">
           <SummaryDates
-            totalGuests={totalGuests}
+            totalGuests={guests?.totalGuests}
             startDate={startDate}
             endDate={endDate}
             listingName={listingName}
           />
           <SummaryCosts
-            selectedCurrency={savedCurrency}
-            listingName={listingName}
-            totalCostFiat={totalCostFiat}
-            totalCostToken={totalCostToken}
-            totalCostUtility={totalCostUtility}
+            utilityFiat={utilityFiat}
+            useToken={useToken}
+            accomodationCost={accomodationCost}
+            totalToPayInToken={totalToPayInToken}
+            totalToPayInFiat={totalToPayInFiat}
           />
-          <button
-            className="booking-btn"
-            onClick={handleNext}
-          >
+          <button className="booking-btn" onClick={handleNext}>
             {__('buttons_checkout')}
           </button>
         </div>

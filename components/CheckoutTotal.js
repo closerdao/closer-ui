@@ -3,17 +3,7 @@ import PropTypes from 'prop-types';
 import { __, priceFormat } from '../utils/helpers';
 import CalculatorIcon from './icons/CalculatorIcon';
 
-export const CheckoutTotal = ({
-  totalCostFiat,
-  totalCostToken,
-  totalCostUtility,
-  selectedCurrency,
-}) => {
-  const isTokenSelected = selectedCurrency === 'TDF';
-  const totalValue = isTokenSelected
-    ? totalCostToken.val
-    : totalCostFiat.val + totalCostUtility.val;
-
+export const CheckoutTotal = ({ selectedCurrency, accomodationCost }) => {
   return (
     <div>
       <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3 flex items-center">
@@ -24,7 +14,7 @@ export const CheckoutTotal = ({
         <p> {__('bookings_total')}</p>
         <p className="font-bold">
           {priceFormat({
-            val: totalValue,
+            val: accomodationCost,
             cur: selectedCurrency,
           })}
         </p>

@@ -1,17 +1,15 @@
 import PropTypes from 'prop-types';
 
+import { BLOCKCHAIN_DAO_TOKEN } from '../config_blockchain';
 import { __, priceFormat } from '../utils/helpers';
 
 export const SummaryCosts = ({
-  selectedCurrency,
-  totalCostFiat,
-  totalCostToken,
-  totalCostUtility,
+  utilityFiat,
+  accomodationCost,
+  useToken,
+  totalToPayInToken,
+  totalToPayInFiat,
 }) => {
-  const isTokenSelected = selectedCurrency === totalCostToken.cur;
-  const totalValue = isTokenSelected
-    ? totalCostToken.val
-    : totalCostFiat.val + totalCostUtility.val;
   return (
     <div>
       <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3">
@@ -20,15 +18,11 @@ export const SummaryCosts = ({
       </h2>
       <div className="flex justify-between items-center mt-3">
         <p>{__('bookings_summary_step_dates_accomodation_type')}</p>
-        <p className="font-bold">
-          {isTokenSelected
-            ? priceFormat(totalCostToken)
-            : priceFormat(totalCostFiat)}
-        </p>
+        <p className="font-bold">{priceFormat(accomodationCost)}</p>
       </div>
       <div className="flex justify-between items-center mt-3">
         <p> {__('bookings_summary_step_utility_total')}</p>
-        <p className="font-bold">{priceFormat(totalCostUtility)}</p>
+        <p className="font-bold">{priceFormat(utilityFiat)}</p>
       </div>
       <p className="text-right text-xs">
         {__('bookings_summary_step_utility_description')}
@@ -36,10 +30,16 @@ export const SummaryCosts = ({
       <div className="flex justify-between items-center mt-3">
         <p> {__('bookings_total')}</p>
         <p className="font-bold">
-          {priceFormat({
-            val: totalValue,
-            cur: selectedCurrency,
-          })}
+          {useToken ? (
+            <>
+              <span>
+                {priceFormat(totalToPayInToken, BLOCKCHAIN_DAO_TOKEN.symbol)}
+              </span>{' '}
+              + <span>{priceFormat(totalToPayInFiat)}</span>
+            </>
+          ) : (
+            priceFormat(totalToPayInFiat)
+          )}
         </p>
       </div>
       <p className="text-right text-xs">
@@ -53,11 +53,11 @@ SummaryCosts.propTypes = {
   selectCurrency: PropTypes.func,
   selectedCurrency: PropTypes.string,
   listingName: PropTypes.string,
-  totalCostFiat: PropTypes.shape({
+  rentalFiat: PropTypes.shape({
     val: PropTypes.number,
     cur: PropTypes.string,
   }),
-  totalCostToken: PropTypes.shape({
+  rentalToken: PropTypes.shape({
     val: PropTypes.number,
     cur: PropTypes.string,
   }),
@@ -67,11 +67,11 @@ SummaryCosts.defaultProps = {
   selectCurrency: () => {},
   selectedCurrency: '',
   listingName: '',
-  totalCostFiat: {
+  rentalFiat: {
     val: 0,
     cur: 'EUR',
   },
-  totalCostToken: {
+  rentalToken: {
     val: 0,
     cur: 'TDF',
   },

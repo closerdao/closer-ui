@@ -92,8 +92,8 @@ BookingDates.propTypes = {
       maxDuration: PropTypes.number,
     }),
   }),
-  startDate: PropTypes.string,
-  endDate: PropTypes.string,
+  startDate: PropTypes.instanceOf(Date),
+  endDate: PropTypes.instanceOf(Date),
   setStartDate: PropTypes.func,
   setEndDate: PropTypes.func,
 };

@@ -13,14 +13,17 @@ import { __, priceFormat } from '../../../utils/helpers';
 
 const Checkout = () => {
   const { steps } = useBookingState();
+  const { startDate, endDate, totalNights, useToken, savedCurrency } =
+    steps.find((step) => step.path === '/bookings/new/dates').data;
+
   const {
     bookingId,
     listingName,
-    useToken,
-    totalCostFiat,
-    totalCostToken,
-    totalCostUtility,
+    utilityFiat,
     dailyRentalToken,
+    accomodationCost,
+    totalToPayInToken,
+    totalToPayInFiat,
   } = steps.find((step) => step.path === '/bookings/new/accomodation').data;
 
   const { startNewBooking } = useBookingActions();
@@ -35,14 +38,6 @@ const Checkout = () => {
   if (!listingName) {
     return null;
   }
-
-  const savedCurrency =
-    totalCostToken && (useToken ? totalCostToken.cur : totalCostFiat.cur);
-  const accomodationValue = useToken ? totalCostToken.val : totalCostFiat.val;
-
-  const totalValueFiat = useToken
-    ? totalCostUtility.val
-    : totalCostFiat.val + totalCostUtility.val;
 
   return (
     <Layout>
@@ -63,7 +58,7 @@ const Checkout = () => {
               <p> {listingName}</p>
               <p className="font-bold">
                 {priceFormat({
-                  val: accomodationValue,
+                  val: accomodationCost,
                   cur: savedCurrency,
                 })}
               </p>
@@ -90,25 +85,26 @@ const Checkout = () => {
             </h2>
             <div className="flex justify-between items-center mt-3">
               <p> {__('bookings_summary_step_utility_total')}</p>
-              <p className="font-bold">{priceFormat(totalCostUtility)}</p>
+              <p className="font-bold">{priceFormat(utilityFiat)}</p>
             </div>
             <p className="text-right text-xs">
               {__('bookings_summary_step_utility_description')}
             </p>
           </div>
           <CheckoutTotal
-            totalCostFiat={totalCostFiat}
-            totalCostToken={totalCostToken}
-            totalCostUtility={totalCostUtility}
             selectedCurrency={savedCurrency}
+            accomodationCost={accomodationCost}
           />
           <CheckoutPayment
             bookingId={bookingId}
             buttonDisabled={useToken && !hasAgreedToWalletDisclaimer}
             useToken={useToken}
-            totalValueToken={totalCostToken.val}
-            totalValueFiat={totalValueFiat}
+            totalToPayInToken={totalToPayInToken}
+            totalToPayInFiat={totalToPayInFiat}
             dailyTokenValue={dailyRentalToken.val}
+            startDate={startDate}
+            endDate={endDate}
+            totalNights={totalNights}
           />
         </div>
       </div>
