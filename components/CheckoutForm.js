@@ -46,6 +46,7 @@ const CheckoutForm = ({
   onError = () => {},
   prePayInTokens = () => {},
   isProcessingTokenPayment = false,
+  children: conditions,
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -147,7 +148,8 @@ const CheckoutForm = ({
         className={cardElementClassName}
         onChange={handleChange}
       />
-      <div className="mt-4">
+      {conditions}
+      <div className="mt-8">
         <PayButton
           disabled={isButtonDisabled || submitDisabled}
           className={submitButtonClassName}

@@ -1,4 +1,6 @@
-export const Checkbox = ({ className, label, checked, onChange }) => {
+import PropTypes from 'prop-types';
+
+export const Checkbox = ({ className, label, children, checked, onChange }) => {
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <input
@@ -7,9 +9,21 @@ export const Checkbox = ({ className, label, checked, onChange }) => {
         checked={checked}
         onChange={onChange}
       />
-      <label className="text-base font-normal text-gray-900 dark:text-gray-300 normal-case">
-        {label}
-      </label>
+      {children ? (
+        children
+      ) : (
+        <label className="text-base font-normal text-gray-900 dark:text-gray-300 normal-case">
+          {label}
+        </label>
+      )}
     </div>
   );
+};
+
+Checkbox.propTypes = {
+  className: PropTypes.string,
+  label: PropTypes.string,
+  children: PropTypes.node,
+  checked: PropTypes.bool,
+  onChange: PropTypes.func,
 };

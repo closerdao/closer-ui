@@ -1,5 +1,7 @@
 import { useRouter } from 'next/router';
 
+import { useState } from 'react';
+
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
@@ -12,6 +14,7 @@ import { useBookingSmartContract } from '../hooks/useBookingSmartContract';
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
 import CheckoutForm from './CheckoutForm';
+import { Conditions } from './Conditions';
 
 const stripe = loadStripe(config.STRIPE_PUB_KEY);
 
@@ -42,6 +45,8 @@ export const CheckoutPayment = ({
   const { user } = useAuth();
   const router = useRouter();
   const { saveStepData } = useBookingActions();
+  const [hasComplied, setCompliance] = useState(false);
+  const onComply = () => setCompliance(true);
 
   const onSuccess = (payment) => {
     saveStepData({
@@ -108,12 +113,14 @@ export const CheckoutPayment = ({
           buttonText={__('bookings_checkout_step_payment_button')}
           submitButtonClassName="booking-btn mt-8"
           cardElementClassName="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-4"
-          buttonDisabled={buttonDisabled}
+          buttonDisabled={buttonDisabled || hasComplied}
           prePayInTokens={useToken ? payTokens : () => null}
           isProcessingTokenPayment={isStaking}
           total={totalToPayInFiat}
           currency="EUR"
-        />
+        >
+          <Conditions onComply={onComply} />
+        </CheckoutForm>
       </Elements>
     </div>
   );
