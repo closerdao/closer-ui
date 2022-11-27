@@ -46,7 +46,7 @@ export const CheckoutPayment = ({
   const router = useRouter();
   const { saveStepData } = useBookingActions();
   const [hasComplied, setCompliance] = useState(false);
-  const onComply = () => setCompliance(true);
+  const onComply = (isComplete) => setCompliance(isComplete);
 
   const onSuccess = (payment) => {
     saveStepData({
@@ -119,7 +119,7 @@ export const CheckoutPayment = ({
           total={totalToPayInFiat}
           currency="EUR"
         >
-          <Conditions onComply={onComply} />
+          <Conditions setComply={onComply} />
         </CheckoutForm>
       </Elements>
     </div>

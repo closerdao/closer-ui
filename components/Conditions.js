@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useAuth } from '../contexts/auth';
 import { useBookingState } from '../contexts/booking';
@@ -6,7 +6,7 @@ import { __ } from '../utils/helpers';
 import { Checkbox } from './Checkbox';
 import { Modal } from './Modal';
 
-export const Conditions = ({ onComply }) => {
+export const Conditions = ({ setComply }) => {
   const { user } = useAuth();
   const isMember = user?.roles.includes('member');
   const { settings } = useBookingState();
@@ -16,15 +16,20 @@ export const Conditions = ({ onComply }) => {
     useState(false);
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
 
-  const checkCompliance = (event) => {
-    event.stopPropagation();
+  useEffect(() => {
     if (isVisitorsGuideChecked && isCancellationPolicyChecked) {
-      onComply();
+      setComply(true);
+    } else {
+      setComply(false)
     }
+  }, [isVisitorsGuideChecked, isCancellationPolicyChecked]);
+
+  const stopPropagation = (event) => {
+    event.stopPropagation();
   };
 
   return (
-    <div className="mt-8" onClick={checkCompliance}>
+    <div className="mt-8" onClick={stopPropagation}>
       <Checkbox
         checked={isVisitorsGuideChecked}
         onChange={() => setIsVisitorsGuideChecked(!isVisitorsGuideChecked)}
