@@ -76,7 +76,7 @@ export const useBookingSmartContract = ({ bookingNights }) => {
     try {
       setPending(true);
       const pricePerNightBigNum = BigNumber.from(dailyValue).mul(
-        BigNumber.from(10).pow(BLOCKCHAIN_DAO_TOKEN.decimals),
+        BigNumber.from(10).pow(BigNumber.from(BLOCKCHAIN_DAO_TOKEN.decimals)),
       );
       const tx3 = await Diamond.bookAccommodation(
         bookingNights,
