@@ -23,9 +23,8 @@ const ConfirmationStep = () => {
 
   const { startNewBooking, resetBooking } = useBookingActions();
   const router = useRouter();
-  const viewBooking = () => {
-    resetBooking();
-    router.push(`/bookings/${bookingId}`);
+  const viewBooking = (id) => {
+    router.push(`/bookings/${id}`);
   };
 
   useEffect(() => {
@@ -38,7 +37,7 @@ const ConfirmationStep = () => {
     return (
       <Layout>
         <div className="max-w-screen-sm mx-auto p-8">
-          <BookingBackButton />
+          <BookingBackButton resetBooking={resetBooking} />
           <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
             <span className="mr-1">❌</span>
             <span>{__('bookings_confirmation_step_error')}</span>
@@ -96,7 +95,11 @@ const ConfirmationStep = () => {
               {__('bookings_confirmation_step_success_when_payment_processed')}
             </p>
           </div>
-          <button className="booking-btn" type="button" onClick={viewBooking}>
+          <button
+            className="booking-btn"
+            type="button"
+            onClick={() => viewBooking(bookingId)}
+          >
             {__('bookings_confirmation_step_success_button')}
           </button>
         </div>

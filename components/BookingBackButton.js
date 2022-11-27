@@ -1,14 +1,14 @@
 import { useRouter } from 'next/router';
 
-import { useBookingActions } from '../contexts/booking';
 import { __ } from '../utils/helpers';
 
-export const BookingBackButton = ({ url }) => {
+export const BookingBackButton = ({ url, resetBooking, goBack }) => {
   const router = useRouter();
-  const { resetBooking, goBack } = useBookingActions();
 
   const redirectToUrl = () => {
-    resetBooking();
+    if (resetBooking) {
+      resetBooking();
+    }
     router.push(url);
   };
 

@@ -27,7 +27,7 @@ const Checkout = () => {
     totalToPayInFiat,
   } = steps.find((step) => step.path === '/bookings/new/accomodation').data;
 
-  const { startNewBooking } = useBookingActions();
+  const { startNewBooking, goBack } = useBookingActions();
   useEffect(() => {
     if (!bookingId || !listingName) {
       startNewBooking();
@@ -43,7 +43,7 @@ const Checkout = () => {
   return (
     <Layout>
       <div className="max-w-screen-sm mx-auto p-8">
-        <BookingBackButton />
+        <BookingBackButton goBack={goBack} />
         <h1 className="step-title font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">💰</span>
           <span>{__('bookings_checkout_step_title')}</span>

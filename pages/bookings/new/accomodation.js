@@ -16,7 +16,8 @@ const AccomodationSelector = () => {
   const dates = steps.find((step) => step.path === '/bookings/new/dates').data;
   const { startDate, endDate, guests, useToken } = dates || {};
   const { adults, kids, infants, pets } = guests || {};
-  const { saveStepData, goToNextStep, startNewBooking } = useBookingActions();
+  const { saveStepData, goToNextStep, startNewBooking, goBack } =
+    useBookingActions();
 
   const [listings, setListings] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -97,7 +98,7 @@ const AccomodationSelector = () => {
   return (
     <Layout>
       <div className="max-w-screen-sm mx-auto p-8">
-        <BookingBackButton />
+        <BookingBackButton goBack={goBack} />
         <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">🏡</span>
           <span>{__('bookings_accomodation_step_title')}</span>

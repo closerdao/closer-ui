@@ -13,12 +13,16 @@ const Summary = () => {
   const { steps } = useBookingState();
 
   const dates = steps.find((step) => step.path === '/bookings/new/dates').data;
-  const { startDate, endDate, guests, savedCurrency, useToken } = dates || {};
-  const { listingName, accomodationCost, totalToPayInToken, totalToPayInFiat, utilityFiat } = steps.find(
-    (step) => step.path === '/bookings/new/accomodation',
-  ).data;
+  const { startDate, endDate, guests, useToken } = dates || {};
+  const {
+    listingName,
+    accomodationCost,
+    totalToPayInToken,
+    totalToPayInFiat,
+    utilityFiat,
+  } = steps.find((step) => step.path === '/bookings/new/accomodation').data;
 
-  const { goToNextStep, startNewBooking } = useBookingActions();
+  const { goToNextStep, startNewBooking, goBack } = useBookingActions();
 
   useEffect(() => {
     if (!startDate || !listingName) {
@@ -37,7 +41,7 @@ const Summary = () => {
   return (
     <Layout>
       <div className="max-w-screen-sm mx-auto p-8">
-        <BookingBackButton />
+        <BookingBackButton goBack={goBack} />
         <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">📑</span>
           <span>{__('bookings_summary_step_title')}</span>

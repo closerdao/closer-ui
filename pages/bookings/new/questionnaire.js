@@ -21,7 +21,7 @@ const Questionnaire = () => {
 
   const currentStep = steps.find((step) => step.path === router.pathname);
   const savedAnswers = currentStep.data.answers;
-  const { saveStepData, goToNextStep } = useBookingActions();
+  const { saveStepData, goToNextStep, goBack } = useBookingActions();
   const [answers, setAnswers] = useState(
     savedAnswers
       ? new Map(savedAnswers)
@@ -82,7 +82,7 @@ const Questionnaire = () => {
   return (
     <Layout>
       <div className="max-w-screen-sm mx-auto p-8">
-        <BookingBackButton />
+        <BookingBackButton goBack={goBack} />
         <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">📄</span>
           <span>{__('bookings_questionnaire_step_title')}</span>
