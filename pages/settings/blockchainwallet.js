@@ -41,7 +41,7 @@ const CryptoWallet = () => {
     },
   );
 
-  const { data: DAOTokenBalance, mutate: mutateDTD } = useSWR(
+  const { data: DAOTokenBalance, mutate: mutateDTD } = useSWR( 
     [BLOCKCHAIN_DAO_TOKEN.address, 'balanceOf', account],
     {
       fetcher: fetcher(library, BLOCKCHAIN_DAO_TOKEN_ABI),

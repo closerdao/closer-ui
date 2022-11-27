@@ -1,10 +1,12 @@
 import { useRouter } from 'next/router';
 
+import { useEffect } from 'react';
+
 import { BookingBackButton } from '../../../components/BookingBackButton';
 import { BookingProgress } from '../../../components/BookingProgress';
 import Layout from '../../../components/Layout';
 
-import { useBookingState } from '../../../contexts/booking';
+import { useBookingActions, useBookingState } from '../../../contexts/booking';
 import { __ } from '../../../utils/helpers';
 
 const ConfirmationStep = () => {
@@ -20,6 +22,16 @@ const ConfirmationStep = () => {
   ).data;
 
   const router = useRouter();
+  const viewBooking = () => {
+    router.push(`/bookings/${bookingId}`);
+  };
+  const { startNewBooking } = useBookingActions();
+
+  useEffect(() => {
+    if (!bookingId) {
+      startNewBooking();
+    }
+  }, [bookingId]);
 
   if (paymentRejected) {
     return (
@@ -49,10 +61,6 @@ const ConfirmationStep = () => {
       </Layout>
     );
   }
-
-  const viewBooking = () => {
-    router.push(`/bookings/${bookingId}`);
-  };
 
   if (!bookingId) {
     return null;

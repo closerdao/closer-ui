@@ -65,6 +65,11 @@ export const CheckoutPayment = ({
       await checkContract();
 
     const error = stakingError || nightsRejected;
+    console.log(
+      'payTokens -> isBookingMatchContract',
+      isBookingMatchContract,
+      error,
+    );
     if (error) {
       saveStepData({
         tokenPayment: { error },

@@ -13,6 +13,7 @@ import {
 } from '../config_blockchain';
 import { fetcher } from '../utils/blockchain';
 import { checkIfBookingEqBlockchain } from '../utils/helpers';
+import { useWallet } from './useWallet';
 
 dayjs.extend(dayOfYear);
 
@@ -35,6 +36,8 @@ export const useBookingSmartContract = ({ bookingNights }) => {
     fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
     options,
   );
+
+  const { updateWalletBalance } = useWallet();
 
   const Diamond = new Contract(
     BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
@@ -81,6 +84,7 @@ export const useBookingSmartContract = ({ bookingNights }) => {
         ),
       );
       revalidateNights();
+      updateWalletBalance();
       return { error: null, success: { transactionId: tx3.hash } };
     } catch (error) {
       //User rejected transaction

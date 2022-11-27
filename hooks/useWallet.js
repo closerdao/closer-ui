@@ -53,7 +53,7 @@ export const useWallet = () => {
 
   useEagerConnect(injected);
 
-  const { data: balanceDAOToken } = useSWR(
+  const { data: balanceDAOToken, mutate: updateWalletBalance } = useSWR(
     [BLOCKCHAIN_DAO_TOKEN.address, 'balanceOf', account],
     {
       fetcher: fetcher(library, BLOCKCHAIN_DAO_TOKEN_ABI),
@@ -129,5 +129,6 @@ export const useWallet = () => {
     tokenSymbol: BLOCKCHAIN_DAO_TOKEN.symbol,
     isWalletConnected,
     connectWallet,
+    updateWalletBalance,
   };
 };

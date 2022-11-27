@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 
-import dayjs from 'dayjs';
-
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
 import { PayButton } from './PayButton';
@@ -63,19 +61,13 @@ const CheckoutForm = ({
 
     if (prePayInTokens) {
       const res = await prePayInTokens();
-      const { error, success } = res || {};
-      console.log(
-        'CheckoutForm success',
-        success,
-        error,
-        dayjs().format('HH:mm:ss:SSS'),
-      );
+      const { error } = res || {};
       if (error) {
         setProcessing(false);
         return;
       }
     }
-
+    console.log('prePay is ok, processing payment...');
     try {
       const { error, token } = await stripe.createToken(
         elements.getElement(CardElement),
