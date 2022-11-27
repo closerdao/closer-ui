@@ -87,7 +87,7 @@ const DatesSelector = () => {
   return (
     <Layout>
       <div className="max-w-screen-sm mx-auto p-8 h-full">
-        <BookingBackButton />
+        <BookingBackButton url="/dashboard" />
         <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">🏡</span>
           <span>{__('bookings_dates_step_title')}</span>

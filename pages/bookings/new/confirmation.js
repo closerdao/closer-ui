@@ -21,11 +21,12 @@ const ConfirmationStep = () => {
     (step) => step.path === '/bookings/new/accomodation',
   ).data;
 
+  const { startNewBooking, resetBooking } = useBookingActions();
   const router = useRouter();
   const viewBooking = () => {
+    resetBooking();
     router.push(`/bookings/${bookingId}`);
   };
-  const { startNewBooking } = useBookingActions();
 
   useEffect(() => {
     if (!bookingId) {

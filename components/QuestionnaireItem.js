@@ -41,7 +41,6 @@ export const QuestionnaireItem = ({
             value={answer}
             onChange={onChange}
             required={required}
-            autofocus
           />
           <label className="mt-1 invisible peer-focus:peer-invalid:visible normal-case font-normal text-xs text-primary">
             {__('generic_input_empty_error')}

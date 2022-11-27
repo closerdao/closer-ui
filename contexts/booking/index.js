@@ -13,10 +13,11 @@ const BookingDispatchContext = createContext();
 export const BookingProvider = ({ children }) => {
   const router = useRouter();
   const [state, dispatch] = useReducer(bookingReducer, initialState);
-  const currentStep = state.steps.find((step) => step.path === router.pathname);
+  const { steps, settings } = state;
+  const currentStep = steps.find((step) => step.path === router.pathname);
 
   useEffect(() => {
-    const hasNoSettings = Object.keys(state.settings).length === 0;
+    const hasNoSettings = Object.keys(settings).length === 0;
     const fetchSettings = async () => {
       const {
         data: { results },
@@ -57,10 +58,28 @@ export const BookingProvider = ({ children }) => {
     router.push('/bookings/new');
   };
 
+  const goBack = () => {
+    const currentStepIndex = steps.indexOf(currentStep);
+    const previousStepPath = steps[currentStepIndex - 1]?.path;
+    if (!previousStepPath) {
+      return;
+    }
+    router.push(previousStepPath);
+  };
+
+  const resetBooking = () => {
+    dispatch({
+      type: 'RESET_BOOKING',
+    });
+  };
+  
+
   const bookingActions = {
     saveStepData,
     goToNextStep,
     startNewBooking,
+    goBack,
+    resetBooking,
   };
 
   return (
