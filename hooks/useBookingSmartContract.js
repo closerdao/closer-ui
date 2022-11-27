@@ -29,7 +29,6 @@ export const useBookingSmartContract = ({ bookingNights }) => {
   ];
   const options = {
     revalidateOnMount: true,
-    revalidateInterval: 1,
   };
   const { data: contractNights, mutate: revalidateNights } = useSWR(
     fetchKey,
