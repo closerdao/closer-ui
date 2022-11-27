@@ -13,8 +13,9 @@ import { __, priceFormat } from '../../../utils/helpers';
 
 const Checkout = () => {
   const { steps } = useBookingState();
-  const { startDate, endDate, totalNights, useToken, savedCurrency } =
-    steps.find((step) => step.path === '/bookings/new/dates').data;
+  const { startDate, endDate, totalNights, useToken } = steps.find(
+    (step) => step.path === '/bookings/new/dates',
+  ).data;
 
   const {
     bookingId,
@@ -93,7 +94,6 @@ const Checkout = () => {
             bookingId={bookingId}
             buttonDisabled={useToken && !hasAgreedToWalletDisclaimer}
             useToken={useToken}
-            totalToPayInToken={totalToPayInToken}
             totalToPayInFiat={totalToPayInFiat}
             dailyTokenValue={dailyRentalToken.val}
             startDate={startDate}

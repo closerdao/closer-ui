@@ -7,6 +7,7 @@ import duration from 'dayjs/plugin/duration';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
+import { BLOCKCHAIN_DAO_TOKEN } from '../config_blockchain';
 import { REFUND_PERIODS } from '../constants';
 import base from '../locales/base';
 import en from '../locales/en';
@@ -102,14 +103,14 @@ export const priceFormat = (price, currency = 'EUR') => {
   }
   if (typeof price === 'object' && price.val) {
     const priceValue = parseFloat(price.val);
-    if (price.cur === 'TDF') {
+    if (price.cur === BLOCKCHAIN_DAO_TOKEN.symbol) {
       const numberFormatParts = new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: 'TDF',
+        currency: BLOCKCHAIN_DAO_TOKEN.symbol,
       }).formatToParts(priceValue);
       return numberFormatParts.reduce((acc, part) => {
         if (part.type === 'currency') {
-          return acc + 'TDF';
+          return acc + BLOCKCHAIN_DAO_TOKEN.symbol;
         }
         return acc + part.value;
       }, '$');
@@ -234,4 +235,16 @@ export const calculateRefundTotal = ({ initialValue, policy, startDate }) => {
     return initialValue * lastday;
   }
   return 0;
+};
+
+export const checkIfBookingEqBlockchain = (booking, blockchain) => {
+  if (!blockchain) {
+    return false;
+  }
+  const isBookingMatchBlockchain = booking.every(([year, day]) =>
+    blockchain.some(
+      ([_, bookedYear, bookedDay]) => bookedYear === year && bookedDay === day,
+    ),
+  );
+  return isBookingMatchBlockchain;
 };

@@ -77,7 +77,7 @@ const AccomodationSelector = () => {
           utilityFiat,
           dailyRentalToken,
           accomodationCost: useToken ? rentalToken : rentalFiat,
-          totalToPayInToken: useToken ? rentalToken : 0,
+          totalToPayInToken: useToken ? rentalToken.val : 0,
           totalToPayInFiat: useToken
             ? utilityFiat.val
             : rentalFiat.val + utilityFiat.val,

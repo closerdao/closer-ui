@@ -1,7 +1,7 @@
 /*
 	System-wide constants
 */
-import blockchainConfig from '../config_blockchain.js';
+import { BLOCKCHAIN_DAO_TOKEN } from '../config_blockchain.js';
 
 export const BOOKING_PATHS = [
   '/bookings/new/dates',
@@ -12,5 +12,5 @@ export const BOOKING_PATHS = [
   '/bookings/new/confirmation',
 ];
 
-export const CURRENCIES = ['EUR', blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol];
+export const CURRENCIES = ['EUR', BLOCKCHAIN_DAO_TOKEN.symbol];
 export const DEFAULT_CURRENCY = CURRENCIES[0]; // EUR

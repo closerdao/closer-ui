@@ -61,7 +61,7 @@ export const useWallet = () => {
     },
   );
   const { data: balanceStaked } = useSWR(
-    [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'stakedBalanceOf', account],
+    [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'unlockedStake', account],
     {
       fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
       fallbackData: BigNumber.from(0),

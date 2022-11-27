@@ -2,8 +2,30 @@ import React, { useState } from 'react';
 
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 
+import dayjs from 'dayjs';
+
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
+import { PayButton } from './PayButton';
+
+const cardStyle = {
+  style: {
+    base: {
+      fontSize: '16px',
+      lineHeight: '1.6',
+      color: 'black',
+      padding: '0.2rem',
+      fontWeight: 'regular',
+      fontFamily: 'Roobert, sans-serif',
+      '::placeholder': {
+        color: '#8f8f8f',
+      },
+    },
+    invalid: {
+      color: '#9f1f42',
+    },
+  },
+};
 
 const CheckoutForm = ({
   type,
@@ -30,6 +52,7 @@ const CheckoutForm = ({
   const stripe = useStripe();
   const elements = useElements();
   const [error, setError] = useState(null);
+  const [submitDisabled, setSubmitDisabled] = useState(true);
   const [processing, setProcessing] = useState(false);
   const isButtonDisabled =
     !stripe || buttonDisabled || processing || isProcessingTokenPayment;
@@ -40,7 +63,13 @@ const CheckoutForm = ({
 
     if (prePayInTokens) {
       const res = await prePayInTokens();
-      const { error } = res || {};
+      const { error, success } = res || {};
+      console.log(
+        'CheckoutForm success',
+        success,
+        error,
+        dayjs().format('HH:mm:ss:SSS'),
+      );
       if (error) {
         setProcessing(false);
         return;
@@ -97,7 +126,14 @@ const CheckoutForm = ({
     }
   };
 
-  const getButtonText = () => {
+  const handleChange = async (event) => {
+    // Listen for changes in the CardElement
+    // and display any errors as the customer types their card details
+    setSubmitDisabled(event.empty);
+    setError(event.error ? event.error.message : '');
+  };
+
+  const renderButtonText = () => {
     if (isProcessingTokenPayment) {
       return __('checkout_processing_token_payment');
     }
@@ -115,37 +151,19 @@ const CheckoutForm = ({
         </div>
       )}
       <CardElement
-        options={{
-          style: {
-            base: {
-              fontSize: '16px',
-              lineHeight: '1.6',
-              color: 'black',
-              padding: '0.2rem',
-              fontWeight: 'regular',
-              fontFamily: 'Roobert, sans-serif',
-              '::placeholder': {
-                color: '#8f8f8f',
-              },
-            },
-            invalid: {
-              color: '#9f1f42',
-            },
-          },
-        }}
+        options={cardStyle}
         className={cardElementClassName}
+        onChange={handleChange}
       />
-      <button
-        type="submit"
-        className={
-          submitButtonClassName.length
-            ? submitButtonClassName
-            : 'btn-primary mt-4'
-        }
-        disabled={isButtonDisabled}
-      >
-        {getButtonText()}
-      </button>
+      <div className="mt-4">
+        <PayButton
+          disabled={isButtonDisabled || submitDisabled}
+          className={submitButtonClassName}
+          isSpinnerVisible={processing || isProcessingTokenPayment}
+          buttonText={renderButtonText()}
+        />
+      </div>
+
       {cancelUrl && (
         <a href={cancelUrl} className="mt-4 ml-2">
           {__('generic_cancel')}

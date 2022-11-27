@@ -12,66 +12,64 @@ import {
   BLOCKCHAIN_DIAMOND_ABI,
 } from '../config_blockchain';
 import { fetcher } from '../utils/blockchain';
+import { checkIfBookingEqBlockchain } from '../utils/helpers';
 
 dayjs.extend(dayOfYear);
 
-export const useBookingSmartContract = ({
-  startDate,
-  totalNights,
-  dailyValue,
-}) => {
+export const useBookingSmartContract = ({ bookingNights }) => {
   const { account, library } = useWeb3React();
   const [pendingTransactions, setPendingTransactions] = useState([]);
   const [isPending, setPending] = useState(false);
-  const bookingYear = dayjs(startDate).year();
-  const bookingNights = Array.from({ length: totalNights }, (_, i) => [
+  const [[bookingYear]] = bookingNights;
+  const fetchKey = [
+    BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
+    'getAccommodationBookings',
+    account,
     bookingYear,
-    dayjs(startDate).add(i, 'day').dayOfYear(),
-  ]);
-
-  const { data: bookedNights, mutate: updateBlockchainCache } = useSWR(
-    [
-      BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
-      'getAccommodationBookings',
-      account,
-      bookingYear,
-    ],
-    {
-      fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
-    },
+  ];
+  const options = {
+    revalidateOnMount: true,
+    revalidateInterval: 1,
+  };
+  const { data: contractNights, mutate: revalidateNights } = useSWR(
+    fetchKey,
+    fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
+    options,
   );
 
-  const checkBookingOnBlockchain = () => {
-    if (!bookedNights) {
-      return false;
-    }
-    const isBookingMatchBlockhainState = bookingNights.every(
-      ([year, dayOfYear]) =>
-        bookedNights.some(
-          (bookedNight) =>
-            bookedNight.year === year && bookedNight.dayOfYear === dayOfYear,
-        ),
+  const Diamond = new Contract(
+    BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
+    BLOCKCHAIN_DIAMOND_ABI,
+    library.getUncheckedSigner(),
+  );
+
+  const checkContract = async () => {
+    const contractNightsUpdated = await Diamond.getAccommodationBookings(
+      account,
+      bookingYear,
     );
-    return { isBookingMatchBlockhainState, bookedNights };
+    // console.log('contractNightsUpdated', contractNightsUpdated);
+    const isBookingMatchContract = checkIfBookingEqBlockchain(
+      bookingNights,
+      contractNightsUpdated,
+    );
+    if (isBookingMatchContract) {
+      return { success: true, error: null };
+    } else {
+      return { success: false, error: 'Booking nights are not in contract' };
+    }
   };
 
-  const stakeTokens = async () => {
-    if (!library || !account) {
+  const stakeTokens = async (dailyValue) => {
+    if (!library || !account || !dailyValue) {
       return;
     }
-
-    const Diamond = new Contract(
-      BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
-      BLOCKCHAIN_DIAMOND_ABI,
-      library.getUncheckedSigner(),
-    );
 
     try {
       setPending(true);
       const pricePerNightBigNum = BigNumber.from(dailyValue).mul(
         BigNumber.from(10).pow(BLOCKCHAIN_DAO_TOKEN.decimals),
       );
-
       const tx3 = await Diamond.bookAccommodation(
         bookingNights,
         pricePerNightBigNum,
@@ -83,7 +81,7 @@ export const useBookingSmartContract = ({
           (transactionId) => transactionId !== tx3.hash,
         ),
       );
-      updateBlockchainCache();
+      revalidateNights();
       return { error: null, success: { transactionId: tx3.hash } };
     } catch (error) {
       //User rejected transaction
@@ -97,5 +95,5 @@ export const useBookingSmartContract = ({
     }
   };
 
-  return { stakeTokens, checkBookingOnBlockchain, isStaking: isPending };
+  return { stakeTokens, contractNights, isStaking: isPending, checkContract };
 };

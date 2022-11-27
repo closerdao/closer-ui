@@ -87,6 +87,7 @@
   "bookings_confirmation_step_success_button": "View booking",
   "buttons_select": "Select",
   "buttons_back": "< Back",
+  "buttons_back_to": "Back to %s",
   "buttons_submit": "Submit",
   "buttons_checkout": "Checkout",
   "cancel_booking_page_title": "Cancellation",

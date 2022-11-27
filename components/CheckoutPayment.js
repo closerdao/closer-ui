@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
+import dayjs from 'dayjs';
+
 import config from '../config';
 import { useAuth } from '../contexts/auth';
 import { useBookingActions } from '../contexts/booking';
@@ -17,25 +19,29 @@ export const CheckoutPayment = ({
   bookingId,
   buttonDisabled,
   useToken,
-  totalToPayInToken,
   totalToPayInFiat,
   dailyTokenValue,
   startDate,
-  endDate,
   totalNights,
 }) => {
-  const { saveStepData } = useBookingActions();
-  const { stakeTokens, isStaking, checkBookingOnBlockchain } =
-    useBookingSmartContract({
-      value: totalToPayInToken,
-      startDate,
-      endDate,
-      totalNights,
-      dailyValue: dailyTokenValue,
-    });
+  const bookingYear = dayjs(startDate).year();
+  const bookingStartDayOfYear = dayjs(startDate).dayOfYear();
+  // bookingNights below is a 2d-array in a form of
+  // [[bookingYear, bookingStartDayOfYear]],
+  // which means for the booking from Nov 27 to Nov 29 of 2022,
+  // bookingNights will be [[2022, 331], [2022, 332], [2022, 333]]
+  // where 331 is the day of year for Nov 27 and so on.
+  const bookingNights = Array.from({ length: totalNights }, (_, i) => [
+    bookingYear,
+    bookingStartDayOfYear + i,
+  ]);
+  const { stakeTokens, isStaking, checkContract } = useBookingSmartContract({
+    bookingNights,
+  });
 
   const { user } = useAuth();
   const router = useRouter();
+  const { saveStepData } = useBookingActions();
 
   const onSuccess = (payment) => {
     saveStepData({
@@ -52,40 +58,31 @@ export const CheckoutPayment = ({
   };
 
   const payTokens = async () => {
-    const res = await stakeTokens(totalToPayInToken);
-    const { error, success } = res;
+    const { stakingSuccess, error: stakingError } = await stakeTokens(
+      dailyTokenValue,
+    );
+    const { success: isBookingMatchContract, error: nightsRejected } =
+      await checkContract();
+
+    const error = stakingError || nightsRejected;
     if (error) {
       saveStepData({
         tokenPayment: { error },
       });
       return { error, success: null };
     }
-    if (success) {
+    if (stakingSuccess?.transactionId && isBookingMatchContract) {
       saveStepData({
         tokenPayment: {
-          transactionId: success.transactionId,
+          transactionId: stakingSuccess.transactionId,
           error: null,
         },
       });
       await api.patch(`/booking/${bookingId}`, {
         useToken,
-        transactionId: success.transactionId,
+        transactionId: stakingSuccess.transactionId,
       });
-
-      const { isBookingMatchBlockhainState, bookedNights } =
-        checkBookingOnBlockchain();
-
-      if (isBookingMatchBlockhainState) {
-        return { success: true, error: null };
-      } else {
-        return {
-          success: false,
-          error: {
-            message: 'Blockchain has no records of booked nights',
-            bookedNights,
-          },
-        };
-      }
+      return { success: true, error: null };
     }
   };
 

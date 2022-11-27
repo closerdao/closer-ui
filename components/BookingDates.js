@@ -43,7 +43,7 @@ export const BookingDates = ({
       <p>{renderConditionsDescription()}</p>
       <div className="mt-8 flex justify-between items-center md:px-20">
         <div>
-          <label className="capitalize font-normal" htmlFor="start">
+          <label className="capitalize font-normal mb-0" htmlFor="start">
             {__('listings_book_check_in')}
           </label>
           <DateTimePicker
@@ -56,7 +56,7 @@ export const BookingDates = ({
                 'days',
               )
               .format('YYYY-MM-DD')}
-            onChange={setStartDate}
+            onChange={(start) => setStartDate(start.toDate())}
             showTime={false}
           />
         </div>
@@ -71,7 +71,7 @@ export const BookingDates = ({
             maxValue={dayjs(startDate)
               .add(isMember ? member.maxDuration : guest.maxDuration, 'days')
               .format('YYYY-MM-DD')}
-            onChange={setEndDate}
+            onChange={(end) => setEndDate(end.toDate())}
             showTime={false}
           />
         </div>

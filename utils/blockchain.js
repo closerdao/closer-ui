@@ -13,6 +13,7 @@ export const fetcher =
       const method = arg2;
       const contract = new Contract(address, abi, library.getSigner());
       const res = contract[method](...params);
+      // console.log('fetcher method', method, ...params);
       return res;
     }
     //eth call
