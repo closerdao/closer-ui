@@ -10,6 +10,7 @@ import {
   BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
   BLOCKCHAIN_DAO_TOKEN,
   BLOCKCHAIN_DIAMOND_ABI,
+  BLOCKCHAIN_NETWORK_ID,
 } from '../config_blockchain';
 import { fetcher } from '../utils/blockchain';
 import { checkIfBookingEqBlockchain } from '../utils/helpers';
@@ -18,7 +19,7 @@ import { useWallet } from './useWallet';
 dayjs.extend(dayOfYear);
 
 export const useBookingSmartContract = ({ bookingNights }) => {
-  const { account, library } = useWeb3React();
+  const { account, library, chainId } = useWeb3React();
   const [pendingTransactions, setPendingTransactions] = useState([]);
   const [isPending, setPending] = useState(false);
   const [[bookingYear]] = bookingNights;
@@ -63,7 +64,12 @@ export const useBookingSmartContract = ({ bookingNights }) => {
   };
 
   const stakeTokens = async (dailyValue) => {
-    if (!library || !account || !dailyValue) {
+    if (
+      !library ||
+      !account ||
+      !dailyValue ||
+      chainId !== BLOCKCHAIN_NETWORK_ID
+    ) {
       return;
     }
 
