@@ -19,7 +19,7 @@ export const BookingBackButton = ({ url }) => {
     return (
       <button onClick={handleBack}>
         <span>{__('buttons_back_to')}</span>
-        <span className="normal-case">{url.replace('/', ' ')}</span>
+        <span className="capitalize">{url.slice(1)}</span>
       </button>
     );
   }
