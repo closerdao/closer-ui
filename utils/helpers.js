@@ -248,3 +248,12 @@ export const checkIfBookingEqBlockchain = (booking, blockchain) => {
   );
   return isBookingMatchBlockchain;
 };
+
+export const formatCurrency = (currency) => {
+  const symbol = {
+    USD: '$',
+    EUR: '€',
+    TDF: '$',
+  };
+  return `${symbol[currency]} ${currency}`;
+};
