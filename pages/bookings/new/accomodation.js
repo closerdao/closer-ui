@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 
-import { BookingBackButton } from '../../../components/BookingBackButton';
-import { BookingProgress } from '../../../components/BookingProgress';
-import { BookingStepsInfo } from '../../../components/BookingStepsInfo';
+import BookingBackButton from '../../../components/BookingBackButton';
+import BookingProgress from '../../../components/BookingProgress';
+import BookingStepsInfo from '../../../components/BookingStepsInfo';
 import Layout from '../../../components/Layout';
-import { ListingCard } from '../../../components/ListingCard';
+import ListingCard from '../../../components/ListingCard';
 
 import { useBookingActions, useBookingState } from '../../../contexts/booking';
 import api from '../../../utils/api';

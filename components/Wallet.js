@@ -1,7 +1,7 @@
 import { useWallet } from '../hooks/useWallet';
 import { __, priceFormat } from '../utils/helpers';
 
-export const Wallet = () => {
+const Wallet = () => {
   const { balance, tokenSymbol, isWalletConnected, connectWallet } =
     useWallet();
 
@@ -42,3 +42,5 @@ export const Wallet = () => {
     </div>
   );
 };
+
+export default Wallet;

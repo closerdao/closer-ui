@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 
 import { __ } from '../utils/helpers';
 
-export const SummaryDates = ({
+const SummaryDates = ({
   totalGuests,
   startDate,
   endDate,
@@ -31,3 +31,5 @@ export const SummaryDates = ({
     </div>
   </div>
 );
+
+export default SummaryDates

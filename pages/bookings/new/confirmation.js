@@ -2,8 +2,8 @@ import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
 
-import { BookingBackButton } from '../../../components/BookingBackButton';
-import { BookingProgress } from '../../../components/BookingProgress';
+import BookingBackButton from '../../../components/BookingBackButton';
+import BookingProgress from '../../../components/BookingProgress';
 import Layout from '../../../components/Layout';
 
 import { useBookingActions, useBookingState } from '../../../contexts/booking';

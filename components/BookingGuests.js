@@ -1,9 +1,9 @@
 import PropTypes from 'prop-types';
 
 import { __ } from '../utils/helpers';
-import { Counter } from './Counter';
+import Counter from './Counter';
 
-export const BookingGuests = ({
+const BookingGuests = ({
   adults,
   kids,
   infants,
@@ -51,3 +51,5 @@ BookingGuests.propTypes = {
   setInfants: PropTypes.func,
   setPets: PropTypes.func,
 };
+
+export default BookingGuests;

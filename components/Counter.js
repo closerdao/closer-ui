@@ -1,19 +1,9 @@
-// create a counter component with three inline elements: value, increment, and decrement
-// increment and decrement should be buttons that PLusCircleIcon and MinusCircleIcon
-// value should be a span
-//
-// the counter component should accept a value and a setFn prop
-// the value prop should be the current value of the counter
-// the setFn prop should be a function that updates the value prop
-//
-// the counter component should have a default value of 0
-// Path: components/Counter.js
 import PropTypes from 'prop-types';
 
 import MinusCircleIcon from './icons/MinusCircleIcon';
 import PlusCircleIcon from './icons/PlusCircleIcon';
 
-export const Counter = ({ value, minValue, setFn }) => {
+const Counter = ({ value, minValue, setFn }) => {
   const increment = () => setFn((prevValue) => prevValue + 1);
   const decrement = () => {
     if (value > minValue) {
@@ -45,3 +35,5 @@ Counter.propTypes = {
   minValue: PropTypes.number,
   setFn: PropTypes.func,
 };
+
+export default Counter;

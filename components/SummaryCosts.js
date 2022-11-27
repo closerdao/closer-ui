@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { BLOCKCHAIN_DAO_TOKEN } from '../config_blockchain';
 import { __, priceFormat } from '../utils/helpers';
 
-export const SummaryCosts = ({
+const SummaryCosts = ({
   utilityFiat,
   accomodationCost,
   useToken,
@@ -50,17 +50,17 @@ export const SummaryCosts = ({
 };
 
 SummaryCosts.propTypes = {
-  selectCurrency: PropTypes.func,
-  selectedCurrency: PropTypes.string,
-  listingName: PropTypes.string,
-  rentalFiat: PropTypes.shape({
+  utilityFiat: PropTypes.shape({
     val: PropTypes.number,
     cur: PropTypes.string,
   }),
-  rentalToken: PropTypes.shape({
+  accomodationCost: PropTypes.shape({
     val: PropTypes.number,
     cur: PropTypes.string,
   }),
+  useToken: PropTypes.bool.isRequired,
+  totalToPayInToken: PropTypes.number.isRequired,
+  totalToPayInFiat: PropTypes.number.isRequired,
 };
 
 SummaryCosts.defaultProps = {
@@ -76,3 +76,5 @@ SummaryCosts.defaultProps = {
     cur: 'TDF',
   },
 };
+
+export default SummaryCosts;

@@ -2,7 +2,7 @@ import React from 'react';
 
 import PropTypes from 'prop-types';
 
-export const Progress = ({ progress, total }) => {
+const Progress = ({ progress, total }) => {
   const steps = Array.from({ length: total }, (_, i) => i + 1);
   return (
     <div className="flex items-center space-between">
@@ -24,3 +24,5 @@ Progress.propTypes = {
   progress: PropTypes.number.isRequired,
   total: PropTypes.number.isRequired,
 };
+
+export default Progress;

@@ -1,8 +1,9 @@
 import daysjs from 'dayjs';
+import PropTypes from 'prop-types';
 
 import { __, formatCurrency } from '../utils/helpers';
 
-export const BookingStepsInfo = ({
+const BookingStepsInfo = ({
   startDate,
   endDate,
   totalGuests,
@@ -26,3 +27,12 @@ export const BookingStepsInfo = ({
     </div>
   </div>
 );
+
+BookingStepsInfo.propTypes = {
+  startDate: PropTypes.instanceOf(Date),
+  endDate: PropTypes.instanceOf(Date),
+  totalGuests: PropTypes.number,
+  savedCurrency: PropTypes.string,
+};
+
+export default BookingStepsInfo;

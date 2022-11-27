@@ -1,8 +1,10 @@
 import { useRouter } from 'next/router';
 
+import PropTypes from 'prop-types';
+
 import { __ } from '../utils/helpers';
 
-export const BookingBackButton = ({ url, resetBooking, goBack }) => {
+const BookingBackButton = ({ url, resetBooking, goBack }) => {
   const router = useRouter();
 
   const redirectToUrl = () => {
@@ -23,3 +25,11 @@ export const BookingBackButton = ({ url, resetBooking, goBack }) => {
 
   return <button onClick={goBack}>{__('buttons_back')}</button>;
 };
+
+BookingBackButton.propTypes = {
+  url: PropTypes.string,
+  resetBooking: PropTypes.func,
+  goBack: PropTypes.func,
+};
+
+export default BookingBackButton;

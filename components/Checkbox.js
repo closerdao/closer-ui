@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 
-export const Checkbox = ({ className, label, children, checked, onChange }) => {
+const Checkbox = ({ className, label, children, checked, onChange }) => {
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <input
@@ -27,3 +27,5 @@ Checkbox.propTypes = {
   checked: PropTypes.bool,
   onChange: PropTypes.func,
 };
+
+export default Checkbox;

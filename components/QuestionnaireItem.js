@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
 
+import PropTypes from 'prop-types';
+
 import { useDebounce } from '../hooks/useDebounce';
 import { __ } from '../utils/helpers';
 
-export const QuestionnaireItem = ({
+const QuestionnaireItem = ({
   question: { type, name, options, required },
   savedAnswer,
   handleAnswer,
@@ -75,3 +77,16 @@ QuestionnaireItem.defaultProps = {
   },
   handleAnswer: () => {},
 };
+
+QuestionnaireItem.propTypes = {
+  question: PropTypes.shape({
+    type: PropTypes.string,
+    name: PropTypes.string,
+    options: PropTypes.arrayOf(PropTypes.string),
+    required: PropTypes.bool,
+  }),
+  savedAnswer: PropTypes.string,
+  handleAnswer: PropTypes.func,
+};
+
+export default QuestionnaireItem;

@@ -3,12 +3,7 @@ import PropTypes from 'prop-types';
 import { __, priceFormat } from '../utils/helpers';
 import PlusIcon from './icons/PlusIcon';
 
-export const ListingPrice = ({
-  fiatPrice,
-  tokenPrice,
-  utilityFiat,
-  useToken,
-}) => {
+const ListingPrice = ({ fiatPrice, tokenPrice, utilityFiat, useToken }) => {
   return (
     <div>
       <div className="flex items-center justify-center">
@@ -44,3 +39,5 @@ ListingPrice.propTypes = {
     cur: PropTypes.string,
   }),
 };
+
+export default ListingPrice;

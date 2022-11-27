@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 
-import { BookingBackButton } from '../../../components/BookingBackButton';
-import { BookingProgress } from '../../../components/BookingProgress';
-import { Checkbox } from '../../../components/Checkbox';
-import { CheckoutPayment } from '../../../components/CheckoutPayment';
-import { CheckoutTotal } from '../../../components/CheckoutTotal';
+import BookingBackButton from '../../../components/BookingBackButton';
+import BookingProgress from '../../../components/BookingProgress';
+import Checkbox from '../../../components/Checkbox';
+import CheckoutPayment from '../../../components/CheckoutPayment';
+import CheckoutTotal from '../../../components/CheckoutTotal';
 import Layout from '../../../components/Layout';
-import { Wallet } from '../../../components/Wallet';
+import Wallet from '../../../components/Wallet';
 
 import { useBookingActions, useBookingState } from '../../../contexts/booking';
 import { useWallet } from '../../../hooks/useWallet';

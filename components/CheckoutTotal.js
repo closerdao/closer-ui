@@ -4,7 +4,7 @@ import { DEFAULT_CURRENCY } from '../utils/const';
 import { __, priceFormat } from '../utils/helpers';
 import CalculatorIcon from './icons/CalculatorIcon';
 
-export const CheckoutTotal = ({ totalToPayInFiat }) => {
+const CheckoutTotal = ({ totalToPayInFiat }) => {
   return (
     <div>
       <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3 flex items-center">
@@ -30,3 +30,5 @@ CheckoutTotal.propTypes = {
     cur: PropTypes.string,
   }),
 };
+
+export default CheckoutTotal;

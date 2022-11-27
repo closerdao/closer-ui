@@ -4,9 +4,9 @@ import PropTypes from 'prop-types';
 
 import { cdn } from '../utils/api';
 import { __ } from '../utils/helpers';
-import { ListingPrice } from './ListingPrice';
+import ListingPrice from './ListingPrice';
 
-export const ListingCard = ({ listing, bookListing, useToken }) => {
+const ListingCard = ({ listing, bookListing, useToken }) => {
   const {
     name,
     description,
@@ -99,3 +99,5 @@ ListingCard.propTypes = {
   bookListing: PropTypes.func,
   useToken: PropTypes.bool,
 };
+
+export default ListingCard;

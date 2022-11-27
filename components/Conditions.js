@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 
+import PropTypes from 'prop-types';
+
 import { useAuth } from '../contexts/auth';
 import { useBookingState } from '../contexts/booking';
 import { __ } from '../utils/helpers';
-import { Checkbox } from './Checkbox';
-import { Modal } from './Modal';
+import Checkbox from './Checkbox';
+import Modal from './Modal';
 
-export const Conditions = ({ setComply }) => {
+const Conditions = ({ setComply }) => {
   const { user } = useAuth();
   const isMember = user?.roles.includes('member');
   const { settings } = useBookingState();
@@ -20,7 +22,7 @@ export const Conditions = ({ setComply }) => {
     if (isVisitorsGuideChecked && isCancellationPolicyChecked) {
       setComply(true);
     } else {
-      setComply(false)
+      setComply(false);
     }
   }, [isVisitorsGuideChecked, isCancellationPolicyChecked]);
 
@@ -78,3 +80,9 @@ export const Conditions = ({ setComply }) => {
     </div>
   );
 };
+
+Conditions.propTypes = {
+  setComply: PropTypes.func,
+};
+
+export default Conditions;

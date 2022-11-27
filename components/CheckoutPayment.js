@@ -6,6 +6,7 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
 import dayjs from 'dayjs';
+import PropTypes from 'prop-types';
 
 import config from '../config';
 import { useAuth } from '../contexts/auth';
@@ -14,11 +15,11 @@ import { useBookingSmartContract } from '../hooks/useBookingSmartContract';
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
 import CheckoutForm from './CheckoutForm';
-import { Conditions } from './Conditions';
+import Conditions from './Conditions';
 
 const stripe = loadStripe(config.STRIPE_PUB_KEY);
 
-export const CheckoutPayment = ({
+const CheckoutPayment = ({
   bookingId,
   buttonDisabled,
   useToken,
@@ -125,3 +126,15 @@ export const CheckoutPayment = ({
     </div>
   );
 };
+
+CheckoutPayment.propTypes = {
+  bookingId: PropTypes.string.isRequired,
+  buttonDisabled: PropTypes.bool.isRequired,
+  useToken: PropTypes.bool.isRequired,
+  totalToPayInFiat: PropTypes.number.isRequired,
+  dailyTokenValue: PropTypes.number.isRequired,
+  startDate: PropTypes.instanceOf(Date),
+  totalNights: PropTypes.number.isRequired,
+};
+
+export default CheckoutPayment;

@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 
-import { BookingBackButton } from '../../../components/BookingBackButton';
-import { BookingProgress } from '../../../components/BookingProgress';
+import BookingBackButton from '../../../components/BookingBackButton';
+import BookingProgress from '../../../components/BookingProgress';
 import Layout from '../../../components/Layout';
-import { SummaryCosts } from '../../../components/SummaryCosts';
-import { SummaryDates } from '../../../components/SummaryDates';
+import SummaryCosts from '../../../components/SummaryCosts';
+import SummaryDates from '../../../components/SummaryDates';
 
 import { useBookingActions, useBookingState } from '../../../contexts/booking';
 import { __ } from '../../../utils/helpers';

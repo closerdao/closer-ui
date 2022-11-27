@@ -7,7 +7,7 @@ import DateTimePicker from './DateTimePicker';
 
 dayjs.extend(relativeTime);
 
-export const BookingDates = ({
+const BookingDates = ({
   isMember,
   conditions: { member, guest },
   startDate,
@@ -97,3 +97,5 @@ BookingDates.propTypes = {
   setStartDate: PropTypes.func,
   setEndDate: PropTypes.func,
 };
+
+export default BookingDates;
