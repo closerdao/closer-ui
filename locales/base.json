@@ -73,6 +73,7 @@
   "bookings_checkout_step_payment_title": "Payment",
   "bookings_checkout_step_payment_button": "Pay",
   "bookings_checkout_step_wallet_disclaimer": "I acknowledge that my tokens are being staken upon payment.",
+  "bookings_checkout_step_accomodation_not_enough_balance": "You don't have enough token to pay for your accomodation.",
   "bookings_summary_step_title": "Summary",
   "bookings_summary_step_dates_title": "Your Stay",
   "bookings_summary_step_dates_number_of_guests": "Guests",

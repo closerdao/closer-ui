@@ -113,7 +113,7 @@ export const CheckoutPayment = ({
           buttonText={__('bookings_checkout_step_payment_button')}
           submitButtonClassName="booking-btn mt-8"
           cardElementClassName="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-4"
-          buttonDisabled={buttonDisabled || hasComplied}
+          buttonDisabled={buttonDisabled || !hasComplied}
           prePayInTokens={useToken ? payTokens : () => null}
           isProcessingTokenPayment={isStaking}
           total={totalToPayInFiat}

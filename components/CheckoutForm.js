@@ -53,6 +53,7 @@ const CheckoutForm = ({
   const [error, setError] = useState(null);
   const [submitDisabled, setSubmitDisabled] = useState(true);
   const [processing, setProcessing] = useState(false);
+
   const isButtonDisabled =
     !stripe || buttonDisabled || processing || isProcessingTokenPayment;
 
@@ -119,10 +120,10 @@ const CheckoutForm = ({
     }
   };
 
-  const handleChange = async (event) => {
+  const validateCardElement = async (event) => {
     // Listen for changes in the CardElement
     // and display any errors as the customer types their card details
-    setSubmitDisabled(event.empty);
+    setSubmitDisabled(event.empty || event.error);
     setError(event.error ? event.error.message : '');
   };
 
@@ -146,7 +147,7 @@ const CheckoutForm = ({
       <CardElement
         options={cardStyle}
         className={cardElementClassName}
-        onChange={handleChange}
+        onChange={validateCardElement}
       />
       {conditions}
       <div className="mt-8">

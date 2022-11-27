@@ -9,6 +9,7 @@ import Layout from '../../../components/Layout';
 import { Wallet } from '../../../components/Wallet';
 
 import { useBookingActions, useBookingState } from '../../../contexts/booking';
+import { useWallet } from '../../../hooks/useWallet';
 import { __, priceFormat } from '../../../utils/helpers';
 
 const Checkout = () => {
@@ -35,6 +36,8 @@ const Checkout = () => {
   }, []);
 
   const [hasAgreedToWalletDisclaimer, setWalletDisclaimer] = useState(false);
+  const { balance } = useWallet();
+  const isNotEnoughBalance = balance < totalToPayInToken;
 
   if (!listingName) {
     return null;
@@ -65,6 +68,13 @@ const Checkout = () => {
             {totalToPayInToken > 0 && (
               <div className="mt-4">
                 <Wallet />
+                {isNotEnoughBalance && (
+                  <p className="text-red-500 mt-2">
+                    {__(
+                      'bookings_checkout_step_accomodation_not_enough_balance',
+                    )}
+                  </p>
+                )}
                 <Checkbox
                   checked={hasAgreedToWalletDisclaimer}
                   onChange={() =>
@@ -92,7 +102,9 @@ const Checkout = () => {
           <CheckoutTotal totalToPayInFiat={totalToPayInFiat} />
           <CheckoutPayment
             bookingId={bookingId}
-            buttonDisabled={useToken && !hasAgreedToWalletDisclaimer}
+            buttonDisabled={
+              useToken && (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)
+            }
             useToken={useToken}
             totalToPayInFiat={totalToPayInFiat}
             dailyTokenValue={dailyRentalToken.val}
