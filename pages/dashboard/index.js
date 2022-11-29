@@ -4,7 +4,7 @@ import Link from 'next/link';
 import React from 'react';
 
 import Layout from '../../components/Layout';
-import { Wallet } from '../../components/Wallet';
+import Wallet from '../../components/Wallet';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 
