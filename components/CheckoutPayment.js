@@ -82,6 +82,7 @@ const CheckoutPayment = ({
       });
       return { error, success: null };
     }
+    console.log('Staking transactionId', stakingSuccess?.transactionId);
     if (stakingSuccess?.transactionId && isBookingMatchContract) {
       saveStepData({
         tokenPayment: {
@@ -89,8 +90,7 @@ const CheckoutPayment = ({
           error: null,
         },
       });
-      await api.patch(`/booking/${bookingId}`, {
-        useToken,
+      await api.patch(`/bookings/${bookingId}/token-payment`, {
         transactionId: stakingSuccess.transactionId,
       });
       return { success: true, error: null };
