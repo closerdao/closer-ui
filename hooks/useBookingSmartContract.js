@@ -47,6 +47,10 @@ export const useBookingSmartContract = ({ bookingNights, useToken }) => {
   );
 
   const checkContract = async () => {
+    if (!library || !account || chainId !== BLOCKCHAIN_NETWORK_ID) {
+      return;
+    }
+
     const contractNightsUpdated = await Diamond.getAccommodationBookings(
       account,
       bookingYear,
