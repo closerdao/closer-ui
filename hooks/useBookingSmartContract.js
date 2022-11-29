@@ -18,7 +18,7 @@ import { useWallet } from './useWallet';
 
 dayjs.extend(dayOfYear);
 
-export const useBookingSmartContract = ({ bookingNights }) => {
+export const useBookingSmartContract = ({ bookingNights, useToken }) => {
   const { account, library, chainId } = useWeb3React();
   const [pendingTransactions, setPendingTransactions] = useState([]);
   const [isPending, setPending] = useState(false);
@@ -43,7 +43,7 @@ export const useBookingSmartContract = ({ bookingNights }) => {
   const Diamond = new Contract(
     BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
     BLOCKCHAIN_DIAMOND_ABI,
-    library.getUncheckedSigner(),
+    library && library.getUncheckedSigner(),
   );
 
   const checkContract = async () => {
