@@ -14,7 +14,7 @@ const Index = () => {
   const { isAuthenticated } = useAuth();
 
   if (isAuthenticated) {
-    router.push('/community');
+    router.push('/dashboard');
   }
 
   return (

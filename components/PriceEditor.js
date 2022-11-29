@@ -25,7 +25,6 @@ const PriceEditor = ({ value, onChange, placeholder, required }) => {
     setPrice(update);
     onChange && onChange(update);
   };
-  const currency = currencies.find((cur) => cur.value === price.cur);
 
   useEffect(() => {
     setPrice(value);

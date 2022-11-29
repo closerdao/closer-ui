@@ -10,7 +10,6 @@ import LocalizedFormat from 'dayjs/plugin/localizedFormat';
 
 import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
-import config from '../../../config';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import api from '../../../utils/api';
@@ -29,7 +28,7 @@ const Booking = ({ booking, error }) => {
       await platform.booking.patch(booking._id, update);
       router.push(`/bookings/${booking._id}`);
     } catch (err) {
-      alert('An error occured.');
+      alert('An error occured.'); 
       console.log(err);
     }
   };

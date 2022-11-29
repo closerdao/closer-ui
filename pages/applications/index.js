@@ -1,6 +1,6 @@
 import Head from 'next/head';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
 import ApplicationList from '../../components/ApplicationList';
 import Layout from '../../components/Layout';
@@ -19,7 +19,6 @@ const rejectedApplications = { where: { status: 'rejected' } };
 const Applications = () => {
   const { user } = useAuth();
   const { platform } = usePlatform();
-  const [status, setStatus] = useState('open');
 
   useEffect(() => {
     const loadData = async () => {
@@ -106,7 +105,6 @@ const Applications = () => {
                   ),
                 },
               ]}
-              onChange={(tab) => setStatus(tab.value)}
             />
           </div>
         </div>

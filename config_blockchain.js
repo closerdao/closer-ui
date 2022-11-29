@@ -4,35 +4,129 @@ module.exports = {
   BLOCKCHAIN_RPC_URL: 'https://alfajores-forno.celo-testnet.org',
   BLOCKCHAIN_EXPLORER_URL: 'https://alfajores-blockscout.celo-testnet.org',
   BLOCKCHAIN_NATIVE_TOKEN: {
-    name: 'TEST CELO',
-    symbol: 'CELOT',
+    name: 'CELO',
+    symbol: 'CELO',
     decimals: 18,
   },
   BLOCKCHAIN_DAO_TOKEN: {
-    address: '0xE5402805464028eEB9be13ca73C997d0a6A16dEe',
-    name: 'TTM',
-    symbol: 'TTM',
+    address: '0xA1885AC1A36C645651CE267ac15E8d33FC34446e',
+    name: 'TDF',
+    symbol: 'TDF',
     decimals: 18,
   },
   BLOCKCHAIN_CROWDSALE_CONTRACT_ADDRESS:
     '0xA3145DBd2E9E4778934D61f7814AF2b6eF3F06E2',
-  BLOCKCHAIN_DAO_DIAMOND_ADDRESS: '0x359ee1Add999ad2dFb76CeB674a8307DC02aDFaD',
+  BLOCKCHAIN_DAO_DIAMOND_ADDRESS: '0x743C187B61EfDdD464722afdC40738FDa7ADD6B3',
   BLOCKCHAIN_DAO_TOKEN_ABI: [
+    {
+      anonymous: false,
+      inputs: [
+        {
+          indexed: false,
+          internalType: 'address',
+          name: 'previousAdmin',
+          type: 'address',
+        },
+        {
+          indexed: false,
+          internalType: 'address',
+          name: 'newAdmin',
+          type: 'address',
+        },
+      ],
+      name: 'AdminChanged',
+      type: 'event',
+    },
+    {
+      anonymous: false,
+      inputs: [
+        {
+          indexed: true,
+          internalType: 'address',
+          name: 'beacon',
+          type: 'address',
+        },
+      ],
+      name: 'BeaconUpgraded',
+      type: 'event',
+    },
+    {
+      anonymous: false,
+      inputs: [
+        {
+          indexed: true,
+          internalType: 'address',
+          name: 'implementation',
+          type: 'address',
+        },
+      ],
+      name: 'Upgraded',
+      type: 'event',
+    },
+    {
+      stateMutability: 'payable',
+      type: 'fallback',
+    },
+    {
+      inputs: [],
+      name: 'admin',
+      outputs: [
+        {
+          internalType: 'address',
+          name: 'admin_',
+          type: 'address',
+        },
+      ],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'implementation',
+      outputs: [
+        {
+          internalType: 'address',
+          name: 'implementation_',
+          type: 'address',
+        },
+      ],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
     {
       inputs: [
         {
           internalType: 'address',
-          name: 'to',
+          name: 'newImplementation',
+          type: 'address',
+        },
+      ],
+      name: 'upgradeTo',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'newImplementation',
           type: 'address',
         },
         {
-          internalType: 'uint256',
-          name: 'amount',
-          type: 'uint256',
+          internalType: 'bytes',
+          name: 'data',
+          type: 'bytes',
         },
       ],
-      stateMutability: 'nonpayable',
-      type: 'constructor',
+      name: 'upgradeToAndCall',
+      outputs: [],
+      stateMutability: 'payable',
+      type: 'function',
+    },
+    {
+      stateMutability: 'payable',
+      type: 'receive',
     },
     {
       anonymous: false,
@@ -63,6 +157,70 @@ module.exports = {
       anonymous: false,
       inputs: [
         {
+          indexed: false,
+          internalType: 'uint8',
+          name: 'version',
+          type: 'uint8',
+        },
+      ],
+      name: 'Initialized',
+      type: 'event',
+    },
+    {
+      anonymous: false,
+      inputs: [
+        {
+          indexed: true,
+          internalType: 'address',
+          name: 'previousOwner',
+          type: 'address',
+        },
+        {
+          indexed: true,
+          internalType: 'address',
+          name: 'newOwner',
+          type: 'address',
+        },
+      ],
+      name: 'OwnershipTransferStarted',
+      type: 'event',
+    },
+    {
+      anonymous: false,
+      inputs: [
+        {
+          indexed: true,
+          internalType: 'address',
+          name: 'previousOwner',
+          type: 'address',
+        },
+        {
+          indexed: true,
+          internalType: 'address',
+          name: 'newOwner',
+          type: 'address',
+        },
+      ],
+      name: 'OwnershipTransferred',
+      type: 'event',
+    },
+    {
+      anonymous: false,
+      inputs: [
+        {
+          indexed: false,
+          internalType: 'address',
+          name: 'account',
+          type: 'address',
+        },
+      ],
+      name: 'Paused',
+      type: 'event',
+    },
+    {
+      anonymous: false,
+      inputs: [
+        {
           indexed: true,
           internalType: 'address',
           name: 'from',
@@ -85,16 +243,23 @@ module.exports = {
       type: 'event',
     },
     {
-      inputs: [],
-      name: 'DOMAIN_SEPARATOR',
-      outputs: [
+      anonymous: false,
+      inputs: [
         {
-          internalType: 'bytes32',
-          name: '',
-          type: 'bytes32',
+          indexed: false,
+          internalType: 'address',
+          name: 'account',
+          type: 'address',
         },
       ],
-      stateMutability: 'view',
+      name: 'Unpaused',
+      type: 'event',
+    },
+    {
+      inputs: [],
+      name: 'acceptOwnership',
+      outputs: [],
+      stateMutability: 'nonpayable',
       type: 'function',
     },
     {
@@ -149,36 +314,7 @@ module.exports = {
       inputs: [
         {
           internalType: 'address',
-          name: 'spender',
-          type: 'address',
-        },
-        {
-          internalType: 'uint256',
-          name: 'amount',
-          type: 'uint256',
-        },
-        {
-          internalType: 'bytes',
-          name: 'data',
-          type: 'bytes',
-        },
-      ],
-      name: 'approveAndCall',
-      outputs: [
-        {
-          internalType: 'bool',
-          name: '',
-          type: 'bool',
-        },
-      ],
-      stateMutability: 'nonpayable',
-      type: 'function',
-    },
-    {
-      inputs: [
-        {
-          internalType: 'address',
-          name: 'owner',
+          name: 'account',
           type: 'address',
         },
       ],
@@ -207,6 +343,24 @@ module.exports = {
       type: 'function',
     },
     {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'account',
+          type: 'address',
+        },
+        {
+          internalType: 'uint256',
+          name: 'amount',
+          type: 'uint256',
+        },
+      ],
+      name: 'burnFrom',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
       inputs: [],
       name: 'decimals',
       outputs: [
@@ -216,23 +370,23 @@ module.exports = {
           type: 'uint8',
         },
       ],
-      stateMutability: 'pure',
+      stateMutability: 'view',
       type: 'function',
     },
     {
       inputs: [
         {
-          internalType: 'address payable[]',
-          name: 'tos',
-          type: 'address[]',
+          internalType: 'address',
+          name: 'spender',
+          type: 'address',
         },
         {
           internalType: 'uint256',
-          name: 'totalAmount',
+          name: 'subtractedValue',
           type: 'uint256',
         },
       ],
-      name: 'distributeAlongWithETH',
+      name: 'decreaseAllowance',
       outputs: [
         {
           internalType: 'bool',
@@ -240,36 +394,17 @@ module.exports = {
           type: 'bool',
         },
       ],
-      stateMutability: 'payable',
+      stateMutability: 'nonpayable',
       type: 'function',
     },
     {
       inputs: [],
-      name: 'name',
+      name: 'getDAOContract',
       outputs: [
-        {
-          internalType: 'string',
-          name: '',
-          type: 'string',
-        },
-      ],
-      stateMutability: 'pure',
-      type: 'function',
-    },
-    {
-      inputs: [
         {
           internalType: 'address',
-          name: 'owner',
-          type: 'address',
-        },
-      ],
-      name: 'nonces',
-      outputs: [
-        {
-          internalType: 'uint256',
           name: '',
-          type: 'uint256',
+          type: 'address',
         },
       ],
       stateMutability: 'view',
@@ -279,26 +414,16 @@ module.exports = {
       inputs: [
         {
           internalType: 'address',
-          name: 'forAddress',
-          type: 'address',
-        },
-        {
-          internalType: 'address',
-          name: 'to',
+          name: 'spender',
           type: 'address',
         },
         {
           internalType: 'uint256',
-          name: 'amount',
+          name: 'addedValue',
           type: 'uint256',
         },
-        {
-          internalType: 'bytes',
-          name: 'data',
-          type: 'bytes',
-        },
       ],
-      name: 'payForAndCall',
+      name: 'increaseAllowance',
       outputs: [
         {
           internalType: 'bool',
@@ -313,41 +438,108 @@ module.exports = {
       inputs: [
         {
           internalType: 'address',
-          name: 'owner',
+          name: 'manager',
           type: 'address',
-        },
-        {
-          internalType: 'address',
-          name: 'spender',
-          type: 'address',
-        },
-        {
-          internalType: 'uint256',
-          name: 'value',
-          type: 'uint256',
-        },
-        {
-          internalType: 'uint256',
-          name: 'deadline',
-          type: 'uint256',
-        },
-        {
-          internalType: 'uint8',
-          name: 'v',
-          type: 'uint8',
-        },
-        {
-          internalType: 'bytes32',
-          name: 'r',
-          type: 'bytes32',
-        },
-        {
-          internalType: 'bytes32',
-          name: 's',
-          type: 'bytes32',
         },
       ],
-      name: 'permit',
+      name: 'initialize',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'account',
+          type: 'address',
+        },
+        {
+          internalType: 'uint256',
+          name: 'amount',
+          type: 'uint256',
+        },
+      ],
+      name: 'mint',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'name',
+      outputs: [
+        {
+          internalType: 'string',
+          name: '',
+          type: 'string',
+        },
+      ],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'owner',
+      outputs: [
+        {
+          internalType: 'address',
+          name: '',
+          type: 'address',
+        },
+      ],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'pause',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'paused',
+      outputs: [
+        {
+          internalType: 'bool',
+          name: '',
+          type: 'bool',
+        },
+      ],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'pendingOwner',
+      outputs: [
+        {
+          internalType: 'address',
+          name: '',
+          type: 'address',
+        },
+      ],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'renounceOwnership',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'manager',
+          type: 'address',
+        },
+      ],
+      name: 'setDAOContract',
       outputs: [],
       stateMutability: 'nonpayable',
       type: 'function',
@@ -405,59 +597,6 @@ module.exports = {
     {
       inputs: [
         {
-          internalType: 'address payable',
-          name: 'to',
-          type: 'address',
-        },
-        {
-          internalType: 'uint256',
-          name: 'amount',
-          type: 'uint256',
-        },
-      ],
-      name: 'transferAlongWithETH',
-      outputs: [
-        {
-          internalType: 'bool',
-          name: '',
-          type: 'bool',
-        },
-      ],
-      stateMutability: 'payable',
-      type: 'function',
-    },
-    {
-      inputs: [
-        {
-          internalType: 'address',
-          name: 'to',
-          type: 'address',
-        },
-        {
-          internalType: 'uint256',
-          name: 'amount',
-          type: 'uint256',
-        },
-        {
-          internalType: 'bytes',
-          name: 'data',
-          type: 'bytes',
-        },
-      ],
-      name: 'transferAndCall',
-      outputs: [
-        {
-          internalType: 'bool',
-          name: '',
-          type: 'bool',
-        },
-      ],
-      stateMutability: 'nonpayable',
-      type: 'function',
-    },
-    {
-      inputs: [
-        {
           internalType: 'address',
           name: 'from',
           type: 'address',
@@ -488,35 +627,42 @@ module.exports = {
       inputs: [
         {
           internalType: 'address',
-          name: 'from',
+          name: 'newOwner',
+          type: 'address',
+        },
+      ],
+      name: 'transferOwnership',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'unpause',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'address',
+          name: '_logic',
           type: 'address',
         },
         {
           internalType: 'address',
-          name: 'to',
+          name: 'admin_',
           type: 'address',
         },
         {
-          internalType: 'uint256',
-          name: 'amount',
-          type: 'uint256',
-        },
-        {
           internalType: 'bytes',
-          name: 'data',
+          name: '_data',
           type: 'bytes',
         },
       ],
-      name: 'transferFromAndCall',
-      outputs: [
-        {
-          internalType: 'bool',
-          name: '',
-          type: 'bool',
-        },
-      ],
-      stateMutability: 'nonpayable',
-      type: 'function',
+      stateMutability: 'payable',
+      type: 'constructor',
     },
   ],
   BLOCKCHAIN_DIAMOND_ABI: [
@@ -577,6 +723,56 @@ module.exports = {
     {
       stateMutability: 'payable',
       type: 'receive',
+    },
+    {
+      anonymous: false,
+      inputs: [
+        {
+          indexed: false,
+          internalType: 'address',
+          name: 'executer',
+          type: 'address',
+        },
+        {
+          indexed: false,
+          internalType: 'address',
+          name: 'account',
+          type: 'address',
+        },
+        {
+          indexed: false,
+          internalType: 'uint16[2][]',
+          name: 'bookings',
+          type: 'uint16[2][]',
+        },
+      ],
+      name: 'BookingCheckedIn',
+      type: 'event',
+    },
+    {
+      anonymous: false,
+      inputs: [
+        {
+          indexed: false,
+          internalType: 'address',
+          name: 'executer',
+          type: 'address',
+        },
+        {
+          indexed: false,
+          internalType: 'address',
+          name: 'account',
+          type: 'address',
+        },
+        {
+          indexed: false,
+          internalType: 'uint16[2][]',
+          name: 'bookings',
+          type: 'uint16[2][]',
+        },
+      ],
+      name: 'BookingConfirmed',
+      type: 'event',
     },
     {
       anonymous: false,
@@ -743,6 +939,11 @@ module.exports = {
           name: 'dates',
           type: 'uint16[2][]',
         },
+        {
+          internalType: 'uint256',
+          name: 'price',
+          type: 'uint256',
+        },
       ],
       name: 'bookAccommodation',
       outputs: [],
@@ -758,6 +959,60 @@ module.exports = {
         },
       ],
       name: 'cancelAccommodation',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'account',
+          type: 'address',
+        },
+        {
+          internalType: 'uint16[2][]',
+          name: 'dates',
+          type: 'uint16[2][]',
+        },
+      ],
+      name: 'cancelAccommodationFor',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'account',
+          type: 'address',
+        },
+        {
+          internalType: 'uint16[2][]',
+          name: 'dates',
+          type: 'uint16[2][]',
+        },
+      ],
+      name: 'checkinAccommodationFor',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'account',
+          type: 'address',
+        },
+        {
+          internalType: 'uint16[2][]',
+          name: 'dates',
+          type: 'uint16[2][]',
+        },
+      ],
+      name: 'confirmAccommodationFor',
       outputs: [],
       stateMutability: 'nonpayable',
       type: 'function',
@@ -808,6 +1063,11 @@ module.exports = {
         {
           components: [
             {
+              internalType: 'enum BookingMapLib.BookingStatus',
+              name: 'status',
+              type: 'uint8',
+            },
+            {
               internalType: 'uint16',
               name: 'year',
               type: 'uint16',
@@ -853,6 +1113,11 @@ module.exports = {
       outputs: [
         {
           components: [
+            {
+              internalType: 'enum BookingMapLib.BookingStatus',
+              name: 'status',
+              type: 'uint8',
+            },
             {
               internalType: 'uint16',
               name: 'year',
@@ -976,6 +1241,35 @@ module.exports = {
     {
       inputs: [
         {
+          internalType: 'address',
+          name: 'account',
+          type: 'address',
+        },
+        {
+          internalType: 'uint16',
+          name: 'year',
+          type: 'uint16',
+        },
+        {
+          internalType: 'uint16',
+          name: 'day',
+          type: 'uint16',
+        },
+      ],
+      name: 'lockedStakeAt',
+      outputs: [
+        {
+          internalType: 'uint256',
+          name: '',
+          type: 'uint256',
+        },
+      ],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
           internalType: 'uint16',
           name: 'number',
           type: 'uint16',
@@ -984,6 +1278,35 @@ module.exports = {
       name: 'removeAccommodationYear',
       outputs: [],
       stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'account',
+          type: 'address',
+        },
+        {
+          internalType: 'uint16',
+          name: 'year',
+          type: 'uint16',
+        },
+        {
+          internalType: 'uint16',
+          name: 'day',
+          type: 'uint16',
+        },
+      ],
+      name: 'unlockedStakeAt',
+      outputs: [
+        {
+          internalType: 'uint256',
+          name: '',
+          type: 'uint256',
+        },
+      ],
+      stateMutability: 'view',
       type: 'function',
     },
     {
@@ -1093,7 +1416,7 @@ module.exports = {
               type: 'uint256',
             },
           ],
-          internalType: 'struct StakeLib.StakedDeposit[]',
+          internalType: 'struct OrderedStakeLib.Deposit[]',
           name: '',
           type: 'tuple[]',
         },
@@ -1181,13 +1504,7 @@ module.exports = {
     {
       inputs: [],
       name: 'withdrawMaxStake',
-      outputs: [
-        {
-          internalType: 'uint256',
-          name: '',
-          type: 'uint256',
-        },
-      ],
+      outputs: [],
       stateMutability: 'nonpayable',
       type: 'function',
     },
@@ -1200,34 +1517,9 @@ module.exports = {
         },
       ],
       name: 'withdrawStake',
-      outputs: [
-        {
-          internalType: 'uint256',
-          name: '',
-          type: 'uint256',
-        },
-      ],
+      outputs: [],
       stateMutability: 'nonpayable',
       type: 'function',
-    },
-    {
-      anonymous: false,
-      inputs: [
-        {
-          indexed: false,
-          internalType: 'uint256',
-          name: 'amount',
-          type: 'uint256',
-        },
-        {
-          indexed: false,
-          internalType: 'address',
-          name: 'sender',
-          type: 'address',
-        },
-      ],
-      name: 'LockingTimePeriodChanged',
-      type: 'event',
     },
     {
       anonymous: false,
@@ -1405,6 +1697,53 @@ module.exports = {
       type: 'function',
     },
     {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'from',
+          type: 'address',
+        },
+        {
+          internalType: 'address',
+          name: 'to',
+          type: 'address',
+        },
+        {
+          internalType: 'uint256',
+          name: '',
+          type: 'uint256',
+        },
+      ],
+      name: 'isTokenTransferPermitted',
+      outputs: [
+        {
+          internalType: 'bool',
+          name: '',
+          type: 'bool',
+        },
+      ],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'account',
+          type: 'address',
+        },
+        {
+          internalType: 'uint256',
+          name: 'amount',
+          type: 'uint256',
+        },
+      ],
+      name: 'mintTokensFor',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
       inputs: [],
       name: 'pause',
       outputs: [],
@@ -1456,32 +1795,6 @@ module.exports = {
         },
       ],
       name: 'revokeRole',
-      outputs: [],
-      stateMutability: 'nonpayable',
-      type: 'function',
-    },
-    {
-      inputs: [
-        {
-          internalType: 'uint256',
-          name: 'daysLocked',
-          type: 'uint256',
-        },
-      ],
-      name: 'setLockingTimePeriodDays',
-      outputs: [],
-      stateMutability: 'nonpayable',
-      type: 'function',
-    },
-    {
-      inputs: [
-        {
-          internalType: 'uint256',
-          name: 'seconds_',
-          type: 'uint256',
-        },
-      ],
-      name: 'setLockingTimePeriodSeconds',
       outputs: [],
       stateMutability: 'nonpayable',
       type: 'function',
@@ -1645,11 +1958,6 @@ module.exports = {
           internalType: 'address',
           name: 'token',
           type: 'address',
-        },
-        {
-          internalType: 'uint256',
-          name: 'secondsLocked',
-          type: 'uint256',
         },
       ],
       name: 'init',

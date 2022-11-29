@@ -35,14 +35,14 @@ const SignupForm = () => {
     try {
       const user = await signup(application);
       setSubmitted(true);
-      window.location.href = decodeURIComponent(back || '/community');
+      window.location.href = decodeURIComponent(back || '/dashboard');
     } catch (err) {
       setError(err.message);
     }
   };
 
   if (isAuthenticated) {
-    router.push(decodeURIComponent(back || '/community'));
+    router.push(decodeURIComponent(back || '/dashboard'));
   }
   const updateApplication = (update) =>
     setApplication({ ...application, ...update });
@@ -62,7 +62,7 @@ const SignupForm = () => {
           <input
             type="hidden"
             name="backurl"
-            value={decodeURIComponent(back || '/community')}
+            value={decodeURIComponent(back || '/dashboard')}
           />
           <div className="w-full mb-4">
             <label htmlFor="screenname">{__('signup_form_name')}</label>

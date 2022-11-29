@@ -18,7 +18,7 @@ module.exports = {
           card: '#e7e6e6',
           error: '#9f1f42',
           line: '#a3a3a3',
-        },
+        }
       },
     },
     theme,

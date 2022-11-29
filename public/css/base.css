@@ -68,7 +68,7 @@
     @apply font-bold text-2xl md:text-4xl;
   }
   h1.page-title {
-    @apply text-4xl md:text-9xl font-light mb-4;
+    @apply text-3xl md:text-4xl font-light mb-4;
   }
   h2 {
     @apply text-xl md:text-2xl font-bold;
@@ -90,5 +90,13 @@
     margin: 0 0.25rem 0.25rem 0;
     border-radius: 1.1rem;
     color: white;
+  }
+
+  .leading-12 {
+    line-height: 3rem;
+  }
+
+  .step-title {
+    @apply text-[32px] leading-12 font-normal;
   }
 }

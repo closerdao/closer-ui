@@ -1,21 +1,16 @@
 import Head from 'next/head';
 import Link from 'next/link';
-
-import React, { useEffect, useState } from 'react';
-import Linkify from 'react-linkify';
-
-import EventAttendees from '../../../components/EventAttendees';
-import EventPhoto from '../../../components/EventPhoto';
-<<<<<<< HEAD
-import EventDescription from '../../../components/EventDescription';
-=======
-import Layout from '../../../components/Layout';
-import Photo from '../../../components/Photo';
-
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
 
->>>>>>> origin/develop
+import React, { useEffect, useState } from 'react';
+
+import EventAttendees from '../../../components/EventAttendees';
+import EventPhoto from '../../../components/EventPhoto';
+import EventDescription from '../../../components/EventDescription';
+import Layout from '../../../components/Layout';
+import Photo from '../../../components/Photo';
+
 import PageNotFound from '../../404';
 import config from '../../../config';
 import { useAuth } from '../../../contexts/auth';
@@ -415,32 +410,7 @@ const Event = ({ event, error }) => {
               />
             )}
 
-<<<<<<< HEAD
             { event.description && <EventDescription event={event}  /> }
-=======
-            {event.description && (
-              <section className="mb-6">
-                <h3 className="font-bold text-2xl">Event description</h3>
-                <p className="whitespace-pre-line">
-                  <Linkify
-                    componentDecorator={(decoratedHref, decoratedText, key) => (
-                      <a
-                        target="_blank"
-                        rel="nofollow noreferrer"
-                        href={decoratedHref}
-                        key={key}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {decoratedText}
-                      </a>
-                    )}
-                  >
-                    {event.description}
-                  </Linkify>
-                </p>
-              </section>
-            )}
->>>>>>> origin/develop
           </main>
         </div>
       )}

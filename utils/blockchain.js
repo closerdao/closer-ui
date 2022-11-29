@@ -1,9 +1,7 @@
 import { BigNumber, Contract, utils } from 'ethers';
 import { isAddress } from 'ethers/lib/utils.js';
 
-import blockchainConfig, {
-  BLOCKCHAIN_NETWORK_ID,
-} from '../config_blockchain.js';
+import blockchainConfig from '../config_blockchain.js';
 
 export const fetcher =
   (library, abi) =>
@@ -15,6 +13,7 @@ export const fetcher =
       const method = arg2;
       const contract = new Contract(address, abi, library.getSigner());
       const res = contract[method](...params);
+      // console.log('fetcher method', method, ...params);
       return res;
     }
     //eth call

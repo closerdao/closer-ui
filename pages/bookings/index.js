@@ -1,66 +1,60 @@
 import Head from 'next/head';
-import { useRouter } from 'next/router';
-
-import React, { useEffect } from 'react';
-
-import BookingListPreview from '../../components/BookingListPreview';
 import Layout from '../../components/Layout';
 
 import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
-import { usePlatform } from '../../contexts/platform';
 import { __ } from '../../utils/helpers';
+import Tabs from '../../components/Tabs';
+import Bookings from '../../components/Bookings';
 
-const Bookings = () => {
+const BookingsDirectory = () => {
   const { user } = useAuth();
-  const { platform } = usePlatform();
-  const bookingFilter = user && { where: { createdBy: user._id } };
 
-  const loadData = async () => {
-    await Promise.all([platform.booking.get(bookingFilter)]);
-  };
-
-  useEffect(() => {
-    if (user && user._id) {
-      loadData();
+  const filters = {
+    myBookings: user && {
+      where: {
+        createdBy: user._id,
+        status: ['pending', 'confirmed', 'checkedIn'],
+        end: {
+          $gt: new Date()
+        }
+      }
+    },
+    pastBookings: user && {
+      where: {
+        createdBy: user._id,
+        end: { $lt: new Date() }
+      }
     }
-  }, [user]);
+  };
 
   if (!user) {
     return <PageNotFound error="User not logged in." />;
   }
 
-  const bookings = platform.booking.find(bookingFilter);
-  
   return (
     <Layout>
       <Head>
         <title>{__('bookings_title')}</title>
       </Head>
-      {bookings && bookings.get('error') && (
-        <div className="validation-error">{bookings.get('error')}</div>
-      )}
       <div className="main-content intro fullwidth">
-        <div className="columns">
-          <div className="col lg two-third">
-            <div className="page-header">
-              <h1>{__('bookings_title')}</h1>
-            </div>
-            <div className="bookings-list">
-              {bookings && bookings.count() > 0
-                ? bookings.map((booking) => (
-                  <BookingListPreview
-                    key={booking.get('_id')}
-                    booking={booking}
-                  />
-                ))
-                : 'No Bookings'}
-            </div>
-          </div>
-        </div>
+        <Tabs
+          tabs={ [
+            {
+              title: __('bookings_title'),
+              value: 'my-bookings',
+              content: <Bookings filter={ filters.myBookings } />
+            },
+            {
+              title: __('past_bookings_title'),
+              value: 'past-bookings',
+              content: <Bookings filter={ filters.pastBookings } />
+            },
+          ] }
+        />
       </div>
     </Layout>
   );
 };
 
-export default Bookings;
+export default BookingsDirectory;
