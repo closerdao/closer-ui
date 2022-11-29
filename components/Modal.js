@@ -1,6 +1,6 @@
 import CloseIcon from './icons/CloseIcon';
 
-export const Modal = ({ children, closeModal }) => {
+const Modal = ({ children, closeModal }) => {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
       <div className="fixed inset-0 bg-black opacity-50" onClick={closeModal} />
@@ -16,3 +16,5 @@ export const Modal = ({ children, closeModal }) => {
     </div>
   );
 };
+
+export default Modal;
