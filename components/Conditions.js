@@ -30,6 +30,16 @@ const Conditions = ({ setComply }) => {
     event.stopPropagation();
   };
 
+  const openModal = (event) => {
+    event.preventDefault();
+    setIsInfoModalOpened(true);
+  };
+
+  const closeModal = (event) => {
+    event.preventDefault();
+    setIsInfoModalOpened(false);
+  };
+
   return (
     <div className="mt-8" onClick={stopPropagation}>
       <Checkbox
@@ -59,14 +69,14 @@ const Conditions = ({ setComply }) => {
           <span>{__('bookings_checkout_step_comply_with')}</span>
           <button
             className="border-b pb-1 border-neutral-400 border-dashed"
-            onClick={() => setIsInfoModalOpened(true)}
+            onClick={openModal}
           >
             {__('bookings_checkout_step_cancellation_policy')}
           </button>
         </p>
       </Checkbox>
       {isInfoModalOpened && (
-        <Modal closeModal={() => setIsInfoModalOpened(false)}>
+        <Modal closeModal={closeModal}>
           <div>
             <h1 className="step-title mb-8">
               {__('bookings_checkout_step_cancellation_policy')}
