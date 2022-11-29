@@ -18,7 +18,7 @@ import { useWallet } from './useWallet';
 
 dayjs.extend(dayOfYear);
 
-export const useBookingSmartContract = ({ bookingNights, useToken }) => {
+export const useBookingSmartContract = ({ bookingNights }) => {
   const { account, library, chainId } = useWeb3React();
   const [pendingTransactions, setPendingTransactions] = useState([]);
   const [isPending, setPending] = useState(false);
