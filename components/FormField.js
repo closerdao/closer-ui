@@ -8,7 +8,7 @@ import DateTimePicker from './DateTimePicker';
 import DiscountsEditor from './DiscountsEditor';
 import FieldsEditor from './FieldsEditor';
 import PhotosEditor from './PhotosEditor';
-import PriceEditor from './PriceEditor';
+import PriceEditor, { currencies } from './PriceEditor';
 import Switch from './Switch';
 import TicketOptionsEditor from './TicketOptionsEditor';
 
@@ -131,10 +131,7 @@ const FormField = ({
                   e.preventDefault();
                   update(
                     name,
-                    (data[name] || []).concat({
-                      cur: currencies[0].value,
-                      val: 0,
-                    }),
+                    (data[name] || []).concat(currencies[0]),
                   );
                 }}
               >

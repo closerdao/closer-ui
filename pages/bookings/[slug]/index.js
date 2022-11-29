@@ -28,7 +28,7 @@ const Booking = ({ booking, error }) => {
       await platform.booking.patch(booking._id, update);
       router.push(`/bookings/${booking._id}`);
     } catch (err) {
-      alert('An error occured.');
+      alert('An error occured.'); 
       console.log(err);
     }
   };

@@ -1,0 +1,111 @@
+import { useRouter } from 'next/router';
+
+import { useEffect } from 'react';
+
+import BookingBackButton from '../../../components/BookingBackButton';
+import BookingProgress from '../../../components/BookingProgress';
+import Layout from '../../../components/Layout';
+
+import { useBookingActions, useBookingState } from '../../../contexts/booking';
+import { __ } from '../../../utils/helpers';
+
+const ConfirmationStep = () => {
+  const { steps } = useBookingState();
+  const paymentData = steps.find(
+    (step) => step.path === '/bookings/new/checkout',
+  ).data;
+  const { fiatPayment, tokenPayment } = paymentData;
+  const paymentRejected =
+    (fiatPayment && fiatPayment.error) || (tokenPayment && tokenPayment.error);
+  const { bookingId } = steps.find(
+    (step) => step.path === '/bookings/new/accomodation',
+  ).data;
+
+  const { startNewBooking, resetBooking } = useBookingActions();
+  const router = useRouter();
+  const viewBooking = (id) => {
+    router.push(`/bookings/${id}`);
+  };
+
+  useEffect(() => {
+    if (!bookingId) {
+      startNewBooking();
+    }
+  }, [bookingId]);
+
+  if (paymentRejected) {
+    return (
+      <Layout>
+        <div className="max-w-screen-sm mx-auto p-8">
+          <BookingBackButton resetBooking={resetBooking} />
+          <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
+            <span className="mr-1">❌</span>
+            <span>{__('bookings_confirmation_step_error')}</span>
+          </h1>
+          <BookingProgress />
+          <div className="mt-16 flex flex-col gap-4">
+            {tokenPayment.error && (
+              <>
+                <h2>Token Payment rejected</h2>
+                <p>{JSON.stringify(tokenPayment.error, null, 2)}</p>
+              </>
+            )}
+            {fiatPayment.error && (
+              <>
+                <h2>Euro payment rejected</h2>
+                <p>{JSON.stringify(fiatPayment.error, null, 2)}</p>
+              </>
+            )}
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!bookingId) {
+    return null;
+  }
+
+  return (
+    <Layout>
+      <div className="max-w-screen-sm mx-auto p-8">
+        <BookingBackButton url="/dashboard" />
+        <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
+          <span className="mr-1">🎊</span>
+          <span>{__('bookings_confirmation_step_success')}</span>
+        </h1>
+        <BookingProgress />
+        <div className="mt-16 flex flex-col gap-16 flex-nowrap">
+          <h2 className="text-2xl leading-10 font-normal">
+            <span className="mr-1">🏡</span>
+            <span>{__('bookings_confirmation_step_success_subtitle')}</span>
+          </h2>
+          <p>{__('bookings_confirmation_step_success_thankyou')}</p>
+          <p className="font-black uppercase">
+            {__(
+              'bookings_confirmation_step_success_your_booking_id',
+              bookingId,
+            )}
+          </p>
+          <div>
+            <p className="mb-4">
+              {__('bookings_confirmation_step_success_what_happen_next')}
+            </p>
+            <p>
+              {__('bookings_confirmation_step_success_when_payment_processed')}
+            </p>
+          </div>
+          <button
+            className="booking-btn"
+            type="button"
+            onClick={() => viewBooking(bookingId)}
+          >
+            {__('bookings_confirmation_step_success_button')}
+          </button>
+        </div>
+      </div>
+    </Layout>
+  );
+};
+
+export default ConfirmationStep;

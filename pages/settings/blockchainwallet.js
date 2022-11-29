@@ -41,7 +41,7 @@ const CryptoWallet = () => {
     },
   );
 
-  const { data: DAOTokenBalance, mutate: mutateDTD } = useSWR(
+  const { data: DAOTokenBalance, mutate: mutateDTD } = useSWR( 
     [BLOCKCHAIN_DAO_TOKEN.address, 'balanceOf', account],
     {
       fetcher: fetcher(library, BLOCKCHAIN_DAO_TOKEN_ABI),
@@ -130,7 +130,7 @@ const CryptoWallet = () => {
             <button
               className="btn-primary w-48 px-4"
               onClick={() => {
-                onboard?.walletSelect();
+                alert('Not implemented')
               }}
             >
               {__('blockchain_connect_wallet')}
