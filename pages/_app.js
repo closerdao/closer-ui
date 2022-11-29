@@ -19,6 +19,7 @@ import {
 //   BLOCKCHAIN_STABLE_COIN,
 // } from '../config_blockchain';
 import { AuthProvider } from '../contexts/auth';
+import { BookingProvider } from '../contexts/booking/';
 import { PlatformProvider } from '../contexts/platform';
 import '../public/styles.css';
 import { theme } from '../tailwind.config';
@@ -77,15 +78,17 @@ const Application = ({
       <AuthProvider>
         <PlatformProvider>
           <Web3ReactProvider getLibrary={getLibrary}>
-            <Navigation query={query} signedIn={signedIn} />
-            <div className="content-wrapper">
-              <Component
-                {...pageProps}
-                query={query}
-                user={user}
-                signedIn={signedIn}
-              />
-            </div>
+            <BookingProvider>
+              <Navigation query={query} signedIn={signedIn} />
+              <div className="content-wrapper">
+                <Component
+                  {...pageProps}
+                  query={query}
+                  user={user}
+                  signedIn={signedIn}
+                />
+              </div>
+            </BookingProvider>
           </Web3ReactProvider>
         </PlatformProvider>
       </AuthProvider>

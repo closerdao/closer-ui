@@ -91,4 +91,12 @@
     border-radius: 1.1rem;
     color: white;
   }
+
+  .leading-12 {
+    line-height: 3rem;
+  }
+
+  .step-title {
+    @apply text-[32px] leading-12 font-normal;
+  }
 }
