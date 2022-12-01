@@ -2,24 +2,62 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import Layout from '../../components/Layout';
 
 import { useAuth } from '../../contexts/auth';
+import { useWallet } from '../../hooks/useWallet';
+
+import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
 
 const Login = () => {
+  const { account, signMessage, isWalletConnected, connectWallet } = useWallet()
+
   const router = useRouter();
   const { isAuthenticated, login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [ shouldFollowUpOnConnectAndSign, setShouldFollowUpOnConnectAndSign ] = useState('')
 
   if (isAuthenticated && typeof window.location !== 'undefined') {
     // router.push('/');
     // For some reason, cache needs to get reset.
     window.location.href = decodeURIComponent(router.query.back || '/');
   }
+
+  
+  const executeRestOfSignInWithWallet = async() => {
+    try {
+      const nonce = 'lalal'//await api.get('/nonceForLogin', { params: { account } });
+      const message =  'I am signing this secure one time login code: '+nonce
+      const signedMessage = await signMessage(message)
+      await api.post('/signInWallet', {
+        signedMessage
+      });
+    } catch (error) {
+    }
+  }
+
+  const walletConnectAndSignInFlow = async () => {
+    setShouldFollowUpOnConnectAndSign(true)
+    if(!isWalletConnected){
+      connectWallet()
+    }else{
+      executeRestOfSignInWithWallet()
+    }
+  }
+
+  //The following goes on after the above connect and injected account are made available to use
+  //There is probably a better way to connect, and then to wait for useWeb3React hook above to refresh account
+  //And then synchronously continue
+  useEffect(() => {
+    if(shouldFollowUpOnConnectAndSign){
+      executeRestOfSignInWithWallet()
+      setShouldFollowUpOnConnectAndSign(false)
+    }
+  }, [account])
 
   return (
     <Layout>
@@ -71,22 +109,30 @@ const Login = () => {
               />
             </div>
             <div className="card-footer">
-              <div className="action-row">
+              <div className="flex flex-row justify-between items-end">
                 <button type="submit" className="btn-primary">
                   {__('login_submit')}
                 </button>
-                <hr className="my-4" />
-                <p>
+                <div>
                   <Link
                     href="/login/forgot-password"
                     as="/login/forgot-password"
                   >
                     <a>{__('login_link_forgot_password')}</a>
                   </Link>
-                </p>
+                </div>
               </div>
             </div>
           </form>
+          
+
+          <hr className="my-4 mt-10" />
+          <button type="submit" className="btn-primary"
+          onClick={async () => {
+            await walletConnectAndSignInFlow();
+          }}>
+            {__('blockchain_sign_in_with_wallet')}
+          </button>
         </main>
       </div>
     </Layout>
