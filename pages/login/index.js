@@ -16,7 +16,7 @@ const Login = () => {
   const { account, signMessage, isWalletConnected, connectWallet } = useWallet()
 
   const router = useRouter();
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, login, setAuthentification, setError } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [ shouldFollowUpOnConnectAndSign, setShouldFollowUpOnConnectAndSign ] = useState('')
@@ -27,16 +27,22 @@ const Login = () => {
     window.location.href = decodeURIComponent(router.query.back || '/');
   }
 
-  
+
   const executeRestOfSignInWithWallet = async() => {
     try {
-      const nonce = 'lalal'//await api.get('/nonceForLogin', { params: { account } });
-      const message =  'I am signing this secure one time login code: '+nonce
+      const { data: { nonce } } = await api.post('/auth/web3/pre-sign', { walletAddress: account });
+      const message =  `Signing in with code ${nonce}`;
       const signedMessage = await signMessage(message)
-      await api.post('/signInWallet', {
-        signedMessage
+      const {
+        data: { access_token: token, results: user },
+      } = await api.post('/auth/web3/login', {
+        signedMessage,
+        walletAddress: account,
+        message
       });
+      setAuthentification(user, token)
     } catch (error) {
+      setError(error.message);
     }
   }
 
@@ -124,7 +130,7 @@ const Login = () => {
               </div>
             </div>
           </form>
-          
+
 
           <hr className="my-4 mt-10" />
           <button type="submit" className="btn-primary"

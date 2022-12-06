@@ -48,8 +48,7 @@ export const AuthProvider = ({ children }) => {
         data: { access_token: token, results: user },
       } = await api.post('/login', {
         email,
-        password,
-        // platform: config.PLATFORM
+        password
       });
       if (token) {
         Cookies.set('token', token, { expires: 60 });
@@ -61,6 +60,16 @@ export const AuthProvider = ({ children }) => {
       setError(err.response?.data?.error || err.message);
     }
   };
+
+  const setAuthentification = async (user, token) => {
+    if (token) {
+      Cookies.set('token', token, { expires: 60 });
+      if (user) {
+        setUser(user);
+      }
+    }
+  };
+
 
   const signup = async (data) => {
     try {
@@ -118,6 +127,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!user,
         user,
         login,
+        setAuthentification,
         isLoading,
         logout,
         error,
