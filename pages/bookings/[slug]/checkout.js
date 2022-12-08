@@ -70,7 +70,7 @@ const Checkout = ({ booking, listing, error }) => {
               <span>{__('bookings_checkout_step_accomodation')}</span>
             </h2>
             <div className="flex justify-between items-center mt-3">
-              <p> {listingName}</p>
+              <p>{listingName}</p>
               <p className="font-bold">{priceFormat(accomodationCost)}</p>
             </div>
             <p className="text-right text-xs">
@@ -116,7 +116,7 @@ const Checkout = ({ booking, listing, error }) => {
             buttonDisabled={
               useTokens && (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)
             }
-            useToken={useTokens}
+            useTokens={useTokens}
             totalToPayInFiat={totalToPayInFiat}
             dailyTokenValue={dailyRentalToken.val}
             startDate={start}

@@ -21,7 +21,7 @@ const stripe = loadStripe(config.STRIPE_PUB_KEY);
 const CheckoutPayment = ({
   bookingId,
   buttonDisabled,
-  useToken,
+  useTokens,
   totalToPayInFiat,
   dailyTokenValue,
   startDate,
@@ -108,7 +108,7 @@ const CheckoutPayment = ({
           submitButtonClassName="booking-btn mt-8"
           cardElementClassName="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-4"
           buttonDisabled={buttonDisabled || !hasComplied}
-          prePayInTokens={useToken ? payTokens : () => null}
+          prePayInTokens={useTokens ? payTokens : () => null}
           isProcessingTokenPayment={isStaking}
           total={totalToPayInFiat}
           currency="EUR"
@@ -123,7 +123,7 @@ const CheckoutPayment = ({
 CheckoutPayment.propTypes = {
   bookingId: PropTypes.string.isRequired,
   buttonDisabled: PropTypes.bool.isRequired,
-  useToken: PropTypes.bool.isRequired,
+  useTokens: PropTypes.bool.isRequired,
   totalToPayInFiat: PropTypes.number.isRequired,
   dailyTokenValue: PropTypes.number.isRequired,
   start: PropTypes.string,
