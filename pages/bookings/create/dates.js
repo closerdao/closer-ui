@@ -94,6 +94,17 @@ const DatesSelector = ({ error, settings }) => {
         </h1>
         <BookingProgress />
         <div className="mt-16 flex flex-col gap-16">
+          <div>
+            <h2 className="mb-3 text-2xl leading-10 font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center">
+              <span className="mr-1">💰</span>
+              <span>{__('bookings_dates_step_payment_title')}</span>
+            </h2>
+            <CurrencySwitch
+              selectedCurrency={currency}
+              onSelect={selectCurrency}
+              currencies={CURRENCIES}
+            />
+          </div>
           <BookingDates
             conditions={settings?.conditions}
             startDate={start}
@@ -112,17 +123,6 @@ const DatesSelector = ({ error, settings }) => {
             setInfants={setInfants}
             setPets={setPets}
           />
-          <div>
-            <h2 className="mb-3 text-2xl leading-10 font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center">
-              <span className="mr-1">💰</span>
-              <span>{__('bookings_dates_step_payment_title')}</span>
-            </h2>
-            <CurrencySwitch
-              selectedCurrency={currency}
-              onSelect={selectCurrency}
-              currencies={CURRENCIES}
-            />
-          </div>
           <button className="booking-btn" onClick={handleNext}>
             {__('generic_search')}
           </button>

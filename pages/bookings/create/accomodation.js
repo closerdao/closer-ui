@@ -23,28 +23,22 @@ const AccomodationSelector = ({
   listings,
 }) => {
   const router = useRouter();
-  const { goBack, saveStepData } = useBookingActions();
+  const { goBack } = useBookingActions();
 
   const bookListing = async ({ listingId }) => {
     try {
-      const bookingData = {
-        listingId,
+      const {
+        data: { results: newBooking },
+      } = await api.post('/bookings/request', {
         useTokens,
         start,
         end,
         adults,
-        kids,
         infants,
         pets,
-      };
-      const {
-        data: { results: newBooking },
-      } = await api.post('/bookings/request', {
-        ...bookingData,
         listing: listingId,
         children: kids,
       });
-      saveStepData(bookingData);
       router.push(`/bookings/${newBooking._id}/questions`);
     } catch (err) {
       console.log(err); // TO DO handle error
@@ -105,10 +99,10 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
     listings: results,
     start,
     end,
-    adults,
-    kids,
-    infants,
-    pets,
+    adults: Number(adults),
+    kids: Number(kids),
+    infants: Number(infants),
+    pets: Number(pets),
     currency,
     useTokens,
   };

@@ -61,14 +61,16 @@ const CheckoutForm = ({
     setProcessing(true);
 
     if (prePayInTokens) {
+      console.log('paying in tokens...');
       const res = await prePayInTokens();
       const { error } = res || {};
       if (error) {
         setProcessing(false);
         return;
       }
+      console.log('prePay is ok, proceeding with EUR payment...');
     }
-    console.log('prePay is ok, processing payment...');
+
     try {
       const { error, token } = await stripe.createToken(
         elements.getElement(CardElement),
