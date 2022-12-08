@@ -63,7 +63,7 @@ const CheckoutPayment = ({
   };
 
   const payTokens = async () => {
-    const { stakingSuccess, error: stakingError } = await stakeTokens(
+    const { success: stakingSuccess, error: stakingError } = await stakeTokens(
       dailyTokenValue,
     );
     const { success: isBookingMatchContract, error: nightsRejected } =
@@ -76,6 +76,12 @@ const CheckoutPayment = ({
       });
       return { error, success: null };
     }
+    console.log(
+      'payTokens',
+      stakingError,
+      stakingSuccess,
+      isBookingMatchContract,
+    );
     if (stakingSuccess?.transactionId && isBookingMatchContract) {
       saveStepData({
         tokenPayment: {
@@ -83,6 +89,7 @@ const CheckoutPayment = ({
           error: null,
         },
       });
+      console.log(`/bookings/${bookingId}/token-payment`);
       await api.patch(`/bookings/${bookingId}/token-payment`, {
         transactionId: stakingSuccess.transactionId,
       });
