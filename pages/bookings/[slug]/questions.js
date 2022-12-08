@@ -82,7 +82,7 @@ const Questionnaire = ({ questions, booking, error }) => {
               question={question}
               key={question.name}
               handleAnswer={handleAnswer}
-              savedAnswer={answers.size ? answers.get(question.name) : ''}
+              savedAnswer={answers.get(question.name)}
             />
           ))}
           <button
