@@ -68,8 +68,6 @@ const Questionnaire = ({ questions, booking, error }) => {
     return <PageError error={error} />;
   }
 
-  console.log('answers', questionsData);
-
   return (
     <Layout>
       <div className="max-w-screen-sm mx-auto p-8">
