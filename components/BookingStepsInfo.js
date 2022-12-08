@@ -10,7 +10,7 @@ const BookingStepsInfo = ({
   savedCurrency,
 }) => (
   <div className="mt-6 flex justify-between gap-2 flex-wrap md:justify-start">
-    <div className="border border-solid border-neutral-400 rounded-3xl px-4 py-2 font-normal flex justify-between items-center">
+    <div className="basis-1/2 border border-solid border-neutral-400 rounded-3xl px-4 py-2 font-normal flex justify-between items-center">
       <span className="mr-1">📆</span>
       <span>
         {daysjs(startDate).format('MMM DD')} -{' '}
