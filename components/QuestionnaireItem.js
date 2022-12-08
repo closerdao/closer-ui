@@ -10,7 +10,7 @@ const QuestionnaireItem = ({
   savedAnswer,
   handleAnswer,
 }) => {
-  const [answer, setAnswer] = React.useState(savedAnswer);
+  const [answer, setAnswer] = React.useState(savedAnswer || '');
   const debouncedAnswer = useDebounce(answer, 500);
 
   useEffect(() => {
