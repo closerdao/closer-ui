@@ -73,7 +73,7 @@ const Booking = ({ booking, error }) => {
     </Layout>
   );
 };
-Booking.getInitialProps = async ({ req, query }) => {
+Booking.getInitialProps = async ({ query }) => {
   try {
     const {
       data: { results: booking },

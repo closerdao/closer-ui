@@ -15,7 +15,6 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import PropTypes from 'prop-types';
 
 import { useAuth } from '../../../contexts/auth';
-import { useBookingActions, useBookingState } from '../../../contexts/booking';
 import api from '../../../utils/api';
 import { CURRENCIES, DEFAULT_CURRENCY } from '../../../utils/const';
 import { __ } from '../../../utils/helpers';
@@ -38,11 +37,6 @@ const defaultEnd = dayjs()
 
 const DatesSelector = ({ error, settings }) => {
   const router = useRouter();
-  const { user } = useAuth();
-  const isMember = user?.roles.includes('member');
-  const {
-    data: { dates: savedDates },
-  } = useBookingState();
   const {
     start: savedStartDate,
     end: savedEndDate,
@@ -51,14 +45,16 @@ const DatesSelector = ({ error, settings }) => {
     infants: savedInfants,
     pets: savedPets,
     currency: savedCurrency,
-  } = savedDates || {};
-  const { saveStepData } = useBookingActions();
+  } = router.query || {};
+
+  const { user } = useAuth();
+  const isMember = user?.roles.includes('member');
   const [start, setStartDate] = useState(savedStartDate || defaultStart);
   const [end, setEndDate] = useState(savedEndDate || defaultEnd);
-  const [adults, setAdults] = useState(savedAdults || 1);
-  const [kids, setKids] = useState(savedKids || 0);
-  const [infants, setInfants] = useState(savedInfants || 0);
-  const [pets, setPets] = useState(savedPets || 0);
+  const [adults, setAdults] = useState(Number(savedAdults) || 1);
+  const [kids, setKids] = useState(Number(savedKids) || 0);
+  const [infants, setInfants] = useState(Number(savedInfants) || 0);
+  const [pets, setPets] = useState(Number(savedPets) || 0);
   const [currency, selectCurrency] = useState(
     savedCurrency || DEFAULT_CURRENCY,
   );
@@ -75,7 +71,6 @@ const DatesSelector = ({ error, settings }) => {
       pets,
       currency,
     };
-    saveStepData(data);
     const urlParams = new URLSearchParams(data);
     router.push(`/bookings/create/accomodation?${urlParams}`);
   };

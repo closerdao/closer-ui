@@ -7,7 +7,6 @@ import Layout from '../../../components/Layout';
 import ListingCard from '../../../components/ListingCard';
 
 import { BLOCKCHAIN_DAO_TOKEN } from '../../../config_blockchain';
-import { useBookingActions } from '../../../contexts/booking';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
@@ -23,8 +22,6 @@ const AccomodationSelector = ({
   listings,
 }) => {
   const router = useRouter();
-  const { goBack } = useBookingActions();
-
   const bookListing = async ({ listingId }) => {
     try {
       const {
@@ -50,10 +47,24 @@ const AccomodationSelector = ({
     return null;
   }
 
+  const backToDates = () => {
+    const params = {
+      start,
+      end,
+      adults,
+      kids,
+      infants,
+      pets,
+      currency,
+    };
+    const urlParams = new URLSearchParams(params);
+    router.push(`/bookings/create/dates?${urlParams}`);
+  };
+
   return (
     <Layout>
       <div className="max-w-screen-sm mx-auto p-8">
-        <BookingBackButton goBack={goBack} />
+        <BookingBackButton goBack={backToDates} />
         <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">🏡</span>
           <span>{__('bookings_accomodation_step_title')}</span>
@@ -64,6 +75,7 @@ const AccomodationSelector = ({
           endDate={end}
           totalGuests={adults}
           savedCurrency={currency}
+          backToDates={backToDates}
         />
 
         <div className="mt-16 md:flex md:items-start md:gap-2">

@@ -23,7 +23,7 @@ const Summary = ({ booking, listing, error }) => {
     useTokens,
     start,
     end,
-    guests,
+    adults,
   } = booking || {};
   const accomodationCost = useTokens ? rentalToken : rentalFiat;
   const totalFiat = useTokens
@@ -36,7 +36,7 @@ const Summary = ({ booking, listing, error }) => {
   const handleNext = () => {
     router.push(`/bookings/${booking._id}/checkout`);
   };
-  
+
   const { isAuthenticated } = useAuth();
 
   if (error) {
@@ -58,7 +58,7 @@ const Summary = ({ booking, listing, error }) => {
         <BookingProgress />
         <div className="mt-16 flex flex-col gap-16">
           <SummaryDates
-            totalGuests={guests}
+            totalGuests={adults}
             startDate={start}
             endDate={end}
             listingName={listing.name}
