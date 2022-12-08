@@ -1,5 +1,7 @@
 import { useRouter } from 'next/router';
 
+import { useEffect } from 'react';
+
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingProgress from '../../../components/BookingProgress';
 import Layout from '../../../components/Layout';
@@ -25,6 +27,12 @@ const Summary = ({ booking, listing, error }) => {
     end,
     adults,
   } = booking || {};
+  useEffect(() => {
+    if (booking.status !== 'open') {
+      router.push(`/bookings/${booking._id}`);
+    }
+  }, [booking.status]);
+
   const accomodationCost = useTokens ? rentalToken : rentalFiat;
   const totalFiat = useTokens
     ? utilityFiat.val
