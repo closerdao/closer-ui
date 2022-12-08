@@ -27,7 +27,7 @@ const AccomodationSelector = ({
 
   const bookListing = async ({ listingId }) => {
     try {
-      const data = {
+      const bookingData = {
         listingId,
         useTokens,
         start,
@@ -40,11 +40,11 @@ const AccomodationSelector = ({
       const {
         data: { results: newBooking },
       } = await api.post('/bookings/request', {
-        ...data,
+        ...bookingData,
         listing: listingId,
         children: kids,
       });
-      saveStepData(data);
+      saveStepData(bookingData);
       router.push(`/bookings/${newBooking._id}/questions`);
     } catch (err) {
       console.log(err); // TO DO handle error
@@ -99,7 +99,7 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
     children: kids,
     infants,
     pets,
-    useTokens
+    useTokens,
   });
   return {
     listings: results,
