@@ -48,12 +48,7 @@ export const BookingProvider = ({ children }) => {
   };
 
   const goBack = () => {
-    const currentStepIndex = steps.indexOf(currentStep);
-    const previousStepPath = steps[currentStepIndex - 1]?.path;
-    if (!previousStepPath) {
-      return;
-    }
-    router.push(previousStepPath);
+    router.back();
   };
 
   const resetBooking = () => {
