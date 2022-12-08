@@ -22,9 +22,9 @@ const Login = () => {
   const [ shouldFollowUpOnConnectAndSign, setShouldFollowUpOnConnectAndSign ] = useState('')
 
   if (isAuthenticated && typeof window.location !== 'undefined') {
-    // router.push('/');
+    router.push('/');
     // For some reason, cache needs to get reset.
-    window.location.href = decodeURIComponent(router.query.back || '/');
+    // window.location.href = decodeURIComponent(router.query.back || '/');
   }
 
 
