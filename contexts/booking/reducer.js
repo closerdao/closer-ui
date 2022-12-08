@@ -20,6 +20,7 @@ export const bookingReducer = (state, action) => {
       return {
         ...state,
         data: {
+          ...state.data,
           [action.payload.name]: data,
         },
       };
