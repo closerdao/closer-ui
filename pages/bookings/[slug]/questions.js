@@ -16,32 +16,33 @@ import { __ } from '../../../utils/helpers';
 
 const Questionnaire = ({ questions, booking, error }) => {
   const {
-    data: { questions: answers },
+    data: { questions: questionsData },
   } = useBookingState();
   const { goBack, saveAnswer } = useBookingActions();
-  const hasRequiredQuestions =
-    questions && questions.some((question) => question.required);
+  const hasRequiredQuestions = questions.some((question) => question.required);
   const [isSubmitDisabled, setSubmitDisabled] = useState(hasRequiredQuestions);
 
   useEffect(() => {
-    if (!questions || !hasRequiredQuestions) {
+    if (!hasRequiredQuestions) {
       return;
     }
-    const allRequiredQuestionsCompleted = questions.some(
-      (question) => question.required && answers.get(question.name) !== '',
-    );
+    const allRequiredQuestionsCompleted = questions.some((question) => {
+      const answer = questionsData.get(question.name);
+      const isAnswered = answer !== '' && answer !== undefined;
+      return question.required && isAnswered;
+    });
     setSubmitDisabled(!allRequiredQuestionsCompleted);
-  }, [answers]);
+  }, [questionsData]);
 
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const handleSubmit = async () => {
-    if (!answers.size) {
+    if (!questionsData.size) {
       return;
     }
     try {
       await api.patch(`/booking/${booking._id}`, {
-        fields: Array.from(answers, ([key, value]) => ({
+        fields: Array.from(questionsData, ([key, value]) => ({
           [key]: value,
         })),
       });
@@ -67,6 +68,8 @@ const Questionnaire = ({ questions, booking, error }) => {
     return <PageError error={error} />;
   }
 
+  console.log('answers', questionsData);
+
   return (
     <Layout>
       <div className="max-w-screen-sm mx-auto p-8">
@@ -82,7 +85,7 @@ const Questionnaire = ({ questions, booking, error }) => {
               question={question}
               key={question.name}
               handleAnswer={handleAnswer}
-              savedAnswer={answers.get(question.name)}
+              savedAnswer={questionsData.get(question.name)}
             />
           ))}
           <button
