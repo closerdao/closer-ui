@@ -30,8 +30,8 @@ const Checkout = ({ booking, listing, settings, error }) => {
   } = booking || {};
   const accomodationCost = useTokens ? rentalToken : rentalFiat;
   const totalToPayInFiat = useTokens
-    ? utilityFiat.val
-    : rentalFiat.val + utilityFiat.val;
+    ? utilityFiat?.val
+    : rentalFiat?.val + utilityFiat?.val;
   const totalToPayInToken = useTokens ? rentalToken?.val : 0;
   const listingName = listing?.name;
 
@@ -143,9 +143,11 @@ Checkout.getInitialProps = async ({ query }) => {
       {
         data: { results: settings },
       },
-    ] = await Promise.all[
-      (api.get(`/listing/${booking.listing}`), api.get('/bookings/settings'))
-    ];
+    ] = await Promise.all([
+      api.get(`/listing/${booking.listing}`),
+      api.get('/bookings/settings'),
+    ]);
+
     return { booking, listing, settings, error: null };
   } catch (err) {
     return {
