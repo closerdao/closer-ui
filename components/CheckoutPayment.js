@@ -27,6 +27,7 @@ const CheckoutPayment = ({
   startDate,
   totalNights,
   user,
+  settings,
 }) => {
   const bookingYear = dayjs(startDate).year();
   const bookingStartDayOfYear = dayjs(startDate).dayOfYear();
@@ -120,7 +121,10 @@ const CheckoutPayment = ({
           total={totalToPayInFiat}
           currency="EUR"
         >
-          <Conditions setComply={onComply} />
+          <Conditions
+            setComply={onComply}
+            visitorsGuide={settings.visitorsGuide}
+          />
         </CheckoutForm>
       </Elements>
     </div>
@@ -135,6 +139,9 @@ CheckoutPayment.propTypes = {
   dailyTokenValue: PropTypes.number.isRequired,
   start: PropTypes.string,
   totalNights: PropTypes.number.isRequired,
+  settings: PropTypes.shape({
+    visitorsGuide: PropTypes.string,
+  }),
 };
 
 export default CheckoutPayment;

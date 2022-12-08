@@ -16,7 +16,7 @@ import { useWallet } from '../../../hooks/useWallet';
 import api from '../../../utils/api';
 import { __, priceFormat } from '../../../utils/helpers';
 
-const Checkout = ({ booking, listing, error }) => {
+const Checkout = ({ booking, listing, settings, error }) => {
   const {
     _id: bookingId,
     utilityFiat,
@@ -46,7 +46,7 @@ const Checkout = ({ booking, listing, error }) => {
     return <PageNotAllowed />;
   }
 
-  if (!listingName || !user) {
+  if (!booking || !user || !listing || !settings) {
     return null;
   }
 
@@ -123,6 +123,7 @@ const Checkout = ({ booking, listing, error }) => {
             endDate={end}
             totalNights={duration}
             user={user}
+            settings={settings}
           />
         </div>
       </div>
@@ -135,15 +136,23 @@ Checkout.getInitialProps = async ({ query }) => {
     const {
       data: { results: booking },
     } = await api.get(`/booking/${query.slug}`);
-    const {
-      data: { results: listing },
-    } = await api.get(`/listing/${booking.listing}`);
-    return { booking, listing, error: null };
+    const [
+      {
+        data: { results: listing },
+      },
+      {
+        data: { results: settings },
+      },
+    ] = await Promise.all[
+      (api.get(`/listing/${booking.listing}`), api.get('/bookings/settings'))
+    ];
+    return { booking, listing, settings, error: null };
   } catch (err) {
     return {
       error: err.message,
       booking: null,
       listing: null,
+      settings: null,
     };
   }
 };
