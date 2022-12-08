@@ -1,3 +1,5 @@
+import { useRouter } from 'next/router';
+
 import { useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
@@ -9,9 +11,10 @@ import Layout from '../../../components/Layout';
 import PageError from '../../../components/PageError';
 import Wallet from '../../../components/Wallet';
 
+import PropTypes from 'prop-types';
+
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
-import { useBookingActions } from '../../../contexts/booking';
 import { useWallet } from '../../../hooks/useWallet';
 import api from '../../../utils/api';
 import { __, priceFormat } from '../../../utils/helpers';
@@ -34,13 +37,15 @@ const Checkout = ({ booking, listing, settings, error }) => {
     : rentalFiat?.val + utilityFiat?.val;
   const totalToPayInToken = useTokens ? rentalToken?.val : 0;
   const listingName = listing?.name;
-
-  const { goBack } = useBookingActions();
-
   const [hasAgreedToWalletDisclaimer, setWalletDisclaimer] = useState(false);
   const { balance } = useWallet();
   const isNotEnoughBalance = balance < totalToPayInToken;
   const { user, isAuthenticated } = useAuth();
+
+  const router = useRouter();
+  const goBack = () => {
+    router.push(`/bookings/${booking._id}/summary`);
+  };
 
   if (!isAuthenticated) {
     return <PageNotAllowed />;
@@ -160,3 +165,36 @@ Checkout.getInitialProps = async ({ query }) => {
 };
 
 export default Checkout;
+
+Checkout.propTypes = {
+  booking: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    utilityFiat: PropTypes.shape({
+      val: PropTypes.number.isRequired,
+      cur: PropTypes.string.isRequired,
+    }).isRequired,
+    dailyRentalToken: PropTypes.shape({
+      val: PropTypes.number.isRequired,
+      cur: PropTypes.string.isRequired,
+    }).isRequired,
+    useTokens: PropTypes.bool.isRequired,
+    rentalToken: PropTypes.shape({
+      val: PropTypes.number.isRequired,
+      cur: PropTypes.string.isRequired,
+    }).isRequired,
+    rentalFiat: PropTypes.shape({
+      val: PropTypes.number.isRequired,
+      cur: PropTypes.string.isRequired,
+    }).isRequired,
+    duration: PropTypes.number.isRequired,
+    start: PropTypes.string.isRequired,
+    end: PropTypes.string.isRequired,
+  }).isRequired,
+  listing: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+  }).isRequired,
+  settings: PropTypes.shape({
+    visitorsGuide: PropTypes.string,
+  }),
+  error: PropTypes.string,
+};

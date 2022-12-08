@@ -13,7 +13,6 @@ import PropTypes from 'prop-types';
 
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
-import { useBookingActions } from '../../../contexts/booking';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
@@ -27,6 +26,7 @@ const Summary = ({ booking, listing, error }) => {
     end,
     adults,
   } = booking || {};
+
   useEffect(() => {
     if (booking.status !== 'open') {
       router.push(`/bookings/${booking._id}`);
@@ -38,11 +38,13 @@ const Summary = ({ booking, listing, error }) => {
     ? utilityFiat.val
     : rentalFiat.val + utilityFiat.val;
 
-  const { goBack } = useBookingActions();
-
   const router = useRouter();
   const handleNext = () => {
     router.push(`/bookings/${booking._id}/checkout`);
+  };
+
+  const goBack = () => {
+    router.push(`/bookings/${booking._id}/questions`);
   };
 
   const { isAuthenticated } = useAuth();

@@ -18,7 +18,7 @@ const Questionnaire = ({ questions, booking, error }) => {
   const {
     data: { questions: questionsData },
   } = useBookingState();
-  const { goBack, saveAnswer } = useBookingActions();
+  const { saveAnswer } = useBookingActions();
   const hasRequiredQuestions = questions.some((question) => question.required);
   const [isSubmitDisabled, setSubmitDisabled] = useState(hasRequiredQuestions);
 
@@ -56,6 +56,10 @@ const Questionnaire = ({ questions, booking, error }) => {
     saveAnswer({ name, value });
   };
 
+  const backToAccomodation = () => {
+    router.push(`/bookings/${booking._id}/accomodation`);
+  };
+
   if (!isAuthenticated) {
     return <PageNotAllowed />;
   }
@@ -71,7 +75,7 @@ const Questionnaire = ({ questions, booking, error }) => {
   return (
     <Layout>
       <div className="max-w-screen-sm mx-auto p-8">
-        <BookingBackButton goBack={goBack} />
+        <BookingBackButton goBack={backToAccomodation} />
         <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">📄</span>
           <span>{__('bookings_questionnaire_step_title')}</span>
