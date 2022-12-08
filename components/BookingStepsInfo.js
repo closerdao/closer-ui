@@ -29,9 +29,9 @@ const BookingStepsInfo = ({
 );
 
 BookingStepsInfo.propTypes = {
-  startDate: PropTypes.instanceOf(Date),
-  endDate: PropTypes.instanceOf(Date),
-  totalGuests: PropTypes.number,
+  startDate: PropTypes.string,
+  endDate: PropTypes.string,
+  totalGuests: PropTypes.string,
   savedCurrency: PropTypes.string,
 };
 

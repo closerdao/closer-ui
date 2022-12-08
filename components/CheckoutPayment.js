@@ -9,7 +9,6 @@ import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
 
 import config from '../config';
-import { useAuth } from '../contexts/auth';
 import { useBookingActions } from '../contexts/booking';
 import { useBookingSmartContract } from '../hooks/useBookingSmartContract';
 import api from '../utils/api';
@@ -27,6 +26,7 @@ const CheckoutPayment = ({
   dailyTokenValue,
   startDate,
   totalNights,
+  user,
 }) => {
   const bookingYear = dayjs(startDate).year();
   const bookingStartDayOfYear = dayjs(startDate).dayOfYear();
@@ -43,7 +43,6 @@ const CheckoutPayment = ({
     bookingNights,
   });
 
-  const { user } = useAuth();
   const router = useRouter();
   const { saveStepData } = useBookingActions();
   const [hasComplied, setCompliance] = useState(false);
@@ -53,14 +52,14 @@ const CheckoutPayment = ({
     saveStepData({
       fiatPayment: { ...payment, error: null },
     });
-    router.push('/bookings/new/confirmation');
+    router.push(`/bookings/${bookingId}/confirmation`);
   };
 
   const onError = (error) => {
     saveStepData({
       fiatPayment: { error },
     });
-    router.push('/bookings/new/confirmation');
+    router.push(`/bookings/${bookingId}/confirmation`);
   };
 
   const payTokens = async () => {
@@ -71,18 +70,12 @@ const CheckoutPayment = ({
       await checkContract();
 
     const error = stakingError || nightsRejected;
-    console.log(
-      'payTokens -> isBookingMatchContract',
-      isBookingMatchContract,
-      error,
-    );
     if (error) {
       saveStepData({
         tokenPayment: { error },
       });
       return { error, success: null };
     }
-    console.log('Staking transactionId', stakingSuccess?.transactionId);
     if (stakingSuccess?.transactionId && isBookingMatchContract) {
       saveStepData({
         tokenPayment: {
@@ -133,7 +126,7 @@ CheckoutPayment.propTypes = {
   useToken: PropTypes.bool.isRequired,
   totalToPayInFiat: PropTypes.number.isRequired,
   dailyTokenValue: PropTypes.number.isRequired,
-  startDate: PropTypes.instanceOf(Date),
+  start: PropTypes.string,
   totalNights: PropTypes.number.isRequired,
 };
 

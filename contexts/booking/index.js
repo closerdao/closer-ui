@@ -1,10 +1,9 @@
 import { useRouter } from 'next/router';
 
-import { createContext, useContext, useEffect, useReducer } from 'react';
+import { createContext, useContext, useReducer } from 'react';
 
 import PropTypes from 'prop-types';
 
-import api from '../../utils/api';
 import { bookingReducer, initialState } from './reducer';
 
 const BookingStateContext = createContext();
@@ -13,49 +12,39 @@ const BookingDispatchContext = createContext();
 export const BookingProvider = ({ children }) => {
   const router = useRouter();
   const [state, dispatch] = useReducer(bookingReducer, initialState);
-  const { steps, settings } = state;
-  const currentStep = steps.find((step) => step.path === router.pathname);
-
-  useEffect(() => {
-    const hasNoSettings = Object.keys(settings).length === 0;
-    const fetchSettings = async () => {
-      const {
-        data: { results },
-      } = await api.get('/bookings/settings');
-      dispatch({ type: 'SET_SETTINGS', payload: results });
-    };
-    if (hasNoSettings) {
-      fetchSettings();
-    }
-  });
+  const { steps } = state;
+  const currentStep = steps.find((step) => router.pathname.includes(step));
 
   const saveStepData = (data) => {
     if (!data) {
-      console.error('saveStepData: data are required');
+      console.error('saveStepData: data is required');
       return;
     }
     dispatch({
-      type: 'SET_STEP_DATA',
+      type: 'SAVE_STEP_DATA',
       payload: {
-        path: router.pathname,
+        name: currentStep,
         data,
       },
     });
   };
 
-  const goToNextStep = () => {
-    const nextStepPath = currentStep.next;
-    if (!nextStepPath) {
+  const saveAnswer = (answer) => {
+    if (!answer) {
+      console.error('saveAnswer: answer is required');
       return;
     }
-    router.push(nextStepPath);
+    dispatch({
+      type: 'SAVE_ANSWER',
+      payload: answer,
+    });
   };
 
   const startNewBooking = () => {
     dispatch({
       type: 'RESET_BOOKING',
     });
-    router.push('/bookings/new');
+    router.push('/bookings/create');
   };
 
   const goBack = () => {
@@ -72,11 +61,10 @@ export const BookingProvider = ({ children }) => {
       type: 'RESET_BOOKING',
     });
   };
-  
 
   const bookingActions = {
     saveStepData,
-    goToNextStep,
+    saveAnswer,
     startNewBooking,
     goBack,
     resetBooking,

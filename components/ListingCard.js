@@ -6,25 +6,13 @@ import { cdn } from '../utils/api';
 import { __ } from '../utils/helpers';
 import ListingPrice from './ListingPrice';
 
-const ListingCard = ({ listing, bookListing, useToken }) => {
-  const {
-    name,
-    description,
-    rentalFiat,
-    rentalToken,
-    utilityFiat,
-    dailyRentalToken,
-    available,
-  } = listing;
+const ListingCard = ({ listing, bookListing, useTokens }) => {
+  const { name, description, rentalFiat, rentalToken, utilityFiat, available } =
+    listing;
 
   const handleBooking = () => {
     bookListing({
       listingId: listing._id,
-      listingName: name,
-      rentalFiat,
-      rentalToken,
-      utilityFiat,
-      dailyRentalToken,
     });
   };
 
@@ -52,10 +40,10 @@ const ListingCard = ({ listing, bookListing, useToken }) => {
       </ul>
       <div className="my-8">
         <ListingPrice
-          fiatPrice={rentalFiat}
-          tokenPrice={rentalToken}
+          rentalFiat={rentalFiat}
+          rentalToken={rentalToken}
           utilityFiat={utilityFiat}
-          useToken={useToken}
+          useTokens={useTokens}
         />
       </div>
       <button

@@ -1,13 +1,9 @@
 import dayjs from 'dayjs';
+import PropTypes from 'prop-types';
 
 import { __ } from '../utils/helpers';
 
-const SummaryDates = ({
-  totalGuests,
-  startDate,
-  endDate,
-  listingName,
-}) => (
+const SummaryDates = ({ totalGuests, startDate, endDate, listingName }) => (
   <div>
     <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2">
       <span className="mr-1">🏡</span>
@@ -32,4 +28,11 @@ const SummaryDates = ({
   </div>
 );
 
-export default SummaryDates
+SummaryDates.propTypes = {
+  totalGuests: PropTypes.number,
+  startDate: PropTypes.string,
+  endDate: PropTypes.string,
+  listingName: PropTypes.string,
+};
+
+export default SummaryDates;

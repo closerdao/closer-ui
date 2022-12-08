@@ -3,5 +3,6 @@
     "source.fixAll.eslint": true,
     "source.fixAll.prettier": true
   },
-  "eslint.validate": ["javascript"]
+  "eslint.validate": ["javascript"],
+  "prettier.configPath": ".prettierrc.json"
 }
