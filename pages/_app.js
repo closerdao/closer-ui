@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
+import GdprCompliancePopup from '../components/CookiePopup';
 import Footer from '../components/Footer';
 import Navigation from '../components/Navigation';
 
@@ -93,6 +94,7 @@ const Application = ({
         </PlatformProvider>
       </AuthProvider>
       <Footer tags={tags} />
+      <GdprCompliancePopup />
     </div>
   );
 };
