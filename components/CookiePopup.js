@@ -27,10 +27,10 @@ const GdprCompliancePopup = () => {
         <p className="mt-2">{__('gdpr-popup-description')}</p>
       </div>
       <div className="my-4 flex flex-col gap-4 md:flex-row md:flex-1">
-        <button className="btn md:basis-1/2" onClick={onAccept}>
+        <button className="btn uppercase md:basis-1/2" onClick={onAccept}>
           {__('gdpr-popup-button-accept')}
         </button>
-        <button className="btn md:basis-1/2" onClick={onReject}>
+        <button className="btn uppercase md:basis-1/2" onClick={onReject}>
           {__('gdpr-popup-button-reject')}
         </button>
       </div>
