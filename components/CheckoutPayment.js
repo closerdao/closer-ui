@@ -91,7 +91,7 @@ const CheckoutPayment = ({
         },
       });
       console.log(`/bookings/${bookingId}/token-payment`);
-      await api.patch(`/bookings/${bookingId}/token-payment`, {
+      await api.post(`/bookings/${bookingId}/token-payment`, {
         transactionId: stakingSuccess.transactionId,
       });
       return { success: true, error: null };
