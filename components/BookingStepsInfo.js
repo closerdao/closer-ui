@@ -13,7 +13,7 @@ const BookingStepsInfo = ({
   <div className="mt-6 flex justify-between gap-2 flex-wrap md:justify-start">
     <div
       onClick={backToDates}
-      className="basis-1/2 border border-solid border-neutral-400 rounded-3xl px-4 py-2 font-normal flex justify-between items-center cursor-pointer"
+      className="basis-1/2 border border-solid border-neutral-400 rounded-3xl px-4 py-2 font-normal flex justify-between items-center md:flex-initial cursor-pointer"
     >
       <span className="mr-1">📆</span>
       <span>

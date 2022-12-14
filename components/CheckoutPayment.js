@@ -77,12 +77,7 @@ const CheckoutPayment = ({
       });
       return { error, success: null };
     }
-    console.log(
-      'payTokens',
-      stakingError,
-      stakingSuccess,
-      isBookingMatchContract,
-    );
+
     if (stakingSuccess?.transactionId && isBookingMatchContract) {
       saveStepData({
         tokenPayment: {
@@ -90,7 +85,6 @@ const CheckoutPayment = ({
           error: null,
         },
       });
-      console.log(`/bookings/${bookingId}/token-payment`);
       await api.post(`/bookings/${bookingId}/token-payment`, {
         transactionId: stakingSuccess.transactionId,
       });
@@ -116,7 +110,7 @@ const CheckoutPayment = ({
           submitButtonClassName="booking-btn mt-8"
           cardElementClassName="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-4"
           buttonDisabled={buttonDisabled || !hasComplied}
-          prePayInTokens={useTokens ? payTokens : () => null}
+          prePayInTokens={useTokens && payTokens}
           isProcessingTokenPayment={isStaking}
           total={totalToPayInFiat}
           currency="EUR"
