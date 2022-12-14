@@ -78,7 +78,7 @@ const AccomodationSelector = ({
           backToDates={backToDates}
         />
 
-        <div className="mt-16 md:flex md:items-start md:gap-2">
+        <div className="mt-16 md:grid md:grid-flow-col md:items-start md:gap-2">
           {listings.map((listing) => (
             <ListingCard
               key={listing._id}

@@ -19,7 +19,7 @@ const ListingCard = ({ listing, bookListing, useTokens }) => {
   if (!listing) return null;
 
   return (
-    <div className="flex flex-col rounded-lg p-4 mb-16 last:mb-0 shadow-4xl md:mb-0 md:basis-2/4">
+    <div className="flex flex-col rounded-lg p-4 mb-16 last:mb-0 shadow-4xl md:mb-0 md:basis-full md:h-full">
       <h2 className="text-2xl leading-10 font-normal">{name}</h2>
       {listing.photos && (
         <div className="relative h-48 rounded-lg my-4 overflow-hidden">
@@ -30,7 +30,7 @@ const ListingCard = ({ listing, bookListing, useTokens }) => {
           />
         </div>
       )}
-      <ul className="list-disc px-4">
+      <ul className="list-disc px-4 flex-1">
         <li>{description}</li>
         <li>
           {listing.private
