@@ -32,7 +32,7 @@ const Bookings = ({ filter }) => {
 
   return (
     <div className="columns mt-8">
-      <div className="bookings-list mt-8">
+      <div className="bookings-list mt-8 flex flex-wrap gap-4">
         {noBookings && <p className="mt-4">{__('no_bookings')}</p>}
         {myBookings.map((booking) => {
           const listingId = booking.get('listing');

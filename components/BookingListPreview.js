@@ -24,7 +24,7 @@ const BookingListPreview = ({ booking }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg p-4 shadow-xl mb-8">
+    <div className="max-w-sm bg-white rounded-lg p-4 shadow-xl flex flex-col md:basis-5/12 md:flex-1 ">
       <p className="text-xs leading-5 opacity-50 mb-3">
         {__('bookings_status')} <b className="tag">{booking.get('status')}</b>
       </p>
