@@ -2,8 +2,7 @@ import { useWallet } from '../hooks/useWallet';
 import { __, priceFormat } from '../utils/helpers';
 
 const Wallet = () => {
-  const { balance, tokenSymbol, isWalletConnected, connectWallet } =
-    useWallet();
+  const { balance, tokenSymbol, isWalletConnected, connectWallet } = useWallet();
 
   return (
     <div className="p-4 flex flex-col rounded-lg shadow-4xl">

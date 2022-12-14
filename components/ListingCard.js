@@ -33,7 +33,7 @@ const ListingCard = ({ listing, bookListing, useToken }) => {
   return (
     <div className="flex flex-col rounded-lg p-4 mb-16 last:mb-0 shadow-4xl md:mb-0 md:basis-2/4">
       <h2 className="text-2xl leading-10 font-normal">{name}</h2>
-      {listing.photos && (
+      {listing.photos && listing.photos.length > 0 && (
         <div className="relative h-48 rounded-lg my-4 overflow-hidden">
           <Image
             src={`${cdn}${listing.photos[0]}-post-md.jpg`}

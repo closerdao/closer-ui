@@ -85,7 +85,7 @@ const Navigation = () => {
   }, []);
 
   return (
-    <div className="NavContainer pt-20 md:pt-0 relative">
+    <div className="NavContainer pt-20 md:pt-0 relative z-20">
       {featuredEvents && featuredEvents.first() && (
         <FeaturedEvent event={featuredEvents.first()} />
       )}
