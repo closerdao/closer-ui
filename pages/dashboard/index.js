@@ -42,7 +42,7 @@ const dashbboardLinks = [
   },
   {
     label: 'Book a stay',
-    url: '/bookings/new',
+    url: '/bookings/create',
     enabled: () => FEATURES.booking,
   },
   {

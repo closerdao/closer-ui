@@ -1,165 +1,129 @@
-import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 
+import BookingBackButton from '../../../components/BookingBackButton';
+import BookingProgress from '../../../components/BookingProgress';
 import Layout from '../../../components/Layout';
-import Switch from '../../../components/Switch';
-
-import { useWeb3React } from '@web3-react/core';
-import dayjs from 'dayjs';
-import LocalizedFormat from 'dayjs/plugin/localizedFormat';
+import PageError from '../../../components/PageError';
+import QuestionnaireItem from '../../../components/QuestionnaireItem';
 
 import PageNotAllowed from '../../401';
-import PageNotFound from '../../404';
-import config from '../../../config';
-import { BLOCKCHAIN_NETWORK_ID } from '../../../config_blockchain';
 import { useAuth } from '../../../contexts/auth';
-import { usePlatform } from '../../../contexts/platform';
+import { useBookingActions, useBookingState } from '../../../contexts/booking';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
-dayjs.extend(LocalizedFormat);
+const Questionnaire = ({ questions, booking, error }) => {
+  const {
+    data: { questions: questionsData },
+  } = useBookingState();
+  const { saveAnswer } = useBookingActions();
+  const hasRequiredQuestions = questions.some((question) => question.required);
+  const [isSubmitDisabled, setSubmitDisabled] = useState(hasRequiredQuestions);
 
-const Booking = ({ booking, error, questions }) => {
+  useEffect(() => {
+    if (!hasRequiredQuestions) {
+      return;
+    }
+    const allRequiredQuestionsCompleted = questions.some((question) => {
+      const answer = questionsData.get(question.name);
+      const isAnswered = answer !== '' && answer !== undefined;
+      return question.required && isAnswered;
+    });
+    setSubmitDisabled(!allRequiredQuestionsCompleted);
+  }, [questionsData]);
+
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
-  const [editBooking, setBooking] = useState(booking);
-  const { isAuthenticated, user } = useAuth();
-  const { platform } = usePlatform();
-
-  console.log('questions', questions);
-
-  const { chainId, account, activate, deactivate, setError, active, library } =
-    useWeb3React();
-
-  const saveBooking = async (update) => {
+  const handleSubmit = async () => {
+    if (!questionsData.size) {
+      return;
+    }
     try {
-      await platform.booking.patch(booking._id, update);
-      active && typeof account === 'string' && chainId === BLOCKCHAIN_NETWORK_ID
-        ? router.push(`/bookings/${booking._id}/checkout`)
-        : router.push(`/bookings/${booking._id}/connectwallet`);
+      await api.patch(`/booking/${booking._id}`, {
+        fields: Array.from(questionsData, ([key, value]) => ({
+          [key]: value,
+        })),
+      });
+      router.push(`/bookings/${booking._id}/summary`);
     } catch (err) {
-      alert('An error occured.');
-      console.log(err);
+      console.log(err); // TO DO handle error
     }
   };
 
-  if (!booking) {
-    return <PageNotFound />;
-  }
+  const handleAnswer = (name, value) => {
+    saveAnswer({ name, value });
+  };
 
-  const start = dayjs(booking.start);
-  const end = dayjs(booking.end);
+  const backToAccomodation = () => {
+    router.push(`/bookings/${booking._id}/accomodation`);
+  };
 
   if (!isAuthenticated) {
     return <PageNotAllowed />;
   }
 
+  if (!questions) {
+    return null;
+  }
+
+  if (error) {
+    return <PageError error={error} />;
+  }
+
   return (
     <Layout>
-      <Head>
-        <title>{booking.name}</title>
-        <meta name="description" content={booking.description} />
-        <meta property="og:type" content="booking" />
-      </Head>
-      <main className="main-content max-w-prose booking">
-        <h1 className="mb-4">{__('bookings_contribution_title')}</h1>
-        {booking.status === 'open' && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              saveBooking(editBooking);
-            }}
+      <div className="max-w-screen-sm mx-auto p-8">
+        <BookingBackButton goBack={backToAccomodation} />
+        <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
+          <span className="mr-1">📄</span>
+          <span>{__('bookings_questionnaire_step_title')}</span>
+        </h1>
+        <BookingProgress />
+        <div className="my-16 gap-16 mt-16">
+          {questions.map((question) => (
+            <QuestionnaireItem
+              question={question}
+              key={question.name}
+              handleAnswer={handleAnswer}
+              savedAnswer={questionsData.get(question.name)}
+            />
+          ))}
+          <button
+            className="booking-btn"
+            onClick={handleSubmit}
+            disabled={isSubmitDisabled}
           >
-            <section>
-              <h3>{__('bookings_contribution_about')}</h3>
-              <textarea
-                onChange={(e) =>
-                  setBooking({
-                    ...editBooking,
-                    about: e.target.value,
-                  })
-                }
-                value={editBooking.about}
-                placeholder={__('bookings_contribution_about_placeholder')}
-              />
-            </section>
-            <section className="mt-8">
-              <h3>{__('bookings_contribution_message')}</h3>
-              <textarea
-                onChange={(e) =>
-                  setBooking({
-                    ...editBooking,
-                    message: e.target.value,
-                  })
-                }
-                value={editBooking.message}
-                placeholder={__('bookings_contribution_message_placeholder')}
-              />
-            </section>
-            {config.FEATURES.bookingVolunteers && (
-              <section className="mt-8">
-                <h3 className="mb-3">
-                  {__('bookings_contribution_volunteer')}
-                </h3>
-                <Switch
-                  checked={editBooking.volunteer}
-                  onChange={(volunteer) =>
-                    setBooking({
-                      ...editBooking,
-                      volunteer,
-                    })
-                  }
-                />
-              </section>
-            )}
-            {editBooking.volunteer && (
-              <section className="mt-8">
-                <h3>{__('bookings_contribution_gift')}</h3>
-                <textarea
-                  onChange={(e) =>
-                    setBooking({
-                      ...editBooking,
-                      gift: e.target.value,
-                    })
-                  }
-                  value={editBooking.gift}
-                  placeholder={__('bookings_contribution_gift_placeholder')}
-                />
-              </section>
-            )}
-            <section className="mt-8">
-              <button className="btn-primary">{__('generic_next')}</button>
-            </section>
-          </form>
-        )}
-      </main>
+            {__('buttons_submit')}
+          </button>
+        </div>
+      </div>
     </Layout>
   );
 };
-Booking.getInitialProps = async ({ req, query }) => {
+
+Questionnaire.getInitialProps = async ({ query }) => {
   try {
-    const [{
-      data: { results: booking },
-    }, {
-      data: {
-        results: questions
-      }
-    }] = await Promise.all([
+    const [
+      {
+        data: { results: booking },
+      },
+      {
+        data: { results: questions },
+      },
+    ] = await Promise.all([
       api.get(`/booking/${query.slug}`),
-      api.get('/bookings/questions')
+      api.get('/bookings/questions'),
     ]);
-
-    console.log('// QUESTION: ', questions)
-
-    return { booking, questions };
+    return { booking, questions, error: null };
   } catch (err) {
-    console.log('Error', err.message);
-
     return {
       error: err.message,
+      booking: null,
+      questions: null,
     };
   }
 };
 
-export default Booking;
+export default Questionnaire;

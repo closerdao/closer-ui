@@ -1,38 +1,40 @@
-import { BOOKING_PATHS } from '../../utils/const';
+import { data } from 'autoprefixer';
 
 export const initialState = {
-  steps: BOOKING_PATHS.map((path) => ({
-    path,
-    next: BOOKING_PATHS[BOOKING_PATHS.indexOf(path) + 1] || null,
-    data: {},
-  })),
-  settings: {},
+  steps: [
+    'dates',
+    'accomodation',
+    'questions',
+    'summary',
+    'checkout',
+    'confirmation',
+  ],
+  data: {
+    questions: new Map(),
+  },
 };
 
 export const bookingReducer = (state, action) => {
   switch (action.type) {
-    case 'SET_CURRENT_STEP':
+    case 'SAVE_STEP_DATA':
       return {
         ...state,
-        currentStep: action.payload,
+        data: {
+          ...state.data,
+          [action.payload.name]: data,
+        },
       };
-    case 'SET_STEP_DATA':
+
+    case 'SAVE_ANSWER':
+      const answer = action.payload;
+      const answers = state.data.questions;
+      const newMap = answers.size ? new Map(answers) : new Map();
+      newMap.set(answer.name, answer.value);
       return {
         ...state,
-        steps: state.steps.map((step) => {
-          if (step.path === action.payload.path) {
-            return {
-              ...step,
-              data: { ...step.data, ...action.payload.data },
-            };
-          }
-          return step;
-        }),
-      };
-    case 'SET_SETTINGS':
-      return {
-        ...state,
-        settings: action.payload,
+        data: {
+          questions: newMap,
+        },
       };
 
     case 'RESET_BOOKING':
@@ -42,80 +44,3 @@ export const bookingReducer = (state, action) => {
       throw new Error(`Invalid action type: ${action.type}`);
   }
 };
-
-// // state.settings:
-// {
-//   "utilityFiat": {
-//       "val": 10,
-//       "cur": "EUR"
-//   },
-//   "utilityToken": {
-//       "val": 0.04504504504504504,
-//       "cur": "$TDF"
-//   },
-//   "checkinTime": 14,
-//   "checkoutTime": 11,
-//   "maxDuration": 180,
-//   "minDuration": 1,
-//   "conditions": {
-//       "member": {
-//           "maxDuration": 180,
-//           "maxBookingHorizon": 365
-//       },
-//       "guest": {
-//           "maxDuration": 14,
-//           "maxBookingHorizon": 30
-//       }
-//   },
-//   "discounts": {
-//       "weekly": 0.3,
-//       "monthly": 0.5,
-//       "highseason": 0.3
-//   },
-//   "cancellationPolicy": {
-//       "lastday": 0,
-//       "lastweek": 0,
-//       "lastmonth": 0.5,
-//       "default": 1
-//   },
-//   "questions": [
-//       {
-//           "type": "text",
-//           "name": "What brings you to Closer?",
-//           "required": true
-//       },
-//       {
-//           "type": "text",
-//           "name": "Do you have any dietary needs?"
-//       },
-//       {
-//           "type": "select",
-//           "name": "How do you like your mattress?",
-//           "options": [
-//               "soft",
-//               "medium",
-//               "hard"
-//           ]
-//       }
-//   ],
-//   "visitorsGuide": "https://docs.google.com/document/d/198vWYEQCC1lELQa8f76Jcw3l3UDiPcBKt04PGFKnUvg/edit#",
-//   "bookingQuestionnaire": [
-//       {
-//           "fieldType": "text",
-//           "name": "What brings you to Closer?"
-//       },
-//       {
-//           "fieldType": "text",
-//           "name": "Do you have any dietary needs?"
-//       },
-//       {
-//           "fieldType": "select",
-//           "name": "How do you like your mattress?",
-//           "options": [
-//               "soft",
-//               "medium",
-//               "hard"
-//           ]
-//       }
-//   ]
-// }
