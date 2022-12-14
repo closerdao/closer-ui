@@ -104,16 +104,12 @@ export const priceFormat = (price, currency = 'EUR') => {
   if (typeof price === 'object' && price.val) {
     const priceValue = parseFloat(price.val);
     if (price.cur === BLOCKCHAIN_DAO_TOKEN.symbol) {
-      const numberFormatParts = new Intl.NumberFormat('en-US', {
+      return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: BLOCKCHAIN_DAO_TOKEN.symbol,
-      }).formatToParts(priceValue);
-      return numberFormatParts.reduce((acc, part) => {
-        if (part.type === 'currency') {
-          return acc + BLOCKCHAIN_DAO_TOKEN.symbol;
-        }
-        return acc + part.value;
-      }, '$');
+      })
+        .formatToParts(priceValue)
+        .map((v, i) => (i === 0 ? '$' + v.value : v.value));
     }
     return priceValue.toLocaleString('en-US', {
       style: 'currency',
