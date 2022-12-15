@@ -1,9 +1,9 @@
 import Head from 'next/head';
-import { useRouter } from 'next/router';
 
-import React, { useState } from 'react';
+import React from 'react';
 
 import Layout from '../../../components/Layout';
+import PageError from '../../../components/PageError';
 
 import dayjs from 'dayjs';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
@@ -11,27 +11,13 @@ import LocalizedFormat from 'dayjs/plugin/localizedFormat';
 import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
-import { usePlatform } from '../../../contexts/platform';
 import api from '../../../utils/api';
 import { __, priceFormat } from '../../../utils/helpers';
 
 dayjs.extend(LocalizedFormat);
 
 const Booking = ({ booking, error }) => {
-  const router = useRouter();
-  const [editBooking, setBooking] = useState(booking);
-  const { isAuthenticated, user } = useAuth();
-  const { platform } = usePlatform();
-
-  const saveBooking = async (update) => {
-    try {
-      await platform.booking.patch(booking._id, update);
-      router.push(`/bookings/${booking._id}`);
-    } catch (err) {
-      alert('An error occured.'); 
-      console.log(err);
-    }
-  };
+  const { isAuthenticated } = useAuth();
 
   if (!booking) {
     return <PageNotFound />;
@@ -42,6 +28,10 @@ const Booking = ({ booking, error }) => {
 
   if (!isAuthenticated) {
     return <PageNotAllowed />;
+  }
+
+  if (error) {
+    return <PageError error={error} />;
   }
 
   return (
@@ -56,7 +46,7 @@ const Booking = ({ booking, error }) => {
         <section className="mt-3">
           <h3>{__('bookings_summary')}</h3>
           <p>
-            {__('bookings_status')} <b>{editBooking.status}</b>
+            {__('bookings_status')} <b>{booking.status}</b>
           </p>
           <p>
             {__('bookings_checkin')} <b>{start.format('LLL')}</b>
@@ -83,7 +73,7 @@ const Booking = ({ booking, error }) => {
     </Layout>
   );
 };
-Booking.getInitialProps = async ({ req, query }) => {
+Booking.getInitialProps = async ({ query }) => {
   try {
     const {
       data: { results: booking },

@@ -3,15 +3,13 @@ import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { useAuth } from '../contexts/auth';
-import { useBookingState } from '../contexts/booking';
 import { __ } from '../utils/helpers';
 import Checkbox from './Checkbox';
 import Modal from './Modal';
 
-const Conditions = ({ setComply }) => {
+const Conditions = ({ setComply, visitorsGuide }) => {
   const { user } = useAuth();
   const isMember = user?.roles.includes('member');
-  const { settings } = useBookingState();
 
   const [isVisitorsGuideChecked, setIsVisitorsGuideChecked] = useState(false);
   const [isCancellationPolicyChecked, setIsCancellationPolicyChecked] =
@@ -51,7 +49,7 @@ const Conditions = ({ setComply }) => {
           <span>{__('bookings_checkout_step_comply_with')}</span>
           <a
             className="border-b pb-1 border-neutral-400 border-dashed"
-            href={settings?.visitorsGuide}
+            href={visitorsGuide}
             target="_blank"
             rel="noreferrer noopener"
           >
@@ -93,6 +91,7 @@ const Conditions = ({ setComply }) => {
 
 Conditions.propTypes = {
   setComply: PropTypes.func,
+  visitorsGuide: PropTypes.string,
 };
 
 export default Conditions;

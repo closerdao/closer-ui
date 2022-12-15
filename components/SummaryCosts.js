@@ -1,14 +1,15 @@
 import PropTypes from 'prop-types';
 
 import { BLOCKCHAIN_DAO_TOKEN } from '../config_blockchain';
+import { DEFAULT_CURRENCY } from '../utils/const';
 import { __, priceFormat } from '../utils/helpers';
 
 const SummaryCosts = ({
   utilityFiat,
   accomodationCost,
-  useToken,
-  totalToPayInToken,
-  totalToPayInFiat,
+  useTokens,
+  totalToken,
+  totalFiat,
 }) => {
   return (
     <div>
@@ -28,17 +29,17 @@ const SummaryCosts = ({
         {__('bookings_summary_step_utility_description')}
       </p>
       <div className="flex justify-between items-center mt-3">
-        <p> {__('bookings_total')}</p>
+        <p>{__('bookings_total')}</p>
         <p className="font-bold">
-          {useToken ? (
+          {useTokens ? (
             <>
               <span>
-                {priceFormat(totalToPayInToken, BLOCKCHAIN_DAO_TOKEN.symbol)}
+                {priceFormat(totalToken, BLOCKCHAIN_DAO_TOKEN.symbol)}
               </span>{' '}
-              + <span>{priceFormat(totalToPayInFiat)}</span>
+              + <span>{priceFormat(totalFiat)}</span>
             </>
           ) : (
-            priceFormat(totalToPayInFiat)
+            priceFormat(totalFiat, DEFAULT_CURRENCY)
           )}
         </p>
       </div>
@@ -58,23 +59,9 @@ SummaryCosts.propTypes = {
     val: PropTypes.number,
     cur: PropTypes.string,
   }),
-  useToken: PropTypes.bool.isRequired,
-  totalToPayInToken: PropTypes.number.isRequired,
-  totalToPayInFiat: PropTypes.number.isRequired,
-};
-
-SummaryCosts.defaultProps = {
-  selectCurrency: () => {},
-  selectedCurrency: '',
-  listingName: '',
-  rentalFiat: {
-    val: 0,
-    cur: 'EUR',
-  },
-  rentalToken: {
-    val: 0,
-    cur: 'TDF',
-  },
+  useTokens: PropTypes.bool.isRequired,
+  totalToken: PropTypes.number.isRequired,
+  totalFiat: PropTypes.number.isRequired,
 };
 
 export default SummaryCosts;
