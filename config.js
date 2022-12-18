@@ -4,7 +4,7 @@ module.exports = {
   GA_ANALYTICS: false,
   FB_DOMAIN_VERIFICATION: false,
   PLATFORM_LEGAL_ADDRESS: 'TBD, Portugal',
-  DEFAULT_TITLE: 'Closer: the operating system for sovereign communities',
+  DEFAULT_TITLE: 'The operating system for regenerative communities',
   DEFAULT_DESCRIPTION: '',
   SEMANTIC_URL: 'https://dev.closer.earth',
   TEAM_EMAIL: 'team@closer.earth',
@@ -18,7 +18,8 @@ module.exports = {
   CACHE_DURATION: 6000000, // 1h
   // STRIPE_PUB_KEY: 'pk_live_YxOUUf7iOvQj104TG4JyWMAE003w80ISH6',
   // TODO remove test key
-  STRIPE_PUB_KEY: 'pk_test_51Gv17cGtt5D0VKR2Gt2RUVIDfrHRGJTfMSwRFpdbF5B4VfZ2zFOxM62ckAj4aQN5q6mDexpjZAqQKLpKdmwcnQfJ00sJwfbVWK',
+  STRIPE_PUB_KEY:
+    'pk_test_51Gv17cGtt5D0VKR2Gt2RUVIDfrHRGJTfMSwRFpdbF5B4VfZ2zFOxM62ckAj4aQN5q6mDexpjZAqQKLpKdmwcnQfJ00sJwfbVWK',
   LOGO_HEADER: '/images/logo.png',
   LOGO_WIDTH: undefined,
   REGISTRATION_MODE: 'open', // curated, paid, open
