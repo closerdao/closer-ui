@@ -1,17 +1,17 @@
-import { useEffect } from 'react';
+// import { useEffect } from 'react';
 
-import { initAnalytics, trackPageView } from './Analytics';
+// import { initAnalytics, trackPageView } from './Analytics';
 
-let GA_INITIALIZED;
+// let GA_INITIALIZED;
 
 const Layout = ({ children }) => {
-  useEffect(() => {
-    if (!GA_INITIALIZED) {
-      initAnalytics();
-      GA_INITIALIZED = true;
-    }
-    trackPageView();
-  }, []);
+  // useEffect(() => {
+  //   if (!GA_INITIALIZED) {
+  //     initAnalytics();
+  //     GA_INITIALIZED = true;
+  //   }
+  //   trackPageView();
+  // }, []);
 
   return children;
 };
