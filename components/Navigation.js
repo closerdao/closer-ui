@@ -1,52 +1,39 @@
-import Link from 'next/link';
+import { useRouter } from 'next/router';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { useAuth } from '../contexts/auth.js';
-import { __ } from '../utils/helpers';
+import { useAuth } from '../contexts/auth';
+import GuestMenu from './GuestMenu';
 import Logo from './Logo';
-import Menu from './Menu';
-import Profile from './Profile';
-import QuestionMarkIcon from './icons/QuestionMarkIcon';
+import MemberMenu from './MemberMenu';
+import Menu from './MenuContainer';
 
 const Navigation = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const [navOpen, setNavOpen] = useState(false);
+  const toggleNav = () => {
+    setNavOpen((isOpen) => !isOpen);
+  };
+
+  const router = useRouter();
+  useEffect(() => {
+    router.events.on('routeChangeComplete', toggleNav);
+    router.events.on('routeChangeError', toggleNav);
+
+    return () => {
+      router.events.off('routeChangeComplete', toggleNav);
+      router.events.off('routeChangeError', toggleNav);
+    };
+  }, [router]);
+
+  const { isAuthenticated } = useAuth();
 
   return (
     <div className="NavContainer pt-20 md:pt-0 relative z-20">
       <nav className="h-20 fixed z-50 top-0 left-0 right-0 shadow-sm md:relative">
         <div className="main-content flex justify-between items-center">
           <Logo />
-          <Menu>
-            {isAuthenticated ? (
-              <>
-                <Profile />
-                <button className="btn w-full uppercase" onClick={logout}>
-                  {__('navigation_sign_out')}
-                </button>
-              </>
-            ) : (
-              <div className="mt-12 px-4 pb-8 shadow-sm relative">
-                <QuestionMarkIcon className="w-24 h-24 absolute left-0 right-0 mx-auto -translate-y-1/2" />
-                <p className="mt-16 mb-4 text-center">
-                  {__('navigation_sign_in_cta')}
-                </p>
-                <Link href="/login" passHref>
-                  <a>
-                    <button className="btn w-full uppercase mb-3">
-                      {__('navigation_sign_in')}
-                    </button>
-                  </a>
-                </Link>
-                <Link href="/signup" passHref>
-                  <a>
-                    <button className="btn w-full uppercase">
-                      {__('navigation_register')}
-                    </button>
-                  </a>
-                </Link>
-              </div>
-            )}
+          <Menu isOpen={navOpen} toggleNav={toggleNav}>
+            {isAuthenticated ? <MemberMenu /> : <GuestMenu />}
           </Menu>
         </div>
       </nav>
