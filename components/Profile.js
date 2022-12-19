@@ -14,7 +14,7 @@ const Profile = () => {
             src={`${cdn}${user.photo}-profile-lg.jpg`}
             loading="lazy"
             alt={user.screenname}
-            className="w-32 md:w-44 mt-4 md:mt-0 rounded-full"
+            className="w-32 md:w-44 rounded-full"
           />
         ) : (
           <FaUser className="text-gray-200 text-6xl" />
