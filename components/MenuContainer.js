@@ -3,6 +3,13 @@ import PropTypes from 'prop-types';
 import CloseIcon from './icons/CloseIcon.js';
 
 const MenuContainer = ({ isOpen, toggleNav, children }) => {
+  const menuClassnames = {
+    container: 'w-full h-full fixed inset-0',
+    overlay:
+      'w-full h-full duration-500 ease-out transition-all inset-0 absolute bg-gray-900',
+    slider:
+      'md:max-w-sm w-full bg-white h-full absolute right-0 duration-300 ease-out transition-all overflow-y-auto',
+  };
   return (
     <>
       <button className="space-y-2" onClick={toggleNav}>
@@ -13,22 +20,22 @@ const MenuContainer = ({ isOpen, toggleNav, children }) => {
       <div
         className={
           isOpen
-            ? 'w-full h-full fixed inset-0'
-            : 'w-full h-full fixed inset-0 invisible'
+            ? menuClassnames.container
+            : `${menuClassnames.container} invisible`
         }
       >
         <div
           className={
             isOpen
-              ? 'w-full h-full duration-500 ease-out transition-all inset-0 absolute bg-gray-900 opacity-50'
-              : 'w-full h-full duration-500 ease-out transition-all inset-0 absolute bg-gray-900 opacity-0'
+              ? `${menuClassnames.overlay} opacity-50`
+              : `${menuClassnames.overlay} opacity-0`
           }
         />
         <div
           className={
             isOpen
-              ? 'md:max-w-sm w-full bg-white h-full absolute right-0 duration-300 ease-out transition-all'
-              : 'md:max-w-sm w-full bg-white h-full absolute right-0 duration-300 ease-out transition-all translate-x-full'
+              ? `${menuClassnames.slider} translate-x-0`
+              : `${menuClassnames.slider} translate-x-full`
           }
         >
           <div
@@ -37,7 +44,7 @@ const MenuContainer = ({ isOpen, toggleNav, children }) => {
           >
             <CloseIcon />
           </div>
-          <div className="pt-20 px-8 relative w-full flex flex-col gap-4 z-10">
+          <div className="pt-32 pb-12 px-8 relative w-full flex flex-col gap-4 z-10">
             {children}
           </div>
         </div>

@@ -5,7 +5,7 @@ import QuestionMarkIcon from './icons/QuestionMarkIcon';
 
 const GuestMenu = () => (
   <nav>
-    <div className="mt-12 px-4 pb-8 shadow-sm relative rounded-lg">
+    <div className="px-4 pb-8 shadow-sm relative rounded-lg">
       <QuestionMarkIcon className="w-24 h-24 absolute left-0 right-0 mx-auto -translate-y-1/2" />
       <p className="pt-16 mb-4 text-center">{__('navigation_sign_in_cta')}</p>
       <Link href="/login" passHref>

@@ -18,24 +18,18 @@ const MemberMenu = () => {
   );
 
   return (
-    <>
+    <nav className="flex flex-col gap-4">
       <Profile />
-      <div className="my-4">
-        <Wallet />
-      </div>
-      <div className="py-8">
-        {filteredLinks.map((link) => (
-          <Link key={link.url} href={link.url} target={link.target}>
-            <a className="mb-4 btn uppercase text-center w-full">
-              {link.label}
-            </a>
-          </Link>
-        ))}
-      </div>
+      <Wallet />
+      {filteredLinks.map((link) => (
+        <Link key={link.url} href={link.url} target={link.target}>
+          <a className="btn uppercase text-center w-full">{link.label}</a>
+        </Link>
+      ))}
       <button className="btn w-full uppercase" onClick={logout}>
         {__('navigation_sign_out')}
       </button>
-    </>
+    </nav>
   );
 };
 

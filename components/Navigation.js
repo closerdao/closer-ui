@@ -29,14 +29,12 @@ const Navigation = () => {
 
   return (
     <div className="NavContainer pt-20 md:pt-0 relative z-20">
-      <nav className="h-20 fixed z-50 top-0 left-0 right-0 shadow-sm md:relative">
-        <div className="main-content flex justify-between items-center">
-          <Logo />
-          <Menu isOpen={navOpen} toggleNav={toggleNav}>
-            {isAuthenticated ? <MemberMenu /> : <GuestMenu />}
-          </Menu>
-        </div>
-      </nav>
+      <div className="main-content h-20 fixed z-50 top-0 left-0 right-0 shadow-sm md:relative  flex justify-between items-center">
+        <Logo />
+        <Menu isOpen={navOpen} toggleNav={toggleNav}>
+          {isAuthenticated ? <MemberMenu /> : <GuestMenu />}
+        </Menu>
+      </div>
     </div>
   );
 };
