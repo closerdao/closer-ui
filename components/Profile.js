@@ -21,7 +21,7 @@ const Profile = () => {
         )}
       </div>
 
-      <div className="pt-14 px-4 pb-8 shadow-sm relative rounded-lg w-full">
+      <div className="pt-14 px-4 pb-8 shadow-xl relative rounded-lg w-full">
         <div className="text-center">
           <p className="font-black uppercase">{user.screenname}</p>
           <p>{__('navigation_member')}</p>
