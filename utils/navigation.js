@@ -36,7 +36,7 @@ export const links = [
     enabled: () => FEATURES.booking,
   },
   {
-    label: 'Update profile',
+    label: 'Settings',
     url: '/settings',
   },
   {
