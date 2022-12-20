@@ -24,13 +24,6 @@ const GuestMenu = () => (
       </Link>
     </div>
     <div className="flex flex-col gap-4 mt-4">
-      <Link href="/about" passHref>
-        <a>
-          <button className="btn w-full uppercase">
-            {__('navigation_about')}
-          </button>
-        </a>
-      </Link>
       <Link href="/events" passHref>
         <a>
           <button className="btn w-full uppercase">
