@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 
 import { useAuth } from '../contexts/auth.js';
@@ -10,12 +12,19 @@ const Profile = () => {
     <div className="w-full">
       <div className="flex justify-center items-center w-24 h-24 absolute left-0 right-0 mx-auto -translate-y-1/2">
         {user.photo ? (
-          <img
-            src={`${cdn}${user.photo}-profile-lg.jpg`}
-            loading="lazy"
-            alt={user.screenname}
-            className="w-32 md:w-44 rounded-full"
-          />
+          <Link href={`/members/${user?.slug}`} passsHref>
+            <a
+              title="View profile"
+              className="hidden md:flex md:flex-row items-center z-0"
+            >
+              <img
+                src={`${cdn}${user.photo}-profile-lg.jpg`}
+                loading="lazy"
+                alt={user.screenname}
+                className="w-32 md:w-44 rounded-full"
+              />
+            </a>
+          </Link>
         ) : (
           <FaUser className="text-gray-200 text-6xl" />
         )}
