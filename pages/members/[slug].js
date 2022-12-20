@@ -112,7 +112,7 @@ const MemberPage = ({ member, loadError }) => {
     setAbout(member.about);
     setTagline(member.tagline);
     setLinks(member.links);
-  }, [member.about, member.tagline, member.links]);
+  }, []);
 
   if (!member) {
     return <PageNotFound error={error} />;

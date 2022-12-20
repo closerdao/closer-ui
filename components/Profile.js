@@ -10,12 +10,12 @@ const Profile = () => {
   const { user } = useAuth();
   return (
     <div className="w-full">
-      <div className="flex justify-center items-center w-24 h-24 absolute left-0 right-0 mx-auto -translate-y-1/2">
+      <div className="flex justify-center items-center w-24 h-24 absolute left-0 right-0 mx-auto -translate-y-1/2 z-20">
         {user.photo ? (
           <Link href={`/members/${user?.slug}`} passsHref>
             <a
               title="View profile"
-              className="hidden md:flex md:flex-row items-center z-0"
+              className="hidden md:flex md:flex-row items-center cursor-pointer"
             >
               <img
                 src={`${cdn}${user.photo}-profile-lg.jpg`}
