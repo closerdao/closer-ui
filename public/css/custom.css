@@ -1,1 +1,8 @@
 /* Define your custom styles here */
+@tailwind components;
+
+@layer components {
+  .card-feature {
+    @apply text-xs opacity-50 leading-5;
+  }
+}

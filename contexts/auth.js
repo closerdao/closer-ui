@@ -1,10 +1,7 @@
-import Router, { useRouter } from 'next/router';
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import Cookies from 'js-cookie';
 
-import config from '../config';
 import PageNotAllowed from '../pages/401';
 import api from '../utils/api';
 
@@ -105,7 +102,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = (email, password) => {
+  const logout = () => {
     Cookies.remove('token');
     setUser(null);
     delete api.defaults.headers.Authorization;

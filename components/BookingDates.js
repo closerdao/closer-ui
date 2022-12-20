@@ -56,7 +56,7 @@ const BookingDates = ({
                 'days',
               )
               .format('YYYY-MM-DD')}
-            onChange={(start) => setStartDate(start.toDate())}
+            onChange={(start) => setStartDate(start.format('YYYY-MM-DD'))}
             showTime={false}
           />
         </div>
@@ -71,7 +71,7 @@ const BookingDates = ({
             maxValue={dayjs(startDate)
               .add(isMember ? member.maxDuration : guest.maxDuration, 'days')
               .format('YYYY-MM-DD')}
-            onChange={(end) => setEndDate(end.toDate())}
+            onChange={(end) => setEndDate(end.format('YYYY-MM-DD'))}
             showTime={false}
           />
         </div>
@@ -92,8 +92,8 @@ BookingDates.propTypes = {
       maxDuration: PropTypes.number,
     }),
   }),
-  startDate: PropTypes.instanceOf(Date),
-  endDate: PropTypes.instanceOf(Date),
+  startDate: PropTypes.string,
+  endDate: PropTypes.string,
   setStartDate: PropTypes.func,
   setEndDate: PropTypes.func,
 };

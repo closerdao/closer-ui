@@ -5,21 +5,19 @@ import { useEffect } from 'react';
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingProgress from '../../../components/BookingProgress';
 import Layout from '../../../components/Layout';
+import PageError from '../../../components/PageError';
 
 import { useBookingActions, useBookingState } from '../../../contexts/booking';
+import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
-const ConfirmationStep = () => {
-  const { steps } = useBookingState();
-  const paymentData = steps.find(
-    (step) => step.path === '/bookings/new/checkout',
-  ).data;
-  const { fiatPayment, tokenPayment } = paymentData;
+const ConfirmationStep = ({ error, booking }) => {
+  const {
+    data: { checkout },
+  } = useBookingState();
+  const { fiatPayment, tokenPayment } = checkout || {};
   const paymentRejected =
     (fiatPayment && fiatPayment.error) || (tokenPayment && tokenPayment.error);
-  const { bookingId } = steps.find(
-    (step) => step.path === '/bookings/new/accomodation',
-  ).data;
 
   const { startNewBooking, resetBooking } = useBookingActions();
   const router = useRouter();
@@ -28,10 +26,10 @@ const ConfirmationStep = () => {
   };
 
   useEffect(() => {
-    if (!bookingId) {
+    if (!booking._id) {
       startNewBooking();
     }
-  }, [bookingId]);
+  }, [booking._id]);
 
   if (paymentRejected) {
     return (
@@ -61,8 +59,11 @@ const ConfirmationStep = () => {
       </Layout>
     );
   }
+  if (error) {
+    return <PageError error={error} />;
+  }
 
-  if (!bookingId) {
+  if (!booking._id) {
     return null;
   }
 
@@ -84,7 +85,7 @@ const ConfirmationStep = () => {
           <p className="font-black uppercase">
             {__(
               'bookings_confirmation_step_success_your_booking_id',
-              bookingId,
+              booking._id,
             )}
           </p>
           <div>
@@ -98,7 +99,7 @@ const ConfirmationStep = () => {
           <button
             className="booking-btn"
             type="button"
-            onClick={() => viewBooking(bookingId)}
+            onClick={() => viewBooking(booking._id)}
           >
             {__('bookings_confirmation_step_success_button')}
           </button>
@@ -106,6 +107,22 @@ const ConfirmationStep = () => {
       </div>
     </Layout>
   );
+};
+
+ConfirmationStep.getInitialProps = async ({ query }) => {
+  try {
+    const {
+      data: { results: booking },
+    } = await api.get(`/booking/${query.slug}`);
+
+    return { booking, error: null };
+  } catch (err) {
+    return {
+      error: err.message,
+      booking: null,
+      listing: null,
+    };
+  }
 };
 
 export default ConfirmationStep;
