@@ -72,7 +72,7 @@ export const useWallet = () => {
     BLOCKCHAIN_DAO_TOKEN.decimals,
   );
 
-  const connectWallet = () => {
+  const connectWallet = async () => {
     activate(
       injected,
       async (error) => {
@@ -96,16 +96,16 @@ export const useWallet = () => {
     );
   };
 
-  const switchNetwork = async (provider = library.provider) => {
+  const switchNetwork = async () => {
     try {
-      await provider.request({
+      await library.provider.request({
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: utils.hexlify(BLOCKCHAIN_NETWORK_ID) }],
       });
     } catch (switchError) {
       if (switchError.code === 4902) {
         try {
-          await provider.request({
+          await library.provider.request({
             method: 'wallet_addEthereumChain',
             params: [
               {
@@ -124,11 +124,26 @@ export const useWallet = () => {
     }
   };
 
+  const signMessage = async (msg) => {
+    try {
+      const signedMessage = await library.provider.request({
+        method: 'personal_sign',
+        params:[msg, account],
+      });
+      return signedMessage
+    } catch (e) {
+      console.log(e)
+      return null
+    }
+  }
+
   return {
     balance,
+    account,
     tokenSymbol: BLOCKCHAIN_DAO_TOKEN.symbol,
     isWalletConnected,
     connectWallet,
     updateWalletBalance,
+    signMessage
   };
 };
