@@ -14,7 +14,7 @@ const GdprCompliancePopup = () => {
   if (acceptedCookieWarning) return null;
 
   return (
-    <div className="absolute bottom-0 w-full bg-white shadow-2xl">
+    <div className="fixed bottom-0 w-full bg-white border-t border-gray-500 border-solid">
       <div className="main-content p-4 flex flex-col items-center md:flex-row md:px-8">
         <div className="md:mr-14">
           <h1 className="text-2xl font-normal">
