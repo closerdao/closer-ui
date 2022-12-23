@@ -5,7 +5,8 @@ The platform for sovereign communities.
 ## Bug bounty program
 
 If you find critical security gaps in our smart contract code, please reach sam@closer.earth.
-We are offering a bounty of 1000CUSD + our eternal gratitute + free tickets for an event of your choice at [Traditional Dream Factory](https://traditionaldreamfactory.com/) (Maybe join us at the Regenerative Network State Summit?)
+We are offering a bounty of 1000CUSD + our eternal gratitute + free tickets for an event of your choice at [Traditional Dream Factory](https://traditionaldreamfactory.com/) (Maybe join us at the Regenerative Network State Summit?).
+For smaller issues you can create tickets in our open source code repositories and we will happily consider an appropriate reward.
 
 ## UI
 
