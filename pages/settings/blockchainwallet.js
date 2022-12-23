@@ -332,7 +332,7 @@ const CryptoWallet = () => {
                 { bookedDates2022.map( e => (
                   <div key={'p'+e[1]+e[2]}>
                     {new Date(2022, 0, e[2]).toLocaleDateString('en-US')} - Price: {formatBigNumberForDisplay(e[3],18)}
-                    <button  onClick={() => {
+                    <button className='ml-4' onClick={() => {
                       cancelBooking(2022,e[2]);
                     }}>
                       Cancel
@@ -350,7 +350,7 @@ const CryptoWallet = () => {
                 { bookedDates2023.map( e => (
                   <div key={'p'+e[1]+e[2]}>
                     {new Date(2023, 0, e[2]).toLocaleDateString('en-US')} - Price: {formatBigNumberForDisplay(e[3],18)}
-                    <button onClick={async () => {
+                    <button className='ml-4' onClick={async () => {
                       cancelBooking(2023,e[2]);
                     }}>
                       Cancel
