@@ -4,12 +4,12 @@ import { useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingProgress from '../../../components/BookingProgress';
+import BookingWallet from '../../../components/BookingWallet';
 import Checkbox from '../../../components/Checkbox';
 import CheckoutPayment from '../../../components/CheckoutPayment';
 import CheckoutTotal from '../../../components/CheckoutTotal';
 import Layout from '../../../components/Layout';
 import PageError from '../../../components/PageError';
-import Wallet from '../../../components/Wallet';
 
 import PropTypes from 'prop-types';
 
@@ -45,6 +45,10 @@ const Checkout = ({ booking, listing, settings, error }) => {
   const router = useRouter();
   const goBack = () => {
     router.push(`/bookings/${booking._id}/summary`);
+  };
+
+  const switchToEUR = () => {
+    router.push(`/bookings/${booking._id}/checkout`);
   };
 
   if (!isAuthenticated) {
@@ -83,14 +87,7 @@ const Checkout = ({ booking, listing, settings, error }) => {
             </p>
             {totalToPayInToken > 0 && (
               <div className="mt-4">
-                <Wallet />
-                {isNotEnoughBalance && (
-                  <p className="text-red-500 mt-2">
-                    {__(
-                      'bookings_checkout_step_accomodation_not_enough_balance',
-                    )}
-                  </p>
-                )}
+                <BookingWallet accomodationCost={accomodationCost.val} />
                 <Checkbox
                   checked={hasAgreedToWalletDisclaimer}
                   onChange={() =>

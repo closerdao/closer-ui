@@ -396,5 +396,8 @@
   "wallet_not_connected_button": "Connect Wallet",
   "wallet_tdf": "$TDF (Total)",
   "wallet_tdf_available": "$TDF (Available)",
-  "wallet_pop": "POP"
+  "wallet_pop": "POP",
+  "wallet_booking_insufficient_balance": "Insufficient Balance",
+  "wallet_booking_available_balance": "Available Balance",
+  "wallet_booking_after_payment": "After Payment"
 }

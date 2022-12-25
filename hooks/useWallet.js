@@ -77,6 +77,8 @@ export const useWallet = () => {
     BLOCKCHAIN_DAO_TOKEN.decimals,
   );
 
+  console.log('useWallet account', account);
+
   const isCorrectNetwork = BLOCKCHAIN_NETWORK_ID === chainId;
 
   const connectWallet = async () => {
@@ -154,6 +156,6 @@ export const useWallet = () => {
     updateWalletBalance,
     signMessage,
     isCorrectNetwork,
-    switchNetwork
+    switchNetwork,
   };
 };
