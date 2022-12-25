@@ -15,6 +15,7 @@ import PropTypes from 'prop-types';
 
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
+import { usePlatform } from '../../../contexts/platform';
 import { useWallet } from '../../../hooks/useWallet';
 import api from '../../../utils/api';
 import { __, priceFormat } from '../../../utils/helpers';
@@ -47,7 +48,10 @@ const Checkout = ({ booking, listing, settings, error }) => {
     router.push(`/bookings/${booking._id}/summary`);
   };
 
-  const switchToEUR = () => {
+  const { platform } = usePlatform();
+
+  const switchToEUR = async () => {
+    await platform.booking.patch(booking._id, { useTokens: false });
     router.push(`/bookings/${booking._id}/checkout`);
   };
 
@@ -87,7 +91,10 @@ const Checkout = ({ booking, listing, settings, error }) => {
             </p>
             {totalToPayInToken > 0 && (
               <div className="mt-4">
-                <BookingWallet accomodationCost={accomodationCost.val} />
+                <BookingWallet
+                  accomodationCost={accomodationCost.val}
+                  switchToEUR={switchToEUR}
+                />
                 <Checkbox
                   checked={hasAgreedToWalletDisclaimer}
                   onChange={() =>

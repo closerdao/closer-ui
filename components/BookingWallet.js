@@ -19,7 +19,7 @@ const BookingWallet = ({ accomodationCost, switchToEUR }) => {
               {priceFormat(balanceAvailable, tokenSymbol)}
             </p>
           </div>
-          {isInsufficientBalance ? (
+          {!isInsufficientBalance ? (
             <div className="flex justify-between items-center">
               <p>{__('wallet_booking_after_payment')}</p>
               <p className="font-bold">
