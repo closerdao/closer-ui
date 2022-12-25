@@ -88,15 +88,15 @@ const Timeline = () => {
         <div className="mb-4 lg:flex lg:justify-between flex-row-reverse items-center left-timeline">
           <div className="w-12"></div>
           <div className="flex items-center mb-2 lg:mb-0">
-            <h3 className="mx-auto font-semibold border-b-4 border-blue-400 text-lg p-1">Spring '22</h3>
+            <h3 className="mx-auto font-semibold border-b-4 border-green-400 text-lg p-1">Spring '22</h3>
           </div>
           <div className="lg:bg-pink-200 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
-              <li>🌳 Add additional biodiversity & cover crops to forest</li>
-              <li>🖥️ Launch Closer MVP with ability to handle bookings, events & tasks</li>
-              <li>🏠️ Complete renovation of house & start insulation of coliving building</li>
-              <li>💰 Raise capital for the first phases of construction</li>
-              <li>🗳️ Start onboarding community onto DAO governance systems</li>
+              <li>🌳 Planted an additional ~200 trees and started our food forest</li>
+              <li>🖥️ Launched Closer MVP with ability to handle bookings & events</li>
+              <li>🏠️ Completed insulation of house</li>
+              <li>💰 Raised seed capital from members</li>
+              <li>⚡ Hosted <a href="https://refispring.com" target="_blank">ReFi Spring Portugal</a>, <a href="https://magika.fm/heartmagika/" target="_blank">Heart: Magika</a> and other events</li>
             </ol>
           </div>
         </div>
@@ -104,13 +104,15 @@ const Timeline = () => {
         <div className="mb-4 lg:mb-8 lg:flex lg:justify-between items-center right-timeline">
           <div className="w-12"></div>
           <div className="flex items-center mb-2 lg:mb-0">
-            <h3 className="mx-auto font-semibold border-b-4 border-blue-400 text-lg p-1">Summer '22 <span className="text-xs">(expected)</span></h3>
+            <h3 className="mx-auto font-semibold border-b-4 border-green-400 text-lg p-1">Summer '22</h3>
           </div>
           <div className="lg:bg-pink-200 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
-              <li>🏠️ Construction of first 6 suites</li>
-              <li>💦 Setup gray & black water systems</li>
-              <li>⚡ Electrical & plumbing infrastructure</li>
+              <li>🏠️ Got our architectural plans approved by the municipality, and working on engineering plans</li>
+              <li>🏠️ Built a tree house & other land facilities</li>
+              <li>💦 Setup our grey water systems & started our biopool</li>
+              <li>⚡ Hosted the Abela Art Faire and had our first artists residents creating art on the lands</li>
+              <li>🖥️ Deployed our smart contracts to testnet, allowing for bookings on chain & giving utility to our future $TDF token.</li>
             </ol>
           </div>
         </div>
@@ -122,8 +124,10 @@ const Timeline = () => {
           </div>
           <div className="lg:bg-pink-200 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <ol className="text-md">
-              <li>🌳 Plant food forest in collaboration with <a href="http://www.growback.net/" target="_blank">Marc Leiber</a></li>
-              <li>🏠️ Build out 8 additional suites, renovate cafe, event space & coworking</li>
+              <li>🌳 Plant food forest in collaboration with <a href="http://www.growback.net/" target="_blank">Marc Leiber</a> and others</li>
+              <li>💰 Expecting to launch our token sale once the Swiss authorities approve our utility token</li>
+              <li>📝 Completing engineering plans to submit to municipality</li>
+              <li>🏠️ Preparing for construction of the first 6 suites</li>
             </ol>
           </div>
         </div>
@@ -131,13 +135,14 @@ const Timeline = () => {
         <div className="mb-4 lg:mb-8 lg:flex lg:justify-between items-center right-timeline">
           <div className="w-12"></div>
           <div className="flex items-center mb-2 lg:mb-0">
-            <h3 className="mx-auto font-semibold border-b-4 border-blue-400 text-lg p-1">Summer '23 <span className="text-xs">(expected)</span></h3>
+            <h3 className="mx-auto font-semibold border-b-4 border-blue-400 text-lg p-1">Summer '23 - Summer '24 <span className="text-xs">(expected)</span></h3>
           </div>
           <div className="lg:bg-pink-200 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
             <h2 className="text-lg font-bold mb-2 text-center">Go Live!</h2>
             <ol className="text-md">
               <li>🖊️ Execute purchase option on reminder 25Ha of land</li>
               <li>💰 Tokens become liquid and can be resold</li>
+              <li>🏠️ Construction is completed</li>
               <li>🏠️ Members can check in using their tokens directly</li>
             </ol>
           </div>

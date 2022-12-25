@@ -1,25 +1,26 @@
 import React, { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
-import Layout from '../components/layout'
-import Timeline from '../components/timeline'
+import Layout from '../components/Layout'
+import Timeline from '../components/Timeline'
 import pink_paper from '../pink_paper';
 
 const getCode = (diff1, diff2) => Math.abs(Math.round(
-  (((Math.random()/10*6 + 0.5) * 255*0.85))
+  (Math.random() * 255 * 0.5 + 100)
 )).toString(16);
 const getColor = () => `#${getCode(0,0)}${getCode(0,0)}${getCode(0,0)}`;
 const makePlaygound = () => (
   <>
-    <span className="drop-shadow-lg" style={ { color: getColor() } }>p</span>
-    <span className="drop-shadow-lg" style={ { color: getColor() } }>l</span>
-    <span className="drop-shadow-lg" style={ { color: getColor() } }>a</span>
-    <span className="drop-shadow-lg" style={ { color: getColor() } }>y</span>
-    <span className="drop-shadow-lg" style={ { color: getColor() } }>g</span>
-    <span className="drop-shadow-lg" style={ { color: getColor() } }>r</span>
-    <span className="drop-shadow-lg" style={ { color: getColor() } }>u</span>
-    <span className="drop-shadow-lg" style={ { color: getColor() } }>n</span>
-    <span className="drop-shadow-lg" style={ { color: getColor() } }>d</span>
+    <span style={ { color: getColor() } }>p</span>
+    <span style={ { color: getColor() } }>l</span>
+    <span style={ { color: getColor() } }>a</span>
+    <span style={ { color: getColor() } }>y</span>
+    <span style={ { color: getColor() } }>g</span>
+    <span style={ { color: getColor() } }>r</span>
+    <span style={ { color: getColor() } }>o</span>
+    <span style={ { color: getColor() } }>u</span>
+    <span style={ { color: getColor() } }>n</span>
+    <span style={ { color: getColor() } }>d</span>
   </>
 );
 
@@ -27,7 +28,7 @@ const index = () => {
   const [playgound, setPlayground] = useState(makePlaygound());
 
   useEffect(() => {
-    const interval = setInterval(() => setPlayground(makePlaygound()), 250);
+    const interval = setInterval(() => setPlayground(makePlaygound()), 150);
     return () => clearInterval(interval);
   }, [])
 
@@ -36,44 +37,62 @@ const index = () => {
       <Head>
         <title>Traditional Dream Factory | Regenerative coliving space in Alentejo, Portugal</title>
       </Head>
-      <main className="foreground m-3">
+      <main className="main-content">
         <section className="text-xl mb-20">
-          <h1 className="mt-24 italic mb-4 text-4xl font-display">A {playgound} for living and creating together</h1>
-          <p className="mb-4">Come build with us, play with us, grow with us. <sup><a href="#footnotes">[1]</a></sup></p>
+          <h1 className="mt-8 italic mb-4 text-4xl font-display font-bold">A {playgound} for living and creating together</h1>
 
-          <ol className="text-right mb-4">
-            <li className="py-8">
-              <p className="mr-2 italic">Step one,</p>
-              <h3 className="mt-4">
-                <Link href="/welcome">
-                  <a type="submit" className="button px-4 py-1 mr-2 mb-2 rounded-full hover:bg-black bg-white hover:text-white text-black font-bold" rel="nofollow noreferrer">
-                    Learn more
-                  </a>
-                </Link>
-              </h3>
-            </li>
-            <li className="py-8">
-              <p className="mr-2 italic">Step two,</p>
-              <h3 className="mt-4"><Link href={ pink_paper.url }>
-                  <a type="submit" className="button px-4 py-1 mr-2 mb-2 rounded-full bg-black hover:bg-white text-white hover:text-black font-bold" rel="nofollow noreferrer" target="_blank">
-                    Read Pink Paper
-                  </a>
-                </Link>
-              </h3>
-            </li>
-            <li className="py-8">
-              <p className="mr-2 italic">Step three,</p>
-              <h3 className="mt-4"><Link href="/signup">
-                <a type="submit" className="button px-4 py-1 mr-2 mb-2 rounded-full bg-pink-500 hover:bg-white text-white hover:text-pink-500 font-bold">
-                  Become Member
-                </a>
-              </Link></h3>
-            </li>
-          </ol>
+          <p className="mb-4 mt-24">We are living in an age of transformation. Our species has built technology & tools enabling it to reign over the natural kingdom, but in the process we have exhausted the natural resources of the planet, and altered it's ecology to the point of entering the 6th mass extinction event.</p>
+          <blockquote className="text-xl my-8">Earth has lost 50% of its wildlife in the past 40 years <sup><a href="#footnotes">[1]</a></sup></blockquote>
+          <p>If we do not radically change the way that we live over the next few decades we will lose most natural species, including ourselves.</p>
+
+          <p className="mb-4">We are here to prototype a better way. We believe that humans are kind by design <sup><a href="#footnotes">[2]</a></sup>, and are committed to promoting <b>biodiversity, restoration of water cycles, regeneration of the soils, and regeneration of souls</b>.</p>
+
+          <p className="mb-4">We believe that our creativity is our greatest asset, and that we can channel our collective inteligence towards planetary regeneration. We believe in using technology for good, and in replacing ownership with stewardship.</p>
+
+          <p className="mb-4">We are here to re:imagine how we live together, to put into practice years of research in creating abundant food systems that work with nature, to retain water in our soils and avoid erosion and droughts, to create human living systems that leave a positive trace on its environment <sup><Link href="/impact-map"><a>(view our impact map)</a></Link></sup>.</p>
+
+          <p className="mb-4">This is not idealism or optimism. We are realists, and it is time that our modern societies wake up to the call. A new Earth is waiting. On this new planet, <b>we are the stewards of our spaceship</b>.  In this new world, we thrive by promoting biodiversity and being in the service of the greater ecosystem that we are a part of. We must re:learn to be part of Nature, and to respect its delicate cycles.</p>
+
+          <hr className="my-8"/>
+
+          <p className="mb-8">Traditional Dream Factory (aka TDF ) is our first prototype in developing a new form in living that's more in tune with nature and with our human creativity. We are creating a DAO governed regenerative village, sitting on lands conserved under the <a href="https://oasa.earth" target="_blank">Oasa network</a>.</p>
+
+          <p className="mb-4">
+            <Link href={ pink_paper.url }>
+              <a className="button px-4 py-1 mr-4 mb-2 rounded-full bg-black hover:bg-white text-white hover:text-black font-bold" rel="nofollow noreferrer" target="_blank">
+                Read Pink Paper
+              </a>
+            </Link>
+            <Link href="/roadmap">
+              <a className="button px-4 py-1 mr-4 mb-2 rounded-full bg-black hover:bg-white text-white hover:text-black font-bold">
+                See our roadmap
+              </a>
+            </Link>
+          </p>
+
+          <hr className="my-8"/>
+
+          <p className="mb-4">Join the dreamers & the makers of tomorrow. We are engineers, artists, permaculturists, scientists, innovators, nomads. Come build with us, play with us, grow with us.</p>
+          {/* <p className="mb-4">We are a regenerative living & creation collective based in Alentejo, Portugal.</p> */}
+
+          <p className="mb-4">
+            <Link href="/signup">
+              <a type="submit" className="button px-4 py-1 mr-2 mb-2 rounded-full bg-pink-500 hover:bg-white text-white hover:text-pink-500 font-bold">
+                🐇 Become Member
+              </a>
+            </Link>
+          </p>
+
+          {/* <div id="footnotes" className="mt-8 italic text-sm">
+            <ol className="list-decimal pl-6">
+              <li><h2 className="mt-24 italic mb-4 text-xl"><Link href="/welcome"><a>Welcome home 🐇</a></Link></h2></li>
+            </ol>
+          </div> */}
 
           <div id="footnotes" className="mt-8 italic text-sm">
             <ol className="list-decimal pl-6">
-              <li><h2 className="mt-24 italic mb-4 text-xl"><Link href="/welcome"><a>Welcome home 🐇</a></Link></h2></li>
+              <li><p><a href="https://www.theguardian.com/environment/2014/sep/29/earth-lost-50-wildlife-in-40-years-wwf" target="_blank" rel="noreferrer nofollow">Earth has lost half of its wildlife in the past 40 years, says WWF</a></p></li>
+              <li>Human kind - a hopeful history, Rutger Bregman.</li>
             </ol>
           </div>
         </section>

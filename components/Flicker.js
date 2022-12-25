@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { trackEvent } from './analytics'
+import { trackEvent } from './Analytics'
 import { logout, isSignedIn } from '../utils/auth'
 
 const imgCount = 14;

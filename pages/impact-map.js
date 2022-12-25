@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import Gradient from 'javascript-color-gradient';
 import Head from 'next/head'
 import Link from 'next/link'
-import Layout from '../components/layout'
-import Nav from '../components/nav'
-import Flicker from '../components/Flicker'
-import api from '../utils/api';
+import Layout from '../components/Layout'
 
 const about = () => {
   return (

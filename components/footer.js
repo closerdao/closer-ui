@@ -1,8 +1,7 @@
 import React from 'react'
-import Newsletter from '../components/newsletter'
+import Newsletter from '../components/Newsletter'
 import Link from 'next/link'
 import api from '../utils/api'
-import { trackEvent } from './analytics'
 
 /*
  * Icons generated at https://www.tailwindtoolbox.com/icons
@@ -11,7 +10,7 @@ import { trackEvent } from './analytics'
 const footer = ({ articles, originalUrl, tags }) => (
   <footer className="max-w-2xl m-auto">
     <div className="px-3 py-6 text-gray-400">
-      <p>Traditional Dream Factory is the first village in the <a href="https://oasa.co" target="_blank">Oasa network</a> - it is located in Abela, Portugal. Logo designed by <a href="https://www.instagram.com/braulioamado/" rel="noreferrer nofollow" target="_blank">braulioamado</a>.</p>
+      <p>Traditional Dream Factory is the first village in the <a href="https://oasa.earth" target="_blank">Oasa network</a> - it is located in Abela, Portugal. Logo designed by <a href="https://www.instagram.com/braulioamado/" rel="noreferrer nofollow" target="_blank">braulioamado</a>.</p>
       <div className="social mt-4 flex flex-row">
         <a href="https://t.me/+7yBqlNOMbRtlZmFh" target="_blank" className="mr-2">
           <svg className="h-8 w-8 text-pink-500"  width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">  <path stroke="none" d="M0 0h24v24H0z"/>  <path d="M15 10l-4 4l6 6l4 -16l-18 7l4 2l2 6l3 -4" /></svg>
