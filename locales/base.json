@@ -15,7 +15,7 @@
   "blockchain_wallet": "Blockchain wallet",
   "blockchainwallet_title": "Blockchain wallet settings",
   "blockchain_connect_wallet": "Connect wallet",
-  "blockchain_switch_chain": "Click to switch chain",
+  "blockchain_switch_chain": "Switch chain",
   "blockchain_switch_wallet": "Switch wallets",
   "blockchain_sign_in_with_wallet": "Sign in with Wallet",
   "blockchain_link_wallet_again": "Link a wallet",
@@ -390,9 +390,11 @@
   "401_signin": "Sign In",
   "404_title": "Page not found",
   "404_go_back": "Take me home",
-  "wallet_connected_title": "Wallet Connected",
-  "wallet_balance": "Your Balance",
+  "wallet_connected_title": "Wallet Balance",
   "wallet_not_connected_title": "Wallet Not Connected",
   "wallet_not_connected_cta": "Please connect your wallet to see your $TDF & POP Balance",
-  "wallet_not_connected_button": "Connect Wallet"
+  "wallet_not_connected_button": "Connect Wallet",
+  "wallet_tdf": "$TDF (Total)",
+  "wallet_tdf_available": "$TDF (Available)",
+  "wallet_pop": "POP"
 }

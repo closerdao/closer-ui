@@ -49,6 +49,7 @@ export const useWallet = () => {
     activate,
     setError,
     library,
+    chainId,
   } = useWeb3React();
 
   useEagerConnect(injected);
@@ -67,10 +68,16 @@ export const useWallet = () => {
       fallbackData: BigNumber.from(0),
     },
   );
-  const balance = formatBigNumberForDisplay(
+  const balanceTotal = formatBigNumberForDisplay(
     balanceDAOToken.add(balanceStaked),
     BLOCKCHAIN_DAO_TOKEN.decimals,
   );
+  const balanceAvailable = formatBigNumberForDisplay(
+    balanceDAOToken,
+    BLOCKCHAIN_DAO_TOKEN.decimals,
+  );
+
+  const isCorrectNetwork = BLOCKCHAIN_NETWORK_ID === chainId;
 
   const connectWallet = async () => {
     activate(
@@ -128,22 +135,25 @@ export const useWallet = () => {
     try {
       const signedMessage = await library.provider.request({
         method: 'personal_sign',
-        params:[msg, account],
+        params: [msg, account],
       });
-      return signedMessage
+      return signedMessage;
     } catch (e) {
-      console.log(e)
-      return null
+      console.log(e);
+      return null;
     }
-  }
+  };
 
   return {
-    balance,
+    balanceAvailable,
+    balanceTotal,
     account,
     tokenSymbol: BLOCKCHAIN_DAO_TOKEN.symbol,
     isWalletConnected,
     connectWallet,
     updateWalletBalance,
-    signMessage
+    signMessage,
+    isCorrectNetwork,
+    switchNetwork
   };
 };
