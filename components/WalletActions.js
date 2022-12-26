@@ -8,7 +8,7 @@ const WalletActions = () => {
   if (!isCorrectNetwork) {
     return (
       <button className="btn mt-4 w-full uppercase" onClick={switchNetwork}>
-        {__('blockchain_switch_chain')}
+        {__('wallet_switch_network')}
       </button>
     );
   }

@@ -401,5 +401,7 @@
   "wallet_pop": "POP",
   "wallet_booking_insufficient_balance": "Insufficient Balance",
   "wallet_booking_available_balance": "Available Balance",
-  "wallet_booking_after_payment": "After Payment"
+  "wallet_booking_after_payment": "After Payment",
+  "wallet_incorrect_network": "Wrong Network",
+  "wallet_switch_network": "Switch Network"
 }
