@@ -23,30 +23,17 @@ import { BookingProvider } from '../contexts/booking/';
 import { PlatformProvider } from '../contexts/platform';
 import '../public/styles.css';
 import { theme } from '../tailwind.config';
-import api from '../utils/api';
 
-const Application = ({
-  tags,
-  query,
-  signedIn,
-  Component,
-  pageProps,
-  token,
-  user,
-}) => {
+const Application = ({ Component, pageProps }) => {
   const router = useRouter();
-
-  function getLibrary(provider) {
-    const library = new Web3Provider(provider);
-    return library;
-  }
-
+  const query = router.query;
   if (query?.ref && typeof localStorage !== 'undefined') {
     localStorage.setItem('referrer', query.ref);
   }
 
-  if (typeof token !== 'undefined') {
-    api.defaults.headers.Authorization = `Bearer ${token}`;
+  function getLibrary(provider) {
+    const library = new Web3Provider(provider);
+    return library;
   }
 
   // const tokensToWatch = {
@@ -79,20 +66,15 @@ const Application = ({
         <PlatformProvider>
           <Web3ReactProvider getLibrary={getLibrary}>
             <BookingProvider>
-              <Navigation query={query} signedIn={signedIn} />
+              <Navigation />
               <div className="content-wrapper">
-                <Component
-                  {...pageProps}
-                  query={query}
-                  user={user}
-                  signedIn={signedIn}
-                />
+                <Component {...pageProps} />
               </div>
             </BookingProvider>
           </Web3ReactProvider>
         </PlatformProvider>
       </AuthProvider>
-      <Footer tags={tags} />
+      <Footer />
     </div>
   );
 };
