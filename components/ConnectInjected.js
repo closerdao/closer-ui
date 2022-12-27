@@ -20,7 +20,7 @@ import {
   BLOCKCHAIN_NETWORK_ID,
   BLOCKCHAIN_RPC_URL,
 } from '../config_blockchain';
-import { useEagerConnect } from '../hooks/blockchain_hooks';
+import { useEagerConnect } from '../hooks/blockchain';
 import { fetcher, formatBigNumberForDisplay } from '../utils/blockchain';
 import { __ } from '../utils/helpers';
 

@@ -18,7 +18,9 @@ import {
   BLOCKCHAIN_NETWORK_ID,
   BLOCKCHAIN_RPC_URL,
 } from '../config_blockchain';
-import { useEagerConnect } from '../hooks/blockchain_hooks';
+import { useAuth } from '../contexts/auth';
+import { useEagerConnect } from './blockchain';
+import api from '../utils/api';
 import { fetcher, formatBigNumberForDisplay } from '../utils/blockchain';
 
 const injected = new InjectedConnector({
@@ -51,7 +53,7 @@ export const useWallet = () => {
     library,
     chainId,
   } = useWeb3React();
-
+  console.log('useWallet account', account);
   useEagerConnect(injected);
 
   const { data: balanceDAOToken, mutate: updateWalletBalance } = useSWR(
@@ -78,29 +80,66 @@ export const useWallet = () => {
   );
 
   const isCorrectNetwork = BLOCKCHAIN_NETWORK_ID === chainId;
+  const hasSameConnectedAccount = account === user.walletAddress;
+  const isBlockchainAllowed = isCorrectNetwork && hasSameConnectedAccount;
 
   const connectWallet = async () => {
-    activate(
-      injected,
-      async (error) => {
-        if (error instanceof UserRejectedRequestError) {
-          // ignore user rejected error
-        } else if (
-          error instanceof UnsupportedChainIdError &&
-          window.ethereum
-        ) {
-          //Unrecognized chain, provider not loaded, attempting hard forced chain change if metamask is injected
-          switchNetwork(window.ethereum);
-        } else if (error instanceof NoEthereumProviderError) {
-          alert(
-            'You need to install and activate an Ethereum compatible wallet',
-          );
-        } else {
-          setError(error);
-        }
-      },
-      false,
-    );
+    if (isBlockchainAllowed) {
+      activate(
+        injected,
+        async (error) => {
+          if (error instanceof UserRejectedRequestError) {
+            // ignore user rejected error
+          } else if (
+            error instanceof UnsupportedChainIdError &&
+            window.ethereum
+          ) {
+            //Unrecognized chain, provider not loaded, attempting hard forced chain change if metamask is injected
+            switchNetwork(window.ethereum);
+          } else if (error instanceof NoEthereumProviderError) {
+            alert(
+              'You need to install and activate an Ethereum compatible wallet',
+            );
+          } else {
+            setError(error);
+          }
+        },
+        false,
+      );
+    } else {
+      console.error(
+        'Can`t connect wallet, not allowed, isCorrectNetwork - ',
+        isCorrectNetwork,
+        'hasSameConnectedAccount - ',
+        hasSameConnectedAccount,
+        'isBlockchainAllowed - ',
+        isBlockchainAllowed,
+      );
+    }
+  };
+
+  const { user } = useAuth();
+  console.log('useWallet', account, user);
+
+  const connect = async () => {
+    // const response = await connectWallet();
+    // console.log('connect response', response);
+    if (!user.walletAddress) {
+      const {
+        data: { nonce },
+      } = await api.post('/auth/web3/pre-sign', { walletAddress: account });
+      const message = `Signing in with code ${nonce}`;
+      const signedMessage = await signMessage(message);
+      const {
+        data: { results: userUpdated },
+      } = await api.post('/auth/web3/connect', {
+        signedMessage,
+        walletAddress: account,
+        message,
+        userId: user._id,
+      });
+      console.log('userUpdated', userUpdated);
+    }
   };
 
   const switchNetwork = async () => {
@@ -150,7 +189,7 @@ export const useWallet = () => {
     account,
     tokenSymbol: BLOCKCHAIN_DAO_TOKEN.symbol,
     isWalletConnected,
-    connectWallet,
+    connect,
     updateWalletBalance,
     signMessage,
     isCorrectNetwork,
