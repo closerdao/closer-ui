@@ -23,6 +23,7 @@ import { useAuth } from '../../contexts/auth';
 import {
   fetcher,
   formatBigNumberForDisplay,
+  multiFetcher,
   sendDAOToken,
 } from '../../utils/blockchain';
 import { __ } from '../../utils/helpers';
@@ -71,17 +72,20 @@ const CryptoWallet = () => {
     },
   );
 
-  const { data: bookedDates2022, mutate: mutate2022 } = useSWR( 
-    [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'getAccommodationBookings', account, 2022],
+  const { data: activatedBookingYears } = useSWR( 
+    [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'getAccommodationYears'],
     {
       fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
     },
   );
-
-  const { data: bookedDates2023, mutate: mutate2023 } = useSWR( 
-    [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'getAccommodationBookings', account, 2023],
+  
+  const { data: bookedDates, mutate: mutateD } = useSWR( 
+    [
+      activatedBookingYears ? (activatedBookingYears.map(
+        year => [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'getAccommodationBookings', account, year[0]])) : null
+    ],
     {
-      fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
+      fetcher: multiFetcher(library, BLOCKCHAIN_DIAMOND_ABI),
     },
   );
 
@@ -161,27 +165,20 @@ const CryptoWallet = () => {
     if (chainId !== BLOCKCHAIN_NETWORK_ID) {
       return;
     }
-
     try {
       const Diamond = new Contract(
         BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
         BLOCKCHAIN_DIAMOND_ABI,
         library.getSigner(),
-      );
-
-      console.log('here')
-    
+      );    
       const tx = await Diamond.cancelAccommodation(
         [[year,day]]
       );    
-
-
       setPendingTransactions([...pendingTransactions, tx.hash]);
       await tx.wait();
       mutateLS(undefined, true);
       mutateUS(undefined, true);
-      mutate2022(undefined, true);
-      mutate2023(undefined, true);
+      mutateD(undefined, true);
       console.log(`${tx.hash} mined`);
       setPendingTransactions((pendingTransactions) =>
         pendingTransactions.filter((h) => h !== tx.hash),
@@ -325,45 +322,33 @@ const CryptoWallet = () => {
               </b>
               <br/>
 
-              { bookedDates2022 && (
+              { bookedDates && (
                 <>
-                <b>Booked dates for 2022:</b>
+                <b>Booked dates:</b>
                 
-                { bookedDates2022.map( e => (
-                  <div key={'p'+e[1]+e[2]}>
-                    {new Date(2022, 0, e[2]).toLocaleDateString('en-US')} - Price: {formatBigNumberForDisplay(e[3],18)}
+                { bookedDates.flat().map( e => (
+                  <div key={'p'+e.dayOfYear+e.year}>
+                    {new Date(e.year, 0, e.dayOfYear).toLocaleDateString('en-US')} - Price: {formatBigNumberForDisplay(e.price,18)}
                     <button className='ml-4' onClick={() => {
-                      cancelBooking(2022,e[2]);
+                      cancelBooking(e.year,e.dayOfYear);
                     }}>
                       Cancel
                     </button>
+                  </div>
+                 ))
+                }
+                <br/>
+                <b>Proof of presences:</b>
+                { bookedDates.flat().map( e => ((new Date(e.year, 0, e.dayOfYear)>Date.now() || e.status != 2) ? null :
+                  <div key={'p'+e.dayOfYear+e.year}>
+                    {new Date(e.year, 0, e.dayOfYear).toLocaleDateString('en-US')}
                   </div>
                  ))
                 }
               </>
               )}
               <br/>
-              { bookedDates2023 && (
-                <>
-                <b>Booked dates for 2023:</b>
-                
-                { bookedDates2023.map( e => (
-                  <div key={'p'+e[1]+e[2]}>
-                    {new Date(2023, 0, e[2]).toLocaleDateString('en-US')} - Price: {formatBigNumberForDisplay(e[3],18)}
-                    <button className='ml-4' onClick={async () => {
-                      cancelBooking(2023,e[2]);
-                    }}>
-                      Cancel
-                    </button>
-                  </div>
-                 ))
-                }
-              </>
-              )}
-
-              
-
-              
+         
             </>
           )}
         </main>
