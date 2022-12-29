@@ -72,12 +72,20 @@ export const useWallet = () => {
       fallbackData: BigNumber.from(0),
     },
   );
+  const { data: unlockedStake } = useSWR(
+    [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'unlockedStake', account],
+    {
+      fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
+      fallbackData: BigNumber.from(0),
+    },
+  );
+
   const balanceTotal = formatBigNumberForDisplay(
     balanceDAOToken.add(balanceStaked),
     BLOCKCHAIN_DAO_TOKEN.decimals,
   );
   const balanceAvailable = formatBigNumberForDisplay(
-    balanceDAOToken,
+    balanceDAOToken.add(unlockedStake),
     BLOCKCHAIN_DAO_TOKEN.decimals,
   );
 
