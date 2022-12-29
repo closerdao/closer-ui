@@ -4,17 +4,12 @@ import WalletActions from './WalletActions';
 import WalletHeader from './WalletHeader';
 
 const Wallet = () => {
-  const {
-    balanceTotal,
-    balanceAvailable,
-    isWalletConnected,
-    isCorrectNetwork,
-  } = useWallet();
+  const { balanceTotal, balanceAvailable, isBlockchainAllowed } = useWallet();
 
   return (
     <div className="p-4 flex flex-col rounded-lg shadow-4xl">
       <WalletHeader />
-      {isWalletConnected && isCorrectNetwork ? (
+      {isBlockchainAllowed ? (
         <div className="flex flex-col gap-2 mt-4">
           <div className="flex justify-between items-center">
             <p>{__('wallet_tdf')}</p>

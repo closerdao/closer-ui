@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import { UnsupportedChainIdError, useWeb3React } from '@web3-react/core';
 import {
   InjectedConnector,
@@ -19,9 +21,9 @@ import {
   BLOCKCHAIN_RPC_URL,
 } from '../config_blockchain';
 import { useAuth } from '../contexts/auth';
-import { useEagerConnect } from './blockchain';
 import api from '../utils/api';
 import { fetcher, formatBigNumberForDisplay } from '../utils/blockchain';
+import { useEagerConnect } from './blockchain';
 
 const injected = new InjectedConnector({
   supportedChainIds: [
@@ -53,8 +55,8 @@ export const useWallet = () => {
     library,
     chainId,
   } = useWeb3React();
-  console.log('useWallet account', account);
-  useEagerConnect(injected);
+
+  useEagerConnect(injected, isBlockchainAllowed);
 
   const { data: balanceDAOToken, mutate: updateWalletBalance } = useSWR(
     [BLOCKCHAIN_DAO_TOKEN.address, 'balanceOf', account],
@@ -80,51 +82,62 @@ export const useWallet = () => {
   );
 
   const isCorrectNetwork = BLOCKCHAIN_NETWORK_ID === chainId;
-  const hasSameConnectedAccount = account === user.walletAddress;
-  const isBlockchainAllowed = isCorrectNetwork && hasSameConnectedAccount;
+  const hasSameConnectedAccount = user?.walletAddress
+    ? account === user?.walletAddress
+    : true;
+  const isBlockchainAllowed = useMemo(() => {
+    if (isWalletConnected) {
+      return isCorrectNetwork && hasSameConnectedAccount;
+    } else {
+      return true;
+    }
+  }, [(chainId, account, isWalletConnected, user?.walletAddress)]);
 
   const connectWallet = async () => {
-    if (isBlockchainAllowed) {
-      activate(
-        injected,
-        async (error) => {
-          if (error instanceof UserRejectedRequestError) {
-            // ignore user rejected error
-          } else if (
-            error instanceof UnsupportedChainIdError &&
-            window.ethereum
-          ) {
-            //Unrecognized chain, provider not loaded, attempting hard forced chain change if metamask is injected
-            switchNetwork(window.ethereum);
-          } else if (error instanceof NoEthereumProviderError) {
-            alert(
-              'You need to install and activate an Ethereum compatible wallet',
-            );
-          } else {
-            setError(error);
-          }
-        },
-        false,
-      );
-    } else {
-      console.error(
-        'Can`t connect wallet, not allowed, isCorrectNetwork - ',
-        isCorrectNetwork,
-        'hasSameConnectedAccount - ',
-        hasSameConnectedAccount,
-        'isBlockchainAllowed - ',
-        isBlockchainAllowed,
-      );
-    }
+    activate(
+      injected,
+      async (error) => {
+        if (error instanceof UserRejectedRequestError) {
+          // ignore user rejected error
+        } else if (
+          error instanceof UnsupportedChainIdError &&
+          window.ethereum
+        ) {
+          //Unrecognized chain, provider not loaded, attempting hard forced chain change if metamask is injected
+          switchNetwork(window.ethereum);
+        } else if (error instanceof NoEthereumProviderError) {
+          alert(
+            'You need to install and activate an Ethereum compatible wallet',
+          );
+        } else {
+          setError(error);
+        }
+      },
+      false,
+    );
   };
 
   const { user } = useAuth();
   console.log('useWallet', account, user);
 
   const connect = async () => {
-    // const response = await connectWallet();
-    // console.log('connect response', response);
+    console.log(
+      'isCorrectNetwork',
+      isCorrectNetwork,
+      chainId,
+      BLOCKCHAIN_NETWORK_ID,
+    );
+    console.log(
+      'hasSameConnectedAccount',
+      hasSameConnectedAccount,
+      account,
+      user?.walletAddress,
+    );
+    if (!isWalletConnected) {
+      await connectWallet();
+    }
     if (!user.walletAddress) {
+      console.log('calling /auth/web3/pre-sign with account:', account);
       const {
         data: { nonce },
       } = await api.post('/auth/web3/pre-sign', { walletAddress: account });
@@ -194,5 +207,6 @@ export const useWallet = () => {
     signMessage,
     isCorrectNetwork,
     switchNetwork,
+    isBlockchainAllowed,
   };
 };

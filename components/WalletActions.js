@@ -2,10 +2,10 @@ import { useWallet } from '../hooks/useWallet';
 import { __ } from '../utils/helpers';
 
 const WalletActions = () => {
-  const { isCorrectNetwork, switchNetwork, connectWallet, isWalletConnected } =
+  const { isCorrectNetwork, switchNetwork, connect, isWalletConnected } =
     useWallet();
 
-  if (!isCorrectNetwork) {
+  if (isWalletConnected && !isCorrectNetwork) {
     return (
       <button className="btn mt-4 w-full uppercase" onClick={switchNetwork}>
         {__('wallet_switch_network')}
@@ -17,7 +17,7 @@ const WalletActions = () => {
     return (
       <>
         <p className="my-4 text-xs">{__('wallet_not_connected_cta')}</p>
-        <button className="btn mt-4 w-full uppercase" onClick={connectWallet}>
+        <button className="btn mt-4 w-full uppercase" onClick={connect}>
           {__('wallet_not_connected_button')}
         </button>
       </>
