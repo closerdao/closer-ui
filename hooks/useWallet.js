@@ -47,6 +47,7 @@ const injected = new InjectedConnector({
 });
 
 export const useWallet = () => {
+  const { user } = useAuth();
   const {
     active: isWalletConnected,
     account,
@@ -125,7 +126,6 @@ export const useWallet = () => {
     );
   };
 
-  const { user } = useAuth();
   console.log('useWallet', account, user);
 
   const connect = async () => {
