@@ -56,7 +56,7 @@ export const useWallet = () => {
     chainId,
   } = useWeb3React();
 
-  useEagerConnect(injected, isBlockchainAllowed);
+  useEagerConnect(injected);
 
   const { data: balanceDAOToken, mutate: updateWalletBalance } = useSWR(
     [BLOCKCHAIN_DAO_TOKEN.address, 'balanceOf', account],
