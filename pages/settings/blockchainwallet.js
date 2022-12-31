@@ -38,9 +38,12 @@ const CryptoWallet = () => {
   const [pendingTransactions, setPendingTransactions] = useState([]);
   const [lockedStakeAt, setLockedStakeAt] = useState();
   const [unlockedStakeAt, setUnlockedStakeAt] = useState();
+  const [tokenCostEstimate, setTokenCostEstimate] = useState();
 
   const yearRef = useRef(null)
   const dayRef = useRef(null)
+  const yearRef2 = useRef(null)
+  const tokenCostRef = useRef(null)
 
   const { data: nativeBalance, mutate: mutateNB } = useSWR(
     ['getBalance', account, 'latest'],
@@ -88,6 +91,30 @@ const CryptoWallet = () => {
       fetcher: multiFetcher(library, BLOCKCHAIN_DIAMOND_ABI),
     },
   );
+
+  const estimateNeededStakeForNewBookingForDisplay = (bookingYear, totalBookingTokenCost) => {
+    if(!bookedDates){
+      return
+    }
+    let yearlyTotals = [];
+    let maxStake = 0; //per year
+    let maxStakeYear = null;
+    let loopYearlyStakeValue = 0;
+    let bookingYearCurrentStake = 0;
+    for(let i=0;i<bookedDates.length;i++){
+      loopYearlyStakeValue = 0;
+      if(bookedDates[i].length>0){
+        loopYearlyStakeValue = bookedDates[i].map(e => formatBigNumberForDisplay(e.price,18)).reduce((e,c) => e+c, 0)
+        if(maxStake < loopYearlyStakeValue){
+          maxStake = loopYearlyStakeValue;
+        }
+        if(bookedDates[i][0].year == bookingYear){
+          bookingYearCurrentStake = loopYearlyStakeValue;
+        }
+      }
+    }
+    setTokenCostEstimate(Math.max(totalBookingTokenCost - (maxStake - bookingYearCurrentStake),0)) 
+  }
 
   const stakesAt = async (year,day) => {
     if (chainId !== BLOCKCHAIN_NETWORK_ID) {
@@ -315,16 +342,16 @@ const CryptoWallet = () => {
                     }}>Fetch</button>
               </div>
               <b>
-                Locked: {formatBigNumberForDisplay(lockedStakeAt, 18)}
+                == Locked: {formatBigNumberForDisplay(lockedStakeAt, 18)}
               </b>
               <b>
-                Unlocked: {formatBigNumberForDisplay(unlockedStakeAt, 18)}
+                == Unlocked: {formatBigNumberForDisplay(unlockedStakeAt, 18)}
               </b>
               <br/>
 
               { bookedDates && (
                 <>
-                <b>Booked dates:</b>
+                <h3>Booked dates:</h3>
                 
                 { bookedDates.flat().map( e => (
                   <div key={'p'+e.dayOfYear+e.year}>
@@ -338,7 +365,30 @@ const CryptoWallet = () => {
                  ))
                 }
                 <br/>
-                <b>Proof of presences:</b>
+                <h4>Booking Staking Estimator:</h4>
+                <div className='flex flex-row'>
+              Year: <input 
+                    className='w-12'
+                    ref={yearRef2}
+                    type="text"
+                    id="year"
+                    name="year"/> 
+              Total_token_cost: <input 
+                    className='w-12'
+                    ref={tokenCostRef}
+                    type="text"
+                    id="day"
+                    name="day"/> 
+                    <button className='border-4 border-black' onClick={() => {
+                      estimateNeededStakeForNewBookingForDisplay(yearRef2.current.value, tokenCostRef.current.value)
+                    }}>Estimate</button>
+              </div>
+              <b>
+                == Estimated additional Tokens to stake: {tokenCostEstimate}
+              </b>
+              <br/>
+              <br/>
+                <h3>Proof of presences:</h3>
                 { bookedDates.flat().map( e => ((new Date(e.year, 0, e.dayOfYear)>Date.now() || e.status != 2) ? null :
                   <div key={'p'+e.dayOfYear+e.year}>
                     {new Date(e.year, 0, e.dayOfYear).toLocaleDateString('en-US')}
@@ -348,9 +398,12 @@ const CryptoWallet = () => {
               </>
               )}
               <br/>
+
+              
          
             </>
           )}
+          
         </main>
       </div>
     </Layout>
