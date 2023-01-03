@@ -7,14 +7,14 @@ import WalletActions from './WalletActions';
 import WalletHeader from './WalletHeader';
 
 const BookingWallet = ({ accomodationCost, switchToEUR }) => {
-  const { balanceAvailable, isBlockchainAllowed } = useContext(WalletState);
+  const { balanceAvailable, isWalletReady } = useContext(WalletState);
   const balanceAfterPayment = balanceAvailable - accomodationCost;
   const isInsufficientBalance = balanceAfterPayment < 0;
 
   return (
     <div className="p-4 flex flex-col rounded-lg shadow-4xl">
       <WalletHeader />
-      {isBlockchainAllowed ? (
+      {isWalletReady ? (
         <div className="flex flex-col gap-2 mt-4">
           <div className="flex justify-between items-center">
             <p>{__('wallet_booking_available_balance')}</p>

@@ -15,7 +15,6 @@ import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
 const Questionnaire = ({ questions, booking, error }) => {
-  console.log(booking);
   const {
     data: { questions: questionsData },
   } = useBookingState();

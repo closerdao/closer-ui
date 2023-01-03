@@ -107,7 +107,7 @@ export const WalletProvider = ({ children }) => {
     },
   );
 
-  const { data: bookedDates } = useSWR(
+  const { data: bookedDates, mutate: refetchBookingDates } = useSWR(
     [
       activatedBookingYears
         ? activatedBookingYears.map(([year]) => [
@@ -240,6 +240,8 @@ export const WalletProvider = ({ children }) => {
   return (
     <WalletState.Provider
       value={{
+        account,
+        library,
         injected,
         isWalletReady,
         balanceTotal,
@@ -247,6 +249,7 @@ export const WalletProvider = ({ children }) => {
         proofOfPresence,
         isCorrectNetwork,
         isWalletConnected,
+        bookedDates: bookedDates?.flat(),
       }}
     >
       <WalletDispatch.Provider
@@ -255,6 +258,7 @@ export const WalletProvider = ({ children }) => {
           switchNetwork,
           connectWallet,
           updateWalletBalance,
+          refetchBookingDates,
         }}
       >
         {children}
