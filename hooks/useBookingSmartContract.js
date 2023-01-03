@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 
 import { useWeb3React } from '@web3-react/core';
 import dayjs from 'dayjs';
@@ -12,9 +12,9 @@ import {
   BLOCKCHAIN_DIAMOND_ABI,
   BLOCKCHAIN_NETWORK_ID,
 } from '../config_blockchain';
+import { WalletDispatch } from '../contexts/wallet';
 import { fetcher } from '../utils/blockchain';
 import { checkIfBookingEqBlockchain } from '../utils/helpers';
-import { useWallet } from './useWallet';
 
 dayjs.extend(dayOfYear);
 
@@ -38,7 +38,7 @@ export const useBookingSmartContract = ({ bookingNights }) => {
     options,
   );
 
-  const { updateWalletBalance } = useWallet();
+  const { updateWalletBalance } = useContext(WalletDispatch);
 
   const Diamond = new Contract(
     BLOCKCHAIN_DAO_DIAMOND_ADDRESS,

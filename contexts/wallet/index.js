@@ -179,20 +179,25 @@ export const WalletProvider = ({ children }) => {
   };
 
   const linkWalletWithUser = async (accountId) => {
-    const {
-      data: { nonce },
-    } = await api.post('/auth/web3/pre-sign', { walletAddress: accountId });
-    const message = `Signing in with code ${nonce}`;
-    const signedMessage = await signMessage(message);
-    const {
-      data: { results: userUpdated },
-    } = await api.post('/auth/web3/connect', {
-      signedMessage,
-      walletAddress: accountId,
-      message,
-      userId: user._id,
-    });
-    return userUpdated;
+    try {
+      const {
+        data: { nonce },
+      } = await api.post('/auth/web3/pre-sign', { walletAddress: accountId });
+      const message = `Signing in with code ${nonce}`;
+      const signedMessage = await signMessage(message);
+      const {
+        data: { results: userUpdated },
+      } = await api.post('/auth/web3/connect', {
+        signedMessage,
+        walletAddress: accountId,
+        message,
+        userId: user._id,
+      });
+      return userUpdated;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
   };
 
   const switchNetwork = async () => {
@@ -247,7 +252,12 @@ export const WalletProvider = ({ children }) => {
       }}
     >
       <WalletDispatch.Provider
-        value={{ signMessage, switchNetwork, connectWallet }}
+        value={{
+          signMessage,
+          switchNetwork,
+          connectWallet,
+          updateWalletBalance,
+        }}
       >
         {children}
       </WalletDispatch.Provider>
