@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingProgress from '../../../components/BookingProgress';
@@ -16,7 +16,7 @@ import PropTypes from 'prop-types';
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
-import { useWallet } from '../../../hooks/useWallet';
+import { WalletState } from '../../../contexts/wallet';
 import api from '../../../utils/api';
 import { __, priceFormat } from '../../../utils/helpers';
 
@@ -39,8 +39,8 @@ const Checkout = ({ booking, listing, settings, error }) => {
   const totalToPayInToken = useTokens ? rentalToken?.val : 0;
   const listingName = listing?.name;
   const [hasAgreedToWalletDisclaimer, setWalletDisclaimer] = useState(false);
-  const { balance } = useWallet();
-  const isNotEnoughBalance = balance < totalToPayInToken;
+  const { balanceAvailable } = useContext(WalletState);
+  const isNotEnoughBalance = balanceAvailable < totalToPayInToken;
   const { user, isAuthenticated } = useAuth();
 
   const router = useRouter();
