@@ -59,6 +59,14 @@ export const WalletProvider = ({ children }) => {
     chainId,
   } = useWeb3React();
   const { user } = useAuth();
+  useEffect(() => {
+    if (user && !isWalletConnected) {
+      injected.isAuthorized().then((isAuthorized) => {
+        if (!isAuthorized) return;
+        connectWallet();
+      });
+    }
+  }, [user]);
 
   const [isWalletReady, setIsWalletReady] = useState(false);
   const isCorrectNetwork = BLOCKCHAIN_NETWORK_ID === chainId;
