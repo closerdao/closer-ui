@@ -65,6 +65,12 @@ const Login = () => {
     }
   };
 
+  const onSubmit = async (event) => {
+    event.preventDefault();
+    login(email, password);
+    setError('');
+  };
+
   return (
     <Layout>
       <Head>
@@ -72,12 +78,7 @@ const Login = () => {
       </Head>
       <div className="mural">
         <main className="main-content max-w-prose center intro">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              login(email, password);
-            }}
-          >
+          <form onSubmit={onSubmit}>
             <div className="w-full mb-4">
               <label
                 className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
