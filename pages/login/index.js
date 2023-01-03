@@ -2,24 +2,25 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 
 import Layout from '../../components/Layout';
 
 import { useAuth } from '../../contexts/auth';
-import { useWallet } from '../../hooks/useWallet';
-
+import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
 
 const Login = () => {
-  const { account, signMessage, isWalletConnected, connectWallet } = useWallet()
+  const { account, signMessage, isWalletConnected } = useContext(WalletState);
+  const { connectWallet } = useContext(WalletDispatch);
 
   const router = useRouter();
   const { isAuthenticated, login, setAuthentification, setError } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [ shouldFollowUpOnConnectAndSign, setShouldFollowUpOnConnectAndSign ] = useState('')
+  const [shouldFollowUpOnConnectAndSign, setShouldFollowUpOnConnectAndSign] =
+    useState('');
 
   if (isAuthenticated && typeof window.location !== 'undefined') {
     router.push('/');
@@ -27,43 +28,44 @@ const Login = () => {
     // window.location.href = decodeURIComponent(router.query.back || '/');
   }
 
-
-  const executeRestOfSignInWithWallet = async() => {
+  const executeRestOfSignInWithWallet = async () => {
     try {
-      const { data: { nonce } } = await api.post('/auth/web3/pre-sign', { walletAddress: account });
-      const message =  `Signing in with code ${nonce}`;
-      const signedMessage = await signMessage(message)
+      const {
+        data: { nonce },
+      } = await api.post('/auth/web3/pre-sign', { walletAddress: account });
+      const message = `Signing in with code ${nonce}`;
+      const signedMessage = await signMessage(message);
       const {
         data: { access_token: token, results: user },
       } = await api.post('/auth/web3/login', {
         signedMessage,
         walletAddress: account,
-        message
+        message,
       });
-      setAuthentification(user, token)
+      setAuthentification(user, token);
     } catch (error) {
       setError(error.message);
     }
-  }
+  };
 
   const walletConnectAndSignInFlow = async () => {
-    setShouldFollowUpOnConnectAndSign(true)
-    if(!isWalletConnected){
-      connectWallet()
-    }else{
-      executeRestOfSignInWithWallet()
+    setShouldFollowUpOnConnectAndSign(true);
+    if (!isWalletConnected) {
+      connectWallet();
+    } else {
+      executeRestOfSignInWithWallet();
     }
-  }
+  };
 
   //The following goes on after the above connect and injected account are made available to use
   //There is probably a better way to connect, and then to wait for useWeb3React hook above to refresh account
   //And then synchronously continue
   useEffect(() => {
-    if(shouldFollowUpOnConnectAndSign){
-      executeRestOfSignInWithWallet()
-      setShouldFollowUpOnConnectAndSign(false)
+    if (shouldFollowUpOnConnectAndSign) {
+      executeRestOfSignInWithWallet();
+      setShouldFollowUpOnConnectAndSign(false);
     }
-  }, [account])
+  }, [account]);
 
   return (
     <Layout>
@@ -131,12 +133,14 @@ const Login = () => {
             </div>
           </form>
 
-
           <hr className="my-4 mt-10" />
-          <button type="submit" className="btn-primary"
-          onClick={async () => {
-            await walletConnectAndSignInFlow();
-          }}>
+          <button
+            type="submit"
+            className="btn-primary"
+            onClick={async () => {
+              await walletConnectAndSignInFlow();
+            }}
+          >
             {__('blockchain_sign_in_with_wallet')}
           </button>
         </main>

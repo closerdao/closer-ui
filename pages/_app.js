@@ -21,6 +21,7 @@ import {
 import { AuthProvider } from '../contexts/auth';
 import { BookingProvider } from '../contexts/booking/';
 import { PlatformProvider } from '../contexts/platform';
+import { WalletProvider } from '../contexts/wallet/';
 import '../public/styles.css';
 import { theme } from '../tailwind.config';
 
@@ -65,12 +66,14 @@ const Application = ({ Component, pageProps }) => {
       <AuthProvider>
         <PlatformProvider>
           <Web3ReactProvider getLibrary={getLibrary}>
-            <BookingProvider>
-              <Navigation />
-              <div className="content-wrapper">
-                <Component {...pageProps} />
-              </div>
-            </BookingProvider>
+            <WalletProvider>
+              <BookingProvider>
+                <Navigation />
+                <div className="content-wrapper">
+                  <Component {...pageProps} />
+                </div>
+              </BookingProvider>
+            </WalletProvider>
           </Web3ReactProvider>
         </PlatformProvider>
       </AuthProvider>

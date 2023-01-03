@@ -1,10 +1,13 @@
-import { useWallet } from '../hooks/useWallet';
+import { useContext } from 'react';
+
+import { BLOCKCHAIN_DAO_TOKEN } from '../../config_blockchain';
+import { WalletState } from '../contexts/wallet';
 import { __, priceFormat } from '../utils/helpers';
 import WalletActions from './WalletActions';
 import WalletHeader from './WalletHeader';
 
 const BookingWallet = ({ accomodationCost, switchToEUR }) => {
-  const { balanceAvailable, isBlockchainAllowed, tokenSymbol } = useWallet();
+  const { balanceAvailable, isBlockchainAllowed } = useContext(WalletState);
   const balanceAfterPayment = balanceAvailable - accomodationCost;
   const isInsufficientBalance = balanceAfterPayment < 0;
 
@@ -16,14 +19,14 @@ const BookingWallet = ({ accomodationCost, switchToEUR }) => {
           <div className="flex justify-between items-center">
             <p>{__('wallet_booking_available_balance')}</p>
             <p className="font-bold">
-              {priceFormat(balanceAvailable, tokenSymbol)}
+              {priceFormat(balanceAvailable, BLOCKCHAIN_DAO_TOKEN.symbol)}
             </p>
           </div>
           {!isInsufficientBalance ? (
             <div className="flex justify-between items-center">
               <p>{__('wallet_booking_after_payment')}</p>
               <p className="font-bold">
-                {priceFormat(balanceAfterPayment, tokenSymbol)}
+                {priceFormat(balanceAfterPayment, BLOCKCHAIN_DAO_TOKEN.symbol)}
               </p>
             </div>
           ) : (

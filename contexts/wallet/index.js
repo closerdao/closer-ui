@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import React, { createContext, useEffect, useState } from 'react';
 
 import { UnsupportedChainIdError, useWeb3React } from '@web3-react/core';
 import {
@@ -19,11 +19,13 @@ import {
   BLOCKCHAIN_NATIVE_TOKEN,
   BLOCKCHAIN_NETWORK_ID,
   BLOCKCHAIN_RPC_URL,
-} from '../config_blockchain';
-import { useAuth } from '../contexts/auth';
-import api from '../utils/api';
-import { fetcher, formatBigNumberForDisplay } from '../utils/blockchain';
-import { useEagerConnect } from './blockchain';
+} from '../../config_blockchain';
+import api from '../../utils/api';
+import { fetcher, formatBigNumberForDisplay } from '../../utils/blockchain';
+import { useAuth } from '../auth';
+
+export const WalletState = createContext();
+export const WalletDispatch = createContext();
 
 const injected = new InjectedConnector({
   supportedChainIds: [
@@ -46,18 +48,80 @@ const injected = new InjectedConnector({
   ],
 });
 
-export const useWallet = () => {
-  const { user } = useAuth();
+export const WalletProvider = ({ children }) => {
   const {
     active: isWalletConnected,
     account,
     activate,
     setError,
+    error,
     library,
     chainId,
   } = useWeb3React();
+  const { user } = useAuth();
 
-  useEagerConnect(injected);
+  useEffect(() => {
+    injected.isAuthorized().then((isAuthorized) => {
+      if (!isAuthorized) return;
+      activate(injected, undefined, true).catch((error) => {
+        setError(error);
+      });
+    });
+  }, []);
+
+  const [isWalletReady, setIsWalletReady] = useState(false);
+  useEffect(() => {
+    if (chainId) {
+      setIsWalletReady(BLOCKCHAIN_NETWORK_ID === chainId);
+    }
+  }, [chainId]);
+
+  const isCorrectNetwork = BLOCKCHAIN_NETWORK_ID === chainId;
+  // const hasSameConnectedAccount = user?.walletAddress
+  //   ? account === user?.walletAddress
+  //   : true;
+
+  useEffect(() => {
+    const { ethereum } = window;
+    // if (ethereum && !isWalletConnected && !error) {
+    const handleConnect = () => {
+      console.log('Handling "connect" event');
+      if (!isWalletConnected) {
+        activate(injected);
+      }
+    };
+    // const handleChainChanged = (newChainId) => {
+    //   console.log('Handling "chainChanged" event with payload', newChainId);
+    //   if (!isWalletConnected) {
+    //     activate(injected);
+    //   }
+    // };
+    const handleAccountsChanged = async ([newAccount]) => {
+      console.log('Handling "accountsChanged" event with payload', newAccount);
+      // if (!user.walletAddress) {
+      //   console.log('calling /auth/web3/pre-sign with account:', newAccount);
+      //   const user = await linkWalletWithUser(newAccount);
+      //   console.log('user wallet updated on the backend', user);
+      // }
+    };
+    const handleNetworkChanged = (networkId) => {
+      setIsWalletReady(BLOCKCHAIN_NETWORK_ID === Number(networkId));
+      activate(injected);
+    };
+
+    ethereum?.on('connect', handleConnect);
+    // ethereum?.on('chainChanged', handleChainChanged);
+    ethereum?.on('accountsChanged', handleAccountsChanged);
+    ethereum?.on('networkChanged', handleNetworkChanged);
+
+    return () => {
+      ethereum?.removeListener('connect', handleConnect);
+      // ethereum?.removeListener('chainChanged', handleChainChanged);
+      ethereum?.removeListener('accountsChanged', handleAccountsChanged);
+      ethereum?.removeListener('networkChanged', handleNetworkChanged);
+    };
+    // }
+  }, [isWalletConnected, error, activate]);
 
   const { data: balanceDAOToken, mutate: updateWalletBalance } = useSWR(
     [BLOCKCHAIN_DAO_TOKEN.address, 'balanceOf', account],
@@ -90,20 +154,8 @@ export const useWallet = () => {
     BLOCKCHAIN_DAO_TOKEN.decimals,
   );
 
-  const isCorrectNetwork = BLOCKCHAIN_NETWORK_ID === chainId;
-  const hasSameConnectedAccount = user?.walletAddress
-    ? account === user?.walletAddress
-    : true;
-  const isBlockchainAllowed = useMemo(() => {
-    if (isWalletConnected) {
-      return isCorrectNetwork && hasSameConnectedAccount;
-    } else {
-      return true;
-    }
-  }, [(chainId, account, isWalletConnected, user?.walletAddress)]);
-
   const connectWallet = async () => {
-    activate(
+    await activate(
       injected,
       async (error) => {
         if (error instanceof UserRejectedRequestError) {
@@ -126,41 +178,21 @@ export const useWallet = () => {
     );
   };
 
-  console.log('useWallet', account, user);
-
-  const connect = async () => {
-    console.log(
-      'isCorrectNetwork',
-      isCorrectNetwork,
-      chainId,
-      BLOCKCHAIN_NETWORK_ID,
-    );
-    console.log(
-      'hasSameConnectedAccount',
-      hasSameConnectedAccount,
-      account,
-      user?.walletAddress,
-    );
-    if (!isWalletConnected) {
-      await connectWallet();
-    }
-    if (!user.walletAddress) {
-      console.log('calling /auth/web3/pre-sign with account:', account);
-      const {
-        data: { nonce },
-      } = await api.post('/auth/web3/pre-sign', { walletAddress: account });
-      const message = `Signing in with code ${nonce}`;
-      const signedMessage = await signMessage(message);
-      const {
-        data: { results: userUpdated },
-      } = await api.post('/auth/web3/connect', {
-        signedMessage,
-        walletAddress: account,
-        message,
-        userId: user._id,
-      });
-      console.log('userUpdated', userUpdated);
-    }
+  const linkWalletWithUser = async (accountId) => {
+    const {
+      data: { nonce },
+    } = await api.post('/auth/web3/pre-sign', { walletAddress: accountId });
+    const message = `Signing in with code ${nonce}`;
+    const signedMessage = await signMessage(message);
+    const {
+      data: { results: userUpdated },
+    } = await api.post('/auth/web3/connect', {
+      signedMessage,
+      walletAddress: accountId,
+      message,
+      userId: user._id,
+    });
+    return userUpdated;
   };
 
   const switchNetwork = async () => {
@@ -204,17 +236,21 @@ export const useWallet = () => {
     }
   };
 
-  return {
-    balanceAvailable,
-    balanceTotal,
-    account,
-    tokenSymbol: BLOCKCHAIN_DAO_TOKEN.symbol,
-    isWalletConnected,
-    connect,
-    updateWalletBalance,
-    signMessage,
-    isCorrectNetwork,
-    switchNetwork,
-    isBlockchainAllowed,
-  };
+  return (
+    <WalletState.Provider
+      value={{
+        isWalletReady,
+        balanceTotal,
+        balanceAvailable,
+        isCorrectNetwork,
+        isWalletConnected,
+      }}
+    >
+      <WalletDispatch.Provider
+        value={{ signMessage, switchNetwork, connectWallet }}
+      >
+        {children}
+      </WalletDispatch.Provider>
+    </WalletState.Provider>
+  );
 };

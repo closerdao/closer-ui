@@ -1,15 +1,18 @@
-import { useWallet } from '../hooks/useWallet';
+import { useContext } from 'react';
+
+import { WalletState } from '../contexts/wallet';
 import { __ } from '../utils/helpers';
 import WalletActions from './WalletActions';
 import WalletHeader from './WalletHeader';
 
 const Wallet = () => {
-  const { balanceTotal, balanceAvailable, isBlockchainAllowed } = useWallet();
+  const { balanceTotal, balanceAvailable, isWalletReady } =
+    useContext(WalletState);
 
   return (
     <div className="p-4 flex flex-col rounded-lg shadow-4xl">
       <WalletHeader />
-      {isBlockchainAllowed ? (
+      {isWalletReady ? (
         <div className="flex flex-col gap-2 mt-4">
           <div className="flex justify-between items-center">
             <p>{__('wallet_tdf')}</p>

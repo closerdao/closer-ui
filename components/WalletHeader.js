@@ -1,8 +1,10 @@
-import { useWallet } from '../hooks/useWallet';
+import { useContext } from 'react';
+
+import { WalletState } from '../contexts/wallet';
 import { __ } from '../utils/helpers';
 
 const WalletHeader = ({ isInsufficientBalance }) => {
-  const { isWalletConnected, isCorrectNetwork } = useWallet();
+  const { isWalletConnected, isCorrectNetwork } = useContext(WalletState);
 
   const getTitle = () => {
     if (!isWalletConnected) {
