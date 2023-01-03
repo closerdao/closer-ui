@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 
 import Layout from '../../components/Layout';
 
@@ -12,60 +12,58 @@ import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
 
 const Login = () => {
-  const { account, signMessage, isWalletConnected } = useContext(WalletState);
-  const { connectWallet } = useContext(WalletDispatch);
+  const { injected } = useContext(WalletState);
+  const { signMessage } = useContext(WalletDispatch);
 
   const router = useRouter();
-  const { isAuthenticated, login, setAuthentification, setError } = useAuth();
+  const { isAuthenticated, login, setAuthentification } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [shouldFollowUpOnConnectAndSign, setShouldFollowUpOnConnectAndSign] =
-    useState('');
+  const [error, setError] = useState('');
 
-  if (isAuthenticated && typeof window.location !== 'undefined') {
+  if (isAuthenticated) {
     router.push('/');
-    // For some reason, cache needs to get reset.
-    // window.location.href = decodeURIComponent(router.query.back || '/');
   }
 
-  const executeRestOfSignInWithWallet = async () => {
+  const signInWithWallet = async (walletAddress) => {
     try {
       const {
         data: { nonce },
-      } = await api.post('/auth/web3/pre-sign', { walletAddress: account });
+      } = await api.post('/auth/web3/pre-sign', { walletAddress });
       const message = `Signing in with code ${nonce}`;
-      const signedMessage = await signMessage(message);
-      const {
-        data: { access_token: token, results: user },
-      } = await api.post('/auth/web3/login', {
-        signedMessage,
-        walletAddress: account,
-        message,
-      });
-      setAuthentification(user, token);
-    } catch (error) {
-      setError(error.message);
+      const signedMessage = await signMessage(message, walletAddress);
+      if (signedMessage) {
+        const {
+          data: { access_token: token, results: user },
+        } = await api.post('/auth/web3/login', {
+          signedMessage,
+          walletAddress,
+          message,
+        });
+        if (error) {
+          setError(error);
+          return;
+        }
+        setAuthentification(user, token);
+      }
+    } catch (e) {
+      if (e.response?.status === 401) {
+        setError(e.response.data.error);
+        return;
+      }
+      console.error(e);
     }
   };
 
-  const walletConnectAndSignInFlow = async () => {
-    setShouldFollowUpOnConnectAndSign(true);
-    if (!isWalletConnected) {
-      connectWallet();
+  const walletConnectAndSignInFlow = async (event) => {
+    event.preventDefault();
+    const activated = await injected.activate();
+    if (activated?.account) {
+      signInWithWallet(activated.account);
     } else {
-      executeRestOfSignInWithWallet();
+      console.log('no account activated');
     }
   };
-
-  //The following goes on after the above connect and injected account are made available to use
-  //There is probably a better way to connect, and then to wait for useWeb3React hook above to refresh account
-  //And then synchronously continue
-  useEffect(() => {
-    if (shouldFollowUpOnConnectAndSign) {
-      executeRestOfSignInWithWallet();
-      setShouldFollowUpOnConnectAndSign(false);
-    }
-  }, [account]);
 
   return (
     <Layout>
@@ -117,32 +115,32 @@ const Login = () => {
               />
             </div>
             <div className="card-footer">
-              <div className="flex flex-row justify-between items-end">
-                <button type="submit" className="btn-primary">
-                  {__('login_submit')}
-                </button>
-                <div>
-                  <Link
-                    href="/login/forgot-password"
-                    as="/login/forgot-password"
+              <div className="flex flex-col justify-between items-center gap-4 sm:flex-row">
+                <div className="flex flex-col gap-4 w-full sm:flex-row">
+                  <button
+                    type="submit"
+                    className="btn-primary w-full sm:w-auto"
                   >
-                    <a>{__('login_link_forgot_password')}</a>
-                  </Link>
+                    {__('login_submit')}
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    onClick={walletConnectAndSignInFlow}
+                  >
+                    {__('blockchain_sign_in_with_wallet')}
+                  </button>
                 </div>
+
+                <Link href="/login/forgot-password" as="/login/forgot-password">
+                  <a className="whitespace-nowrap">
+                    {__('login_link_forgot_password')}
+                  </a>
+                </Link>
               </div>
             </div>
           </form>
-
-          <hr className="my-4 mt-10" />
-          <button
-            type="submit"
-            className="btn-primary"
-            onClick={async () => {
-              await walletConnectAndSignInFlow();
-            }}
-          >
-            {__('blockchain_sign_in_with_wallet')}
-          </button>
+          {error && <p className="text-primary mt-4 text-center">{error}</p>}
         </main>
       </div>
     </Layout>

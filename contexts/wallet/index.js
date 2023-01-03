@@ -60,68 +60,17 @@ export const WalletProvider = ({ children }) => {
   } = useWeb3React();
   const { user } = useAuth();
 
-  useEffect(() => {
-    injected.isAuthorized().then((isAuthorized) => {
-      if (!isAuthorized) return;
-      activate(injected, undefined, true).catch((error) => {
-        setError(error);
-      });
-    });
-  }, []);
-
   const [isWalletReady, setIsWalletReady] = useState(false);
-  useEffect(() => {
-    if (chainId) {
-      setIsWalletReady(BLOCKCHAIN_NETWORK_ID === chainId);
-    }
-  }, [chainId]);
-
   const isCorrectNetwork = BLOCKCHAIN_NETWORK_ID === chainId;
-  // const hasSameConnectedAccount = user?.walletAddress
-  //   ? account === user?.walletAddress
-  //   : true;
+  const hasSameConnectedAccount = user?.walletAddress
+    ? account === user?.walletAddress
+    : true;
 
   useEffect(() => {
-    const { ethereum } = window;
-    // if (ethereum && !isWalletConnected && !error) {
-    const handleConnect = () => {
-      console.log('Handling "connect" event');
-      if (!isWalletConnected) {
-        activate(injected);
-      }
-    };
-    // const handleChainChanged = (newChainId) => {
-    //   console.log('Handling "chainChanged" event with payload', newChainId);
-    //   if (!isWalletConnected) {
-    //     activate(injected);
-    //   }
-    // };
-    const handleAccountsChanged = async ([newAccount]) => {
-      console.log('Handling "accountsChanged" event with payload', newAccount);
-      // if (!user.walletAddress) {
-      //   console.log('calling /auth/web3/pre-sign with account:', newAccount);
-      //   const user = await linkWalletWithUser(newAccount);
-      //   console.log('user wallet updated on the backend', user);
-      // }
-    };
-    const handleNetworkChanged = (networkId) => {
-      setIsWalletReady(BLOCKCHAIN_NETWORK_ID === Number(networkId));
-      activate(injected);
-    };
-
-    ethereum?.on('connect', handleConnect);
-    // ethereum?.on('chainChanged', handleChainChanged);
-    ethereum?.on('accountsChanged', handleAccountsChanged);
-    ethereum?.on('networkChanged', handleNetworkChanged);
-
-    return () => {
-      ethereum?.removeListener('connect', handleConnect);
-      // ethereum?.removeListener('chainChanged', handleChainChanged);
-      ethereum?.removeListener('accountsChanged', handleAccountsChanged);
-      ethereum?.removeListener('networkChanged', handleNetworkChanged);
-    };
-    // }
-  }, [isWalletConnected, error, activate]);
+    setIsWalletReady(
+      isWalletConnected && isCorrectNetwork && hasSameConnectedAccount,
+    );
+  }, [chainId, isWalletConnected, account, error]);
 
   const { data: balanceDAOToken, mutate: updateWalletBalance } = useSWR(
     [BLOCKCHAIN_DAO_TOKEN.address, 'balanceOf', account],
@@ -176,6 +125,14 @@ export const WalletProvider = ({ children }) => {
       },
       false,
     );
+    if (!user?.walletAddress) {
+      if (account) {
+        await linkWalletWithUser(account);
+      } else {
+        const activated = await injected.activate();
+        await linkWalletWithUser(activated?.account);
+      }
+    }
   };
 
   const linkWalletWithUser = async (accountId) => {
@@ -184,7 +141,7 @@ export const WalletProvider = ({ children }) => {
         data: { nonce },
       } = await api.post('/auth/web3/pre-sign', { walletAddress: accountId });
       const message = `Signing in with code ${nonce}`;
-      const signedMessage = await signMessage(message);
+      const signedMessage = await signMessage(message, accountId);
       const {
         data: { results: userUpdated },
       } = await api.post('/auth/web3/connect', {
@@ -228,15 +185,21 @@ export const WalletProvider = ({ children }) => {
     }
   };
 
-  const signMessage = async (msg) => {
+  const signMessage = async (msg, accountId) => {
+    let provider;
+    if (!library) {
+      provider = await injected.getProvider();
+    } else {
+      provider = library.provider;
+    }
     try {
-      const signedMessage = await library.provider.request({
+      const signedMessage = await provider.request({
         method: 'personal_sign',
-        params: [msg, account],
+        params: [msg, accountId],
       });
       return signedMessage;
     } catch (e) {
-      console.log(e);
+      console.error(e);
       return null;
     }
   };
@@ -244,6 +207,7 @@ export const WalletProvider = ({ children }) => {
   return (
     <WalletState.Provider
       value={{
+        injected,
         isWalletReady,
         balanceTotal,
         balanceAvailable,
