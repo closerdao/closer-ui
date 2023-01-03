@@ -21,7 +21,11 @@ import {
   BLOCKCHAIN_RPC_URL,
 } from '../../config_blockchain';
 import api from '../../utils/api';
-import { fetcher, formatBigNumberForDisplay } from '../../utils/blockchain';
+import {
+  fetcher,
+  formatBigNumberForDisplay,
+  multiFetcher,
+} from '../../utils/blockchain';
 import { useAuth } from '../auth';
 
 export const WalletState = createContext();
@@ -87,27 +91,48 @@ export const WalletProvider = ({ children }) => {
       fallbackData: BigNumber.from(0),
     },
   );
-  const { data: balanceStaked } = useSWR(
-    [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'unlockedStake', account],
-    {
-      fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
-      fallbackData: BigNumber.from(0),
-    },
-  );
-  const { data: unlockedStake } = useSWR(
-    [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'unlockedStake', account],
+
+  const { data: lockedStake } = useSWR(
+    [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'lockedStake', account],
     {
       fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
       fallbackData: BigNumber.from(0),
     },
   );
 
+  const { data: activatedBookingYears } = useSWR(
+    [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'getAccommodationYears'],
+    {
+      fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
+    },
+  );
+
+  const { data: bookedDates } = useSWR(
+    [
+      activatedBookingYears
+        ? activatedBookingYears.map(([year]) => [
+            BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
+            'getAccommodationBookings',
+            account,
+            year,
+          ])
+        : null,
+    ],
+    {
+      fetcher: multiFetcher(library, BLOCKCHAIN_DIAMOND_ABI),
+    },
+  );
+
+  const proofOfPresence = bookedDates
+    ?.flat()
+    .filter((date) => date.status === 2).length;
+
   const balanceTotal = formatBigNumberForDisplay(
-    balanceDAOToken.add(balanceStaked),
+    balanceDAOToken.add(lockedStake),
     BLOCKCHAIN_DAO_TOKEN.decimals,
   );
   const balanceAvailable = formatBigNumberForDisplay(
-    balanceDAOToken.add(unlockedStake),
+    balanceDAOToken,
     BLOCKCHAIN_DAO_TOKEN.decimals,
   );
 
@@ -219,6 +244,7 @@ export const WalletProvider = ({ children }) => {
         isWalletReady,
         balanceTotal,
         balanceAvailable,
+        proofOfPresence,
         isCorrectNetwork,
         isWalletConnected,
       }}

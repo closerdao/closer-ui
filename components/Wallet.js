@@ -6,7 +6,7 @@ import WalletActions from './WalletActions';
 import WalletHeader from './WalletHeader';
 
 const Wallet = () => {
-  const { balanceTotal, balanceAvailable, isWalletReady } =
+  const { balanceTotal, balanceAvailable, proofOfPresence, isWalletReady } =
     useContext(WalletState);
 
   return (
@@ -24,7 +24,7 @@ const Wallet = () => {
           </div>
           <div className="flex justify-between items-center">
             <p>{__('wallet_pop')}</p>
-            <p className="font-bold">0.00</p>
+            <p className="font-bold">{proofOfPresence}</p>
           </div>
         </div>
       ) : null}

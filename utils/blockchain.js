@@ -21,6 +21,11 @@ export const fetcher =
     return library[method](arg2, ...params);
   };
 
+export const multiFetcher = (library, abi) => (argsArray) => {
+  const f = fetcher(library, abi);
+  return Promise.all(argsArray.map((args) => f(...args)));
+};
+
 export function formatBigNumberForDisplay(
   bigNumber,
   tokenDecimals,
