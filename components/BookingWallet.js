@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 
-import { BLOCKCHAIN_DAO_TOKEN } from '../../config_blockchain';
+import { BLOCKCHAIN_DAO_TOKEN } from '../config_blockchain';
 import { WalletState } from '../contexts/wallet';
 import { __, priceFormat } from '../utils/helpers';
 import WalletActions from './WalletActions';
