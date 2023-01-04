@@ -180,7 +180,6 @@ const Book = ({ token }) => {
                           : booking.end,
                       })
                     }
-                    showTime={false}
                   />
                 </fieldset>
                 <fieldset className="flex flex-col flex-grow justify-center items-start">
@@ -194,7 +193,6 @@ const Book = ({ token }) => {
                         end,
                       })
                     }
-                    showTime={false}
                   />
                 </fieldset>
                 <fieldset>

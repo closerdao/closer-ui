@@ -57,7 +57,6 @@ const BookingDates = ({
               )
               .format('YYYY-MM-DD')}
             onChange={(start) => setStartDate(start.format('YYYY-MM-DD'))}
-            showTime={false}
           />
         </div>
         <div>
@@ -72,7 +71,6 @@ const BookingDates = ({
               .add(isMember ? member.maxDuration : guest.maxDuration, 'days')
               .format('YYYY-MM-DD')}
             onChange={(end) => setEndDate(end.format('YYYY-MM-DD'))}
-            showTime={false}
           />
         </div>
       </div>

@@ -9,7 +9,6 @@ const DateTimePicker = ({
   minValue,
   maxValue = '180',
   onChange,
-  showTime,
 }) => {
   const [datetime, updateTime] = useState(value ? dayjs(value) : defaultTime);
 
@@ -37,28 +36,8 @@ const DateTimePicker = ({
       <p className="mt-2 invisible peer-invalid:visible text-primary text-sm">
         Please set a valid date.
       </p>
-      {showTime && (
-        <input
-          type="time"
-          value={datetime.format('HH:mm')}
-          placeholder="14:20"
-          onChange={(e) => {
-            const [hour, minute] = e.target.value
-              .split(':')
-              .map((n) => Number(n));
-
-            const newDate = datetime.set('hour', hour).set('minute', minute);
-            updateTime(newDate);
-            onChange(newDate);
-          }}
-        />
-      )}
     </div>
   );
-};
-
-DateTimePicker.defaultProps = {
-  showTime: true,
 };
 
 export default DateTimePicker;
