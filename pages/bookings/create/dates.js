@@ -58,13 +58,11 @@ const DatesSelector = ({ error, settings }) => {
   const [currency, selectCurrency] = useState(
     savedCurrency || DEFAULT_CURRENCY,
   );
-  const totalNights = Math.abs(Math.ceil(dayjs(start).diff(end, 'days'))) + 1;
 
   const handleNext = () => {
     const data = {
       start,
       end,
-      totalNights,
       adults,
       kids,
       infants,
