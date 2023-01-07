@@ -10,41 +10,32 @@ import QuestionnaireItem from '../../../components/QuestionnaireItem';
 
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
-import { useBookingActions, useBookingState } from '../../../contexts/booking';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
 const Questionnaire = ({ questions, booking, error }) => {
-  const {
-    data: { questions: questionsData },
-  } = useBookingState();
-  const { saveAnswer } = useBookingActions();
   const hasRequiredQuestions = questions.some((question) => question.required);
   const [isSubmitDisabled, setSubmitDisabled] = useState(hasRequiredQuestions);
+  const [answers, setAnswers] = useState(booking?.fields || []);
 
   useEffect(() => {
     if (!hasRequiredQuestions) {
       return;
     }
     const allRequiredQuestionsCompleted = questions.some((question) => {
-      const answer = questionsData.get(question.name);
-      const isAnswered = answer !== '' && answer !== undefined;
+      const answer = getAnswer(answers, question.name);
+      const isAnswered = answer !== '';
       return question.required && isAnswered;
     });
     setSubmitDisabled(!allRequiredQuestionsCompleted);
-  }, [questionsData]);
+  }, [answers]);
 
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const handleSubmit = async () => {
-    if (!questionsData.size) {
-      return;
-    }
     try {
       await api.patch(`/booking/${booking._id}`, {
-        fields: Array.from(questionsData, ([key, value]) => ({
-          [key]: value,
-        })),
+        fields: answers,
       });
       router.push(`/bookings/${booking._id}/summary`);
     } catch (err) {
@@ -53,11 +44,28 @@ const Questionnaire = ({ questions, booking, error }) => {
   };
 
   const handleAnswer = (name, value) => {
-    saveAnswer({ name, value });
+    setAnswers((prevState) =>
+      prevState.map((field) => {
+        if (Object.keys(field)[0] === name) {
+          return { [name]: value };
+        }
+        return field;
+      }),
+    );
   };
 
   const resetBooking = () => {
     router.push('/bookings/create');
+  };
+
+  const getAnswer = (answers, questionName) => {
+    const savedAnswer = answers.find(
+      (answer) => Object.keys(answer)[0] === questionName,
+    );
+    if (savedAnswer) {
+      return savedAnswer[questionName];
+    }
+    return '';
   };
 
   if (!isAuthenticated) {
@@ -90,7 +98,7 @@ const Questionnaire = ({ questions, booking, error }) => {
               question={question}
               key={question.name}
               handleAnswer={handleAnswer}
-              savedAnswer={questionsData.get(question.name)}
+              savedAnswer={getAnswer(booking?.fields, question.name)}
             />
           ))}
           <button
