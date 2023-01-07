@@ -396,6 +396,7 @@
   "wallet_not_connected_title": "Wallet Not Connected",
   "wallet_not_connected_cta": "Please connect your wallet to see your $TDF & POP Balance",
   "wallet_not_connected_button": "Connect Wallet",
+  "wallet_not_connected_button_title": "Please connect your wallet to book with $TDF",
   "wallet_tdf": "$TDF (Total)",
   "wallet_tdf_available": "$TDF (Available)",
   "wallet_pop": "POP",
