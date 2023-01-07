@@ -16,9 +16,12 @@ import { __ } from '../../../utils/helpers';
 const Questionnaire = ({ questions, booking, error }) => {
   const hasRequiredQuestions = questions.some((question) => question.required);
   const [isSubmitDisabled, setSubmitDisabled] = useState(hasRequiredQuestions);
-  const [answers, setAnswers] = useState(booking?.fields || []);
-
+  const [answers, setAnswers] = useState(
+    booking?.fields || questions.map((question) => ({ [question.name]: '' })),
+  );
+  console.log('answersState', answers);
   useEffect(() => {
+    console.log('answers useEffect');
     if (!hasRequiredQuestions) {
       return;
     }
@@ -44,14 +47,14 @@ const Questionnaire = ({ questions, booking, error }) => {
   };
 
   const handleAnswer = (name, value) => {
-    setAnswers((prevState) =>
-      prevState.map((field) => {
-        if (Object.keys(field)[0] === name) {
-          return { [name]: value };
-        }
-        return field;
-      }),
-    );
+    console.log('saving answer for question: ', name, value);
+    const updatedAnswers = answers.map((answer) => {
+      if (Object.keys(answer)[0] === name) {
+        return { [name]: value };
+      }
+      return answer;
+    });
+    setAnswers(updatedAnswers);
   };
 
   const resetBooking = () => {
@@ -59,7 +62,7 @@ const Questionnaire = ({ questions, booking, error }) => {
   };
 
   const getAnswer = (answers, questionName) => {
-    const savedAnswer = answers.find(
+    const savedAnswer = answers?.find(
       (answer) => Object.keys(answer)[0] === questionName,
     );
     if (savedAnswer) {
