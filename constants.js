@@ -140,3 +140,12 @@ export const REFUND_PERIODS = {
   DAY: 1,
   LASTDAY: 0
 }
+
+export const BOOKING_STEPS = [
+  'dates',
+  'accomodation',
+  'questions',
+  'summary',
+  'checkout',
+  'confirmation',
+];
