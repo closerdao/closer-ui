@@ -1,4 +1,4 @@
-import { BLOCKCHAIN_DAO_TOKEN } from '../config_blockchain.js';
+import { BLOCKCHAIN_DAO_TOKEN } from './config_blockchain.js';
 
 // Api actions
 export const GET_INIT = 'GET_INIT';

@@ -7,7 +7,7 @@ import BookingProgress from '../../../components/BookingProgress';
 import Layout from '../../../components/Layout';
 import PageError from '../../../components/PageError';
 
-import { useBookingActions, useBookingState } from '../../../contexts/booking';
+import { useBookingState } from '../../../contexts/booking';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
@@ -19,10 +19,12 @@ const ConfirmationStep = ({ error, booking }) => {
   const paymentRejected =
     (fiatPayment && fiatPayment.error) || (tokenPayment && tokenPayment.error);
 
-  const { startNewBooking, resetBooking } = useBookingActions();
   const router = useRouter();
   const viewBooking = (id) => {
     router.push(`/bookings/${id}`);
+  };
+  const startNewBooking = () => {
+    router.push('/bookings/create');
   };
 
   useEffect(() => {
@@ -36,7 +38,7 @@ const ConfirmationStep = ({ error, booking }) => {
       <Layout>
         <div className="max-w-screen-sm mx-auto p-8">
           <BookingBackButton
-            action={resetBooking}
+            action={startNewBooking}
             name={__('buttons_go_to_bookings')}
           />
           <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
