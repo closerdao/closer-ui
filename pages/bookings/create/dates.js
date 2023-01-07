@@ -16,8 +16,8 @@ import PropTypes from 'prop-types';
 
 import { useAuth } from '../../../contexts/auth';
 import api from '../../../utils/api';
-import { CURRENCIES, DEFAULT_CURRENCY } from '../../../utils/const';
 import { __ } from '../../../utils/helpers';
+import { CURRENCIES, DEFAULT_CURRENCY } from '../../constants';
 
 dayjs.extend(relativeTime);
 
