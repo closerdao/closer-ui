@@ -175,28 +175,28 @@ const MemberPage = ({ member }) => {
         <div className="flex flex-col items-start">
           <div className="flex flex-col items-start space-y-5 md:w-full md:mt-3">
             <div className="flex flex-col md:flex-row w-full">
-              <div className="md:w-72 items-center justify-start relative top-0 right-0">
-                <div className="flex mb-4 md:mr-8 md:justify-center items-center">
+              <div className="group md:w-72 items-center justify-start relative">
+                <div className="flex flex-col items-start mb-4 md:mr-8 md:items-center">
                   {member.photo ? (
                     <img
                       src={`${cdn}${member.photo}-profile-lg.jpg`}
                       loading="lazy"
                       alt={member.screenname}
-                      className="w-32 md:w-44 mt-4 md:mt-0 rounded-full"
+                      className="peer w-32 md:w-44 mt-4 md:mt-0 rounded-full"
                     />
                   ) : (
                     <FaUser className="text-gray-200 text-6xl" />
                   )}
-                </div>
-                <div className="absolute top-0 bottom-0 right-6 left-0 items-center h-full opacity-0 hover:opacity-80">
-                  {isAuthenticated && member._id === currentUser._id && (
-                    <UploadPhoto
-                      model="user"
-                      id={member._id}
-                      onSave={(id) => setPhoto(id)}
-                      label={member.photo ? 'Change photo' : 'Add photo'}
-                    />
-                  )}
+                  <div className="items-center h-full lg:opacity-0 group-hover:opacity-80 mt-2">
+                    {isAuthenticated && member._id === currentUser._id && (
+                      <UploadPhoto
+                        model="user"
+                        id={member._id}
+                        onSave={(id) => setPhoto(id)}
+                        label={member.photo ? 'Change photo' : 'Add photo'}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
 
