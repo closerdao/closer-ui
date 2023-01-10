@@ -1,19 +1,21 @@
 import Head from 'next/head';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import Layout from '../../components/Layout';
 import Spinner from '../../components/Spinner';
 
 import { useWeb3React } from '@web3-react/core';
-import { BigNumber, utils } from 'ethers';
+import { BigNumber, Contract, utils } from 'ethers';
 import useSWR from 'swr';
 
 import PageNotAllowed from '../401';
 import '../../config';
 import {
+  BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
   BLOCKCHAIN_DAO_TOKEN,
   BLOCKCHAIN_DAO_TOKEN_ABI,
+  BLOCKCHAIN_DIAMOND_ABI,
   BLOCKCHAIN_NATIVE_TOKEN,
   BLOCKCHAIN_NETWORK_ID,
 } from '../../config_blockchain';
@@ -21,18 +23,27 @@ import { useAuth } from '../../contexts/auth';
 import {
   fetcher,
   formatBigNumberForDisplay,
+  multiFetcher,
   sendDAOToken,
 } from '../../utils/blockchain';
 import { __ } from '../../utils/helpers';
 
 const CryptoWallet = () => {
   const { isAuthenticated } = useAuth();
-  const { chainId, account, activate, deactivate, setError, active, library } =
+  const { chainId, account, library } =
     useWeb3React();
 
   const [toAddress, setToAddress] = useState('');
   const [amountToSend, setamountToSend] = useState(0);
   const [pendingTransactions, setPendingTransactions] = useState([]);
+  const [lockedStakeAt, setLockedStakeAt] = useState();
+  const [unlockedStakeAt, setUnlockedStakeAt] = useState();
+  const [tokenCostEstimate, setTokenCostEstimate] = useState();
+
+  const yearRef = useRef(null)
+  const dayRef = useRef(null)
+  const yearRef2 = useRef(null)
+  const tokenCostRef = useRef(null)
 
   const { data: nativeBalance, mutate: mutateNB } = useSWR(
     ['getBalance', account, 'latest'],
@@ -47,6 +58,85 @@ const CryptoWallet = () => {
       fetcher: fetcher(library, BLOCKCHAIN_DAO_TOKEN_ABI),
     },
   );
+
+  const { data: lockedStake, mutate: mutateLS } = useSWR(
+    [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'lockedStake', account],
+    {
+      fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
+      fallbackData: BigNumber.from(0),
+    },
+  );
+
+  const { data: unlockedStake, mutate: mutateUS } = useSWR(
+    [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'unlockedStake', account],
+    {
+      fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
+      fallbackData: BigNumber.from(0),
+    },
+  );
+
+  const { data: activatedBookingYears } = useSWR( 
+    [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'getAccommodationYears'],
+    {
+      fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
+    },
+  );
+  
+  const { data: bookedDates, mutate: mutateD } = useSWR( 
+    [
+      activatedBookingYears ? (activatedBookingYears.map(
+        year => [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'getAccommodationBookings', account, year[0]])) : null
+    ],
+    {
+      fetcher: multiFetcher(library, BLOCKCHAIN_DIAMOND_ABI),
+    },
+  );
+
+  const estimateNeededStakeForNewBookingForDisplay = (bookingYear, totalBookingTokenCost) => {
+    if(!bookedDates){
+      return
+    }
+    let yearlyTotals = [];
+    let maxStake = 0; //per year
+    let maxStakeYear = null;
+    let loopYearlyStakeValue = 0;
+    let bookingYearCurrentStake = 0;
+    for(let i=0;i<bookedDates.length;i++){
+      loopYearlyStakeValue = 0;
+      if(bookedDates[i].length>0){
+        loopYearlyStakeValue = bookedDates[i].map(e => formatBigNumberForDisplay(e.price,18)).reduce((e,c) => e+c, 0)
+        if(maxStake < loopYearlyStakeValue){
+          maxStake = loopYearlyStakeValue;
+        }
+        if(bookedDates[i][0].year == bookingYear){
+          bookingYearCurrentStake = loopYearlyStakeValue;
+        }
+      }
+    }
+    setTokenCostEstimate(Math.max(totalBookingTokenCost - (maxStake - bookingYearCurrentStake),0)) 
+  }
+
+  const stakesAt = async (year,day) => {
+    if (chainId !== BLOCKCHAIN_NETWORK_ID) {
+      return;
+    }
+
+    try {
+      const Diamond = new Contract(
+        BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
+        BLOCKCHAIN_DIAMOND_ABI,
+        library.getSigner(),
+      );
+    
+      setUnlockedStakeAt(await Diamond.unlockedStakeAt(
+        account,year,day
+      )); 
+      setLockedStakeAt(await Diamond.lockedStakeAt(
+        account,year,day
+      ));   
+
+    } catch (error) {}
+  };
 
   const sendTokenTransaction = async () => {
     if (chainId !== BLOCKCHAIN_NETWORK_ID) {
@@ -98,6 +188,33 @@ const CryptoWallet = () => {
     } catch (error) {}
   };
 
+  const cancelBooking = async (year,day) => {
+    if (chainId !== BLOCKCHAIN_NETWORK_ID) {
+      return;
+    }
+    try {
+      const Diamond = new Contract(
+        BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
+        BLOCKCHAIN_DIAMOND_ABI,
+        library.getSigner(),
+      );    
+      const tx = await Diamond.cancelAccommodation(
+        [[year,day]]
+      );    
+      setPendingTransactions([...pendingTransactions, tx.hash]);
+      await tx.wait();
+      mutateLS(undefined, true);
+      mutateUS(undefined, true);
+      mutateD(undefined, true);
+      console.log(`${tx.hash} mined`);
+      setPendingTransactions((pendingTransactions) =>
+        pendingTransactions.filter((h) => h !== tx.hash),
+      );
+    } catch (error) {}
+  };
+
+  
+
   if (!isAuthenticated) {
     return <PageNotAllowed />;
   }
@@ -107,13 +224,13 @@ const CryptoWallet = () => {
       <Head>
         <title>{__('blockchainwallet_title')}</title>
       </Head>
-      {pendingTransactions?.length > 0 && <Spinner fixed />}
+      {pendingTransactions?.length > 0 && <Spinner fixed className='inset-1/2' />}
       <div className="main-content min-h-[300px]">
         <main className="flex flex-col justify-between md:max-w-[60%]">
           <div className="flex flex-row items-baseline">
-            <h3 className="mt-9 mb-8 text-4xl font-light">
+            <h2 className="mt-9 mb-8 text-4xl font-light">
               {__('blockchain_wallet')}
-            </h3>
+            </h2>
             {account && library && (
               <>
                 <span className="px-4">
@@ -138,7 +255,7 @@ const CryptoWallet = () => {
           )}
           {account && library && (
             <>
-              <h4>Wallet contents</h4>
+              <h2>Wallet contents</h2>
               <div className="flex justify-between md:flex-row m-4">
                 <label>Sending params:</label>
                 <input
@@ -193,8 +310,100 @@ const CryptoWallet = () => {
                   </button>
                 </div>
               )}
+
+              <h2>
+                Bookings and Stake
+              </h2>
+
+              <h3>Stakes now</h3>
+              <b>
+                Locked: {formatBigNumberForDisplay(lockedStake, 18)}
+              </b>
+              <b>
+                Unlocked: {formatBigNumberForDisplay(unlockedStake, 18)}
+              </b>
+              <br/>
+              <h3>Simulate Stakes at a date</h3>
+              <div className='flex flex-row'>
+              Year: <input 
+                    className='w-12'
+                    ref={yearRef}
+                    type="text"
+                    id="year"
+                    name="year"/> 
+              Day_of_year: <input 
+                    className='w-12'
+                    ref={dayRef}
+                    type="text"
+                    id="day"
+                    name="day"/> 
+                    <button className='border-4 border-black' onClick={() => {
+                      stakesAt(yearRef.current.value, dayRef.current.value)
+                    }}>Fetch</button>
+              </div>
+              <b>
+                == Locked: {formatBigNumberForDisplay(lockedStakeAt, 18)}
+              </b>
+              <b>
+                == Unlocked: {formatBigNumberForDisplay(unlockedStakeAt, 18)}
+              </b>
+              <br/>
+
+              { bookedDates && (
+                <>
+                <h3>Booked dates:</h3>
+                
+                { bookedDates.flat().map( e => (
+                  <div key={'p'+e.dayOfYear+e.year}>
+                    {new Date(e.year, 0, e.dayOfYear).toLocaleDateString('en-US')} - Price: {formatBigNumberForDisplay(e.price,18)}
+                    <button className='ml-4' onClick={() => {
+                      cancelBooking(e.year,e.dayOfYear);
+                    }}>
+                      Cancel
+                    </button>
+                  </div>
+                 ))
+                }
+                <br/>
+                <h4>Booking Staking Estimator:</h4>
+                <div className='flex flex-row'>
+              Year: <input 
+                    className='w-12'
+                    ref={yearRef2}
+                    type="text"
+                    id="year"
+                    name="year"/> 
+              Total_token_cost: <input 
+                    className='w-12'
+                    ref={tokenCostRef}
+                    type="text"
+                    id="day"
+                    name="day"/> 
+                    <button className='border-4 border-black' onClick={() => {
+                      estimateNeededStakeForNewBookingForDisplay(yearRef2.current.value, tokenCostRef.current.value)
+                    }}>Estimate</button>
+              </div>
+              <b>
+                == Estimated additional Tokens to stake: {tokenCostEstimate}
+              </b>
+              <br/>
+              <br/>
+                <h3>Proof of presences:</h3>
+                { bookedDates.flat().map( e => ((new Date(e.year, 0, e.dayOfYear)>Date.now() || e.status != 2) ? null :
+                  <div key={'p'+e.dayOfYear+e.year}>
+                    {new Date(e.year, 0, e.dayOfYear).toLocaleDateString('en-US')}
+                  </div>
+                 ))
+                }
+              </>
+              )}
+              <br/>
+
+              
+         
             </>
           )}
+          
         </main>
       </div>
     </Layout>

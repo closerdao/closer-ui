@@ -5,21 +5,27 @@ import blockchainConfig from '../config_blockchain.js';
 
 export const fetcher =
   (library, abi) =>
-  (...args) => {
-    const [arg1, arg2, ...params] = args;
-    //contract call
-    if (isAddress(arg1)) {
-      const address = arg1;
-      const method = arg2;
-      const contract = new Contract(address, abi, library.getSigner());
-      const res = contract[method](...params);
-      // console.log('fetcher method', method, ...params);
-      return res;
+    (...args) => {
+      const [arg1, arg2, ...params] = args;
+      //contract call
+      if (isAddress(arg1)) {
+        const address = arg1;
+        const method = arg2;
+        const contract = new Contract(address, abi, library.getSigner());
+        const res = contract[method](...params);
+        return res;
+      }
+      //eth call
+      const method = arg1;
+      return library[method](arg2, ...params);
+    };
+
+export const multiFetcher = 
+  (library, abi) => 
+    (argsArray) => {
+      const f = fetcher(library, abi)
+      return Promise.all(argsArray.map(args => f(...args)))
     }
-    //eth call
-    const method = arg1;
-    return library[method](arg2, ...params);
-  };
 
 export function formatBigNumberForDisplay(
   bigNumber,

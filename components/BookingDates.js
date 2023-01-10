@@ -50,12 +50,7 @@ const BookingDates = ({
             id="start"
             value={startDate}
             minValue={dayjs().format('YYYY-MM-DD')}
-            maxValue={dayjs()
-              .add(
-                isMember ? member.maxBookingHorizon : guest.maxBookingHorizon,
-                'days',
-              )
-              .format('YYYY-MM-DD')}
+            
             onChange={(start) => setStartDate(start.format('YYYY-MM-DD'))}
             showTime={false}
           />
@@ -68,9 +63,7 @@ const BookingDates = ({
             id="end"
             value={endDate}
             minValue={dayjs(startDate).add(1, 'days').format('YYYY-MM-DD')}
-            maxValue={dayjs(startDate)
-              .add(isMember ? member.maxDuration : guest.maxDuration, 'days')
-              .format('YYYY-MM-DD')}
+            
             onChange={(end) => setEndDate(end.format('YYYY-MM-DD'))}
             showTime={false}
           />
