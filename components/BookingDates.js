@@ -1,11 +1,14 @@
+import { useContext, useMemo } from 'react';
+
 import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
+import dayOfYear from 'dayjs/plugin/dayOfYear';
 import PropTypes from 'prop-types';
 
+import { WalletState } from '../contexts/wallet';
 import { __ } from '../utils/helpers';
 import DateTimePicker from './DateTimePicker';
 
-dayjs.extend(relativeTime);
+dayjs.extend(dayOfYear);
 
 const BookingDates = ({
   isMember,
@@ -34,6 +37,18 @@ const BookingDates = ({
     }
   };
 
+  const { bookedDates, isWalletConnected } = useContext(WalletState);
+  // bookedDates[i] = [status, year, dayOfYear, price (BigNumber), timestamp(BigNumber)]
+  const bookedDatesFormatted = useMemo(
+    () =>
+      bookedDates
+        ?.filter((dateArr) => dateArr.year === dayjs().year())
+        .map((dateArr) =>
+          dayjs().year(dateArr[1]).dayOfYear(dateArr[2]).toDate(),
+        ),
+    [bookedDates],
+  );
+
   return (
     <div>
       <h2 className="text-2xl leading-10 font-normal mb-4 border-b border-[#e1e1e1] border-solid pb-2">
@@ -57,6 +72,7 @@ const BookingDates = ({
               )
               .toDate()}
             onChange={setStartDate}
+            disabledDates={isWalletConnected ? bookedDatesFormatted : []}
           />
         </div>
         <div>
@@ -71,6 +87,7 @@ const BookingDates = ({
               .add(isMember ? member.maxDuration : guest.maxDuration, 'days')
               .toDate()}
             onChange={setEndDate}
+            disabledDates={isWalletConnected ? bookedDatesFormatted : []}
           />
         </div>
       </div>
