@@ -1,14 +1,13 @@
-import { useContext, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 
 import dayjs from 'dayjs';
-import dayOfYear from 'dayjs/plugin/dayOfYear';
 import PropTypes from 'prop-types';
 
-import { WalletState } from '../contexts/wallet';
+import { useAuth } from '../contexts/auth';
+import { usePlatform } from '../contexts/platform';
+import { getBookedDatesObjects } from '../utils/bookings';
 import { __ } from '../utils/helpers';
 import DateTimePicker from './DateTimePicker';
-
-dayjs.extend(dayOfYear);
 
 const BookingDates = ({
   isMember,
@@ -37,18 +36,37 @@ const BookingDates = ({
     }
   };
 
-  const { bookedDates, isWalletConnected } = useContext(WalletState);
-  // bookedDates[i] = [status, year, dayOfYear, price (BigNumber), timestamp(BigNumber)]
-  const bookedDatesFormatted = useMemo(
-    () =>
-      bookedDates
-        ?.filter((dateArr) => dateArr.year === dayjs().year())
-        .map((dateArr) =>
-          dayjs().year(dateArr[1]).dayOfYear(dateArr[2]).toDate(),
-        ),
-    [bookedDates],
-  );
+  const { platform } = usePlatform();
+  const { user } = useAuth();
 
+  const bookingsFilter = user && {
+    where: {
+      createdBy: user._id,
+      status: ['pending', 'confirmed', 'checkedIn', 'checkedOut'],
+      end: {
+        $gt: new Date(),
+      },
+    },
+  };
+  const [bookingDates, setBookingDates] = useState([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const res = await platform.booking.get(bookingsFilter);
+        const bookings = res.results.toJS();
+        const bookedDates = getBookedDatesObjects(bookings);
+        setBookingDates(bookedDates);
+      } catch (err) {
+        console.error('Error loading bookings: ', err);
+      }
+    };
+    if (user) {
+      loadData();
+    }
+  }, [user]);
+
+  // const bookings = platform.booking.find(bookingsFilter) > undefined
   return (
     <div>
       <h2 className="text-2xl leading-10 font-normal mb-4 border-b border-[#e1e1e1] border-solid pb-2">
@@ -72,7 +90,7 @@ const BookingDates = ({
               )
               .toDate()}
             onChange={setStartDate}
-            disabledDates={isWalletConnected ? bookedDatesFormatted : []}
+            disabledDates={bookingDates}
           />
         </div>
         <div>
@@ -87,7 +105,7 @@ const BookingDates = ({
               .add(isMember ? member.maxDuration : guest.maxDuration, 'days')
               .toDate()}
             onChange={setEndDate}
-            disabledDates={isWalletConnected ? bookedDatesFormatted : []}
+            disabledDates={bookingDates}
           />
         </div>
       </div>

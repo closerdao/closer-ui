@@ -18,6 +18,7 @@ const Bookings = ({ filter }) => {
   }, [filter]);
 
   const myBookings = platform.booking.find(filter);
+  console.log('myBookings', myBookings);
   const noBookings = myBookings && myBookings.count() === 0;
   const error = myBookings && myBookings.get('error');
   const listings = platform.listing.find();
