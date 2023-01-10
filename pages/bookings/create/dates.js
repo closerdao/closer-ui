@@ -14,10 +14,10 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import PropTypes from 'prop-types';
 
+import { CURRENCIES, DEFAULT_CURRENCY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
-import { CURRENCIES, DEFAULT_CURRENCY } from '../../constants';
 
 dayjs.extend(relativeTime);
 
