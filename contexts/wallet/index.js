@@ -106,7 +106,6 @@ export const WalletProvider = ({ children }) => {
       fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
     },
   );
-
   const { data: bookedDates, mutate: refetchBookingDates } = useSWR(
     [
       activatedBookingYears

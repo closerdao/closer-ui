@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useContext, useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingProgress from '../../../components/BookingProgress';
@@ -11,6 +11,7 @@ import CheckoutTotal from '../../../components/CheckoutTotal';
 import Layout from '../../../components/Layout';
 import PageError from '../../../components/PageError';
 
+import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
 
 import PageNotAllowed from '../../401';
@@ -18,6 +19,7 @@ import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { WalletState } from '../../../contexts/wallet';
 import api from '../../../utils/api';
+import { estimateNeededStakeForNewBooking } from '../../../utils/blockchain';
 import { __, priceFormat } from '../../../utils/helpers';
 
 const Checkout = ({ booking, listing, settings, error }) => {
@@ -36,12 +38,24 @@ const Checkout = ({ booking, listing, settings, error }) => {
   const totalToPayInFiat = useTokens
     ? utilityFiat?.val
     : rentalFiat?.val + utilityFiat?.val;
-  const totalToPayInToken = useTokens ? rentalToken?.val : 0;
-  const listingName = listing?.name;
-  const [hasAgreedToWalletDisclaimer, setWalletDisclaimer] = useState(false);
-  const { balanceAvailable } = useContext(WalletState);
+  const { balanceAvailable, bookedDates } = useContext(WalletState);
+
+  const totalToPayInToken = useMemo(() => {
+    if (!useTokens || bookedDates === undefined) return null;
+    return estimateNeededStakeForNewBooking({
+      bookedDates,
+      bookingYear: dayjs(start).year(),
+      totalBookingTokenCost: rentalToken?.val,
+    });
+  }, [bookedDates]);
+
   const isNotEnoughBalance = balanceAvailable < totalToPayInToken;
   const { user, isAuthenticated } = useAuth();
+
+  const listingName = listing?.name;
+  const [hasAgreedToWalletDisclaimer, setWalletDisclaimer] = useState(
+    !(totalToPayInToken > 0),
+  );
 
   const router = useRouter();
   const goBack = () => {
@@ -49,7 +63,6 @@ const Checkout = ({ booking, listing, settings, error }) => {
   };
 
   const { platform } = usePlatform();
-
   const switchToEUR = async () => {
     await platform.booking.patch(booking._id, { useTokens: false });
     router.push(`/bookings/${booking._id}/checkout`);
@@ -89,12 +102,13 @@ const Checkout = ({ booking, listing, settings, error }) => {
             <p className="text-right text-xs">
               {__('bookings_checkout_step_accomodation_description')}
             </p>
-            {totalToPayInToken > 0 && (
-              <div className="mt-4">
-                <BookingWallet
-                  accomodationCost={accomodationCost.val}
-                  switchToEUR={switchToEUR}
-                />
+
+            <div className="mt-4">
+              <BookingWallet
+                toPay={totalToPayInToken}
+                switchToEUR={switchToEUR}
+              />
+              {totalToPayInToken > 0 && (
                 <Checkbox
                   checked={hasAgreedToWalletDisclaimer}
                   onChange={() =>
@@ -103,8 +117,8 @@ const Checkout = ({ booking, listing, settings, error }) => {
                   className="mt-8"
                   label={__('bookings_checkout_step_wallet_disclaimer')}
                 />
-              </div>
-            )}
+              )}
+            </div>
           </div>
           <div>
             <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3">

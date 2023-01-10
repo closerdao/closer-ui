@@ -6,9 +6,9 @@ import { __, priceFormat } from '../utils/helpers';
 import WalletActions from './WalletActions';
 import WalletHeader from './WalletHeader';
 
-const BookingWallet = ({ accomodationCost, switchToEUR }) => {
+const BookingWallet = ({ toPay, switchToEUR }) => {
   const { balanceAvailable, isWalletReady } = useContext(WalletState);
-  const balanceAfterPayment = balanceAvailable - accomodationCost;
+  const balanceAfterPayment = balanceAvailable - toPay;
   const isInsufficientBalance = balanceAfterPayment < 0;
 
   return (
