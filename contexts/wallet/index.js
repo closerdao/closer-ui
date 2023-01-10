@@ -63,6 +63,7 @@ export const WalletProvider = ({ children }) => {
     chainId,
   } = useWeb3React();
   const { user } = useAuth();
+
   useEffect(() => {
     if (user && !isWalletConnected) {
       injected.isAuthorized().then((isAuthorized) => {
@@ -249,6 +250,7 @@ export const WalletProvider = ({ children }) => {
         isCorrectNetwork,
         isWalletConnected,
         bookedDates: bookedDates?.flat(),
+        hasSameConnectedAccount,
       }}
     >
       <WalletDispatch.Provider

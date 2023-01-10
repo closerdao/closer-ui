@@ -1,5 +1,3 @@
-import { useRouter } from 'next/router';
-
 import React, { useEffect, useMemo, useState } from 'react';
 
 import dayjs from 'dayjs';
@@ -11,7 +9,6 @@ import { __ } from '../utils/helpers';
 import EventPreview from './EventPreview';
 import Pagination from './Pagination';
 
-const now = new Date();
 dayjs.extend(advancedFormat);
 
 const EventsList = ({
@@ -19,7 +16,6 @@ const EventsList = ({
   card,
   list,
   title,
-  channel,
   queryParam,
   where,
   limit,
@@ -29,7 +25,7 @@ const EventsList = ({
   const { platform } = usePlatform();
   const [error, setErrors] = useState(false);
   const [page, setPage] = useState(1);
-  const router = useRouter();
+
   const eventsFilter = useMemo(
     () => ({ where, limit, page }),
     [where, limit, page],
@@ -55,6 +51,7 @@ const EventsList = ({
 
   return (
     <div className={card ? 'card' : ''}>
+      {error && <p className="text-red-500">{error}</p>}
       {title && <h3 className={card ? 'card-title' : ''}>{title}</h3>}
       <div
         className={`event-list ${card ? 'event-body' : ''} flex ${

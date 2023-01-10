@@ -24,9 +24,9 @@ const CurrencySwitch = ({ currencies, selectedCurrency, onSelect }) => {
             onClick={() => onSelect(currency)}
             disabled={currency === 'TDF' && !isWalletConnected}
             title={
-              !isWalletConnected &&
-              currency === 'TDF' &&
-              __('wallet_not_connected_button_title')
+              !isWalletConnected && currency === 'TDF'
+                ? __('wallet_not_connected_button_title')
+                : undefined
             }
           >
             {__(`currency_switch_${currency}_title`)}
