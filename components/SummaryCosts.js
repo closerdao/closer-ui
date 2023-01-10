@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 
 import { BLOCKCHAIN_DAO_TOKEN } from '../config_blockchain';
-import { DEFAULT_CURRENCY } from '../utils/const';
+import { DEFAULT_CURRENCY } from '../constants';
 import { __, priceFormat } from '../utils/helpers';
 
 const SummaryCosts = ({

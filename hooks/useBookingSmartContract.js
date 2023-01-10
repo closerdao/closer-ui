@@ -1,44 +1,27 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 
-import { useWeb3React } from '@web3-react/core';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import { BigNumber, Contract } from 'ethers';
-import useSWR from 'swr';
 
 import {
   BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
   BLOCKCHAIN_DAO_TOKEN,
   BLOCKCHAIN_DIAMOND_ABI,
-  BLOCKCHAIN_NETWORK_ID,
 } from '../config_blockchain';
-import { fetcher } from '../utils/blockchain';
+import { WalletDispatch } from '../contexts/wallet';
+import { WalletState } from '../contexts/wallet';
 import { checkIfBookingEqBlockchain } from '../utils/helpers';
-import { useWallet } from './useWallet';
 
 dayjs.extend(dayOfYear);
 
 export const useBookingSmartContract = ({ bookingNights }) => {
-  const { account, library, chainId } = useWeb3React();
+  const { isWalletReady, account, library } = useContext(WalletState);
+  const { updateWalletBalance, refetchBookingDates } =
+    useContext(WalletDispatch);
   const [pendingTransactions, setPendingTransactions] = useState([]);
   const [isPending, setPending] = useState(false);
   const [[bookingYear]] = bookingNights;
-  const fetchKey = [
-    BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
-    'getAccommodationBookings',
-    account,
-    bookingYear,
-  ];
-  const options = {
-    revalidateOnMount: true,
-  };
-  const { data: contractNights, mutate: revalidateNights } = useSWR(
-    fetchKey,
-    fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
-    options,
-  );
-
-  const { updateWalletBalance } = useWallet();
 
   const Diamond = new Contract(
     BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
@@ -47,7 +30,7 @@ export const useBookingSmartContract = ({ bookingNights }) => {
   );
 
   const checkContract = async () => {
-    if (!library || !account || chainId !== BLOCKCHAIN_NETWORK_ID) {
+    if (!library || !account || !isWalletReady) {
       return;
     }
 
@@ -55,7 +38,6 @@ export const useBookingSmartContract = ({ bookingNights }) => {
       account,
       bookingYear,
     );
-    // console.log('contractNightsUpdated', contractNightsUpdated);
     const isBookingMatchContract = checkIfBookingEqBlockchain(
       bookingNights,
       contractNightsUpdated,
@@ -63,17 +45,15 @@ export const useBookingSmartContract = ({ bookingNights }) => {
     if (isBookingMatchContract) {
       return { success: true, error: null };
     } else {
-      return { success: false, error: 'Booking nights are not in contract' };
+      return {
+        success: false,
+        error: 'Booking nights are not in the contract',
+      };
     }
   };
 
   const stakeTokens = async (dailyValue) => {
-    if (
-      !library ||
-      !account ||
-      !dailyValue ||
-      chainId !== BLOCKCHAIN_NETWORK_ID
-    ) {
+    if (!library || !account || !dailyValue || !isWalletReady) {
       return;
     }
 
@@ -93,12 +73,12 @@ export const useBookingSmartContract = ({ bookingNights }) => {
           (transactionId) => transactionId !== tx3.hash,
         ),
       );
-      revalidateNights();
+      refetchBookingDates();
       updateWalletBalance();
       return { error: null, success: { transactionId: tx3.hash } };
     } catch (error) {
       //User rejected transaction
-      console.error('useTokenPayment step 2', error);
+      console.error('stakeTokens', error);
       return {
         error,
         success: null,
@@ -108,5 +88,5 @@ export const useBookingSmartContract = ({ bookingNights }) => {
     }
   };
 
-  return { stakeTokens, contractNights, isStaking: isPending, checkContract };
+  return { stakeTokens, isStaking: isPending, checkContract };
 };

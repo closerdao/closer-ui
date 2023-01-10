@@ -15,7 +15,7 @@ const Profile = () => {
           <Link href={`/members/${user?.slug}`} passsHref>
             <a
               title="View profile"
-              className="hidden md:flex md:flex-row items-center cursor-pointer"
+              className="md:flex md:flex-row items-center cursor-pointer"
             >
               <img
                 src={`${cdn}${user.photo}-profile-lg.jpg`}

@@ -5,12 +5,11 @@ import React from 'react';
 import EditModel from '../../components/EditModel';
 import Layout from '../../components/Layout';
 
-
 import { useAuth } from '../../contexts/auth';
 import models from '../../models';
 import { __ } from '../../utils/helpers';
 
-const Settings = ({ token }) => {
+const Settings = () => {
   const { user } = useAuth();
 
   return (

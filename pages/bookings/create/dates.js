@@ -14,9 +14,9 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import PropTypes from 'prop-types';
 
+import { CURRENCIES, DEFAULT_CURRENCY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import api from '../../../utils/api';
-import { CURRENCIES, DEFAULT_CURRENCY } from '../../../utils/const';
 import { __ } from '../../../utils/helpers';
 
 dayjs.extend(relativeTime);
@@ -73,6 +73,10 @@ const DatesSelector = ({ error, settings }) => {
     router.push(`/bookings/create/accomodation?${urlParams}`);
   };
 
+  const goToDashboard = () => {
+    router.push('/bookings');
+  };
+
   if (error) {
     return <PageError error={error} />;
   }
@@ -80,7 +84,10 @@ const DatesSelector = ({ error, settings }) => {
   return (
     <Layout>
       <div className="max-w-screen-sm mx-auto p-8 h-full">
-        <BookingBackButton url="/dashboard" />
+        <BookingBackButton
+          action={goToDashboard}
+          name={__('buttons_go_to_bookings')}
+        />
         <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">🏡</span>
           <span>{__('bookings_dates_step_title')}</span>

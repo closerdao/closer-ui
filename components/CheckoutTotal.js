@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 
-import { DEFAULT_CURRENCY } from '../utils/const';
+import { DEFAULT_CURRENCY } from '../constants';
 import { __, priceFormat } from '../utils/helpers';
 import CalculatorIcon from './icons/CalculatorIcon';
 

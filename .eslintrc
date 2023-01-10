@@ -12,6 +12,7 @@
     "react-hooks/exhaustive-deps": "off",
     "quotes": ["error", "single"],
     "object-curly-spacing": ["error", "always"],
-    "no-undef": "error"
+    "no-undef": "error",
+    "react/display-name": "off" // https://reactjs.org/docs/react-component.html#displayname
   }
 }
