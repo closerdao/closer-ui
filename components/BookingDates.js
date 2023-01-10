@@ -49,14 +49,14 @@ const BookingDates = ({
           <DateTimePicker
             id="start"
             value={startDate}
-            minValue={dayjs().format('YYYY-MM-DD')}
+            minValue={new Date()}
             maxValue={dayjs()
               .add(
                 isMember ? member.maxBookingHorizon : guest.maxBookingHorizon,
                 'days',
               )
-              .format('YYYY-MM-DD')}
-            onChange={(start) => setStartDate(start.format('YYYY-MM-DD'))}
+              .toDate()}
+            onChange={setStartDate}
           />
         </div>
         <div>
@@ -66,11 +66,11 @@ const BookingDates = ({
           <DateTimePicker
             id="end"
             value={endDate}
-            minValue={dayjs(startDate).add(1, 'days').format('YYYY-MM-DD')}
+            minValue={dayjs(startDate).add(1, 'days').toDate()}
             maxValue={dayjs(startDate)
               .add(isMember ? member.maxDuration : guest.maxDuration, 'days')
-              .format('YYYY-MM-DD')}
-            onChange={(end) => setEndDate(end.format('YYYY-MM-DD'))}
+              .toDate()}
+            onChange={setEndDate}
           />
         </div>
       </div>
@@ -90,8 +90,8 @@ BookingDates.propTypes = {
       maxDuration: PropTypes.number,
     }),
   }),
-  startDate: PropTypes.string,
-  endDate: PropTypes.string,
+  startDate: PropTypes.instanceOf(Date),
+  endDate: PropTypes.instanceOf(Date),
   setStartDate: PropTypes.func,
   setEndDate: PropTypes.func,
 };
