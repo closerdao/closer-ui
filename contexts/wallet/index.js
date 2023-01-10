@@ -160,13 +160,27 @@ export const WalletProvider = ({ children }) => {
     );
     if (!user?.walletAddress) {
       if (account) {
+        console.log('IF: connecting with account', account);
         await linkWalletWithUser(account);
-      } else {
-        const activated = await injected.activate();
-        await linkWalletWithUser(activated?.account);
+        return;
       }
+
+      const activated = await injected.activate();
+      console.log('ELSE: connecting with account', activated?.account);
+      await linkWalletWithUser(activated?.account);
     }
   };
+
+  useEffect(() => {
+    console.log('account', account);
+    console.log('linked account', user.walletAddress);
+    const getInjectedAccount = async () => {
+      const activated = await injected.activate();
+      console.log('activated', activated);
+      console.log('injectedAccount', activated?.account);
+    };
+    getInjectedAccount();
+  });
 
   const linkWalletWithUser = async (accountId) => {
     try {
