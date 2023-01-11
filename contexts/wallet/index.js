@@ -173,7 +173,7 @@ export const WalletProvider = ({ children }) => {
 
   useEffect(() => {
     console.log('Metamask account', account);
-    console.log('User walletAddress', user.walletAddress);
+    console.log('User walletAddress', user?.walletAddress);
   }, [user]);
 
   const linkWalletWithUser = async (accountId) => {
