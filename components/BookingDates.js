@@ -1,11 +1,13 @@
+import { useEffect, useState } from 'react';
+
 import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
 import PropTypes from 'prop-types';
 
+import { useAuth } from '../contexts/auth';
+import { usePlatform } from '../contexts/platform';
+import { getBookedDatesObjects } from '../utils/bookings';
 import { __ } from '../utils/helpers';
 import DateTimePicker from './DateTimePicker';
-
-dayjs.extend(relativeTime);
 
 const BookingDates = ({
   isMember,
@@ -34,6 +36,37 @@ const BookingDates = ({
     }
   };
 
+  const { platform } = usePlatform();
+  const { user } = useAuth();
+
+  const bookingsFilter = user && {
+    where: {
+      createdBy: user._id,
+      status: ['pending', 'confirmed', 'checkedIn', 'checkedOut'],
+      end: {
+        $gt: new Date(),
+      },
+    },
+  };
+  const [bookingDates, setBookingDates] = useState([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const res = await platform.booking.get(bookingsFilter);
+        const bookings = res.results.toJS();
+        const bookedDates = getBookedDatesObjects(bookings);
+        setBookingDates(bookedDates);
+      } catch (err) {
+        console.error('Error loading bookings: ', err);
+      }
+    };
+    if (user) {
+      loadData();
+    }
+  }, [user]);
+
+  // const bookings = platform.booking.find(bookingsFilter) > undefined
   return (
     <div>
       <h2 className="text-2xl leading-10 font-normal mb-4 border-b border-[#e1e1e1] border-solid pb-2">
@@ -49,15 +82,15 @@ const BookingDates = ({
           <DateTimePicker
             id="start"
             value={startDate}
-            minValue={dayjs().format('YYYY-MM-DD')}
+            minValue={new Date()}
             maxValue={dayjs()
               .add(
                 isMember ? member.maxBookingHorizon : guest.maxBookingHorizon,
                 'days',
               )
-              .format('YYYY-MM-DD')}
-            onChange={(start) => setStartDate(start.format('YYYY-MM-DD'))}
-            showTime={false}
+              .toDate()}
+            onChange={setStartDate}
+            disabledDates={bookingDates}
           />
         </div>
         <div>
@@ -67,12 +100,12 @@ const BookingDates = ({
           <DateTimePicker
             id="end"
             value={endDate}
-            minValue={dayjs(startDate).add(1, 'days').format('YYYY-MM-DD')}
+            minValue={dayjs(startDate).add(1, 'days').toDate()}
             maxValue={dayjs(startDate)
               .add(isMember ? member.maxDuration : guest.maxDuration, 'days')
-              .format('YYYY-MM-DD')}
-            onChange={(end) => setEndDate(end.format('YYYY-MM-DD'))}
-            showTime={false}
+              .toDate()}
+            onChange={setEndDate}
+            disabledDates={bookingDates}
           />
         </div>
       </div>
@@ -92,8 +125,8 @@ BookingDates.propTypes = {
       maxDuration: PropTypes.number,
     }),
   }),
-  startDate: PropTypes.string,
-  endDate: PropTypes.string,
+  startDate: PropTypes.instanceOf(Date),
+  endDate: PropTypes.instanceOf(Date),
   setStartDate: PropTypes.func,
   setEndDate: PropTypes.func,
 };

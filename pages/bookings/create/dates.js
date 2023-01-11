@@ -26,14 +26,14 @@ const defaultStart = dayjs()
   .set('hours', 18)
   .set('seconds', 0)
   .set('minutes', 0)
-  .format('YYYY-MM-DD');
+  .toDate();
 
 const defaultEnd = dayjs()
   .add(6, 'days')
   .set('hours', 11)
   .set('seconds', 0)
   .set('minutes', 0)
-  .format('YYYY-MM-DD');
+  .toDate();
 
 const DatesSelector = ({ error, settings }) => {
   const router = useRouter();
@@ -46,11 +46,12 @@ const DatesSelector = ({ error, settings }) => {
     pets: savedPets,
     currency: savedCurrency,
   } = router.query || {};
-
   const { user } = useAuth();
   const isMember = user?.roles.includes('member');
-  const [start, setStartDate] = useState(savedStartDate || defaultStart);
-  const [end, setEndDate] = useState(savedEndDate || defaultEnd);
+  const [start, setStartDate] = useState(
+    Date.parse(savedStartDate) || defaultStart,
+  );
+  const [end, setEndDate] = useState(Date.parse(savedEndDate) || defaultEnd);
   const [adults, setAdults] = useState(Number(savedAdults) || 1);
   const [kids, setKids] = useState(Number(savedKids) || 0);
   const [infants, setInfants] = useState(Number(savedInfants) || 0);

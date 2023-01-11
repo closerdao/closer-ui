@@ -5,4 +5,21 @@
   .card-feature {
     @apply text-xs opacity-50 leading-5;
   }
+
+  .datepicker .react-date-picker__inputGroup {
+    @apply flex items-center;
+  }
+
+  .datepicker .react-date-picker__wrapper {
+    @apply bg-transparent text-foreground border-0 border-b-2 border-gray-200 px-0.5 focus:ring-0 focus:border-black;
+  }
+
+  .datepicker .react-date-picker__inputGroup__divider {
+    @apply p-0 whitespace-normal;
+  }
+
+  .datepicker
+    .react-date-picker__inputGroup__month.react-date-picker__inputGroup__input--hasLeadingZero {
+    @apply p-0 m-0;
+  }
 }

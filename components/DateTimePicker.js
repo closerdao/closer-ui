@@ -1,64 +1,50 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import 'react-calendar/dist/Calendar.css';
+import 'react-date-picker/dist/DatePicker.css';
+import DatePicker from 'react-date-picker/dist/entry.nostyle';
 
 import dayjs from 'dayjs';
-
-const defaultTime = dayjs().add(7, 'days').set('hour', 12).set('minute', 0);
 
 const DateTimePicker = ({
   value,
   minValue,
-  maxValue = '180',
+  maxValue,
   onChange,
-  showTime,
+  disabledDates,
 }) => {
-  const [datetime, updateTime] = useState(value ? dayjs(value) : defaultTime);
+  const handleChange = (date) => {
+    onChange(date);
+  };
 
-  useEffect(() => {
-    updateTime(value ? dayjs(value) : defaultTime);
-  }, [value]);
+  const disableTile = ({ date, view }) => {
+    if (view !== 'month' || !disabledDates) {
+      return false;
+    }
+
+    const disabledDayJSDates = disabledDates.map(dayjs);
+    return disabledDayJSDates.some((disabledDate) => {
+      return dayjs(disabledDate).isSame(dayjs(date), 'day');
+    });
+  };
 
   return (
-    <div className={`${showTime ? 'columns-2' : ''}`}>
-      <input
-        type="date"
-        value={datetime.format('YYYY-MM-DD')}
-        min={minValue}
-        max={maxValue}
-        placeholder="01/01/1975"
-        onChange={(e) => {
-          const newDate = dayjs(e.target.value)
-            .set('hour', datetime.get('hour'))
-            .set('minute', datetime.get('minute'));
-          updateTime(newDate);
-          onChange(newDate);
-        }}
-        className="peer invalid:text-primary invalid:border-primary focus:invalid:text-primary focus:invalid:border-primary"
+    <div>
+      <DatePicker
+        minDate={minValue}
+        maxDate={maxValue}
+        value={value}
+        onChange={handleChange}
+        className="datepicker"
+        clearIcon={null}
+        format="dd/MM/y"
+        tileDisabled={disableTile}
       />
+
       <p className="mt-2 invisible peer-invalid:visible text-primary text-sm">
         Please set a valid date.
       </p>
-      {showTime && (
-        <input
-          type="time"
-          value={datetime.format('HH:mm')}
-          placeholder="14:20"
-          onChange={(e) => {
-            const [hour, minute] = e.target.value
-              .split(':')
-              .map((n) => Number(n));
-
-            const newDate = datetime.set('hour', hour).set('minute', minute);
-            updateTime(newDate);
-            onChange(newDate);
-          }}
-        />
-      )}
     </div>
   );
-};
-
-DateTimePicker.defaultProps = {
-  showTime: true,
 };
 
 export default DateTimePicker;
