@@ -69,7 +69,7 @@ export const estimateNeededStakeForNewBooking = ({
   bookingYear,
   totalBookingTokenCost,
 }) => {
-  // given the bookedDate is an array of arrays, where
+  // given the bookedDates is an array of arrays, where
   // bookedDates[i] = [status, year, dayOfYear, price (BigNumber), timestamp(BigNumber)]
   // 1. we construct a Map - stakedByYear, where keys are years and values are the total price of bookings for that year in BigNumber
   // 2. we find how much tokens user spent already in the current year - currentYearStake
