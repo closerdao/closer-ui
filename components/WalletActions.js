@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 import { useContext } from 'react';
 
 import { useAuth } from '../contexts/auth';
@@ -31,17 +29,6 @@ const WalletActions = () => {
     );
   }
 
-  if (!hasSameConnectedAccount) {
-    return (
-      <Link href={`/members/${user.slug}`}>
-        <a>
-          <button className="btn mt-4 w-full uppercase">
-            {__('buttons_edit_profile')}
-          </button>
-        </a>
-      </Link>
-    );
-  }
   return null;
 };
 

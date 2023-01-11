@@ -12,12 +12,14 @@ const Wallet = () => {
     proofOfPresence,
     isWalletReady,
     hasSameConnectedAccount,
+    isWalletConnected,
+    isCorrectNetwork,
   } = useContext(WalletState);
 
   return (
     <div className="p-4 flex flex-col rounded-lg shadow-4xl">
       <WalletHeader />
-      {isWalletReady ? (
+      {isWalletReady && (
         <div className="flex flex-col gap-2 mt-4">
           <div className="flex justify-between items-center">
             <p>{__('wallet_tdf')}</p>
@@ -32,14 +34,14 @@ const Wallet = () => {
             <p className="font-bold">{proofOfPresence}</p>
           </div>
         </div>
-      ) : null}
-      {!hasSameConnectedAccount ? (
+      )}
+      {isWalletConnected && isCorrectNetwork && !hasSameConnectedAccount && (
         <div className="flex flex-col gap-2 mt-4">
           <div className="flex justify-between items-center">
             <p>{__('wallet_different_saved_address')}</p>
           </div>
         </div>
-      ) : null}
+      )}
       <WalletActions />
     </div>
   );
