@@ -1,14 +1,11 @@
 import { useContext } from 'react';
 
-import { useAuth } from '../contexts/auth';
 import { WalletDispatch, WalletState } from '../contexts/wallet';
 import { __ } from '../utils/helpers';
 
 const WalletActions = () => {
   const { switchNetwork, connectWallet } = useContext(WalletDispatch);
-  const { isCorrectNetwork, isWalletConnected, hasSameConnectedAccount } =
-    useContext(WalletState);
-  const { user } = useAuth();
+  const { isCorrectNetwork, isWalletConnected } = useContext(WalletState);
 
   if (isWalletConnected && !isCorrectNetwork) {
     return (
