@@ -159,22 +159,11 @@ export const WalletProvider = ({ children }) => {
       false,
     );
     if (!user?.walletAddress) {
-      if (account) {
-        console.log('IF: connecting with account', account);
-        await linkWalletWithUser(account);
-        return;
-      }
-
       const activated = await injected.activate();
-      console.log('ELSE: connecting with account', activated?.account);
+      console.log('linking user.walletAddress =', activated?.account);
       await linkWalletWithUser(activated?.account);
     }
   };
-
-  useEffect(() => {
-    console.log('Metamask account', account);
-    console.log('User walletAddress', user?.walletAddress);
-  }, [user]);
 
   const linkWalletWithUser = async (accountId) => {
     try {
