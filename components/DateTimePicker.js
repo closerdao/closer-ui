@@ -1,4 +1,5 @@
 import React from 'react';
+import 'react-calendar/dist/Calendar.css';
 import 'react-date-picker/dist/DatePicker.css';
 import DatePicker from 'react-date-picker/dist/entry.nostyle';
 

@@ -80,7 +80,6 @@ const BookingDates = ({
             {__('listings_book_check_in')}
           </label>
           <DateTimePicker
-            id="start"
             value={startDate}
             minValue={new Date()}
             maxValue={dayjs()
@@ -98,7 +97,6 @@ const BookingDates = ({
             {__('listings_book_check_out')}
           </label>
           <DateTimePicker
-            id="end"
             value={endDate}
             minValue={dayjs(startDate).add(1, 'days').toDate()}
             maxValue={dayjs(startDate)
