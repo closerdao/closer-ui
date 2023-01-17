@@ -6,8 +6,11 @@
     @apply bg-background min-h-screen text-foreground;
   }
   .App {
-    min-height: 100vh;
-    @apply flex flex-col justify-between;
+    @apply flex flex-col;
+  }
+
+  .content-wrapper {
+    @apply min-h-screen;
   }
   .main-content {
     @apply max-w-screen-xl mx-auto p-4;
