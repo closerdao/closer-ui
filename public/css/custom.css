@@ -19,7 +19,13 @@
   }
 
   .datepicker
-    .react-date-picker__inputGroup__month.react-date-picker__inputGroup__input--hasLeadingZero {
+    .react-date-picker__inputGroup__month.react-date-picker__inputGroup__input--hasLeadingZero,
+  .datepicker
+    .react-date-picker__inputGroup__day.react-date-picker__inputGroup__input--hasLeadingZero {
     @apply p-0 m-0;
+  }
+
+  .datepicker .react-date-picker__inputGroup__input {
+    @apply h-auto;
   }
 }
