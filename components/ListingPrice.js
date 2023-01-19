@@ -7,16 +7,16 @@ const ListingPrice = ({ rentalFiat, rentalToken, utilityFiat, useTokens }) => {
   return (
     <div>
       <div className="flex items-center justify-center">
-        <div className="flex-1 flex flex-col items-center">
+        <div className="flex flex-col items-center">
           <p className="text-2xl leading-9">
             {priceFormat(useTokens ? rentalToken : rentalFiat)}
           </p>
           <p>{__('bookings_price_switch_accomodation')}</p>
         </div>
-        <div>
+        <div className="flex-1 flex justify-center">
           <PlusIcon width={16} height={16} />
         </div>
-        <div className="flex-1 flex flex-col items-center">
+        <div className="flex flex-col items-center">
           <p className="text-2xl leading-9">{priceFormat(utilityFiat)}</p>
           <p>{__('bookings_price_switch_utility')}</p>
         </div>
