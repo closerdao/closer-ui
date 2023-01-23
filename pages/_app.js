@@ -80,14 +80,12 @@ const Application = ({
           <Web3ReactProvider getLibrary={getLibrary}>
             <BookingProvider>
               <Navigation query={query} signedIn={signedIn} />
-              <div className="content-wrapper">
-                <Component
-                  {...pageProps}
-                  query={query}
-                  user={user}
-                  signedIn={signedIn}
-                />
-              </div>
+              <Component
+                {...pageProps}
+                query={query}
+                user={user}
+                signedIn={signedIn}
+              />
             </BookingProvider>
           </Web3ReactProvider>
         </PlatformProvider>
