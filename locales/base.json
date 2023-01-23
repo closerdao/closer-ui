@@ -394,5 +394,15 @@
   "wallet_balance": "Your Balance",
   "wallet_not_connected_title": "Wallet Not Connected",
   "wallet_not_connected_cta": "Please connect your wallet to see your $TDF & POP Balance",
-  "wallet_not_connected_button": "Connect Wallet"
+  "wallet_not_connected_button": "Connect Wallet",
+  "token_sale_invite_page_title": "The first land-based DAO In Europe is here!",
+  "token_sale_invite_page_description": "This is an invite only sale. Haven’t been invited yet? Join our Telegram and make friends - or tag @tdfinyourdreams on Twitter with #BEHHH.",
+  "token_sale_invite_page_cta": "Already have an invite? Please log in.",
+  "token_sale_invite_page_button_invite": "Get invite",
+  "token_sale_page_title": "$TDF sale Now OPEN!",
+  "token_sale_page_description": "The first crypto token that provides you with housing + food, while regenerating the planet.",
+  "countdown_days": "days",
+  "countdown_hours": "hours",
+  "countdown_minutes": "minutes",
+  "countdown_seconds": "seconds"
 }
