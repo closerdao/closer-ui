@@ -42,6 +42,22 @@ const DateTimePicker = ({
         clearIcon={null}
         format="dd/MM/y"
         tileDisabled={disableTile}
+        tileContent={({ date, view }) => {
+          if (
+            view === 'month' &&
+            disabledDates.some((d) => dayjs(d).isSame(date, 'day'))
+          ) {
+            return (
+              <div className="w-full h-full relative">
+                <span
+                  className="bg-primary w-full h-full absolute block top-1"
+                  title="you already booked these dates"
+                ></span>
+              </div>
+            );
+          }
+          return null;
+        }}
       />
 
       <p className="mt-2 invisible peer-invalid:visible text-primary text-sm">
