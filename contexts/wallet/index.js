@@ -75,9 +75,8 @@ export const WalletProvider = ({ children }) => {
 
   const [isWalletReady, setIsWalletReady] = useState(false);
   const isCorrectNetwork = BLOCKCHAIN_NETWORK_ID === chainId;
-  const hasSameConnectedAccount = user?.walletAddress
-    ? account.toLowerCase() === user?.walletAddress.toLowerCase()
-    : true;
+  const hasSameConnectedAccount =
+    user?.walletAddress.toLowerCase() === account.toLowerCase();
 
   useEffect(() => {
     setIsWalletReady(
