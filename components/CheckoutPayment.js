@@ -9,7 +9,6 @@ import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
 
 import config from '../config';
-import { useBookingActions } from '../contexts/booking';
 import { useBookingSmartContract } from '../hooks/useBookingSmartContract';
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
@@ -45,21 +44,10 @@ const CheckoutPayment = ({
   });
 
   const router = useRouter();
-  const { saveStepData } = useBookingActions();
   const [hasComplied, setCompliance] = useState(false);
   const onComply = (isComplete) => setCompliance(isComplete);
 
-  const onSuccess = (payment) => {
-    saveStepData({
-      fiatPayment: { ...payment, error: null },
-    });
-    router.push(`/bookings/${bookingId}/confirmation`);
-  };
-
-  const onError = (error) => {
-    saveStepData({
-      fiatPayment: { error },
-    });
+  const onSuccess = () => {
     router.push(`/bookings/${bookingId}/confirmation`);
   };
 
@@ -72,19 +60,10 @@ const CheckoutPayment = ({
 
     const error = stakingError || nightsRejected;
     if (error) {
-      saveStepData({
-        tokenPayment: { error },
-      });
       return { error, success: null };
     }
 
     if (stakingSuccess?.transactionId && isBookingMatchContract) {
-      saveStepData({
-        tokenPayment: {
-          transactionId: stakingSuccess.transactionId,
-          error: null,
-        },
-      });
       await api.post(`/bookings/${bookingId}/token-payment`, {
         transactionId: stakingSuccess.transactionId,
       });
@@ -103,7 +82,6 @@ const CheckoutPayment = ({
           type="booking"
           _id={bookingId}
           onSuccess={onSuccess}
-          onError={onError}
           email={user.email}
           name={user.screenname}
           buttonText={__('bookings_checkout_step_payment_button')}
