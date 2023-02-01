@@ -9,7 +9,7 @@ const ConnectedWallet = () => {
     try {
       await api.post('/auth/web3/unlink');
     } catch (e) {
-      console.log('error on disconnecting the wallet', e);
+      console.error('error on disconnecting the wallet', e);
     }
   };
 

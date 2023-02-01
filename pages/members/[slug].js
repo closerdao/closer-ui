@@ -310,9 +310,7 @@ const MemberPage = ({ member }) => {
                     </button>
                   )}
                 </div>
-                <div className="">
-                  <ConnectedWallet />
-                </div>
+                <ConnectedWallet />
                 <div className="flex flex-col items-start md:w-6/12">
                   <div className="w-full">
                     <div className="page-title flex justify-between">
