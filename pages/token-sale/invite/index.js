@@ -1,24 +1,24 @@
 import { useRouter } from 'next/router';
 
-import Countdown from '../../components/Countdown';
-import Layout from '../../components/Layout';
+import Countdown from '../../../components/Countdown';
+import Layout from '../../../components/Layout';
 
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
-import { __ } from '../../utils/helpers';
+import config from '../../../config';
+import { __ } from '../../../utils/helpers';
 
 dayjs.extend(customParseFormat);
 
-const TokenSalePage = () => {
+const Invite = () => {
   const router = useRouter();
-
-  const isCountdownOn = process.env.NEXT_PUBLIC_COUNTDOWN_ON === 'true';
-  const saleDate = dayjs(process.env.NEXT_PUBLIC_SALE_DATE, 'DD/MM/YYYY');
+  const saleDate = dayjs(config.TOKEN_SALE_DATE, 'DD/MM/YYYY');
 
   const redirectToTokenSale = () => {
     router.push('/token-sale/');
   };
+
   return (
     <Layout>
       <div className="w-full px-20 mt-20">
@@ -27,7 +27,7 @@ const TokenSalePage = () => {
             <h1 className="text-8xl uppercase font-black">
               {__('token_sale_invite_page_title')}
             </h1>
-            {isCountdownOn && saleDate.isValid() && (
+            {config.IS_COUNTDOWN_ON && saleDate.isValid() && (
               <div className="mt-16">
                 <Countdown
                   date={saleDate.toDate()}
@@ -57,4 +57,4 @@ const TokenSalePage = () => {
   );
 };
 
-export default TokenSalePage;
+export default Invite;

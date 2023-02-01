@@ -215,7 +215,10 @@ export const PlatformProvider = ({ children }) => {
       // Find data in the state
       find: (filter) =>
         state.getIn([model, 'byFilter', filterToKey(filter), 'data']),
-      findOne: (id) => state.getIn([model, 'byId'].concat(id, 'data')),
+      findOne: (id) => {
+        console.log(state.getIn([model, 'byId']));
+        return state.getIn([model, 'byId'].concat(id, 'data'));
+      },
       findCount: (filter) =>
         state.getIn([model, 'count', filterToKey(filter), 'data']),
       findGraph: (filter) =>

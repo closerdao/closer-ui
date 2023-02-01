@@ -1,3 +1,16 @@
 {
-  "__about_this_file": "Insert your custom language in here."
+  "__about_this_file": "Insert your custom language in here.",
+  "token_sale_invite_page_title": "The first land-based DAO In Europe is here!",
+  "token_sale_invite_page_description": "This is an invite only sale. Haven’t been invited yet? Join our Telegram and make friends - or tag @tdfinyourdreams on Twitter with #BEHHH.",
+  "token_sale_invite_page_cta": "Already have an invite? Please log in.",
+  "token_sale_invite_page_button_invite": "Get invite",
+  "token_sale_invite_page_invited_by": "You have been invited by",
+  "token_sale_page_title": "$TDF sale Now OPEN!",
+  "token_sale_page_description": "The first crypto token that provides you with housing + food, while regenerating the planet.",
+  "token_sale_invite_page_condition_title": "To join the whitelist:",
+  "token_sale_invite_page_condition_1": "Create account or log in",
+  "token_sale_invite_page_condition_2": "Connect wallet",
+  "token_sale_invite_page_condition_3": "(Optional) Nominate up to 5 friends to join",
+  "token_sale_invite_page_process_description": "For each friend who joins the whitelist you get access 1 day earlier (max 5 days).",
+  "token_sale_invite_page_process_price": "The price of the token goes up after each purchase, the sooner you purchase your tokens, the cheaper they are."
 }
