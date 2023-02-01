@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useReducer,
-  useState,
-} from 'react';
+import React, { createContext, useContext, useReducer } from 'react';
 
 import { Map, fromJS } from 'immutable';
 
@@ -22,20 +16,9 @@ export const models = [
   'application',
   'listing',
   'booking',
-  'ticket'
+  'ticket',
 ];
-const idList = (entry) =>
-  Array.from(
-    new Set(
-      typeof entry === 'string'
-        ? entry.split(',')
-        : Iterable.isIterable(entry)
-        ? entry.toJS()
-        : entry instanceof Array
-        ? entry
-        : [],
-    ),
-  );
+
 const filterToKey = (filter) => JSON.stringify(filter) || '__';
 const init = (state) => {
   return state.withMutations((map) => {
@@ -78,16 +61,8 @@ const reducer = (state, action) => {
       return state.set([action.model, 'isPosting'], true);
     case constants.PATCH_INIT:
       return state;
-      map.setIn([action.model, 'byId', action._id, 'loading'], true);
     case constants.PATCH_ERROR:
       return state;
-      map.mergeIn(
-        [action.model, 'byId', action._id],
-        Map({
-          loading: false,
-          error: action.error,
-        }),
-      );
     case constants.POST_ERROR:
       return state
         .set([action.model, 'isPosting'], false)
@@ -104,27 +79,33 @@ const reducer = (state, action) => {
       );
     case constants.PATCH_SUCCESS:
       return state.withMutations((map) => {
-          if (action.filterKey && action.resultIndex) {
-            map.setIn(
-              [action.model, 'byFilter', action.filterKey, 'data', action.resultIndex],
-              Map({
-                data: action.results,
-                loading: false,
-                error: null,
-                receivedAt: Date.now(),
-              }),
-            );
-          }
+        if (action.filterKey && action.resultIndex) {
           map.setIn(
-            [action.model, 'byId', action._id],
+            [
+              action.model,
+              'byFilter',
+              action.filterKey,
+              'data',
+              action.resultIndex,
+            ],
             Map({
               data: action.results,
               loading: false,
               error: null,
               receivedAt: Date.now(),
             }),
-          )
-        });
+          );
+        }
+        map.setIn(
+          [action.model, 'byId', action._id],
+          Map({
+            data: action.results,
+            loading: false,
+            error: null,
+            receivedAt: Date.now(),
+          }),
+        );
+      });
     case constants.GET_INIT:
       return state.setIn(
         [action.model, 'byFilter', action.filterKey, 'loading'],
@@ -307,7 +288,7 @@ export const PlatformProvider = ({ children }) => {
             )
         );
       },
-      get: (filter, opts = {}) => {
+      get: (filter) => {
         const options = Object.assign({ sort_by: '-created' }, filter);
         const filterKey = filterToKey(filter);
         if (
@@ -359,7 +340,7 @@ export const PlatformProvider = ({ children }) => {
             }),
           );
       },
-      getCount: (params, opts = {}) => {
+      getCount: (params) => {
         const filterKey = filterToKey(params);
         // if (params && params.where) {
         //   params.where = formatSearch(params.where);
@@ -399,7 +380,7 @@ export const PlatformProvider = ({ children }) => {
             }),
           );
       },
-      getGraph: (params, opts = {}) => {
+      getGraph: (params) => {
         const filterKey = filterToKey(params);
         dispatch({ type: constants.GET_GRAPH_INIT, model, filterKey });
         if (
@@ -436,7 +417,7 @@ export const PlatformProvider = ({ children }) => {
             }),
           );
       },
-      post: (data, opts = {}) => {
+      post: (data) => {
         const filterKey = filterToKey(data);
         dispatch({ type: constants.POST_INIT, model, filterKey });
         return api
@@ -463,7 +444,7 @@ export const PlatformProvider = ({ children }) => {
             }),
           );
       },
-      patch: (_id, data, opts = {}) => {
+      patch: (_id, data) => {
         dispatch({ type: constants.PATCH_INIT, model, _id, data });
         return api
           .patch(`/${model}/${_id}`, data)
@@ -493,9 +474,8 @@ export const PlatformProvider = ({ children }) => {
   });
 
   platform.bookings = {
-    confirm: (_id, filter) => (
-      api.post(`/bookings/${_id}/confirm`)
-      .then((res) => {
+    confirm: (_id) =>
+      api.post(`/bookings/${_id}/confirm`).then((res) => {
         const results = fromJS(res.data.results);
         const action = {
           results,
@@ -505,11 +485,9 @@ export const PlatformProvider = ({ children }) => {
         };
         dispatch(action);
         return action;
-      })
-    ),
-    reject: (_id, filter) => (
-      api.post(`/bookings/${_id}/reject`)
-      .then((res) => {
+      }),
+    reject: (_id) =>
+      api.post(`/bookings/${_id}/reject`).then((res) => {
         const results = fromJS(res.data.results);
         const action = {
           results,
@@ -519,8 +497,7 @@ export const PlatformProvider = ({ children }) => {
         };
         dispatch(action);
         return action;
-      })
-    )
+      }),
   };
 
   return (

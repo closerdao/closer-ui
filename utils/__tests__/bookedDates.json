@@ -1,0 +1,288 @@
+[
+    [
+        1,
+        2022,
+        331,
+        {
+            "type": "BigNumber",
+            "hex": "0x8ac7230489e80000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x63834ff5"
+        }
+    ],
+    [
+        1,
+        2022,
+        333,
+        {
+            "type": "BigNumber",
+            "hex": "0x1bc16d674ec80000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x6385f2f3"
+        }
+    ],
+    [
+        1,
+        2022,
+        334,
+        {
+            "type": "BigNumber",
+            "hex": "0x1bc16d674ec80000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x63874472"
+        }
+    ],
+    [
+        1,
+        2022,
+        335,
+        {
+            "type": "BigNumber",
+            "hex": "0x1bc16d674ec80000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x638895f1"
+        }
+    ],
+    [
+        1,
+        2022,
+        361,
+        {
+            "type": "BigNumber",
+            "hex": "0x01158e460913d00000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x63aadcd7"
+        }
+    ],
+    [
+        1,
+        2022,
+        362,
+        {
+            "type": "BigNumber",
+            "hex": "0x01158e460913d00000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x63ac2e56"
+        }
+    ],
+    [
+        1,
+        2023,
+        60,
+        {
+            "type": "BigNumber",
+            "hex": "0x1bc16d674ec80000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x63ff3e04"
+        }
+    ],
+    [
+        1,
+        2023,
+        103,
+        {
+            "type": "BigNumber",
+            "hex": "0x1bc16d674ec80000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x6437ee59"
+        }
+    ],
+    [
+        1,
+        2023,
+        121,
+        {
+            "type": "BigNumber",
+            "hex": "0x1bc16d674ec80000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x644fa947"
+        }
+    ],
+    [
+        1,
+        2023,
+        1,
+        {
+            "type": "BigNumber",
+            "hex": "0x01158e460913d00000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x63b175bf"
+        }
+    ],
+    [
+        1,
+        2023,
+        2,
+        {
+            "type": "BigNumber",
+            "hex": "0x01158e460913d00000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x63b2c73e"
+        }
+    ],
+    [
+        1,
+        2023,
+        341,
+        {
+            "type": "BigNumber",
+            "hex": "0x01158e460913d00000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x6571b26b"
+        }
+    ],
+    [
+        1,
+        2023,
+        342,
+        {
+            "type": "BigNumber",
+            "hex": "0x01158e460913d00000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x657303ea"
+        }
+    ],
+    [
+        1,
+        2023,
+        291,
+        {
+            "type": "BigNumber",
+            "hex": "0x1bc16d674ec80000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x652fc79d"
+        }
+    ],
+    [
+        1,
+        2023,
+        292,
+        {
+            "type": "BigNumber",
+            "hex": "0x1bc16d674ec80000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x6531191c"
+        }
+    ],
+    [
+        1,
+        2023,
+        6,
+        {
+            "type": "BigNumber",
+            "hex": "0x01158e460913d00000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x63b80d3a"
+        }
+    ],
+    [
+        1,
+        2023,
+        7,
+        {
+            "type": "BigNumber",
+            "hex": "0x01158e460913d00000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x63b95eb9"
+        }
+    ],
+    [
+        1,
+        2023,
+        8,
+        {
+            "type": "BigNumber",
+            "hex": "0x01158e460913d00000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x63bab038"
+        }
+    ],
+    [
+        1,
+        2023,
+        9,
+        {
+            "type": "BigNumber",
+            "hex": "0x01158e460913d00000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x63bc01b7"
+        }
+    ],
+    [
+        1,
+        2023,
+        10,
+        {
+            "type": "BigNumber",
+            "hex": "0x01158e460913d00000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x63bd5336"
+        }
+    ],
+    [
+        1,
+        2023,
+        11,
+        {
+            "type": "BigNumber",
+            "hex": "0x01158e460913d00000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x63bea4b5"
+        }
+    ],
+    [
+        1,
+        2023,
+        12,
+        {
+            "type": "BigNumber",
+            "hex": "0x01158e460913d00000"
+        },
+        {
+            "type": "BigNumber",
+            "hex": "0x63bff634"
+        }
+    ]
+]

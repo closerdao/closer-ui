@@ -44,9 +44,6 @@ const QuestionnaireItem = ({
             onChange={onChange}
             required={required}
           />
-          <label className="mt-1 invisible peer-focus:peer-invalid:visible normal-case font-normal text-xs text-primary">
-            {__('generic_input_empty_error')}
-          </label>
         </>
       )}
       {type === 'select' && (

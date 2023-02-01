@@ -11,23 +11,23 @@ const Profile = () => {
   return (
     <div className="w-full">
       <div className="flex justify-center items-center w-24 h-24 absolute left-0 right-0 mx-auto -translate-y-1/2 z-20">
-        {user.photo ? (
-          <Link href={`/members/${user?.slug}`} passsHref>
-            <a
-              title="View profile"
-              className="hidden md:flex md:flex-row items-center cursor-pointer"
-            >
+        <Link href={`/members/${user?.slug}`} passsHref>
+          <a
+            title="View profile"
+            className="md:flex md:flex-row items-center cursor-pointer"
+          >
+            {user.photo ? (
               <img
                 src={`${cdn}${user.photo}-profile-lg.jpg`}
                 loading="lazy"
                 alt={user.screenname}
                 className="w-32 md:w-44 rounded-full"
               />
-            </a>
-          </Link>
-        ) : (
-          <FaUser className="text-gray-200 text-6xl" />
-        )}
+            ) : (
+              <FaUser className="text-gray-200 text-6xl" />
+            )}
+          </a>
+        </Link>
       </div>
 
       <div className="pt-14 px-4 pb-8 shadow-xl relative rounded-lg w-full">
