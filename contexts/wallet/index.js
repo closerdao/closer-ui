@@ -75,9 +75,8 @@ export const WalletProvider = ({ children }) => {
 
   const [isWalletReady, setIsWalletReady] = useState(false);
   const isCorrectNetwork = BLOCKCHAIN_NETWORK_ID === chainId;
-  const hasSameConnectedAccount = user?.walletAddress
-    ? account === user?.walletAddress
-    : true;
+  const hasSameConnectedAccount =
+    user?.walletAddress?.toLowerCase() === account?.toLowerCase();
 
   useEffect(() => {
     setIsWalletReady(
@@ -160,7 +159,6 @@ export const WalletProvider = ({ children }) => {
     );
     if (!user?.walletAddress) {
       const activated = await injected.activate();
-      console.log('linking user.walletAddress =', activated?.account);
       await linkWalletWithUser(activated?.account);
     }
   };
