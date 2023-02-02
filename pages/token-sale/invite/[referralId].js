@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 import config from '../../../config';
+import { useHasMounted } from '../../../hooks/useHasMounted';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
@@ -15,12 +16,13 @@ dayjs.extend(customParseFormat);
 const InvitedByPage = ({ referredByUser }) => {
   const router = useRouter();
   const saleDate = dayjs(config.TOKEN_SALE_DATE, 'DD/MM/YYYY');
+  const hasMounted = useHasMounted();
 
   const redirectToTokenSale = () => {
     router.push('/token-sale/');
   };
 
-  if (typeof window === undefined) {
+  if (!hasMounted) {
     return null;
   }
 
