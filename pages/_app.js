@@ -69,9 +69,7 @@ const Application = ({ Component, pageProps }) => {
             <WalletProvider>
               <BookingProvider>
                 <Navigation />
-                <div className="content-wrapper">
-                  <Component {...pageProps} />
-                </div>
+                <Component {...pageProps} />
               </BookingProvider>
             </WalletProvider>
           </Web3ReactProvider>
