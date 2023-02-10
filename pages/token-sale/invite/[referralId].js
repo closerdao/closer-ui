@@ -2,12 +2,14 @@ import { useRouter } from 'next/router';
 
 import Countdown from '../../../components/Countdown';
 import Layout from '../../../components/Layout';
-import ProfilePhoto from '../../../components/ProfilePhoto';
+import WhiteListConditions from '../../../components/WhiteListConditions';
+import WhiteListed from '../../../components/WhiteListed';
 
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 import config from '../../../config';
+import { useAuth } from '../../../contexts/auth';
 import { useHasMounted } from '../../../hooks/useHasMounted';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
@@ -15,6 +17,8 @@ import { __ } from '../../../utils/helpers';
 dayjs.extend(customParseFormat);
 
 const InvitedByPage = ({ referredByUser }) => {
+  const { user } = useAuth();
+  const isUserWhiteListed = true;
   const router = useRouter();
   const saleDate = dayjs(config.TOKEN_SALE_DATE, 'DD/MM/YYYY');
   const hasMounted = useHasMounted();
@@ -33,7 +37,12 @@ const InvitedByPage = ({ referredByUser }) => {
         <div className="flex mb-4">
           <div className="basis-1/2">
             <h1 className="text-8xl uppercase font-black">
-              {__('token_sale_invite_page_title')}
+              {isUserWhiteListed
+                ? __(
+                    'token_sale_invite_page_whitelisted_title',
+                    user?.screenname,
+                  )
+                : __('token_sale_invite_page_title')}
             </h1>
             {config.IS_COUNTDOWN_ON && saleDate.isValid() && (
               <div className="mt-16">
@@ -44,32 +53,14 @@ const InvitedByPage = ({ referredByUser }) => {
               </div>
             )}
           </div>
-          <div className="basis-1/2 w-[410px] h-[410px] bg-[url('/images/token_hero_placeholder.jpg')] bg-cover bg-center" />
+          <div className="basis-1/2 w-[410px] h-[410px] bg-[url('/images/token-sale/token_hero_placeholder.jpg')] bg-cover bg-center" />
         </div>
         <div className="flex flex-col gap-4">
-          <h2 className="mt-8 text-4xl leading-snug items-center flex">
-            <span>{__('token_sale_invite_page_invited_by')}</span>
-            <div className="bg-primary-light flex items-center ml-2 gap-2 px-4 py-2">
-              <ProfilePhoto user={referredByUser} size="sm" />
-              <span>{' ' + referredByUser?.screenname}</span>
-            </div>
-          </h2>
-          <h3 className="mt-4 text-4xl leading-snug">
-            {__('token_sale_invite_page_condition_title')}
-          </h3>
-          <ol className="list-decimal pl-8">
-            <li className="mt-4 text-2xl leading-snug">
-              {__('token_sale_invite_page_condition_1')}
-            </li>
-            <li className="mt-4 text-2xl leading-snug">
-              {__('token_sale_invite_page_condition_2')}
-            </li>
-            <li className="mt-4 text-2xl leading-snug">
-              {__('token_sale_invite_page_condition_3')}
-            </li>
-          </ol>
-          <p>{__('token_sale_invite_page_process_description')}</p>
-          <p>{__('token_sale_invite_page_process_price')}</p>
+          {isUserWhiteListed ? (
+            <WhiteListed />
+          ) : (
+            <WhiteListConditions referredByUser={referredByUser} />
+          )}
         </div>
       </div>
     </Layout>
