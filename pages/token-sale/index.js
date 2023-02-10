@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 
 import Layout from '../../components/Layout';
+import TokenSaleHeader from '../../components/TokenSaleHeader';
 
 import dayjs from 'dayjs';
-
+ 
 import { TOKEN_SALE_DATE } from '../../config';
 import { __ } from '../../utils/helpers';
 
@@ -72,15 +73,10 @@ const TokenSalePage = () => {
     <Layout>
       <div className="flex flex-col w-full px-20 pb-32 mt-20">
         <div className="flex mb-4 gap-8">
-          <div className="basis-1/2">
-            <h1 className="text-8xl uppercase font-black">
-              {__('token_sale_page_title')}
-            </h1>
-            <p className="mt-10 text-2xl leading-8 font-bold max-w-sm">
-              {__('token_sale_page_description')}
-            </p>
-          </div>
-          <div className="basis-1/2 w-[410px] h-[410px] bg-[url('/images/token_hero_placeholder.jpg')] bg-cover bg-center"></div>
+          <TokenSaleHeader
+            title={__('token_sale_page_title')}
+            description={__('token_sale_page_description')}
+          />
         </div>
         <p className="flex self-center mt-28 items-center">
           <span className="text-2xl leading-8">
