@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 
 import Countdown from '../../../components/Countdown';
 import Layout from '../../../components/Layout';
+import ProfilePhoto from '../../../components/ProfilePhoto';
 
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -46,14 +47,17 @@ const InvitedByPage = ({ referredByUser }) => {
           <div className="basis-1/2 w-[410px] h-[410px] bg-[url('/images/token_hero_placeholder.jpg')] bg-cover bg-center" />
         </div>
         <div className="flex flex-col gap-4">
-          <h2 className="mt-8 text-4xl leading-snug">
+          <h2 className="mt-8 text-4xl leading-snug items-center flex">
             <span>{__('token_sale_invite_page_invited_by')}</span>
-            <span>{' ' + referredByUser?.screenname}</span>
+            <div className="bg-primary-light flex items-center ml-2 gap-2 px-4 py-2">
+              <ProfilePhoto user={referredByUser} size="sm" />
+              <span>{' ' + referredByUser?.screenname}</span>
+            </div>
           </h2>
           <h3 className="mt-4 text-4xl leading-snug">
             {__('token_sale_invite_page_condition_title')}
           </h3>
-          <ol className="list-decimal">
+          <ol className="list-decimal pl-8">
             <li className="mt-4 text-2xl leading-snug">
               {__('token_sale_invite_page_condition_1')}
             </li>
@@ -81,7 +85,6 @@ InvitedByPage.getInitialProps = async ({ query }) => {
     };
   } catch (err) {
     console.log('Error', err.message);
-
     return {
       loadError: err.message,
     };

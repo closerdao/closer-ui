@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { usePlatform } from '../contexts/platform';
@@ -44,7 +43,7 @@ const UsersTable = ({ where, limit }) => {
         <Loading />
       ) : users && users.count() > 0 ? (
         <div className="users-table -mt-4 -ml-4 -mr-4">
-          { error && <div className="error">{ error }</div> }
+          {error && <div className="error">{error}</div>}
           <table className="table-auto w-full">
             <thead className="card-header text-xs font-semibold uppercase text-gray-600 bg-gray-100 dark:bg-gray-900 dark:text-gray-300">
               <tr>
@@ -69,6 +68,7 @@ const UsersTable = ({ where, limit }) => {
               {users.map((row) => {
                 // Fetch the itemized object which can have been patched
                 const user = platform.user.findOne(row.get('_id'));
+                console.log(user.toJS());
 
                 return (
                   <tr key={row.get('_id')}>
