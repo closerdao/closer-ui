@@ -2,18 +2,23 @@ import { useRouter } from 'next/router';
 
 import Countdown from '../../../components/Countdown';
 import Layout from '../../../components/Layout';
+import LinkText from '../../../components/LinkText';
 
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
-import config from '../../../config';
+import {
+  IS_COUNTDOWN_ON,
+  TELEGRAM_URL,
+  TOKEN_SALE_DATE,
+} from '../../../config';
 import { __ } from '../../../utils/helpers';
 
 dayjs.extend(customParseFormat);
 
 const Invite = () => {
   const router = useRouter();
-  const saleDate = dayjs(config.TOKEN_SALE_DATE, 'DD/MM/YYYY');
+  const saleDate = dayjs(TOKEN_SALE_DATE, 'DD/MM/YYYY');
 
   const redirectToTokenSale = () => {
     router.push('/token-sale/');
@@ -27,7 +32,7 @@ const Invite = () => {
             <h1 className="text-8xl uppercase font-black">
               {__('token_sale_invite_page_title')}
             </h1>
-            {config.IS_COUNTDOWN_ON && saleDate.isValid() && (
+            {IS_COUNTDOWN_ON && saleDate.isValid() && (
               <div className="mt-16">
                 <Countdown
                   date={saleDate.toDate()}
@@ -36,7 +41,11 @@ const Invite = () => {
               </div>
             )}
             <p className="mt-10 text-2xl leading-8 font-bold">
-              {__('token_sale_invite_page_description')}
+              <LinkText
+                text={__('token_sale_invite_page_description')}
+                word="Telegram"
+                link={TELEGRAM_URL}
+              />
             </p>
             <p className="mt-4 text-2xl leading-8 font-bold">
               {__('token_sale_invite_page_cta')}
