@@ -15,7 +15,7 @@ dayjs.extend(customParseFormat);
 
 const InvitedByPage = ({ referredByUser }) => {
   const { user } = useAuth();
-  const { isWhiteListed } = user;
+  const { isWhiteListed } = user || {};
 
   const saleDate = dayjs(config.TOKEN_SALE_DATE, 'DD/MM/YYYY');
 
@@ -37,7 +37,7 @@ const InvitedByPage = ({ referredByUser }) => {
           />
         </div>
         <div className="flex flex-col gap-4">
-          {isWhiteListed ? (
+          {true ? (
             <WhiteListed />
           ) : (
             <WhiteListConditions referredByUser={referredByUser} />

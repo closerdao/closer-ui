@@ -7,7 +7,6 @@ import TokenSaleHeader from '../../components/TokenSaleHeader';
 
 import dayjs from 'dayjs';
 
-import PageNotAllowed from '../401';
 import { TOKEN_SALE_DATE } from '../../config';
 import { useAuth } from '../../contexts/auth';
 import { __ } from '../../utils/helpers';
@@ -53,11 +52,11 @@ const TokenSalePage = () => {
     Math.round((tokenToBuy * CEUR_PER_TDF + Number.EPSILON) * 100) / 100,
   );
 
-  useEffect(() => {
-    if (!user.isWhiteListed) {
-      router.push('/token-sale/invite');
-    }
-  }, [user]);
+  // useEffect(() => {
+  //   if (!user?.isWhiteListed) {
+  //     router.push('/token-sale/invite');
+  //   }
+  // }, [user]);
 
   const handleTDFChange = (event) => {
     const value = event.target.value;
@@ -81,9 +80,9 @@ const TokenSalePage = () => {
     );
   }, [tokenToBuy]);
 
-  if (!user?.isWhiteListed) {
-    return <PageNotAllowed />;
-  }
+  // if (!user?.isWhiteListed) {
+  //   return <PageNotAllowed />;
+  // }
 
   return (
     <Layout>

@@ -21,6 +21,19 @@ const WhiteListed = () => {
         <p>{__('token_sale_invite_page_process_description')}</p>
         <p>{__('token_sale_invite_page_process_price')}</p>
       </div>
+      <div className="my-7 flex gap-10">
+        {user?.referralCompleted.map((name) => (
+          <div
+            className="flex flex-col gap-5 justify-center items-center"
+            key={name}
+          >
+            <div className="bg-primary-light w-20 h-20 rounded-full relative">
+              <div className="w-12 h-12 bg-primary absolute rounded-full left-4 top-4" />
+            </div>
+            <p className="font-medium text-2xl uppercase">{name}</p>
+          </div>
+        ))}
+      </div>
     </>
   );
 };

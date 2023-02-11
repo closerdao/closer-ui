@@ -5,7 +5,6 @@ import { useContext } from 'react';
 
 import { useAuth } from '../contexts/auth';
 import { WalletDispatch, WalletState } from '../contexts/wallet';
-import api from '../utils/api';
 import { __ } from '../utils/helpers';
 import ProfilePhoto from './ProfilePhoto';
 
@@ -16,21 +15,25 @@ const WhiteListConditions = ({ referredByUser }) => {
 
   useEffect(() => {
     const whiteListUser = async () => {
-      await api.patch(`/user/${user?._id}`, {
-        isWhiteListed: true,
-      });
+      console.log(`whitelisting user ${user?._id}`);
+      // await api.patch(`/user/${user?._id}`, {
+      //   isWhiteListed: true,
+      // });
     };
-    const addReferralPoint = async (userId) => {
-      await api.patch(`/user/${user?.referredBy}`, {
-        referralCompleted: userId,
-      });
+    const addReferralPoint = async (id) => {
+      console.log('adding referral point to user', id);
+      // await api.patch(`/user/${id}`, {
+      //   referralCompleted: user.screenname,
+      // });
     };
 
     if (isWalletReady && !user?.isWhiteListed) {
       // if user completes all conditions, whitelist him,
       // and add point to the user who referred him
       whiteListUser();
-      addReferralPoint(user?.referredBy);
+      if (user?.referredBy) {
+        addReferralPoint(user?.referredBy);
+      }
     }
   }, [isWalletReady]);
 

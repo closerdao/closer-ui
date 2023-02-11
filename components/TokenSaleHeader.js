@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
 
 import { TOKEN_SALE_DATE } from '../config';
+import { useHasMounted } from '../hooks/useHasMounted';
 import HeroImage from './HeroImage';
 
 const TokenSaleHeader = ({ title, description, hasCountDown }) => {
@@ -18,6 +19,13 @@ const TokenSaleHeader = ({ title, description, hasCountDown }) => {
   if (!TOKEN_SALE_DATE) {
     throw new Error('TOKEN_SALE_DATE is not defined, please set it in config');
   }
+
+  const componentHasMounted = useHasMounted();
+
+  if (!componentHasMounted) {
+    return null;
+  }
+
   return (
     <>
       <div className="basis-1/2">

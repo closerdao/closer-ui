@@ -17,7 +17,7 @@ import { __ } from '../../../utils/helpers';
 dayjs.extend(customParseFormat);
 
 const Invite = () => {
-  const { isAthenticated, user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -44,7 +44,7 @@ const Invite = () => {
             {__('token_sale_invite_page_cta')}
           </p>
           <div className="mt-16 flex gap-4">
-            {!isAthenticated && (
+            {!isAuthenticated && (
               <Link
                 href={`/login?r=${encodeURIComponent('/token-sale/invite')}`}
               >
