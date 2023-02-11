@@ -1,3 +1,5 @@
+import { useRouter } from 'next/router';
+
 import { useEffect, useState } from 'react';
 
 import Layout from '../../components/Layout';
@@ -5,7 +7,9 @@ import TokenSaleHeader from '../../components/TokenSaleHeader';
 
 import dayjs from 'dayjs';
 
+import PageNotAllowed from '../401';
 import { TOKEN_SALE_DATE } from '../../config';
+import { useAuth } from '../../contexts/auth';
 import { __ } from '../../utils/helpers';
 
 const CEUR_PER_TDF = 230.23;
@@ -35,6 +39,8 @@ const ACCOMODATION_COST = [
 ];
 
 const TokenSalePage = () => {
+  const router = useRouter();
+  const { user } = useAuth();
   const [weeksNumber, setWeeksNumber] = useState(4);
   const [selectedAccomodation, selectAccomodation] = useState(
     ACCOMODATION_COST[0].name,
@@ -46,6 +52,12 @@ const TokenSalePage = () => {
   const [tokenToSpend, setTokenToSpend] = useState(
     Math.round((tokenToBuy * CEUR_PER_TDF + Number.EPSILON) * 100) / 100,
   );
+
+  useEffect(() => {
+    if (!user.isWhiteListed) {
+      router.push('/token-sale/invite');
+    }
+  }, [user]);
 
   const handleTDFChange = (event) => {
     const value = event.target.value;
@@ -68,6 +80,10 @@ const TokenSalePage = () => {
       Math.round((tokenToBuy * CEUR_PER_TDF + Number.EPSILON) * 100) / 100,
     );
   }, [tokenToBuy]);
+
+  if (!user?.isWhiteListed) {
+    return <PageNotAllowed />;
+  }
 
   return (
     <Layout>
@@ -191,7 +207,6 @@ export const getServerSideProps = async () => {
   const isBeforeDate = dayjs().isBefore(tokenSaleDate);
 
   if (isBeforeDate) {
-    console.log('return 404');
     return {
       notFound: true,
     };

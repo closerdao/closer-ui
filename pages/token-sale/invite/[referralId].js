@@ -8,7 +8,6 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 import config from '../../../config';
 import { useAuth } from '../../../contexts/auth';
-import { useHasMounted } from '../../../hooks/useHasMounted';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
@@ -16,14 +15,9 @@ dayjs.extend(customParseFormat);
 
 const InvitedByPage = ({ referredByUser }) => {
   const { user } = useAuth();
-  const isUserWhiteListed = true;
+  const { isWhiteListed } = user;
 
   const saleDate = dayjs(config.TOKEN_SALE_DATE, 'DD/MM/YYYY');
-  const hasMounted = useHasMounted();
-
-  if (!hasMounted) {
-    return null;
-  }
 
   return (
     <Layout>
@@ -33,7 +27,7 @@ const InvitedByPage = ({ referredByUser }) => {
             hasCountDown={config.IS_COUNTDOWN_ON}
             saleDate={saleDate}
             title={
-              isUserWhiteListed
+              isWhiteListed
                 ? __(
                     'token_sale_invite_page_whitelisted_title',
                     user?.screenname,
@@ -43,7 +37,7 @@ const InvitedByPage = ({ referredByUser }) => {
           />
         </div>
         <div className="flex flex-col gap-4">
-          {isUserWhiteListed ? (
+          {isWhiteListed ? (
             <WhiteListed />
           ) : (
             <WhiteListConditions referredByUser={referredByUser} />
@@ -57,7 +51,6 @@ const InvitedByPage = ({ referredByUser }) => {
 InvitedByPage.getInitialProps = async ({ query }) => {
   try {
     const res = await api.get(`/user/${query.referralId}`);
-
     return {
       referredByUser: res.data.results,
     };

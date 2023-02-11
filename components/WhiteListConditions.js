@@ -1,16 +1,39 @@
 import Link from 'next/link';
 
+import { useEffect } from 'react';
 import { useContext } from 'react';
 
 import { useAuth } from '../contexts/auth';
 import { WalletDispatch, WalletState } from '../contexts/wallet';
+import api from '../utils/api';
 import { __ } from '../utils/helpers';
 import ProfilePhoto from './ProfilePhoto';
 
 const WhiteListConditions = ({ referredByUser }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { connectWallet, switchNetwork } = useContext(WalletDispatch);
   const { isCorrectNetwork, isWalletReady } = useContext(WalletState);
+
+  useEffect(() => {
+    const whiteListUser = async () => {
+      await api.patch(`/user/${user?._id}`, {
+        isWhiteListed: true,
+      });
+    };
+    const addReferralPoint = async (userId) => {
+      await api.patch(`/user/${user?.referredBy}`, {
+        referralCompleted: userId,
+      });
+    };
+
+    if (isWalletReady && !user?.isWhiteListed) {
+      // if user completes all conditions, whitelist him,
+      // and add point to the user who referred him
+      whiteListUser();
+      addReferralPoint(user?.referredBy);
+    }
+  }, [isWalletReady]);
+
   return (
     <>
       <h2 className="mt-8 text-4xl leading-snug items-center flex">

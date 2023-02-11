@@ -16,13 +16,14 @@ const Login = () => {
   const { signMessage } = useContext(WalletDispatch);
 
   const router = useRouter();
+  const redirectBack = decodeURIComponent(router.query?.r) || '/';
   const { isAuthenticated, login, setAuthentification } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   if (isAuthenticated) {
-    router.push('/');
+    router.push(redirectBack);
   }
 
   const signInWithWallet = async (walletAddress) => {
