@@ -37,7 +37,7 @@ const InvitedByPage = ({ referredByUser }) => {
           />
         </div>
         <div className="flex flex-col gap-4">
-          {true ? (
+          {isWhiteListed ? (
             <WhiteListed />
           ) : (
             <WhiteListConditions referredByUser={referredByUser} />
