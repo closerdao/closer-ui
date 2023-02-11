@@ -19,5 +19,7 @@
   "token_sale_invite_page_process_price": "The price of the token goes up after each purchase, the sooner you purchase your tokens, the cheaper they are.",
   "token_sale_invite_page_whitelisted_title": "%s, you have been whitelisted!",
   "token_sale_referral_code_title": "Your referral code",
-  "buttons_copy_code": "Copy code"
+  "buttons_copy_code": "Copy code",
+  "tdf_token": "$TDF",
+  "ceur_token": "CEUR"
 }

@@ -4,7 +4,7 @@ import Layout from '../../components/Layout';
 import TokenSaleHeader from '../../components/TokenSaleHeader';
 
 import dayjs from 'dayjs';
- 
+
 import { TOKEN_SALE_DATE } from '../../config';
 import { __ } from '../../utils/helpers';
 
@@ -89,7 +89,7 @@ const TokenSalePage = () => {
             min={1}
             max={52}
             step={1}
-            className="inline !w-fit !py-0 m-0 mx-2 text-2xl"
+            className="inline w-16 m-0 mx-2 text-2xl bg-primary-light rounded-full px-4 !text-primary !border-none"
           />
           <span className="text-2xl leading-8">
             {__('token_sale_page_stay_weeks')}
@@ -97,7 +97,7 @@ const TokenSalePage = () => {
           <select
             value={selectedAccomodation}
             onChange={(e) => selectAccomodation(e.target.value)}
-            className="mx-2 p-0 pl-2 pr-7"
+            className="h-12 mx-2 py-1 px-4  rounded-full text-2xl bg-primary-light text-primary !border-none"
           >
             {ACCOMODATION_COST.map((accomodation) => (
               <option key={accomodation.name} value={accomodation.name}>
@@ -114,26 +114,33 @@ const TokenSalePage = () => {
             <input
               value={tokenToBuy}
               onChange={handleTDFChange}
-              className="h-16 text-right rounded-full px-4"
+              className="h-16 text-right px-4 pr-8 rounded-full text-2xl bg-primary-light text-primary !border-none"
             />
-            <p className="absolute top-2 left-2 bg-gray-100 py-3 px-6 rounded-full">
-              $TDF
+            <p className="absolute top-2 left-4 py-2 px-6 rounded-full bg-white text-2xl">
+              {__('tdf_token')}
             </p>
           </div>
           <p className="text-stone-500 text-xs w-full text-center p-1">
             1 $TDF = 230.23 CEUR
           </p>
-          <div className="relative">
+          <div className="relative mb-4">
             <input
               value={tokenToSpend}
               onChange={handleCEURChange}
-              className="h-16 text-right rounded-full px-4"
+              className="h-16 text-right px-4 pr-8 rounded-full text-2xl bg-primary-light text-primary !border-none"
             />
-            <p className="absolute top-2 left-2 bg-gray-100 py-3 px-6 rounded-full">
-              CEUR
+            <p className="absolute top-2 left-4 bg-white py-2 px-6 rounded-full text-2xl flex items-center">
+              <img
+                src="/images/token-sale/ceur-icon.svg"
+                alt=""
+                className="inline mr-1"
+              />
+              <span>{__('ceur_token')}</span>
             </p>
           </div>
-          <button className="btn uppercase mt-6">Buy now</button>
+          <button className="bg-primary text-white uppercase font-bold text-4xl py-3 px-12 rounded-full whitespace-nowrap">
+            Buy now
+          </button>
         </div>
         <div className="flex flex-col mt-32">
           <p className="text-2xl leading-8">
@@ -162,7 +169,7 @@ const TokenSalePage = () => {
                       </div>
                     </div>
                     <p className="text-primary text-2xl leading-8">
-                      $TDF {accomodation.price}
+                      {`${__('tdf_token')} ${String(accomodation.price)}`}
                     </p>
                   </div>
                 ))}
