@@ -4,13 +4,27 @@ import { __ } from '../utils/helpers';
 const WhiteListed = () => {
   const { user } = useAuth();
   const referralLink = `https://traditionaldreamfactory.com/token-sale/invite/${user?._id}`;
+
+  const copyCode = async () => {
+    if (user?._id) {
+      await navigator.clipboard.writeText(referralLink);
+    }
+  };
+
+  if (!user) {
+    return null;
+  }
+
   return (
     <>
       <h2 className="text-4xl leading-snug mt-20">
         {__('token_sale_referral_code_title')}
       </h2>
       <div className="flex gap-4 mt-8">
-        <button className="bg-primary text-white uppercase font-bold text-4xl py-3 px-12 rounded-full whitespace-nowrap">
+        <button
+          onClick={copyCode}
+          className="bg-primary text-white uppercase font-bold text-4xl py-3 px-12 rounded-full whitespace-nowrap"
+        >
           {__('buttons_copy_code')}
         </button>
         <div className="bg-primary-light text-primary upercase text-2xl py-3 px-10 whitespace-nowrap rounded-full">

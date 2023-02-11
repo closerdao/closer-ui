@@ -48,16 +48,34 @@ const InvitedByPage = ({ referredByUser }) => {
   );
 };
 
-InvitedByPage.getInitialProps = async ({ query }) => {
+export const getServerSideProps = async ({ query }) => {
   try {
     const res = await api.get(`/user/${query.referralId}`);
+    console.log(res.data.results);
     return {
-      referredByUser: res.data.results,
+      props: {
+        referredByUser: res.data.results,
+      },
     };
   } catch (err) {
-    console.log('Error', err.message);
+    console.log(
+      'Error',
+      err.response.status,
+      err.response.status === '404',
+      err.response.status === 404,
+    );
+    if (err.response.status === 404) {
+      console.log('return redirect to /token-sale/invite');
+      return {
+        // redirect to /token-sale/invite
+        redirect: {
+          destination: '/token-sale/invite',
+          permanent: false,
+        },
+      };
+    }
     return {
-      loadError: err.message,
+      notFound: true,
     };
   }
 };

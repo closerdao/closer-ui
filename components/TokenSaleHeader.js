@@ -1,26 +1,25 @@
 import { useRouter } from 'next/router';
 
-import Countdown from 'react-countdown';
-
 import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
 
 import { TOKEN_SALE_DATE } from '../config';
 import { useHasMounted } from '../hooks/useHasMounted';
+import Countdown from './Countdown';
 import HeroImage from './HeroImage';
 
 const TokenSaleHeader = ({ title, description, hasCountDown }) => {
   const router = useRouter();
+  const saleDate = dayjs(TOKEN_SALE_DATE, 'DD/MM/YYYY');
+  const componentHasMounted = useHasMounted();
+
   const redirectToTokenSale = () => {
     router.push('/token-sale/');
   };
-  const saleDate = dayjs(TOKEN_SALE_DATE, 'DD/MM/YYYY');
 
   if (!TOKEN_SALE_DATE) {
     throw new Error('TOKEN_SALE_DATE is not defined, please set it in config');
   }
-
-  const componentHasMounted = useHasMounted();
 
   if (!componentHasMounted) {
     return null;
