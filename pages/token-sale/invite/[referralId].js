@@ -27,6 +27,7 @@ const InvitedByPage = ({ referredBy }) => {
   const generalSaleDate = dayjs(config.TOKEN_SALE_DATE, 'DD/MM/YYYY');
 
   const params = {
+    sort_by: '-created',
     where: { referredBy: user?._id },
   };
   const referredUsers = platform.user.find(params);
@@ -45,7 +46,9 @@ const InvitedByPage = ({ referredBy }) => {
   };
 
   useEffect(() => {
-    loadData();
+    if (user?._id) {
+      loadData();
+    }
     if (referredBy) {
       localStorage.setItem('referredBy', referredBy);
     }
@@ -81,7 +84,10 @@ const InvitedByPage = ({ referredBy }) => {
 };
 
 InvitedByPage.propTypes = {
-  referredByUser: PropTypes.string,
+  referredBy: PropTypes.shape({
+    _id: PropTypes.string,
+    screenname: PropTypes.string,
+  }).isRequired,
 };
 
 export const getServerSideProps = async ({ query }) => {

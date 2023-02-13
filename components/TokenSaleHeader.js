@@ -8,9 +8,8 @@ import { useHasMounted } from '../hooks/useHasMounted';
 import Countdown from './Countdown';
 import HeroImage from './HeroImage';
 
-const TokenSaleHeader = ({ title, description, hasCountDown }) => {
+const TokenSaleHeader = ({ title, description, hasCountDown, saleDate }) => {
   const router = useRouter();
-  const saleDate = dayjs(TOKEN_SALE_DATE, 'DD/MM/YYYY');
   const componentHasMounted = useHasMounted();
 
   const redirectToTokenSale = () => {
@@ -54,7 +53,7 @@ TokenSaleHeader.propTypes = {
   title: PropTypes.string.isRequired,
   description: PropTypes.string,
   hasCountDown: PropTypes.bool,
-  saleDate: PropTypes.object,
+  saleDate: PropTypes.instanceOf(dayjs),
 };
 
 export default TokenSaleHeader;
