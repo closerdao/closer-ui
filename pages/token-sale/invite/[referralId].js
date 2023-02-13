@@ -11,32 +11,53 @@ import PropTypes from 'prop-types';
 
 import config from '../../../config';
 import { useAuth } from '../../../contexts/auth';
+import { usePlatform } from '../../../contexts/platform';
+import { WalletState } from '../../../contexts/wallet';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
-import { WalletState } from '../contexts/wallet';
 
 dayjs.extend(customParseFormat);
 
 const InvitedByPage = ({ referredBy }) => {
   const { user, isAuthenticated } = useAuth();
   const { isWalletReady } = useContext(WalletState);
+  const { platform } = usePlatform();
 
   const isWhiteListed = isAuthenticated && isWalletReady;
-  const saleDate = dayjs(config.TOKEN_SALE_DATE, 'DD/MM/YYYY');
+  const generalSaleDate = dayjs(config.TOKEN_SALE_DATE, 'DD/MM/YYYY');
+
+  const params = {
+    where: { referredBy: user?._id },
+  };
+  const referredUsers = platform.user.find(params);
+  const totalReferred = platform.user.findCount(params);
+  const personalSaleDate = generalSaleDate.subtract(totalReferred, 'day');
+
+  const loadData = async () => {
+    try {
+      await Promise.all([
+        platform.user.get(params),
+        platform.user.getCount(params),
+      ]);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
+    loadData();
     if (referredBy) {
       localStorage.setItem('referredBy', referredBy);
     }
-  }, []);
+  }, [user]);
 
   return (
     <Layout>
-      <div className="w-full px-20 mt-20 font-marketing">
-        <div className="flex mb-4">
+      <div className="font-marketing w-full px-4 pb-20 mt-6 md:px-20 md:mt-20 ">
+        <div className="flex flex-col mb-4 md:flex-row">
           <TokenSaleHeader
             hasCountDown={config.IS_COUNTDOWN_ON}
-            saleDate={saleDate}
+            saleDate={personalSaleDate}
             title={
               isWhiteListed
                 ? __(
@@ -49,7 +70,7 @@ const InvitedByPage = ({ referredBy }) => {
         </div>
         <div className="flex flex-col gap-4">
           {isWhiteListed ? (
-            <WhiteListed />
+            <WhiteListed referredUsers={referredUsers?.toJS()} />
           ) : (
             <WhiteListConditions referredBy={referredBy} />
           )}
@@ -68,7 +89,7 @@ export const getServerSideProps = async ({ query }) => {
     const res = await api.get(`/user/${query.referralId}`);
     return {
       props: {
-        referredByUser: res.data.results,
+        referredBy: res.data.results,
       },
     };
   } catch (err) {

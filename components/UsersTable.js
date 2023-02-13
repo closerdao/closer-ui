@@ -68,8 +68,6 @@ const UsersTable = ({ where, limit }) => {
               {users.map((row) => {
                 // Fetch the itemized object which can have been patched
                 const user = platform.user.findOne(row.get('_id'));
-                console.log(user.toJS());
-
                 return (
                   <tr key={row.get('_id')}>
                     <td className="p-2 whitespace-nowrap">

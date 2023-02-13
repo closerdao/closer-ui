@@ -216,7 +216,6 @@ export const PlatformProvider = ({ children }) => {
       find: (filter) =>
         state.getIn([model, 'byFilter', filterToKey(filter), 'data']),
       findOne: (id) => {
-        console.log(state.getIn([model, 'byId']));
         return state.getIn([model, 'byId'].concat(id, 'data'));
       },
       findCount: (filter) =>

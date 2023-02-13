@@ -28,10 +28,10 @@ const TokenSaleHeader = ({ title, description, hasCountDown }) => {
 
   return (
     <>
-      <div className="basis-1/2">
-        <h1 className="text-8xl uppercase font-black">{title}</h1>
+      <div className="md:basis-1/2 mb-8 md:mb-0">
+        <h1 className="text-5xl md:text-8xl uppercase font-black">{title}</h1>
         {hasCountDown && saleDate.isValid() && (
-          <div className="mt-16">
+          <div className="mt-8 md:mt-16">
             <Countdown
               date={saleDate.toDate()}
               onComplete={redirectToTokenSale}

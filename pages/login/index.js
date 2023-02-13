@@ -16,7 +16,9 @@ const Login = () => {
   const { signMessage } = useContext(WalletDispatch);
 
   const router = useRouter();
-  const redirectBack = decodeURIComponent(router.query?.r) || '/';
+  const redirectBack = router.query?.back
+    ? decodeURIComponent(router.query?.back)
+    : '/';
   const { isAuthenticated, login, setAuthentification } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -88,7 +90,7 @@ const Login = () => {
                 {__('login_email')}
               </label>
               <input
-                className="w-full"
+                className="w-full bg-transparent"
                 type="email"
                 name="email"
                 id="email"
@@ -106,7 +108,7 @@ const Login = () => {
                 {__('login_password')}
               </label>
               <input
-                className="w-full"
+                className="w-full bg-transparent"
                 type="password"
                 name="password"
                 id="password"

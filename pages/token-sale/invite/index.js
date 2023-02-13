@@ -18,11 +18,11 @@ const Invite = () => {
 
   return (
     <Layout>
-      <div className="w-full px-20 mt-20 font-marketing">
-        <div className="flex mb-4">
+      <div className="font-marketing w-full px-4 pb-20 mt-6 md:px-20 md:mt-20 ">
+        <div className="flex flex-col mb-4 md:flex-row">
           <TokenSaleHeader title={__('token_sale_invite_page_title')} />
         </div>
-        <div className="w-1/2">
+        <div className="w-full md:w-1/2">
           <p className="mt-10 text-2xl leading-8 font-bold">
             <LinkText
               text={__('token_sale_invite_page_description')}
@@ -33,17 +33,17 @@ const Invite = () => {
           <p className="mt-4 text-2xl leading-8 font-bold">
             {__('token_sale_invite_page_cta')}
           </p>
-          <div className="mt-16 flex gap-4">
+          <div className="mt-8 md:mt-16 flex gap-4">
             {!isAuthenticated && (
               <Link
-                href={`/login?r=${encodeURIComponent('/token-sale/invite')}`}
+                href={`/login?back=${encodeURIComponent('/token-sale/invite')}`}
               >
-                <button className="btn w-fit uppercase">
+                <button className="btn w-full md:w-fit uppercase">
                   {__('navigation_sign_in')}
                 </button>
               </Link>
             )}
-            <button className="btn w-fit uppercase">
+            <button className="btn w-full md:w-fit uppercase">
               {__('token_sale_invite_page_button_invite')}
             </button>
           </div>

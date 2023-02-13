@@ -79,6 +79,7 @@ const SignupForm = () => {
                 })
               }
               placeholder="Jane Birkin"
+              className="bg-transparent"
             />
           </div>
           {SIGNUP_FIELDS &&
@@ -86,7 +87,7 @@ const SignupForm = () => {
               <div className="w-full mb-4" key={field.name}>
                 <label htmlFor={field.name}>{field.label}</label>
                 <textarea
-                  className="textarea"
+                  className="textarea bg-transparent"
                   id={field.name}
                   value={application.fields[field.name]}
                   onChange={(e) =>
@@ -106,6 +107,7 @@ const SignupForm = () => {
               value={application.phone}
               onChange={(e) => updateApplication({ phone: e.target.value })}
               placeholder="+1 777 888 999"
+              className="bg-transparent"
             />
           </div>
           <div className="w-full mb-4">
@@ -117,6 +119,7 @@ const SignupForm = () => {
               value={application.email}
               onChange={(e) => updateApplication({ email: e.target.value })}
               placeholder="you@project.co"
+              className="bg-transparent"
             />
           </div>
           <div className="w-full mb-4">
@@ -128,6 +131,7 @@ const SignupForm = () => {
               value={application.password}
               onChange={(e) => updateApplication({ password: e.target.value })}
               placeholder="****"
+              className="bg-transparent"
             />
           </div>
           <div className="w-full mb-4">
@@ -145,6 +149,7 @@ const SignupForm = () => {
                 })
               }
               placeholder="****"
+              className="bg-transparent"
             />
           </div>
           <div className="w-full mb-4">

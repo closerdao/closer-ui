@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 import dayjs from 'dayjs';
 
 import { TOKEN_SALE_DATE } from '../config';
@@ -5,15 +7,20 @@ import { TOKEN_SALE_DATE } from '../config';
 const HeroImage = () => {
   const saleDate = dayjs(TOKEN_SALE_DATE, 'DD/MM/YYYY');
   const isBeforeDate = dayjs().isBefore(saleDate);
-
-  if (isBeforeDate) {
-    return (
-      <div className="basis-1/2 w-[410px] h-[410px] bg-[url('/images/token-sale/token_hero_placeholder.jpg')] bg-cover bg-center" />
-    );
-  }
+  const imagePath = isBeforeDate
+    ? '/images/token-sale/token_hero_placeholder.jpg'
+    : '/images/token-sale/tdf-coworking.png';
 
   return (
-    <div className="basis-1/2 w-[410px] h-[410px] bg-[url('/images/token-sale/tdf-coworking.png')] bg-cover bg-center" />
+    <div className="relative w-full h-96 md:basis-1/2 md:w-96">
+      <Image
+        src={imagePath}
+        alt="Token Sale Hero Placeholder"
+        layout="fill"
+        objectFit="cover"
+        objectPosition="center"
+      />
+    </div>
   );
 };
 

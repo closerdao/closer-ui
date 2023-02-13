@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 import { useContext } from 'react';
 
@@ -8,14 +9,16 @@ import { __ } from '../utils/helpers';
 import ProfilePhoto from './ProfilePhoto';
 
 const WhiteListConditions = ({ referredBy }) => {
+  const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { connectWallet, switchNetwork } = useContext(WalletDispatch);
-  const { isCorrectNetwork, isWalletReady } = useContext(WalletState);
+  const { isCorrectNetwork, isWalletReady, isWalletConnected } =
+    useContext(WalletState);
   return (
     <>
-      <h2 className="mt-8 text-4xl leading-snug items-center flex">
+      <h2 className="mt-8 text-3xl md:text-4xl leading-snug md:items-center flex flex-col md:flex-row">
         <span>{__('token_sale_invite_page_invited_by')}</span>
-        <div className="bg-primary-light flex items-center ml-2 gap-2 px-4 py-2">
+        <div className="w-fit bg-primary-light flex items-center ml-2 gap-2 px-4 py-2">
           <ProfilePhoto user={referredBy} size="sm" />
           <span>{' ' + referredBy?.screenname}</span>
         </div>
@@ -23,15 +26,15 @@ const WhiteListConditions = ({ referredBy }) => {
       <h3 className="mt-4 text-4xl leading-snug">
         {__('token_sale_invite_page_condition_title')}
       </h3>
-      <ol className="list-decimal pl-8">
-        <li className="mt-4 text-2xl leading-snug">
-          <Link href="/signup" passHref>
+      <ol className="list-decimal pl-8 pb-8 md:pb-0">
+        <li className="mt-4 text-xl md:text-2xl leading-snug">
+          <Link href={`/signup?back=${router.asPath}`} passHref>
             <a className="text-primary underline cursor-pointer">
               {__('signup_form_create')}
             </a>
           </Link>
           <span className="mx-2">{__('or')}</span>
-          <Link href="/login" passHref>
+          <Link href={`/login?back=${router.asPath}`} passHref>
             <a className="text-primary underline cursor-pointer">
               {__('navigation_sign_in')}
             </a>
@@ -40,11 +43,11 @@ const WhiteListConditions = ({ referredBy }) => {
             <img
               src="/images/token-sale/circle-check.svg"
               alt=""
-              className="inline w-12 ml-5"
+              className="inline w-8 md:w-12 ml-5"
             />
           )}
         </li>
-        <li className="mt-4 text-2xl leading-snug">
+        <li className="mt-4 text-xl md:text-2xl leading-snug">
           <button
             className="text-primary underline cursor-pointer inline"
             onClick={connectWallet}
@@ -58,7 +61,7 @@ const WhiteListConditions = ({ referredBy }) => {
               className="inline w-12 ml-5"
             />
           )}
-          {!isCorrectNetwork && (
+          {isWalletConnected && !isCorrectNetwork && (
             <button
               className="text-primary underline cursor-pointer inline ml-4"
               onClick={switchNetwork}
@@ -67,7 +70,7 @@ const WhiteListConditions = ({ referredBy }) => {
             </button>
           )}
         </li>
-        <li className="mt-4 text-2xl leading-snug">
+        <li className="mt-4 text-xl md:text-2xl leading-snug">
           {__('token_sale_invite_page_nominate_friends')}
         </li>
       </ol>
