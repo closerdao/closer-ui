@@ -52,12 +52,6 @@ const TokenSalePage = () => {
     Math.round((tokenToBuy * CEUR_PER_TDF + Number.EPSILON) * 100) / 100,
   );
 
-  // useEffect(() => {
-  //   if (!user?.isWhiteListed) {
-  //     router.push('/token-sale/invite');
-  //   }
-  // }, [user]);
-
   const handleTDFChange = (event) => {
     const value = event.target.value;
     setTokenToBuy(value);
@@ -79,10 +73,6 @@ const TokenSalePage = () => {
       Math.round((tokenToBuy * CEUR_PER_TDF + Number.EPSILON) * 100) / 100,
     );
   }, [tokenToBuy]);
-
-  // if (!user?.isWhiteListed) {
-  //   return <PageNotAllowed />;
-  // }
 
   return (
     <Layout>

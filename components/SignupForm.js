@@ -21,6 +21,7 @@ const SignupForm = () => {
     fields: {},
     source: typeof window !== 'undefined' && window.location.href,
   });
+
   const submit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -29,28 +30,31 @@ const SignupForm = () => {
       return;
     }
     if (application.repeatpassword !== application.password) {
-      setError('Passwords don\'t match.');
+      setError('Passwords don`t match.');
       return;
     }
     try {
-      const user = await signup(application);
+      const referredBy = localStorage.getItem('referredBy');
+      await signup({ ...application, ...(referredBy && { referredBy }) });
       setSubmitted(true);
-      window.location.href = decodeURIComponent(back || '/dashboard');
+      window.location.href = decodeURIComponent(back || '/');
     } catch (err) {
       setError(err.message);
     }
   };
 
   if (isAuthenticated) {
-    router.push(decodeURIComponent(back || '/dashboard'));
+    router.push(decodeURIComponent(back || '/'));
   }
+
   const updateApplication = (update) =>
-    setApplication({ ...application, ...update });
+    setApplication((prevState) => ({ ...prevState, ...update }));
+
   const updateApplicationFields = (update) =>
-    setApplication({
-      ...application,
-      fields: { ...application.fields, ...update },
-    });
+    setApplication((prevState) => ({
+      ...prevState,
+      fields: { ...prevState.fields, ...update },
+    }));
 
   return (
     <div>
@@ -62,7 +66,7 @@ const SignupForm = () => {
           <input
             type="hidden"
             name="backurl"
-            value={decodeURIComponent(back || '/dashboard')}
+            value={decodeURIComponent(back || '/')}
           />
           <div className="w-full mb-4">
             <label htmlFor="screenname">{__('signup_form_name')}</label>
@@ -144,7 +148,7 @@ const SignupForm = () => {
             />
           </div>
           <div className="w-full mb-4">
-            <button id="signupbutton" className="btn-primary" type="submit">
+            <button className="btn-primary" type="submit">
               {__('signup_form_create')}
             </button>
           </div>

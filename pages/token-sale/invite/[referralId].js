@@ -1,3 +1,5 @@
+import { useContext, useEffect } from 'react';
+
 import Layout from '../../../components/Layout';
 import TokenSaleHeader from '../../../components/TokenSaleHeader';
 import WhiteListConditions from '../../../components/WhiteListConditions';
@@ -5,19 +7,28 @@ import WhiteListed from '../../../components/WhiteListed';
 
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import PropTypes from 'prop-types';
 
 import config from '../../../config';
 import { useAuth } from '../../../contexts/auth';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
+import { WalletState } from '../contexts/wallet';
 
 dayjs.extend(customParseFormat);
 
-const InvitedByPage = ({ referredByUser }) => {
-  const { user } = useAuth();
-  const { isWhiteListed } = user || {};
+const InvitedByPage = ({ referredBy }) => {
+  const { user, isAuthenticated } = useAuth();
+  const { isWalletReady } = useContext(WalletState);
 
+  const isWhiteListed = isAuthenticated && isWalletReady;
   const saleDate = dayjs(config.TOKEN_SALE_DATE, 'DD/MM/YYYY');
+
+  useEffect(() => {
+    if (referredBy) {
+      localStorage.setItem('referredBy', referredBy);
+    }
+  }, []);
 
   return (
     <Layout>
@@ -40,7 +51,7 @@ const InvitedByPage = ({ referredByUser }) => {
           {isWhiteListed ? (
             <WhiteListed />
           ) : (
-            <WhiteListConditions referredByUser={referredByUser} />
+            <WhiteListConditions referredBy={referredBy} />
           )}
         </div>
       </div>
@@ -48,26 +59,21 @@ const InvitedByPage = ({ referredByUser }) => {
   );
 };
 
+InvitedByPage.propTypes = {
+  referredByUser: PropTypes.string,
+};
+
 export const getServerSideProps = async ({ query }) => {
   try {
     const res = await api.get(`/user/${query.referralId}`);
-    console.log(res.data.results);
     return {
       props: {
         referredByUser: res.data.results,
       },
     };
   } catch (err) {
-    console.log(
-      'Error',
-      err.response.status,
-      err.response.status === '404',
-      err.response.status === 404,
-    );
     if (err.response.status === 404) {
-      console.log('return redirect to /token-sale/invite');
       return {
-        // redirect to /token-sale/invite
         redirect: {
           destination: '/token-sale/invite',
           permanent: false,

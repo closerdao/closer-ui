@@ -1,6 +1,5 @@
 import Link from 'next/link';
 
-import { useEffect } from 'react';
 import { useContext } from 'react';
 
 import { useAuth } from '../contexts/auth';
@@ -8,42 +7,17 @@ import { WalletDispatch, WalletState } from '../contexts/wallet';
 import { __ } from '../utils/helpers';
 import ProfilePhoto from './ProfilePhoto';
 
-const WhiteListConditions = ({ referredByUser }) => {
-  const { isAuthenticated, user } = useAuth();
+const WhiteListConditions = ({ referredBy }) => {
+  const { isAuthenticated } = useAuth();
   const { connectWallet, switchNetwork } = useContext(WalletDispatch);
   const { isCorrectNetwork, isWalletReady } = useContext(WalletState);
-
-  useEffect(() => {
-    const whiteListUser = async () => {
-      console.log(`whitelisting user ${user?._id}`);
-      // await api.patch(`/user/${user?._id}`, {
-      //   isWhiteListed: true,
-      // });
-    };
-    const addReferralPoint = async (id) => {
-      console.log('adding referral point to user', id);
-      // await api.patch(`/user/${id}`, {
-      //   referralCompleted: user.screenname,
-      // });
-    };
-
-    if (isWalletReady && !user?.isWhiteListed) {
-      // if user completes all conditions, whitelist him,
-      // and add point to the user who referred him
-      whiteListUser();
-      if (user?.referredBy) {
-        addReferralPoint(user?.referredBy);
-      }
-    }
-  }, [isWalletReady]);
-
   return (
     <>
       <h2 className="mt-8 text-4xl leading-snug items-center flex">
         <span>{__('token_sale_invite_page_invited_by')}</span>
         <div className="bg-primary-light flex items-center ml-2 gap-2 px-4 py-2">
-          <ProfilePhoto user={referredByUser} size="sm" />
-          <span>{' ' + referredByUser?.screenname}</span>
+          <ProfilePhoto user={referredBy} size="sm" />
+          <span>{' ' + referredBy?.screenname}</span>
         </div>
       </h2>
       <h3 className="mt-4 text-4xl leading-snug">

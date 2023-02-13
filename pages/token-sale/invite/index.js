@@ -1,7 +1,4 @@
 import Link from 'next/link';
-import { useRouter } from 'next/router';
-
-import { useEffect } from 'react';
 
 import Layout from '../../../components/Layout';
 import LinkText from '../../../components/LinkText';
@@ -17,14 +14,7 @@ import { __ } from '../../../utils/helpers';
 dayjs.extend(customParseFormat);
 
 const Invite = () => {
-  const { isAuthenticated, user } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (user?.isWhiteListed) {
-      router.push('/token-sale/');
-    }
-  }, [user]);
+  const { isAuthenticated } = useAuth();
 
   return (
     <Layout>

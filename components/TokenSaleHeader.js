@@ -22,6 +22,7 @@ const TokenSaleHeader = ({ title, description, hasCountDown }) => {
   }
 
   if (!componentHasMounted) {
+    // this prevents hydration errors
     return null;
   }
 
