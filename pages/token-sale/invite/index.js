@@ -28,7 +28,7 @@ const Invite = () => {
 
   return (
     <Layout>
-      <div className="w-full px-20 mt-20">
+      <div className="w-full px-20 mt-20 font-marketing">
         <div className="flex mb-4">
           <TokenSaleHeader title={__('token_sale_invite_page_title')} />
         </div>

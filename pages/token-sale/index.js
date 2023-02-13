@@ -86,7 +86,7 @@ const TokenSalePage = () => {
 
   return (
     <Layout>
-      <div className="flex flex-col w-full px-20 pb-32 mt-20">
+      <div className="flex flex-col w-full px-20 pb-32 mt-20 font-marketing">
         <div className="flex mb-4 gap-8">
           <TokenSaleHeader
             title={__('token_sale_page_title')}

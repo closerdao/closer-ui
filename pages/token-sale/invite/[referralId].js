@@ -21,7 +21,7 @@ const InvitedByPage = ({ referredByUser }) => {
 
   return (
     <Layout>
-      <div className="w-full px-20 mt-20">
+      <div className="w-full px-20 mt-20 font-marketing">
         <div className="flex mb-4">
           <TokenSaleHeader
             hasCountDown={config.IS_COUNTDOWN_ON}
