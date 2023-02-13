@@ -51,7 +51,7 @@ module.exports = {
       placeholder: 'A DAO for regenerative coffee farmers',
     },
   ],
-  TOKEN_SALE_DATE: '01/04/2023',
+  TOKEN_SALE_DATE: '01/02/2023',
   TOKEN_SALE_HAS_COUNTDOWN: true,
   ACCOMODATION_COST: [
     {
