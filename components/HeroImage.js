@@ -15,7 +15,7 @@ const HeroImage = () => {
     <div className="relative w-full h-96 md:basis-1/2 md:w-96">
       <Image
         src={imagePath}
-        alt="Token Sale Hero Placeholder"
+        alt="$TDF token sale"
         layout="fill"
         objectFit="cover"
         objectPosition="center"
