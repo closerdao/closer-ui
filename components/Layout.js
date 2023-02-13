@@ -10,6 +10,8 @@ const Layout = ({ children }) => {
     if (!GA_INITIALIZED && GA_ANALYTICS) {
       initAnalytics();
       GA_INITIALIZED = true;
+    }
+    if (GA_ANALYTICS) {
       trackPageView();
     }
   }, []);
