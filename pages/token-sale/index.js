@@ -76,15 +76,15 @@ const TokenSalePage = () => {
 
   return (
     <Layout>
-      <div className="flex flex-col w-full px-20 pb-32 mt-20 font-marketing">
-        <div className="flex mb-4 gap-8">
+      <div className="flex flex-col font-marketing w-full px-4 pb-20 mt-6 md:px-20 md:mt-20 ">
+        <div className="flex flex-col md:flex-row mb-4 gap-8">
           <TokenSaleHeader
             title={__('token_sale_page_title')}
             description={__('token_sale_page_description')}
           />
         </div>
-        <p className="flex self-center mt-28 items-center">
-          <span className="text-2xl leading-8">
+        <p className="flex flex-wrap self-center mt-8 md:mt-28 items-center gap-4 text-center md:text-left">
+          <span className="text-2xl leading-8 w-1/2 md:w-fit">
             {__('token_sale_page_I_want_stay')}
           </span>
           <input
@@ -96,13 +96,13 @@ const TokenSalePage = () => {
             step={1}
             className="inline w-16 m-0 mx-2 text-2xl bg-primary-light rounded-full px-4 !text-primary !border-none"
           />
-          <span className="text-2xl leading-8">
+          <span className="text-2xl leading-8 w-full md:w-auto">
             {__('token_sale_page_stay_weeks')}
           </span>
           <select
             value={selectedAccomodation}
             onChange={(e) => selectAccomodation(e.target.value)}
-            className="h-12 mx-2 py-1 px-4  rounded-full text-2xl bg-primary-light text-primary !border-none"
+            className="flex-1 h-12 mx-2 mt-4 md:mt-0 py-1 px-4 rounded-full text-2xl bg-primary-light text-primary !border-none"
           >
             {ACCOMODATION_COST.map((accomodation) => (
               <option key={accomodation.name} value={accomodation.name}>
@@ -110,11 +110,11 @@ const TokenSalePage = () => {
               </option>
             ))}
           </select>
-          <span className="text-2xl leading-8">
+          <span className="text-2xl leading-8 flex-auto mt-4 md:mt-0">
             {__('token_sale_page_I_should_buy')}
           </span>
         </p>
-        <div className="flex flex-col w-96 self-center mt-24">
+        <div className="flex flex-col w-full md:w-96 self-center mt-8 md:mt-24">
           <div className="relative">
             <input
               value={tokenToBuy}
@@ -143,16 +143,16 @@ const TokenSalePage = () => {
               <span>{__('ceur_token')}</span>
             </p>
           </div>
-          <button className="bg-primary text-white uppercase font-bold text-4xl py-3 px-12 rounded-full whitespace-nowrap">
+          <button className="bg-primary text-white uppercase font-bold w-full text-2xl md:text-4xl py-3 px-12 rounded-full whitespace-nowrap">
             Buy now
           </button>
         </div>
-        <div className="flex flex-col mt-32">
-          <p className="text-2xl leading-8">
+        <div className="flex flex-col mt-16 md:mt-32">
+          <p className="text-2xl leading-8 text-center md:text-left">
             {__('token_sale_page_accomodation_cost_title')}
           </p>
-          <div className="max-w-screen-sm w-full">
-            <div className="p-6 shadow-4xl rounded-lg mt-2 w-full">
+          <div className="max-w-screen-sm w-full mt-4">
+            <div className="p-2 md:p-6 md:shadow-4xl rounded-lg mt-2 w-full">
               <p className="text-right text-base leading-8">
                 {__('token_sale_page_price_description')}
               </p>
@@ -165,7 +165,7 @@ const TokenSalePage = () => {
                     <div className="flex gap-4 items-center">
                       <img src={accomodation.iconPath} alt="" />
                       <div className="flex flex-col">
-                        <p className="text-2xl leading-8">
+                        <p className="text-xl md:text-2xl leading-8">
                           {accomodation.name}
                         </p>
                         <p className="text-base text-primary">
@@ -173,14 +173,14 @@ const TokenSalePage = () => {
                         </p>
                       </div>
                     </div>
-                    <p className="text-primary text-2xl leading-8">
+                    <p className="text-primary text-xl md:text-2xl leading-8 whitespace-nowrap">
                       {`${__('tdf_token')} ${String(accomodation.price)}`}
                     </p>
                   </div>
                 ))}
               </div>
             </div>
-            <p className="text-base text-right mt-4">
+            <p className="text-base text-center md:text-right mt-4 ">
               {__('token_sale_page_food_disclaimer')}
             </p>
           </div>

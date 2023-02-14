@@ -11,14 +11,10 @@ const attemptSignup = async (event, request) => {
   await api.post('/subscribe', request);
 };
 
-const Newsletter = ({ tags, placement }) => {
+const Newsletter = ({ placement }) => {
   const [screenname, setName] = useState('');
   const [email, setEmail] = useState('');
   const [signupError, setSignupError] = useState(null);
-  const didCompleteSignup = Boolean(
-    typeof localStorage !== 'undefined' &&
-      localStorage.getItem('signupCompleted'),
-  );
   const referrer =
     typeof localStorage !== 'undefined' && localStorage.getItem('referrer');
   const [signupCompleted, setSignupCompleted] = useState(false);
@@ -60,12 +56,10 @@ const Newsletter = ({ tags, placement }) => {
           className="flex flex-row items-center justify-center"
         >
           <div className="flex flex-col items-center justify-start px-2 mt-12 md:mt-0">
-            {/* <p className='mb-2 self-start'>{ __('newsletter_body') }</p> */}
-
             <div className="flex flex-row justify-end">
               <input
                 type="email"
-                className="mr-2"
+                className="mr-2 bg-transparent"
                 value={email}
                 placeholder="Your email"
                 onChange={(e) => setEmail(e.target.value)}
