@@ -17,7 +17,6 @@ const TokenSaleMemberView = ({
   referredUsers,
   personalSaleDate,
 }) => {
-  console.log(referredUsers);
   const { user, isAuthenticated } = useAuth();
   const { isWalletReady } = useContext(WalletState);
 
