@@ -153,7 +153,7 @@ const SignupForm = () => {
             />
           </div>
           <div className="w-full mb-4">
-            <button className="btn-primary" type="submit">
+            <button id="signupbutton" className="btn-primary" type="submit">
               {__('signup_form_create')}
             </button>
           </div>
