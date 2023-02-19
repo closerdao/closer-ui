@@ -52,13 +52,13 @@ const TokenSaleMemberView = ({
 };
 
 TokenSaleMemberView.propTypes = {
-  referredByUser: PropTypes.oneOf(
+  referredByUser: PropTypes.oneOf([
     PropTypes.shape({
       _id: PropTypes.string,
       screenname: PropTypes.string,
     }),
     undefined,
-  ),
+  ]),
   referredUsers: PropTypes.arrayOf(
     PropTypes.shape({
       _id: PropTypes.string,

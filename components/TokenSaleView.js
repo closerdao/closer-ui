@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 
 import { __ } from '../utils/helpers';
-import TokenSaleHeader from './BookingBackButton';
 import Layout from './Layout';
+import TokenSaleHeader from './TokenSaleHeader';
 
 const CEUR_PER_TDF = 230.23;
 
