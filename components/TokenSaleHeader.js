@@ -13,11 +13,15 @@ const TokenSaleHeader = ({ title, description, hasCountDown, saleDate }) => {
   const componentHasMounted = useHasMounted();
 
   const redirectToTokenSale = () => {
-    router.push('/token-sale/');
+    router.push('/token-sale');
   };
 
   if (!TOKEN_SALE_DATE) {
-    throw new Error('TOKEN_SALE_DATE is not defined, please set it in config');
+    return (
+      <div className="flex flex-1 items-center text-primary">
+        TOKEN_SALE_DATE is not defined, please set it in config
+      </div>
+    );
   }
 
   if (!componentHasMounted) {
@@ -54,6 +58,7 @@ TokenSaleHeader.propTypes = {
   description: PropTypes.string,
   hasCountDown: PropTypes.bool,
   saleDate: PropTypes.instanceOf(dayjs),
+  
 };
 
 export default TokenSaleHeader;

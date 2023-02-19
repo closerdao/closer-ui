@@ -1,21 +1,12 @@
 import Link from 'next/link';
 
-import Layout from '../../../components/Layout';
-import LinkText from '../../../components/LinkText';
-import TokenSaleHeader from '../../../components/TokenSaleHeader';
+import { TELEGRAM_URL } from '../config';
+import { __ } from '../utils/helpers';
+import Layout from './Layout';
+import TextWithLink from './TextWithLink';
+import TokenSaleHeader from './TokenSaleHeader';
 
-import dayjs from 'dayjs';
-import customParseFormat from 'dayjs/plugin/customParseFormat';
-
-import { TELEGRAM_URL } from '../../../config';
-import { useAuth } from '../../../contexts/auth';
-import { __ } from '../../../utils/helpers';
-
-dayjs.extend(customParseFormat);
-
-const Invite = () => {
-  const { isAuthenticated } = useAuth();
-
+const TokenSaleGuestView = () => {
   return (
     <Layout>
       <div className="font-marketing w-full px-4 pb-20 mt-6 md:px-20 md:mt-20 ">
@@ -24,7 +15,7 @@ const Invite = () => {
         </div>
         <div className="w-full md:w-1/2">
           <p className="mt-10 text-2xl leading-8 font-bold">
-            <LinkText
+            <TextWithLink
               text={__('token_sale_invite_page_description')}
               word="Telegram"
               link={TELEGRAM_URL}
@@ -34,15 +25,11 @@ const Invite = () => {
             {__('token_sale_invite_page_cta')}
           </p>
           <div className="mt-8 md:mt-16 flex gap-4">
-            {!isAuthenticated && (
-              <Link
-                href={`/login?back=${encodeURIComponent('/token-sale/invite')}`}
-              >
-                <button className="btn w-full md:w-fit uppercase">
-                  {__('navigation_sign_in')}
-                </button>
-              </Link>
-            )}
+            <Link href="/login?back=/token-sale">
+              <button className="btn w-full md:w-fit uppercase">
+                {__('navigation_sign_in')}
+              </button>
+            </Link>
             <button className="btn w-full md:w-fit uppercase">
               {__('token_sale_invite_page_button_invite')}
             </button>
@@ -53,4 +40,4 @@ const Invite = () => {
   );
 };
 
-export default Invite;
+export default TokenSaleGuestView;

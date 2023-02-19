@@ -1,4 +1,4 @@
-const LinkText = ({ text, word, link }) => {
+const TextWithLink = ({ text, word, link }) => {
   const wordIndex = text.indexOf(word);
   const firstPart = text.slice(0, wordIndex);
   const secondPart = text.slice(wordIndex + word.length, text.length);
@@ -17,6 +17,6 @@ const LinkText = ({ text, word, link }) => {
       {secondPart}
     </>
   );
-}
+};
 
-export default LinkText;
+export default TextWithLink;
