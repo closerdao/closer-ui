@@ -2,8 +2,8 @@ import { useRouter } from 'next/router';
 
 import React, { useState } from 'react';
 
-import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
 import { SIGNUP_FIELDS } from '../config';
+import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import { useAuth } from '../contexts/auth';
 import { __, useNextQueryParams } from '../utils/helpers';
 

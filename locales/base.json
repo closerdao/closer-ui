@@ -10,6 +10,7 @@
   "apply_email": "Email",
   "apply_submit_button": "Apply",
   "apply_name": "Name",
+  "auth_error_401_message": "Invalid username or password",
   "autocomplete_close": "Close",
   "autocomplete_no_results": "No results",
   "blockchain_wallet": "Blockchain wallet",

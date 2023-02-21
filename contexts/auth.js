@@ -1,9 +1,16 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
 import Cookies from 'js-cookie';
 
 import PageNotAllowed from '../pages/401';
 import api from '../utils/api';
+import { __ } from '../utils/helpers';
 
 const AuthContext = createContext({});
 
@@ -12,11 +19,12 @@ export const AuthProvider = ({ children }) => {
   const [error, setErrorState] = useState(null);
   const [isLoading, setLoading] = useState(true);
   let errorTimeout = null;
-  const setError = (msg) => {
+
+  const setError = useCallback((msg) => {
     clearTimeout(errorTimeout);
     setErrorState(msg);
     errorTimeout = setTimeout(() => setErrorState(null), 5000);
-  };
+  }, []);
 
   useEffect(() => {
     async function loadUserFromCookies() {
@@ -45,7 +53,7 @@ export const AuthProvider = ({ children }) => {
         data: { access_token: token, results: user },
       } = await api.post('/login', {
         email,
-        password
+        password,
       });
       if (token) {
         Cookies.set('token', token, { expires: 60 });
@@ -53,8 +61,14 @@ export const AuthProvider = ({ children }) => {
           setUser(user);
         }
       }
+      setError('');
     } catch (err) {
+      if (err.response?.status === 401) {
+        setError(__('auth_error_401_message'));
+        return;
+      }
       setError(err.response?.data?.error || err.message);
+      console.error(err);
     }
   };
 
@@ -67,7 +81,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-
   const signup = async (data) => {
     try {
       const {
@@ -77,9 +90,11 @@ export const AuthProvider = ({ children }) => {
         Cookies.set('token', token, { expires: 60 });
         setUser(userData);
       }
+      setError('');
       return userData;
     } catch (err) {
-      throw new Error(err.response?.data?.error || err.message);
+      setError(err.response?.data?.error || err.message);
+      console.error(err);
     }
   };
 

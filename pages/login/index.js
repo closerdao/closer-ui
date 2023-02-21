@@ -19,10 +19,10 @@ const Login = () => {
   const redirectBack = router.query?.back
     ? decodeURIComponent(router.query?.back)
     : '/';
-  const { isAuthenticated, login, setAuthentification } = useAuth();
+  const { isAuthenticated, login, setAuthentification, error, setError } =
+    useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
 
   if (isAuthenticated) {
     router.push(redirectBack);
@@ -43,10 +43,6 @@ const Login = () => {
           walletAddress,
           message,
         });
-        if (error) {
-          setError(error);
-          return;
-        }
         setAuthentification(user, token);
       }
     } catch (e) {
@@ -79,7 +75,7 @@ const Login = () => {
       <Head>
         <title>{__('login_title')}</title>
       </Head>
-      <main className="main-content max-w-prose center intro flex items-center flex-1">
+      <main className="main-content max-w-prose center intro flex flex-col justify-center flex-1">
         <form onSubmit={onSubmit}>
           <div className="w-full mb-4">
             <label
