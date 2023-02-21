@@ -30,9 +30,11 @@ const TokenSaleGuestView = () => {
                 {__('navigation_sign_in')}
               </button>
             </Link>
-            <button className="btn w-full md:w-fit uppercase">
-              {__('token_sale_invite_page_button_invite')}
-            </button>
+            <Link href="/signup?back=/token-sale">
+              <button className="btn w-full md:w-fit uppercase">
+                {__('navigation_register')}
+              </button>
+            </Link>
           </div>
         </div>
       </div>

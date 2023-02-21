@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 import { SIGNUP_FIELDS } from '../config';
+import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
 
@@ -21,7 +22,7 @@ const ApplicationForm = () => {
       return;
     }
     try {
-      const referredBy = localStorage.getItem('referredBy');
+      const referredBy = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
       await api.post('/application', {
         ...application,
         ...(referredBy && { referredBy }),

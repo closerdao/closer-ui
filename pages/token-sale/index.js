@@ -8,6 +8,7 @@ import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 import config from '../../config';
+import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 
@@ -19,7 +20,7 @@ const TokenSalePage = () => {
 
   const [referredByUserId, setReferredByUserId] = useState(null);
   useEffect(() => {
-    const id = localStorage.getItem('referredByUserId');
+    const id = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
     setReferredByUserId(id);
   }, []);
 

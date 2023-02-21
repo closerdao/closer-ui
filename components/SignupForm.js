@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 
 import React, { useState } from 'react';
 
+import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
 import { SIGNUP_FIELDS } from '../config';
 import { useAuth } from '../contexts/auth';
 import { __, useNextQueryParams } from '../utils/helpers';
@@ -34,7 +35,7 @@ const SignupForm = () => {
       return;
     }
     try {
-      const referredBy = localStorage.getItem('referredBy');
+      const referredBy = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
       await signup({ ...application, ...(referredBy && { referredBy }) });
       setSubmitted(true);
       window.location.href = decodeURIComponent(back || '/');

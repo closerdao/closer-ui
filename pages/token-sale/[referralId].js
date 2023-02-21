@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
+import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 
 dayjs.extend(customParseFormat);
@@ -21,7 +22,7 @@ const InvitedByPage = () => {
 
   useEffect(() => {
     if (referredByUserId) {
-      localStorage.setItem('referredByUserId', referredByUserId);
+      localStorage.setItem(REFERRAL_ID_LOCAL_STORAGE_KEY, referredByUserId);
     }
     redirectToTokenSalePage();
   }, [user, referredByUserId]);
