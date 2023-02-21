@@ -29,6 +29,7 @@ const ACCOMODATION_COST = [
     iconPath: '/images/token-sale/suite-icon.svg',
   },
 ];
+const DAYS_IN_A_WEEK = 7;
 
 const TokenSaleView = () => {
   const [weeksNumber, setWeeksNumber] = useState(4);
@@ -37,8 +38,9 @@ const TokenSaleView = () => {
   );
   const selectedValue = ACCOMODATION_COST.find(
     (accomodation) => accomodation.name === selectedAccomodation,
-  )?.price;
+  )?.price * DAYS_IN_A_WEEK;
   const [tokenToBuy, setTokenToBuy] = useState(weeksNumber * selectedValue);
+  const 
   const [tokenToSpend, setTokenToSpend] = useState(
     Math.round((tokenToBuy * CEUR_PER_TDF + Number.EPSILON) * 100) / 100,
   );
