@@ -52,5 +52,5 @@ module.exports = {
     },
   ],
   TOKEN_SALE_DATE: '01/04/2023',
-  IS_COUNTDOWN_ON: true,
+  TOKEN_SALE_HAS_COUNTDOWN: true,
 };
