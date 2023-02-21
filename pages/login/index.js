@@ -114,27 +114,26 @@ const Login = () => {
               required
             />
           </div>
-          <div className="card-footer">
-            <div className="flex flex-col justify-between items-center gap-4 sm:flex-row">
-              <div className="flex flex-col gap-4 w-full sm:flex-row">
-                <button type="submit" className="btn-primary w-full sm:w-auto">
-                  {__('login_submit')}
-                </button>
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  onClick={walletConnectAndSignInFlow}
-                >
-                  {__('blockchain_sign_in_with_wallet')}
-                </button>
-              </div>
 
-              <Link href="/login/forgot-password" as="/login/forgot-password">
-                <a className="whitespace-nowrap">
-                  {__('login_link_forgot_password')}
-                </a>
-              </Link>
+          <div className="flex flex-col justify-between items-center gap-4 sm:flex-row">
+            <div className="flex flex-col gap-4 w-full sm:flex-row">
+              <button type="submit" className="btn-primary w-full sm:w-auto">
+                {__('login_submit')}
+              </button>
+              <button
+                type="submit"
+                className="btn-primary"
+                onClick={walletConnectAndSignInFlow}
+              >
+                {__('blockchain_sign_in_with_wallet')}
+              </button>
             </div>
+
+            <Link href="/login/forgot-password" as="/login/forgot-password">
+              <a className="whitespace-nowrap">
+                {__('login_link_forgot_password')}
+              </a>
+            </Link>
           </div>
         </form>
       </main>
