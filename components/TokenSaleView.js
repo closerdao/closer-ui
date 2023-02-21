@@ -36,11 +36,11 @@ const TokenSaleView = () => {
   const [selectedAccomodation, selectAccomodation] = useState(
     ACCOMODATION_COST[0].name,
   );
-  const selectedValue = ACCOMODATION_COST.find(
-    (accomodation) => accomodation.name === selectedAccomodation,
-  )?.price * DAYS_IN_A_WEEK;
+  const selectedValue =
+    ACCOMODATION_COST.find(
+      (accomodation) => accomodation.name === selectedAccomodation,
+    )?.price * DAYS_IN_A_WEEK;
   const [tokenToBuy, setTokenToBuy] = useState(weeksNumber * selectedValue);
-  const 
   const [tokenToSpend, setTokenToSpend] = useState(
     Math.round((tokenToBuy * CEUR_PER_TDF + Number.EPSILON) * 100) / 100,
   );
