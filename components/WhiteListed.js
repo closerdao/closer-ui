@@ -5,7 +5,7 @@ import { __ } from '../utils/helpers';
 
 const WhiteListed = ({ referredUsers }) => {
   const { user } = useAuth();
-  const referralLink = `https://traditionaldreamfactory.com/token-sale/invite/${user?._id}`;
+  const referralLink = `https://traditionaldreamfactory.com/token-sale/${user?._id}`;
 
   const copyCode = async () => {
     if (user?._id) {
