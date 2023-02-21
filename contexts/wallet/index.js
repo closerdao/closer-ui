@@ -82,7 +82,7 @@ export const WalletProvider = ({ children }) => {
     setIsWalletReady(
       isWalletConnected && isCorrectNetwork && hasSameConnectedAccount,
     );
-  }, [chainId, isWalletConnected, account, error]);
+  }, [chainId, isWalletConnected, account, error, user?.walletAddress]);
 
   const { data: balanceDAOToken, mutate: updateWalletBalance } = useSWR(
     [BLOCKCHAIN_DAO_TOKEN.address, 'balanceOf', account],
