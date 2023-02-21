@@ -1,18 +1,17 @@
 import { useRouter } from 'next/router';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { SIGNUP_FIELDS } from '../config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import { useAuth } from '../contexts/auth';
-import { __, useNextQueryParams } from '../utils/helpers';
+import { __ } from '../utils/helpers';
 
 const SignupForm = () => {
   const router = useRouter();
-  const { back } = useNextQueryParams();
+  const { back } = router.query || {};
   const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState(false);
-  const { signup, isAuthenticated } = useAuth();
+  const { signup, isAuthenticated, error, setError } = useAuth();
   const [application, setApplication] = useState({
     screenname: '',
     phone: '',
@@ -38,32 +37,49 @@ const SignupForm = () => {
       const referredBy = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
       await signup({ ...application, ...(referredBy && { referredBy }) });
       setSubmitted(true);
-      window.location.href = decodeURIComponent(back || '/');
     } catch (err) {
       setError(err.message);
     }
   };
 
-  if (isAuthenticated) {
+  const redirect = () => {
     router.push(decodeURIComponent(back || '/'));
-  }
+  };
 
-  const updateApplication = (update) =>
+  useEffect(() => {
+    if (isAuthenticated) {
+      redirect();
+    }
+    if (submitted && back && !error) {
+      setTimeout(() => {
+        redirect();
+      }, 2000);
+    }
+  }, [isAuthenticated, submitted, back]);
+
+  const updateApplication = (update) => {
+    setError(null);
     setApplication((prevState) => ({ ...prevState, ...update }));
+  };
 
-  const updateApplicationFields = (update) =>
+  const updateApplicationFields = (update) => {
+    setError(null);
     setApplication((prevState) => ({
       ...prevState,
       fields: { ...prevState.fields, ...update },
     }));
+  };
 
   return (
     <div>
-      {error && <div className="error-box">{error}</div>}
-      {submitted ? (
-        <h2 className="my-4">{__('signup_success')}</h2>
+      {error && <div className="text-primary mb-4 text-center">{error}</div>}
+      {submitted && !error ? (
+        <>
+          <h2 className="my-4">{__('signup_success')}</h2>
+          <p>{__('signup_success_cta')}</p>
+        </>
       ) : (
-        <form className="join mt-24 flex flex-col" onSubmit={submit}>
+        <form className="join mt-8 flex flex-col" onSubmit={submit}>
           <input
             type="hidden"
             name="backurl"

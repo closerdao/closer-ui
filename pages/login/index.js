@@ -76,6 +76,7 @@ const Login = () => {
         <title>{__('login_title')}</title>
       </Head>
       <main className="main-content max-w-prose center intro flex flex-col justify-center flex-1">
+        {error && <p className="text-primary my-4 text-center">{error}</p>}
         <form onSubmit={onSubmit}>
           <div className="w-full mb-4">
             <label
@@ -136,7 +137,6 @@ const Login = () => {
             </div>
           </div>
         </form>
-        {error && <p className="text-primary mt-4 text-center">{error}</p>}
       </main>
     </Layout>
   );
