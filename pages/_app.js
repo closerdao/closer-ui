@@ -19,7 +19,6 @@ import {
 //   BLOCKCHAIN_STABLE_COIN,
 // } from '../config_blockchain';
 import { AuthProvider } from '../contexts/auth';
-import { BookingProvider } from '../contexts/booking/';
 import { PlatformProvider } from '../contexts/platform';
 import { WalletProvider } from '../contexts/wallet/';
 import '../public/styles.css';
@@ -67,10 +66,8 @@ const Application = ({ Component, pageProps }) => {
         <PlatformProvider>
           <Web3ReactProvider getLibrary={getLibrary}>
             <WalletProvider>
-              <BookingProvider>
-                <Navigation />
-                <Component {...pageProps} />
-              </BookingProvider>
+              <Navigation />
+              <Component {...pageProps} />
             </WalletProvider>
           </Web3ReactProvider>
         </PlatformProvider>

@@ -43,7 +43,6 @@ const CheckoutForm = ({
   onSuccess,
   submitButtonClassName = '',
   cardElementClassName = '',
-  onError = () => {},
   prePayInTokens = () => {},
   isProcessingTokenPayment = false,
   children: conditions,
@@ -66,6 +65,8 @@ const CheckoutForm = ({
       const { error } = res || {};
       if (error) {
         setProcessing(false);
+        setError('Token payment failed.')
+        console.error(error)
         return;
       }
       console.log('prePay is ok, proceeding with EUR payment...');
@@ -111,13 +112,12 @@ const CheckoutForm = ({
       }
     } catch (err) {
       setProcessing(false);
-      console.log(err);
+      console.error(err);
       const errorMessage =
         err.response && err.response.data.error
           ? err.response.data.error
           : err.message;
       setError(errorMessage);
-      onError(errorMessage);
     }
   };
 
