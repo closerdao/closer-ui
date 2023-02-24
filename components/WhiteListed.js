@@ -31,7 +31,7 @@ const WhiteListed = ({ referredUsers }) => {
           onClick={copyCode}
           className="bg-primary text-white uppercase font-bold w-full md:w-fit text-2xl md:text-4xl py-3 px-12 rounded-full whitespace-nowrap"
         >
-          {__('buttons_copy_code')}
+          {__('token_sale_invite_buttons_copy_code')}
         </button>
         <div className="bg-primary-light text-primary upercase text-base md:text-2xl py-3 px-4 md:px-10 md:whitespace-nowrap rounded-full">
           {referralLink}

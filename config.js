@@ -51,6 +51,31 @@ module.exports = {
       placeholder: 'A DAO for regenerative coffee farmers',
     },
   ],
-  TOKEN_SALE_DATE: '01/04/2023',
+  TOKEN_SALE_DATE: '01/02/2023',
   TOKEN_SALE_HAS_COUNTDOWN: true,
+  ACCOMODATION_COST: [
+    {
+      name: 'Glamping',
+      price: 1,
+      iconPath: '/images/token-sale/tent-icon.svg',
+    },
+    {
+      name: 'Van parking',
+      price: 0.5,
+      iconPath: '/images/token-sale/car-icon.svg',
+    },
+    {
+      name: 'Outdoor Camping',
+      price: 0.5,
+      iconPath: '/images/token-sale/tent-icon.svg',
+    },
+    {
+      name: 'Private suite',
+      description: '*coming 2023*',
+      price: 3,
+      iconPath: '/images/token-sale/suite-icon.svg',
+    },
+  ],
+  TOKEN_PRICE: 230.23,
+  SOURCE_TOKEN: 'CEUR'
 };
