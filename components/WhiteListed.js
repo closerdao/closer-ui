@@ -1,3 +1,5 @@
+import { useRouter } from 'next/router';
+
 import PropTypes from 'prop-types';
 
 import { useAuth } from '../contexts/auth';
@@ -5,7 +7,9 @@ import { __ } from '../utils/helpers';
 
 const WhiteListed = ({ referredUsers }) => {
   const { user } = useAuth();
-  const referralLink = `https://traditionaldreamfactory.com/token-sale/${user?._id}`;
+  const router = useRouter();
+  console.log('current url', router.pathname, window.location.hostname);
+  const referralLink = `${window.location.host}${router.pathname}/${user?._id}`;
 
   const copyCode = async () => {
     if (user?._id) {
