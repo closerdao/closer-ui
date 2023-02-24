@@ -52,26 +52,27 @@ const WhiteListConditions = ({ referredByUser }) => {
           )}
         </li>
         <li className="mt-4 text-xl md:text-2xl leading-snug">
-          <button
-            className="text-primary underline cursor-pointer inline"
-            onClick={connectWallet}
-          >
-            {__('wallet_not_connected_button')}
-          </button>
-          {isWalletReady && (
-            <img
-              src="/images/token-sale/circle-check.svg"
-              alt=""
-              className="inline w-12 ml-5"
-            />
-          )}
-          {isWalletConnected && !isCorrectNetwork && (
+          {isWalletConnected && !isCorrectNetwork ? (
             <button
               className="text-primary underline cursor-pointer inline ml-4"
               onClick={switchNetwork}
             >
               {__('wallet_switch_network')}
             </button>
+          ) : (
+            <button
+              className="text-primary underline cursor-pointer inline"
+              onClick={connectWallet}
+            >
+              {__('wallet_not_connected_button')}
+            </button>
+          )}
+          {isWalletReady && (
+            <img
+              src="/images/token-sale/circle-check.svg"
+              alt=""
+              className="inline w-12 ml-5"
+            />
           )}
         </li>
         <li className="mt-4 text-xl md:text-2xl leading-snug">
