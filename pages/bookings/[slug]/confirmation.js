@@ -37,7 +37,7 @@ const ConfirmationStep = ({ error, booking }) => {
   return (
     <Layout>
       <div className="max-w-screen-sm mx-auto p-8">
-        <BookingBackButton url="/dashboard" />
+        <BookingBackButton url="/" />
         <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">🎊</span>
           <span>{__('bookings_confirmation_step_success')}</span>

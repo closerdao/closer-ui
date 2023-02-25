@@ -16,13 +16,16 @@ const Login = () => {
   const { signMessage } = useContext(WalletDispatch);
 
   const router = useRouter();
-  const { isAuthenticated, login, setAuthentification } = useAuth();
+  const redirectBack = router.query?.back
+    ? decodeURIComponent(router.query?.back)
+    : '/';
+  const { isAuthenticated, login, setAuthentification, error, setError } =
+    useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
 
   if (isAuthenticated) {
-    router.push('/');
+    router.push(redirectBack);
   }
 
   const signInWithWallet = async (walletAddress) => {
@@ -40,10 +43,6 @@ const Login = () => {
           walletAddress,
           message,
         });
-        if (error) {
-          setError(error);
-          return;
-        }
         setAuthentification(user, token);
       }
     } catch (e) {
@@ -76,74 +75,68 @@ const Login = () => {
       <Head>
         <title>{__('login_title')}</title>
       </Head>
-      <div className="mural">
-        <main className="main-content max-w-prose center intro">
-          <form onSubmit={onSubmit}>
-            <div className="w-full mb-4">
-              <label
-                className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                htmlFor="email"
-              >
-                {__('login_email')}
-              </label>
-              <input
-                className="w-full"
-                type="email"
-                name="email"
-                id="email"
-                value={email}
-                placeholder="name@awesomeproject.co"
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="w-full mb-4">
-              <label
-                className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-                htmlFor="password"
-              >
-                {__('login_password')}
-              </label>
-              <input
-                className="w-full"
-                type="password"
-                name="password"
-                id="password"
-                value={password}
-                placeholder="*****"
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <div className="card-footer">
-              <div className="flex flex-col justify-between items-center gap-4 sm:flex-row">
-                <div className="flex flex-col gap-4 w-full sm:flex-row">
-                  <button
-                    type="submit"
-                    className="btn-primary w-full sm:w-auto"
-                  >
-                    {__('login_submit')}
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn-primary"
-                    onClick={walletConnectAndSignInFlow}
-                  >
-                    {__('blockchain_sign_in_with_wallet')}
-                  </button>
-                </div>
+      <main className="main-content max-w-prose center intro flex flex-col justify-center flex-1">
+        {error && <p className="text-primary my-4 text-center">{error}</p>}
+        <form onSubmit={onSubmit}>
+          <div className="w-full mb-4">
+            <label
+              className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+              htmlFor="email"
+            >
+              {__('login_email')}
+            </label>
+            <input
+              className="w-full bg-transparent"
+              type="email"
+              name="email"
+              id="email"
+              value={email}
+              placeholder="name@awesomeproject.co"
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="w-full mb-4">
+            <label
+              className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+              htmlFor="password"
+            >
+              {__('login_password')}
+            </label>
+            <input
+              className="w-full bg-transparent"
+              type="password"
+              name="password"
+              id="password"
+              value={password}
+              placeholder="*****"
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
 
-                <Link href="/login/forgot-password" as="/login/forgot-password">
-                  <a className="whitespace-nowrap">
-                    {__('login_link_forgot_password')}
-                  </a>
-                </Link>
-              </div>
+          <div className="flex flex-col justify-between items-center gap-4 sm:flex-row">
+            <div className="flex flex-col gap-4 w-full sm:flex-row">
+              <button type="submit" className="btn-primary w-full sm:w-auto">
+                {__('login_submit')}
+              </button>
+              <button
+                type="submit"
+                className="btn-primary"
+                onClick={walletConnectAndSignInFlow}
+              >
+                {__('blockchain_sign_in_with_wallet')}
+              </button>
             </div>
-          </form>
-          {error && <p className="text-primary mt-4 text-center">{error}</p>}
-        </main>
-      </div>
+
+            <Link href="/login/forgot-password" as="/login/forgot-password">
+              <a className="whitespace-nowrap">
+                {__('login_link_forgot_password')}
+              </a>
+            </Link>
+          </div>
+        </form>
+      </main>
     </Layout>
   );
 };

@@ -1,0 +1,44 @@
+import { ACCOMODATION_COST } from '../config';
+import { __ } from '../utils/helpers';
+
+const AccomodationPriceInfo = () => {
+  return (
+    <>
+      <div className="p-2 md:p-6 md:shadow-4xl rounded-lg mt-2 w-full">
+        <p className="text-right text-base leading-8">
+          {__('token_sale_page_price_description')}
+        </p>
+        <div className="flex flex-col gap-4 mt-4">
+          {ACCOMODATION_COST.map((accomodation) => (
+            <div
+              className="flex items-center justify-between"
+              key={accomodation.name}
+            >
+              <div className="flex gap-4 items-center">
+                <img src={accomodation.iconPath} alt="" />
+                <div className="flex flex-col">
+                  <p className="text-xl md:text-2xl leading-8">
+                    {accomodation.name}
+                  </p>
+                  <p className="text-base text-primary">
+                    {accomodation.description}
+                  </p>
+                </div>
+              </div>
+              <p className="text-primary text-xl md:text-2xl leading-8 whitespace-nowrap">
+                {`${__('token_sale_token_symbol')} ${String(
+                  accomodation.price,
+                )}`}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+      <p className="text-base text-center md:text-right mt-4 ">
+        {__('token_sale_page_food_disclaimer')}
+      </p>
+    </>
+  );
+};
+
+export default AccomodationPriceInfo;

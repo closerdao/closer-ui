@@ -59,7 +59,7 @@ const Summary = ({ booking, listing, error }) => {
 
   return (
     <Layout>
-      <div className="max-w-screen-sm mx-auto p-8">
+      <div className="w-full max-w-screen-sm mx-auto p-8">
         <BookingBackButton action={goBack} name={__('buttons_back')} />
         <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">📑</span>

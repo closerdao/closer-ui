@@ -1,6 +1,6 @@
 import Head from 'next/head';
 
-import React, { useState } from 'react';
+import React from 'react';
 
 import Layout from '../../components/Layout';
 import Loading from '../../components/Loading';
@@ -14,7 +14,6 @@ import { __ } from '../../utils/helpers';
 
 const Admin = () => {
   const { user, isLoading } = useAuth();
-  const [error, setError] = useState(null);
 
   if (isLoading) {
     return <Loading />;
@@ -29,7 +28,6 @@ const Admin = () => {
         <title>{__('admin_title')}</title>
       </Head>
       <main className="main-content center intro">
-        { error && <div className="error">{ error }</div> }
         <Tabs
           tabs={[
             {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 import { SIGNUP_FIELDS } from '../config';
+import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
 
@@ -13,6 +14,7 @@ const ApplicationForm = () => {
     fields: {},
     source: typeof window !== 'undefined' && window.location.href,
   });
+
   const submit = async (e) => {
     e.preventDefault();
     if (!application.email || !application.phone) {
@@ -20,7 +22,11 @@ const ApplicationForm = () => {
       return;
     }
     try {
-      await api.post('/application', application);
+      const referredBy = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
+      await api.post('/application', {
+        ...application,
+        ...(referredBy && { referredBy }),
+      });
       setSubmitted(true);
     } catch (err) {
       alert('There was an error sending your application, please try again.');
@@ -28,12 +34,13 @@ const ApplicationForm = () => {
   };
 
   const updateApplication = (update) =>
-    setApplication({ ...application, ...update });
-  const updateApplicationFields = (update) =>
-    setApplication({
-      ...application,
-      fields: { ...application.fields, ...update },
-    });
+    setApplication((prevApplication) => ({ ...prevApplication, ...update }));
+
+  const updateApplicationFields = (newFields) =>
+    setApplication((prevApplication) => ({
+      ...prevApplication,
+      fields: { ...prevApplication.fields, ...newFields },
+    }));
 
   return (
     <div>

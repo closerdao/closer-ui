@@ -154,3 +154,4 @@ export const BOOKING_STEPS = [
 
 export const CURRENCIES = ['EUR', BLOCKCHAIN_DAO_TOKEN.symbol];
 export const DEFAULT_CURRENCY = CURRENCIES[0]; // EUR
+export const REFERRAL_ID_LOCAL_STORAGE_KEY = 'referredByUserId';

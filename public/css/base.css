@@ -3,12 +3,14 @@
 @layer base {
   body {
     /*  dark:bg-background-dark  dark:text-foreground-dark min-h-screen  text-foreground */
-    @apply bg-background min-h-screen text-foreground;
+    @apply min-h-screen bg-background text-foreground flex flex-col;
   }
+
+  #__next,
   .App {
-    min-height: 100vh;
-    @apply flex flex-col justify-between;
+    @apply flex-1 flex flex-col;
   }
+
   .main-content {
     @apply max-w-screen-xl mx-auto p-4;
   }

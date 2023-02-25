@@ -12,7 +12,7 @@ const Index = () => {
       <Head>
         <title>{PLATFORM_NAME}</title>
       </Head>
-      <main className="homepage">
+      <main className="flex flex-1 justify-center">
         <section className="text-center flex flex-column items-center justify-center pb-10">
           <div className="main-content">
             <h1 className="text-8xl font-normal leading-none">

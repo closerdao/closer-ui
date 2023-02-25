@@ -85,7 +85,7 @@ const Questionnaire = ({ questions, booking, error }) => {
 
   return (
     <Layout>
-      <div className="max-w-screen-sm mx-auto p-8">
+      <div className="w-full max-w-screen-sm mx-auto p-8">
         <BookingBackButton
           action={resetBooking}
           name={__('buttons_back_to_dates')}
