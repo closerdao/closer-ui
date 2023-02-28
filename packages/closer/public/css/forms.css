@@ -1,0 +1,71 @@
+@tailwind components;
+
+@layer components {
+  .btn,
+  .btn[type='submit'] {
+    @apply cursor-pointer inline-block py-2 px-4 rounded-full text-foreground focus:outline-none border-2 border-foreground focus:ring-2 focus:ring-primary focus:ring-opacity-75 md:block disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed;
+  }
+  .btn-primary,
+  .btn-primary[type='submit'] {
+    @apply btn text-primary bg-transparent hover:text-white hover:bg-primary border-primary disabled:hover:bg-transparent disabled:border-gray-400 disabled:text-gray-400;
+  }
+  .btn-small,
+  .btn-small[type='submit'] {
+    @apply btn py-0 px-2 text-sm hover:bg-primary text-primary hover:text-white bg-transparent border-2 border-primary disabled:hover:bg-transparent disabled:border-gray-400 disabled:text-gray-400;
+  }
+  .btn-secondary,
+  .btn-secondary[type='submit'] {
+    @apply btn hover:bg-secondary text-secondary hover:text-white bg-transparent border-2 border-secondary disabled:hover:bg-transparent disabled:border-gray-400 disabled:text-gray-400;
+  }
+  .btn-primary.btn-large {
+    @apply border-8 py-4 px-8 focus:ring-4;
+  }
+  .btn-primary.active {
+    @apply bg-primary text-white hover:bg-transparent hover:text-primary;
+  }
+  .booking-btn {
+    @apply uppercase w-full inline-block py-2 px-4 rounded-full text-foreground focus:outline-none border border-foreground focus:ring-2 focus:ring-primary focus:ring-opacity-75 disabled:cursor-not-allowed disabled:text-gray-400 disabled:border-gray-400 md:block md:px-20 md:w-fit md:mx-auto;
+  }
+  .form-field {
+    @apply mb-4;
+  }
+  .toggle-bg:after {
+    content: '';
+    @apply absolute top-0.5 left-0.5 bg-white border border-gray-300 rounded-full h-5 w-5 transition shadow-sm;
+  }
+  input:checked + .toggle-bg:after {
+    transform: translateX(100%);
+    @apply border-white;
+  }
+  input:checked + .toggle-bg {
+    @apply bg-blue-600 border-blue-600;
+  }
+  input,
+  textarea {
+    @apply w-full;
+  }
+  textarea,
+  .textarea {
+    @apply mt-0 block w-full border-0 border-b-2 border-gray-200 px-0.5 focus:ring-0 focus:border-black resize-none;
+  }
+  .input,
+  input[type='email'],
+  input[type='password'],
+  input[type='text'],
+  input[type='phone'],
+  input[type='number'],
+  input[type='date'],
+  input[type='time'] {
+    @apply text-foreground block border-0 border-b-2 border-gray-200 focus:ring-0 focus:border-black;
+  }
+  select {
+    @apply h-10 pl-3 pr-6 text-base text-black placeholder-gray-600 border-b-2 border-gray-200 rounded-lg appearance-none focus:border-black outline-none max-w-full;
+  }
+  label,
+  .label {
+    @apply block uppercase tracking-wide text-gray-500 text-xs font-bold mb-2;
+  }
+  .switch .label {
+    @apply mb-0 ml-2;
+  }
+}

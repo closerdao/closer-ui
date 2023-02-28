@@ -1,0 +1,7 @@
+@tailwind utilities;
+
+@import './css/base.css';
+@import './css/fonts.css';
+@import './css/card.css';
+@import './css/forms.css';
+@import './css/custom.css';

@@ -1,0 +1,104 @@
+@tailwind base;
+
+@layer base {
+  body {
+    /*  dark:bg-background-dark  dark:text-foreground-dark min-h-screen  text-foreground */
+    @apply min-h-screen bg-background text-foreground flex flex-col;
+  }
+
+  #__next,
+  .App {
+    @apply flex-1 flex flex-col;
+  }
+
+  .main-content {
+    @apply max-w-screen-xl mx-auto p-4;
+  }
+  .date-preview {
+    @apply text-center max-w-xl mr-3 p-1 text-gray-900 bg-gray-100 font-bold w-16;
+  }
+  .date-preview .date {
+    @apply text-sm;
+  }
+  .validation-error {
+    padding: 1rem 0;
+    color: #9f1f42;
+  }
+  .success-toast {
+    position: fixed;
+    z-index: 20;
+    top: 5rem;
+    left: 50%;
+    margin-left: -10rem;
+    display: flex;
+    justify-content: space-between;
+    width: 20rem;
+    padding: 1rem;
+    color: #fafafa;
+    background-color: #68d09b;
+    border: 1px solid #469f72;
+  }
+  .error-toast {
+    position: fixed;
+    z-index: 20;
+    top: 5rem;
+    left: 50%;
+    margin-left: -10rem;
+    display: flex;
+    justify-content: space-between;
+    width: 20rem;
+    padding: 1rem;
+    color: #fafafa;
+    background-color: #9f1f42;
+    border: 1px solid #5b1226;
+  }
+  .danger-link {
+    @apply text-error;
+  }
+  .success-box {
+    @apply p-2 bg-gray-100 border border-gray-200 whitespace-pre-line mb-4;
+  }
+  .error-box {
+    margin: 0.5rem 0;
+    padding: 1rem;
+    color: #fafafa;
+    background-color: #9f1f42;
+    border: 1px solid #5b1226;
+    white-space: pre-line;
+  }
+  h1 {
+    @apply font-bold text-2xl md:text-4xl;
+  }
+  h1.page-title {
+    @apply text-3xl md:text-4xl font-light mb-4;
+  }
+  h2 {
+    @apply text-xl md:text-2xl font-bold;
+  }
+  h3 {
+    @apply text-lg md:text-xl font-bold;
+  }
+  h4 {
+    @apply md:text-lg font-bold capitalize;
+  }
+  .logo img {
+    height: 3rem;
+  }
+  .tag {
+    background-color: #13301e;
+    padding: 0.1rem 0.5rem;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    margin: 0 0.25rem 0.25rem 0;
+    border-radius: 1.1rem;
+    color: white;
+  }
+
+  .leading-12 {
+    line-height: 3rem;
+  }
+
+  .step-title {
+    @apply text-[32px] leading-12 font-normal;
+  }
+}
