@@ -8,7 +8,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "dotenv -e .env -v VARIABLE1=somevalue1 next dev",
+    "dev": "dotenv -e .env next dev",
     "build": "next build",
     "lint": "next lint",
     "lint-fix": "next lint --fix",
