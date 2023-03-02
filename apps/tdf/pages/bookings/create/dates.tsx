@@ -5,7 +5,6 @@ export const getStaticProps = async () => {
     const {
       data: { results },
     } = await api.get('/bookings/settings');
-    console.log('results', results);
     return {
       props: {
         settings: results,
