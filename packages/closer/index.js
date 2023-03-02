@@ -35,6 +35,9 @@ export { default as TicketPage } from './pages/tickets/[slug]/index';
 export { default as TicketsInvoicePage } from './pages/tickets/[slug]/invoice';
 export { default as TokenSalePage } from './pages/token-sale';
 export { default as TokenSaleReferralPage } from './pages/token-sale/[referralId]';
+export { default as SettingsPage } from './pages/settings';
+export { default as AdminPage } from './pages/admin';
+export { default as SignUpPage } from './pages/signup';
 
 // Components
 export { default as Footer } from './components/Footer';

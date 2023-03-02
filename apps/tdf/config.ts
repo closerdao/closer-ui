@@ -17,7 +17,6 @@ const config = {
     bookingVolunteers: true,
   },
   LOGO_FOOTER: '/images/logo.svg',
-  REGISTRATION_MODE: 'curated',
   PERMISSIONS: {
     event: {
       create: 'event-creator',

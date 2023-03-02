@@ -1,5 +1,3 @@
-import { useRouter } from 'next/router';
-
 import React, { useEffect, useState } from 'react';
 
 import objectPath from 'object-path';
@@ -28,7 +26,6 @@ const EditModel = ({
   fields,
   id,
   initialData,
-  buttonText,
   endpoint,
   onSave,
   onUpdate,
@@ -38,7 +35,6 @@ const EditModel = ({
   deleteButton,
   isPublic,
 }) => {
-  const router = useRouter();
   const { isAuthenticated, user } = useAuth();
   const initialModel =
     initialData ||
@@ -171,7 +167,9 @@ const EditModel = ({
         {__('edit_model_auth_required')}
       </div>
     );
-  } else if (
+  }
+
+  if (
     !isPublic &&
     data.createdBy &&
     user &&

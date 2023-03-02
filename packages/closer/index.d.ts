@@ -46,6 +46,9 @@ declare module 'closer' {
   export const TicketsInvoicePage: NextPage;
   export const TokenSalePage: NextPage;
   export const TokenSaleReferralPage: NextPage;
+  export const SettingsPage: NextPage;
+  export const AdminPage: NextPage;
+  export const SignUpPage: NextPage;
 
   export const Footer: React.FC;
   export const Navigation: React.FC;
