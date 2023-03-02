@@ -133,7 +133,6 @@ const DatesSelector = ({ error, settings }) => {
 };
 
 export const getStaticProps = async () => {
-  console.log('Booking dates page getStaticProps');
   try {
     const {
       data: { results },
@@ -147,7 +146,7 @@ export const getStaticProps = async () => {
     return {
       props: {
         error: err.message,
-        questions: null,
+        settings: null,
       },
     };
   }
