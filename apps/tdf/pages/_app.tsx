@@ -1,6 +1,6 @@
 import { AppProps } from 'next/app';
 
-import { FC, useEffect } from 'react';
+import { FC } from 'react';
 
 import { ErrorBoundary } from '@/components';
 import { Layout } from '@/components';
