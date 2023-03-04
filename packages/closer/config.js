@@ -13,8 +13,6 @@ module.exports = {
   CACHE_DURATION: 6000000, // 1h
   LOGO_HEADER: '/images/logo.png',
   LOGO_WIDTH: undefined,
-  REGISTRATION_MODE: 'open', // curated, paid, open
-  // LOGO_FOOTER: "",
   FACEBOOK_URL: 'https://instagram.com/closerearth',
   INSTAGRAM_URL: 'https://instagram.com/closerearth',
   DISCORD_URL: 'https://discord.gg/A5WFMwPRaK',

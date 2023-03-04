@@ -1,7 +1,8 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Linkify from 'react-linkify';
 
 import ConnectedWallet from '../../components/ConnectedWallet';
@@ -19,17 +20,17 @@ import api, { cdn } from '../../utils/api';
 import { __ } from '../../utils/helpers';
 
 const MemberPage = ({ member }) => {
-  const [photo, setPhoto] = useState(null);
+  const router = useRouter();
   const [introMessage, setMessage] = useState('');
   const [openIntro, setOpenIntro] = useState(false);
   const [error, setErrors] = useState(false);
   const [sendError, setSendErrors] = useState(false);
   const [linkName, setLinkName] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
-  const [links, setLinks] = useState(member && member.links);
+  const [links, setLinks] = useState(member?.links || []);
   const { user: currentUser, isAuthenticated } = useAuth();
-  const [about, setAbout] = useState(member && member.about);
-  const [tagline, setTagline] = useState(member && member.tagline);
+  const [about, setAbout] = useState(member?.about || '');
+  const [tagline, setTagline] = useState(member?.tagline || '');
   const [showForm, toggleShowForm] = useState(false);
   const [editProfile, toggleEditProfile] = useState(false);
 
@@ -109,12 +110,6 @@ const MemberPage = ({ member }) => {
     }
   };
 
-  useEffect(() => {
-    setAbout(member.about);
-    setTagline(member.tagline);
-    setLinks(member.links);
-  }, []);
-
   if (!member) {
     return <PageNotFound error={error} />;
   }
@@ -177,7 +172,7 @@ const MemberPage = ({ member }) => {
             <div className="flex flex-col md:flex-row w-full">
               <div className="group md:w-72 items-center justify-start relative">
                 <div className="flex flex-col items-start mb-4 md:mr-8 md:items-center">
-                  {member.photo ? (
+                  {member?.photo ? (
                     <img
                       src={`${cdn}${member.photo}-profile-lg.jpg`}
                       loading="lazy"
@@ -192,7 +187,9 @@ const MemberPage = ({ member }) => {
                       <UploadPhoto
                         model="user"
                         id={member._id}
-                        onSave={(id) => setPhoto(id)}
+                        onSave={() => {
+                          router.push(router.asPath);
+                        }}
                         label={member.photo ? 'Change photo' : 'Add photo'}
                       />
                     )}
@@ -227,7 +224,8 @@ const MemberPage = ({ member }) => {
                             as={`/members?role=${encodeURIComponent(role)}`}
                             href="/members"
                             key={role}
-                            className="tag">
+                            className="tag"
+                          >
                             {role}
                           </Link>
                         ))}
