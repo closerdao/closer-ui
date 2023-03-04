@@ -14,10 +14,6 @@ import { __ } from '../utils/helpers';
 import CheckoutForm from './CheckoutForm';
 import Conditions from './Conditions';
 
-if (!process.env.NEXT_PUBLIC_STRIPE_PUB_KEY) {
-  throw new Error('stripe key is undefined');
-}
-
 const stripe = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUB_KEY);
 
 const CheckoutPayment = ({
@@ -31,6 +27,11 @@ const CheckoutPayment = ({
   user,
   settings,
 }) => {
+
+  if (!process.env.NEXT_PUBLIC_STRIPE_PUB_KEY) {
+    throw new Error('stripe key is undefined');
+  }
+
   const bookingYear = dayjs(startDate).year();
   const bookingStartDayOfYear = dayjs(startDate).dayOfYear();
   // bookingNights below is a 2d-array in a form of
