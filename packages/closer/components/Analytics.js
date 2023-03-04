@@ -25,7 +25,7 @@ export const trackEvent = (category, action) => {
     console.log(category, action)
   }
 
-  event({category, label: action})
+  event({ category, label: action })
   // ReactGA.event({
   //   category,
   //   action,
