@@ -1,9 +1,10 @@
 import { AppProps } from 'next/app';
 
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 
 import { ErrorBoundary } from '@/components';
 import { Layout } from '@/components';
+import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import {
   ExternalProvider,
@@ -22,7 +23,6 @@ const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
     const library = new Web3Provider(provider);
     return library;
   }
-
   return (
     <ErrorBoundary>
       <AuthProvider>
@@ -30,6 +30,7 @@ const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
           <Web3ReactProvider getLibrary={getLibrary}>
             <WalletProvider>
               <Layout>
+                <GoogleAnalytics trackPageViews />
                 <Component {...pageProps} config={config} />
               </Layout>
             </WalletProvider>

@@ -5,6 +5,7 @@ import React from 'react';
 
 import { Playground } from '@/components';
 import { PINK_PAPER_URL } from '@/constants';
+import { Analytics, Layout } from 'closer';
 
 import { NextPage } from 'next';
 
@@ -17,9 +18,9 @@ const HomePage: NextPage = () => {
           Portugal
         </title>
       </Head>
-
-        <section className="text-xl mb-20">
-          <h1 className="mt-8 italic mb-4 text-4xl font-display font-bold">
+      <Layout>
+        <div className="text-xl mb-20">
+          <h1 className="mt-8 mb-4 text-6xl text-primary font-display font-bold">
             A{' '}
             <span>
               <Playground />
@@ -73,7 +74,7 @@ const HomePage: NextPage = () => {
             to create human living systems that leave a positive trace on its
             environment{' '}
             <sup>
-              <Link href="/impact-map">(view our impact map)</Link>
+              <Link href="/impact-map" onClick={ () => Analytics.trackEvent('HomePage', 'ImpactMap') }>(view our impact map)</Link>
             </sup>
             .
           </p>
@@ -95,17 +96,18 @@ const HomePage: NextPage = () => {
             developing a new form in living that&apos;s more in tune with nature
             and with our human creativity. We are creating a DAO governed
             regenerative village, sitting on lands conserved under the{' '}
-            <a href="https://oasa.earth" target="_blank" rel="noreferrer">
+            <a href="https://oasa.earth" target="_blank" rel="noreferrer" onClick={ () => Analytics.trackEvent('HomePage', 'Oasa') }>
               Oasa network
             </a>
             .
           </p>
 
-          <p className="mb-4">
+          <section className="mb-4">
             <Link
               href={PINK_PAPER_URL}
               className="button px-4 py-1 mr-4 mb-2 rounded-full bg-black hover:bg-white text-white hover:text-black font-bold"
               rel="nofollow noreferrer"
+              onClick={ () => Analytics.trackEvent('HomePage', 'PinkPaper') }
               target="_blank"
             >
               Read Pink Paper
@@ -113,10 +115,20 @@ const HomePage: NextPage = () => {
             <Link
               href="/roadmap"
               className="button px-4 py-1 mr-4 mb-2 rounded-full bg-black hover:bg-white text-white hover:text-black font-bold"
+              onClick={ () => Analytics.trackEvent('HomePage', 'Roadmap') }
             >
               See our roadmap
             </Link>
-          </p>
+          </section>
+
+
+
+          <section className="text-xl mb-20 mt-8 mb-4 text-4xl font-display bg-lime-100 p-20">
+            <h2 className="text-2xl font-bold mb-4">Executive summary:</h2>
+            <p>
+              The Traditional Dream Factory (TDF) is the first project of the <Link href="https://oasa.earth" target="_blank">OASA network</Link>, which aims to create a regenerative co-living model. OASA's mision is to put land into conservation while offering it as commons to be be regenerated to it's community of members. TDF operates through a DAO that issues the $TDF token through the OASA Association, and its tokenomics are designed to optimize common resources while nurturing a creative and thriving community and leaving a positive trace on the environment. The $TDF token is an ERC-20 token deployed on the Celo network. The $TDF issuance policy is regulated by the TDF Sale Price Curve, which mints new tokens on demand from the market within the limits set by the DAO. TDF DAO has established a target supply of 18,600 $TDF (see <Link href="https://oasa.earth/papers/OASA-Whitepaper-V1.2.pdf" target="_blank">whitepaper</Link> for details). The $TDF token gives TDF DAO Members the right to spend nights at TDF at operating cost every year.
+            </p>
+          </section>
 
           <hr className="my-8" />
 
@@ -127,15 +139,16 @@ const HomePage: NextPage = () => {
           </p>
           {/* <p className="mb-4">We are a regenerative living & creation collective based in Alentejo, Portugal.</p> */}
 
-          <p className="mb-4">
+          <section className="mb-4">
             <Link
               href="/signup"
               type="submit"
-              className="button px-4 py-1 mr-2 mb-2 rounded-full bg-pink-500 hover:bg-white text-white hover:text-pink-500 font-bold"
+              onClick={ () => Analytics.trackEvent('HomePage', 'Apply') }
+              className="button text-3xl px-8 py-4 block text-center mx-auto mt-8 mb-6 rounded-full hover:bg-pink-500 bg-white hover:text-white text-pink-500 font-bold"
             >
-              🐇 Become Member
+              Apply {' '} 🐇
             </Link>
-          </p>
+          </section>
           <div id="footnotes" className="mt-8 italic text-sm">
             <ol className="list-decimal pl-6">
               <li>
@@ -153,8 +166,8 @@ const HomePage: NextPage = () => {
               <li>Human kind - a hopeful history, Rutger Bregman.</li>
             </ol>
           </div>
-        </section>
-
+        </div>
+      </Layout>
     </>
   );
 };
