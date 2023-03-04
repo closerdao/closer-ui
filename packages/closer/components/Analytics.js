@@ -1,4 +1,5 @@
 import ReactGA from 'react-ga';
+import { event } from 'nextjs-google-analytics';
 
 import { GA_ANALYTICS } from '../config';
 
@@ -23,10 +24,12 @@ export const trackEvent = (category, action) => {
   if (window.logLevel > 1) {
     console.log(category, action)
   }
-  ReactGA.event({
-    category,
-    action,
-  });
+
+  event({category, label: action})
+  // ReactGA.event({
+  //   category,
+  //   action,
+  // });
 };
 
 export default {

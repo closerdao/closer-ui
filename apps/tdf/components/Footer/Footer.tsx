@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
 export const Footer: FC = () => (
-  <footer className="max-w-3xl m-full mx-auto">
+  <footer className="max-w-3xl m-full mx-auto p-8">
     <div className="py-6 text-gray-400">
       <p>
         Traditional Dream Factory is the first village in the{' '}
