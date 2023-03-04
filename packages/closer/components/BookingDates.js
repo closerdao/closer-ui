@@ -9,7 +9,7 @@ dayjs.extend(relativeTime);
 
 const BookingDates = ({
   isMember,
-  conditions: { member, guest },
+  conditions: { member, guest } = {},
   startDate,
   endDate,
   setStartDate,
@@ -20,16 +20,16 @@ const BookingDates = ({
       return (
         __(
           'bookings_dates_step_member_book_horizon',
-          member.maxBookingHorizon,
+          member?.maxBookingHorizon,
         ) +
         ', ' +
-        __('bookings_dates_step_book_duration', member.maxDuration)
+        __('bookings_dates_step_book_duration', member?.maxDuration)
       );
     } else {
       return (
-        __('bookings_dates_step_guest_book_horizon', guest.maxBookingHorizon) +
+        __('bookings_dates_step_guest_book_horizon', guest?.maxBookingHorizon) +
         ', ' +
-        __('bookings_dates_step_book_duration', guest.maxDuration)
+        __('bookings_dates_step_book_duration', guest?.maxDuration)
       );
     }
   };
@@ -52,7 +52,7 @@ const BookingDates = ({
             minValue={dayjs().format('YYYY-MM-DD')}
             maxValue={dayjs()
               .add(
-                isMember ? member.maxBookingHorizon : guest.maxBookingHorizon,
+                isMember ? member?.maxBookingHorizon : guest?.maxBookingHorizon,
                 'days',
               )
               .format('YYYY-MM-DD')}
@@ -69,7 +69,7 @@ const BookingDates = ({
             value={endDate}
             minValue={dayjs(startDate).add(1, 'days').format('YYYY-MM-DD')}
             maxValue={dayjs(startDate)
-              .add(isMember ? member.maxDuration : guest.maxDuration, 'days')
+              .add(isMember ? member?.maxDuration : guest?.maxDuration, 'days')
               .format('YYYY-MM-DD')}
             onChange={(end) => setEndDate(end.format('YYYY-MM-DD'))}
             showTime={false}

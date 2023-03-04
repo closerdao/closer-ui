@@ -10,7 +10,8 @@
         "NEXT_PUBLIC_API_URL",
         "NEXT_PUBLIC_PLATFORM",
         "NEXT_PUBLIC_LOG_REQUESTS",
-        "NEXT_PUBLIC_STRIPE_PUB_KEY"
+        "NEXT_PUBLIC_STRIPE_PUB_KEY",
+        "NEXT_PUBLIC_REGISTRATION_MODE"
       ]
     },
     "lint": {

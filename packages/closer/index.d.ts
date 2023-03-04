@@ -25,10 +25,30 @@ declare module 'closer' {
   export const EditEventPage: NextPage;
   export const CheckoutEventPage: NextPage;
   export const TicketsEventPage: NextPage;
-
   export const LoginPage: NextPage;
   export const ForgotPasswordPage: NextPage;
   export const SetPasswordPage: NextPage;
+  export const BookingsPage: NextPage;
+  export const BookingsRequestsPage: NextPage;
+  export const BookingPage: NextPage;
+  export const BookingCancelPage: NextPage;
+  export const BookingCheckoutPage: NextPage;
+  export const BookingConfirmationPage: NextPage;
+  export const BookingQuestionsPage: NextPage;
+  export const BookingSummaryPage: NextPage;
+  export const CreateBookingPage: NextPage;
+  export const CreateBookingAccomodationPage: NextPage;
+  export const CreateBookingDatesPage: NextPage;
+  export const EditBookingPage: NextPage;
+  export const MembersPage: NextPage;
+  export const MemberPage: NextPage;
+  export const TicketPage: NextPage;
+  export const TicketsInvoicePage: NextPage;
+  export const TokenSalePage: NextPage;
+  export const TokenSaleReferralPage: NextPage;
+  export const SettingsPage: NextPage;
+  export const AdminPage: NextPage;
+  export const SignUpPage: NextPage;
 
   export const Footer: React.FC;
   export const Navigation: React.FC;

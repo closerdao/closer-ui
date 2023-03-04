@@ -25,9 +25,6 @@ const FormField = ({
   endpoint,
   searchField,
   multi,
-  defaultValue,
-  toggleFeature,
-  toggleLabel,
   min,
   max,
 }) => {
@@ -48,7 +45,7 @@ const FormField = ({
               placeholder={placeholder}
               min={min}
               max={max}
-              className={className}
+              className={'bg-transparent ' + className}
               onChange={(e) => update(name, e.target.value)}
               required={required}
             />
@@ -61,7 +58,6 @@ const FormField = ({
           )}
           {type === 'longtext' && (
             <textarea
-              // type={ type }
               value={data[name]}
               placeholder={placeholder}
               onChange={(e) => update(name, e.target.value)}
@@ -129,10 +125,7 @@ const FormField = ({
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  update(
-                    name,
-                    (data[name] || []).concat(currencies[0]),
-                  );
+                  update(name, (data[name] || []).concat(currencies[0]));
                 }}
               >
                 {__('form_field_add_currency')}
