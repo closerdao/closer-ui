@@ -1,13 +1,8 @@
 import { FC } from 'react';
 
 export const Footer: FC = () => (
-<<<<<<< HEAD
   <footer className="max-w-3xl m-full mx-auto p-8">
     <div className="py-6 text-gray-400">
-=======
-  <footer className="max-w-3xl m-full mx-auto">
-    <div className="p-6 text-gray-400">
->>>>>>> origin/main
       <p>
         Traditional Dream Factory is the first village in the{' '}
         <a href="https://oasa.earth" target="_blank" rel="noreferrer">

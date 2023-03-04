@@ -18,14 +18,8 @@ const HomePage: NextPage = () => {
           Portugal
         </title>
       </Head>
-<<<<<<< HEAD
       <div className="text-xl mb-20 p-8">
         <h1 className="mt-8 mb-4 text-6xl text-primary font-display font-bold">
-=======
-
-      <section className="text-xl mb-20 p-6">
-        <h1 className="mt-8 italic mb-4 text-4xl font-display font-bold">
->>>>>>> origin/main
           A{' '}
           <span>
             <Playground />
@@ -79,7 +73,6 @@ const HomePage: NextPage = () => {
           to create human living systems that leave a positive trace on its
           environment{' '}
           <sup>
-<<<<<<< HEAD
             <Link
               href="/impact-map"
               onClick={() =>
@@ -88,9 +81,6 @@ const HomePage: NextPage = () => {
             >
               (view our impact map)
             </Link>
-=======
-            <Link href="/impact-map">(view our impact map)</Link>
->>>>>>> origin/main
           </sup>
           .
         </p>
