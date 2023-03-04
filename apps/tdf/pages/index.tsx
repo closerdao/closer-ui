@@ -137,7 +137,7 @@ const HomePage: NextPage = () => {
           </Link>
         </section>
 
-        <section className="text-xl mb-20 mt-8 mb-4 text-4xl font-display bg-primary text-white p-8">
+        <section className="text-xl mb-20 mt-8 mb-4 text-4xl font-display bg-pink-100 p-8">
           <h2 className="text-2xl font-bold mb-4">Executive summary:</h2>
           <p>
             The Traditional Dream Factory (TDF) is the first project of the{' '}
