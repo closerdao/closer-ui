@@ -4,7 +4,6 @@ import { FC } from 'react';
 
 import { ErrorBoundary } from '@/components';
 import { Layout } from '@/components';
-import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import {
   ExternalProvider,
@@ -14,6 +13,7 @@ import {
 import { Web3ReactProvider } from '@web3-react/core';
 import { AuthProvider, PlatformProvider, WalletProvider } from 'closer';
 import 'closer/public/styles.css';
+import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import config from '../config';
 import '../index.css';
