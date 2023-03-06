@@ -132,22 +132,18 @@ const DatesSelector = ({ error, settings }) => {
   );
 };
 
-export const getStaticProps = async () => {
+DatesSelector.getInitialProps = async () => {
   try {
     const {
       data: { results },
     } = await api.get('/bookings/settings');
     return {
-      props: {
-        settings: results,
-      },
+      settings: results,
     };
   } catch (err) {
     return {
-      props: {
-        error: err.message,
-        settings: null,
-      },
+      error: err.message,
+      settings: null,
     };
   }
 };
