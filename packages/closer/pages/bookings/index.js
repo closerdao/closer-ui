@@ -38,7 +38,7 @@ const BookingsDirectory = () => {
       <Head>
         <title>{__('bookings_title')}</title>
       </Head>
-      <div className="main-content intro fullwidth">
+      <div className="main-content intro w-full">
         <Tabs
           tabs={[
             {

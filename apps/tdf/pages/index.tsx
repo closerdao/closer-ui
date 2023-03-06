@@ -18,7 +18,7 @@ const HomePage: NextPage = () => {
         </title>
       </Head>
 
-      <section className="text-xl mb-20 p-6">
+      <section className="text-xl mb-20">
         <h1 className="mt-8 italic mb-4 text-4xl font-display font-bold">
           A{' '}
           <span>

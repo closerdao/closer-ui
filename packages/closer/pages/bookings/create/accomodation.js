@@ -21,6 +21,11 @@ const AccomodationSelector = ({
   useTokens,
   listings,
 }) => {
+  console.log(
+    'acc',
+
+    listings,
+  );
   const router = useRouter();
   const bookListing = async ({ listingId }) => {
     try {
@@ -107,6 +112,7 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
     pets,
     useTokens,
   });
+  console.log('res', results);
   return {
     listings: results,
     start,

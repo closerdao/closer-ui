@@ -68,11 +68,11 @@ const Application = ({ Component, pageProps }) => {
             <WalletProvider>
               <Navigation />
               <Component {...pageProps} />
+              <Footer />
             </WalletProvider>
           </Web3ReactProvider>
         </PlatformProvider>
       </AuthProvider>
-      <Footer />
     </div>
   );
 };
