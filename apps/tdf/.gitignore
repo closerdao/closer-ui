@@ -1,6 +1,7 @@
 
 # Sentry
 .sentryclirc
+.env.local
 
 # Sentry
 next.config.original.js
