@@ -81,6 +81,9 @@
   h4 {
     @apply md:text-lg font-bold capitalize;
   }
+  p a {
+    text-decoration: underline;
+  }
   .logo img {
     height: 3rem;
   }

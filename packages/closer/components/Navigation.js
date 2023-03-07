@@ -35,7 +35,7 @@ const Navigation = () => {
 
   return (
     <div className="NavContainer pt-20 md:pt-0 relative z-20">
-      <div className="main-content h-20 fixed z-50 top-0 left-0 right-0 shadow-sm md:relative  flex justify-between items-center">
+      <div className="main-content h-20 fixed z-50 top-0 left-0 right-0 md:relative  flex justify-between items-center">
         <Logo />
         <div className="flex gap-4">
           {isAuthenticated && (

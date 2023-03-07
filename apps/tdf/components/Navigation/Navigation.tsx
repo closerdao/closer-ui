@@ -3,7 +3,7 @@ import Link from 'next/link';
 import React from 'react';
 
 export const Navigation = () => (
-  <header className="navigation flex justify-between items-center mb-4 mx-auto max-w-3xl w-full">
+  <header className="navigation flex justify-between items-center mb-4 mx-auto w-full">
     <h2 className="text-xl font-display font-black">
       <Link
         href="/"

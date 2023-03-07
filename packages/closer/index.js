@@ -42,6 +42,8 @@ export { default as SignUpPage } from './pages/signup';
 // Components
 export { default as Footer } from './components/Footer';
 export { default as Navigation } from './components/Navigation';
+export { default as Analytics } from './components/Analytics';
+export { default as Layout } from './components/Layout';
 
 // Utils
 export { default as api } from './utils/api';
