@@ -5,7 +5,7 @@ import React from 'react';
 import dayjs from 'dayjs';
 
 import ProfilePhoto from './ProfilePhoto';
-const TicketCounter = ({ count }) => count && (
+const TicketCounter = ({ count }) => count > 0 && (
   <div className="z-10 w-9 h-9 inline-flex justify-center items-center text-center rounded-full overflow-hidden bg-black text-white text-sm">
     +{Math.min(count, 99)}
   </div>
