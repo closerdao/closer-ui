@@ -49,7 +49,7 @@ const Event = ({ event, error }) => {
   const dateFormat = isThisYear ? 'MMMM Do HH:mm' : 'YYYY MMMM Do HH:mm';
   const myTickets = platform.ticket.find(myTicketFilter);
   const ticketsCount = event.ticketOptions ?
-    (platform.ticket.findCount(allTicketFilter) || 0) - event.attendees.length :
+    (platform.ticket.findCount(allTicketFilter) || event.attendees.length) - event.attendees.length :
     event.attendees && event.attendees.length;
 
   const loadData = async () => {

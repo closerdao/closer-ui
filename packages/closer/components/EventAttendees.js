@@ -38,7 +38,7 @@ const EventAttendees = ({ user, event, start, attendees, platform, ticketsCount 
               </Link>
             );
           })}
-          { ticketsCount && <TicketCounter count={ ticketsCount } /> }
+          { ticketsCount > 0 && <TicketCounter count={ ticketsCount } /> }
         </div>
       ) : platform && attendees.length > 0 ? (
         <div>
@@ -62,7 +62,7 @@ const EventAttendees = ({ user, event, start, attendees, platform, ticketsCount 
               </Link>)
             );
           })}
-          { ticketsCount && <TicketCounter count={ ticketsCount } /> }
+          { ticketsCount > 0 && <TicketCounter count={ ticketsCount } /> }
         </div>
       ) : (
         'No results'
