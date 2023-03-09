@@ -13,6 +13,7 @@ import {
 import { Web3ReactProvider } from '@web3-react/core';
 import { AuthProvider, PlatformProvider, WalletProvider } from 'closer';
 import 'closer/public/styles.css';
+import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import config from '../config';
 import '../index.css';
@@ -22,7 +23,6 @@ const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
     const library = new Web3Provider(provider);
     return library;
   }
-
   return (
     <ErrorBoundary>
       <AuthProvider>
@@ -30,6 +30,7 @@ const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
           <Web3ReactProvider getLibrary={getLibrary}>
             <WalletProvider>
               <Layout>
+                <GoogleAnalytics trackPageViews />
                 <Component {...pageProps} config={config} />
               </Layout>
             </WalletProvider>
