@@ -162,7 +162,6 @@ const EditModel = ({
   }, [endpoint, id, initialData, fields]);
 
   if (!isPublic && !isAuthenticated) {
-    console.log('not auth', isPublic, isAuthenticated);
     return (
       <div className="validation-error card">
         {__('edit_model_auth_required')}

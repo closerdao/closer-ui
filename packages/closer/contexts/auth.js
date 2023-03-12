@@ -44,7 +44,6 @@ export const AuthProvider = ({ children }) => {
         setError(err.message);
       }
     }
-    console.log('loading user from cookies', Cookies.get('token'));
     loadUserFromCookies();
   }, []);
 
