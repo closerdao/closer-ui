@@ -3,7 +3,6 @@ import { useContext } from 'react';
 import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
 
-import config from '../config';
 import { useAuth } from '../contexts/auth';
 import { WalletState } from '../contexts/wallet';
 import { __ } from '../utils/helpers';
@@ -24,10 +23,9 @@ const TokenSaleMemberView = ({
 
   return (
     <Layout>
-      <div className="font-marketing w-full px-4 pb-20 mt-6 md:px-20 md:mt-20 ">
+      <div className="font-marketing w-full px-4 pb-20 mt-6">
         <div className="flex flex-col mb-4 md:flex-row">
           <TokenSaleHeader
-            hasCountDown={config.TOKEN_SALE_HAS_COUNTDOWN}
             saleDate={personalSaleDate}
             title={
               isWhiteListed
