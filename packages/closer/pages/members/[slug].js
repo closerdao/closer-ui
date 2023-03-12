@@ -313,7 +313,7 @@ const MemberPage = ({ member }) => {
                   <div className="w-full">
                     <div className="page-title flex justify-between">
                       <h3 className="mt-8 md:mt-3">
-                        Meet {member.screenname} at:
+                        {__('members_slug_my_events')}
                       </h3>
                     </div>
 
