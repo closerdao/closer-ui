@@ -14,6 +14,7 @@ const TokenSaleHeader = ({ title, description, saleDate }) => {
   const redirectToTokenSale = () => {
     router.push('/token-sale');
   };
+  console.log('header', title, description);
 
   if (!componentHasMounted || !saleDate) {
     // this prevents hydration errors
