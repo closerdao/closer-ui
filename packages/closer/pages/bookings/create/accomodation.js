@@ -78,6 +78,16 @@ const AccomodationSelector = ({
           backToDates={backToDates}
         />
 
+        {listings.length === 0 && (
+          <div className="mt-16">
+            <h2 className="text-2xl font-bold">
+              {__('bookings_accomodation_no_results_title')}
+            </h2>
+            <p className="mt-4 text-lg">
+              {__('bookings_accomodation_no_results_description')}
+            </p>
+          </div>
+        )}
         <div className="mt-16 md:grid md:grid-flow-col md:items-start md:gap-2">
           {listings.map((listing) => (
             <ListingCard
