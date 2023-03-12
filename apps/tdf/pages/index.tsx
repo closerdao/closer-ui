@@ -18,7 +18,7 @@ const HomePage: NextPage = () => {
           Portugal
         </title>
       </Head>
-      <div className="text-xl mb-20 p-8">
+      <div className="text-xl mb-20">
         <h1 className="mt-8 mb-4 text-6xl text-primary font-display font-bold">
           A{' '}
           <span>

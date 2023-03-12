@@ -4,13 +4,16 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 const { withSentryConfig } = require('@sentry/nextjs');
 
-module.exports = {
+const moduleExports = {
   reactStrictMode: true,
   transpilePackages: ['closer'],
+  sentry: {
+    hideSourcemaps: true,
+  },
 };
 
-module.exports = withSentryConfig(
-  module.exports,
-  { silent: true },
-  { hideSourcemaps: true },
-);
+const sentryWebpackPluginOptions = {
+  silent: true,
+};
+
+module.exports = withSentryConfig(moduleExports, sentryWebpackPluginOptions);

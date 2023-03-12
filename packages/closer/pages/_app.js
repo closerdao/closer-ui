@@ -67,7 +67,9 @@ const Application = ({ Component, pageProps }) => {
           <Web3ReactProvider getLibrary={getLibrary}>
             <WalletProvider>
               <Navigation />
-              <Component {...pageProps} />
+              <div className="p-6 flex flex-1 flex-col items-center">
+                <Component {...pageProps} />
+              </div>
               <Footer />
             </WalletProvider>
           </Web3ReactProvider>

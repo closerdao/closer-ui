@@ -162,6 +162,7 @@ const EditModel = ({
   }, [endpoint, id, initialData, fields]);
 
   if (!isPublic && !isAuthenticated) {
+    console.log('not auth', isPublic, isAuthenticated);
     return (
       <div className="validation-error card">
         {__('edit_model_auth_required')}
@@ -213,14 +214,14 @@ const EditModel = ({
           <FormField {...field} key={field.name} data={data} update={update} />
         ))
       )}
-      <div className="mt-2">
+      <div className="mt-2 flex items-center">
         <button type="submit" className="btn-primary">
           {__('edit_model_save')}
         </button>
         {allowDelete && (
           <a
             href="#"
-            className="text-red-700 ml-2"
+            className="text-red-700 ml-4"
             onClick={(e) => {
               e.preventDefault();
               deleteObject();

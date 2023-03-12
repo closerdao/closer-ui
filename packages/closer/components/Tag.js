@@ -12,7 +12,7 @@ const colors = {
 const Tag = ({ color, children, remove }) => {
   return (
     <span
-      className={`${colors[color]} inline-flex items-center text-sm rounded mt-2 mr-1 overflow-hidden`}
+      className={`${colors[color]} inline-flex items-center text-sm rounded overflow-hidden`}
     >
       <span
         className="ml-2 mr-1 leading-relaxed truncate max-w-xs px-1"

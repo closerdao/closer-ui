@@ -1,5 +1,4 @@
 import Head from 'next/head';
-import { useRouter } from 'next/router';
 
 import React, { useEffect } from 'react';
 
@@ -14,8 +13,6 @@ import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
 const EventTickets = ({ event }) => {
-  const router = useRouter();
-
   const { user } = useAuth();
   const { platform } = usePlatform();
   const ticketsFilter = { where: { event: event && event._id } };
@@ -76,7 +73,7 @@ const EventTickets = ({ event }) => {
     </Layout>
   );
 };
-EventTickets.getInitialProps = async ({ req, query }) => {
+EventTickets.getInitialProps = async ({ query }) => {
   try {
     const {
       data: { results: event },

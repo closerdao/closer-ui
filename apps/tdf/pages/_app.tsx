@@ -16,7 +16,7 @@ import 'closer/public/styles.css';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import config from '../config';
-import '../index.css';
+import '../styles/index.css';
 
 const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
   function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {

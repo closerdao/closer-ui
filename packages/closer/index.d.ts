@@ -49,6 +49,10 @@ declare module 'closer' {
   export const SettingsPage: NextPage;
   export const AdminPage: NextPage;
   export const SignUpPage: NextPage;
+  export const ListingsPage: NextPage;
+  export const ListingPage: NextPage;
+  export const EditListingPage: NextPage;
+  export const CreateListingPage: NextPage;
 
   export const Footer: React.FC;
   export const Navigation: React.FC;
@@ -73,6 +77,4 @@ declare module 'closer' {
     tokenDecimals: number,
     displayDecimals?: number,
   ) => string;
-
-  export * as theme from 'closer/theme';
 }

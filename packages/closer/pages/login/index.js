@@ -59,8 +59,6 @@ const Login = () => {
     const activated = await injected.activate();
     if (activated?.account) {
       signInWithWallet(activated.account);
-    } else {
-      console.log('no account activated');
     }
   };
 
@@ -75,7 +73,7 @@ const Login = () => {
       <Head>
         <title>{__('login_title')}</title>
       </Head>
-      <main className="main-content max-w-prose center intro flex flex-col justify-center flex-1">
+      <main className="w-full md:max-w-prose center intro flex flex-col justify-center flex-1">
         {error && <p className="text-primary my-4 text-center">{error}</p>}
         <form onSubmit={onSubmit}>
           <div className="w-full mb-4">
@@ -132,10 +130,9 @@ const Login = () => {
             <Link
               href="/login/forgot-password"
               as="/login/forgot-password"
-              className="whitespace-nowrap">
-
+              className="whitespace-nowrap"
+            >
               {__('login_link_forgot_password')}
-
             </Link>
           </div>
         </form>

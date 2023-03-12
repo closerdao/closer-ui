@@ -11,14 +11,11 @@ import { __ } from '../../utils/helpers';
 
 const SetPasswordScreen = () => {
   const router = useRouter();
-  const { completeRegistration, updatePassword, error, isAuthenticated } =
-    useAuth();
+  const { completeRegistration, updatePassword, isAuthenticated } = useAuth();
   const [password, setPassword] = useState('');
   const [screenname, setName] = useState('');
   const [actionCompleted, setActionCompleted] = useState(false);
   let tokenContent = {};
-
-  console.log(router.query.signup_token);
 
   if (router.query.signup_token) {
     try {
@@ -41,9 +38,7 @@ const SetPasswordScreen = () => {
           <div className="">
             <p>{__('login_set_password_success')}</p>
             <Link href="/login" className="btn mt-4 md: w-fit">
-
               {__('login_set_password_link')}
-
             </Link>
           </div>
         ) : router.query.signup_token || router.query.reset_token ? (

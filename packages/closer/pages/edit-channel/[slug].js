@@ -56,8 +56,6 @@ EditChannel.getInitialProps = async ({ query }) => {
       data: { results: channel },
     } = await api.get(`/channel/${query.slug}`);
 
-    console.log('channel', channel);
-
     return { channel };
   } catch (err) {
     return {

@@ -17,8 +17,8 @@ dayjs.extend(customParseFormat);
 const TokenSalePage = () => {
   const { platform } = usePlatform();
   const { isAuthenticated, user } = useAuth();
-
   const [referredByUserId, setReferredByUserId] = useState(null);
+
   useEffect(() => {
     const id = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
     setReferredByUserId(id);

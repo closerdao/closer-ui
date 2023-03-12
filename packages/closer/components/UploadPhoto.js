@@ -31,7 +31,6 @@ const UploadPhoto = ({ model, id, onSave, label, minimal }) => {
             });
           }
           setLoading(false);
-          console.log('Photo uploaded!', photo);
           if (onSave) {
             onSave(photo._id);
           }

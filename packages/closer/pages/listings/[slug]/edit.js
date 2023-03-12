@@ -20,7 +20,7 @@ const EditListing = ({ listing }) => {
   if (!listing) {
     return <h1>{__('listings_slug_edit_error')}</h1>;
   }
-
+  console.log('listing', listing.name);
   return (
     <Layout protect>
       <Head>
@@ -28,7 +28,7 @@ const EditListing = ({ listing }) => {
           {__('listings_slug_edit_title')} {listing.name}
         </title>
       </Head>
-      <div className="main-content">
+      <div className="w-full">
         <EditModel
           id={listing._id}
           endpoint={'/listing'}

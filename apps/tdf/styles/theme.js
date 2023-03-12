@@ -1,5 +1,5 @@
-import { theme as closerTheme } from 'closer';
-import defaultTheme from 'tailwindcss/defaultTheme';
+const closerTheme = require('closer/theme');
+const defaultTheme = require('tailwindcss/defaultTheme');
 
 const tdfTheme = {
   extend: {
@@ -23,4 +23,4 @@ const tdfTheme = {
   plugins: [],
 };
 
-export default tdfTheme;
+module.exports = tdfTheme;
