@@ -44,6 +44,7 @@ export const AuthProvider = ({ children }) => {
         setError(err.message);
       }
     }
+    console.log('loading user from cookies', Cookies.get('token'));
     loadUserFromCookies();
   }, []);
 
@@ -88,6 +89,7 @@ export const AuthProvider = ({ children }) => {
       } = await api.post('/signup', data);
       if (token && userData) {
         Cookies.set('token', token, { expires: 60 });
+        api.defaults.headers.Authorization = `Bearer ${token}`;
         setUser(userData);
       }
       setError('');
