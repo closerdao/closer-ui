@@ -41,7 +41,7 @@ const CheckoutForm = ({
   currency,
   discountCode,
   onSuccess,
-  submitButtonClassName = '',
+  submitButtonClassName = 'btn-primary',
   cardElementClassName = '',
   prePayInTokens = () => {},
   isProcessingTokenPayment = false,
