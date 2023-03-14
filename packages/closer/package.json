@@ -45,6 +45,7 @@
     "react-ga": "^3.3.0",
     "react-icons": "^4.3.1",
     "react-linkify": "^1.0.0-alpha",
+    "react-markdown": "^8.0.5",
     "react-qr-code": "^2.0.3",
     "react-select": "latest",
     "react-tooltip": "^4.2.21",
