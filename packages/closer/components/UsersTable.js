@@ -88,7 +88,7 @@ const UsersTable = ({ where, limit }) => {
                       </div>
                     </td>
                     <td className="p-2 whitespace-nowrap">
-                      <div className="space-x-1 flex flex-wrap justify-start items-start">
+                      <div className="space-x-2 flex flex-wrap justify-start items-center">
                         {user.get('roles') &&
                           user.get('roles').map((role) => (
                             <Tag

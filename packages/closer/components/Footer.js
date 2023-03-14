@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 import { FaTelegram } from '@react-icons/all-files/fa/FaTelegram';
@@ -19,7 +18,7 @@ import Newsletter from './Newsletter';
 
 const footer = () => (
   <div>
-    <footer className="flex flex-col items-center p-4">
+    <footer className="flex flex-col items-center p-4 main-content">
       <div className="flex flex-col md:flex-row py-2 items-center w-full justify-between">
         <div className="flex flex-col items-center md:items-start">
           <div className="flex flex-row mb-8 md:mb-1">

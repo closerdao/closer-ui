@@ -1,5 +1,5 @@
-import { theme as closerTheme } from 'closer';
-import defaultTheme from 'tailwindcss/defaultTheme';
+const closerTheme = require('closer/theme');
+const defaultTheme = require('tailwindcss/defaultTheme');
 
 const tdfTheme = {
   extend: {
@@ -17,10 +17,10 @@ const tdfTheme = {
       line: '#a3a3a3',
     },
     fontFamily: {
-      sans: ['Barlow', ...defaultTheme.fontFamily.sans],
+      marketing: ['Barlow', ...defaultTheme.fontFamily.sans],
     },
   },
   plugins: [],
 };
 
-export default tdfTheme;
+module.exports = tdfTheme;

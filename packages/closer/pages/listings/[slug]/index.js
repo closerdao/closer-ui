@@ -1,24 +1,19 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Linkify from 'react-linkify';
 
 import Layout from '../../../components/Layout';
 import PostList from '../../../components/PostList';
 import Slider from '../../../components/Slider';
 
-
 import PageNotFound from '../../404';
-import { useAuth } from '../../../contexts/auth';
 import api, { cdn } from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
 const Listing = ({ listing, error }) => {
-  const [photo, setPhoto] = useState(
-    listing && listing.photos && listing.photos[0],
-  );
-  const { isAuthenticated, user } = useAuth();
+  const photo = listing && listing.photos && listing.photos[0];
 
   if (!listing) {
     return <PageNotFound />;
@@ -88,10 +83,9 @@ const Listing = ({ listing, error }) => {
             <section className="my-4">
               <Link
                 href={`/listings/book?listing=${listing.slug}`}
-                className="text-lg btn-primary">
-
+                className="text-lg btn-primary"
+              >
                 {__('listings_slug_link')}
-
               </Link>
             </section>
             <section>
@@ -108,7 +102,7 @@ const Listing = ({ listing, error }) => {
     </Layout>
   );
 };
-Listing.getInitialProps = async ({ req, query }) => {
+Listing.getInitialProps = async ({ query }) => {
   try {
     const {
       data: { results: listing },

@@ -18,7 +18,7 @@ const HomePage: NextPage = () => {
           Portugal
         </title>
       </Head>
-      <div className="text-xl mb-20 p-8">
+      <div className="text-xl mb-20">
         <h1 className="mt-8 mb-4 text-6xl text-primary font-display font-bold">
           A{' '}
           <span>
@@ -184,7 +184,7 @@ const HomePage: NextPage = () => {
             }
             className="button text-3xl px-8 py-4 block text-center mx-auto mt-8 mb-6 rounded-full hover:bg-pink-500 bg-white hover:text-white text-pink-500 font-bold"
           >
-            Apply 🐇
+            Want to know more? 🐇
           </Link>
         </section>
         <div id="footnotes" className="mt-8 italic text-sm">

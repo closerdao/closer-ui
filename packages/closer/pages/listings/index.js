@@ -1,6 +1,5 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 
 import React, { useEffect } from 'react';
 
@@ -13,8 +12,6 @@ import { usePlatform } from '../../contexts/platform';
 import { __ } from '../../utils/helpers';
 
 const Listings = () => {
-  const router = useRouter();
-
   const { user } = useAuth();
   const { platform } = usePlatform();
 
@@ -44,11 +41,15 @@ const Listings = () => {
       {listings && listings.get('error') && (
         <div className="validation-error">{listings.get('error')}</div>
       )}
-      <div className="main-content intro fullwidth">
-        <div className="page-header mb-3 flex justify-between">
+      <div className="main-content w-full">
+        <div className="page-header mb-6 flex justify-between">
           <h1>{__('listings_title')}</h1>
           <div className="user-actions">
-            <Link as="/listings/create" href="/listings/create" className="btn-primary">
+            <Link
+              as="/listings/create"
+              href="/listings/create"
+              className="btn-primary"
+            >
               {__('listings_create')}
             </Link>
           </div>
@@ -56,11 +57,11 @@ const Listings = () => {
         <div className="grid md:grid-cols-3 gap-6">
           {listings && listings.count() > 0
             ? listings.map((listing) => (
-              <ListingListPreview
-                key={listing.get('_id')}
-                listing={listing}
-              />
-            ))
+                <ListingListPreview
+                  key={listing.get('_id')}
+                  listing={listing}
+                />
+              ))
             : 'No Listings'}
         </div>
       </div>

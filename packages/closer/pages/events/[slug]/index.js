@@ -36,12 +36,21 @@ const Event = ({ event, error }) => {
       email: user && user.email,
     },
   };
+  const allTicketFilter = event && {
+    where: {
+      event: event._id,
+      status: 'approved'
+    },
+  };
   const start = event && event.start && dayjs(event.start);
   const end = event && event.end && dayjs(event.end);
   const duration = end && end.diff(start, 'hour', true);
   const isThisYear = dayjs().isSame(start, 'year');
   const dateFormat = isThisYear ? 'MMMM Do HH:mm' : 'YYYY MMMM Do HH:mm';
   const myTickets = platform.ticket.find(myTicketFilter);
+  const ticketsCount = event.ticketOptions ?
+    (platform.ticket.findCount(allTicketFilter) || event.attendees.length) - event.attendees.length :
+    event.attendees && event.attendees.length;
 
   const loadData = async () => {
     if (event.attendees && event.attendees.length > 0) {
@@ -50,6 +59,7 @@ const Event = ({ event, error }) => {
         // Load attendees list
         platform.user.get(params),
         platform.ticket.get(myTicketFilter),
+        platform.ticket.getCount(allTicketFilter),
       ]);
     }
   };
@@ -388,6 +398,7 @@ const Event = ({ event, error }) => {
                 user={user}
                 start={start}
                 attendees={attendees}
+                ticketsCount={ ticketsCount }
                 platform={platform}
               />
             )}

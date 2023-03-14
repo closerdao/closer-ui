@@ -21,11 +21,6 @@ const AccomodationSelector = ({
   useTokens,
   listings,
 }) => {
-  console.log(
-    'acc',
-
-    listings,
-  );
   const router = useRouter();
   const bookListing = async ({ listingId }) => {
     try {
@@ -68,7 +63,7 @@ const AccomodationSelector = ({
 
   return (
     <Layout>
-      <div className="max-w-screen-sm mx-auto p-8">
+      <div className="max-w-screen-sm mx-auto md:first-letter:p-8">
         <BookingBackButton action={backToDates} name={__('buttons_back')} />
         <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">🏡</span>
@@ -83,6 +78,16 @@ const AccomodationSelector = ({
           backToDates={backToDates}
         />
 
+        {listings.length === 0 && (
+          <div className="mt-16">
+            <h2 className="text-2xl font-bold">
+              {__('bookings_accomodation_no_results_title')}
+            </h2>
+            <p className="mt-4 text-lg">
+              {__('bookings_accomodation_no_results_description')}
+            </p>
+          </div>
+        )}
         <div className="mt-16 md:grid md:grid-flow-col md:items-start md:gap-2">
           {listings.map((listing) => (
             <ListingCard
@@ -112,7 +117,7 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
     pets,
     useTokens,
   });
-  console.log('res', results);
+
   return {
     listings: results,
     start,

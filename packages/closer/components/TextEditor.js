@@ -28,7 +28,6 @@ const TextEditor = ({ onChange, value }) => {
       xhr.send(data);
       xhr.addEventListener('load', () => {
         const response = JSON.parse(xhr.responseText);
-        console.log(response);
         resolve(response);
       });
       xhr.addEventListener('error', () => {

@@ -9,7 +9,7 @@ import Layout from '../../components/Layout';
 import models from '../../models';
 import { __ } from '../../utils/helpers';
 
-const CreateListing = ({ token }) => {
+const CreateListing = () => {
   const router = useRouter();
 
   return (
@@ -17,7 +17,7 @@ const CreateListing = ({ token }) => {
       <Head>
         <title>{__('listings_create_title')}</title>
       </Head>
-      <div className="main-content intro">
+      <div className="main-content intro w-full">
         <EditModel
           endpoint={'/listing'}
           fields={models.listing}

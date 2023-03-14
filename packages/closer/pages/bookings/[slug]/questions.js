@@ -19,9 +19,8 @@ const Questionnaire = ({ questions, booking, error }) => {
   const [answers, setAnswers] = useState(
     booking?.fields || questions.map((question) => ({ [question.name]: '' })),
   );
-  console.log('answersState', answers);
+
   useEffect(() => {
-    console.log('answers useEffect');
     if (!hasRequiredQuestions) {
       return;
     }
@@ -47,7 +46,6 @@ const Questionnaire = ({ questions, booking, error }) => {
   };
 
   const handleAnswer = (name, value) => {
-    console.log('saving answer for question: ', name, value);
     const updatedAnswers = answers.map((answer) => {
       if (Object.keys(answer)[0] === name) {
         return { [name]: value };

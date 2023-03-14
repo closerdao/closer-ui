@@ -83,7 +83,7 @@ const DatesSelector = ({ error, settings }) => {
 
   return (
     <Layout>
-      <div className="max-w-screen-sm mx-auto p-8 h-full">
+      <div className="max-w-screen-sm mx-auto md:p-8 h-full">
         <BookingBackButton
           action={goToDashboard}
           name={__('buttons_go_to_bookings')}

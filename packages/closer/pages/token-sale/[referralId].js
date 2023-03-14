@@ -14,7 +14,6 @@ const InvitedByPage = () => {
   const { user } = useAuth();
   const router = useRouter();
   const referredByUserId = router.query.referralId;
-  console.log('referredByUserId', referredByUserId);
 
   const redirectToTokenSalePage = () => {
     router.push('/token-sale');

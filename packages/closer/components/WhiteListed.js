@@ -8,7 +8,6 @@ import { __ } from '../utils/helpers';
 const WhiteListed = ({ referredUsers }) => {
   const { user } = useAuth();
   const router = useRouter();
-  console.log('current url', router.pathname, window.location.hostname);
   const referralLink = `${window.location.host}${router.pathname}/${user?._id}`;
 
   const copyCode = async () => {

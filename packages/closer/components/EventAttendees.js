@@ -5,14 +5,19 @@ import React from 'react';
 import dayjs from 'dayjs';
 
 import ProfilePhoto from './ProfilePhoto';
+const TicketCounter = ({ count }) => (
+  <div className="z-10 w-9 h-9 inline-flex justify-center items-center text-center rounded-full overflow-hidden bg-black text-white text-sm">
+    +{Math.min(count, 99)}
+  </div>
+);
 
-const EventAttendees = ({ user, event, start, attendees, platform }) => {
+const EventAttendees = ({ user, event, start, attendees, platform, ticketsCount }) => {
   return (
     <section className="attendees card-body mb-6">
       <h3 className="text-2xl font-bold">
         {start && start.isAfter(dayjs()) ? 'Who\'s coming?' : 'Who attended?'}
       </h3>
-      {event.price || event.ticketOptions ? (
+      {event.ticketOptions ? (
         <div className="-space-x-3 flex flex-row flex-wrap">
           {Array.from(new Set(attendees)).map((_id) => {
             const attendee = platform.user.findOne(_id);
@@ -22,7 +27,7 @@ const EventAttendees = ({ user, event, start, attendees, platform }) => {
             }
 
             return (
-              (<Link
+              <Link
                 key={attendee.get('_id')}
                 as={`/members/${attendee.get('slug')}`}
                 href="/members/[slug]"
@@ -30,9 +35,10 @@ const EventAttendees = ({ user, event, start, attendees, platform }) => {
 
                 <ProfilePhoto size="sm" user={attendee.toJS()} />
 
-              </Link>)
+              </Link>
             );
           })}
+          { ticketsCount > 0 && <TicketCounter count={ ticketsCount } /> }
         </div>
       ) : platform && attendees.length > 0 ? (
         <div>
@@ -56,6 +62,7 @@ const EventAttendees = ({ user, event, start, attendees, platform }) => {
               </Link>)
             );
           })}
+          { ticketsCount > 0 && <TicketCounter count={ ticketsCount } /> }
         </div>
       ) : (
         'No results'

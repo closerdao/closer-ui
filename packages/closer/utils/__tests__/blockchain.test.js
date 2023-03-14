@@ -8,6 +8,5 @@ describe('estimateNeededStakeForNewBooking', () => {
       bookingYear: 2023,
       totalBookingTokenCost: 50,
     });
-    console.log(res);
   });
 });

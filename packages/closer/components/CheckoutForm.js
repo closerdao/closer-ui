@@ -41,7 +41,7 @@ const CheckoutForm = ({
   currency,
   discountCode,
   onSuccess,
-  submitButtonClassName = '',
+  submitButtonClassName = 'btn-primary',
   cardElementClassName = '',
   prePayInTokens = () => {},
   isProcessingTokenPayment = false,
@@ -60,7 +60,6 @@ const CheckoutForm = ({
     setProcessing(true);
 
     if (prePayInTokens) {
-      console.log('paying in tokens...');
       const res = await prePayInTokens();
       const { error } = res || {};
       if (error) {
@@ -69,7 +68,6 @@ const CheckoutForm = ({
         console.error(error)
         return;
       }
-      console.log('prePay is ok, proceeding with EUR payment...');
     }
 
     try {

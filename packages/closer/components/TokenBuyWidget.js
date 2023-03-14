@@ -6,14 +6,14 @@ import { __ } from '../utils/helpers';
 const DAYS_IN_A_WEEK = 7;
 
 const TokenBuyWidget = ({ weeks, selectedAccomodation }) => {
-  const [tokenToBuy, setTokenToBuy] = useState(weeks * selectedValue);
-  const [tokenToSpend, setTokenToSpend] = useState(
-    Math.round((tokenToBuy * TOKEN_PRICE + Number.EPSILON) * 100) / 100,
-  );
   const selectedValue =
     ACCOMODATION_COST.find(
       (accomodation) => accomodation.name === selectedAccomodation,
     )?.price * DAYS_IN_A_WEEK;
+  const [tokenToBuy, setTokenToBuy] = useState(weeks * selectedValue);
+  const [tokenToSpend, setTokenToSpend] = useState(
+    Math.round((tokenToBuy * TOKEN_PRICE + Number.EPSILON) * 100) / 100,
+  );
 
   const handleTokenToBuyChange = (event) => {
     const value = event.target.value;

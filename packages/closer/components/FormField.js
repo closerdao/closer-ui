@@ -62,7 +62,7 @@ const FormField = ({
               placeholder={placeholder}
               onChange={(e) => update(name, e.target.value)}
               required={required}
-              className={`${className} textarea`}
+              className={`${className} textarea bg-transparent`}
             />
           )}
           {type === 'currency' && (
