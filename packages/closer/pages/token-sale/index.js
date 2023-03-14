@@ -7,7 +7,6 @@ import TokenSaleOpenView from '../../components/TokenSaleView';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
-import config from '../../config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
@@ -24,7 +23,8 @@ const TokenSalePage = () => {
     setReferredByUserId(id);
   }, []);
 
-  const generalSaleDate = dayjs(config.TOKEN_SALE_DATE, 'DD/MM/YYYY');
+  const TOKEN_SALE_DATE = process.env.NEXT_PUBLIC_TOKEN_SALE_DATE;
+  const generalSaleDate = dayjs(TOKEN_SALE_DATE, 'DD/MM/YYYY');
 
   const getUsersParams = {
     sort_by: '-created',
@@ -54,6 +54,14 @@ const TokenSalePage = () => {
       loadData(getUsersParams);
     }
   }, [user]);
+
+  if (!TOKEN_SALE_DATE) {
+    return (
+      <div className="flex flex-1 items-center text-primary">
+        TOKEN_SALE_DATE is not defined
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <TokenSaleGuestView />;

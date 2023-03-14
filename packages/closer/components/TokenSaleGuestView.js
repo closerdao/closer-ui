@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import dayjs from 'dayjs';
+
 import { TELEGRAM_URL } from '../config';
 import { __ } from '../utils/helpers';
 import Layout from './Layout';
@@ -7,11 +9,15 @@ import TextWithLink from './TextWithLink';
 import TokenSaleHeader from './TokenSaleHeader';
 
 const TokenSaleGuestView = () => {
+  const saleDate = dayjs(process.env.NEXT_PUBLIC_TOKEN_SALE_DATE, 'DD/MM/YYYY');
   return (
     <Layout>
-      <div className="font-marketing w-full px-4 pb-20 mt-6 md:px-20 md:mt-20 ">
+      <div className="font-marketing w-full px-4 pb-20 mt-6">
         <div className="flex flex-col mb-4 md:flex-row">
-          <TokenSaleHeader title={__('token_sale_invite_page_title')} />
+          <TokenSaleHeader
+            title={__('token_sale_invite_page_title')}
+            saleDate={saleDate}
+          />
         </div>
         <div className="w-full md:w-1/2">
           <p className="mt-10 text-2xl leading-8 font-bold">
