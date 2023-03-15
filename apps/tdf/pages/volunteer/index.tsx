@@ -38,6 +38,10 @@ const ImpactMapPage = () => {
               {end && duration >= 24 && ` - ${end.format(dateFormat)}`}
             </p>
           </div>
+          <div className="flex flex-row items-center py-3 space-x-1 mt-2 text-gray-500">
+            <MdLocationOn />
+            <p className="text-sm">Traditional Dream Factory, Abela</p>
+          </div>
 
           <div className="flex flex-row items-center">
             <img src="https://www.notion.so/image/https%3A%2F%2Fs3-us-west-2.amazonaws.com%2Fsecure.notion-static.com%2F9d704a3a-e959-41be-801a-4df006a17133%2FUntitled.png?table=block&id=4348a4f6-ca62-4549-ac3b-2f374a7b2450&spaceId=222dc36e-c5a7-402a-88b4-408a95bc89f8&width=2000&userId=e880b949-26ad-40a3-9a7f-6789bd0ac3a6&cache=v2" />
