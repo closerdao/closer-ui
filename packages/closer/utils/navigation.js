@@ -2,20 +2,12 @@ import { FEATURES, GOVERNANCE_URL } from '../config';
 
 export const links = [
   {
+    label: 'Events',
+    url: '/events',
+  },
+  {
     label: 'Booking requests',
     url: '/bookings/requests',
-    enabled: () => FEATURES.booking,
-    roles: ['space-host'],
-  },
-  {
-    label: 'Check in',
-    url: '/bookings/check-in',
-    enabled: () => FEATURES.booking,
-    roles: ['space-host'],
-  },
-  {
-    label: 'Calendar availability',
-    url: '/bookings/calendar',
     enabled: () => FEATURES.booking,
     roles: ['space-host'],
   },
