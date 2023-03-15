@@ -3,11 +3,12 @@
 @layer components {
   .btn,
   .btn[type='submit'] {
-    @apply cursor-pointer inline-block py-2 px-4 rounded-full text-foreground focus:outline-none border-2 border-foreground focus:ring-2 focus:ring-primary focus:ring-opacity-75 md:block disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed;
+    @apply cursor-pointer inline-block py-2 px-4 rounded-full text-foreground border-2 border-foreground focus:outline-none disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed hover:border-foreground hover:bg-foreground hover:text-background;
   }
   .btn-primary,
   .btn-primary[type='submit'] {
-    @apply btn text-primary bg-transparent hover:text-white hover:bg-primary border-primary disabled:hover:bg-transparent disabled:border-gray-400 disabled:text-gray-400;
+    @apply cursor-pointer inline-block py-2 px-4 rounded-full text-primary border-2 border-primary focus:outline-none disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed hover:bg-primary hover:text-background;
+    @apply text-primary bg-transparent hover:text-white hover:bg-primary border-primary disabled:hover:bg-transparent disabled:border-gray-400 disabled:text-gray-400;
   }
   .btn-small,
   .btn-small[type='submit'] {
@@ -56,7 +57,7 @@
   input[type='number'],
   input[type='date'],
   input[type='time'] {
-    @apply text-foreground block border-0 border-b-2 border-gray-200 focus:ring-0 focus:border-black;
+    @apply py-2 text-foreground block border-0 border-b-2 border-gray-200 focus:outline-none focus:border-primary;
   }
   select {
     @apply h-10 pl-3 pr-6 text-base text-black placeholder-gray-600 border-b-2 border-gray-200 rounded-lg appearance-none focus:border-black outline-none max-w-full;

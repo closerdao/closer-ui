@@ -6,6 +6,10 @@ export const links = [
     url: '/events',
   },
   {
+    label: 'Volunteer',
+    url: '/volunteer',
+  },
+  {
     label: 'Booking requests',
     url: '/bookings/requests',
     enabled: () => FEATURES.booking,

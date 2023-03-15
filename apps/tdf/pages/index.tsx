@@ -61,7 +61,7 @@ const HomePage: NextPage = () => {
 
         <p className="mb-4">
           We believe that our creativity is our greatest asset, and that we can
-          channel our collective inteligence towards planetary regeneration. We
+          channel our collective intelligence towards planetary regeneration. We
           believe in using technology for good, and in replacing ownership with
           stewardship.
         </p>
@@ -98,7 +98,7 @@ const HomePage: NextPage = () => {
 
         <p className="mb-8">
           Traditional Dream Factory (aka TDF ) is our first prototype in
-          developing a new form in living that&apos;s more in tune with nature
+          developing a new form of living that&apos;s more in tune with nature
           and with our human creativity. We are creating a DAO governed
           regenerative village, sitting on lands conserved under the{' '}
           <a
@@ -109,7 +109,7 @@ const HomePage: NextPage = () => {
               event('click', { category: 'HomePage', label: 'Oasa' })
             }
           >
-            Oasa network
+            OASA network
           </a>
           .
         </p>

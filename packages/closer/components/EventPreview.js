@@ -67,6 +67,7 @@ const EventPreview = ({ event, list }) => {
               <p className="text-xs font-light">
                 {start && start.format(dateFormat)}
                 {end && duration <= 24 && ` - ${end.format('HH:mm')}`}
+                {end && duration >= 24 && ` - ${end.format(dateFormat)}`}
               </p>
             </div>
             {event.get('location') && (
