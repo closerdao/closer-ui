@@ -21,7 +21,7 @@ module.exports = {
   GOVERNANCE_URL: 'https://snapshot.org/#/traditionaldreamfactory.eth',
   FEATURES: {
     events: true,
-    booking: true,
+    booking: false,
     bookingVolunteers: false,
   },
   // Set which roles are permitted to do certain actions
@@ -34,11 +34,11 @@ module.exports = {
     },
   },
   SIGNUP_FIELDS: [
-    {
-      name: 'community',
-      label: 'Tell us about your community',
-      placeholder: 'A DAO for regenerative coffee farmers',
-    },
+    // {
+    //   name: 'community',
+    //   label: 'Tell us about your community',
+    //   placeholder: 'A DAO for regenerative coffee farmers',
+    // },
   ],
   ACCOMODATION_COST: [
     {

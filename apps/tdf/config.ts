@@ -13,8 +13,8 @@ const config = {
   TWITTER_URL: 'https://twitter.com/traditionaldreamfactory',
   FEATURES: {
     events: true,
-    booking: true,
-    bookingVolunteers: true,
+    booking: false,
+    bookingVolunteers: false,
   },
   LOGO_FOOTER: '/images/logo.svg',
   PERMISSIONS: {

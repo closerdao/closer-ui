@@ -12,11 +12,11 @@ import {
 } from '@ethersproject/providers';
 import { Web3ReactProvider } from '@web3-react/core';
 import { AuthProvider, PlatformProvider, WalletProvider } from 'closer';
+// import '../styles/index.css';
 import 'closer/public/styles.css';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import config from '../config';
-import '../styles/index.css';
 
 const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
   function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {

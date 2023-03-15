@@ -6,7 +6,7 @@ export const Footer: FC = () => (
       <p>
         Traditional Dream Factory is the first village in the{' '}
         <a href="https://oasa.earth" target="_blank" rel="noreferrer">
-          Oasa network
+          OASA network
         </a>{' '}
         - it is located in Abela, Portugal. Logo designed by{' '}
         <a
