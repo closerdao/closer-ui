@@ -18,18 +18,14 @@ const CreatePost = ({
   isReply,
   visibility,
 }) => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [error, setErrors] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [photo, setPhoto] = useState(null);
   const initialPost = {
     content: '',
     tags: [],
     attachment: null,
   };
   const [newPost, setNewPost] = useState(initialPost);
-  const [addTag, setAddTag] = useState('');
-  const [manuallyAddedTags, addManualTag] = useState([]);
   const [exploredUrls, setExploredUrls] = useState([]);
   const fetchUrlMeta = async (url) => {
     try {
@@ -58,7 +54,7 @@ const CreatePost = ({
     setNewPost({
       ...newPost,
       content,
-      tags: filterTags(postTags.concat(manuallyAddedTags)),
+      tags: filterTags(postTags),
     });
   };
 
@@ -171,11 +167,14 @@ const CreatePost = ({
               {newPost.tags &&
                 newPost.tags.length > 0 &&
                 newPost.tags.map((tag) => (
-                  (<Link key={tag} as={`/search/${tag}`} href="/search/[keyword]" className="tag">
-
+                  <Link
+                    key={tag}
+                    as={`/search/${tag}`}
+                    href="/search/[keyword]"
+                    className="tag"
+                  >
                     <span className="ellipsis">{tag}</span>
-
-                  </Link>)
+                  </Link>
                 ))}
               {/* <input
                 type="text"

@@ -16,6 +16,8 @@ const Layout = ({ children }) => {
     }
   }, []);
 
-  return <>{children}</>;
+  return (
+    <div className="p-6 flex flex-1 flex-col items-center">{children}</div>
+  );
 };
 export default Layout;

@@ -6,7 +6,7 @@ import api from '../utils/api';
 import { __ } from '../utils/helpers';
 
 const UploadPhoto = ({ model, id, onSave, label, minimal }) => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [error, setErrors] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -58,6 +58,7 @@ const UploadPhoto = ({ model, id, onSave, label, minimal }) => {
         minimal ? '' : 'mt-2 w-full h-full flex items-center justify-center'
       }`}
     >
+      {error && <p className="text-red-500">{error}</p>}
       <input {...getInputProps()} />
       {loading ? (
         <p>{__('upload_photo_loading_message')}</p>

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import React, { useState } from 'react';
+import React from 'react';
 
 import { useAuth } from '../contexts/auth.js';
 import { __ } from '../utils/helpers';
@@ -10,7 +10,6 @@ import UpcomingEvents from './UpcomingEvents';
 
 const MemberHome = () => {
   const { user, isLoading } = useAuth();
-  const [error, setErrors] = useState(false);
 
   if (isLoading || !user) {
     // Wait for user to be loaded in order to allow getting private data
@@ -29,12 +28,11 @@ const MemberHome = () => {
             </div>
             <div className="channel-sub-header">
               {user.roles.includes('admin') && (
-                (<Link href="/channel/create" as="/channel/create">
-                   {__('member_home_add_channel')} 
-                </Link>)
+                <Link href="/channel/create" as="/channel/create">
+                  {__('member_home_add_channel')}
+                </Link>
               )}
             </div>
-            {error && <div className="error-box">{error}</div>}
             <section>
               <PostList channel={null} allowCreate />
             </section>

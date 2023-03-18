@@ -53,6 +53,20 @@ declare module 'closer' {
   export const ListingPage: NextPage;
   export const EditListingPage: NextPage;
   export const CreateListingPage: NextPage;
+  export const ApplicationsPage: NextPage;
+  export const ChannelPage: NextPage;
+  export const CreateChannelPage: NextPage;
+  export const CommunityPage: NextPage;
+  export const EditChannelPage: NextPage;
+  export const SearchPage: NextPage;
+  export const KeywordPage: NextPage;
+  export const TasksPage: NextPage;
+  export const TaskPage: NextPage;
+  export const CreateTaskPage: NextPage;
+  export const EditTaskPage: NextPage;
+  export const ArticlePage: NextPage;
+  export const Page401: NextPage;
+  export const Page404: NextPage;
 
   export const Footer: React.FC;
   export const Navigation: React.FC;

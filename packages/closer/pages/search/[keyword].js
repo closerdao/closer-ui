@@ -3,14 +3,12 @@ import Link from 'next/link';
 
 import React from 'react';
 
-import Layout from '../../components/Layout';
-
 import api, { formatSearch } from '../../utils/api';
 import { __ } from '../../utils/helpers';
 
 const Search = ({ articles, error, keyword, tags }) =>
   console.log(error, articles) || (
-    <Layout>
+    <>
       <Head>
         <title>{keyword}</title>
       </Head>
@@ -31,13 +29,15 @@ const Search = ({ articles, error, keyword, tags }) =>
                 {articles ? (
                   articles.map((article) => (
                     <div className="article-preview" key={article._id}>
-                      <Link as={`/${article.slug}`} href="/[slug]" role="button">
-
+                      <Link
+                        as={`/${article.slug}`}
+                        href="/[slug]"
+                        role="button"
+                      >
                         <span className="title">{article.title}</span>
                         {article.summary && (
                           <span className="summary">{article.summary}</span>
                         )}
-
                       </Link>
                     </div>
                   ))
@@ -56,7 +56,8 @@ const Search = ({ articles, error, keyword, tags }) =>
                     as={`/search/${encodeURIComponent(tag)}`}
                     href="/search/[keyword]"
                     key={tag}
-                    className="tag">
+                    className="tag"
+                  >
                     {tag}
                   </Link>
                 ))
@@ -65,14 +66,12 @@ const Search = ({ articles, error, keyword, tags }) =>
               )}
             </p>
             <h3>
-              <Link href="/search">
-                {__('search_keyword_articles')}
-              </Link>
+              <Link href="/search">{__('search_keyword_articles')}</Link>
             </h3>
           </section>
         </div>
       </div>
-    </Layout>
+    </>
   );
 
 Search.getInitialProps = async ({ req, query }) => {

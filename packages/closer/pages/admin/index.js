@@ -2,7 +2,6 @@ import Head from 'next/head';
 
 import React from 'react';
 
-import Layout from '../../components/Layout';
 import Loading from '../../components/Loading';
 import Tabs from '../../components/Tabs';
 import UsersTable from '../../components/UsersTable';
@@ -23,7 +22,7 @@ const Admin = () => {
   }
 
   return (
-    <Layout protect>
+    <>
       <Head>
         <title>{__('admin_title')}</title>
       </Head>
@@ -43,7 +42,7 @@ const Admin = () => {
           ]}
         />
       </main>
-    </Layout>
+    </>
   );
 };
 

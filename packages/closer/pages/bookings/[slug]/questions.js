@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingProgress from '../../../components/BookingProgress';
-import Layout from '../../../components/Layout';
 import PageError from '../../../components/PageError';
 import QuestionnaireItem from '../../../components/QuestionnaireItem';
 
@@ -82,7 +81,7 @@ const Questionnaire = ({ questions, booking, error }) => {
   }
 
   return (
-    <Layout>
+    <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
         <BookingBackButton
           action={resetBooking}
@@ -111,7 +110,7 @@ const Questionnaire = ({ questions, booking, error }) => {
           </button>
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

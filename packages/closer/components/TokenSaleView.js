@@ -4,7 +4,6 @@ import { ACCOMODATION_COST } from '../config';
 import { __ } from '../utils/helpers';
 import AccomodationEstimate from './AccomodationEstimate';
 import AccomodationPriceInfo from './AccomodationPriceInfo';
-import Layout from './Layout';
 import TokenBuyWidget from './TokenBuyWidget';
 import TokenSaleHeader from './TokenSaleHeader';
 
@@ -15,7 +14,7 @@ const TokenSaleView = () => {
   );
 
   return (
-    <Layout>
+    <>
       <div className="flex flex-col font-marketing w-full px-4 pb-20 mt-6 md:px-20 md:mt-20 ">
         <div className="flex flex-col md:flex-row mb-4 gap-8">
           <TokenSaleHeader
@@ -45,7 +44,7 @@ const TokenSaleView = () => {
           </div>
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 
 import { useAuth } from '../contexts/auth.js';
@@ -7,7 +6,6 @@ import UploadPhoto from './UploadPhoto';
 
 const Prompts = () => {
   const { user, isAuthenticated, setUser } = useAuth();
-  const [error, setErrors] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
   const [photo, setPhoto] = useState(null);
 

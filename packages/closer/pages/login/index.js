@@ -4,8 +4,6 @@ import { useRouter } from 'next/router';
 
 import React, { useContext, useState } from 'react';
 
-import Layout from '../../components/Layout';
-
 import { useAuth } from '../../contexts/auth';
 import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import api from '../../utils/api';
@@ -69,7 +67,7 @@ const Login = () => {
   };
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>{__('login_title')}</title>
       </Head>
@@ -137,7 +135,7 @@ const Login = () => {
           </div>
         </form>
       </main>
-    </Layout>
+    </>
   );
 };
 

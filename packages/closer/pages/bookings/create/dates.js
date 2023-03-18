@@ -7,7 +7,6 @@ import BookingDates from '../../../components/BookingDates';
 import BookingGuests from '../../../components/BookingGuests';
 import BookingProgress from '../../../components/BookingProgress';
 import CurrencySwitch from '../../../components/CurrencySwitch';
-import Layout from '../../../components/Layout';
 import PageError from '../../../components/PageError';
 
 import dayjs from 'dayjs';
@@ -82,7 +81,7 @@ const DatesSelector = ({ error, settings }) => {
   }
 
   return (
-    <Layout>
+    <>
       <div className="max-w-screen-sm mx-auto md:p-8 h-full">
         <BookingBackButton
           action={goToDashboard}
@@ -128,7 +127,7 @@ const DatesSelector = ({ error, settings }) => {
           </button>
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

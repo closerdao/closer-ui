@@ -2,6 +2,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 
 import Footer from '../components/Footer';
+import Layout from '../components/Layout';
 import Navigation from '../components/Navigation';
 
 import { Web3Provider } from '@ethersproject/providers';
@@ -13,11 +14,6 @@ import {
   FB_DOMAIN_VERIFICATION,
   SEMANTIC_URL,
 } from '../config';
-// import {
-//   BLOCKCHAIN_DAO_TOKEN,
-//   BLOCKCHAIN_NETWORK_ID,
-//   BLOCKCHAIN_STABLE_COIN,
-// } from '../config_blockchain';
 import { AuthProvider } from '../contexts/auth';
 import { PlatformProvider } from '../contexts/platform';
 import { WalletProvider } from '../contexts/wallet/';
@@ -35,10 +31,6 @@ const Application = ({ Component, pageProps }) => {
     const library = new Web3Provider(provider);
     return library;
   }
-
-  // const tokensToWatch = {
-  //   [BLOCKCHAIN_NETWORK_ID]: [BLOCKCHAIN_DAO_TOKEN, BLOCKCHAIN_STABLE_COIN],
-  // };
 
   return (
     <div className="App">
@@ -67,9 +59,9 @@ const Application = ({ Component, pageProps }) => {
           <Web3ReactProvider getLibrary={getLibrary}>
             <WalletProvider>
               <Navigation />
-              <div className="p-6 flex flex-1 flex-col items-center">
+              <Layout>
                 <Component {...pageProps} />
-              </div>
+              </Layout>
               <Footer />
             </WalletProvider>
           </Web3ReactProvider>

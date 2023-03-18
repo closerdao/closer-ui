@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingProgress from '../../../components/BookingProgress';
-import Layout from '../../../components/Layout';
 import PageError from '../../../components/PageError';
 
 import api from '../../../utils/api';
@@ -35,7 +34,7 @@ const ConfirmationStep = ({ error, booking }) => {
   }
 
   return (
-    <Layout>
+    <>
       <div className="max-w-screen-sm mx-auto p-8">
         <BookingBackButton url="/" />
         <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
@@ -72,7 +71,7 @@ const ConfirmationStep = ({ error, booking }) => {
           </button>
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

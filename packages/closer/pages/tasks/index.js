@@ -3,18 +3,13 @@ import Link from 'next/link';
 
 import React from 'react';
 
-import Layout from '../../components/Layout';
 import TaskList from '../../components/TaskList';
 
-
-import { useAuth } from '../../contexts/auth.js';
 import { __ } from '../../utils/helpers';
 
-const Settings = ({ token }) => {
-  const { user } = useAuth();
-
+const Tasks = () => {
   return (
-    <Layout protect>
+    <>
       <Head>
         <title>{__('tasks_title')}</title>
       </Head>
@@ -29,8 +24,8 @@ const Settings = ({ token }) => {
         </div>
         <TaskList />
       </main>
-    </Layout>
+    </>
   );
 };
 
-export default Settings;
+export default Tasks;

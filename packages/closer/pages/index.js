@@ -2,13 +2,11 @@ import Head from 'next/head';
 
 import React from 'react';
 
-import Layout from '../components/Layout';
-
 import { DEFAULT_TITLE, PLATFORM_NAME } from '../config';
 
 const Index = () => {
   return (
-    <Layout>
+    <>
       <Head>
         <title>{PLATFORM_NAME}</title>
       </Head>
@@ -22,7 +20,7 @@ const Index = () => {
           </div>
         </section>
       </main>
-    </Layout>
+    </>
   );
 };
 

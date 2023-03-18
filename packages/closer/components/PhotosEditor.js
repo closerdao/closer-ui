@@ -6,7 +6,7 @@ import { __ } from '../utils/helpers';
 import Photo from './Photo';
 import UploadPhoto from './UploadPhoto';
 
-const PhotosEditor = ({ value, onChange, placeholder, required }) => {
+const PhotosEditor = ({ value, onChange }) => {
   const [photos, setPhotos] = useState(value);
   const addPhoto = (photo) => {
     const update = (photos || []).concat(photo);

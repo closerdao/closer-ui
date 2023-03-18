@@ -9,7 +9,6 @@ import { loadStripe } from '@stripe/stripe-js';
 
 import CheckoutForm from '../../../components/CheckoutForm';
 import DateTimePicker from '../../../components/DateTimePicker';
-import Layout from '../../../components/Layout';
 import Tabs from '../../../components/Tabs';
 
 import dayjs from 'dayjs';
@@ -127,7 +126,7 @@ const EventCheckout = ({ event, error }) => {
   }
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>{__('events_slug_checkout_title')}</title>
       </Head>
@@ -400,9 +399,10 @@ const EventCheckout = ({ event, error }) => {
                   discountCode={router.query.discount}
                   _id={event._id}
                   volunteer={isVolunteer}
-                  onSuccess={(payment) =>
-                    router.push(`/tickets/${payment._id}`)
-                  }
+                  onSuccess={(payment) => {
+                    setPaymentReceived(true);
+                    router.push(`/tickets/${payment._id}`);
+                  }}
                   email={isAuthenticated ? user.email : signup.email}
                   name={isAuthenticated ? user.screenname : signup.screenname}
                   message={signup.message}
@@ -433,7 +433,7 @@ const EventCheckout = ({ event, error }) => {
           </div>
         )}
       </div>
-    </Layout>
+    </>
   );
 };
 EventCheckout.getInitialProps = async ({ query }) => {

@@ -2,17 +2,7 @@ import Link from 'next/link';
 
 import React from 'react';
 
-
-
-const Pagination = ({
-  loadPage,
-  queryParam,
-  total,
-  items,
-  page,
-  limit,
-  maxPages,
-}) => {
+const Pagination = ({ loadPage, queryParam, total, page, limit, maxPages }) => {
   const totalPages = Math.ceil(total / limit);
   const pageOffset =
     totalPages > maxPages ? Math.max(Math.floor(page - maxPages / 2), 0) : 0;
@@ -32,10 +22,9 @@ const Pagination = ({
               e.preventDefault();
               e.stopPropagation();
               loadPage(page - 1);
-            }}>
-            
-              prev
-            
+            }}
+          >
+            prev
           </Link>
         )}
       </div>
@@ -49,7 +38,7 @@ const Pagination = ({
                 return;
               }
               return (
-                (<Link
+                <Link
                   href={{ query: { [queryParam]: toPage } }}
                   key={`page-${toPage}`}
                   className={`p-1 mr-2 ${
@@ -59,11 +48,10 @@ const Pagination = ({
                     e.preventDefault();
                     e.stopPropagation();
                     loadPage(toPage);
-                  }}>
-
+                  }}
+                >
                   {`${toPage}`}
-
-                </Link>)
+                </Link>
               );
             },
           )}
@@ -77,10 +65,9 @@ const Pagination = ({
               e.preventDefault();
               e.stopPropagation();
               loadPage(page + 1);
-            }}>
-            
-              next
-            
+            }}
+          >
+            next
           </Link>
         )}
       </div>

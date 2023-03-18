@@ -8,7 +8,6 @@ import BookingWallet from '../../../components/BookingWallet';
 import Checkbox from '../../../components/Checkbox';
 import CheckoutPayment from '../../../components/CheckoutPayment';
 import CheckoutTotal from '../../../components/CheckoutTotal';
-import Layout from '../../../components/Layout';
 import PageError from '../../../components/PageError';
 
 import dayjs from 'dayjs';
@@ -81,7 +80,7 @@ const Checkout = ({ booking, listing, settings, error }) => {
   }
 
   return (
-    <Layout>
+    <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
         <BookingBackButton action={goBack} name={__('buttons_back')} />
         <h1 className="step-title font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
@@ -150,7 +149,7 @@ const Checkout = ({ booking, listing, settings, error }) => {
           />
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

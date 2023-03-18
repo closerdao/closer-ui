@@ -1,11 +1,9 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Linkify from 'react-linkify';
 
-import Layout from '../../components/Layout';
 import PostList from '../../components/PostList';
 import UpcomingEvents from '../../components/UpcomingEvents';
 import UserList from '../../components/UserList';
@@ -15,21 +13,18 @@ import { useAuth } from '../../contexts/auth.js';
 import api from '../../utils/api';
 
 const ChannelPage = ({ channel }) => {
-  const router = useRouter();
   const { user, isAuthenticated } = useAuth();
-  const [error, setErrors] = useState(false);
 
   if (!channel) {
     return <PageNotFound />;
   }
 
   return (
-    <Layout protect>
+    <>
       <Head>
         <title>{channel.name}</title>
         <meta name="description" content={channel.description} />
       </Head>
-      {error && <div className="validation-error">{error}</div>}
       <main className="main-content fullwidth intro">
         <div className="columns">
           <div className="col lg two-third">
@@ -40,13 +35,13 @@ const ChannelPage = ({ channel }) => {
                   {user &&
                     (user.roles.includes('admin') ||
                       channel.createdBy === user._id) && (
-                    <Link
-                      as={`/edit-channel/${channel.slug}`}
-                      href="/edit-channel/[slug]"
-                    >
-                      edit
-                    </Link>
-                  )}
+                      <Link
+                        as={`/edit-channel/${channel.slug}`}
+                        href="/edit-channel/[slug]"
+                      >
+                        edit
+                      </Link>
+                    )}
                 </div>
               </div>
               {channel.description && (
@@ -91,7 +86,7 @@ const ChannelPage = ({ channel }) => {
           </div>
         </div>
       </main>
-    </Layout>
+    </>
   );
 };
 

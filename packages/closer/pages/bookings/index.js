@@ -1,7 +1,6 @@
 import Head from 'next/head';
 
 import Bookings from '../../components/Bookings';
-import Layout from '../../components/Layout';
 import Tabs from '../../components/Tabs';
 
 import PageNotFound from '../404';
@@ -34,7 +33,7 @@ const BookingsDirectory = () => {
   }
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>{__('bookings_title')}</title>
       </Head>
@@ -54,7 +53,7 @@ const BookingsDirectory = () => {
           ]}
         />
       </div>
-    </Layout>
+    </>
   );
 };
 

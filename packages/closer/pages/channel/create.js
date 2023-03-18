@@ -4,8 +4,6 @@ import { useRouter } from 'next/router';
 import React from 'react';
 
 import EditModel from '../../components/EditModel';
-import Layout from '../../components/Layout';
-
 
 import models from '../../models';
 import { __ } from '../../utils/helpers';
@@ -14,7 +12,7 @@ const AddChannel = () => {
   const router = useRouter();
 
   return (
-    <Layout protect>
+    <>
       <Head>
         <title>{__('channel_create_title')}</title>
       </Head>
@@ -26,7 +24,7 @@ const AddChannel = () => {
           onSave={(channel) => router.push(`/channel/${channel.slug}`)}
         />
       </div>
-    </Layout>
+    </>
   );
 };
 

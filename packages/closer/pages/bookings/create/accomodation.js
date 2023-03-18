@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingProgress from '../../../components/BookingProgress';
 import BookingStepsInfo from '../../../components/BookingStepsInfo';
-import Layout from '../../../components/Layout';
 import ListingCard from '../../../components/ListingCard';
 
 import { BLOCKCHAIN_DAO_TOKEN } from '../../../config_blockchain';
@@ -62,7 +61,7 @@ const AccomodationSelector = ({
   };
 
   return (
-    <Layout>
+    <>
       <div className="max-w-screen-sm mx-auto md:first-letter:p-8">
         <BookingBackButton action={backToDates} name={__('buttons_back')} />
         <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
@@ -99,7 +98,7 @@ const AccomodationSelector = ({
           ))}
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

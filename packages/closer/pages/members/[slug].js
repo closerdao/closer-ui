@@ -7,7 +7,6 @@ import Linkify from 'react-linkify';
 
 import ConnectedWallet from '../../components/ConnectedWallet';
 import EventsList from '../../components/EventsList';
-import Layout from '../../components/Layout';
 import UploadPhoto from '../../components/UploadPhoto';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
@@ -115,7 +114,7 @@ const MemberPage = ({ member }) => {
   }
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>{member.screenname}</title>
       </Head>
@@ -457,7 +456,7 @@ const MemberPage = ({ member }) => {
           {error && <p className="validation-error">Error: {error}</p>}
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

@@ -2,28 +2,21 @@ import Head from 'next/head';
 
 import React from 'react';
 
-import Layout from '../../../components/Layout';
-
 import dayjs from 'dayjs';
 
 import PageNotFound from '../../404';
 import { PLATFORM_LEGAL_ADDRESS, PLATFORM_NAME } from '../../../config';
-import { useAuth } from '../../../contexts/auth';
-import { usePlatform } from '../../../contexts/platform';
 import api from '../../../utils/api';
 import { priceFormat } from '../../../utils/helpers';
 import { __ } from '../../../utils/helpers';
 
 const Ticket = ({ ticket, event, error }) => {
-  const { platform } = usePlatform();
-  const { user, isAuthenticated } = useAuth();
-
   if (!ticket) {
     return <PageNotFound error={error} />;
   }
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>
           {__('tickets_invoice_title')} {ticket._id}
@@ -58,10 +51,10 @@ const Ticket = ({ ticket, event, error }) => {
           <h4>{priceFormat(ticket.price.val, ticket.price.cur)}</h4>
         </div>
       </main>
-    </Layout>
+    </>
   );
 };
-Ticket.getInitialProps = async ({ req, query }) => {
+Ticket.getInitialProps = async ({ query }) => {
   try {
     const {
       data: { results: ticket },

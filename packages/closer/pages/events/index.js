@@ -4,7 +4,6 @@ import Link from 'next/link';
 import React from 'react';
 
 import EventsList from '../../components/EventsList';
-import Layout from '../../components/Layout';
 
 import { PERMISSIONS, PLATFORM_NAME } from '../../config';
 import { useAuth } from '../../contexts/auth.js';
@@ -16,7 +15,7 @@ const Events = () => {
   const { user } = useAuth();
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>
           {PLATFORM_NAME} {__('events_title')}
@@ -30,10 +29,10 @@ const Events = () => {
               (!PERMISSIONS ||
                 !PERMISSIONS.event.create ||
                 user.roles.includes(PERMISSIONS.event.create)) && (
-              <Link href="/events/create" className="btn-primary">
-                {__('events_link')}
-              </Link>
-            )}
+                <Link href="/events/create" className="btn-primary">
+                  {__('events_link')}
+                </Link>
+              )}
           </div>
         </div>
         <EventsList
@@ -59,7 +58,7 @@ const Events = () => {
           }}
         />
       </div>
-    </Layout>
+    </>
   );
 };
 

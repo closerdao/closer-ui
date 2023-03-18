@@ -4,8 +4,6 @@ import { useRouter } from 'next/router';
 
 import React from 'react';
 
-import Layout from '../components/Layout';
-
 import { useAuth } from '../contexts/auth';
 import { __ } from '../utils/helpers';
 
@@ -14,7 +12,7 @@ const PageNotAllowed = ({ error }) => {
   const { isAuthenticated } = useAuth();
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>{__('401_title')}</title>
       </Head>
@@ -23,14 +21,17 @@ const PageNotAllowed = ({ error }) => {
         {error && <h2 className="font-light italic my-4">{error}</h2>}
         {!isAuthenticated && (
           <p>
-            <Link href={`/login?back=${encodeURIComponent(router.asPath)}`} className="btn">
+            <Link
+              href={`/login?back=${encodeURIComponent(router.asPath)}`}
+              className="btn"
+            >
               {__('401_signin')}
             </Link>
             .
           </p>
         )}
       </main>
-    </Layout>
+    </>
   );
 };
 

@@ -3,14 +3,12 @@ import Link from 'next/link';
 
 import React from 'react';
 
-import Layout from '../../components/Layout';
-
 import { PLATFORM_NAME } from '../../config';
 import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
 
-const Search = ({ tags, error, keyword, articles }) => (
-  <Layout>
+const Search = ({ tags, error, articles }) => (
+  <>
     <Head>
       <title>
         {__('generic_search')} {PLATFORM_NAME}
@@ -28,13 +26,15 @@ const Search = ({ tags, error, keyword, articles }) => (
                 articles.map((article) => {
                   return (
                     <div className="article-preview" key={article._id}>
-                      <Link as={`/${article.slug}`} href="/[slug]" role="button">
-
+                      <Link
+                        as={`/${article.slug}`}
+                        href="/[slug]"
+                        role="button"
+                      >
                         <span className="title">{article.title}</span>
                         {article.summary && (
                           <span className="summary">{article.summary}</span>
                         )}
-
                       </Link>
                     </div>
                   );
@@ -50,25 +50,26 @@ const Search = ({ tags, error, keyword, articles }) => (
           <p className="tags">
             {tags
               ? tags.map((tag) => (
-                <Link
-                  as={`/search/${encodeURIComponent(tag)}`}
-                  href="/search/[keyword]"
-                  key={tag}
-                  className="tag">
-                  {tag}
-                </Link>
-              ))
+                  <Link
+                    as={`/search/${encodeURIComponent(tag)}`}
+                    href="/search/[keyword]"
+                    key={tag}
+                    className="tag"
+                  >
+                    {tag}
+                  </Link>
+                ))
               : !error && (
-                <span className="Loading">{__('generic_loading')}</span>
-              )}
+                  <span className="Loading">{__('generic_loading')}</span>
+                )}
           </p>
         </section>
       </div>
     </div>
-  </Layout>
+  </>
 );
 
-Search.getInitialProps = async ({ req, query }) => {
+Search.getInitialProps = async () => {
   try {
     const [tags, articles] = await Promise.all([
       api.get('/distinct/article/tags'),

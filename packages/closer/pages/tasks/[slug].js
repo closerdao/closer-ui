@@ -4,9 +4,7 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import Linkify from 'react-linkify';
 
-import Layout from '../../components/Layout';
 import ProfilePhoto from '../../components/ProfilePhoto';
-
 
 import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth.js';
@@ -14,7 +12,6 @@ import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
 
 const Task = ({ task, error }) => {
-  const [loadError, setErrors] = useState(null);
   const [status, setStatus] = useState(task && task.status);
   const { user, isAuthenticated } = useAuth();
   const [usersById, setUsersById] = useState({});
@@ -50,7 +47,7 @@ const Task = ({ task, error }) => {
   }
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>{task.title}</title>
         <meta name="description" content={task.description} />
@@ -61,7 +58,7 @@ const Task = ({ task, error }) => {
           <div className="col lg two-third">
             <div>
               <h1>{task.title}</h1>
-              {loadError && <div className="validation-error">{loadError}</div>}
+              {error && <div className="validation-error">{error}</div>}
               <section>
                 <p className="about-text">
                   <Linkify
@@ -145,45 +142,47 @@ const Task = ({ task, error }) => {
                 {task.tags && task.tags.length > 0 && (
                   <div className="tags">
                     {task.tags.map((tag) => (
-                      (<Link key={tag} as={`/search/${tag}`} href="/search/[keyword]" className="tag">
-
+                      <Link
+                        key={tag}
+                        as={`/search/${tag}`}
+                        href="/search/[keyword]"
+                        className="tag"
+                      >
                         <span className="ellipsis">{tag}</span>
-
-                      </Link>)
+                      </Link>
                     ))}
                   </div>
                 )}
                 {user &&
                   (user._id === task.createdBy ||
                     (task.team && user._id === task.team[0])) && (
-                  <section className="applicants card-body">
-                    <h3>{__('tasks_slug_applicants')}</h3>
-                    <div className="user-list">
-                      {applicants.length > 0
-                        ? applicants.map(
-                          (uid) =>
-                            usersById[uid] && (
-                              (<Link
-                                key={uid}
-                                as={`/members/${usersById[uid].slug}`}
-                                href="/members/[slug]"
-                                className="from user-preview">
-
-                                <ProfilePhoto
-                                  size="sm"
-                                  user={usersById[uid]}
-                                />
-                                <span className="name">
-                                  {usersById[uid].screenname}
-                                </span>
-
-                              </Link>)
-                            ),
-                        )
-                        : 'No applicants yet'}
-                    </div>
-                  </section>
-                )}
+                    <section className="applicants card-body">
+                      <h3>{__('tasks_slug_applicants')}</h3>
+                      <div className="user-list">
+                        {applicants.length > 0
+                          ? applicants.map(
+                              (uid) =>
+                                usersById[uid] && (
+                                  <Link
+                                    key={uid}
+                                    as={`/members/${usersById[uid].slug}`}
+                                    href="/members/[slug]"
+                                    className="from user-preview"
+                                  >
+                                    <ProfilePhoto
+                                      size="sm"
+                                      user={usersById[uid]}
+                                    />
+                                    <span className="name">
+                                      {usersById[uid].screenname}
+                                    </span>
+                                  </Link>
+                                ),
+                            )
+                          : 'No applicants yet'}
+                      </div>
+                    </section>
+                  )}
                 {task.rewards && task.rewards.length > 0 && (
                   <section className="rewards card-body">
                     <h3>{__('tasks_slug_reward')}</h3>
@@ -194,10 +193,10 @@ const Task = ({ task, error }) => {
           </div>
         </div>
       </main>
-    </Layout>
+    </>
   );
 };
-Task.getInitialProps = async ({ req, query }) => {
+Task.getInitialProps = async ({ query }) => {
   try {
     const {
       data: { results: task },
