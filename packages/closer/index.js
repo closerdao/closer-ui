@@ -24,7 +24,7 @@ export { default as BookingCancelPage } from './pages/bookings/[slug]/cancel';
 export { default as BookingCheckoutPage } from './pages/bookings/[slug]/checkout';
 export { default as BookingConfirmationPage } from './pages/bookings/[slug]/confirmation';
 export { default as BookingQuestionsPage } from './pages/bookings/[slug]/questions';
-export { default as BookingSummaryPage } from './pages/members';
+export { default as BookingSummaryPage } from './pages/bookings/[slug]/summary';
 export { default as CreateBookingPage } from './pages/bookings/create/index';
 export { default as CreateBookingAccomodationPage } from './pages/bookings/create/accomodation';
 export { default as CreateBookingDatesPage } from './pages/bookings/create/dates';
