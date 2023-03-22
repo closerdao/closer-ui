@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { __ } from '../utils/helpers';
 import PriceEditor from './PriceEditor';
 
-const TicketOptionsEditor = ({ value, onChange, placeholder, required }) => {
+const TicketOptionsEditor = ({ value, onChange, required }) => {
   const [options, setOptions] = useState(value);
   const updateOptions = (update) => {
     setOptions(update);

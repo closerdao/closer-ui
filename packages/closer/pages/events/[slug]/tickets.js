@@ -2,7 +2,6 @@ import Head from 'next/head';
 
 import React, { useEffect } from 'react';
 
-import Layout from '../../../components/Layout';
 import TicketListPreview from '../../../components/TicketListPreview';
 
 import PageNotAllowed from '../../401';
@@ -43,7 +42,7 @@ const EventTickets = ({ event }) => {
   }
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>
           {event.name} {__('events_slug_tickets_title')}
@@ -70,7 +69,7 @@ const EventTickets = ({ event }) => {
           )}
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 EventTickets.getInitialProps = async ({ query }) => {

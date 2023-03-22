@@ -21,7 +21,6 @@ const EventsList = ({
   limit,
   showPagination,
 }) => {
-  const { user } = useAuth();
   const { platform } = usePlatform();
   const [error, setErrors] = useState(false);
   const [page, setPage] = useState(1);
@@ -35,10 +34,7 @@ const EventsList = ({
 
   const loadData = async () => {
     try {
-      await Promise.all([
-        platform.event.get(eventsFilter),
-        platform.event.getCount(eventsFilter),
-      ]);
+      await platform.event.get(eventsFilter);
     } catch (err) {
       console.log('Load error', err);
       setErrors(err.message);
@@ -47,7 +43,7 @@ const EventsList = ({
 
   useEffect(() => {
     loadData();
-  }, [eventsFilter, user]);
+  }, []);
 
   return (
     <div className={card ? 'card' : ''}>
@@ -85,11 +81,12 @@ const EventsList = ({
   );
 };
 EventsList.defaultProps = {
-  where: undefined,
   showPagination: true,
   list: false,
   card: false,
   queryParam: 'events',
+  center: false,
+  title: undefined,
 };
 
 export default EventsList;

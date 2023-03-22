@@ -2,8 +2,6 @@ import Head from 'next/head';
 
 import React, { useState } from 'react';
 
-import Layout from '../../components/Layout';
-
 import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
 
@@ -23,7 +21,7 @@ const ForgotPasswordScreen = () => {
   };
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>{__('login_forgot_password_title')}</title>
       </Head>
@@ -55,7 +53,7 @@ const ForgotPasswordScreen = () => {
           </form>
         )}
       </main>
-    </Layout>
+    </>
   );
 };
 

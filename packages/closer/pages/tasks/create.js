@@ -4,16 +4,15 @@ import { useRouter } from 'next/router';
 import React from 'react';
 
 import EditModel from '../../components/EditModel';
-import Layout from '../../components/Layout';
 
 import models from '../../models';
 import { __ } from '../../utils/helpers';
 
-const AddChannel = ({ token }) => {
+const CreateTask = () => {
   const router = useRouter();
 
   return (
-    <Layout protect>
+    <>
       <Head>
         <title>{__('tasks_create_title')}</title>
       </Head>
@@ -25,8 +24,8 @@ const AddChannel = ({ token }) => {
           onSave={(event) => router.push(`/tasks/${event.slug}`)}
         />
       </div>
-    </Layout>
+    </>
   );
 };
 
-export default AddChannel;
+export default CreateTask;

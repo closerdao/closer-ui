@@ -7,14 +7,13 @@ import Linkify from 'react-linkify';
 
 import ConnectedWallet from '../../components/ConnectedWallet';
 import EventsList from '../../components/EventsList';
-import Layout from '../../components/Layout';
 import UploadPhoto from '../../components/UploadPhoto';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 import { TiDelete } from '@react-icons/all-files/ti/TiDelete';
 
 import PageNotFound from '../404';
-import { useAuth } from '../../contexts/auth.js';
+import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import api, { cdn } from '../../utils/api';
 import { __ } from '../../utils/helpers';
@@ -115,11 +114,11 @@ const MemberPage = ({ member }) => {
   }
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>{member.screenname}</title>
       </Head>
-      <div className="main-content">
+      <div className="main-content w-full">
         {openIntro && (
           <>
             <div className="flex justify-center items-center overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline">
@@ -449,7 +448,7 @@ const MemberPage = ({ member }) => {
                         </>
                       )}
                   </div>
-                </div>{' '}
+                </div>
               </div>
             </div>
           </div>
@@ -457,7 +456,7 @@ const MemberPage = ({ member }) => {
           {error && <p className="validation-error">Error: {error}</p>}
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

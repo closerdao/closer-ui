@@ -13,13 +13,20 @@
         "NEXT_PUBLIC_STRIPE_PUB_KEY",
         "NEXT_PUBLIC_GA_MEASUREMENT_ID",
         "NEXT_PUBLIC_REGISTRATION_MODE",
-        "NEXT_PUBLIC_TOKEN_SALE_DATE"
+        "NEXT_PUBLIC_TOKEN_SALE_DATE",
+        "NEXT_PUBLIC_FEATURE_BOOKING",
+        "NEXT_PUBLIC_FEATURE_WEB3_BOOKING",
+        "NEXT_PUBLIC_FEATURE_WEB3_WALLET"
       ]
     },
     "lint": {
       "outputs": []
     },
     "dev": {
+      "cache": false
+    },
+    "test": {},
+    "test:watch": {
       "cache": false
     }
   }

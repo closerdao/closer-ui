@@ -9,7 +9,6 @@ const EventPhoto = ({
   photo,
   cdn,
   isAuthenticated,
-  id,
   setPhoto,
 }) => (
   <div className="md:w-1/2 md:mr-4 mb-4 relative bg-gray-50 md:h-80">

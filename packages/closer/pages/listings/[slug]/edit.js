@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import React from 'react';
 
 import EditModel from '../../../components/EditModel';
-import Layout from '../../../components/Layout';
 
 import models from '../../../models';
 import api from '../../../utils/api';
@@ -22,7 +21,7 @@ const EditListing = ({ listing }) => {
   }
   console.log('listing', listing.name);
   return (
-    <Layout protect>
+    <>
       <Head>
         <title>
           {__('listings_slug_edit_title')} {listing.name}
@@ -43,7 +42,7 @@ const EditListing = ({ listing }) => {
           onDelete={() => router.push('/')}
         />
       </div>
-    </Layout>
+    </>
   );
 };
 

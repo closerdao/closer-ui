@@ -3,7 +3,6 @@ import Head from 'next/head';
 import React from 'react';
 
 import EditModel from '../../components/EditModel';
-import Layout from '../../components/Layout';
 
 import { useAuth } from '../../contexts/auth';
 import models from '../../models';
@@ -13,7 +12,7 @@ const Settings = () => {
   const { user } = useAuth();
 
   return (
-    <Layout protect>
+    <>
       <Head>
         <title>{__('settings_title')}</title>
       </Head>
@@ -28,7 +27,7 @@ const Settings = () => {
           />
         )}
       </div>
-    </Layout>
+    </>
   );
 };
 

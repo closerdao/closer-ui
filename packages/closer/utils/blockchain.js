@@ -4,7 +4,7 @@ import { isAddress } from 'ethers/lib/utils.js';
 import {
   BLOCKCHAIN_DAO_TOKEN,
   BLOCKCHAIN_DAO_TOKEN_ABI,
-} from '../config_blockchain.js';
+} from '../config_blockchain';
 
 export const fetcher =
   (library, abi) =>

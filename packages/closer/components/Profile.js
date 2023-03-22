@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 
-import { useAuth } from '../contexts/auth.js';
+import { useAuth } from '../contexts/auth';
 import { cdn } from '../utils/api';
 import { __ } from '../utils/helpers.js';
 

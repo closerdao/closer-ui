@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import { __ } from '../utils/helpers';
 
-const DiscountsEditor = ({ value, onChange, placeholder, required }) => {
+const DiscountsEditor = ({ value, onChange }) => {
   const [options, setOptions] = useState(value);
   const updateOptions = (update) => {
     setOptions(update);

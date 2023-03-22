@@ -3,25 +3,20 @@ import Head from 'next/head';
 import React from 'react';
 import QRCode from 'react-qr-code';
 
-import Layout from '../../../components/Layout';
-
 import PageNotFound from '../../404';
-import config from '../../../config';
-import { useAuth } from '../../../contexts/auth';
-import { usePlatform } from '../../../contexts/platform';
+import { useConfig } from '../../../contexts/config';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
 const Ticket = ({ ticket, event, error }) => {
-  const { platform } = usePlatform();
-  const { user, isAuthenticated } = useAuth();
-
+  const config = useConfig();
   if (!ticket) {
     return <PageNotFound error={error} />;
   }
+  console.log('Ticket page config', config);
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>
           {__('tickets_slug_title')} {event.name}
@@ -51,10 +46,10 @@ const Ticket = ({ ticket, event, error }) => {
           send us an email to {config.TEAM_EMAIL} for support.
         </p>
       </main>
-    </Layout>
+    </>
   );
 };
-Ticket.getInitialProps = async ({ req, query }) => {
+Ticket.getInitialProps = async ({ query }) => {
   try {
     const {
       data: { results: ticket },

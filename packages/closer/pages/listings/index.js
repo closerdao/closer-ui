@@ -3,7 +3,6 @@ import Link from 'next/link';
 
 import React, { useEffect } from 'react';
 
-import Layout from '../../components/Layout';
 import ListingListPreview from '../../components/ListingListPreview';
 
 import PageNotAllowed from '../401';
@@ -34,7 +33,7 @@ const Listings = () => {
   const listings = platform.listing.find();
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>{__('listings_title')}</title>
       </Head>
@@ -65,7 +64,7 @@ const Listings = () => {
             : 'No Listings'}
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

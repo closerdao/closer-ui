@@ -1,4 +1,4 @@
-import { calculateRefundTotal, checkIfBookingEqBlockchain } from './helpers';
+import { calculateRefundTotal, checkIfBookingEqBlockchain } from '../helpers';
 
 const POLICY_MOCK = {
   default: 1,

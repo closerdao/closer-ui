@@ -4,9 +4,9 @@ import { useEffect } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingProgress from '../../../components/BookingProgress';
-import Layout from '../../../components/Layout';
 import PageError from '../../../components/PageError';
 
+import PageNotFound from '../../404';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
@@ -30,12 +30,16 @@ const ConfirmationStep = ({ error, booking }) => {
     return <PageError error={error} />;
   }
 
+  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+    return <PageNotFound />;
+  }
+
   if (!booking._id) {
     return null;
   }
 
   return (
-    <Layout>
+    <>
       <div className="max-w-screen-sm mx-auto p-8">
         <BookingBackButton url="/" />
         <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
@@ -72,7 +76,7 @@ const ConfirmationStep = ({ error, booking }) => {
           </button>
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

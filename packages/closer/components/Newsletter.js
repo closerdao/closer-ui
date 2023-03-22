@@ -12,17 +12,12 @@ const attemptSignup = async (event, request) => {
 };
 
 const Newsletter = ({ placement }) => {
-  const [screenname, setName] = useState('');
   const [email, setEmail] = useState('');
   const [signupError, setSignupError] = useState(null);
   const referrer =
     typeof localStorage !== 'undefined' && localStorage.getItem('referrer');
   const [signupCompleted, setSignupCompleted] = useState(false);
   const router = useRouter();
-
-  // if (didCompleteSignup) {
-  //   return null;
-  // }
 
   return (
     <div className="Newsletter py-5 text-neutral-900">
@@ -35,7 +30,7 @@ const Newsletter = ({ placement }) => {
           onSubmit={(e) =>
             attemptSignup(e, {
               email,
-              screenname,
+              screenname: '',
               tags: [placement, router.asPath, `ref:${referrer}`],
             })
               .then(() => {

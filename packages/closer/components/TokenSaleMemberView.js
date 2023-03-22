@@ -6,7 +6,6 @@ import PropTypes from 'prop-types';
 import { useAuth } from '../contexts/auth';
 import { WalletState } from '../contexts/wallet';
 import { __ } from '../utils/helpers';
-import Layout from './Layout';
 import TokenSaleHeader from './TokenSaleHeader';
 import WhiteListConditions from './WhiteListConditions';
 import WhiteListed from './WhiteListed';
@@ -22,7 +21,7 @@ const TokenSaleMemberView = ({
   const isWhiteListed = isAuthenticated && isWalletReady;
 
   return (
-    <Layout>
+    <>
       <div className="font-marketing w-full px-4 pb-20 mt-6">
         <div className="flex flex-col mb-4 md:flex-row">
           <TokenSaleHeader
@@ -45,7 +44,7 @@ const TokenSaleMemberView = ({
           )}
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

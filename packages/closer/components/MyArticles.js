@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from 'react';
 
-import { useAuth } from '../contexts/auth.js';
+import { useAuth } from '../contexts/auth';
 import api, { formatSearch } from '../utils/api';
 import { __ } from '../utils/helpers';
 import Link from './ActiveLink';

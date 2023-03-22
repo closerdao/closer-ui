@@ -3,7 +3,6 @@ import Head from 'next/head';
 import React, { useEffect } from 'react';
 
 import ApplicationList from '../../components/ApplicationList';
-import Layout from '../../components/Layout';
 import Tabs from '../../components/Tabs';
 
 import PageNotAllowed from '../401';
@@ -43,11 +42,11 @@ const Applications = () => {
   }
 
   return (
-    <Layout protect>
+    <>
       <Head>
         <title>{__('applications_title')}</title>
       </Head>
-      <main className="main-content">
+      <main className="main-content w-full">
         <div className="page-header mb-4">
           <div>
             <h1>{__('applications_title')}</h1>
@@ -109,7 +108,7 @@ const Applications = () => {
           </div>
         </div>
       </main>
-    </Layout>
+    </>
   );
 };
 
