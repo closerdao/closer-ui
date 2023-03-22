@@ -1,12 +1,23 @@
-import { ACCOMODATION_COST } from '../config';
+import { FC } from 'react';
+
+import { useConfig } from '../hooks/useConfig';
 import { __ } from '../utils/helpers';
 
-const AccomodationEstimate = ({
+interface Props {
+  weeksNumber: string;
+  setWeeksNumber: (value: string) => void;
+  selectedAccomodation: string;
+  selectAccomodation: (value: string) => void;
+}
+
+const AccomodationEstimate: FC<Props> = ({
   weeksNumber,
   setWeeksNumber,
   selectedAccomodation,
   selectAccomodation,
 }) => {
+  const config = useConfig();
+  const { ACCOMODATION_COST } = config || {};
   return (
     <p className="flex flex-wrap self-center mt-8 md:mt-28 items-center gap-4 text-center md:text-left">
       <span className="text-2xl leading-8 w-1/2 md:w-fit">
@@ -29,7 +40,7 @@ const AccomodationEstimate = ({
         onChange={(e) => selectAccomodation(e.target.value)}
         className="flex-1 h-12 mx-2 mt-4 md:mt-0 py-1 px-4 rounded-full text-2xl bg-primary-light text-primary !border-none"
       >
-        {ACCOMODATION_COST.map((accomodation) => (
+        {ACCOMODATION_COST.map((accomodation: { name: string }) => (
           <option key={accomodation.name} value={accomodation.name}>
             {accomodation.name}
           </option>

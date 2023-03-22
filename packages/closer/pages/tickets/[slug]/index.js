@@ -4,14 +4,16 @@ import React from 'react';
 import QRCode from 'react-qr-code';
 
 import PageNotFound from '../../404';
-import config from '../../../config';
+import { useConfig } from '../../../contexts/config';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
 const Ticket = ({ ticket, event, error }) => {
+  const config = useConfig();
   if (!ticket) {
     return <PageNotFound error={error} />;
   }
+  console.log('Ticket page config', config);
 
   return (
     <>

@@ -13,7 +13,7 @@ import { FaUser } from '@react-icons/all-files/fa/FaUser';
 import { TiDelete } from '@react-icons/all-files/ti/TiDelete';
 
 import PageNotFound from '../404';
-import { useAuth } from '../../contexts/auth.js';
+import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import api, { cdn } from '../../utils/api';
 import { __ } from '../../utils/helpers';
@@ -118,7 +118,7 @@ const MemberPage = ({ member }) => {
       <Head>
         <title>{member.screenname}</title>
       </Head>
-      <div className="main-content">
+      <div className="main-content w-full">
         {openIntro && (
           <>
             <div className="flex justify-center items-center overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline">
@@ -448,7 +448,7 @@ const MemberPage = ({ member }) => {
                         </>
                       )}
                   </div>
-                </div>{' '}
+                </div>
               </div>
             </div>
           </div>

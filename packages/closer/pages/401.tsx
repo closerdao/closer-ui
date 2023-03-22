@@ -2,12 +2,12 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import React from 'react';
+import React, { FC } from 'react';
 
 import { useAuth } from '../contexts/auth';
 import { __ } from '../utils/helpers';
 
-const PageNotAllowed = ({ error }) => {
+const PageNotAllowed: FC<{ error?: string }> = ({ error }) => {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
 

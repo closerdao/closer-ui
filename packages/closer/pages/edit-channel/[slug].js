@@ -27,7 +27,7 @@ const EditChannel = ({ channel }) => {
           {__('edit_channel_title')} {channel.name}
         </title>
       </Head>
-      <div className="main-content">
+      <div className="main-content w-full">
         <EditModel
           id={channel._id}
           endpoint={'/channel'}

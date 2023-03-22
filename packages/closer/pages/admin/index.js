@@ -26,7 +26,7 @@ const Admin = () => {
       <Head>
         <title>{__('admin_title')}</title>
       </Head>
-      <main className="main-content center intro">
+      <main className="main-content w-full">
         <Tabs
           tabs={[
             {

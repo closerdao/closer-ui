@@ -2,9 +2,9 @@ import React, { createContext, useContext, useReducer } from 'react';
 
 import { Map, fromJS } from 'immutable';
 
-import config from '../config';
-import * as constants from '../constants';
-import api, { formatSearch } from '../utils/api';
+import { useConfig } from '../../hooks/useConfig';
+import api, { formatSearch } from '../../utils/api';
+import * as constants from './platformActions';
 
 const PlatformContext = createContext({});
 export const models = [
@@ -203,7 +203,7 @@ const reducer = (state, action) => {
 };
 export const PlatformProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
-
+  const config = useConfig();
   const platform = {
     toJS: () => state.toJS(),
   };

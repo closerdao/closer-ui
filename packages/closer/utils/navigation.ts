@@ -1,9 +1,13 @@
-import { FEATURES, GOVERNANCE_URL } from '../config';
-
 export const links = [
   {
     label: 'Events',
     url: '/events',
+    enabled: true,
+  },
+  {
+    label: 'Volunteer',
+    url: '/volunteer',
+    enabled: true,
   },
   {
     label: 'Volunteer',
@@ -12,24 +16,24 @@ export const links = [
   {
     label: 'Booking requests',
     url: '/bookings/requests',
-    enabled: () => FEATURES.booking,
+    enabled: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
     roles: ['space-host'],
   },
   {
     label: 'Edit listings',
     url: '/listings',
-    enabled: () => FEATURES.booking,
+    enabled: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
     roles: ['space-host'],
   },
   {
     label: 'Book a stay',
     url: '/bookings/create',
-    enabled: () => FEATURES.booking,
+    enabled: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
   },
   {
     label: 'My bookings',
     url: '/bookings',
-    enabled: () => FEATURES.booking,
+    enabled: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
   },
   {
     label: 'Settings',
@@ -37,9 +41,9 @@ export const links = [
   },
   {
     label: 'Governance',
-    url: GOVERNANCE_URL,
+    url: 'https://snapshot.org/#/traditionaldreamfactory.eth',
     target: '_blank',
-    enabled: () => !!GOVERNANCE_URL,
+    enabled: true,
     roles: ['member'],
   },
   {

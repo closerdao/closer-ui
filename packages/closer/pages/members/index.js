@@ -5,7 +5,7 @@ import React from 'react';
 import MemberList from '../../components/MemberList';
 
 import PageNotAllowed from '../401';
-import { useAuth } from '../../contexts/auth.js';
+import { useAuth } from '../../contexts/auth';
 import { __ } from '../../utils/helpers';
 
 const Settings = () => {

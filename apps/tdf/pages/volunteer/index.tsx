@@ -24,7 +24,7 @@ const ImpactMapPage = () => {
           Alentejo, Portugal
         </title>
       </Head>
-      <section className="mb-8">
+      <section className="mb-8 w-full">
         <h1>Volunteer at TDF</h1>
       </section>
       <section className="grid grid-cols-1 md:grid-cols-2">

@@ -5,6 +5,7 @@ import BookingProgress from '../../../components/BookingProgress';
 import BookingStepsInfo from '../../../components/BookingStepsInfo';
 import ListingCard from '../../../components/ListingCard';
 
+import PageNotFound from '../../404';
 import { BLOCKCHAIN_DAO_TOKEN } from '../../../config_blockchain';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
@@ -41,6 +42,10 @@ const AccomodationSelector = ({
     } finally {
     }
   };
+
+  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+    return <PageNotFound />;
+  }
 
   if (!start || !adults) {
     return null;

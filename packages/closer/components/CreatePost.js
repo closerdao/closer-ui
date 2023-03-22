@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import React, { useEffect, useState } from 'react';
 
-import { useAuth } from '../contexts/auth.js';
+import { useAuth } from '../contexts/auth';
 import api, { cdn } from '../utils/api';
 import { getHashTags, getUrls } from '../utils/helpers';
 import { __ } from '../utils/helpers';

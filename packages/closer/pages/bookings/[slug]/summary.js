@@ -11,6 +11,7 @@ import SummaryDates from '../../../components/SummaryDates';
 import PropTypes from 'prop-types';
 
 import PageNotAllowed from '../../401';
+import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
@@ -47,6 +48,10 @@ const Summary = ({ booking, listing, error }) => {
   };
 
   const { isAuthenticated } = useAuth();
+
+  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+    return <PageNotFound />;
+  }
 
   if (error) {
     return <PageError error={error} />;

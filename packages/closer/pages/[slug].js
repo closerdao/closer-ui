@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import React from 'react';
 
-import { useAuth } from '../contexts/auth.js';
+import { useAuth } from '../contexts/auth';
 import api, { cdn } from '../utils/api';
 import PageNotFound from './404';
 
@@ -54,7 +54,7 @@ const Article = ({ article, error }) => {
       </Head>
       {article.photo ? (
         <section
-          className={`main-content fullwidth hero ${
+          className={`main-content w-full hero ${
             article.photo ? 'hero-photo' : ''
           }`}
           style={{ backgroundImage: `url("${fullImageUrl}")` }}
@@ -78,7 +78,7 @@ const Article = ({ article, error }) => {
           </div>
         </section>
       ) : (
-        <section className="main-content intro article">
+        <section className="main-content w-full">
           <h2 className="category">
             <span>{article.category}</span>
           </h2>
@@ -92,7 +92,7 @@ const Article = ({ article, error }) => {
           </h1>
         </section>
       )}
-      <div className="main-content fullwidth">
+      <div className="main-content w-full">
         <div className="columns">
           <main className="col lg">
             <section

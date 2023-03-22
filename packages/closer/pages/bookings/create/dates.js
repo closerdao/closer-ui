@@ -13,6 +13,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import PropTypes from 'prop-types';
 
+import PageNotFound from '../../404';
 import { CURRENCIES, DEFAULT_CURRENCY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import api from '../../../utils/api';
@@ -20,19 +21,9 @@ import { __ } from '../../../utils/helpers';
 
 dayjs.extend(relativeTime);
 
-const defaultStart = dayjs()
-  .add(3, 'days')
-  .set('hours', 18)
-  .set('seconds', 0)
-  .set('minutes', 0)
-  .format('YYYY-MM-DD');
+const defaultStart = dayjs().add(3, 'days').format('YYYY-MM-DD');
 
-const defaultEnd = dayjs()
-  .add(6, 'days')
-  .set('hours', 11)
-  .set('seconds', 0)
-  .set('minutes', 0)
-  .format('YYYY-MM-DD');
+const defaultEnd = dayjs().add(6, 'days').format('YYYY-MM-DD');
 
 const DatesSelector = ({ error, settings }) => {
   const router = useRouter();
@@ -78,6 +69,10 @@ const DatesSelector = ({ error, settings }) => {
 
   if (error) {
     return <PageError error={error} />;
+  }
+
+  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+    return <PageNotFound />;
   }
 
   return (

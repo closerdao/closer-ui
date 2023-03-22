@@ -7,9 +7,9 @@
 const moduleExports = {
   reactStrictMode: true,
   transpilePackages: ['closer'],
-  sentry: {
-    hideSourcemaps: true,
-  },
+  // sentry: {
+  //   hideSourcemaps: true,
+  // },
 };
 
 // const sentryWebpackPluginOptions = {

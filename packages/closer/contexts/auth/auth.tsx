@@ -1,4 +1,6 @@
 import React, {
+  FC,
+  PropsWithChildren,
   createContext,
   useCallback,
   useContext,
@@ -6,21 +8,26 @@ import React, {
   useState,
 } from 'react';
 
+import { AxiosError } from 'axios';
 import Cookies from 'js-cookie';
 
-import PageNotAllowed from '../pages/401';
-import api from '../utils/api';
-import { __ } from '../utils/helpers';
+import { useConfig } from '../../hooks/useConfig';
+import PageNotAllowed from '../../pages/401';
+import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
+import { __ } from '../../utils/helpers';
+import { AuthenticationContext, User } from './types';
 
-export const AuthContext = createContext({});
+export const AuthContext = createContext<AuthenticationContext | null>(null);
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [error, setErrorState] = useState(null);
-  const [isLoading, setLoading] = useState(true);
-  let errorTimeout = null;
+export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [error, setErrorState] = useState<string | null>(null);
+  const [isLoading, setLoading] = useState<boolean>(true);
+  let errorTimeout: NodeJS.Timeout;
+  const config = useConfig() || {};
 
-  const setError = useCallback((msg) => {
+  const setError = useCallback((msg: string) => {
     clearTimeout(errorTimeout);
     setErrorState(msg);
     errorTimeout = setTimeout(() => setErrorState(null), 5000);
@@ -29,7 +36,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     async function loadUserFromCookies() {
       try {
-        const token = Cookies.get('token');
+        const token = Cookies.get(config?.COOKIE_TOKEN);
         if (token) {
           api.defaults.headers.Authorization = `Bearer ${token}`;
           const {
@@ -41,13 +48,14 @@ export const AuthProvider = ({ children }) => {
         }
         setLoading(false);
       } catch (err) {
-        setError(err.message);
+        const message = parseMessageFromError(err);
+        setError(message);
       }
     }
     loadUserFromCookies();
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (email: string, password: string) => {
     try {
       const {
         data: { access_token: token, results: user },
@@ -56,79 +64,99 @@ export const AuthProvider = ({ children }) => {
         password,
       });
       if (token) {
-        Cookies.set('token', token, { expires: 60 });
         if (user) {
+          setAuthentification(user, token);
           setUser(user);
         }
       }
       setError('');
     } catch (err) {
-      if (err.response?.status === 401) {
+      if ((err as AxiosError).response?.status === 401) {
         setError(__('auth_error_401_message'));
         return;
       }
-      setError(err.response?.data?.error || err.message);
+      setError(
+        (err as AxiosError).response?.data?.error || (err as Error).message,
+      );
       console.error(err);
     }
   };
 
-  const setAuthentification = async (user, token) => {
+  const setAuthentification = async (user: User, token: string) => {
     if (token) {
-      Cookies.set('token', token, { expires: 60 });
+      Cookies.set(config.COOKIE_TOKEN, token, {
+        expires: 60,
+        sameSite: 'strict',
+        secure: true,
+      });
       if (user) {
         setUser(user);
       }
     }
   };
 
-  const signup = async (data) => {
+  const signup = async (data: unknown): Promise<User | undefined> => {
     try {
       const {
         data: { access_token: token, results: userData },
       } = await api.post('/signup', data);
       if (token && userData) {
-        Cookies.set('token', token, { expires: 60 });
+        setAuthentification(userData, token);
         api.defaults.headers.Authorization = `Bearer ${token}`;
         setUser(userData);
       }
       setError('');
       return userData;
     } catch (err) {
-      setError(err.response?.data?.error || err.message);
+      setError(
+        (err as AxiosError).response?.data?.error || (err as Error).message,
+      );
       console.error(err);
     }
   };
 
-  const completeRegistration = async (signup_token, data, onSuccess) => {
+  const completeRegistration = async (
+    signup_token: string,
+    data: unknown,
+    onSuccess: () => void,
+  ) => {
     try {
       const postData = Object.assign({ signup_token }, data);
       const {
         data: { access_token: token, results: userData },
       } = await api.post('/signup', postData);
       if (token) {
-        Cookies.set('token', token, { expires: 60 });
+        setAuthentification(userData, token);
         if (userData) setUser(userData);
         if (onSuccess) onSuccess();
       }
       return userData;
     } catch (err) {
-      setError(err.response?.data?.error || err.message);
+      setError(
+        (err as AxiosError).response?.data?.error || (err as Error).message,
+      );
     }
   };
 
-  const updatePassword = async (reset_token, password, onSuccess) => {
+  const updatePassword = async (
+    reset_token: string,
+    password: string,
+    onSuccess: (status: string) => void,
+  ) => {
     try {
       const {
         data: { status },
       } = await api.post('/set-password', { reset_token, password });
       onSuccess(status);
     } catch (err) {
-      setError(err.response?.data?.error || err.message);
+      setError(
+        (err as AxiosError).response?.data?.error || (err as Error).message,
+      );
     }
   };
 
   const logout = () => {
-    Cookies.remove('token');
+    Cookies.remove(config?.COOKIE_TOKEN);
     setUser(null);
     delete api.defaults.headers.Authorization;
     window.location.pathname = '/';
@@ -156,12 +184,10 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
-
-export const ProtectRoute = ({ children }) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
-  if (isLoading || !isAuthenticated || !user) {
-    return <PageNotAllowed />;
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === null) {
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-  return children;
+  return context;
 };

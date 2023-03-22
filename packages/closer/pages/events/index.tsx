@@ -5,13 +5,16 @@ import React from 'react';
 
 import EventsList from '../../components/EventsList';
 
-import { PERMISSIONS, PLATFORM_NAME } from '../../config';
-import { useAuth } from '../../contexts/auth.js';
+import { NextPage } from 'next';
+
+import { useAuth } from '../../contexts/auth';
+import { useConfig } from '../../hooks/useConfig';
 import { __ } from '../../utils/helpers';
 
 const now = new Date();
 
-const Events = () => {
+const Events: NextPage = () => {
+  const { PERMISSIONS, PLATFORM_NAME } = useConfig() || {};
   const { user } = useAuth();
 
   return (
@@ -21,7 +24,7 @@ const Events = () => {
           {PLATFORM_NAME} {__('events_title')}
         </title>
       </Head>
-      <div className="main-content intro">
+      <div className="main-content w-full">
         <div className="page-title flex justify-between">
           <h1 className="mb-4">{__('events_upcoming')}</h1>
           <div className="action">

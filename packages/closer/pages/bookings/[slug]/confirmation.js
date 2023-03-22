@@ -6,6 +6,7 @@ import BookingBackButton from '../../../components/BookingBackButton';
 import BookingProgress from '../../../components/BookingProgress';
 import PageError from '../../../components/PageError';
 
+import PageNotFound from '../../404';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
@@ -27,6 +28,10 @@ const ConfirmationStep = ({ error, booking }) => {
 
   if (error) {
     return <PageError error={error} />;
+  }
+
+  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+    return <PageNotFound />;
   }
 
   if (!booking._id) {

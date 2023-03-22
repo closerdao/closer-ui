@@ -18,7 +18,7 @@ dayjs.extend(LocalizedFormat);
 const Booking = ({ booking, error }) => {
   const { isAuthenticated } = useAuth();
 
-  if (!booking) {
+  if (!booking || process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
     return <PageNotFound />;
   }
 

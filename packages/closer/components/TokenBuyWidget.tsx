@@ -1,28 +1,39 @@
-import { useEffect, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
-import { ACCOMODATION_COST, SOURCE_TOKEN, TOKEN_PRICE } from '../config';
+import { useConfig } from '../hooks/useConfig';
 import { __ } from '../utils/helpers';
 
 const DAYS_IN_A_WEEK = 7;
 
-const TokenBuyWidget = ({ weeks, selectedAccomodation }) => {
+interface Props {
+  weeks: number;
+  selectedAccomodation: string;
+}
+
+const TokenBuyWidget: FC<Props> = ({ weeks, selectedAccomodation }) => {
+  const { ACCOMODATION_COST, SOURCE_TOKEN, TOKEN_PRICE } = useConfig() || {};
   const selectedValue =
     ACCOMODATION_COST.find(
-      (accomodation) => accomodation.name === selectedAccomodation,
+      (accomodation: { name: string }) =>
+        accomodation.name === selectedAccomodation,
     )?.price * DAYS_IN_A_WEEK;
   const [tokenToBuy, setTokenToBuy] = useState(weeks * selectedValue);
   const [tokenToSpend, setTokenToSpend] = useState(
     Math.round((tokenToBuy * TOKEN_PRICE + Number.EPSILON) * 100) / 100,
   );
 
-  const handleTokenToBuyChange = (event) => {
-    const value = event.target.value;
+  const handleTokenToBuyChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const value = parseInt(event.target.value, 10);
     setTokenToBuy(value);
     setTokenToSpend(value * TOKEN_PRICE);
   };
 
-  const handleTokenToSpendChange = (event) => {
-    const value = event.target.value;
+  const handleTokenToSpendChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const value = parseInt(event.target.value, 10);
     setTokenToSpend(value);
     setTokenToBuy(value / TOKEN_PRICE);
   };

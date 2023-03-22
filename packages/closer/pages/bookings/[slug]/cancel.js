@@ -49,7 +49,7 @@ const BookingCancelPage = ({ booking, error }) => {
     }
   }, [user]);
 
-  if (!booking || error) {
+  if (!booking || error || process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
     return <PageNotFound />;
   }
 

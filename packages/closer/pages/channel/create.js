@@ -16,7 +16,7 @@ const AddChannel = () => {
       <Head>
         <title>{__('channel_create_title')}</title>
       </Head>
-      <div className="main-content intro">
+      <div className="main-content w-full">
         <EditModel
           endpoint={'/channel'}
           fields={models.channel}

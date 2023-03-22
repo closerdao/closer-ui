@@ -19,6 +19,7 @@ const Login = () => {
     : '/';
   const { isAuthenticated, login, setAuthentification, error, setError } =
     useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { useAuth } from '../contexts/auth.js';
+import { useAuth } from '../contexts/auth';
 import { cdn } from '../utils/api';
 import UploadPhoto from './UploadPhoto';
 

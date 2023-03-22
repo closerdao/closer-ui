@@ -11,22 +11,25 @@ const MemberMenu = () => {
 
   const filteredLinks = links.filter(
     (link) =>
-      (!link.enabled || link.enabled()) &&
+      link.enabled &&
       (!link.roles ||
         (isAuthenticated &&
           user.roles.some((role) => link.roles.includes(role)))),
   );
 
+  const isWalletEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
   return (
     <nav className="flex flex-col gap-4">
       <Profile />
-      <Wallet />
+      {isWalletEnabled && <Wallet />}
       {filteredLinks.map((link) => (
         <Link
           key={link.url}
           href={link.url}
           target={link.target}
-          className="btn uppercase text-center w-full">
+          className="btn uppercase text-center w-full"
+        >
           {link.label}
         </Link>
       ))}

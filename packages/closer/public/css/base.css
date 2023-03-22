@@ -6,13 +6,12 @@
     @apply min-h-screen bg-background text-foreground flex flex-col;
   }
 
-  #__next,
-  .App {
+  #__next {
     @apply flex-1 flex flex-col;
   }
 
   .main-content {
-    @apply max-w-screen-xl mx-auto p-4;
+    @apply max-w-screen-xl mx-auto;
   }
   .date-preview {
     @apply text-center max-w-xl mr-3 p-1 text-gray-900 bg-gray-100 font-bold w-16;

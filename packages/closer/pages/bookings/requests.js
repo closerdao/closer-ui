@@ -23,6 +23,10 @@ const BookingsRequests = () => {
     return <PageNotFound error="User may not access" />;
   }
 
+  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+    return <PageNotFound />;
+  }
+
   return (
     <>
       <Head>

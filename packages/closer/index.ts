@@ -1,7 +1,9 @@
 // Contexts
-export * from './contexts/wallet';
+export * from './contexts/wallet/';
 export * from './contexts/auth';
 export * from './contexts/platform';
+export * from './contexts/config';
+
 
 // Hooks
 export * from './hooks/useHasMounted';
@@ -16,7 +18,6 @@ export { default as TicketsEventPage } from './pages/events/[slug]/tickets';
 export { default as LoginPage } from './pages/login';
 export { default as ForgotPasswordPage } from './pages/login/forgot-password';
 export { default as SetPasswordPage } from './pages/login/set-password';
-
 export { default as BookingsPage } from './pages/bookings/index';
 export { default as BookingsRequestsPage } from './pages/bookings/requests';
 export { default as BookingPage } from './pages/bookings/[slug]/index';
@@ -24,7 +25,7 @@ export { default as BookingCancelPage } from './pages/bookings/[slug]/cancel';
 export { default as BookingCheckoutPage } from './pages/bookings/[slug]/checkout';
 export { default as BookingConfirmationPage } from './pages/bookings/[slug]/confirmation';
 export { default as BookingQuestionsPage } from './pages/bookings/[slug]/questions';
-export { default as BookingSummaryPage } from './pages/members';
+export { default as BookingSummaryPage } from './pages/bookings/[slug]/summary';
 export { default as CreateBookingPage } from './pages/bookings/create/index';
 export { default as CreateBookingAccomodationPage } from './pages/bookings/create/accomodation';
 export { default as CreateBookingDatesPage } from './pages/bookings/create/dates';
@@ -60,7 +61,7 @@ export { default as Page404 } from './pages/404';
 // Components
 export { default as Footer } from './components/Footer';
 export { default as Navigation } from './components/Navigation';
-export { default as Analytics } from './components/Analytics';
+export { ConfigProvider } from './contexts/config';
 
 // Utils
 export { default as api } from './utils/api';
@@ -68,6 +69,3 @@ export * from './utils/blockchain';
 
 // Config
 export * from './config_blockchain';
-
-// Styles
-export * from './public/styles.css';

@@ -8,6 +8,7 @@ import PageError from '../../../components/PageError';
 import QuestionnaireItem from '../../../components/QuestionnaireItem';
 
 import PageNotAllowed from '../../401';
+import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
@@ -67,6 +68,10 @@ const Questionnaire = ({ questions, booking, error }) => {
     }
     return '';
   };
+
+  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+    return <PageNotFound />;
+  }
 
   if (!isAuthenticated) {
     return <PageNotAllowed />;

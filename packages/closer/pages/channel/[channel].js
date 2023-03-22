@@ -9,7 +9,7 @@ import UpcomingEvents from '../../components/UpcomingEvents';
 import UserList from '../../components/UserList';
 
 import PageNotFound from '../404';
-import { useAuth } from '../../contexts/auth.js';
+import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
 
 const ChannelPage = ({ channel }) => {
@@ -25,7 +25,7 @@ const ChannelPage = ({ channel }) => {
         <title>{channel.name}</title>
         <meta name="description" content={channel.description} />
       </Head>
-      <main className="main-content fullwidth intro">
+      <main className="main-content w-full">
         <div className="columns">
           <div className="col lg two-third">
             <div className="channel">

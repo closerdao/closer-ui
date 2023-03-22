@@ -2,9 +2,12 @@ import Head from 'next/head';
 
 import React from 'react';
 
-import { DEFAULT_TITLE, PLATFORM_NAME } from '../config';
+import { NextPage } from 'next';
 
-const Index = () => {
+import { useConfig } from '../hooks/useConfig';
+
+const Index: NextPage = () => {
+  const { DEFAULT_TITLE, PLATFORM_NAME } = useConfig() || {};
   return (
     <>
       <Head>

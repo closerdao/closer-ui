@@ -3,7 +3,7 @@ import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import Linkify from 'react-linkify';
 
-import { useAuth } from '../contexts/auth.js';
+import { useAuth } from '../contexts/auth';
 import api, { cdn, formatSearch } from '../utils/api';
 import { __ } from '../utils/helpers';
 import CreatePost from './CreatePost';
@@ -116,29 +116,24 @@ const Post = ({
               }`}
               href="/channel/[channel]"
             >
-
               {channelsById[channel]
                 ? channelsById[channel].name
                 : 'unknown channel'}
-
             </Link>
           </i>
         </div>
       )}
       <div className="card-title">
         {usersById[createdBy] && (
-          (<Link
+          <Link
             key={createdBy}
             as={`/members/${usersById[createdBy].slug}`}
             href="/members/[slug]"
-            className="from user-preview flex flex-row justify-start items-center">
-
+            className="from user-preview flex flex-row justify-start items-center"
+          >
             <ProfilePhoto size="sm" user={usersById[createdBy]} />
-            <span className="name ml-4">
-              {usersById[createdBy].screenname}
-            </span>
-
-          </Link>)
+            <span className="name ml-4">{usersById[createdBy].screenname}</span>
+          </Link>
         )}
         <TimeSince time={created} />
       </div>
@@ -173,11 +168,14 @@ const Post = ({
         {tags && tags.length > 0 && (
           <div className="tags">
             {tags.map((tag) => (
-              (<Link key={tag} as={`/search/${tag}`} href="/search/[keyword]" className="tag">
-
+              <Link
+                key={tag}
+                as={`/search/${tag}`}
+                href="/search/[keyword]"
+                className="tag"
+              >
                 <span className="ellipsis">{tag}</span>
-
-              </Link>)
+              </Link>
             ))}
           </div>
         )}
@@ -257,13 +255,12 @@ const Post = ({
                         <Link
                           as={`/members/${usersById[post.createdBy].slug}`}
                           href="/members/[slug]"
-                          className="from user-preview mr-2">
-
+                          className="from user-preview mr-2"
+                        >
                           <ProfilePhoto
                             size="sm"
                             user={usersById[post.createdBy]}
                           />
-
                         </Link>
                         <p>
                           <b className="mr-2">

@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import React from 'react';
 
-import { useAuth } from '../contexts/auth.js';
+import { useAuth } from '../contexts/auth';
 import { __ } from '../utils/helpers';
 import MemberList from './MemberList';
 import PostList from './PostList';

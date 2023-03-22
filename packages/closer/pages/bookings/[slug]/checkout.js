@@ -14,6 +14,7 @@ import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
 
 import PageNotAllowed from '../../401';
+import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { WalletState } from '../../../contexts/wallet';
@@ -69,6 +70,10 @@ const Checkout = ({ booking, listing, settings, error }) => {
 
   if (!isAuthenticated) {
     return <PageNotAllowed />;
+  }
+
+  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+    return <PageNotFound />;
   }
 
   if (!booking || !user || !listing || !settings) {

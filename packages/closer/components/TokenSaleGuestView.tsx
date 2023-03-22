@@ -1,13 +1,16 @@
 import Link from 'next/link';
 
+import { FC } from 'react';
+
 import dayjs from 'dayjs';
 
-import { TELEGRAM_URL } from '../config';
+import { useConfig } from '../hooks/useConfig';
 import { __ } from '../utils/helpers';
 import TextWithLink from './TextWithLink';
 import TokenSaleHeader from './TokenSaleHeader';
 
-const TokenSaleGuestView = () => {
+const TokenSaleGuestView: FC = () => {
+  const { TELEGRAM_URL } = useConfig() || {};
   const saleDate = dayjs(process.env.NEXT_PUBLIC_TOKEN_SALE_DATE, 'DD/MM/YYYY');
   return (
     <>

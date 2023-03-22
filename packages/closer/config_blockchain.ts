@@ -1,4 +1,4 @@
-module.exports = {
+export const blockchainConfig = {
   BLOCKCHAIN_NETWORK_ID: 44787,
   BLOCKCHAIN_NAME: 'CELO ALFAJORES',
   BLOCKCHAIN_RPC_URL: 'https://alfajores-forno.celo-testnet.org',

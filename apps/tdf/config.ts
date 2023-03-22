@@ -11,18 +11,14 @@ const config = {
   INSTAGRAM_URL: 'https://instagram.com/traditionaldreamfactory',
   FACEBOOK_URL: 'https://www.facebook.com/oasaliving',
   TWITTER_URL: 'https://twitter.com/traditionaldreamfactory',
-  FEATURES: {
-    events: true,
-    booking: false,
-    bookingVolunteers: false,
-  },
+  LOGO_HEADER: '/images/logo.png',
   LOGO_FOOTER: '/images/logo.svg',
   PERMISSIONS: {
     event: {
       create: 'event-creator',
     },
   },
-  SIGNUP_FIELDS: [],
+  COOKIE_TOKEN: 'tdf-token',
 };
 
 export default config;

@@ -28,6 +28,10 @@ const BookingsDirectory = () => {
     },
   };
 
+  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+    return <PageNotFound />;
+  }
+
   if (!user) {
     return <PageNotFound error="User not logged in." />;
   }

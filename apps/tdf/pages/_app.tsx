@@ -11,8 +11,13 @@ import {
   Web3Provider,
 } from '@ethersproject/providers';
 import { Web3ReactProvider } from '@web3-react/core';
-import { AuthProvider, PlatformProvider, WalletProvider } from 'closer';
-// import '../styles/index.css';
+import {
+  AuthProvider,
+  ConfigProvider,
+  PlatformProvider,
+  WalletProvider,
+  blockchainConfig,
+} from 'closer';
 import 'closer/public/styles.css';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
@@ -24,20 +29,22 @@ const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
     return library;
   }
   return (
-    <ErrorBoundary>
-      <AuthProvider>
-        <PlatformProvider>
-          <Web3ReactProvider getLibrary={getLibrary}>
-            <WalletProvider>
-              <Layout>
-                <GoogleAnalytics trackPageViews />
-                <Component {...pageProps} config={config} />
-              </Layout>
-            </WalletProvider>
-          </Web3ReactProvider>
-        </PlatformProvider>
-      </AuthProvider>
-    </ErrorBoundary>
+    <ConfigProvider config={{ ...config, ...blockchainConfig }}>
+      <ErrorBoundary>
+        <AuthProvider>
+          <PlatformProvider>
+            <Web3ReactProvider getLibrary={getLibrary}>
+              <WalletProvider>
+                <Layout>
+                  <GoogleAnalytics trackPageViews />
+                  <Component {...pageProps} config={config} />
+                </Layout>
+              </WalletProvider>
+            </Web3ReactProvider>
+          </PlatformProvider>
+        </AuthProvider>
+      </ErrorBoundary>
+    </ConfigProvider>
   );
 };
 

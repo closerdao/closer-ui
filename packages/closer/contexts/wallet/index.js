@@ -9,17 +9,7 @@ import {
 import { BigNumber, utils } from 'ethers';
 import useSWR from 'swr';
 
-import {
-  BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
-  BLOCKCHAIN_DAO_TOKEN,
-  BLOCKCHAIN_DAO_TOKEN_ABI,
-  BLOCKCHAIN_DIAMOND_ABI,
-  BLOCKCHAIN_EXPLORER_URL,
-  BLOCKCHAIN_NAME,
-  BLOCKCHAIN_NATIVE_TOKEN,
-  BLOCKCHAIN_NETWORK_ID,
-  BLOCKCHAIN_RPC_URL,
-} from '../../config_blockchain';
+import { blockchainConfig } from '../../config_blockchain';
 import api from '../../utils/api';
 import {
   fetcher,
@@ -30,6 +20,18 @@ import { useAuth } from '../auth';
 
 export const WalletState = createContext();
 export const WalletDispatch = createContext();
+
+const {
+  BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
+  BLOCKCHAIN_DAO_TOKEN,
+  BLOCKCHAIN_DAO_TOKEN_ABI,
+  BLOCKCHAIN_DIAMOND_ABI,
+  BLOCKCHAIN_EXPLORER_URL,
+  BLOCKCHAIN_NAME,
+  BLOCKCHAIN_NATIVE_TOKEN,
+  BLOCKCHAIN_NETWORK_ID,
+  BLOCKCHAIN_RPC_URL,
+} = blockchainConfig;
 
 const injected = new InjectedConnector({
   supportedChainIds: [

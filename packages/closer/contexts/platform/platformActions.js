@@ -1,5 +1,3 @@
-import { BLOCKCHAIN_DAO_TOKEN } from './config_blockchain.js';
-
 // Api actions
 export const GET_INIT = 'GET_INIT';
 export const GET_ONE_INIT = 'GET_ONE_INIT';
@@ -135,23 +133,3 @@ export const NEWSLETTER_SUBSCRIBE_ERROR = 'NEWSLETTER_SUBSCRIBE_ERROR';
 
 export const FETCH_ADMIN_GRAPH = 'FETCH_ADMIN_GRAPH';
 export const FETCH_ADMIN_GRAPH_ERROR = 'FETCH_ADMIN_GRAPH_ERROR';
-
-export const REFUND_PERIODS = {
-  MONTH: 30,
-  WEEK: 7,
-  DAY: 1,
-  LASTDAY: 0,
-};
-
-export const BOOKING_STEPS = [
-  'dates',
-  'accomodation',
-  'questions',
-  'summary',
-  'checkout',
-  'confirmation',
-];
-
-export const CURRENCIES = ['EUR', BLOCKCHAIN_DAO_TOKEN.symbol];
-export const DEFAULT_CURRENCY = CURRENCIES[0]; // EUR
-export const REFERRAL_ID_LOCAL_STORAGE_KEY = 'referredByUserId';
