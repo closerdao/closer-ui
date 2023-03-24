@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { ACCOMODATION_COST } from '../config';
+import { useConfig } from '../hooks/useConfig';
 import { __ } from '../utils/helpers';
 import AccomodationEstimate from './AccomodationEstimate';
 import AccomodationPriceInfo from './AccomodationPriceInfo';
@@ -8,6 +8,7 @@ import TokenBuyWidget from './TokenBuyWidget';
 import TokenSaleHeader from './TokenSaleHeader';
 
 const TokenSaleView = () => {
+  const { ACCOMODATION_COST } = useConfig();
   const [weeksNumber, setWeeksNumber] = useState(4);
   const [selectedAccomodation, selectAccomodation] = useState(
     ACCOMODATION_COST[0].name,

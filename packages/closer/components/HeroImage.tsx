@@ -2,10 +2,8 @@ import Image from 'next/image';
 
 import dayjs from 'dayjs';
 
-import { useConfig } from '../hooks/useConfig';
-
 const HeroImage = () => {
-  const { TOKEN_SALE_DATE } = useConfig() || {};
+  const TOKEN_SALE_DATE = process.env.NEXT_PUBLIC_TOKEN_SALE_DATE;
 
   if (!TOKEN_SALE_DATE) {
     console.error('HeroImage: No token sale date');
