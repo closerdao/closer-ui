@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 
 import { useConfig } from '../hooks/useConfig';
 import { __ } from '../utils/helpers';
