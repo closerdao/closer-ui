@@ -4,18 +4,19 @@ import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import { BigNumber, Contract } from 'ethers';
 
-import {
-  BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
-  BLOCKCHAIN_DAO_TOKEN,
-  BLOCKCHAIN_DIAMOND_ABI,
-} from '../config_blockchain';
 import { WalletDispatch } from '../contexts/wallet';
 import { WalletState } from '../contexts/wallet';
 import { checkIfBookingEqBlockchain } from '../utils/helpers';
+import { useConfig } from './useConfig';
 
 dayjs.extend(dayOfYear);
 
 export const useBookingSmartContract = ({ bookingNights }) => {
+  const {
+    BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
+    BLOCKCHAIN_DAO_TOKEN,
+    BLOCKCHAIN_DIAMOND_ABI,
+  } = useConfig();
   const { isWalletReady, account, library } = useContext(WalletState);
   const { updateWalletBalance, refetchBookingDates } =
     useContext(WalletDispatch);

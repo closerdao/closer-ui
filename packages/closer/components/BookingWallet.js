@@ -1,12 +1,13 @@
 import { useContext } from 'react';
 
-import { BLOCKCHAIN_DAO_TOKEN } from '../config_blockchain';
 import { WalletState } from '../contexts/wallet';
+import { useConfig } from '../hooks/useConfig';
 import { __, priceFormat } from '../utils/helpers';
 import WalletActions from './WalletActions';
 import WalletHeader from './WalletHeader';
 
 const BookingWallet = ({ toPay, switchToEUR }) => {
+  const { BLOCKCHAIN_DAO_TOKEN } = useConfig();
   const { balanceAvailable, isWalletReady } = useContext(WalletState);
   const balanceAfterPayment = balanceAvailable - toPay;
   const isInsufficientBalance = balanceAfterPayment < 0;

@@ -5,12 +5,13 @@ import React from 'react';
 import dayjs from 'dayjs';
 
 import PageNotFound from '../../404';
-import { PLATFORM_LEGAL_ADDRESS, PLATFORM_NAME } from '../../../config';
+import { useConfig } from '../../../hooks/useConfig';
 import api from '../../../utils/api';
 import { priceFormat } from '../../../utils/helpers';
 import { __ } from '../../../utils/helpers';
 
 const Ticket = ({ ticket, event, error }) => {
+  const { PLATFORM_LEGAL_ADDRESS, PLATFORM_NAME } = useConfig();
   if (!ticket) {
     return <PageNotFound error={error} />;
   }

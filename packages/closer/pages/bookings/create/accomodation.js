@@ -6,7 +6,7 @@ import BookingStepsInfo from '../../../components/BookingStepsInfo';
 import ListingCard from '../../../components/ListingCard';
 
 import PageNotFound from '../../404';
-import { BLOCKCHAIN_DAO_TOKEN } from '../../../config_blockchain';
+import { blockchainConfig } from '../../../config_blockchain';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
@@ -109,6 +109,7 @@ const AccomodationSelector = ({
 
 AccomodationSelector.getInitialProps = async ({ query }) => {
   const { start, end, adults, kids, infants, pets, currency } = query || {};
+  const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
   const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
   const {
     data: { results },

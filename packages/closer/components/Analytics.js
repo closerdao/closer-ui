@@ -2,7 +2,9 @@ import ReactGA from 'react-ga';
 
 import { event } from 'nextjs-google-analytics';
 
-import { GA_ANALYTICS } from '../config';
+import { closerConfig } from '../config';
+
+const { GA_ANALYTICS } = closerConfig;
 
 export const initAnalytics = () => {
   console.log(`Start Analytics ${GA_ANALYTICS}`);

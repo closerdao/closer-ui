@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 
-import { BLOCKCHAIN_DAO_TOKEN } from '../config_blockchain';
 import { DEFAULT_CURRENCY } from '../constants';
+import { useConfig } from '../hooks/useConfig';
 import { __, priceFormat } from '../utils/helpers';
 
 const SummaryCosts = ({
@@ -11,6 +11,8 @@ const SummaryCosts = ({
   totalToken,
   totalFiat,
 }) => {
+  const { BLOCKCHAIN_DAO_TOKEN } = useConfig();
+
   return (
     <div>
       <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3">

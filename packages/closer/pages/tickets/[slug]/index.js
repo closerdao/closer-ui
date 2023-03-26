@@ -4,7 +4,7 @@ import React from 'react';
 import QRCode from 'react-qr-code';
 
 import PageNotFound from '../../404';
-import { useConfig } from '../../../contexts/config';
+import { useConfig } from '../../../hooks/useConfig';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
