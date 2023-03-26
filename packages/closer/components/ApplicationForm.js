@@ -35,12 +35,6 @@ const ApplicationForm = () => {
   const updateApplication = (update) =>
     setApplication((prevApplication) => ({ ...prevApplication, ...update }));
 
-  const updateApplicationFields = (newFields) =>
-    setApplication((prevApplication) => ({
-      ...prevApplication,
-      fields: { ...prevApplication.fields, ...newFields },
-    }));
-
   return (
     <div>
       {submitted ? (

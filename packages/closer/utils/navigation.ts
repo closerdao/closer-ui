@@ -10,6 +10,10 @@ export const links = [
     enabled: true,
   },
   {
+    label: 'Volunteer',
+    url: '/volunteer',
+  },
+  {
     label: 'Booking requests',
     url: '/bookings/requests',
     enabled: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',

@@ -3,7 +3,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
 
-import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
 import { __ } from '../utils/helpers';
 import EventPreview from './EventPreview';

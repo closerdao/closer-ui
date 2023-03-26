@@ -1,6 +1,6 @@
 Welcome to [traditionaldreamfactory.com](https://traditionaldreamfactory.com/)!
 
-This repository is created with a monorepo pattern and is built with a Turborepo - https://turbo.build/repo. The `apps` directory contains `tdf` app that is deployed to traditionaldreamfactory.com, and the `packages` directory contains Closer package, that is deployed to [dev.closer.earth](dev.closer.earth).
+This repository is created with a monorepo pattern and is built with a Turborepo - https://turbo.build/repo. The `apps` directory contains `tdf` app that is deployed to [traditionaldreamfactory.com](traditionaldreamfactory.com), and the `packages` directory that contains Closer package, which is deployed to [dev.closer.earth](dev.closer.earth).
 
 ### Apps:
 
@@ -12,16 +12,9 @@ This repository is created with a monorepo pattern and is built with a Turborepo
 - `eslint-config-custom`: `eslint` configurations shared across all projects
 - `tsconfig`: `tsconfig.json`s used throughout the monorepo
 
-### Deployments
-
-Apps/Packages are deployed with Vercel:
-
-- one for Closer app - https://closer-apps-closer.vercel.app/
-- one for TDF app - https://closer-tdf.vercel.app/ (try "Sign in with Wallet" on `/login`, should work!)
-
 ### Run locally
 
-Please, first find two files with the name.env.sample, clone them in the same directory (one in tdf, one in closer) and rename to .env. Then, fill in the values for the variables.
+Please, first find two files with the name.env.sample, clone them in the same directory (one in tdf, one in closer) and rename to .env. Then, fill in the values for the variables (ask in the chat for secrets)
 
 From root folder:
 

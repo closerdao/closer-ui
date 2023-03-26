@@ -72,7 +72,7 @@ QuestionnaireItem.defaultProps = {
     name: 'Question',
     options: [],
   },
-  handleAnswer: () => {},
+  handleAnswer: () => null,
 };
 
 QuestionnaireItem.propTypes = {

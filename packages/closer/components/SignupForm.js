@@ -61,14 +61,6 @@ const SignupForm = () => {
     setApplication((prevState) => ({ ...prevState, ...update }));
   };
 
-  const updateApplicationFields = (update) => {
-    setError(null);
-    setApplication((prevState) => ({
-      ...prevState,
-      fields: { ...prevState.fields, ...update },
-    }));
-  };
-
   return (
     <div>
       {error && <div className="text-primary mb-4 text-center">{error}</div>}
