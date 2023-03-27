@@ -8,7 +8,7 @@ import EditModel from '../../components/EditModel';
 import models from '../../models';
 import { __ } from '../../utils/helpers';
 
-const AddChannel = () => {
+const CreateEvent = () => {
   const router = useRouter();
 
   return (
@@ -28,4 +28,4 @@ const AddChannel = () => {
   );
 };
 
-export default AddChannel;
+export default CreateEvent;

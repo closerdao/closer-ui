@@ -24,8 +24,6 @@
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",
-    "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^14.0.0",
     "@types/node": "^17.0.12",
     "@types/react": "^18.0.22",
     "@types/react-dom": "^18.0.7",
@@ -38,5 +36,8 @@
     "tailwindcss": "^3.0.7",
     "tsconfig": "*",
     "typescript": "^4.5.3"
+  },
+  "msw": {
+    "workerDirectory": "public"
   }
 }

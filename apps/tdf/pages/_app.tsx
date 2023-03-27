@@ -23,11 +23,12 @@ import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import config from '../config';
 
+export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
+  const library = new Web3Provider(provider);
+  return library;
+}
+
 const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
-  function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
-    const library = new Web3Provider(provider);
-    return library;
-  }
   return (
     <ConfigProvider config={{ ...config, ...blockchainConfig }}>
       <ErrorBoundary>

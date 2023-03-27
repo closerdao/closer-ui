@@ -1,13 +1,16 @@
 import React from 'react';
 
+// setup env variables globally
+process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING = 'true';
+process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET = 'true';
+process.env.NEXT_PUBLIC_FEATURE_BOOKING = 'true';
+
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: jest.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: jest.fn(), // Deprecated
-    removeListener: jest.fn(), // Deprecated
     addEventListener: jest.fn(),
     removeEventListener: jest.fn(),
     dispatchEvent: jest.fn(),
@@ -20,3 +23,5 @@ jest.mock('next/image', () => ({
     return <img {...props} />;
   },
 }));
+
+jest.mock('next/router', () => require('next-router-mock'));

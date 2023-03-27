@@ -1,4 +1,4 @@
-// jest.config.js
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const nextJest = require('next/jest');
 
 const createJestConfig = nextJest({
@@ -9,8 +9,8 @@ const createJestConfig = nextJest({
 // Add any custom config to be passed to Jest
 const customJestConfig = {
   // Add more setup options before each test is run
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
-  setupFiles: ['<rootDir>/.jest/jest.env.ts', '<rootDir>/.jest/jest.mocks.tsx'],
+  setupFilesAfterEnv: ['<rootDir>/test/jest.setup.ts'],
+  setupFiles: ['<rootDir>/test/jest.mocks.tsx'],
   modulePathIgnorePatterns: ['cypress'],
   moduleDirectories: ['node_modules', '<rootDir>/'],
   testEnvironment: 'jest-environment-jsdom',

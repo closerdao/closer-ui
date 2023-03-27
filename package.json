@@ -15,8 +15,13 @@
     "test:watch": "turbo run test:watch"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/user-event": "^14.4.3",
     "dotenv-cli": "^7.0.0",
     "eslint-config-custom": "*",
+    "msw": "^1.2.1",
+    "next-router-mock": "^0.9.3",
     "prettier": "latest",
     "turbo": "latest"
   },

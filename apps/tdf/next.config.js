@@ -2,19 +2,20 @@
 // with Sentry.
 // https://nextjs.org/docs/api-reference/next.config.js/introduction
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
-// const { withSentryConfig } = require('@sentry/nextjs');
+
+// const extractedHostnameRegex = /^(?:https?:\/\/)?([^\/]+)/;
+// const hostname = process.env.NEXT_PUBLIC_CDN_URL.match(extractedHostnameRegex)[1];
 
 const moduleExports = {
   reactStrictMode: true,
   transpilePackages: ['closer'],
-  // sentry: {
-  //   hideSourcemaps: true,
-  // },
+  images: {
+    remotePatterns: [
+      {
+        hostname: 'cdn.oasa.co',
+      },
+    ],
+  },
 };
 
-// const sentryWebpackPluginOptions = {
-//   silent: true,
-// };
-
-// module.exports = withSentryConfig(moduleExports, sentryWebpackPluginOptions);
 module.exports = moduleExports;

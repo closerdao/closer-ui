@@ -4,7 +4,6 @@ export * from './contexts/auth';
 export * from './contexts/platform';
 export * from './contexts/config';
 
-
 // Hooks
 export * from './hooks/useHasMounted';
 

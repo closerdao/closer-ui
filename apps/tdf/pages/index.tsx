@@ -173,7 +173,6 @@ const HomePage: NextPage = () => {
       {!isAuthenticated && (
         <>
           <hr className="my-8" />
-
           <p className="mb-4">
             Join the dreamers & the makers of tomorrow. We are engineers,
             artists, permaculturists, scientists, innovators, nomads. Come build
