@@ -41,6 +41,7 @@ const Create = () => {
           />
         </div> } */}
         <div className="mb-4">
+          <div><Link href="/blog">◀️ Blog</Link></div>
           <input
             type="text"
             className="text-xl mb-2"
