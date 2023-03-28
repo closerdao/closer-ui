@@ -1,3 +1,3 @@
-import { MemberPage } from 'closer';
+import { MembersPage } from 'closer';
 
-export default MemberPage;
+export default MembersPage;
