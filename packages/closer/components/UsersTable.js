@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 
 import { usePlatform } from '../contexts/platform';
 import { __ } from '../utils/helpers';
@@ -62,6 +63,11 @@ const UsersTable = ({ where, limit }) => {
                     {__('users_table_roles')}
                   </div>
                 </th>
+                <th className="p-2 whitespace-nowrap">
+                  <div className="font-semibold text-left">
+                    {__('users_table_email')}
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody className="text-sm divide-y bg-gray-200 dark:bg-gray-700 divide-gray-50 dark:divide-gray-800">
@@ -73,10 +79,14 @@ const UsersTable = ({ where, limit }) => {
                     <td className="p-2 whitespace-nowrap">
                       <span className="flex items-center">
                         <span className="w-10 h-10 flex-shrink-0 mr-2 sm:mr-3">
-                          <ProfilePhoto user={user.toJS()} size="sm" />
+                          <Link href={ `/members/${user.get('slug')}` }>
+                            <ProfilePhoto user={user.toJS()} size="sm" />
+                          </Link>
                         </span>
                         <span className="font-medium text-gray-800 dark:text-gray-200">
-                          {user.get('screenname')}
+                          <Link href={ `/members/${user.get('slug')}` }>
+                            {user.get('screenname')}
+                          </Link>
                         </span>
                       </span>
                     </td>
@@ -88,7 +98,7 @@ const UsersTable = ({ where, limit }) => {
                       </div>
                     </td>
                     <td className="p-2 whitespace-nowrap">
-                      <div className="space-x-2 flex flex-wrap justify-start items-center">
+                      <div className="space-x-2 space-y-2 flex flex-wrap justify-start items-center">
                         {user.get('roles') &&
                           user.get('roles').map((role) => (
                             <Tag
@@ -125,6 +135,7 @@ const UsersTable = ({ where, limit }) => {
                         >
                           <input
                             type="text"
+                            className="p-2"
                             value={addRole[user.get('_id')] || ''}
                             placeholder="Add role"
                             onChange={(e) => {
@@ -136,6 +147,13 @@ const UsersTable = ({ where, limit }) => {
                           />
                         </form>
                       </div>
+                    </td>
+                    <td>
+                      <span className="font-medium text-gray-800 dark:text-gray-200">
+                        <Link href={ `mailto:${user.get('email')}` }>
+                          {user.get('email')}
+                        </Link>
+                      </span>
                     </td>
                   </tr>
                 );

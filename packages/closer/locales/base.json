@@ -211,6 +211,7 @@
   "users_table_created": "Created",
   "users_table_roles": "Roles",
   "users_table_empty": "No users found",
+  "users_table_email": "Email",
   "admin_title": "Admin",
   "applications_title": "Community applications",
   "applications_subtitle": "Platform metrics",

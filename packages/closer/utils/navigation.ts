@@ -10,10 +10,6 @@ export const links = [
     enabled: true,
   },
   {
-    label: 'Volunteer',
-    url: '/volunteer',
-  },
-  {
     label: 'Booking requests',
     url: '/bookings/requests',
     enabled: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
@@ -38,6 +34,7 @@ export const links = [
   {
     label: 'Settings',
     url: '/settings',
+    enabled: true,
   },
   {
     label: 'Governance',
@@ -49,6 +46,7 @@ export const links = [
   {
     label: 'Admin',
     url: '/admin',
+    enabled: true,
     roles: ['admin'],
   },
 ];

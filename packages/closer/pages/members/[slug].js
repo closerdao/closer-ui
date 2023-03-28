@@ -307,7 +307,7 @@ const MemberPage = ({ member }) => {
                     </button>
                   )}
                 </div>
-                <ConnectedWallet />
+                { isAuthenticated && member._id === currentUser._id && <ConnectedWallet /> }
                 <div className="flex flex-col items-start md:w-6/12">
                   <div className="w-full">
                     <div className="page-title flex justify-between">
