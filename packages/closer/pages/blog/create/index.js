@@ -1,18 +1,17 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import Image from 'next/image';
+// import Image from 'next/image';
 import { useRouter } from 'next/router';
 
 import React, { useState } from 'react';
 import Editor from 'react-simple-wysiwyg';
 
 import { useAuth } from '../../../contexts/auth';
-import api, { cdn } from '../../../utils/api';
-import PageNotFound from '../../404';
+import api from '../../../utils/api';
 
 const Create = () => {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [html, setHtml] = useState('');
   const [title, setTitle] = useState('');
   const onChange = (e) => {
@@ -20,7 +19,7 @@ const Create = () => {
   }
 
   const persist = async () => {
-    const res = await api.post(`/article`, { title, html });
+    const res = await api.post('/article', { title, html });
     router.push(decodeURIComponent(`/blog/${ res.data.results.slug }`));
   }
 
