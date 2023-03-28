@@ -47,13 +47,15 @@ export { default as ChannelPage } from './pages/channel/[channel]';
 export { default as CreateChannelPage } from './pages/channel/create';
 export { default as CommunityPage } from './pages/community';
 export { default as EditChannelPage } from './pages/edit-channel/[slug]';
-export { default as SearchPage } from './pages/search';
-export { default as KeywordPage } from './pages/search/[keyword]';
 export { default as EditTaskPage } from './pages/tasks/edit/[slug]';
 export { default as TaskPage } from './pages/tasks/[slug]';
 export { default as CreateTaskPage } from './pages/tasks/create';
 export { default as TasksPage } from './pages/tasks';
-export { default as ArticlePage } from './pages/[slug]';
+export { default as ArticlePage } from './pages/blog/[slug]';
+export { default as ArticleEditPage } from './pages/blog/edit/[slug]';
+export { default as ArticleCreatePage } from './pages/blog/create/index';
+export { default as SearchPage } from './pages/blog/index';
+export { default as KeywordPage } from './pages/blog/search/[keyword]';
 export { default as Page401 } from './pages/401';
 export { default as Page404 } from './pages/404';
 

@@ -27,5 +27,8 @@
   },
   "engines": {
     "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "react-simple-wysiwyg": "^2.2.2"
   }
 }
