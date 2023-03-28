@@ -22,7 +22,7 @@ const Search = ({ articles, error, keyword, tags }) => (
             {articles.length !== 1 && 's'} about <i>{keyword}</i>.
           </p>
         )}
-        <div className="grid md:grid-cols-2">
+        <div className="grid md:grid-cols-2 gap-4">
           {articles ? (
             articles.map((article) => (
               <div className="card" key={article._id}>
@@ -69,7 +69,7 @@ const Search = ({ articles, error, keyword, tags }) => (
 Search.getInitialProps = async ({ req, query }) => {
   try {
     const rawKeyword =
-      (req && req.url.replace('/search/', '')) || (query && query.keyword);
+      (req && req.url.replace('/blog/search/', '')) || (query && query.keyword);
     const keyword =
       typeof decodeURIComponent !== 'undefined'
         ? decodeURIComponent(rawKeyword)
