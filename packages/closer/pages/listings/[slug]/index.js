@@ -92,7 +92,6 @@ const Listing = ({ listing, error }) => {
                 visibility="public"
                 parentId={listing._id}
                 parentType="listing"
-                channel={listing.category}
               />
             </section>
           </div>
