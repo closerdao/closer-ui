@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 
+import api from '../utils/api'
+
 const user = {
   screenname: 'VV',
   timezone: 'Asia/Almaty',
@@ -91,21 +93,14 @@ function SubscribeCheckoutForm() {
       //
 
       // call the backend to create subscription
-      const response = await fetch('/api/create-subscription', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          paymentMethod: paymentMethod?.paymentMethod?.id,
-          email,
-          priceId,
-        }),
-      }).then((res) => res.json());
+      const response = await api.post('/subscription', {
+        paymentMethod: paymentMethod?.paymentMethod?.id,
+        priceId,
+      });
 
         console.log('response=', response);
-        
-   
+
+
     //   const confirmPayment = await stripe?.confirmCardPayment(
     //     response.clientSecret,
     //   );
