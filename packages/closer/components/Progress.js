@@ -11,7 +11,7 @@ const Progress = ({ progress, total }) => {
           key={step}
           className={`flex-1 h-1 border border-solid rounded-xl mr-1 ${
             step <= progress
-              ? 'bg-black border-black'
+              ? 'bg-primary border-primary'
               : 'bg-zinc-300 border-zinc-300'
           }`}
         />

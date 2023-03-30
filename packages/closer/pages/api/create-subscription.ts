@@ -38,11 +38,11 @@ const handler: NextApiHandler = async (req, res) => {
     },
     expand: ['latest_invoice.payment_intent'],
   });
-    
-    console.log('subscription=', subscription);
 
-    const invoice = subscription!.latest_invoice as Stripe.Invoice;
-    const intent = invoice.payment_intent as Stripe.PaymentIntent;
+  console.log('subscription=', subscription);
+
+  const invoice = subscription.latest_invoice as Stripe.Invoice;
+  const intent = invoice.payment_intent as Stripe.PaymentIntent;
 
   res.status(200).json({
     status: subscription.status,

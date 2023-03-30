@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const closerTheme = require('closer/theme');
 const defaultTheme = require('tailwindcss/defaultTheme');
 
@@ -6,7 +7,7 @@ const tdfTheme = {
     ...closerTheme.extend,
     colors: {
       ...closerTheme.extend.colors,
-      primary: '#e4427d',
+      primary: '#FE4FB7',
       secondary: '#1b3bc3',
       background: '#F8FAFC',
       'background-dark': '#1c1c1c',

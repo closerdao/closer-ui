@@ -1,40 +1,30 @@
-import Head from "next/head";
+import Head from 'next/head';
+import { useRouter } from 'next/router';
 
 import { NextPage } from 'next';
 
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
-import { Router, useRouter } from 'next/router';
 
-const now = new Date();
+// const now = new Date();
+
+interface Subscription {
+  title: string;
+  description: string;
+  priceID: string;
+  tier: number;
+  monthlyCredits: number;
+  price: number;
+  perks: string[];
+  billingPeriod: string;
+}
 
 const Subscribe: NextPage = () => {
-  const { PERMISSIONS, PLATFORM_NAME } = useConfig() || {};
+  const { PERMISSIONS, PLATFORM_NAME, SUBSCRIPTION_PLANS } = useConfig() || {};
   const { user } = useAuth();
   const router = useRouter();
 
-  const subscriptions = [
-    {
-      title: 'Free',
-      description: "Free plan description",
-      priceID: 'stripe price id',
-      tier: 1,
-      monthlyCredits: 100,
-      price: 'free',
-      perks: ['perk1', 'perk 2'],
-      billingPeriod: 'month',
-    },
-    {
-      title: 'Plan 2',
-      description: "Plan 2 description",
-      priceID: 'stripe price id',
-      tier: 1,
-      monthlyCredits: 100,
-      price: '10',
-      perks: ['perk1', 'perk 2'],
-      billingPeriod: 'month',
-    },
-  ];
+  const subscriptions: Subscription[] = SUBSCRIPTION_PLANS
 
   return (
     <>
@@ -51,7 +41,7 @@ const Subscribe: NextPage = () => {
           <div>
             <h1 className="mb-4">Subscriptions</h1>
             {subscriptions &&
-              subscriptions.map((subscription) => (
+              subscriptions.map((subscription: Subscription) => (
                 <div key={subscription.title} className="border p-6 mb-4">
                   <h2>{subscription.title}</h2>
                   <div>
@@ -59,7 +49,12 @@ const Subscribe: NextPage = () => {
                       return <p key={perk}>{perk}</p>;
                     })}
                   </div>
-                  <button className='border p-4' onClick={()=>router.push("/subscribe/checkout")}>Subscribe</button>
+                  <button
+                    className="border p-4"
+                    onClick={() => router.push('/subscribe/checkout')}
+                  >
+                    Subscribe
+                  </button>
                 </div>
               ))}
           </div>

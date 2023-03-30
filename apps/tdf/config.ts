@@ -19,6 +19,38 @@ const config = {
     },
   },
   COOKIE_TOKEN: 'tdf-token',
+  SUBSCRIPTION_PLANS: [
+    {
+      title: 'Free',
+      description: 'Join out digital community for free',
+      priceID: 'stripe price id',
+      tier: 1,
+      monthlyCredits: 0,
+      price: 0,
+      perks: ['Volonteer positions', 'Free e-book', 'Weekly newsletter'],
+      billingPeriod: 'month',
+    },
+    {
+      title: 'Plan 2',
+      description: 'Unlock yor stay passes and join aour physical community',
+      priceID: 'stripe price id',
+      tier: 2,
+      monthlyCredits: 100,
+      price: 10,
+      perks: ['Volonteer positions', 'Free e-book', 'Weekly newsletter'],
+      billingPeriod: 'month',
+    },
+    {
+      title: 'Another plan',
+      description: 'Collect carrots and turn them into stay and event credits',
+      priceID: 'stripe price id',
+      tier: 3,
+      monthlyCredits: 100,
+      price: 30,
+      perks: ['Volonteer positions', 'Free e-book', 'Weekly newsletter', 'Free stays', 'free events'],
+      billingPeriod: 'month',
+    },
+  ],
 };
 
 export default config;
