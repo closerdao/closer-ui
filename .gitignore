@@ -22,6 +22,7 @@ out/
 # misc
 .DS_Store
 .env
+.env.local
 **/.env
 
 # debug
