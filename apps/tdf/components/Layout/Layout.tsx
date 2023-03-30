@@ -8,7 +8,9 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
   return (
     <div className="flex-1 flex flex-col relative mx-auto max-w-6xl w-full">
       <Navigation />
-      <div className="p-6 flex flex-1 flex-col items-center">{children}</div>
+      <div className="p-6 flex flex-1 flex-col w-full">
+        {children}
+      </div>
       <Footer />
     </div>
   );

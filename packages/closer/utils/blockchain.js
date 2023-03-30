@@ -1,10 +1,9 @@
 import { BigNumber, Contract, utils } from 'ethers';
 import { isAddress } from 'ethers/lib/utils.js';
 
-import {
-  BLOCKCHAIN_DAO_TOKEN,
-  BLOCKCHAIN_DAO_TOKEN_ABI,
-} from '../config_blockchain.js';
+import { blockchainConfig } from '../config_blockchain';
+
+const { BLOCKCHAIN_DAO_TOKEN, BLOCKCHAIN_DAO_TOKEN_ABI } = blockchainConfig;
 
 export const fetcher =
   (library, abi) =>

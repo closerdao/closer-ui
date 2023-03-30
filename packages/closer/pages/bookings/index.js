@@ -1,7 +1,6 @@
 import Head from 'next/head';
 
 import Bookings from '../../components/Bookings';
-import Layout from '../../components/Layout';
 import Tabs from '../../components/Tabs';
 
 import PageNotFound from '../404';
@@ -29,12 +28,16 @@ const BookingsDirectory = () => {
     },
   };
 
+  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+    return <PageNotFound />;
+  }
+
   if (!user) {
     return <PageNotFound error="User not logged in." />;
   }
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>{__('bookings_title')}</title>
       </Head>
@@ -54,7 +57,7 @@ const BookingsDirectory = () => {
           ]}
         />
       </div>
-    </Layout>
+    </>
   );
 };
 

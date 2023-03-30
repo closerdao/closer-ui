@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { useAuth } from '../contexts/auth.js';
+import { useAuth } from '../contexts/auth';
 import api, { formatSearch } from '../utils/api';
 import CreatePost from './CreatePost';
 import Post from './Post';
@@ -13,7 +13,6 @@ const PostList = ({
   visibility,
 }) => {
   const { user, isAuthenticated } = useAuth();
-  const [users, setUsers] = useState(null);
   const [error, setErrors] = useState(false);
   const [usersById, setUsersById] = useState({});
   const [posts, setPosts] = useState([]);
@@ -70,6 +69,7 @@ const PostList = ({
 
   return (
     <div>
+      {error && <div className="validation-error">{error}</div>}
       {isAuthenticated && allowCreate && (
         <section className="card">
           <CreatePost

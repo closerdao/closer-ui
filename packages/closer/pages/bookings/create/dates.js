@@ -7,13 +7,13 @@ import BookingDates from '../../../components/BookingDates';
 import BookingGuests from '../../../components/BookingGuests';
 import BookingProgress from '../../../components/BookingProgress';
 import CurrencySwitch from '../../../components/CurrencySwitch';
-import Layout from '../../../components/Layout';
 import PageError from '../../../components/PageError';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import PropTypes from 'prop-types';
 
+import PageNotFound from '../../404';
 import { CURRENCIES, DEFAULT_CURRENCY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import api from '../../../utils/api';
@@ -21,19 +21,9 @@ import { __ } from '../../../utils/helpers';
 
 dayjs.extend(relativeTime);
 
-const defaultStart = dayjs()
-  .add(3, 'days')
-  .set('hours', 18)
-  .set('seconds', 0)
-  .set('minutes', 0)
-  .format('YYYY-MM-DD');
+const defaultStart = dayjs().add(3, 'days').format('YYYY-MM-DD');
 
-const defaultEnd = dayjs()
-  .add(6, 'days')
-  .set('hours', 11)
-  .set('seconds', 0)
-  .set('minutes', 0)
-  .format('YYYY-MM-DD');
+const defaultEnd = dayjs().add(6, 'days').format('YYYY-MM-DD');
 
 const DatesSelector = ({ error, settings }) => {
   const router = useRouter();
@@ -81,8 +71,12 @@ const DatesSelector = ({ error, settings }) => {
     return <PageError error={error} />;
   }
 
+  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+    return <PageNotFound />;
+  }
+
   return (
-    <Layout>
+    <>
       <div className="max-w-screen-sm mx-auto md:p-8 h-full">
         <BookingBackButton
           action={goToDashboard}
@@ -128,7 +122,7 @@ const DatesSelector = ({ error, settings }) => {
           </button>
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

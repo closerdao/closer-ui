@@ -2,9 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import React, { useContext, useState } from 'react';
-
-import Layout from '../../components/Layout';
+import { useContext, useState } from 'react';
 
 import { useAuth } from '../../contexts/auth';
 import { WalletDispatch, WalletState } from '../../contexts/wallet';
@@ -21,6 +19,7 @@ const Login = () => {
     : '/';
   const { isAuthenticated, login, setAuthentification, error, setError } =
     useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -69,7 +68,7 @@ const Login = () => {
   };
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>{__('login_title')}</title>
       </Head>
@@ -118,13 +117,15 @@ const Login = () => {
               <button type="submit" className="btn-primary w-full sm:w-auto">
                 {__('login_submit')}
               </button>
-              <button
-                type="submit"
-                className="btn-primary"
-                onClick={walletConnectAndSignInFlow}
-              >
-                {__('blockchain_sign_in_with_wallet')}
-              </button>
+              {process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true' && (
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  onClick={walletConnectAndSignInFlow}
+                >
+                  {__('blockchain_sign_in_with_wallet')}
+                </button>
+              )}
             </div>
 
             <Link
@@ -137,7 +138,7 @@ const Login = () => {
           </div>
         </form>
       </main>
-    </Layout>
+    </>
   );
 };
 

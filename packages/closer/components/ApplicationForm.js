@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 
-import { SIGNUP_FIELDS } from '../config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
@@ -36,12 +35,6 @@ const ApplicationForm = () => {
   const updateApplication = (update) =>
     setApplication((prevApplication) => ({ ...prevApplication, ...update }));
 
-  const updateApplicationFields = (newFields) =>
-    setApplication((prevApplication) => ({
-      ...prevApplication,
-      fields: { ...prevApplication.fields, ...newFields },
-    }));
-
   return (
     <div>
       {submitted ? (
@@ -57,23 +50,6 @@ const ApplicationForm = () => {
               placeholder="Jane Birkin"
             />
           </div>
-          {SIGNUP_FIELDS &&
-            SIGNUP_FIELDS.map((field) => (
-              <div className="w-full mb-4" key={field.name}>
-                <label htmlFor={field.name}>{field.label}</label>
-                <textarea
-                  className="textarea"
-                  id={field.name}
-                  value={application.fields[field.name]}
-                  onChange={(e) =>
-                    updateApplicationFields({
-                      [field.name]: e.target.value,
-                    })
-                  }
-                  placeholder={field.placeholder}
-                />
-              </div>
-            ))}
           <div className="w-full mb-4">
             <label htmlFor="phone">{__('apply_phone_number')}</label>
             <input

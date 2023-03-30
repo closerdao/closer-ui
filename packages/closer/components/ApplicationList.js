@@ -1,22 +1,15 @@
-import { useRouter } from 'next/router';
-
 import React, { useEffect, useMemo, useState } from 'react';
 
-
-import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
 import models from '../models';
 import { __ } from '../utils/helpers';
 import Pagination from './Pagination';
 import TimeSince from './TimeSince';
 
-const ApplicationList = ({ children, channel, status, managedBy, limit }) => {
-  const { user } = useAuth();
+const ApplicationList = ({ status, managedBy, limit }) => {
   const { platform } = usePlatform();
   const [page, setPage] = useState(1);
-  const [applicationMeta, setApplicationMeta] = useState({});
   const [error, setErrors] = useState(false);
-  const router = useRouter();
   const filter = useMemo(
     () => ({
       where: { status },
@@ -55,6 +48,7 @@ const ApplicationList = ({ children, channel, status, managedBy, limit }) => {
 
   return (
     <div className="application-list grid gap-4">
+      {error && <div className="validation-error">{error}</div>}
       {applications && applications.count() > 0 ? (
         applications.map((app) => {
           const application = platform.application.findOne(app.get('_id'));
@@ -72,7 +66,7 @@ const ApplicationList = ({ children, channel, status, managedBy, limit }) => {
                 </div>
               </div>
               <div className="card-body">
-                {models.application.map(({ label, name, status }) => (
+                {models.application.map(({ label, name }) => (
                   <div key={name} className="mb-2">
                     <p>
                       <i className="text-gray-500">{label}</i>
@@ -115,11 +109,7 @@ const ApplicationList = ({ children, channel, status, managedBy, limit }) => {
                   <button
                     onClick={(e) => {
                       e.preventDefault();
-                      updateApplication(
-                        application.get('_id'),
-                        'approved',
-                        applicationMeta[application.get('_id')] || {},
-                      );
+                      updateApplication(application.get('_id'), 'approved', {});
                     }}
                     className="btn-primary mr-4"
                   >

@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingProgress from '../../../components/BookingProgress';
-import Layout from '../../../components/Layout';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
@@ -12,6 +11,7 @@ import SummaryDates from '../../../components/SummaryDates';
 import PropTypes from 'prop-types';
 
 import PageNotAllowed from '../../401';
+import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
@@ -49,6 +49,10 @@ const Summary = ({ booking, listing, error }) => {
 
   const { isAuthenticated } = useAuth();
 
+  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+    return <PageNotFound />;
+  }
+
   if (error) {
     return <PageError error={error} />;
   }
@@ -58,7 +62,7 @@ const Summary = ({ booking, listing, error }) => {
   }
 
   return (
-    <Layout>
+    <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
         <BookingBackButton action={goBack} name={__('buttons_back')} />
         <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
@@ -85,7 +89,7 @@ const Summary = ({ booking, listing, error }) => {
           </button>
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

@@ -27,7 +27,7 @@ const Counter = ({ value, minValue, setFn }) => {
 Counter.defaultProps = {
   value: 0,
   minValue: 0,
-  setFn: () => {},
+  setFn: () => null,
 };
 
 Counter.propTypes = {

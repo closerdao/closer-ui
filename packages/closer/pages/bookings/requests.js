@@ -1,10 +1,10 @@
 import Head from 'next/head';
-import Layout from '../../components/Layout';
+
+import Bookings from '../../components/Bookings';
 
 import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { __ } from '../../utils/helpers';
-import Bookings from '../../components/Bookings';
 
 const BookingsRequests = () => {
   const { user } = useAuth();
@@ -13,26 +13,30 @@ const BookingsRequests = () => {
       where: {
         status: ['pending'],
         end: {
-          $gt: new Date()
-        }
-      }
-    }
+          $gt: new Date(),
+        },
+      },
+    },
   };
 
   if (!user || !user.roles.includes('space-host')) {
     return <PageNotFound error="User may not access" />;
   }
 
+  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+    return <PageNotFound />;
+  }
+
   return (
-    <Layout>
+    <>
       <Head>
-        <title>{ __('booking_requests_title') }</title>
+        <title>{__('booking_requests_title')}</title>
       </Head>
       <div className="main-content intro fullwidth">
-        <h1 className="page-title">{ __('booking_requests_title') }</h1>
-        <Bookings filter={ filters.openBookings } />
+        <h1 className="page-title">{__('booking_requests_title')}</h1>
+        <Bookings filter={filters.openBookings} />
       </div>
-    </Layout>
+    </>
   );
 };
 

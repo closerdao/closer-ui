@@ -4,7 +4,9 @@ import { useEffect } from 'react';
 import React from 'react';
 
 import PageNotAllowed from '../../401';
+import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
+import '../../../utils/helpers';
 
 const NewBooking = () => {
   const router = useRouter();
@@ -15,6 +17,10 @@ const NewBooking = () => {
       router.push('/bookings/create/dates');
     }
   }, [isAuthenticated]);
+
+  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+    return <PageNotFound />;
+  }
 
   if (!isAuthenticated) {
     return <PageNotAllowed />;

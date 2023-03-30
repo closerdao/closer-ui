@@ -3,7 +3,7 @@ import duration from 'dayjs/plugin/duration';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
-import { BLOCKCHAIN_DAO_TOKEN } from '../config_blockchain';
+import { blockchainConfig } from '../config_blockchain';
 import { REFUND_PERIODS } from '../constants';
 import base from '../locales/base';
 import en from '../locales/en';
@@ -11,6 +11,8 @@ import en from '../locales/en';
 dayjs.extend(localizedFormat);
 dayjs.extend(relativeTime);
 dayjs.extend(duration);
+
+const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
 
 let language = Object.assign({}, base, en);
 

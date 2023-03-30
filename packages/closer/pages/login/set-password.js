@@ -4,8 +4,6 @@ import { useRouter } from 'next/router';
 
 import React, { useState } from 'react';
 
-import Layout from '../../components/Layout';
-
 import { useAuth } from '../../contexts/auth';
 import { __ } from '../../utils/helpers';
 
@@ -26,7 +24,7 @@ const SetPasswordScreen = () => {
   }
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>{__('login_set_password_title')}</title>
       </Head>
@@ -117,7 +115,7 @@ const SetPasswordScreen = () => {
           </div>
         )}
       </main>
-    </Layout>
+    </>
   );
 };
 

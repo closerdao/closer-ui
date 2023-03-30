@@ -5,7 +5,6 @@ import { useRouter } from 'next/router';
 import React from 'react';
 
 import EditModel from '../../../components/EditModel';
-import Layout from '../../../components/Layout';
 
 import { FaArrowLeft } from '@react-icons/all-files/fa/FaArrowLeft';
 
@@ -25,7 +24,7 @@ const EditEvent = ({ event }) => {
   }
 
   return (
-    <Layout protect>
+    <>
       <Head>
         <title>
           {__('events_slug_edit_title')} {event.name}
@@ -58,7 +57,7 @@ const EditEvent = ({ event }) => {
           onDelete={() => router.push('/')}
         />
       </div>
-    </Layout>
+    </>
   );
 };
 

@@ -3,13 +3,12 @@ import Head from 'next/head';
 import React from 'react';
 
 import ApplicationForm from '../../components/ApplicationForm';
-import Layout from '../../components/Layout';
 import SignupForm from '../../components/SignupForm';
 
 import { __ } from '../../utils/helpers';
 
 const Signup = () => (
-  <Layout>
+  <>
     <Head>
       <title>{__('signup_title')}</title>
     </Head>
@@ -22,7 +21,7 @@ const Signup = () => (
         <SignupForm />
       )}
     </main>
-  </Layout>
+  </>
 );
 
 export default Signup;

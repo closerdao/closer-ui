@@ -24,6 +24,7 @@ const EventPreview = ({ event, list }) => {
       className={`event-preview relative ${
         list ? 'mb-2' : 'md:pr-4 w-full md:w-1/3 mb-8'
       }`}
+      role="listitem"
     >
       <div
         className={`${
@@ -36,7 +37,6 @@ const EventPreview = ({ event, list }) => {
           } bg-gray-50 overflow-hidden`}
         >
           <Link href={`/events/${event.get('slug')}`}>
-
             {event.get('photo') ? (
               <img
                 className="object-cover h-full w-full"
@@ -52,7 +52,6 @@ const EventPreview = ({ event, list }) => {
                 />
               )
             )}
-
           </Link>
         </div>
         <div className={`p-2 ${list ? 'w-2/3' : 'text-left'}`}>
@@ -67,6 +66,7 @@ const EventPreview = ({ event, list }) => {
               <p className="text-xs font-light">
                 {start && start.format(dateFormat)}
                 {end && duration <= 24 && ` - ${end.format('HH:mm')}`}
+                {end && duration >= 24 && ` - ${end.format(dateFormat)}`}
               </p>
             </div>
             {event.get('location') && (

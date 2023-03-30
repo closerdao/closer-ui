@@ -2,7 +2,6 @@ import Head from 'next/head';
 
 import React from 'react';
 
-import Layout from '../../../components/Layout';
 import PageError from '../../../components/PageError';
 
 import dayjs from 'dayjs';
@@ -19,7 +18,7 @@ dayjs.extend(LocalizedFormat);
 const Booking = ({ booking, error }) => {
   const { isAuthenticated } = useAuth();
 
-  if (!booking) {
+  if (!booking || process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
     return <PageNotFound />;
   }
 
@@ -35,7 +34,7 @@ const Booking = ({ booking, error }) => {
   }
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>{booking.name}</title>
         <meta name="description" content={booking.description} />
@@ -70,7 +69,7 @@ const Booking = ({ booking, error }) => {
           <section className="mt-3">{__('bookings_confirmation')}</section>
         )}
       </main>
-    </Layout>
+    </>
   );
 };
 Booking.getInitialProps = async ({ query }) => {

@@ -6,7 +6,6 @@ import React, { useEffect, useState } from 'react';
 import EventAttendees from '../../../components/EventAttendees';
 import EventDescription from '../../../components/EventDescription';
 import EventPhoto from '../../../components/EventPhoto';
-import Layout from '../../../components/Layout';
 import Photo from '../../../components/Photo';
 
 import dayjs from 'dayjs';
@@ -22,13 +21,11 @@ dayjs.extend(advancedFormat);
 
 const Event = ({ event, error }) => {
   const [photo, setPhoto] = useState(event && event.photo);
-  const [loadError, setErrors] = useState(null);
   const [password, setPassword] = useState('');
   const [featured, setFeatured] = useState(event && !!event.featured);
   const { platform } = usePlatform();
   const { user, isAuthenticated } = useAuth();
   const [attendees, setAttendees] = useState(event && (event.attendees || []));
-  const [ticketsSold, setTicketsSold] = useState([]);
   const myTicketFilter = event && {
     where: {
       event: event._id,
@@ -39,7 +36,7 @@ const Event = ({ event, error }) => {
   const allTicketFilter = event && {
     where: {
       event: event._id,
-      status: 'approved'
+      status: 'approved',
     },
   };
   const start = event && event.start && dayjs(event.start);
@@ -48,9 +45,10 @@ const Event = ({ event, error }) => {
   const isThisYear = dayjs().isSame(start, 'year');
   const dateFormat = isThisYear ? 'MMMM Do HH:mm' : 'YYYY MMMM Do HH:mm';
   const myTickets = platform.ticket.find(myTicketFilter);
-  const ticketsCount = event.ticketOptions ?
-    (platform.ticket.findCount(allTicketFilter) || event.attendees.length) - event.attendees.length :
-    event.attendees && event.attendees.length;
+  const ticketsCount = event.ticketOptions
+    ? (platform.ticket.findCount(allTicketFilter) || event.attendees.length) -
+      event.attendees.length
+    : event.attendees && event.attendees.length;
 
   const loadData = async () => {
     if (event.attendees && event.attendees.length > 0) {
@@ -93,14 +91,14 @@ const Event = ({ event, error }) => {
     if (event) {
       loadData();
     }
-  }, [event, ticketsSold, user]);
+  }, [event, user]);
 
   if (!event) {
     return <PageNotFound error={error} />;
   }
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>{event.name}</title>
         <meta name="description" content={event.description} />
@@ -171,10 +169,6 @@ const Event = ({ event, error }) => {
                   <h3 className="p3 mr-2 italic">Event ended</h3>
                 )}
                 <h1 className="md:text-4xl mt-4 font-bold">{event.name}</h1>
-                {loadError && (
-                  <div className="validation-error">{loadError}</div>
-                )}
-
                 <div className="mt-4 event-actions flex items-center">
                   {event.ticket && start && start.isAfter(dayjs()) ? (
                     <Link
@@ -398,7 +392,7 @@ const Event = ({ event, error }) => {
                 user={user}
                 start={start}
                 attendees={attendees}
-                ticketsCount={ ticketsCount }
+                ticketsCount={ticketsCount}
                 platform={platform}
               />
             )}
@@ -407,10 +401,10 @@ const Event = ({ event, error }) => {
           </main>
         </div>
       )}
-    </Layout>
+    </>
   );
 };
-Event.getInitialProps = async ({ req, query }) => {
+Event.getInitialProps = async ({ query }) => {
   try {
     const {
       data: { results: event },

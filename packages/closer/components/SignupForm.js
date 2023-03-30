@@ -2,7 +2,6 @@ import { useRouter } from 'next/router';
 
 import React, { useEffect, useState } from 'react';
 
-import { SIGNUP_FIELDS } from '../config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import { useAuth } from '../contexts/auth';
 import { __ } from '../utils/helpers';
@@ -62,14 +61,6 @@ const SignupForm = () => {
     setApplication((prevState) => ({ ...prevState, ...update }));
   };
 
-  const updateApplicationFields = (update) => {
-    setError(null);
-    setApplication((prevState) => ({
-      ...prevState,
-      fields: { ...prevState.fields, ...update },
-    }));
-  };
-
   return (
     <div>
       {error && <div className="text-primary mb-4 text-center">{error}</div>}
@@ -99,23 +90,6 @@ const SignupForm = () => {
               className="bg-transparent"
             />
           </div>
-          {SIGNUP_FIELDS &&
-            SIGNUP_FIELDS.map((field) => (
-              <div className="w-full mb-4" key={field.name}>
-                <label htmlFor={field.name}>{field.label}</label>
-                <textarea
-                  className="textarea bg-transparent"
-                  id={field.name}
-                  value={application.fields[field.name]}
-                  onChange={(e) =>
-                    updateApplicationFields({
-                      [field.name]: e.target.value,
-                    })
-                  }
-                  placeholder={field.placeholder}
-                />
-              </div>
-            ))}
           <div className="w-full mb-4">
             <label htmlFor="phone">{__('signup_form_phone_number')}</label>
             <input

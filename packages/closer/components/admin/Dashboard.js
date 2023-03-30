@@ -122,7 +122,7 @@ const Dashboard = () => {
           e.preventDefault();
           inviteUser(email);
         }}
-        className="mt-8 w-1/2"
+        className="mt-8 md:w-1/2"
       >
         {invite && (
           <div className="success-box">
@@ -140,6 +140,7 @@ const Dashboard = () => {
             placeholder="name@awesomeproject.co"
             onChange={(e) => setInviteEmail(e.target.value)}
             required
+            className="bg-transparent"
           />
         </div>
         <div className="card-footer">

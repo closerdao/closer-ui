@@ -3,12 +3,10 @@ import Link from 'next/link';
 
 import React from 'react';
 
-import Layout from '../components/Layout';
-
 import { __ } from '../utils/helpers';
 
 const PageNotFound = ({ error }) => (
-  <Layout>
+  <>
     <Head>
       <title>{__('404_title')}</title>
     </Head>
@@ -21,7 +19,7 @@ const PageNotFound = ({ error }) => (
         </Link>
       </p>
     </main>
-  </Layout>
+  </>
 );
 
 export default PageNotFound;

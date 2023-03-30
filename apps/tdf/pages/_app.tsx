@@ -11,33 +11,41 @@ import {
   Web3Provider,
 } from '@ethersproject/providers';
 import { Web3ReactProvider } from '@web3-react/core';
-import { AuthProvider, PlatformProvider, WalletProvider } from 'closer';
+import {
+  AuthProvider,
+  ConfigProvider,
+  PlatformProvider,
+  WalletProvider,
+  blockchainConfig,
+} from 'closer';
 import 'closer/public/styles.css';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import config from '../config';
-import '../styles/index.css';
+
+export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
+  const library = new Web3Provider(provider);
+  return library;
+}
 
 const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
-  function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
-    const library = new Web3Provider(provider);
-    return library;
-  }
   return (
-    <ErrorBoundary>
-      <AuthProvider>
-        <PlatformProvider>
-          <Web3ReactProvider getLibrary={getLibrary}>
-            <WalletProvider>
-              <Layout>
-                <GoogleAnalytics trackPageViews />
-                <Component {...pageProps} config={config} />
-              </Layout>
-            </WalletProvider>
-          </Web3ReactProvider>
-        </PlatformProvider>
-      </AuthProvider>
-    </ErrorBoundary>
+    <ConfigProvider config={{ ...config, ...blockchainConfig }}>
+      <ErrorBoundary>
+        <AuthProvider>
+          <PlatformProvider>
+            <Web3ReactProvider getLibrary={getLibrary}>
+              <WalletProvider>
+                <Layout>
+                  <GoogleAnalytics trackPageViews />
+                  <Component {...pageProps} config={config} />
+                </Layout>
+              </WalletProvider>
+            </Web3ReactProvider>
+          </PlatformProvider>
+        </AuthProvider>
+      </ErrorBoundary>
+    </ConfigProvider>
   );
 };
 

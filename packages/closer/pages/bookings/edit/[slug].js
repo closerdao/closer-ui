@@ -4,8 +4,8 @@ import { useRouter } from 'next/router';
 import React from 'react';
 
 import EditModel from '../../../components/EditModel';
-import Layout from '../../../components/Layout';
 
+import PageNotFound from '../../404';
 import models from '../../../models';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
@@ -21,8 +21,12 @@ const EditEvent = ({ event }) => {
     return <h1>{__('bookings_edit_slug_not_found')}</h1>;
   }
 
+  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+    return <PageNotFound />;
+  }
+
   return (
-    <Layout protect>
+    <>
       <Head>
         <title>
           {__('bookings_edit_slug_title')} {event.name}
@@ -43,7 +47,7 @@ const EditEvent = ({ event }) => {
           onDelete={() => router.push('/')}
         />
       </div>
-    </Layout>
+    </>
   );
 };
 

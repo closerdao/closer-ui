@@ -1,19 +1,14 @@
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 
 import React, { useEffect, useState } from 'react';
 
-
-import { useAuth } from '../contexts/auth.js';
 import api, { formatSearch } from '../utils/api';
 import { __ } from '../utils/helpers';
 import TimeSince from './TimeSince';
 
 const TaskList = ({ channel, limit }) => {
-  const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [error, setErrors] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     const loadData = async () => {
@@ -40,16 +35,17 @@ const TaskList = ({ channel, limit }) => {
 
   return (
     <section className="tasks">
+      {error && <div className="validation-error">{error}</div>}
       <div className="card-body">
         <div className="tasks-list">
           {tasks && tasks.length > 0 ? (
             tasks.map((task) => (
-              (<Link
+              <Link
                 key={task._id}
                 as={`/tasks/${task.slug}`}
                 href="/tasks/[slug]"
-                className="task-preview card">
-
+                className="task-preview card"
+              >
                 <span className="name">{task.title}</span>
                 <br />
                 {task.tags && task.tags.length > 0 && (
@@ -62,8 +58,7 @@ const TaskList = ({ channel, limit }) => {
                   </div>
                 )}
                 <TimeSince time={task.created} />
-
-              </Link>)
+              </Link>
             ))
           ) : (
             <p>{__('task_list_empty_message')}</p>

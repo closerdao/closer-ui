@@ -12,6 +12,9 @@ const CurrencySwitch = ({ currencies, selectedCurrency, onSelect }) => {
   const inactiveClass =
     'flex-1 bg-none text-black text-center uppercase text-xs disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed';
 
+  const isWeb3BookingDisabled =
+    process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING !== 'true';
+
   return (
     <div className="h-9 border border-solid border-neutral-400 rounded-3xl p-1 font-normal flex justify-between items-center">
       {currencies.map((currency) => {
@@ -22,7 +25,10 @@ const CurrencySwitch = ({ currencies, selectedCurrency, onSelect }) => {
               selectedCurrency === currency ? activeClass : inactiveClass
             }
             onClick={() => onSelect(currency)}
-            disabled={currency === 'TDF' && !isWalletConnected}
+            disabled={
+              (currency === 'TDF' && !isWalletConnected) ||
+              isWeb3BookingDisabled
+            }
             title={
               !isWalletConnected && currency === 'TDF'
                 ? __('wallet_not_connected_button_title')

@@ -10,15 +10,25 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/user-event": "^14.4.3",
     "dotenv-cli": "^7.0.0",
     "eslint-config-custom": "*",
+    "msw": "^1.2.1",
+    "next-router-mock": "^0.9.3",
     "prettier": "latest",
     "turbo": "latest"
   },
   "engines": {
     "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "react-simple-wysiwyg": "^2.2.2"
   }
 }

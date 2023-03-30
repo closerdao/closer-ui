@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 import objectPath from 'object-path';
 
-import { useAuth } from '../contexts/auth.js';
+import { useAuth } from '../contexts/auth';
 import api from '../utils/api';
 import { getSample } from '../utils/helpers';
 import { __ } from '../utils/helpers';

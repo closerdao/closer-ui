@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import React from 'react';
 
 import EditModel from '../../components/EditModel';
-import Layout from '../../components/Layout';
 
 import models from '../../models';
 import api from '../../utils/api';
@@ -22,13 +21,13 @@ const EditChannel = ({ channel }) => {
   }
 
   return (
-    <Layout protect>
+    <>
       <Head>
         <title>
           {__('edit_channel_title')} {channel.name}
         </title>
       </Head>
-      <div className="main-content">
+      <div className="main-content w-full">
         <EditModel
           id={channel._id}
           endpoint={'/channel'}
@@ -43,7 +42,7 @@ const EditChannel = ({ channel }) => {
           onDelete={() => (window.location.href = '/community')}
         />
       </div>
-    </Layout>
+    </>
   );
 };
 

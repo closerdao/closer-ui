@@ -4,7 +4,6 @@ import Link from 'next/link';
 import React from 'react';
 import Linkify from 'react-linkify';
 
-import Layout from '../../../components/Layout';
 import PostList from '../../../components/PostList';
 import Slider from '../../../components/Slider';
 
@@ -20,7 +19,7 @@ const Listing = ({ listing, error }) => {
   }
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>{listing.name}</title>
         <meta name="description" content={listing.description} />
@@ -93,13 +92,12 @@ const Listing = ({ listing, error }) => {
                 visibility="public"
                 parentId={listing._id}
                 parentType="listing"
-                channel={listing.category}
               />
             </section>
           </div>
         </div>
       </main>
-    </Layout>
+    </>
   );
 };
 Listing.getInitialProps = async ({ query }) => {
