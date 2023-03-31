@@ -26,7 +26,9 @@ const AboutYou = () => {
 
   const { PLATFORM_NAME } = useConfig() || {};
 
-  const submitHandler = (e: ChangeEvent<HTMLFormElement>) => {};
+  const submitHandler = (e: ChangeEvent<HTMLFormElement>) => {
+    e.preventDefault();
+  };
 
   return (
     <>
@@ -119,13 +121,13 @@ const AboutYou = () => {
             >
               <Checkbox
                 checked={false}
-                changeHandler={() => {}}
+                changeHandler={() => {null}}
                 className=""
                 label={__('bookings_checkout_step_comply_with')}
               />
               <Checkbox
                 checked={true}
-                changeHandler={() => {}}
+                changeHandler={() => {null}}
                 className=""
                 label={__('bookings_checkout_step_comply_with')}
               />

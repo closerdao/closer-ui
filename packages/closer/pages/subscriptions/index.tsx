@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 
 import { NextPage } from 'next';
 
-import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 
 // const now = new Date();
@@ -20,12 +19,11 @@ interface Subscription {
 }
 
 const Subscribe: NextPage = () => {
-  const {  PLATFORM_NAME, SUBSCRIPTION_PLANS } = useConfig() || {};
+  const { PLATFORM_NAME, SUBSCRIPTION_PLANS } = useConfig() || {};
   // const { user } = useAuth();
   const router = useRouter();
 
-  const subscriptions: Subscription[] = SUBSCRIPTION_PLANS
-  
+  const subscriptions: Subscription[] = SUBSCRIPTION_PLANS;
 
   return (
     <>

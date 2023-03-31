@@ -52,6 +52,7 @@ function SubscribeCheckoutForm() {
     } else {
       setSubmitDisabled(false);
     }
+    if(!error) {null}
     setError(event.error ? event.error.message : '');
   };
 
@@ -60,11 +61,13 @@ function SubscribeCheckoutForm() {
     setEmail(user.email);
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const createSubscription = async (e: any) => {
     e.preventDefault;
     try {
       const paymentMethod = await stripe?.createPaymentMethod({
         type: 'card',
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         card: elements!.getElement(CardElement)!,
         billing_details: {
           email,
@@ -130,7 +133,7 @@ function SubscribeCheckoutForm() {
         onChange={validateCardElement}
         className="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-4"
       />
-      <button onClick={createSubscription} disabled={!stripe}>
+      <button onClick={createSubscription} disabled={!stripe || submitDisabled}>
         Subscribe
       </button>
     </div>
