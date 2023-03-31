@@ -54,7 +54,9 @@ function SubscribeCheckoutForm() {
     } else {
       setSubmitDisabled(false);
     }
-    setError(event.error ? event.error.message : '');
+    if (!error) {
+      setError(event.error ? event.error.message : '');
+    }
   };
 
   useEffect(() => {
