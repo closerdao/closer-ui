@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 
 import api from '../utils/api';
-import axios from 'axios';
 
 const user = {
   screenname: 'VV',
@@ -95,7 +94,7 @@ function SubscribeCheckoutForm() {
       // call the backend to create subscription
       console.log('data=', paymentMethod?.paymentMethod?.id, priceId, email);
 
-      const response = await axios.post('/subscription', {
+      const response = await api.post('/subscription', {
         email,
         paymentMethod: paymentMethod?.paymentMethod?.id,
         // paymentMethod: 'pm_1MrcqFGtt5D0VKR2GUwCfbCT',
