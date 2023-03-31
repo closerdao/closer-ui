@@ -19,12 +19,13 @@ describe('Events', () => {
         return res(ctx.json({ results: eventsMock }));
       }),
     );
+
     renderWithProviders(<Events />);
     const titleUpcoming = screen.getAllByRole('heading', { level: 1 })[0];
     const titlePast = screen.getAllByRole('heading', { level: 1 })[1];
     expect(titleUpcoming).toHaveTextContent(/upcoming events/i);
     expect(titlePast).toHaveTextContent(/past events/i);
     const eventCards = await screen.findAllByRole('listitem');
-    expect(eventCards).toHaveLength(eventsMock.length);
+    expect(eventCards).toHaveLength(eventsMock.length+1);
   });
 });

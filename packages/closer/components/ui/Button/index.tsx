@@ -2,7 +2,7 @@ import React from 'react';
 
 interface ButtonProps {
   children: React.ReactNode;
-  clickHandler: () => void;
+  clickHandler?: () => void;
 }
 
 const Button = ({ children, clickHandler }: ButtonProps) => {

@@ -9,6 +9,8 @@ module.exports = {
       foreground: '#1c1c1c',
       'foreground-dark': '#dadada',
       card: '#ebf1f6',
+      neutral: '#F0F0F0',
+      complimentary: '#333333',
       error: '#9f1f42',
       line: '#a3a3a3',
       failure: '#DB4726',

@@ -1,33 +1,32 @@
 import Head from 'next/head';
-import { useRouter } from 'next/router';
 
-import { useAuth, useConfig } from '@/../../packages/closer';
+import { ChangeEvent, useState } from 'react';
+
+import { useConfig } from '@/../../packages/closer';
 import { __ } from '@/../../packages/closer/utils/helpers';
 
 import BackButton from '@/../../packages/closer/components/ui/BackButton';
+import Button from '@/../../packages/closer/components/ui/Button';
+import Checkbox from '@/../../packages/closer/components/ui/Checkbox';
 import Heading from '@/../../packages/closer/components/ui/Heading';
+import Input from '@/../../packages/closer/components/ui/Input';
 import ProgressBar from '@/../../packages/closer/components/ui/ProgressBar';
+import Wrapper from '@/../../packages/closer/components/ui/Wrapper';
 
-import { NextPage } from 'next';
+// TODO:
+// add locales variables everywhere
+// add Barlow font
 
-interface Subscription {
-  title: string;
-  description: string;
-  priceID: string;
-  tier: number;
-  monthlyCredits: number;
-  price: number;
-  perks: string[];
-  billingPeriod: string;
-}
+const AboutYou = () => {
+  // const { user } = useAuth();
+  // const router = useRouter();
 
-const Subscribe: NextPage = () => {
-  const { user } = useAuth();
-  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [about, setAbout] = useState('');
 
-  const { PERMISSIONS, PLATFORM_NAME, SUBSCRIPTION_PLANS } = useConfig() || {};
+  const { PLATFORM_NAME } = useConfig() || {};
 
-  const subscriptions: Subscription[] = SUBSCRIPTION_PLANS;
+  const submitHandler = (e: ChangeEvent<HTMLFormElement>) => {};
 
   return (
     <>
@@ -47,24 +46,97 @@ const Subscribe: NextPage = () => {
         </Heading>
 
         <ProgressBar />
-        {/* <div className="mt-16 flex flex-col gap-16 "> */}
-        <div className="mt-16 flex gap-8 w-full flex-col md:flex-row">
-          Login
-        </div>
+
+        <Wrapper className="mt-16 mb-24 flex gap-0 w-full flex-col md:flex-row flex-wrap">
+          <Heading level={2}>⭐ Required</Heading>
+
+          <form onSubmit={submitHandler} className="flex flex-wrap w-full">
+            <Input
+              value={email}
+              placeholder="Your name"
+              type="text"
+              label="Name"
+              changeHandler={(e: ChangeEvent<HTMLInputElement>) =>
+                setEmail(e.target.value)
+              }
+              information="Additional in fromation"
+            />
+
+            <Input
+              value={about}
+              placeholder="about you"
+              type="text"
+              label="Tell us about yourself"
+              changeHandler={(e: ChangeEvent<HTMLInputElement>) =>
+                setAbout(e.target.value)
+              }
+            />
+
+            <Input
+              value={email}
+              placeholder="Your name"
+              type="text"
+              label="Name"
+              changeHandler={(e: ChangeEvent<HTMLInputElement>) =>
+                setEmail(e.target.value)
+              }
+              information="Additional in fromation"
+            />
+
+            <Heading level={2} className="mt-6">
+              🔰 Recommended
+            </Heading>
+
+            <Input
+              value={email}
+              placeholder="Your name"
+              type="text"
+              label="Name"
+              changeHandler={(e: ChangeEvent<HTMLInputElement>) =>
+                setEmail(e.target.value)
+              }
+              information="Additional in fromation"
+            />
+
+            <Heading level={2} className="mt-6">
+              🔰 Optional
+            </Heading>
+
+            <Input
+              value={email}
+              placeholder="Your name"
+              type="text"
+              label="Name"
+              changeHandler={(e: ChangeEvent<HTMLInputElement>) =>
+                setEmail(e.target.value)
+              }
+              information="Additional in fromation"
+            />
+
+            <div
+              className="mb-8
+            "
+            >
+              <Checkbox
+                checked={false}
+                changeHandler={() => {}}
+                className=""
+                label={__('bookings_checkout_step_comply_with')}
+              />
+              <Checkbox
+                checked={true}
+                changeHandler={() => {}}
+                className=""
+                label={__('bookings_checkout_step_comply_with')}
+              />
+            </div>
+
+            <Button>Subscribe</Button>
+          </form>
+        </Wrapper>
       </div>
     </>
   );
 };
 
-// export async function getStaticProps() {
-//   const res = await fetch('')
-//   const subscriptions = await res.json()
-
-//   return {
-//     props: {
-//       subscriptions,
-//     },
-//   }
-// }
-
-export default Subscribe;
+export default AboutYou;

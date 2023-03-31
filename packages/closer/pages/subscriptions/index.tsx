@@ -25,6 +25,7 @@ const Subscribe: NextPage = () => {
   const router = useRouter();
 
   const subscriptions: Subscription[] = SUBSCRIPTION_PLANS
+  
 
   return (
     <>

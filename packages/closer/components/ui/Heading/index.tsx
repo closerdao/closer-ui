@@ -10,7 +10,15 @@ const Heading = ({ level, children, className }: HeadingProps) => {
   const HeadingTag = ({ ...props }: React.HTMLAttributes<HTMLHeadingElement>) =>
     React.createElement(`h${level}`, props, children);
 
-  return <HeadingTag className={`mb-[24px] ${className}`}>{children}</HeadingTag>;
+  return (
+    <HeadingTag
+      className={`mb-[24px] w-full ${
+        level === 2 && 'border-b border-divider pb-[10px] mb-[30px]'
+      }   ${className}`}
+    >
+      {children}
+    </HeadingTag>
+  );
 };
 
 export default Heading;

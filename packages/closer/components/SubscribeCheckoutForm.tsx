@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 
-import api from '../utils/api'
+import api from '../utils/api';
+import axios from 'axios';
 
 const user = {
   screenname: 'VV',
@@ -38,7 +39,6 @@ const user = {
 };
 
 function SubscribeCheckoutForm() {
-
   const [email, setEmail] = useState('');
   const [priceId, setPriceId] = useState('');
   const [error, setError] = useState(null);
@@ -93,23 +93,26 @@ function SubscribeCheckoutForm() {
       //
 
       // call the backend to create subscription
-      const response = await api.post('/subscription', {
+      console.log('data=', paymentMethod?.paymentMethod?.id, priceId, email);
+
+      const response = await axios.post('/subscription', {
+        email,
         paymentMethod: paymentMethod?.paymentMethod?.id,
+        // paymentMethod: 'pm_1MrcqFGtt5D0VKR2GUwCfbCT',
         priceId,
       });
 
-        console.log('response=', response);
+      console.log('response=', response.data);
 
+      //   const confirmPayment = await stripe?.confirmCardPayment(
+      //     response.clientSecret,
+      //   );
 
-    //   const confirmPayment = await stripe?.confirmCardPayment(
-    //     response.clientSecret,
-    //   );
-
-    //   if (confirmPayment?.error) {
-    //     console.log('Error! ', confirmPayment.error.message);
-    //   } else {
-    //     console.log('Success! ');
-    //   }
+      //   if (confirmPayment?.error) {
+      //     console.log('Error! ', confirmPayment.error.message);
+      //   } else {
+      //     console.log('Success! ');
+      //   }
     } catch (error) {
       console.log('error=', error);
     }
@@ -127,7 +130,7 @@ function SubscribeCheckoutForm() {
         onChange={validateCardElement}
         className="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-4"
       />
-      <button onClick={createSubscription} disabled={!stripe}>
+      <button onClick={createSubscription} disabled={!stripe || submitDisabled}>
         Subscribe
       </button>
     </div>

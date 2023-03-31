@@ -49,3 +49,15 @@ export interface ABI {
     type: string;
   };
 }
+
+export interface Subscription {
+  title: string;
+  emoji: string;
+  description: string;
+  priceId: string;
+  tier: number;
+  monthlyCredits: number;
+  price: number;
+  perks: string[];
+  billingPeriod: string;
+}
