@@ -16,7 +16,6 @@ const stripePromise = loadStripe(
 );
 
 const Checkout = () => {
-  const now = new Date();
 
   // code used to redirect from login page:
   // const router = useRouter();

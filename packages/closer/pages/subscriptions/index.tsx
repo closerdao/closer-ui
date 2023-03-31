@@ -20,8 +20,8 @@ interface Subscription {
 }
 
 const Subscribe: NextPage = () => {
-  const { PERMISSIONS, PLATFORM_NAME, SUBSCRIPTION_PLANS } = useConfig() || {};
-  const { user } = useAuth();
+  const {  PLATFORM_NAME, SUBSCRIPTION_PLANS } = useConfig() || {};
+  // const { user } = useAuth();
   const router = useRouter();
 
   const subscriptions: Subscription[] = SUBSCRIPTION_PLANS

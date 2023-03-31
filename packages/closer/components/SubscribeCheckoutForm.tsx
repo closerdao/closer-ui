@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 import { useEffect, useState } from 'react';
 
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
@@ -69,6 +70,7 @@ function SubscribeCheckoutForm() {
     try {
       const paymentMethod = await stripe?.createPaymentMethod({
         type: 'card',
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         card: elements?.getElement(CardElement)!,
         billing_details: {
           email,
