@@ -17,6 +17,7 @@ const CreateEvent = () => {
         <title>{__('events_create_title')}</title>
       </Head>
       <div className="main-content intro">
+        <h2 className="mb-2">{ __('events_create_title') }</h2>
         <EditModel
           endpoint={'/event'}
           fields={models.event}

@@ -72,10 +72,10 @@ const Login = () => {
       <Head>
         <title>{__('login_title')}</title>
       </Head>
-      <main className="w-full md:max-w-prose center intro flex flex-col justify-center flex-1">
+      <main className="flex flex-col items-center">
         {error && <p className="text-primary my-4 text-center">{error}</p>}
-        <form onSubmit={onSubmit}>
-          <div className="w-full mb-4">
+        <form onSubmit={onSubmit} className="w-full max-w-prose card">
+          <div className="w-full py-6">
             <label
               className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
               htmlFor="email"
@@ -93,7 +93,7 @@ const Login = () => {
               required
             />
           </div>
-          <div className="w-full mb-4">
+          <div className="w-full py-6">
             <label
               className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
               htmlFor="password"
@@ -113,7 +113,7 @@ const Login = () => {
           </div>
 
           <div className="flex flex-col justify-between items-center gap-4 sm:flex-row">
-            <div className="flex flex-col gap-4 w-full sm:flex-row">
+            <div className="flex flex-col gap-4 w-full sm:flex-row py-6">
               <button type="submit" className="btn-primary w-full sm:w-auto">
                 {__('login_submit')}
               </button>

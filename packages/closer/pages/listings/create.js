@@ -17,6 +17,7 @@ const CreateListing = () => {
         <title>{__('listings_create_title')}</title>
       </Head>
       <div className="main-content intro w-full">
+        <h2 className="mb-2">{ __('listings_create_title') }</h2>
         <EditModel
           endpoint={'/listing'}
           fields={models.listing}

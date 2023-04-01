@@ -21,7 +21,7 @@ const Footer: FC = () => {
   } = config || {};
   return (
     <div>
-      <footer className="flex flex-col items-center p-4 main-content">
+      <footer className="flex flex-col items-center p-4 main-content text-center">
         <div className="flex flex-col md:flex-row py-2 items-center w-full justify-between">
           <div className="flex flex-col items-center md:items-start">
             <div className="flex flex-row mb-8 md:mb-1">

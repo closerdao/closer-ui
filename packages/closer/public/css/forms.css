@@ -47,7 +47,8 @@
   }
   textarea,
   .textarea {
-    @apply mt-0 block w-full border-0 border-b-2 border-gray-200 px-0.5 focus:ring-0 focus:border-black resize-none;
+    /* @apply mt-0 block w-full border-0 border-b-2 border-gray-200 px-0.5 focus:ring-0 focus:border-black resize-none; */
+    @apply p-2 text-foreground block border-0 border-b-2 border-transparent focus:outline-none focus:border-primary;
   }
   .input,
   input[type='email'],
@@ -57,7 +58,7 @@
   input[type='number'],
   input[type='date'],
   input[type='time'] {
-    @apply py-2 text-foreground block border-0 border-b-2 border-gray-200 focus:outline-none focus:border-primary;
+    @apply p-2 text-foreground block border-0 border-b-2 border-transparent focus:outline-none focus:border-primary;
   }
   select {
     @apply h-10 pl-3 pr-6 text-base text-black placeholder-gray-600 border-b-2 border-gray-200 rounded-lg appearance-none focus:border-black outline-none max-w-full;
