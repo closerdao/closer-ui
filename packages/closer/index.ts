@@ -63,6 +63,7 @@ export { default as Page404 } from './pages/404';
 export { default as Footer } from './components/Footer';
 export { default as Navigation } from './components/Navigation';
 export { default as CreateVolunteerView } from './components/CreateVolunteerView/';
+export { default as VolunteerCard } from './components/VolunteerCard/';
 
 // Utils
 export { default as api } from './utils/api';
@@ -70,3 +71,6 @@ export * from './utils/blockchain';
 
 // Config
 export * from './config_blockchain';
+
+// Types
+export * from './types/';
