@@ -62,7 +62,7 @@ export { default as Page404 } from './pages/404';
 // Components
 export { default as Footer } from './components/Footer';
 export { default as Navigation } from './components/Navigation';
-export { ConfigProvider } from './contexts/config';
+export { CreateVolunteerView } from './components/CreateVolunteerView/';
 
 // Utils
 export { default as api } from './utils/api';

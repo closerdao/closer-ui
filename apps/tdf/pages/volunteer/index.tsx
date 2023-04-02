@@ -4,6 +4,7 @@ import React from 'react';
 
 import { FaCalendarAlt } from '@react-icons/all-files/fa/FaCalendarAlt';
 import { MdLocationOn } from '@react-icons/all-files/md/MdLocationOn';
+import { api } from 'closer';
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
 
@@ -15,7 +16,7 @@ const duration = end && end.diff(start, 'hour', true);
 const isThisYear = dayjs().isSame(start, 'year');
 const dateFormat = isThisYear ? 'MMMM Do HH:mm' : 'YYYY MMMM Do HH:mm';
 
-const ImpactMapPage = () => {
+const VolunteerPage = () => {
   return (
     <>
       <Head>
@@ -70,4 +71,12 @@ const ImpactMapPage = () => {
   );
 };
 
-export default ImpactMapPage;
+VolunteerPage.getInitialProps = async () => {
+  const { data: results } = await api.get('/volunteer');
+  console.log('results', results);
+  return {
+    results,
+  };
+};
+
+export default VolunteerPage;

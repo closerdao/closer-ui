@@ -383,6 +383,73 @@ const models = {
       placeholder: '',
     },
   ],
+  volunteer: [
+    {
+      name: 'name',
+      label: 'Title',
+      public: true,
+      editable: true,
+      type: 'text',
+    },
+    {
+      name: 'category',
+      label: 'Category',
+      public: true,
+      editable: true,
+      type: 'text',
+    },
+    {
+      name: 'photo',
+      label: 'Photo',
+      public: true,
+      editable: true,
+      type: 'photos',
+    },
+    {
+      name: 'slug',
+      label: 'Slug',
+      public: true,
+      required: true,
+      index: 1,
+      unique: true,
+      editable: true,
+      type: 'text',
+    },
+    {
+      name: 'description',
+      label: 'Description',
+      public: true,
+      editable: true,
+      type: 'longtext',
+    },
+    {
+      name: 'start',
+      label: 'Start date',
+      public: true,
+      editable: true,
+      type: 'datetime',
+    },
+    {
+      name: 'end',
+      label: 'End date',
+      public: true,
+      editable: true,
+      type: 'datetime',
+    },
+    {
+      name: 'visibility',
+      label: 'Visibility',
+      ownerVisible: true,
+      editable: true,
+      enum: ['public', 'custom', 'private', 'secret'],
+      default: 'public',
+      type: 'select',
+      options: [
+        { label: 'Public', value: 'public' },
+        { label: 'Private', value: 'private' },
+      ],
+    },
+  ],
 };
 
 export default models;
