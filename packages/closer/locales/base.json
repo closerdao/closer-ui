@@ -421,5 +421,7 @@
   "countdown_minutes": "minutes",
   "countdown_seconds": "seconds",
   "or": "or",
-  "volunteer_create_page_title": "Create a new volunteer opportunity"
+  "volunteer_create_page_title": "Create a new volunteer opportunity",
+  "volunteer_page_opportunity_ended": "This opportunity has ended",
+  "button_edit_opportunity": "Edit opportunity"
 }

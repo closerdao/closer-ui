@@ -64,6 +64,7 @@ export { default as Footer } from './components/Footer';
 export { default as Navigation } from './components/Navigation';
 export { default as CreateVolunteerView } from './components/CreateVolunteerView/';
 export { default as VolunteerCard } from './components/VolunteerCard/';
+export { default as VolunteerEventView } from './components/VolunteerEventView/';
 
 // Utils
 export { default as api } from './utils/api';

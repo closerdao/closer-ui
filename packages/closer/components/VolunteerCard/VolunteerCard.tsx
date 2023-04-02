@@ -36,7 +36,9 @@ const VolunteerCard: FC<Props> = ({
   const dateFormat = isThisYear ? 'MMMM Do HH:mm' : 'YYYY MMMM Do HH:mm';
   return (
     <div className="card">
-      <h2>{name}</h2>
+      <Link href={`/volunteer/${slug}`}>
+        <h2>{name}</h2>
+      </Link>
       <div className="flex flex-row items-center py-3 space-x-1 mt-2 text-gray-500">
         <FaCalendarAlt />
         <p className="text-xs font-light">
@@ -51,7 +53,9 @@ const VolunteerCard: FC<Props> = ({
       </div>
 
       <div className="flex flex-row items-center">
-        <img src={`${cdn}${photo}-max-lg.jpg`} alt={description} />
+        <Link href={`/volunteer/${slug}`}>
+          <img src={`${cdn}${photo}-max-lg.jpg`} alt={description} />
+        </Link>
       </div>
       <p className="py-3">{description}</p>
       <div className="mt-4 py-3">

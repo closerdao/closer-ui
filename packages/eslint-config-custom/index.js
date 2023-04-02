@@ -26,4 +26,7 @@ module.exports = {
     'no-empty-function': 'off',
     '@typescript-eslint/no-empty-function': 'warn',
   },
+  globals: {
+    NodeJS: true,
+  },
 };
