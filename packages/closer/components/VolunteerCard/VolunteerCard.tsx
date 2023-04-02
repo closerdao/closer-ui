@@ -35,7 +35,7 @@ const VolunteerCard: FC<Props> = ({
   const isThisYear = dayjs().isSame(start, 'year');
   const dateFormat = isThisYear ? 'MMMM Do HH:mm' : 'YYYY MMMM Do HH:mm';
   return (
-    <div className="card">
+    <div className="card" data-testid="volunteer-card">
       <Link href={`/volunteer/${slug}`}>
         <h2>{name}</h2>
       </Link>

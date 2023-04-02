@@ -6,7 +6,7 @@ import { VolunteerCard, type VolunteerOpportunity, api } from 'closer';
 import { NextPage } from 'next';
 
 interface Props {
-  opportunities: VolunteerOpportunity[];
+  opportunities?: VolunteerOpportunity[];
 }
 const VolunteerPage: NextPage<Props> = ({ opportunities }) => {
   return (
@@ -21,10 +21,10 @@ const VolunteerPage: NextPage<Props> = ({ opportunities }) => {
         <h1>Volunteer at TDF</h1>
       </section>
       <section className="grid grid-cols-1 md:grid-cols-2">
-        {opportunities.length === 0 ? (
+        {opportunities?.length === 0 ? (
           <p>There are no volunteer opportunities at the moment.</p>
         ) : (
-          opportunities.map(
+          opportunities?.map(
             ({
               start,
               end,
@@ -52,10 +52,12 @@ const VolunteerPage: NextPage<Props> = ({ opportunities }) => {
 };
 
 VolunteerPage.getInitialProps = async () => {
+  console.log('getting initial props');
   try {
     const {
       data: { results },
     } = await api.get('/volunteer');
+    console.log(results);
     return {
       opportunities: results,
     };
