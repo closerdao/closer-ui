@@ -1,4 +1,4 @@
-export default {
+const models = {
   channel: [
     {
       name: 'name',
@@ -339,7 +339,7 @@ export default {
     {
       name: 'inspiration',
       label:
-        "What is the most inspiring thing you've seen recently? Any events/community/book/project etc.",
+        'What is the most inspiring thing you`ve seen recently? Any events/community/book/project etc.',
       type: 'longtext',
       placeholder: 'Project Heart in Tulum',
     },
@@ -358,20 +358,20 @@ export default {
     },
     {
       name: 'name',
-      label: "What's your name?",
+      label: 'What is your name?',
       type: 'text',
       placeholder: 'John Snow',
       required: true,
     },
     {
       name: 'phone',
-      label: "What's your phone number? (include country code)",
+      label: 'What is your phone number? (include country code)',
       type: 'phone',
       placeholder: '+35108892645',
     },
     {
       name: 'email',
-      label: "What's your email?",
+      label: 'What is your email?',
       type: 'text',
       placeholder: 'you@awesomeproject.org',
       required: true,
@@ -384,3 +384,5 @@ export default {
     },
   ],
 };
+
+export default models;
