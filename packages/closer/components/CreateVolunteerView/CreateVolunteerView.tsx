@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import models from '../../models';
 import EditModel from '../EditModel';
 
-export const CreateVolunteerView = () => {
+const CreateVolunteerView = () => {
   const router = useRouter();
   const onSave = (item: any) => {
     router.push('/volunteer');
@@ -17,3 +17,5 @@ export const CreateVolunteerView = () => {
     />
   );
 };
+
+export default CreateVolunteerView;

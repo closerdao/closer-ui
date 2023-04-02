@@ -1,1 +1,1 @@
-export * from './CreateVolunteerView';
+export { default } from './CreateVolunteerView';

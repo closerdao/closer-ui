@@ -1,6 +1,6 @@
 import Head from 'next/head';
 
-import { CreateVolunteerView } from '../../components/CreateVolunteerView';
+import CreateVolunteerView from '../../components/CreateVolunteerView';
 
 import { __ } from '../../utils/helpers';
 
