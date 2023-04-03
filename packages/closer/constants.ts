@@ -18,7 +18,6 @@ export const BOOKING_STEPS = [
 
 export const SUBSCRIPTION_STEPS = [
   'subscriptions',
-  'about-you',
   'summary',
   'checkout',
   'success',

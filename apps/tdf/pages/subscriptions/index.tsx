@@ -14,7 +14,7 @@ const Subscriptions = () => {
   const { PLATFORM_NAME } = useConfig() || {};
 
   const handleNext = (priceId: string) => {
-    router.push(`/subscriptions/about-you?plan=${priceId}`);
+    router.push(`/subscriptions/summary?priceId=${priceId}`);
   };
 
   return (
@@ -24,11 +24,8 @@ const Subscriptions = () => {
           {__('subscriptions_title')} — {PLATFORM_NAME}
         </title>
       </Head>
-      <Wrapper className="main-content w-full">
-        <Heading level={1}>
-          <span className="mr-1">♻️</span>
-          <span>{__('subscriptions_title')}</span>
-        </Heading>
+      <Wrapper className="py-6 main-content w-full">
+        <Heading level={1}> ♻️ {__('subscriptions_title')}</Heading>
 
         <SubscriptionCards clickHandler={handleNext} />
       </Wrapper>

@@ -50,7 +50,7 @@ export interface ABI {
   };
 }
 
-export interface Subscription {
+export interface SubscriptionPlan {
   title: string;
   emoji: string;
   description: string;
@@ -60,4 +60,18 @@ export interface Subscription {
   price: number;
   perks: string[];
   billingPeriod: string;
+}
+
+export interface Subscriptions {
+  config: {
+    currency: string;
+    symbol: string;
+  };
+  plans: SubscriptionPlan[];
+}
+
+export interface SelectedPlan {
+  title: string;
+  monthlyCredits: number;
+  price: number;
 }

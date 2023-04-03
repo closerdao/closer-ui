@@ -1,38 +1,70 @@
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 
-import { useConfig } from '@/../../packages/closer';
-import { __ } from '@/../../packages/closer/utils/helpers';
+import { useEffect, useState } from 'react';
+
+import { useAuth, useConfig } from '@/../../packages/closer';
+import { SUBSCRIPTION_STEPS } from '@/../../packages/closer/constants';
+import { SelectedPlan, Subscriptions } from '@/../../packages/closer/types';
+import { __, priceFormat } from '@/../../packages/closer/utils/helpers';
 
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
-import SubscribeCheckoutForm from '@/../../packages/closer/components/SubscribeCheckoutForm';
+import SubscriptionCheckoutForm from '@/../../packages/closer/components/SubscriptionCheckoutForm';
 import BackButton from '@/../../packages/closer/components/ui/BackButton';
 import Heading from '@/../../packages/closer/components/ui/Heading';
 import ProgressBar from '@/../../packages/closer/components/ui/ProgressBar';
+import Row from '@/../../packages/closer/components/ui/Row';
+import Wrapper from '@/../../packages/closer/components/ui/Wrapper';
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUB_KEY as string,
 );
 
+const defautlSelectedPlan: SelectedPlan = {
+  title: '',
+  monthlyCredits: 0,
+  price: 0,
+};
+
 const Checkout = () => {
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const router = useRouter();
+  const { priceId } = router.query;
+  const { PLATFORM_NAME, SUBSCRIPTIONS } = useConfig() || {};
+  const subscriptions: Subscriptions = SUBSCRIPTIONS;
 
-  // code used to redirect from login page:
-  // const router = useRouter();
-  // if (router.query?.back) {
-  //   const redirectBack = router.query?.back
-  //     ? decodeURIComponent(router.query?.back)
-  //     : '/';
-  // }
-  // const { isAuthenticated, login, setAuthentification, error, setError } =
-  //   useAuth();
+  const [selectedPlan, setSelectedPlan] =
+    useState<SelectedPlan>(defautlSelectedPlan);
 
-  // if (isAuthenticated) {
-  //   router.push(redirectBack);
-  // }
-  //
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push(`/login?back=${router.asPath}`);
+        // router.push(`/signup?back=${router.asPath}`);
+      }
+    }
+  }, [isAuthenticated, isLoading]);
 
-  const { PLATFORM_NAME } = useConfig() || {};
+  useEffect(() => {
+    if (priceId && subscriptions) {
+      const selectedSubscription =
+        subscriptions.plans.find((plan) => plan.priceId === priceId) ??
+        defautlSelectedPlan;
+
+      setSelectedPlan({
+        title: selectedSubscription.title,
+        monthlyCredits: selectedSubscription.monthlyCredits,
+        price: selectedSubscription.price,
+      });
+    }
+  }, [subscriptions, priceId]);
+
+  const goBack = () => {
+    // TODO: do not repeat this on every page of the flow
+    router.push(`/subscriptions/summary?priceId=${priceId}`);
+  };
 
   return (
     <>
@@ -43,35 +75,44 @@ const Checkout = () => {
         </title>
       </Head>
 
-      <div className="main-content w-full max-w-screen-sm mx-auto">
-        <BackButton clickHandler={() => null}>{__('buttons_back')}</BackButton>
+      <Wrapper className="main-content w-full max-w-screen-sm mx-auto">
 
-        <Heading level={1}>
-          <span className="mr-1">💰</span>
-          <span>{__('subscriptions_checkout_title')}</span>
-        </Heading>
+        <BackButton clickHandler={goBack}>{__('buttons_back')}</BackButton>
 
-        <ProgressBar />
-        {/* <div className="mt-16 flex flex-col gap-16 "> */}
-        <div className="mt-16 flex gap-8 w-full flex-col md:flex-row">
-          <Elements stripe={stripePromise}>
-            <SubscribeCheckoutForm />
-          </Elements>
+        <Heading level={1}>💰 {__('subscriptions_checkout_title')}</Heading>
+
+        <ProgressBar steps={SUBSCRIPTION_STEPS} />
+
+        <div className="mt-16 w-full md:flex-row">
+          <div className="mb-10">
+            <Heading level={2}>♻️ {__('subscriptions_title')}</Heading>
+            <Row
+              rowKey={selectedPlan.title}
+              value={`${priceFormat(
+                selectedPlan.price,
+                subscriptions.config.currency,
+              )}`}
+              additionalInfo={__('subscriptions_summary_per_month')}
+            />
+          </div>
+
+          <div className="mb-14">
+            <Heading level={2}>
+              💲 {__('subscriptions_checkout_payment_subtitle')}
+            </Heading>
+            <div className="mb-10">
+              <Elements stripe={stripePromise}>
+                <SubscriptionCheckoutForm
+                  userEmail={user?.email || ''}
+                  priceId={priceId}
+                />
+              </Elements>
+            </div>
+          </div>
         </div>
-      </div>
+      </Wrapper>
     </>
   );
 };
-
-// export async function getStaticProps() {
-//   const res = await fetch('')
-//   const subscriptions = await res.json()
-
-//   return {
-//     props: {
-//       subscriptions,
-//     },
-//   }
-// }
 
 export default Checkout;

@@ -60,7 +60,7 @@
     @apply py-2 text-foreground block border-0 border-b-2 border-gray-200 focus:outline-none focus:border-primary;
   } */
 
-  .input,
+
   input[type='email'],
   input[type='password'],
   input[type='text'],
@@ -70,6 +70,8 @@
   input[type='time'] {
     @apply py-2 text-black block bg-neutral focus:outline-none rounded-md px-[8px] w-full text-sm;
   }
+
+
   select {
     @apply h-10 pl-3 pr-6 text-base text-black placeholder-gray-600 border-b-2 border-gray-200 rounded-lg appearance-none focus:border-black outline-none max-w-full;
   }

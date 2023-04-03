@@ -1,7 +1,7 @@
 // Components
 export { default as Footer } from './components/Footer';
 export { default as Navigation } from './components/Navigation';
-export { default as SubscribeCheckoutForm } from './components/SubscribeCheckoutForm';
+export { default as SubscribeCheckoutForm } from './components/SubscriptionCheckoutForm';
 // Config
 export * from './config_blockchain';
 export * from './contexts/auth';

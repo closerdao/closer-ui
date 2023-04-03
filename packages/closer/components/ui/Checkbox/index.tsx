@@ -2,28 +2,33 @@ import React from 'react';
 
 interface CheckboxProps {
   className?: string;
-  label?: string;
-  checked: boolean;
+  checked?: boolean;
   changeHandler: () => void;
+  children?: React.ReactNode;
+  id?: string;
 }
 const Checkbox = ({
   className,
-  label,
   checked,
   changeHandler,
+  children,
+  id,
 }: CheckboxProps) => {
   return (
-    <div className={`flex items-center gap-3 w-full  ${className}`}>
-
+    <div className={`flex items-top gap-3 w-full ${className}`}>
       <input
+        id={id}
         type="checkbox"
-        className="w-4 h-4 bg-neutral rounded-full border-neutral-400 checked:text-slate-600"
+        className="accent-primary w-[16px] h-[16px] mt-[6px]"
         checked={checked}
         onChange={changeHandler}
       />
 
-      <label className="text-base font-normal text-complimentary normal-case pt-[6px]">
-        {label}
+      <label
+        htmlFor={id}
+        className="text-[1rem] text-complimentary"
+      >
+        {children}
       </label>
     </div>
   );
