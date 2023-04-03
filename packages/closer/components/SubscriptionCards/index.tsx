@@ -1,5 +1,4 @@
-import { useConfig } from '../../hooks/useConfig';
-import { Subscriptions } from '../../types';
+import { SubscriptionPlan, Subscriptions } from '../../types';
 import { __ } from '../../utils/helpers';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
@@ -7,21 +6,24 @@ import Heading from '../ui/Heading';
 
 interface SubscriptionCardsProps {
   clickHandler: (priceId: string) => void;
+  filteredSubscriptionPlans: SubscriptionPlan[];
+  config: Subscriptions['config'];
 }
 
-const SubscriptionCards = ({ clickHandler }: SubscriptionCardsProps) => {
-  const { SUBSCRIPTIONS } = useConfig() || {};
-
-  const subscriptions: Subscriptions = SUBSCRIPTIONS;
+const SubscriptionCards = ({
+  clickHandler,
+  filteredSubscriptionPlans,
+  config,
+}: SubscriptionCardsProps) => {
   return (
     <>
       <div className="mt-16 flex gap-8 w-full flex-col md:flex-row">
-        {subscriptions &&
-          subscriptions.plans.map((plan) => (
+        {filteredSubscriptionPlans &&
+          filteredSubscriptionPlans.map((plan) => (
             <Card
               key={plan.title}
               className={`w-full md:w-[${Math.floor(
-                100 / subscriptions.plans.length,
+                100 / filteredSubscriptionPlans.length,
               )}%]`}
             >
               <div>
@@ -47,7 +49,7 @@ const SubscriptionCards = ({ clickHandler }: SubscriptionCardsProps) => {
                   ) : (
                     <div>
                       <div>
-                        {subscriptions.config.symbol}
+                        {config.symbol}
                         {plan.price}
                       </div>
                       <p className="text-sm font-normal">

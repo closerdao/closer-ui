@@ -47,8 +47,7 @@ const Success = () => {
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
-        router.push(`/login?back=${router.asPath}`);
-        // router.push(`/signup?back=${router.asPath}`);
+        router.push(`/signup?back=${router.asPath}`);
       }
     }
   }, [isAuthenticated, isLoading]);

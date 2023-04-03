@@ -15,10 +15,6 @@ import ProgressBar from '@/../../packages/closer/components/ui/ProgressBar';
 import Row from '@/../../packages/closer/components/ui/Row';
 import Wrapper from '@/../../packages/closer/components/ui/Wrapper';
 
-// TODO:
-// add locales variables everywhere
-// add Barlow font correctly
-
 const defautlSelectedPlan: SelectedPlan = {
   title: '',
   monthlyCredits: 0,
@@ -52,8 +48,7 @@ const Summary = () => {
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
-        router.push(`/login?back=${router.asPath}`);
-        // router.push(`/signup?back=${router.asPath}`);
+        router.push(`/signup?back=${router.asPath}`);
       }
     }
   }, [isAuthenticated, isLoading]);
@@ -124,9 +119,7 @@ const Summary = () => {
               />
             </div>
             <Button clickHandler={handleCheckout}>
-              {selectedPlan.price === 0
-                ? 'Subscribe for free'
-                : __('subscriptions_summary_checkout_button')}
+              {__('subscriptions_summary_checkout_button')}
             </Button>
           </div>
         </Wrapper>

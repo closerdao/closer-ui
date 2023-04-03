@@ -49,4 +49,9 @@ export const links = [
     enabled: true,
     roles: ['admin'],
   },
+  {
+    label: 'Subscriptions',
+    url: '/subscriptions',
+    enabled: true,
+  },
 ];
