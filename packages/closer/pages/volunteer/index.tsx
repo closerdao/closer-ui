@@ -2,17 +2,19 @@ import Head from 'next/head';
 
 import React from 'react';
 
-import EventPreview from '@/../../packages/closer/components/EventPreview';
+import EventPreview from '../../components/EventPreview';
 
-import { type VolunteerOpportunity, api } from 'closer';
 import { NextPage } from 'next';
+
+import { type VolunteerOpportunity } from '../../types';
+import api from '../../utils/api';
 
 interface Props {
   opportunities?: VolunteerOpportunity[];
 }
 const VolunteerPage: NextPage<Props> = ({ opportunities }) => {
   return (
-    <div className="w-full">
+    <>
       <Head>
         <title>
           Volunteer | Traditional Dream Factory | Regenerative coliving space in
@@ -35,7 +37,7 @@ const VolunteerPage: NextPage<Props> = ({ opportunities }) => {
           ))
         )}
       </section>
-    </div>
+    </>
   );
 };
 
@@ -44,7 +46,6 @@ VolunteerPage.getInitialProps = async () => {
     const {
       data: { results },
     } = await api.get('/volunteer');
-
     return {
       opportunities: results,
     };

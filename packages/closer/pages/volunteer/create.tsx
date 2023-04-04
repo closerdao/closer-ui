@@ -1,17 +1,23 @@
 import Head from 'next/head';
 
-import CreateVolunteerView from '../../components/CreateVolunteerView';
+import { CreateVolunteerView } from 'closer';
 
-import { __ } from '../../utils/helpers';
+import Page401 from '../401';
+import { useAuth } from '../../contexts/auth';
 
 const CreateVolunteerOportunity = () => {
+  const { user } = useAuth();
+  const hasStewardRole = user?.roles?.includes('steward');
+
+  if (!hasStewardRole) return <Page401 />;
+
   return (
     <>
       <Head>
-        <title>{__('volunteer_create_page_title')}</title>
+        <title>Create Volunteer Opportunity</title>
       </Head>
-      <div className="main-content">
-        <h2 className="mb-2">{__('volunteer_create_page_title')}</h2>
+      <div>
+        <h2 className="mb-2">Create a new volunteer opportunity</h2>
         <CreateVolunteerView />
       </div>
     </>

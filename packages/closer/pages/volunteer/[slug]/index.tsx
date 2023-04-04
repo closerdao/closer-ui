@@ -1,12 +1,9 @@
-import NotFoundPage from '@/pages/404';
+import Metatags from '../../../components/Metatags';
 
-import {
-  Metatags,
-  VolunteerEventView,
-  VolunteerOpportunity,
-  api,
-} from 'closer';
+import { VolunteerEventView, VolunteerOpportunity, api } from 'closer';
 import { NextPage } from 'next';
+
+import NotFoundPage from '../../404';
 
 interface Props {
   volunteer: VolunteerOpportunity;

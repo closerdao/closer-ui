@@ -8,7 +8,7 @@ interface Props {
   description: string;
 }
 
-export const Metatags: FC<Props> = ({ imageId, title, description }) => {
+const Metatags: FC<Props> = ({ imageId, title, description }) => {
   const cdn = process.env.NEXT_PUBLIC_CDN_URL;
   return (
     <Head>
@@ -32,3 +32,5 @@ export const Metatags: FC<Props> = ({ imageId, title, description }) => {
     </Head>
   );
 };
+
+export default Metatags;

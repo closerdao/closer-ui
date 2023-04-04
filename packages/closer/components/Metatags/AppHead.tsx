@@ -3,10 +3,10 @@ import { useRouter } from 'next/router';
 
 import { FC } from 'react';
 
-import { useConfig } from '../hooks/useConfig';
-import { theme } from '../tailwind.config';
+import { useConfig } from '../../hooks/useConfig';
+import { theme } from '../../tailwind.config';
 
-const Metatags: FC = () => {
+export const AppHead: FC = () => {
   const router = useRouter();
   const { DEFAULT_TITLE, FB_DOMAIN_VERIFICATION, SEMANTIC_URL } =
     useConfig() || {};
@@ -34,5 +34,3 @@ const Metatags: FC = () => {
     </Head>
   );
 };
-
-export default Metatags;
