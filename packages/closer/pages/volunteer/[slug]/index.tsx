@@ -4,6 +4,7 @@ import { VolunteerEventView, VolunteerOpportunity, api } from 'closer';
 import { NextPage } from 'next';
 
 import NotFoundPage from '../../404';
+import { __ } from '../../../utils/helpers';
 
 interface Props {
   volunteer: VolunteerOpportunity;
@@ -13,15 +14,12 @@ const VolunteerPage: NextPage<Props> = ({ volunteer }) => {
   const { photo, name, description } = volunteer || {};
 
   if (!volunteer)
-    return <NotFoundPage error="Volunteering opportunity does not exist" />;
+    return <NotFoundPage error={__('volunteer_page_does_not_exist')} />;
 
   return (
     <>
       <Metatags imageId={photo} title={name} description={description} />
-      <VolunteerEventView
-        volunteer={volunteer}
-        location="Traditional Dream Factory, Abela "
-      />
+      <VolunteerEventView volunteer={volunteer} />
     </>
   );
 };

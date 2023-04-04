@@ -4,6 +4,7 @@ import { CreateVolunteerView } from 'closer';
 
 import Page401 from '../401';
 import { useAuth } from '../../contexts/auth';
+import { __ } from '../../utils/helpers';
 
 const CreateVolunteerOportunity = () => {
   const { user } = useAuth();
@@ -14,10 +15,10 @@ const CreateVolunteerOportunity = () => {
   return (
     <>
       <Head>
-        <title>Create Volunteer Opportunity</title>
+        <title>{__('volunteer_create_page_title')}</title>
       </Head>
       <div>
-        <h2 className="mb-2">Create a new volunteer opportunity</h2>
+        <h2 className="mb-2">{__('volunteer_create_page_title')}</h2>
         <CreateVolunteerView />
       </div>
     </>

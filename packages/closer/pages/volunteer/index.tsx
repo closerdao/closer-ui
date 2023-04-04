@@ -8,6 +8,7 @@ import { NextPage } from 'next';
 
 import { type VolunteerOpportunity } from '../../types';
 import api from '../../utils/api';
+import { __ } from '../../utils/helpers';
 
 interface Props {
   opportunities?: VolunteerOpportunity[];
@@ -16,17 +17,14 @@ const VolunteerPage: NextPage<Props> = ({ opportunities }) => {
   return (
     <>
       <Head>
-        <title>
-          Volunteer | Traditional Dream Factory | Regenerative coliving space in
-          Alentejo, Portugal
-        </title>
+        <title>{__('volunteers_page_title')}</title>
       </Head>
       <section className="mb-8 w-full">
-        <h1>Volunteer at TDF</h1>
+        <h1>{__('volunteers_page_title')}</h1>
       </section>
       <section className="grid gap-8 md:grid-cols-2">
         {opportunities?.length === 0 ? (
-          <p>There are no volunteer opportunities at the moment.</p>
+          <p>{__('volunteers_page_empty')}</p>
         ) : (
           opportunities?.map((opportunity: VolunteerOpportunity) => (
             <EventPreview
