@@ -45,7 +45,7 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
   const isThisYear = dayjs().isSame(start, 'year');
   const dateFormat = isThisYear ? 'MMMM Do HH:mm' : 'YYYY MMMM Do HH:mm';
   const linkHref = isVolunteerCard ? `/volunteer/${slug}` : `/events/${slug}`;
-  console.log(linkHref);
+
   return (
     <div role="listitem" className={className}>
       <div

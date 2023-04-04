@@ -84,4 +84,23 @@ describe('VolunteerEventView', () => {
     expect(screen.getByText('Test title')).toBeInTheDocument();
     expect(screen.getByText('test description')).toBeInTheDocument();
   });
+
+  it('should have Edit button if user has steward role', () => {
+    const authContextWithUserStewardRole = {
+      ...authContextMock,
+      user: {
+        ...userMock,
+        roles: ['steward'],
+      },
+    };
+
+    render(
+      <AuthContext.Provider value={authContextWithUserStewardRole}>
+        <VolunteerEventView volunteer={volunteerEventMock} />
+      </AuthContext.Provider>,
+    );
+    expect(screen.getByText('Test title')).toBeInTheDocument();
+    expect(screen.getByText('test description')).toBeInTheDocument();
+    expect(screen.getByText('Edit opportunity')).toBeInTheDocument();
+  });
 });

@@ -26,7 +26,7 @@ describe('Volunteer', () => {
     const title = screen.getByRole('heading', { level: 1 });
 
     expect(title).toHaveTextContent(/volunteer at TDF/i);
-    const volCard = screen.getAllByTestId('volunteer-card');
-    expect(volCard).eventListMock(eventListMock.length);
+    const volCard = screen.getAllByRole('listitem');
+    expect(volCard).toHaveLength(eventListMock.length);
   });
 });
