@@ -8,8 +8,8 @@ import listingsMock from './listings.json';
 describe('Select accomodation type page', () => {
   it('should render and have a proper No available accomodation message in case empty array with listings is returned from the server', async () => {
     const props = {
-      start: '2023 - 03 - 29',
-      end: '2023 - 04 - 01 ',
+      start: '2023-03-29',
+      end: '2023-04-01 ',
       adults: '1',
       kids: '0',
       infants: '0',
@@ -33,8 +33,8 @@ describe('Select accomodation type page', () => {
 
   it('should render cards with acommodation options and have buttons enabled if listings array is returned from the server', async () => {
     const props = {
-      start: '2023 - 03 - 29',
-      end: '2023 - 04 - 01 ',
+      start: '2023-03-29',
+      end: '2023-04-01 ',
       adults: '1',
       kids: '1',
       infants: '1',
