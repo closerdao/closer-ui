@@ -59,9 +59,9 @@ const VolunteerCard: FC<Props> = ({
       </div>
       <p className="py-3">{description}</p>
       <div className="mt-4 py-3">
-        <Link href={`/volunteer/${slug}/checkout`}>
+        <a href="mailto:traditionaldreamfactory@gmail.com">
           <button className="btn-primary">{__('apply_submit_button')}</button>
-        </Link>
+        </a>
       </div>
     </div>
   );

@@ -69,12 +69,11 @@ const VolunteerEventView: FC<Props> = ({ volunteer, location }) => {
             <h1 className="md:text-4xl mt-4 font-bold">{name}</h1>
             <div className="mt-4 event-actions flex items-center">
               {!isEnded && (
-                <Link
-                  href={`/volunteer/${slug}/checkout`}
-                  className="btn-primary mr-2"
-                >
-                  {__('apply_submit_button')}
-                </Link>
+                <a href="mailto:traditionaldreamfactory@gmail.com">
+                  <button className="btn-primary mr-2">
+                    {__('apply_submit_button')}
+                  </button>
+                </a>
               )}
               {user?.roles.includes('admin') && (
                 <Link href={`/volunteer/${slug}/edit`}>
