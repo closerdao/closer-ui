@@ -2,9 +2,7 @@ import Head from 'next/head';
 
 import React from 'react';
 
-import EventPreview from '@/../../packages/closer/components/EventPreview';
-
-import { type VolunteerOpportunity, api } from 'closer';
+import { EventPreview, type VolunteerOpportunity, api } from 'closer';
 import { NextPage } from 'next';
 
 interface Props {
