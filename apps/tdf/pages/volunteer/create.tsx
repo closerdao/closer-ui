@@ -1,8 +1,14 @@
 import Head from 'next/head';
 
-import { CreateVolunteerView } from 'closer';
+import { CreateVolunteerView, useAuth } from 'closer';
+
+import Page401 from '../401';
 
 const CreateVolunteerOportunity = () => {
+  const { user } = useAuth();
+  const isSteward = user?.roles?.includes('steward');
+
+  if (!isSteward) return <Page401 />;
   return (
     <>
       <Head>
