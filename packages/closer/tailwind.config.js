@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const theme = require('./theme');
 
 module.exports = {
@@ -12,5 +13,5 @@ module.exports = {
       display: ['group-hover'],
     },
   },
-  plugins: [require('@tailwindcss/forms')],
+  plugins: [require('@tailwindcss/forms'), require('@tailwindcss/line-clamp')],
 };

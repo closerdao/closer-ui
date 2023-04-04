@@ -11,7 +11,7 @@ export type Event = {
   description: string;
   participationGuideUrl: string;
   ticket: string;
-  virtual: boolean;
+  virtual?: boolean;
   paid: boolean;
   blocksBookingCalendar: boolean;
   location: string;
@@ -34,6 +34,7 @@ export type Event = {
   attributes: string[];
   managedBy: string[];
   _id: string;
+  visual?: string
 };
 export type TicketOption = {
   name: string;

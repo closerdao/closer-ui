@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const tdfTheme = require('./styles/theme');
 
 module.exports = {
@@ -8,4 +9,5 @@ module.exports = {
     '../../packages/closer/components/**/*.{js,ts,jsx,tsx}',
   ],
   theme: tdfTheme,
+  plugins: [require('@tailwindcss/line-clamp')],
 };

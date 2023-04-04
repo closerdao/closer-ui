@@ -35,7 +35,7 @@ const VolunteerCard: FC<Props> = ({
   const isThisYear = dayjs().isSame(start, 'year');
   const dateFormat = isThisYear ? 'MMMM Do HH:mm' : 'YYYY MMMM Do HH:mm';
   return (
-    <div className="card" data-testid="volunteer-card">
+    <div className="bg-white rounded-md p-4 shadow-lg" data-testid="volunteer-card">
       <Link href={`/volunteer/${slug}`}>
         <h2>{name}</h2>
       </Link>
@@ -57,8 +57,8 @@ const VolunteerCard: FC<Props> = ({
           <img src={`${cdn}${photo}-max-lg.jpg`} alt={description} />
         </Link>
       </div>
-      <p className="py-3">{description}</p>
-      <div className="mt-4 py-3">
+      <p className="mt-4 line-clamp-3">{description}</p>
+      <div className="mt-4">
         <a href="mailto:traditionaldreamfactory@gmail.com">
           <button className="btn-primary">{__('apply_submit_button')}</button>
         </a>
