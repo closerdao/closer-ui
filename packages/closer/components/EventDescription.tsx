@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { FC } from 'react';
 import Linkify from 'react-linkify';
 
-const EventDescription = ({ event }) => {
+import { type Event } from '../types';
+
+const EventDescription: FC<{ event: Event }> = ({ event }) => {
   return (
     <section className="mb-6">
       <h3 className="font-bold text-2xl">Event description</h3>
