@@ -33,7 +33,7 @@ const Button = ({
           type === 'secondary' &&
           'bg-white  text-primary '
         }
-        ${disabled && 'bg-white border-2 text-light border-light'}
+        ${disabled && 'bg-white border-2 text-light '}
         ${className}`}
       >
         {loading && <Spinner />}

@@ -17,6 +17,8 @@ import Wrapper from '@/../../packages/closer/components/ui/Wrapper';
 // add login likk to subscribe page and vice versa
 // research save credit card info
 // research customer portal options
+// if user has a paid plan, filter out current plan from subscriptions page
+// unit tests
 
 const Subscriptions = () => {
   const { isAuthenticated } = useAuth();
