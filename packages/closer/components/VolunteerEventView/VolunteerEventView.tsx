@@ -26,7 +26,7 @@ const VolunteerEventView: FC<Props> = ({ volunteer, location }) => {
     slug,
   } = volunteer || {};
   const { user } = useAuth();
-
+  const hasStewardRole = user?.roles?.includes('steward');
   if (!volunteer) {
     return null;
   }
@@ -41,46 +41,54 @@ const VolunteerEventView: FC<Props> = ({ volunteer, location }) => {
   return (
     <div>
       <section className="py-5">
-        <div className="main-content md:flex flex-row justify-center items-center">
-          <div className="md:w-1/2 md:mr-4 mb-4 relative bg-gray-50 md:h-80">
+        <div className="main-content md:flex flex-row justify-center items-center gap-4">
+          <div className="md:w-1/2 relative bg-gray-50">
             <img
               className="object-cover md:h-full md:w-full"
               src={`${cdn}${photo}-max-lg.jpg`}
               alt={name}
             />
           </div>
-          <div className="md:w-1/2 mt-2">
-            <h2 className="text-lg font-light md:whitespace-nowrap">
-              {start && start.format(dateFormat)}
-              {end && duration > 24 && ` - ${end.format(dateFormat)}`}
-              {end && duration <= 24 && ` - ${end.format('HH:mm')}`}
-            </h2>
-            {location && (
-              <h3 className="text-lg font-light text-gray-500 flex mt-2">
-                <MdLocationOn />
-                <p className="text-sm">{location}</p>
-              </h3>
-            )}
-            {isEnded && (
-              <h3 className="p3 mr-2 italic">
-                {__('volunteer_page_opportunity_ended')}
-              </h3>
-            )}
-            <h1 className="md:text-4xl mt-4 font-bold">{name}</h1>
-            <div className="mt-4 event-actions flex items-center">
-              {!isEnded && (
-                <a href="mailto:traditionaldreamfactory@gmail.com">
-                  <button className="btn-primary mr-2">
-                    {__('apply_submit_button')}
-                  </button>
-                </a>
+          <div className="md:w-1/2 justify-between flex flex-col self-stretch">
+            <div>
+              <div className="flex items-center gap-2 md:whitespace-nowrap">
+                <span className="text-lg font-light">
+                  {start && start.format(dateFormat)}
+                  {end && duration > 24 && ` - ${end.format(dateFormat)}`}
+                  {end && duration <= 24 && ` - ${end.format('HH:mm')}`}
+                </span>
+              </div>
+              <h1 className="md:text-4xl font-bold">{name}</h1>
+              {isEnded && (
+                <h3 className="p3 mr-2 italic">
+                  {__('volunteer_page_opportunity_ended')}
+                </h3>
               )}
-              {user?.roles.includes('admin') && (
-                <Link href={`/volunteer/${slug}/edit`}>
-                  <button className="btn-primary inline-flex items-center">
-                    {__('button_edit_opportunity')}
-                  </button>
-                </Link>
+              <div className="mt-4 event-actions flex items-center">
+                {!isEnded && (
+                  <a href="mailto:traditionaldreamfactory@gmail.com">
+                    <button className="btn-primary mr-2">
+                      {__('apply_submit_button')}
+                    </button>
+                  </a>
+                )}
+                {hasStewardRole && (
+                  <Link href={`/volunteer/${slug}/edit`}>
+                    <button className="btn-primary inline-flex items-center">
+                      {__('button_edit_opportunity')}
+                    </button>
+                  </Link>
+                )}
+              </div>
+            </div>
+            <div>
+              {location && (
+                <div className="flex items-center gap-2 md:whitespace-nowrap">
+                  <MdLocationOn className="text-gray-500" />
+                  <span className="text-sm font-light text-gray-500">
+                    {location}
+                  </span>
+                </div>
               )}
             </div>
           </div>
