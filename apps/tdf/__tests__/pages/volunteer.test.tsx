@@ -9,15 +9,16 @@ import {
 } from 'closer';
 
 import VolunteerPage from '../../pages/volunteer';
-import { volunteersMock } from '../mocks/volunteersMock';
+import { volunteerEventMock } from '../mocks/volunteerEvent';
 
 describe('Volunteer', () => {
   it('should render and have proper title', () => {
+    const eventListMock = [volunteerEventMock];
     render(
       <ConfigProvider config={{ ...closerConfig, ...blockchainConfig }}>
         <AuthProvider>
           <PlatformProvider>
-            <VolunteerPage opportunities={volunteersMock} />
+            <VolunteerPage opportunities={eventListMock} />
           </PlatformProvider>
         </AuthProvider>
       </ConfigProvider>,
@@ -26,6 +27,6 @@ describe('Volunteer', () => {
 
     expect(title).toHaveTextContent(/volunteer at TDF/i);
     const volCard = screen.getAllByTestId('volunteer-card');
-    expect(volCard).toHaveLength(volunteersMock.length);
+    expect(volCard).eventListMock(eventListMock.length);
   });
 });
