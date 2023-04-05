@@ -1,15 +1,15 @@
 import { useRouter } from 'next/router';
 
+import { FormEvent } from 'react';
 import { useState } from 'react';
 
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { StripeCardElementChangeEvent } from '@stripe/stripe-js';
 
+import { __ } from 'closer/utils/helpers';
+
 import api from '../../utils/api';
-import { __ } from '../../utils/helpers';
-// import Checkbox from '../ui/Checkbox';
 import SubscriptionConditions from '../SubscriptionConditions';
-// import Conditions from '../Conditions';
 import Button from '../ui/Button';
 import ErrorMessage from '../ui/ErrorMessage';
 
@@ -52,7 +52,8 @@ function SubscriptionCheckoutForm({
     },
   };
 
-  const createSubscription = async () => {
+  const createSubscription = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setLoading(true);
     try {
       const paymentMethod = await stripe?.createPaymentMethod({
@@ -90,8 +91,9 @@ function SubscriptionCheckoutForm({
   };
 
   return (
-    <div className="">
+    <form onSubmit={createSubscription}>
       <CardElement
+        data-testid="card-element"
         onChange={validateCardElement}
         options={cardElementOptions}
         className="w-full h-14 rounded-md bg-neutral px-4 py-4 mb-4"
@@ -101,14 +103,10 @@ function SubscriptionCheckoutForm({
       <div className="my-8">
         <SubscriptionConditions setComply={setComply} />
       </div>
-      <Button
-        clickHandler={createSubscription}
-        disabled={!stripe || submitDisabled || !comply}
-        loading={loading}
-      >
+      <Button disabled={!stripe || submitDisabled || !comply} loading={loading}>
         {__('subscriptions_checkout_pay_button')}
       </Button>
-    </div>
+    </form>
   );
 }
 

@@ -393,6 +393,7 @@
   "subscriptions_checkout_payment_subtitle": "Payment",
   "subscriptions_checkout_comply_with": "I comply with the",
   "subscriptions_checkout_subscription_terms": "Subscription T&Cs",
+  "subscriptions_checkout_save_card_for_later": "Save card for later",
   "subscriptions_success_view_button": "View subscription",
   "subscriptions_success_your": "Your",
   "subscriptions_success_subscription_is_active": "Subscription is now active!",

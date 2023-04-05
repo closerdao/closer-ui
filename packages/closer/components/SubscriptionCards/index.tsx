@@ -1,5 +1,5 @@
 import { SubscriptionPlan, Subscriptions } from '../../types';
-import { __ } from '../../utils/helpers';
+import { __ } from 'closer/utils/helpers';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Heading from '../ui/Heading';
@@ -15,6 +15,8 @@ const SubscriptionCards = ({
   filteredSubscriptionPlans,
   config,
 }: SubscriptionCardsProps) => {
+
+  
   return (
     <>
       <div className="mt-16 flex gap-8 w-full flex-col md:flex-row">

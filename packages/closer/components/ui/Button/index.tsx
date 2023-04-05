@@ -27,14 +27,12 @@ const Button = ({
         onClick={clickHandler}
         disabled={disabled}
         className={` 
-        border-2 border-primary flex justify-center w-full text-lg rounded-full uppercase tracking-wide p-2 mt-[10px] 
-        ${type === 'primary' && !disabled && 'bg-primary text-white'}
-        ${
-          type === 'secondary' &&
-          'bg-white  text-primary '
-        }
-        ${disabled && 'bg-white border-2 text-light '}
-        ${className}`}
+        border-2 flex justify-center w-full text-lg rounded-full uppercase tracking-wide p-2 mt-[10px] 
+        ${type === 'primary' && !disabled && 'bg-primary text-white border-primary '}
+        ${type === 'secondary' && 'bg-white  text-primary border-primary '}
+        ${disabled && 'bg-neutral border-2 text-light border-light'}
+        ${className}
+        `}
       >
         {loading && <Spinner />}
         {children}

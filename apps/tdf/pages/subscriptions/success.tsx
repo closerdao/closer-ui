@@ -3,16 +3,16 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
-import { useAuth, useConfig } from '@/../../packages/closer';
-import { SUBSCRIPTION_STEPS } from '@/../../packages/closer/constants';
-import { SelectedPlan, Subscriptions } from '@/../../packages/closer/types';
-import { __ } from '@/../../packages/closer/utils/helpers';
+import BackButton from 'closer/components/ui/BackButton';
+import Button from 'closer/components/ui/Button';
+import Heading from 'closer/components/ui/Heading';
+import ProgressBar from 'closer/components/ui/ProgressBar';
+import Wrapper from 'closer/components/ui/Wrapper';
 
-import BackButton from '@/../../packages/closer/components/ui/BackButton';
-import Button from '@/../../packages/closer/components/ui/Button';
-import Heading from '@/../../packages/closer/components/ui/Heading';
-import ProgressBar from '@/../../packages/closer/components/ui/ProgressBar';
-import Wrapper from '@/../../packages/closer/components/ui/Wrapper';
+import { useAuth, useConfig } from 'closer';
+import { SUBSCRIPTION_STEPS } from 'closer/constants';
+import { SelectedPlan, Subscriptions } from 'closer/types';
+import { __ } from 'closer/utils/helpers';
 
 const defautlSelectedPlan: SelectedPlan = {
   title: '',

@@ -3,20 +3,20 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
-import { useAuth, useConfig } from '@/../../packages/closer';
-import { SUBSCRIPTION_STEPS } from '@/../../packages/closer/constants';
-import { SelectedPlan, Subscriptions } from '@/../../packages/closer/types';
-import { __, priceFormat } from '@/../../packages/closer/utils/helpers';
-
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
-import SubscriptionCheckoutForm from '@/../../packages/closer/components/SubscriptionCheckoutForm';
-import BackButton from '@/../../packages/closer/components/ui/BackButton';
-import Heading from '@/../../packages/closer/components/ui/Heading';
-import ProgressBar from '@/../../packages/closer/components/ui/ProgressBar';
-import Row from '@/../../packages/closer/components/ui/Row';
-import Wrapper from '@/../../packages/closer/components/ui/Wrapper';
+import SubscriptionCheckoutForm from 'closer/components/SubscriptionCheckoutForm';
+import BackButton from 'closer/components/ui/BackButton';
+import Heading from 'closer/components/ui/Heading';
+import ProgressBar from 'closer/components/ui/ProgressBar';
+import Row from 'closer/components/ui/Row';
+import Wrapper from 'closer/components/ui/Wrapper';
+
+import { useAuth, useConfig } from 'closer';
+import { SUBSCRIPTION_STEPS } from 'closer/constants';
+import { SelectedPlan, Subscriptions } from 'closer/types';
+import { __, priceFormat } from 'closer/utils/helpers';
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUB_KEY as string,
@@ -61,7 +61,6 @@ const Checkout = () => {
   }, [subscriptions, priceId]);
 
   const goBack = () => {
-    // TODO: do not repeat this on every page of the flow
     router.push(`/subscriptions/summary?priceId=${priceId}`);
   };
 
@@ -75,7 +74,6 @@ const Checkout = () => {
       </Head>
 
       <Wrapper className="main-content w-full max-w-screen-sm mx-auto">
-
         <BackButton clickHandler={goBack}>{__('buttons_back')}</BackButton>
 
         <Heading level={1}>💰 {__('subscriptions_checkout_title')}</Heading>
