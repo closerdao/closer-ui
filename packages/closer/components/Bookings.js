@@ -39,6 +39,9 @@ const Bookings = ({ filter }) => {
           const listing = listings.find(
             (listing) => listing.get('_id') === listingId,
           );
+          if (!listing){
+            return null;
+          }
           const listingName = listing.get('name');
 
           return (

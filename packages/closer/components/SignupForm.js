@@ -62,7 +62,7 @@ const SignupForm = () => {
   };
 
   return (
-    <div>
+    <div className="card">
       {error && <div className="text-primary mb-4 text-center">{error}</div>}
       {submitted && !error ? (
         <>
@@ -70,7 +70,7 @@ const SignupForm = () => {
           <p>{__('signup_success_cta')}</p>
         </>
       ) : (
-        <form className="join mt-8 flex flex-col" onSubmit={submit}>
+        <form className="join flex flex-col" onSubmit={submit}>
           <input
             type="hidden"
             name="backurl"

@@ -184,53 +184,56 @@ const EditModel = ({
   }
 
   return (
-    <form
-      action="#"
-      onSubmit={(e) => {
-        e.preventDefault();
-        save(data);
-      }}
-    >
-      {error && <div className="validation-error">{error}</div>}
-      {Object.keys(fieldsByTab).length > 1 ? (
-        <Tabs
-          tabs={Object.keys(fieldsByTab).map((key) => ({
-            title: key,
-            value: key,
-            content: filterFields(fieldsByTab[key], data).map((field) => (
-              <FormField
-                {...field}
-                key={field.name}
-                data={data}
-                update={update}
-              />
-            )),
-          }))}
-        />
-      ) : (
-        fields &&
-        filterFields(fields, data).map((field) => (
-          <FormField {...field} key={field.name} data={data} update={update} />
-        ))
-      )}
-      <div className="mt-2 flex items-center">
-        <button type="submit" className="btn-primary">
-          {__('edit_model_save')}
-        </button>
-        {allowDelete && (
-          <a
-            href="#"
-            className="text-red-700 ml-4"
-            onClick={(e) => {
-              e.preventDefault();
-              deleteObject();
-            }}
-          >
-            {deleteButton}
-          </a>
+    <div className="card">
+      <form
+        action="#"
+        onSubmit={(e) => {
+          e.preventDefault();
+          save(data);
+        }}
+        className="w-full"
+      >
+        {error && <div className="validation-error">{error}</div>}
+        {Object.keys(fieldsByTab).length > 1 ? (
+          <Tabs
+            tabs={Object.keys(fieldsByTab).map((key) => ({
+              title: key,
+              value: key,
+              content: filterFields(fieldsByTab[key], data).map((field) => (
+                <FormField
+                  {...field}
+                  key={field.name}
+                  data={data}
+                  update={update}
+                />
+              )),
+            }))}
+          />
+        ) : (
+          fields &&
+          filterFields(fields, data).map((field) => (
+            <FormField {...field} key={field.name} data={data} update={update} />
+          ))
         )}
-      </div>
-    </form>
+        <div className="py-6 flex items-center">
+          <button type="submit" className="btn-primary">
+            {__('edit_model_save')}
+          </button>
+          {allowDelete && (
+            <a
+              href="#"
+              className="text-pink-700 ml-4"
+              onClick={(e) => {
+                e.preventDefault();
+                deleteObject();
+              }}
+            >
+              {deleteButton}
+            </a>
+          )}
+        </div>
+      </form>
+    </div>
   );
 };
 

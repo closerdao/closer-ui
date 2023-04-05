@@ -21,7 +21,7 @@
   }
   .validation-error {
     padding: 1rem 0;
-    color: #9f1f42;
+    color: #fe5e8a;
   }
   .success-toast {
     position: fixed;
@@ -61,8 +61,7 @@
     margin: 0.5rem 0;
     padding: 1rem;
     color: #fafafa;
-    background-color: #9f1f42;
-    border: 1px solid #5b1226;
+    background-color: #fe5e8a;
     white-space: pre-line;
   }
   h1 {

@@ -47,9 +47,9 @@
   }
   textarea,
   .textarea {
-    @apply mt-0 block w-full border-0 border-b-2 border-gray-200 px-0.5 focus:ring-0 focus:border-black resize-none;
+    @apply p-2 text-foreground block border-0 border-b-2 border-transparent focus:outline-none focus:border-primary;
   }
-  /* .input,
+  .input,
   input[type='email'],
   input[type='password'],
   input[type='text'],
@@ -57,28 +57,17 @@
   input[type='number'],
   input[type='date'],
   input[type='time'] {
-    @apply py-2 text-foreground block border-0 border-b-2 border-gray-200 focus:outline-none focus:border-primary;
-  } */
-
-
-  input[type='email'],
-  input[type='password'],
-  input[type='text'],
-  input[type='phone'],
-  input[type='number'],
-  input[type='date'],
-  input[type='time'] {
-    @apply py-2 text-black block bg-neutral focus:outline-none rounded-md px-[8px] w-full text-sm;
+    @apply p-2 text-foreground block border-0 border-b-2 border-transparent focus:outline-none focus:border-primary;
   }
 
 
   select {
     @apply h-10 pl-3 pr-6 text-base text-black placeholder-gray-600 border-b-2 border-gray-200 rounded-lg appearance-none focus:border-black outline-none max-w-full;
   }
-  /* label,
+  label,
   .label {
     @apply block uppercase tracking-wide text-gray-500 text-xs font-bold mb-2;
-  } */
+  }
   label,
   .label {
     @apply block tracking-wide text-complimentary text-lg mb-2;
