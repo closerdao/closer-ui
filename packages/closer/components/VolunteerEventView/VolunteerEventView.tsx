@@ -1,8 +1,5 @@
-import Link from 'next/link';
-
 import { FC } from 'react';
 
-import { MdLocationOn } from '@react-icons/all-files/md/MdLocationOn';
 import dayjs from 'dayjs';
 
 import { useAuth } from '../../contexts/auth';
@@ -13,17 +10,15 @@ import EventDescription from '../EventDescription';
 
 interface Props {
   volunteer: VolunteerOpportunity;
-  location?: string;
 }
 
-const VolunteerEventView: FC<Props> = ({ volunteer, location }) => {
+const VolunteerEventView: FC<Props> = ({ volunteer }) => {
   const {
     name,
     description,
     photo,
     start: startDate,
     end: endDate,
-    slug,
   } = volunteer || {};
   const { user } = useAuth();
   const hasStewardRole = user?.roles?.includes('steward');
@@ -73,23 +68,11 @@ const VolunteerEventView: FC<Props> = ({ volunteer, location }) => {
                   </a>
                 )}
                 {hasStewardRole && (
-                  <Link href={`/volunteer/${slug}/edit`}>
-                    <button className="btn-primary inline-flex items-center">
-                      {__('button_edit_opportunity')}
-                    </button>
-                  </Link>
+                  <button className="btn-primary inline-flex items-center">
+                    {__('button_edit_opportunity')}
+                  </button>
                 )}
               </div>
-            </div>
-            <div>
-              {location && (
-                <div className="flex items-center gap-2 md:whitespace-nowrap">
-                  <MdLocationOn className="text-gray-500" />
-                  <span className="text-sm font-light text-gray-500">
-                    {location}
-                  </span>
-                </div>
-              )}
             </div>
           </div>
         </div>
