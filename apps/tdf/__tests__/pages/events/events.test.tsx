@@ -26,6 +26,6 @@ describe('Events', () => {
     expect(titleUpcoming).toHaveTextContent(/upcoming events/i);
     expect(titlePast).toHaveTextContent(/past events/i);
     const eventCards = await screen.findAllByRole('listitem');
-    expect(eventCards).toHaveLength(eventsMock.length+1);
+    expect(eventCards).toHaveLength(eventsMock.length);
   });
 });
