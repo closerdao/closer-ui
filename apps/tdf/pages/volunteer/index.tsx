@@ -3,13 +3,16 @@ import Link from 'next/link';
 
 import React from 'react';
 
-import { EventPreview, type VolunteerOpportunity, api } from 'closer';
+import { EventPreview, type VolunteerOpportunity, api, useAuth } from 'closer';
 import { NextPage } from 'next';
 
 interface Props {
   opportunities?: VolunteerOpportunity[];
 }
 const VolunteerPage: NextPage<Props> = ({ opportunities }) => {
+  const { user } = useAuth();
+  const hasStewardRole = user?.roles?.includes('steward');
+
   return (
     <div className="w-full">
       <Head>
@@ -20,11 +23,11 @@ const VolunteerPage: NextPage<Props> = ({ opportunities }) => {
       </Head>
       <section className="mb-8 w-full flex justify-between items-center">
         <h1>Volunteer at TDF</h1>
-        <Link href="/volunteer/create">
-          <button className="btn-primary">
-            Create opportunity
-          </button>
-        </Link>
+        {hasStewardRole && (
+          <Link href="/volunteer/create">
+            <button className="btn-primary">Create opportunity</button>
+          </Link>
+        )}
       </section>
       <section className="grid gap-8 md:grid-cols-2">
         {opportunities?.length === 0 ? (
