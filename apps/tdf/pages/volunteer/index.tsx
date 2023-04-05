@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 
 import React from 'react';
 
@@ -17,8 +18,13 @@ const VolunteerPage: NextPage<Props> = ({ opportunities }) => {
           Alentejo, Portugal
         </title>
       </Head>
-      <section className="mb-8 w-full">
+      <section className="mb-8 w-full flex justify-between items-center">
         <h1>Volunteer at TDF</h1>
+        <Link href="/volunteer/create">
+          <button className="btn-primary">
+            Create opportunity
+          </button>
+        </Link>
       </section>
       <section className="grid gap-8 md:grid-cols-2">
         {opportunities?.length === 0 ? (

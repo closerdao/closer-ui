@@ -21,10 +21,7 @@ const VolunteerPage: NextPage<Props> = ({ volunteer }) => {
   return (
     <>
       <Metatags imageId={photo} title={name} description={description} />
-      <VolunteerEventView
-        volunteer={volunteer}
-        location="Traditional Dream Factory, Abela "
-      />
+      <VolunteerEventView volunteer={volunteer} />
     </>
   );
 };

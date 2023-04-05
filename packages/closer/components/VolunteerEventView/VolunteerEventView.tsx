@@ -78,7 +78,9 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
         </div>
       </section>
       <main className="max-w-prose py-10 mx-auto">
-        {description && <EventDescription event={volunteer} />}
+        {description && (
+          <EventDescription event={volunteer} isVolunteer={true} />
+        )}
       </main>
     </div>
   );

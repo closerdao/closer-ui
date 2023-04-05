@@ -426,5 +426,7 @@
   "volunteer_page_does_not_exist": "Volunteering opportunity does not exist",
   "volunteers_page_title": "Work with volunteers at your village",
   "volunteers_page_empty": "There are no volunteer opportunities at the moment.",
-  "button_edit_opportunity": "Edit opportunity"
+  "button_edit_opportunity": "Edit opportunity",
+  "event_description_title": "Event description",
+  "volunteer_description_title": "Opportunity description"
 }
