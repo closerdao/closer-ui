@@ -428,5 +428,7 @@
   "volunteers_page_empty": "There are no volunteer opportunities at the moment.",
   "button_edit_opportunity": "Edit opportunity",
   "event_description_title": "Event description",
-  "volunteer_description_title": "Opportunity description"
+  "volunteer_description_title": "Opportunity description",
+  "volunteer_edit_page_title": "Edit volunteer opportunity",
+  "volunteer_edit_page_delete": "Delete opportunity"
 }

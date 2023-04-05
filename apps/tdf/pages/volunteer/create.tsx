@@ -1,10 +1,11 @@
 import Head from 'next/head';
 
 import { CreateVolunteerView, useAuth } from 'closer';
+import { NextPage } from 'next';
 
 import Page401 from '../401';
 
-const CreateVolunteerOportunity = () => {
+const CreateVolunteerOportunity: NextPage = () => {
   const { user } = useAuth();
   const hasStewardRole = user?.roles?.includes('steward');
 

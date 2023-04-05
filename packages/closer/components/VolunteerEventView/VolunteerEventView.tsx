@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { FC } from 'react';
 
 import dayjs from 'dayjs';
@@ -68,9 +70,11 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
                   </a>
                 )}
                 {hasStewardRole && (
-                  <button className="btn-primary inline-flex items-center">
-                    {__('button_edit_opportunity')}
-                  </button>
+                  <Link href={`/volunteer/${volunteer.slug}/edit`}>
+                    <button className="btn-primary inline-flex items-center">
+                      {__('button_edit_opportunity')}
+                    </button>
+                  </Link>
                 )}
               </div>
             </div>
