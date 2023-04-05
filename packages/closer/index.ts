@@ -60,6 +60,13 @@ export { default as TicketPage } from './pages/tickets/[slug]/index';
 export { default as TicketsInvoicePage } from './pages/tickets/[slug]/invoice';
 export { default as TokenSalePage } from './pages/token-sale';
 export { default as TokenSaleReferralPage } from './pages/token-sale/[referralId]';
+//
+export { default as ArticlePage } from './pages/blog/[slug]';
+export { default as ArticleCreatePage } from './pages/blog/create';
+export { default as SearchPage } from './pages/blog/';
+export { default as ArticleEditPage } from './pages/blog/edit/[slug]';
+export { default as KeywordPage } from './pages/blog/search/[keyword]';
+
 // Utils
 export { default as api } from './utils/api';
 export * from './utils/blockchain';
