@@ -25,6 +25,10 @@ const Subscriptions =  () => {
     }
   };
 
+  if (!isLoading) {
+    return null
+  }
+
   return (
     <>
       <Head>
@@ -34,8 +38,8 @@ const Subscriptions =  () => {
       </Head>
       <Wrapper className="py-6 main-content w-full">
         <Heading level={1}> ♻️ {__('subscriptions_title')}</Heading>
-        {! isLoading && isAuthenticated  && <SubscriptionCards config={subscriptions.config} filteredSubscriptionPlans={paidSubscriptionPlans} clickHandler={handleNext} />}
-        {! isLoading && !isAuthenticated  && <SubscriptionCards config={subscriptions.config} filteredSubscriptionPlans={subscriptions.plans} clickHandler={handleNext} />}
+        {isAuthenticated  && <SubscriptionCards config={subscriptions.config} filteredSubscriptionPlans={paidSubscriptionPlans} clickHandler={handleNext} />}
+        {!isAuthenticated  && <SubscriptionCards config={subscriptions.config} filteredSubscriptionPlans={subscriptions.plans} clickHandler={handleNext} />}
       </Wrapper>
     </>
   );

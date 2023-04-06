@@ -1,3 +1,5 @@
+import { Subscriptions } from 'closer/types';
+
 const config = {
   PORT: 14444,
   PLATFORM_NAME: 'Traditional Dream Factory',
@@ -19,7 +21,7 @@ const config = {
     },
   },
   COOKIE_TOKEN: 'tdf-token',
- 
+
   SUBSCRIPTIONS: {
     config: {
       currency: 'EUR',
@@ -79,7 +81,7 @@ const config = {
         billingPeriod: 'month',
       },
     ],
-  },
+  } as Subscriptions,
 };
 
 export default config;
