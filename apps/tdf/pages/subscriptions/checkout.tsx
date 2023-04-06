@@ -30,6 +30,7 @@ const defautlSelectedPlan: SelectedPlan = {
 
 const Checkout = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
+  console.log('user email', user?.email);
   const router = useRouter();
   const { priceId } = router.query;
   const { PLATFORM_NAME, SUBSCRIPTIONS } = useConfig() || {};
@@ -39,10 +40,8 @@ const Checkout = () => {
     useState<SelectedPlan>(defautlSelectedPlan);
 
   useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push(`/signup?back=${router.asPath}`);
-      }
+    if (!isLoading && !isAuthenticated) {
+      router.push(`/signup?back=${router.asPath}`);
     }
   }, [isAuthenticated, isLoading]);
 
@@ -100,7 +99,7 @@ const Checkout = () => {
             <div className="mb-10">
               <Elements stripe={stripePromise}>
                 <SubscriptionCheckoutForm
-                  userEmail={user?.email || ''}
+                  userEmail={user?.email}
                   priceId={priceId}
                 />
               </Elements>

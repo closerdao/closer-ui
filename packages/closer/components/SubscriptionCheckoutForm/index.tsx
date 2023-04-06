@@ -14,7 +14,7 @@ import Button from '../ui/Button';
 import ErrorMessage from '../ui/ErrorMessage';
 
 interface SubscriptionCheckoutFormProps {
-  userEmail: string;
+  userEmail?: string;
   priceId: string | string[] | undefined;
 }
 
@@ -30,6 +30,10 @@ function SubscriptionCheckoutForm({
   const router = useRouter();
   const stripe = useStripe();
   const elements = useElements();
+
+  if (!stripe || !elements || !userEmail) {
+    return null;
+  }
 
   const validateCardElement = (event: StripeCardElementChangeEvent) => {
     if (event.error) {
@@ -56,32 +60,32 @@ function SubscriptionCheckoutForm({
     e.preventDefault();
     setLoading(true);
     try {
-      const paymentMethod = await stripe?.createPaymentMethod({
+      const createdPaymentMethod = await stripe?.createPaymentMethod({
         type: 'card',
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        card: elements!.getElement(CardElement)!,
+        card: elements.getElement(CardElement) || { token: '' },
         billing_details: {
           email: userEmail,
         },
       });
 
-      if (paymentMethod?.error) {
-        console.log('Error! ', paymentMethod.error.message);
-        setErrorMessage(paymentMethod.error.message || '');
-      } else {
-        const response = await api.post('/subscription', {
-          email: userEmail,
-          paymentMethod: paymentMethod?.paymentMethod?.id,
-          priceId,
-        });
+      if (createdPaymentMethod?.error) {
+        console.log('Error! ', createdPaymentMethod.error.message);
+        setErrorMessage(createdPaymentMethod.error.message || '');
+        return;
+      }
 
-        console.log('response=', response.data);
-        if (response.data.results.status === 'active') {
-          console.log('Success! ');
-          router.push(
-            `/subscriptions/success?subscriptionId=${response.data.results.subscription}&priceId=${priceId}`,
-          );
-        }
+      const response = await api.post('/subscription', {
+        email: userEmail,
+        paymentMethod: createdPaymentMethod.paymentMethod.id,
+        priceId,
+      });
+
+      console.log('response=', response.data);
+      if (response.data.results.status === 'active') {
+        console.log('Success! ');
+        router.push(
+          `/subscriptions/success?subscriptionId=${response.data.results.subscription}&priceId=${priceId}`,
+        );
       }
     } catch (error) {
       const errorMessage = parseMessageFromError(error)
