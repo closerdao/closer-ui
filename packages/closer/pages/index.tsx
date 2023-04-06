@@ -31,6 +31,7 @@ const Index: NextPage = () => {
           <Image
             width="615"
             height="503"
+            alt="Closer Layers: Natural assets > Web3 governance and access > Regenerative Villages "
             src="/images/backgrounds/layers.png?3"
           />
           {!isAuthenticated && (
