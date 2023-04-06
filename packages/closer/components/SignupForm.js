@@ -61,6 +61,8 @@ const SignupForm = () => {
     setApplication((prevState) => ({ ...prevState, ...update }));
   };
 
+  const isSignupDisabled = !application.email || !application.password || !application.screenname;
+
   return (
     <div className="card">
       {error && <div className="text-primary mb-4 text-center">{error}</div>}
@@ -144,7 +146,7 @@ const SignupForm = () => {
             />
           </div>
           <div className="w-full mb-4">
-            <button id="signupbutton" className="btn-primary" type="submit">
+            <button id="signupbutton" className="btn-primary" type="submit" disabled={isSignupDisabled}>
               {__('signup_form_create')}
             </button>
           </div>
