@@ -32,6 +32,18 @@ export default {
       required: true,
     },
     {
+      name: 'settings.skills',
+      label: 'What skills do you feel comfortable with?',
+      type: 'tags',
+      placeholder: 'Woodworking, cooking'
+    },
+    {
+      name: 'settings.mattress',
+      type: 'select',
+      label: 'How do you like your mattress?',
+      options: [{label: 'Soft', value: 'soft'}, {label: 'Medium', value: 'medium'}, {label: 'Hard', value: 'hard'}],
+    },
+    {
       name: 'settings.newsletter_weekly',
       label: 'Weekly summary email',
       type: 'switch',
