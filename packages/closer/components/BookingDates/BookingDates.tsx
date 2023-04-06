@@ -1,35 +1,56 @@
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import PropTypes from 'prop-types';
+import { FC } from 'react';
+import React from 'react';
 
-import { __ } from '../utils/helpers';
-import DateTimePicker from './DateTimePicker';
+import dayjs, { Dayjs } from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+import { __ } from '../../utils/helpers';
+import { BookingConditions } from '../../utils/types';
+import DateTimePicker from '../DateTimePicker';
 
 dayjs.extend(relativeTime);
 
-const BookingDates = ({
+interface Props {
+  isMember?: boolean;
+  conditions?: BookingConditions;
+  startDate: Dayjs;
+  endDate: Dayjs;
+  setStartDate: (startDate: Dayjs) => void;
+  setEndDate: (endDate: Dayjs) => void;
+}
+
+const BookingDates: FC<Props> = ({
   isMember,
-  conditions: { member, guest } = {},
+  conditions,
   startDate,
   endDate,
   setStartDate,
   setEndDate,
 }) => {
+  const { member, guest } = conditions || {};
+  if (!member || !guest) {
+    console.error(
+      'Cannot render BookingDates: missing conditions for member or guest',
+      conditions,
+    );
+    return null;
+  }
+
   const renderConditionsDescription = () => {
     if (isMember) {
       return (
         __(
           'bookings_dates_step_member_book_horizon',
-          member?.maxBookingHorizon,
+          member.maxBookingHorizon,
         ) +
         ', ' +
-        __('bookings_dates_step_book_duration', member?.maxDuration)
+        __('bookings_dates_step_book_duration', member.maxDuration)
       );
     } else {
       return (
-        __('bookings_dates_step_guest_book_horizon', guest?.maxBookingHorizon) +
+        __('bookings_dates_step_guest_book_horizon', guest.maxBookingHorizon) +
         ', ' +
-        __('bookings_dates_step_book_duration', guest?.maxDuration)
+        __('bookings_dates_step_book_duration', guest.maxDuration)
       );
     }
   };
@@ -47,16 +68,15 @@ const BookingDates = ({
             {__('listings_book_check_in')}
           </label>
           <DateTimePicker
-            id="start"
-            value={startDate}
+            value={startDate.format('YYYY-MM-DD')}
             minValue={dayjs().format('YYYY-MM-DD')}
             maxValue={dayjs()
               .add(
-                isMember ? member?.maxBookingHorizon : guest?.maxBookingHorizon,
+                isMember ? member.maxBookingHorizon : guest.maxBookingHorizon,
                 'days',
               )
               .format('YYYY-MM-DD')}
-            onChange={(start) => setStartDate(start.format('YYYY-MM-DD'))}
+            onChange={(start) => setStartDate(start)}
             showTime={false}
           />
         </div>
@@ -65,37 +85,18 @@ const BookingDates = ({
             {__('listings_book_check_out')}
           </label>
           <DateTimePicker
-            id="end"
-            value={endDate}
+            value={endDate.format('YYYY-MM-DD')}
             minValue={dayjs(startDate).add(1, 'days').format('YYYY-MM-DD')}
             maxValue={dayjs(startDate)
               .add(isMember ? member?.maxDuration : guest?.maxDuration, 'days')
               .format('YYYY-MM-DD')}
-            onChange={(end) => setEndDate(end.format('YYYY-MM-DD'))}
+            onChange={(end) => setEndDate(end)}
             showTime={false}
           />
         </div>
       </div>
     </div>
   );
-};
-
-BookingDates.propTypes = {
-  isMember: PropTypes.bool,
-  conditions: PropTypes.shape({
-    member: PropTypes.shape({
-      maxBookingHorizon: PropTypes.number,
-      maxDuration: PropTypes.number,
-    }),
-    guest: PropTypes.shape({
-      maxBookingHorizon: PropTypes.number,
-      maxDuration: PropTypes.number,
-    }),
-  }),
-  startDate: PropTypes.string,
-  endDate: PropTypes.string,
-  setStartDate: PropTypes.func,
-  setEndDate: PropTypes.func,
 };
 
 export default BookingDates;

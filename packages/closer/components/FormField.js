@@ -8,9 +8,9 @@ import DateTimePicker from './DateTimePicker';
 import DiscountsEditor from './DiscountsEditor';
 import FieldsEditor from './FieldsEditor';
 import PhotosEditor from './PhotosEditor';
-import Tag from './Tag';
 import PriceEditor, { currencies } from './PriceEditor';
 import Switch from './Switch';
+import Tag from './Tag';
 import TicketOptionsEditor from './TicketOptionsEditor';
 
 const FormField = ({
@@ -30,7 +30,7 @@ const FormField = ({
   max,
 }) => {
   const [addTag, setAddTag] = useState('');
-  console.log(name, objectPath.get(data, name))
+
   return (
     <div className={`form-field w-full mb-6 form-type-${type}`} key={name}>
       <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2">
@@ -84,50 +84,57 @@ const FormField = ({
           )}
           {type === 'currencies' && (
             <div className="currencies-group">
-              {(objectPath.get(data, name) || []).map((currencyGroup, index) => (
-                <div className="currency-group" key={`${name}.${index}.cur`}>
-                  <select
-                    value={objectPath.get(data, name)?.cur}
-                    onChange={(e) =>
-                      update(`${name}.${index}.cur`, e.target.value)
-                    }
-                  >
-                    {currencies.map((opt) => (
-                      <option value={opt.value} key={opt.value}>
-                        {opt.symbol} - {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type={type}
-                    value={objectPath.get(data, name)[index]?.val || ''}
-                    placeholder={placeholder}
-                    onChange={(e) =>
-                      update(`${name}.${index}.val`, e.target.value)
-                    }
-                    required={required}
-                  />
-                  {index > 0 && (
-                    <a
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        update(
-                          name,
-                          (objectPath.get(data, name) || []).filter((c, i) => i !== index),
-                        );
-                      }}
+              {(objectPath.get(data, name) || []).map(
+                (currencyGroup, index) => (
+                  <div className="currency-group" key={`${name}.${index}.cur`}>
+                    <select
+                      value={objectPath.get(data, name)?.cur}
+                      onChange={(e) =>
+                        update(`${name}.${index}.cur`, e.target.value)
+                      }
                     >
-                      {__('form_field_remove_currency')}
-                    </a>
-                  )}
-                </div>
-              ))}
+                      {currencies.map((opt) => (
+                        <option value={opt.value} key={opt.value}>
+                          {opt.symbol} - {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type={type}
+                      value={objectPath.get(data, name)[index]?.val || ''}
+                      placeholder={placeholder}
+                      onChange={(e) =>
+                        update(`${name}.${index}.val`, e.target.value)
+                      }
+                      required={required}
+                    />
+                    {index > 0 && (
+                      <a
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          update(
+                            name,
+                            (objectPath.get(data, name) || []).filter(
+                              (c, i) => i !== index,
+                            ),
+                          );
+                        }}
+                      >
+                        {__('form_field_remove_currency')}
+                      </a>
+                    )}
+                  </div>
+                ),
+              )}
               <a
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  update(name, (objectPath.get(data, name) || []).concat(currencies[0]));
+                  update(
+                    name,
+                    (objectPath.get(data, name) || []).concat(currencies[0]),
+                  );
                 }}
               >
                 {__('form_field_add_currency')}
@@ -156,7 +163,7 @@ const FormField = ({
             />
           )}
           {type === 'tags' && (
-            <div className={`${className||''} space-x-1`}>
+            <div className={`${className || ''} space-x-1`}>
               {objectPath.get(data, name) &&
                 objectPath.get(data, name).map((tag) => (
                   <Tag
@@ -169,11 +176,11 @@ const FormField = ({
                         'DELETE',
                       );
                     }}
+                    key={tag}
                   >
                     {tag}
                   </Tag>
-                ))
-              }
+                ))}
               <input
                 type="text"
                 className="mt-2"
@@ -184,7 +191,10 @@ const FormField = ({
                   if (e.which === 13) {
                     e.preventDefault();
                     e.stopPropagation();
-                    update(name, (objectPath.get(data, name) || []).concat(addTag));
+                    update(
+                      name,
+                      (objectPath.get(data, name) || []).concat(addTag),
+                    );
                     setAddTag('');
                   }
                 }}
@@ -207,7 +217,9 @@ const FormField = ({
                             e.preventDefault();
                             update(
                               name,
-                              objectPath.get(data, name).filter((el) => el._id !== item._id),
+                              objectPath
+                                .get(data, name)
+                                .filter((el) => el._id !== item._id),
                               item,
                               'DELETE',
                             );

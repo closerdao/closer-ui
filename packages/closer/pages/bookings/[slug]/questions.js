@@ -3,12 +3,13 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
-import BookingProgress from '../../../components/BookingProgress';
 import PageError from '../../../components/PageError';
 import QuestionnaireItem from '../../../components/QuestionnaireItem';
+import ProgressBar from '../../../components/ui/ProgressBar';
 
 import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
+import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
@@ -96,7 +97,7 @@ const Questionnaire = ({ questions, booking, error }) => {
           <span className="mr-1">📄</span>
           <span>{__('bookings_questionnaire_step_title')}</span>
         </h1>
-        <BookingProgress />
+        <ProgressBar steps={BOOKING_STEPS} />
         <div className="my-16 gap-16 mt-16">
           {questions.map((question) => (
             <QuestionnaireItem

@@ -3,15 +3,16 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
-import BookingProgress from '../../../components/BookingProgress';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
+import ProgressBar from '../../../components/ui/ProgressBar';
 
 import PropTypes from 'prop-types';
 
 import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
+import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
@@ -69,7 +70,7 @@ const Summary = ({ booking, listing, error }) => {
           <span className="mr-1">📑</span>
           <span>{__('bookings_summary_step_title')}</span>
         </h1>
-        <BookingProgress />
+        <ProgressBar steps={BOOKING_STEPS} />
         <div className="mt-16 flex flex-col gap-16">
           <SummaryDates
             totalGuests={adults}

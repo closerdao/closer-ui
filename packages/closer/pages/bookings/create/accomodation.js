@@ -1,12 +1,13 @@
 import { useRouter } from 'next/router';
 
 import BookingBackButton from '../../../components/BookingBackButton';
-import BookingProgress from '../../../components/BookingProgress';
 import BookingStepsInfo from '../../../components/BookingStepsInfo';
 import ListingCard from '../../../components/ListingCard';
+import ProgressBar from '../../../components/ui/ProgressBar';
 
 import PageNotFound from '../../404';
 import { blockchainConfig } from '../../../config_blockchain';
+import { BOOKING_STEPS } from '../../../constants';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
@@ -73,7 +74,7 @@ const AccomodationSelector = ({
           <span className="mr-1">🏡</span>
           <span>{__('bookings_accomodation_step_title')}</span>
         </h1>
-        <BookingProgress />
+        <ProgressBar steps={BOOKING_STEPS} />
         <BookingStepsInfo
           startDate={start}
           endDate={end}

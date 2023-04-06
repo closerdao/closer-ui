@@ -6,9 +6,10 @@ const tdfTheme = {
     ...closerTheme.extend,
     colors: {
       ...closerTheme.extend.colors,
+      'accent-core': '#FE4FB7',
       primary: '#e4427d',
       secondary: '#1b3bc3',
-      background: '#F8FAFC',
+      background: '#fff',
       'background-dark': '#1c1c1c',
       foreground: '#1c1c1c',
       'foreground-dark': '#dadada',
@@ -17,7 +18,7 @@ const tdfTheme = {
       line: '#a3a3a3',
     },
     fontFamily: {
-      marketing: ['Barlow', ...defaultTheme.fontFamily.sans],
+      sans: ['Barlow', ...defaultTheme.fontFamily.sans],
     },
   },
   plugins: [],

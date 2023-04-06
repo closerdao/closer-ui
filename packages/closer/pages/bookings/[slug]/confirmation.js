@@ -3,10 +3,11 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
-import BookingProgress from '../../../components/BookingProgress';
 import PageError from '../../../components/PageError';
+import ProgressBar from '../../../components/ui/ProgressBar';
 
 import PageNotFound from '../../404';
+import { BOOKING_STEPS } from '../../../constants';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
@@ -46,7 +47,7 @@ const ConfirmationStep = ({ error, booking }) => {
           <span className="mr-1">🎊</span>
           <span>{__('bookings_confirmation_step_success')}</span>
         </h1>
-        <BookingProgress />
+        <ProgressBar steps={BOOKING_STEPS} />
         <div className="mt-16 flex flex-col gap-16 flex-nowrap">
           <h2 className="text-2xl leading-10 font-normal">
             <span className="mr-1">🏡</span>

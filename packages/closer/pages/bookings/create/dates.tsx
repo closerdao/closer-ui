@@ -1,31 +1,37 @@
 import { useRouter } from 'next/router';
 
 import { useState } from 'react';
+import React from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
-import BookingDates from '../../../components/BookingDates';
+import BookingDates from '../../../components/BookingDates/BookingDates';
 import BookingGuests from '../../../components/BookingGuests';
-import BookingProgress from '../../../components/BookingProgress';
 import CurrencySwitch from '../../../components/CurrencySwitch';
 import PageError from '../../../components/PageError';
+import ProgressBar from '../../../components/ui/ProgressBar';
 
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import PropTypes from 'prop-types';
+import dayjs, { Dayjs } from 'dayjs';
+import { NextPage } from 'next';
 
 import PageNotFound from '../../404';
-import { CURRENCIES, DEFAULT_CURRENCY } from '../../../constants';
+import {
+  BOOKING_STEPS,
+  CURRENCIES,
+  DEFAULT_CURRENCY,
+} from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import api from '../../../utils/api';
+import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
+import { BookingSettings } from '../../../utils/types/api';
+import { CloserCurrencies } from '../../../utils/types/currency';
 
-dayjs.extend(relativeTime);
+interface Props {
+  error?: string;
+  settings?: BookingSettings;
+}
 
-const defaultStart = dayjs().add(3, 'days').format('YYYY-MM-DD');
-
-const defaultEnd = dayjs().add(6, 'days').format('YYYY-MM-DD');
-
-const DatesSelector = ({ error, settings }) => {
+const DatesSelector: NextPage<Props> = ({ error, settings }) => {
   const router = useRouter();
   const {
     start: savedStartDate,
@@ -37,34 +43,42 @@ const DatesSelector = ({ error, settings }) => {
     currency: savedCurrency,
   } = router.query || {};
 
+  const initialStartDate = savedStartDate
+    ? dayjs(savedStartDate as string, 'YYYY-MM-DD')
+    : dayjs().add(3, 'days');
+
+  const initialEndDate = savedEndDate
+    ? dayjs(savedEndDate as string, 'YYYY-MM-DD')
+    : dayjs().add(6, 'days');
+
   const { user } = useAuth();
   const isMember = user?.roles.includes('member');
-  const [start, setStartDate] = useState(savedStartDate || defaultStart);
-  const [end, setEndDate] = useState(savedEndDate || defaultEnd);
-  const [adults, setAdults] = useState(Number(savedAdults) || 1);
-  const [kids, setKids] = useState(Number(savedKids) || 0);
-  const [infants, setInfants] = useState(Number(savedInfants) || 0);
-  const [pets, setPets] = useState(Number(savedPets) || 0);
-  const [currency, selectCurrency] = useState(
-    savedCurrency || DEFAULT_CURRENCY,
+  const [start, setStartDate] = useState<Dayjs>(initialStartDate);
+  const [end, setEndDate] = useState<Dayjs>(initialEndDate);
+  const [adults, setAdults] = useState<number>(Number(savedAdults) || 1);
+  const [kids, setKids] = useState<number>(Number(savedKids) || 0);
+  const [infants, setInfants] = useState<number>(Number(savedInfants) || 0);
+  const [pets, setPets] = useState<number>(Number(savedPets) || 0);
+  const [currency, selectCurrency] = useState<CloserCurrencies>(
+    (savedCurrency as CloserCurrencies) || DEFAULT_CURRENCY,
   );
 
   const handleNext = () => {
     const data = {
-      start,
-      end,
-      adults,
-      kids,
-      infants,
-      pets,
+      start: start.format('YYYY-MM-DD'),
+      end: end.format('YYYY-MM-DD'),
+      adults: String(adults),
+      kids: String(kids),
+      infants: String(infants),
+      pets: String(pets),
       currency,
     };
     const urlParams = new URLSearchParams(data);
     router.push(`/bookings/create/accomodation?${urlParams}`);
   };
 
-  const goToDashboard = () => {
-    router.push('/bookings');
+  const goBack = () => {
+    router.back();
   };
 
   if (error) {
@@ -78,15 +92,12 @@ const DatesSelector = ({ error, settings }) => {
   return (
     <>
       <div className="max-w-screen-sm mx-auto md:p-8 h-full">
-        <BookingBackButton
-          action={goToDashboard}
-          name={__('buttons_go_to_bookings')}
-        />
+        <BookingBackButton onClick={goBack} />
         <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">🏡</span>
           <span>{__('bookings_dates_step_title')}</span>
         </h1>
-        <BookingProgress />
+        <ProgressBar steps={BOOKING_STEPS} />
         <div className="mt-16 flex flex-col gap-16">
           <div>
             <h2 className="mb-3 text-2xl leading-10 font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center">
@@ -132,30 +143,13 @@ DatesSelector.getInitialProps = async () => {
       data: { results },
     } = await api.get('/bookings/settings');
     return {
-      settings: results,
+      settings: results as BookingSettings,
     };
   } catch (err) {
     return {
-      error: err.message,
-      settings: null,
+      error: parseMessageFromError(err),
     };
   }
-};
-
-DatesSelector.propTypes = {
-  error: PropTypes.string,
-  settings: PropTypes.shape({
-    conditions: PropTypes.shape({
-      member: PropTypes.shape({
-        maxBookingHorizon: PropTypes.number,
-        maxDuration: PropTypes.number,
-      }),
-      guest: PropTypes.shape({
-        maxBookingHorizon: PropTypes.number,
-        maxDuration: PropTypes.number,
-      }),
-    }),
-  }),
 };
 
 export default DatesSelector;

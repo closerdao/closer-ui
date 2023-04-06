@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { FC } from 'react';
 
-import PropTypes from 'prop-types';
+interface Props {
+  progress: number;
+  total: number;
+}
 
-const Progress = ({ progress, total }) => {
+const Progress: FC<Props> = ({ progress, total }) => {
   const steps = Array.from({ length: total }, (_, i) => i + 1);
   return (
     <div className="flex items-center space-between">
@@ -11,18 +14,13 @@ const Progress = ({ progress, total }) => {
           key={step}
           className={`flex-1 h-1 border border-solid rounded-xl mr-1 ${
             step <= progress
-              ? 'bg-black border-black'
-              : 'bg-zinc-300 border-zinc-300'
+              ? 'bg-accent-core border-accent-core'
+              : 'bg-neutral-300 border-neutral-300'
           }`}
         />
       ))}
     </div>
   );
-};
-
-Progress.propTypes = {
-  progress: PropTypes.number.isRequired,
-  total: PropTypes.number.isRequired,
 };
 
 export default Progress;

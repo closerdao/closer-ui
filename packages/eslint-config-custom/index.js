@@ -25,5 +25,6 @@ module.exports = {
     'no-html-link-for-pages': 'off',
     'no-empty-function': 'off',
     '@typescript-eslint/no-empty-function': 'warn',
+    '@typescript-eslint/no-var-requires': 'off',
   },
 };
