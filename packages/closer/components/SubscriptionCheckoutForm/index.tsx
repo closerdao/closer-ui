@@ -84,7 +84,8 @@ function SubscriptionCheckoutForm({
         }
       }
     } catch (error) {
-      console.log('error=', error);
+      const errorMessage = parseMessageFromError(error)
+      setErrorMessage(errorMessage)
     } finally {
       setLoading(false);
     }
