@@ -9,6 +9,7 @@ import { StripeCardElementChangeEvent } from '@stripe/stripe-js';
 import { __ } from 'closer/utils/helpers';
 
 import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
 import SubscriptionConditions from '../SubscriptionConditions';
 import Button from '../ui/Button';
 import ErrorMessage from '../ui/ErrorMessage';
@@ -88,8 +89,8 @@ function SubscriptionCheckoutForm({
         );
       }
     } catch (error) {
-      const errorMessage = parseMessageFromError(error)
-      setErrorMessage(errorMessage)
+      const errorMessage = parseMessageFromError(error);
+      setErrorMessage(errorMessage);
     } finally {
       setLoading(false);
     }
