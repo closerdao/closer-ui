@@ -8,6 +8,7 @@ import BookingDates from '../../../components/BookingDates/BookingDates';
 import BookingGuests from '../../../components/BookingGuests';
 import CurrencySwitch from '../../../components/CurrencySwitch';
 import PageError from '../../../components/PageError';
+import TicketOptions from '../../../components/TicketOptions';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import dayjs, { Dayjs } from 'dayjs';
@@ -20,18 +21,25 @@ import {
   DEFAULT_CURRENCY,
 } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import { BookingSettings } from '../../../types/api';
+import { CloserCurrencies } from '../../../types/currency';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
-import { BookingSettings } from '../../../utils/types/api';
-import { CloserCurrencies } from '../../../utils/types/currency';
 
 interface Props {
   error?: string;
   settings?: BookingSettings;
+  ticketOptions?: any;
+  volunteer?: any;
 }
 
-const DatesSelector: NextPage<Props> = ({ error, settings }) => {
+const DatesSelector: NextPage<Props> = ({
+  error,
+  settings,
+  ticketOptions,
+  volunteer,
+}) => {
   const router = useRouter();
   const {
     start: savedStartDate,
@@ -41,6 +49,7 @@ const DatesSelector: NextPage<Props> = ({ error, settings }) => {
     infants: savedInfants,
     pets: savedPets,
     currency: savedCurrency,
+    eventId,
   } = router.query || {};
 
   const initialStartDate = savedStartDate
@@ -62,7 +71,7 @@ const DatesSelector: NextPage<Props> = ({ error, settings }) => {
   const [currency, selectCurrency] = useState<CloserCurrencies>(
     (savedCurrency as CloserCurrencies) || DEFAULT_CURRENCY,
   );
-
+  const [selectedTicketName, selectTicketName] = useState<string>();
   const handleNext = () => {
     const data = {
       start: start.format('YYYY-MM-DD'),
@@ -72,6 +81,7 @@ const DatesSelector: NextPage<Props> = ({ error, settings }) => {
       infants: String(infants),
       pets: String(pets),
       currency,
+      eventId: eventId as string,
     };
     const urlParams = new URLSearchParams(data);
     router.push(`/bookings/create/accomodation?${urlParams}`);
@@ -110,6 +120,13 @@ const DatesSelector: NextPage<Props> = ({ error, settings }) => {
               currencies={CURRENCIES}
             />
           </div>
+          {ticketOptions && (
+            <TicketOptions
+              items={ticketOptions}
+              selectedTicketName={selectedTicketName}
+              selectTicketName={selectTicketName}
+            />
+          )}
           <BookingDates
             conditions={settings?.conditions}
             startDate={start}
@@ -137,11 +154,29 @@ const DatesSelector: NextPage<Props> = ({ error, settings }) => {
   );
 };
 
-DatesSelector.getInitialProps = async () => {
+DatesSelector.getInitialProps = async ({ query }) => {
   try {
+    const { eventId, volunteerId } = query;
     const {
       data: { results },
     } = await api.get('/bookings/settings');
+    if (eventId) {
+      console.log('eventId', eventId);
+      const ticketsAvailable = await api.get(
+        `/bookings/event/${eventId}/availability`,
+      );
+      return {
+        settings: results as BookingSettings,
+        ticketOptions: ticketsAvailable.data.ticketOptions,
+      };
+    }
+    if (volunteerId) {
+      const volunteer = await api.get(`/volunteers/${volunteerId}`);
+      return {
+        settings: results as BookingSettings,
+        volunteer: volunteer.data.results,
+      };
+    }
     return {
       settings: results as BookingSettings,
     };

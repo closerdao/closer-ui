@@ -195,8 +195,7 @@ const Event = ({ event, error }) => {
                         (event.stripePub ||
                           process.env.NEXT_PUBLIC_STRIPE_PUB_KEY) && (
                           <Link
-                            as={`/events/${event.slug}/checkout`}
-                            href="/events/[slug]/checkout"
+                            href={`/bookings/create/dates/?eventId=${event._id}`}
                             className="btn-primary mr-2"
                           >
                             Buy ticket

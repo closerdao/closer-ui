@@ -4,8 +4,8 @@ import React from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
+import { BookingConditions } from '../../types';
 import { __ } from '../../utils/helpers';
-import { BookingConditions } from '../../utils/types';
 import DateTimePicker from '../DateTimePicker';
 
 dayjs.extend(relativeTime);

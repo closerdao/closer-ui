@@ -1,4 +1,4 @@
-import { CloserCurrencies } from './utils/types/currency';
+import { CloserCurrencies } from './types/currency';
 
 export const blockchainConfig = {
   BLOCKCHAIN_NETWORK_ID: 44787,

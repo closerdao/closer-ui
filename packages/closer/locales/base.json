@@ -61,6 +61,7 @@
   "bookings_price_switch_accomodation": "Accomodation",
   "bookings_price_switch_utility": "Utility",
   "bookings_dates_step_guests_title": "Guests",
+  "bookings_dates_step_tickets_title": "Ticket Options",
   "bookings_dates_step_guests_adults": "Adults",
   "bookings_dates_step_guests_children": "Children < 14 y.o.",
   "bookings_dates_step_guests_infants": "Infants < 2 y.o.",
