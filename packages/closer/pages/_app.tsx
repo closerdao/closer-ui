@@ -37,12 +37,14 @@ const Application: FC<AppProps> = ({ Component, pageProps }) => {
         <PlatformProvider>
           <Web3ReactProvider getLibrary={getLibrary}>
             <WalletProvider>
-              <Metatags />
-              <Navigation />
-              <Layout>
-                <Component {...pageProps} />
-              </Layout>
-              <Footer />
+              <div className="h-100 w-100 static bg-[url('/images/backgrounds/light-green.svg')]">
+                <Metatags />
+                <Navigation />
+                <Layout>
+                  <Component {...pageProps} />
+                </Layout>
+                <Footer />
+              </div>
             </WalletProvider>
           </Web3ReactProvider>
         </PlatformProvider>
