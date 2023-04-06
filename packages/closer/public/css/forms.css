@@ -42,7 +42,9 @@
     @apply bg-primary border-primary;
   }
   input,
-  textarea {
+  textarea,
+  .input,
+  .textarea {
     @apply w-full;
   }
   textarea,
@@ -57,12 +59,12 @@
   input[type='number'],
   input[type='date'],
   input[type='time'] {
-    @apply p-2 text-foreground block border-0 border-b-2 border-transparent focus:outline-none focus:border-primary;
+    @apply p-2 text-foreground block border-0 border-b-2 border-transparent ring-transparent focus:outline-none focus:border-primary;
   }
 
 
   select {
-    @apply h-10 pl-3 pr-6 text-base text-black placeholder-gray-600 border-b-2 border-gray-200 rounded-lg appearance-none focus:border-black outline-none max-w-full;
+    @apply text-base border-gray-200 border-2 rounded-lg ring-transparent appearance-none focus:border-primary outline-none max-w-full;
   }
   label,
   .label {
