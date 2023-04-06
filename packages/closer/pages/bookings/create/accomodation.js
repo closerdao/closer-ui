@@ -21,6 +21,7 @@ const AccomodationSelector = ({
   currency,
   useTokens,
   listings,
+  eventId,
 }) => {
   const router = useRouter();
   const bookListing = async ({ listingId }) => {
@@ -36,6 +37,7 @@ const AccomodationSelector = ({
         pets,
         listing: listingId,
         children: kids,
+        eventId,
       });
       router.push(`/bookings/${newBooking._id}/questions`);
     } catch (err) {
@@ -61,6 +63,7 @@ const AccomodationSelector = ({
       infants,
       pets,
       currency,
+      eventId,
     };
     const urlParams = new URLSearchParams(params);
     router.push(`/bookings/create/dates?${urlParams}`);
@@ -109,7 +112,8 @@ const AccomodationSelector = ({
 };
 
 AccomodationSelector.getInitialProps = async ({ query }) => {
-  const { start, end, adults, kids, infants, pets, currency } = query || {};
+  const { start, end, adults, kids, infants, pets, currency, eventId } =
+    query || {};
   const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
   const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
   const {
@@ -122,6 +126,7 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
     infants,
     pets,
     useTokens,
+    eventId,
   });
 
   return {
@@ -134,6 +139,7 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
     pets: Number(pets),
     currency,
     useTokens,
+    eventId,
   };
 };
 

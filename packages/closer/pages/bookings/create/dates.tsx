@@ -145,7 +145,11 @@ const DatesSelector: NextPage<Props> = ({
             setInfants={setInfants}
             setPets={setPets}
           />
-          <button className="booking-btn" onClick={handleNext}>
+          <button
+            className="booking-btn"
+            onClick={handleNext}
+            disabled={eventId ? !selectedTicketName : false}
+          >
             {__('generic_search')}
           </button>
         </div>
