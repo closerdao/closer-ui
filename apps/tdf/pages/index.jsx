@@ -39,7 +39,7 @@ const HomePage = () => {
           Traditional Dream Factory | Regenerative Playground in Alentejo, Portugal
         </title>
       </Head>
-      <section className="text-right -ml-6 -mr-6 pt-20 pb-12 -mt-6 min-h-100 p-6 bg-cover bg-[url('/images/landing/sheep-min.png')]">
+      <section className="text-right -ml-6 -mr-6 pt-20 pb-12 -mt-6 h-screen p-6 bg-cover bg-[url('/images/landing/sheep-min.png')]">
         <div className="max-w-6xl mx-auto">
           <h1
             className="md:mt-20 mb-6 md:mb-12 text-3xl md:text-8xl text-white ml-8"
@@ -54,7 +54,7 @@ const HomePage = () => {
             regenerative village, on a mission to re-root a better way of living.
           </p>
 
-          {!isAuthenticated && (
+          {!isAuthenticated ? (
             <>
               <Link
                 href="/signup"
@@ -67,12 +67,25 @@ const HomePage = () => {
                 JOIN THE DREAM
               </Link>
             </>
+          ) : (
+            <>
+              <Link
+                href="/subscribtions"
+                type="submit"
+                onClick={() =>
+                  event('click', { category: 'HomePage', label: 'KeepDreaming' })
+                }
+                className="btn-primary"
+              >
+                GET MEMBERSHIP
+              </Link>
+            </>
           )}
         </div>
       </section>
-      <section className="max-w-6xl mx-auto">
+      <section className="max-w-6xl mx-auto md:pt-20">
         <h3 className="text-center py-12 px-4">
-          A prototype for a future of beautiful,
+          A prototype for a future of beautiful,<br/>
           connected  regenerative living
         </h3>
         <ul className="flex flex-wrap text-center divide-x">

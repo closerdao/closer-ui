@@ -74,7 +74,7 @@
     @apply text-xl md:text-base font-bold uppercase;
   }
   h3 {
-    @apply text-lg md:text-base font-bold uppercase;
+    @apply text-lg md:text-xl font-bold uppercase;
   }
   h4 {
     @apply md:text-lg font-bold uppercase;
