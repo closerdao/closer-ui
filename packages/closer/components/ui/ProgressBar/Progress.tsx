@@ -14,7 +14,7 @@ const Progress: FC<Props> = ({ progress, total }) => {
           key={step}
           className={`flex-1 h-1 border border-solid rounded-xl mr-1 ${
             step <= progress
-              ? 'bg-accent-core border-accent-core'
+              ? 'bg-accent border-accent'
               : 'bg-neutral-300 border-neutral-300'
           }`}
         />
