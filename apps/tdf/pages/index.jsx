@@ -4,7 +4,7 @@ import Link from 'next/link';
 import React, { useEffect } from 'react';
 
 import { useAuth } from 'closer';
-import { NextPage } from 'next';
+// import { NextPage } from 'next';
 import { event } from 'nextjs-google-analytics';
 
 import { usePlatform } from 'closer';
