@@ -9,16 +9,16 @@ import { event } from 'nextjs-google-analytics';
 
 import { usePlatform } from 'closer';
 
-interface Resource {
-  title: string;
-  slug: string;
-  url: string;
-  _id: string;
-  created: Date;
-  id: number;
-};
-
-const HomePage: NextPage = () => {
+// interface Resource {
+//   title: string;
+//   slug: string;
+//   url: string;
+//   _id: string;
+//   created: Date;
+//   id: number;
+// };
+// : NextPage
+const HomePage = () => {
   const { isAuthenticated } = useAuth();
   const { platform } = usePlatform();
 
@@ -76,7 +76,7 @@ const HomePage: NextPage = () => {
           connected  regenerative living
         </h3>
         <ul className="flex flex-wrap text-center divide-x">
-          { platform.resource.find() && platform.resource.find().map((resource: Resource) => (
+          { platform.resource.find() && platform.resource.find().map((resource) => (
             <li
               key={ resource.slug }
               className="w-1/2 md:w-1/3 lg:w-1/4 mb-4 p-3"
