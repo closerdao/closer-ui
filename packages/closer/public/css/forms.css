@@ -7,8 +7,7 @@
   }
   .btn-primary,
   .btn-primary[type='submit'] {
-    @apply cursor-pointer inline-block py-2 px-4 rounded-full text-primary border-2 border-primary focus:outline-none disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed hover:bg-primary hover:text-background;
-    @apply text-primary bg-transparent hover:text-white hover:bg-primary border-primary disabled:hover:bg-transparent disabled:border-gray-400 disabled:text-gray-400;
+    @apply cursor-pointer inline-block py-1 px-4 rounded-full text-background border-2 border-primary bg-primary focus:outline-none disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed uppercase;
   }
   .btn-small,
   .btn-small[type='submit'] {
