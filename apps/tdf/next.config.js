@@ -9,6 +9,7 @@
 const moduleExports = {
   reactStrictMode: true,
   transpilePackages: ['closer'],
+  presets: ["next/babel"],
   images: {
     remotePatterns: [
       {

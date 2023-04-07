@@ -34,8 +34,8 @@ const Navigation = () => {
   const { isAuthenticated, user } = useAuth();
 
   return (
-    <div className="NavContainer pt-20 md:pt-0 relative z-20">
-      <div className="max-w-6xl mx-auto p-4 h-20 fixed z-50 top-0 left-0 right-0 md:relative flex justify-between items-center">
+    <div className="NavContainer h-20 md:pt-0 top-0 left-0 right-0 fixed z-20 bg-background shadow">
+      <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
         <Logo />
         <div className="flex gap-4">
           {isAuthenticated && (

@@ -39,34 +39,62 @@ const HomePage = () => {
           Traditional Dream Factory | Regenerative Playground in Alentejo, Portugal
         </title>
       </Head>
-      <section className="text-right -ml-6 -mr-6 pt-20 pb-12 -mt-6 h-screen p-6 bg-cover bg-[url('/images/landing/sheep-min.png')]">
+      <section className="text-right -ml-6 -mr-6 pt-60 pb-12 -mt-6 h-screen p-6 bg-cover bg-[url('/images/landing/sheep-min.png')]">
         <div className="max-w-6xl mx-auto">
           <h1
-            className="md:mt-20 mb-6 md:mb-12 text-3xl md:text-8xl text-white ml-8"
+            className="md:mt-20 mb-6 md:mb-12 text-4xl md:text-8xl text-white ml-8"
             data-testid="page-title"
           >
             A life of soils and souls regenerating together.
           </h1>
           <p
-            className="md:mt-20 mb-6 md:mb-12 text-xs md:text-4xl text-white ml-8"
+            className="md:mt-20 mb-6 md:mb-12 text-sm md:text-4xl text-white ml-8"
           >
             Traditional Dream Factory is the first web3-powered
             regenerative village, on a mission to re-root a better way of living.
           </p>
 
           {!isAuthenticated ? (
-            <>
+            <div className="mb-4">
               <Link
                 href="/signup"
                 type="submit"
                 onClick={() =>
                   event('click', { category: 'HomePage', label: 'Apply' })
                 }
-                className="btn-primary"
+                className="btn-primary btn-large"
               >
                 JOIN THE DREAM
               </Link>
-            </>
+            </div>
+          ) : (
+            <div className="mb-4">
+              <Link
+                href="/subscribtions"
+                type="submit"
+                onClick={() =>
+                  event('click', { category: 'HomePage', label: 'KeepDreaming' })
+                }
+                className="btn-primary btn-large"
+              >
+                GET MEMBERSHIP
+              </Link>
+            </div>
+          )}
+          {!isAuthenticated ? (
+            <div>
+              <Link
+                href="/pdf/tdf-private-sale.pdf"
+                target="_blank"
+                type="submit"
+                onClick={() =>
+                  event('click', { category: 'HomePage', label: 'Apply' })
+                }
+                className="btn-primary bg-primary-light md:text-xl"
+              >
+                Download Investor pack
+              </Link>
+            </div>
           ) : (
             <>
               <Link
