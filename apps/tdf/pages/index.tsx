@@ -7,7 +7,7 @@ import { useAuth } from 'closer';
 import { NextPage } from 'next';
 import { event } from 'nextjs-google-analytics';
 
-import { usePlatform } from 'closer/contexts/platform';
+import { usePlatform } from 'closer';
 
 interface Resource {
   title: string;
