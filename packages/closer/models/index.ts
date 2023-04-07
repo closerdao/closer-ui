@@ -35,13 +35,17 @@ const models = {
       name: 'settings.skills',
       label: 'What skills do you feel comfortable with?',
       type: 'tags',
-      placeholder: 'Woodworking, cooking'
+      placeholder: 'Woodworking, cooking',
     },
     {
       name: 'settings.mattress',
       type: 'select',
       label: 'How do you like your mattress?',
-      options: [{label: 'Soft', value: 'soft'}, {label: 'Medium', value: 'medium'}, {label: 'Hard', value: 'hard'}],
+      options: [
+        { label: 'Soft', value: 'soft' },
+        { label: 'Medium', value: 'medium' },
+        { label: 'Hard', value: 'hard' },
+      ],
     },
     {
       name: 'settings.newsletter_weekly',
@@ -390,7 +394,6 @@ const models = {
       public: true,
       editable: true,
       type: 'text',
-      tab: 'general',
     },
     {
       name: 'category',
@@ -398,7 +401,6 @@ const models = {
       public: true,
       editable: true,
       type: 'text',
-      tab: 'general',
     },
     {
       name: 'photo',
@@ -406,7 +408,6 @@ const models = {
       public: true,
       editable: true,
       type: 'photos',
-      tab: 'general',
     },
     {
       name: 'slug',
@@ -417,7 +418,6 @@ const models = {
       unique: true,
       editable: true,
       type: 'text',
-      tab: 'general',
     },
     {
       name: 'description',
@@ -425,7 +425,6 @@ const models = {
       public: true,
       editable: true,
       type: 'longtext',
-      tab: 'general',
     },
     {
       name: 'start',
@@ -433,7 +432,6 @@ const models = {
       public: true,
       editable: true,
       type: 'datetime',
-      tab: 'general',
     },
     {
       name: 'end',
@@ -441,7 +439,6 @@ const models = {
       public: true,
       editable: true,
       type: 'datetime',
-      tab: 'general',
     },
     {
       name: 'visibility',
@@ -455,48 +452,6 @@ const models = {
         { label: 'Public', value: 'public' },
         { label: 'Private', value: 'private' },
       ],
-      tab: 'general',
-    },
-    {
-      name: 'paid',
-      label: 'Is this a paid event?',
-      type: 'switch',
-      tab: 'tickets',
-      defaultValue: false,
-    },
-    {
-      name: 'ticketOptions',
-      label: 'Ticket options',
-      type: 'ticketOptions',
-      tab: 'tickets',
-      showIf: [
-        {
-          field: 'paid',
-          value: true,
-        },
-        {
-          field: 'ticket',
-          value: '',
-        },
-      ],
-    },
-    {
-      name: 'discounts',
-      label: 'Discount codes',
-      type: 'discounts',
-      tab: 'tickets',
-      showIf: [
-        {
-          field: 'paid',
-          value: true,
-        },
-      ],
-    },
-    {
-      name: 'fields',
-      label: 'Custom questions',
-      type: 'fields',
-      tab: 'advanced',
     },
   ],
 };
