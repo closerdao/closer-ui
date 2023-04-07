@@ -96,7 +96,7 @@ const AccomodationSelector = ({
             </p>
           </div>
         )}
-        <div className="mt-16 md:grid md:grid-flow-col md:items-start md:gap-2">
+        <div className="flex flex-col gap-4 mt-16 md:grid md:grid-cols-2 md:items-start">
           {listings.map((listing) => (
             <ListingCard
               key={listing._id}

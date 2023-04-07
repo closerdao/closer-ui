@@ -21,7 +21,8 @@ import {
   DEFAULT_CURRENCY,
 } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
-import { BookingSettings } from '../../../types/api';
+import { TicketOption } from '../../../types';
+import { BookingSettings, VolunteerOpportunity } from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
@@ -30,8 +31,8 @@ import { __ } from '../../../utils/helpers';
 interface Props {
   error?: string;
   settings?: BookingSettings;
-  ticketOptions?: any;
-  volunteer?: any;
+  ticketOptions?: TicketOption[];
+  volunteer?: VolunteerOpportunity;
 }
 
 const DatesSelector: NextPage<Props> = ({
@@ -50,6 +51,7 @@ const DatesSelector: NextPage<Props> = ({
     pets: savedPets,
     currency: savedCurrency,
     eventId,
+    volunteerId
   } = router.query || {};
 
   const initialStartDate = savedStartDate
@@ -81,7 +83,9 @@ const DatesSelector: NextPage<Props> = ({
       infants: String(infants),
       pets: String(pets),
       currency,
-      eventId: eventId as string,
+      ...(eventId && { eventId: eventId as string }),
+      ...(volunteerId && { volunteerId: volunteerId as string  }),
+
     };
     const urlParams = new URLSearchParams(data);
     router.push(`/bookings/create/accomodation?${urlParams}`);
@@ -120,13 +124,14 @@ const DatesSelector: NextPage<Props> = ({
               currencies={CURRENCIES}
             />
           </div>
-          {ticketOptions && (
-            <TicketOptions
-              items={ticketOptions}
-              selectedTicketName={selectedTicketName}
-              selectTicketName={selectTicketName}
-            />
-          )}
+
+          <TicketOptions
+            items={ticketOptions}
+            selectedTicketName={selectedTicketName}
+            selectTicketName={selectTicketName}
+            volunteer={volunteer}
+          />
+
           <BookingDates
             conditions={settings?.conditions}
             startDate={start}
@@ -175,7 +180,7 @@ DatesSelector.getInitialProps = async ({ query }) => {
       };
     }
     if (volunteerId) {
-      const volunteer = await api.get(`/volunteers/${volunteerId}`);
+      const volunteer = await api.get(`/volunteer/${volunteerId}`);
       return {
         settings: results as BookingSettings,
         volunteer: volunteer.data.results,

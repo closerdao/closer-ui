@@ -1,25 +1,60 @@
 import { FC } from 'react';
 
-import { CloserCurrencies } from '../../types';
+import {
+  CloserCurrencies,
+  TicketOption,
+  VolunteerOpportunity,
+} from '../../types';
 import { __, priceFormat } from '../../utils/helpers';
 
-type TicketOption = {
-  name: string;
-  price: number;
-  currency: CloserCurrencies;
-  available: number;
-};
-
 interface Props {
-  items: TicketOption[];
+  items?: TicketOption[];
   selectTicketName: (name: string) => void;
   selectedTicketName?: string;
+  volunteer?: VolunteerOpportunity;
 }
 
-const EventTicketOptions: FC<Props> = ({
+const Ticket = ({
+  name,
+  price,
+  currency,
+  available,
+  selectTicketName,
+  selectedTicketName,
+  isVolunteer,
+}: {
+  name: string;
+  price?: number;
+  currency: string;
+  available: number;
+  selectTicketName: (name: string) => void;
+  selectedTicketName?: string;
+  isVolunteer?: boolean;
+}) => {
+  return (
+    <button
+      className={`border-2 flex flex-col justify-center rounded-md shadow-lg mr-3 mb-3 p-4 hover:border-accent ${
+        name === selectedTicketName ? 'border-accent' : 'border-gray-100'
+      } ${available > 0 ? 'available' : 'unavailable'}`}
+      onClick={() => selectTicketName(name)}
+      disabled={available === 0}
+    >
+      <h4>{name.split('_').join(' ')}</h4>
+      <p className="price text-gray-500">
+        {isVolunteer ? 'Volunteering' : priceFormat(price, currency)}
+      </p>
+      <p className="availability text-xs uppercase text-accent">
+        {available > 0 ? `${available} available` : 'not available'}
+      </p>
+    </button>
+  );
+};
+
+const TicketOptions: FC<Props> = ({
   items,
   selectTicketName,
   selectedTicketName,
+  volunteer,
 }) => {
   return (
     <div>
@@ -28,31 +63,32 @@ const EventTicketOptions: FC<Props> = ({
         <span>{__('bookings_dates_step_tickets_title')}</span>
       </h2>
       <div className="ticket-options my-4 flex flex-row flex-wrap">
-        {items.map((option) => (
-          <button
-            key={option.name}
-            className={`border-2 flex flex-col justify-center rounded-md shadow-lg mr-3 mb-3 p-4 hover:border-accent ${
-              option.name === selectedTicketName
-                ? 'border-accent'
-                : 'border-gray-100'
-            } ${option.available > 0 ? 'available' : 'unavailable'}`}
-            onClick={() => selectTicketName(option.name)}
-            disabled={option.available === 0}
-          >
-            <h4>{option.name.split('_').join(' ')}</h4>
-            <p className="price text-gray-500">
-              {priceFormat(option.price, option.currency)}
-            </p>
-            <p className="availability text-xs uppercase text-accent">
-              {option.available > 0
-                ? `${option.available} available`
-                : 'not available'}
-            </p>
-          </button>
-        ))}
+        {volunteer ? (
+          <Ticket
+            key={volunteer.name}
+            name={volunteer.name}
+            isVolunteer={true}
+            currency={CloserCurrencies.EUR}
+            available={20}
+            selectTicketName={selectTicketName}
+            selectedTicketName={selectedTicketName}
+          />
+        ) : (
+          items?.map(({ name, price, currency, available }) => (
+            <Ticket
+              key={name}
+              name={name}
+              price={price}
+              currency={currency}
+              available={available}
+              selectTicketName={selectTicketName}
+              selectedTicketName={selectedTicketName}
+            />
+          ))
+        )}
       </div>
     </div>
   );
 };
 
-export default EventTicketOptions;
+export default TicketOptions;
