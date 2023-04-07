@@ -27,4 +27,7 @@ module.exports = {
     '@typescript-eslint/no-empty-function': 'warn',
     '@typescript-eslint/no-var-requires': 'off',
   },
+  globals: {
+    NodeJS: true,
+  },
 };

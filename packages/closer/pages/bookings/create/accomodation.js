@@ -50,7 +50,7 @@ const AccomodationSelector = ({
     return <PageNotFound />;
   }
 
-  if (!start || !adults) {
+  if (!start || !adults || !end) {
     return null;
   }
 

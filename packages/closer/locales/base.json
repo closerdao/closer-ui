@@ -422,5 +422,15 @@
   "countdown_hours": "hours",
   "countdown_minutes": "minutes",
   "countdown_seconds": "seconds",
-  "or": "or"
+  "or": "or",
+  "volunteer_create_page_title": "Create a new volunteer opportunity",
+  "volunteer_page_opportunity_ended": "This opportunity has ended",
+  "volunteer_page_does_not_exist": "Volunteering opportunity does not exist",
+  "volunteers_page_title": "Work with volunteers at your village",
+  "volunteers_page_empty": "There are no volunteer opportunities at the moment.",
+  "button_edit_opportunity": "Edit opportunity",
+  "event_description_title": "Event description",
+  "volunteer_description_title": "Opportunity description",
+  "volunteer_edit_page_title": "Edit volunteer opportunity",
+  "volunteer_edit_page_delete": "Delete opportunity"
 }

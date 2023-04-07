@@ -17,6 +17,7 @@ export const models = [
   'listing',
   'booking',
   'ticket',
+  'volunteer',
 ];
 
 const filterToKey = (filter) => JSON.stringify(filter) || '__';

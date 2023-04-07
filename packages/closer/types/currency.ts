@@ -1,4 +1,3 @@
-
 export enum CloserCurrencies {
   EUR = 'EUR',
   ETH = 'ETH',
