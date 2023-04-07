@@ -39,7 +39,7 @@ const HomePage = () => {
           Traditional Dream Factory | Regenerative Playground in Alentejo, Portugal
         </title>
       </Head>
-      <section className="text-right -ml-6 -mr-6 pt-60 pb-12 -mt-6 h-screen p-6 bg-cover bg-[url('/images/landing/sheep-min.png')]">
+      <section className="text-right -ml-6 -mr-6 pt-60 pb-12 -mt-6 min-h-screen p-6 bg-cover bg-[url('/images/landing/sheep-min.png')]">
         <div className="max-w-6xl mx-auto">
           <h1
             className="md:mt-20 mb-6 md:mb-12 text-4xl md:text-8xl text-white ml-8"
@@ -50,8 +50,9 @@ const HomePage = () => {
           <p
             className="md:mt-20 mb-6 md:mb-12 text-sm md:text-4xl text-white ml-8"
           >
-            Traditional Dream Factory is the first web3-powered
-            regenerative village, on a mission to re-root a better way of living.
+            Traditional Dream Factory is the first  web3-powered
+            regenerative village in Europe, on a mission to re-root a
+            better way of living.
           </p>
 
           {!isAuthenticated ? (
