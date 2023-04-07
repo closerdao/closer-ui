@@ -1,4 +1,4 @@
-export default {
+const models = {
   channel: [
     {
       name: 'name',
@@ -35,13 +35,17 @@ export default {
       name: 'settings.skills',
       label: 'What skills do you feel comfortable with?',
       type: 'tags',
-      placeholder: 'Woodworking, cooking'
+      placeholder: 'Woodworking, cooking',
     },
     {
       name: 'settings.mattress',
       type: 'select',
       label: 'How do you like your mattress?',
-      options: [{label: 'Soft', value: 'soft'}, {label: 'Medium', value: 'medium'}, {label: 'Hard', value: 'hard'}],
+      options: [
+        { label: 'Soft', value: 'soft' },
+        { label: 'Medium', value: 'medium' },
+        { label: 'Hard', value: 'hard' },
+      ],
     },
     {
       name: 'settings.newsletter_weekly',
@@ -339,7 +343,7 @@ export default {
     {
       name: 'inspiration',
       label:
-        "What is the most inspiring thing you've seen recently? Any events/community/book/project etc.",
+        'What is the most inspiring thing you`ve seen recently? Any events/community/book/project etc.',
       type: 'longtext',
       placeholder: 'Project Heart in Tulum',
     },
@@ -358,20 +362,20 @@ export default {
     },
     {
       name: 'name',
-      label: "What's your name?",
+      label: 'What is your name?',
       type: 'text',
       placeholder: 'John Snow',
       required: true,
     },
     {
       name: 'phone',
-      label: "What's your phone number? (include country code)",
+      label: 'What is your phone number? (include country code)',
       type: 'phone',
       placeholder: '+35108892645',
     },
     {
       name: 'email',
-      label: "What's your email?",
+      label: 'What is your email?',
       type: 'text',
       placeholder: 'you@awesomeproject.org',
       required: true,
@@ -383,4 +387,73 @@ export default {
       placeholder: '',
     },
   ],
+  volunteer: [
+    {
+      name: 'name',
+      label: 'Title',
+      public: true,
+      editable: true,
+      type: 'text',
+    },
+    {
+      name: 'category',
+      label: 'Category',
+      public: true,
+      editable: true,
+      type: 'text',
+    },
+    {
+      name: 'photo',
+      label: 'Photo',
+      public: true,
+      editable: true,
+      type: 'photos',
+    },
+    {
+      name: 'slug',
+      label: 'Slug',
+      public: true,
+      required: true,
+      index: 1,
+      unique: true,
+      editable: true,
+      type: 'text',
+    },
+    {
+      name: 'description',
+      label: 'Description',
+      public: true,
+      editable: true,
+      type: 'longtext',
+    },
+    {
+      name: 'start',
+      label: 'Start date',
+      public: true,
+      editable: true,
+      type: 'datetime',
+    },
+    {
+      name: 'end',
+      label: 'End date',
+      public: true,
+      editable: true,
+      type: 'datetime',
+    },
+    {
+      name: 'visibility',
+      label: 'Visibility',
+      ownerVisible: true,
+      editable: true,
+      enum: ['public', 'custom', 'private', 'secret'],
+      default: 'public',
+      type: 'select',
+      options: [
+        { label: 'Public', value: 'public' },
+        { label: 'Private', value: 'private' },
+      ],
+    },
+  ],
 };
+
+export default models;

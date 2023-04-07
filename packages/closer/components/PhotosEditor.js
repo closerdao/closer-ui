@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { TiDelete } from '@react-icons/all-files/ti/TiDelete';
 
@@ -7,27 +7,26 @@ import Photo from './Photo';
 import UploadPhoto from './UploadPhoto';
 
 const PhotosEditor = ({ value, onChange }) => {
-  const [photos, setPhotos] = useState(value);
+  const hasMultiplePhotos = Array.isArray(value);
+  const [photos, setPhotos] = useState(hasMultiplePhotos ? value : [value]);
+
   const addPhoto = (photo) => {
     const update = (photos || []).concat(photo);
     setPhotos(update);
     onChange && onChange(update);
   };
+
   const deletePhoto = (photo) => {
     const update = (photos || []).filter((id) => id !== photo);
     setPhotos(update);
     onChange && onChange(update);
   };
 
-  useEffect(() => {
-    setPhotos(value);
-  }, [value]);
-
   return (
     <div className="photo-group">
       <div className="grid grid-cols-8 gap-4 mb-4">
         {photos && photos.length > 0 ? (
-          photos.map((photo) => (
+          photos?.map((photo) => (
             <div key={photo} className="relative">
               <Photo id={photo} />
               <a

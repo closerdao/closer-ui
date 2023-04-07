@@ -1,19 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 
 import objectPath from 'object-path';
 
-import { useAuth } from '../contexts/auth';
-import api from '../utils/api';
-import { getSample } from '../utils/helpers';
-import { __ } from '../utils/helpers';
-import { trackEvent } from './Analytics';
-import FormField from './FormField';
-import Tabs from './Tabs';
+import { useAuth } from '../../contexts/auth';
+import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
+import { getSample } from '../../utils/helpers';
+import { __ } from '../../utils/helpers';
+import { trackEvent } from '../Analytics';
+import FormField from '../FormField';
+import Tabs from '../Tabs';
 
-const filterFields = (fields, data) =>
+const filterFields = (fields: any[], data: any) =>
   fields.filter((field) => {
     if (field.showIf) {
-      if (field.showIf.every(({ field, value }) => data[field] === value)) {
+      if (
+        field.showIf.every(
+          ({ field, value }: { field: any; value: any }) =>
+            data[field] === value,
+        )
+      ) {
         return true;
       }
       return false;
@@ -22,7 +28,26 @@ const filterFields = (fields, data) =>
   });
 
 // If no id is passed, we are creating a new model
-const EditModel = ({
+interface Props {
+  fields: any[];
+  id?: string;
+  initialData?: any;
+  endpoint: string;
+  onSave?: (data: any) => void;
+  onUpdate?: (
+    name: string,
+    value: any,
+    option?: string,
+    actionType?: string,
+  ) => void;
+  onError?: (error: string) => void;
+  onDelete?: () => void;
+  allowDelete?: boolean;
+  deleteButton?: any;
+  isPublic?: boolean;
+}
+
+const EditModel: FC<Props> = ({
   fields,
   id,
   initialData,
@@ -46,8 +71,8 @@ const EditModel = ({
       {},
     );
   const [data, setData] = useState(initialModel);
-  const [error, setErrors] = useState(false);
-  const fieldsByTab = {
+  const [error, setErrors] = useState<string | null>(null);
+  const fieldsByTab: Record<string, any> = {
     general: [],
   };
   fields &&
@@ -59,8 +84,20 @@ const EditModel = ({
       }
     });
 
+  const propagateError = (error: unknown) => {
+    const errorMessage = parseMessageFromError(error);
+    setErrors(errorMessage);
+    if (onError) {
+      onError(errorMessage);
+    }
+  };
   // Name: visibleBy, value: [1], option: 1, actionType: ADD
-  const update = (name, value, option, actionType) => {
+  const update = (
+    name: string,
+    value: any,
+    option?: string,
+    actionType?: string,
+  ) => {
     const copy = { ...data };
     objectPath.set(copy, name, value);
     setData(copy);
@@ -70,8 +107,8 @@ const EditModel = ({
     }
   };
 
-  const validate = (updatedData) => {
-    const validationErrors = [];
+  const validate = (updatedData: any) => {
+    const validationErrors: string[] = [];
     fields.forEach((field) => {
       if (field.required && !updatedData[field.name]) {
         validationErrors.push(field.name);
@@ -81,7 +118,7 @@ const EditModel = ({
       throw new Error(`Please set a valid ${validationErrors.join(', ')}`);
     }
   };
-  const save = async (updatedData) => {
+  const save = async (updatedData: any) => {
     setErrors(null);
     try {
       validate(updatedData);
@@ -95,10 +132,7 @@ const EditModel = ({
         onSave(savedData);
       }
     } catch (err) {
-      setErrors(err.message);
-      if (onError) {
-        onError(err.message);
-      }
+      propagateError(err);
     }
   };
   const deleteObject = async () => {
@@ -115,10 +149,7 @@ const EditModel = ({
         onDelete();
       }
     } catch (err) {
-      setErrors(err.message);
-      if (onError) {
-        onError(err.message);
-      }
+      propagateError(err);
     }
   };
 
@@ -150,7 +181,7 @@ const EditModel = ({
         );
       }
     } catch (err) {
-      setErrors(err.response?.data?.error || err.message);
+      propagateError(err);
     }
   };
 
@@ -212,7 +243,12 @@ const EditModel = ({
         ) : (
           fields &&
           filterFields(fields, data).map((field) => (
-            <FormField {...field} key={field.name} data={data} update={update} />
+            <FormField
+              {...field}
+              key={field.name}
+              data={data}
+              update={update}
+            />
           ))
         )}
         <div className="py-6 flex items-center">
@@ -239,7 +275,6 @@ const EditModel = ({
 
 EditModel.defaultProps = {
   fields: [],
-  buttonText: 'Save',
   allowDelete: false,
   deleteButton: 'Delete',
   isPublic: false,

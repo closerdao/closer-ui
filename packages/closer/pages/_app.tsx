@@ -5,7 +5,7 @@ import { FC } from 'react';
 
 import Footer from '../components/Footer';
 import Layout from '../components/Layout';
-import Metatags from '../components/Metatags';
+import { AppHead } from '../components/Metatags';
 import Navigation from '../components/Navigation';
 
 import { ExternalProvider, Web3Provider } from '@ethersproject/providers';
@@ -38,7 +38,7 @@ const Application: FC<AppProps> = ({ Component, pageProps }) => {
           <Web3ReactProvider getLibrary={getLibrary}>
             <WalletProvider>
               <div className="h-100 w-100 static bg-[url('/images/backgrounds/light-green.svg')]">
-                <Metatags />
+                <AppHead />
                 <Navigation />
                 <Layout>
                   <Component {...pageProps} />
