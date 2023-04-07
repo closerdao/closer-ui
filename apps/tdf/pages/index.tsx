@@ -39,7 +39,7 @@ const HomePage: NextPage = () => {
           Traditional Dream Factory | Regenerative Playground in Alentejo, Portugal
         </title>
       </Head>
-      <section className="text-right -ml-6 -mr-6 -mt-6 min-h-100 p-6 bg-cover bg-[url('/images/landing/sheep.png')]">
+      <section className="text-right -ml-6 -mr-6 -mt-6 min-h-100 p-6 bg-cover bg-[url('/images/landing/sheep-min.png')]">
         <h1
           className="md:mt-20 mb-6 text-3xl md:text-8xl text-white ml-8"
           data-testid="page-title"
