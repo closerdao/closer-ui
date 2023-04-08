@@ -12,6 +12,7 @@ import Wrapper from 'closer/components/ui/Wrapper';
 
 const Subscriptions =  () => {
   const { isAuthenticated, isLoading } = useAuth();
+  console.log('isLoading', isLoading)
   const router = useRouter();
   const { PLATFORM_NAME, SUBSCRIPTIONS } = useConfig() || {};
   const subscriptions: Subscriptions = SUBSCRIPTIONS;
@@ -25,9 +26,11 @@ const Subscriptions =  () => {
     }
   };
 
-  if (!isLoading) {
+  if (isLoading) {
     return null
   }
+
+  console.log('Subscriptions isAuthenticated', isAuthenticated)
 
   return (
     <>
