@@ -40,10 +40,13 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       try {
         const token = Cookies.get(config?.COOKIE_TOKEN);
         if (token) {
-          api.defaults.headers.Authorization = `Bearer ${token}`;
           const {
             data: { results: user },
-          } = await api.get('/mine/user');
+          } = await api.get('/mine/user', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
           if (user) {
             setUser(user);
           }
@@ -54,7 +57,9 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         setError(message);
       }
     }
-    loadUserFromCookies();
+    if (!user) {
+      loadUserFromCookies();
+    }
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -85,6 +90,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const setAuthentification = async (user: User, token: string) => {
     if (token) {
       api.defaults.headers.Authorization = `Bearer ${token}`;
+      console.log('setting cookie', config.COOKIE_TOKEN);
       Cookies.set(config.COOKIE_TOKEN, token, {
         expires: 60,
         sameSite: 'strict',
