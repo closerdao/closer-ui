@@ -177,7 +177,6 @@ const FormField = ({
                         'DELETE',
                       );
                     }}
-                    key={tag}
                   >
                     {tag}
                   </Tag>
