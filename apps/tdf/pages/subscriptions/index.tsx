@@ -13,6 +13,7 @@ import { __ } from 'closer/utils/helpers';
 
 const Subscriptions = () => {
   const { isAuthenticated, isLoading } = useAuth();
+  console.log('isLoading', isLoading)
   const router = useRouter();
   const { PLATFORM_NAME, SUBSCRIPTIONS } = useConfig() || {};
 
@@ -34,6 +35,8 @@ const Subscriptions = () => {
   if (process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true') {
     return <Page404 error="" />;
   }
+
+  console.log('Subscriptions isAuthenticated', isAuthenticated)
 
   return (
     <>
