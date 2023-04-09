@@ -1,5 +1,3 @@
-import Image from 'next/image';
-
 import React from 'react';
 
 interface InformationProps {
@@ -8,14 +6,27 @@ interface InformationProps {
 
 const Information = ({ children }: InformationProps) => {
   return (
-    <div className="flex mt-3 ">
-      <Image
-        src="/images/icon-info.svg"
-        width={17}
-        height={17}
-        alt="Information icon"
-      />
-      <p className="px-2 text-light text-xs pt-[2px]">{children}</p>
+    <div className="flex pt-3 ">
+      <svg
+        width="17px"
+        height="17px"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <g id="Warning / Info">
+          <path
+            id="Vector"
+            d="M12 11V16M12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21ZM12.0498 8V8.1L11.9502 8.1002V8H12.0498Z"
+            stroke="#bbbbbb"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </g>
+      </svg>
+
+      <p className="px-2 text-light text-xs">{children}</p>
     </div>
   );
 };

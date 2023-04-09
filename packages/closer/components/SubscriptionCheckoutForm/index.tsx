@@ -1,18 +1,12 @@
 import { useRouter } from 'next/router';
 
-import { FormEvent } from 'react';
-import { useState } from 'react';
+import { FormEvent, useState } from 'react';
 
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { StripeCardElementChangeEvent } from '@stripe/stripe-js';
 
+import { Button, ErrorMessage, SubscriptionConditions, api } from 'closer';
 import { __ } from 'closer/utils/helpers';
-
-import api from '../../utils/api';
-import { parseMessageFromError } from '../../utils/common';
-import SubscriptionConditions from '../SubscriptionConditions';
-import Button from '../ui/Button';
-import ErrorMessage from '../ui/ErrorMessage';
 
 interface SubscriptionCheckoutFormProps {
   userEmail?: string;
@@ -23,26 +17,31 @@ function SubscriptionCheckoutForm({
   userEmail,
   priceId,
 }: SubscriptionCheckoutFormProps) {
-  const [submitDisabled, setSubmitDisabled] = useState(true);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [comply, setComply] = useState(false);
+  const [isSubmitEnabled, setIsSubmitEnabled] = useState(true);
+  const [error, setError] = useState<unknown>();
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasAcceptedConditions, setHasAcceptedConditions] = useState(false);
 
   const router = useRouter();
   const stripe = useStripe();
   const elements = useElements();
 
+  // console.log('stripe=', stripe);
+  // console.log('elements=', elements);
+  // console.log('userEmail=', userEmail);
+  // console.log('stripe=', stripe);
   if (!stripe || !elements || !userEmail) {
+    console.log('somethings missing');
     return null;
   }
 
   const validateCardElement = (event: StripeCardElementChangeEvent) => {
     if (event.error) {
-      setErrorMessage(event.error.message);
-      setSubmitDisabled(true);
+      setError(event.error);
+      setIsSubmitEnabled(false);
     } else {
-      setErrorMessage('');
-      setSubmitDisabled(false);
+      setError('');
+      setIsSubmitEnabled(true);
     }
   };
 
@@ -59,7 +58,7 @@ function SubscriptionCheckoutForm({
 
   const createSubscription = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
+    setIsLoading(true);
     try {
       const createdPaymentMethod = await stripe?.createPaymentMethod({
         type: 'card',
@@ -70,8 +69,7 @@ function SubscriptionCheckoutForm({
       });
 
       if (createdPaymentMethod?.error) {
-        console.log('Error! ', createdPaymentMethod.error.message);
-        setErrorMessage(createdPaymentMethod.error.message || '');
+        setError(createdPaymentMethod.error || '');
         return;
       }
 
@@ -81,18 +79,15 @@ function SubscriptionCheckoutForm({
         priceId,
       });
 
-      console.log('response=', response.data);
       if (response.data.results.status === 'active') {
-        console.log('Success! ');
         router.push(
           `/subscriptions/success?subscriptionId=${response.data.results.subscription}&priceId=${priceId}`,
         );
       }
     } catch (error) {
-      const errorMessage = parseMessageFromError(error);
-      setErrorMessage(errorMessage);
+      setError(error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -104,12 +99,18 @@ function SubscriptionCheckoutForm({
         options={cardElementOptions}
         className="w-full h-14 rounded-md bg-neutral px-4 py-4 mb-4"
       />
-      {errorMessage && <ErrorMessage>{String(errorMessage)}</ErrorMessage>}
+      {typeof error === 'object' && <ErrorMessage error={error} />}
 
       <div className="my-8">
-        <SubscriptionConditions setComply={setComply} />
+        <SubscriptionConditions
+          setHasAcceptedConditions={setHasAcceptedConditions}
+        />
       </div>
-      <Button disabled={!stripe || submitDisabled || !comply} loading={loading}>
+      <Button
+        className="mt-3"
+        isEnabled={isSubmitEnabled && hasAcceptedConditions}
+        isLoading={isLoading}
+      >
         {__('subscriptions_checkout_pay_button')}
       </Button>
     </form>

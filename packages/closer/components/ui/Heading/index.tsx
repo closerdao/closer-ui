@@ -12,11 +12,13 @@ const Heading = ({ level, children, className }: HeadingProps) => {
 
   return (
     <HeadingTag
-      className={`mb-[24px] w-full font-[700] 
-      ${level === 1 && 'font-[800] text-3xl'}
+      // className={`mb-[24px] w-full font-bold
+      className={`w-full font-bold  
+      ${level === 1 ? 'font-extrabold text-3xl' : ''}
       ${
-        level === 2 && 'border-b border-divider pb-[10px] mb-[30px]'
-      }   ${className}`}
+        level === 2 ? 'border-b border-divider pb-2.5' : ''
+      }   
+      ${className || ''}`}
     >
       {children}
     </HeadingTag>

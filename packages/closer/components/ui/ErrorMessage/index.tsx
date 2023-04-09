@@ -1,11 +1,12 @@
-import React from 'react';
+import { parseMessageFromError } from '../../../utils/common';
 
 interface ErrorMessageProps {
-  children: React.ReactNode;
+  error: unknown;
 }
 
-const ErrorMessage = ({ children }: ErrorMessageProps) => {
-  return <p className="text-red-500 mb-4">{children}</p>;
+const ErrorMessage = ({ error }: ErrorMessageProps) => {
+  const errorMessage = parseMessageFromError(error);
+  return <p className="text-red-500 mb-4">{String(errorMessage)}</p>;
 };
 
 export default ErrorMessage;

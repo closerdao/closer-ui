@@ -1,4 +1,4 @@
-import { Subscriptions } from 'closer/types';
+import { SubscriptionPlan, Subscriptions } from 'closer/types/subscriptions';
 
 const config = {
   PORT: 14444,
@@ -80,7 +80,7 @@ const config = {
         ],
         billingPeriod: 'month',
       },
-    ],
+    ] as SubscriptionPlan[],
   } as Subscriptions,
 };
 

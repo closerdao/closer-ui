@@ -1,21 +1,23 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useAuth, useConfig } from 'closer';
-import { Subscriptions } from 'closer/types';
+import {
+  Heading,
+  Page404,
+  SubscriptionCards,
+  useAuth,
+  useConfig,
+} from 'closer';
+import { SubscriptionPlan } from 'closer/types/subscriptions';
 import { __ } from 'closer/utils/helpers';
 
-
-import SubscriptionCards from 'closer/components/SubscriptionCards';
-import Heading from 'closer/components/ui/Heading';
-import Wrapper from 'closer/components/ui/Wrapper';
-
-const Subscriptions =  () => {
+const Subscriptions = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const { PLATFORM_NAME, SUBSCRIPTIONS } = useConfig() || {};
-  const subscriptions: Subscriptions = SUBSCRIPTIONS;
-  const paidSubscriptionPlans = subscriptions.plans.filter(plan => plan.price !== 0);
+
+  const plans: SubscriptionPlan[] = SUBSCRIPTIONS.plans;
+  const paidSubscriptionPlans = plans.filter((plan) => plan.price !== 0);
 
   const handleNext = (priceId: string) => {
     if (priceId === 'free') {
@@ -25,8 +27,12 @@ const Subscriptions =  () => {
     }
   };
 
-  if (!isLoading) {
-    return null
+  if (isLoading) {
+    return null;
+  }
+
+  if (process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true') {
+    return <Page404 error="" />;
   }
 
   return (
@@ -36,11 +42,26 @@ const Subscriptions =  () => {
           {__('subscriptions_title')} — {PLATFORM_NAME}
         </title>
       </Head>
-      <Wrapper className="py-6 main-content w-full">
-        <Heading level={1}> ♻️ {__('subscriptions_title')}</Heading>
-        {isAuthenticated  && <SubscriptionCards config={subscriptions.config} filteredSubscriptionPlans={paidSubscriptionPlans} clickHandler={handleNext} />}
-        {!isAuthenticated  && <SubscriptionCards config={subscriptions.config} filteredSubscriptionPlans={subscriptions.plans} clickHandler={handleNext} />}
-      </Wrapper>
+      <main className="pt-16 pb-24 px-6 md:flex-row flex-wrap">
+        <Heading level={1} className="mb-6 mt-4">
+          {' '}
+          ♻️ {__('subscriptions_title')}
+        </Heading>
+        {isAuthenticated && (
+          <SubscriptionCards
+            config={SUBSCRIPTIONS.config}
+            filteredSubscriptionPlans={paidSubscriptionPlans}
+            clickHandler={handleNext}
+          />
+        )}
+        {!isAuthenticated && (
+          <SubscriptionCards
+            config={SUBSCRIPTIONS.config}
+            filteredSubscriptionPlans={plans}
+            clickHandler={handleNext}
+          />
+        )}
+      </main>
     </>
   );
 };

@@ -2,11 +2,11 @@ import React from 'react';
 
 interface BackButtonProps {
   children: React.ReactNode;
-  clickHandler: () => void;
+  handleClick: () => void;
 }
 
-const BackButton = ({ children, clickHandler }: BackButtonProps) => {
-  return <button onClick={clickHandler} className="py-4">{children}</button>;
+const BackButton = ({ children, handleClick }: BackButtonProps) => {
+  return <button onClick={handleClick} className="py-4">{children}</button>;
 };
 
 export default BackButton;

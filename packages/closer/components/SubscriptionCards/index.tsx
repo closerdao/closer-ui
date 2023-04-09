@@ -1,5 +1,6 @@
-import { SubscriptionPlan, Subscriptions } from '../../types';
 import { __ } from 'closer/utils/helpers';
+
+import { SubscriptionPlan, Subscriptions } from '../../types/subscriptions';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Heading from '../ui/Heading';
@@ -15,11 +16,9 @@ const SubscriptionCards = ({
   filteredSubscriptionPlans,
   config,
 }: SubscriptionCardsProps) => {
-
-  
   return (
     <>
-      <div className="mt-16 flex gap-8 w-full flex-col md:flex-row">
+      <div className="pt-16 flex gap-8 w-full flex-col md:flex-row">
         {filteredSubscriptionPlans &&
           filteredSubscriptionPlans.map((plan) => (
             <Card
@@ -29,7 +28,7 @@ const SubscriptionCards = ({
               )}%]`}
             >
               <div>
-                <Heading level={2} className="text-center border-b-0">
+                <Heading level={2} className="text-center border-b-0 mb-6">
                   <p>{plan.emoji}</p>
                   {plan.title}
                 </Heading>
@@ -61,11 +60,11 @@ const SubscriptionCards = ({
                   )}
                 </div>
                 <Button
-                  clickHandler={() => clickHandler(plan.priceId)}
+                  onClick={() => clickHandler(plan.priceId)}
                   infoText={`${
                     plan.price !== 0 ? __('subscriptions_cancel_anytime') : ''
                   }`}
-                  className={`${plan.price === 0 && 'mb-[27px]'}`}
+                  className={` ${plan.price === 0 ? 'mb-7' : ''} || ''`}
                 >
                   {plan.price === 0
                     ? __('subscriptions_create_account_button')

@@ -3,39 +3,33 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
-import BackButton from 'closer/components/ui/BackButton';
-import Button from 'closer/components/ui/Button';
-import Heading from 'closer/components/ui/Heading';
-import ProgressBar from 'closer/components/ui/ProgressBar';
-import Row from 'closer/components/ui/Row';
-import Wrapper from 'closer/components/ui/Wrapper';
-
-import { useAuth, useConfig } from 'closer';
+import {
+  BackButton,
+  Button,
+  Heading,
+  Page404,
+  ProgressBar,
+  Row,
+  useAuth,
+  useConfig,
+} from 'closer';
 import { SUBSCRIPTION_STEPS } from 'closer/constants';
-import { SelectedPlan, Subscriptions } from 'closer/types';
+import { SelectedPlan, SubscriptionPlan } from 'closer/types/subscriptions';
 import { __, priceFormat } from 'closer/utils/helpers';
-
-const defautlSelectedPlan: SelectedPlan = {
-  title: '',
-  monthlyCredits: 0,
-  price: 0,
-};
 
 const Summary = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const { priceId } = router.query;
   const { PLATFORM_NAME, SUBSCRIPTIONS } = useConfig() || {};
-  const subscriptions: Subscriptions = SUBSCRIPTIONS;
 
-  const [selectedPlan, setSelectedPlan] =
-    useState<SelectedPlan>(defautlSelectedPlan);
+  const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
 
   useEffect(() => {
-    if (priceId && subscriptions) {
-      const selectedSubscription =
-        subscriptions.plans.find((plan) => plan.priceId === priceId) ??
-        defautlSelectedPlan;
+    if (priceId) {
+      const selectedSubscription = SUBSCRIPTIONS.plans.find(
+        (plan: SubscriptionPlan) => plan.priceId === priceId,
+      );
 
       setSelectedPlan({
         title: selectedSubscription.title,
@@ -43,7 +37,7 @@ const Summary = () => {
         price: selectedSubscription.price,
       });
     }
-  }, [subscriptions, priceId]);
+  }, [priceId]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -61,12 +55,16 @@ const Summary = () => {
     router.push('/subscriptions');
   };
   const handleCheckout = () => {
-    if (selectedPlan.price === 0) {
+    if (selectedPlan?.price === 0) {
       router.push(`/subscriptions/success?priceId=${priceId}`);
     } else {
       router.push(`/subscriptions/checkout?priceId=${priceId}`);
     }
   };
+
+  if (process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true') {
+    return <Page404 error="" />;
+  }
 
   return (
     <>
@@ -77,52 +75,54 @@ const Summary = () => {
         </title>
       </Head>
 
-      <div className="main-content w-full max-w-screen-sm mx-auto">
-        <BackButton clickHandler={goBack}>{__('buttons_back')}</BackButton>
+      <div className="main-content w-full max-w-screen-sm mx-auto p-6">
+        <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
 
-        <Heading level={1}>📑 {__('subscriptions_summary_title')}</Heading>
+        <Heading level={1} className="mb-6">
+          📑 {__('subscriptions_summary_title')}
+        </Heading>
 
         <ProgressBar steps={SUBSCRIPTION_STEPS} />
 
-        <Wrapper className="mt-16 mb-24  md:flex-row flex-wrap">
+        <main className="pt-14 pb-24 md:flex-row flex-wrap">
           <div className="mb-14">
-            <Heading level={2}>
+            <Heading level={2} className="mb-8">
               ♻️ {__('subscriptions_summary_your_subscription_subtitle')}
             </Heading>
             <div className="mb-10">
               <Row
                 rowKey={__('subscriptions_summary_tier')}
-                value={selectedPlan.title}
+                value={selectedPlan?.title}
               />
               <Row
                 rowKey={__('subscriptions_summary_stays_per_month')}
-                value={selectedPlan.monthlyCredits}
+                value={selectedPlan?.monthlyCredits}
               />
             </div>
-            <Button type="secondary" clickHandler={handleEditPlan}>
+            <Button className="mt-3" type="secondary" onClick={handleEditPlan}>
               {__('subscriptions_summary_edit_button')}
             </Button>
           </div>
 
           <div className="mb-14">
-            <Heading level={2}>
+            <Heading level={2} className="mb-8">
               💰 {__('subscriptions_summary_costs_subtitle')}
             </Heading>
             <div className="mb-10">
               <Row
                 rowKey={__('subscriptions_summary_subscription')}
                 value={`${priceFormat(
-                  selectedPlan.price,
-                  subscriptions.config.currency,
+                  selectedPlan?.price,
+                  SUBSCRIPTIONS.config.currency,
                 )}`}
                 additionalInfo={__('subscriptions_summary_per_month')}
               />
             </div>
-            <Button clickHandler={handleCheckout}>
+            <Button className="mt-3" onClick={handleCheckout}>
               {__('subscriptions_summary_checkout_button')}
             </Button>
           </div>
-        </Wrapper>
+        </main>
       </div>
     </>
   );

@@ -4,9 +4,9 @@ import Information from '@/../../packages/closer/components/ui/Information';
 type InputProps = {
   label?: string;
   value: string;
-  changeHandler: (event: ChangeEvent<HTMLInputElement>) => void;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
   type: 'text' | 'password';
-  required?: boolean;
+  isRequired?: boolean;
   placeholder?: string;
   className?: string;
   information?: string;
@@ -15,9 +15,9 @@ type InputProps = {
 const Input = ({
   label,
   value,
-  changeHandler,
+  onChange,
   type,
-  required,
+  isRequired,
   placeholder,
   className,
   information
@@ -28,8 +28,8 @@ const Input = ({
       <input
         type={type}
         value={value}
-        onChange={changeHandler}
-        required={required}
+        onChange={onChange}
+        required={isRequired}
         placeholder={placeholder}
         className={className}
       />

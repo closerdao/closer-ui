@@ -1,10 +1,4 @@
-import {
-  Dispatch,
-  MouseEvent,
-  SetStateAction,
-  useEffect,
-  useState,
-} from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
 import { __ } from 'closer/utils/helpers';
 
@@ -12,10 +6,12 @@ import Modal from '../Modal';
 import Checkbox from '../ui/Checkbox';
 
 interface SubscriptionConditionsProps {
-  setComply: Dispatch<SetStateAction<boolean>>;
+  setHasAcceptedConditions: Dispatch<SetStateAction<boolean>>;
 }
 
-const SubscriptionConditions = ({ setComply }: SubscriptionConditionsProps) => {
+const SubscriptionConditions = ({
+  setHasAcceptedConditions,
+}: SubscriptionConditionsProps) => {
   const [isSubscriptionsTermsChecked, setIsSubscriptionsTermsChecked] =
     useState(false);
   const [isSaveCardChecked, setIsSaveCardChecked] = useState(false);
@@ -23,19 +19,17 @@ const SubscriptionConditions = ({ setComply }: SubscriptionConditionsProps) => {
 
   useEffect(() => {
     if (isSubscriptionsTermsChecked && isSaveCardChecked) {
-      setComply(true);
+      setHasAcceptedConditions(true);
     } else {
-      setComply(false);
+      setHasAcceptedConditions(false);
     }
   }, [isSubscriptionsTermsChecked, isSaveCardChecked]);
 
-  const openModal = (event: MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
+  const openModal = () => {
     setIsInfoModalOpened(true);
   };
 
-  const closeModal = (event: MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
+  const closeModal = () => {
     setIsInfoModalOpened(false);
   };
 
@@ -52,19 +46,18 @@ const SubscriptionConditions = ({ setComply }: SubscriptionConditionsProps) => {
       )}
       <Checkbox
         id="isSaveCardChecked"
-        changeHandler={() => setIsSaveCardChecked(!isSaveCardChecked)}
+        onChange={() => setIsSaveCardChecked(!isSaveCardChecked)}
       >
         {__('subscriptions_checkout_save_card_for_later')}
       </Checkbox>
       <Checkbox
         id="isSubscriptionsTermsChecked"
-        changeHandler={() =>
+        onChange={() =>
           setIsSubscriptionsTermsChecked(!isSubscriptionsTermsChecked)
         }
       >
         {__('subscriptions_checkout_comply_with')}{' '}
         <button className="text-primary underline" onClick={openModal}>
-          {' '}
           {__('subscriptions_checkout_subscription_terms')}
         </button>
       </Checkbox>

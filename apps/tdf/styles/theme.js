@@ -24,7 +24,11 @@ const tdfTheme = {
       line: '#a3a3a3',
     },
     fontFamily: {
+      sans: ['Barlow', ...defaultTheme.fontFamily.sans],
       marketing: ['Barlow', ...defaultTheme.fontFamily.sans],
+    },
+    boxShadow: {
+      xl: '0 2px 8px 0 rgb(0 0 0 / 0.12)',
     },
   },
   plugins: [],

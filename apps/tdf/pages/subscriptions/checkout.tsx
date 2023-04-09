@@ -6,38 +6,30 @@ import { useEffect, useState } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
-import SubscriptionCheckoutForm from 'closer/components/SubscriptionCheckoutForm';
-import BackButton from 'closer/components/ui/BackButton';
-import Heading from 'closer/components/ui/Heading';
-import ProgressBar from 'closer/components/ui/ProgressBar';
-import Row from 'closer/components/ui/Row';
-import Wrapper from 'closer/components/ui/Wrapper';
-
-import { useAuth, useConfig } from 'closer';
+import {
+  BackButton,
+  Heading,
+  Page404,
+  ProgressBar,
+  Row,
+  SubscriptionCheckoutForm,
+  useAuth,
+  useConfig,
+} from 'closer';
 import { SUBSCRIPTION_STEPS } from 'closer/constants';
-import { SelectedPlan, Subscriptions } from 'closer/types';
+import { SelectedPlan, SubscriptionPlan } from 'closer/types/subscriptions';
 import { __, priceFormat } from 'closer/utils/helpers';
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUB_KEY as string,
 );
 
-const defautlSelectedPlan: SelectedPlan = {
-  title: '',
-  monthlyCredits: 0,
-  price: 0,
-};
-
 const Checkout = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
-  console.log('user email', user?.email);
   const router = useRouter();
   const { priceId } = router.query;
   const { PLATFORM_NAME, SUBSCRIPTIONS } = useConfig() || {};
-  const subscriptions: Subscriptions = SUBSCRIPTIONS;
-
-  const [selectedPlan, setSelectedPlan] =
-    useState<SelectedPlan>(defautlSelectedPlan);
+  const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -46,10 +38,10 @@ const Checkout = () => {
   }, [isAuthenticated, isLoading]);
 
   useEffect(() => {
-    if (priceId && subscriptions) {
-      const selectedSubscription =
-        subscriptions.plans.find((plan) => plan.priceId === priceId) ??
-        defautlSelectedPlan;
+    if (priceId) {
+      const selectedSubscription = SUBSCRIPTIONS.plans.find(
+        (plan: SubscriptionPlan) => plan.priceId === priceId,
+      );
 
       setSelectedPlan({
         title: selectedSubscription.title,
@@ -57,11 +49,21 @@ const Checkout = () => {
         price: selectedSubscription.price,
       });
     }
-  }, [subscriptions, priceId]);
+  }, [priceId]);
+
+  useEffect(() => {
+    (async function () {
+      console.log(user);
+    })();
+  }, [user]);
 
   const goBack = () => {
     router.push(`/subscriptions/summary?priceId=${priceId}`);
   };
+
+  if (process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true') {
+    return <Page404 error="" />;
+  }
 
   return (
     <>
@@ -72,28 +74,34 @@ const Checkout = () => {
         </title>
       </Head>
 
-      <Wrapper className="main-content w-full max-w-screen-sm mx-auto">
-        <BackButton clickHandler={goBack}>{__('buttons_back')}</BackButton>
+      <div className="main-content w-full max-w-screen-sm mx-auto p-6">
+        <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
 
-        <Heading level={1}>💰 {__('subscriptions_checkout_title')}</Heading>
+        <Heading level={1} className="mb-6">
+          💰 {__('subscriptions_checkout_title')}
+        </Heading>
 
         <ProgressBar steps={SUBSCRIPTION_STEPS} />
 
-        <div className="mt-16 w-full md:flex-row">
+        <main className="pt-14 pb-24 md:flex-row flex-wrap">
           <div className="mb-10">
-            <Heading level={2}>♻️ {__('subscriptions_title')}</Heading>
+            <Heading level={2} className="mb-8">
+              ♻️ {__('subscriptions_title')}
+            </Heading>
+
             <Row
-              rowKey={selectedPlan.title}
+              className="mb-4"
+              rowKey={selectedPlan?.title}
               value={`${priceFormat(
-                selectedPlan.price,
-                subscriptions.config.currency,
+                selectedPlan?.price,
+                SUBSCRIPTIONS.config.currency,
               )}`}
               additionalInfo={__('subscriptions_summary_per_month')}
             />
           </div>
 
           <div className="mb-14">
-            <Heading level={2}>
+            <Heading level={2} className="mb-8">
               💲 {__('subscriptions_checkout_payment_subtitle')}
             </Heading>
             <div className="mb-10">
@@ -105,8 +113,8 @@ const Checkout = () => {
               </Elements>
             </div>
           </div>
-        </div>
-      </Wrapper>
+        </main>
+      </div>
     </>
   );
 };

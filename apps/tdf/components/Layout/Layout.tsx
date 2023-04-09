@@ -6,11 +6,9 @@ import { Navigation } from 'closer';
 
 export const Layout: FC<PropsWithChildren> = ({ children }) => {
   return (
-    <div className="flex-1 flex flex-col relative mx-auto max-w-6xl w-full font-marketing font-[500]">
+    <div className="flex-1 flex flex-col relative mx-auto max-w-6xl w-full">
       <Navigation />
-      <div>
-        {children}
-      </div>
+      <div>{children}</div>
       <Footer />
     </div>
   );

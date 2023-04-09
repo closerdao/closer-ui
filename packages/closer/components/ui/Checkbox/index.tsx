@@ -2,15 +2,15 @@ import React from 'react';
 
 interface CheckboxProps {
   className?: string;
-  checked?: boolean;
-  changeHandler: () => void;
+  isChecked?: boolean;
+  onChange: () => void;
   children?: React.ReactNode;
   id?: string;
 }
 const Checkbox = ({
   className,
-  checked,
-  changeHandler,
+  isChecked,
+  onChange,
   children,
   id,
 }: CheckboxProps) => {
@@ -20,13 +20,13 @@ const Checkbox = ({
         id={id}
         type="checkbox"
         className="accent-primary w-[16px] h-[16px] mt-[6px]"
-        checked={checked}
-        onChange={changeHandler}
+        checked={isChecked}
+        onChange={onChange}
       />
 
       <label
         htmlFor={id}
-        className="text-[1rem] text-complimentary normal-case font-[500]"
+        className="text-base text-complimentary normal-case font-medium"
       >
         {children}
       </label>
