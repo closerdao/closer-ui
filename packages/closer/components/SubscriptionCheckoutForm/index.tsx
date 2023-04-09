@@ -53,7 +53,7 @@ function SubscriptionCheckoutForm({
     try {
       const createdPaymentMethod = await stripe?.createPaymentMethod({
         type: 'card',
-        card: elements.getElement(CardElement) || { token: '' },
+        card: elements?.getElement(CardElement) || { token: '' },
         billing_details: {
           email: userEmail,
         },
@@ -66,7 +66,7 @@ function SubscriptionCheckoutForm({
 
       const response = await api.post('/subscription', {
         email: userEmail,
-        paymentMethod: createdPaymentMethod.paymentMethod.id,
+        paymentMethod: createdPaymentMethod?.paymentMethod.id,
         priceId,
       });
 
