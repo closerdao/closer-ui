@@ -51,12 +51,6 @@ const Checkout = () => {
     }
   }, [priceId]);
 
-  useEffect(() => {
-    (async function () {
-      console.log(user);
-    })();
-  }, [user]);
-
   const goBack = () => {
     router.push(`/subscriptions/summary?priceId=${priceId}`);
   };

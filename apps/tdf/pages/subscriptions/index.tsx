@@ -36,8 +36,6 @@ const Subscriptions = () => {
     return <Page404 error="" />;
   }
 
-  console.log('Subscriptions isAuthenticated', isAuthenticated)
-
   return (
     <>
       <Head>

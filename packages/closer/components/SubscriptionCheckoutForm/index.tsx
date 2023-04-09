@@ -26,15 +26,6 @@ function SubscriptionCheckoutForm({
   const stripe = useStripe();
   const elements = useElements();
 
-  // console.log('stripe=', stripe);
-  // console.log('elements=', elements);
-  // console.log('userEmail=', userEmail);
-  // console.log('stripe=', stripe);
-  if (!stripe || !elements || !userEmail) {
-    console.log('somethings missing');
-    return null;
-  }
-
   const validateCardElement = (event: StripeCardElementChangeEvent) => {
     if (event.error) {
       setError(event.error);
