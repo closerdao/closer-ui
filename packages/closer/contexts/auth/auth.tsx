@@ -54,7 +54,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         setLoading(false);
       } catch (err) {
         const message = parseMessageFromError(err);
-        setError(message);
+        setError(message as string);
       }
     }
     if (!user) {
