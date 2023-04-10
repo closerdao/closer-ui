@@ -387,7 +387,6 @@ Event.getInitialProps = async ({ query }) => {
     const {
       data: { results: event },
     } = await api.get(`/event/${query.slug}`);
-    console.log('event', event);
     return { event };
   } catch (err) {
     console.log('Error', err.message);

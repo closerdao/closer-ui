@@ -23,6 +23,9 @@ const SummaryCosts = ({
         <p>{__('bookings_summary_step_dates_accomodation_type')}</p>
         <p className="font-bold">{priceFormat(accomodationCost)}</p>
       </div>
+      <p className="text-right text-xs">
+        {__('bookings_summary_step_accomodation_type_description')}
+      </p>
       <div className="flex justify-between items-center mt-3">
         <p> {__('bookings_summary_step_utility_total')}</p>
         <p className="font-bold">{priceFormat(utilityFiat)}</p>

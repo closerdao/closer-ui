@@ -93,6 +93,7 @@
   "bookings_summary_step_dates_title": "Your Stay",
   "bookings_summary_step_dates_number_of_guests": "Guests",
   "bookings_summary_step_dates_accomodation_type": "Accomodation",
+  "bookings_summary_step_accomodation_type_description": "Daily rate",
   "bookings_summary_step_costs_title": "Costs",
   "bookings_summary_step_utility_total": "Utility",
   "bookings_summary_step_utility_description": "Daily * Nights * Guests",

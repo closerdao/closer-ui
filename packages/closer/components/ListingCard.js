@@ -11,9 +11,7 @@ const ListingCard = ({ listing, bookListing, useTokens }) => {
     listing;
 
   const handleBooking = () => {
-    bookListing({
-      listingId: listing._id,
-    });
+    bookListing(listing._id);
   };
 
   if (!listing) return null;
