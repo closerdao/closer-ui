@@ -174,6 +174,7 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
     currency,
     useTokens,
     eventId,
+    volunteerId,
   };
 };
 
