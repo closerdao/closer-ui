@@ -9,6 +9,7 @@ import BookingGuests from '../../../components/BookingGuests';
 import CurrencySwitch from '../../../components/CurrencySwitch';
 import PageError from '../../../components/PageError';
 import TicketOptions from '../../../components/TicketOptions';
+import Button from '../../../components/ui/Button';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import dayjs, { Dayjs } from 'dayjs';
@@ -167,13 +168,12 @@ const DatesSelector: NextPage<Props> = ({
             setInfants={setInfants}
             setPets={setPets}
           />
-          <button
-            className="booking-btn"
+          <Button
             onClick={handleNext}
             disabled={eventId ? !selectedTicketName : false}
           >
             {__('generic_search')}
-          </button>
+          </Button>
         </div>
       </div>
     </>

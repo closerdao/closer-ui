@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import BookingBackButton from '../../../components/BookingBackButton';
 import PageError from '../../../components/PageError';
 import QuestionnaireItem from '../../../components/QuestionnaireItem';
+import Button from '../../../components/ui/Button';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import PageNotAllowed from '../../401';
@@ -107,13 +108,10 @@ const Questionnaire = ({ questions, booking, error }) => {
               savedAnswer={getAnswer(booking?.fields, question.name)}
             />
           ))}
-          <button
-            className="booking-btn"
-            onClick={handleSubmit}
-            disabled={isSubmitDisabled}
-          >
+
+          <Button onClick={handleSubmit} disabled={isSubmitDisabled}>
             {__('buttons_submit')}
-          </button>
+          </Button>
         </div>
       </div>
     </>

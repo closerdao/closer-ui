@@ -66,6 +66,7 @@ export { default as CreateVolunteerView } from './components/CreateVolunteerView
 export { default as VolunteerEventView } from './components/VolunteerEventView/';
 export { default as Metatags } from './components/Metatags/';
 export { default as EventPreview } from './components/EventPreview';
+export { default as Button } from './components/ui/Button';
 
 // Utils
 export { default as api } from './utils/api';

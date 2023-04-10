@@ -4,7 +4,7 @@ import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
-import { PayButton } from './PayButton';
+import Button from './ui/Button';
 
 const cardStyle = {
   style: {
@@ -41,7 +41,6 @@ const CheckoutForm = ({
   currency,
   discountCode,
   onSuccess,
-  submitButtonClassName = 'btn-primary',
   cardElementClassName = '',
   prePayInTokens,
   isProcessingTokenPayment = false,
@@ -154,12 +153,12 @@ const CheckoutForm = ({
       />
       {conditions}
       <div className="mt-8">
-        <PayButton
+        <Button
           disabled={isButtonDisabled || submitDisabled}
-          className={submitButtonClassName}
           isSpinnerVisible={processing || isProcessingTokenPayment}
-          buttonText={renderButtonText()}
-        />
+        >
+          {renderButtonText()}
+        </Button>
       </div>
 
       {cancelUrl && (

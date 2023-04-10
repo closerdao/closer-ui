@@ -7,6 +7,7 @@ import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
 import ProgressBar from '../../../components/ui/ProgressBar';
+import Button from '../../../components/ui/Button';
 
 import PropTypes from 'prop-types';
 
@@ -85,9 +86,9 @@ const Summary = ({ booking, listing, error }) => {
             totalToken={rentalToken.val}
             totalFiat={totalFiat}
           />
-          <button className="booking-btn" onClick={handleNext}>
+          <Button className="booking-btn" onClick={handleNext}>
             {__('buttons_checkout')}
-          </button>
+          </Button>
         </div>
       </div>
     </>

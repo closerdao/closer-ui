@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import { cdn } from '../utils/api';
 import { __ } from '../utils/helpers';
 import ListingPrice from './ListingPrice';
+import Button from './ui/Button';
 
 const ListingCard = ({ listing, bookListing, useTokens }) => {
   const { name, description, rentalFiat, rentalToken, utilityFiat, available } =
@@ -46,15 +47,11 @@ const ListingCard = ({ listing, bookListing, useTokens }) => {
           useTokens={useTokens}
         />
       </div>
-      <button
-        className="btn uppercase disabled:cursor-not-allowed disabled:text-gray-400 disabled:border-gray-400"
-        onClick={handleBooking}
-        disabled={!available}
-      >
+      <Button onClick={handleBooking} disabled={!available}>
         {available
           ? __('listing_preview_book')
           : __('listing_preview_not_available')}
-      </button>
+      </Button>
     </div>
   );
 };
