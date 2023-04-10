@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import React from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
@@ -57,22 +57,33 @@ const DatesSelector: NextPage<Props> = ({
   } = router.query || {};
 
   const initialStartDate = savedStartDate
-    ? dayjs(savedStartDate as string, 'YYYY-MM-DD')
-    : dayjs().add(3, 'days');
+    ? dayjs(savedStartDate as string, 'YYYY-MM-DD').set('hour', 16)
+    : dayjs().add(3, 'days').set('hour', 16);
   const initialEndDate = savedEndDate
-    ? dayjs(savedEndDate as string, 'YYYY-MM-DD')
-    : dayjs().add(6, 'days');
-  const isEndTheSameDay = initialEndDate.isSame(initialStartDate, 'day');
-  if (isEndTheSameDay) {
-    router.replace({
-      pathname: router.pathname,
-      query: {
-        ...router.query,
-        start: savedStartDate,
-        end: initialStartDate.add(1, 'day').format('YYYY-MM-DD'),
-      },
-    });
-  }
+    ? dayjs(savedEndDate as string, 'YYYY-MM-DD').set('hour', 11)
+    : dayjs().add(6, 'days').set('hour', 11);
+
+  useEffect(() => {
+    // Always do navigations after the first render
+    const isEndTheSameDay = initialEndDate.isSame(initialStartDate, 'day');
+    const newEndDate = initialStartDate.add(1, 'day').set('hour', 11);
+    if (isEndTheSameDay) {
+      setEndDate(newEndDate);
+      router.replace(
+        {
+          pathname: router.pathname,
+          query: {
+            ...router.query,
+            start: savedStartDate,
+            end: newEndDate.format('YYYY-MM-DD'),
+          },
+        },
+        undefined,
+        { shallow: true },
+      );
+    }
+  }, []);
+
   const [start, setStartDate] = useState<Dayjs>(initialStartDate);
   const [end, setEndDate] = useState<Dayjs>(initialEndDate);
   const [adults, setAdults] = useState<number>(Number(savedAdults) || 1);
@@ -176,7 +187,6 @@ DatesSelector.getInitialProps = async ({ query }) => {
       data: { results },
     } = await api.get('/bookings/settings');
     if (eventId) {
-      console.log('eventId', eventId);
       const ticketsAvailable = await api.get(
         `/bookings/event/${eventId}/availability`,
       );

@@ -1,4 +1,4 @@
-import { CloserCurrencies, Currency } from './currency';
+import { CloserCurrencies, Price } from './currency';
 
 export type BookingConditions = {
   member: {
@@ -36,8 +36,8 @@ export type Question = {
 };
 
 export type BookingSettings = {
-  utilityFiat: Currency<CloserCurrencies.EUR>;
-  utilityToken: Currency<CloserCurrencies.ETH>;
+  utilityFiat: Price<CloserCurrencies.EUR>;
+  utilityToken: Price<CloserCurrencies.ETH>;
   checkinTime: number;
   checkoutTime: number;
   maxDuration: number;

@@ -127,13 +127,13 @@ Questionnaire.getInitialProps = async ({ query }) => {
         data: { results: booking },
       },
       {
-        data: { results: questions },
+        data: { results: settings },
       },
     ] = await Promise.all([
       api.get(`/booking/${query.slug}`),
-      api.get('/bookings/questions'),
+      api.get('/bookings/settings'),
     ]);
-    return { booking, questions, error: null };
+    return { booking, questions: settings.questions, error: null };
   } catch (err) {
     return {
       error: err.message,

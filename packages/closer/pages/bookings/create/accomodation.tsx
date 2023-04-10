@@ -10,25 +10,13 @@ import { type NextPage } from 'next';
 import PageNotFound from '../../404';
 import { blockchainConfig } from '../../../config_blockchain';
 import { BOOKING_STEPS } from '../../../constants';
-import { CloserCurrencies } from '../../../types';
+import { BaseBookingParams, Listing } from '../../../types';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
-interface BaseParams {
-  eventId?: string;
-  volunteerId?: string;
-  start?: string;
-  end?: string;
-  adults?: string;
-  kids?: string;
-  infants?: string;
-  pets?: string;
-  currency?: CloserCurrencies;
-}
-
-interface Props extends BaseParams {
+interface Props extends BaseBookingParams {
   useTokens: boolean;
-  listings: any[];
+  listings: Listing[];
   error?: string;
 }
 
@@ -121,7 +109,7 @@ const AccomodationSelector: NextPage<Props> = ({
           </div>
         )}
         <div className="flex flex-col gap-4 mt-16 md:grid md:grid-cols-2 md:items-start">
-          {listings.map((listing: any) => (
+          {listings.map((listing) => (
             <ListingCard
               key={listing._id}
               listing={listing}
@@ -146,7 +134,7 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
     currency,
     eventId,
     volunteerId,
-  }: BaseParams = query || {};
+  }: BaseBookingParams = query || {};
   const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
   const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
   const {
