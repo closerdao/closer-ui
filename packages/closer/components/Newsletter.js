@@ -54,11 +54,11 @@ const Newsletter = ({ placement, ctaText, className, onSuccess }) => {
           }
           className="flex flex-row items-center justify-center"
         >
-          <div className="flex flex-col items-center justify-start px-2 mt-12 md:mt-0">
-            <div className="flex flex-row justify-end">
+          <div className="flex flex-col items-center justify-start px-2 md:mt-0">
+            <div className="justify-end">
               <input
                 type="email"
-                className="mr-2 bg-transparent"
+                className="mb-4"
                 value={email}
                 placeholder="Your email"
                 onChange={(e) => setEmail(e.target.value)}
