@@ -19,7 +19,7 @@ const Checkbox = ({
       <input
         id={id}
         type="checkbox"
-        className="accent-primary w-[16px] h-[16px] mt-[6px]"
+        className="accent-primary w-4 h-4 mt-4"
         checked={isChecked}
         onChange={onChange}
       />
