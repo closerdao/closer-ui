@@ -8,23 +8,25 @@ import {
   blockchainConfig,
 } from 'closer';
 
-import ImpactMapPage from '../../pages/volunteer/index';
-
+import VolunteerPage from '../../pages/volunteer';
+import { volunteerEventMock } from '../mocks/volunteerEvent';
 
 describe('Volunteer', () => {
   it('should render and have proper title', () => {
+    const eventListMock = [volunteerEventMock];
     render(
       <ConfigProvider config={{ ...closerConfig, ...blockchainConfig }}>
         <AuthProvider>
           <PlatformProvider>
-            <ImpactMapPage />
+            <VolunteerPage opportunities={eventListMock} />
           </PlatformProvider>
         </AuthProvider>
       </ConfigProvider>,
     );
-
     const title = screen.getByRole('heading', { level: 1 });
 
-    expect(title).toHaveTextContent(/volunteer at/i);
+    expect(title).toHaveTextContent(/volunteer at TDF/i);
+    const volCard = screen.getAllByRole('listitem');
+    expect(volCard).toHaveLength(eventListMock.length);
   });
 });

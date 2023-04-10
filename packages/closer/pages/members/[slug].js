@@ -321,7 +321,7 @@ const MemberPage = ({ member }) => {
 
                     <EventsList
                       limit={7}
-                      list
+                      isListView
                       showPagination={false}
                       where={{
                         attendees: member._id,

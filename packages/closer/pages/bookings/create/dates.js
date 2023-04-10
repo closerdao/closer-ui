@@ -28,15 +28,16 @@ const defaultEnd = dayjs().add(6, 'days').format('YYYY-MM-DD');
 const DatesSelector = ({ error, settings }) => {
   const router = useRouter();
   const {
-    start: savedStartDate,
-    end: savedEndDate,
+    start: savedStart,
+    end: savedEnd,
     adults: savedAdults,
     kids: savedKids,
     infants: savedInfants,
     pets: savedPets,
     currency: savedCurrency,
   } = router.query || {};
-
+  const savedStartDate = savedStart ? dayjs(savedStart) : undefined;
+  const savedEndDate = savedEnd ? dayjs(savedEnd) : undefined;
   const { user } = useAuth();
   const isMember = user?.roles.includes('member');
   const [start, setStartDate] = useState(savedStartDate || defaultStart);

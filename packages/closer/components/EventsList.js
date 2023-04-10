@@ -13,7 +13,7 @@ dayjs.extend(advancedFormat);
 const EventsList = ({
   center,
   card,
-  list,
+  isListView,
   title,
   queryParam,
   where,
@@ -49,13 +49,17 @@ const EventsList = ({
       {error && <p className="text-red-500">{error}</p>}
       {title && <h3 className={card ? 'card-title' : ''}>{title}</h3>}
       <div
-        className={`event-list ${card ? 'event-body' : ''} flex ${
-          list ? 'flex-col' : 'flex-row'
-        } flex-wrap justify-${center ? 'center' : 'start'}`}
+        className={`grid gap-8 md:grid-cols-3 md:justify-${
+          center ? 'center' : 'start'
+        } ${card ? 'event-body' : ''} ${isListView ? 'grid-cols-1' : ''} `}
       >
         {events && events.count() > 0 ? (
           events.map((event) => (
-            <EventPreview key={event.get('_id')} list={list} event={event} />
+            <EventPreview
+              key={event.get('_id')}
+              isListView={isListView}
+              event={event.toJSON()}
+            />
           ))
         ) : (
           <div className="w-full py-4">
@@ -81,7 +85,7 @@ const EventsList = ({
 };
 EventsList.defaultProps = {
   showPagination: true,
-  list: false,
+  isListView: false,
   card: false,
   queryParam: 'events',
   center: false,
