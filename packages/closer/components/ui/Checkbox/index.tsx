@@ -15,11 +15,11 @@ const Checkbox = ({
   id,
 }: CheckboxProps) => {
   return (
-    <div className={`flex items-top gap-3 w-full ${className}`}>
+    <div className={`flex items-top gap-3 w-full mb-2 ${className}`}>
       <input
         id={id}
         type="checkbox"
-        className="accent-primary w-4 h-4 mt-4"
+        className="accent-primary w-4 h-4 mt-1"
         checked={isChecked}
         onChange={onChange}
       />
