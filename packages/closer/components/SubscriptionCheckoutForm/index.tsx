@@ -51,7 +51,6 @@ function SubscriptionCheckoutForm({
     e.preventDefault();
     setIsLoading(true);
     try {
-      console.log('try');
       const createdPaymentMethod = await stripe?.createPaymentMethod({
         type: 'card',
         card: elements?.getElement(CardElement) || { token: '' },
@@ -59,20 +58,16 @@ function SubscriptionCheckoutForm({
           email: userEmail,
         },
       });
-      
+
       if (createdPaymentMethod?.error) {
         setError(createdPaymentMethod.error || '');
         return;
       }
-      console.log('2');
-
       const response = await api.post('/subscription', {
         email: userEmail,
         paymentMethod: createdPaymentMethod?.paymentMethod.id,
         priceId,
       });
-
-      console.log('response.status', response);
 
       if (response.data.results.status === 'active') {
         router.push(
