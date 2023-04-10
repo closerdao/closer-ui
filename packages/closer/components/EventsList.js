@@ -9,6 +9,7 @@ import EventPreview from './EventPreview';
 import Pagination from './Pagination';
 
 dayjs.extend(advancedFormat);
+let renders = 0;
 
 const EventsList = ({
   center,
@@ -20,29 +21,27 @@ const EventsList = ({
   limit,
   showPagination,
 }) => {
+  renders++;
   const { platform } = usePlatform();
   const [error, setErrors] = useState(false);
   const [page, setPage] = useState(1);
 
-  const eventsFilter = useMemo(
-    () => ({ where, limit, page }),
-    [where, limit, page],
-  );
+  const eventsFilter = { where, limit, page };
   const events = platform.event.find(eventsFilter);
   const totalEvents = platform.event.findCount(eventsFilter);
 
-  const loadData = async () => {
-    try {
-      await platform.event.get(eventsFilter);
-    } catch (err) {
-      console.log('Load error', err);
-      setErrors(err.message);
-    }
-  };
-
   useEffect(() => {
+    const loadData = async () => {
+      try {
+        const load = await platform.event.get(eventsFilter);
+      } catch (err) {
+        console.log('Load error', err);
+        setErrors(err.message);
+      }
+    };
+
     loadData();
-  }, []);
+  }, [where, limit, page]);
 
   return (
     <div className={card ? 'card' : ''}>

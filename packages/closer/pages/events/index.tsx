@@ -26,7 +26,7 @@ const Events: NextPage = () => {
       </Head>
       <div className="main-content w-full">
         <div className="page-title flex justify-between">
-          <h1 className="mb-4">{__('events_upcoming')}</h1>
+          <h2 className="mb-4 text-xl">{__('events_upcoming')}</h2>
           <div className="action">
             {user &&
               (!PERMISSIONS ||
@@ -44,12 +44,13 @@ const Events: NextPage = () => {
             end: {
               $gt: now,
             },
+            visibility: 'public',
           }}
         />
       </div>
       <div className="main-content intro">
         <div className="page-title flex justify-between">
-          <h1 className="mb-4">{__('events_past')}</h1>
+          <h2 className="mb-4 text-xl">{__('events_past')}</h2>
         </div>
         <EventsList
           limit={30}
