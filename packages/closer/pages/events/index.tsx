@@ -24,8 +24,8 @@ const Events: NextPage = () => {
           {PLATFORM_NAME} {__('events_title')}
         </title>
       </Head>
-      <div className="main-content w-full">
-        <div className="page-title flex justify-between">
+      <div className="main-content w-full mb-12">
+        <div className="flex justify-between">
           <h2 className="mb-4 text-xl">{__('events_upcoming')}</h2>
           <div className="action">
             {user &&

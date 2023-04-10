@@ -104,7 +104,7 @@ const HomePage = () => {
         <ul className="flex flex-wrap text-center divide-x">
           { platform.resource.find() && platform.resource.find().map((resource) => (
             <li
-              key={ resource._id }
+              key={ resource.get('_id') }
               className="w-1/2 md:w-1/3 lg:w-1/4 mb-4 p-3"
             >
               <h4 className="mb-4">{resource.get('title')}</h4>
@@ -142,22 +142,27 @@ const HomePage = () => {
             <h3 className="md:text-6xl text-xl">
               THE DREAM
             </h3>
-            <p className="mt-2">A burgeoning Web3-powered regenerative village, shepherded by an inclusive and indomitable community fighting for better. Shared between 80-100 villagers, members will co-live purposefully in tune with the earth’s cycles, co-create in a space that will help them foster their own dreams, and empower them to drive positive change, together. </p>
+            <p className="mt-2">A burgeoning web3-powered regenerative village, shepherded by an inclusive and indomitable community fighting for better. Shared between 80-100 villagers, members will co-live purposefully in tune with the earth’s cycles, co-create in a space that will help them foster their own dreams, and empower them to drive positive change, together. </p>
             <p className="mt-2">We may be dreamers and futurists, but our dreams are rooted in realism. A new life of regeneration and co-living is waiting, and it starts at TDF in Abela.</p>
           </div>
         </div>
       </section>
-      <section className="mb-12 max-w-6xl mx-auto md:pt-20 text-center md:text-left">
-        <h2 className="mb-6">JOIN FELLOW FUTURISTS FOR UPCOMING EVENTS</h2>
-        <p className="mb-6 text-xs md:text-normal">TDF is more than the land from which we build. Regeneration transcends soil, bricks and mortar, and farming practices. It replenishes our souls, too, by uniting thinkers, earth warriors, travellers and impact investors, to supercharge a movement that will bring us all closer to a circular economy. Find a TDF event where you can get involved in the mission.</p>
-        <EventsList
-          limit={3}
-          where={{
-            end: {
-              $gt: loadTime,
-            },
-          }}
-        />
+      <section className="mb-12 max-w-6xl mx-auto md:pt-20 text-center md:text-left md:flex md:space-x-12">
+        <div className="md:max-w-lg">
+          <h2 className="mb-6">JOIN FELLOW FUTURISTS FOR UPCOMING EVENTS</h2>
+          <p className="mb-6 text-xs md:text-base">TDF is more than the land from which we build. Regeneration transcends soil, bricks and mortar, and farming practices. It replenishes our souls, too, by uniting thinkers, earth warriors, travellers and impact investors, to supercharge a movement that will bring us all closer to a circular economy. Find a TDF event where you can get involved in the mission.</p>
+        </div>
+        <div className="flex-grow">
+          <EventsList
+            limit={2}
+            cols={2}
+            where={{
+              end: {
+                $gt: loadTime,
+              }
+            }}
+          />
+        </div>
       </section>
       <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2">
         <div className="md:max-w-lg">
@@ -166,29 +171,33 @@ const HomePage = () => {
           </h2>
           <p className="text-center md:text-left mb-6">Our co-living quarters will be home to 14 large suites with a living room & kitchen, 3 loft studios with a music production live-in studio, and a private house for families or friends.</p>
           <p className="text-center md:text-left mb-6">The TDF village will be made up of:</p>
-          <ul>
-            <li><h4>Open Coworking, Coworking pods & Jungle phone booths</h4></li>
-            <li><h4>Indoors forest and tropical greenhouse</h4></li>
-            <li><h4>Experiential Restaurant</h4></li>
-            <li><h4>Café & Store</h4></li>
-            <li><h4>Pop-up event space</h4></li>
-            <li>
-              <h4>
-                Wellness area
-                <small className="text-sm">{' '}
-                  (natural pool, sauna(s), yoga studio, massage parlor)
-                </small>
-              </h4>
-            </li>
-            <li>
-              <h4>
-                Makerspace
-                <small className="text-sm">{' '}
-                  (Lab, Atelier, Artist Studio, Workshop, Music Studio)
-                </small>
-              </h4>
-            </li>
-          </ul>
+          <div className="md:flex md:flex-cols-2 md:space-x-6">
+            <ul className="space-y-6">
+              <li><h4 className="md:text-sm">Open Coworking, Coworking pods & Jungle phone booths</h4></li>
+              <li><h4 className="md:text-sm">Indoors forest and tropical greenhouse</h4></li>
+              <li><h4 className="md:text-sm">Experiential Restaurant</h4></li>
+              <li><h4 className="md:text-sm">Café & Store</h4></li>
+            </ul>
+            <ul className="space-y-6">
+              <li><h4 className="md:text-sm">Pop-up event space</h4></li>
+              <li>
+                <h4 className="md:text-sm">
+                  Wellness area
+                  <small className="text-sm">{' '}
+                    (natural pool, sauna(s), yoga studio, massage parlor)
+                  </small>
+                </h4>
+              </li>
+              <li>
+                <h4 className="md:text-sm">
+                  Makerspace
+                  <small className="text-sm">{' '}
+                    (Lab, Atelier, Artist Studio, Workshop, Music Studio)
+                  </small>
+                </h4>
+              </li>
+            </ul>
+          </div>
         </div>
         <div className="md:pl-32">
           <img src="/images/landing/map.svg" alt="TDF Map" />
@@ -198,7 +207,7 @@ const HomePage = () => {
         <div className="md:max-w-lg">
           <h3 className="mb-6">
             Your guide to<br/>
-            <span className="text-3xl md:text-5xl">becoming a</span><br/>
+            <span className="text-3xl md:text-6xl">becoming a</span><br/>
             TDF VISIONARY
           </h3>
           <h4 className="mb-6">

@@ -19,6 +19,7 @@ const EventsList = ({
   where,
   limit,
   showPagination,
+  cols
 }) => {
   const { platform } = usePlatform();
   const [error, setErrors] = useState(false);
@@ -48,25 +49,26 @@ const EventsList = ({
     <div className={card ? 'card' : ''}>
       {error && <p className="text-red-500">{error}</p>}
       {title && <h3 className={card ? 'card-title' : ''}>{title}</h3>}
-      <div
-        className={`grid gap-8 md:grid-cols-3 md:justify-${
-          center ? 'center' : 'start'
-        } ${card ? 'event-body' : ''} ${isListView ? 'grid-cols-1' : ''} `}
-      >
-        {events && events.count() > 0 ? (
-          events.map((event) => (
+      { events && events.count() > 0 ?
+        <div
+          className={`grid gap-8 md:grid-cols-${cols} md:justify-${
+            center ? 'center' : 'start'
+          } ${card ? 'event-body' : ''} ${isListView ? 'grid-cols-1' : ''} `}
+        >
+          { events.map((event) => (
             <EventPreview
               key={event.get('_id')}
               isListView={isListView}
               event={event.toJSON()}
             />
-          ))
-        ) : (
-          <div className="w-full py-4">
+          ))}
+        </div>:
+        (
+          <div className="w-full h-full text-center p-12">
             <p className="italic">{__('events_list_no_events')}</p>
           </div>
-        )}
-      </div>
+        )
+      }
       {showPagination && (
         <Pagination
           loadPage={(page) => {
@@ -86,6 +88,7 @@ const EventsList = ({
 EventsList.defaultProps = {
   showPagination: true,
   isListView: false,
+  cols: 3,
   card: false,
   queryParam: 'events',
   center: false,
