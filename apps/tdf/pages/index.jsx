@@ -49,7 +49,7 @@ const HomePage = () => {
             className="md:mt-20 mb-6 md:mb-12 text-sm md:text-4xl text-white ml-8"
           >
             Traditional Dream Factory is the first  web3-powered
-            regenerative village in Europe, on a mission to re-root a
+            regenerative village in Europe, on a mission to root a
             better way of living.
           </p>
 
@@ -149,7 +149,7 @@ const HomePage = () => {
       </section>
       <section className="mb-12 max-w-6xl mx-auto md:pt-20 text-center md:text-left">
         <h2 className="mb-6">JOIN FELLOW FUTURISTS FOR UPCOMING EVENTS</h2>
-        <p className="mb-6 text-xs">TDF is more than the land from which we build. Regeneration transcends soil, bricks and mortar, and farming practices. It replenishes our souls, too, by uniting thinkers, earth warriors, travellers and impact investors, to supercharge a movement that will bring us all closer to a circular economy. Find a TDF event where you can get involved in the mission.</p>
+        <p className="mb-6 text-xs md:text-normal">TDF is more than the land from which we build. Regeneration transcends soil, bricks and mortar, and farming practices. It replenishes our souls, too, by uniting thinkers, earth warriors, travellers and impact investors, to supercharge a movement that will bring us all closer to a circular economy. Find a TDF event where you can get involved in the mission.</p>
         <EventsList
           limit={3}
           where={{
@@ -194,8 +194,18 @@ const HomePage = () => {
           <img src="/images/landing/map.svg" alt="TDF Map" />
         </div>
       </section>
-      <section className="mb-12 max-w-6xl mx-auto md:pt-20">
-        <h3>Get access to our token sale materials</h3>
+      <section className="mb-12 max-w-6xl mx-auto md:pt-20 text-center md:flex md:justify-center">
+        <div className="md:max-w-lg">
+          <h3 className="mb-6">
+            Your guide to<br/>
+            <span className="text-3xl md:text-5xl">becoming a</span><br/>
+            TDF VISIONARY
+          </h3>
+          <h4 className="mb-6">
+            Ready to change the way  we live for good?  
+          </h4>
+          <p>We’re excited to have you on board.</p>
+        </div>
       </section>
     </div>
   );
