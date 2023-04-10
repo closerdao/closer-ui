@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import React, { useEffect } from 'react';
 
-import { useAuth, EventsList, usePlatform } from 'closer';
+import { useAuth, EventsList, usePlatform, Newsletter } from 'closer';
 import { event } from 'nextjs-google-analytics';
 
 const loadTime = new Date();
@@ -43,7 +43,7 @@ const HomePage = () => {
             className="md:mt-20 mb-6 md:mb-12 text-4xl md:text-8xl text-white ml-8"
             data-testid="page-title"
           >
-            A life of soils and souls regenerating together.
+            Soil and souls regenerating life together
           </h1>
           <p
             className="md:mt-20 mb-6 md:mb-12 text-sm md:text-4xl text-white ml-8"
@@ -213,7 +213,13 @@ const HomePage = () => {
           <h4 className="mb-6">
             Ready to change the way  we live for good?  
           </h4>
-          <p>We’re excited to have you on board.</p>
+          <p className="mb-6">We’re excited to have you on board.</p>
+          <Newsletter
+            placement="Landing"
+            className="card"
+            ctaText="Download your VISIONARY packs"
+            onSuccess={() => window.open('/pdf/private-sale.pdf')}
+          />
         </div>
       </section>
     </div>

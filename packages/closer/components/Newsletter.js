@@ -11,7 +11,7 @@ const attemptSignup = async (event, request) => {
   await api.post('/subscribe', request);
 };
 
-const Newsletter = ({ placement }) => {
+const Newsletter = ({ placement, ctaText, className, row, onSuccess }) => {
   const [email, setEmail] = useState('');
   const [signupError, setSignupError] = useState(null);
   const referrer =
@@ -20,7 +20,7 @@ const Newsletter = ({ placement }) => {
   const router = useRouter();
 
   return (
-    <div className="Newsletter py-5 text-neutral-900">
+    <div className={`Newsletter py-5 ${className}`}>
       {signupError && <div className="error-box">{signupError}</div>}
       {signupCompleted ? (
         <h3>{__('newsletter_success')}</h3>
@@ -36,7 +36,11 @@ const Newsletter = ({ placement }) => {
               .then(() => {
                 trackEvent(placement, 'Lead');
                 setSignupCompleted(true);
+                setSignupError(null);
                 localStorage.setItem('signupCompleted', true);
+                if (onSuccess) {
+                  onSuccess();
+                }
               })
               .catch((err) => {
                 trackEvent(placement, 'LeadError');
@@ -63,9 +67,9 @@ const Newsletter = ({ placement }) => {
               <button
                 type="submit"
                 name="subscribe"
-                className="btn-primary w-36"
+                className="btn-primary"
               >
-                {__('newsletter_signup')}
+                {ctaText || __('newsletter_signup')}
               </button>
             </div>
           </div>
@@ -73,6 +77,13 @@ const Newsletter = ({ placement }) => {
       )}
     </div>
   );
+};
+Newsletter.defaultProps = {
+  ctaText: null,
+  className: '',
+  placement: 'default',
+  row: true,
+  onSuccess: null
 };
 
 export default Newsletter;
