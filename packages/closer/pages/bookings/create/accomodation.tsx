@@ -5,13 +5,34 @@ import BookingStepsInfo from '../../../components/BookingStepsInfo';
 import ListingCard from '../../../components/ListingCard';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
+import { type NextPage } from 'next';
+
 import PageNotFound from '../../404';
 import { blockchainConfig } from '../../../config_blockchain';
 import { BOOKING_STEPS } from '../../../constants';
+import { CloserCurrencies } from '../../../types';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
-const AccomodationSelector = ({
+interface BaseParams {
+  eventId?: string;
+  volunteerId?: string;
+  start?: string;
+  end?: string;
+  adults?: string;
+  kids?: string;
+  infants?: string;
+  pets?: string;
+  currency?: CloserCurrencies;
+}
+
+interface Props extends BaseParams {
+  useTokens: boolean;
+  listings: any[];
+  error?: string;
+}
+
+const AccomodationSelector: NextPage<Props> = ({
   start,
   end,
   adults,
@@ -22,9 +43,10 @@ const AccomodationSelector = ({
   useTokens,
   listings,
   eventId,
+  volunteerId,
 }) => {
   const router = useRouter();
-  const bookListing = async ({ listingId }) => {
+  const bookListing = async (listingId: string) => {
     try {
       const {
         data: { results: newBooking },
@@ -37,7 +59,8 @@ const AccomodationSelector = ({
         pets,
         listing: listingId,
         children: kids,
-        eventId,
+        ...(eventId && { eventId }),
+        ...(volunteerId && { volunteerId }),
       });
       router.push(`/bookings/${newBooking._id}/questions`);
     } catch (err) {
@@ -59,11 +82,12 @@ const AccomodationSelector = ({
       start,
       end,
       adults,
-      kids,
-      infants,
-      pets,
-      currency,
-      eventId,
+      ...(kids && { kids }),
+      ...(infants && { infants }),
+      ...(pets && { pets }),
+      ...(currency && { currency }),
+      ...(eventId && { eventId }),
+      ...(volunteerId && { volunteerId }),
     };
     const urlParams = new URLSearchParams(params);
     router.push(`/bookings/create/dates?${urlParams}`);
@@ -72,7 +96,7 @@ const AccomodationSelector = ({
   return (
     <>
       <div className="max-w-screen-sm mx-auto md:first-letter:p-8">
-        <BookingBackButton action={backToDates} name={__('buttons_back')} />
+        <BookingBackButton onClick={backToDates} name={__('buttons_back')} />
         <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">🏡</span>
           <span>{__('bookings_accomodation_step_title')}</span>
@@ -97,7 +121,7 @@ const AccomodationSelector = ({
           </div>
         )}
         <div className="flex flex-col gap-4 mt-16 md:grid md:grid-cols-2 md:items-start">
-          {listings.map((listing) => (
+          {listings.map((listing: any) => (
             <ListingCard
               key={listing._id}
               listing={listing}
@@ -112,8 +136,17 @@ const AccomodationSelector = ({
 };
 
 AccomodationSelector.getInitialProps = async ({ query }) => {
-  const { start, end, adults, kids, infants, pets, currency, eventId } =
-    query || {};
+  const {
+    start,
+    end,
+    adults,
+    kids,
+    infants,
+    pets,
+    currency,
+    eventId,
+    volunteerId,
+  }: BaseParams = query || {};
   const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
   const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
   const {
@@ -126,17 +159,18 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
     infants,
     pets,
     useTokens,
-    eventId,
+    ...(eventId && { eventId }),
+    ...(volunteerId && { volunteerId }),
   });
 
   return {
     listings: results,
     start,
     end,
-    adults: Number(adults),
-    kids: Number(kids),
-    infants: Number(infants),
-    pets: Number(pets),
+    adults,
+    kids,
+    infants,
+    pets,
     currency,
     useTokens,
     eventId,

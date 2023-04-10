@@ -42,6 +42,8 @@ const DatesSelector: NextPage<Props> = ({
   volunteer,
 }) => {
   const router = useRouter();
+  const { user } = useAuth();
+  const isMember = user?.roles.includes('member');
   const {
     start: savedStartDate,
     end: savedEndDate,
@@ -51,19 +53,26 @@ const DatesSelector: NextPage<Props> = ({
     pets: savedPets,
     currency: savedCurrency,
     eventId,
-    volunteerId
+    volunteerId,
   } = router.query || {};
 
   const initialStartDate = savedStartDate
     ? dayjs(savedStartDate as string, 'YYYY-MM-DD')
     : dayjs().add(3, 'days');
-
   const initialEndDate = savedEndDate
     ? dayjs(savedEndDate as string, 'YYYY-MM-DD')
     : dayjs().add(6, 'days');
-
-  const { user } = useAuth();
-  const isMember = user?.roles.includes('member');
+  const isEndTheSameDay = initialEndDate.isSame(initialStartDate, 'day');
+  if (isEndTheSameDay) {
+    router.replace({
+      pathname: router.pathname,
+      query: {
+        ...router.query,
+        start: savedStartDate,
+        end: initialStartDate.add(1, 'day').format('YYYY-MM-DD'),
+      },
+    });
+  }
   const [start, setStartDate] = useState<Dayjs>(initialStartDate);
   const [end, setEndDate] = useState<Dayjs>(initialEndDate);
   const [adults, setAdults] = useState<number>(Number(savedAdults) || 1);
@@ -84,8 +93,7 @@ const DatesSelector: NextPage<Props> = ({
       pets: String(pets),
       currency,
       ...(eventId && { eventId: eventId as string }),
-      ...(volunteerId && { volunteerId: volunteerId as string  }),
-
+      ...(volunteerId && { volunteerId: volunteerId as string }),
     };
     const urlParams = new URLSearchParams(data);
     router.push(`/bookings/create/accomodation?${urlParams}`);
@@ -124,14 +132,12 @@ const DatesSelector: NextPage<Props> = ({
               currencies={CURRENCIES}
             />
           </div>
-
           <TicketOptions
             items={ticketOptions}
             selectedTicketName={selectedTicketName}
             selectTicketName={selectTicketName}
             volunteer={volunteer}
           />
-
           <BookingDates
             conditions={settings?.conditions}
             startDate={start}

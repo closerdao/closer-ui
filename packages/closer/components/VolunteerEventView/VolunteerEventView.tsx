@@ -63,7 +63,13 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
               )}
               <div className="mt-4 event-actions flex items-center">
                 {!isEnded && (
-                  <Link href={`/bookings/create/dates?volunteerId=${volunteer._id}&start=${volunteer.start}&end=${volunteer.end}`}>
+                  <Link
+                    href={`/bookings/create/dates?volunteerId=${
+                      volunteer._id
+                    }&start=${start.format('YYYY-MM-DD')}&end=${end.format(
+                      'YYYY-MM-DD',
+                    )}`}
+                  >
                     <button className="btn-primary mr-2">
                       {__('apply_submit_button')}
                     </button>
