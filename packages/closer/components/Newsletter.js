@@ -11,7 +11,7 @@ const attemptSignup = async (event, request) => {
   await api.post('/subscribe', request);
 };
 
-const Newsletter = ({ placement, ctaText, className, row, onSuccess }) => {
+const Newsletter = ({ placement, ctaText, className, onSuccess }) => {
   const [email, setEmail] = useState('');
   const [signupError, setSignupError] = useState(null);
   const referrer =
@@ -82,7 +82,6 @@ Newsletter.defaultProps = {
   ctaText: null,
   className: '',
   placement: 'default',
-  row: true,
   onSuccess: null
 };
 

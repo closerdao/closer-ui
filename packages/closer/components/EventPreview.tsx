@@ -2,7 +2,6 @@ import Link from 'next/link';
 
 import React, { FC } from 'react';
 
-import { FaCalendarAlt } from '@react-icons/all-files/fa/FaCalendarAlt';
 import { MdLocationOn } from '@react-icons/all-files/md/MdLocationOn';
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
