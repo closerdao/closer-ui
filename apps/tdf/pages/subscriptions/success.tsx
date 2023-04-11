@@ -77,7 +77,7 @@ const Success = () => {
 
         <ProgressBar steps={SUBSCRIPTION_STEPS} />
 
-        <main className="pt-16 pb-24 px-6 md:flex-row flex-wrap">
+        <main className="pt-14 pb-24 md:flex-row flex-wrap">
           <div className="mb-14">
             <Heading level={3} className="mb-12 text-2xl">
               {__('subscriptions_success_your')} {selectedPlan?.title}{' '}

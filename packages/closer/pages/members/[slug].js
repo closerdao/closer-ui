@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Linkify from 'react-linkify';
 
 import ConnectedWallet from '../../components/ConnectedWallet';
@@ -11,6 +11,7 @@ import UploadPhoto from '../../components/UploadPhoto';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 import { TiDelete } from '@react-icons/all-files/ti/TiDelete';
+import { Button, Heading, useConfig } from 'closer';
 
 import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
@@ -34,6 +35,17 @@ const MemberPage = ({ member }) => {
   const [editProfile, toggleEditProfile] = useState(false);
 
   const { platform } = usePlatform();
+
+  const { SUBSCRIPTIONS } = useConfig() || {};
+  let selectedSubscription;
+
+  if (member.subscription.subscriptionId) {
+    selectedSubscription = SUBSCRIPTIONS.plans.find(
+      (plan) => plan.priceId === member.subscription.priceId,
+    );
+  } else {
+    selectedSubscription = SUBSCRIPTIONS.plans[0];
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -106,6 +118,16 @@ const MemberPage = ({ member }) => {
     } catch (err) {
       const error = err?.response?.data?.error || err.message;
       setSendErrors(error);
+    }
+  };
+
+  const handleUpgradeSubscription = () => {
+    if (member.subscription.subscriptionId) {
+      router.push(
+        `https://billing.stripe.com/p/login/test_dR69Cl1Igat5dhK3cc?prefilled_email=${member.subscription.stripeCustomerEmail}`,
+      );
+    } else {
+      router.push('/subscriptions');
     }
   };
 
@@ -201,6 +223,24 @@ const MemberPage = ({ member }) => {
                   <h3 className="font-medium text-5xl md:text-6xl md:w-6/12 flex flex-wrap">
                     {member.screenname}
                   </h3>
+
+                  {/* This is temporary to test subscriptions management functionality*/}
+                  {selectedSubscription && (
+                    <div className="py-6">
+                      <Heading level={1}>
+                        {selectedSubscription.emoji}{' '}
+                        {selectedSubscription.title}
+                      </Heading>
+                      <Button
+                        onClick={handleUpgradeSubscription}
+                        className="my-6"
+                      >
+                        Upgrade
+                      </Button>
+                    </div>
+                  )}
+                  {/* This is temporary to test subscriptions management functionality*/}
+
                   {isAuthenticated && member._id !== currentUser._id && (
                     <div className="my-3">
                       <a
