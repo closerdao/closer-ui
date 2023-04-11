@@ -214,28 +214,28 @@ const HomePage = () => {
           <p className="text-center md:text-left mb-6">Our co-living quarters will be home to 14 large suites with a living room & kitchen, 3 loft studios with a music production live-in studio, and a private house for families or friends.</p>
           <p className="text-center md:text-left mb-6">The TDF village will be made up of:</p>
           <div className="md:flex md:flex-cols-2 md:space-x-6">
-            <ul className="space-y-6 w-1/2">
+            <ul className="space-y-6 md:w-1/2">
               <li className="flex justify-start items-center">
-                <img src="/images/icons/cowork.png" alt="Coworking" className="mr-1 inline w-12" />
+                <img src="/images/icons/cowork.png" alt="Coworking" className="mr-1 w-12" />
                 <h4 className="md:text-sm">
                   Open Coworking, Coworking pods & STARLINK WIFI{' '}
                   <Tag className="m-1" color="primary">v1</Tag>
                 </h4>
               </li>
               <li className="flex justify-start items-center">
-                <img src="/images/icons/van.png" alt="Van" className="mr-1 inline w-12" />
+                <img src="/images/icons/van.png" alt="Van" className="mr-1 w-12" />
                 <h4 className="md:text-sm">
                   6 Van parking areas
                 </h4>
               </li>
               <li className="flex justify-start items-center">
-                <img src="/images/icons/glamping.png" alt="Glamping" className="mr-1 inline w-12" />
+                <img src="/images/icons/glamping.png" alt="Glamping" className="mr-1 w-12" />
                 <h4 className="md:text-sm">
                   10 Glamping Accommodations
                 </h4>
               </li>
               <li className="flex justify-start items-center">
-                <img src="/images/icons/foodforest.png" alt="Syntropic food forest" className="mr-1 inline w-12" />
+                <img src="/images/icons/foodforest.png" alt="Syntropic food forest" className="mr-1 w-12" />
                 <h4 className="md:text-sm">
                   Food forest
                   <small className="text-sm font-light">{' '}
@@ -244,7 +244,7 @@ const HomePage = () => {
                 </h4>
               </li>
               <li className="flex justify-start items-center">
-                <img src="/images/icons/veggies.png" alt="Veggetable production" className="mr-1 inline w-12" />
+                <img src="/images/icons/veggies.png" alt="Veggetable production" className="mr-1 w-12" />
                 <h4 className="md:text-sm">
                   Veggie farm
                   <small className="text-sm font-light">{' '}
@@ -253,22 +253,22 @@ const HomePage = () => {
                 </h4>
               </li>
               <li className="flex justify-start items-center">
-                <img src="/images/icons/cafe.png" className="mr-1 inline w-12" />
+                <img src="/images/icons/cafe.png" className="mr-1 w-12" />
                 <h4 className="md:text-sm">
                   Café & Store{' '}
                   <Tag className="m-1" color="primary">Coming soon</Tag>
                 </h4>
               </li>
             </ul>
-            <ul className="space-y-6 w-1/2">
+            <ul className="space-y-6 md:w-1/2">
               <li className="flex justify-start items-center">
-                <img src="/images/icons/event.png" alt="Events" className="mr-1 inline w-12" />
+                <img src="/images/icons/event.png" alt="Events" className="mr-1 w-12" />
                 <h4 className="md:text-sm">
                   Pop-up event space
                 </h4>
               </li>
               <li className="flex justify-start items-center">
-                <img src="/images/icons/wellness.png" alt="Wellness candle" className="mr-1 inline w-12" />
+                <img src="/images/icons/wellness.png" alt="Wellness candle" className="mr-1 w-12" />
                 <h4 className="md:text-sm">
                   Wellness area
                   <small className="text-sm font-light">{' '}
@@ -278,21 +278,21 @@ const HomePage = () => {
                 </h4>
               </li>
               <li className="flex justify-start items-center">
-                <img src="/images/icons/restaurant.png" alt="Restaurant plate" className="mr-1 inline w-12" />
+                <img src="/images/icons/restaurant.png" alt="Restaurant plate" className="mr-1 w-12" />
                 <h4 className="md:text-sm">
                   Farm to table restaurant{' '}
                   <Tag className="m-1" color="primary">Coming soon</Tag>
                 </h4>
               </li>
               <li className="flex justify-start items-center">
-                <img src="/images/icons/foodforest.png" alt="Greenhouse" className="mr-1 inline w-12" />
+                <img src="/images/icons/foodforest.png" alt="Greenhouse" className="mr-1 w-12" />
                 <h4 className="md:text-sm">
                   Indoors forest and tropical greenhouse{' '}
                   <Tag className="m-1" color="primary">Coming soon</Tag>
                 </h4>
               </li>
               <li className="flex justify-start items-center">
-                <img src="/images/icons/makerspace.png" alt="Makerspace" className="mr-1 inline w-12" />
+                <img src="/images/icons/makerspace.png" alt="Makerspace" className="mr-1 w-12" />
                 <h4 className="md:text-sm">
                   Makerspace
                   <small className="text-sm font-light">{' '}
@@ -304,7 +304,7 @@ const HomePage = () => {
             </ul>
           </div>
         </div>
-        <div className="md:pl-32">
+        <div className="md:pl-16">
           <img src="/images/landing/map.svg" alt="TDF Map" />
         </div>
       </section>
