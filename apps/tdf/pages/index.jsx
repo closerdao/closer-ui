@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import React, { useEffect } from 'react';
 
-import { useAuth, EventsList, usePlatform, Newsletter } from 'closer';
+import { useAuth, EventsList, usePlatform, Newsletter, Tag } from 'closer';
 import { event } from 'nextjs-google-analytics';
 
 const loadTime = new Date();
@@ -37,7 +37,7 @@ const HomePage = () => {
           Traditional Dream Factory | Regenerative Playground in Alentejo, Portugal
         </title>
       </Head>
-      <section className="text-right -ml-6 -mr-6 pt-20 pb-12 -mt-6 md:min-h-screen p-6 bg-cover bg-[url('/images/landing/sheep-mobile.jpg')] md:bg-[url('/images/landing/sheep-min.png')]">
+      <section className="text-right -ml-6 -mr-6 pt-20 pb-12 -mt-6 mb-12 md:mb-32 md:min-h-screen p-6 bg-cover bg-[url('/images/landing/sheep-mobile.jpg')] md:bg-[url('/images/landing/sheep-min.png')]">
         <div className="max-w-6xl mx-auto">
           <h1
             className="md:mt-20 mb-6 md:mb-12 text-4xl md:text-8xl text-white ml-8"
@@ -78,7 +78,7 @@ const HomePage = () => {
                   event('click', { category: 'HomePage', label: 'Download Investor Pack' });
                   document.getElementById('subscribe').scrollIntoView();
                 }}
-                className="btn-primary bg-primary-light md:text-xl"
+                className="btn-primary-light md:text-xl"
               >
                 Download Investor pack
               </Link>
@@ -99,9 +99,45 @@ const HomePage = () => {
           )}
         </div>
       </section>
+      <section className="mb-12 max-w-6xl mx-auto md:flex md:space-x-20">
+        <div className="relative mb-6 md:mb-0 card p-12 bg-secondary-light">
+          <p className="mb-6 font-bold text-xl">Traditional Dream Factory are pioneers of regeneration, challengers of tomorrow, and prototypers of a better way of living. It’s our mission to co-create a more sustainable world for generations to come. </p>
+          <p className="text-xl font-bold">
+            Will you join us?
+          </p>
+          <div className="absolute -bottom-24 -right-24">
+            <img
+              src="/images/graphics/mushroom.png?"
+              width="220"
+              alt="TDF Mushroom"
+            />
+          </div>
+        </div>
+        <div className="relative text-right p-12">
+          <h3>
+            Co-create the regenerative dream
+          </h3>
+          <p className="my-4">Invest in a DAO-based future of regenerative living. Help us transition to a land of freedom, and rewild a world we can all enjoy. Don’t just dream it. Sign up and join us as a key player in bringing this dream to reality.</p>
+          {!isAuthenticated && (
+            <div className="mb-4">
+              <Link
+                href="/signup"
+                type="submit"
+                onClick={() =>
+                  event('click', { category: 'HomePage', label: 'Secure your place now' })
+                }
+                className="btn-primary btn-large"
+              >
+                SECURE YOUR PLACE NOW
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
       <section className="mb-12 max-w-6xl mx-auto md:pt-20">
         <h3 className="text-center py-12 px-4 mb-6">
-          A prototype for a future of beautiful, connected regenerative living
+          A prototype for a future of beautiful,{' '}
+          connected regenerative living
         </h3>
         <ul className="flex flex-wrap text-center divide-x">
           { platform.resource.find() && platform.resource.find().map((resource) => (
@@ -120,6 +156,10 @@ const HomePage = () => {
             </li>
           )) }
         </ul>
+      </section>
+      <section className="mb-12 mt-24 max-w-6xl mx-auto text-center">
+          <h3>Discover<br/><span className="md:text-7xl">Abela</span></h3>
+          <p>a small Portuguese village of 400 inhabitants</p>
       </section>
       <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:space-x-4">
         <div className="relative mb-6 md:mb-0">
@@ -167,35 +207,98 @@ const HomePage = () => {
         </div>
       </section>
       <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2">
-        <div className="md:max-w-lg">
+        <div className="md:max-w-xl">
           <h2 className="text-center md:text-left mb-6 md:text-6xl">
             Traditional Dream Factory
           </h2>
           <p className="text-center md:text-left mb-6">Our co-living quarters will be home to 14 large suites with a living room & kitchen, 3 loft studios with a music production live-in studio, and a private house for families or friends.</p>
           <p className="text-center md:text-left mb-6">The TDF village will be made up of:</p>
           <div className="md:flex md:flex-cols-2 md:space-x-6">
-            <ul className="space-y-6">
-              <li><h4 className="md:text-sm">Open Coworking, Coworking pods & Jungle phone booths</h4></li>
-              <li><h4 className="md:text-sm">Indoors forest and tropical greenhouse</h4></li>
-              <li><h4 className="md:text-sm">Experiential Restaurant</h4></li>
-              <li><h4 className="md:text-sm">Café & Store</h4></li>
-            </ul>
-            <ul className="space-y-6">
-              <li><h4 className="md:text-sm">Pop-up event space</h4></li>
-              <li>
+            <ul className="space-y-6 w-1/2">
+              <li className="flex justify-start items-center">
+                <img src="/images/icons/cowork.png" alt="Coworking" className="mr-1 inline w-12" />
                 <h4 className="md:text-sm">
-                  Wellness area
-                  <small className="text-sm">{' '}
-                    (natural pool, sauna(s), yoga studio, massage parlor)
+                  Open Coworking, Coworking pods & STARLINK WIFI{' '}
+                  <Tag className="m-1" color="primary">v1</Tag>
+                </h4>
+              </li>
+              <li className="flex justify-start items-center">
+                <img src="/images/icons/van.png" alt="Van" className="mr-1 inline w-12" />
+                <h4 className="md:text-sm">
+                  6 Van parking areas
+                </h4>
+              </li>
+              <li className="flex justify-start items-center">
+                <img src="/images/icons/glamping.png" alt="Glamping" className="mr-1 inline w-12" />
+                <h4 className="md:text-sm">
+                  10 Glamping Accommodations
+                </h4>
+              </li>
+              <li className="flex justify-start items-center">
+                <img src="/images/icons/foodforest.png" alt="Syntropic food forest" className="mr-1 inline w-12" />
+                <h4 className="md:text-sm">
+                  Food forest
+                  <small className="text-sm font-light">{' '}
+                    (w/ 1000+ trees)
                   </small>
                 </h4>
               </li>
-              <li>
+              <li className="flex justify-start items-center">
+                <img src="/images/icons/veggies.png" alt="Veggetable production" className="mr-1 inline w-12" />
+                <h4 className="md:text-sm">
+                  Veggie farm
+                  <small className="text-sm font-light">{' '}
+                    (for 30+ people)
+                  </small>
+                </h4>
+              </li>
+              <li className="flex justify-start items-center">
+                <img src="/images/icons/cafe.png" className="mr-1 inline w-12" />
+                <h4 className="md:text-sm">
+                  Café & Store{' '}
+                  <Tag className="m-1" color="primary">Coming soon</Tag>
+                </h4>
+              </li>
+            </ul>
+            <ul className="space-y-6 w-1/2">
+              <li className="flex justify-start items-center">
+                <img src="/images/icons/event.png" alt="Events" className="mr-1 inline w-12" />
+                <h4 className="md:text-sm">
+                  Pop-up event space
+                </h4>
+              </li>
+              <li className="flex justify-start items-center">
+                <img src="/images/icons/wellness.png" alt="Wellness candle" className="mr-1 inline w-12" />
+                <h4 className="md:text-sm">
+                  Wellness area
+                  <small className="text-sm font-light">{' '}
+                    (natural pool, sauna(s), yoga studio, massage parlor)
+                  </small>{' '}
+                  <Tag className="m-1" color="primary">In progress</Tag>
+                </h4>
+              </li>
+              <li className="flex justify-start items-center">
+                <img src="/images/icons/restaurant.png" alt="Restaurant plate" className="mr-1 inline w-12" />
+                <h4 className="md:text-sm">
+                  Farm to table restaurant{' '}
+                  <Tag className="m-1" color="primary">Coming soon</Tag>
+                </h4>
+              </li>
+              <li className="flex justify-start items-center">
+                <img src="/images/icons/foodforest.png" alt="Greenhouse" className="mr-1 inline w-12" />
+                <h4 className="md:text-sm">
+                  Indoors forest and tropical greenhouse{' '}
+                  <Tag className="m-1" color="primary">Coming soon</Tag>
+                </h4>
+              </li>
+              <li className="flex justify-start items-center">
+                <img src="/images/icons/makerspace.png" alt="Makerspace" className="mr-1 inline w-12" />
                 <h4 className="md:text-sm">
                   Makerspace
-                  <small className="text-sm">{' '}
+                  <small className="text-sm font-light">{' '}
                     (Lab, Atelier, Artist Studio, Workshop, Music Studio)
-                  </small>
+                  </small>{' '}
+                  <Tag className="m-1" color="primary">In progress</Tag>
                 </h4>
               </li>
             </ul>

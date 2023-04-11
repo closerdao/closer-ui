@@ -68,6 +68,7 @@ export { default as Metatags } from './components/Metatags/';
 export { default as EventPreview } from './components/EventPreview';
 export { default as EventsList } from './components/EventsList';
 export { default as Newsletter } from './components/Newsletter';
+export { default as Tag } from './components/Tag';
 
 // Utils
 export { default as api } from './utils/api';
