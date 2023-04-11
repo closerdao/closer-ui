@@ -73,9 +73,11 @@ const HomePage = () => {
                 href="/pdf/tdf-private-sale.pdf"
                 target="_blank"
                 type="submit"
-                onClick={() =>
-                  event('click', { category: 'HomePage', label: 'Download Investor Pack' })
-                }
+                onClick={(e) => {
+                  e.preventDefault();
+                  event('click', { category: 'HomePage', label: 'Download Investor Pack' });
+                  document.getElementById('subscribe').scrollIntoView();
+                }}
                 className="btn-primary bg-primary-light md:text-xl"
               >
                 Download Investor pack
@@ -204,7 +206,7 @@ const HomePage = () => {
         </div>
       </section>
       <section className="mb-12 max-w-6xl mx-auto md:pt-20 text-center md:flex md:justify-center">
-        <div className="md:max-w-lg">
+        <div className="md:max-w-lg" id="subscribe">
           <h3 className="mb-6">
             Your guide to<br/>
             <span className="text-3xl md:text-6xl">becoming a</span><br/>
