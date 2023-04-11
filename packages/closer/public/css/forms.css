@@ -7,8 +7,17 @@
   }
   .btn-primary,
   .btn-primary[type='submit'] {
-    @apply cursor-pointer inline-block py-2 px-4 rounded-full text-primary border-2 border-primary focus:outline-none disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed hover:bg-primary hover:text-background;
-    @apply text-primary bg-transparent hover:text-white hover:bg-primary border-primary disabled:hover:bg-transparent disabled:border-gray-400 disabled:text-gray-400;
+    @apply text-base cursor-pointer inline-block py-2 px-4 rounded-full text-background border-0 border-primary bg-primary focus:outline-none disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed uppercase;
+  }
+  .btn-primary-light,
+  .btn-primary-light[type='submit'] {
+    @apply text-base cursor-pointer inline-block py-2 px-4 rounded-full text-primary border-0 border-primary bg-primary-light focus:outline-none disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed uppercase;
+  }
+  .btn-primary-large {
+    @apply: btn-primary md:text-4xl;
+  }
+  .btn-light {
+    @apply: bg-primary-light;
   }
   .btn-small,
   .btn-small[type='submit'] {
@@ -17,9 +26,6 @@
   .btn-secondary,
   .btn-secondary[type='submit'] {
     @apply btn hover:bg-secondary text-secondary hover:text-white bg-transparent border-2 border-secondary disabled:hover:bg-transparent disabled:border-gray-400 disabled:text-gray-400;
-  }
-  .btn-primary.btn-large {
-    @apply border-8 py-4 px-8 focus:ring-4;
   }
   .btn-primary.active {
     @apply bg-primary text-white hover:bg-transparent hover:text-primary;

@@ -2,7 +2,6 @@ import Link from 'next/link';
 
 import React, { FC } from 'react';
 
-import { FaCalendarAlt } from '@react-icons/all-files/fa/FaCalendarAlt';
 import { MdLocationOn } from '@react-icons/all-files/md/MdLocationOn';
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
@@ -50,12 +49,19 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
     <div role="listitem" className={className}>
       <div
         className={`h-full ${
-          isListView ? 'flex flex-row' : 'card rounded bg-card overflow-hidden'
+          isListView ? 'flex flex-row' : 'card rounded overflow-hidden'
         }`}
       >
+        <p className="text-xs font-light">
+          {startDate && startDate.format(dateFormat)}
+          {endDate && duration <= 24 && ` - ${endDate.format('HH:mm')}`}
+          {endDate &&
+            duration >= 24 &&
+            ` - ${endDate.format(dateFormat)}`}
+        </p>
         <div
           className={`${
-            isListView ? 'w-24 mt-3 mr-3 h-24' : '-mx-4 -mt-4 h-44 md:h-80 '
+            isListView ? 'w-24 mt-3 mr-3 h-24' : '-mx-4 mt-4 h-44 md:h-50 '
           } bg-gray-50 overflow-hidden`}
         >
           <Link href={linkHref}>
@@ -81,16 +87,6 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
             <h4 className={`${isListView ? 'text-sm' : 'font-bold text-xl'}`}>
               <Link href={linkHref}>{name}</Link>
             </h4>
-            <div className="flex flex-row items-center space-x-1 mt-2 text-gray-500">
-              <FaCalendarAlt />
-              <p className="text-xs font-light">
-                {startDate && startDate.format(dateFormat)}
-                {endDate && duration <= 24 && ` - ${endDate.format('HH:mm')}`}
-                {endDate &&
-                  duration >= 24 &&
-                  ` - ${endDate.format(dateFormat)}`}
-              </p>
-            </div>
             {virtual && (
               <div className="flex flex-row items-center space-x-1 mt-2 text-gray-500">
                 <MdLocationOn />
