@@ -13,6 +13,7 @@
   "dependencies": {
     "@sentry/nextjs": "^7.40.0",
     "@tailwindcss/forms": "^0.4.0",
+    "@tailwindcss/line-clamp": "^0.4.4",
     "closer": "*",
     "next": "^13.1.1",
     "nextjs-google-analytics": "^2.3.3",

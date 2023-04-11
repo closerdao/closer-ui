@@ -6,8 +6,10 @@ const tdfTheme = {
     ...closerTheme.extend,
     colors: {
       ...closerTheme.extend.colors,
-      primary: '#e4427d',
-      secondary: '#1b3bc3',
+      primary: '#FE4FB7',
+      'primary-light': '#FFC8E9',
+      secondary: '#52FFB8',
+      'secondary-light': '#D4FFED',
       background: '#F8FAFC',
       'background-dark': '#1c1c1c',
       foreground: '#1c1c1c',

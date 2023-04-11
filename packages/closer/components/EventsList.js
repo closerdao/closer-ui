@@ -13,12 +13,13 @@ dayjs.extend(advancedFormat);
 const EventsList = ({
   center,
   card,
-  list,
+  isListView,
   title,
   queryParam,
   where,
   limit,
   showPagination,
+  cols
 }) => {
   const { platform } = usePlatform();
   const [error, setErrors] = useState(false);
@@ -48,21 +49,26 @@ const EventsList = ({
     <div className={card ? 'card' : ''}>
       {error && <p className="text-red-500">{error}</p>}
       {title && <h3 className={card ? 'card-title' : ''}>{title}</h3>}
-      <div
-        className={`event-list ${card ? 'event-body' : ''} flex ${
-          list ? 'flex-col' : 'flex-row'
-        } flex-wrap justify-${center ? 'center' : 'start'}`}
-      >
-        {events && events.count() > 0 ? (
-          events.map((event) => (
-            <EventPreview key={event.get('_id')} list={list} event={event} />
-          ))
-        ) : (
-          <div className="w-full py-4">
+      { events && events.count() > 0 ?
+        <div
+          className={`grid gap-8 md:grid-cols-${cols} md:justify-${
+            center ? 'center' : 'start'
+          } ${card ? 'event-body' : ''} ${isListView ? 'grid-cols-1' : ''} `}
+        >
+          { events.map((event) => (
+            <EventPreview
+              key={event.get('_id')}
+              isListView={isListView}
+              event={event.toJSON()}
+            />
+          ))}
+        </div>:
+        (
+          <div className="w-full h-full text-center p-12">
             <p className="italic">{__('events_list_no_events')}</p>
           </div>
-        )}
-      </div>
+        )
+      }
       {showPagination && (
         <Pagination
           loadPage={(page) => {
@@ -81,7 +87,8 @@ const EventsList = ({
 };
 EventsList.defaultProps = {
   showPagination: true,
-  list: false,
+  isListView: false,
+  cols: 3,
   card: false,
   queryParam: 'events',
   center: false,

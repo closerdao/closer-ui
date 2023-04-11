@@ -6,11 +6,9 @@ import { Navigation } from 'closer';
 
 export const Layout: FC<PropsWithChildren> = ({ children }) => {
   return (
-    <div className="flex-1 flex flex-col relative mx-auto max-w-6xl w-full">
+    <div className="flex-1 flex flex-col relative mx-auto mt-20 w-full">
       <Navigation />
-      <div>
-        {children}
-      </div>
+      <div className="p-4 overflow-hidden">{children}</div>
       <Footer />
     </div>
   );

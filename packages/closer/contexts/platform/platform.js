@@ -8,15 +8,24 @@ import * as constants from './platformActions';
 
 const PlatformContext = createContext({});
 export const models = [
-  'user',
+  'article',
+  'application',
+  'booking',
+  'config',
+  'channel',
+  'event',
+  'ticket',
+  'listing',
+  'message',
+  'metric',
+  'product',
   'post',
   'photo',
-  'message',
-  'event',
-  'application',
-  'listing',
-  'booking',
-  'ticket',
+  'resource',
+  'session',
+  'stay',
+  'user',
+  'volunteer',
 ];
 
 const filterToKey = (filter) => JSON.stringify(filter) || '__';

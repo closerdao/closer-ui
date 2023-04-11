@@ -62,7 +62,13 @@ export { default as Page404 } from './pages/404';
 // Components
 export { default as Footer } from './components/Footer';
 export { default as Navigation } from './components/Navigation';
-export { ConfigProvider } from './contexts/config';
+export { default as CreateVolunteerView } from './components/CreateVolunteerView/';
+export { default as VolunteerEventView } from './components/VolunteerEventView/';
+export { default as Metatags } from './components/Metatags/';
+export { default as EventPreview } from './components/EventPreview';
+export { default as EventsList } from './components/EventsList';
+export { default as Newsletter } from './components/Newsletter';
+export { default as Tag } from './components/Tag';
 
 // Utils
 export { default as api } from './utils/api';
@@ -70,3 +76,6 @@ export * from './utils/blockchain';
 
 // Config
 export * from './config_blockchain';
+
+// Types
+export * from './types/';

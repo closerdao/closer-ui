@@ -50,9 +50,7 @@ const EditEvent = ({ event }) => {
           endpoint="/event"
           fields={models.event}
           onSave={(event) => router.push(`/events/${event.slug}`)}
-          onUpdate={(name, value, option, actionType) =>
-            onUpdate(name, value, option, actionType)
-          }
+          onUpdate={onUpdate}
           allowDelete
           deleteButton="Delete Event"
           onDelete={() => router.push('/')}
