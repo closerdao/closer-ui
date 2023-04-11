@@ -12,7 +12,7 @@ const Settings = () => {
   const { user } = useAuth();
 
   return (
-    <>
+    <div className="max-w-6xl mx-auto">
       <Head>
         <title>{__('settings_title')}</title>
       </Head>
@@ -27,7 +27,7 @@ const Settings = () => {
           />
         )}
       </div>
-    </>
+    </div>
   );
 };
 
