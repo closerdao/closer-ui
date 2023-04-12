@@ -44,7 +44,7 @@ const Subscriptions = () => {
         </title>
       </Head>
       <main className="pt-16 pb-24 px-6 md:flex-row flex-wrap">
-        <Heading level={1} className="mb-6 mt-4">
+        <Heading level={1} className="mb-6">
           {' '}
           ♻️ {__('subscriptions_title')}
         </Heading>

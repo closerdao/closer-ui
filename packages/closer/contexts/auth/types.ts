@@ -33,6 +33,7 @@ export type User = {
   attributes: string[];
   managedBy: string[];
   _id: string;
+  subscription: any
 };
 
 export type AuthenticationContext = {

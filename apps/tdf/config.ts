@@ -61,6 +61,7 @@ const config = {
         ],
         billingPeriod: 'month',
       },
+
       {
         title: 'Pioneer',
         emoji: '👨🏽‍🚀',
@@ -72,10 +73,12 @@ const config = {
         price: 30,
         perks: [
           ' ✔ Access to Events',
-          ' ✔ Access to Volunteering',
-          '✔ Weekly newsletter',
-          '🌟 Free E-Book',
-          '🌟 Discord Community Access',
+          '✔ Access to Volunteering',
+          ' ✔ Weekly newsletter',
+          ' ✔ Free E-Book',
+          ' ✔ Discord Community Access',
+          '✔ Impact Reports',
+          '🌟 Access To Stays',
           '🌟 20% Discount on accommodation',
         ],
         billingPeriod: 'month',

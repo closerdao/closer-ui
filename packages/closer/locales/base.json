@@ -373,6 +373,11 @@
   "search_related_content": "Related content",
   "settings_title": "Settings",
 
+  "settings_your_subscription_title": "Your subscription",
+  "settings_your_subscription_manage_subscription_button": "Manage subscription",
+  "settings_your_subscription_upgrade_to": "Upgrade to",
+  "settings_your_subscription_upgrade_button": "Upgrade",
+
   "subscriptions_title": "Subscriptions",
   "subscriptions_about_you_title": "About you",
   "subscriptions_summary_title": "Summary",

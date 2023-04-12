@@ -30,7 +30,6 @@ const Summary = () => {
       const selectedSubscription = SUBSCRIPTIONS.plans.find(
         (plan: SubscriptionPlan) => plan.priceId === priceId,
       );
-
       setSelectedPlan({
         title: selectedSubscription.title,
         monthlyCredits: selectedSubscription.monthlyCredits,
@@ -75,7 +74,7 @@ const Summary = () => {
         </title>
       </Head>
 
-      <div className="main-content w-full max-w-screen-sm mx-auto p-6">
+      <div className="main-content w-full max-w-screen-sm mx-auto p-6 border">
         <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-6">

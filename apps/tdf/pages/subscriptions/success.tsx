@@ -51,7 +51,7 @@ const Success = () => {
   };
 
   const handleViewSubscription = () => {
-    router.push('/profile/your-subscription');
+    router.push('/settings/subscriptions');
   };
 
   if (process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true') {

@@ -5,9 +5,8 @@ import { FormEvent, useState } from 'react';
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { StripeCardElementChangeEvent } from '@stripe/stripe-js';
 
-import { Button, ErrorMessage, SubscriptionConditions } from 'closer';
+import { Button, ErrorMessage, SubscriptionConditions, api } from 'closer';
 import { __ } from 'closer/utils/helpers';
-import axios from 'axios';
 
 interface SubscriptionCheckoutFormProps {
   userEmail?: string;
@@ -64,13 +63,7 @@ function SubscriptionCheckoutForm({
         setError(createdPaymentMethod.error || '');
         return;
       }
-      // const response = await api.post('/subscription', {
-      //   email: userEmail,
-      //   paymentMethod: createdPaymentMethod?.paymentMethod.id,
-      //   priceId,
-      // });
-
-      const response = await axios.post('/api/create-subscription', {
+      const response = await api.post('/subscription', {
         email: userEmail,
         paymentMethod: createdPaymentMethod?.paymentMethod.id,
         priceId,
