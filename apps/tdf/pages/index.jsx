@@ -86,7 +86,7 @@ const HomePage = () => {
           ) : (
             <>
               <Link
-                href="/subscribtions"
+                href="/subscriptions"
                 type="submit"
                 onClick={() =>
                   event('click', { category: 'HomePage', label: 'Get Membership' })
