@@ -15,7 +15,6 @@ import { __ } from 'closer/utils/helpers';
 
 const Subscriptions = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
-  console.log('isLoading', isLoading);
   const router = useRouter();
   const { PLATFORM_NAME, SUBSCRIPTIONS } = useConfig() || {};
 
@@ -41,7 +40,23 @@ const Subscriptions = () => {
   }
 
   if (process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true') {
-    return <Page404 error="" />;
+    return (
+      <>
+        <Head>
+          <title>
+            {__('settings_your_subscription_title')} — {PLATFORM_NAME}
+          </title>
+        </Head>
+
+        <div className="main-content w-full max-w-screen-sm mx-auto p-6">
+          <Heading level={1} className="mb-14">
+            ♻️ {__('settings_your_subscription_title')}
+          </Heading>
+
+          <h2>Coming soon!</h2>
+        </div>
+      </>
+    );
   }
 
   return (
