@@ -55,7 +55,6 @@
   }
   textarea,
   .textarea {
-    /* @apply mt-0 block w-full border-0 border-b-2 border-gray-200 px-0.5 focus:ring-0 focus:border-black resize-none; */
     @apply p-2 text-foreground block border-0 border-b-2 border-transparent focus:outline-none focus:border-primary;
   }
   .input,
@@ -68,12 +67,19 @@
   input[type='time'] {
     @apply p-2 text-foreground block border-0 border-b-2 border-transparent ring-transparent focus:outline-none focus:border-primary;
   }
+
+
   select {
     @apply text-base border-gray-200 border-2 rounded-lg ring-transparent appearance-none focus:border-primary outline-none max-w-full;
   }
+
   label,
   .label {
-    @apply block uppercase tracking-wide text-gray-500 text-xs font-bold mb-2;
+    @apply  text-complimentary block uppercase tracking-wide text-xs font-bold;
+  }
+
+    label + input {
+    @apply mt-2;
   }
   .switch .label {
     @apply mb-0 ml-2;

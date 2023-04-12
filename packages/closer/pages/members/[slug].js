@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Linkify from 'react-linkify';
 
 import ConnectedWallet from '../../components/ConnectedWallet';
@@ -12,11 +12,11 @@ import UploadPhoto from '../../components/UploadPhoto';
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 import { TiDelete } from '@react-icons/all-files/ti/TiDelete';
 
-import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import api, { cdn } from '../../utils/api';
 import { __ } from '../../utils/helpers';
+import PageNotFound from '../404';
 
 const MemberPage = ({ member }) => {
   const router = useRouter();
@@ -201,6 +201,7 @@ const MemberPage = ({ member }) => {
                   <h3 className="font-medium text-5xl md:text-6xl md:w-6/12 flex flex-wrap">
                     {member.screenname}
                   </h3>
+
                   {isAuthenticated && member._id !== currentUser._id && (
                     <div className="my-3">
                       <a
@@ -215,6 +216,7 @@ const MemberPage = ({ member }) => {
                       </a>
                     </div>
                   )}
+                  <h6 className="text-sm my-2 ml-1">{member.email}</h6>
                   <div className="mt-1 w-full">
                     {member.roles && (
                       <div className="text-sm mt-1 tags">

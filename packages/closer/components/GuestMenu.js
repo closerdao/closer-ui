@@ -39,6 +39,15 @@ const GuestMenu = () => (
 
       </Link>
     </div>
+    <div className="flex flex-col gap-4 mt-4">
+      <Link href="/subscriptions" passHref>
+
+        <button className="btn w-full uppercase">
+          {__('navigation_subscriptions')}
+        </button>
+
+      </Link>
+    </div>
   </nav>
 );
 
