@@ -28,7 +28,7 @@ const SubscriptionCards = ({
               )}%]`}
             >
               <div>
-                <Heading level={2} className="text-center border-b-0 mb-6">
+                <Heading level={3} className="text-center border-b-0 mb-6">
                   <p>{plan.emoji}</p>
                   {plan.title}
                 </Heading>

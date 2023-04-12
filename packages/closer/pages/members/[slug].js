@@ -312,71 +312,66 @@ const MemberPage = ({ member }) => {
                 {isAuthenticated && member._id === currentUser._id && (
                   <ConnectedWallet />
                 )}
-                <div className="flex flex-col items-start md:w-6/12">
-                  <div className="w-full">
-                    <div className="page-title flex justify-between">
-                      <h3 className="mt-8 md:mt-3">
-                        {__('members_slug_my_events')}
-                      </h3>
-                    </div>
-
-                    <EventsList
-                      limit={7}
-                      isListView
-                      showPagination={false}
-                      where={{
-                        attendees: member._id,
-                        visibility: 'public',
-                      }}
-                    />
+                <div className="">
+                  <div className="page-title flex justify-between">
+                    <h3 className="mt-8 md:mt-3">
+                      {__('members_slug_my_events')}
+                    </h3>
                   </div>
 
-                  <div className="flex flex-col w-full">
-                    <div className="flex flex-col items-start mb-10">
-                      <div className="flex flex-row items-center justify-between mt-8 w-full">
-                        <p className="font-semibold text-md mr-5">
-                          {__('members_slug_stay_social')}
-                        </p>
-                        {isAuthenticated && member._id === currentUser._id && (
-                          <div className="flex flex-row items-center justify-start space-x-3 w-20">
-                            <a
-                              href="#"
-                              name="Add links"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                toggleShowForm(!showForm);
-                              }}
-                            >
-                              <button className="btn-small">Add</button>
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                      <ul className="flex flex-col w-full space-y-1 mt-4">
-                        {links
-                          ? links.map((link) => (
-                              <li
-                                key={link._id}
-                                className="group flex flex-row items-center justify-start space-x-5 mb-1"
-                              >
-                                <a href={link.url}>{link.name}</a>
-                                {isAuthenticated &&
-                                  member._id === currentUser._id && (
-                                    <a
-                                      href="#"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        deleteLink(link);
-                                      }}
-                                    >
-                                      <TiDelete className="text-gray-500 text-lg hover:text-black hidden group-hover:block" />
-                                    </a>
-                                  )}
-                              </li>
-                            ))
-                          : 'No links yet'}
-                      </ul>
+                  <EventsList
+                    limit={7}
+                    showPagination={false}
+                    where={{
+                      attendees: member._id,
+                      visibility: 'public',
+                    }}
+                  />
+
+                  <div className="mt-8">
+                    <div>
+                      <p className="font-semibold text-md mr-5">
+                        {__('members_slug_stay_social')}
+                      </p>
+                      {isAuthenticated && member._id === currentUser._id && (
+                        <div className="flex flex-row items-center justify-start space-x-3 w-20">
+                          <a
+                            href="#"
+                            name="Add links"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              toggleShowForm(!showForm);
+                            }}
+                          >
+                            <button className="btn-small">Add</button>
+                          </a>
+                        </div>
+                      )}
                     </div>
+                    <ul className="flex flex-col w-full space-y-1 mt-4">
+                      {links
+                        ? links.map((link) => (
+                            <li
+                              key={link._id}
+                              className="group flex flex-row items-center justify-start space-x-5 mb-1"
+                            >
+                              <a href={link.url}>{link.name}</a>
+                              {isAuthenticated &&
+                                member._id === currentUser._id && (
+                                  <a
+                                    href="#"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      deleteLink(link);
+                                    }}
+                                  >
+                                    <TiDelete className="text-gray-500 text-lg hover:text-black hidden group-hover:block" />
+                                  </a>
+                                )}
+                            </li>
+                          ))
+                        : 'No links yet'}
+                    </ul>
 
                     {isAuthenticated &&
                       member._id === currentUser._id &&

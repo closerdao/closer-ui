@@ -14,7 +14,7 @@ const VolunteerPage: NextPage<Props> = ({ opportunities }) => {
   const hasStewardRole = user?.roles?.includes('steward');
 
   return (
-    <div className="w-full">
+    <div className="max-w-6xl mx-auto">
       <Head>
         <title>
           Volunteer | Traditional Dream Factory | Regenerative coliving space in

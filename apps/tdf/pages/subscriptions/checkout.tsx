@@ -74,7 +74,7 @@ const Checkout = () => {
         </title>
       </Head>
 
-      <div className="main-content w-full max-w-screen-sm mx-auto p-6">
+      <div className="max-w-6xl mx-auto">
         <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-6">
@@ -85,7 +85,7 @@ const Checkout = () => {
 
         <main className="pt-14 pb-24 md:flex-row flex-wrap">
           <div className="mb-10">
-            <Heading level={2} className="mb-8">
+            <Heading level={4} className="mb-8">
               ♻️ {__('subscriptions_title')}
             </Heading>
 
@@ -101,7 +101,7 @@ const Checkout = () => {
           </div>
 
           <div className="mb-14">
-            <Heading level={2} className="mb-8">
+            <Heading level={4} className="mb-8">
               💲 {__('subscriptions_checkout_payment_subtitle')}
             </Heading>
             <div className="mb-10">
