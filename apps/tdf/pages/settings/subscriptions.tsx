@@ -16,7 +16,7 @@ import { SubscriptionPlan } from 'closer/types/subscriptions';
 import { __, priceFormat } from 'closer/utils/helpers';
 
 const Subscriptions = () => {
-  const { isLoading, loadUserFromCookies, user } = useAuth();
+  const { isLoading, loadUserFromCookies, user, isAuthenticated } = useAuth();
   const router = useRouter();
   const { PLATFORM_NAME, SUBSCRIPTIONS } = useConfig() || {};
 
@@ -29,8 +29,13 @@ const Subscriptions = () => {
   }, []);
 
   useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push(`/login?back=${router.asPath}`);
+    }
+  }, [isAuthenticated, isLoading]);
+
+  useEffect(() => {
     if (user) {
-      console.log('user', user);
       if (!user.subscription || !user.subscription.priceId) {
         console.log('free plan!!!!!!!');
         setIsFreePlan(true);
@@ -68,10 +73,6 @@ const Subscriptions = () => {
 
   if (isLoading) {
     return null;
-  }
-
-  if (!user) {
-    return <Page404 error="" />;
   }
 
   return (
