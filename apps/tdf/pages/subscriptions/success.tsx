@@ -17,12 +17,18 @@ import { SelectedPlan, SubscriptionPlan } from 'closer/types/subscriptions';
 import { __ } from 'closer/utils/helpers';
 
 const Success = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId, subscriptionId } = router.query;
   const { PLATFORM_NAME, SUBSCRIPTIONS } = useConfig() || {};
 
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
+
+  useEffect(() => {
+    if (user?.subscription && user.subscription.priceId) {
+      router.push('/settings/subscriptions');
+    }
+  }, [user]);
 
   useEffect(() => {
     if (priceId) {
@@ -39,10 +45,8 @@ const Success = () => {
   }, [priceId]);
 
   useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push(`/signup?back=${router.asPath}`);
-      }
+    if (!isLoading && !isAuthenticated) {
+      router.push(`/signup?back=${router.asPath}`);
     }
   }, [isAuthenticated, isLoading]);
 

@@ -57,6 +57,7 @@ export type AuthenticationContext = {
   ) => Promise<void>;
   setUser: (user: User | null) => void;
   setError: (msg: string) => void;
+  loadUserFromCookies: () => Promise<void>;
 };
 
 // isAuthenticated: !!user,

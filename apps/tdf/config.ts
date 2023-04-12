@@ -46,7 +46,7 @@ const config = {
       {
         title: 'Wanderer',
         emoji: '👩🏽‍🌾',
-        description: 'Unlock yor stay passes and join aour physical community',
+        description: 'Unlock yor stay passes and join our physical community',
         priceId: 'price_1MqtoHGtt5D0VKR2Has7KE5X',
         tier: 2,
         monthlyCredits: 3,

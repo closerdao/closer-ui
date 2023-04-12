@@ -18,12 +18,18 @@ import { SelectedPlan, SubscriptionPlan } from 'closer/types/subscriptions';
 import { __, priceFormat } from 'closer/utils/helpers';
 
 const Summary = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId } = router.query;
   const { PLATFORM_NAME, SUBSCRIPTIONS } = useConfig() || {};
 
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
+
+  useEffect(() => {
+    if (user?.subscription && user.subscription.priceId) {
+      router.push('/settings/subscriptions');
+    }
+  }, [user]);
 
   useEffect(() => {
     if (priceId) {
@@ -74,7 +80,7 @@ const Summary = () => {
         </title>
       </Head>
 
-      <div className="main-content w-full max-w-screen-sm mx-auto p-6 border">
+      <div className="main-content w-full max-w-screen-sm mx-auto p-6">
         <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-6">

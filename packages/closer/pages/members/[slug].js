@@ -12,11 +12,11 @@ import UploadPhoto from '../../components/UploadPhoto';
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 import { TiDelete } from '@react-icons/all-files/ti/TiDelete';
 
-import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import api, { cdn } from '../../utils/api';
 import { __ } from '../../utils/helpers';
+import PageNotFound from '../404';
 
 const MemberPage = ({ member }) => {
   const router = useRouter();

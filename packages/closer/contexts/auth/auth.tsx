@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import React, {
+import {
   FC,
   PropsWithChildren,
   createContext,
@@ -35,25 +35,25 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     errorTimeout = setTimeout(() => setErrorState(null), 5000);
   }, []);
 
-  useEffect(() => {
-    async function loadUserFromCookies() {
-      try {
-        const token = Cookies.get(config?.COOKIE_TOKEN);
-        if (token) {
-          api.defaults.headers.Authorization = `Bearer ${token}`;
-          const {
-            data: { results: user },
-          } = await api.get('/mine/user');
-          if (user) {
-            setUser(user);
-          }
+  async function loadUserFromCookies() {
+    try {
+      const token = Cookies.get(config?.COOKIE_TOKEN);
+      if (token) {
+        api.defaults.headers.Authorization = `Bearer ${token}`;
+        const {
+          data: { results: user },
+        } = await api.get('/mine/user');
+        if (user) {
+          setUser(user);
         }
-        setLoading(false);
-      } catch (err) {
-        const message = parseMessageFromError(err);
-        setError(message);
       }
+      setLoading(false);
+    } catch (err) {
+      const message = parseMessageFromError(err);
+      setError(message);
     }
+  }
+  useEffect(() => {
     loadUserFromCookies();
   }, []);
 
@@ -177,6 +177,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         updatePassword,
         setUser,
         setError,
+        loadUserFromCookies,
       }}
     >
       {children}

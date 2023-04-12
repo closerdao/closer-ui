@@ -3,8 +3,6 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
-import PageNotFound from '@/../../packages/closer/pages/404';
-
 import {
   Button,
   Card,
@@ -18,31 +16,35 @@ import { SubscriptionPlan } from 'closer/types/subscriptions';
 import { __, priceFormat } from 'closer/utils/helpers';
 
 const Subscriptions = () => {
-  const { isLoading, user } = useAuth();
+  const { isLoading, loadUserFromCookies, user } = useAuth();
   const router = useRouter();
-
   const { PLATFORM_NAME, SUBSCRIPTIONS } = useConfig() || {};
 
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>();
   const [upgradePlan, setUpgradePlan] = useState<SubscriptionPlan>();
   const [isFreePlan, setIsFreePlan] = useState(true);
 
+  useEffect(() => {
+    loadUserFromCookies();
+  }, []);
 
   useEffect(() => {
     if (user) {
-      if (user.subscription.priceId) {
-        setIsFreePlan(false);
-        const selectedSubscription = SUBSCRIPTIONS.plans.find(
-          (plan: SubscriptionPlan) =>
-            plan.priceId === user.subscription.priceId,
-        );
-        setSelectedPlan(selectedSubscription);
-      } else {
+      console.log('user', user);
+      if (!user.subscription || !user.subscription.priceId) {
+        console.log('free plan!!!!!!!');
         setIsFreePlan(true);
         const selectedSubscription = SUBSCRIPTIONS.plans[0];
         setSelectedPlan(selectedSubscription);
         setUpgradePlan(SUBSCRIPTIONS.plans[1]);
       }
+    }
+    if (user?.subscription && user.subscription.priceId) {
+      setIsFreePlan(false);
+      const selectedSubscription = SUBSCRIPTIONS.plans.find(
+        (plan: SubscriptionPlan) => plan.priceId === user.subscription.priceId,
+      );
+      setSelectedPlan(selectedSubscription);
     }
   }, [user]);
 
@@ -69,7 +71,7 @@ const Subscriptions = () => {
   }
 
   if (!user) {
-    return <PageNotFound error="" />;
+    return <Page404 error="" />;
   }
 
   return (
@@ -81,17 +83,13 @@ const Subscriptions = () => {
       </Head>
 
       <div className="main-content w-full max-w-screen-sm mx-auto p-6">
-        <Heading level={1} className="mb-6">
+        <Heading level={1} className="mb-14">
           ♻️ {__('settings_your_subscription_title')}
         </Heading>
         {!isFreePlan && selectedPlan && (
           <>
-            <Heading level={1} className="mb-12">
-              {selectedPlan.emoji} {selectedPlan.title}
-            </Heading>
-
             <Heading level={2} className="">
-              💰 {__('subscriptions_summary_costs_subtitle')}
+              {`${selectedPlan.emoji} ${selectedPlan.title}`}
             </Heading>
             <div className="mb-8 mt-6">
               <Row
@@ -161,7 +159,5 @@ const Subscriptions = () => {
     </>
   );
 };
-
-
 
 export default Subscriptions;

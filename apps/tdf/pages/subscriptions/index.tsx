@@ -1,6 +1,8 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
+import { useEffect } from 'react';
+
 import {
   Heading,
   Page404,
@@ -12,13 +14,19 @@ import { SubscriptionPlan } from 'closer/types/subscriptions';
 import { __ } from 'closer/utils/helpers';
 
 const Subscriptions = () => {
-  const { isAuthenticated, isLoading } = useAuth();
-  console.log('isLoading', isLoading)
+  const { isAuthenticated, isLoading, user } = useAuth();
+  console.log('isLoading', isLoading);
   const router = useRouter();
   const { PLATFORM_NAME, SUBSCRIPTIONS } = useConfig() || {};
 
   const plans: SubscriptionPlan[] = SUBSCRIPTIONS.plans;
   const paidSubscriptionPlans = plans.filter((plan) => plan.price !== 0);
+
+  useEffect(() => {
+    if (user?.subscription && user.subscription.priceId) {
+      router.push('/settings/subscriptions');
+    }
+  }, [user]);
 
   const handleNext = (priceId: string) => {
     if (priceId === 'free') {

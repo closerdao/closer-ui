@@ -23,7 +23,7 @@ export const config = {
       {
         title: 'Wanderer',
         emoji: '👩🏽‍🌾',
-        description: 'Unlock yor stay passes and join aour physical community',
+        description: 'Unlock yor stay passes and join our physical community',
         priceId: 'price_1MqtoHGtt5D0VKR2Has7KE5X',
         tier: 2,
         monthlyCredits: 3,
@@ -38,6 +38,7 @@ export const config = {
         ],
         billingPeriod: 'month',
       },
+
       {
         title: 'Pioneer',
         emoji: '👨🏽‍🚀',
@@ -49,16 +50,18 @@ export const config = {
         price: 30,
         perks: [
           ' ✔ Access to Events',
-          ' ✔ Access to Volunteering',
-          '✔ Weekly newsletter',
-          '🌟 Free E-Book',
-          '🌟 Discord Community Access',
+          '✔ Access to Volunteering',
+          ' ✔ Weekly newsletter',
+          ' ✔ Free E-Book',
+          ' ✔ Discord Community Access',
+          '✔ Impact Reports',
+          '🌟 Access To Stays',
           '🌟 20% Discount on accommodation',
         ],
         billingPeriod: 'month',
       },
-    ],
-  },
+    ] ,
+  } ,
 };
 
 export default config;

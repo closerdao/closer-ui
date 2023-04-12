@@ -32,6 +32,12 @@ const Checkout = () => {
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
 
   useEffect(() => {
+    if (user?.subscription && user.subscription.priceId) {
+      router.push('/settings/subscriptions');
+    }
+  }, [user]);
+
+  useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push(`/signup?back=${router.asPath}`);
     }
