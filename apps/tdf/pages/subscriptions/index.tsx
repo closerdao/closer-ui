@@ -5,7 +5,6 @@ import { useEffect } from 'react';
 
 import {
   Heading,
-  Page404,
   SubscriptionCards,
   useAuth,
   useConfig,
