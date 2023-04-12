@@ -45,7 +45,7 @@ const Subscriptions = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="main-content w-full max-w-screen-sm mx-auto p-6">
       <Head>
         <title>
           {__('subscriptions_title')} — {PLATFORM_NAME}
