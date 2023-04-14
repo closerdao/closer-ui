@@ -1,28 +1,28 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-import {
-  Heading,
-  SubscriptionCards,
-  useAuth,
-  useConfig,
-} from 'closer';
+import { Heading, SubscriptionCards, useAuth, useConfig } from 'closer';
 import { SubscriptionPlan } from 'closer/types/subscriptions';
 import { __ } from 'closer/utils/helpers';
 
 const Subscriptions = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
-  const { PLATFORM_NAME, SUBSCRIPTIONS } = useConfig() || {};
+  const { PLATFORM_NAME, SUBSCRIPTIONS, STRIPE_CUSTOMER_PORTAL_URL } = useConfig() || {};
 
   const plans: SubscriptionPlan[] = SUBSCRIPTIONS.plans;
   const paidSubscriptionPlans = plans.filter((plan) => plan.price !== 0);
 
+  const [userActivePlan, setUserActivePlan] = useState<SubscriptionPlan>();
+
   useEffect(() => {
     if (user?.subscription && user.subscription.priceId) {
-      router.push('/settings/subscriptions');
+      const selectedSubscription = SUBSCRIPTIONS.plans.find(
+        (plan: SubscriptionPlan) => plan.priceId === user.subscription.priceId,
+      );
+      setUserActivePlan(selectedSubscription);
     }
   }, [user]);
 
@@ -30,7 +30,11 @@ const Subscriptions = () => {
     if (priceId === 'free') {
       router.push(`/signup?back=${router.asPath}`);
     } else {
-      router.push(`/subscriptions/summary?priceId=${priceId}`);
+      if (userActivePlan) {
+        router.push(`${STRIPE_CUSTOMER_PORTAL_URL}?prefilled_email=${user?.subscription.stripeCustomerEmail}`);
+      } else {
+        router.push(`/subscriptions/summary?priceId=${priceId}`);
+      }
     }
   };
 
@@ -75,6 +79,7 @@ const Subscriptions = () => {
             config={SUBSCRIPTIONS.config}
             filteredSubscriptionPlans={paidSubscriptionPlans}
             clickHandler={handleNext}
+            userActivePlan={userActivePlan}
           />
         )}
         {!isAuthenticated && (
@@ -82,6 +87,7 @@ const Subscriptions = () => {
             config={SUBSCRIPTIONS.config}
             filteredSubscriptionPlans={plans}
             clickHandler={handleNext}
+            userActivePlan={userActivePlan}
           />
         )}
       </main>

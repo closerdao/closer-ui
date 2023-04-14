@@ -408,6 +408,7 @@
   "subscriptions_success_your_subscription_number": "YOUR SUBSCRIPTION # IS: ",
   "subscriptions_success_next_steps": "You can view, change and cancel your subscription from your account profile.",
   "subscriptions_terms_full_text": "This is the full text of the terms and conditions",
+  "subscriptions_active_button": "Active",
   
   "tasks_edit_title": "Edit",
   "tasks_edit_error": "Task not found",
