@@ -14,6 +14,52 @@ import { BaseBookingParams, Listing } from '../../../types';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
+const bookingHardcoded = {
+  status: 'Booking request sent.',
+  results: {
+    status: 'open',
+    listing: '609d72f9a460e712c32a1c4b',
+    addon: [],
+    start: '2023-04-17T00:00:00.000Z',
+    end: '2023-04-20T00:00:00.000Z',
+    duration: 3,
+    adults: 1,
+    children: 0,
+    infants: 0,
+    pets: 0,
+    useTokens: false,
+    utilityFiat: {
+      val: 30,
+      cur: 'EUR',
+    },
+    rentalFiat: {
+      val: 90,
+      cur: 'EUR',
+    },
+    rentalToken: {
+      val: 1.5,
+      cur: 'TDF',
+    },
+    dailyUtilityFiat: {
+      val: 10,
+      cur: 'EUR',
+    },
+    dailyRentalToken: {
+      val: 0.5,
+      cur: 'TDF',
+    },
+    visibility: 'public',
+    visibleBy: [],
+    reportedBy: [],
+    createdBy: '641c2524f72ea12f5e9ab85d',
+    updated: '2023-04-14T12:37:45.240Z',
+    created: '2023-04-14T12:37:45.240Z',
+    attributes: [],
+    managedBy: [],
+    _id: '64394919561dfa6edd9ace0c',
+  },
+};
+
 interface Props extends BaseBookingParams {
   useTokens: boolean;
   listings: Listing[];
@@ -35,21 +81,25 @@ const AccomodationSelector: NextPage<Props> = ({
 }) => {
   const router = useRouter();
   const bookListing = async (listingId: string) => {
+    console.log('book a listing');
+
     try {
-      const {
-        data: { results: newBooking },
-      } = await api.post('/bookings/request', {
-        useTokens,
-        start,
-        end,
-        adults,
-        infants,
-        pets,
-        listing: listingId,
-        children: kids,
-        ...(eventId && { eventId }),
-        ...(volunteerId && { volunteerId }),
-      });
+      // const {
+      //   data: { results: newBooking },
+      // } = await api.post('/bookings/request', {
+      //   useTokens,
+      //   start,
+      //   end,
+      //   adults,
+      //   infants,
+      //   pets,
+      //   listing: listingId,
+      //   children: kids,
+      //   ...(eventId && { eventId }),
+      //   ...(volunteerId && { volunteerId }),
+      // });
+      const newBooking = bookingHardcoded.results;
+      console.log('newBooking', newBooking);
       router.push(`/bookings/${newBooking._id}/questions`);
     } catch (err) {
       console.log(err); // TO DO handle error

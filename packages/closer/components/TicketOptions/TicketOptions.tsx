@@ -87,6 +87,9 @@ const TicketOptions: FC<Props> = ({
           ))
         )}
       </div>
+
+      I have a discount code
+      <div>Discound code component here</div>
     </div>
   );
 };

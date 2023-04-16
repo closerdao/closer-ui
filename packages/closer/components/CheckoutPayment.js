@@ -23,6 +23,7 @@ const CheckoutPayment = ({
   totalToPayInFiat,
   dailyTokenValue,
   startDate,
+  endDate,
   totalNights,
   user,
   settings,

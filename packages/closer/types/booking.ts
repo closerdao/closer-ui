@@ -60,4 +60,11 @@ export type Booking = {
   attributes: string[];
   managedBy: string[];
   _id: string;
+  volunteer: string,
+  event: string, 
+  commitment?: string;
+  ticketOption?: string
+  total?: Price<CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH>;
 };
+
+

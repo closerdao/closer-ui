@@ -1,14 +1,43 @@
 import dayjs from 'dayjs';
-import PropTypes from 'prop-types';
 
 import { __ } from '../utils/helpers';
 
-const SummaryDates = ({ totalGuests, startDate, endDate, listingName }) => (
+interface SummaryDatesProps {
+  totalGuests: number;
+  startDate: string;
+  endDate: string;
+  listingName: string;
+  commitment?: string;
+  event?: string;
+  ticketOption?: string;
+}
+
+const SummaryDates = ({
+  totalGuests,
+  startDate,
+  endDate,
+  listingName,
+  commitment,
+  event,
+  ticketOption
+}: SummaryDatesProps) => (
   <div>
     <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2">
       <span className="mr-1">🏡</span>
       <span>{__('bookings_summary_step_dates_title')}</span>
     </h2>
+    {event && (
+      <div className="flex justify-between items-center mt-3">
+        <p>{__('bookings_summary_step_dates_event')}</p>
+        <p className="font-bold uppercase">{event}</p>
+      </div>
+    )}
+    {ticketOption && (
+      <div className="flex justify-between items-center mt-3">
+        <p>{__('bookings_summary_step_dates_ticket_option')}</p>
+        <p className="font-bold uppercase">{ticketOption}</p>
+      </div>
+    )}
     <div className="flex justify-between items-center my-3">
       <p>{__('bookings_summary_step_dates_number_of_guests')}</p>
       <p className="font-bold">{totalGuests}</p>
@@ -25,14 +54,14 @@ const SummaryDates = ({ totalGuests, startDate, endDate, listingName }) => (
       <p>{__('bookings_summary_step_dates_accomodation_type')}</p>
       <p className="font-bold uppercase">{listingName}</p>
     </div>
+    {commitment && (
+      <div className="flex justify-between items-center mt-3">
+        <p>{__('bookings_summary_step_dates_commitment')}</p>
+        <p className="font-bold uppercase">{commitment}</p>
+      </div>
+    )}
+    
   </div>
 );
-
-SummaryDates.propTypes = {
-  totalGuests: PropTypes.number,
-  startDate: PropTypes.string,
-  endDate: PropTypes.string,
-  listingName: PropTypes.string,
-};
 
 export default SummaryDates;

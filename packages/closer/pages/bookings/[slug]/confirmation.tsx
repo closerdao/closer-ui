@@ -4,14 +4,24 @@ import { useEffect } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import PageError from '../../../components/PageError';
+import Button from '../../../components/ui/Button';
 import ProgressBar from '../../../components/ui/ProgressBar';
+
+import { ParsedUrlQuery } from 'querystring';
 
 import PageNotFound from '../../404';
 import { BOOKING_STEPS } from '../../../constants';
+import { BaseBookingParams, Booking } from '../../../types';
 import api from '../../../utils/api';
+import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
 
-const ConfirmationStep = ({ error, booking }) => {
+interface Props extends BaseBookingParams {
+  booking: Booking;
+  error?: string;
+}
+
+const ConfirmationStep = ({ error, booking }: Props) => {
   const router = useRouter();
 
   useEffect(() => {
@@ -20,11 +30,15 @@ const ConfirmationStep = ({ error, booking }) => {
     }
   }, [booking._id]);
 
-  const viewBooking = (id) => {
+  const viewBooking = (id: string) => {
     router.push(`/bookings/${id}`);
   };
   const startNewBooking = () => {
     router.push('/bookings/create');
+  };
+
+  const goBack = () => {
+    router.push('/');
   };
 
   if (error) {
@@ -42,7 +56,7 @@ const ConfirmationStep = ({ error, booking }) => {
   return (
     <>
       <div className="max-w-screen-sm mx-auto p-8">
-        <BookingBackButton url="/" />
+        <BookingBackButton onClick={goBack} />
         <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">🎊</span>
           <span>{__('bookings_confirmation_step_success')}</span>
@@ -68,20 +82,20 @@ const ConfirmationStep = ({ error, booking }) => {
               {__('bookings_confirmation_step_success_when_payment_processed')}
             </p>
           </div>
-          <button
-            className="booking-btn"
-            type="button"
-            onClick={() => viewBooking(booking._id)}
-          >
+          <Button onClick={() => viewBooking(booking._id)}>
             {__('bookings_confirmation_step_success_button')}
-          </button>
+          </Button>
         </div>
       </div>
     </>
   );
 };
 
-ConfirmationStep.getInitialProps = async ({ query }) => {
+ConfirmationStep.getInitialProps = async ({
+  query,
+}: {
+  query: ParsedUrlQuery;
+}) => {
   try {
     const {
       data: { results: booking },
@@ -90,7 +104,7 @@ ConfirmationStep.getInitialProps = async ({ query }) => {
     return { booking, error: null };
   } catch (err) {
     return {
-      error: err.message,
+      error: parseMessageFromError(err),
       booking: null,
       listing: null,
     };

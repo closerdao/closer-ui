@@ -1,7 +1,6 @@
 import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
-import React from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingDates from '../../../components/BookingDates/BookingDates';
@@ -94,7 +93,7 @@ const DatesSelector: NextPage<Props> = ({
   const [currency, selectCurrency] = useState<CloserCurrencies>(
     (savedCurrency as CloserCurrencies) || DEFAULT_CURRENCY,
   );
-  const [selectedTicketName, selectTicketName] = useState<string>();
+  const [selectedTicketName, selectTicketName] = useState<string>('');
   const handleNext = () => {
     const data = {
       start: start.format('YYYY-MM-DD'),
@@ -106,6 +105,7 @@ const DatesSelector: NextPage<Props> = ({
       currency,
       ...(eventId && { eventId: eventId as string }),
       ...(volunteerId && { volunteerId: volunteerId as string }),
+      selectedTicketName,
     };
     const urlParams = new URLSearchParams(data);
     router.push(`/bookings/create/accomodation?${urlParams}`);
@@ -133,17 +133,20 @@ const DatesSelector: NextPage<Props> = ({
         </h1>
         <ProgressBar steps={BOOKING_STEPS} />
         <div className="mt-16 flex flex-col gap-16">
-          <div>
-            <h2 className="mb-3 text-2xl leading-10 font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center">
-              <span className="mr-1">💰</span>
-              <span>{__('bookings_dates_step_payment_title')}</span>
-            </h2>
-            <CurrencySwitch
-              selectedCurrency={currency}
-              onSelect={selectCurrency}
-              currencies={CURRENCIES}
-            />
-          </div>
+          {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' && (
+            <div>
+              <h2 className="mb-3 text-2xl leading-10 font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center">
+                <span className="mr-1">💰</span>
+                <span>{__('bookings_dates_step_payment_title')}</span>
+              </h2>
+              <CurrencySwitch
+                selectedCurrency={currency}
+                onSelect={selectCurrency}
+                currencies={CURRENCIES}
+              />
+            </div>
+          )}
+
           <TicketOptions
             items={ticketOptions}
             selectedTicketName={selectedTicketName}

@@ -11,7 +11,7 @@ import PageError from '../../../components/PageError';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import dayjs from 'dayjs';
-import PropTypes from 'prop-types';
+import { ParsedUrlQuery } from 'querystring';
 
 import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
@@ -19,11 +19,21 @@ import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { WalletState } from '../../../contexts/wallet';
+import { BaseBookingParams, Booking, Listing } from '../../../types';
+import { BookingSettings } from '../../../types/api';
 import api from '../../../utils/api';
 import { estimateNeededStakeForNewBooking } from '../../../utils/blockchain';
+import { parseMessageFromError } from '../../../utils/common';
 import { __, priceFormat } from '../../../utils/helpers';
 
-const Checkout = ({ booking, listing, settings, error }) => {
+interface Props extends BaseBookingParams {
+  listing: Listing;
+  booking: Booking;
+  settings: BookingSettings;
+  error?: string;
+}
+
+const Checkout = ({ booking, listing, settings, error }: Props) => {
   const {
     _id: bookingId,
     utilityFiat,
@@ -35,6 +45,10 @@ const Checkout = ({ booking, listing, settings, error }) => {
     start,
     end,
   } = booking || {};
+
+
+console.log('booking=', booking);
+
   const accomodationCost = useTokens ? rentalToken : rentalFiat;
   const totalToPayInFiat = useTokens
     ? utilityFiat?.val
@@ -46,16 +60,18 @@ const Checkout = ({ booking, listing, settings, error }) => {
     return estimateNeededStakeForNewBooking({
       bookedDates,
       bookingYear: dayjs(start).year(),
-      totalBookingTokenCost: rentalToken?.val,
+      totalBookingTokenCost: rentalToken.val,
     });
   }, [bookedDates]);
 
-  const isNotEnoughBalance = balanceAvailable < totalToPayInToken;
+  const isNotEnoughBalance = totalToPayInToken
+    ? balanceAvailable < totalToPayInToken
+    : false;
   const { user, isAuthenticated } = useAuth();
 
   const listingName = listing?.name;
   const [hasAgreedToWalletDisclaimer, setWalletDisclaimer] = useState(
-    !(totalToPayInToken > 0),
+    totalToPayInToken && !(totalToPayInToken > 0),
   );
 
   const router = useRouter();
@@ -63,7 +79,9 @@ const Checkout = ({ booking, listing, settings, error }) => {
     router.push(`/bookings/${booking._id}/summary`);
   };
 
-  const { platform } = usePlatform();
+  const { platform }: any = usePlatform();
+  // TODO: add types to platform
+
   const switchToEUR = async () => {
     await platform.booking.patch(booking._id, { useTokens: false });
     router.push(`/bookings/${booking._id}/checkout`);
@@ -88,7 +106,7 @@ const Checkout = ({ booking, listing, settings, error }) => {
   return (
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
-        <BookingBackButton action={goBack} name={__('buttons_back')} />
+        <BookingBackButton onClick={goBack} name={__('buttons_back')} />
         <h1 className="step-title font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">💰</span>
           <span>{__('bookings_checkout_step_title')}</span>
@@ -107,23 +125,24 @@ const Checkout = ({ booking, listing, settings, error }) => {
             <p className="text-right text-xs">
               {__('bookings_checkout_step_accomodation_description')}
             </p>
-
-            <div className="mt-4">
-              <BookingWallet
-                toPay={totalToPayInToken}
-                switchToEUR={switchToEUR}
-              />
-              {totalToPayInToken > 0 && (
-                <Checkbox
-                  checked={hasAgreedToWalletDisclaimer}
-                  onChange={() =>
-                    setWalletDisclaimer(!hasAgreedToWalletDisclaimer)
-                  }
-                  className="mt-8"
-                  label={__('bookings_checkout_step_wallet_disclaimer')}
+            {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' && (
+              <div className="mt-4">
+                <BookingWallet
+                  toPay={totalToPayInToken}
+                  switchToEUR={switchToEUR}
                 />
-              )}
-            </div>
+                {totalToPayInToken && totalToPayInToken > 0 && (
+                  <Checkbox
+                    checked={hasAgreedToWalletDisclaimer || false}
+                    onChange={() =>
+                      setWalletDisclaimer(!hasAgreedToWalletDisclaimer)
+                    }
+                    className="mt-8"
+                    label={__('bookings_checkout_step_wallet_disclaimer')}
+                  />
+                )}
+              </div>
+            )}
           </div>
           <div>
             <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3">
@@ -159,7 +178,7 @@ const Checkout = ({ booking, listing, settings, error }) => {
   );
 };
 
-Checkout.getInitialProps = async ({ query }) => {
+Checkout.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
   try {
     const {
       data: { results: booking },
@@ -173,13 +192,14 @@ Checkout.getInitialProps = async ({ query }) => {
       },
     ] = await Promise.all([
       api.get(`/listing/${booking.listing}`),
-      api.get('/bookings/settings'),
+      // api.get('/bookings/settings'),
+      api.get('/config/booking'),
     ]);
 
     return { booking, listing, settings, error: null };
   } catch (err) {
     return {
-      error: err.message,
+      error: parseMessageFromError(err),
       booking: null,
       listing: null,
       settings: null,
@@ -189,35 +209,3 @@ Checkout.getInitialProps = async ({ query }) => {
 
 export default Checkout;
 
-Checkout.propTypes = {
-  booking: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    utilityFiat: PropTypes.shape({
-      val: PropTypes.number.isRequired,
-      cur: PropTypes.string.isRequired,
-    }).isRequired,
-    dailyRentalToken: PropTypes.shape({
-      val: PropTypes.number.isRequired,
-      cur: PropTypes.string.isRequired,
-    }).isRequired,
-    useTokens: PropTypes.bool.isRequired,
-    rentalToken: PropTypes.shape({
-      val: PropTypes.number.isRequired,
-      cur: PropTypes.string.isRequired,
-    }).isRequired,
-    rentalFiat: PropTypes.shape({
-      val: PropTypes.number.isRequired,
-      cur: PropTypes.string.isRequired,
-    }).isRequired,
-    duration: PropTypes.number.isRequired,
-    start: PropTypes.string.isRequired,
-    end: PropTypes.string.isRequired,
-  }).isRequired,
-  listing: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-  }).isRequired,
-  settings: PropTypes.shape({
-    visitorsGuide: PropTypes.string,
-  }),
-  error: PropTypes.string,
-};

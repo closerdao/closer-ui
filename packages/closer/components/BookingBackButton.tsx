@@ -1,5 +1,4 @@
 import { FC, MouseEventHandler } from 'react';
-import React from 'react';
 
 import { __ } from '../utils/helpers';
 

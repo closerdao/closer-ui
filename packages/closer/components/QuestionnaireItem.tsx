@@ -1,15 +1,20 @@
 import React, { useEffect } from 'react';
 
-import PropTypes from 'prop-types';
-
 import { useDebounce } from '../hooks/useDebounce';
+import { Question } from '../types';
 import { __ } from '../utils/helpers';
+
+interface Props {
+  question: Question;
+  savedAnswer: string;
+  handleAnswer: (name: string, answer: string) => void;
+}
 
 const QuestionnaireItem = ({
   question: { type, name, options, required },
   savedAnswer,
   handleAnswer,
-}) => {
+}: Props) => {
   const [answer, setAnswer] = React.useState(savedAnswer || '');
   const debouncedAnswer = useDebounce(answer, 500);
 
@@ -17,7 +22,11 @@ const QuestionnaireItem = ({
     handleAnswer(name, debouncedAnswer);
   }, [debouncedAnswer]);
 
-  const onChange = (e) => {
+  const onChange = (
+    e:
+      | React.ChangeEvent<HTMLSelectElement>
+      | React.ChangeEvent<HTMLInputElement>,
+  ) => {
     setAnswer(e.target.value);
   };
 
@@ -46,9 +55,8 @@ const QuestionnaireItem = ({
           />
         </>
       )}
-      {type === 'select' && (
+      {type === 'select' && options && (
         <select
-          type="text"
           className="rounded-xl border-solid !border border-neutral-400 bg-neutral-100 px-4 block w-full appearance-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent invalid:border-primary"
           value={answer || ''}
           onChange={onChange}
@@ -73,17 +81,6 @@ QuestionnaireItem.defaultProps = {
     options: [],
   },
   handleAnswer: () => null,
-};
-
-QuestionnaireItem.propTypes = {
-  question: PropTypes.shape({
-    type: PropTypes.string,
-    name: PropTypes.string,
-    options: PropTypes.arrayOf(PropTypes.string),
-    required: PropTypes.bool,
-  }),
-  savedAnswer: PropTypes.string,
-  handleAnswer: PropTypes.func,
 };
 
 export default QuestionnaireItem;
