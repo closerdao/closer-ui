@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const closerTheme = require('closer/theme');
 const defaultTheme = require('tailwindcss/defaultTheme');
 
@@ -32,7 +33,7 @@ const tdfTheme = {
     fontFamily: {
       sans: ['Barlow', ...defaultTheme.fontFamily.sans],
     },
-  },
+ },
   plugins: [],
 };
 

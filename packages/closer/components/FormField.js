@@ -167,7 +167,7 @@ const FormField = ({
               {objectPath.get(data, name) &&
                 objectPath.get(data, name).map((tag) => (
                   <Tag
-                    key={ tag }
+                    key={tag}
                     color="blue"
                     remove={() => {
                       update(

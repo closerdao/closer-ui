@@ -15,14 +15,15 @@ describe('Signup', () => {
     expect(title).toHaveTextContent(/signup/i);
   });
 
-  it('should have a Create account button enabled', () => {
+  it('should have a Create account button disabled by default', () => {
     render(
       <AuthProvider>
         <Signup />
       </AuthProvider>,
     );
-
     const button = screen.getByRole('button', { name: /create account/i });
-    expect(button).toBeEnabled();
+
+    expect(button).toBeDisabled();
   });
+
 });

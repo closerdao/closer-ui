@@ -19,6 +19,7 @@ describe('Events', () => {
         return res(ctx.json({ results: eventsMock }));
       }),
     );
+
     renderWithProviders(<Events />);
     const titleUpcoming = screen.getAllByRole('heading', { level: 1 })[0];
     const titlePast = screen.getAllByRole('heading', { level: 1 })[1];

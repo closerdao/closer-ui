@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Linkify from 'react-linkify';
 
 import ConnectedWallet from '../../components/ConnectedWallet';
@@ -12,11 +12,11 @@ import UploadPhoto from '../../components/UploadPhoto';
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 import { TiDelete } from '@react-icons/all-files/ti/TiDelete';
 
-import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import api, { cdn } from '../../utils/api';
 import { __ } from '../../utils/helpers';
+import PageNotFound from '../404';
 
 const MemberPage = ({ member }) => {
   const router = useRouter();
@@ -201,6 +201,7 @@ const MemberPage = ({ member }) => {
                   <h3 className="font-medium text-5xl md:text-6xl md:w-6/12 flex flex-wrap">
                     {member.screenname}
                   </h3>
+
                   {isAuthenticated && member._id !== currentUser._id && (
                     <div className="my-3">
                       <a
@@ -215,6 +216,7 @@ const MemberPage = ({ member }) => {
                       </a>
                     </div>
                   )}
+                  <h6 className="text-sm my-2 ml-1">{member.email}</h6>
                   <div className="mt-1 w-full">
                     {member.roles && (
                       <div className="text-sm mt-1 tags">
@@ -310,71 +312,66 @@ const MemberPage = ({ member }) => {
                 {isAuthenticated && member._id === currentUser._id && (
                   <ConnectedWallet />
                 )}
-                <div className="flex flex-col items-start md:w-6/12">
-                  <div className="w-full">
-                    <div className="page-title flex justify-between">
-                      <h3 className="mt-8 md:mt-3">
-                        {__('members_slug_my_events')}
-                      </h3>
-                    </div>
-
-                    <EventsList
-                      limit={7}
-                      isListView
-                      showPagination={false}
-                      where={{
-                        attendees: member._id,
-                        visibility: 'public',
-                      }}
-                    />
+                <div className="">
+                  <div className="page-title flex justify-between">
+                    <h3 className="mt-8 md:mt-3">
+                      {__('members_slug_my_events')}
+                    </h3>
                   </div>
 
-                  <div className="flex flex-col w-full">
-                    <div className="flex flex-col items-start mb-10">
-                      <div className="flex flex-row items-center justify-between mt-8 w-full">
-                        <p className="font-semibold text-md mr-5">
-                          {__('members_slug_stay_social')}
-                        </p>
-                        {isAuthenticated && member._id === currentUser._id && (
-                          <div className="flex flex-row items-center justify-start space-x-3 w-20">
-                            <a
-                              href="#"
-                              name="Add links"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                toggleShowForm(!showForm);
-                              }}
-                            >
-                              <button className="btn-small">Add</button>
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                      <ul className="flex flex-col w-full space-y-1 mt-4">
-                        {links
-                          ? links.map((link) => (
-                              <li
-                                key={link._id}
-                                className="group flex flex-row items-center justify-start space-x-5 mb-1"
-                              >
-                                <a href={link.url}>{link.name}</a>
-                                {isAuthenticated &&
-                                  member._id === currentUser._id && (
-                                    <a
-                                      href="#"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        deleteLink(link);
-                                      }}
-                                    >
-                                      <TiDelete className="text-gray-500 text-lg hover:text-black hidden group-hover:block" />
-                                    </a>
-                                  )}
-                              </li>
-                            ))
-                          : 'No links yet'}
-                      </ul>
+                  <EventsList
+                    limit={7}
+                    showPagination={false}
+                    where={{
+                      attendees: member._id,
+                      visibility: 'public',
+                    }}
+                  />
+
+                  <div className="mt-8">
+                    <div>
+                      <p className="font-semibold text-md mr-5">
+                        {__('members_slug_stay_social')}
+                      </p>
+                      {isAuthenticated && member._id === currentUser._id && (
+                        <div className="flex flex-row items-center justify-start space-x-3 w-20">
+                          <a
+                            href="#"
+                            name="Add links"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              toggleShowForm(!showForm);
+                            }}
+                          >
+                            <button className="btn-small">Add</button>
+                          </a>
+                        </div>
+                      )}
                     </div>
+                    <ul className="flex flex-col w-full space-y-1 mt-4">
+                      {links
+                        ? links.map((link) => (
+                            <li
+                              key={link._id}
+                              className="group flex flex-row items-center justify-start space-x-5 mb-1"
+                            >
+                              <a href={link.url}>{link.name}</a>
+                              {isAuthenticated &&
+                                member._id === currentUser._id && (
+                                  <a
+                                    href="#"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      deleteLink(link);
+                                    }}
+                                  >
+                                    <TiDelete className="text-gray-500 text-lg hover:text-black hidden group-hover:block" />
+                                  </a>
+                                )}
+                            </li>
+                          ))
+                        : 'No links yet'}
+                    </ul>
 
                     {isAuthenticated &&
                       member._id === currentUser._id &&

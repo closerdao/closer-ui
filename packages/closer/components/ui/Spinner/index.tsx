@@ -1,9 +1,9 @@
 const Spinner = () => {
   return (
-    <div role="status" className=" block  mt-[6px] mr-[5px]">
+    <div role="status">
       <svg
         aria-hidden="true"
-        className="h-[16px] w-[16px] animate-spin"
+        className="h-4 w-4 animate-spin"
         viewBox="0 0 100 101"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
