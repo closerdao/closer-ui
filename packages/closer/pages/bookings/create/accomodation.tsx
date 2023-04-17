@@ -32,9 +32,12 @@ const AccomodationSelector: NextPage<Props> = ({
   listings,
   eventId,
   volunteerId,
+  ticketName,
 }) => {
+  console.log('ticketName', ticketName);
   const router = useRouter();
   const bookListing = async (listingId: string) => {
+    console.log(eventId && { eventId, ticketOption: { name: ticketName } });
     try {
       const {
         data: { results: newBooking },
@@ -47,7 +50,7 @@ const AccomodationSelector: NextPage<Props> = ({
         pets,
         listing: listingId,
         children: kids,
-        ...(eventId && { eventId }),
+        ...(eventId && { eventId, ticketOption: { name: ticketName } }),
         ...(volunteerId && { volunteerId }),
       });
       router.push(`/bookings/${newBooking._id}/questions`);
@@ -134,6 +137,7 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
     currency,
     eventId,
     volunteerId,
+    ticketName,
   }: BaseBookingParams = query || {};
   const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
   const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
@@ -147,7 +151,7 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
     infants,
     pets,
     useTokens,
-    ...(eventId && { eventId }),
+    ...(eventId && { eventId, ticketName }),
     ...(volunteerId && { volunteerId }),
   });
 
@@ -163,6 +167,7 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
     useTokens,
     eventId,
     volunteerId,
+    ticketName,
   };
 };
 

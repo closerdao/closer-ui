@@ -106,6 +106,7 @@ const DatesSelector: NextPage<Props> = ({
       currency,
       ...(eventId && { eventId: eventId as string }),
       ...(volunteerId && { volunteerId: volunteerId as string }),
+      ...(selectedTicketName && { ticketName: selectedTicketName }),
     };
     const urlParams = new URLSearchParams(data);
     router.push(`/bookings/create/accomodation?${urlParams}`);
