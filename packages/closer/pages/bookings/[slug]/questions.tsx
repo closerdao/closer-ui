@@ -8,15 +8,16 @@ import QuestionnaireItem from '../../../components/QuestionnaireItem';
 import Button from '../../../components/ui/Button';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
+import { ParsedUrlQuery } from 'querystring';
+
 import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { BaseBookingParams, Booking, Question } from '../../../types';
 import api from '../../../utils/api';
-import { __ } from '../../../utils/helpers';
-import { ParsedUrlQuery } from 'querystring';
 import { parseMessageFromError } from '../../../utils/common';
+import { __ } from '../../../utils/helpers';
 
 const questionsHardcoded: Question[] = [
   { type: 'text', name: 'What brings you to Closer?', required: true },
@@ -35,13 +36,16 @@ interface Props extends BaseBookingParams {
 }
 
 const Questionnaire = ({ questions, booking, error }: Props) => {
+  console.log('booking', booking);
+
   const hasRequiredQuestions = questions.some((question) => question.required);
   const [isSubmitDisabled, setSubmitDisabled] = useState(hasRequiredQuestions);
 
-
   console.log(booking?.fields);
   const [answers, setAnswers] = useState(
-    booking?.fields.length ? booking?.fields : questions.map((question) => ({ [question.name]: '' })),
+    booking?.fields && booking?.fields?.length
+      ? booking?.fields
+      : questions.map((question) => ({ [question.name]: '' })),
   );
 
   useEffect(() => {
@@ -91,7 +95,10 @@ const Questionnaire = ({ questions, booking, error }: Props) => {
     router.push('/bookings/create');
   };
 
-  const getAnswer = (answers: { [key: string]: string; }[], questionName: string) => {
+  const getAnswer = (
+    answers: { [key: string]: string }[],
+    questionName: string,
+  ) => {
     const savedAnswer = answers?.find(
       (answer) => Object.keys(answer)[0] === questionName,
     );
@@ -124,7 +131,7 @@ const Questionnaire = ({ questions, booking, error }: Props) => {
           onClick={resetBooking}
           name={__('buttons_back_to_dates')}
         />
-        <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
+        <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">📄</span>
           <span>{__('bookings_questionnaire_step_title')}</span>
         </h1>
@@ -148,7 +155,12 @@ const Questionnaire = ({ questions, booking, error }: Props) => {
   );
 };
 
-Questionnaire.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
+Questionnaire.getInitialProps = async ({
+  query,
+}: {
+  query: ParsedUrlQuery;
+}) => {
+  console.log('query.slug=', query.slug);
   try {
     const [
       {
@@ -161,8 +173,8 @@ Questionnaire.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => 
       api.get(`/booking/${query.slug}`),
       api.get('/bookings/settings'),
     ]);
-    // return { booking, questions: settings.questions, error: null };
-    return { booking, questions: questionsHardcoded, error: null };
+    return { booking, questions: settings.questions, error: null };
+    // return { booking, questions: questionsHardcoded, error: null };
   } catch (err) {
     return {
       error: parseMessageFromError(err),

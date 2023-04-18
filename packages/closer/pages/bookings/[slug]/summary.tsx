@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
+import Conditions from '../../../components/Conditions';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
@@ -19,7 +20,6 @@ import { BaseBookingParams, Booking, Listing } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, getPriceWithDiscount } from '../../../utils/helpers';
-import Conditions from '../../../components/Conditions';
 
 const bookingHardcoded = {
   status: 'open',
@@ -86,16 +86,15 @@ interface Props extends BaseBookingParams {
   listing: Listing;
   booking: Booking;
   error?: string;
-  settings: any
+  settings: any;
 }
 
 const Summary = ({ booking, listing, settings, error }: Props) => {
-
   console.log('settings=', settings);
   const router = useRouter();
   const [hasComplied, setCompliance] = useState(false);
   const onComply = (isComplete: boolean) => setCompliance(isComplete);
-  
+
   const {
     utilityFiat,
     rentalToken,
@@ -108,12 +107,12 @@ const Summary = ({ booking, listing, settings, error }: Props) => {
     event,
     volunteer,
   } = booking || {};
-  
+
   const eventCostWithDiscount = getPriceWithDiscount(
     Number(event?.eventPrice.val),
     event?.eventDiscount,
     event?.ticketOption.name,
-    );
+  );
 
   useEffect(() => {
     console.log('booking=', booking);
@@ -140,7 +139,6 @@ const Summary = ({ booking, listing, settings, error }: Props) => {
     if (volunteer) {
       router.push(`/bookings/${booking._id}/confirmation`);
     } else {
-
       router.push(`/bookings/${booking._id}/checkout`);
     }
   };
@@ -167,7 +165,7 @@ const Summary = ({ booking, listing, settings, error }: Props) => {
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
         <BookingBackButton onClick={goBack} name={__('buttons_back')} />
-        <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
+        <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">📑</span>
           <span>{__('bookings_summary_step_title')}</span>
         </h1>
@@ -212,14 +210,13 @@ const Summary = ({ booking, listing, settings, error }: Props) => {
   );
 };
 
-Summary.getInitialProps = async ({ query }: ParsedUrlQuery) => {
+Summary.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
   try {
-    // const {
-    //   data: { results: booking },
-    // } = await api.get(`/booking/${query.slug}`);
+    const {
+      data: { results: booking },
+    } = await api.get(`/booking/${query.slug}`);
 
-    const booking = bookingHardcoded;
-
+    // const booking = bookingHardcoded;
 
     // const {
     //   data: { results: settings },
@@ -237,7 +234,6 @@ Summary.getInitialProps = async ({ query }: ParsedUrlQuery) => {
     ] = await Promise.all([
       api.get(`/listing/${booking.listing}`),
       api.get('/bookings/settings'),
-      // api.get('/config/booking'),
     ]);
     return { booking, listing, settings, error: null };
   } catch (err) {

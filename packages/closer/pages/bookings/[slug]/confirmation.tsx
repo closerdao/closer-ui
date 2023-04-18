@@ -63,7 +63,7 @@ const ConfirmationStep = ({ error, booking }: Props) => {
     <>
       <div className="max-w-screen-sm mx-auto p-8">
         <BookingBackButton onClick={goBack} />
-        <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
+        <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">🎊</span>
           <span>{__('bookings_confirmation_step_success')}</span>
         </h1>
@@ -90,7 +90,7 @@ const ConfirmationStep = ({ error, booking }: Props) => {
               </span>
             </h2>
           )}
-     
+
           {!booking?.volunteer && (
             <p className="font-black uppercase">
               {__(
@@ -119,8 +119,6 @@ const ConfirmationStep = ({ error, booking }: Props) => {
               </p>
             </div>
           )}
-
-          
 
           <Button onClick={() => viewBooking(booking._id)}>
             {__('bookings_confirmation_step_success_button')}

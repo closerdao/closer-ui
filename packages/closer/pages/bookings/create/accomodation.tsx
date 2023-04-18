@@ -80,29 +80,29 @@ const AccomodationSelector: NextPage<Props> = ({
   volunteerId,
   ticketName,
 }) => {
-  console.log('ticketName', ticketName);
+  console.log('ticketName=', ticketName);
   const router = useRouter();
   const bookListing = async (listingId: string) => {
     console.log('book a listing');
 
     try {
-      // const {
-      //       data: { results: newBooking },
-      //     } = await api.post('/bookings/request', {
-      //       useTokens,
-      //       start,
-      //       end,
-      //       adults,
-      //       infants,
-      //       pets,
-      //       listing: listingId,
-      //       children: kids,
-      //       ...(eventId && { eventId, ticketOption: { name: ticketName } }),
-      //       ...(volunteerId && { volunteerId }),
-      //     });
-      const newBooking = bookingHardcoded.results;
+      const {
+        data: { results: newBooking },
+      } = await api.post('/bookings/request', {
+        useTokens,
+        start,
+        end,
+        adults,
+        infants,
+        pets,
+        listing: listingId,
+        children: kids,
+        ...(eventId && { eventId, ticketOption: { name: ticketName } }),
+        ...(volunteerId && { volunteerId }),
+      });
+      // const newBooking = bookingHardcoded.results;
       console.log('newBooking', newBooking);
-   
+
       router.push(`/bookings/${newBooking._id}/questions`);
     } catch (err) {
       console.log(err); // TO DO handle error
@@ -138,7 +138,7 @@ const AccomodationSelector: NextPage<Props> = ({
     <>
       <div className="max-w-screen-sm mx-auto md:first-letter:p-8">
         <BookingBackButton onClick={backToDates} name={__('buttons_back')} />
-        <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
+        <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">🏡</span>
           <span>{__('bookings_accomodation_step_title')}</span>
         </h1>
@@ -191,7 +191,7 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
   }: BaseBookingParams = query || {};
   const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
   const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
-  
+
   const {
     data: { results },
   } = await api.post('/bookings/availability', {
