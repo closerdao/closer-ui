@@ -10,6 +10,7 @@ const SummaryCosts = ({
   useTokens,
   totalToken,
   totalFiat,
+  eventCost,
 }) => {
   const { BLOCKCHAIN_DAO_TOKEN } = useConfig();
 
@@ -19,6 +20,14 @@ const SummaryCosts = ({
         <span className="mr-1">💰</span>
         <span>{__('bookings_summary_step_costs_title')}</span>
       </h2>
+
+      {eventCost !== 0 && (
+        <div className="flex justify-between items-center mt-3">
+          <p>{__('bookings_checkout_ticket_cost')}</p>
+          <p className="font-bold">{priceFormat(eventCost)}</p>
+        </div>
+      )}
+
       <div className="flex justify-between items-center mt-3">
         <p>{__('bookings_summary_step_dates_accomodation_type')}</p>
         <p className="font-bold">{priceFormat(accomodationCost)}</p>

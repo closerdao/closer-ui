@@ -62,6 +62,12 @@ const TicketOptions: FC<Props> = ({
         <span className="mr-1">🎟</span>
         <span>{__('bookings_dates_step_tickets_title')}</span>
       </h2>
+
+      {/* TODO: convert to reusable components:
+      <Heading level={2} className="mb-8">
+        🎟 {__('bookings_dates_step_tickets_title')}
+      </Heading> */}
+
       <div className="ticket-options my-4 flex flex-row flex-wrap">
         {volunteer ? (
           <Ticket
@@ -87,9 +93,6 @@ const TicketOptions: FC<Props> = ({
           ))
         )}
       </div>
-
-      I have a discount code
-      <div>Discound code component here</div>
     </div>
   );
 };

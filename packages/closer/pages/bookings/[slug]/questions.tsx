@@ -139,7 +139,7 @@ const Questionnaire = ({ questions, booking, error }: Props) => {
             />
           ))}
 
-          <Button onClick={handleSubmit} disabled={isSubmitDisabled}>
+          <Button onClick={handleSubmit} isEnabled={!isSubmitDisabled}>
             {__('buttons_submit')}
           </Button>
         </div>

@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import PageError from '../../../components/PageError';
@@ -18,9 +18,10 @@ import { useAuth } from '../../../contexts/auth';
 import { BaseBookingParams, Booking, Listing } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { __ } from '../../../utils/helpers';
+import { __, getPriceWithDiscount } from '../../../utils/helpers';
+import Conditions from '../../../components/Conditions';
 
-const bookingSummaryHardcoded = {
+const bookingHardcoded = {
   status: 'open',
   listing: '609d72f9a460e712c32a1c4b',
   start: '2023-04-17T00:00:00.000Z',
@@ -36,7 +37,7 @@ const bookingSummaryHardcoded = {
     cur: 'EUR',
   },
   rentalFiat: {
-    val: 0,
+    val: 15,
     cur: 'EUR',
   },
   rentalToken: {
@@ -60,18 +61,41 @@ const bookingSummaryHardcoded = {
   managedBy: [],
   _id: '64394919561dfa6edd9ace0c',
 
-  commitment: '4 hours',
-  event: 're:build global summit + Audio visual immersive dance ritual with @Alquem',
-  ticketOption: '1 X full passs'
+  volunteer: { id: 'id', name: 'lets build', commitment: '4 hours' },
+  // event: {
+  //   id: 'id',
+  //   name: 're:build global summit + Audio visual immersive dance ritual with @Alquem',
+  //   ticketOption: {
+  //     name: '1 X full passs',
+  //     price: 11,
+  //     cur: 'EUR',
+  //     disclaimer: 'ice-cream',
+  //   },
+  //   eventPrice: { val: 11, cur: 'EUR' },
+  //   eventDiscount: {
+  //     val: 0,
+  //     percent: 20,
+  //     name: '1 X full passs',
+  //     code: 'code',
+  //     _id: 'id',
+  //   },
+  // },
 };
 
 interface Props extends BaseBookingParams {
   listing: Listing;
   booking: Booking;
   error?: string;
+  settings: any
 }
 
-const Summary = ({ booking, listing, error }: Props) => {
+const Summary = ({ booking, listing, settings, error }: Props) => {
+
+  console.log('settings=', settings);
+  const router = useRouter();
+  const [hasComplied, setCompliance] = useState(false);
+  const onComply = (isComplete: boolean) => setCompliance(isComplete);
+  
   const {
     utilityFiat,
     rentalToken,
@@ -80,7 +104,16 @@ const Summary = ({ booking, listing, error }: Props) => {
     start,
     end,
     adults,
+
+    event,
+    volunteer,
   } = booking || {};
+  
+  const eventCostWithDiscount = getPriceWithDiscount(
+    Number(event?.eventPrice.val),
+    event?.eventDiscount,
+    event?.ticketOption.name,
+    );
 
   useEffect(() => {
     console.log('booking=', booking);
@@ -89,14 +122,27 @@ const Summary = ({ booking, listing, error }: Props) => {
     }
   }, [booking.status]);
 
-  const accomodationCost = useTokens ? rentalToken : rentalFiat;
-  const totalFiat = useTokens
-    ? utilityFiat.val
-    : rentalFiat.val + utilityFiat.val;
+  const accomodationCost = useTokens
+    ? rentalToken
+    : volunteer?.id
+    ? 0
+    : rentalFiat;
 
-  const router = useRouter();
+  const totalToPayInFiat = useTokens
+    ? utilityFiat?.val
+    : event?.eventPrice.val
+    ? rentalFiat?.val + utilityFiat?.val + eventCostWithDiscount
+    : volunteer?.id
+    ? utilityFiat?.val
+    : rentalFiat?.val + utilityFiat?.val;
+
   const handleNext = () => {
-    router.push(`/bookings/${booking._id}/checkout`);
+    if (volunteer) {
+      router.push(`/bookings/${booking._id}/confirmation`);
+    } else {
+
+      router.push(`/bookings/${booking._id}/checkout`);
+    }
   };
 
   const goBack = () => {
@@ -132,21 +178,34 @@ const Summary = ({ booking, listing, error }: Props) => {
             startDate={start}
             endDate={end}
             listingName={listing.name}
-            commitment={booking.commitment}
-            event={booking?.event}
-            ticketOption={booking?.ticketOption}
+            commitment={booking?.volunteer?.commitment}
+            event={booking?.event?.name}
+            ticketOption={booking?.event?.ticketOption.name}
           />
           <SummaryCosts
             utilityFiat={utilityFiat}
             useTokens={useTokens}
             accomodationCost={accomodationCost}
             totalToken={rentalToken.val}
-            totalFiat={totalFiat}
+            totalFiat={totalToPayInFiat}
+            eventCost={eventCostWithDiscount}
           />
-
-          <Button className="booking-btn" onClick={handleNext}>
-            {__('buttons_checkout')}
-          </Button>
+          {event && (
+            <Button className="booking-btn" onClick={handleNext}>
+              {__('buttons_checkout')}
+            </Button>
+          )}
+          {volunteer && (
+            <>
+              <Conditions
+                setComply={onComply}
+                visitorsGuide={settings.visitorsGuide}
+              />
+              <Button className="booking-btn" onClick={handleNext}>
+                {__('apply_submit_button')}
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </>
@@ -159,12 +218,28 @@ Summary.getInitialProps = async ({ query }: ParsedUrlQuery) => {
     //   data: { results: booking },
     // } = await api.get(`/booking/${query.slug}`);
 
-    const booking = bookingSummaryHardcoded;
+    const booking = bookingHardcoded;
 
-    const {
-      data: { results: listing },
-    } = await api.get(`/listing/${booking.listing}`);
-    return { booking, listing, error: null };
+
+    // const {
+    //   data: { results: settings },
+    // } = await api.get('/bookings/settings');
+    // const {
+    //   data: { results: listing },
+    // } = await api.get(`/listing/${booking.listing}`);
+    const [
+      {
+        data: { results: listing },
+      },
+      {
+        data: { results: settings },
+      },
+    ] = await Promise.all([
+      api.get(`/listing/${booking.listing}`),
+      api.get('/bookings/settings'),
+      // api.get('/config/booking'),
+    ]);
+    return { booking, listing, settings, error: null };
   } catch (err) {
     return {
       error: parseMessageFromError(err),

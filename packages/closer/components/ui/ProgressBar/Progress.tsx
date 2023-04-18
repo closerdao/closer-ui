@@ -12,10 +12,10 @@ const Progress: FC<Props> = ({ progress, total }) => {
       {steps.map((step) => (
         <div
           key={step}
-          className={`flex-1 h-1 border border-solid rounded-xl mr-1 ${
+          className={`flex-1 h-1 rounded-xl mr-1 ${
             step <= progress
-              ? 'bg-accent border-accent'
-              : 'bg-neutral-300 border-neutral-300'
+              ? 'bg-accent'
+              : 'bg-neutral-dark '
           }`}
         />
       ))}

@@ -1,4 +1,5 @@
 import { ChangeEvent } from 'react';
+
 import Information from '@/../../packages/closer/components/ui/Information';
 
 type InputProps = {
@@ -20,21 +21,20 @@ const Input = ({
   isRequired,
   placeholder,
   className,
-  information
+  information,
 }: InputProps) => {
   return (
-    <div className='w-full mb-10'>
-      <label className='mb-2'>{label}</label>
+    <div className={`w-full mb-10 ${className || ''}`}>
+      {label && <label className="mb-2">{label}</label>}
       <input
         type={type}
         value={value}
         onChange={onChange}
         required={isRequired}
         placeholder={placeholder}
-        className={className}
+        className='bg-neutral-dark rounded-md '
       />
       {information && <Information>{information}</Information>}
-      
     </div>
   );
 };

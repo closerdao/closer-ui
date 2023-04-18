@@ -19,6 +19,8 @@ const tdfTheme = {
       'accent-alt-dark': '#42CC93',
       'accent-alt-medium': '#97FFD4',
       'accent-alt-light': '#D4FFED',
+      'neutral': '#F8F3F5',
+      'neutral-dark': '#EDE8EB' ,
       // these colors are not suppoerted anymore, please use those above
       primary: '#e4427d',
       secondary: '#1b3bc3',

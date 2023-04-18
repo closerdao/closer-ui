@@ -2,13 +2,15 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
-import BookingBackButton from '../../../components/BookingBackButton';
 import BookingDates from '../../../components/BookingDates/BookingDates';
 import BookingGuests from '../../../components/BookingGuests';
 import CurrencySwitch from '../../../components/CurrencySwitch';
+import DiscountCode from '../../../components/DiscountCode';
 import PageError from '../../../components/PageError';
 import TicketOptions from '../../../components/TicketOptions';
+import BackButton from '../../../components/ui/BackButton';
 import Button from '../../../components/ui/Button';
+import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import dayjs, { Dayjs } from 'dayjs';
@@ -94,6 +96,8 @@ const DatesSelector: NextPage<Props> = ({
     (savedCurrency as CloserCurrencies) || DEFAULT_CURRENCY,
   );
   const [selectedTicketName, selectTicketName] = useState<string>('');
+  const [discountCode, setDiscountCode] = useState('');
+
   const handleNext = () => {
     const data = {
       start: start.format('YYYY-MM-DD'),
@@ -105,7 +109,8 @@ const DatesSelector: NextPage<Props> = ({
       currency,
       ...(eventId && { eventId: eventId as string }),
       ...(volunteerId && { volunteerId: volunteerId as string }),
-      selectedTicketName,
+      ticketOption: selectedTicketName,
+      discountCode: discountCode,
     };
     const urlParams = new URLSearchParams(data);
     router.push(`/bookings/create/accomodation?${urlParams}`);
@@ -126,12 +131,12 @@ const DatesSelector: NextPage<Props> = ({
   return (
     <>
       <div className="max-w-screen-sm mx-auto md:p-8 h-full">
-        <BookingBackButton onClick={goBack} />
-        <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
-          <span className="mr-1">🏡</span>
-          <span>{__('bookings_dates_step_title')}</span>
-        </h1>
+        <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
+        <Heading level={1} className="mb-6">
+          🏡 {__('bookings_summary_step_dates_title')}
+        </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
+
         <div className="mt-16 flex flex-col gap-16">
           {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' && (
             <div>
@@ -147,12 +152,22 @@ const DatesSelector: NextPage<Props> = ({
             </div>
           )}
 
-          <TicketOptions
-            items={ticketOptions}
-            selectedTicketName={selectedTicketName}
-            selectTicketName={selectTicketName}
-            volunteer={volunteer}
-          />
+          {eventId && (
+            <>
+              {' '}
+              <TicketOptions
+                items={ticketOptions}
+                selectedTicketName={selectedTicketName}
+                selectTicketName={selectTicketName}
+                volunteer={volunteer}
+              />
+              <DiscountCode
+                discountCode={discountCode}
+                setDiscountCode={setDiscountCode}
+              />
+            </>
+          )}
+
           <BookingDates
             conditions={settings?.conditions}
             startDate={start}
@@ -173,7 +188,7 @@ const DatesSelector: NextPage<Props> = ({
           />
           <Button
             onClick={handleNext}
-            disabled={eventId ? !selectedTicketName : false}
+            isEnabled={(eventId && selectedTicketName) || volunteerId || (!eventId && !volunteerId) ? true : false}
           >
             {__('generic_search')}
           </Button>
@@ -193,6 +208,8 @@ DatesSelector.getInitialProps = async ({ query }) => {
       const ticketsAvailable = await api.get(
         `/bookings/event/${eventId}/availability`,
       );
+      console.log('ticketsAvailable=', ticketsAvailable.data);
+
       return {
         settings: results as BookingSettings,
         ticketOptions: ticketsAvailable.data.ticketOptions,

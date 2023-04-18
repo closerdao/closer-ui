@@ -1,4 +1,5 @@
 import { CloserCurrencies, Price } from './currency';
+import { Discount, TicketOption } from './event';
 
 // we set those as url params on
 // - /bookings/create/dates
@@ -60,11 +61,18 @@ export type Booking = {
   attributes: string[];
   managedBy: string[];
   _id: string;
-  volunteer: string,
-  event: string, 
-  commitment?: string;
-  ticketOption?: string
-  total?: Price<CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH>;
+
+  volunteer?: {id: string, name: string, commitment: string};
+  event?: {
+    id: 'id',
+    name: 're:build global summit + Audio visual immersive dance ritual with @Alquem',
+    ticketOption: TicketOption,
+    eventPrice: { val: 11, cur: 'EUR' },
+    eventDiscount: Discount,
+    commitment?: string;
+  },
+  total?: Price<
+    CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH
+  >;
+  
 };
-
-

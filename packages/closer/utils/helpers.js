@@ -237,3 +237,25 @@ export const formatCurrency = (currency) => {
   };
   return `${symbol[currency]} ${currency}`;
 };
+
+// TODO: convert utils to typescript
+export const getPriceWithDiscount = (
+  // price: number,
+  // discount: Discount,
+  // name: string,
+  price,
+  discount,
+  name,
+) => {
+  let total = 0;
+  if (discount && (!discount.name || discount.name === name)) {
+    if (discount.percent) {
+      total = price - (price * discount.percent) / 100;
+      console.log('total', total);
+    } else if (discount.val) {
+      total = price - discount.val;
+    }
+  }
+  total = Math.max(Math.round(total * 100) / 100, 0);
+  return total;
+};

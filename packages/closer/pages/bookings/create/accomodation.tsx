@@ -187,6 +187,7 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
   }: BaseBookingParams = query || {};
   const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
   const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
+  
   const {
     data: { results },
   } = await api.post('/bookings/availability', {

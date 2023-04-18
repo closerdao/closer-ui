@@ -8,7 +8,9 @@ import Checkbox from '../../../components/Checkbox';
 import CheckoutPayment from '../../../components/CheckoutPayment';
 import CheckoutTotal from '../../../components/CheckoutTotal';
 import PageError from '../../../components/PageError';
+import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
+import Row from '../../../components/ui/Row';
 
 import dayjs from 'dayjs';
 import { ParsedUrlQuery } from 'querystring';
@@ -24,7 +26,69 @@ import { BookingSettings } from '../../../types/api';
 import api from '../../../utils/api';
 import { estimateNeededStakeForNewBooking } from '../../../utils/blockchain';
 import { parseMessageFromError } from '../../../utils/common';
-import { __, priceFormat } from '../../../utils/helpers';
+import { __, getPriceWithDiscount, priceFormat } from '../../../utils/helpers';
+
+const bookingHardcoded = {
+  status: 'open',
+  listing: '609d72f9a460e712c32a1c4b',
+  start: '2023-04-17T00:00:00.000Z',
+  end: '2023-04-20T00:00:00.000Z',
+  duration: 3,
+  adults: 1,
+  children: 0,
+  infants: 0,
+  pets: 0,
+  useTokens: false,
+  utilityFiat: {
+    val: 30,
+    cur: 'EUR',
+  },
+  rentalFiat: {
+    val: 15,
+    cur: 'EUR',
+  },
+  rentalToken: {
+    val: 1.5,
+    cur: 'TDF',
+  },
+  dailyUtilityFiat: {
+    val: 10,
+    cur: 'EUR',
+  },
+  dailyRentalToken: {
+    val: 0.5,
+    cur: 'TDF',
+  },
+  fields: [],
+  visibleBy: [],
+  createdBy: '641c2524f72ea12f5e9ab85d',
+  updated: '2023-04-14T14:03:36.968Z',
+  created: '2023-04-14T12:37:45.240Z',
+  attributes: [],
+  managedBy: [],
+  _id: '64394919561dfa6edd9ace0c',
+
+  volunteer: { id: 'id', name: 'lets build', commitment: '4 hours' },
+  // event: {
+  //   id: 'id',
+  //   name: 're:build global summit + Audio visual immersive dance ritual with @Alquem',
+  //   ticketOption: {
+  //     name: '1 X full passs',
+  //     price: 11,
+  //     cur: 'EUR',
+  //     disclaimer: 'ice-cream',
+  //   },
+  //   eventPrice: { val: 11, cur: 'EUR' },
+  //   eventDiscount: {
+  //     val: 0,
+  //     percent: 20,
+  //     name: '1 X full passs',
+  //     code: 'code',
+  //     _id: 'id',
+  //   },
+  // },
+};
+
 
 interface Props extends BaseBookingParams {
   listing: Listing;
@@ -44,15 +108,35 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
     duration,
     start,
     end,
+    event,
+    volunteer
   } = booking || {};
 
+  const eventCostWithDiscount = getPriceWithDiscount(
+    Number(event?.eventPrice.val),
+    event?.eventDiscount,
+    event?.ticketOption.name,
+  );
 
-console.log('booking=', booking);
+  const accomodationCost = useTokens
+  ? rentalToken
+  : volunteer?.id
+  ? 0
+  : rentalFiat;
 
-  const accomodationCost = useTokens ? rentalToken : rentalFiat;
-  const totalToPayInFiat = useTokens
-    ? utilityFiat?.val
-    : rentalFiat?.val + utilityFiat?.val;
+const totalToPayInFiat = useTokens
+  ? utilityFiat?.val
+  : event?.eventPrice.val
+  ? rentalFiat?.val + utilityFiat?.val + eventCostWithDiscount
+  : volunteer?.id
+  ? utilityFiat?.val
+  : rentalFiat?.val + utilityFiat?.val;
+
+  console.log(
+    'getPriceWithDiscount(Number(eventPrice.val), eventDiscount, ticketOption.name)',
+    eventCostWithDiscount,
+  );
+
   const { balanceAvailable, bookedDates } = useContext(WalletState);
 
   const totalToPayInToken = useMemo(() => {
@@ -114,6 +198,20 @@ console.log('booking=', booking);
         <ProgressBar steps={BOOKING_STEPS} />
         <div className="mt-16 flex flex-col gap-16">
           <div>
+            {event && event.eventPrice && (
+              <>
+                <Heading level={2} className="mb-8">
+                  🎉 {__('bookings_checkout_ticket_cost')}
+                </Heading>
+                <div className="mb-10">
+                  <Row
+                    rowKey={event.ticketOption.name}
+                    value={`${priceFormat(eventCostWithDiscount, event.eventPrice.cur)}`}
+                  />
+                </div>
+              </>
+            )}
+
             <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2">
               <span className="mr-1">🏡</span>
               <span>{__('bookings_checkout_step_accomodation')}</span>
@@ -180,9 +278,10 @@ console.log('booking=', booking);
 
 Checkout.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
   try {
-    const {
-      data: { results: booking },
-    } = await api.get(`/booking/${query.slug}`);
+    // const {
+    //   data: { results: booking },
+    // } = await api.get(`/booking/${query.slug}`);
+    const booking = bookingHardcoded;
     const [
       {
         data: { results: listing },
@@ -192,8 +291,8 @@ Checkout.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
       },
     ] = await Promise.all([
       api.get(`/listing/${booking.listing}`),
-      // api.get('/bookings/settings'),
-      api.get('/config/booking'),
+      api.get('/bookings/settings'),
+      // api.get('/config/booking'),
     ]);
 
     return { booking, listing, settings, error: null };
@@ -208,4 +307,3 @@ Checkout.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
 };
 
 export default Checkout;
-
