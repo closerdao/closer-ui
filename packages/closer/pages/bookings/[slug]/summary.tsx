@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import Conditions from '../../../components/Conditions';
@@ -16,7 +16,12 @@ import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
-import { BaseBookingParams, Booking, Listing } from '../../../types';
+import {
+  BaseBookingParams,
+  Booking,
+  BookingSettings,
+  Listing,
+} from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, getPriceWithDiscount } from '../../../utils/helpers';
@@ -86,11 +91,11 @@ interface Props extends BaseBookingParams {
   listing: Listing;
   booking: Booking;
   error?: string;
-  settings: any;
+  settings: BookingSettings;
+  eventName: string;
 }
 
-const Summary = ({ booking, listing, settings, error }: Props) => {
-  console.log('settings=', settings);
+const Summary = ({ booking, listing, settings, error, eventName }: Props) => {
   const router = useRouter();
   const [hasComplied, setCompliance] = useState(false);
   const onComply = (isComplete: boolean) => setCompliance(isComplete);
@@ -114,12 +119,12 @@ const Summary = ({ booking, listing, settings, error }: Props) => {
     event?.ticketOption.name,
   );
 
-  useEffect(() => {
-    console.log('booking=', booking);
-    if (booking.status !== 'open') {
-      router.push(`/bookings/${booking._id}`);
-    }
-  }, [booking.status]);
+  // useEffect(() => {
+  //   console.log('booking=', booking);
+  //   if (booking?.status !== 'open') {
+  //     router.push(`/bookings/${booking?._id}`);
+  //   }
+  // }, [booking?.status]);
 
   const accomodationCost = useTokens
     ? rentalToken
@@ -159,6 +164,10 @@ const Summary = ({ booking, listing, settings, error }: Props) => {
 
   if (!isAuthenticated) {
     return <PageNotAllowed />;
+  }
+
+  if (!listing || !booking) {
+    return null;
   }
 
   return (
@@ -215,15 +224,7 @@ Summary.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
     const {
       data: { results: booking },
     } = await api.get(`/booking/${query.slug}`);
-
-    // const booking = bookingHardcoded;
-
-    // const {
-    //   data: { results: settings },
-    // } = await api.get('/bookings/settings');
-    // const {
-    //   data: { results: listing },
-    // } = await api.get(`/listing/${booking.listing}`);
+    console.log('booking=', booking);
     const [
       {
         data: { results: listing },
@@ -231,12 +232,23 @@ Summary.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
       {
         data: { results: settings },
       },
+      {
+        data: { results: event },
+      },
     ] = await Promise.all([
       api.get(`/listing/${booking.listing}`),
       api.get('/bookings/settings'),
+      api.get(`/event/${booking.eventId}`),
     ]);
-    return { booking, listing, settings, error: null };
+    return {
+      booking,
+      listing,
+      settings,
+      eventName: event.name,
+      error: null,
+    };
   } catch (err) {
+    console.log('HERE', err.message, parseMessageFromError(err));
     return {
       error: parseMessageFromError(err),
       booking: null,
