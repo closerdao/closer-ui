@@ -252,7 +252,7 @@ const HomePage = () => {
                 </h4>
               </li>
               <li className="flex justify-start items-center">
-                <img src="/images/icons/cafe.png" className="mr-1 w-12" />
+                <img src="/images/icons/cafe.png" alt="TDF Cafe" className="mr-1 w-12" />
                 <h4 className="md:text-sm">
                   Café & Store{' '}
                   <Tag className="m-1" color="primary">Coming soon</Tag>
