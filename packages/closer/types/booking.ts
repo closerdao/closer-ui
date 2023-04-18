@@ -14,6 +14,7 @@ export interface BaseBookingParams {
   infants?: string;
   pets?: string;
   currency?: CloserCurrencies;
+  ticketName?: string;
 }
 
 export type Listing = {

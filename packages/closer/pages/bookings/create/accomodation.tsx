@@ -78,28 +78,31 @@ const AccomodationSelector: NextPage<Props> = ({
   listings,
   eventId,
   volunteerId,
+  ticketName,
 }) => {
+  console.log('ticketName', ticketName);
   const router = useRouter();
   const bookListing = async (listingId: string) => {
     console.log('book a listing');
 
     try {
       // const {
-      //   data: { results: newBooking },
-      // } = await api.post('/bookings/request', {
-      //   useTokens,
-      //   start,
-      //   end,
-      //   adults,
-      //   infants,
-      //   pets,
-      //   listing: listingId,
-      //   children: kids,
-      //   ...(eventId && { eventId }),
-      //   ...(volunteerId && { volunteerId }),
-      // });
+      //       data: { results: newBooking },
+      //     } = await api.post('/bookings/request', {
+      //       useTokens,
+      //       start,
+      //       end,
+      //       adults,
+      //       infants,
+      //       pets,
+      //       listing: listingId,
+      //       children: kids,
+      //       ...(eventId && { eventId, ticketOption: { name: ticketName } }),
+      //       ...(volunteerId && { volunteerId }),
+      //     });
       const newBooking = bookingHardcoded.results;
       console.log('newBooking', newBooking);
+   
       router.push(`/bookings/${newBooking._id}/questions`);
     } catch (err) {
       console.log(err); // TO DO handle error
@@ -184,6 +187,7 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
     currency,
     eventId,
     volunteerId,
+    ticketName,
   }: BaseBookingParams = query || {};
   const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
   const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
@@ -198,7 +202,7 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
     infants,
     pets,
     useTokens,
-    ...(eventId && { eventId }),
+    ...(eventId && { eventId, ticketName }),
     ...(volunteerId && { volunteerId }),
   });
 
@@ -214,6 +218,7 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
     useTokens,
     eventId,
     volunteerId,
+    ticketName,
   };
 };
 
