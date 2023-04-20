@@ -99,6 +99,10 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
     return <PageNotAllowed />;
   }
 
+  if (!listing || !booking) {
+    return null;
+  }
+
   return (
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
@@ -159,7 +163,6 @@ Summary.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
     const {
       data: { results: booking },
     } = await api.get(`/booking/${query.slug}`);
-
     const [
       {
         data: { results: listing },
@@ -177,6 +180,7 @@ Summary.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
     ]);
     return { booking, listing, settings, event, error: null };
   } catch (err) {
+    console.log(parseMessageFromError(err));
     return {
       error: parseMessageFromError(err),
       booking: null,
