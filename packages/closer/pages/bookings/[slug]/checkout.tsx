@@ -27,7 +27,6 @@ import { estimateNeededStakeForNewBooking } from '../../../utils/blockchain';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, priceFormat } from '../../../utils/helpers';
 
-
 interface Props extends BaseBookingParams {
   listing: Listing;
   booking: Booking;
@@ -122,14 +121,11 @@ const Checkout = ({ booking, listing, settings, event, error }: Props) => {
   return (
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
-    {user && JSON.stringify(user)}
-      <div className="text-3xl bg-red-100">status = {booking.status}</div>
+        <div className="text-3xl bg-red-100">status = {booking.status}</div>
         <BookingBackButton onClick={goBack} name={__('buttons_back')} />
         <h1 className="step-title font-normal pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">💰</span>
-          <span>{__('bookings_checkout_step_title')}
-          
-          </span>
+          <span>{__('bookings_checkout_step_title')}</span>
         </h1>
         <ProgressBar steps={BOOKING_STEPS} />
         <div className="mt-16 flex flex-col gap-16">
@@ -142,10 +138,7 @@ const Checkout = ({ booking, listing, settings, event, error }: Props) => {
                 <div className="mb-16 mt-4">
                   <Row
                     rowKey={ticketOption?.name}
-                    value={`${priceFormat(
-                      eventPrice.val,
-                      eventPrice.cur,
-                    )}`}
+                    value={`${priceFormat(eventPrice.val, eventPrice.cur)}`}
                   />
                 </div>
               </div>
