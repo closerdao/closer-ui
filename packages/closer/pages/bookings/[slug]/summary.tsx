@@ -16,84 +16,26 @@ import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
-import { BaseBookingParams, Booking, Listing } from '../../../types';
+import { BaseBookingParams, Booking, Event, Listing } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { __, getPriceWithDiscount } from '../../../utils/helpers';
-
-const bookingHardcoded = {
-  status: 'open',
-  listing: '609d72f9a460e712c32a1c4b',
-  start: '2023-04-17T00:00:00.000Z',
-  end: '2023-04-20T00:00:00.000Z',
-  duration: 3,
-  adults: 1,
-  children: 0,
-  infants: 0,
-  pets: 0,
-  useTokens: false,
-  utilityFiat: {
-    val: 30,
-    cur: 'EUR',
-  },
-  rentalFiat: {
-    val: 15,
-    cur: 'EUR',
-  },
-  rentalToken: {
-    val: 1.5,
-    cur: 'TDF',
-  },
-  dailyUtilityFiat: {
-    val: 10,
-    cur: 'EUR',
-  },
-  dailyRentalToken: {
-    val: 0.5,
-    cur: 'TDF',
-  },
-  fields: [],
-  visibleBy: [],
-  createdBy: '641c2524f72ea12f5e9ab85d',
-  updated: '2023-04-14T14:03:36.968Z',
-  created: '2023-04-14T12:37:45.240Z',
-  attributes: [],
-  managedBy: [],
-  _id: '64394919561dfa6edd9ace0c',
-
-  volunteer: { id: 'id', name: 'lets build', commitment: '4 hours' },
-  // event: {
-  //   id: 'id',
-  //   name: 're:build global summit + Audio visual immersive dance ritual with @Alquem',
-  //   ticketOption: {
-  //     name: '1 X full passs',
-  //     price: 11,
-  //     cur: 'EUR',
-  //     disclaimer: 'ice-cream',
-  //   },
-  //   eventPrice: { val: 11, cur: 'EUR' },
-  //   eventDiscount: {
-  //     val: 0,
-  //     percent: 20,
-  //     name: '1 X full passs',
-  //     code: 'code',
-  //     _id: 'id',
-  //   },
-  // },
-};
+import { __ } from '../../../utils/helpers';
 
 interface Props extends BaseBookingParams {
   listing: Listing;
   booking: Booking;
   error?: string;
   settings: any;
+  event?: Event;
 }
 
-const Summary = ({ booking, listing, settings, error }: Props) => {
-  console.log('settings=', settings);
+const Summary = ({ booking, listing, settings, event, error }: Props) => {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const [hasComplied, setCompliance] = useState(false);
   const onComply = (isComplete: boolean) => setCompliance(isComplete);
+
+  console.log('booking', booking);
 
   const {
     utilityFiat,
@@ -104,39 +46,37 @@ const Summary = ({ booking, listing, settings, error }: Props) => {
     end,
     adults,
 
-    event,
-    volunteer,
+    // eventId,
+    volunteerId,
+    ticketOption,
+    eventPrice,
   } = booking || {};
 
-  const eventCostWithDiscount = getPriceWithDiscount(
-    Number(event?.eventPrice.val),
-    event?.eventDiscount,
-    event?.ticketOption.name,
-  );
+  const accomodationCost = useTokens
+    ? rentalToken.val
+    : volunteerId
+    ? 0
+    : rentalFiat.val;
+
+  const totalToPayInFiat = useTokens
+    ? utilityFiat?.val
+    : eventPrice?.val
+    ? rentalFiat?.val + utilityFiat?.val + eventPrice?.val
+    : volunteerId
+    ? utilityFiat?.val
+    : rentalFiat?.val + utilityFiat?.val;
 
   useEffect(() => {
-    console.log('booking=', booking);
-    if (booking.status !== 'open') {
+    if (booking.status === 'pending' || booking.status === 'paid') {
       router.push(`/bookings/${booking._id}`);
     }
   }, [booking.status]);
 
-  const accomodationCost = useTokens
-    ? rentalToken
-    : volunteer?.id
-    ? 0
-    : rentalFiat;
+  const handleNext = async () => {
+    const result = await api.post(`/bookings/${booking._id}/complete`, {});
+    console.log('result=', result.data.results);
+    if (volunteerId) {
 
-  const totalToPayInFiat = useTokens
-    ? utilityFiat?.val
-    : event?.eventPrice.val
-    ? rentalFiat?.val + utilityFiat?.val + eventCostWithDiscount
-    : volunteer?.id
-    ? utilityFiat?.val
-    : rentalFiat?.val + utilityFiat?.val;
-
-  const handleNext = () => {
-    if (volunteer) {
       router.push(`/bookings/${booking._id}/confirmation`);
     } else {
       router.push(`/bookings/${booking._id}/checkout`);
@@ -146,8 +86,6 @@ const Summary = ({ booking, listing, settings, error }: Props) => {
   const goBack = () => {
     router.push(`/bookings/${booking._id}/questions`);
   };
-
-  const { isAuthenticated } = useAuth();
 
   if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
     return <PageNotFound />;
@@ -164,6 +102,7 @@ const Summary = ({ booking, listing, settings, error }: Props) => {
   return (
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
+        <div className="text-3xl bg-red-100">status = {booking.status}</div>
         <BookingBackButton onClick={goBack} name={__('buttons_back')} />
         <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">📑</span>
@@ -176,9 +115,9 @@ const Summary = ({ booking, listing, settings, error }: Props) => {
             startDate={start}
             endDate={end}
             listingName={listing.name}
-            commitment={booking?.volunteer?.commitment}
-            event={booking?.event?.name}
-            ticketOption={booking?.event?.ticketOption.name}
+            volunteerId={volunteerId}
+            eventName={event?.name}
+            ticketOption={ticketOption?.name}
           />
           <SummaryCosts
             utilityFiat={utilityFiat}
@@ -186,23 +125,28 @@ const Summary = ({ booking, listing, settings, error }: Props) => {
             accomodationCost={accomodationCost}
             totalToken={rentalToken.val}
             totalFiat={totalToPayInFiat}
-            eventCost={eventCostWithDiscount}
+            eventCost={eventPrice?.val}
+            evntDefaultCost={booking.ticketOption?.price}
           />
-          {event && (
-            <Button className="booking-btn" onClick={handleNext}>
-              {__('buttons_checkout')}
-            </Button>
-          )}
-          {volunteer && (
+
+          {volunteerId ? (
             <>
               <Conditions
                 setComply={onComply}
                 visitorsGuide={settings.visitorsGuide}
               />
-              <Button className="booking-btn" onClick={handleNext}>
+              <Button
+                isEnabled={hasComplied}
+                className="booking-btn"
+                onClick={handleNext}
+              >
                 {__('apply_submit_button')}
               </Button>
             </>
+          ) : (
+            <Button className="booking-btn" onClick={handleNext}>
+              {__('buttons_checkout')}
+            </Button>
           )}
         </div>
       </div>
@@ -216,14 +160,6 @@ Summary.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
       data: { results: booking },
     } = await api.get(`/booking/${query.slug}`);
 
-    // const booking = bookingHardcoded;
-
-    // const {
-    //   data: { results: settings },
-    // } = await api.get('/bookings/settings');
-    // const {
-    //   data: { results: listing },
-    // } = await api.get(`/listing/${booking.listing}`);
     const [
       {
         data: { results: listing },
@@ -231,11 +167,15 @@ Summary.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
       {
         data: { results: settings },
       },
+      {
+        data: { results: event },
+      },
     ] = await Promise.all([
       api.get(`/listing/${booking.listing}`),
-      api.get('/bookings/settings'),
+      api.get('/bookings/questions'),
+      api.get(`/event/${booking.eventId}`),
     ]);
-    return { booking, listing, settings, error: null };
+    return { booking, listing, settings, event, error: null };
   } catch (err) {
     return {
       error: parseMessageFromError(err),

@@ -7,9 +7,9 @@ interface SummaryDatesProps {
   startDate: string;
   endDate: string;
   listingName: string;
-  commitment?: string;
-  event?: string;
+  eventName?: string;
   ticketOption?: string;
+  volunteerId?: string;
 }
 
 const SummaryDates = ({
@@ -17,12 +17,12 @@ const SummaryDates = ({
   startDate,
   endDate,
   listingName,
-  commitment,
-  event,
+  volunteerId,
+  eventName,
   ticketOption,
 }: SummaryDatesProps) => (
   <div>
-    {event ? (
+    {eventName ? (
       <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2">
         <span className="mr-1">🏡</span>
         <span>{__('bookings_summary_step_your_event')}</span>
@@ -33,16 +33,16 @@ const SummaryDates = ({
         <span>{__('bookings_summary_step_dates_title')}</span>
       </h2>
     )}
-    {event && (
+    {eventName && (
       <div className="flex justify-between mt-3 gap-20 items-start	">
         <p>{__('bookings_summary_step_dates_event')}</p>
-        <p className="font-bold uppercase text-right">{event}</p>
+        <p className="font-bold uppercase text-right">{eventName}</p>
       </div>
     )}
     {ticketOption && (
       <div className="flex justify-between items-start mt-3">
         <p>{__('bookings_summary_step_dates_ticket_option')}</p>
-        <p className="font-bold uppercase">{ticketOption}</p>
+        <p className="font-bold uppercase">{ticketOption}  X {totalGuests}</p>
       </div>
     )}
     <div className="flex justify-between items-start my-3">
@@ -62,12 +62,10 @@ const SummaryDates = ({
       <p className="font-bold uppercase">{listingName}</p>
     </div>
 
-
-    
-    {commitment && (
+    {volunteerId && (
       <div className="flex justify-between items-start mt-3">
         <p>{__('bookings_summary_step_dates_commitment')}</p>
-        <p className="font-bold uppercase">{commitment}</p>
+        <p className="font-bold uppercase">{__('bookings_summary_step_dates_default_commitment')}</p>
       </div>
     )}
   </div>

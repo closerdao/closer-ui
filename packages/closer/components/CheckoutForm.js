@@ -154,7 +154,7 @@ const CheckoutForm = ({
       {conditions}
       <div className="mt-8">
         <Button
-          disabled={isButtonDisabled || submitDisabled}
+          isEnabled={!isButtonDisabled || !submitDisabled}
           isSpinnerVisible={processing || isProcessingTokenPayment}
         >
           {renderButtonText()}

@@ -17,6 +17,7 @@ const Settings = () => {
         <title>{__('settings_title')}</title>
       </Head>
       <div className="w-full">
+
         {user && (
           <EditModel
             id={user._id}

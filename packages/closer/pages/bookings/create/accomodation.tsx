@@ -14,51 +14,8 @@ import { BaseBookingParams, Listing } from '../../../types';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
-const bookingHardcoded = {
-  status: 'Booking request sent.',
-  results: {
-    status: 'open',
-    listing: '609d72f9a460e712c32a1c4b',
-    addon: [],
-    start: '2023-04-17T00:00:00.000Z',
-    end: '2023-04-20T00:00:00.000Z',
-    duration: 3,
-    adults: 1,
-    children: 0,
-    infants: 0,
-    pets: 0,
-    useTokens: false,
-    utilityFiat: {
-      val: 30,
-      cur: 'EUR',
-    },
-    rentalFiat: {
-      val: 90,
-      cur: 'EUR',
-    },
-    rentalToken: {
-      val: 1.5,
-      cur: 'TDF',
-    },
-    dailyUtilityFiat: {
-      val: 10,
-      cur: 'EUR',
-    },
-    dailyRentalToken: {
-      val: 0.5,
-      cur: 'TDF',
-    },
-    visibility: 'public',
-    visibleBy: [],
-    reportedBy: [],
-    createdBy: '641c2524f72ea12f5e9ab85d',
-    updated: '2023-04-14T12:37:45.240Z',
-    created: '2023-04-14T12:37:45.240Z',
-    attributes: [],
-    managedBy: [],
-    _id: '64394919561dfa6edd9ace0c',
-  },
-};
+import { useAuth } from '../../../contexts/auth';
+
 
 interface Props extends BaseBookingParams {
   useTokens: boolean;
@@ -79,9 +36,17 @@ const AccomodationSelector: NextPage<Props> = ({
   eventId,
   volunteerId,
   ticketName,
+  discountCode,
 }) => {
-  console.log('ticketName=', ticketName);
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
+
+  const bookingType = eventId
+    ? 'event'
+    : volunteerId
+    ? 'volunteer'
+    : 'accomodation';
+
   const bookListing = async (listingId: string) => {
     console.log('book a listing');
 
@@ -97,11 +62,11 @@ const AccomodationSelector: NextPage<Props> = ({
         pets,
         listing: listingId,
         children: kids,
+        discountCode,
+
         ...(eventId && { eventId, ticketOption: { name: ticketName } }),
         ...(volunteerId && { volunteerId }),
       });
-      // const newBooking = bookingHardcoded.results;
-      console.log('newBooking', newBooking);
 
       router.push(`/bookings/${newBooking._id}/questions`);
     } catch (err) {
@@ -168,6 +133,8 @@ const AccomodationSelector: NextPage<Props> = ({
               listing={listing}
               bookListing={bookListing}
               useTokens={useTokens}
+              bookingType={bookingType}
+              isAuthenticated={isAuthenticated}
             />
           ))}
         </div>
@@ -188,6 +155,7 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
     eventId,
     volunteerId,
     ticketName,
+    discountCode,
   }: BaseBookingParams = query || {};
   const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
   const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
@@ -202,6 +170,7 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
     infants,
     pets,
     useTokens,
+    discountCode,
     ...(eventId && { eventId, ticketName }),
     ...(volunteerId && { volunteerId }),
   });
@@ -219,6 +188,7 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
     eventId,
     volunteerId,
     ticketName,
+    discountCode,
   };
 };
 

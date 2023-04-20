@@ -8,7 +8,6 @@ import Checkbox from '../../../components/Checkbox';
 import CheckoutPayment from '../../../components/CheckoutPayment';
 import CheckoutTotal from '../../../components/CheckoutTotal';
 import PageError from '../../../components/PageError';
-import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 import Row from '../../../components/ui/Row';
 
@@ -21,73 +20,12 @@ import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { WalletState } from '../../../contexts/wallet';
-import { BaseBookingParams, Booking, Listing } from '../../../types';
+import { BaseBookingParams, Booking, Event, Listing } from '../../../types';
 import { BookingSettings } from '../../../types/api';
 import api from '../../../utils/api';
 import { estimateNeededStakeForNewBooking } from '../../../utils/blockchain';
 import { parseMessageFromError } from '../../../utils/common';
-import { __, getPriceWithDiscount, priceFormat } from '../../../utils/helpers';
-
-const bookingHardcoded = {
-  status: 'open',
-  listing: '609d72f9a460e712c32a1c4b',
-  start: '2023-04-17T00:00:00.000Z',
-  end: '2023-04-20T00:00:00.000Z',
-  duration: 3,
-  adults: 1,
-  children: 0,
-  infants: 0,
-  pets: 0,
-  useTokens: false,
-  utilityFiat: {
-    val: 30,
-    cur: 'EUR',
-  },
-  rentalFiat: {
-    val: 15,
-    cur: 'EUR',
-  },
-  rentalToken: {
-    val: 1.5,
-    cur: 'TDF',
-  },
-  dailyUtilityFiat: {
-    val: 10,
-    cur: 'EUR',
-  },
-  dailyRentalToken: {
-    val: 0.5,
-    cur: 'TDF',
-  },
-  fields: [],
-  visibleBy: [],
-  createdBy: '641c2524f72ea12f5e9ab85d',
-  updated: '2023-04-14T14:03:36.968Z',
-  created: '2023-04-14T12:37:45.240Z',
-  attributes: [],
-  managedBy: [],
-  _id: '64394919561dfa6edd9ace0c',
-
-  volunteer: { id: 'id', name: 'lets build', commitment: '4 hours' },
-  // event: {
-  //   id: 'id',
-  //   name: 're:build global summit + Audio visual immersive dance ritual with @Alquem',
-  //   ticketOption: {
-  //     name: '1 X full passs',
-  //     price: 11,
-  //     cur: 'EUR',
-  //     disclaimer: 'ice-cream',
-  //   },
-  //   eventPrice: { val: 11, cur: 'EUR' },
-  //   eventDiscount: {
-  //     val: 0,
-  //     percent: 20,
-  //     name: '1 X full passs',
-  //     code: 'code',
-  //     _id: 'id',
-  //   },
-  // },
-};
+import { __, priceFormat } from '../../../utils/helpers';
 
 
 interface Props extends BaseBookingParams {
@@ -95,47 +33,40 @@ interface Props extends BaseBookingParams {
   booking: Booking;
   settings: BookingSettings;
   error?: string;
+  event?: Event;
 }
 
-const Checkout = ({ booking, listing, settings, error }: Props) => {
+const Checkout = ({ booking, listing, settings, event, error }: Props) => {
   const {
-    _id: bookingId,
     utilityFiat,
-    dailyRentalToken,
-    useTokens,
     rentalToken,
     rentalFiat,
-    duration,
+    useTokens,
     start,
     end,
-    event,
-    volunteer
+    dailyRentalToken,
+    duration,
+    adults,
+
+    eventId,
+    volunteerId,
+    ticketOption,
+    eventPrice,
   } = booking || {};
 
-  const eventCostWithDiscount = getPriceWithDiscount(
-    Number(event?.eventPrice.val),
-    event?.eventDiscount,
-    event?.ticketOption.name,
-  );
-
   const accomodationCost = useTokens
-  ? rentalToken
-  : volunteer?.id
-  ? 0
-  : rentalFiat;
+    ? rentalToken.val
+    : volunteerId
+    ? 0
+    : rentalFiat.val;
 
-const totalToPayInFiat = useTokens
-  ? utilityFiat?.val
-  : event?.eventPrice.val
-  ? rentalFiat?.val + utilityFiat?.val + eventCostWithDiscount
-  : volunteer?.id
-  ? utilityFiat?.val
-  : rentalFiat?.val + utilityFiat?.val;
-
-  console.log(
-    'getPriceWithDiscount(Number(eventPrice.val), eventDiscount, ticketOption.name)',
-    eventCostWithDiscount,
-  );
+  const totalToPayInFiat = useTokens
+    ? utilityFiat?.val
+    : eventPrice?.val
+    ? rentalFiat?.val + utilityFiat?.val + eventPrice?.val
+    : volunteerId
+    ? utilityFiat?.val
+    : rentalFiat?.val + utilityFiat?.val;
 
   const { balanceAvailable, bookedDates } = useContext(WalletState);
 
@@ -152,6 +83,7 @@ const totalToPayInFiat = useTokens
     ? balanceAvailable < totalToPayInToken
     : false;
   const { user, isAuthenticated } = useAuth();
+  console.log('user', user);
 
   const listingName = listing?.name;
   const [hasAgreedToWalletDisclaimer, setWalletDisclaimer] = useState(
@@ -190,26 +122,33 @@ const totalToPayInFiat = useTokens
   return (
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
+    {user && JSON.stringify(user)}
+      <div className="text-3xl bg-red-100">status = {booking.status}</div>
         <BookingBackButton onClick={goBack} name={__('buttons_back')} />
-        <h1 className="step-title font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
+        <h1 className="step-title font-normal pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">💰</span>
-          <span>{__('bookings_checkout_step_title')}</span>
+          <span>{__('bookings_checkout_step_title')}
+          
+          </span>
         </h1>
         <ProgressBar steps={BOOKING_STEPS} />
         <div className="mt-16 flex flex-col gap-16">
           <div>
-            {event && event.eventPrice && (
-              <>
-                <Heading level={2} className="mb-8">
+            {eventPrice && (
+              <div>
+                <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2">
                   🎉 {__('bookings_checkout_ticket_cost')}
-                </Heading>
-                <div className="mb-10">
+                </h2>
+                <div className="mb-16 mt-4">
                   <Row
-                    rowKey={event.ticketOption.name}
-                    value={`${priceFormat(eventCostWithDiscount, event.eventPrice.cur)}`}
+                    rowKey={ticketOption?.name}
+                    value={`${priceFormat(
+                      eventPrice.val,
+                      eventPrice.cur,
+                    )}`}
                   />
                 </div>
-              </>
+              </div>
             )}
 
             <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2">
@@ -223,6 +162,7 @@ const totalToPayInFiat = useTokens
             <p className="text-right text-xs">
               {__('bookings_checkout_step_accomodation_description')}
             </p>
+
             {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' && (
               <div className="mt-4">
                 <BookingWallet
@@ -257,7 +197,7 @@ const totalToPayInFiat = useTokens
           </div>
           <CheckoutTotal totalToPayInFiat={totalToPayInFiat} />
           <CheckoutPayment
-            bookingId={bookingId}
+            bookingId={booking._id}
             buttonDisabled={
               useTokens && (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)
             }
@@ -278,10 +218,10 @@ const totalToPayInFiat = useTokens
 
 Checkout.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
   try {
-    // const {
-    //   data: { results: booking },
-    // } = await api.get(`/booking/${query.slug}`);
-    const booking = bookingHardcoded;
+    const {
+      data: { results: booking },
+    } = await api.get(`/booking/${query.slug}`);
+
     const [
       {
         data: { results: listing },
@@ -289,13 +229,15 @@ Checkout.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
       {
         data: { results: settings },
       },
+      {
+        data: { results: event },
+      },
     ] = await Promise.all([
       api.get(`/listing/${booking.listing}`),
       api.get('/bookings/settings'),
-      // api.get('/config/booking'),
+      api.get(`/event/${booking.eventId}`),
     ]);
-
-    return { booking, listing, settings, error: null };
+    return { booking, listing, settings, event, error: null };
   } catch (err) {
     return {
       error: parseMessageFromError(err),

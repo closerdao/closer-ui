@@ -11,7 +11,7 @@ import { ParsedUrlQuery } from 'querystring';
 
 import PageNotFound from '../../404';
 import { BOOKING_STEPS } from '../../../constants';
-import { BaseBookingParams, Booking } from '../../../types';
+import { BaseBookingParams, Booking, Event } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
@@ -19,9 +19,10 @@ import { __ } from '../../../utils/helpers';
 interface Props extends BaseBookingParams {
   booking: Booking;
   error?: string;
+  event?: Event;
 }
 
-const ConfirmationStep = ({ error, booking }: Props) => {
+const ConfirmationStep = ({ error, booking, event }: Props) => {
   const router = useRouter();
 
   useEffect(() => {
@@ -31,7 +32,7 @@ const ConfirmationStep = ({ error, booking }: Props) => {
   }, [booking._id]);
 
   useEffect(() => {
-    if (booking.status !== 'pending' && booking.status !== 'confirmed') {
+    if (booking.status !== 'pending' && booking.status !== 'paid') {
       startNewBooking();
     }
   }, [booking.status]);
@@ -61,7 +62,9 @@ const ConfirmationStep = ({ error, booking }: Props) => {
 
   return (
     <>
+
       <div className="max-w-screen-sm mx-auto p-8">
+      <div className="text-3xl bg-red-100">status = {booking.status}</div>
         <BookingBackButton onClick={goBack} />
         <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">🎊</span>
@@ -69,60 +72,85 @@ const ConfirmationStep = ({ error, booking }: Props) => {
         </h1>
         <ProgressBar steps={BOOKING_STEPS} />
         <div className="mt-16 flex flex-col gap-16 flex-nowrap">
-          {booking && booking.status === 'pending' && (
-            <h2 className="text-2xl leading-10 font-normal">
-              <span className="mr-1">🏡</span>
-              <span>{__('bookings_confirmation_step_success_subtitle')}</span>
-            </h2>
-          )}
+          {booking.status === 'pending' &&
+            !booking.volunteerId &&
+            !booking.eventId && (
+              <>
+                <p className="font-bold text-3xl">
+                  {__('bookings_title_pending')}
+                </p>
+                <p>{__('subscriptions_success_thank_you_message')}</p>
+                <p className="uppercase font-bold">
+                  {__('bookings_confirmation_step_success_your_booking_id')}
+                  {booking._id}
+                </p>
+                <p>
+                  {__('bookings_confirmation_step_success_what_happen_next')}
+                </p>
+                <p>
+                  {__(
+                    'bookings_confirmation_step_success_when_payment_processed',
+                  )}
+                </p>
+              </>
+            )}
 
-          {booking && booking.status === 'confirmed' && (
-            <h2 className="text-2xl leading-10 font-normal">
-              <span className="mr-1">🏡</span>
-              <span>
-                {__('bookings_title_confirmed')}{' '}
-                {__('bookings_title_confirmed_see_you_on')}{' '}
-                {new Date(booking.start).toLocaleDateString('en-US', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
-              </span>
-            </h2>
-          )}
-
-          {!booking?.volunteer && (
-            <p className="font-black uppercase">
-              {__(
-                'bookings_confirmation_step_success_your_application_id',
-                booking._id,
-              )}
-            </p>
-          )}
-          {booking?.volunteer && (
-            <p className="font-black uppercase">
-              {__(
-                'bookings_confirmation_step_success_your_application_id',
-                booking._id,
-              )}
-            </p>
-          )}
-          {booking && booking.status === 'pending' && !booking?.volunteer && (
-            <div>
-              <p className="mb-4">
-                {__('bookings_confirmation_step_success_what_happen_next')}
+          {booking.volunteerId && (
+            <>
+              <p className="font-bold text-3xl">
+                {__('bookings_title_application_sent')}
               </p>
-              <p>
+
+              <p>{__('subscriptions_success_thank_you_message')}</p>
+              <p className="font-black uppercase">
                 {__(
-                  'bookings_confirmation_step_success_when_payment_processed',
+                  'bookings_confirmation_step_success_your_application_id',
+                  booking._id,
                 )}
               </p>
+              <div>
+                <p className="mb-4">
+                  {__('bookings_confirmation_step_success_what_happen_next')}
+                </p>
+                <p>
+                  {__(
+                    'bookings_confirmation_step_success_when_payment_processed',
+                  )}
+                </p>
+              </div>
+            </>
+          )}
+
+          {booking.eventId && (
+            <div>
+              <p className="font-bold text-3xl mb-16">
+                {__('bookings_confirmation_step_you_are_coming')} {event?.name}
+              </p>
+              <p>{__('subscriptions_success_thank_you_message')}</p>
+              <p className="my-14 uppercase font-bold">
+                {__('bookings_confirmation_step_success_your_booking_id')}{' '}
+                {booking._id}
+              </p>
+              <p>{__('bookings_event_confirmation_see_you_soon')}</p>
             </div>
           )}
 
-          <Button onClick={() => viewBooking(booking._id)}>
-            {__('bookings_confirmation_step_success_button')}
-          </Button>
+          {booking.volunteerId && (
+            <Button onClick={() => viewBooking(booking._id)}>
+              {__('bookings_confirmation_step_volunteer_application_button')}
+            </Button>
+          )}
+          {booking.eventId && (
+            <Button onClick={() => viewBooking(booking._id)}>
+              {__('ticket_list_view_ticket')}
+            </Button>
+          )}
+
+          {!booking.eventId && !booking.volunteerId && (
+            <Button onClick={() => viewBooking(booking._id)}>
+              {__('bookings_confirmation_step_success_button')}
+            </Button>
+          )}
         </div>
       </div>
     </>
@@ -139,7 +167,11 @@ ConfirmationStep.getInitialProps = async ({
       data: { results: booking },
     } = await api.get(`/booking/${query.slug}`);
 
-    return { booking, error: null };
+    const {
+      data: { results: event },
+    } = await api.get(`/event/${booking.eventId}`);
+
+    return { booking, event, error: null };
   } catch (err) {
     return {
       error: parseMessageFromError(err),

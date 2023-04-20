@@ -7,7 +7,13 @@ import { __ } from '../utils/helpers';
 import ListingPrice from './ListingPrice';
 import Button from './ui/Button';
 
-const ListingCard = ({ listing, bookListing, useTokens }) => {
+const ListingCard = ({
+  listing,
+  bookListing,
+  useTokens,
+  bookingType,
+  isAuthenticated,
+}) => {
   const { name, description, rentalFiat, rentalToken, utilityFiat, available } =
     listing;
 
@@ -45,11 +51,14 @@ const ListingCard = ({ listing, bookListing, useTokens }) => {
           rentalToken={rentalToken}
           utilityFiat={utilityFiat}
           useTokens={useTokens}
+          bookingType={bookingType}
         />
       </div>
-      <Button onClick={handleBooking} disabled={!available}>
+      <Button onClick={handleBooking} isEnabled={available && isAuthenticated}>
         {available
-          ? __('listing_preview_book')
+          ? isAuthenticated
+            ? __('listing_preview_book')
+            : __('listing_preview_sign_in_to_book')
           : __('listing_preview_not_available')}
       </Button>
     </div>

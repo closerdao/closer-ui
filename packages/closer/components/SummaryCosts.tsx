@@ -1,8 +1,19 @@
-import PropTypes from 'prop-types';
-
 import { DEFAULT_CURRENCY } from '../constants';
 import { useConfig } from '../hooks/useConfig';
+import { CloserCurrencies, Price } from '../types';
 import { __, priceFormat } from '../utils/helpers';
+
+interface Props {
+  utilityFiat?: Price<
+    CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH
+  >;
+  accomodationCost?: number;
+  useTokens: boolean;
+  totalToken: number;
+  totalFiat: number;
+  eventCost?: number;
+  evntDefaultCost?: number
+}
 
 const SummaryCosts = ({
   utilityFiat,
@@ -11,8 +22,9 @@ const SummaryCosts = ({
   totalToken,
   totalFiat,
   eventCost,
-}) => {
-  const { BLOCKCHAIN_DAO_TOKEN } = useConfig();
+  evntDefaultCost
+}: Props) => {
+  const { BLOCKCHAIN_DAO_TOKEN }:any  = useConfig();
 
   return (
     <div>
@@ -21,12 +33,14 @@ const SummaryCosts = ({
         <span>{__('bookings_summary_step_costs_title')}</span>
       </h2>
 
-      {eventCost !== 0 && (
+      {eventCost ? (
         <div className="flex justify-between items-center mt-3">
-          <p>{__('bookings_checkout_ticket_cost')}</p>
-          <p className="font-bold">{priceFormat(eventCost)}</p>
+          <p>{__('bookings_checkout_event_cost')}</p>
+          <p className="font-bold">
+            {evntDefaultCost !== eventCost && <span className='line-through'>{priceFormat(evntDefaultCost)}</span>}{' '}
+            {priceFormat(eventCost)}</p>
         </div>
-      )}
+      ) : null}
 
       <div className="flex justify-between items-center mt-3">
         <p>{__('bookings_summary_step_dates_accomodation_type')}</p>
@@ -62,20 +76,6 @@ const SummaryCosts = ({
       </p>
     </div>
   );
-};
-
-SummaryCosts.propTypes = {
-  utilityFiat: PropTypes.shape({
-    val: PropTypes.number,
-    cur: PropTypes.string,
-  }),
-  accomodationCost: PropTypes.shape({
-    val: PropTypes.number,
-    cur: PropTypes.string,
-  }),
-  useTokens: PropTypes.bool.isRequired,
-  totalToken: PropTypes.number.isRequired,
-  totalFiat: PropTypes.number.isRequired,
 };
 
 export default SummaryCosts;

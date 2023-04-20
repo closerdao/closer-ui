@@ -97,6 +97,8 @@ const DatesSelector: NextPage<Props> = ({
   const [selectedTicketName, selectTicketName] = useState<string>('');
   const [discountCode, setDiscountCode] = useState('');
 
+  console.log('ticketOptions', ticketOptions);
+
   const handleNext = () => {
     const data = {
       start: start.format('YYYY-MM-DD'),
@@ -154,7 +156,7 @@ const DatesSelector: NextPage<Props> = ({
 
           {eventId && (
             <>
-              {' '}
+      
               <TicketOptions
                 items={ticketOptions}
                 selectedTicketName={selectedTicketName}

@@ -15,6 +15,7 @@ export interface BaseBookingParams {
   pets?: string;
   currency?: CloserCurrencies;
   ticketName?: string;
+  discountCode?: string;
 }
 
 export type Listing = {
@@ -63,15 +64,12 @@ export type Booking = {
   managedBy: string[];
   _id: string;
 
-  volunteer?: {id: string, name: string, commitment: string};
-  event?: {
-    id: 'id',
-    name: 're:build global summit + Audio visual immersive dance ritual with @Alquem',
-    ticketOption: TicketOption,
-    eventPrice: { val: 11, cur: 'EUR' },
-    eventDiscount: Discount,
-    commitment?: string;
-  },
+  ticketOption?: TicketOption;
+  eventId?: string;
+  volunteerId?: string;
+  eventPrice?: Price<CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH>;
+  eventDiscount?: Discount;
+  
   total?: Price<
     CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH
   >;

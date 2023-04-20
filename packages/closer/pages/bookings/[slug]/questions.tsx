@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
+// import EditModel from '../../../components/EditModel';
 import PageError from '../../../components/PageError';
 import QuestionnaireItem from '../../../components/QuestionnaireItem';
 import Button from '../../../components/ui/Button';
@@ -29,19 +30,26 @@ const questionsHardcoded: Question[] = [
   },
 ];
 
+const prepareQuestions = (eventQuestions: any) => {
+  const preparedQuestions = eventQuestions.map((question: any) => {
+    Object.assign(question, { type: question['fieldType'] });
+    return question;
+  });
+  return preparedQuestions;
+};
+
 interface Props extends BaseBookingParams {
-  questions: Question[];
+  eventQuestions: Question[];
   booking: Booking;
   error?: string;
 }
 
-const Questionnaire = ({ questions, booking, error }: Props) => {
-  console.log('booking', booking);
+const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
+  const questions: Question[] = prepareQuestions(eventQuestions);
 
   const hasRequiredQuestions = questions.some((question) => question.required);
   const [isSubmitDisabled, setSubmitDisabled] = useState(hasRequiredQuestions);
 
-  console.log(booking?.fields);
   const [answers, setAnswers] = useState(
     booking?.fields && booking?.fields?.length
       ? booking?.fields
@@ -49,7 +57,6 @@ const Questionnaire = ({ questions, booking, error }: Props) => {
   );
 
   useEffect(() => {
-    console.log('answers=', answers);
     if (!hasRequiredQuestions) {
       return;
     }
@@ -68,6 +75,8 @@ const Questionnaire = ({ questions, booking, error }: Props) => {
       await api.patch(`/booking/${booking._id}`, {
         fields: answers,
       });
+      //TODO: update user preferences
+      // PATCH /user/:id {preferences}
       router.push(`/bookings/${booking._id}/summary`);
     } catch (err) {
       console.log(err); // TO DO handle error
@@ -75,11 +84,6 @@ const Questionnaire = ({ questions, booking, error }: Props) => {
   };
 
   const handleAnswer = (name: string, value: string) => {
-    console.log('name=', name);
-    console.log('value=', value);
-
-    // console.log('answers=', answers);
-
     const updatedAnswers = answers.map((answer) => {
       if (Object.keys(answer)[0] === name) {
         return { [name]: value };
@@ -127,6 +131,7 @@ const Questionnaire = ({ questions, booking, error }: Props) => {
   return (
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
+        <div className="text-3xl bg-red-100">status = {booking.status}</div>
         <BookingBackButton
           onClick={resetBooking}
           name={__('buttons_back_to_dates')}
@@ -136,6 +141,7 @@ const Questionnaire = ({ questions, booking, error }: Props) => {
           <span>{__('bookings_questionnaire_step_title')}</span>
         </h1>
         <ProgressBar steps={BOOKING_STEPS} />
+
         <div className="my-16 gap-16 mt-16">
           {questions.map((question) => (
             <QuestionnaireItem
@@ -160,21 +166,18 @@ Questionnaire.getInitialProps = async ({
 }: {
   query: ParsedUrlQuery;
 }) => {
-  console.log('query.slug=', query.slug);
   try {
+    const {
+      data: { results: booking },
+    } = await api.get(`/booking/${query.slug}`);
+
     const [
       {
-        data: { results: booking },
+        data: { results: event },
       },
-      {
-        data: { results: settings },
-      },
-    ] = await Promise.all([
-      api.get(`/booking/${query.slug}`),
-      api.get('/bookings/settings'),
-    ]);
-    return { booking, questions: settings.questions, error: null };
-    // return { booking, questions: questionsHardcoded, error: null };
+    ] = await Promise.all([api.get(`/event/${booking.eventId}`)]);
+
+    return { booking, eventQuestions: event.fields, error: null };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
