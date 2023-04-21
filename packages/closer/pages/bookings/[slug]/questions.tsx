@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
-// import EditModel from '../../../components/EditModel';
 import PageError from '../../../components/PageError';
 import QuestionnaireItem from '../../../components/QuestionnaireItem';
 import Button from '../../../components/ui/Button';
@@ -19,16 +18,6 @@ import { BaseBookingParams, Booking, Question } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
-
-const questionsHardcoded: Question[] = [
-  { type: 'text', name: 'What brings you to Closer?', required: true },
-  { type: 'text', name: 'Do you have any dietary needs?' },
-  {
-    type: 'select',
-    name: 'How do you like your mattress?',
-    options: ['soft', 'medium', 'hard'],
-  },
-];
 
 const prepareQuestions = (eventQuestions: any) => {
   const preparedQuestions = eventQuestions.map((question: any) => {
@@ -75,7 +64,7 @@ const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
       await api.patch(`/booking/${booking._id}`, {
         fields: answers,
       });
-      //TODO: update user preferences
+      //TODO when we have user profile page updated: update user preferences
       // PATCH /user/:id {preferences}
       router.push(`/bookings/${booking._id}/summary`);
     } catch (err) {
@@ -91,8 +80,6 @@ const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
       return answer;
     });
     setAnswers(updatedAnswers);
-
-    console.log('updatedAnswers=', updatedAnswers);
   };
 
   const resetBooking = () => {
@@ -131,7 +118,6 @@ const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
   return (
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
-        <div className="text-3xl bg-red-100">status = {booking.status}</div>
         <BookingBackButton
           onClick={resetBooking}
           name={__('buttons_back_to_dates')}
@@ -141,7 +127,6 @@ const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
           <span>{__('bookings_questionnaire_step_title')}</span>
         </h1>
         <ProgressBar steps={BOOKING_STEPS} />
-
         <div className="my-16 gap-16 mt-16">
           {questions.map((question) => (
             <QuestionnaireItem

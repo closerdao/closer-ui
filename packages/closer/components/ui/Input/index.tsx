@@ -11,6 +11,7 @@ type InputProps = {
   placeholder?: string;
   className?: string;
   information?: string;
+  id?: string;
 };
 
 const Input = ({
@@ -22,11 +23,13 @@ const Input = ({
   placeholder,
   className,
   information,
+  id
 }: InputProps) => {
   return (
     <div className={`w-full mb-10 ${className || ''}`}>
       {label && <label className="mb-2">{label}</label>}
       <input
+        id={id}
         type={type}
         value={value}
         onChange={onChange}

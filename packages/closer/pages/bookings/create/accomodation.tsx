@@ -7,12 +7,12 @@ import ProgressBar from '../../../components/ui/ProgressBar';
 
 import { type NextPage } from 'next';
 
-import PageNotFound from '../../404';
 import { blockchainConfig } from '../../../config_blockchain';
 import { BOOKING_STEPS } from '../../../constants';
 import { BaseBookingParams, Listing } from '../../../types';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
+import PageNotFound from '../../404';
 
 import { useAuth } from '../../../contexts/auth';
 
@@ -67,8 +67,13 @@ const AccomodationSelector: NextPage<Props> = ({
         ...(eventId && { eventId, ticketOption: { name: ticketName } }),
         ...(volunteerId && { volunteerId }),
       });
+      if (volunteerId) {
+        
+        router.push(`/bookings/${newBooking._id}/summary`);
+      } else {
+        router.push(`/bookings/${newBooking._id}/questions`);
 
-      router.push(`/bookings/${newBooking._id}/questions`);
+      }
     } catch (err) {
       console.log(err); // TO DO handle error
     } finally {

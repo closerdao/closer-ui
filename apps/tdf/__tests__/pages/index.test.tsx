@@ -1,19 +1,18 @@
-import { render, screen } from '@testing-library/react';
-import { AuthProvider } from 'closer';
+import {  screen } from '@testing-library/react';
+
 
 import HomePage from '../../pages/index';
+import { renderWithProviders } from '@/test/utils';
 
 describe('HomePage', () => {
   it('should render and have a title', () => {
-    render(
-      <AuthProvider>
-        <HomePage />
-      </AuthProvider>,
-    );
 
-    const title = screen.getByTestId('page-title');
+
+    renderWithProviders(<HomePage />)
+
+    const title = screen.getByRole('heading', { level: 1 });
     expect(title).toHaveTextContent(
-      'A playground for living and creating together',
+      /SOIL AND SOULS REGENERATING LIFE TOGETHER/i,
     );
   });
 });

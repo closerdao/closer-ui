@@ -45,6 +45,7 @@ const CheckoutForm = ({
   prePayInTokens,
   isProcessingTokenPayment = false,
   children: conditions,
+  hasComplied
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -154,7 +155,7 @@ const CheckoutForm = ({
       {conditions}
       <div className="mt-8">
         <Button
-          isEnabled={!isButtonDisabled || !submitDisabled}
+          isEnabled={!isButtonDisabled && !submitDisabled && hasComplied}
           isSpinnerVisible={processing || isProcessingTokenPayment}
         >
           {renderButtonText()}

@@ -16,6 +16,8 @@ import { __, priceFormat } from '../../../utils/helpers';
 dayjs.extend(LocalizedFormat);
 
 const Booking = ({ booking, error }) => {
+
+  // TODO: update cards with proper buttons and event and volunteer data
   const { isAuthenticated } = useAuth();
 
   if (!booking || process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {

@@ -12,7 +12,9 @@ interface Props {
   totalToken: number;
   totalFiat: number;
   eventCost?: number;
-  evntDefaultCost?: number
+  eventDefaultCost?: number;
+  accomodationDefaultCost?: number;
+  volunteerId?: string;
 }
 
 const SummaryCosts = ({
@@ -22,9 +24,11 @@ const SummaryCosts = ({
   totalToken,
   totalFiat,
   eventCost,
-  evntDefaultCost
+  eventDefaultCost,
+  accomodationDefaultCost,
+  volunteerId,
 }: Props) => {
-  const { BLOCKCHAIN_DAO_TOKEN }:any  = useConfig();
+  const { BLOCKCHAIN_DAO_TOKEN }: any = useConfig();
 
   return (
     <div>
@@ -37,14 +41,26 @@ const SummaryCosts = ({
         <div className="flex justify-between items-center mt-3">
           <p>{__('bookings_checkout_event_cost')}</p>
           <p className="font-bold">
-            {evntDefaultCost !== eventCost && <span className='line-through'>{priceFormat(evntDefaultCost)}</span>}{' '}
-            {priceFormat(eventCost)}</p>
+            {eventDefaultCost !== eventCost && (
+              <span className="line-through">
+                {priceFormat(eventDefaultCost)}
+              </span>
+            )}{' '}
+            {priceFormat(eventCost)}
+          </p>
         </div>
       ) : null}
 
       <div className="flex justify-between items-center mt-3">
         <p>{__('bookings_summary_step_dates_accomodation_type')}</p>
-        <p className="font-bold">{priceFormat(accomodationCost)}</p>
+        <p className="font-bold">
+          {volunteerId ? (
+            <span className="line-through">
+              {priceFormat(accomodationDefaultCost)}
+            </span>
+          ) : null}{' '}
+          {priceFormat(accomodationCost)}
+        </p>
       </div>
       <p className="text-right text-xs">
         {__('bookings_summary_step_accomodation_type_description')}

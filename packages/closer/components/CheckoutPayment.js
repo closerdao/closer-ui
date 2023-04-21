@@ -97,6 +97,7 @@ const CheckoutPayment = ({
           isProcessingTokenPayment={isStaking}
           total={totalToPayInFiat}
           currency="EUR"
+          hasComplied={hasComplied}
         >
           <Conditions
             setComply={onComply}
@@ -104,6 +105,7 @@ const CheckoutPayment = ({
           />
         </CheckoutForm>
       </Elements>
+
     </div>
   );
 };

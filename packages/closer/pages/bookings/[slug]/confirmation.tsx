@@ -62,9 +62,7 @@ const ConfirmationStep = ({ error, booking, event }: Props) => {
 
   return (
     <>
-
       <div className="max-w-screen-sm mx-auto p-8">
-      <div className="text-3xl bg-red-100">status = {booking.status}</div>
         <BookingBackButton onClick={goBack} />
         <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">🎊</span>
@@ -72,12 +70,12 @@ const ConfirmationStep = ({ error, booking, event }: Props) => {
         </h1>
         <ProgressBar steps={BOOKING_STEPS} />
         <div className="mt-16 flex flex-col gap-16 flex-nowrap">
-          {booking.status === 'pending' &&
+          {booking.status === 'paid' &&
             !booking.volunteerId &&
             !booking.eventId && (
               <>
                 <p className="font-bold text-3xl">
-                  {__('bookings_title_pending')}
+                  {__('bookings_title_confirmed')}
                 </p>
                 <p>{__('subscriptions_success_thank_you_message')}</p>
                 <p className="uppercase font-bold">

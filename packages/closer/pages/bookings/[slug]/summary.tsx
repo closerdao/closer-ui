@@ -32,10 +32,9 @@ interface Props extends BaseBookingParams {
 const Summary = ({ booking, listing, settings, event, error }: Props) => {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+
   const [hasComplied, setCompliance] = useState(false);
   const onComply = (isComplete: boolean) => setCompliance(isComplete);
-
-  console.log('booking', booking);
 
   const {
     utilityFiat,
@@ -45,8 +44,6 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
     start,
     end,
     adults,
-
-    // eventId,
     volunteerId,
     ticketOption,
     eventPrice,
@@ -73,10 +70,8 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
   }, [booking.status]);
 
   const handleNext = async () => {
-    const result = await api.post(`/bookings/${booking._id}/complete`, {});
-    console.log('result=', result.data.results);
+    await api.post(`/bookings/${booking._id}/complete`, {});
     if (volunteerId) {
-
       router.push(`/bookings/${booking._id}/confirmation`);
     } else {
       router.push(`/bookings/${booking._id}/checkout`);
@@ -106,7 +101,6 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
   return (
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
-        <div className="text-3xl bg-red-100">status = {booking.status}</div>
         <BookingBackButton onClick={goBack} name={__('buttons_back')} />
         <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">📑</span>
@@ -130,7 +124,13 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
             totalToken={rentalToken.val}
             totalFiat={totalToPayInFiat}
             eventCost={eventPrice?.val}
-            evntDefaultCost={booking.ticketOption?.price}
+            eventDefaultCost={
+              booking.ticketOption?.price
+                ? booking.ticketOption.price * booking.adults
+                : undefined
+            }
+            accomodationDefaultCost={listing.fiatPrice.val * booking.adults}
+            volunteerId={volunteerId}
           />
 
           {volunteerId ? (
@@ -175,9 +175,10 @@ Summary.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
       },
     ] = await Promise.all([
       api.get(`/listing/${booking.listing}`),
-      api.get('/bookings/questions'),
+      api.get('/bookings/settings'),
       api.get(`/event/${booking.eventId}`),
     ]);
+
     return { booking, listing, settings, event, error: null };
   } catch (err) {
     console.log(parseMessageFromError(err));

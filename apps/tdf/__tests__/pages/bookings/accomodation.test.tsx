@@ -14,7 +14,7 @@ describe('Select accomodation type page', () => {
       kids: '0',
       infants: '0',
       pets: '0',
-      currency: 'EUR',
+      // currency: 'EUR',
       useTokens: false,
       listings: [],
     };
@@ -22,11 +22,11 @@ describe('Select accomodation type page', () => {
     renderWithProviders(<AccomodationSelector {...props} />);
 
     const title = screen.getByRole('heading', {
-      name: /Accomodation/i,
+      name: /Accommodation/i,
     });
     expect(title).toBeInTheDocument();
     const message = screen.getByText(
-      /There are no accomodations available for these dates/i,
+      /There are no accommodations available for these dates/i,
     );
     expect(message).toBeInTheDocument();
   });
@@ -39,7 +39,7 @@ describe('Select accomodation type page', () => {
       kids: '1',
       infants: '1',
       pets: '1',
-      currency: 'EUR',
+      // currency: 'EUR',
       useTokens: false,
       listings: listingsMock,
     };
@@ -48,10 +48,14 @@ describe('Select accomodation type page', () => {
     const cards = screen.getAllByRole('heading', { level: 2 });
     expect(cards).toHaveLength(2);
     const cardTitle = screen.getByRole('heading', { name: /magical cave/i });
-    const button1 = screen.getAllByRole('button', { name: /book/i })[0];
-    const button2 = screen.getAllByRole('button', { name: /book/i })[1];
+    const button1 = screen.getAllByRole('button', {
+      name: /sign in to book/i,
+    })[0];
+    const button2 = screen.getAllByRole('button', {
+      name: /sign in to book/i,
+    })[1];
     expect(cardTitle).toBeInTheDocument();
-    expect(button1).toBeEnabled();
-    expect(button2).toBeEnabled();
+    expect(button1).toBeDisabled();
+    expect(button2).toBeDisabled();
   });
 });

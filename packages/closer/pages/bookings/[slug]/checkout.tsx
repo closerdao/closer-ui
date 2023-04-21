@@ -35,7 +35,7 @@ interface Props extends BaseBookingParams {
   event?: Event;
 }
 
-const Checkout = ({ booking, listing, settings, event, error }: Props) => {
+const Checkout = ({ booking, listing, settings, error }: Props) => {
   const {
     utilityFiat,
     rentalToken,
@@ -45,9 +45,6 @@ const Checkout = ({ booking, listing, settings, event, error }: Props) => {
     end,
     dailyRentalToken,
     duration,
-    adults,
-
-    eventId,
     volunteerId,
     ticketOption,
     eventPrice,
@@ -82,7 +79,6 @@ const Checkout = ({ booking, listing, settings, event, error }: Props) => {
     ? balanceAvailable < totalToPayInToken
     : false;
   const { user, isAuthenticated } = useAuth();
-  console.log('user', user);
 
   const listingName = listing?.name;
   const [hasAgreedToWalletDisclaimer, setWalletDisclaimer] = useState(
@@ -121,7 +117,6 @@ const Checkout = ({ booking, listing, settings, event, error }: Props) => {
   return (
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
-        <div className="text-3xl bg-red-100">status = {booking.status}</div>
         <BookingBackButton onClick={goBack} name={__('buttons_back')} />
         <h1 className="step-title font-normal pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">💰</span>

@@ -21,8 +21,8 @@ describe('Events', () => {
     );
 
     renderWithProviders(<Events />);
-    const titleUpcoming = screen.getAllByRole('heading', { level: 1 })[0];
-    const titlePast = screen.getAllByRole('heading', { level: 1 })[1];
+    const titleUpcoming = screen.getAllByRole('heading', { level: 2 })[0];
+    const titlePast = screen.getAllByRole('heading', { level: 2 })[1];
     expect(titleUpcoming).toHaveTextContent(/upcoming events/i);
     expect(titlePast).toHaveTextContent(/past events/i);
     const eventCards = await screen.findAllByRole('listitem');
