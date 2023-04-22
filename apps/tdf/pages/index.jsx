@@ -7,6 +7,7 @@ import { useAuth, EventsList, usePlatform, Newsletter, Tag } from 'closer';
 import { event } from 'nextjs-google-analytics';
 
 const loadTime = new Date();
+const RESOURCES_KEY = {sort_by: 'created'};
 // interface Resource {
 //   title: string;
 //   slug: string;
@@ -23,7 +24,7 @@ const HomePage = () => {
   useEffect(() => {
     const loadData = async () => {
       await Promise.all([
-        platform.resource.get()
+        platform.resource.get(RESOURCES_KEY)
       ]);
     };
 
@@ -140,7 +141,7 @@ const HomePage = () => {
           connected regenerative living
         </h3>
         <ul className="flex flex-wrap text-center divide-x">
-          { platform.resource.find() && platform.resource.find().map((resource) => (
+          { platform.resource.find(RESOURCES_KEY) && platform.resource.find(RESOURCES_KEY).map((resource) => (
             <li
               key={ resource.get('_id') }
               className="w-1/2 md:w-1/3 lg:w-1/4 mb-4 p-3"
