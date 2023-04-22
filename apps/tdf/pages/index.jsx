@@ -33,9 +33,8 @@ const HomePage = () => {
   return (
     <div>
       <Head>
-        <title>
-          Traditional Dream Factory | Regenerative Playground in Alentejo, Portugal
-        </title>
+        <title>Traditional Dream Factory</title>
+        <meta name="description" content="Traditional Dream Factory (TDF) is a regenerative playground in Abela, Portugal."></meta>
       </Head>
       <section className="text-right -ml-6 -mr-6 pt-20 pb-12 -mt-6 mb-12 md:mb-32 md:min-h-screen p-6 bg-cover bg-[url('/images/landing/sheep-mobile.jpg')] md:bg-[url('/images/landing/sheep-min.png')]">
         <div className="max-w-6xl mx-auto">
@@ -253,7 +252,7 @@ const HomePage = () => {
                 </h4>
               </li>
               <li className="flex justify-start items-center">
-                <img src="/images/icons/cafe.png" className="mr-1 w-12" />
+                <img src="/images/icons/cafe.png" alt="TDF Cafe" className="mr-1 w-12" />
                 <h4 className="md:text-sm">
                   Café & Store{' '}
                   <Tag className="m-1" color="primary">Coming soon</Tag>
