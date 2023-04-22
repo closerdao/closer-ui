@@ -18,7 +18,8 @@ import { __, priceFormat } from 'closer/utils/helpers';
 const Subscriptions = () => {
   const { isLoading, loadUserFromCookies, user, isAuthenticated } = useAuth();
   const router = useRouter();
-  const { PLATFORM_NAME, SUBSCRIPTIONS } = useConfig() || {};
+  const { PLATFORM_NAME, SUBSCRIPTIONS, STRIPE_CUSTOMER_PORTAL_URL } =
+    useConfig() || {};
 
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>();
   const [upgradePlan, setUpgradePlan] = useState<SubscriptionPlan>();
@@ -62,7 +63,7 @@ const Subscriptions = () => {
   const handleManageSubscription = () => {
     if (user) {
       router.push(
-        `https://billing.stripe.com/p/login/test_dR69Cl1Igat5dhK3cc?prefilled_email=${user.subscription.stripeCustomerEmail}`,
+        `${STRIPE_CUSTOMER_PORTAL_URL}?prefilled_email=${user.subscription.stripeCustomerEmail}`,
       );
     }
   };
