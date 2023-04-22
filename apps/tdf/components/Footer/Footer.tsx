@@ -1,8 +1,8 @@
 import { FC } from 'react';
 
 export const Footer: FC = () => (
-  <footer className="w-full mx-auto">
-    <div className="p-6 text-gray-400">
+  <footer className="w-full mt-16 mx-auto text-center max-w-prose">
+    <div className="p-6 text-gray-700 italic">
       <p>
         Traditional Dream Factory is the first village in the{' '}
         <a href="https://oasa.earth" target="_blank" rel="noreferrer">
@@ -16,13 +16,16 @@ export const Footer: FC = () => (
         >
           braulioamado
         </a>
-        .
+        . Illustrations by Silvia Bastos. Platform developed by{' '}
+        <a href="https://closer.earth">Closer</a>.{' '}
+        Campaign designed by{' '}
+        <a href="https://zebragrowth.com/">Zebra</a>.
       </p>
-      <div className="social mt-4 flex flex-row">
+      <div className="social mt-4 flex flex-row justify-center">
         <a
-          href="https://t.me/+7yBqlNOMbRtlZmFh"
+          href="https://t.me/traditionaldreamfactor"
           target="_blank"
-          className="mr-2"
+          className="mr-2 p-2 transition ease-linear duration-1200 hover:scale-125"
           rel="noreferrer"
         >
           <svg
@@ -44,7 +47,7 @@ export const Footer: FC = () => (
         <a
           href="https://www.instagram.com/traditionaldreamfactory/"
           target="_blank"
-          className="mr-2"
+          className="mr-2 p-2 transition ease-linear duration-1200 hover:scale-125"
           rel="noreferrer"
         >
           <svg
@@ -68,7 +71,7 @@ export const Footer: FC = () => (
         <a
           href="https://twitter.com/tdfinyourdreams/"
           target="_blank"
-          className="mr-2"
+          className="mr-2 p-2 transition ease-linear duration-1200 hover:scale-125"
           rel="noreferrer"
         >
           <svg

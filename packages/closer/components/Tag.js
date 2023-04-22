@@ -9,10 +9,10 @@ const colors = {
   primary: 'bg-primary text-gray-100',
 };
 
-const Tag = ({ color, children, remove }) => {
+const Tag = ({ color, children, remove, className }) => {
   return (
     <span
-      className={`${colors[color]} inline-flex items-center text-sm rounded overflow-hidden`}
+      className={`${colors[color]} ${className} inline-flex items-center text-sm rounded-lg overflow-hidden`}
     >
       <span
         className="ml-2 mr-1 leading-relaxed truncate max-w-xs px-1"
@@ -22,7 +22,7 @@ const Tag = ({ color, children, remove }) => {
       </span>
       {remove && (
         <button
-          className="w-6 h-8 inline-block align-middle text-gray-500 bg-grey-900 bg-opacity-50 focus:outline-none"
+          className="w-6 h-6 inline-block align-middle text-gray-500 bg-grey-900 bg-opacity-50 focus:outline-none"
           onClick={remove}
         >
           <svg
@@ -42,6 +42,7 @@ const Tag = ({ color, children, remove }) => {
 };
 Tag.defaultProps = {
   color: 'blue',
+  className: ''
 };
 
 export default Tag;

@@ -1,4 +1,6 @@
-import React, {
+import { useRouter } from 'next/router';
+
+import {
   FC,
   PropsWithChildren,
   createContext,
@@ -12,7 +14,6 @@ import { AxiosError } from 'axios';
 import Cookies from 'js-cookie';
 
 import { useConfig } from '../../hooks/useConfig';
-import PageNotAllowed from '../../pages/401';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
@@ -21,10 +22,11 @@ import { AuthenticationContext, User } from './types';
 export const AuthContext = createContext<AuthenticationContext | null>(null);
 
 export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [error, setErrorState] = useState<string | null>(null);
   const [isLoading, setLoading] = useState<boolean>(true);
-  let errorTimeout: NodeJS.Timeout;
+  let errorTimeout: any;
   const config = useConfig() || {};
 
   const setError = useCallback((msg: string) => {
@@ -33,25 +35,25 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     errorTimeout = setTimeout(() => setErrorState(null), 5000);
   }, []);
 
-  useEffect(() => {
-    async function loadUserFromCookies() {
-      try {
-        const token = Cookies.get(config?.COOKIE_TOKEN);
-        if (token) {
-          api.defaults.headers.Authorization = `Bearer ${token}`;
-          const {
-            data: { results: user },
-          } = await api.get('/mine/user');
-          if (user) {
-            setUser(user);
-          }
+  async function loadUserFromCookies() {
+    try {
+      const token = Cookies.get(config?.COOKIE_TOKEN);
+      if (token) {
+        api.defaults.headers.Authorization = `Bearer ${token}`;
+        const {
+          data: { results: user },
+        } = await api.get('/mine/user');
+        if (user) {
+          setUser(user);
         }
-        setLoading(false);
-      } catch (err) {
-        const message = parseMessageFromError(err);
-        setError(message);
       }
+      setLoading(false);
+    } catch (err) {
+      const message = parseMessageFromError(err);
+      setError(message);
     }
+  }
+  useEffect(() => {
     loadUserFromCookies();
   }, []);
 
@@ -63,13 +65,11 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         email,
         password,
       });
-      if (token) {
-        if (user) {
-          setAuthentification(user, token);
-          setUser(user);
-        }
+      if (token && user) {
+        setAuthentification(user, token);
+        setUser(user);
+        setError('');
       }
-      setError('');
     } catch (err) {
       if ((err as AxiosError).response?.status === 401) {
         setError(__('auth_error_401_message'));
@@ -84,6 +84,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const setAuthentification = async (user: User, token: string) => {
     if (token) {
+      api.defaults.headers.Authorization = `Bearer ${token}`;
       Cookies.set(config.COOKIE_TOKEN, token, {
         expires: 60,
         sameSite: 'strict',
@@ -102,7 +103,6 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       } = await api.post('/signup', data);
       if (token && userData) {
         setAuthentification(userData, token);
-        api.defaults.headers.Authorization = `Bearer ${token}`;
         setUser(userData);
       }
       setError('');
@@ -159,7 +159,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     Cookies.remove(config?.COOKIE_TOKEN);
     setUser(null);
     delete api.defaults.headers.Authorization;
-    window.location.pathname = '/';
+    router.push('/');
   };
 
   return (
@@ -177,6 +177,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         updatePassword,
         setUser,
         setError,
+        loadUserFromCookies,
       }}
     >
       {children}

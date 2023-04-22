@@ -18,7 +18,7 @@ const Layout: FC<PropsWithChildren> = ({ children }) => {
   }, []);
 
   return (
-    <div className="p-6 flex flex-1 flex-col items-center w-full">
+    <div className="main-content p-6 flex flex-1 flex-col w-full gap-8">
       {children}
     </div>
   );

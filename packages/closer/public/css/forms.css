@@ -7,8 +7,17 @@
   }
   .btn-primary,
   .btn-primary[type='submit'] {
-    @apply cursor-pointer inline-block py-2 px-4 rounded-full text-primary border-2 border-primary focus:outline-none disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed hover:bg-primary hover:text-background;
-    @apply text-primary bg-transparent hover:text-white hover:bg-primary border-primary disabled:hover:bg-transparent disabled:border-gray-400 disabled:text-gray-400;
+    @apply text-base cursor-pointer inline-block py-2 px-4 rounded-full text-background border-0 border-primary bg-primary focus:outline-none disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed uppercase;
+  }
+  .btn-primary-light,
+  .btn-primary-light[type='submit'] {
+    @apply text-base cursor-pointer inline-block py-2 px-4 rounded-full text-primary border-0 border-primary bg-primary-light focus:outline-none disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed uppercase;
+  }
+  .btn-primary-large {
+    @apply: btn-primary md:text-4xl;
+  }
+  .btn-light {
+    @apply: bg-primary-light;
   }
   .btn-small,
   .btn-small[type='submit'] {
@@ -17,9 +26,6 @@
   .btn-secondary,
   .btn-secondary[type='submit'] {
     @apply btn hover:bg-secondary text-secondary hover:text-white bg-transparent border-2 border-secondary disabled:hover:bg-transparent disabled:border-gray-400 disabled:text-gray-400;
-  }
-  .btn-primary.btn-large {
-    @apply border-8 py-4 px-8 focus:ring-4;
   }
   .btn-primary.active {
     @apply bg-primary text-white hover:bg-transparent hover:text-primary;
@@ -39,15 +45,17 @@
     @apply border-white;
   }
   input:checked + .toggle-bg {
-    @apply bg-blue-600 border-blue-600;
+    @apply bg-primary border-primary;
   }
   input,
-  textarea {
+  textarea,
+  .input,
+  .textarea {
     @apply w-full;
   }
   textarea,
   .textarea {
-    @apply mt-0 block w-full border-0 border-b-2 border-gray-200 px-0.5 focus:ring-0 focus:border-black resize-none;
+    @apply p-2 text-foreground block border-0 border-b-2 border-transparent focus:outline-none focus:border-primary;
   }
   .input,
   input[type='email'],
@@ -57,14 +65,21 @@
   input[type='number'],
   input[type='date'],
   input[type='time'] {
-    @apply py-2 text-foreground block border-0 border-b-2 border-gray-200 focus:outline-none focus:border-primary;
+    @apply p-2 text-foreground block border-0 border-b-2 border-transparent ring-transparent focus:outline-none focus:border-primary;
   }
+
+
   select {
-    @apply h-10 pl-3 pr-6 text-base text-black placeholder-gray-600 border-b-2 border-gray-200 rounded-lg appearance-none focus:border-black outline-none max-w-full;
+    @apply text-base border-gray-200 border-2 rounded-lg ring-transparent appearance-none focus:border-primary outline-none max-w-full;
   }
+
   label,
   .label {
-    @apply block uppercase tracking-wide text-gray-500 text-xs font-bold mb-2;
+    @apply  text-complimentary block uppercase tracking-wide text-xs font-bold;
+  }
+
+    label + input {
+    @apply mt-2;
   }
   .switch .label {
     @apply mb-0 ml-2;

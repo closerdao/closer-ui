@@ -8,6 +8,7 @@ import DateTimePicker from './DateTimePicker';
 import DiscountsEditor from './DiscountsEditor';
 import FieldsEditor from './FieldsEditor';
 import PhotosEditor from './PhotosEditor';
+import Tag from './Tag';
 import PriceEditor, { currencies } from './PriceEditor';
 import Switch from './Switch';
 import TicketOptionsEditor from './TicketOptionsEditor';
@@ -29,6 +30,7 @@ const FormField = ({
   max,
 }) => {
   const [addTag, setAddTag] = useState('');
+  console.log(name, objectPath.get(data, name))
   return (
     <div className={`form-field w-full mb-6 form-type-${type}`} key={name}>
       <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2">
@@ -41,7 +43,7 @@ const FormField = ({
           ) && (
             <input
               type={type}
-              value={data[name]}
+              value={objectPath.get(data, name)}
               placeholder={placeholder}
               min={min}
               max={max}
@@ -52,13 +54,13 @@ const FormField = ({
           )}
           {type === 'datetime' && (
             <DateTimePicker
-              value={data[name]}
+              value={objectPath.get(data, name)}
               onChange={(value) => update(name, value)}
             />
           )}
           {type === 'longtext' && (
             <textarea
-              value={data[name]}
+              value={objectPath.get(data, name)}
               placeholder={placeholder}
               onChange={(e) => update(name, e.target.value)}
               required={required}
@@ -67,7 +69,7 @@ const FormField = ({
           )}
           {type === 'currency' && (
             <PriceEditor
-              value={data[name]}
+              value={objectPath.get(data, name)}
               onChange={(value) => update(name, value)}
               placeholder={placeholder}
               required={required}
@@ -75,17 +77,17 @@ const FormField = ({
           )}
           {type === 'photos' && (
             <PhotosEditor
-              value={data[name]}
+              value={objectPath.get(data, name)}
               onChange={(value) => update(name, value)}
               required={required}
             />
           )}
           {type === 'currencies' && (
             <div className="currencies-group">
-              {(data[name] || []).map((currencyGroup, index) => (
+              {(objectPath.get(data, name) || []).map((currencyGroup, index) => (
                 <div className="currency-group" key={`${name}.${index}.cur`}>
                   <select
-                    value={data[name]?.cur}
+                    value={objectPath.get(data, name)?.cur}
                     onChange={(e) =>
                       update(`${name}.${index}.cur`, e.target.value)
                     }
@@ -98,7 +100,7 @@ const FormField = ({
                   </select>
                   <input
                     type={type}
-                    value={data[name][index]?.val || ''}
+                    value={objectPath.get(data, name)[index]?.val || ''}
                     placeholder={placeholder}
                     onChange={(e) =>
                       update(`${name}.${index}.val`, e.target.value)
@@ -112,7 +114,7 @@ const FormField = ({
                         e.preventDefault();
                         update(
                           name,
-                          (data[name] || []).filter((c, i) => i !== index),
+                          (objectPath.get(data, name) || []).filter((c, i) => i !== index),
                         );
                       }}
                     >
@@ -125,7 +127,7 @@ const FormField = ({
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  update(name, (data[name] || []).concat(currencies[0]));
+                  update(name, (objectPath.get(data, name) || []).concat(currencies[0]));
                 }}
               >
                 {__('form_field_add_currency')}
@@ -134,7 +136,7 @@ const FormField = ({
           )}
           {type === 'select' && (
             <select
-              value={data[name]}
+              value={objectPath.get(data, name)}
               onChange={(e) => update(name, e.target.value)}
               className={className}
             >
@@ -154,31 +156,28 @@ const FormField = ({
             />
           )}
           {type === 'tags' && (
-            <div className={`${className} tags`}>
-              {data[name] &&
-                data[name].length > 0 &&
-                data[name].map((tag) => (
-                  <div className="tag" key={tag}>
-                    <span className="ellipsis">{tag}</span>
-                    <a
-                      href="#"
-                      className="remove"
-                      onClick={() => {
-                        update(
-                          name,
-                          data[name].filter((el) => el !== tag),
-                          tag,
-                          'DELETE',
-                        );
-                      }}
-                    >
-                      X
-                    </a>
-                  </div>
-                ))}
+            <div className={`${className||''} space-x-1`}>
+              {objectPath.get(data, name) &&
+                objectPath.get(data, name).map((tag) => (
+                  <Tag
+                    key={tag}
+                    color="blue"
+                    remove={() => {
+                      update(
+                        name,
+                        objectPath.get(data, name).filter((el) => el !== tag),
+                        tag,
+                        'DELETE',
+                      );
+                    }}
+                  >
+                    {tag}
+                  </Tag>
+                ))
+              }
               <input
                 type="text"
-                className="inline"
+                className="mt-2"
                 placeholder={placeholder || 'Add tag'}
                 value={addTag}
                 title="Press enter to add"
@@ -186,7 +185,7 @@ const FormField = ({
                   if (e.which === 13) {
                     e.preventDefault();
                     e.stopPropagation();
-                    update(name, data[name].concat(addTag));
+                    update(name, (objectPath.get(data, name) || []).concat(addTag));
                     setAddTag('');
                   }
                 }}
@@ -197,7 +196,7 @@ const FormField = ({
           {type === 'autocomplete' && (
             <div className="autocomplete-container">
               <div className="tags">
-                {data[name].map(
+                {objectPath.get(data, name).map(
                   (item) =>
                     item._id && (
                       <span className="tag" key={item._id}>
@@ -209,7 +208,7 @@ const FormField = ({
                             e.preventDefault();
                             update(
                               name,
-                              data[name].filter((el) => el._id !== item._id),
+                              objectPath.get(data, name).filter((el) => el._id !== item._id),
                               item,
                               'DELETE',
                             );
@@ -225,7 +224,7 @@ const FormField = ({
                 multi={multi}
                 endpoint={endpoint}
                 searchField={searchField}
-                value={data[name]}
+                value={objectPath.get(data, name)}
                 onChange={(value, option, actionType) =>
                   update(name, value, option, actionType)
                 }
@@ -234,19 +233,19 @@ const FormField = ({
           )}
           {type === 'ticketOptions' && (
             <TicketOptionsEditor
-              value={data[name]}
+              value={objectPath.get(data, name)}
               onChange={(value) => update(name, value)}
             />
           )}
           {type === 'discounts' && (
             <DiscountsEditor
-              value={data[name]}
+              value={objectPath.get(data, name)}
               onChange={(value) => update(name, value)}
             />
           )}
           {type === 'fields' && (
             <FieldsEditor
-              value={data[name]}
+              value={objectPath.get(data, name)}
               onChange={(value) => update(name, value)}
             />
           )}

@@ -31,27 +31,26 @@ const EditEvent = ({ event }) => {
         </title>
       </Head>
       <div className="main-content">
-        <h1 className="flex justify-start items-center">
-          <Link
-            as={`/events/${event.slug}`}
-            href="/events/[slug]"
-            className="mr-2"
-          >
-            <FaArrowLeft />
-          </Link>
+        <Link
+          href={`/events/${event.slug}`}
+          className="mr-2 italic flex flex-row items-center justify-start"
+        >
+          <FaArrowLeft className="mr-1" /> {__('generic_back')}
+        </Link>
+        <h2 className="flex justify-start items-center">
           {__('events_slug_edit_link')} <i>{event.name}</i>
-        </h1>
+        </h2>
         {!process.env.NEXT_PUBLIC_STRIPE_PUB_KEY && (
-          <div className="p2 italic">{__('events_no_stripe_integration')}</div>
+          <div className="my-4 error-box italic">
+            {__('events_no_stripe_integration')}
+          </div>
         )}
         <EditModel
           id={event._id}
           endpoint="/event"
           fields={models.event}
           onSave={(event) => router.push(`/events/${event.slug}`)}
-          onUpdate={(name, value, option, actionType) =>
-            onUpdate(name, value, option, actionType)
-          }
+          onUpdate={onUpdate}
           allowDelete
           deleteButton="Delete Event"
           onDelete={() => router.push('/')}

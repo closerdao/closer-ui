@@ -61,8 +61,10 @@ const SignupForm = () => {
     setApplication((prevState) => ({ ...prevState, ...update }));
   };
 
+  const isSignupDisabled = !application.email || !application.password || !application.screenname;
+
   return (
-    <div>
+    <div className="card">
       {error && <div className="text-primary mb-4 text-center">{error}</div>}
       {submitted && !error ? (
         <>
@@ -70,7 +72,7 @@ const SignupForm = () => {
           <p>{__('signup_success_cta')}</p>
         </>
       ) : (
-        <form className="join mt-8 flex flex-col" onSubmit={submit}>
+        <form className="join flex flex-col" onSubmit={submit}>
           <input
             type="hidden"
             name="backurl"
@@ -144,7 +146,7 @@ const SignupForm = () => {
             />
           </div>
           <div className="w-full mb-4">
-            <button id="signupbutton" className="btn-primary" type="submit">
+            <button id="signupbutton" className="btn-primary" type="submit" disabled={isSignupDisabled}>
               {__('signup_form_create')}
             </button>
           </div>

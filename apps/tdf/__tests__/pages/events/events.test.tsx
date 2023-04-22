@@ -10,7 +10,7 @@ import eventsMock from './events.json';
 describe('Events', () => {
   it('should render and have proper subtitles', async () => {
     server.use(
-      rest.get('https://api.closer.earth/event', (req, res, ctx) => {
+      rest.get('*/event', (req, res, ctx) => {
         const params = req.url.searchParams;
         const where = params.get('where');
         if (where?.includes('gt')) {
@@ -19,6 +19,7 @@ describe('Events', () => {
         return res(ctx.json({ results: eventsMock }));
       }),
     );
+
     renderWithProviders(<Events />);
     const titleUpcoming = screen.getAllByRole('heading', { level: 1 })[0];
     const titlePast = screen.getAllByRole('heading', { level: 1 })[1];

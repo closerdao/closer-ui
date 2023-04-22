@@ -332,7 +332,7 @@ const Event = ({ event, error }) => {
               </div>
             </div>
           </section>
-          <main className="main-content max-w-prose event-page py-10">
+          <main className="main-content max-w-prose py-10">
             {((event.partners && event.partners.length > 0) ||
               (isAuthenticated && user._id === event.createdBy)) && (
               <section className="mb-6">
@@ -358,31 +358,6 @@ const Event = ({ event, error }) => {
                         ),
                     )}
                 </div>
-                {/* { (isAuthenticated && user._id === event.createdBy) &&
-                  <div className="m-4">
-                    <h3>Add partner</h3>
-                    <form className="flex flex-row p-2" onSubmit={ e => addPartner(e, partnerToAdd) }>
-                      <div className="w-2/3">
-                        <input
-                          type="text"
-                          value={ partnerToAdd.name }
-                          placeholder="Partner Name"
-                          onChange={ e => setPartnerToAdd({ ...partnerToAdd, name: e.target.value }) }
-                        />
-                      </div>
-                      <div className="w-1/3">
-                        { partnerToAdd.photo && <Photo id={ partnerToAdd.photo } /> }
-                        <div className="flex flex-row``">
-                          <UploadPhoto
-                            onSave={ photo => setPartnerToAdd({ ...partnerToAdd, photo }) }
-                            label="Upload logo"
-                          />
-                          <button className="btn-primary">Add</button>
-                        </div>
-                      </div>
-                    </form>
-                  </div>
-                } */}
               </section>
             )}
 
@@ -409,20 +384,10 @@ Event.getInitialProps = async ({ query }) => {
     const {
       data: { results: event },
     } = await api.get(`/event/${query.slug}`);
-    // Test cases:
-    // Event is ongoing
-    // event.start = '2022-02-02T19:00:00.000Z';
-    // event.end = '2029-04-02T19:00:00.000Z';
-    // Event ended
-    // event.start = '2022-02-02T19:00:00.000Z';
-    // event.end = '2022-02-03T19:00:00.000Z';
-    // Event is starting soon
-    // event.start = '2022-03-02T21:00:00.000Z';
-    // event.end = '2022-03-03T19:00:00.000Z';
+    console.log('event', event);
     return { event };
   } catch (err) {
     console.log('Error', err.message);
-
     return {
       error: err.message,
     };
