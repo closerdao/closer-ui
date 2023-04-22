@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import React, { useEffect } from 'react';
 
-import { useAuth, EventsList, usePlatform, Newsletter, Tag } from 'closer';
+import { useAuth, EventsList, usePlatform, Newsletter, Tag, api } from 'closer';
 import { event } from 'nextjs-google-analytics';
 
 const loadTime = new Date();
@@ -150,6 +150,13 @@ const HomePage = () => {
               <Link
                 href={resource.get('url')}
                 className="btn-primary"
+                onClick={ async (e) => {
+                  e.preventDefault();
+                  if (isAuthenticated) {
+                    await api.post(`/actions/${resource.get('slug')}-reader`);
+                  }
+                  window.open(resource.get('url'));
+                } }
               >
                 {resource.get('ctaText')}
               </Link>
