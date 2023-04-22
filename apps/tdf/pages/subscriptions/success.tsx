@@ -71,7 +71,7 @@ const Success = () => {
         </title>
       </Head>
 
-      <div className="main-content w-full max-w-screen-sm mx-auto p-6 border">
+      <div className="main-content w-full max-w-screen-sm mx-auto p-6">
         <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-6">
