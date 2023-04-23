@@ -55,7 +55,7 @@ describe('Select accomodation type page', () => {
       name: /sign in to book/i,
     })[1];
     expect(cardTitle).toBeInTheDocument();
-    expect(button1).toBeDisabled();
-    expect(button2).toBeDisabled();
+    expect(button1).toBeEnabled();
+    expect(button2).toBeEnabled();
   });
 });
