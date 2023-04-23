@@ -7,7 +7,7 @@ import { useAuth, EventsList, usePlatform, Newsletter, Tag } from 'closer';
 import { event } from 'nextjs-google-analytics';
 
 const loadTime = new Date();
-const RESOURCES_KEY = {sort_by: 'created'};
+const RESOURCES_KEY = { sort_by: 'created' };
 // interface Resource {
 //   title: string;
 //   slug: string;
