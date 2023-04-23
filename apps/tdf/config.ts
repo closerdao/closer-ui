@@ -62,6 +62,7 @@ const config = {
 
       {
         title: 'Pioneer',
+        available: false,
         emoji: '👨🏽‍🚀',
         description:
           'Collect carrots and turn them into stay and event credits',

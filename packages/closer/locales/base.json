@@ -296,6 +296,7 @@
   "generic_yes": "Yes",
   "generic_no": "No",
   "generic_ok": "Ok",
+  "generic_coming_soon": "Coming soon",
   "listings_slug_checkout_title": "Booking",
   "listings_slug_checkout_volunteer_true": "Thank you for being a volunteer!",
   "listings_slug_checkout_volunteer_capacity_reached": "Thank you for applying to be a volunteer, unforturnately volunteer tickets are now sold out.",
@@ -409,7 +410,7 @@
   "subscriptions_success_next_steps": "You can view, change and cancel your subscription from your account profile.",
   "subscriptions_terms_full_text": "This is the full text of the terms and conditions",
   "subscriptions_active_button": "Active",
-  
+
   "tasks_edit_title": "Edit",
   "tasks_edit_error": "Task not found",
   "tasks_slug_edit_task": "Edit task",
