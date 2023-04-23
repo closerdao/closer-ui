@@ -33,7 +33,7 @@ export type User = {
   attributes: string[];
   managedBy: string[];
   _id: string;
-  subscription: any
+  subscription: any;
 };
 
 export type AuthenticationContext = {
@@ -58,17 +58,5 @@ export type AuthenticationContext = {
   setUser: (user: User | null) => void;
   setError: (msg: string) => void;
   loadUserFromCookies: () => Promise<void>;
+  refetchUser: () => Promise<void>;
 };
-
-// isAuthenticated: !!user,
-// user,
-// login,
-// setAuthentification,
-// isLoading,
-// logout,
-// error,
-// signup,
-// completeRegistration,
-// updatePassword,
-// setUser,
-// setError,

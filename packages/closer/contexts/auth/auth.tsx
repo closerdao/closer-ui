@@ -162,6 +162,21 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     router.push('/');
   };
 
+  const refetchUser = async () => {
+    try {
+      const {
+        data: { results: user },
+      } = await api.get('/mine/user');
+      if (user) {
+        setUser(user);
+      }
+    } catch (err) {
+      const message = parseMessageFromError(err);
+      setError(message);
+    }
+  };
+
+
   return (
     <AuthContext.Provider
       value={{
@@ -178,6 +193,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         setUser,
         setError,
         loadUserFromCookies,
+        refetchUser
       }}
     >
       {children}

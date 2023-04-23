@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 
 import { FC, useState } from 'react';
 
+import UploadPhoto from '../../components/UploadPhoto';
 import Heading from '../../components/ui/Heading';
 import Input from '../../components/ui/Input';
 
@@ -11,6 +12,8 @@ import { useAuth } from '../../contexts/auth';
 import { type User } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
 import { parseMessageFromError } from '../../utils/common';
+
+type UpdateUserFunction = (value: string) => Promise<void>;
 
 const MemberPage: FC = () => {
   const router = useRouter();
@@ -31,7 +34,8 @@ const MemberPage: FC = () => {
   const { platform } = usePlatform() as any;
 
   const saveUserAttribute =
-    (attribute: keyof User) => async (value: string) => {
+    (attribute: keyof User): UpdateUserFunction =>
+    async (value: string) => {
       try {
         await platform.user.patch(user?._id, { [attribute]: value });
         setError(null);
@@ -142,6 +146,17 @@ const MemberPage: FC = () => {
           className="mt-8"
           validation="email"
         />
+        <div className="md:w-72 items-center justify-start relative mt-8">
+          <label className="font-medium text-complimentary-light">
+            Profile Picture
+          </label>
+          <UploadPhoto
+            model="user"
+            id={user._id}
+            label={user.photo ? 'Change' : 'Add photo'}
+            className="my-4"
+          />
+        </div>
       </div>
     </>
   );

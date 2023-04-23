@@ -99,18 +99,13 @@ const Input = React.memo(
         ? `${label} is not a valid ${validation} value.`
         : null;
 
-    console.log(
-      'isValid',
-      isValid,
-      'validation',
-      validation,
-      ' !isValid && validation',
-      !isValid && validation,
-    );
-
     return (
       <div className={`flex flex-col gap-4 relative ${className}`}>
-        <label className="font-medium text-complimentary-light">{label}</label>
+        {label && (
+          <label className="font-medium text-complimentary-light">
+            {label}
+          </label>
+        )}
         <input
           type={type}
           value={localValue}
