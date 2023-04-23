@@ -12,7 +12,7 @@ interface Props {
 const DiscountCode = ({ setDiscountCode, discountCode }: Props) => {
   return (
     <div className='flex basis-20'>
-      <Heading level={3} className="text-[16px] mt-2 basis-1/2">
+      <Heading level={3} className="text-[14px] mt-2 basis-1/2">
       {__('bookings_dates_step_tickets_discount_code')}:
       </Heading>
       <Input
@@ -22,7 +22,6 @@ const DiscountCode = ({ setDiscountCode, discountCode }: Props) => {
         placeholder='enter code'
         className=''
       />
-      {/* TODO: validate disount code in the background? */}
     </div>
   );
 };

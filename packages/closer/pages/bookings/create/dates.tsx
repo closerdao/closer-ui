@@ -161,10 +161,6 @@ const DatesSelector: NextPage<Props> = ({
                 discountCode={discountCode}
                 setDiscountCode={setDiscountCode}
               />
-              {/* <DiscountCode
-                discountCode={discountCode}
-                setDiscountCode={setDiscountCode}
-              /> */}
             </>
           )}
 
