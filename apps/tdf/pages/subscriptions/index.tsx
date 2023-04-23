@@ -51,7 +51,7 @@ const Subscriptions = () => {
           </title>
         </Head>
 
-        <div className="main-content w-full max-w-screen-sm mx-auto p-6">
+        <div className="max-w-6xl mx-auto">
           <Heading level={1} className="mb-14">
             ♻️ {__('settings_your_subscription_title')}
           </Heading>
@@ -63,13 +63,13 @@ const Subscriptions = () => {
   }
 
   return (
-    <div className="main-content w-full max-w-screen-sm mx-auto p-6">
+    <div className="max-w-6xl mx-auto">
       <Head>
         <title>
           {__('subscriptions_title')} — {PLATFORM_NAME}
         </title>
       </Head>
-      <main className="pt-16 pb-24 px-6 md:flex-row flex-wrap">
+      <main className="pt-16 pb-24 md:flex-row flex-wrap">
         <Heading level={1} className="mb-6">
           {' '}
           ♻️ {__('subscriptions_title')}

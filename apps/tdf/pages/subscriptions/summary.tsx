@@ -80,7 +80,7 @@ const Summary = () => {
         </title>
       </Head>
 
-      <div className="main-content w-full max-w-screen-sm mx-auto p-6">
+      <div className="max-w-6xl mx-auto">
         <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-6">
