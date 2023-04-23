@@ -2,6 +2,7 @@ import { Dispatch, SetStateAction } from 'react';
 
 import Heading from '../ui/Heading';
 import Input from '../ui/Input';
+import { __ } from '../../utils/helpers';
 
 interface Props {
   setDiscountCode: Dispatch<SetStateAction<string>>;
@@ -10,14 +11,16 @@ interface Props {
 
 const DiscountCode = ({ setDiscountCode, discountCode }: Props) => {
   return (
-    <div>
-      <Heading level={3} className="mb-4">
-        I have a discount code
+    <div className='flex basis-20'>
+      <Heading level={3} className="text-[16px] mt-2 basis-1/2">
+      {__('bookings_dates_step_tickets_discount_code')}:
       </Heading>
       <Input
         type="text"
         value={discountCode}
         onChange={(e) => setDiscountCode(e.target.value)}
+        placeholder='enter code'
+        className=''
       />
       {/* TODO: validate disount code in the background? */}
     </div>

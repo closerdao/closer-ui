@@ -16,6 +16,7 @@ import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import { useConfig } from '../../../hooks/useConfig';
 import { BaseBookingParams, Booking, Event, Listing } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
@@ -31,11 +32,13 @@ interface Props extends BaseBookingParams {
 
 const Summary = ({ booking, listing, settings, event, error }: Props) => {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
-
+  const { isAuthenticated, user } = useAuth();
+  const { SUBSCRIPTIONS } = useConfig() || {};
   const [hasComplied, setCompliance] = useState(false);
   const onComply = (isComplete: boolean) => setCompliance(isComplete);
 
+
+  console.log('booking', booking);
   const {
     utilityFiat,
     rentalToken,
@@ -48,6 +51,12 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
     ticketOption,
     eventPrice,
   } = booking || {};
+
+  // check if user is a paid subscriber
+  // const isUserPaidSubscriber = SUBSCRIPTIONS.plans.some(
+  //   (plan: SubscriptionPlan) => plan.priceId === user?.subscription.priceId,
+  // );
+  const isUserPaidSubscriber = true
 
   const accomodationCost = useTokens
     ? rentalToken.val
@@ -70,11 +79,14 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
   }, [booking.status]);
 
   const handleNext = async () => {
-    await api.post(`/bookings/${booking._id}/complete`, {});
-    if (volunteerId) {
-      router.push(`/bookings/${booking._id}/confirmation`);
-    } else {
+    const res = await api.post(`/bookings/${booking._id}/complete`, {});
+    const status = res.data.results.status
+
+    if (status === 'confirmed') {
       router.push(`/bookings/${booking._id}/checkout`);
+    } 
+    if (status === 'pending') { 
+      router.push(`/bookings/${booking._id}/confirmation`);
     }
   };
 
@@ -147,11 +159,18 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
                 {__('apply_submit_button')}
               </Button>
             </>
-          ) : (
+          ) :
+            
+          isUserPaidSubscriber ? 
+            (
             <Button className="booking-btn" onClick={handleNext}>
               {__('buttons_checkout')}
             </Button>
-          )}
+              ) :
+              <Button className="booking-btn" onClick={handleNext}>
+                {__('buttons_book')}
+            </Button>
+          }
         </div>
       </div>
     </>

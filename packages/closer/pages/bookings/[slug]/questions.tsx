@@ -34,7 +34,15 @@ interface Props extends BaseBookingParams {
 }
 
 const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const questions: Question[] = prepareQuestions(eventQuestions);
+
+  //this is a temporary solution to redirect to summary page if there are no questions
+  //once we have questions from user profile integrated we should remove this
+  if (questions.length === 0) { 
+    router.push(`/bookings/${booking._id}/summary`)
+  }
 
   const hasRequiredQuestions = questions.some((question) => question.required);
   const [isSubmitDisabled, setSubmitDisabled] = useState(hasRequiredQuestions);
@@ -57,8 +65,7 @@ const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
     setSubmitDisabled(!allRequiredQuestionsCompleted);
   }, [answers]);
 
-  const { isAuthenticated } = useAuth();
-  const router = useRouter();
+
   const handleSubmit = async () => {
     try {
       await api.patch(`/booking/${booking._id}`, {

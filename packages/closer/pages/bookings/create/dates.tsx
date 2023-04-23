@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import BookingDates from '../../../components/BookingDates/BookingDates';
 import BookingGuests from '../../../components/BookingGuests';
 import CurrencySwitch from '../../../components/CurrencySwitch';
-import DiscountCode from '../../../components/DiscountCode';
 import PageError from '../../../components/PageError';
 import TicketOptions from '../../../components/TicketOptions';
 import BackButton from '../../../components/ui/BackButton';
@@ -97,8 +96,6 @@ const DatesSelector: NextPage<Props> = ({
   const [selectedTicketName, selectTicketName] = useState<string>('');
   const [discountCode, setDiscountCode] = useState('');
 
-  console.log('ticketOptions', ticketOptions);
-
   const handleNext = () => {
     const data = {
       start: start.format('YYYY-MM-DD'),
@@ -156,17 +153,18 @@ const DatesSelector: NextPage<Props> = ({
 
           {eventId && (
             <>
-      
               <TicketOptions
                 items={ticketOptions}
                 selectedTicketName={selectedTicketName}
                 selectTicketName={selectTicketName}
                 volunteer={volunteer}
-              />
-              <DiscountCode
                 discountCode={discountCode}
                 setDiscountCode={setDiscountCode}
               />
+              {/* <DiscountCode
+                discountCode={discountCode}
+                setDiscountCode={setDiscountCode}
+              /> */}
             </>
           )}
 

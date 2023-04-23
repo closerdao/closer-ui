@@ -92,6 +92,29 @@ const ConfirmationStep = ({ error, booking, event }: Props) => {
                 </p>
               </>
             )}
+          
+          {booking.status === 'pending' &&
+            !booking.volunteerId &&
+            !booking.eventId && (
+              <>
+                <p className="font-bold text-3xl">
+                  {__('bookings_title_pending')}
+                </p>
+                <p>{__('subscriptions_success_thank_you_message')}</p>
+                <p className="uppercase font-bold">
+                  {__('bookings_confirmation_step_success_your_booking_id')}
+                  {booking._id}
+                </p>
+                <p>
+                  {__('bookings_confirmation_step_success_what_happen_next')}
+                </p>
+                <p>
+                  {__(
+                    'bookings_confirmation_step_success_when_payment_processed',
+                  )}
+                </p>
+              </>
+            )}
 
           {booking.volunteerId && (
             <>

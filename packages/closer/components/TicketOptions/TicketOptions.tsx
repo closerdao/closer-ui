@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { Dispatch, FC, SetStateAction } from 'react';
 
 import {
   CloserCurrencies,
@@ -6,12 +6,15 @@ import {
   VolunteerOpportunity,
 } from '../../types';
 import { __, priceFormat } from '../../utils/helpers';
+import DiscountCode from '../DiscountCode';
 
 interface Props {
   items?: TicketOption[];
   selectTicketName: (name: string) => void;
   selectedTicketName?: string;
   volunteer?: VolunteerOpportunity;
+  discountCode?: string;
+  setDiscountCode: Dispatch<SetStateAction<string>>;
 }
 
 const Ticket = ({
@@ -30,9 +33,8 @@ const Ticket = ({
   selectTicketName: (name: string) => void;
   selectedTicketName?: string;
   isVolunteer?: boolean;
-  }) => {
-  
-  console.log('currency=',currency);
+}) => {
+  console.log('currency=', currency);
   return (
     <button
       className={`border-2 flex flex-col justify-center rounded-md shadow-lg mr-3 mb-3 p-4 hover:border-accent ${
@@ -57,6 +59,8 @@ const TicketOptions: FC<Props> = ({
   selectTicketName,
   selectedTicketName,
   volunteer,
+  discountCode,
+  setDiscountCode,
 }) => {
   return (
     <div>
@@ -95,6 +99,10 @@ const TicketOptions: FC<Props> = ({
           ))
         )}
       </div>
+      <DiscountCode
+        discountCode={discountCode || ''}
+        setDiscountCode={setDiscountCode}
+      />
     </div>
   );
 };

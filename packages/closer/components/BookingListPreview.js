@@ -67,7 +67,7 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
   };
 
   return (
-    <div className="max-w-sm bg-white rounded-lg p-4 shadow-xl flex flex-col md:basis-5/12 md:flex-1">
+    <div className="max-w-sm bg-white rounded-lg p-4 shadow-xl flex flex-col md:basis-5/12 md:flex-1 w-full">
       <div className="flex flex-col gap-3">
         <div>
           <p className="card-feature">

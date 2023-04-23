@@ -14,7 +14,7 @@ const BookingsDirectory = () => {
     myBookings: user && {
       where: {
         createdBy: user._id,
-        status: ['open', 'pending', 'confirmed', 'checkedIn', 'checkedOut'],
+        status: ['open', 'pending', 'confirmed', 'paid', 'checkedIn', 'checkedOut'],
         end: {
           $gt: new Date(),
         },

@@ -26,7 +26,7 @@ const Input = ({
   id
 }: InputProps) => {
   return (
-    <div className={`w-full mb-10 ${className || ''}`}>
+    <div className={`w-full ${className || ''}`}>
       {label && <label className="mb-2">{label}</label>}
       <input
         id={id}
