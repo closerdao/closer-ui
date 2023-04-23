@@ -68,19 +68,18 @@
     @apply p-2 text-foreground block border-0 border-b-2 border-transparent ring-transparent focus:outline-none focus:border-primary;
   }
 
-
   select {
     @apply text-base border-gray-200 border-2 rounded-lg ring-transparent appearance-none focus:border-primary outline-none max-w-full;
   }
-
+  /* 
   label,
   .label {
-    @apply  text-complimentary block uppercase tracking-wide text-xs font-bold;
-  }
+    @apply  text-complimentary-light block uppercase tracking-wide text-xs font-bold;
+  } */
 
-    label + input {
+  /* label + input {
     @apply mt-2;
-  }
+  } */
   .switch .label {
     @apply mb-0 ml-2;
   }

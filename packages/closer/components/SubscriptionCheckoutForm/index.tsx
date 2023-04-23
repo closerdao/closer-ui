@@ -5,8 +5,11 @@ import { FormEvent, useState } from 'react';
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { StripeCardElementChangeEvent } from '@stripe/stripe-js';
 
-import { Button, ErrorMessage, SubscriptionConditions, api } from 'closer';
-import { __ } from 'closer/utils/helpers';
+import api from '../../utils/api';
+import { __ } from '../../utils/helpers';
+import SubscriptionConditions from '../SubscriptionConditions';
+import Button from '../ui/Button';
+import ErrorMessage from '../ui/ErrorMessage';
 
 interface SubscriptionCheckoutFormProps {
   userEmail?: string;

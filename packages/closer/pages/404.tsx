@@ -1,11 +1,11 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import React from 'react';
+import React, { FC } from 'react';
 
 import { __ } from '../utils/helpers';
 
-const PageNotFound = ({ error }) => (
+const PageNotFound: FC<{ error: string }> = ({ error }) => (
   <>
     <Head>
       <title>{__('404_title')}</title>

@@ -26,7 +26,7 @@ const Checkbox = ({
 
       <label
         htmlFor={id}
-        className="text-base text-complimentary normal-case font-medium"
+        className="text-base text-complimentary-light normal-case font-medium"
       >
         {children}
       </label>
