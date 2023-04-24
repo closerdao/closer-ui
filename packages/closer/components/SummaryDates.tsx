@@ -59,7 +59,7 @@ const SummaryDates = ({
     </div>
     <div className="flex justify-between items-start mt-3">
       <p>{__('bookings_summary_step_dates_accomodation_type')}</p>
-      <p className="font-bold uppercase">{listingName}</p>
+      <p className="font-bold uppercase text-right">{listingName}</p>
     </div>
 
     {volunteerId && (

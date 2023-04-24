@@ -34,7 +34,6 @@ const Ticket = ({
   selectedTicketName?: string;
   isVolunteer?: boolean;
 }) => {
-  console.log('currency=', currency);
   return (
     <button
       className={`border-2 flex flex-col justify-center rounded-md shadow-lg mr-3 mb-3 p-4 hover:border-accent ${

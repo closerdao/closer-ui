@@ -7,15 +7,13 @@ import ProgressBar from '../../../components/ui/ProgressBar';
 
 import { type NextPage } from 'next';
 
+import PageNotFound from '../../404';
 import { blockchainConfig } from '../../../config_blockchain';
 import { BOOKING_STEPS } from '../../../constants';
+import { useAuth } from '../../../contexts/auth';
 import { BaseBookingParams, Listing } from '../../../types';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
-import PageNotFound from '../../404';
-
-import { useAuth } from '../../../contexts/auth';
-
 
 interface Props extends BaseBookingParams {
   useTokens: boolean;
@@ -41,15 +39,17 @@ const AccomodationSelector: NextPage<Props> = ({
   const router = useRouter();
   const { isAuthenticated } = useAuth();
 
-  const bookingType = eventId
-    ? 'event'
-    : volunteerId
-    ? 'volunteer'
-    : 'accomodation';
+  let bookingType: string;
+
+  if (eventId) {
+    bookingType = 'event';
+  } else if (volunteerId) {
+    bookingType = 'volunteer';
+  } else {
+    bookingType = 'accomodation';
+  }
 
   const bookListing = async (listingId: string) => {
-    console.log('book a listing');
-
     try {
       const {
         data: { results: newBooking },
@@ -68,11 +68,9 @@ const AccomodationSelector: NextPage<Props> = ({
         ...(volunteerId && { volunteerId }),
       });
       if (volunteerId) {
-        
         router.push(`/bookings/${newBooking._id}/summary`);
       } else {
         router.push(`/bookings/${newBooking._id}/questions`);
-
       }
     } catch (err) {
       console.log(err); // TO DO handle error

@@ -16,11 +16,14 @@ import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
-import { useConfig } from '../../../hooks/useConfig';
 import { BaseBookingParams, Booking, Event, Listing } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { __ } from '../../../utils/helpers';
+import {
+  __,
+  getAccommodationCost,
+  getTotalToPayInFiat,
+} from '../../../utils/helpers';
 
 interface Props extends BaseBookingParams {
   listing: Listing;
@@ -33,12 +36,9 @@ interface Props extends BaseBookingParams {
 const Summary = ({ booking, listing, settings, event, error }: Props) => {
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
-  const { SUBSCRIPTIONS } = useConfig() || {};
   const [hasComplied, setCompliance] = useState(false);
   const onComply = (isComplete: boolean) => setCompliance(isComplete);
 
-
-  console.log('booking', booking);
   const {
     utilityFiat,
     rentalToken,
@@ -48,29 +48,27 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
     end,
     adults,
     volunteerId,
+    eventId,
     ticketOption,
     eventPrice,
   } = booking || {};
 
-  // check if user is a paid subscriber
-  // const isUserPaidSubscriber = SUBSCRIPTIONS.plans.some(
-  //   (plan: SubscriptionPlan) => plan.priceId === user?.subscription.priceId,
-  // );
-  const isUserPaidSubscriber = true
+  const isMember = user?.roles.includes('member');
 
-  const accomodationCost = useTokens
-    ? rentalToken.val
-    : volunteerId
-    ? 0
-    : rentalFiat.val;
+  const accomodationCost = getAccommodationCost(
+    useTokens,
+    rentalToken,
+    rentalFiat,
+    volunteerId,
+  );
 
-  const totalToPayInFiat = useTokens
-    ? utilityFiat?.val
-    : eventPrice?.val
-    ? rentalFiat?.val + utilityFiat?.val + eventPrice?.val
-    : volunteerId
-    ? utilityFiat?.val
-    : rentalFiat?.val + utilityFiat?.val;
+  const totalToPayInFiat = getTotalToPayInFiat(
+    useTokens,
+    utilityFiat,
+    eventPrice,
+    rentalFiat,
+    volunteerId,
+  );
 
   useEffect(() => {
     if (booking.status === 'pending' || booking.status === 'paid') {
@@ -80,12 +78,12 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
 
   const handleNext = async () => {
     const res = await api.post(`/bookings/${booking._id}/complete`, {});
-    const status = res.data.results.status
+    const status = res.data.results.status;
 
     if (status === 'confirmed') {
       router.push(`/bookings/${booking._id}/checkout`);
-    } 
-    if (status === 'pending') { 
+    }
+    if (status === 'pending') {
       router.push(`/bookings/${booking._id}/confirmation`);
     }
   };
@@ -112,6 +110,7 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
 
   return (
     <>
+      
       <div className="w-full max-w-screen-sm mx-auto p-8">
         <BookingBackButton onClick={goBack} name={__('buttons_back')} />
         <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
@@ -159,18 +158,19 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
                 {__('apply_submit_button')}
               </Button>
             </>
-          ) :
-            
-          isUserPaidSubscriber ? 
-            (
+          ) : eventId ? (
             <Button className="booking-btn" onClick={handleNext}>
               {__('buttons_checkout')}
             </Button>
-              ) :
-              <Button className="booking-btn" onClick={handleNext}>
-                {__('buttons_book')}
+          ) : !isMember ? (
+            <Button className="booking-btn" onClick={handleNext}>
+              {__('buttons_checkout')}
             </Button>
-          }
+          ) : (
+            <Button className="booking-btn" onClick={handleNext}>
+              {__('buttons_booking_request')}
+            </Button>
+          )}
         </div>
       </div>
     </>

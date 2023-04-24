@@ -14,7 +14,7 @@ describe('Select accomodation type page', () => {
       kids: '0',
       infants: '0',
       pets: '0',
-      // currency: 'EUR',
+      currency: 'EUR',
       useTokens: false,
       listings: [],
     };
@@ -39,7 +39,7 @@ describe('Select accomodation type page', () => {
       kids: '1',
       infants: '1',
       pets: '1',
-      // currency: 'EUR',
+      currency: 'EUR',
       useTokens: false,
       listings: listingsMock,
     };

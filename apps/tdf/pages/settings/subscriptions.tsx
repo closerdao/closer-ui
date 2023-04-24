@@ -37,7 +37,6 @@ const Subscriptions = () => {
   useEffect(() => {
     if (user) {
       if (!user.subscription || !user.subscription.priceId) {
-        console.log('free plan!!!!!!!');
         setIsFreePlan(true);
         const selectedSubscription = SUBSCRIPTIONS.plans[0];
         setSelectedPlan(selectedSubscription);

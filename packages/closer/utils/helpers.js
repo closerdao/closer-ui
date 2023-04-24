@@ -238,3 +238,32 @@ export const formatCurrency = (currency) => {
   return `${symbol[currency]} ${currency}`;
 };
 
+export const getTotalToPayInFiat = (
+  useTokens,
+  utilityFiat,
+  eventPrice,
+  rentalFiat,
+  volunteerId,
+) => {
+  if (useTokens) {
+    return utilityFiat?.val;
+  } else if (eventPrice?.val) {
+    return rentalFiat?.val + utilityFiat?.val + eventPrice?.val;
+  } else if (volunteerId) {
+    return utilityFiat?.val;
+  } else {
+    return rentalFiat?.val + utilityFiat?.val;
+  }
+};
+
+export const getAccommodationCost = (
+  useTokens, rentalToken, rentalFiat, volunteerId
+) => {
+  if (useTokens) {
+    return rentalToken.val
+  } else if(volunteerId) {
+    return 0
+  } else {
+    return rentalFiat.val
+  }
+};

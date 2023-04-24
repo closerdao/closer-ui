@@ -16,7 +16,10 @@ const getStatusText = (status, updated) => {
     rejected: __('booking_status_rejected'),
     open: __('booking_status_open'),
     pending: __('booking_status_pending'),
+
     confirmed: __('booking_status_confirmed'),
+    paid: __('booking_status_confirmed'),
+
     'checked-in': __('booking_status_checked_in'),
     'checked-out': __('booking_status_checked_out'),
   };
@@ -29,6 +32,7 @@ const statusColor = {
   open: 'text-pending',
   pending: 'text-pending',
   confirmed: 'text-success',
+  paid: 'text-success',
   'checked-in': 'text-success',
   'checked-out': 'text-success',
 };
@@ -154,6 +158,15 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
 
           </Link>)
         )}
+        {status === 'confirmed' && (
+          (<Link passHref href={`/bookings/${_id}/checkout`}>
+
+            <button className="btn w-full uppercase ">
+              {__('booking_card_checkout_button')}
+            </button>
+
+          </Link>)
+        )}
         {user && isBookingCancelable && (
           (<Link passHref href={`/bookings/${_id}/cancel`}>
 
@@ -163,6 +176,19 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
 
           </Link>)
         )}
+
+{status === 'paid' && (
+         (<Link passHref href={`/bookings/${_id}/cancel`}>
+
+         <button className="btn w-full uppercase">
+           {__('booking_cancel_button')}
+         </button>
+
+       </Link>)
+        )}
+
+
+
         {user &&
           user.roles.includes('space-host') &&
           createdBy !== user._id && (

@@ -90,13 +90,6 @@ export { default as KeywordPage } from './pages/blog/search/[keyword]';
 export { default as Page401 } from './pages/401';
 export { default as Page404 } from './pages/404';
 
-// Components
-// export { default as Footer } from './components/Footer';
-// export { default as Navigation } from './components/Navigation';
-// export { default as CreateVolunteerView } from './components/CreateVolunteerView/';
-// export { default as VolunteerEventView } from './components/VolunteerEventView/';
-// export { default as Metatags } from './components/Metatags/';
-// export { default as EventPreview } from './components/EventPreview';
 
 // Utils
 export { default as api } from './utils/api';

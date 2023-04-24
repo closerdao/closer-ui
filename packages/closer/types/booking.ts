@@ -65,8 +65,8 @@ export type Booking = {
   _id: string;
 
   ticketOption?: TicketOption;
-  eventId?: string;
-  volunteerId?: string;
+  eventId: string;
+  volunteerId: string;
   eventPrice?: Price<CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH>;
   eventDiscount?: Discount;
   
