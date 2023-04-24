@@ -12,6 +12,15 @@ export type User = {
   roles: string[];
   viewChannels: string[];
   manageChannels: string[];
+  preferences: {
+    diet?: string;
+    sharedAccomodation?: string;
+    superpower?: string;
+    skills?: string;
+    dream?: string;
+    needs?: string;
+    moreInfo?: string;
+  };
   location: {
     name: string;
     name_long: string;
