@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import Select, { GroupBase } from 'react-select';
+import Select, { GroupBase, OnChangeValue } from 'react-select';
 
 type SelectProps<Option, IsMulti, Group> = {
   label?: string;
@@ -36,10 +36,16 @@ const SelectComponent = React.memo(
       onChangeRef.current = onChange; // prevents re-renders when parent component re-renders with the same props
     }
 
-    const handleChange = (option) => {
-      if (!option) return;
-      setLocalValue(option?.value);
-      onChange && onChange(option?.value);
+    const handleChange = (newValue: OnChangeValue<string, isMulti>) => {
+      if (isMulti) {
+        const option = (newValue as any)?.map((item: any) => item.value);
+        setLocalValue(option);
+        onChange && onChange(option);
+        return;
+      }
+      const option = (newValue as any)?.value;
+      setLocalValue(option.value);
+      onChange && onChange(option.value);
     };
 
     return (
