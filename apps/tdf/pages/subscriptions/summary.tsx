@@ -27,7 +27,7 @@ const Summary = () => {
 
   useEffect(() => {
     if (user?.subscription && user.subscription.priceId) {
-      router.push('/settings/subscriptions');
+      router.push('/subscriptions');
     }
   }, [user]);
 

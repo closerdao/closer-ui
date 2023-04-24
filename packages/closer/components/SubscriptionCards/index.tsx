@@ -62,7 +62,7 @@ const SubscriptionCards = ({
                   )}
                 </div>
                 <Button
-                  isEnabled={plan.available && userActivePlan?.title !== plan.title}
+                  isEnabled={plan.available !== false}
                   onClick={() => clickHandler(plan.priceId)}
                   infoText={`${
                     plan.price !== 0 ? __('subscriptions_cancel_anytime') : ''

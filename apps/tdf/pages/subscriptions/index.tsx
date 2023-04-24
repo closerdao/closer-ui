@@ -18,23 +18,22 @@ const Subscriptions = () => {
   const [userActivePlan, setUserActivePlan] = useState<SubscriptionPlan>();
 
   useEffect(() => {
-    if (user?.subscription && user.subscription.priceId) {
-      const selectedSubscription = SUBSCRIPTIONS.plans.find(
-        (plan: SubscriptionPlan) => plan.priceId === user.subscription.priceId,
-      );
-      setUserActivePlan(selectedSubscription);
-    }
+    const selectedSubscription = SUBSCRIPTIONS.plans.find(
+      (plan: SubscriptionPlan) => plan.priceId === (user?.subscription?.priceId || 'free'),
+    );
+    setUserActivePlan(selectedSubscription);
   }, [user]);
 
   const handleNext = (priceId: string) => {
-    if (priceId === 'free') {
-      router.push(`/signup?back=${router.asPath}`);
+    if (!isAuthenticated) {
+      // User has no account - must start with creating one.
+      router.push(`/signup?back=${encodeURIComponent(`/subscriptions/summary?priceId=${priceId}`)}`);
+    } else if (userActivePlan?.priceId !== 'free') {
+      // User has a subscription - must be managed in Stripe.
+      router.push(`${STRIPE_CUSTOMER_PORTAL_URL}?prefilled_email=${user?.subscription?.stripeCustomerEmail || user.email}`);
     } else {
-      if (userActivePlan) {
-        router.push(`${STRIPE_CUSTOMER_PORTAL_URL}?prefilled_email=${user?.subscription.stripeCustomerEmail}`);
-      } else {
-        router.push(`/subscriptions/summary?priceId=${priceId}`);
-      }
+      // User does not yet have a subscription, we can show the checkout
+      router.push(`/subscriptions/summary?priceId=${priceId}`);
     }
   };
 
@@ -74,22 +73,12 @@ const Subscriptions = () => {
           {' '}
           ♻️ {__('subscriptions_title')}
         </Heading>
-        {isAuthenticated && (
-          <SubscriptionCards
-            config={SUBSCRIPTIONS.config}
-            filteredSubscriptionPlans={paidSubscriptionPlans}
-            clickHandler={handleNext}
-            userActivePlan={userActivePlan}
-          />
-        )}
-        {!isAuthenticated && (
-          <SubscriptionCards
-            config={SUBSCRIPTIONS.config}
-            filteredSubscriptionPlans={plans}
-            clickHandler={handleNext}
-            userActivePlan={userActivePlan}
-          />
-        )}
+        <SubscriptionCards
+          config={SUBSCRIPTIONS.config}
+          filteredSubscriptionPlans={isAuthenticated ? paidSubscriptionPlans : plans}
+          clickHandler={handleNext}
+          userActivePlan={userActivePlan}
+        />
       </main>
     </div>
   );

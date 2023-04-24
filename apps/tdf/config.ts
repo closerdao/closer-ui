@@ -37,8 +37,8 @@ const config = {
         monthlyCredits: 0,
         price: 0,
         perks: [
-          ' ✔ Access to Events',
-          ' ✔ Access to Volunteering',
+          ' 🌟 Access to Events',
+          ' 🌟 Access to Volunteering',
         ],
         billingPeriod: 'month',
       },
