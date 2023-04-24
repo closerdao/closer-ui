@@ -24,7 +24,7 @@ const tdfTheme = {
       // 'neutral-dark': '#EDE8EB' ,
       'neutral-dark': '#F0F0F0',
       // these colors are not suppoerted anymore, please use those above
-      primary: '#e4427d',
+      primary: '#FE4FB7',
       secondary: '#1b3bc3',
       background: '#fff',
       'background-dark': '#1c1c1c',
