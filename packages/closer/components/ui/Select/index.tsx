@@ -1,20 +1,24 @@
 import React, { useRef, useState } from 'react';
-import Select from 'react-select';
+import Select, { GroupBase } from 'react-select';
 
-type SelectProps = {
+type SelectProps<Option, IsMulti, Group> = {
   label?: string;
   value?: string;
-  options: any[];
+  options: (Option | Group)[];
   onChange?: (value: string) => void;
   isRequired?: boolean;
   placeholder?: string;
   className?: string;
   dataTestId?: string;
-  isMulti?: boolean;
+  isMulti?: IsMulti;
 };
 
 const SelectComponent = React.memo(
-  ({
+  <
+    Option,
+    isMulti extends boolean = false,
+    Group extends GroupBase<Option> = GroupBase<Option>,
+  >({
     label,
     value,
     options,
@@ -24,7 +28,7 @@ const SelectComponent = React.memo(
     className,
     dataTestId,
     isMulti,
-  }: SelectProps) => {
+  }: SelectProps<Option, isMulti, Group>) => {
     const [localValue, setLocalValue] = useState(value || '');
 
     const onChangeRef = useRef(onChange);
@@ -32,10 +36,10 @@ const SelectComponent = React.memo(
       onChangeRef.current = onChange; // prevents re-renders when parent component re-renders with the same props
     }
 
-    const handleChange = (option: any) => {
-      console.log('option.value', option.value);
-      setLocalValue(option.value as string);
-      onChange && onChange(option.value as string);
+    const handleChange = (option) => {
+      if (!option) return;
+      setLocalValue(option?.value);
+      onChange && onChange(option?.value);
     };
 
     return (
@@ -51,7 +55,7 @@ const SelectComponent = React.memo(
           placeholder={placeholder}
           data-testid={dataTestId}
           className="text-complimentary-core"
-          options={options}
+          options={options as any}
           onChange={handleChange}
           isMulti={isMulti}
           isSearchable={false}
