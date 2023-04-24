@@ -9,12 +9,14 @@ interface SubscriptionCardsProps {
   clickHandler: (priceId: string) => void;
   filteredSubscriptionPlans: SubscriptionPlan[];
   config: Subscriptions['config'];
+  userActivePlan?: SubscriptionPlan;
 }
 
 const SubscriptionCards = ({
   clickHandler,
   filteredSubscriptionPlans,
   config,
+  userActivePlan,
 }: SubscriptionCardsProps) => {
   return (
     <>
@@ -60,15 +62,22 @@ const SubscriptionCards = ({
                   )}
                 </div>
                 <Button
+                  isEnabled={plan.available !== false}
                   onClick={() => clickHandler(plan.priceId)}
                   infoText={`${
                     plan.price !== 0 ? __('subscriptions_cancel_anytime') : ''
                   }`}
                   className={` ${plan.price === 0 ? 'mb-7' : ''} || ''`}
                 >
-                  {plan.price === 0
+                  {
+                    plan.available === false
+                    ? __('generic_coming_soon')
+                    : plan.price === 0
                     ? __('subscriptions_create_account_button')
+                    : userActivePlan?.title === plan.title
+                    ? __('subscriptions_active_button')
                     : __('subscriptions_subscribe_button')}
+
                 </Button>
               </div>
             </Card>

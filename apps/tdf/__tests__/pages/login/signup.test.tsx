@@ -12,7 +12,7 @@ describe('Signup', () => {
     );
 
     const title = screen.getByRole('heading', { level: 1 });
-    expect(title).toHaveTextContent(/signup/i);
+    expect(title).toHaveTextContent(/sign up/i);
   });
 
   it('should have a Create account button disabled by default', () => {
