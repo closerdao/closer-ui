@@ -36,9 +36,9 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
   const isEnded = end.isBefore(dayjs());
 
   return (
-    <div>
-      <section className="py-5">
-        <div className="main-content md:flex flex-row justify-center items-center gap-4">
+    <div className="max-w-6xl mx-auto">
+      <section className="mb-5">
+        <div className="md:flex flex-row justify-center items-center gap-4">
           <div className="md:w-1/2 relative bg-gray-50">
             <img
               className="object-cover md:h-full md:w-full"
@@ -87,11 +87,11 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
           </div>
         </div>
       </section>
-      <main className="max-w-prose py-10 mx-auto">
-        {description && (
+      {description && (
+        <section className="max-w-prose py-10 mx-auto">
           <EventDescription event={volunteer} isVolunteer={true} />
-        )}
-      </main>
+        </section>
+      )}
     </div>
   );
 };

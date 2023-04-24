@@ -5,7 +5,7 @@ module.exports = {
       primary: '#e4427d',
       'primary-light': '#FFEDF8',
       secondary: '#1b3bc3',
-      background: '#F8FAFC',
+      background: 'transparent',
       'background-dark': '#1c1c1c',
       foreground: '#1c1c1c',
       'foreground-dark': '#dadada',

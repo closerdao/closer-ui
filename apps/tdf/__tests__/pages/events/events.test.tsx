@@ -21,10 +21,10 @@ describe('Events', () => {
     );
 
     renderWithProviders(<Events />);
-    const titleUpcoming = screen.getAllByRole('heading', { level: 2 })[0];
-    const titlePast = screen.getAllByRole('heading', { level: 2 })[1];
-    expect(titleUpcoming).toHaveTextContent(/upcoming events/i);
-    expect(titlePast).toHaveTextContent(/past events/i);
+    const titleUpcoming = screen.getByRole('heading', { name: /upcoming events/i });
+    const titlePast = screen.getByRole('heading', { name: /past events/i });
+    expect(titleUpcoming).toBeInTheDocument();
+    expect(titlePast).toBeInTheDocument();
     const eventCards = await screen.findAllByRole('listitem');
     expect(eventCards).toHaveLength(eventsMock.length);
   });

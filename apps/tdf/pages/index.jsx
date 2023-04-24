@@ -7,6 +7,7 @@ import { useAuth, EventsList, usePlatform, Newsletter, Tag, api } from 'closer';
 import { event } from 'nextjs-google-analytics';
 
 const loadTime = new Date();
+const RESOURCES_KEY = { sort_by: 'created' };
 // interface Resource {
 //   title: string;
 //   slug: string;
@@ -23,7 +24,7 @@ const HomePage = () => {
   useEffect(() => {
     const loadData = async () => {
       await Promise.all([
-        platform.resource.get()
+        platform.resource.get(RESOURCES_KEY)
       ]);
     };
 
@@ -33,9 +34,8 @@ const HomePage = () => {
   return (
     <div>
       <Head>
-        <title>
-          Traditional Dream Factory | Regenerative Playground in Alentejo, Portugal
-        </title>
+        <title>Traditional Dream Factory</title>
+        <meta name="description" content="Traditional Dream Factory (TDF) is a regenerative playground in Abela, Portugal."></meta>
       </Head>
       <section className="text-right -ml-6 -mr-6 pt-20 pb-12 -mt-6 mb-12 md:mb-32 md:min-h-screen p-6 bg-cover bg-[url('/images/landing/sheep-mobile.jpg')] md:bg-[url('/images/landing/sheep-min.png')]">
         <div className="max-w-6xl mx-auto">
@@ -140,7 +140,7 @@ const HomePage = () => {
           connected regenerative living
         </h3>
         <ul className="flex flex-wrap text-center divide-x">
-          { platform.resource.find() && platform.resource.find().map((resource) => (
+          { platform.resource.find(RESOURCES_KEY) && platform.resource.find(RESOURCES_KEY).map((resource) => (
             <li
               key={ resource.get('_id') }
               className="w-1/2 md:w-1/3 lg:w-1/4 mb-4 p-3"
@@ -260,7 +260,7 @@ const HomePage = () => {
                 </h4>
               </li>
               <li className="flex justify-start items-center">
-                <img src="/images/icons/cafe.png" className="mr-1 w-12" />
+                <img src="/images/icons/cafe.png" alt="TDF Cafe" className="mr-1 w-12" />
                 <h4 className="md:text-sm">
                   Café & Store{' '}
                   <Tag className="m-1" color="primary">Coming soon</Tag>
