@@ -30,7 +30,7 @@ const Subscriptions = () => {
       router.push(`/signup?back=${encodeURIComponent(`/subscriptions/summary?priceId=${priceId}`)}`);
     } else if (userActivePlan?.priceId !== 'free') {
       // User has a subscription - must be managed in Stripe.
-      router.push(`${STRIPE_CUSTOMER_PORTAL_URL}?prefilled_email=${user?.subscription?.stripeCustomerEmail || user.email}`);
+      router.push(`${STRIPE_CUSTOMER_PORTAL_URL}?prefilled_email=${user?.subscription?.stripeCustomerEmail || user?.email}`);
     } else {
       // User does not yet have a subscription, we can show the checkout
       router.push(`/subscriptions/summary?priceId=${priceId}`);
