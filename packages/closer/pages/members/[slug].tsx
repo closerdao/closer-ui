@@ -146,7 +146,7 @@ const MemberPage: FC = () => {
           className="mt-8"
           validation="email"
         />
-        <div className="md:w-72 items-center justify-start relative mt-8">
+        <div className="md:w-72 relative mt-8">
           <label className="font-medium text-complimentary-light">
             Profile Picture
           </label>
@@ -157,6 +157,9 @@ const MemberPage: FC = () => {
             className="my-4"
           />
         </div>
+        <Heading level={2} className="mt-16">
+          🔰 Recommended
+        </Heading>
       </div>
     </>
   );
