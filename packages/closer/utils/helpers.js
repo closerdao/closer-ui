@@ -279,7 +279,7 @@ export const getAccommodationCost = (
   } else if (volunteerId) {
     return 0;
   } else {
-    return rentalFiat.val;
+    return rentalFiat?.val || 0;
   }
 };
 

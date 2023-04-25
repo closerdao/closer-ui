@@ -20,7 +20,7 @@ import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
 
 const prepareQuestions = (eventQuestions: any) => {
-  const preparedQuestions = eventQuestions.map((question: any) => {
+  const preparedQuestions = eventQuestions?.map((question: any) => {
     Object.assign(question, { type: question['fieldType'] });
     return question;
   });
@@ -38,32 +38,34 @@ const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
   const { isAuthenticated } = useAuth();
   const questions: Question[] = prepareQuestions(eventQuestions);
 
-  //this is a temporary solution to redirect to summary page if there are no questions
-  //once we have questions from user profile integrated we should remove this
-  if (questions.length === 0) { 
-    router.push(`/bookings/${booking._id}/summary`)
-  }
-
-  const hasRequiredQuestions = questions.some((question) => question.required);
+  const hasRequiredQuestions = questions?.some((question) => question.required);
   const [isSubmitDisabled, setSubmitDisabled] = useState(hasRequiredQuestions);
 
   const [answers, setAnswers] = useState(
     booking?.fields && booking?.fields?.length
       ? booking?.fields
-      : questions.map((question) => ({ [question.name]: '' })),
+      : questions?.map((question) => ({ [question.name]: '' })),
   );
 
   useEffect(() => {
     if (!hasRequiredQuestions) {
       return;
     }
-    const allRequiredQuestionsCompleted = questions.some((question) => {
+    const allRequiredQuestionsCompleted = questions?.some((question) => {
       const answer = getAnswer(answers, question.name);
       const isAnswered = answer !== '';
       return question.required && isAnswered;
     });
     setSubmitDisabled(!allRequiredQuestionsCompleted);
   }, [answers]);
+
+  useEffect(() => {
+    //this is a temporary solution to redirect to summary page if there are no questions
+    //once we have questions from user profile integrated we should remove this
+    if (!questions?.length) {
+      router.push(`/bookings/${booking._id}/summary`)
+    }
+  }, []);
 
 
   const handleSubmit = async () => {
@@ -114,10 +116,6 @@ const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
     return <PageNotAllowed />;
   }
 
-  if (!questions) {
-    return null;
-  }
-
   if (error) {
     return <PageError error={error} />;
   }
@@ -135,7 +133,7 @@ const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
         </h1>
         <ProgressBar steps={BOOKING_STEPS} />
         <div className="my-16 gap-16 mt-16">
-          {questions.map((question) => (
+          {questions?.map((question) => (
             <QuestionnaireItem
               question={question}
               key={question.name}
@@ -162,14 +160,10 @@ Questionnaire.getInitialProps = async ({
     const {
       data: { results: booking },
     } = await api.get(`/booking/${query.slug}`);
+    const optionalEvent = booking.eventId && await api.get(`/event/${booking.eventId}`);
+    const event = optionalEvent?.data?.results;
 
-    const [
-      {
-        data: { results: event },
-      },
-    ] = await Promise.all([api.get(`/event/${booking.eventId}`)]);
-
-    return { booking, eventQuestions: event.fields, error: null };
+    return { booking, eventQuestions: event?.fields, error: null };
   } catch (err) {
     return {
       error: parseMessageFromError(err),

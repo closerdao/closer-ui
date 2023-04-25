@@ -10,8 +10,8 @@ import DiscountCode from '../DiscountCode';
 
 interface Props {
   items?: TicketOption[];
-  selectTicketName: (name: string) => void;
-  selectedTicketName?: string;
+  selectTicketOption: (name: string) => void;
+  selectedTicketOption?: string;
   volunteer?: VolunteerOpportunity;
   discountCode?: string;
   setDiscountCode: Dispatch<SetStateAction<string>>;
@@ -22,24 +22,24 @@ const Ticket = ({
   price,
   currency,
   available,
-  selectTicketName,
-  selectedTicketName,
+  selectTicketOption,
+  selectedTicketOption,
   isVolunteer,
 }: {
   name: string;
   price?: number;
   currency: string;
   available: number;
-  selectTicketName: (name: string) => void;
-  selectedTicketName?: string;
+  selectTicketOption: (name: string) => void;
+  selectedTicketOption?: string;
   isVolunteer?: boolean;
 }) => {
   return (
     <button
       className={`border-2 flex flex-col justify-center rounded-md shadow-lg mr-3 mb-3 p-4 hover:border-accent ${
-        name === selectedTicketName ? 'border-accent' : 'border-gray-100'
+        name === selectedTicketOption ? 'border-accent' : 'border-gray-100'
       } ${available > 0 ? 'available' : 'unavailable'}`}
-      onClick={() => selectTicketName(name)}
+      onClick={() => selectTicketOption(name)}
       disabled={available === 0}
     >
       <h4>{name.split('_').join(' ')}</h4>
@@ -55,8 +55,8 @@ const Ticket = ({
 
 const TicketOptions: FC<Props> = ({
   items,
-  selectTicketName,
-  selectedTicketName,
+  selectTicketOption,
+  selectedTicketOption,
   volunteer,
   discountCode,
   setDiscountCode,
@@ -81,8 +81,8 @@ const TicketOptions: FC<Props> = ({
             isVolunteer={true}
             currency={CloserCurrencies.EUR}
             available={20}
-            selectTicketName={selectTicketName}
-            selectedTicketName={selectedTicketName}
+            selectTicketOption={selectTicketOption}
+            selectedTicketOption={selectedTicketOption}
           />
         ) : (
           items?.map(({ name, price, currency, available }) => (
@@ -92,8 +92,8 @@ const TicketOptions: FC<Props> = ({
               price={price}
               currency={currency}
               available={available}
-              selectTicketName={selectTicketName}
-              selectedTicketName={selectedTicketName}
+              selectTicketOption={selectTicketOption}
+              selectedTicketOption={selectedTicketOption}
             />
           ))
         )}
