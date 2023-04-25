@@ -206,7 +206,11 @@ export const calculateRefundTotal = ({
   const bookingStartDate = dayjs(startDate);
   const now = dayjs();
   const daysUntilBookingStart = bookingStartDate.diff(now, 'days');
-  if (bookingStatus === 'pending' || bookingStatus === 'confirmed') {
+  if (
+    bookingStatus === 'pending' ||
+    bookingStatus === 'confirmed' ||
+    bookingStatus === 'open'
+  ) {
     return 0;
   }
 
