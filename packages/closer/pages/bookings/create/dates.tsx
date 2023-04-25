@@ -171,8 +171,7 @@ const DatesSelector: NextPage<Props> = ({
             setStartDate={setStartDate}
             setEndDate={setEndDate}
             isMember={isMember}
-            eventId={eventId}
-       
+            eventId={eventId as string}
           />
           <BookingGuests
             adults={adults}
