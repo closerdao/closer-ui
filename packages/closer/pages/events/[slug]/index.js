@@ -379,12 +379,15 @@ const Event = ({ event, error }) => {
     </>
   );
 };
-Event.getInitialProps = async ({ query }) => {
+Event.getInitialProps = async ({ req, query }) => {
   try {
     const {
       data: { results: event },
-    } = await api.get(`/event/${query.slug}`);
-    console.log('event', event);
+    } = await api.get(`/event/${query.slug}`, {
+      headers: req?.cookies?.access_token && {
+        Authorization: `Bearer ${req?.cookies?.access_token}`
+      }
+    });
     return { event };
   } catch (err) {
     console.log('Error', err.message);

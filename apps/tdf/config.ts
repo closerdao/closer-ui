@@ -20,7 +20,6 @@ const config = {
       create: 'event-creator',
     },
   },
-  COOKIE_TOKEN: 'tdf-token',
 
   SUBSCRIPTIONS: {
     config: {
