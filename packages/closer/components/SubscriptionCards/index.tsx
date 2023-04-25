@@ -10,6 +10,8 @@ interface SubscriptionCardsProps {
   filteredSubscriptionPlans: SubscriptionPlan[];
   config: Subscriptions['config'];
   userActivePlan?: SubscriptionPlan;
+  validUntil?: Date;
+  cancelledAt?: Date;
 }
 
 const SubscriptionCards = ({
@@ -17,7 +19,43 @@ const SubscriptionCards = ({
   filteredSubscriptionPlans,
   config,
   userActivePlan,
+  validUntil,
+  cancelledAt,
 }: SubscriptionCardsProps) => {
+  const getSubscriptionInfoText = (plan: SubscriptionPlan) => {
+    if (userActivePlan?.title === plan.title && validUntil && !cancelledAt) {
+      return (
+        <>
+          {__('subscriptions_next_billing_date')}{' '}
+          {validUntil.toLocaleDateString('en-US', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          })}
+        </>
+      );
+    } else if (userActivePlan?.title === plan.title && cancelledAt) {
+      if (cancelledAt > new Date()) {
+        return (
+          <>
+            {__('subscriptions_expires_at')}{' '}
+            {cancelledAt.toLocaleDateString('en-US', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })}
+          </>
+        );
+      } else {
+        return <>{__('subscriptions_cancelled')}</>;
+      }
+    } else if (plan.price !== 0) {
+      return __('subscriptions_cancel_anytime');
+    } else {
+      return null;
+    }
+  };
+
   return (
     <>
       <div className="pt-16 flex gap-8 w-full flex-col md:flex-row">
@@ -64,20 +102,16 @@ const SubscriptionCards = ({
                 <Button
                   isEnabled={plan.available !== false}
                   onClick={() => clickHandler(plan.priceId)}
-                  infoText={`${
-                    plan.price !== 0 ? __('subscriptions_cancel_anytime') : ''
-                  }`}
+                  infoText={getSubscriptionInfoText(plan)}
                   className={` ${plan.price === 0 ? 'mb-7' : ''} || ''`}
                 >
-                  {
-                    plan.available === false
+                  {plan.available === false
                     ? __('generic_coming_soon')
                     : plan.price === 0
                     ? __('subscriptions_create_account_button')
                     : userActivePlan?.title === plan.title
                     ? __('subscriptions_active_button')
                     : __('subscriptions_subscribe_button')}
-
                 </Button>
               </div>
             </Card>

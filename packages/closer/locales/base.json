@@ -410,6 +410,10 @@
   "subscriptions_success_next_steps": "You can view, change and cancel your subscription from your account profile.",
   "subscriptions_terms_full_text": "This is the full text of the terms and conditions",
   "subscriptions_active_button": "Manage subscription",
+  "subscriptions_next_billing_date": "Next billing date:",
+  "subscriptions_cancelled": "Cancelled",
+  "subscriptions_expires_at": "Expires at:",
+
   "tasks_edit_title": "Edit",
   "tasks_edit_error": "Task not found",
   "tasks_slug_edit_task": "Edit task",
