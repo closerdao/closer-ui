@@ -286,7 +286,7 @@ export const getBookingType = (eventId, volunteerId) => {
   } else if (volunteerId) {
     bookingType = 'volunteer';
   } else {
-    bookingType = 'accomodation';
+    bookingType = 'stay';
   }
   return bookingType;
 };
