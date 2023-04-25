@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import EventAttendees from '../../../components/EventAttendees';
 import EventDescription from '../../../components/EventDescription';
@@ -199,7 +199,7 @@ const Event = ({ event, error }) => {
                               event._id
                             }&start=${start.format(
                               'YYYY-MM-DD',
-                            )}&end=${end.format('YYYY-MM-DD')}&blocksBookingCalendar=${event.blocksBookingCalendar}`}
+                            )}&end=${end.format('YYYY-MM-DD')}`}
                             className="btn-primary mr-2"
                           >
                             Buy ticket

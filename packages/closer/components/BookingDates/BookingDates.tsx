@@ -1,5 +1,4 @@
 import { FC } from 'react';
-import React from 'react';
 
 import dayjs, { Dayjs } from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -17,7 +16,7 @@ interface Props {
   endDate: Dayjs;
   setStartDate: (startDate: Dayjs) => void;
   setEndDate: (endDate: Dayjs) => void;
-  blocksBookingCalendar?: boolean
+  eventId?: string;
 }
 
 const BookingDates: FC<Props> = ({
@@ -27,7 +26,7 @@ const BookingDates: FC<Props> = ({
   endDate,
   setStartDate,
   setEndDate,
-  blocksBookingCalendar
+  eventId,
 }) => {
   const { member, guest } = conditions || {};
   if (!member || !guest) {
@@ -71,13 +70,23 @@ const BookingDates: FC<Props> = ({
           </label>
           <DateTimePicker
             value={startDate.format('YYYY-MM-DD')}
-            minValue={blocksBookingCalendar ? startDate.format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD')}
-            maxValue={blocksBookingCalendar ?  endDate.format('YYYY-MM-DD') : dayjs()
-              .add(
-                isMember ? member.maxBookingHorizon : guest.maxBookingHorizon,
-                'days',
-              )
-              .format('YYYY-MM-DD')}
+            minValue={
+              eventId
+                ? startDate.format('YYYY-MM-DD')
+                : dayjs().format('YYYY-MM-DD')
+            }
+            maxValue={
+              eventId
+                ? endDate.format('YYYY-MM-DD')
+                : dayjs()
+                    .add(
+                      isMember
+                        ? member.maxBookingHorizon
+                        : guest.maxBookingHorizon,
+                      'days',
+                    )
+                    .format('YYYY-MM-DD')
+            }
             onChange={(start) => setStartDate(start)}
             showTime={false}
           />
@@ -86,14 +95,24 @@ const BookingDates: FC<Props> = ({
           <label className="capitalize font-normal mb-0" htmlFor="end">
             {__('listings_book_check_out')}
           </label>
-          
+
           <DateTimePicker
             value={endDate.format('YYYY-MM-DD')}
-            minValue={blocksBookingCalendar ? startDate.format('YYYY-MM-DD') : dayjs(startDate).add(1, 'days').format('YYYY-MM-DD')}
-            
-            maxValue={blocksBookingCalendar ? endDate.format('YYYY-MM-DD') : dayjs(startDate)
-              .add(isMember ? member?.maxDuration : guest?.maxDuration, 'days')
-              .format('YYYY-MM-DD')}
+            minValue={
+              eventId
+                ? startDate.format('YYYY-MM-DD')
+                : dayjs(startDate).add(1, 'days').format('YYYY-MM-DD')
+            }
+            maxValue={
+              eventId
+                ? endDate.format('YYYY-MM-DD')
+                : dayjs(startDate)
+                    .add(
+                      isMember ? member?.maxDuration : guest?.maxDuration,
+                      'days',
+                    )
+                    .format('YYYY-MM-DD')
+            }
             onChange={(end) => setEndDate(end)}
             showTime={false}
           />

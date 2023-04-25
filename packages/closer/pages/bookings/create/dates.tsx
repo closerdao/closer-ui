@@ -54,7 +54,6 @@ const DatesSelector: NextPage<Props> = ({
     currency: savedCurrency,
     eventId,
     volunteerId,
-    blocksBookingCalendar,
   } = router.query || {};
 
   const initialStartDate = savedStartDate
@@ -172,9 +171,8 @@ const DatesSelector: NextPage<Props> = ({
             setStartDate={setStartDate}
             setEndDate={setEndDate}
             isMember={isMember}
-            blocksBookingCalendar={
-              blocksBookingCalendar === 'true' ? true : false
-            }
+            eventId={eventId}
+       
           />
           <BookingGuests
             adults={adults}
