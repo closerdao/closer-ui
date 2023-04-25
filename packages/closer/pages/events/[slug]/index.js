@@ -199,7 +199,7 @@ const Event = ({ event, error }) => {
                               event._id
                             }&start=${start.format(
                               'YYYY-MM-DD',
-                            )}&end=${end.format('YYYY-MM-DD')}`}
+                            )}&end=${end.format('YYYY-MM-DD')}&blocksBookingCalendar=${event.blocksBookingCalendar}`}
                             className="btn-primary mr-2"
                           >
                             Buy ticket

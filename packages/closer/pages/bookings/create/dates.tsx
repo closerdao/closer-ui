@@ -54,7 +54,9 @@ const DatesSelector: NextPage<Props> = ({
     currency: savedCurrency,
     eventId,
     volunteerId,
+    blocksBookingCalendar
   } = router.query || {};
+
 
   const initialStartDate = savedStartDate
     ? dayjs(savedStartDate as string, 'YYYY-MM-DD').set('hour', 16)
@@ -171,6 +173,7 @@ const DatesSelector: NextPage<Props> = ({
             setStartDate={setStartDate}
             setEndDate={setEndDate}
             isMember={isMember}
+            blocksBookingCalendar={blocksBookingCalendar === 'true' ? true : false}
           />
           <BookingGuests
             adults={adults}
