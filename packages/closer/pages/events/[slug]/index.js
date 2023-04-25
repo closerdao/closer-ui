@@ -190,8 +190,8 @@ const Event = ({ event, error }) => {
                           See ticket
                         </Link>
                       ) : (
-                        start &&
-                        start.isAfter(dayjs()) &&
+                        end &&
+                        end.isAfter(dayjs()) &&
                         (event.stripePub ||
                           process.env.NEXT_PUBLIC_STRIPE_PUB_KEY) && (
                           <Link
