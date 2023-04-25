@@ -1,12 +1,10 @@
 import Link from 'next/link';
 
-import React from 'react';
-
 import dayjs from 'dayjs';
 
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
-import { __, priceFormat } from '../utils/helpers';
+import { __, getBookingType, priceFormat } from '../utils/helpers';
 
 const getStatusText = (status, updated) => {
   if (status === 'cancelled') {
@@ -18,7 +16,7 @@ const getStatusText = (status, updated) => {
     pending: __('booking_status_pending'),
 
     confirmed: __('booking_status_confirmed'),
-    paid: __('booking_status_confirmed'),
+    paid: __('booking_status_paid'),
 
     'checked-in': __('booking_status_checked_in'),
     'checked-out': __('booking_status_checked_out'),
@@ -51,6 +49,8 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
     rentalToken,
     rentalFiat,
     utilityFiat,
+    eventId,
+    volunteerId,
   } = bookingMapItem.toJS();
   const { user } = useAuth();
   const { platform } = usePlatform();
@@ -59,10 +59,12 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
   const createdFormatted = dayjs(created).format('DD/MM/YYYY - HH:mm:A');
   const isNotPaid = status === 'open';
 
+  const bookingType = getBookingType(eventId, volunteerId);
+
   const isBookingCancelable =
     createdBy === user._id &&
     (status === 'open' || status === 'pending' || status === 'confirmed');
-    // (status === 'open' || status === 'confirmed');
+  // (status === 'open' || status === 'confirmed');
 
   const confirmBooking = async () => {
     await platform.bookings.confirm(_id);
@@ -80,6 +82,10 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
             {_id}
           </p>
           <p className="card-feature">{createdFormatted}</p>
+        </div>
+        <div>
+          <p className="card-feature">{__('booking_card_booking_type')}</p>
+          <p>{bookingType.charAt(0).toUpperCase() + bookingType.slice(1)}</p>
         </div>
         <div>
           <p className="card-feature">{__('booking_card_status')}</p>
@@ -133,62 +139,48 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
 
       <div className="mt-8 flex flex-col gap-4">
         {status === 'checked-in' && (
-          (<Link passHref href="">
-
+          <Link passHref href="">
             <button className="btn w-full uppercase ">
               {__('booking_card_join_chat_button')}
             </button>
-
-          </Link>)
+          </Link>
         )}
         {status === 'checked-out' && (
-          (<Link passHref href="">
-
+          <Link passHref href="">
             <button className="btn w-full uppercase ">
               {__('booking_card_feedback_button')}
             </button>
-
-          </Link>)
+          </Link>
         )}
         {status === 'open' && (
-          (<Link passHref href={`/bookings/${_id}/checkout`}>
-
+          <Link passHref href={`/bookings/${_id}/checkout`}>
             <button className="btn w-full uppercase ">
               {__('booking_card_checkout_button')}
             </button>
-
-          </Link>)
+          </Link>
         )}
         {status === 'confirmed' && (
-          (<Link passHref href={`/bookings/${_id}/checkout`}>
-
+          <Link passHref href={`/bookings/${_id}/checkout`}>
             <button className="btn w-full uppercase ">
               {__('booking_card_checkout_button')}
             </button>
-
-          </Link>)
+          </Link>
         )}
         {user && isBookingCancelable && (
-          (<Link passHref href={`/bookings/${_id}/cancel`}>
-
+          <Link passHref href={`/bookings/${_id}/cancel`}>
             <button className="btn w-full uppercase">
               {__('booking_cancel_button')}
             </button>
-
-          </Link>)
+          </Link>
         )}
 
-{status === 'paid' && (
-         (<Link passHref href={`/bookings/${_id}/cancel`}>
-
-         <button className="btn w-full uppercase">
-           {__('booking_cancel_button')}
-         </button>
-
-       </Link>)
+        {status === 'paid' && (
+          <Link passHref href={`/bookings/${_id}/cancel`}>
+            <button className="btn w-full uppercase">
+              {__('booking_cancel_button')}
+            </button>
+          </Link>
         )}
-
-
 
         {user &&
           user.roles.includes('space-host') &&
@@ -211,11 +203,9 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
                 </button>
               )}
               <Link passHref href={`/members/${createdBy}`}>
-
                 <button className="btn w-full uppercase">
                   {__('booking_view_profile')}
                 </button>
-
               </Link>
             </>
           )}

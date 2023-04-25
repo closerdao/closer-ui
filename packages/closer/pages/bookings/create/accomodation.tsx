@@ -13,7 +13,7 @@ import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { BaseBookingParams, Listing } from '../../../types';
 import api from '../../../utils/api';
-import { __ } from '../../../utils/helpers';
+import { __, getBookingType } from '../../../utils/helpers';
 
 interface Props extends BaseBookingParams {
   useTokens: boolean;
@@ -39,15 +39,8 @@ const AccomodationSelector: NextPage<Props> = ({
   const router = useRouter();
   const { isAuthenticated } = useAuth();
 
-  let bookingType: string;
-
-  if (eventId) {
-    bookingType = 'event';
-  } else if (volunteerId) {
-    bookingType = 'volunteer';
-  } else {
-    bookingType = 'accomodation';
-  }
+  const bookingType = getBookingType(eventId, volunteerId);
+  
 
   const bookListing = async (listingId: string) => {
     try {

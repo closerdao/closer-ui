@@ -196,13 +196,18 @@ export const getSample = (field) => {
   }
 };
 
-export const calculateRefundTotal = ({ bookingStatus, initialValue, policy, startDate }) => {
+export const calculateRefundTotal = ({
+  bookingStatus,
+  initialValue,
+  policy,
+  startDate,
+}) => {
   const { default: defaultRefund, lastmonth, lastweek, lastday } = policy || {};
   const bookingStartDate = dayjs(startDate);
   const now = dayjs();
   const daysUntilBookingStart = bookingStartDate.diff(now, 'days');
-  if (bookingStatus === 'pending' || bookingStatus === 'confirmed') { 
-    return 0
+  if (bookingStatus === 'pending' || bookingStatus === 'confirmed') {
+    return 0;
   }
 
   if (daysUntilBookingStart > REFUND_PERIODS.MONTH) {
@@ -260,13 +265,28 @@ export const getTotalToPayInFiat = (
 };
 
 export const getAccommodationCost = (
-  useTokens, rentalToken, rentalFiat, volunteerId
+  useTokens,
+  rentalToken,
+  rentalFiat,
+  volunteerId,
 ) => {
   if (useTokens) {
-    return rentalToken.val
-  } else if(volunteerId) {
-    return 0
+    return rentalToken.val;
+  } else if (volunteerId) {
+    return 0;
   } else {
-    return rentalFiat.val
+    return rentalFiat.val;
   }
+};
+
+export const getBookingType = (eventId, volunteerId) => {
+  let bookingType;
+  if (eventId) {
+    bookingType = 'event';
+  } else if (volunteerId) {
+    bookingType = 'volunteer';
+  } else {
+    bookingType = 'accomodation';
+  }
+  return bookingType;
 };
