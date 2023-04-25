@@ -64,7 +64,6 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
   const isBookingCancelable =
     createdBy === user._id &&
     (status === 'open' || status === 'pending' || status === 'confirmed');
-  // (status === 'open' || status === 'confirmed');
 
   const confirmBooking = async () => {
     await platform.bookings.confirm(_id);
@@ -153,7 +152,7 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
           </Link>
         )}
         {status === 'open' && (
-          <Link passHref href={`/bookings/${_id}/checkout`}>
+          <Link passHref href={`/bookings/${_id}/summary`}>
             <button className="btn w-full uppercase ">
               {__('booking_card_checkout_button')}
             </button>
