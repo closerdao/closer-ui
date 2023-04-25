@@ -43,8 +43,7 @@ const Events: NextPage = () => {
           where={{
             end: {
               $gt: now,
-            },
-            visibility: 'public',
+            }
           }}
         />
       </div>
@@ -57,8 +56,7 @@ const Events: NextPage = () => {
           where={{
             end: {
               $lt: now,
-            },
-            visibility: 'public',
+            }
           }}
         />
       </div>
