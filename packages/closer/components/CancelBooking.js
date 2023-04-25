@@ -42,15 +42,15 @@ const CancelBooking = ({
         <span className="text-red-500">!? </span>
         <span>{__('cancel_booking_title')}</span>
       </h1>
-      <h2 className="text-2xl leading-10 font-normal my-16">
+      {/* <h2 className="text-2xl leading-10 font-normal my-16">
         {__('cancel_booking_details')}
-      </h2>
-      <p>
+      </h2> */}
+      {/* <p>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
         tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
         veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
         commodo consequat.
-      </p>
+      </p> */}
       <h2 className="text-2xl leading-10 font-normal my-16">
         {__('cancel_booking_refund_policy')}
       </h2>
