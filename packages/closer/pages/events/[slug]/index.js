@@ -45,13 +45,13 @@ const Event = ({ event, error }) => {
   const isThisYear = dayjs().isSame(start, 'year');
   const dateFormat = isThisYear ? 'MMMM Do HH:mm' : 'YYYY MMMM Do HH:mm';
   const myTickets = platform.ticket.find(myTicketFilter);
-  const ticketsCount = event.ticketOptions
-    ? (platform.ticket.findCount(allTicketFilter) || event.attendees.length) -
-      event.attendees.length
-    : event.attendees && event.attendees.length;
+  const ticketsCount = event?.ticketOptions
+    ? (platform.ticket.findCount(allTicketFilter) || event?.attendees?.length) -
+      event?.attendees?.length
+    : event?.attendees && event.attendees.length;
 
   const loadData = async () => {
-    if (event.attendees && event.attendees.length > 0) {
+    if (event?.attendees && event.attendees.length > 0) {
       const params = { where: { _id: { $in: event.attendees } } };
       await Promise.all([
         // Load attendees list
