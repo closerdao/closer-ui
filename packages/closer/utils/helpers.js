@@ -196,11 +196,14 @@ export const getSample = (field) => {
   }
 };
 
-export const calculateRefundTotal = ({ initialValue, policy, startDate }) => {
+export const calculateRefundTotal = ({ bookingStatus, initialValue, policy, startDate }) => {
   const { default: defaultRefund, lastmonth, lastweek, lastday } = policy || {};
   const bookingStartDate = dayjs(startDate);
   const now = dayjs();
   const daysUntilBookingStart = bookingStartDate.diff(now, 'days');
+  if (bookingStatus === 'pending' || bookingStatus === 'confirmed') { 
+    return 0
+  }
 
   if (daysUntilBookingStart > REFUND_PERIODS.MONTH) {
     return initialValue * defaultRefund;

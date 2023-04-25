@@ -62,6 +62,7 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
   const isBookingCancelable =
     createdBy === user._id &&
     (status === 'open' || status === 'pending' || status === 'confirmed');
+    // (status === 'open' || status === 'confirmed');
 
   const confirmBooking = async () => {
     await platform.bookings.confirm(_id);

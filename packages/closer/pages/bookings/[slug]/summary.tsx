@@ -37,6 +37,7 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
   const [hasComplied, setCompliance] = useState(false);
+  const [isMember, setIsMember] = useState(false);
   const onComply = (isComplete: boolean) => setCompliance(isComplete);
 
   const {
@@ -52,8 +53,6 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
     ticketOption,
     eventPrice,
   } = booking || {};
-
-  const isMember = user?.roles.includes('member');
 
   const accomodationCost = getAccommodationCost(
     useTokens,
@@ -75,6 +74,12 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
       router.push(`/bookings/${booking._id}`);
     }
   }, [booking.status]);
+
+  useEffect(() => {
+    if (user) {
+      setIsMember(user?.roles.includes('member'));
+    }
+  }, [user]);
 
   const handleNext = async () => {
     const res = await api.post(`/bookings/${booking._id}/complete`, {});
@@ -110,7 +115,6 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
 
   return (
     <>
-      
       <div className="w-full max-w-screen-sm mx-auto p-8">
         <BookingBackButton onClick={goBack} name={__('buttons_back')} />
         <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
@@ -162,7 +166,7 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
             <Button className="booking-btn" onClick={handleNext}>
               {__('buttons_checkout')}
             </Button>
-          ) : !isMember ? (
+          ) : user && isMember ? (
             <Button className="booking-btn" onClick={handleNext}>
               {__('buttons_checkout')}
             </Button>

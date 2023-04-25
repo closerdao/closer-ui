@@ -34,6 +34,7 @@ const BookingCancelPage = ({ booking, error }: Props) => {
   const [isPolicyLoading, setPolicyLoading] = useState(false);
   const [isCancelCompleted, setCancelCompleted] = useState(false);
   const refundTotal = calculateRefundTotal({
+    bookingStatus: booking.status,
     initialValue: bookingPrice.val,
     policy,
     startDate: booking.start,
@@ -45,8 +46,12 @@ const BookingCancelPage = ({ booking, error }: Props) => {
         setPolicyLoading(true);
         const {
           data: { results: loadPolicy },
-        } = await api.get('/bookings/cancelation-policy');
-        setPolicy(loadPolicy);
+        } = await api.get('/config/booking');
+
+        const policy = loadPolicy.value.cancellationPolicy;
+
+        console.log('policy=', policy);
+        setPolicy(policy);
       } catch (error) {
         console.log(error);
       } finally {
