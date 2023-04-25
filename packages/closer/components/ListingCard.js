@@ -1,32 +1,46 @@
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 
 import PropTypes from 'prop-types';
 
 import { cdn } from '../utils/api';
 import { __ } from '../utils/helpers';
 import ListingPrice from './ListingPrice';
+import Button from './ui/Button';
 
-const ListingCard = ({ listing, bookListing, useTokens }) => {
+const ListingCard = ({
+  listing,
+  bookListing,
+  useTokens,
+  bookingType,
+  isAuthenticated,
+}) => {
+  const router = useRouter();
   const { name, description, rentalFiat, rentalToken, utilityFiat, available } =
     listing;
 
   const handleBooking = () => {
-    bookListing({
-      listingId: listing._id,
-    });
+    if (!isAuthenticated) {
+      router.push(`/login?back=${router.asPath}`);
+      // TODO fix back link
+    }
+    bookListing(listing._id);
   };
 
   if (!listing) return null;
 
   return (
-    <div className="flex flex-col rounded-lg p-4 mb-16 last:mb-0 shadow-4xl md:mb-0 md:basis-full md:h-full">
+    <div className="flex flex-col rounded-lg p-4 shadow-4xl md:mb-0 md:basis-full md:h-full">
+
       <h2 className="text-2xl leading-10 font-normal">{name}</h2>
       {listing.photos && listing.photos.length > 0 && (
         <div className="relative h-48 rounded-lg my-4 overflow-hidden">
           <Image
+            priority
             src={`${cdn}${listing.photos[0]}-post-md.jpg`}
             alt={name}
-            layout="fill"
+            fill
+            sizes="100%"
           />
         </div>
       )}
@@ -44,17 +58,16 @@ const ListingCard = ({ listing, bookListing, useTokens }) => {
           rentalToken={rentalToken}
           utilityFiat={utilityFiat}
           useTokens={useTokens}
+          bookingType={bookingType}
         />
       </div>
-      <button
-        className="btn uppercase disabled:cursor-not-allowed disabled:text-gray-400 disabled:border-gray-400"
-        onClick={handleBooking}
-        disabled={!available}
-      >
+      <Button onClick={handleBooking} isEnabled={available}>
         {available
-          ? __('listing_preview_book')
+          ? isAuthenticated
+            ? __('listing_preview_book')
+            : __('listing_preview_sign_in_to_book')
           : __('listing_preview_not_available')}
-      </button>
+      </Button>
     </div>
   );
 };

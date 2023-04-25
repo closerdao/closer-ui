@@ -1,6 +1,7 @@
 [
   {
     "name": "Magical Cave",
+    "category": "any",
     "photos": ["62615d64d3c9ec4a501009b2", "62615de5d3c9ec4a501009b3"],
     "slug": "magical-cave",
     "description": "Cavernous residence in the metaverse.",
@@ -28,6 +29,7 @@
   },
   {
     "name": "Shared Glamping",
+    "category": "any",
     "photos": ["637cff4dd9e19f150acf011f"],
     "slug": "spacious-chalet",
     "description": "A beautiful tipi tent, shared with beautiful people. May smell a lil bit like stinky feet sometimes, but it is ok. ",

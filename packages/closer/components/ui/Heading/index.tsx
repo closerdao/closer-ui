@@ -12,7 +12,6 @@ const Heading = ({ level, children, className }: HeadingProps) => {
 
   return (
     <HeadingTag
-      // className={`mb-[24px] w-full font-bold
       className={`w-full font-bold 
       ${level === 1 ? 'font-extrabold text-3xl' : ''}
       ${

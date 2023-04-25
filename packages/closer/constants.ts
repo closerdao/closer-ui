@@ -1,4 +1,5 @@
 import { blockchainConfig } from './config_blockchain';
+import { CloserCurrencies } from './types/currency';
 
 export const REFUND_PERIODS = {
   MONTH: 30,
@@ -16,6 +17,10 @@ export const BOOKING_STEPS = [
   'confirmation',
 ];
 
+export const CURRENCIES: CloserCurrencies[] = [
+  CloserCurrencies.EUR,
+  blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol,
+];
 export const SUBSCRIPTION_STEPS = [
   'subscriptions',
   'summary',
@@ -23,6 +28,5 @@ export const SUBSCRIPTION_STEPS = [
   'success',
 ];
 
-export const CURRENCIES = ['EUR', blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol];
 export const DEFAULT_CURRENCY = CURRENCIES[0]; // EUR
 export const REFERRAL_ID_LOCAL_STORAGE_KEY = 'referredByUserId';

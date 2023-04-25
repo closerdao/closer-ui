@@ -4,7 +4,7 @@ export enum CloserCurrencies {
   TDF = 'TDF',
 }
 
-export type Currency<T extends CloserCurrencies> = {
+export type Price<T extends CloserCurrencies> = {
   val: number;
   cur: T;
 };

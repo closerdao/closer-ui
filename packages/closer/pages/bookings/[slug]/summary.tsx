@@ -1,0 +1,216 @@
+import { useRouter } from 'next/router';
+
+import { useEffect, useState } from 'react';
+
+import BookingBackButton from '../../../components/BookingBackButton';
+import Conditions from '../../../components/Conditions';
+import PageError from '../../../components/PageError';
+import SummaryCosts from '../../../components/SummaryCosts';
+import SummaryDates from '../../../components/SummaryDates';
+import Button from '../../../components/ui/Button';
+import ProgressBar from '../../../components/ui/ProgressBar';
+
+import { ParsedUrlQuery } from 'querystring';
+
+import PageNotAllowed from '../../401';
+import PageNotFound from '../../404';
+import { BOOKING_STEPS } from '../../../constants';
+import { useAuth } from '../../../contexts/auth';
+import { BaseBookingParams, Booking, Event, Listing } from '../../../types';
+import api from '../../../utils/api';
+import { parseMessageFromError } from '../../../utils/common';
+import {
+  __,
+  getAccommodationCost,
+  getTotalToPayInFiat,
+} from '../../../utils/helpers';
+
+interface Props extends BaseBookingParams {
+  listing: Listing;
+  booking: Booking;
+  error?: string;
+  settings: any;
+  event?: Event;
+}
+
+const Summary = ({ booking, listing, settings, event, error }: Props) => {
+  const router = useRouter();
+  const { isAuthenticated, user } = useAuth();
+  const [hasComplied, setCompliance] = useState(false);
+  const [isMember, setIsMember] = useState(false);
+  const onComply = (isComplete: boolean) => setCompliance(isComplete);
+
+  const {
+    utilityFiat,
+    rentalToken,
+    rentalFiat,
+    useTokens,
+    start,
+    end,
+    adults,
+    volunteerId,
+    eventId,
+    ticketOption,
+    eventPrice,
+  } = booking || {};
+
+  const accomodationCost = getAccommodationCost(
+    useTokens,
+    rentalToken,
+    rentalFiat,
+    volunteerId,
+  );
+
+  const totalToPayInFiat = getTotalToPayInFiat(
+    useTokens,
+    utilityFiat,
+    eventPrice,
+    rentalFiat,
+    volunteerId,
+  );
+
+  useEffect(() => {
+    if (booking.status === 'pending' || booking.status === 'paid') {
+      router.push(`/bookings/${booking._id}`);
+    }
+  }, [booking.status]);
+
+  useEffect(() => {
+    if (user) {
+      setIsMember(user?.roles.includes('member'));
+    }
+  }, [user]);
+
+  const handleNext = async () => {
+    const res = await api.post(`/bookings/${booking._id}/complete`, {});
+    const status = res.data.results.status;
+
+    if (status === 'confirmed') {
+      router.push(`/bookings/${booking._id}/checkout`);
+    }
+    if (status === 'pending') {
+      router.push(`/bookings/${booking._id}/confirmation`);
+    }
+  };
+
+  const goBack = () => {
+    router.push(`/bookings/${booking._id}/questions`);
+  };
+
+  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+    return <PageNotFound />;
+  }
+
+  if (error) {
+    return <PageError error={error} />;
+  }
+
+  if (!isAuthenticated) {
+    return <PageNotAllowed />;
+  }
+
+  if (!listing || !booking) {
+    return null;
+  }
+
+  return (
+    <>
+      <div className="w-full max-w-screen-sm mx-auto p-8">
+        <BookingBackButton onClick={goBack} name={__('buttons_back')} />
+        <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
+          <span className="mr-1">📑</span>
+          <span>{__('bookings_summary_step_title')}</span>
+        </h1>
+        <ProgressBar steps={BOOKING_STEPS} />
+        <div className="mt-16 flex flex-col gap-16">
+          <SummaryDates
+            totalGuests={adults}
+            startDate={start}
+            endDate={end}
+            listingName={listing.name}
+            volunteerId={volunteerId}
+            eventName={event?.name}
+            ticketOption={ticketOption?.name}
+          />
+          <SummaryCosts
+            utilityFiat={utilityFiat}
+            useTokens={useTokens}
+            accomodationCost={accomodationCost}
+            totalToken={rentalToken.val}
+            totalFiat={totalToPayInFiat}
+            eventCost={eventPrice?.val}
+            eventDefaultCost={
+              booking.ticketOption?.price
+                ? booking.ticketOption.price * booking.adults
+                : undefined
+            }
+            accomodationDefaultCost={listing.fiatPrice.val * booking.adults}
+            volunteerId={volunteerId}
+          />
+
+          {volunteerId ? (
+            <>
+              <Conditions
+                setComply={onComply}
+                visitorsGuide={settings.visitorsGuide}
+              />
+              <Button
+                isEnabled={hasComplied}
+                className="booking-btn"
+                onClick={handleNext}
+              >
+                {__('apply_submit_button')}
+              </Button>
+            </>
+          ) : eventId ? (
+            <Button className="booking-btn" onClick={handleNext}>
+              {__('buttons_checkout')}
+            </Button>
+          ) : user && isMember ? (
+            <Button className="booking-btn" onClick={handleNext}>
+              {__('buttons_checkout')}
+            </Button>
+          ) : (
+            <Button className="booking-btn" onClick={handleNext}>
+              {__('buttons_booking_request')}
+            </Button>
+          )}
+        </div>
+      </div>
+    </>
+  );
+};
+
+Summary.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
+  try {
+    const {
+      data: { results: booking },
+    } = await api.get(`/booking/${query.slug}`);
+    const [
+      {
+        data: { results: listing },
+      },
+      {
+        data: { results: settings },
+      },
+      {
+        data: { results: event },
+      },
+    ] = await Promise.all([
+      api.get(`/listing/${booking.listing}`),
+      api.get('/bookings/settings'),
+      api.get(`/event/${booking.eventId}`),
+    ]);
+
+    return { booking, listing, settings, event, error: null };
+  } catch (err) {
+    console.log(parseMessageFromError(err));
+    return {
+      error: parseMessageFromError(err),
+      booking: null,
+      listing: null,
+    };
+  }
+};
+
+export default Summary;

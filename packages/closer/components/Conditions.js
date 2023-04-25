@@ -7,6 +7,8 @@ import { __ } from '../utils/helpers';
 import Checkbox from './Checkbox';
 import Modal from './Modal';
 
+
+// TODO: fix visitors guide link
 const Conditions = ({ setComply, visitorsGuide }) => {
   const { user } = useAuth();
   const isMember = user?.roles.includes('member');

@@ -1,16 +1,27 @@
 import { useRouter } from 'next/router';
 
 import BookingBackButton from '../../../components/BookingBackButton';
-import BookingProgress from '../../../components/BookingProgress';
 import BookingStepsInfo from '../../../components/BookingStepsInfo';
 import ListingCard from '../../../components/ListingCard';
+import ProgressBar from '../../../components/ui/ProgressBar';
+
+import { type NextPage } from 'next';
 
 import PageNotFound from '../../404';
 import { blockchainConfig } from '../../../config_blockchain';
+import { BOOKING_STEPS } from '../../../constants';
+import { useAuth } from '../../../contexts/auth';
+import { BaseBookingParams, Listing } from '../../../types';
 import api from '../../../utils/api';
-import { __ } from '../../../utils/helpers';
+import { __, getBookingType } from '../../../utils/helpers';
 
-const AccomodationSelector = ({
+interface Props extends BaseBookingParams {
+  useTokens: boolean;
+  listings: Listing[];
+  error?: string;
+}
+
+const AccomodationSelector: NextPage<Props> = ({
   start,
   end,
   adults,
@@ -20,9 +31,18 @@ const AccomodationSelector = ({
   currency,
   useTokens,
   listings,
+  eventId,
+  volunteerId,
+  ticketName,
+  discountCode,
 }) => {
   const router = useRouter();
-  const bookListing = async ({ listingId }) => {
+  const { isAuthenticated } = useAuth();
+
+  const bookingType = getBookingType(eventId, volunteerId);
+  
+
+  const bookListing = async (listingId: string) => {
     try {
       const {
         data: { results: newBooking },
@@ -35,8 +55,16 @@ const AccomodationSelector = ({
         pets,
         listing: listingId,
         children: kids,
+        discountCode,
+
+        ...(eventId && { eventId, ticketOption: { name: ticketName } }),
+        ...(volunteerId && { volunteerId }),
       });
-      router.push(`/bookings/${newBooking._id}/questions`);
+      if (volunteerId) {
+        router.push(`/bookings/${newBooking._id}/summary`);
+      } else {
+        router.push(`/bookings/${newBooking._id}/questions`);
+      }
     } catch (err) {
       console.log(err); // TO DO handle error
     } finally {
@@ -56,10 +84,12 @@ const AccomodationSelector = ({
       start,
       end,
       adults,
-      kids,
-      infants,
-      pets,
-      currency,
+      ...(kids && { kids }),
+      ...(infants && { infants }),
+      ...(pets && { pets }),
+      ...(currency && { currency }),
+      ...(eventId && { eventId }),
+      ...(volunteerId && { volunteerId }),
     };
     const urlParams = new URLSearchParams(params);
     router.push(`/bookings/create/dates?${urlParams}`);
@@ -68,12 +98,12 @@ const AccomodationSelector = ({
   return (
     <>
       <div className="max-w-screen-sm mx-auto md:first-letter:p-8">
-        <BookingBackButton action={backToDates} name={__('buttons_back')} />
-        <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
+        <BookingBackButton onClick={backToDates} name={__('buttons_back')} />
+        <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">🏡</span>
           <span>{__('bookings_accomodation_step_title')}</span>
         </h1>
-        <BookingProgress />
+        <ProgressBar steps={BOOKING_STEPS} />
         <BookingStepsInfo
           startDate={start}
           endDate={end}
@@ -92,13 +122,15 @@ const AccomodationSelector = ({
             </p>
           </div>
         )}
-        <div className="mt-16 md:grid md:grid-flow-col md:items-start md:gap-2">
+        <div className="flex flex-col gap-4 mt-16 md:grid md:grid-cols-2 md:items-start">
           {listings.map((listing) => (
             <ListingCard
               key={listing._id}
               listing={listing}
               bookListing={bookListing}
               useTokens={useTokens}
+              bookingType={bookingType}
+              isAuthenticated={isAuthenticated}
             />
           ))}
         </div>
@@ -108,9 +140,22 @@ const AccomodationSelector = ({
 };
 
 AccomodationSelector.getInitialProps = async ({ query }) => {
-  const { start, end, adults, kids, infants, pets, currency } = query || {};
+  const {
+    start,
+    end,
+    adults,
+    kids,
+    infants,
+    pets,
+    currency,
+    eventId,
+    volunteerId,
+    ticketName,
+    discountCode,
+  }: BaseBookingParams = query || {};
   const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
   const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
+
   const {
     data: { results },
   } = await api.post('/bookings/availability', {
@@ -121,18 +166,25 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
     infants,
     pets,
     useTokens,
+    discountCode,
+    ...(eventId && { eventId, ticketName }),
+    ...(volunteerId && { volunteerId }),
   });
 
   return {
     listings: results,
     start,
     end,
-    adults: Number(adults),
-    kids: Number(kids),
-    infants: Number(infants),
-    pets: Number(pets),
+    adults,
+    kids,
+    infants,
+    pets,
     currency,
     useTokens,
+    eventId,
+    volunteerId,
+    ticketName,
+    discountCode,
   };
 };
 
