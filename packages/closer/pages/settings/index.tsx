@@ -70,10 +70,15 @@ const MemberPage: FC = () => {
   return (
     <>
       <Head>
-        <title>{user.screenname}</title>
+        <title>{user.screenname} | About me</title>
       </Head>
       <div className="max-w-screen-sm mx-auto md:p-8 h-full main-content w-full flex flex-col min-h-screen py-2">
         <Heading>🤓 Your Info</Heading>
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-8">
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
         <Heading level={2} className="mt-16">
           ⭐ Account
         </Heading>
