@@ -175,8 +175,8 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
               {__('bookings_summary_step_utility_description')}
             </p>
           </div>
-          <CheckoutTotal totalToPayInFiat={booking.total} />
-          { booking.total ?
+          <CheckoutTotal total={booking.total} />
+          { booking.total?.val > 0 ?
             <CheckoutPayment
               bookingId={booking._id}
               buttonDisabled={
@@ -223,6 +223,7 @@ Checkout.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
 
     return { booking, listing, settings, event, error: null };
   } catch (err) {
+    console.log(err);
     return {
       error: parseMessageFromError(err),
       booking: null,

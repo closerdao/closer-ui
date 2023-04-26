@@ -52,7 +52,8 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
     volunteerId,
     eventId,
     ticketOption,
-    eventPrice,
+    eventFiat,
+    total,
   } = booking || {};
 
   const accomodationCost = getAccommodationCost(
@@ -136,8 +137,8 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
             useTokens={useTokens}
             accomodationCost={accomodationCost}
             totalToken={rentalToken?.val}
-            totalFiat={booking.total}
-            eventCost={eventPrice?.val}
+            totalFiat={total}
+            eventCost={eventFiat?.val}
             eventDefaultCost={
               booking.ticketOption?.price
                 ? booking.ticketOption.price * booking.adults

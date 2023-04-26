@@ -110,7 +110,7 @@ const DatesSelector: NextPage<Props> = ({
         currency,
         ...(eventId && { eventId: eventId as string }),
         ...(volunteerId && { volunteerId: volunteerId as string }),
-        ticketOption: selectedTicketOption,
+        ticketOption: selectedTicketOption?.name,
         discountCode: discountCode
       };
 

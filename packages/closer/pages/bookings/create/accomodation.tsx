@@ -22,6 +22,7 @@ interface Props extends BaseBookingParams {
 }
 
 const AccomodationSelector: NextPage<Props> = ({
+  error,
   start,
   end,
   adults,
@@ -33,14 +34,13 @@ const AccomodationSelector: NextPage<Props> = ({
   listings,
   eventId,
   volunteerId,
-  ticketName,
+  ticketOption,
   discountCode,
 }) => {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
 
   const bookingType = getBookingType(eventId, volunteerId);
-  
 
   const bookListing = async (listingId: string) => {
     try {
@@ -57,7 +57,7 @@ const AccomodationSelector: NextPage<Props> = ({
         children: kids,
         discountCode,
 
-        ...(eventId && { eventId, ticketOption: { name: ticketName } }),
+        ...(eventId && { eventId, ticketOption }),
         ...(volunteerId && { volunteerId }),
       });
       if (volunteerId) {
@@ -73,6 +73,9 @@ const AccomodationSelector: NextPage<Props> = ({
 
   if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
     return <PageNotFound />;
+  }
+  if (error) {
+    return <PageNotFound error={ error } />;
   }
 
   if (!start || !adults || !end) {
@@ -140,52 +143,59 @@ const AccomodationSelector: NextPage<Props> = ({
 };
 
 AccomodationSelector.getInitialProps = async ({ query }) => {
-  const {
-    start,
-    end,
-    adults,
-    kids,
-    infants,
-    pets,
-    currency,
-    eventId,
-    volunteerId,
-    ticketName,
-    discountCode,
-  }: BaseBookingParams = query || {};
-  const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
-  const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
+  try {
+    const {
+      start,
+      end,
+      adults,
+      kids,
+      infants,
+      pets,
+      currency,
+      eventId,
+      volunteerId,
+      ticketOption,
+      discountCode,
+    }: BaseBookingParams = query || {};
+    const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
+    const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
 
-  const {
-    data: { results },
-  } = await api.post('/bookings/availability', {
-    start,
-    end,
-    adults,
-    children: kids,
-    infants,
-    pets,
-    useTokens,
-    discountCode,
-    ...(eventId && { eventId, ticketName }),
-    ...(volunteerId && { volunteerId }),
-  });
+    const {
+      data: { results },
+    } = await api.post('/bookings/availability', {
+      start,
+      end,
+      adults,
+      children: kids,
+      infants,
+      pets,
+      useTokens,
+      discountCode,
+      ...(eventId && { eventId, ticketOption }),
+      ...(volunteerId && { volunteerId }),
+    });
 
-  return {
-    listings: results,
-    start,
-    end,
-    adults,
-    kids,
-    infants,
-    pets,
-    currency,
-    useTokens,
-    eventId,
-    volunteerId,
-    ticketName,
-    discountCode,
-  };
+    return {
+      listings: results,
+      start,
+      end,
+      adults,
+      kids,
+      infants,
+      pets,
+      currency,
+      useTokens,
+      eventId,
+      volunteerId,
+      ticketOption,
+      discountCode,
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      error: err.response?.data?.error || err.message
+    }
+  }
 };
 
 export default AccomodationSelector;

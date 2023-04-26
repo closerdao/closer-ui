@@ -14,7 +14,7 @@ const CheckoutTotal = ({ total }) => {
       <div className="flex justify-between items-center mt-3">
         <p> {__('bookings_total')}</p>
         <p className="font-bold">
-          {priceFormat(total.val, total.cur || DEFAULT_CURRENCY)}
+          {total ? priceFormat(total.val, total.cur || DEFAULT_CURRENCY) : '?€'}
         </p>
       </div>
       <p className="text-right text-xs">
