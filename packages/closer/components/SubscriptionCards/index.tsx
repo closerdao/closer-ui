@@ -1,4 +1,5 @@
 import { __ } from 'closer/utils/helpers';
+import dayjs from 'dayjs';
 
 import { SubscriptionPlan, Subscriptions } from '../../types/subscriptions';
 import Button from '../ui/Button';
@@ -27,11 +28,7 @@ const SubscriptionCards = ({
       return (
         <>
           {__('subscriptions_next_billing_date')}{' '}
-          {validUntil.toLocaleDateString('en-US', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-          })}
+          {dayjs(validUntil).format('LL')}
         </>
       );
     } else if (userActivePlan?.title === plan.title && cancelledAt) {
@@ -39,11 +36,7 @@ const SubscriptionCards = ({
         return (
           <>
             {__('subscriptions_expires_at')}{' '}
-            {cancelledAt.toLocaleDateString('en-US', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-            })}
+            {dayjs(cancelledAt).format('LL')}
           </>
         );
       } else {
