@@ -5,8 +5,6 @@ import BookingStepsInfo from '../../../components/BookingStepsInfo';
 import ListingCard from '../../../components/ListingCard';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
-import { type NextPage } from 'next';
-
 import PageNotFound from '../../404';
 import { blockchainConfig } from '../../../config_blockchain';
 import { BOOKING_STEPS } from '../../../constants';
@@ -14,14 +12,14 @@ import { useAuth } from '../../../contexts/auth';
 import { BaseBookingParams, Listing } from '../../../types';
 import api from '../../../utils/api';
 import { __, getBookingType } from '../../../utils/helpers';
+import { ParsedUrlQuery } from 'querystring';
 
 interface Props extends BaseBookingParams {
-  useTokens: boolean;
   listings: Listing[];
   error?: string;
 }
 
-const AccomodationSelector: NextPage<Props> = ({
+const AccomodationSelector = ({
   error,
   start,
   end,
@@ -36,7 +34,7 @@ const AccomodationSelector: NextPage<Props> = ({
   volunteerId,
   ticketOption,
   discountCode,
-}) => {
+}: Props) => {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
 
@@ -142,7 +140,7 @@ const AccomodationSelector: NextPage<Props> = ({
   );
 };
 
-AccomodationSelector.getInitialProps = async ({ query }) => {
+AccomodationSelector.getInitialProps = async ({ query }: { query: ParsedUrlQuery } ) => {
   try {
     const {
       start,
@@ -156,6 +154,7 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
       volunteerId,
       ticketOption,
       discountCode,
+      
     }: BaseBookingParams = query || {};
     const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
     const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
@@ -190,7 +189,7 @@ AccomodationSelector.getInitialProps = async ({ query }) => {
       ticketOption,
       discountCode,
     };
-  } catch (err) {
+  } catch (err: any) {
     console.log(err);
     return {
       error: err.response?.data?.error || err.message
