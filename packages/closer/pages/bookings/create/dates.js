@@ -8,6 +8,7 @@ import BookingGuests from '../../../components/BookingGuests';
 import BookingProgress from '../../../components/BookingProgress';
 import CurrencySwitch from '../../../components/CurrencySwitch';
 import PageError from '../../../components/PageError';
+import Heading from '../../../components/ui/Heading';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -83,10 +84,10 @@ const DatesSelector = ({ error, settings }) => {
           action={goToDashboard}
           name={__('buttons_go_to_bookings')}
         />
-        <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
+        <Heading className="step-title pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">🏡</span>
           <span>{__('bookings_dates_step_title')}</span>
-        </h1>
+        </Heading>
         <BookingProgress />
         <div className="mt-16 flex flex-col gap-16">
           <div>

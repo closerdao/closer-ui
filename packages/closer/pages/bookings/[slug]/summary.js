@@ -7,6 +7,7 @@ import BookingProgress from '../../../components/BookingProgress';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
+import Heading from '../../../components/ui/Heading';
 
 import PropTypes from 'prop-types';
 
@@ -65,10 +66,10 @@ const Summary = ({ booking, listing, error }) => {
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
         <BookingBackButton action={goBack} name={__('buttons_back')} />
-        <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
+        <Heading className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">📑</span>
           <span>{__('bookings_summary_step_title')}</span>
-        </h1>
+        </Heading>
         <BookingProgress />
         <div className="mt-16 flex flex-col gap-16">
           <SummaryDates

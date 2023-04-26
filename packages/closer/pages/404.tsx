@@ -3,6 +3,8 @@ import Link from 'next/link';
 
 import React, { FC } from 'react';
 
+import Heading from '../components/ui/Heading';
+
 import { __ } from '../utils/helpers';
 
 const PageNotFound: FC<{ error: string }> = ({ error }) => (
@@ -11,7 +13,7 @@ const PageNotFound: FC<{ error: string }> = ({ error }) => (
       <title>{__('404_title')}</title>
     </Head>
     <main className="main-content about intro page-not-found max-w-prose h-full flex flex-col flex-1 justify-center gap-4">
-      <h1>{__('404_title')}</h1>
+      <Heading>{__('404_title')}</Heading>
       {error && <h2 className="font-light italic my-4"> {error}</h2>}
       <p>
         <Link href="/" className="btn text-center">

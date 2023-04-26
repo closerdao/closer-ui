@@ -3,6 +3,8 @@ import Link from 'next/link';
 
 import React from 'react';
 
+import Heading from '../../../components/ui/Heading';
+
 import api, { formatSearch } from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
@@ -13,7 +15,7 @@ const Search = ({ articles, error, keyword, tags }) => (
     </Head>
     <div className="main-content fullwidth intro">
       <section className="article limit-width">
-        <h1>{decodeURIComponent(keyword) || 'Search'}</h1>
+        <Heading>{decodeURIComponent(keyword) || 'Search'}</Heading>
         {error ? (
           <div className="validation-error">{error}</div>
         ) : (

@@ -6,6 +6,7 @@ import BookingBackButton from '../../../components/BookingBackButton';
 import BookingProgress from '../../../components/BookingProgress';
 import PageError from '../../../components/PageError';
 import QuestionnaireItem from '../../../components/QuestionnaireItem';
+import Heading from '../../../components/ui/Heading';
 
 import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
@@ -92,10 +93,10 @@ const Questionnaire = ({ questions, booking, error }) => {
           action={resetBooking}
           name={__('buttons_back_to_dates')}
         />
-        <h1 className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
+        <Heading className="step-title border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center mt-8">
           <span className="mr-1">📄</span>
           <span>{__('bookings_questionnaire_step_title')}</span>
-        </h1>
+        </Heading>
         <BookingProgress />
         <div className="my-16 gap-16 mt-16">
           {questions.map((question) => (

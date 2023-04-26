@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/auth';
 import api, { formatSearch } from '../utils/api';
 import { __ } from '../utils/helpers';
 import Link from './ActiveLink';
+import Heading from './ui/Heading';
 
 const MyArticles = () => {
   const [error, setErrors] = useState(false);
@@ -52,7 +53,7 @@ const MyArticles = () => {
   }
   return (
     <div>
-      <h1>Hi {user.screenname}</h1>
+      <Heading>Hi {user.screenname}</Heading>
 
       <div className="user-actions">
         <Link as="/compose/new" href="/compose/[slug]">

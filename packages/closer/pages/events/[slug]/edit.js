@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import React from 'react';
 
 import EditModel from '../../../components/EditModel';
+import Heading from '../../../components/ui/Heading';
 
 import { FaArrowLeft } from '@react-icons/all-files/fa/FaArrowLeft';
 
@@ -20,7 +21,7 @@ const EditEvent = ({ event }) => {
     }
   };
   if (!event) {
-    return <h1>{__('events_slug_edit_error')}</h1>;
+    return <Heading>{__('events_slug_edit_error')}</Heading>;
   }
 
   return (

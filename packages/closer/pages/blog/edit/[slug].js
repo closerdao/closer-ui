@@ -1,24 +1,26 @@
 import Head from 'next/head';
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
 
 import React, { useState } from 'react';
 import Editor from 'react-simple-wysiwyg';
 
+import Heading from '../../../components/ui/Heading';
+
+import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import api, { cdn } from '../../../utils/api';
-import PageNotFound from '../../404';
 
 const Article = ({ article, error }) => {
   const { user, isAuthenticated } = useAuth();
   const [html, setHtml] = useState(article.html);
   const onChange = (e) => {
     setHtml(e.target.value);
-  }
+  };
 
   const persist = async () => {
-    await api.patch(`/article/${article._id}`, { html })
-  }
+    await api.patch(`/article/${article._id}`, { html });
+  };
 
   const fullImageUrl =
     article &&
@@ -63,26 +65,25 @@ const Article = ({ article, error }) => {
         )}
       </Head>
       <section>
-        { article.photo && <div className="relative w-full h-96 md:basis-1/2 md:w-96">
-          <Image
-            src={ fullImageUrl }
-            alt={ article.title }
-            fill={ true }
-            className="bg-cover bg-center"
-          />
-        </div> }
+        {article.photo && (
+          <div className="relative w-full h-96 md:basis-1/2 md:w-96">
+            <Image
+              src={fullImageUrl}
+              alt={article.title}
+              fill={true}
+              className="bg-cover bg-center"
+            />
+          </div>
+        )}
         <div className="mb-4">
-          <div><Link href="/blog">◀️ Blog</Link></div>
-          <h1>{article.title}</h1>
-          <h2 className="opacity-50 mb-4">
-            {article.category}
-          </h2>
+          <div>
+            <Link href="/blog">◀️ Blog</Link>
+          </div>
+          <Heading>{article.title}</Heading>
+          <h2 className="opacity-50 mb-4">{article.category}</h2>
           {isAuthenticated && user._id === article.createdBy && (
             <div>
-              <button
-                onClick={ () => persist() }
-                className="btn-primary"
-              >
+              <button onClick={() => persist()} className="btn-primary">
                 Save
               </button>
             </div>
@@ -116,7 +117,8 @@ const Article = ({ article, error }) => {
 
 Article.getInitialProps = async ({ req, query }) => {
   try {
-    const slug = (req && req.url.replace('/blog/edit/', '')) || (query && query.slug);
+    const slug =
+      (req && req.url.replace('/blog/edit/', '')) || (query && query.slug);
     const res = await api.get(`/article/${slug}`);
 
     return {

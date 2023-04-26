@@ -4,6 +4,8 @@ import { useRouter } from 'next/router';
 
 import React, { useState } from 'react';
 
+import Heading from '../../components/ui/Heading';
+
 import { useAuth } from '../../contexts/auth';
 import { __ } from '../../utils/helpers';
 
@@ -60,7 +62,9 @@ const SetPasswordScreen = () => {
             }}
             className=""
           >
-            <h1 className="mb-8">{__('login_set_password_registration')}</h1>
+            <Heading className="mb-8">
+              {__('login_set_password_registration')}
+            </Heading>
 
             <div className="flex flex-col gap-4">
               {tokenContent && tokenContent.email && (

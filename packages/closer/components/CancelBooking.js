@@ -6,6 +6,7 @@ import api from '../utils/api';
 import { __, priceFormat } from '../utils/helpers';
 import Spinner from './Spinner';
 import CalculatorIcon from './icons/CalculatorIcon';
+import Heading from './ui/Heading';
 
 const CancelBooking = ({
   setCancelCompleted,
@@ -38,10 +39,10 @@ const CancelBooking = ({
 
   return (
     <main className="main-content max-w-prose pb-16">
-      <h1 className="text-[32px] leading-[48px] font-normal border-b border-[#e1e1e1] border-solid pb-2">
+      <Heading className="text-[32px] leading-[48px] font-normal border-b border-[#e1e1e1] border-solid pb-2">
         <span className="text-red-500">!? </span>
         <span>{__('cancel_booking_title')}</span>
-      </h1>
+      </Heading>
       <h2 className="text-2xl leading-10 font-normal my-16">
         {__('cancel_booking_details')}
       </h2>

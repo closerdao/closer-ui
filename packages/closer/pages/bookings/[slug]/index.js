@@ -3,6 +3,7 @@ import Head from 'next/head';
 import React from 'react';
 
 import PageError from '../../../components/PageError';
+import Heading from '../../../components/ui/Heading';
 
 import dayjs from 'dayjs';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
@@ -41,7 +42,9 @@ const Booking = ({ booking, error }) => {
         <meta property="og:type" content="booking" />
       </Head>
       <main className="main-content max-w-prose booking">
-        <h1 className="mb-4">{__(`bookings_title_${booking.status}`)}</h1>
+        <Heading className="mb-4">
+          {__(`bookings_title_${booking.status}`)}
+        </Heading>
         <section className="mt-3">
           <h3>{__('bookings_summary')}</h3>
           <p>

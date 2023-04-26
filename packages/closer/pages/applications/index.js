@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 
 import ApplicationList from '../../components/ApplicationList';
 import Tabs from '../../components/Tabs';
+import Heading from '../../components/ui/Heading';
 
 import PageNotAllowed from '../401';
 import { useAuth } from '../../contexts/auth';
@@ -49,7 +50,7 @@ const Applications = () => {
       <main className="main-content w-full">
         <div className="page-header mb-4">
           <div>
-            <h1>{__('applications_title')}</h1>
+            <Heading>{__('applications_title')}</Heading>
           </div>
         </div>
         <div className="md:flex md:flex-row-reverse">

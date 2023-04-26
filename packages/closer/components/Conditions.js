@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/auth';
 import { __ } from '../utils/helpers';
 import Checkbox from './Checkbox';
 import Modal from './Modal';
+import Heading from './ui/Heading';
 
 const Conditions = ({ setComply, visitorsGuide }) => {
   const { user } = useAuth();
@@ -76,9 +77,9 @@ const Conditions = ({ setComply, visitorsGuide }) => {
       {isInfoModalOpened && (
         <Modal closeModal={closeModal}>
           <div>
-            <h1 className="step-title mb-8">
+            <Heading className="step-title mb-8">
               {__('bookings_checkout_step_cancellation_policy')}
-            </h1>
+            </Heading>
             {isMember
               ? __('booking_cancelation_policy_member')
               : __('booking_cancelation_policy')}

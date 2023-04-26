@@ -7,6 +7,7 @@ import EventAttendees from '../../../components/EventAttendees';
 import EventDescription from '../../../components/EventDescription';
 import EventPhoto from '../../../components/EventPhoto';
 import Photo from '../../../components/Photo';
+import Heading from '../../../components/ui/Heading';
 
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
@@ -121,7 +122,7 @@ const Event = ({ event, error }) => {
       {event.password && event.password !== password ? (
         <div className="flex flex-col justify-center items-center">
           <div className="w-34">
-            <h1>This event is password protected</h1>
+            <Heading>This event is password protected</Heading>
             <input
               onChange={(e) => setPassword(e.target.value)}
               placeholder="password"
@@ -168,7 +169,9 @@ const Event = ({ event, error }) => {
                 {end && end.isBefore(dayjs()) && (
                   <h3 className="p3 mr-2 italic">Event ended</h3>
                 )}
-                <h1 className="md:text-4xl mt-4 font-bold">{event.name}</h1>
+                <Heading className="md:text-4xl mt-4 font-bold">
+                  {event.name}
+                </Heading>
                 <div className="mt-4 event-actions flex items-center">
                   {event.ticket && start && start.isAfter(dayjs()) ? (
                     <Link

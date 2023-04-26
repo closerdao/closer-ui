@@ -3,6 +3,7 @@ import Head from 'next/head';
 import React, { useEffect } from 'react';
 
 import TicketListPreview from '../../../components/TicketListPreview';
+import Heading from '../../../components/ui/Heading';
 
 import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
@@ -53,9 +54,9 @@ const EventTickets = ({ event }) => {
       )}
       <div className="main-content intro fullwidth">
         <div className="page-header mb-3 flex justify-between">
-          <h1>
+          <Heading>
             <i>{event.name}</i> {__('events_slug_tickets_title')}
-          </h1>
+          </Heading>
         </div>
         <div className="tickets-list">
           {tickets && tickets.count() > 0 ? (
