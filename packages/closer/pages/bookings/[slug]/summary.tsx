@@ -111,8 +111,6 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
     return <PageNotAllowed />;
   }
 
-  console.log('booking', booking);
-
   return (
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">

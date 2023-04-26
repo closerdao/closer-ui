@@ -188,7 +188,7 @@ const DatesSelector: NextPage<Props> = ({
             />
           )}
 
-          { !selectedTicketOption?.isDayTicket && <BookingDates
+          { selectedTicketOption?.isDayTicket !== true && <BookingDates
             conditions={settings?.conditions}
             startDate={start}
             endDate={end}
@@ -232,7 +232,7 @@ DatesSelector.getInitialProps = async ({ query }) => {
   try {
     const { eventId, volunteerId } = query;
     const {
-      data: { results },
+      data: { results: { value: settings } },
     } = await api.get('/config/booking');
     if (eventId) {
       const ticketsAvailable = await api.get(
@@ -240,7 +240,7 @@ DatesSelector.getInitialProps = async ({ query }) => {
       );
 
       return {
-        settings: results as BookingSettings,
+        settings: settings as BookingSettings,
         ticketOptions: ticketsAvailable.data.ticketOptions,
       };
     }
@@ -252,7 +252,7 @@ DatesSelector.getInitialProps = async ({ query }) => {
       };
     }
     return {
-      settings: results as BookingSettings,
+      settings: settings as BookingSettings,
     };
   } catch (err) {
     return {
