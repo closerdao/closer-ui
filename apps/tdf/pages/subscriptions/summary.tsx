@@ -74,10 +74,9 @@ const Summary = () => {
   return (
     <>
       <Head>
-        <title>
-          {__('subscriptions_summary_title')} — {__('subscriptions_title')} —{' '}
-          {PLATFORM_NAME}
-        </title>
+        <title>{`${__('subscriptions_summary_title')} - ${__(
+          'subscriptions_title'
+        )} - ${PLATFORM_NAME}`}</title>
       </Head>
 
       <div className="max-w-6xl mx-auto">
