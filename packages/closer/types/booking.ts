@@ -69,10 +69,10 @@ export type Booking = {
   volunteerId: string;
   eventPrice?: Price<CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH>;
   eventDiscount?: Discount;
-  
-  total?: Price<
+
+  total: Price<
     CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH
   >;
   isDayTicket: boolean
-  
+
 };
