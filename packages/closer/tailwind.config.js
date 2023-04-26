@@ -13,5 +13,9 @@ module.exports = {
       display: ['group-hover'],
     },
   },
-  plugins: [require('@tailwindcss/forms'), require('@tailwindcss/line-clamp')],
+  plugins: [
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/line-clamp'),
+    require('react-widgets-tailwind'),
+  ],
 };

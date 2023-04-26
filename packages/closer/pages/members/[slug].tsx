@@ -6,7 +6,8 @@ import React from 'react';
 import UploadPhoto from '../../components/UploadPhoto';
 import Heading from '../../components/ui/Heading';
 import Input from '../../components/ui/Input';
-import Select from '../../components/ui/Select';
+import Select from '../../components/ui/Select/Dropdown';
+import MultiSelect from '../../components/ui/Select/MultiSelect';
 
 import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
@@ -14,37 +15,24 @@ import { type User } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
 import { parseMessageFromError } from '../../utils/common';
 
-type UpdateUserFunction = (value: string) => Promise<void>;
+type UpdateUserFunction = (value: string | string[]) => Promise<void>;
 
-const DIETARY_PREFERENCES = [
-  { label: 'Vegan', value: 'vegan' },
-  { label: 'Vegetarian', value: 'vegetarian' },
-  { label: 'Pescatarian', value: 'pescatarian' },
-  { label: 'Omnivore', value: 'omnivore' },
-  { label: 'Allergies', value: 'allergies' },
-];
-
-// Flexible/Male Only/Female Only
 const SHARED_ACCOMODATION_PREFERENCES = [
   { label: 'Flexible', value: 'flexible' },
   { label: 'Male Only', value: 'male only' },
   { label: 'Female Only', value: 'female only' },
 ];
 
-const SKILLS_EXAMPLES = [
-  { label: 'Javascript', value: 'javascript' },
-  { label: 'Woodworking', value: 'woodworking' },
-  { label: 'Farming', value: 'farming' },
-];
+const SKILLS_EXAMPLES = ['javascript', 'woodworking', 'farming'];
 
 const MemberPage: FC = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, refetchUser } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const { platform } = usePlatform() as any;
 
   const saveUserData =
     (attribute: keyof User['preferences'] | keyof User): UpdateUserFunction =>
-    async (value: string) => {
+    async (value: string | string[]) => {
       const prefKeys = [
         'diet',
         'sharedAccomodation',
@@ -67,6 +55,7 @@ const MemberPage: FC = () => {
       }
       try {
         await platform.user.patch(user?._id, payload);
+        await refetchUser();
         setError(null);
       } catch (err) {
         const errorMessage = parseMessageFromError(err);
@@ -115,9 +104,8 @@ const MemberPage: FC = () => {
         <Heading level={2} className="mt-16">
           🔰 Recommended
         </Heading>
-        <Select
+        <Input
           label="Dietary Preferences"
-          options={DIETARY_PREFERENCES}
           className="mt-4"
           onChange={saveUserData('diet')}
           value={user?.preferences?.diet}
@@ -128,6 +116,7 @@ const MemberPage: FC = () => {
           options={SHARED_ACCOMODATION_PREFERENCES}
           className="mt-8"
           onChange={saveUserData('sharedAccomodation')}
+          isRequired
         />
         <Input
           label="What is your superpower?"
@@ -135,13 +124,13 @@ const MemberPage: FC = () => {
           onChange={saveUserData('email')}
           className="mt-8"
         />
-        <Select
+        <MultiSelect
           label="What skills do you have?"
           value={user?.preferences?.skills}
           className="mt-8"
           onChange={saveUserData('skills')}
           options={SKILLS_EXAMPLES}
-          isMulti
+          placeholder="Pick or create yours"
         />
         <Heading level={2} className="mt-16">
           🔰 Optional

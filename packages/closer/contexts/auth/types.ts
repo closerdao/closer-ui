@@ -16,7 +16,7 @@ export type User = {
     diet?: string;
     sharedAccomodation?: string;
     superpower?: string;
-    skills?: string;
+    skills?: string[];
     dream?: string;
     needs?: string;
     moreInfo?: string;

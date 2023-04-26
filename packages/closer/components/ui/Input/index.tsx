@@ -7,7 +7,7 @@ type InputProps = {
   label?: string;
   value?: string;
   onChange?: (value: string) => void;
-  onBlur?: (event: ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void;
   type?: 'text' | 'password';
   isRequired?: boolean;
   placeholder?: string;
@@ -34,7 +34,7 @@ const Input = React.memo(
     const [localValue, setLocalValue] = useState(value || '');
     const [isEditing, setIsEditing] = useState(false);
     const [isValid, setIsValid] = useState(true);
-
+    console.log('input isEditing', label, isEditing);
     const inputRef = useRef(null);
     const onChangeRef = useRef(onChange);
 
@@ -94,6 +94,15 @@ const Input = React.memo(
       }
     };
 
+    const handleFocus = () => {
+      setIsEditing(true);
+    };
+
+    const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+      setIsEditing(false);
+      onBlur && onBlur(event);
+    };
+
     const validationError =
       !isValid && validation
         ? `${label} is not a valid ${validation} value.`
@@ -110,7 +119,8 @@ const Input = React.memo(
           type={type}
           value={localValue}
           onChange={handleChange}
-          onBlur={onBlur}
+          onBlur={handleBlur}
+          onFocus={handleFocus}
           required={isRequired}
           placeholder={placeholder}
           className={`rounded-lg bg-neutral text-complimentary-core ${
