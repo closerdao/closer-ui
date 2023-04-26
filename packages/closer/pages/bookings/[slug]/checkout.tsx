@@ -183,7 +183,7 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
                 useTokens && (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)
               }
               useTokens={useTokens}
-              totalToPayInFiat={booking.total}
+              totalToPayInFiat={booking.total as any}
               dailyTokenValue={dailyRentalToken?.val}
               startDate={start}
               endDate={end}

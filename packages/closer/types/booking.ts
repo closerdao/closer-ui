@@ -73,5 +73,6 @@ export type Booking = {
   total?: Price<
     CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH
   >;
+  isDayTicket: boolean
   
 };

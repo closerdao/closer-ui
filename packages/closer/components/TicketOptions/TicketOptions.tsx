@@ -11,7 +11,9 @@ import DiscountCode from '../DiscountCode';
 interface Props {
   items?: TicketOption[];
   selectTicketOption: (ticket: object) => void;
-  selectedTicketOption?: object;
+  // selectedTicketOption?: object;
+  selectedTicketOption?: any;
+  disclaimer?: string;
   volunteer?: VolunteerOpportunity;
   discountCode?: string;
   setDiscountCode: Dispatch<SetStateAction<string>>;
@@ -31,10 +33,10 @@ const Ticket = ({
   name: string;
   price?: number;
   currency?: string;
-  disclaimer: string;
+  disclaimer?: string;
   available: number;
   selectTicketOption: (ticket: object) => void;
-  selectedTicketOption?: object;
+  selectedTicketOption?: TicketOption;
   isVolunteer?: boolean;
   isDayTicket?: boolean;
 }) => {
@@ -68,6 +70,7 @@ const TicketOptions: FC<Props> = ({
   volunteer,
   discountCode,
   setDiscountCode,
+  disclaimer
 }) => {
   return (
     <div>

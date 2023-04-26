@@ -90,11 +90,11 @@ const DatesSelector: NextPage<Props> = ({
   const [kids, setKids] = useState<number>(Number(savedKids) || 0);
   const [infants, setInfants] = useState<number>(Number(savedInfants) || 0);
   const [pets, setPets] = useState<number>(Number(savedPets) || 0);
-  const [handleNextError, setHandleNextError] = useState<string>(null);
+  const [handleNextError, setHandleNextError] = useState<string | null>(null);
   const [currency, selectCurrency] = useState<CloserCurrencies>(
     (savedCurrency as CloserCurrencies) || DEFAULT_CURRENCY,
   );
-  const [selectedTicketOption, selectTicketOption] = useState<object>(null);
+  const [selectedTicketOption, selectTicketOption] = useState<any>(null);
   const [discountCode, setDiscountCode] = useState('');
 
   const handleNext = async () => {
@@ -136,7 +136,7 @@ const DatesSelector: NextPage<Props> = ({
         const urlParams = new URLSearchParams(data);
         router.push(`/bookings/create/accomodation?${urlParams}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       setHandleNextError(err.response?.data?.error || err.message);
     }
   };
@@ -247,7 +247,7 @@ DatesSelector.getInitialProps = async ({ query }) => {
     if (volunteerId) {
       const volunteer = await api.get(`/volunteer/${volunteerId}`);
       return {
-        settings: results as BookingSettings,
+        settings: settings as BookingSettings,
         volunteer: volunteer.data.results,
       };
     }

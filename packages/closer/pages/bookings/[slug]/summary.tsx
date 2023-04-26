@@ -22,8 +22,9 @@ import { parseMessageFromError } from '../../../utils/common';
 import {
   __,
   getAccommodationCost,
-  getTotalToPayInFiat,
+  // getTotalToPayInFiat,
 } from '../../../utils/helpers';
+import { NextApiRequest } from 'next';
 
 interface Props extends BaseBookingParams {
   listing: Listing;
@@ -36,7 +37,7 @@ interface Props extends BaseBookingParams {
 const Summary = ({ booking, listing, settings, event, error }: Props) => {
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
-  const [handleNextError, setHandleNextError] = useState<string>(null);
+  const [handleNextError, setHandleNextError] = useState<string | null>(null);
   const [hasComplied, setCompliance] = useState(false);
   const [isMember, setIsMember] = useState(false);
   const onComply = (isComplete: boolean) => setCompliance(isComplete);
@@ -90,7 +91,7 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
       } else {
         console.log(`Could not redirect: ${status}`)
       }
-    } catch (err) {
+    } catch (err: any) {
       setHandleNextError(err.response?.data?.error || err.message);
     }
   };
@@ -180,7 +181,7 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
   );
 };
 
-Summary.getInitialProps = async ({ req, query }: { query: ParsedUrlQuery }) => {
+Summary.getInitialProps = async ({ req, query }: { req: NextApiRequest, query: ParsedUrlQuery }) => {
   try {
     const {
       data: { results: booking },
