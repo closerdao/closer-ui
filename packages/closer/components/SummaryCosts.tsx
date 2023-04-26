@@ -10,7 +10,7 @@ interface Props {
   accomodationCost?: number;
   useTokens: boolean;
   totalToken: number;
-  totalFiat: number;
+  totalFiat: Price<CloserCurrencies> | number | undefined;
   eventCost?: number;
   eventDefaultCost?: number;
   accomodationDefaultCost?: number;
