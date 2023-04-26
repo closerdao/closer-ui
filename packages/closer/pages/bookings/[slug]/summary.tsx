@@ -122,7 +122,7 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
           <span>{__('bookings_summary_step_title')}</span>
         </h1>
         <ProgressBar steps={BOOKING_STEPS} />
-        <div className="mt-16 flex flex-col gap-16">
+        { booking && <div className="mt-16 flex flex-col gap-16">
           <SummaryDates
             isDayTicket={ booking?.isDayTicket }
             totalGuests={adults}
@@ -176,17 +176,21 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
               {__('buttons_booking_request')}
             </Button>
           )}
-        </div>
+        </div> }
       </div>
     </>
   );
 };
 
-Summary.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
+Summary.getInitialProps = async ({ req, query }: { query: ParsedUrlQuery }) => {
   try {
     const {
       data: { results: booking },
-    } = await api.get(`/booking/${query.slug}`);
+    } = await api.get(`/booking/${query.slug}`, {
+      headers: req?.cookies?.access_token && {
+        Authorization: `Bearer ${req?.cookies?.access_token}`
+      }
+    });
     const [
       {
         data: { results: settings },
@@ -194,16 +198,24 @@ Summary.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
       optionalEvent,
       optionalListing
     ] = await Promise.all([
-      api.get('/bookings/settings'),
-      booking.eventId && api.get(`/event/${booking.eventId}`),
-      booking.listing && api.get(`/listing/${booking.listing}`)
+      api.get('/config/booking'),
+      booking.eventId && api.get(`/event/${booking.eventId}`, {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`
+        }
+      }),
+      booking.listing && api.get(`/listing/${booking.listing}`, {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`
+        }
+      })
     ]);
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
 
     return { booking, listing, settings, event, error: null };
   } catch (err) {
-    console.log(parseMessageFromError(err));
+    console.log('Error', err);
     return {
       error: parseMessageFromError(err),
       booking: null,

@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { __ } from '../utils/helpers';
 import PriceEditor from './PriceEditor';
+import Switch from './Switch';
 
 const TicketOptionsEditor = ({ value, onChange, required }) => {
   const [options, setOptions] = useState(value);
@@ -89,6 +90,17 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
                   })
                 }
                 className="textarea"
+              />
+            </div>
+            <div className="mb-3">
+              <label>{__('ticket_options_is_day_ticket')}</label>
+              <Switch
+                name={'isDayTicket'}
+                onChange={(checked) => updateOption(index, {
+                  ...option,
+                  isDayTicket: !option.isDayTicket,
+                })}
+                checked={option.isDayTicket}
               />
             </div>
             <PriceEditor

@@ -4,8 +4,8 @@ export const parseMessageFromError = (err: unknown) => {
   if (typeof err === 'string') {
     return err;
   }
-  if ((err as AxiosError).response) {
-    return (err as AxiosError).response?.data?.error;
+  if (err.response?.data?.error) {
+    return response?.data?.error;
   }
   if (err instanceof Error) {
     return err.message;

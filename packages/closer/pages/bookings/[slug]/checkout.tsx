@@ -214,7 +214,7 @@ Checkout.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
       optionalEvent,
       optionalListing
     ] = await Promise.all([
-      api.get('/bookings/settings'),
+      api.get('/config/booking'),
       booking.eventId && api.get(`/event/${booking.eventId}`),
       booking.listing && api.get(`/listing/${booking.listing}`)
     ]);

@@ -94,9 +94,8 @@ const DatesSelector: NextPage<Props> = ({
   const [currency, selectCurrency] = useState<CloserCurrencies>(
     (savedCurrency as CloserCurrencies) || DEFAULT_CURRENCY,
   );
-  const [selectedTicketOption, selectTicketOption] = useState<string>('');
+  const [selectedTicketOption, selectTicketOption] = useState<object>(null);
   const [discountCode, setDiscountCode] = useState('');
-
 
   const handleNext = async () => {
     setHandleNextError(null);
@@ -115,7 +114,7 @@ const DatesSelector: NextPage<Props> = ({
         discountCode: discountCode
       };
 
-      if (data.start === data.end) {
+      if (data.start === data.end || selectedTicketOption?.isDayTicket) {
         // Single day ticket - no accomodation needed.
         const {
           data: { results: newBooking },
@@ -189,7 +188,7 @@ const DatesSelector: NextPage<Props> = ({
             />
           )}
 
-          <BookingDates
+          { !selectedTicketOption?.isDayTicket && <BookingDates
             conditions={settings?.conditions}
             startDate={start}
             endDate={end}
@@ -197,7 +196,7 @@ const DatesSelector: NextPage<Props> = ({
             setEndDate={setEndDate}
             isMember={isMember}
             eventId={eventId as string}
-          />
+          /> }
           <BookingGuests
             adults={adults}
             kids={kids}
@@ -234,7 +233,7 @@ DatesSelector.getInitialProps = async ({ query }) => {
     const { eventId, volunteerId } = query;
     const {
       data: { results },
-    } = await api.get('/bookings/settings');
+    } = await api.get('/config/booking');
     if (eventId) {
       const ticketsAvailable = await api.get(
         `/bookings/event/${eventId}/availability`,
