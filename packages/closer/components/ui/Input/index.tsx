@@ -34,7 +34,7 @@ const Input = React.memo(
     const [localValue, setLocalValue] = useState(value || '');
     const [isEditing, setIsEditing] = useState(false);
     const [isValid, setIsValid] = useState(true);
-    console.log('input isEditing', label, isEditing);
+
     const inputRef = useRef(null);
     const onChangeRef = useRef(onChange);
 

@@ -39,6 +39,18 @@ const Dropdown: FC<DropdownProps> = React.memo(
           placeholder={placeholder}
           data-testid={dataTestId}
           aria-required={isRequired}
+          optionComponent={(props) => (
+            <div
+              role="option"
+              aria-selected={props?.selected}
+              className={`rw-list-option ${
+                props?.selected ? 'bg-accent-light' : 'bg-transparent'
+              }`}
+              onClick={(event) => props?.onSelect(props?.dataItem, event)}
+            >
+              {props.dataItem.label}
+            </div>
+          )}
         />
       </div>
     );

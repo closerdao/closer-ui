@@ -8,8 +8,5 @@ module.exports = {
     '../../packages/closer/components/**/*.{js,ts,jsx,tsx}',
   ],
   theme: tdfTheme,
-  plugins: [
-    require('@tailwindcss/line-clamp'),
-    require('react-widgets-tailwind'),
-  ],
+  plugins: [require('@tailwindcss/line-clamp')],
 };

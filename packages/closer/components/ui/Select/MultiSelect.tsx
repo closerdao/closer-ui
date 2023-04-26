@@ -20,7 +20,6 @@ const MultiSelect: FC<MultiSelectProps> = React.memo(
     }
 
     const handleChange = (value: string[]) => {
-      console.log('handleChange', value);
       onChange && onChange(value);
     };
 
@@ -46,6 +45,11 @@ const MultiSelect: FC<MultiSelectProps> = React.memo(
           showPlaceholderWithValues={true}
           placeholder={placeholder}
           data-testid={dataTestId}
+          tagOptionComponent={(props) => (
+            <span className="bg-accent-light border-accent-core p-2 rounded-l ml-2 mt-2">
+              {props.children}
+            </span>
+          )}
         />
       </div>
     );
