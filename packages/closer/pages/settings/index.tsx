@@ -126,7 +126,7 @@ const MemberPage: FC = () => {
         <Input
           label="What is your superpower?"
           value={user?.preferences?.superpower}
-          onChange={saveUserData('email')}
+          onChange={saveUserData('superpower')}
           className="mt-8"
         />
         <MultiSelect
@@ -154,9 +154,9 @@ const MemberPage: FC = () => {
         />
         <Input
           label="Anything we should know? Anything you would like to share?"
-          value={user?.preferences?.needs}
+          value={user?.preferences?.moreInfo}
           className="mt-8"
-          onChange={saveUserData('needs')}
+          onChange={saveUserData('moreInfo')}
         />
       </div>
     </>
