@@ -22,7 +22,6 @@ import { parseMessageFromError } from '../../../utils/common';
 import {
   __,
   getAccommodationCost,
-  getTotalToPayInFiat,
 } from '../../../utils/helpers';
 
 interface Props extends BaseBookingParams {
