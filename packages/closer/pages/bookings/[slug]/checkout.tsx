@@ -176,7 +176,7 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
             </p>
           </div>
           <CheckoutTotal total={booking.total} />
-          { booking.total?.val > 0 ?
+          { booking.total.val > 0 ?
             <CheckoutPayment
               bookingId={booking._id}
               buttonDisabled={
