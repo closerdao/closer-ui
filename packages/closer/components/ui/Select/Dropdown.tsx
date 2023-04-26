@@ -51,6 +51,8 @@ const Dropdown: FC<DropdownProps> = React.memo(
               {props.dataItem.label}
             </div>
           )}
+          className="focus:!shadow-xl focus:!border-accent-core focus:ring-2 focus:ring-offset-0 focus:!ring-accent-core"
+          containerClassName="focus:!shadow-xl focus:!border-accent-core focus:ring-0 focus:ring-offset-0 focus:!ring-accent-core"
         />
       </div>
     );
