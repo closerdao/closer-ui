@@ -74,7 +74,7 @@ const BookingCancelPage = ({ booking, error }: Props) => {
   return (
     <>
       <Head>
-        <title>{`${bookingId} ${__('cancel_booking_page_title')}`}</title>
+        <title>{`${bookingId} - ${__('cancel_booking_page_title')}`}</title>
         <meta name="description" content={__('cancel_booking_page_title')} />
         <meta property="og:type" content="booking" />
       </Head>

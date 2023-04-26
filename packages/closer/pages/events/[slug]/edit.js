@@ -2,8 +2,6 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import React from 'react';
-
 import EditModel from '../../../components/EditModel';
 
 import { FaArrowLeft } from '@react-icons/all-files/fa/FaArrowLeft';
@@ -26,9 +24,7 @@ const EditEvent = ({ event }) => {
   return (
     <>
       <Head>
-        <title>
-          {__('events_slug_edit_title')} {event.name}
-        </title>
+        <title>{`${__('events_slug_edit_title')} - ${event.name}`}</title>
       </Head>
       <div className="main-content">
         <Link
