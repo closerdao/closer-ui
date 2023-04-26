@@ -95,17 +95,20 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
             <div className="mb-3">
               <label>{__('ticket_options_is_day_ticket')}</label>
               <Switch
-                name={'isDayTicket'}
-                onChange={(checked) => updateOption(index, {
-                  ...option,
-                  isDayTicket: !option.isDayTicket,
-                })}
+                name={`isDayTicket.${index}`}
+                onChange={(checked) => {
+                  updateOption(index, {
+                    ...option,
+                    isDayTicket: checked,
+                  })
+                }}
                 checked={option.isDayTicket}
               />
             </div>
             <PriceEditor
               value={{ cur: option.currency, val: option.price }}
               onChange={(price) => {
+                console.log(index);
                 updateOption(index, {
                   ...option,
                   price: price.val,

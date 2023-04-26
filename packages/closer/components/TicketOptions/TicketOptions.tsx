@@ -49,6 +49,10 @@ const Ticket = ({
       disabled={available === 0}
     >
       <h4 title={ disclaimer }>{name.split('_').join(' ')}</h4>
+      { isDayTicket ?
+        <p className="text-gray-500 italic">Day ticket.</p>:
+        <p className="text-gray-500 italic">Overnight ticket.</p>
+      }
       <p className="price text-gray-500">
         {isVolunteer ? 'Volunteering' : priceFormat(price, currency)}
       </p>
