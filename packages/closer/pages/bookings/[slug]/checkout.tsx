@@ -191,7 +191,6 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
               totalToPayInFiat={booking.total as any}
               dailyTokenValue={dailyRentalToken?.val}
               startDate={start}
-              endDate={end}
               totalNights={duration}
               user={user}
               settings={settings}
