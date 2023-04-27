@@ -125,7 +125,7 @@ const Input = React.memo(
           onFocus={handleFocus}
           required={isRequired}
           placeholder={placeholder}
-          className={`px-4 py-3 rounded-lg  ${
+          className={`new-input px-4 py-3 rounded-lg ${
             isValid
               ? 'border-neutral bg-neutral'
               : 'border-accent-core border bg-accent-light'

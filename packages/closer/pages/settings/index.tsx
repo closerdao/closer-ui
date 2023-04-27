@@ -27,7 +27,6 @@ const SKILLS_EXAMPLES = ['javascript', 'woodworking', 'farming'];
 
 const MemberPage: FC = () => {
   const { user, isAuthenticated, refetchUser } = useAuth();
-  console.log('user', user);
   const [error, setError] = useState<string | null>(null);
   const { platform } = usePlatform() as any;
 
