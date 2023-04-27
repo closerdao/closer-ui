@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useRef } from 'react';
 
 import dayjs, { Dayjs } from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -29,6 +29,10 @@ const BookingDates: FC<Props> = ({
   eventId,
 }) => {
   const { member, guest } = conditions || {};
+
+  const minDate = useRef(startDate.format('YYYY-MM-DD'));
+  const maxDate = useRef(endDate.format('YYYY-MM-DD'));
+
   if (!member || !guest) {
     console.error(
       'Cannot render BookingDates: missing conditions for member or guest',
@@ -70,14 +74,10 @@ const BookingDates: FC<Props> = ({
           </label>
           <DateTimePicker
             value={startDate.format('YYYY-MM-DD')}
-            minValue={
-              eventId
-                ? startDate.format('YYYY-MM-DD')
-                : dayjs().format('YYYY-MM-DD')
-            }
+            minValue={eventId ? minDate.current : dayjs().format('YYYY-MM-DD')}
             maxValue={
               eventId
-                ? endDate.format('YYYY-MM-DD')
+                ? maxDate.current
                 : dayjs()
                     .add(
                       isMember
@@ -100,12 +100,12 @@ const BookingDates: FC<Props> = ({
             value={endDate.format('YYYY-MM-DD')}
             minValue={
               eventId
-                ? startDate.format('YYYY-MM-DD')
+                ? minDate.current
                 : dayjs(startDate).add(1, 'days').format('YYYY-MM-DD')
             }
             maxValue={
               eventId
-                ? endDate.format('YYYY-MM-DD')
+                ? maxDate.current
                 : dayjs(startDate)
                     .add(
                       isMember ? member?.maxDuration : guest?.maxDuration,
