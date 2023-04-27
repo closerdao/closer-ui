@@ -1,12 +1,10 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import React from 'react';
-
+import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
-import { useAuth } from '../../contexts/auth';
 
 const Search = ({ tags, error, articles }) => {
   const { PLATFORM_NAME } = useConfig();
@@ -14,17 +12,17 @@ const Search = ({ tags, error, articles }) => {
   return (
     <>
       <Head>
-        <title>
-          {__('generic_search')} {PLATFORM_NAME}
-        </title>
+        <title>{`${__('generic_search')} - ${PLATFORM_NAME}`}</title>
       </Head>
       <section className="article limit-width">
-        <h1 className="mb-4">
-          {PLATFORM_NAME} Blog
-        </h1>
-        { isAuthenticated && <div className="mb-4">
-          <Link href="/blog/create" className="btn-primary">Write Article</Link>
-        </div> }
+        <h1 className="mb-4">{PLATFORM_NAME} Blog</h1>
+        {isAuthenticated && (
+          <div className="mb-4">
+            <Link href="/blog/create" className="btn-primary">
+              Write Article
+            </Link>
+          </div>
+        )}
         <div className="grid md:grid-cols-2 gap-8">
           {error ? (
             <div className="validation-error">{error}</div>

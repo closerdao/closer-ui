@@ -1,6 +1,5 @@
 import Head from 'next/head';
 
-import React from 'react';
 import QRCode from 'react-qr-code';
 
 import PageNotFound from '../../404';
@@ -18,9 +17,7 @@ const Ticket = ({ ticket, event, error }) => {
   return (
     <>
       <Head>
-        <title>
-          {__('tickets_slug_title')} {event.name}
-        </title>
+        <title>{`${__('tickets_slug_title')} - ${event.name}`}</title>
         <meta property="og:type" content="ticket" />
       </Head>
       <main className="main-content ticket-page flex flex-col justify-center items-center">

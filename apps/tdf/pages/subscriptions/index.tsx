@@ -56,9 +56,9 @@ const Subscriptions = () => {
     return (
       <>
         <Head>
-          <title>
-            {__('settings_your_subscription_title')} — {PLATFORM_NAME}
-          </title>
+          <title>{`${__(
+            'settings_your_subscription_title',
+          )} - ${PLATFORM_NAME}`}</title>
         </Head>
 
         <div className="max-w-6xl mx-auto">
@@ -75,9 +75,7 @@ const Subscriptions = () => {
   return (
     <div className="max-w-6xl mx-auto">
       <Head>
-        <title>
-          {__('subscriptions_title')} — {PLATFORM_NAME}
-        </title>
+        <title>{`${__('subscriptions_title')} - ${PLATFORM_NAME}`}</title>
       </Head>
       <main className="pt-16 pb-24 md:flex-row flex-wrap">
         <Heading level={1} className="mb-6">

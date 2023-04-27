@@ -1,8 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import React from 'react';
-
 import EditModel from '../../../components/EditModel';
 
 import models from '../../../models';
@@ -23,9 +21,7 @@ const EditTask = ({ task }) => {
   return (
     <>
       <Head>
-        <title>
-          {__('tasks_edit_title')} {task.name}
-        </title>
+        <title>{`${__('tasks_edit_title')} - ${task.name}`}</title>
       </Head>
       <div className="main-content">
         <EditModel
