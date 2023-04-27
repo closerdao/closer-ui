@@ -85,9 +85,9 @@ const AccomodationSelector = ({
 
         {listings.length === 0 && (
           <div className="mt-16">
-            <h2 className="text-2xl font-bold">
+            <Heading level={2} className="text-2xl font-bold">
               {__('bookings_accomodation_no_results_title')}
-            </h2>
+            </Heading>
             <p className="mt-4 text-lg">
               {__('bookings_accomodation_no_results_description')}
             </p>

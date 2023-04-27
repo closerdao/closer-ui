@@ -14,7 +14,12 @@ const PageNotFound: FC<{ error: string }> = ({ error }) => (
     </Head>
     <main className="main-content about intro page-not-found max-w-prose h-full flex flex-col flex-1 justify-center gap-4">
       <Heading>{__('404_title')}</Heading>
-      {error && <h2 className="font-light italic my-4"> {error}</h2>}
+      {error && (
+        <Heading level={2} className="font-light italic my-4">
+          {' '}
+          {error}
+        </Heading>
+      )}
       <p>
         <Link href="/" className="btn text-center">
           {__('404_go_back')}

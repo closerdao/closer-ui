@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 
 import { __ } from '../utils/helpers';
 import DateTimePicker from './DateTimePicker';
+import Heading from './ui/Heading';
 
 dayjs.extend(relativeTime);
 
@@ -36,10 +37,13 @@ const BookingDates = ({
 
   return (
     <div>
-      <h2 className="text-2xl leading-10 font-normal mb-4 border-b border-[#e1e1e1] border-solid pb-2">
+      <Heading
+        level={2}
+        className="text-2xl leading-10 font-normal mb-4 border-b border-[#e1e1e1] border-solid pb-2"
+      >
         <span className="mr-1">📆</span>
         <span>{__('bookings_dates_step_subtitle')}</span>
-      </h2>
+      </Heading>
       <p>{renderConditionsDescription()}</p>
       <div className="mt-8 flex justify-between items-center md:px-20">
         <div>

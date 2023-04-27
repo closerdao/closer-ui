@@ -29,9 +29,9 @@ const EditListing = ({ listing }) => {
         </title>
       </Head>
       <div className="w-full">
-        <h2 className="mb-2">
+        <Heading level={2} className="mb-2">
           Edit Listing <i>{listing.name}</i>
-        </h2>
+        </Heading>
         <EditModel
           id={listing._id}
           endpoint={'/listing'}

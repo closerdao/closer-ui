@@ -156,11 +156,11 @@ const Event = ({ event, error }) => {
                 setPhoto={setPhoto}
               />
               <div className="md:w-1/2 p-2">
-                <h2 className="text-xl font-light">
+                <Heading level={2} className="text-xl font-light">
                   {start && start.format(dateFormat)}
                   {end && duration > 24 && ` - ${end.format(dateFormat)}`}
                   {end && duration <= 24 && ` - ${end.format('HH:mm')}`}
-                </h2>
+                </Heading>
                 {event.address && (
                   <h3 className="text-lg font-light text-gray-500">
                     {event.address}

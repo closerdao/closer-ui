@@ -1,6 +1,6 @@
 import Head from 'next/head';
 
-import { CreateVolunteerView, useAuth } from 'closer';
+import { CreateVolunteerView, Heading, useAuth } from 'closer';
 import { NextPage } from 'next';
 
 import Page401 from '../401';
@@ -16,7 +16,9 @@ const CreateVolunteerOportunity: NextPage = () => {
         <title>Create Volunteer Opportunity</title>
       </Head>
       <div>
-        <h2 className="mb-2">Create a new volunteer opportunity</h2>
+        <Heading level={2} className="mb-2">
+          Create a new volunteer opportunity
+        </Heading>
         <CreateVolunteerView />
       </div>
     </>

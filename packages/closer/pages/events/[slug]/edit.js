@@ -38,9 +38,9 @@ const EditEvent = ({ event }) => {
         >
           <FaArrowLeft className="mr-1" /> {__('generic_back')}
         </Link>
-        <h2 className="flex justify-start items-center">
+        <Heading level={2} className="flex justify-start items-center">
           {__('events_slug_edit_link')} <i>{event.name}</i>
-        </h2>
+        </Heading>
         {!process.env.NEXT_PUBLIC_STRIPE_PUB_KEY && (
           <div className="my-4 error-box italic">
             {__('events_no_stripe_integration')}

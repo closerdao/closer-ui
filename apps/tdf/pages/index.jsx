@@ -227,7 +227,9 @@ const HomePage = () => {
       </section>
       <section className="mb-12 max-w-6xl mx-auto md:pt-20 text-center md:text-left md:flex md:space-x-12">
         <div className="md:max-w-lg">
-          <h2 className="mb-6">JOIN FELLOW FUTURISTS FOR UPCOMING EVENTS</h2>
+          <Heading level={2} className="mb-6">
+            JOIN FELLOW FUTURISTS FOR UPCOMING EVENTS
+          </Heading>
           <p className="mb-6 text-xs md:text-base">
             TDF is more than the land from which we build. Regeneration
             transcends soil, bricks and mortar, and farming practices. It
@@ -251,9 +253,12 @@ const HomePage = () => {
       </section>
       <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2">
         <div className="md:max-w-xl">
-          <h2 className="text-center md:text-left mb-6 md:text-6xl">
+          <Heading
+            level={2}
+            className="text-center md:text-left mb-6 md:text-6xl"
+          >
             Traditional Dream Factory
-          </h2>
+          </Heading>
           <p className="text-center md:text-left mb-6">
             Our co-living quarters will be home to 14 large suites with a living
             room & kitchen, 3 loft studios with a music production live-in

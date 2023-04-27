@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { __ } from '../utils/helpers';
 import Heading from './ui/Heading';
+import Heading from './ui/Heading';
 
 const CancelCompleted = () => {
   return (
@@ -10,9 +11,9 @@ const CancelCompleted = () => {
         <span className="text-red-500">X </span>
         <span>{__('cancel_booking_completed_title')}</span>
       </Heading>
-      <h2 className="text-2xl leading-10 font-normal my-16">
+      <Heading level={2} className="text-2xl leading-10 font-normal my-16">
         {__('cancel_booking_completed_subtitle')}
-      </h2>
+      </Heading>
       <p className="my-16">{__('cancel_booking_completed_body')}</p>
       <div className="flex flex-col">
         <Link href="/bookings" passHref className="btn">

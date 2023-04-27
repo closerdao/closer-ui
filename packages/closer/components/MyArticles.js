@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Heading from './ui/Heading';
 
 import { useAuth } from '../contexts/auth';
 import api, { formatSearch } from '../utils/api';
@@ -64,7 +65,7 @@ const MyArticles = () => {
       {error && <div className="validation-error">{error}</div>}
 
       <section className="margin-top">
-        <h2>{__('my_articles_title')}</h2>
+        <Heading level={2}>{__('my_articles_title')}</Heading>
         {articles ? (
           articles.map((article) => (
             <div key={article._id}>
@@ -83,7 +84,7 @@ const MyArticles = () => {
       </section>
 
       <section className="margin-top">
-        <h2>{__('my_articles_other')}</h2>
+        <Heading level={2}>{__('my_ar</Heading>s_other')}</Heading>
         {others ? (
           others.map((article) => (
             <div key={article._id}>

@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
 
 import { useState } from 'react';
+import Heading from './ui/Heading';
 
 import api from '../utils/api';
 import { __, priceFormat } from '../utils/helpers';
@@ -43,27 +44,30 @@ const CancelBooking = ({
         <span className="text-red-500">!? </span>
         <span>{__('cancel_booking_title')}</span>
       </Heading>
-      <h2 className="text-2xl leading-10 font-normal my-16">
+      <Heading level={2} className="text-2xl leading-10 font-normal my-16">
         {__('cancel_booking_details')}
-      </h2>
+      </Heading>
       <p>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
         tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
         veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
         commodo consequat.
       </p>
-      <h2 className="text-2xl leading-10 font-normal my-16">
+      <Heading level={2} className="text-2xl leading-10 font-normal my-16">
         {__('cancel_booking_refund_policy')}
-      </h2>
+      </Heading>
       <p>
         {isMember
           ? __('booking_cancelation_policy_member')
           : __('booking_cancelation_policy')}
       </p>
-      <h2 className="text-2xl leading-10 font-normal mt-16 mb-3 border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center">
+      <Heading
+        level={2}
+        className="text-2xl leading-10 font-normal mt-16 mb-3 border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center"
+      >
         <CalculatorIcon />
         <p>{__('cancel_booking_refund_total')}</p>
-      </h2>
+      </Heading>
       <div className="flex justify-between mb-16">
         <p>{__('cancel_booking_fiat_description')}</p>
         {isPolicyLoading || !policy ? (

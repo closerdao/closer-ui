@@ -71,7 +71,9 @@ const Article = ({ article, error }) => {
             <Link href="/blog">◀️ Blog</Link>
           </div>
           <Heading>{article.title}</Heading>
-          <h2 className="opacity-50 mb-4">{article.category}</h2>
+          <Heading level={2} className="opacity-50 mb-4">
+            {article.category}
+          </Heading>
           {isAuthenticated && user._id === article.createdBy && (
             <div>
               <Link href={`/blog/edit/${article.slug}`} className="btn-primary">

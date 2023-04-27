@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import { useAuth } from '../contexts/auth';
 import { __ } from '../utils/helpers';
+import Heading from './ui/Heading';
 
 const SignupForm = () => {
   const router = useRouter();
@@ -61,14 +62,17 @@ const SignupForm = () => {
     setApplication((prevState) => ({ ...prevState, ...update }));
   };
 
-  const isSignupDisabled = !application.email || !application.password || !application.screenname;
+  const isSignupDisabled =
+    !application.email || !application.password || !application.screenname;
 
   return (
     <div className="card">
       {error && <div className="text-primary mb-4 text-center">{error}</div>}
       {submitted && !error ? (
         <>
-          <h2 className="my-4">{__('signup_success')}</h2>
+          <Heading level={2} className="my-4">
+            {__('signup_success')}
+          </Heading>
           <p>{__('signup_success_cta')}</p>
         </>
       ) : (
@@ -146,7 +150,12 @@ const SignupForm = () => {
             />
           </div>
           <div className="w-full mb-4">
-            <button id="signupbutton" className="btn-primary" type="submit" disabled={isSignupDisabled}>
+            <button
+              id="signupbutton"
+              className="btn-primary"
+              type="submit"
+              disabled={isSignupDisabled}
+            >
               {__('signup_form_create')}
             </button>
           </div>

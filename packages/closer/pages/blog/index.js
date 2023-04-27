@@ -56,7 +56,7 @@ const Search = ({ tags, error, articles }) => {
       </section>
 
       <section className="mt-8">
-        <h2>{__('search_related_content')}</h2>
+        <Heading level={2}>{__('search_related_content')}</Heading>
         <div className="tags py-4">
           {tags
             ? tags.map((tag) => (

@@ -3,6 +3,8 @@ import Head from 'next/head';
 import React from 'react';
 import QRCode from 'react-qr-code';
 
+import Heading from '../../../components/ui/Heading';
+
 import PageNotFound from '../../404';
 import { useConfig } from '../../../hooks/useConfig';
 import api from '../../../utils/api';
@@ -30,7 +32,9 @@ const Ticket = ({ ticket, event, error }) => {
           </div>
           <div className="md:ml-6">
             <i>{__('tickets_slug_subtitle')}</i>
-            <h2 className="my-3">{event.name}</h2>
+            <Heading level={2} className="my-3">
+              {event.name}
+            </Heading>
             <p>
               {__('tickets_slug_holder')} <b>{ticket.name}</b>
             </p>

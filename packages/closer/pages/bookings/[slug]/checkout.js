@@ -96,10 +96,13 @@ const Checkout = ({ booking, listing, settings, error }) => {
         <BookingProgress />
         <div className="mt-16 flex flex-col gap-16">
           <div>
-            <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2">
+            <Heading
+              level={2}
+              className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2"
+            >
               <span className="mr-1">🏡</span>
               <span>{__('bookings_checkout_step_accomodation')}</span>
-            </h2>
+            </Heading>
             <div className="flex justify-between items-center mt-3">
               <p>{listingName}</p>
               <p className="font-bold">{priceFormat(accomodationCost)}</p>
@@ -126,10 +129,13 @@ const Checkout = ({ booking, listing, settings, error }) => {
             </div>
           </div>
           <div>
-            <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3">
+            <Heading
+              level={2}
+              className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3"
+            >
               <span className="mr-1">🛠</span>
               <span>{__('bookings_checkout_step_utility_title')}</span>
-            </h2>
+            </Heading>
             <div className="flex justify-between items-center mt-3">
               <p> {__('bookings_summary_step_utility_total')}</p>
               <p className="font-bold">{priceFormat(utilityFiat)}</p>

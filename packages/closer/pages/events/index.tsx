@@ -4,6 +4,7 @@ import Link from 'next/link';
 import React from 'react';
 
 import EventsList from '../../components/EventsList';
+import Heading from '../../components/ui/Heading';
 
 import { NextPage } from 'next';
 
@@ -26,7 +27,9 @@ const Events: NextPage = () => {
       </Head>
       <div className="main-content w-full mb-12">
         <div className="flex justify-between">
-          <h2 className="mb-4 text-xl">{__('events_upcoming')}</h2>
+          <Heading level={2} className="mb-4 text-xl">
+            {__('events_upcoming')}
+          </Heading>
           <div className="action">
             {user &&
               (!PERMISSIONS ||
@@ -50,7 +53,9 @@ const Events: NextPage = () => {
       </div>
       <div className="main-content intro">
         <div className="page-title flex justify-between">
-          <h2 className="mb-4 text-xl">{__('events_past')}</h2>
+          <Heading level={2} className="mb-4 text-xl">
+            {__('events_past')}
+          </Heading>
         </div>
         <EventsList
           limit={30}

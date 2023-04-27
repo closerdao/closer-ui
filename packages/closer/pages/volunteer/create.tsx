@@ -1,5 +1,7 @@
 import Head from 'next/head';
 
+import Heading from '../../components/ui/Heading';
+
 import { CreateVolunteerView } from 'closer';
 
 import Page401 from '../401';
@@ -18,7 +20,9 @@ const CreateVolunteerOportunity = () => {
         <title>{__('volunteer_create_page_title')}</title>
       </Head>
       <div>
-        <h2 className="mb-2">{__('volunteer_create_page_title')}</h2>
+        <Heading level={2} className="mb-2">
+          {__('volunteer_create_page_title')}
+        </Heading>
         <CreateVolunteerView />
       </div>
     </>

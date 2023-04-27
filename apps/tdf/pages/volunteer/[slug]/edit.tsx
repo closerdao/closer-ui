@@ -2,6 +2,7 @@ import Head from 'next/head';
 
 import {
   CreateVolunteerView,
+  Heading,
   Page401,
   VolunteerOpportunity,
   api,
@@ -22,7 +23,9 @@ const EditVolunteerOportunity: NextPage<{
         <title>Edit Volunteer Opportunity</title>
       </Head>
       <div>
-        <h2 className="mb-2">Edit volunteer opportunity</h2>
+        <Heading level={2} className="mb-2">
+          Edit volunteer opportunity
+        </Heading>
         <CreateVolunteerView isEditMode data={volunteer} />
       </div>
     </>

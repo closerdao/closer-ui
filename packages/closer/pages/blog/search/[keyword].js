@@ -46,7 +46,7 @@ const Search = ({ articles, error, keyword, tags }) => (
         </div>
       </section>
       <section className="mt-8">
-        <h2>{__('search_keyword_related')}</h2>
+        <Heading level={2}>{__('search_keyword_related')}</Heading>
         <p className="tags">
           {tags ? (
             tags.map((tag) => (

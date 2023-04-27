@@ -3,12 +3,7 @@ import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
 
-import {
-  Heading,
-  SubscriptionCards,
-  useAuth,
-  useConfig,
-} from 'closer';
+import { Heading, SubscriptionCards, useAuth, useConfig } from 'closer';
 import { SubscriptionPlan } from 'closer/types/subscriptions';
 import { __ } from 'closer/utils/helpers';
 
@@ -52,7 +47,7 @@ const Subscriptions = () => {
             ♻️ {__('settings_your_subscription_title')}
           </Heading>
 
-          <h2>Coming soon!</h2>
+          <Heading level={2}>Coming soon!</Heading>
         </div>
       </>
     );

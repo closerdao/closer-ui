@@ -17,7 +17,9 @@ const Signup = () => (
       <Heading className="text-center mb-6 text-4xl">
         {__('signup_title')}
       </Heading>
-      <h2 className="text-center mb-6">{__('signup_sub_title')}</h2>
+      <Heading level={2} className="text-center mb-6">
+        {__('signup_sub_title')}
+      </Heading>
       {/* <p className="text-center mb-8 text-sm">{__('signup_body')}</p> */}
       {process.env.NEXT_PUBLIC_REGISTRATION_MODE === 'curated' ? (
         <ApplicationForm />
