@@ -1,9 +1,19 @@
-import daysjs from 'dayjs';
-import PropTypes from 'prop-types';
+import { FC } from 'react';
 
+import daysjs from 'dayjs';
+
+import { CloserCurrencies } from '../types';
 import { __, formatCurrency } from '../utils/helpers';
 
-const BookingStepsInfo = ({
+interface Props {
+  startDate: string;
+  endDate: string;
+  totalGuests: string;
+  savedCurrency?: CloserCurrencies;
+  backToDates: () => void;
+}
+
+const BookingStepsInfo: FC<Props> = ({
   startDate,
   endDate,
   totalGuests,
@@ -37,13 +47,5 @@ const BookingStepsInfo = ({
     </div>
   </div>
 );
-
-BookingStepsInfo.propTypes = {
-  startDate: PropTypes.string,
-  endDate: PropTypes.string,
-  totalGuests: PropTypes.number,
-  savedCurrency: PropTypes.object,
-  backToDates: PropTypes.func,
-};
 
 export default BookingStepsInfo;

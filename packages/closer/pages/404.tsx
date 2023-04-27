@@ -3,9 +3,11 @@ import Link from 'next/link';
 
 import React from 'react';
 
+import { NextPage } from 'next';
+
 import { __ } from '../utils/helpers';
 
-const PageNotFound = ({ error }) => (
+const PageNotFound: NextPage<{ error?: string }> = ({ error }) => (
   <>
     <Head>
       <title>{__('404_title')}</title>

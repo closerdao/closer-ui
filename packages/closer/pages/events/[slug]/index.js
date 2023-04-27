@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import EventAttendees from '../../../components/EventAttendees';
 import EventDescription from '../../../components/EventDescription';
@@ -45,13 +45,13 @@ const Event = ({ event, error }) => {
   const isThisYear = dayjs().isSame(start, 'year');
   const dateFormat = isThisYear ? 'MMMM Do HH:mm' : 'YYYY MMMM Do HH:mm';
   const myTickets = platform.ticket.find(myTicketFilter);
-  const ticketsCount = event.ticketOptions
-    ? (platform.ticket.findCount(allTicketFilter) || event.attendees.length) -
-      event.attendees.length
-    : event.attendees && event.attendees.length;
+  const ticketsCount = event?.ticketOptions
+    ? (platform.ticket.findCount(allTicketFilter) || event?.attendees?.length) -
+      event?.attendees?.length
+    : event?.attendees && event.attendees.length;
 
   const loadData = async () => {
-    if (event.attendees && event.attendees.length > 0) {
+    if (event?.attendees && event.attendees.length > 0) {
       const params = { where: { _id: { $in: event.attendees } } };
       await Promise.all([
         // Load attendees list
@@ -190,13 +190,16 @@ const Event = ({ event, error }) => {
                           See ticket
                         </Link>
                       ) : (
-                        start &&
-                        start.isAfter(dayjs()) &&
+                        end &&
+                        end.isAfter(dayjs()) &&
                         (event.stripePub ||
                           process.env.NEXT_PUBLIC_STRIPE_PUB_KEY) && (
                           <Link
-                            as={`/events/${event.slug}/checkout`}
-                            href="/events/[slug]/checkout"
+                            href={`/bookings/create/dates/?eventId=${
+                              event._id
+                            }&start=${start.format(
+                              'YYYY-MM-DD',
+                            )}&end=${end.format('YYYY-MM-DD')}`}
                             className="btn-primary mr-2"
                           >
                             Buy ticket
@@ -379,12 +382,15 @@ const Event = ({ event, error }) => {
     </>
   );
 };
-Event.getInitialProps = async ({ query }) => {
+Event.getInitialProps = async ({ req, query }) => {
   try {
     const {
       data: { results: event },
-    } = await api.get(`/event/${query.slug}`);
-    console.log('event', event);
+    } = await api.get(`/event/${query.slug}`, {
+      headers: req?.cookies?.access_token && {
+        Authorization: `Bearer ${req?.cookies?.access_token}`
+      }
+    });
     return { event };
   } catch (err) {
     console.log('Error', err.message);

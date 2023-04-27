@@ -1,3 +1,5 @@
+import { CloserCurrencies } from './types/currency';
+
 export const blockchainConfig = {
   BLOCKCHAIN_NETWORK_ID: 44787,
   BLOCKCHAIN_NAME: 'CELO ALFAJORES',
@@ -10,8 +12,8 @@ export const blockchainConfig = {
   },
   BLOCKCHAIN_DAO_TOKEN: {
     address: '0xA1885AC1A36C645651CE267ac15E8d33FC34446e',
-    name: 'TDF',
-    symbol: 'TDF',
+    name: CloserCurrencies.TDF,
+    symbol: CloserCurrencies.TDF,
     decimals: 18,
   },
   BLOCKCHAIN_CROWDSALE_CONTRACT_ADDRESS:

@@ -37,7 +37,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
   async function loadUserFromCookies() {
     try {
-      const token = Cookies.get(config?.COOKIE_TOKEN);
+      const token = Cookies.get('access_token');
       if (token) {
         api.defaults.headers.Authorization = `Bearer ${token}`;
         const {
@@ -85,7 +85,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const setAuthentification = async (user: User, token: string) => {
     if (token) {
       api.defaults.headers.Authorization = `Bearer ${token}`;
-      Cookies.set(config.COOKIE_TOKEN, token, {
+      Cookies.set('access_token', token, {
         expires: 60,
         sameSite: 'strict',
         secure: true,
@@ -156,7 +156,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   };
 
   const logout = () => {
-    Cookies.remove(config?.COOKIE_TOKEN);
+    Cookies.remove('access_token');
     setUser(null);
     delete api.defaults.headers.Authorization;
     router.push('/');

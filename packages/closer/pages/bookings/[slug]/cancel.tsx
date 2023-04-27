@@ -1,18 +1,27 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import CancelBooking from '../../../components/CancelBooking';
 import CancelCompleted from '../../../components/CancelCompleted';
 
+import { ParsedUrlQuery } from 'querystring';
+
 import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
+import { BaseBookingParams, Booking } from '../../../types';
 import api from '../../../utils/api';
+import { parseMessageFromError } from '../../../utils/common';
 import { __, calculateRefundTotal } from '../../../utils/helpers';
 
-const BookingCancelPage = ({ booking, error }) => {
+interface Props extends BaseBookingParams {
+  booking: Booking;
+  error?: string;
+}
+
+const BookingCancelPage = ({ booking, error }: Props) => {
   const router = useRouter();
   const bookingId = router.query.slug;
   const bookingPrice = booking?.total || {
@@ -25,6 +34,7 @@ const BookingCancelPage = ({ booking, error }) => {
   const [isPolicyLoading, setPolicyLoading] = useState(false);
   const [isCancelCompleted, setCancelCompleted] = useState(false);
   const refundTotal = calculateRefundTotal({
+    bookingStatus: booking.status,
     initialValue: bookingPrice.val,
     policy,
     startDate: booking.start,
@@ -36,8 +46,12 @@ const BookingCancelPage = ({ booking, error }) => {
         setPolicyLoading(true);
         const {
           data: { results: loadPolicy },
-        } = await api.get('/bookings/cancelation-policy');
-        setPolicy(loadPolicy);
+        } = await api.get('/config/booking');
+
+        const policy = loadPolicy.value.cancellationPolicy;
+
+        console.log('policy=', policy);
+        setPolicy(policy);
       } catch (error) {
         console.log(error);
       } finally {
@@ -80,16 +94,19 @@ const BookingCancelPage = ({ booking, error }) => {
   );
 };
 
-BookingCancelPage.getInitialProps = async ({ query }) => {
+BookingCancelPage.getInitialProps = async ({
+  query,
+}: {
+  query: ParsedUrlQuery;
+}) => {
   try {
     const {
       data: { results: booking },
     } = await api.get(`/booking/${query.slug}`);
     return { booking };
   } catch (err) {
-    console.error('Error', err.message);
     return {
-      error: err.message,
+      error: parseMessageFromError(err),
     };
   }
 };

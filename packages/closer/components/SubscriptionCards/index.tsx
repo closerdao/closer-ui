@@ -1,5 +1,4 @@
-import { __ } from 'closer/utils/helpers';
-import dayjs from 'dayjs';
+import { __ } from '../../utils/helpers';
 
 import { SubscriptionPlan, Subscriptions } from '../../types/subscriptions';
 import Button from '../ui/Button';

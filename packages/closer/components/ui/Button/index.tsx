@@ -30,10 +30,10 @@ const Button = ({
         border-2 flex justify-center w-full text-lg rounded-full uppercase tracking-wide p-2  
         ${
           type === 'primary' && isEnabled
-            ? 'bg-primary text-white border-transparent'
+            ? 'bg-accent text-white border-transparent'
             : ''
         }
-        ${type === 'secondary' ? 'bg-white  text-primary border-primary ' : ''}
+        ${type === 'secondary' ? 'bg-white  text-accent border-accent ' : ''}
         ${!isEnabled ? 'bg-neutral border-2 text-light border-light' : ''}
         ${className || ''}
         `}

@@ -1,8 +1,7 @@
 import Head from 'next/head';
 
 import {
-  CreateVolunteerView,
-  Page401,
+  CreateVolunteerView, // Page401,
   VolunteerOpportunity,
   api,
   useAuth,
@@ -15,7 +14,7 @@ const EditVolunteerOportunity: NextPage<{
   const { user } = useAuth();
   const hasStewardRole = user?.roles?.includes('steward');
 
-  if (!hasStewardRole) return <Page401 />;
+  // if (!hasStewardRole) return <Page401 />;
   return (
     <>
       <Head>
