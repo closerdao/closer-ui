@@ -1,8 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import React from 'react';
-
 import EditModel from '../../../components/EditModel';
 
 import models from '../../../models';
@@ -23,12 +21,12 @@ const EditListing = ({ listing }) => {
   return (
     <>
       <Head>
-        <title>
-          {__('listings_slug_edit_title')} {listing.name}
-        </title>
+        <title>{`${listing.name} - ${__('listings_slug_edit_title')}`}</title>
       </Head>
       <div className="w-full">
-        <h2 className="mb-2">Edit Listing <i>{listing.name}</i></h2>
+        <h2 className="mb-2">
+          Edit Listing <i>{listing.name}</i>
+        </h2>
         <EditModel
           id={listing._id}
           endpoint={'/listing'}

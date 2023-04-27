@@ -23,9 +23,8 @@ const EditChannel = ({ channel }) => {
   return (
     <>
       <Head>
-        <title>
-          {__('edit_channel_title')} {channel.name}
-        </title>
+        <title>{`${__('edit_channel_title')} - ${channel.name}`}</title>
+        
       </Head>
       <div className="main-content w-full">
         <EditModel
