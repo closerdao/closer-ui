@@ -113,7 +113,7 @@ const Input = React.memo(
     return (
       <div className={`flex flex-col gap-4 relative ${className}`}>
         {label && (
-          <label className="font-medium text-complimentary-light">
+          <label className="font-medium text-complimentary-light" id={label}>
             {label}
           </label>
         )}
@@ -147,6 +147,7 @@ const Input = React.memo(
               : undefined
           }
           disabled={isDisabled}
+          aria-labelledby={label}
         />
         {isEditing
           ? isValidValue(localValue) && (

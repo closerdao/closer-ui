@@ -25,7 +25,7 @@ const SHARED_ACCOMODATION_PREFERENCES = [
 
 const SKILLS_EXAMPLES = ['javascript', 'woodworking', 'farming'];
 
-const MemberPage: FC = () => {
+const SettingsPage: FC = () => {
   const { user, isAuthenticated, refetchUser } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const { platform } = usePlatform() as any;
@@ -64,7 +64,7 @@ const MemberPage: FC = () => {
     };
 
   if (!isAuthenticated || !user) {
-    return <PageNotFound error="Page does not exist" />;
+    return <PageNotFound error="Sorry, this page does not exist" />;
   }
 
   return (
@@ -97,7 +97,7 @@ const MemberPage: FC = () => {
           isDisabled
         />
         <div className="md:w-72 relative mt-8">
-          <label className="font-medium text-complimentary-light">
+          <label className="font-medium text-complimentary-light" htmlFor="">
             Profile Picture
           </label>
           <UploadPhoto
@@ -164,4 +164,4 @@ const MemberPage: FC = () => {
   );
 };
 
-export default MemberPage;
+export default SettingsPage;

@@ -30,3 +30,14 @@ export const renderWithProviders = (ui: React.ReactElement, options = {}) => {
   }
   return rtlRender(ui, { wrapper: Wrapper, ...options });
 };
+
+export const renderWithAuth = (ui: React.ReactElement, options = {}) => {
+  function Wrapper({ children }: { children?: React.ReactNode }) {
+    return (
+      <ConfigProvider config={{ ...config, ...blockchainConfig }}>
+        <AuthProvider>{children}</AuthProvider>
+      </ConfigProvider>
+    );
+  }
+  return rtlRender(ui, { wrapper: Wrapper, ...options });
+};
