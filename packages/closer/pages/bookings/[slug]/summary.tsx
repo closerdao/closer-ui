@@ -22,8 +22,8 @@ import { parseMessageFromError } from '../../../utils/common';
 import {
   __,
   getAccommodationCost,
-  getTotalToPayInFiat,
 } from '../../../utils/helpers';
+import { NextApiRequest } from 'next';
 
 interface Props extends BaseBookingParams {
   listing: Listing;
@@ -36,6 +36,7 @@ interface Props extends BaseBookingParams {
 const Summary = ({ booking, listing, settings, event, error }: Props) => {
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
+  const [handleNextError, setHandleNextError] = useState<string | null>(null);
   const [hasComplied, setCompliance] = useState(false);
   const [isMember, setIsMember] = useState(false);
   const onComply = (isComplete: boolean) => setCompliance(isComplete);
@@ -51,7 +52,8 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
     volunteerId,
     eventId,
     ticketOption,
-    eventPrice,
+    eventFiat,
+    total,
   } = booking || {};
 
   const accomodationCost = getAccommodationCost(
@@ -61,19 +63,11 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
     volunteerId,
   );
 
-  const totalToPayInFiat = getTotalToPayInFiat(
-    useTokens,
-    utilityFiat,
-    eventPrice,
-    rentalFiat,
-    volunteerId,
-  );
-
   useEffect(() => {
-    if (booking.status === 'pending' || booking.status === 'paid') {
+    if (booking?.status === 'pending' || booking?.status === 'paid') {
       router.push(`/bookings/${booking._id}`);
     }
-  }, [booking.status]);
+  }, [booking?.status]);
 
   useEffect(() => {
     if (user) {
@@ -82,14 +76,23 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
   }, [user]);
 
   const handleNext = async () => {
-    const res = await api.post(`/bookings/${booking._id}/complete`, {});
-    const status = res.data.results.status;
-
-    if (status === 'confirmed') {
-      router.push(`/bookings/${booking._id}/checkout`);
+    setHandleNextError(null);
+    if (booking.status === 'confirmed') {
+      return router.push(`/bookings/${booking._id}/checkout`);;
     }
-    if (status === 'pending') {
-      router.push(`/bookings/${booking._id}/confirmation`);
+    try {
+      const res = await api.post(`/bookings/${booking._id}/complete`, {});
+      const status = res.data.results.status;
+
+      if (status === 'confirmed') {
+        router.push(`/bookings/${booking._id}/checkout`);
+      } else if (status === 'pending') {
+        router.push(`/bookings/${booking._id}/confirmation`);
+      } else {
+        console.log(`Could not redirect: ${status}`)
+      }
+    } catch (err: any) {
+      setHandleNextError(err.response?.data?.error || err.message);
     }
   };
 
@@ -109,10 +112,6 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
     return <PageNotAllowed />;
   }
 
-  if (!listing || !booking) {
-    return null;
-  }
-
   return (
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
@@ -122,12 +121,13 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
           <span>{__('bookings_summary_step_title')}</span>
         </h1>
         <ProgressBar steps={BOOKING_STEPS} />
-        <div className="mt-16 flex flex-col gap-16">
+        { booking && <div className="mt-16 flex flex-col gap-16">
           <SummaryDates
+            isDayTicket={ booking?.isDayTicket }
             totalGuests={adults}
             startDate={start}
             endDate={end}
-            listingName={listing.name}
+            listingName={listing?.name}
             volunteerId={volunteerId}
             eventName={event?.name}
             ticketOption={ticketOption?.name}
@@ -136,15 +136,15 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
             utilityFiat={utilityFiat}
             useTokens={useTokens}
             accomodationCost={accomodationCost}
-            totalToken={rentalToken.val}
-            totalFiat={totalToPayInFiat}
-            eventCost={eventPrice?.val}
+            totalToken={rentalToken?.val}
+            totalFiat={total}
+            eventCost={eventFiat?.val}
             eventDefaultCost={
               booking.ticketOption?.price
                 ? booking.ticketOption.price * booking.adults
                 : undefined
             }
-            accomodationDefaultCost={listing.fiatPrice.val * booking.adults}
+            accomodationDefaultCost={listing?.fiatPrice?.val * booking.adults}
             volunteerId={volunteerId}
           />
 
@@ -175,36 +175,46 @@ const Summary = ({ booking, listing, settings, event, error }: Props) => {
               {__('buttons_booking_request')}
             </Button>
           )}
-        </div>
+        </div> }
       </div>
     </>
   );
 };
 
-Summary.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
+Summary.getInitialProps = async ({ req, query }: { req: NextApiRequest, query: ParsedUrlQuery }) => {
   try {
     const {
       data: { results: booking },
-    } = await api.get(`/booking/${query.slug}`);
+    } = await api.get(`/booking/${query.slug}`, {
+      headers: req?.cookies?.access_token && {
+        Authorization: `Bearer ${req?.cookies?.access_token}`
+      }
+    });
     const [
-      {
-        data: { results: listing },
-      },
       {
         data: { results: settings },
       },
-      {
-        data: { results: event },
-      },
+      optionalEvent,
+      optionalListing
     ] = await Promise.all([
-      api.get(`/listing/${booking.listing}`),
-      api.get('/bookings/settings'),
-      api.get(`/event/${booking.eventId}`),
+      api.get('/config/booking'),
+      booking.eventId && api.get(`/event/${booking.eventId}`, {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`
+        }
+      }),
+      booking.listing && api.get(`/listing/${booking.listing}`, {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`
+        }
+      })
     ]);
+    const event = optionalEvent?.data?.results;
+    const listing = optionalListing?.data?.results;
 
     return { booking, listing, settings, event, error: null };
   } catch (err) {
-    console.log(parseMessageFromError(err));
+    console.log('Error', err);
     return {
       error: parseMessageFromError(err),
       booking: null,

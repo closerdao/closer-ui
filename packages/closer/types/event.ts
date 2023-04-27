@@ -45,6 +45,7 @@ export type TicketOption = {
   limit: number;
   _id: string;
   available: number;
+  isDayTicket: boolean
 };
 
 export type Field = {

@@ -90,29 +90,55 @@ const DatesSelector: NextPage<Props> = ({
   const [kids, setKids] = useState<number>(Number(savedKids) || 0);
   const [infants, setInfants] = useState<number>(Number(savedInfants) || 0);
   const [pets, setPets] = useState<number>(Number(savedPets) || 0);
+  const [handleNextError, setHandleNextError] = useState<string | null>(null);
   const [currency, selectCurrency] = useState<CloserCurrencies>(
     (savedCurrency as CloserCurrencies) || DEFAULT_CURRENCY,
   );
-  const [selectedTicketName, selectTicketName] = useState<string>('');
+  const [selectedTicketOption, selectTicketOption] = useState<any>(null);
   const [discountCode, setDiscountCode] = useState('');
 
-  const handleNext = () => {
-    const data = {
-      start: start.format('YYYY-MM-DD'),
-      end: end.format('YYYY-MM-DD'),
-      adults: String(adults),
-      kids: String(kids),
-      infants: String(infants),
-      pets: String(pets),
-      currency,
-      ...(eventId && { eventId: eventId as string }),
-      ...(volunteerId && { volunteerId: volunteerId as string }),
-      ticketOption: selectedTicketName,
-      discountCode: discountCode,
-      ...(selectedTicketName && { ticketName: selectedTicketName }),
-    };
-    const urlParams = new URLSearchParams(data);
-    router.push(`/bookings/create/accomodation?${urlParams}`);
+  const handleNext = async () => {
+    setHandleNextError(null);
+    try {
+      const data = {
+        start: start.format('YYYY-MM-DD'),
+        end: end.format('YYYY-MM-DD'),
+        adults: String(adults),
+        kids: String(kids),
+        infants: String(infants),
+        pets: String(pets),
+        currency,
+        ...(eventId && { eventId: eventId as string }),
+        ...(volunteerId && { volunteerId: volunteerId as string }),
+        ticketOption: selectedTicketOption?.name,
+        discountCode: discountCode
+      };
+
+      if (data.start === data.end || selectedTicketOption?.isDayTicket) {
+        // Single day ticket - no accomodation needed.
+        const {
+          data: { results: newBooking },
+        } = await api.post('/bookings/request', {
+          // useTokens,
+          start,
+          end,
+          adults,
+          infants,
+          pets,
+          eventId: data.eventId,
+          ticketOption: data.ticketOption,
+          discountCode: data.discountCode,
+          isDayTicket: true,
+          children: kids,
+        });
+        router.push(`/bookings/${newBooking._id}/questions`);
+      } else {
+        const urlParams = new URLSearchParams(data);
+        router.push(`/bookings/create/accomodation?${urlParams}`);
+      }
+    } catch (err: any) {
+      setHandleNextError(err.response?.data?.error || err.message);
+    }
   };
 
   const goBack = () => {
@@ -152,19 +178,17 @@ const DatesSelector: NextPage<Props> = ({
           )}
 
           {eventId && (
-            <>
-              <TicketOptions
-                items={ticketOptions}
-                selectedTicketName={selectedTicketName}
-                selectTicketName={selectTicketName}
-                volunteer={volunteer}
-                discountCode={discountCode}
-                setDiscountCode={setDiscountCode}
-              />
-            </>
+            <TicketOptions
+              items={ticketOptions}
+              selectedTicketOption={selectedTicketOption}
+              selectTicketOption={selectTicketOption}
+              volunteer={volunteer}
+              discountCode={discountCode}
+              setDiscountCode={setDiscountCode}
+            />
           )}
 
-          <BookingDates
+          { selectedTicketOption?.isDayTicket !== true && <BookingDates
             conditions={settings?.conditions}
             startDate={start}
             endDate={end}
@@ -172,7 +196,7 @@ const DatesSelector: NextPage<Props> = ({
             setEndDate={setEndDate}
             isMember={isMember}
             eventId={eventId as string}
-          />
+          /> }
           <BookingGuests
             adults={adults}
             kids={kids}
@@ -183,10 +207,13 @@ const DatesSelector: NextPage<Props> = ({
             setInfants={setInfants}
             setPets={setPets}
           />
+          { handleNextError &&
+            <div className="error-box">{ handleNextError }</div>
+          }
           <Button
             onClick={handleNext}
             isEnabled={
-              (eventId && selectedTicketName) ||
+              (eventId && selectedTicketOption) ||
               volunteerId ||
               (!eventId && !volunteerId)
                 ? true
@@ -205,27 +232,27 @@ DatesSelector.getInitialProps = async ({ query }) => {
   try {
     const { eventId, volunteerId } = query;
     const {
-      data: { results },
-    } = await api.get('/bookings/settings');
+      data: { results: { value: settings } },
+    } = await api.get('/config/booking');
     if (eventId) {
       const ticketsAvailable = await api.get(
         `/bookings/event/${eventId}/availability`,
       );
 
       return {
-        settings: results as BookingSettings,
+        settings: settings as BookingSettings,
         ticketOptions: ticketsAvailable.data.ticketOptions,
       };
     }
     if (volunteerId) {
       const volunteer = await api.get(`/volunteer/${volunteerId}`);
       return {
-        settings: results as BookingSettings,
+        settings: settings as BookingSettings,
         volunteer: volunteer.data.results,
       };
     }
     return {
-      settings: results as BookingSettings,
+      settings: settings as BookingSettings,
     };
   } catch (err) {
     return {

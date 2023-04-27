@@ -10,8 +10,10 @@ import DiscountCode from '../DiscountCode';
 
 interface Props {
   items?: TicketOption[];
-  selectTicketName: (name: string) => void;
-  selectedTicketName?: string;
+  selectTicketOption: (ticket: object) => void;
+  // selectedTicketOption?: object;
+  selectedTicketOption?: any;
+  disclaimer?: string;
   volunteer?: VolunteerOpportunity;
   discountCode?: string;
   setDiscountCode: Dispatch<SetStateAction<string>>;
@@ -21,45 +23,58 @@ const Ticket = ({
   name,
   price,
   currency,
+  disclaimer,
   available,
-  selectTicketName,
-  selectedTicketName,
+  selectTicketOption,
+  selectedTicketOption,
   isVolunteer,
+  isDayTicket
 }: {
   name: string;
   price?: number;
-  currency: string;
+  currency?: string;
+  disclaimer?: string;
   available: number;
-  selectTicketName: (name: string) => void;
-  selectedTicketName?: string;
+  selectTicketOption: (ticket: object) => void;
+  selectedTicketOption?: TicketOption;
   isVolunteer?: boolean;
+  isDayTicket?: boolean;
 }) => {
   return (
     <button
       className={`border-2 flex flex-col justify-center rounded-md shadow-lg mr-3 mb-3 p-4 hover:border-accent ${
-        name === selectedTicketName ? 'border-accent' : 'border-gray-100'
+        name === selectedTicketOption?.name ? 'border-accent' : 'border-gray-100'
       } ${available > 0 ? 'available' : 'unavailable'}`}
-      onClick={() => selectTicketName(name)}
+      onClick={() => selectTicketOption({ name, isDayTicket, price, currency, disclaimer })}
       disabled={available === 0}
     >
-      <h4>{name.split('_').join(' ')}</h4>
+      <h4 title={ disclaimer }>{name.split('_').join(' ')}</h4>
+      { isDayTicket ?
+        <p className="text-gray-500 italic">Day ticket.</p>:
+        <p className="text-gray-500 italic">Overnight ticket.</p>
+      }
       <p className="price text-gray-500">
         {isVolunteer ? 'Volunteering' : priceFormat(price, currency)}
       </p>
       <p className="availability text-xs uppercase text-accent">
         {available > 0 ? `${available} available` : 'not available'}
       </p>
+      { name === selectedTicketOption?.name ?
+        <p>{ disclaimer }</p>:
+        ''
+      }
     </button>
   );
 };
 
 const TicketOptions: FC<Props> = ({
   items,
-  selectTicketName,
-  selectedTicketName,
+  selectTicketOption,
+  selectedTicketOption,
   volunteer,
   discountCode,
   setDiscountCode,
+  disclaimer
 }) => {
   return (
     <div>
@@ -81,19 +96,21 @@ const TicketOptions: FC<Props> = ({
             isVolunteer={true}
             currency={CloserCurrencies.EUR}
             available={20}
-            selectTicketName={selectTicketName}
-            selectedTicketName={selectedTicketName}
+            selectTicketOption={selectTicketOption}
+            selectedTicketOption={selectedTicketOption}
           />
         ) : (
-          items?.map(({ name, price, currency, available }) => (
+          items?.map(({ name, price, currency, disclaimer, available, isDayTicket }) => (
             <Ticket
               key={name}
               name={name}
               price={price}
+              disclaimer={disclaimer}
               currency={currency}
               available={available}
-              selectTicketName={selectTicketName}
-              selectedTicketName={selectedTicketName}
+              isDayTicket={isDayTicket}
+              selectTicketOption={selectTicketOption}
+              selectedTicketOption={selectedTicketOption}
             />
           ))
         )}

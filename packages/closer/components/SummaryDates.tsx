@@ -3,6 +3,7 @@ import dayjs from 'dayjs';
 import { __ } from '../utils/helpers';
 
 interface SummaryDatesProps {
+  isDayTicket: boolean;
   totalGuests: number;
   startDate: string;
   endDate: string;
@@ -13,6 +14,7 @@ interface SummaryDatesProps {
 }
 
 const SummaryDates = ({
+  isDayTicket,
   totalGuests,
   startDate,
   endDate,
@@ -50,17 +52,17 @@ const SummaryDates = ({
       <p className="font-bold">{totalGuests}</p>
     </div>
     <div className="flex justify-between items-start my-3">
-      <p> {__('listings_book_check_in')}</p>
+      <p> { isDayTicket ? __('listings_book_day') : __('listings_book_check_in')}</p>
       <p className="font-bold">{dayjs(startDate).format('DD / MM / YY')}</p>
     </div>
-    <div className="flex justify-between items-start my-3">
+    { !isDayTicket && <div className="flex justify-between items-start my-3">
       <p> {__('listings_book_check_out')}</p>
       <p className="font-bold">{dayjs(endDate).format('DD / MM / YY')}</p>
-    </div>
-    <div className="flex justify-between items-start mt-3">
+    </div> }
+    { listingName && <div className="flex justify-between items-start mt-3">
       <p>{__('bookings_summary_step_dates_accomodation_type')}</p>
       <p className="font-bold uppercase text-right">{listingName}</p>
-    </div>
+    </div> }
 
     {volunteerId && (
       <div className="flex justify-between items-start mt-3">

@@ -54,11 +54,7 @@ const Booking = ({ booking, error }) => {
           </p>
           <p>
             {__('bookings_total')}
-            <b className={booking.volunteer ? 'line-through' : ''}>
-              {' '}
-              {booking.total ? priceFormat(booking.total.val) : 0}
-            </b>
-            <b> {booking.volunteer && priceFormat(0, booking.price.cur)}</b>
+            <b>{booking.total ? priceFormat(booking.total?.val, booking.total?.cur) : 0}</b>
           </p>
           <p>
             {__('bookings_id')} <b>{booking._id}</b>

@@ -7,6 +7,7 @@ import BookingWallet from '../../../components/BookingWallet';
 import Checkbox from '../../../components/Checkbox';
 import CheckoutPayment from '../../../components/CheckoutPayment';
 import CheckoutTotal from '../../../components/CheckoutTotal';
+import Button from '../../../components/ui/Button';
 import PageError from '../../../components/PageError';
 import ProgressBar from '../../../components/ui/ProgressBar';
 import Row from '../../../components/ui/Row';
@@ -54,15 +55,7 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
     ? rentalToken.val
     : volunteerId
     ? 0
-    : rentalFiat.val;
-
-  const totalToPayInFiat = useTokens
-    ? utilityFiat?.val
-    : eventPrice?.val
-    ? rentalFiat?.val + utilityFiat?.val + eventPrice?.val
-    : volunteerId
-    ? utilityFiat?.val
-    : rentalFiat?.val + utilityFiat?.val;
+    : rentalFiat?.val;
 
   const { balanceAvailable, bookedDates } = useContext(WalletState);
 
@@ -89,6 +82,9 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
   const goBack = () => {
     router.push(`/bookings/${booking._id}/summary`);
   };
+  const handleNext = () => {
+    router.push(`/bookings/${booking._id}/confirmation`);
+  };
 
   const { platform }: any = usePlatform();
   // TODO: add types to platform
@@ -104,10 +100,6 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
 
   if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
     return <PageNotFound />;
-  }
-
-  if (!booking || !user || !listing || !settings) {
-    return null;
   }
 
   if (error) {
@@ -183,21 +175,26 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
               {__('bookings_summary_step_utility_description')}
             </p>
           </div>
-          <CheckoutTotal totalToPayInFiat={totalToPayInFiat} />
-          <CheckoutPayment
-            bookingId={booking._id}
-            buttonDisabled={
-              useTokens && (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)
-            }
-            useTokens={useTokens}
-            totalToPayInFiat={totalToPayInFiat}
-            dailyTokenValue={dailyRentalToken.val}
-            startDate={start}
-            endDate={end}
-            totalNights={duration}
-            user={user}
-            settings={settings}
-          />
+          <CheckoutTotal total={booking.total} />
+          { booking.total.val > 0 ?
+            <CheckoutPayment
+              bookingId={booking._id}
+              buttonDisabled={
+                useTokens && (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)
+              }
+              useTokens={useTokens}
+              totalToPayInFiat={booking.total as any}
+              dailyTokenValue={dailyRentalToken?.val}
+              startDate={start}
+              endDate={end}
+              totalNights={duration}
+              user={user}
+              settings={settings}
+            />:
+            <Button className="booking-btn" onClick={handleNext}>
+              {__('buttons_booking_request')}
+            </Button>
+          }
         </div>
       </div>
     </>
@@ -212,21 +209,21 @@ Checkout.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
 
     const [
       {
-        data: { results: listing },
-      },
-      {
         data: { results: settings },
       },
-      {
-        data: { results: event },
-      },
+      optionalEvent,
+      optionalListing
     ] = await Promise.all([
-      api.get(`/listing/${booking.listing}`),
-      api.get('/bookings/settings'),
-      api.get(`/event/${booking.eventId}`),
+      api.get('/config/booking'),
+      booking.eventId && api.get(`/event/${booking.eventId}`),
+      booking.listing && api.get(`/listing/${booking.listing}`)
     ]);
+    const event = optionalEvent?.data?.results;
+    const listing = optionalListing?.data?.results;
+
     return { booking, listing, settings, event, error: null };
   } catch (err) {
+    console.log(err);
     return {
       error: parseMessageFromError(err),
       booking: null,
