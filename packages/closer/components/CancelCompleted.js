@@ -2,7 +2,6 @@ import Link from 'next/link';
 
 import { __ } from '../utils/helpers';
 import Heading from './ui/Heading';
-import Heading from './ui/Heading';
 
 const CancelCompleted = () => {
   return (

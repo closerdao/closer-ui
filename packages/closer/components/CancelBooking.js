@@ -1,7 +1,6 @@
 import { useRouter } from 'next/router';
 
 import { useState } from 'react';
-import Heading from './ui/Heading';
 
 import api from '../utils/api';
 import { __, priceFormat } from '../utils/helpers';
