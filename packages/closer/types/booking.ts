@@ -16,6 +16,8 @@ export interface BaseBookingParams {
   currency?: CloserCurrencies;
   ticketName?: string;
   discountCode?: string;
+  ticketOption?: TicketOption
+  useTokens?: boolean | undefined;
 }
 
 export type Listing = {
@@ -69,10 +71,11 @@ export type Booking = {
   volunteerId: string;
   eventPrice?: Price<CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH>;
   eventDiscount?: Discount;
-  
-  total?: Price<
+
+  total: Price<
     CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH
   >;
-  isDayTicket: boolean
-  
+  isDayTicket: boolean;
+  eventFiat: Price<CloserCurrencies.EUR>;
+
 };
