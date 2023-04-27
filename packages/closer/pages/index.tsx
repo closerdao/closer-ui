@@ -8,7 +8,7 @@ import React from 'react';
 import { NextPage } from 'next';
 
 import { useConfig } from '../hooks/useConfig';
-import { useAuth } from 'closer';
+import { useAuth } from '../contexts/auth';
 
 const Index: NextPage = () => {
   const { DEFAULT_TITLE, PLATFORM_NAME } = useConfig() || {};

@@ -1,7 +1,6 @@
 import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
-import React from 'react';
 
 import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';

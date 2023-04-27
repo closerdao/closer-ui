@@ -1,5 +1,6 @@
 export interface SubscriptionPlan {
     title: string;
+    available: boolean;
     emoji: string;
     description: string;
     priceId: string;
@@ -9,7 +10,7 @@ export interface SubscriptionPlan {
     perks: string[];
     billingPeriod: string;
   }
-  
+
   export interface Subscriptions {
     config: {
       currency: string;
@@ -17,7 +18,7 @@ export interface SubscriptionPlan {
     };
     plans: SubscriptionPlan[];
   }
-  
+
   export interface SelectedPlan {
     title: string;
     monthlyCredits: number;

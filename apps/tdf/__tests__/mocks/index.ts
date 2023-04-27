@@ -137,3 +137,13 @@ export const listing = {
   managedBy: [],
   _id: '609d72f9a460e712c32a1c4b',
 };
+
+export const questions = [
+  { type: 'text', name: 'What brings you to Closer?', required: true },
+  { type: 'text', name: 'Do you have any dietary needs?' },
+  {
+    type: 'select',
+    name: 'How do you like your mattress?',
+    options: ['soft', 'medium', 'hard'],
+  },
+];

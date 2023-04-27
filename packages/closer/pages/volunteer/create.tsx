@@ -1,6 +1,6 @@
 import Head from 'next/head';
 
-import { CreateVolunteerView } from 'closer';
+import CreateVolunteerView from '../../components/CreateVolunteerView';
 
 import Page401 from '../401';
 import { useAuth } from '../../contexts/auth';

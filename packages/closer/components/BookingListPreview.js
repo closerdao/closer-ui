@@ -1,12 +1,10 @@
 import Link from 'next/link';
 
-import React from 'react';
-
 import dayjs from 'dayjs';
 
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
-import { __, priceFormat } from '../utils/helpers';
+import { __, getBookingType, priceFormat } from '../utils/helpers';
 
 const getStatusText = (status, updated) => {
   if (status === 'cancelled') {
@@ -16,7 +14,10 @@ const getStatusText = (status, updated) => {
     rejected: __('booking_status_rejected'),
     open: __('booking_status_open'),
     pending: __('booking_status_pending'),
+
     confirmed: __('booking_status_confirmed'),
+    paid: __('booking_status_paid'),
+
     'checked-in': __('booking_status_checked_in'),
     'checked-out': __('booking_status_checked_out'),
   };
@@ -29,6 +30,7 @@ const statusColor = {
   open: 'text-pending',
   pending: 'text-pending',
   confirmed: 'text-success',
+  paid: 'text-success',
   'checked-in': 'text-success',
   'checked-out': 'text-success',
 };
@@ -47,6 +49,8 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
     rentalToken,
     rentalFiat,
     utilityFiat,
+    eventId,
+    volunteerId,
   } = bookingMapItem.toJS();
   const { user } = useAuth();
   const { platform } = usePlatform();
@@ -54,6 +58,8 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
   const endFormatted = dayjs(end).format('DD/MM/YYYY');
   const createdFormatted = dayjs(created).format('DD/MM/YYYY - HH:mm:A');
   const isNotPaid = status === 'open';
+
+  const bookingType = getBookingType(eventId, volunteerId);
 
   const isBookingCancelable =
     createdBy === user._id &&
@@ -67,7 +73,7 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
   };
 
   return (
-    <div className="max-w-sm bg-white rounded-lg p-4 shadow-xl flex flex-col md:basis-5/12 md:flex-1">
+    <div className="max-w-sm bg-white rounded-lg p-4 shadow-xl flex flex-col md:basis-5/12 md:flex-1 w-full">
       <div className="flex flex-col gap-3">
         <div>
           <p className="card-feature">
@@ -75,6 +81,10 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
             {_id}
           </p>
           <p className="card-feature">{createdFormatted}</p>
+        </div>
+        <div>
+          <p className="card-feature">{__('booking_card_booking_type')}</p>
+          <p>{bookingType.charAt(0).toUpperCase() + bookingType.slice(1)}</p>
         </div>
         <div>
           <p className="card-feature">{__('booking_card_status')}</p>
@@ -127,42 +137,56 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
       </div>
 
       <div className="mt-8 flex flex-col gap-4">
-        {status === 'checked-in' && (
-          (<Link passHref href="">
 
-            <button className="btn w-full uppercase ">
-              {__('booking_card_join_chat_button')}
-            </button>
+        {/* Hide buttons if start date is in the past: */}
+        {new Date(start) > Date.now() && (
+          <>
+            {status === 'checked-in' && (
+              <Link passHref href="">
+                <button className="btn w-full uppercase ">
+                  {__('booking_card_join_chat_button')}
+                </button>
+              </Link>
+            )}
+            {status === 'checked-out' && (
+              <Link passHref href="">
+                <button className="btn w-full uppercase ">
+                  {__('booking_card_feedback_button')}
+                </button>
+              </Link>
+            )}
+            {status === 'open' && (
+              <Link passHref href={`/bookings/${_id}/summary`}>
+                <button className="btn w-full uppercase ">
+                  {__('booking_card_checkout_button')}
+                </button>
+              </Link>
+            )}
+            {status === 'confirmed' && (
+              <Link passHref href={`/bookings/${_id}/checkout`}>
+                <button className="btn w-full uppercase ">
+                  {__('booking_card_checkout_button')}
+                </button>
+              </Link>
+            )}
+            {user && isBookingCancelable && (
+              <Link passHref href={`/bookings/${_id}/cancel`}>
+                <button className="btn w-full uppercase">
+                  {__('booking_cancel_button')}
+                </button>
+              </Link>
+            )}
 
-          </Link>)
+            {status === 'paid' && (
+              <Link passHref href={`/bookings/${_id}/cancel`}>
+                <button className="btn w-full uppercase">
+                  {__('booking_cancel_button')}
+                </button>
+              </Link>
+            )}
+          </>
         )}
-        {status === 'checked-out' && (
-          (<Link passHref href="">
 
-            <button className="btn w-full uppercase ">
-              {__('booking_card_feedback_button')}
-            </button>
-
-          </Link>)
-        )}
-        {status === 'open' && (
-          (<Link passHref href={`/bookings/${_id}/checkout`}>
-
-            <button className="btn w-full uppercase ">
-              {__('booking_card_checkout_button')}
-            </button>
-
-          </Link>)
-        )}
-        {user && isBookingCancelable && (
-          (<Link passHref href={`/bookings/${_id}/cancel`}>
-
-            <button className="btn w-full uppercase">
-              {__('booking_cancel_button')}
-            </button>
-
-          </Link>)
-        )}
         {user &&
           user.roles.includes('space-host') &&
           createdBy !== user._id && (
@@ -184,11 +208,9 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
                 </button>
               )}
               <Link passHref href={`/members/${createdBy}`}>
-
                 <button className="btn w-full uppercase">
                   {__('booking_view_profile')}
                 </button>
-
               </Link>
             </>
           )}

@@ -71,7 +71,7 @@ const SetPasswordScreen = () => {
                   </i>
                 </p>
               )}
-              {tokenContent && !tokenContent.screenname && (
+              {tokenContent && !tokenContent.screenname && router.query.signup_token && (
                 <>
                   <label htmlFor="screenname">
                     {__('login_set_password_registration_name')}

@@ -1,4 +1,4 @@
-import { __ } from 'closer/utils/helpers';
+import { __ } from '../../utils/helpers';
 
 import { SubscriptionPlan, Subscriptions } from '../../types/subscriptions';
 import Button from '../ui/Button';
@@ -62,14 +62,17 @@ const SubscriptionCards = ({
                   )}
                 </div>
                 <Button
-                  isEnabled={userActivePlan?.title !== plan.title}
+                  isEnabled={plan.available !== false}
                   onClick={() => clickHandler(plan.priceId)}
                   infoText={`${
                     plan.price !== 0 ? __('subscriptions_cancel_anytime') : ''
                   }`}
                   className={` ${plan.price === 0 ? 'mb-7' : ''} || ''`}
                 >
-                  {plan.price === 0
+                  {
+                    plan.available === false
+                    ? __('generic_coming_soon')
+                    : plan.price === 0
                     ? __('subscriptions_create_account_button')
                     : userActivePlan?.title === plan.title
                     ? __('subscriptions_active_button')

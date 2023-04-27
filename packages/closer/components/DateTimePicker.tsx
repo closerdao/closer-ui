@@ -1,10 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { ChangeEvent, FC, useEffect, useState } from 'react';
 
 import dayjs from 'dayjs';
 
 const defaultTime = dayjs().add(7, 'days').set('hour', 12).set('minute', 0);
 
-const DateTimePicker = ({
+interface Props {
+  value?: string;
+  minValue?: string;
+  maxValue?: string;
+  onChange: (date: dayjs.Dayjs) => void;
+  showTime?: boolean;
+}
+const DateTimePicker: FC<Props> = ({
   value,
   minValue,
   maxValue = '180',
@@ -17,6 +24,21 @@ const DateTimePicker = ({
     updateTime(value ? dayjs(value) : defaultTime);
   }, [value]);
 
+  const onDateChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const newDate = dayjs(e.target.value, 'YYYY-MM-DD')
+      .set('hour', datetime.get('hour'))
+      .set('minute', datetime.get('minute'));
+    updateTime(newDate);
+    onChange(newDate);
+  };
+
+  const onTimeChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const [hour, minute] = e.target.value.split(':').map((n) => Number(n));
+    const newDate = datetime.set('hour', hour).set('minute', minute);
+    updateTime(newDate);
+    onChange(newDate);
+  };
+
   return (
     <div>
       <div className={`${showTime ? 'flex cols-2' : ''}`}>
@@ -26,13 +48,7 @@ const DateTimePicker = ({
           min={minValue}
           max={maxValue}
           placeholder="01/01/1975"
-          onChange={(e) => {
-            const newDate = dayjs(e.target.value)
-              .set('hour', datetime.get('hour'))
-              .set('minute', datetime.get('minute'));
-            updateTime(newDate);
-            onChange(newDate);
-          }}
+          onChange={onDateChange}
           className="peer invalid:text-primary flex-grow"
         />
         {showTime && (
@@ -40,15 +56,7 @@ const DateTimePicker = ({
             type="time"
             value={datetime.format('HH:mm')}
             placeholder="14:20"
-            onChange={(e) => {
-              const [hour, minute] = e.target.value
-                .split(':')
-                .map((n) => Number(n));
-
-              const newDate = datetime.set('hour', hour).set('minute', minute);
-              updateTime(newDate);
-              onChange(newDate);
-            }}
+            onChange={onTimeChange}
             className="ml-2"
           />
         )}

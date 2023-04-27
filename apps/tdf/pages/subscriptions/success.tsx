@@ -26,7 +26,7 @@ const Success = () => {
 
   useEffect(() => {
     if (user?.subscription && user.subscription.priceId) {
-      router.push('/settings/subscriptions');
+      router.push('/subscriptions');
     }
   }, [user]);
 
@@ -55,7 +55,7 @@ const Success = () => {
   };
 
   const handleViewSubscription = () => {
-    router.push('/settings/subscriptions');
+    router.push('/subscriptions');
   };
 
   if (process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true') {
@@ -65,13 +65,12 @@ const Success = () => {
   return (
     <>
       <Head>
-        <title>
-          {__('subscriptions_success_title')} — {__('subscriptions_title')} —{' '}
-          {PLATFORM_NAME}
-        </title>
+        <title>{`${__('subscriptions_success_title')} - ${__(
+          'subscriptions_title',
+        )} - ${PLATFORM_NAME}`}</title>
       </Head>
 
-      <div className="main-content w-full max-w-screen-sm mx-auto p-6">
+      <div className="max-w-6xl mx-auto">
         <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-6">

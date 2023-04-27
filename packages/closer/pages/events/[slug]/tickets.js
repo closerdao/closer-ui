@@ -1,6 +1,6 @@
 import Head from 'next/head';
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 import TicketListPreview from '../../../components/TicketListPreview';
 
@@ -44,9 +44,7 @@ const EventTickets = ({ event }) => {
   return (
     <>
       <Head>
-        <title>
-          {event.name} {__('events_slug_tickets_title')}
-        </title>
+        <title>{`${event.name} - ${__('events_slug_tickets_title')}`}</title>
       </Head>
       {tickets && tickets.get('error') && (
         <div className="validation-error">{tickets.get('error')}</div>

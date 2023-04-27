@@ -33,7 +33,7 @@ const Checkout = () => {
 
   useEffect(() => {
     if (user?.subscription && user.subscription.priceId) {
-      router.push('/settings/subscriptions');
+      router.push('/subscriptions');
     }
   }, [user]);
 
@@ -68,13 +68,10 @@ const Checkout = () => {
   return (
     <>
       <Head>
-        <title>
-          {__('subscriptions_checkout_title')} — {__('subscriptions_title')} —{' '}
-          {PLATFORM_NAME}
-        </title>
+        <title>{`${__('subscriptions_checkout_title')} - ${__('subscriptions_title')} - ${PLATFORM_NAME}`}</title>
       </Head>
 
-      <div className="main-content w-full max-w-screen-sm mx-auto p-6">
+      <div className="max-w-6xl mx-auto">
         <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-6">
