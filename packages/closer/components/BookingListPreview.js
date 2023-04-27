@@ -137,48 +137,54 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
       </div>
 
       <div className="mt-8 flex flex-col gap-4">
-        {status === 'checked-in' && (
-          <Link passHref href="">
-            <button className="btn w-full uppercase ">
-              {__('booking_card_join_chat_button')}
-            </button>
-          </Link>
-        )}
-        {status === 'checked-out' && (
-          <Link passHref href="">
-            <button className="btn w-full uppercase ">
-              {__('booking_card_feedback_button')}
-            </button>
-          </Link>
-        )}
-        {status === 'open' && (
-          <Link passHref href={`/bookings/${_id}/summary`}>
-            <button className="btn w-full uppercase ">
-              {__('booking_card_checkout_button')}
-            </button>
-          </Link>
-        )}
-        {status === 'confirmed' && (
-          <Link passHref href={`/bookings/${_id}/checkout`}>
-            <button className="btn w-full uppercase ">
-              {__('booking_card_checkout_button')}
-            </button>
-          </Link>
-        )}
-        {user && isBookingCancelable && (
-          <Link passHref href={`/bookings/${_id}/cancel`}>
-            <button className="btn w-full uppercase">
-              {__('booking_cancel_button')}
-            </button>
-          </Link>
-        )}
 
-        {status === 'paid' && (
-          <Link passHref href={`/bookings/${_id}/cancel`}>
-            <button className="btn w-full uppercase">
-              {__('booking_cancel_button')}
-            </button>
-          </Link>
+        {/* Hide buttons if start date is in the past: */}
+        {new Date(start) > Date.now() && (
+          <>
+            {status === 'checked-in' && (
+              <Link passHref href="">
+                <button className="btn w-full uppercase ">
+                  {__('booking_card_join_chat_button')}
+                </button>
+              </Link>
+            )}
+            {status === 'checked-out' && (
+              <Link passHref href="">
+                <button className="btn w-full uppercase ">
+                  {__('booking_card_feedback_button')}
+                </button>
+              </Link>
+            )}
+            {status === 'open' && (
+              <Link passHref href={`/bookings/${_id}/summary`}>
+                <button className="btn w-full uppercase ">
+                  {__('booking_card_checkout_button')}
+                </button>
+              </Link>
+            )}
+            {status === 'confirmed' && (
+              <Link passHref href={`/bookings/${_id}/checkout`}>
+                <button className="btn w-full uppercase ">
+                  {__('booking_card_checkout_button')}
+                </button>
+              </Link>
+            )}
+            {user && isBookingCancelable && (
+              <Link passHref href={`/bookings/${_id}/cancel`}>
+                <button className="btn w-full uppercase">
+                  {__('booking_cancel_button')}
+                </button>
+              </Link>
+            )}
+
+            {status === 'paid' && (
+              <Link passHref href={`/bookings/${_id}/cancel`}>
+                <button className="btn w-full uppercase">
+                  {__('booking_cancel_button')}
+                </button>
+              </Link>
+            )}
+          </>
         )}
 
         {user &&

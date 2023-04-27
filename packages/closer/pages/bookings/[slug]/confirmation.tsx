@@ -29,22 +29,24 @@ const ConfirmationStep = ({ error, booking, event }: Props) => {
 
   useEffect(() => {
     if (!_id) {
-      startNewBooking();
+      console.log('No _id')
+      // startNewBooking();
     }
   }, [_id]);
 
   useEffect(() => {
     if (status !== 'pending' && status !== 'paid') {
-      startNewBooking();
+      console.log('status not pending not paid')
+      // startNewBooking();
     }
   }, [status]);
 
   const viewBooking = (id: string) => {
     router.push(`/bookings/${id}`);
   };
-  const startNewBooking = () => {
-    router.push('/bookings/create');
-  };
+  // const startNewBooking = () => {
+  //   router.push('/bookings/create');
+  // };
 
   const goBack = () => {
     router.push('/');
@@ -75,12 +77,12 @@ const ConfirmationStep = ({ error, booking, event }: Props) => {
           <BookingResult booking={booking} eventName={event?.name} />
 
           <Button onClick={() => viewBooking(_id)}>
-            {eventId && __('ticket_list_view_ticket')}
-            {volunteerId &&
-              __('bookings_confirmation_step_volunteer_application_button')}
-            {!eventId &&
-              !volunteerId &&
-              __('bookings_confirmation_step_success_button')}
+            {eventId ?
+              __('ticket_list_view_ticket'):
+              volunteerId ?
+              __('bookings_confirmation_step_volunteer_application_button'):
+              __('bookings_confirmation_step_success_button')
+            }
           </Button>
         </div>
       </div>
@@ -98,9 +100,8 @@ ConfirmationStep.getInitialProps = async ({
       data: { results: booking },
     } = await api.get(`/booking/${query.slug}`);
 
-    const {
-      data: { results: event },
-    } = await api.get(`/event/${booking.eventId}`);
+    const optionalEvent = booking.eventId && await api.get(`/event/${booking.eventId}`);
+    const event = optionalEvent?.data?.results;
 
     return { booking, event, error: null };
   } catch (err) {
