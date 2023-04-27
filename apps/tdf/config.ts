@@ -20,7 +20,8 @@ const config = {
       create: 'event-creator',
     },
   },
-
+  VISITORS_GUIDE:
+    'https://docs.google.com/document/d/198vWYEQCC1lELQa8f76Jcw3l3UDiPcBKt04PGFKnUvg/edit',
   SUBSCRIPTIONS: {
     config: {
       currency: 'EUR',
@@ -35,10 +36,7 @@ const config = {
         tier: 1,
         monthlyCredits: 0,
         price: 0,
-        perks: [
-          ' 🌟 Access to Events',
-          ' 🌟 Access to Volunteering',
-        ],
+        perks: [' 🌟 Access to Events', ' 🌟 Access to Volunteering'],
         billingPeriod: 'month',
       },
       {
