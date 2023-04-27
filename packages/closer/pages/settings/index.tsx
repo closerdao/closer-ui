@@ -94,6 +94,7 @@ const MemberPage: FC = () => {
           onChange={saveUserData('email')}
           className="mt-8"
           validation="email"
+          isDisabled
         />
         <div className="md:w-72 relative mt-8">
           <label className="font-medium text-complimentary-light">

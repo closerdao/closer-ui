@@ -15,6 +15,7 @@ type InputProps = {
   autoFocus?: boolean;
   dataTestId?: string;
   validation?: 'email' | 'number';
+  isDisabled?: boolean;
 };
 
 const Input = React.memo(
@@ -30,6 +31,7 @@ const Input = React.memo(
     autoFocus,
     onBlur,
     validation,
+    isDisabled = false,
   }: InputProps) => {
     const [localValue, setLocalValue] = useState(value || '');
     const [isEditing, setIsEditing] = useState(false);
@@ -138,6 +140,7 @@ const Input = React.memo(
               ? validationPatterns[validation].toString().slice(1, -1)
               : undefined
           }
+          disabled={isDisabled}
         />
         {isEditing ? (
           <CheckIcon
