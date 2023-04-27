@@ -92,14 +92,12 @@ export const priceFormat = (price, currency = 'EUR') => {
       style: 'currency',
       currency,
     });
-  }
-  if (typeof price === 'object' && price.get && price.get('val')) {
+  } else if (price?.get && typeof price.get('val') !== 'undefined') {
     return parseFloat(price.get('val')).toLocaleString('en-US', {
       style: 'currency',
       currency: price.get('cur'),
     });
-  }
-  if (typeof price === 'object' && price.val) {
+  } else if (typeof price?.val !== 'undefined') {
     const priceValue = parseFloat(price.val);
     if (price.cur === BLOCKCHAIN_DAO_TOKEN.symbol) {
       return new Intl.NumberFormat('en-US', {
@@ -113,6 +111,8 @@ export const priceFormat = (price, currency = 'EUR') => {
       style: 'currency',
       currency: price.cur,
     });
+  } else {
+    console.log('Invalid price:', price);
   }
   return '0.00';
 };

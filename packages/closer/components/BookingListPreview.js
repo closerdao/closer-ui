@@ -187,33 +187,31 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
           </>
         )}
 
-        {user &&
-          user.roles.includes('space-host') &&
-          createdBy !== user._id && (
-            <>
-              {status === 'pending' && (
-                <button
-                  className="btn w-full uppercase"
-                  onClick={(e) => confirmBooking(e)}
-                >
-                  {__('booking_confirm_button')}
-                </button>
-              )}
-              {status === 'pending' && (
-                <button
-                  className="btn w-full uppercase"
-                  onClick={(e) => rejectBooking(e)}
-                >
-                  {__('booking_reject_button')}
-                </button>
-              )}
-              <Link passHref href={`/members/${createdBy}`}>
-                <button className="btn w-full uppercase">
-                  {__('booking_view_profile')}
-                </button>
-              </Link>
-            </>
-          )}
+        {user && user.roles.includes('space-host') &&
+          <>
+            {status === 'pending' && (
+              <button
+                className="btn w-full uppercase"
+                onClick={(e) => confirmBooking(e)}
+              >
+                {__('booking_confirm_button')}
+              </button>
+            )}
+            {status === 'pending' && (
+              <button
+                className="btn w-full uppercase"
+                onClick={(e) => rejectBooking(e)}
+              >
+                {__('booking_reject_button')}
+              </button>
+            )}
+            <Link passHref href={`/members/${createdBy}`}>
+              <button className="btn w-full uppercase">
+                {__('booking_view_profile')}
+              </button>
+            </Link>
+          </>
+        }
       </div>
     </div>
   );
