@@ -35,7 +35,7 @@ export type User = {
   _id: string;
   subscription: {
     tier: string;
-    validUntil: Date;
+    validUntil?: Date;
     cancelledAt?: Date;
     priceId: string;
     monthlyPrice: { val: number; cur: string };

@@ -1,6 +1,7 @@
-import { __ } from '../../utils/helpers';
+import dayjs from 'dayjs';
 
 import { SubscriptionPlan, Subscriptions } from '../../types/subscriptions';
+import { __ } from '../../utils/helpers';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Heading from '../ui/Heading';
@@ -30,18 +31,19 @@ const SubscriptionCards = ({
           {dayjs(validUntil).format('LL')}
         </>
       );
-    } else if (userActivePlan?.title === plan.title && cancelledAt) {
+    }
+    if (userActivePlan?.title === plan.title && cancelledAt) {
       if (cancelledAt > new Date()) {
         return (
           <>
-            {__('subscriptions_expires_at')}{' '}
-            {dayjs(cancelledAt).format('LL')}
+            {__('subscriptions_expires_at')} {dayjs(cancelledAt).format('LL')}
           </>
         );
       } else {
         return <>{__('subscriptions_cancelled')}</>;
       }
-    } else if (plan.price !== 0) {
+    }
+    if (plan.price !== 0) {
       return __('subscriptions_cancel_anytime');
     } else {
       return null;

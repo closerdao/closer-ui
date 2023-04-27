@@ -91,8 +91,8 @@ const Subscriptions = () => {
           }
           clickHandler={handleNext}
           userActivePlan={userActivePlan}
-          validUntil={user?.subscription.validUntil}
-          cancelledAt={user?.subscription.cancelledAt}
+          validUntil={user?.subscription?.validUntil}
+          cancelledAt={user?.subscription?.cancelledAt}
         />
       </main>
     </div>
