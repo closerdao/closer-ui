@@ -37,9 +37,10 @@ const Subscriptions = () => {
     } else if (userActivePlan?.priceId !== 'free') {
       // User has a subscription - must be managed in Stripe.
       router.push(
-        `${STRIPE_CUSTOMER_PORTAL_URL}?prefilled_email=${
-          user?.subscription?.stripeCustomerEmail || user?.email
-        }`,
+        `${STRIPE_CUSTOMER_PORTAL_URL}?prefilled_email=${encodeURIComponent(
+          (user?.subscription?.stripeCustomerEmail as string) ||
+            (user?.email as string),
+        )}`,
       );
     } else {
       // User does not yet have a subscription, we can show the checkout
@@ -88,6 +89,8 @@ const Subscriptions = () => {
           }
           clickHandler={handleNext}
           userActivePlan={userActivePlan}
+          validUntil={user?.subscription?.validUntil}
+          cancelledAt={user?.subscription?.cancelledAt}
         />
       </main>
     </div>
