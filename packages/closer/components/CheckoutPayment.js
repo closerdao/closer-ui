@@ -9,6 +9,7 @@ import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
 
 import { useBookingSmartContract } from '../hooks/useBookingSmartContract';
+import { useConfig } from '../hooks/useConfig';
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
 import CheckoutForm from './CheckoutForm';
@@ -26,8 +27,8 @@ const CheckoutPayment = ({
   endDate,
   totalNights,
   user,
-  settings,
 }) => {
+  const { VISITORS_GUIDE } = useConfig() || {};
 
   if (!process.env.NEXT_PUBLIC_STRIPE_PUB_KEY) {
     throw new Error('stripe key is undefined');
@@ -99,13 +100,9 @@ const CheckoutPayment = ({
           currency="EUR"
           hasComplied={hasComplied}
         >
-          <Conditions
-            setComply={onComply}
-            visitorsGuide={settings.visitorsGuide}
-          />
+          <Conditions setComply={onComply} visitorsGuide={VISITORS_GUIDE} />
         </CheckoutForm>
       </Elements>
-
     </div>
   );
 };
