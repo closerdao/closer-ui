@@ -49,7 +49,7 @@ const Conditions = ({ setComply, visitorsGuide }) => {
         <p>
           <span>{__('bookings_checkout_step_comply_with')}</span>
           <a
-            className="border-b pb-1 border-neutral-400 border-dashed"
+            className="border-b pb-1 border-neutral-400 border-dashed no-underline"
             href={visitorsGuide}
             target="_blank"
             rel="noreferrer noopener"

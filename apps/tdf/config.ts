@@ -20,8 +20,8 @@ const config = {
       create: 'event-creator',
     },
   },
-  COOKIE_TOKEN: 'tdf-token',
-
+  VISITORS_GUIDE:
+    'https://docs.google.com/document/d/198vWYEQCC1lELQa8f76Jcw3l3UDiPcBKt04PGFKnUvg/edit',
   SUBSCRIPTIONS: {
     config: {
       currency: 'EUR',
@@ -36,11 +36,7 @@ const config = {
         tier: 1,
         monthlyCredits: 0,
         price: 0,
-        perks: [
-          ' ✔ Access to Events',
-          ' ✔ Access to Volunteering',
-          ' ✔ Weekly newsletter',
-        ],
+        perks: [' 🌟 Access to Events', ' 🌟 Access to Volunteering'],
         billingPeriod: 'month',
       },
       {
@@ -49,42 +45,43 @@ const config = {
         description: 'Unlock yor stay passes and join our physical community',
         priceId: 'price_1MqtoHGtt5D0VKR2Has7KE5X',
         tier: 2,
-        monthlyCredits: 3,
+        monthlyCredits: 0,
         price: 10,
         perks: [
           ' ✔ Access to Events',
           ' ✔ Access to Volunteering',
-          '✔ Weekly newsletter',
-          '🌟 Free E-Book',
-          '🌟 Discord Community Access',
-          '🌟 10% Discount on accommodation',
+          ' 🌟 Access To Stays',
+          ' 🌟 Discord Community Access',
+          ' 🌟 Access To Exclusive Events',
         ],
         billingPeriod: 'month',
       },
 
       {
         title: 'Pioneer',
+        available: false,
         emoji: '👨🏽‍🚀',
         description:
           'Collect carrots and turn them into stay and event credits',
         priceId: 'price_1Mqtp0Gtt5D0VKR297NwmzIy',
         tier: 3,
-        monthlyCredits: 20,
-        price: 30,
+        monthlyCredits: 3,
+        price: 120,
         perks: [
           ' ✔ Access to Events',
-          '✔ Access to Volunteering',
-          ' ✔ Weekly newsletter',
-          ' ✔ Free E-Book',
+          ' ✔ Access to Volunteering',
+          ' ✔ Access To Stays',
           ' ✔ Discord Community Access',
-          '✔ Impact Reports',
-          '🌟 Access To Stays',
-          '🌟 20% Discount on accommodation',
+          ' ✔ Access To Exclusive Events',
+          ' 🌟 3 Stay credits per month',
+          ' 🌟 Impact Reports',
         ],
         billingPeriod: 'month',
       },
     ] as SubscriptionPlan[],
   } as Subscriptions,
+  STRIPE_CUSTOMER_PORTAL_URL:
+    'https://billing.stripe.com/p/login/test_dR69Cl1Igat5dhK3cc',
 };
 
 export default config;

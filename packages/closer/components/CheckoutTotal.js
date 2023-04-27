@@ -5,7 +5,7 @@ import { __, priceFormat } from '../utils/helpers';
 import CalculatorIcon from './icons/CalculatorIcon';
 import Heading from './ui/Heading';
 
-const CheckoutTotal = ({ totalToPayInFiat }) => {
+const CheckoutTotal = ({ total }) => {
   return (
     <div>
       <Heading
@@ -18,7 +18,7 @@ const CheckoutTotal = ({ totalToPayInFiat }) => {
       <div className="flex justify-between items-center mt-3">
         <p> {__('bookings_total')}</p>
         <p className="font-bold">
-          {priceFormat(totalToPayInFiat, DEFAULT_CURRENCY)}
+          {total ? priceFormat(total.val, total.cur || DEFAULT_CURRENCY) : '?€'}
         </p>
       </div>
       <p className="text-right text-xs">

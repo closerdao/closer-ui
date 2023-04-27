@@ -1,9 +1,11 @@
 import Metatags from '../../../components/Metatags';
+import VolunteerEventView from '../../../components/VolunteerEventView';
 
-import { VolunteerEventView, VolunteerOpportunity, api } from 'closer';
 import { NextPage } from 'next';
 
 import NotFoundPage from '../../404';
+import { VolunteerOpportunity } from '../../../types/api';
+import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
 interface Props {

@@ -1,8 +1,7 @@
 import Head from 'next/head';
 
-import Heading from '../../components/ui/Heading';
-
-import { CreateVolunteerView } from 'closer';
+import CreateVolunteerView from '../../components/CreateVolunteerView';
+import { Heading } from '../../components/ui';
 
 import Page401 from '../401';
 import { useAuth } from '../../contexts/auth';

@@ -14,8 +14,10 @@ const Login = () => {
   const { signMessage } = useContext(WalletDispatch);
 
   const router = useRouter();
+
   const redirectBack = router.query?.back
-    ? decodeURIComponent(router.query?.back)
+    ? // works with multiple url params:
+      decodeURIComponent(new URLSearchParams(router.query)).replace('back=', '')
     : '/';
   const { isAuthenticated, login, setAuthentification, error, setError } =
     useAuth();

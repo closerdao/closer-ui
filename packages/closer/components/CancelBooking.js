@@ -43,16 +43,7 @@ const CancelBooking = ({
         <span className="text-red-500">!? </span>
         <span>{__('cancel_booking_title')}</span>
       </Heading>
-      <Heading level={2} className="text-2xl leading-10 font-normal my-16">
-        {__('cancel_booking_details')}
-      </Heading>
-      <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-        commodo consequat.
-      </p>
-      <Heading level={2} className="text-2xl leading-10 font-normal my-16">
+      <Heading className="text-2xl leading-10 font-normal my-16">
         {__('cancel_booking_refund_policy')}
       </Heading>
       <p>

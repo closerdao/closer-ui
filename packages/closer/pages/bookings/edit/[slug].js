@@ -1,8 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import React from 'react';
-
 import EditModel from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
 
@@ -29,9 +27,7 @@ const EditEvent = ({ event }) => {
   return (
     <>
       <Head>
-        <title>
-          {__('bookings_edit_slug_title')} {event.name}
-        </title>
+        <title>{`${__('bookings_edit_slug_title')} - ${event.name}`}</title>
       </Head>
       <div className="main-content">
         <EditModel

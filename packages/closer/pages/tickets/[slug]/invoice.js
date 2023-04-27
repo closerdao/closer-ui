@@ -1,7 +1,5 @@
 import Head from 'next/head';
 
-import React from 'react';
-
 import Heading from '../../../components/ui/Heading';
 
 import dayjs from 'dayjs';
@@ -9,8 +7,7 @@ import dayjs from 'dayjs';
 import PageNotFound from '../../404';
 import { useConfig } from '../../../hooks/useConfig';
 import api from '../../../utils/api';
-import { priceFormat } from '../../../utils/helpers';
-import { __ } from '../../../utils/helpers';
+import { __, priceFormat } from '../../../utils/helpers';
 
 const Ticket = ({ ticket, event, error }) => {
   const { PLATFORM_LEGAL_ADDRESS, PLATFORM_NAME } = useConfig();
@@ -21,9 +18,7 @@ const Ticket = ({ ticket, event, error }) => {
   return (
     <>
       <Head>
-        <title>
-          {__('tickets_invoice_title')} {ticket._id}
-        </title>
+        <title>{`${__('tickets_invoice_title')} - ${ticket._id}`}</title>
         <meta property="og:type" content="ticket" />
       </Head>
       <main className="main-content invoice-page">

@@ -8,8 +8,7 @@ import { StripeCardElementChangeEvent } from '@stripe/stripe-js';
 import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
 import SubscriptionConditions from '../SubscriptionConditions';
-import Button from '../ui/Button';
-import ErrorMessage from '../ui/ErrorMessage';
+import { Button, ErrorMessage } from '../ui/';
 
 interface SubscriptionCheckoutFormProps {
   userEmail?: string;

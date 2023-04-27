@@ -16,9 +16,7 @@ const Search = ({ tags, error, articles }) => {
   return (
     <>
       <Head>
-        <title>
-          {__('generic_search')} {PLATFORM_NAME}
-        </title>
+        <title>{`${__('generic_search')} - ${PLATFORM_NAME}`}</title>
       </Head>
       <section className="article limit-width">
         <Heading className="mb-4">{PLATFORM_NAME} Blog</Heading>

@@ -1,8 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import React from 'react';
-
 import EventsList from '../../components/EventsList';
 import Heading from '../../components/ui/Heading';
 
@@ -21,9 +19,7 @@ const Events: NextPage = () => {
   return (
     <>
       <Head>
-        <title>
-          {PLATFORM_NAME} {__('events_title')}
-        </title>
+        <title>{`${PLATFORM_NAME} - ${__('events_title')}`}</title>
       </Head>
       <div className="main-content w-full mb-12">
         <div className="flex justify-between">
@@ -47,7 +43,6 @@ const Events: NextPage = () => {
             end: {
               $gt: now,
             },
-            visibility: 'public',
           }}
         />
       </div>
@@ -63,7 +58,6 @@ const Events: NextPage = () => {
             end: {
               $lt: now,
             },
-            visibility: 'public',
           }}
         />
       </div>

@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
-import { __ } from 'closer/utils/helpers';
+import { __ } from '../../utils/helpers';
 
 import Modal from '../Modal';
 import Checkbox from '../ui/Checkbox';

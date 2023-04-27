@@ -4,10 +4,12 @@ import Link from 'next/link';
 
 import React from 'react';
 
-import { Heading, useAuth } from 'closer';
+import Heading from '../components/ui/Heading';
+
 import { NextPage } from 'next';
 import { event } from 'nextjs-google-analytics';
 
+import { useAuth } from '../contexts/auth';
 import { useConfig } from '../hooks/useConfig';
 
 const Index: NextPage = () => {

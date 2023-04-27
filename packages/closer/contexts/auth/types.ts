@@ -42,7 +42,15 @@ export type User = {
   attributes: string[];
   managedBy: string[];
   _id: string;
-  subscription: any;
+  subscription: {
+    tier: string;
+    validUntil?: Date;
+    cancelledAt?: Date;
+    priceId: string;
+    monthlyPrice: { val: number; cur: string };
+    monthlyCredits: number;
+    stripeCustomerEmail: string;
+  };
 };
 
 export type AuthenticationContext = {

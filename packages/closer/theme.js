@@ -1,12 +1,11 @@
 module.exports = {
   extend: {
     colors: {
-      'accent-core': '#FE4FB7',
-      'accent-light': '#FFC8E9',
+      accent: '#1c1c1c',
       primary: '#e4427d',
       'primary-light': '#FFEDF8',
       secondary: '#1b3bc3',
-      background: '#F8FAFC',
+      background: 'transparent',
       'background-dark': '#1c1c1c',
       foreground: '#1c1c1c',
       'foreground-dark': '#dadada',

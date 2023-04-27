@@ -1,4 +1,15 @@
-import { CloserCurrencies, Currency } from './currency';
+import { CloserCurrencies, Price } from './currency';
+
+export type BookingConditions = {
+  member: {
+    maxDuration: number;
+    maxBookingHorizon: number;
+  };
+  guest: {
+    maxDuration: number;
+    maxBookingHorizon: number;
+  };
+};
 
 export type VolunteerOpportunity = {
   name: string;
@@ -17,7 +28,7 @@ export type VolunteerOpportunity = {
   _id: string;
 };
 
-type Question = {
+export type Question = {
   type: 'text' | 'select';
   name: string;
   required?: boolean;
@@ -25,22 +36,13 @@ type Question = {
 };
 
 export type BookingSettings = {
-  utilityFiat: Currency<CloserCurrencies.EUR>;
-  utilityToken: Currency<CloserCurrencies.ETH>;
+  utilityFiat: Price<CloserCurrencies.EUR>;
+  utilityToken: Price<CloserCurrencies.ETH>;
   checkinTime: number;
   checkoutTime: number;
   maxDuration: number;
   minDuration: number;
-  conditions: {
-    member: {
-      maxDuration: number;
-      maxBookingHorizon: number;
-    };
-    guest: {
-      maxDuration: number;
-      maxBookingHorizon: number;
-    };
-  };
+  conditions: BookingConditions;
   discounts: {
     daily: number;
     weekly: number;

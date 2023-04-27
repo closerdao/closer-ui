@@ -1,8 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import React from 'react';
-
 import EditModel from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
 
@@ -24,9 +22,7 @@ const EditListing = ({ listing }) => {
   return (
     <>
       <Head>
-        <title>
-          {__('listings_slug_edit_title')} {listing.name}
-        </title>
+        <title>{`${listing.name} - ${__('listings_slug_edit_title')}`}</title>
       </Head>
       <div className="w-full">
         <Heading level={2} className="mb-2">

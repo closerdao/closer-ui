@@ -1,7 +1,5 @@
 import Head from 'next/head';
 
-import React from 'react';
-
 import PageError from '../../../components/PageError';
 import Heading from '../../../components/ui/Heading';
 
@@ -17,6 +15,7 @@ import { __, priceFormat } from '../../../utils/helpers';
 dayjs.extend(LocalizedFormat);
 
 const Booking = ({ booking, error }) => {
+  // TODO: update cards with proper buttons and event and volunteer data
   const { isAuthenticated } = useAuth();
 
   if (!booking || process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
@@ -58,11 +57,7 @@ const Booking = ({ booking, error }) => {
           </p>
           <p>
             {__('bookings_total')}
-            <b className={booking.volunteer ? 'line-through' : ''}>
-              {' '}
-              {priceFormat(booking.price)}
-            </b>
-            <b> {booking.volunteer && priceFormat(0, booking.price.cur)}</b>
+            <b>{booking.total ? priceFormat(booking.total?.val, booking.total?.cur) : 0}</b>
           </p>
           <p>
             {__('bookings_id')} <b>{booking._id}</b>

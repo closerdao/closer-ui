@@ -48,8 +48,8 @@
     width: 20rem;
     padding: 1rem;
     color: #fafafa;
-    background-color: #9f1f42;
-    border: 1px solid #5b1226;
+    background-color: #fe5e8a;
+    border: 1px solid #db5177;
   }
   .danger-link {
     @apply text-error;
