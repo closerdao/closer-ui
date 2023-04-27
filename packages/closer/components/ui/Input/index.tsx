@@ -125,9 +125,15 @@ const Input = React.memo(
           onFocus={handleFocus}
           required={isRequired}
           placeholder={placeholder}
-          className={`rounded-lg bg-neutral text-complimentary-core ${
-            isValid ? '' : 'border-red-500'
-          } `}
+          className={`px-4 py-3 rounded-lg  ${
+            isValid
+              ? 'border-neutral bg-neutral'
+              : 'border-accent-core border bg-accent-light'
+          } ${
+            isDisabled
+              ? 'text-gray-300 border-gray-300 cursor-not-allowed'
+              : 'text-complimentary-core'
+          }`}
           data-testid={dataTestId}
           autoFocus={autoFocus}
           aria-label={label}
@@ -142,17 +148,19 @@ const Input = React.memo(
           }
           disabled={isDisabled}
         />
-        {isEditing ? (
-          <CheckIcon
-            onClick={handleSubmit}
-            className="absolute right-4 bottom-2"
-          />
-        ) : (
-          <SettingsIcon
-            className="absolute right-4 bottom-2"
-            onClick={handleClick}
-          />
-        )}
+        {isEditing
+          ? isValidValue(localValue) && (
+              <CheckIcon
+                onClick={undefined}
+                className="absolute right-4 top-12 mt-1"
+              />
+            )
+          : !isDisabled && (
+              <SettingsIcon
+                className="absolute right-4 top-12 mt-1"
+                onClick={handleClick}
+              />
+            )}
         {validationError && (
           <span className="text-red-500 text-sm">{validationError}</span>
         )}

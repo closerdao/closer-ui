@@ -1,12 +1,13 @@
 import React, { FC, useRef, useState } from 'react';
 import { Multiselect } from 'react-widgets';
 
+import Tag from '../../Tag';
 import { MultiSelectProps } from './types';
 
 const MultiSelect: FC<MultiSelectProps> = React.memo(
   ({
     label,
-    value,
+    values,
     options,
     onChange,
     placeholder = 'Select an option',
@@ -15,6 +16,7 @@ const MultiSelect: FC<MultiSelectProps> = React.memo(
   }) => {
     const onChangeRef = useRef(onChange);
     const [data, setData] = useState(options);
+
     if (onChange !== onChangeRef.current) {
       onChangeRef.current = onChange; // prevents re-renders when parent component re-renders with the same props
     }
@@ -24,8 +26,14 @@ const MultiSelect: FC<MultiSelectProps> = React.memo(
     };
 
     const handleCreate = (createdValue: string) => {
-      const update = [...(value?.length ? value : []), createdValue];
+      const update = [...(values?.length ? values : []), createdValue];
       setData(update);
+      onChange && onChange(update);
+    };
+
+    const handleRemove = (label: unknown) => {
+      if (!values) return null;
+      const update = values.filter((item) => item !== label);
       onChange && onChange(update);
     };
 
@@ -37,7 +45,7 @@ const MultiSelect: FC<MultiSelectProps> = React.memo(
           </label>
         )}
         <Multiselect
-          defaultValue={value}
+          defaultValue={values}
           data={data}
           onChange={handleChange}
           onCreate={handleCreate}
@@ -46,10 +54,14 @@ const MultiSelect: FC<MultiSelectProps> = React.memo(
           placeholder={placeholder}
           data-testid={dataTestId}
           tagOptionComponent={(props) => (
-            <span className="bg-accent-light border-accent-core p-2 rounded-l ml-2 mt-2">
+            <Tag
+              className="bg-accent-light border-accent-core ml-2 mt-2"
+              remove={() => handleRemove(props.dataItem)}
+            >
               {props.children}
-            </span>
+            </Tag>
           )}
+          key={values?.join('')}
         />
       </div>
     );

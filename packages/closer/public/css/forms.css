@@ -55,13 +55,13 @@
     @apply p-2 text-foreground block border-0 border-b-2 border-transparent focus:outline-none focus:border-primary;
   }
   .input,
-  input[type='email'],
+  /* input[type='email'],
   input[type='password'],
   input[type='text'],
   input[type='phone'],
   input[type='number'],
   input[type='date'],
-  input[type='time'] {
+  input[type='time'] */ {
     @apply p-2 text-foreground block border-0 border-b-2 border-transparent ring-transparent focus:outline-none focus:border-primary;
   }
 

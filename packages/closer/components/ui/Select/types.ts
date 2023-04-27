@@ -7,7 +7,7 @@ interface BaseProps {
 }
 
 export interface MultiSelectProps extends BaseProps {
-  value?: string[];
+  values?: string[];
   onChange?: (value: string[]) => void;
   options: string[];
 }

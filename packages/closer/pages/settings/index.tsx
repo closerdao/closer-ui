@@ -27,6 +27,7 @@ const SKILLS_EXAMPLES = ['javascript', 'woodworking', 'farming'];
 
 const MemberPage: FC = () => {
   const { user, isAuthenticated, refetchUser } = useAuth();
+  console.log('user', user);
   const [error, setError] = useState<string | null>(null);
   const { platform } = usePlatform() as any;
 
@@ -132,7 +133,7 @@ const MemberPage: FC = () => {
         />
         <MultiSelect
           label="What skills do you have?"
-          value={user?.preferences?.skills}
+          values={user?.preferences?.skills}
           className="mt-8"
           onChange={saveUserData('skills')}
           options={SKILLS_EXAMPLES}

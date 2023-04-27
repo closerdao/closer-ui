@@ -6,9 +6,9 @@ const tdfTheme = {
   extend: {
     ...closerTheme.extend,
     colors: {
+      ...closerTheme.extend.colors,
       'accent-core': '#FE4FB7',
       'accent-light': '#FFC8E9',
-      ...closerTheme.extend.colors,
       dominant: '#ffffff',
       complimentary: '#000000',
       'complimentary-medium': '#262626',
