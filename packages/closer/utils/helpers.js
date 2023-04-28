@@ -298,6 +298,9 @@ export const getBookingType = (eventId, volunteerId) => {
 };
 
 export const getVatInfo = (total) => {
-  return `${priceFormat(total.val * Number(process.env.NEXT_PUBLIC_VAT_RATE), total.cur)}
-  (${Number(process.env.NEXT_PUBLIC_VAT_RATE) * 100}%)`;
+  if (process.env.NEXT_PUBLIC_VAT_RATE) {
+    return `${priceFormat(total.val * Number(process.env.NEXT_PUBLIC_VAT_RATE), total.cur)}
+    (${Number(process.env.NEXT_PUBLIC_VAT_RATE) * 100}%)`;  
+  }
+  return '';  
 };
