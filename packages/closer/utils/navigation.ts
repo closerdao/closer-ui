@@ -25,6 +25,7 @@ export const links = [
     label: 'Book a stay',
     url: '/bookings/create',
     enabled: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
+    subscriptions: ['wanderer', 'pioneer', 'sheep'],
   },
   {
     label: 'My bookings',
