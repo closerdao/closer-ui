@@ -4,6 +4,7 @@ import { CheckIcon } from '../../icons/CheckIcon';
 import { SettingsIcon } from '../../icons/SettingsIcon';
 
 type InputProps = {
+  id?: string;
   label?: string;
   value?: string;
   onChange?: (value: string) => void;
@@ -20,6 +21,7 @@ type InputProps = {
 
 const Input = React.memo(
   ({
+    id,
     label,
     value,
     onChange,
@@ -118,6 +120,7 @@ const Input = React.memo(
           </label>
         )}
         <input
+          id={id}
           type={type}
           value={localValue}
           onChange={handleChange}

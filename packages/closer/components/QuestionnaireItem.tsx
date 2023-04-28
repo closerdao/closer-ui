@@ -23,17 +23,14 @@ const QuestionnaireItem = ({
     handleAnswer(name, debouncedAnswer);
   }, [debouncedAnswer]);
 
-  const onChange = (
-    e:
-      | React.ChangeEvent<HTMLSelectElement>
-      | React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    setAnswer(e.target.value);
-  };
-
   if (!type || !name) {
     return null;
   }
+
+  const onChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setAnswer(e.target.value);
+  };
+
   return (
     <div className="mb-16 last:mb-0">
       <label
@@ -45,15 +42,15 @@ const QuestionnaireItem = ({
       </label>
       {type === 'text' && (
         <>
-
           <Input
             id={name}
             type="text"
             placeholder={__('generic_input_placeholder')}
             className="" // TO DO how to resolve class clash with forms.css?
             value={answer}
-            onChange={onChange}
-            isRequired={required}/>
+            onChange={setAnswer}
+            isRequired={required}
+          />
         </>
       )}
       {type === 'select' && options && (
