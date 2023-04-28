@@ -21,7 +21,7 @@ const index = ({
             {__('bookings_confirmation_step_success_your_booking_id')} {_id}
           </p>
           <p>
-            {__('booking_status_confirmed')}
+            {__('booking_status_booking_complete')}
           </p>
         </>
       )}
