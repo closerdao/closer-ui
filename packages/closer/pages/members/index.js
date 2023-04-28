@@ -4,16 +4,9 @@ import React from 'react';
 
 import MemberList from '../../components/MemberList';
 
-import PageNotAllowed from '../401';
-import { useAuth } from '../../contexts/auth';
 import { __ } from '../../utils/helpers';
 
-const Settings = () => {
-  const { user } = useAuth();
-
-  if (!user) {
-    return <PageNotAllowed />;
-  }
+const MembersPage = () => {
 
   return (
     <>
@@ -27,4 +20,4 @@ const Settings = () => {
   );
 };
 
-export default Settings;
+export default MembersPage;

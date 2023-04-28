@@ -1,4 +1,5 @@
 export interface SubscriptionPlan {
+    slug: string;
     title: string;
     available: boolean;
     emoji: string;
