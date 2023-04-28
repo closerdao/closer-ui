@@ -19,7 +19,8 @@
         "NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS",
         "NEXT_PUBLIC_FEATURE_WEB3_BOOKING",
         "NEXT_PUBLIC_FEATURE_WEB3_WALLET",
-        "STRIPE_SECRET_KEY"
+        "STRIPE_SECRET_KEY",
+        "NEXT_PUBLIC_VAT_RATE"
       ]
     },
     "lint": {

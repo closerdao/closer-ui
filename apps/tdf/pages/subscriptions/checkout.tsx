@@ -18,7 +18,7 @@ import {
 } from 'closer';
 import { SUBSCRIPTION_STEPS } from 'closer/constants';
 import { SelectedPlan, SubscriptionPlan } from 'closer/types/subscriptions';
-import { __, priceFormat } from 'closer/utils/helpers';
+import { __, getVatInfo, priceFormat } from 'closer/utils/helpers';
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUB_KEY as string,
@@ -68,7 +68,9 @@ const Checkout = () => {
   return (
     <>
       <Head>
-        <title>{`${__('subscriptions_checkout_title')} - ${__('subscriptions_title')} - ${PLATFORM_NAME}`}</title>
+        <title>{`${__('subscriptions_checkout_title')} - ${__(
+          'subscriptions_title',
+        )} - ${PLATFORM_NAME}`}</title>
       </Head>
 
       <div className="max-w-6xl mx-auto">
@@ -93,7 +95,12 @@ const Checkout = () => {
                 selectedPlan?.price,
                 SUBSCRIPTIONS.config.currency,
               )}`}
-              additionalInfo={__('subscriptions_summary_per_month')}
+              additionalInfo={`${__(
+                'bookings_checkout_step_total_description',
+              )} ${getVatInfo({
+                val: selectedPlan?.price,
+                cur: SUBSCRIPTIONS.config.currency,
+              })} ${__('subscriptions_summary_per_month')}`}
             />
           </div>
 

@@ -15,7 +15,7 @@ import {
 } from 'closer';
 import { SUBSCRIPTION_STEPS } from 'closer/constants';
 import { SelectedPlan, SubscriptionPlan } from 'closer/types/subscriptions';
-import { __, priceFormat } from 'closer/utils/helpers';
+import { __, getVatInfo, priceFormat } from 'closer/utils/helpers';
 
 const Summary = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -119,7 +119,12 @@ const Summary = () => {
                   selectedPlan?.price,
                   SUBSCRIPTIONS.config.currency,
                 )}`}
-                additionalInfo={__('subscriptions_summary_per_month')}
+                additionalInfo={`${__(
+                  'bookings_checkout_step_total_description',
+                )} ${getVatInfo({
+                  val: selectedPlan?.price,
+                  cur: SUBSCRIPTIONS.config.currency,
+                })} ${__('subscriptions_summary_per_month')}`}
               />
             </div>
             <Button className="mt-3" onClick={handleCheckout}>

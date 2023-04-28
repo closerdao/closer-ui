@@ -12,6 +12,8 @@ dayjs.extend(localizedFormat);
 dayjs.extend(relativeTime);
 dayjs.extend(duration);
 
+// TODO: convert to typescript
+
 const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
 
 let language = Object.assign({}, base, en);
@@ -293,4 +295,9 @@ export const getBookingType = (eventId, volunteerId) => {
     bookingType = 'stay';
   }
   return bookingType;
+};
+
+export const getVatInfo = (total) => {
+  return `${priceFormat(total.val * Number(process.env.NEXT_PUBLIC_VAT_RATE), total.cur)}
+  (${Number(process.env.NEXT_PUBLIC_VAT_RATE) * 100}%)`;
 };
