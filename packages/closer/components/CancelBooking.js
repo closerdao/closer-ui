@@ -19,14 +19,18 @@ const CancelBooking = ({
   const [error, setError] = useState(null);
   const [isSendingCancelRequest, setSendingCancelRequest] = useState(false);
 
-  const cancelBooking = () => {
+  const cancelBooking = async () => {
     try {
       setSendingCancelRequest(true);
-      api.post(`/bookings/${bookingId}/cancel`);
+       await api.post(`/bookings/${bookingId}/cancel`);
       setCancelCompleted(true);
     } catch (err) {
-      console.error('Error', err.message);
-      setError(err.message);
+      console.error('Error===', err.message);
+      if (err.response.data.error) {
+        setError(err.response.data.error);
+      } else {
+        setError(err.message);
+      }
     } finally {
       setSendingCancelRequest(false);
     }
