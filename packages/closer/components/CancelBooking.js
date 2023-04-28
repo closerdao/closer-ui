@@ -6,6 +6,7 @@ import api from '../utils/api';
 import { __, priceFormat } from '../utils/helpers';
 import Spinner from './Spinner';
 import CalculatorIcon from './icons/CalculatorIcon';
+import Heading from './ui/Heading';
 
 const CancelBooking = ({
   setCancelCompleted,
@@ -42,31 +43,25 @@ const CancelBooking = ({
 
   return (
     <main className="main-content max-w-prose pb-16">
-      <h1 className="text-[32px] leading-[48px] font-normal border-b border-[#e1e1e1] border-solid pb-2">
+      <Heading className="text-[32px] leading-[48px] font-normal border-b border-[#e1e1e1] border-solid pb-2">
         <span className="text-red-500">!? </span>
         <span>{__('cancel_booking_title')}</span>
-      </h1>
-      {/* <h2 className="text-2xl leading-10 font-normal my-16">
-        {__('cancel_booking_details')}
-      </h2> */}
-      {/* <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-        commodo consequat.
-      </p> */}
-      <h2 className="text-2xl leading-10 font-normal my-16">
+      </Heading>
+      <Heading className="text-2xl leading-10 font-normal my-16">
         {__('cancel_booking_refund_policy')}
-      </h2>
+      </Heading>
       <p>
         {isMember
           ? __('booking_cancelation_policy_member')
           : __('booking_cancelation_policy')}
       </p>
-      <h2 className="text-2xl leading-10 font-normal mt-16 mb-3 border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center">
+      <Heading
+        level={2}
+        className="text-2xl leading-10 font-normal mt-16 mb-3 border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center"
+      >
         <CalculatorIcon />
         <p>{__('cancel_booking_refund_total')}</p>
-      </h2>
+      </Heading>
       <div className="flex justify-between mb-16">
         <p>{__('cancel_booking_fiat_description')}</p>
         {isPolicyLoading || !policy ? (

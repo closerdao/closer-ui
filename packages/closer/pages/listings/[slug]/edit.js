@@ -2,6 +2,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 
 import EditModel from '../../../components/EditModel';
+import Heading from '../../../components/ui/Heading';
 
 import models from '../../../models';
 import api from '../../../utils/api';
@@ -15,7 +16,7 @@ const EditListing = ({ listing }) => {
     }
   };
   if (!listing) {
-    return <h1>{__('listings_slug_edit_error')}</h1>;
+    return <Heading>{__('listings_slug_edit_error')}</Heading>;
   }
   console.log('listing', listing.name);
   return (
@@ -24,9 +25,9 @@ const EditListing = ({ listing }) => {
         <title>{`${listing.name} - ${__('listings_slug_edit_title')}`}</title>
       </Head>
       <div className="w-full">
-        <h2 className="mb-2">
+        <Heading level={2} className="mb-2">
           Edit Listing <i>{listing.name}</i>
-        </h2>
+        </Heading>
         <EditModel
           id={listing._id}
           endpoint={'/listing'}

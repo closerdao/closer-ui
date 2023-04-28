@@ -66,7 +66,7 @@ const Subscriptions = () => {
             ♻️ {__('settings_your_subscription_title')}
           </Heading>
 
-          <h2>Coming soon!</h2>
+          <Heading level={2}>Coming soon!</Heading>
         </div>
       </>
     );

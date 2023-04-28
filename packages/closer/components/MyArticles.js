@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import Heading from './ui/Heading';
 
 import { useAuth } from '../contexts/auth';
 import api, { formatSearch } from '../utils/api';
 import { __ } from '../utils/helpers';
 import Link from './ActiveLink';
+import Heading from './ui/Heading';
 
 const MyArticles = () => {
   const [error, setErrors] = useState(false);
@@ -52,7 +54,7 @@ const MyArticles = () => {
   }
   return (
     <div>
-      <h1>Hi {user.screenname}</h1>
+      <Heading>Hi {user.screenname}</Heading>
 
       <div className="user-actions">
         <Link as="/compose/new" href="/compose/[slug]">
@@ -63,7 +65,7 @@ const MyArticles = () => {
       {error && <div className="validation-error">{error}</div>}
 
       <section className="margin-top">
-        <h2>{__('my_articles_title')}</h2>
+        <Heading level={2}>{__('my_articles_title')}</Heading>
         {articles ? (
           articles.map((article) => (
             <div key={article._id}>
@@ -82,7 +84,7 @@ const MyArticles = () => {
       </section>
 
       <section className="margin-top">
-        <h2>{__('my_articles_other')}</h2>
+        <Heading level={2}>{__('my_ar</Heading>s_other')}</Heading>
         {others ? (
           others.map((article) => (
             <div key={article._id}>

@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import React, { FC } from 'react';
 
 import EditModel from '../../components/EditModel';
+import Heading from '../../components/ui/Heading';
 
 import models from '../../models';
 import { __ } from '../../utils/helpers';
@@ -17,7 +18,9 @@ const CreateEvent: FC = () => {
         <title>{__('events_create_title')}</title>
       </Head>
       <div className="main-content intro">
-        <h2 className="mb-2">{__('events_create_title')}</h2>
+        <Heading level={2} className="mb-2">
+          {__('events_create_title')}
+        </Heading>
         <EditModel
           endpoint={'/event'}
           fields={models.event}

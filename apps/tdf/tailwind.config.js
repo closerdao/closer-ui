@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const tdfTheme = require('./styles/theme');
-
 module.exports = {
   content: [
     './pages/**/*.{js,ts,jsx,tsx}',

@@ -50,7 +50,11 @@ const PhotosEditor = ({ value, onChange }) => {
         )}
       </div>
       <div className="actions">
-        <UploadPhoto minimal onSave={(id) => addPhoto(id)} label="Add photo" />
+        <UploadPhoto
+          isMinimal
+          onSave={(id) => addPhoto(id)}
+          label="Add photo"
+        />
       </div>
     </div>
   );

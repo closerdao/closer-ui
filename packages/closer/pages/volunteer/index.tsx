@@ -4,6 +4,7 @@ import Link from 'next/link';
 import React from 'react';
 
 import EventPreview from '../../components/EventPreview';
+import Heading from '../../components/ui/Heading';
 
 import { NextPage } from 'next';
 
@@ -24,7 +25,7 @@ const VolunteerPage: NextPage<Props> = ({ opportunities }) => {
         <title>{__('volunteers_page_title')}</title>
       </Head>
       <section className="mb-8 w-full flex justify-between items-center">
-        <h1>{__('volunteers_page_title')}</h1>
+        <Heading>{__('volunteers_page_title')}</Heading>
         {hasStewardRole && (
           <Link href="/volunteer/create">
             <button className="btn-primary">Create opportunity</button>

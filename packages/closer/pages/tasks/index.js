@@ -4,6 +4,7 @@ import Link from 'next/link';
 import React from 'react';
 
 import TaskList from '../../components/TaskList';
+import Heading from '../../components/ui/Heading';
 
 import { __ } from '../../utils/helpers';
 
@@ -15,7 +16,7 @@ const Tasks = () => {
       </Head>
       <main className="main-content intro">
         <div className="page-header">
-          <h1>{__('tasks_title')}</h1>
+          <Heading>{__('tasks_title')}</Heading>
           <div className="user-actions">
             <Link as="/tasks/create" href="/tasks/create" className="button">
               {__('tasks_link_create')}

@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import React from 'react';
 
 import EditModel from '../../components/EditModel';
+import Heading from '../../components/ui/Heading';
 
 import models from '../../models';
 import { __ } from '../../utils/helpers';
@@ -17,7 +18,9 @@ const CreateListing = () => {
         <title>{__('listings_create_title')}</title>
       </Head>
       <div className="main-content intro w-full">
-        <h2 className="mb-2">{ __('listings_create_title') }</h2>
+        <Heading level={2} className="mb-2">
+          {__('listings_create_title')}
+        </Heading>
         <EditModel
           endpoint={'/listing'}
           fields={models.listing}

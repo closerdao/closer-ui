@@ -7,6 +7,8 @@ const tdfTheme = {
     ...closerTheme.extend,
     colors: {
       ...closerTheme.extend.colors,
+      'accent-core': '#FE4FB7',
+      'accent-light': '#FFC8E9',
       dominant: '#ffffff',
       complimentary: '#000000',
       'complimentary-medium': '#262626',
@@ -20,7 +22,7 @@ const tdfTheme = {
       'accent-alt-medium': '#97FFD4',
       'accent-alt-light': '#D4FFED',
       // TODO: decide with Daneel about brand color system
-      'neutral': '#F8F3F5',
+      neutral: '#F8F3F5',
       // 'neutral-dark': '#EDE8EB' ,
       'neutral-dark': '#F0F0F0',
       // these colors are not suppoerted anymore, please use those above
@@ -37,7 +39,7 @@ const tdfTheme = {
     fontFamily: {
       sans: ['Barlow', ...defaultTheme.fontFamily.sans],
     },
- },
+  },
   plugins: [],
 };
 

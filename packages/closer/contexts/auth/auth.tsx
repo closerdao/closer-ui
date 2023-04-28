@@ -13,7 +13,6 @@ import {
 import { AxiosError } from 'axios';
 import Cookies from 'js-cookie';
 
-import { useConfig } from '../../hooks/useConfig';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
@@ -27,7 +26,6 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const [error, setErrorState] = useState<string | null>(null);
   const [isLoading, setLoading] = useState<boolean>(true);
   let errorTimeout: any;
-  const config = useConfig() || {};
 
   const setError = useCallback((msg: string) => {
     clearTimeout(errorTimeout);
@@ -162,6 +160,20 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     router.push('/');
   };
 
+  const refetchUser = async () => {
+    try {
+      const {
+        data: { results: user },
+      } = await api.get('/mine/user');
+      if (user) {
+        setUser(user);
+      }
+    } catch (err) {
+      const message = parseMessageFromError(err);
+      setError(message);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -178,6 +190,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         setUser,
         setError,
         loadUserFromCookies,
+        refetchUser,
       }}
     >
       {children}

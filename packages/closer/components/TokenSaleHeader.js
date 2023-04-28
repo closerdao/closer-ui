@@ -6,6 +6,7 @@ import PropTypes from 'prop-types';
 import { useHasMounted } from '../hooks/useHasMounted';
 import Countdown from './Countdown';
 import HeroImage from './HeroImage';
+import Heading from './ui/Heading';
 
 const TokenSaleHeader = ({ title, description, saleDate }) => {
   const router = useRouter();
@@ -23,7 +24,9 @@ const TokenSaleHeader = ({ title, description, saleDate }) => {
   return (
     <>
       <div className="md:basis-1/2 mb-8 md:mb-0">
-        <h1 className="text-5xl md:text-8xl uppercase font-black">{title}</h1>
+        <Heading className="text-5xl md:text-8xl uppercase font-black">
+          {title}
+        </Heading>
         {saleDate.isValid() && (
           <div className="mt-8 md:mt-16">
             <Countdown

@@ -12,6 +12,15 @@ export type User = {
   roles: string[];
   viewChannels: string[];
   manageChannels: string[];
+  preferences: {
+    diet?: string;
+    sharedAccomodation?: string;
+    superpower?: string;
+    skills?: string[];
+    dream?: string;
+    needs?: string;
+    moreInfo?: string;
+  };
   location: {
     name: string;
     name_long: string;
@@ -66,17 +75,5 @@ export type AuthenticationContext = {
   setUser: (user: User | null) => void;
   setError: (msg: string) => void;
   loadUserFromCookies: () => Promise<void>;
+  refetchUser: () => Promise<void>;
 };
-
-// isAuthenticated: !!user,
-// user,
-// login,
-// setAuthentification,
-// isLoading,
-// logout,
-// error,
-// signup,
-// completeRegistration,
-// updatePassword,
-// setUser,
-// setError,

@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import Linkify from 'react-linkify';
 
 import ProfilePhoto from '../../components/ProfilePhoto';
+import Heading from '../../components/ui/Heading';
 
 import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
@@ -57,7 +58,7 @@ const Task = ({ task, error }) => {
         <div className="columns">
           <div className="col lg two-third">
             <div>
-              <h1>{task.title}</h1>
+              <Heading>{task.title}</Heading>
               {error && <div className="validation-error">{error}</div>}
               <section>
                 <p className="about-text">

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import React, { useEffect } from 'react';
 
 import ListingListPreview from '../../components/ListingListPreview';
+import Heading from '../../components/ui/Heading';
 
 import PageNotAllowed from '../401';
 import { useAuth } from '../../contexts/auth';
@@ -42,7 +43,7 @@ const Listings = () => {
       )}
       <div className="main-content w-full">
         <div className="page-header mb-6 flex justify-between">
-          <h1>{__('listings_title')}</h1>
+          <Heading>{__('listings_title')}</Heading>
           <div className="user-actions">
             <Link
               as="/listings/create"

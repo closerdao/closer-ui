@@ -201,7 +201,7 @@ const CreatePost = ({
         <div className="card-footer">
           <div className="flex flex-row justify-between items-end">
             <UploadPhoto
-              minimal
+              isMinimal
               onSave={(id) => setNewPost({ ...newPost, photo: id })}
               label={newPost.photo ? 'Change photo' : 'Add photo'}
             />

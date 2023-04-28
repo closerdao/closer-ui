@@ -1,6 +1,7 @@
 import Head from 'next/head';
 
 import Bookings from '../../components/Bookings';
+import Heading from '../../components/ui/Heading';
 
 import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
@@ -33,7 +34,7 @@ const BookingsRequests = () => {
         <title>{__('booking_requests_title')}</title>
       </Head>
       <div className="main-content intro fullwidth">
-        <h1 className="page-title">{__('booking_requests_title')}</h1>
+        <Heading className="page-title">{__('booking_requests_title')}</Heading>
         <Bookings filter={filters.openBookings} />
       </div>
     </>

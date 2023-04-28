@@ -8,15 +8,16 @@ import Linkify from 'react-linkify';
 import ConnectedWallet from '../../components/ConnectedWallet';
 import EventsList from '../../components/EventsList';
 import UploadPhoto from '../../components/UploadPhoto';
+import Heading from '../../components/ui/Heading';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 import { TiDelete } from '@react-icons/all-files/ti/TiDelete';
 
+import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import api, { cdn } from '../../utils/api';
 import { __ } from '../../utils/helpers';
-import PageNotFound from '../404';
 
 const MemberPage = ({ member }) => {
   const router = useRouter();
@@ -380,9 +381,12 @@ const MemberPage = ({ member }) => {
                           <div className="flex justify-center items-center overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline">
                             <div className="relative w-11/12 my-6 mx-auto max-w-3xl">
                               <div className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-background outline-none focus:outline-none p-10">
-                                <h2 className="self-center text-lg font-normal mb-3">
+                                <Heading
+                                  level={2}
+                                  className="self-center text-lg font-normal mb-3"
+                                >
                                   {__('members_slug_links_title')}
-                                </h2>
+                                </Heading>
                                 {error && (
                                   <p className="validation-error">
                                     {__('members_slug_error')} {error}

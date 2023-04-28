@@ -1,8 +1,8 @@
 import { Dispatch, SetStateAction } from 'react';
 
+import { __ } from '../../utils/helpers';
 import Heading from '../ui/Heading';
 import Input from '../ui/Input';
-import { __ } from '../../utils/helpers';
 
 interface Props {
   setDiscountCode: Dispatch<SetStateAction<string>>;
@@ -11,16 +11,16 @@ interface Props {
 
 const DiscountCode = ({ setDiscountCode, discountCode }: Props) => {
   return (
-    <div className='flex basis-20'>
+    <div className="flex basis-20">
       <Heading level={4} className="text-[14px] mt-2 basis-1/2">
-      {__('bookings_dates_step_tickets_discount_code')}:
+        {__('bookings_dates_step_tickets_discount_code')}:
       </Heading>
       <Input
         type="text"
         value={discountCode}
-        onChange={(e) => setDiscountCode(e.target.value)}
-        placeholder='enter code'
-        className=''
+        onChange={setDiscountCode}
+        placeholder="enter code"
+        className=""
       />
     </div>
   );

@@ -3,7 +3,13 @@ import Link from 'next/link';
 
 import React from 'react';
 
-import { EventPreview, type VolunteerOpportunity, api, useAuth } from 'closer';
+import {
+  EventPreview,
+  Heading,
+  type VolunteerOpportunity,
+  api,
+  useAuth,
+} from 'closer';
 import { NextPage } from 'next';
 
 interface Props {
@@ -22,7 +28,7 @@ const VolunteerPage: NextPage<Props> = ({ opportunities }) => {
         </title>
       </Head>
       <section className="mb-8 w-full flex justify-between items-center">
-        <h1>Volunteer at TDF</h1>
+        <Heading>Volunteer at TDF</Heading>
         {hasStewardRole && (
           <Link href="/volunteer/create">
             <button className="btn-primary">Create opportunity</button>

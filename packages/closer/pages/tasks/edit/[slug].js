@@ -2,6 +2,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 
 import EditModel from '../../../components/EditModel';
+import Heading from '../../../components/ui/Heading';
 
 import models from '../../../models';
 import api from '../../../utils/api';
@@ -15,7 +16,7 @@ const EditTask = ({ task }) => {
     }
   };
   if (!task) {
-    return <h1>{__('tasks_edit_error')}</h1>;
+    return <Heading>{__('tasks_edit_error')}</Heading>;
   }
 
   return (

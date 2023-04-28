@@ -1,12 +1,14 @@
 import Head from 'next/head';
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
 
 import React from 'react';
 
+import Heading from '../../components/ui/Heading';
+
+import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import api, { cdn } from '../../utils/api';
-import PageNotFound from '../404';
 
 const Article = ({ article, error }) => {
   const { user, isAuthenticated } = useAuth();
@@ -54,26 +56,27 @@ const Article = ({ article, error }) => {
         )}
       </Head>
       <section>
-        { article.photo && <div className="relative w-full h-96 md:basis-1/2 md:w-96">
-          <Image
-            src={ fullImageUrl }
-            alt={ article.title }
-            fill={ true }
-            className="bg-cover bg-center"
-          />
-        </div> }
+        {article.photo && (
+          <div className="relative w-full h-96 md:basis-1/2 md:w-96">
+            <Image
+              src={fullImageUrl}
+              alt={article.title}
+              fill={true}
+              className="bg-cover bg-center"
+            />
+          </div>
+        )}
         <div className="mb-4">
-          <div><Link href="/blog">◀️ Blog</Link></div>
-          <h1>{article.title}</h1>
-          <h2 className="opacity-50 mb-4">
+          <div>
+            <Link href="/blog">◀️ Blog</Link>
+          </div>
+          <Heading>{article.title}</Heading>
+          <Heading level={2} className="opacity-50 mb-4">
             {article.category}
-          </h2>
+          </Heading>
           {isAuthenticated && user._id === article.createdBy && (
             <div>
-              <Link
-                href={`/blog/edit/${article.slug}`}
-                className="btn-primary"
-              >
+              <Link href={`/blog/edit/${article.slug}`} className="btn-primary">
                 Edit
               </Link>
             </div>
@@ -109,7 +112,8 @@ const Article = ({ article, error }) => {
 
 Article.getInitialProps = async ({ req, query }) => {
   try {
-    const slug = (req && req.url.replace('/blog/', '')) || (query && query.slug);
+    const slug =
+      (req && req.url.replace('/blog/', '')) || (query && query.slug);
     const res = await api.get(`/article/${slug}`);
 
     return {

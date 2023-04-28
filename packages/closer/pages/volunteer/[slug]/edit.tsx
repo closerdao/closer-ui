@@ -1,6 +1,7 @@
 import Head from 'next/head';
 
 import CreateVolunteerView from '../../../components/CreateVolunteerView';
+import Heading from '../../../components/ui/Heading';
 
 import { NextPage } from 'next';
 
@@ -23,7 +24,9 @@ const EditVolunteerOportunity: NextPage<{
         <title>{__('volunteer_edit_page_title')}</title>
       </Head>
       <div>
-        <h2 className="mb-2">{__('volunteer_edit_page_title')}</h2>
+        <Heading level={2} className="mb-2">
+          {__('volunteer_edit_page_title')}
+        </Heading>
         <CreateVolunteerView isEditMode data={volunteer} />
       </div>
     </>

@@ -1,5 +1,7 @@
 import Head from 'next/head';
 
+import Heading from '../../../components/ui/Heading';
+
 import dayjs from 'dayjs';
 
 import PageNotFound from '../../404';
@@ -43,7 +45,7 @@ const Ticket = ({ ticket, event, error }) => {
             </div>
           </div>
           <hr />
-          <h2>{event.name}</h2>
+          <Heading level={2}>{event.name}</Heading>
           <h4>{priceFormat(ticket.price.val, ticket.price.cur)}</h4>
         </div>
       </main>
