@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 
 import { DEFAULT_CURRENCY } from '../constants';
-import { __, priceFormat } from '../utils/helpers';
+import { __, getVatInfo, priceFormat } from '../utils/helpers';
 import CalculatorIcon from './icons/CalculatorIcon';
 import Heading from './ui/Heading';
 
@@ -22,7 +22,7 @@ const CheckoutTotal = ({ total }) => {
         </p>
       </div>
       <p className="text-right text-xs">
-        {__('bookings_checkout_step_total_description')}
+        {__('bookings_checkout_step_total_description')} {getVatInfo(total)}
       </p>
     </div>
   );

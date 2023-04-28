@@ -1,7 +1,7 @@
 import { DEFAULT_CURRENCY } from '../constants';
 import { useConfig } from '../hooks/useConfig';
 import { CloserCurrencies, Price } from '../types';
-import { __, priceFormat } from '../utils/helpers';
+import { __, getVatInfo, priceFormat } from '../utils/helpers';
 import Heading from './ui/Heading';
 
 interface Props {
@@ -11,7 +11,7 @@ interface Props {
   accomodationCost?: number;
   useTokens: boolean;
   totalToken: number;
-  totalFiat: Price<CloserCurrencies> | number | undefined;
+  totalFiat: Price<CloserCurrencies>;
   eventCost?: number;
   eventDefaultCost?: number;
   accomodationDefaultCost?: number;
@@ -92,7 +92,7 @@ const SummaryCosts = ({
         </p>
       </div>
       <p className="text-right text-xs">
-        {__('bookings_checkout_step_total_description')}
+        {__('bookings_checkout_step_total_description')} {getVatInfo(totalFiat)}
       </p>
     </div>
   );
