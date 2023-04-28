@@ -9,6 +9,7 @@ import { VolunteerOpportunity } from '../../types';
 import { cdn } from '../../utils/api';
 import { __ } from '../../utils/helpers';
 import EventDescription from '../EventDescription';
+import Heading from '../ui/Heading';
 
 interface Props {
   volunteer: VolunteerOpportunity;
@@ -55,7 +56,7 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
                   {end && duration <= 24 && ` - ${end.format('HH:mm')}`}
                 </span>
               </div>
-              <h1 className="md:text-4xl font-bold">{name}</h1>
+              <Heading className="md:text-4xl font-bold">{name}</Heading>
               {isEnded && (
                 <h3 className="p3 mr-2 italic">
                   {__('volunteer_page_opportunity_ended')}

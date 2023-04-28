@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 
 import { useAuth } from '../contexts/auth';
 import { __ } from '../utils/helpers';
+import Heading from './ui/Heading';
 
 const WhiteListed = ({ referredUsers }) => {
   const { user } = useAuth();
@@ -22,9 +23,9 @@ const WhiteListed = ({ referredUsers }) => {
 
   return (
     <>
-      <h2 className="text-4xl leading-snug mt-4 md:mt-20">
+      <Heading level={2} className="text-4xl leading-snug mt-4 md:mt-20">
         {__('token_sale_referral_code_title')}
-      </h2>
+      </Heading>
       <div className="flex flex-col-reverse md:flex-row gap-4 mt-2 md:mt-8">
         <button
           onClick={copyCode}

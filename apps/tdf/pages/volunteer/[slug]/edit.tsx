@@ -1,7 +1,9 @@
 import Head from 'next/head';
 
 import {
-  CreateVolunteerView, // Page401,
+  CreateVolunteerView,
+  Heading,
+  Page401,
   VolunteerOpportunity,
   api,
   useAuth,
@@ -14,14 +16,16 @@ const EditVolunteerOportunity: NextPage<{
   const { user } = useAuth();
   const hasStewardRole = user?.roles?.includes('steward');
 
-  // if (!hasStewardRole) return <Page401 />;
+  if (!hasStewardRole) return <Page401 />;
   return (
     <>
       <Head>
         <title>Edit Volunteer Opportunity</title>
       </Head>
       <div>
-        <h2 className="mb-2">Edit volunteer opportunity</h2>
+        <Heading level={2} className="mb-2">
+          Edit volunteer opportunity
+        </Heading>
         <CreateVolunteerView isEditMode data={volunteer} />
       </div>
     </>

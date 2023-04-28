@@ -45,7 +45,7 @@ const Navigation = () => {
               title="View profile"
               className="hidden md:flex md:flex-row items-center z-0"
             >
-              <ProfilePhoto user={user} />
+              <ProfilePhoto user={user} size="10" />
             </Link>
           )}
           <Menu isOpen={navOpen} toggleNav={toggleNav}>

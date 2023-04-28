@@ -7,6 +7,7 @@ import { cdn } from '../utils/api';
 import { __ } from '../utils/helpers';
 import ListingPrice from './ListingPrice';
 import Button from './ui/Button';
+import Heading from './ui/Heading';
 
 const ListingCard = ({
   listing,
@@ -31,8 +32,7 @@ const ListingCard = ({
 
   return (
     <div className="flex flex-col rounded-lg p-4 shadow-4xl md:mb-0 md:basis-full md:h-full">
-
-      <h2 className="text-2xl leading-10 font-normal">{name}</h2>
+      <Heading className="text-2xl leading-10 font-normal">{name}</Heading>
       {listing.photos && listing.photos.length > 0 && (
         <div className="relative h-48 rounded-lg my-4 overflow-hidden">
           <Image

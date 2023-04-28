@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
+import Heading from './ui/Heading';
 
 const ApplicationForm = () => {
   const [submitted, setSubmitted] = useState(false);
@@ -38,7 +39,9 @@ const ApplicationForm = () => {
   return (
     <div>
       {submitted ? (
-        <h2 className="my-4">{__('apply_success')}</h2>
+        <Heading level={2} className="my-4">
+          {__('apply_success')}
+        </Heading>
       ) : (
         <form className="join mt-24 flex flex-col" onSubmit={submit}>
           <div className="w-full mb-4">

@@ -2,13 +2,19 @@ import { FC } from 'react';
 
 import { PINK_PAPER_URL } from '@/constants';
 
+import { Heading } from 'closer';
+
 export const Timeline: FC = () => {
   return (
     <section>
       <div className="relative wrap overflow-hidden h-full">
-        <h2 className="text-center mb-6 font-bold text-2xl" id="milestones">
+        <Heading
+          level={2}
+          className="text-center mb-6 font-bold text-2xl"
+          id="milestones"
+        >
           Milestones
-        </h2>
+        </Heading>
         <div className="mb-4 lg:mb-8 lg:flex lg:justify-between items-center right-timeline">
           <div className="lg:w-12"></div>
           <div className="flex items-center mb-2 lg:mb-0">
@@ -261,7 +267,12 @@ export const Timeline: FC = () => {
             </h3>
           </div>
           <div className="lg:bg-pink-200 lg:rounded-lg lg:shadow-xl lg:w-5/12 py-2 lg:px-2">
-            <h2 className="text-lg font-bold mb-2 text-center">Go Live!</h2>
+            <Heading
+              level={2}
+              className="text-lg font-bold mb-2 text-c</Heading>"
+            >
+              Go Live!
+            </Heading>
             <ol className="text-md">
               <li>🖊️ Execute purchase option on reminder 25Ha of land</li>
               <li>💰 Tokens become liquid and can be resold</li>

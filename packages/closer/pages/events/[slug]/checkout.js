@@ -10,6 +10,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import CheckoutForm from '../../../components/CheckoutForm';
 import DateTimePicker from '../../../components/DateTimePicker';
 import Tabs from '../../../components/Tabs';
+import Heading from '../../../components/ui/Heading';
 
 import dayjs from 'dayjs';
 
@@ -131,11 +132,11 @@ const EventCheckout = ({ event, error }) => {
         <title>{__('events_slug_checkout_title')}</title>
       </Head>
       <div className="main-content max-w-prose booking">
-        <h1 className="mb-4">
+        <Heading className="mb-4">
           <Link as={`/events/${event.slug}`} href="/events/[slug]">
             {event.name}
           </Link>
-        </h1>
+        </Heading>
         {event.start && (
           <p className="text-gray-500 text-sm mb-24">
             {start.format('MMM D, YYYY')} at {start.format('HH:mm')}{' '}

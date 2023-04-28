@@ -61,27 +61,27 @@ const MemberList = ({ list, preview, channel, filter, title, limit }) => {
               href="/members/[slug]"
               legacyBehavior
             >
-              <div className="flex flex-col justify-start card">
-                <div className="flex flex-row items-center justify-between w-full">
+              <div className="flex flex-row items-center w-full card cursor-pointer">
+                <div className="w-20 mr-4">
+                  <ProfilePhoto user={user.toJS()} size="20" />
+                </div>
+                <div className="flex flex-col justify-start">
                   <h4 className="font-light text-2xl md:text-2xl">
                     {user.get('screenname')}
                     <span className="ml-3 text-xs text-gray-500">
                       {user.get('timezone')}
                     </span>
                   </h4>
-                  <ProfilePhoto user={user.toJS()} width="12" height="12" />
-                </div>
-                {user.get('about') && (
-                  <p className="py-2 text-sm">
-                    {preview
-                      ? user.get('about').substring(0, 120).concat('...')
-                      : user.get('about')}
-                  </p>
-                )}
-                <div className="pt-2">
-                  <button className="btn-primary">
+                  {user.get('about') && (
+                    <p className="py-2 text-sm">
+                      {preview
+                        ? user.get('about').substring(0, 120).concat('...')
+                        : user.get('about')}
+                    </p>
+                  )}
+                  <div className="pt-2 text-primary">
                     {__('member_list_see_profile')}
-                  </button>
+                  </div>
                 </div>
               </div>
             </Link>

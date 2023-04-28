@@ -51,6 +51,7 @@
   "booking_status_pending": "Your stay is being processed by our Space Host. Please wait for your booking to be confirmed.",
   "booking_status_confirmed": "Your booking is confirmed. You can now pay for your stay!",
   "booking_status_paid": "Pack your bags! Your’e ready to come and stay with us. Don’t forget to check in when you arrive to collect your POP.",
+  "booking_status_booking_complete": "Your booking is now completed. You're ready to go!",
   "booking_status_checked_in": "Nice one! Welcome to the Traditional Dream Factory. ",
   "booking_status_checked_out": "We hope you enjoyed your stay! Please provide us with your feedback.",
   "bookings_accomodation_step_guest": "Guest",

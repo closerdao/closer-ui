@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import React from 'react';
 import Linkify from 'react-linkify';
+import Heading from '../../components/ui/Heading';
 
 import PostList from '../../components/PostList';
 import UpcomingEvents from '../../components/UpcomingEvents';
@@ -30,7 +31,7 @@ const ChannelPage = ({ channel }) => {
           <div className="col lg two-third">
             <div className="channel">
               <div className="page-header">
-                <h1>{channel.name}</h1>
+                <Heading>{channel.name}</Heading>
                 <div className="page-actions">
                   {user &&
                     (user.roles.includes('admin') ||

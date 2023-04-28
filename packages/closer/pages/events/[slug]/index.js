@@ -7,6 +7,7 @@ import EventAttendees from '../../../components/EventAttendees';
 import EventDescription from '../../../components/EventDescription';
 import EventPhoto from '../../../components/EventPhoto';
 import Photo from '../../../components/Photo';
+import Heading from '../../../components/ui/Heading';
 
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
@@ -121,7 +122,7 @@ const Event = ({ event, error }) => {
       {event.password && event.password !== password ? (
         <div className="flex flex-col justify-center items-center">
           <div className="w-34">
-            <h1>This event is password protected</h1>
+            <Heading>This event is password protected</Heading>
             <input
               onChange={(e) => setPassword(e.target.value)}
               placeholder="password"
@@ -155,11 +156,11 @@ const Event = ({ event, error }) => {
                 setPhoto={setPhoto}
               />
               <div className="md:w-1/2 p-2">
-                <h2 className="text-xl font-light">
+                <Heading level={2} className="text-xl font-light">
                   {start && start.format(dateFormat)}
                   {end && duration > 24 && ` - ${end.format(dateFormat)}`}
                   {end && duration <= 24 && ` - ${end.format('HH:mm')}`}
-                </h2>
+                </Heading>
                 {event.address && (
                   <h3 className="text-lg font-light text-gray-500">
                     {event.address}
@@ -168,7 +169,9 @@ const Event = ({ event, error }) => {
                 {end && end.isBefore(dayjs()) && (
                   <h3 className="p3 mr-2 italic">Event ended</h3>
                 )}
-                <h1 className="md:text-4xl mt-4 font-bold">{event.name}</h1>
+                <Heading className="md:text-4xl mt-4 font-bold">
+                  {event.name}
+                </Heading>
                 <div className="mt-4 event-actions flex items-center">
                   {event.ticket && start && start.isAfter(dayjs()) ? (
                     <Link

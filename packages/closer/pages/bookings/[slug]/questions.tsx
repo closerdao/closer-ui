@@ -63,10 +63,9 @@ const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
     //this is a temporary solution to redirect to summary page if there are no questions
     //once we have questions from user profile integrated we should remove this
     if (!questions?.length) {
-      router.push(`/bookings/${booking._id}/summary`)
+      router.push(`/bookings/${booking._id}/summary`);
     }
   }, []);
-
 
   const handleSubmit = async () => {
     try {
@@ -160,7 +159,8 @@ Questionnaire.getInitialProps = async ({
     const {
       data: { results: booking },
     } = await api.get(`/booking/${query.slug}`);
-    const optionalEvent = booking.eventId && await api.get(`/event/${booking.eventId}`);
+    const optionalEvent =
+      booking.eventId && (await api.get(`/event/${booking.eventId}`));
     const event = optionalEvent?.data?.results;
 
     return { booking, eventQuestions: event?.fields, error: null };

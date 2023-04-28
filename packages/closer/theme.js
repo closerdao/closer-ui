@@ -1,7 +1,8 @@
 module.exports = {
   extend: {
     colors: {
-      accent: '#1c1c1c',
+      'accent-core': '#FE4FB7',
+      'accent-light': '#FFC8E9',
       primary: '#e4427d',
       'primary-light': '#FFEDF8',
       secondary: '#1b3bc3',
@@ -11,7 +12,8 @@ module.exports = {
       'foreground-dark': '#dadada',
       card: '#ebf1f6',
       neutral: '#F0F0F0',
-      complimentary: '#333333',
+      'complimentary-light': '#333333',
+      'complimentary-core': '#000000',
       error: '#9f1f42',
       line: '#a3a3a3',
       failure: '#DB4726',

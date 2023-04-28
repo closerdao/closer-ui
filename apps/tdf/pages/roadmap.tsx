@@ -4,6 +4,8 @@ import React from 'react';
 
 import { Timeline } from '@/components';
 
+import { Heading } from 'closer';
+
 const RoadmapPage = () => (
   <>
     <Head>
@@ -14,7 +16,7 @@ const RoadmapPage = () => (
     </Head>
     <main className="mx-auto max-w-3xl">
       <section className="my-8 text-xl">
-        <h1 className="font-bold mb-4">🛠️ TDF Roadmap</h1>
+        <Heading className="font-bold mb-4">🛠️ TDF Roadmap</Heading>
         <p className="mb-4">
           Traditional Dream Factory is operating as a{' '}
           <a

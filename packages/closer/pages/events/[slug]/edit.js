@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import EditModel from '../../../components/EditModel';
+import Heading from '../../../components/ui/Heading';
 
 import { FaArrowLeft } from '@react-icons/all-files/fa/FaArrowLeft';
 
@@ -18,7 +19,7 @@ const EditEvent = ({ event, error }) => {
     }
   };
   if (!event) {
-    return <h1>{__('events_slug_edit_error')}</h1>;
+    return <Heading>{__('events_slug_edit_error')}</Heading>;
   }
 
   return (
@@ -34,9 +35,9 @@ const EditEvent = ({ event, error }) => {
         >
           <FaArrowLeft className="mr-1" /> {__('generic_back')}
         </Link>
-        <h2 className="flex justify-start items-center">
+        <Heading level={2} className="flex justify-start items-center">
           {__('events_slug_edit_link')} <i>{event.name}</i>
-        </h2>
+        </Heading>
         {!process.env.NEXT_PUBLIC_STRIPE_PUB_KEY && (
           <div className="my-4 error-box italic">
             {__('events_no_stripe_integration')}

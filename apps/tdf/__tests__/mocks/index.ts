@@ -29,6 +29,9 @@ export const user = {
   attributes: [],
   managedBy: [],
   _id: '641c2524f72ea12f5e9ab85d',
+  preferences: {
+    diet: 'Veggies',
+  },
 };
 
 export const bookingSettings = {

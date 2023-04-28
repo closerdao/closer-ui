@@ -7,8 +7,9 @@ import BookingWallet from '../../../components/BookingWallet';
 import Checkbox from '../../../components/Checkbox';
 import CheckoutPayment from '../../../components/CheckoutPayment';
 import CheckoutTotal from '../../../components/CheckoutTotal';
-import Button from '../../../components/ui/Button';
 import PageError from '../../../components/PageError';
+import Button from '../../../components/ui/Button';
+import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 import Row from '../../../components/ui/Row';
 
@@ -131,10 +132,10 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
               </div>
             )}
 
-            <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2">
+            <Heading className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2">
               <span className="mr-1">🏡</span>
               <span>{__('bookings_checkout_step_accomodation')}</span>
-            </h2>
+            </Heading>
             <div className="flex justify-between items-center mt-3">
               <p>{listingName}</p>
               <p className="font-bold">{priceFormat(accomodationCost)}</p>
@@ -163,10 +164,13 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
             )}
           </div>
           <div>
-            <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3">
+            <Heading
+              level={2}
+              className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3"
+            >
               <span className="mr-1">🛠</span>
               <span>{__('bookings_checkout_step_utility_title')}</span>
-            </h2>
+            </Heading>
             <div className="flex justify-between items-center mt-3">
               <p> {__('bookings_summary_step_utility_total')}</p>
               <p className="font-bold">{priceFormat(utilityFiat)}</p>
@@ -176,25 +180,26 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
             </p>
           </div>
           <CheckoutTotal total={booking.total} />
-          { booking.total.val > 0 ?
+          {booking.total.val > 0 ? (
             <CheckoutPayment
               bookingId={booking._id}
               buttonDisabled={
-                useTokens && (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)
+                useTokens &&
+                (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)
               }
               useTokens={useTokens}
               totalToPayInFiat={booking.total as any}
               dailyTokenValue={dailyRentalToken?.val}
               startDate={start}
-              endDate={end}
               totalNights={duration}
               user={user}
               settings={settings}
-            />:
+            />
+          ) : (
             <Button className="booking-btn" onClick={handleNext}>
               {__('buttons_booking_request')}
             </Button>
-          }
+          )}
         </div>
       </div>
     </>
@@ -212,11 +217,11 @@ Checkout.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
         data: { results: settings },
       },
       optionalEvent,
-      optionalListing
+      optionalListing,
     ] = await Promise.all([
       api.get('/config/booking'),
       booking.eventId && api.get(`/event/${booking.eventId}`),
-      booking.listing && api.get(`/listing/${booking.listing}`)
+      booking.listing && api.get(`/listing/${booking.listing}`),
     ]);
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;

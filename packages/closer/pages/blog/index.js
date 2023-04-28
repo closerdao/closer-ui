@@ -1,6 +1,10 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
+import React from 'react';
+
+import Heading from '../../components/ui/Heading';
+
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import api from '../../utils/api';
@@ -15,7 +19,7 @@ const Search = ({ tags, error, articles }) => {
         <title>{`${__('generic_search')} - ${PLATFORM_NAME}`}</title>
       </Head>
       <section className="article limit-width">
-        <h1 className="mb-4">{PLATFORM_NAME} Blog</h1>
+        <Heading className="mb-4">{PLATFORM_NAME} Blog</Heading>
         {isAuthenticated && (
           <div className="mb-4">
             <Link href="/blog/create" className="btn-primary">
@@ -50,7 +54,7 @@ const Search = ({ tags, error, articles }) => {
       </section>
 
       <section className="mt-8">
-        <h2>{__('search_related_content')}</h2>
+        <Heading level={2}>{__('search_related_content')}</Heading>
         <div className="tags py-4">
           {tags
             ? tags.map((tag) => (

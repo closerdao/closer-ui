@@ -38,7 +38,7 @@ const Button = ({
         ${className || ''}
         `}
       >
-        <div className='mt-[7px] mr-1.5'>{isLoading && <Spinner />}</div>
+        <div className="mt-[7px] mr-1.5">{isLoading && <Spinner />}</div>
         {children}
       </button>
       {infoText && <div className="text-sm text-center pt-2">{infoText}</div>}

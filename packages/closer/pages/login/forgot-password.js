@@ -2,6 +2,8 @@ import Head from 'next/head';
 
 import React, { useState } from 'react';
 
+import Heading from '../../components/ui/Heading';
+
 import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
 
@@ -30,7 +32,9 @@ const ForgotPasswordScreen = () => {
         {error && <div className="text-primary my-4 text-center">{error}</div>}
         {isResetCompleted ? (
           <div className="success">
-            <h1 className="mb-4">{__('login_forgot_password_subtitle')}</h1>
+            <Heading className="mb-4">
+              {__('login_forgot_password_subtitle')}
+            </Heading>
             <p>{__('login_forgot_password_cta', email)}</p>
           </div>
         ) : (

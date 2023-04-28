@@ -2,6 +2,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 
 import EditModel from '../../../components/EditModel';
+import Heading from '../../../components/ui/Heading';
 
 import PageNotFound from '../../404';
 import models from '../../../models';
@@ -16,7 +17,7 @@ const EditEvent = ({ event }) => {
     }
   };
   if (!event) {
-    return <h1>{__('bookings_edit_slug_not_found')}</h1>;
+    return <Heading>{__('bookings_edit_slug_not_found')}</Heading>;
   }
 
   if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {

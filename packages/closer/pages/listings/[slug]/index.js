@@ -6,6 +6,7 @@ import Linkify from 'react-linkify';
 
 import PostList from '../../../components/PostList';
 import Slider from '../../../components/Slider';
+import Heading from '../../../components/ui/Heading';
 
 import PageNotFound from '../../404';
 import api, { cdn } from '../../../utils/api';
@@ -58,7 +59,7 @@ const Listing = ({ listing, error }) => {
             </div>
           </div> */}
           <div>
-            <h1>{listing.name}</h1>
+            <Heading>{listing.name}</Heading>
             {error && <div className="validation-error">{error}</div>}
             <section>
               <p>

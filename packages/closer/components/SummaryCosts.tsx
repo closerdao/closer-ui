@@ -2,6 +2,7 @@ import { DEFAULT_CURRENCY } from '../constants';
 import { useConfig } from '../hooks/useConfig';
 import { CloserCurrencies, Price } from '../types';
 import { __, getVatInfo, priceFormat } from '../utils/helpers';
+import Heading from './ui/Heading';
 
 interface Props {
   utilityFiat?: Price<
@@ -28,14 +29,17 @@ const SummaryCosts = ({
   accomodationDefaultCost,
   volunteerId,
 }: Props) => {
-  const { BLOCKCHAIN_DAO_TOKEN }: any = useConfig();
+  const { BLOCKCHAIN_DAO_TOKEN } = useConfig() || {};
 
   return (
     <div>
-      <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3">
+      <Heading
+        level={2}
+        className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3"
+      >
         <span className="mr-1">💰</span>
         <span>{__('bookings_summary_step_costs_title')}</span>
-      </h2>
+      </Heading>
 
       {eventCost ? (
         <div className="flex justify-between items-center mt-3">

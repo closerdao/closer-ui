@@ -3,14 +3,7 @@ import Youtube from 'react-youtube-embed';
 
 import UploadPhoto from './UploadPhoto';
 
-const EventPhoto = ({
-  event,
-  user,
-  photo,
-  cdn,
-  isAuthenticated,
-  setPhoto,
-}) => (
+const EventPhoto = ({ event, user, photo, cdn, isAuthenticated, setPhoto }) => (
   <div className="md:w-1/2 md:mr-4 mb-4 relative bg-gray-50 md:h-80">
     {event && event.recording && isAuthenticated ? (
       <Youtube id={event.recording} />
@@ -31,16 +24,16 @@ const EventPhoto = ({
     )}
     {isAuthenticated &&
       (user._id === event.createdBy || user.roles.includes('admin')) && (
-      <div className="mt-2">
-        <UploadPhoto
-          model="event"
-          minimal
-          id={event._id}
-          onSave={(id) => setPhoto(id)}
-          label={photo ? 'Change photo' : 'Add photo'}
-        />
-      </div>
-    )}
+        <div className="mt-2">
+          <UploadPhoto
+            model="event"
+            isMinimal
+            id={event._id}
+            onSave={(id) => setPhoto(id)}
+            label={photo ? 'Change photo' : 'Add photo'}
+          />
+        </div>
+      )}
   </div>
 );
 export default EventPhoto;
