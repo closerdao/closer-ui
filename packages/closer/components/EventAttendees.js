@@ -38,9 +38,9 @@ const EventAttendees = ({
                 key={attendee.get('_id')}
                 as={`/members/${attendee.get('slug')}`}
                 href="/members/[slug]"
-                className="from user-preview z-10"
+                className="from user-preview z-10"t
               >
-                <ProfilePhoto size="sm" user={attendee.toJS()} />
+                <ProfilePhoto size="9" user={attendee.toJS()} />
               </Link>
             );
           })}

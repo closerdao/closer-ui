@@ -12,7 +12,7 @@ const ProfilePhoto = ({ user, size, stack }) => {
     <span
       className={`${
         stack ? 'border-white border-2 ' : ''
-      }w-${size} h-${size} inline-flex justify-center items-center text-center rounded-full overflow-hidden bg-primary-light`}
+      }w-${size} h-${size} inline-flex justify-center items-center text-center rounded-full overflow-hidden bg-primary`}
       title={user?.screenname}
     >
       {user?.photo ? (
