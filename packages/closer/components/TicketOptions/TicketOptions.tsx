@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction } from 'react';
+import { Dispatch, FC, SetStateAction, useEffect } from 'react';
 
 import {
   CloserCurrencies,
@@ -28,7 +28,7 @@ const Ticket = ({
   selectTicketOption,
   selectedTicketOption,
   isVolunteer,
-  isDayTicket
+  isDayTicket,
 }: {
   name: string;
   price?: number;
@@ -39,7 +39,11 @@ const Ticket = ({
   selectedTicketOption?: TicketOption;
   isVolunteer?: boolean;
   isDayTicket?: boolean;
-}) => {
+  }) => {
+  
+
+
+
   return (
     <button
       className={`border-2 flex flex-col justify-center rounded-md shadow-lg mr-3 mb-3 p-4 hover:border-accent ${
@@ -76,6 +80,12 @@ const TicketOptions: FC<Props> = ({
   setDiscountCode,
   disclaimer
 }) => {
+
+  useEffect(() => {
+    console.log('discountCode=', discountCode)
+  }, [])
+
+
   return (
     <div>
       <h2 className="mb-3 text-2xl leading-10 font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center">
@@ -115,6 +125,7 @@ const TicketOptions: FC<Props> = ({
           ))
         )}
       </div>
+      {/* {discountCode} */}
       <DiscountCode
         discountCode={discountCode || ''}
         setDiscountCode={setDiscountCode}

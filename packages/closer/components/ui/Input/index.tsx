@@ -7,7 +7,7 @@ type InputProps = {
   id?: string;
   label?: string;
   value?: string;
-  onChange?: (value: string) => void;
+  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
   onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void;
   type?: 'text' | 'password';
   isRequired?: boolean;
@@ -17,6 +17,7 @@ type InputProps = {
   dataTestId?: string;
   validation?: 'email' | 'number';
   isDisabled?: boolean;
+  hasIcon?: boolean;
 };
 
 const Input = React.memo(
@@ -34,6 +35,7 @@ const Input = React.memo(
     onBlur,
     validation,
     isDisabled = false,
+    hasIcon
   }: InputProps) => {
     const [localValue, setLocalValue] = useState(value || '');
     const [isEditing, setIsEditing] = useState(false);
@@ -122,8 +124,9 @@ const Input = React.memo(
         <input
           id={id}
           type={type}
-          value={localValue}
-          onChange={handleChange}
+          value={value ? value : localValue}
+          // onChange={handleChange}
+          onChange={onChange ? onChange : handleChange}
           onBlur={handleBlur}
           onFocus={handleFocus}
           required={isRequired}
