@@ -17,7 +17,7 @@ const MemberMenu = () => {
           user.roles.some((role) => link.roles.includes(role)))) &&
       (!link.subscriptions ||
         (isAuthenticated &&
-          link.subscriptions.includes(user.subscription.slug)))
+          link.subscriptions.includes(user.subscription?.slug)))
   );
 
   const isWalletEnabled =
