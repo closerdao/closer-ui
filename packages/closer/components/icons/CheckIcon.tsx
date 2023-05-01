@@ -13,7 +13,7 @@ export const CheckIcon: FC<Props> = ({
 }) => {
   return (
     <div
-      className={`flex items-center justify-center ${className}`}
+      className={`${className}`}
       onClick={onClick}
     >
       <svg
