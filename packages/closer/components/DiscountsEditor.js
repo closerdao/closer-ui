@@ -97,7 +97,7 @@ const DiscountsEditor = ({ value, onChange }) => {
                 max="100000"
                 step="1"
                 className="w-32"
-                value={option.val}
+                value={option.val || ''}
                 placeholder="24$"
                 onChange={(e) => {
                   e.preventDefault();

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { CURRENCIES_WITH_LABELS } from '../constants';
 import { __ } from '../utils/helpers';
 import PriceEditor from './PriceEditor';
 import Switch from './Switch';
@@ -22,7 +23,7 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
         name: '',
         icon: null,
         price: 0,
-        currency: 'USD',
+        currency: CURRENCIES_WITH_LABELS[0].value,
         disclaimer: '',
         limit: 0,
       }),
@@ -100,7 +101,7 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
                   updateOption(index, {
                     ...option,
                     isDayTicket: checked,
-                  })
+                  });
                 }}
                 checked={option.isDayTicket}
               />
