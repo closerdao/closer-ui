@@ -1,17 +1,6 @@
 import { useEffect, useState } from 'react';
 
-export const currencies = [
-  {
-    value: 'EUR',
-    label: 'Euros',
-    symbol: '€',
-  },
-  {
-    value: 'TDF',
-    label: '$TDF',
-    symbol: '$TDF',
-  },
-];
+import { CURRENCIES_WITH_LABELS } from '../constants';
 
 const PriceEditor = ({ value, onChange, placeholder, required }) => {
   const [price, setPrice] = useState(value);
@@ -25,6 +14,9 @@ const PriceEditor = ({ value, onChange, placeholder, required }) => {
     setPrice(update);
     onChange && onChange(update);
   };
+  useEffect(() => {
+    setPrice(CURRENCIES_WITH_LABELS[0].value);
+  }, [CURRENCIES_WITH_LABELS]);
 
   useEffect(() => {
     setPrice(value);
@@ -37,7 +29,7 @@ const PriceEditor = ({ value, onChange, placeholder, required }) => {
         onChange={(e) => updateCurrency(e.target.value)}
         className="w-64 mr-3"
       >
-        {currencies.map((opt) => (
+        {CURRENCIES_WITH_LABELS.map((opt) => (
           <option value={opt.value} key={opt.value}>
             {opt.symbol} - {opt.label}
           </option>
@@ -62,7 +54,7 @@ PriceEditor.defaultProps = {
   onChange: null,
   value: {
     val: 0.0,
-    cur: currencies[0].value,
+    cur: CURRENCIES_WITH_LABELS[0].value,
   },
 };
 

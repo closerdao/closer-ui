@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
   EventsList,
@@ -27,13 +27,17 @@ const RESOURCES_KEY = { sort_by: 'created' };
 const HomePage = () => {
   const { isAuthenticated } = useAuth();
   const { platform } = usePlatform();
+  const [loadedResources, setLoadedResources] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([platform.resource.get(RESOURCES_KEY)]);
+      setLoadedResources(true);
+      await platform.resource.get(RESOURCES_KEY);
     };
 
-    loadData();
+    if (!loadedResources) {
+      loadData();
+    }
   }, [platform]);
 
   return (
@@ -43,7 +47,7 @@ const HomePage = () => {
         <meta
           name="description"
           content="Traditional Dream Factory (TDF) is a regenerative playground in Abela, Portugal."
-        ></meta>
+        />
       </Head>
       <section className="text-right -ml-6 -mr-6 pt-20 pb-12 -mt-6 mb-12 md:mb-32 md:min-h-screen p-6 bg-cover bg-[url('/images/landing/sheep-mobile.jpg')] md:bg-[url('/images/landing/sheep-min.png')]">
         <div className="max-w-6xl mx-auto">
