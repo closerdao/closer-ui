@@ -1,14 +1,17 @@
-import React, { ChangeEvent, useRef, useState } from 'react';
-
-import { CheckIcon } from '../../icons/CheckIcon';
-import { SettingsIcon } from '../../icons/SettingsIcon';
+import React, {
+  ChangeEvent,
+  Dispatch,
+  SetStateAction,
+  useRef,
+  useState,
+} from 'react';
 
 type InputProps = {
   id?: string;
   label?: string;
   value?: string;
-  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
-  onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void;
+  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   type?: 'text' | 'password';
   isRequired?: boolean;
   placeholder?: string;
@@ -17,7 +20,9 @@ type InputProps = {
   dataTestId?: string;
   validation?: 'email' | 'number';
   isDisabled?: boolean;
-  hasIcon?: boolean;
+  isEditSave?: boolean;
+  hasSaved?: boolean;
+  setHasSaved?: Dispatch<SetStateAction<boolean>>;
 };
 
 const Input = React.memo(
@@ -35,7 +40,9 @@ const Input = React.memo(
     onBlur,
     validation,
     isDisabled = false,
-    hasIcon
+    isEditSave = false,
+    hasSaved,
+    setHasSaved,
   }: InputProps) => {
     const [localValue, setLocalValue] = useState(value || '');
     const [isEditing, setIsEditing] = useState(false);
@@ -72,17 +79,9 @@ const Input = React.memo(
       }
     };
 
-    const handleClick = () => {
-      setIsEditing(true);
-      if (inputRef?.current) {
-        (inputRef.current as HTMLInputElement).focus();
-      }
-    };
-
     const handleSubmit = () => {
       if (onChangeRef.current && isValidValue(localValue)) {
-        onChangeRef.current(localValue);
-        setIsEditing(false);
+        onChangeRef.current(localValue as any);
         if (inputRef?.current) {
           (inputRef.current as HTMLInputElement).blur();
         }
@@ -105,8 +104,13 @@ const Input = React.memo(
     };
 
     const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-      setIsEditing(false);
-      onBlur && onBlur(event);
+      setTimeout(() => {
+        setIsEditing(false);
+        onBlur && onBlur(event);
+        if (setHasSaved) {
+          setHasSaved(false);
+        }
+      }, 2000);
     };
 
     const validationError =
@@ -124,9 +128,8 @@ const Input = React.memo(
         <input
           id={id}
           type={type}
-          value={value ? value : localValue}
-          // onChange={handleChange}
-          onChange={onChange ? onChange : handleChange}
+          value={isEditSave ? localValue : value}
+          onChange={isEditSave ? handleChange : onChange}
           onBlur={handleBlur}
           onFocus={handleFocus}
           required={isRequired}
@@ -155,19 +158,15 @@ const Input = React.memo(
           disabled={isDisabled}
           aria-labelledby={label}
         />
-        {isEditing
-          ? isValidValue(localValue) && (
-              <CheckIcon
-                onClick={undefined}
-                className="absolute right-4 top-12 mt-1"
-              />
-            )
-          : !isDisabled && (
-              <SettingsIcon
-                className="absolute right-4 top-12 mt-1"
-                onClick={handleClick}
-              />
-            )}
+        {isEditing && isEditSave && isValidValue(localValue) && (
+          <button
+            className="absolute right-3 top-11 rounded-full text-white mt-1 bg-primary px-3 py-1"
+            onClick={handleSubmit}
+          >
+            {hasSaved ? 'Saved!' : 'Save'}
+          </button>
+        )}
+
         {validationError && (
           <span className="text-red-500 text-sm">{validationError}</span>
         )}

@@ -15,14 +15,10 @@ const DiscountCode = ({ setDiscountCode, discountCode }: Props) => {
       <Heading level={4} className="text-[14px] mt-2 basis-1/2">
         {__('bookings_dates_step_tickets_discount_code')}:
       </Heading>
-      <div className='p-6'>
-        code:
-        {discountCode}
-      </div>
       <Input  
         type="text"
         value={discountCode}
-        onChange={(e: ChangeEvent<HTMLInputElement>) => setDiscountCode(e.target.value)}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => setDiscountCode(e.target.value ) as any}
         placeholder="enter code"
         className=""
       />
