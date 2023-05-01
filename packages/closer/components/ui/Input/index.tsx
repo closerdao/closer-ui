@@ -1,7 +1,6 @@
 import React, { ChangeEvent, useRef, useState } from 'react';
 
 import { CheckIcon } from '../../icons/CheckIcon';
-import { SettingsIcon } from '../../icons/SettingsIcon';
 
 type InputProps = {
   id?: string;
