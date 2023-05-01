@@ -172,7 +172,17 @@ const MemberPage = ({ member }) => {
             <div className="flex flex-col md:flex-row w-full">
               <div className="group md:w-72 items-center justify-start relative">
                 <div className="flex flex-col items-start mb-4 md:mr-8 md:items-center">
-                  {member?.photo ? (
+                  {isAuthenticated && member._id === currentUser._id ? (
+                    <UploadPhoto
+                      model="user"
+                      id={member._id}
+                      onSave={() => {
+                        router.push(router.asPath);
+                      }}
+                      label={member.photo ? 'Change photo' : 'Add photo'}
+                    />
+                  ):
+                  member?.photo ? (
                     <img
                       src={`${cdn}${member.photo}-profile-lg.jpg`}
                       loading="lazy"
@@ -182,18 +192,6 @@ const MemberPage = ({ member }) => {
                   ) : (
                     <FaUser className="text-gray-200 text-6xl" />
                   )}
-                  <div className="items-center h-full lg:opacity-0 group-hover:opacity-80 mt-2">
-                    {isAuthenticated && member._id === currentUser._id && (
-                      <UploadPhoto
-                        model="user"
-                        id={member._id}
-                        onSave={() => {
-                          router.push(router.asPath);
-                        }}
-                        label={member.photo ? 'Change photo' : 'Add photo'}
-                      />
-                    )}
-                  </div>
                 </div>
               </div>
 
@@ -217,7 +215,6 @@ const MemberPage = ({ member }) => {
                       </a>
                     </div>
                   )}
-                  <h6 className="text-sm my-2 ml-1">{member.email}</h6>
                   <div className="mt-1 w-full">
                     {member.roles && (
                       <div className="text-sm mt-1 tags">

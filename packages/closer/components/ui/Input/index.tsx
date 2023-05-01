@@ -114,6 +114,11 @@ const Input = React.memo(
 
     return (
       <div className={`flex flex-col gap-4 relative ${className}`}>
+        {isEditing && isValidValue(localValue) && (
+          <CheckIcon
+            className="absolute right-4 top-12 mt-1"
+          />
+        )}
         {label && (
           <label className="font-medium text-complimentary-light" id={label}>
             {label}
@@ -152,19 +157,6 @@ const Input = React.memo(
           disabled={isDisabled}
           aria-labelledby={label}
         />
-        {isEditing
-          ? isValidValue(localValue) && (
-              <CheckIcon
-                onClick={undefined}
-                className="absolute right-4 top-12 mt-1"
-              />
-            )
-          : !isDisabled && (
-              <SettingsIcon
-                className="absolute right-4 top-12 mt-1"
-                onClick={handleClick}
-              />
-            )}
         {validationError && (
           <span className="text-red-500 text-sm">{validationError}</span>
         )}

@@ -79,7 +79,7 @@ const SettingsPage: FC = () => {
             <span className="block sm:inline">{error}</span>
           </div>
         )}
-        <Heading level={2} className="mt-16">
+        <Heading level={3} className="border-b border-divider pb-2.5 leading-9 mt-12">
           ⭐ Account
         </Heading>
         <Input
@@ -107,7 +107,7 @@ const SettingsPage: FC = () => {
             className="my-4"
           />
         </div>
-        <Heading level={2} className="mt-16">
+        <Heading level={3} className="border-b border-divider pb-2.5 leading-9 mt-12">
           🔰 Recommended
         </Heading>
         <Input
@@ -138,7 +138,7 @@ const SettingsPage: FC = () => {
           options={SKILLS_EXAMPLES}
           placeholder="Pick or create yours"
         />
-        <Heading level={2} className="mt-16">
+        <Heading level={3} className="border-b border-divider pb-2.5 leading-9 mt-12">
           🔰 Optional
         </Heading>
         <Input
