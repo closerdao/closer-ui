@@ -124,7 +124,8 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
             {eventPrice && (
               <div>
                 <HeadingRow>
-                  🎉 {__('bookings_checkout_ticket_cost')}
+                  <span className="mr-2">🎉</span>
+                  <span>{__('bookings_checkout_ticket_cost')}</span>
                 </HeadingRow>
                 <div className="mb-16 mt-4">
                   <Row
