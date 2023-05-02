@@ -9,6 +9,7 @@ import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
 import Button from '../../../components/ui/Button';
 import ProgressBar from '../../../components/ui/ProgressBar';
+import Heading from '../../../components/ui/Heading';
 
 import { NextApiRequest } from 'next';
 import { ParsedUrlQuery } from 'querystring';
@@ -114,10 +115,16 @@ const Summary = ({ booking, listing, event, error }: Props) => {
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
         <BookingBackButton onClick={goBack} name={__('buttons_back')} />
-        <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
-          <span className="mr-1">📑</span>
+        <Heading
+          level={1}
+          className="pb-4 mt-8"
+        >
+          <span className="mr-4">📑</span>
           <span>{__('bookings_summary_step_title')}</span>
-        </h1>
+        </Heading>
+        { handleNextError && (
+          <div className="error-box">{handleNextError}</div>
+        ) }
         <ProgressBar steps={BOOKING_STEPS} />
         {booking && (
           <div className="mt-16 flex flex-col gap-16">
