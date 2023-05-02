@@ -70,7 +70,7 @@ const Success = () => {
         )} - ${PLATFORM_NAME}`}</title>
       </Head>
 
-      <div className="max-w-6xl mx-auto">
+      <div className="w-full max-w-screen-sm mx-auto p-8">
         <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-6">

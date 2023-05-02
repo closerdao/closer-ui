@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 
 import { __ } from '../utils/helpers';
+import HeadingRow from './ui/HeadingRow';
 
 interface SummaryDatesProps {
   isDayTicket: boolean;
@@ -25,15 +26,17 @@ const SummaryDates = ({
 }: SummaryDatesProps) => (
   <div>
     {eventName ? (
-      <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2">
-        <span className="mr-1">🏡</span>
+      <HeadingRow
+      >
+        <span className="mr-4">🏡</span>
         <span>{__('bookings_summary_step_your_event')}</span>
-      </h2>
+      </HeadingRow>
     ) : (
-      <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2">
-        <span className="mr-1">🏡</span>
+      <HeadingRow
+      >
+        <span className="mr-4">🏡</span>
         <span>{__('bookings_summary_step_dates_title')}</span>
-      </h2>
+      </HeadingRow>
     )}
     {eventName && (
       <div className="flex justify-between mt-3 gap-20 items-start	">

@@ -12,6 +12,7 @@ import {
   Page404,
   ProgressBar,
   Row,
+  HeadingRow,
   SubscriptionCheckoutForm,
   useAuth,
   useConfig,
@@ -73,7 +74,7 @@ const Checkout = () => {
         )} - ${PLATFORM_NAME}`}</title>
       </Head>
 
-      <div className="max-w-6xl mx-auto">
+      <div className="w-full max-w-screen-sm mx-auto p-8">
         <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-6">
@@ -84,9 +85,10 @@ const Checkout = () => {
 
         <main className="pt-14 pb-24 md:flex-row flex-wrap">
           <div className="mb-10">
-            <Heading level={4} className="mb-8">
-              ♻️ {__('subscriptions_title')}
-            </Heading>
+            <HeadingRow>
+              <span className="mr-2">♻️</span>
+              {__('subscriptions_title')}
+            </HeadingRow>
 
             <Row
               className="mb-4"
@@ -105,9 +107,10 @@ const Checkout = () => {
           </div>
 
           <div className="mb-14">
-            <Heading level={4} className="mb-8">
-              💲 {__('subscriptions_checkout_payment_subtitle')}
-            </Heading>
+            <HeadingRow>
+              <span className="mr-2">💲</span>
+              {__('subscriptions_checkout_payment_subtitle')}
+            </HeadingRow>
             <div className="mb-10">
               <Elements stripe={stripePromise}>
                 <SubscriptionCheckoutForm
