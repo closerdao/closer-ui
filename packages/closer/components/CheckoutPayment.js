@@ -83,13 +83,13 @@ const CheckoutPayment = ({
         level={2}
         className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3 flex items-center"
       >
-        <span>💲</span>
+        <span className="mr-2">💲</span>
         <span>{__('bookings_checkout_step_payment_title')}</span>
       </Heading>
       <Elements stripe={stripe}>
         <CheckoutForm
           type="booking"
-          _id={bookingId}
+          _id={bookingId} toPay
           onSuccess={onSuccess}
           email={user.email}
           name={user.screenname}

@@ -1,19 +1,18 @@
 import { useRouter } from 'next/router';
 
-import { useContext, useMemo, useState } from 'react';
+import { useContext, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingWallet from '../../../components/BookingWallet';
-import Checkbox from '../../../components/Checkbox';
 import CheckoutPayment from '../../../components/CheckoutPayment';
 import CheckoutTotal from '../../../components/CheckoutTotal';
 import PageError from '../../../components/PageError';
 import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
+import Checkbox from '../../../components/ui/Checkbox';
 import ProgressBar from '../../../components/ui/ProgressBar';
 import Row from '../../../components/ui/Row';
 
-import dayjs from 'dayjs';
 import { ParsedUrlQuery } from 'querystring';
 
 import PageNotAllowed from '../../401';
@@ -25,7 +24,6 @@ import { WalletState } from '../../../contexts/wallet';
 import { BaseBookingParams, Booking, Event, Listing } from '../../../types';
 import { BookingSettings } from '../../../types/api';
 import api from '../../../utils/api';
-import { estimateNeededStakeForNewBooking } from '../../../utils/blockchain';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, priceFormat } from '../../../utils/helpers';
 
@@ -47,37 +45,19 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
     end,
     dailyRentalToken,
     duration,
-    volunteerId,
     ticketOption,
     eventPrice,
   } = booking || {};
 
-  const accomodationCost = useTokens
-    ? rentalToken.val
-    : volunteerId
-    ? 0
-    : rentalFiat?.val;
+  const { balanceAvailable } = useContext(WalletState);
 
-  const { balanceAvailable, bookedDates } = useContext(WalletState);
-
-  const totalToPayInToken = useMemo(() => {
-    if (!useTokens || bookedDates === undefined) return null;
-    return estimateNeededStakeForNewBooking({
-      bookedDates,
-      bookingYear: dayjs(start).year(),
-      totalBookingTokenCost: rentalToken.val,
-    });
-  }, [bookedDates]);
-
-  const isNotEnoughBalance = totalToPayInToken
-    ? balanceAvailable < totalToPayInToken
+  const isNotEnoughBalance = rentalToken?.val
+    ? balanceAvailable < rentalToken.val
     : false;
   const { user, isAuthenticated } = useAuth();
 
   const listingName = listing?.name;
-  const [hasAgreedToWalletDisclaimer, setWalletDisclaimer] = useState(
-    totalToPayInToken && !(totalToPayInToken > 0),
-  );
+  const [hasAgreedToWalletDisclaimer, setWalletDisclaimer] = useState(false);
 
   const router = useRouter();
   const goBack = () => {
@@ -91,6 +71,7 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
   // TODO: add types to platform
 
   const switchToEUR = async () => {
+    // TODO - this should not be possible - should enable a custom endpoint to change the booking type
     await platform.booking.patch(booking._id, { useTokens: false });
     router.push(`/bookings/${booking._id}/checkout`);
   };
@@ -133,33 +114,35 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
             )}
 
             <Heading className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2">
-              <span className="mr-1">🏡</span>
+              <span className="mr-2">🏡</span>
               <span>{__('bookings_checkout_step_accomodation')}</span>
             </Heading>
             <div className="flex justify-between items-center mt-3">
               <p>{listingName}</p>
-              <p className="font-bold">{priceFormat(accomodationCost)}</p>
+              { useTokens ?
+                <p className="font-bold">{priceFormat(rentalToken)}</p>:
+                <p className="font-bold">{priceFormat(rentalFiat)}</p>
+              }
             </div>
             <p className="text-right text-xs">
               {__('bookings_checkout_step_accomodation_description')}
             </p>
 
-            {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' && (
+            {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' && rentalToken && rentalToken.val > 0 &&  (
               <div className="mt-4">
                 <BookingWallet
-                  toPay={totalToPayInToken}
+                  toPay={rentalToken.val}
                   switchToEUR={switchToEUR}
                 />
-                {totalToPayInToken && totalToPayInToken > 0 && (
-                  <Checkbox
-                    checked={hasAgreedToWalletDisclaimer || false}
-                    onChange={() =>
-                      setWalletDisclaimer(!hasAgreedToWalletDisclaimer)
-                    }
-                    className="mt-8"
-                    label={__('bookings_checkout_step_wallet_disclaimer')}
-                  />
-                )}
+                <Checkbox
+                  isChecked={hasAgreedToWalletDisclaimer}
+                  onChange={() =>
+                    setWalletDisclaimer(!hasAgreedToWalletDisclaimer)
+                  } 
+                  className="mt-8"
+                >
+                  {__('bookings_checkout_step_wallet_disclaimer')}
+                </Checkbox>
               </div>
             )}
           </div>
