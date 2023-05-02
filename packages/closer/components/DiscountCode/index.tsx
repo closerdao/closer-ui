@@ -1,4 +1,4 @@
-import {  ChangeEvent, Dispatch, SetStateAction } from 'react';
+import { ChangeEvent, Dispatch, SetStateAction } from 'react';
 
 import { __ } from '../../utils/helpers';
 import Heading from '../ui/Heading';
@@ -15,10 +15,12 @@ const DiscountCode = ({ setDiscountCode, discountCode }: Props) => {
       <Heading level={4} className="text-[14px] mt-2 basis-1/2">
         {__('bookings_dates_step_tickets_discount_code')}:
       </Heading>
-      <Input  
+      <Input
         type="text"
         value={discountCode}
-        onChange={(e: ChangeEvent<HTMLInputElement>) => setDiscountCode(e.target.value ) as any}
+        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+          setDiscountCode(e.target.value)
+        }
         placeholder="enter code"
         className=""
       />
