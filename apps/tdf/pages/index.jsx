@@ -54,6 +54,7 @@ const HomePage = () => {
           <Heading
             className="md:mt-20 mb-6 md:mb-12 text-4xl md:text-8xl text-white ml-8"
             data-testid="page-title"
+            display
           >
             Soil and souls regenerating life together
           </Heading>
@@ -135,7 +136,7 @@ const HomePage = () => {
           </div>
         </div>
         <div className="relative text-right p-12">
-          <Heading level={3}>Co-create the regenerative dream</Heading>
+          <Heading display level={3}>Co-create the regenerative dream</Heading>
           <p className="my-4">
             Invest in a DAO-based future of regenerative living. Help us
             transition to a land of freedom, and rewild a world we can all
@@ -162,7 +163,7 @@ const HomePage = () => {
         </div>
       </section>
       <section className="mb-12 max-w-6xl mx-auto md:pt-20">
-        <Heading level={3} className="text-center py-12 px-4 mb-6">
+        <Heading display level={3} className="text-center py-12 px-4 mb-6">
           A prototype for a future of beautiful, connected regenerative living
         </Heading>
         <ul className="flex flex-wrap text-center divide-x">
@@ -173,7 +174,7 @@ const HomePage = () => {
                   key={resource.get('_id')}
                   className="w-1/2 md:w-1/3 lg:w-1/4 mb-4 p-3"
                 >
-                  <Heading level={4} className="mb-4">{resource.get('title')}</Heading>
+                  <Heading display level={4} className="mb-4">{resource.get('title')}</Heading>
                   <p className="mb-4 text-xs">{resource.get('content')}</p>
                   <Link href={resource.get('url')} className="btn-primary">
                     {resource.get('ctaText')}
@@ -184,7 +185,7 @@ const HomePage = () => {
         </ul>
       </section>
       <section className="mb-12 mt-24 max-w-6xl mx-auto text-center">
-        <Heading level={3}>
+        <Heading display level={3}>
           Discover
           <br />
           <span className="md:text-7xl">Abela</span>
@@ -198,7 +199,7 @@ const HomePage = () => {
             alt="Tree, at Traditional Dream Factory"
           />
           <div className="absolute bottom-0 left-0 right-0 text-white p-6 text-xs md:text-xl">
-            <Heading level={3} className="md:text-6xl text-xl">THE LAND</Heading>
+            <Heading display level={3} className="md:text-6xl text-xl">THE LAND</Heading>
             <p className="mt-2">
               In 2020, we set our sights on a small, arid plot of land in the
               village of Abela, Portugal. Home to an old poultry farm, the land
@@ -216,7 +217,7 @@ const HomePage = () => {
         <div className="relative">
           <img src="/images/landing/dream.jpg" alt="Dream at TDF" />
           <div className="absolute bottom-0 left-0 right-0 text-white p-6 text-xs md:text-xl md:text-right">
-            <Heading level={3} className="md:text-6xl text-xl">THE DREAM</Heading>
+            <Heading display level={3} className="md:text-6xl text-xl">THE DREAM</Heading>
             <p className="mt-2">
               A burgeoning web3-powered regenerative village, shepherded by an
               inclusive and indomitable community fighting for better. Shared
@@ -235,7 +236,7 @@ const HomePage = () => {
       </section>
       <section className="mb-12 max-w-6xl mx-auto md:pt-20 text-center md:text-left md:flex md:space-x-12">
         <div className="md:max-w-lg">
-          <Heading level={2} className="mb-6">
+          <Heading display level={2} className="mb-6">
             JOIN FELLOW FUTURISTS FOR UPCOMING EVENTS
           </Heading>
           <p className="mb-6 text-xs md:text-base">
@@ -263,6 +264,7 @@ const HomePage = () => {
         <div className="md:max-w-xl">
           <Heading
             level={2}
+            display
             className="text-center md:text-left mb-6 md:text-6xl"
           >
             Traditional Dream Factory
@@ -283,7 +285,7 @@ const HomePage = () => {
                   alt="Coworking"
                   className="mr-1 w-12"
                 />
-                <Heading level={4} className="md:text-sm">
+                <Heading display level={4} className="md:text-sm">
                   Open Coworking, Coworking pods & STARLINK WIFI{' '}
                   <Tag className="m-1" color="primary">
                     v1
@@ -296,7 +298,7 @@ const HomePage = () => {
                   alt="Van"
                   className="mr-1 w-12"
                 />
-                <Heading level={4} className="md:text-sm">6 Van parking areas</Heading>
+                <Heading display level={4} className="md:text-sm">6 Van parking areas</Heading>
               </li>
               <li className="flex justify-start items-center">
                 <img
@@ -304,7 +306,7 @@ const HomePage = () => {
                   alt="Glamping"
                   className="mr-1 w-12"
                 />
-                <Heading level={4} className="md:text-sm">10 Glamping Accommodations</Heading>
+                <Heading display level={4} className="md:text-sm">10 Glamping Accommodations</Heading>
               </li>
               <li className="flex justify-start items-center">
                 <img
@@ -312,7 +314,7 @@ const HomePage = () => {
                   alt="Syntropic food forest"
                   className="mr-1 w-12"
                 />
-                <Heading level={4} className="md:text-sm">
+                <Heading display level={4} className="md:text-sm">
                   Food forest
                   <small className="text-sm font-light">
                     {' '}
@@ -326,7 +328,7 @@ const HomePage = () => {
                   alt="Veggetable production"
                   className="mr-1 w-12"
                 />
-                <Heading level={4} className="md:text-sm">
+                <Heading display level={4} className="md:text-sm">
                   Veggie farm
                   <small className="text-sm font-light">
                     {' '}
@@ -340,7 +342,7 @@ const HomePage = () => {
                   alt="TDF Cafe"
                   className="mr-1 w-12"
                 />
-                <Heading level={4} className="md:text-sm">
+                <Heading display level={4} className="md:text-sm">
                   Café & Store{' '}
                   <Tag className="m-1" color="primary">
                     Coming soon
@@ -355,7 +357,7 @@ const HomePage = () => {
                   alt="Events"
                   className="mr-1 w-12"
                 />
-                <Heading level={4} className="md:text-sm">Pop-up event space</Heading>
+                <Heading display level={4} className="md:text-sm">Pop-up event space</Heading>
               </li>
               <li className="flex justify-start items-center">
                 <img
@@ -363,7 +365,7 @@ const HomePage = () => {
                   alt="Wellness candle"
                   className="mr-1 w-12"
                 />
-                <Heading level={4} className="md:text-sm">
+                <Heading display level={4} className="md:text-sm">
                   Wellness area
                   <small className="text-sm font-light">
                     {' '}
@@ -380,7 +382,7 @@ const HomePage = () => {
                   alt="Restaurant plate"
                   className="mr-1 w-12"
                 />
-                <Heading level={4} className="md:text-sm">
+                <Heading display level={4} className="md:text-sm">
                   Farm to table restaurant{' '}
                   <Tag className="m-1" color="primary">
                     Coming soon
@@ -393,7 +395,7 @@ const HomePage = () => {
                   alt="Greenhouse"
                   className="mr-1 w-12"
                 />
-                <Heading level={4} className="md:text-sm">
+                <Heading display level={4} className="md:text-sm">
                   Indoors forest and tropical greenhouse{' '}
                   <Tag className="m-1" color="primary">
                     Coming soon
@@ -406,7 +408,7 @@ const HomePage = () => {
                   alt="Makerspace"
                   className="mr-1 w-12"
                 />
-                <Heading level={4} className="md:text-sm">
+                <Heading display level={4} className="md:text-sm">
                   Makerspace
                   <small className="text-sm font-light">
                     {' '}
@@ -426,14 +428,14 @@ const HomePage = () => {
       </section>
       <section className="mb-12 max-w-6xl mx-auto md:pt-20 text-center md:flex md:justify-center">
         <div className="md:max-w-lg" id="subscribe">
-          <Heading level={3} className="mb-6">
+          <Heading display level={3} className="mb-6">
             Your guide to
             <br />
             <span className="text-3xl md:text-6xl">becoming a</span>
             <br />
             TDF VISIONARY
           </Heading>
-          <Heading level={4} className="mb-6">Ready to change the way we live for good?</Heading>
+          <Heading display level={4} className="mb-6">Ready to change the way we live for good?</Heading>
           <p className="mb-6">We’re excited to have you on board.</p>
           <Newsletter
             placement="Landing"

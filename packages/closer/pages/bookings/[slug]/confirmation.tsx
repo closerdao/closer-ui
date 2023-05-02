@@ -6,6 +6,7 @@ import BookingBackButton from '../../../components/BookingBackButton';
 import BookingResult from '../../../components/BookingResult';
 import PageError from '../../../components/PageError';
 import Button from '../../../components/ui/Button';
+import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import { ParsedUrlQuery } from 'querystring';
@@ -68,10 +69,10 @@ const ConfirmationStep = ({ error, booking, event }: Props) => {
     <>
       <div className="max-w-screen-sm mx-auto p-8">
         <BookingBackButton onClick={goBack} />
-        <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
-          <span className="mr-1">🎊</span>
+        <Heading className="pb-4 mt-8">
+          <span className="mr-2">🎊</span>
           <span>{__('bookings_confirmation_step_success')}</span>
-        </h1>
+        </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
         <div className="mt-16 flex flex-col gap-16 flex-nowrap">
           <BookingResult booking={booking} eventName={event?.name} />

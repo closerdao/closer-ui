@@ -3,18 +3,15 @@ import PropTypes from 'prop-types';
 import { DEFAULT_CURRENCY } from '../constants';
 import { __, getVatInfo, priceFormat } from '../utils/helpers';
 import CalculatorIcon from './icons/CalculatorIcon';
-import Heading from './ui/Heading';
+import HeadingRow from './ui/HeadingRow';
 
 const CheckoutTotal = ({ total }) => {
   return (
     <div>
-      <Heading
-        level={2}
-        className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3 flex items-center"
-      >
-        <CalculatorIcon />
+      <HeadingRow>
+        <span className="mr-2"><CalculatorIcon /></span>
         <span>{__('bookings_checkout_step_total_title')}</span>
-      </Heading>
+      </HeadingRow>
       <div className="flex justify-between items-center mt-3">
         <p> {__('bookings_total')}</p>
         <p className="font-bold">

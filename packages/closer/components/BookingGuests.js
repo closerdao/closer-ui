@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 
 import { __ } from '../utils/helpers';
 import Counter from './Counter';
-import Heading from './ui/Heading';
+import HeadingRow from './ui/HeadingRow';
 
 const BookingGuests = ({
   adults,
@@ -16,13 +16,10 @@ const BookingGuests = ({
 }) => {
   return (
     <div>
-      <Heading
-        level={2}
-        className="text-2xl leading-10 font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center"
-      >
-        <span className="mr-1">👨‍👩‍👦</span>
+      <HeadingRow>
+        <span className="mr-2">👨‍👩‍👦</span>
         <span>{__('bookings_dates_step_guests_title')}</span>
-      </Heading>
+      </HeadingRow>
       <div className="mt-4">
         <div className="flex space-between items-center">
           <p className="flex-1">{__('bookings_dates_step_guests_adults')}</p>
