@@ -1,7 +1,8 @@
+import Link from 'next/link';
+
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
 import { __ } from '../../utils/helpers';
-
 import Modal from '../Modal';
 import Checkbox from '../ui/Checkbox';
 
@@ -57,9 +58,9 @@ const SubscriptionConditions = ({
         }
       >
         {__('subscriptions_checkout_comply_with')}{' '}
-        <button className="text-primary underline" onClick={openModal}>
+        <Link href="/legal/terms" className="text-primary underline" target="_blank">
           {__('subscriptions_checkout_subscription_terms')}
-        </button>
+        </Link>
       </Checkbox>
     </>
   );
