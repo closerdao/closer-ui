@@ -72,8 +72,7 @@ const TicketOptions: FC<Props> = ({
   selectedTicketOption,
   volunteer,
   discountCode,
-  setDiscountCode,
-  disclaimer
+  setDiscountCode
 }) => {
 
   useEffect(() => {
