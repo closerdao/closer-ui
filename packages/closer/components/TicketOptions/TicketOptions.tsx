@@ -7,6 +7,7 @@ import {
 } from '../../types';
 import { __, priceFormat } from '../../utils/helpers';
 import DiscountCode from '../DiscountCode';
+import HeadingRow from '../ui/HeadingRow';
 
 interface Props {
   items?: TicketOption[];
@@ -39,37 +40,31 @@ const Ticket = ({
   selectedTicketOption?: TicketOption;
   isVolunteer?: boolean;
   isDayTicket?: boolean;
-  }) => {
-  
-
-
-
-  return (
-    <button
-      className={`border-2 flex flex-col justify-center rounded-md shadow-lg mr-3 mb-3 p-4 hover:border-accent ${
-        name === selectedTicketOption?.name ? 'border-accent' : 'border-gray-100'
-      } ${available > 0 ? 'available' : 'unavailable'}`}
-      onClick={() => selectTicketOption({ name, isDayTicket, price, currency, disclaimer })}
-      disabled={available === 0}
-    >
-      <h4 title={ disclaimer }>{name.split('_').join(' ')}</h4>
-      { isDayTicket ?
-        <p className="text-gray-500 italic">Day ticket.</p>:
-        <p className="text-gray-500 italic">Overnight ticket.</p>
-      }
-      <p className="price text-gray-500">
-        {isVolunteer ? 'Volunteering' : priceFormat(price, currency)}
-      </p>
-      <p className="availability text-xs uppercase text-accent">
-        {available > 0 ? `${available} available` : 'not available'}
-      </p>
-      { name === selectedTicketOption?.name ?
-        <p>{ disclaimer }</p>:
-        ''
-      }
-    </button>
-  );
-};
+  }) => (
+  <button
+    className={`border-2 flex flex-col justify-center rounded-md shadow-lg mr-3 mb-3 p-4 hover:border-accent ${
+      name === selectedTicketOption?.name ? 'border-accent' : 'border-gray-100'
+    } ${available > 0 ? 'available' : 'unavailable'}`}
+    onClick={() => selectTicketOption({ name, isDayTicket, price, currency, disclaimer })}
+    disabled={available === 0}
+  >
+    <h4 title={ disclaimer }>{name.split('_').join(' ')}</h4>
+    { isDayTicket ?
+      <p className="text-gray-500 italic">Day ticket.</p>:
+      <p className="text-gray-500 italic">Overnight ticket.</p>
+    }
+    <p className="price text-gray-500">
+      {isVolunteer ? 'Volunteering' : priceFormat(price, currency)}
+    </p>
+    <p className="availability text-xs uppercase text-accent">
+      {available > 0 ? `${available} available` : 'not available'}
+    </p>
+    { name === selectedTicketOption?.name ?
+      <p>{ disclaimer }</p>:
+      ''
+    }
+  </button>
+);
 
 const TicketOptions: FC<Props> = ({
   items,
@@ -87,17 +82,11 @@ const TicketOptions: FC<Props> = ({
 
 
   return (
-    <div>
-      <h2 className="mb-3 text-2xl leading-10 font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center">
-        <span className="mr-1">🎟</span>
+    <>
+      <HeadingRow>
+        <span className="mr-2">🎟</span>
         <span>{__('bookings_dates_step_tickets_title')}</span>
-      </h2>
-
-      {/* TODO: convert to reusable components:
-      <Heading level={2} className="mb-8">
-        🎟 {__('bookings_dates_step_tickets_title')}
-      </Heading> */}
-
+      </HeadingRow>
       <div className="ticket-options my-4 flex flex-row flex-wrap">
         {volunteer ? (
           <Ticket
@@ -130,7 +119,7 @@ const TicketOptions: FC<Props> = ({
         discountCode={discountCode || ''}
         setDiscountCode={setDiscountCode}
       />
-    </div>
+    </>
   );
 };
 
