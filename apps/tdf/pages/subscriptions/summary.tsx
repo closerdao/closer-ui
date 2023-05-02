@@ -92,7 +92,7 @@ const Summary = () => {
 
         <main className="pt-14 pb-24 md:flex-row flex-wrap">
           <div className="mb-14">
-            <HeadingRow className="mb-8">
+            <HeadingRow>
               <span className="mr-2">♻️</span>
               <span>{__('subscriptions_summary_your_subscription_subtitle')}</span>
             </HeadingRow>
@@ -112,7 +112,7 @@ const Summary = () => {
           </div>
 
           <div className="mb-14">
-            <HeadingRow className="mb-8">
+            <HeadingRow>
               <span className="mr-2">💰</span>
               <span>{__('subscriptions_summary_costs_subtitle')}</span>
             </HeadingRow>
