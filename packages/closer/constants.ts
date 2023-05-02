@@ -21,6 +21,20 @@ export const CURRENCIES: CloserCurrencies[] = [
   CloserCurrencies.EUR,
   blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol,
 ];
+
+export const CURRENCIES_WITH_LABELS = [
+  {
+    value: CloserCurrencies.EUR,
+    label: 'Euros',
+    symbol: '€',
+  },
+  {
+    value: blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol,
+    label: `$${blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol}`,
+    symbol: `$${blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol}`,
+  },
+];
+
 export const SUBSCRIPTION_STEPS = [
   'subscriptions',
   'summary',

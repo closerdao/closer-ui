@@ -11,13 +11,14 @@ const Heading = ({ level = 1, children, className }: HeadingProps) => {
     React.createElement(`h${level}`, props, children);
 
   const styleMap = {
-    1: 'font-extrabold text-[32px]',
-    2: 'border-b border-divider pb-2.5 text-2xl leading-9 font-bold',
-    3: 'text-xl pb-2.5',
+    1: 'font-black text-3xl md:text-6xl uppercase',
+    2: 'font-black text-3xl md:text-6xl uppercase',
+    3: 'text-2xl md:text-4xl font-black uppercase',
+    4: 'md:text-lg font-bold uppercase',
   } as Record<number, string>;
 
   return (
-    <HeadingTag className={`w-full ${styleMap[level]} ${className}`}>
+    <HeadingTag className={`${styleMap[level]} ${className}`}>
       {children}
     </HeadingTag>
   );

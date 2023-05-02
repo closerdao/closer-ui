@@ -53,7 +53,7 @@ const models = {
       type: 'switch',
     },
   ],
- 
+
   event: [
     {
       name: 'name',
