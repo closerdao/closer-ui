@@ -9,6 +9,8 @@ import PageError from '../../../components/PageError';
 import TicketOptions from '../../../components/TicketOptions';
 import BackButton from '../../../components/ui/BackButton';
 import Button from '../../../components/ui/Button';
+import Heading from '../../../components/ui/Heading';
+import HeadingRow from '../../../components/ui/HeadingRow';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import dayjs, { Dayjs } from 'dayjs';
@@ -157,18 +159,19 @@ const DatesSelector: NextPage<Props> = ({
     <>
       <div className="max-w-screen-sm mx-auto md:p-8 h-full">
         <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
-        <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
-          🏡 {__('bookings_summary_step_dates_title')}
-        </h1>
+        <Heading className="pb-4 mt-8">
+          <span className="mr-2">🏡</span>
+          <span>{__('bookings_summary_step_dates_title')}</span>
+        </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
 
         <div className="mt-16 flex flex-col gap-16">
           {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' && (
             <div>
-              <h2 className="mb-3 text-2xl leading-10 font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center">
-                <span className="mr-1">💰</span>
+              <HeadingRow>
+                <span className="mr-2">💰</span>
                 <span>{__('bookings_dates_step_payment_title')}</span>
-              </h2>
+              </HeadingRow>
               <CurrencySwitch
                 selectedCurrency={currency}
                 onSelect={selectCurrency}

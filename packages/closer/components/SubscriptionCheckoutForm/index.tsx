@@ -9,6 +9,7 @@ import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
 import SubscriptionConditions from '../SubscriptionConditions';
 import { Button, ErrorMessage } from '../ui/';
+import { useAuth } from '../../contexts/auth';
 
 interface SubscriptionCheckoutFormProps {
   userEmail?: string;
@@ -23,6 +24,7 @@ function SubscriptionCheckoutForm({
   const [error, setError] = useState<unknown>();
   const [isLoading, setIsLoading] = useState(false);
   const [hasAcceptedConditions, setHasAcceptedConditions] = useState(false);
+  const { refetchUser } = useAuth();
 
   const router = useRouter();
   const stripe = useStripe();
@@ -72,6 +74,8 @@ function SubscriptionCheckoutForm({
       });
 
       if (response.data.results.status === 'active') {
+        await refetchUser();
+
         router.push(
           `/subscriptions/success?subscriptionId=${response.data.results.subscription}&priceId=${priceId}`,
         );

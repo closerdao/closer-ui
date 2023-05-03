@@ -4,6 +4,7 @@ import BookingBackButton from '../../../components/BookingBackButton';
 import BookingStepsInfo from '../../../components/BookingStepsInfo';
 import ListingCard from '../../../components/ListingCard';
 import ProgressBar from '../../../components/ui/ProgressBar';
+import Heading from '../../../components/ui/Heading';
 
 import PageNotFound from '../../404';
 import { blockchainConfig } from '../../../config_blockchain';
@@ -100,10 +101,10 @@ const AccomodationSelector = ({
     <>
       <div className="max-w-screen-sm mx-auto md:first-letter:p-8">
         <BookingBackButton onClick={backToDates} name={__('buttons_back')} />
-        <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
-          <span className="mr-1">🏡</span>
+        <Heading className="pb-4 mt-8">
+          <span className="mr-2">🏡</span>
           <span>{__('bookings_accomodation_step_title')}</span>
-        </h1>
+        </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
         <BookingStepsInfo
           startDate={start}

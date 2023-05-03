@@ -1,18 +1,14 @@
-import { DEFAULT_CURRENCY } from '../constants';
-import { useConfig } from '../hooks/useConfig';
 import { CloserCurrencies, Price } from '../types';
 import { __, getVatInfo, priceFormat } from '../utils/helpers';
-import Heading from './ui/Heading';
+import HeadingRow from './ui/HeadingRow';
 
 interface Props {
-  utilityFiat?: Price<
-    CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH
-  >;
-  accomodationCost?: number;
+  utilityFiat?: Price<CloserCurrencies>;
+  accomodationCost?: Price<CloserCurrencies>;
   useTokens: boolean;
-  totalToken: number;
+  totalToken: Price<CloserCurrencies>;
   totalFiat: Price<CloserCurrencies>;
-  eventCost?: number;
+  eventCost?: Price<CloserCurrencies>;
   eventDefaultCost?: number;
   accomodationDefaultCost?: number;
   volunteerId?: string;
@@ -25,27 +21,20 @@ const SummaryCosts = ({
   totalToken,
   totalFiat,
   eventCost,
-  eventDefaultCost,
-  accomodationDefaultCost,
-  volunteerId,
+  eventDefaultCost
 }: Props) => {
-  const { BLOCKCHAIN_DAO_TOKEN } = useConfig() || {};
-
   return (
     <div>
-      <Heading
-        level={2}
-        className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3"
-      >
-        <span className="mr-1">💰</span>
+      <HeadingRow>
+        <span className="mr-4">💰</span>
         <span>{__('bookings_summary_step_costs_title')}</span>
-      </Heading>
+      </HeadingRow>
 
       {eventCost ? (
         <div className="flex justify-between items-center mt-3">
           <p>{__('bookings_checkout_event_cost')}</p>
           <p className="font-bold">
-            {eventDefaultCost !== eventCost && (
+            {eventDefaultCost !== eventCost?.val && (
               <span className="line-through">
                 {priceFormat(eventDefaultCost)}
               </span>
@@ -58,11 +47,6 @@ const SummaryCosts = ({
       <div className="flex justify-between items-center mt-3">
         <p>{__('bookings_summary_step_dates_accomodation_type')}</p>
         <p className="font-bold">
-          {volunteerId ? (
-            <span className="line-through">
-              {priceFormat(accomodationDefaultCost)}
-            </span>
-          ) : null}{' '}
           {priceFormat(accomodationCost)}
         </p>
       </div>
@@ -82,12 +66,12 @@ const SummaryCosts = ({
           {useTokens ? (
             <>
               <span>
-                {priceFormat(totalToken, BLOCKCHAIN_DAO_TOKEN.symbol)}
+                {priceFormat(totalToken)}
               </span>{' '}
               + <span>{priceFormat(totalFiat)}</span>
             </>
           ) : (
-            priceFormat(totalFiat, DEFAULT_CURRENCY)
+            priceFormat(totalFiat)
           )}
         </p>
       </div>

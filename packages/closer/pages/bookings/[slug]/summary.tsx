@@ -9,6 +9,7 @@ import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
 import Button from '../../../components/ui/Button';
 import ProgressBar from '../../../components/ui/ProgressBar';
+import Heading from '../../../components/ui/Heading';
 
 import { NextApiRequest } from 'next';
 import { ParsedUrlQuery } from 'querystring';
@@ -21,7 +22,7 @@ import { useConfig } from '../../../hooks/useConfig';
 import { BaseBookingParams, Booking, Event, Listing } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { __, getAccommodationCost } from '../../../utils/helpers';
+import { __ } from '../../../utils/helpers';
 
 interface Props extends BaseBookingParams {
   listing: Listing;
@@ -53,14 +54,6 @@ const Summary = ({ booking, listing, event, error }: Props) => {
     eventFiat,
     total,
   } = booking || {};
-
-  const accomodationCost = getAccommodationCost(
-    useTokens,
-    rentalToken,
-    rentalFiat,
-    volunteerId,
-  );
-
   useEffect(() => {
     if (booking?.status === 'pending' || booking?.status === 'paid') {
       router.push(`/bookings/${booking._id}`);
@@ -111,73 +104,77 @@ const Summary = ({ booking, listing, event, error }: Props) => {
   }
 
   return (
-    <>
-      <div className="w-full max-w-screen-sm mx-auto p-8">
-        <BookingBackButton onClick={goBack} name={__('buttons_back')} />
-        <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
-          <span className="mr-1">📑</span>
-          <span>{__('bookings_summary_step_title')}</span>
-        </h1>
-        <ProgressBar steps={BOOKING_STEPS} />
-        {booking && (
-          <div className="mt-16 flex flex-col gap-16">
-            <SummaryDates
-              isDayTicket={booking?.isDayTicket}
-              totalGuests={adults}
-              startDate={start}
-              endDate={end}
-              listingName={listing?.name}
-              volunteerId={volunteerId}
-              eventName={event?.name}
-              ticketOption={ticketOption?.name}
-            />
-            <SummaryCosts
-              utilityFiat={utilityFiat}
-              useTokens={useTokens}
-              accomodationCost={accomodationCost}
-              totalToken={rentalToken?.val}
-              totalFiat={total}
-              eventCost={eventFiat?.val}
-              eventDefaultCost={
-                booking.ticketOption?.price
-                  ? booking.ticketOption.price * booking.adults
-                  : undefined
-              }
-              accomodationDefaultCost={listing?.fiatPrice?.val * booking.adults}
-              volunteerId={volunteerId}
-            />
+    <div className="w-full max-w-screen-sm mx-auto p-8">
+      <BookingBackButton onClick={goBack} name={__('buttons_back')} />
+      <Heading
+        level={1}
+        className="pb-4 mt-8"
+      >
+        <span className="mr-4">📑</span>
+        <span>{__('bookings_summary_step_title')}</span>
+      </Heading>
+      { handleNextError && (
+        <div className="error-box">{handleNextError}</div>
+      ) }
+      <ProgressBar steps={BOOKING_STEPS} />
+      {booking && (
+        <div className="mt-16 flex flex-col gap-16">
+          <SummaryDates
+            isDayTicket={booking?.isDayTicket}
+            totalGuests={adults}
+            startDate={start}
+            endDate={end}
+            listingName={listing?.name}
+            volunteerId={volunteerId}
+            eventName={event?.name}
+            ticketOption={ticketOption?.name}
+          />
+          <SummaryCosts
+            utilityFiat={utilityFiat}
+            useTokens={useTokens}
+            accomodationCost={ useTokens ? rentalToken : rentalFiat }
+            totalToken={rentalToken}
+            totalFiat={total}
+            eventCost={eventFiat}
+            eventDefaultCost={
+              booking.ticketOption?.price
+                ? booking.ticketOption.price * booking.adults
+                : undefined
+            }
+            accomodationDefaultCost={listing?.fiatPrice?.val * booking.adults}
+            volunteerId={volunteerId}
+          />
 
-            {volunteerId ? (
-              <>
-                <Conditions
-                  setComply={onComply}
-                  visitorsGuide={VISITORS_GUIDE}
-                />
-                <Button
-                  isEnabled={hasComplied}
-                  className="booking-btn"
-                  onClick={handleNext}
-                >
-                  {__('apply_submit_button')}
-                </Button>
-              </>
-            ) : eventId ? (
-              <Button className="booking-btn" onClick={handleNext}>
-                {__('buttons_checkout')}
+          {volunteerId ? (
+            <>
+              <Conditions
+                setComply={onComply}
+                visitorsGuide={VISITORS_GUIDE}
+              />
+              <Button
+                isEnabled={hasComplied}
+                className="booking-btn"
+                onClick={handleNext}
+              >
+                {__('apply_submit_button')}
               </Button>
-            ) : user && isMember ? (
-              <Button className="booking-btn" onClick={handleNext}>
-                {__('buttons_checkout')}
-              </Button>
-            ) : (
-              <Button className="booking-btn" onClick={handleNext}>
-                {__('buttons_booking_request')}
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
-    </>
+            </>
+          ) : eventId ? (
+            <Button className="booking-btn" onClick={handleNext}>
+              {__('buttons_checkout')}
+            </Button>
+          ) : user && isMember ? (
+            <Button className="booking-btn" onClick={handleNext}>
+              {__('buttons_checkout')}
+            </Button>
+          ) : (
+            <Button className="booking-btn" onClick={handleNext}>
+              {__('buttons_booking_request')}
+            </Button>
+          )}
+        </div>
+      )}
+    </div>
   );
 };
 
