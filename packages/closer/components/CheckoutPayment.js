@@ -111,7 +111,7 @@ CheckoutPayment.propTypes = {
   bookingId: PropTypes.string.isRequired,
   buttonDisabled: PropTypes.bool.isRequired,
   useTokens: PropTypes.bool.isRequired,
-  totalToPayInFiat: PropTypes.number.isRequired,
+  totalToPayInFiat: PropTypes.object.isRequired,
   dailyTokenValue: PropTypes.number.isRequired,
   start: PropTypes.string,
   totalNights: PropTypes.number.isRequired,
