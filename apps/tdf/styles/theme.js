@@ -21,13 +21,12 @@ const tdfTheme = {
       'accent-alt-dark': '#42CC93',
       'accent-alt-medium': '#97FFD4',
       'accent-alt-light': '#D4FFED',
-      'neon-light': '#D4FFED',
       // TODO: decide with Daneel about brand color system
       neutral: '#F8F3F5',
       // 'neutral-dark': '#EDE8EB' ,
       'neutral-dark': '#F0F0F0',
       // these colors are not suppoerted anymore, please use those above
-      'disabled-dark': '#9C9C9C',
+      'disabled-dark': '#9C9C9C', // color for disable button border and text
       primary: '#FE4FB7',
       secondary: '#1b3bc3',
       background: '#fff',
