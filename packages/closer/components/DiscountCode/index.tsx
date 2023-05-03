@@ -37,7 +37,7 @@ const DiscountCode = ({
     setDiscountResult({ ...res.data });
   };
   return (
-    <>
+    <div>
       <div className="flex basis-20">
         <Heading level={4} className="text-[14px] mt-2 basis-1/2">
           {__('bookings_dates_step_tickets_discount_code')}:
@@ -80,7 +80,7 @@ const DiscountCode = ({
           </p>
         )}
       </div>
-    </>
+    </div>
   );
 };
 
