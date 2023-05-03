@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useEffect } from 'react';
+import { Dispatch, FC, SetStateAction } from 'react';
 
 import {
   CloserCurrencies,
@@ -17,6 +17,7 @@ interface Props {
   volunteer?: VolunteerOpportunity;
   discountCode?: string;
   setDiscountCode: Dispatch<SetStateAction<string>>;
+  eventId?: string;
 }
 
 const Ticket = ({
@@ -39,34 +40,32 @@ const Ticket = ({
   selectedTicketOption?: TicketOption;
   isVolunteer?: boolean;
   isDayTicket?: boolean;
-  }) => {
-  
-
-
-
+}) => {
   return (
     <button
       className={`border-2 flex flex-col justify-center rounded-md shadow-lg mr-3 mb-3 p-4 hover:border-accent ${
-        name === selectedTicketOption?.name ? 'border-accent' : 'border-gray-100'
+        name === selectedTicketOption?.name
+          ? 'border-accent'
+          : 'border-gray-100'
       } ${available > 0 ? 'available' : 'unavailable'}`}
-      onClick={() => selectTicketOption({ name, isDayTicket, price, currency, disclaimer })}
+      onClick={() =>
+        selectTicketOption({ name, isDayTicket, price, currency, disclaimer })
+      }
       disabled={available === 0}
     >
-      <h4 title={ disclaimer }>{name.split('_').join(' ')}</h4>
-      { isDayTicket ?
-        <p className="text-gray-500 italic">Day ticket.</p>:
+      <h4 title={disclaimer}>{name.split('_').join(' ')}</h4>
+      {isDayTicket ? (
+        <p className="text-gray-500 italic">Day ticket.</p>
+      ) : (
         <p className="text-gray-500 italic">Overnight ticket.</p>
-      }
+      )}
       <p className="price text-gray-500">
         {isVolunteer ? 'Volunteering' : priceFormat(price, currency)}
       </p>
       <p className="availability text-xs uppercase text-accent">
         {available > 0 ? `${available} available` : 'not available'}
       </p>
-      { name === selectedTicketOption?.name ?
-        <p>{ disclaimer }</p>:
-        ''
-      }
+      {name === selectedTicketOption?.name ? <p>{disclaimer}</p> : ''}
     </button>
   );
 };
@@ -78,14 +77,9 @@ const TicketOptions: FC<Props> = ({
   volunteer,
   discountCode,
   setDiscountCode,
-  disclaimer
+  disclaimer,
+  eventId,
 }) => {
-
-  useEffect(() => {
-    console.log('discountCode=', discountCode)
-  }, [])
-
-
   return (
     <div>
       <h2 className="mb-3 text-2xl leading-10 font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center">
@@ -110,25 +104,28 @@ const TicketOptions: FC<Props> = ({
             selectedTicketOption={selectedTicketOption}
           />
         ) : (
-          items?.map(({ name, price, currency, disclaimer, available, isDayTicket }) => (
-            <Ticket
-              key={name}
-              name={name}
-              price={price}
-              disclaimer={disclaimer}
-              currency={currency}
-              available={available}
-              isDayTicket={isDayTicket}
-              selectTicketOption={selectTicketOption}
-              selectedTicketOption={selectedTicketOption}
-            />
-          ))
+          items?.map(
+            ({ name, price, currency, disclaimer, available, isDayTicket }) => (
+              <Ticket
+                key={name}
+                name={name}
+                price={price}
+                disclaimer={disclaimer}
+                currency={currency}
+                available={available}
+                isDayTicket={isDayTicket}
+                selectTicketOption={selectTicketOption}
+                selectedTicketOption={selectedTicketOption}
+              />
+            ),
+          )
         )}
       </div>
-      {/* {discountCode} */}
       <DiscountCode
+        eventId={eventId}
         discountCode={discountCode || ''}
         setDiscountCode={setDiscountCode}
+        selectedTicketOption={selectedTicketOption}
       />
     </div>
   );

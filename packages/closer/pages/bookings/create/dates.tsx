@@ -185,6 +185,7 @@ const DatesSelector: NextPage<Props> = ({
               volunteer={volunteer}
               discountCode={discountCode}
               setDiscountCode={setDiscountCode}
+              eventId={eventId as string}
             />
           )}
 
@@ -238,7 +239,6 @@ DatesSelector.getInitialProps = async ({ query }) => {
       const ticketsAvailable = await api.get(
         `/bookings/event/${eventId}/availability`,
       );
-
       return {
         settings: settings as BookingSettings,
         ticketOptions: ticketsAvailable.data.ticketOptions,

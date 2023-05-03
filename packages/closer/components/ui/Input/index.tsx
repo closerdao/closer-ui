@@ -6,6 +6,9 @@ import React, {
   useState,
 } from 'react';
 
+import { __ } from '../../../utils/helpers';
+import Button from '../Button';
+
 type InputProps = {
   id?: string;
   label?: string;
@@ -20,7 +23,7 @@ type InputProps = {
   dataTestId?: string;
   validation?: 'email' | 'number';
   isDisabled?: boolean;
-  isEditSave?: boolean;
+  isInstantSave?: boolean;
   hasSaved?: boolean;
   setHasSaved?: Dispatch<SetStateAction<boolean>>;
 };
@@ -40,7 +43,7 @@ const Input = React.memo(
     onBlur,
     validation,
     isDisabled = false,
-    isEditSave = false,
+    isInstantSave = false,
     hasSaved,
     setHasSaved,
   }: InputProps) => {
@@ -79,15 +82,6 @@ const Input = React.memo(
       }
     };
 
-    const handleSubmit = () => {
-      if (onChangeRef.current && isValidValue(localValue)) {
-        onChangeRef.current(localValue as any);
-        if (inputRef?.current) {
-          (inputRef.current as HTMLInputElement).blur();
-        }
-      }
-    };
-
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === 'Enter') {
         event.preventDefault();
@@ -113,6 +107,15 @@ const Input = React.memo(
       }, 2000);
     };
 
+    const handleSubmit = () => {
+      if (onChangeRef.current && isValidValue(localValue)) {
+        onChangeRef.current(localValue as any);
+        if (inputRef?.current) {
+          (inputRef.current as HTMLInputElement).blur();
+        }
+      }
+    };
+
     const validationError =
       !isValid && validation
         ? `${label} is not a valid ${validation} value.`
@@ -125,47 +128,46 @@ const Input = React.memo(
             {label}
           </label>
         )}
-        <input
-          id={id}
-          type={type}
-          value={isEditSave ? localValue : value}
-          onChange={isEditSave ? handleChange : onChange}
-          onBlur={handleBlur}
-          onFocus={handleFocus}
-          required={isRequired}
-          placeholder={placeholder}
-          className={`new-input px-4 py-3 rounded-lg ${
-            isValid
-              ? 'border-neutral bg-neutral'
-              : 'border-accent-core border bg-accent-light'
-          } ${
-            isDisabled
-              ? 'text-gray-300 border-gray-300 cursor-not-allowed'
-              : 'text-complimentary-core'
-          }`}
-          data-testid={dataTestId}
-          autoFocus={autoFocus}
-          aria-label={label}
-          aria-required={isRequired}
-          aria-invalid={!isValidValue(localValue)}
-          ref={inputRef}
-          onKeyDown={handleKeyDown}
-          pattern={
-            validation
-              ? validationPatterns[validation].toString().slice(1, -1)
-              : undefined
-          }
-          disabled={isDisabled}
-          aria-labelledby={label}
-        />
-        {isEditing && isEditSave && isValidValue(localValue) && (
-          <button
-            className="absolute right-3 top-11 rounded-full text-white mt-1 bg-primary px-3 py-1"
-            onClick={handleSubmit}
-          >
-            {hasSaved ? 'Saved!' : 'Save'}
-          </button>
-        )}
+        <div>
+          <input
+            id={id}
+            type={type}
+            value={isInstantSave ? localValue : value}
+            onChange={isInstantSave ? handleChange : onChange}
+            onBlur={isInstantSave ? handleBlur : undefined}
+            onFocus={isInstantSave ? handleFocus : undefined}
+            required={isRequired}
+            placeholder={placeholder}
+            className={`new-input px-4 py-3 rounded-lg ${
+              isValid
+                ? 'border-neutral bg-neutral'
+                : 'border-accent-core border bg-accent-light'
+            } ${
+              isDisabled
+                ? 'text-gray-300 border-gray-300 cursor-not-allowed'
+                : 'text-complimentary-core'
+            }`}
+            data-testid={dataTestId}
+            autoFocus={autoFocus}
+            aria-label={label}
+            aria-required={isRequired}
+            aria-invalid={!isValidValue(localValue)}
+            ref={inputRef}
+            onKeyDown={isInstantSave ? handleKeyDown : undefined}
+            pattern={
+              validation
+                ? validationPatterns[validation].toString().slice(1, -1)
+                : undefined
+            }
+            disabled={isDisabled}
+            aria-labelledby={label}
+          />
+          {isEditing && isInstantSave && isValidValue(localValue) && (
+            <Button type="instantSave" onClick={handleSubmit}>
+              {hasSaved ? __('edit_model_saved') : __('edit_model_save')}
+            </Button>
+          )}
+        </div>
 
         {validationError && (
           <span className="text-red-500 text-sm">{validationError}</span>
