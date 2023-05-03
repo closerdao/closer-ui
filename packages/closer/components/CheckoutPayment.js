@@ -14,7 +14,7 @@ import api from '../utils/api';
 import { __ } from '../utils/helpers';
 import CheckoutForm from './CheckoutForm';
 import Conditions from './Conditions';
-import Heading from './ui/Heading';
+import HeadingRow from './ui/HeadingRow';
 
 const stripe = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUB_KEY);
 
@@ -79,13 +79,10 @@ const CheckoutPayment = ({
 
   return (
     <div>
-      <Heading
-        level={2}
-        className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3 flex items-center"
-      >
-        <span>💲</span>
+      <HeadingRow>
+        <span className="mr-2">💲</span>
         <span>{__('bookings_checkout_step_payment_title')}</span>
-      </Heading>
+      </HeadingRow>
       <Elements stripe={stripe}>
         <CheckoutForm
           type="booking"

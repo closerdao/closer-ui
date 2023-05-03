@@ -7,6 +7,7 @@ import {
   BackButton,
   Button,
   Heading,
+  HeadingRow,
   Page404,
   ProgressBar,
   Row,
@@ -79,20 +80,22 @@ const Summary = () => {
         )} - ${PLATFORM_NAME}`}</title>
       </Head>
 
-      <div className="max-w-6xl mx-auto">
+      <div className="w-full max-w-screen-sm mx-auto p-8">
         <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
 
-        <Heading level={1} className="mb-6">
-          📑 {__('subscriptions_summary_title')}
+        <Heading level={1} className="mb-4">
+          <span className="mr-2">📑</span>
+          <span>{__('subscriptions_summary_title')}</span>
         </Heading>
 
         <ProgressBar steps={SUBSCRIPTION_STEPS} />
 
         <main className="pt-14 pb-24 md:flex-row flex-wrap">
           <div className="mb-14">
-            <Heading level={4} className="mb-8">
-              ♻️ {__('subscriptions_summary_your_subscription_subtitle')}
-            </Heading>
+            <HeadingRow>
+              <span className="mr-2">♻️</span>
+              <span>{__('subscriptions_summary_your_subscription_subtitle')}</span>
+            </HeadingRow>
             <div className="mb-10">
               <Row
                 rowKey={__('subscriptions_summary_tier')}
@@ -109,9 +112,10 @@ const Summary = () => {
           </div>
 
           <div className="mb-14">
-            <Heading level={4} className="mb-8">
-              💰 {__('subscriptions_summary_costs_subtitle')}
-            </Heading>
+            <HeadingRow>
+              <span className="mr-2">💰</span>
+              <span>{__('subscriptions_summary_costs_subtitle')}</span>
+            </HeadingRow>
             <div className="mb-10">
               <Row
                 rowKey={__('subscriptions_summary_subscription')}

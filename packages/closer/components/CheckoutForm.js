@@ -9,12 +9,13 @@ import Button from './ui/Button';
 const cardStyle = {
   style: {
     base: {
-      fontSize: '16px',
+      fontSize: '18px',
       lineHeight: '1.6',
       color: 'black',
       padding: '0.2rem',
-      fontWeight: 'regular',
-      fontFamily: 'Roobert, sans-serif',
+      fontWeight: 'normal',
+      fontFamily: 'Barlow, sans-serif',
+      minWidth: '50%',
       '::placeholder': {
         color: '#8f8f8f',
       },

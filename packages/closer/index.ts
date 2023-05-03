@@ -7,6 +7,7 @@ export { default as ErrorMessage } from './components/ui/ErrorMessage';
 export { default as EventsList } from './components/EventsList';
 export { default as EventPreview } from './components/EventPreview';
 export { default as Heading } from './components/ui/Heading';
+export { default as HeadingRow } from './components/ui/HeadingRow';
 export { default as Input } from './components/ui/Input';
 export { default as ProgressBar } from './components/ui/ProgressBar';
 export { default as Row } from './components/ui/Row';
