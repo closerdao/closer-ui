@@ -34,7 +34,7 @@ const Button = ({
             : ''
         }
         ${type === 'secondary' ? 'bg-white  text-accent border-accent ' : ''}
-        ${!isEnabled ? 'bg-neutral border-2 text-light border-light' : ''}
+        ${!isEnabled ? 'bg-neutral border-2 text-disabled-dark border-disabled-dark' : ''}
         ${className || ''}
         `}
       >

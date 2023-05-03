@@ -3,9 +3,11 @@ import { renderWithProviders } from '@/test/utils';
 
 import { screen } from '@testing-library/react';
 
+import { subscriptions } from '../../mocks/subscriptions';
+
 describe('Subscriptions Summary', () => {
   it('should have a proper title and "Pay" button disabled by default', () => {
-    renderWithProviders(<Checkout />);
+    renderWithProviders(<Checkout subscriptionPlans={subscriptions.plans} />);
 
     const title = screen.getByRole('heading', {
       name: /Checkout/i,

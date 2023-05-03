@@ -9,6 +9,7 @@ import {
   Heading,
   Page404,
   ProgressBar,
+  api,
   useAuth,
   useConfig,
 } from 'closer';
@@ -16,30 +17,28 @@ import { SUBSCRIPTION_STEPS } from 'closer/constants';
 import { SelectedPlan, SubscriptionPlan } from 'closer/types/subscriptions';
 import { __ } from 'closer/utils/helpers';
 
-const Success = () => {
+interface Props {
+  subscriptionPlans: SubscriptionPlan[];
+}
+
+const Success = ({ subscriptionPlans }: Props) => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId, subscriptionId } = router.query;
-  const { PLATFORM_NAME, SUBSCRIPTIONS } = useConfig() || {};
+  const { PLATFORM_NAME } = useConfig() || {};
 
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
 
   useEffect(() => {
-    if (user?.subscription && user.subscription.priceId) {
-      router.push('/subscriptions');
-    }
-  }, [user]);
-
-  useEffect(() => {
     if (priceId) {
-      const selectedSubscription = SUBSCRIPTIONS.plans.find(
+      const selectedSubscription = subscriptionPlans.find(
         (plan: SubscriptionPlan) => plan.priceId === priceId,
       );
 
       setSelectedPlan({
-        title: selectedSubscription.title,
-        monthlyCredits: selectedSubscription.monthlyCredits,
-        price: selectedSubscription.price,
+        title: selectedSubscription?.title as string,
+        monthlyCredits: selectedSubscription?.monthlyCredits as number,
+        price: selectedSubscription?.price as number,
       });
     }
   }, [priceId]);
@@ -111,5 +110,24 @@ const Success = () => {
     </>
   );
 };
+
+export async function getServerSideProps() {
+  try {
+    const {
+      data: { results },
+    } = await api.get('/config/subscriptions');
+
+    return {
+      props: {
+        subscriptionPlans: results.value.plans,
+      },
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      subscriptionPlans: [],
+    };
+  }
+}
 
 export default Success;

@@ -1,10 +1,11 @@
 import Summary from '@/pages/subscriptions/summary';
 import { renderWithProviders } from '@/test/utils';
 import { screen } from '@testing-library/react';
+import { subscriptions } from '../../mocks/subscriptions';
 
 describe('Subscriptions Summary', () => {
   it('should have a proper title and "Edit" and "Checkout" buttons enabled', () => {
-    renderWithProviders(<Summary />);
+    renderWithProviders(<Summary subscriptionPlans={subscriptions.plans}  />);
 
     const title = screen.getByRole('heading', {
       name: /Summary/i,

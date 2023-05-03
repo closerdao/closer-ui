@@ -3,23 +3,29 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
-import { Heading, SubscriptionCards, useAuth, useConfig } from 'closer';
+import { Heading, SubscriptionCards, api, useAuth, useConfig } from 'closer';
+import { DEFAULT_CURRENCY } from 'closer/constants';
 import { SubscriptionPlan } from 'closer/types/subscriptions';
 import { __ } from 'closer/utils/helpers';
 
-const Subscriptions = () => {
+interface Props {
+  subscriptionPlans: SubscriptionPlan[];
+}
+
+const Subscriptions = ({ subscriptionPlans }: Props) => {
+  console.log('subscriptionPlans=', subscriptionPlans);
+
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
-  const { PLATFORM_NAME, SUBSCRIPTIONS, STRIPE_CUSTOMER_PORTAL_URL } =
-    useConfig() || {};
+  const { PLATFORM_NAME, STRIPE_CUSTOMER_PORTAL_URL } = useConfig() || {};
 
-  const plans: SubscriptionPlan[] = SUBSCRIPTIONS.plans;
+  const plans: SubscriptionPlan[] = subscriptionPlans;
   const paidSubscriptionPlans = plans.filter((plan) => plan.price !== 0);
 
   const [userActivePlan, setUserActivePlan] = useState<SubscriptionPlan>();
 
   useEffect(() => {
-    const selectedSubscription = SUBSCRIPTIONS.plans.find(
+    const selectedSubscription = subscriptionPlans.find(
       (plan: SubscriptionPlan) =>
         plan.priceId === (user?.subscription?.priceId || 'free'),
     );
@@ -83,7 +89,6 @@ const Subscriptions = () => {
           ♻️ {__('subscriptions_title')}
         </Heading>
         <SubscriptionCards
-          config={SUBSCRIPTIONS.config}
           filteredSubscriptionPlans={
             isAuthenticated ? paidSubscriptionPlans : plans
           }
@@ -91,10 +96,30 @@ const Subscriptions = () => {
           userActivePlan={userActivePlan}
           validUntil={user?.subscription?.validUntil}
           cancelledAt={user?.subscription?.cancelledAt}
+          currency={DEFAULT_CURRENCY}
         />
       </main>
     </div>
   );
 };
+
+export async function getServerSideProps() {
+  try {
+    const {
+      data: { results },
+    } = await api.get('/config/subscriptions');
+
+    return {
+      props: {
+        subscriptionPlans: results.value.plans,
+      },
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      subscriptionPlans: [],
+    };
+  }
+}
 
 export default Subscriptions;

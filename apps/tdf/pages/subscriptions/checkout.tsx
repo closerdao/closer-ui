@@ -9,15 +9,16 @@ import { loadStripe } from '@stripe/stripe-js';
 import {
   BackButton,
   Heading,
+  HeadingRow,
   Page404,
   ProgressBar,
   Row,
-  HeadingRow,
   SubscriptionCheckoutForm,
+  api,
   useAuth,
   useConfig,
 } from 'closer';
-import { SUBSCRIPTION_STEPS } from 'closer/constants';
+import { DEFAULT_CURRENCY, SUBSCRIPTION_STEPS } from 'closer/constants';
 import { SelectedPlan, SubscriptionPlan } from 'closer/types/subscriptions';
 import { __, getVatInfo, priceFormat } from 'closer/utils/helpers';
 
@@ -25,18 +26,22 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUB_KEY as string,
 );
 
-const Checkout = () => {
+interface Props {
+  subscriptionPlans: SubscriptionPlan[];
+}
+
+const Checkout = ({ subscriptionPlans }: Props) => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId } = router.query;
-  const { PLATFORM_NAME, SUBSCRIPTIONS } = useConfig() || {};
+  const { PLATFORM_NAME } = useConfig() || {};
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
 
   useEffect(() => {
     if (user?.subscription && user.subscription.priceId) {
       router.push('/subscriptions');
     }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -46,14 +51,14 @@ const Checkout = () => {
 
   useEffect(() => {
     if (priceId) {
-      const selectedSubscription = SUBSCRIPTIONS.plans.find(
+      const selectedSubscription = subscriptionPlans.find(
         (plan: SubscriptionPlan) => plan.priceId === priceId,
       );
 
       setSelectedPlan({
-        title: selectedSubscription.title,
-        monthlyCredits: selectedSubscription.monthlyCredits,
-        price: selectedSubscription.price,
+        title: selectedSubscription?.title as string,
+        monthlyCredits: selectedSubscription?.monthlyCredits as number,
+        price: selectedSubscription?.price as number,
       });
     }
   }, [priceId]);
@@ -93,15 +98,12 @@ const Checkout = () => {
             <Row
               className="mb-4"
               rowKey={selectedPlan?.title}
-              value={`${priceFormat(
-                selectedPlan?.price,
-                SUBSCRIPTIONS.config.currency,
-              )}`}
+              value={`${priceFormat(selectedPlan?.price, DEFAULT_CURRENCY)}`}
               additionalInfo={`${__(
                 'bookings_checkout_step_total_description',
               )} ${getVatInfo({
                 val: selectedPlan?.price,
-                cur: SUBSCRIPTIONS.config.currency,
+                cur: DEFAULT_CURRENCY,
               })} ${__('subscriptions_summary_per_month')}`}
             />
           </div>
@@ -125,5 +127,24 @@ const Checkout = () => {
     </>
   );
 };
+
+export async function getServerSideProps() {
+  try {
+    const {
+      data: { results },
+    } = await api.get('/config/subscriptions');
+
+    return {
+      props: {
+        subscriptionPlans: results.value.plans,
+      },
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      subscriptionPlans: [],
+    };
+  }
+}
 
 export default Checkout;
