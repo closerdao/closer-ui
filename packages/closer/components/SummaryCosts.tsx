@@ -2,7 +2,7 @@ import { DEFAULT_CURRENCY } from '../constants';
 import { useConfig } from '../hooks/useConfig';
 import { CloserCurrencies, Price } from '../types';
 import { __, getVatInfo, priceFormat } from '../utils/helpers';
-import Heading from './ui/Heading';
+import HeadingRow from './ui/HeadingRow';
 
 interface Props {
   utilityFiat?: Price<
@@ -33,13 +33,10 @@ const SummaryCosts = ({
 
   return (
     <div>
-      <Heading
-        level={2}
-        className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3"
-      >
-        <span className="mr-1">💰</span>
+      <HeadingRow>
+        <span className="mr-4">💰</span>
         <span>{__('bookings_summary_step_costs_title')}</span>
-      </Heading>
+      </HeadingRow>
 
       {eventCost ? (
         <div className="flex justify-between items-center mt-3">

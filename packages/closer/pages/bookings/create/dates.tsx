@@ -9,6 +9,7 @@ import PageError from '../../../components/PageError';
 import TicketOptions from '../../../components/TicketOptions';
 import BackButton from '../../../components/ui/BackButton';
 import Button from '../../../components/ui/Button';
+import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import dayjs, { Dayjs } from 'dayjs';
@@ -157,9 +158,10 @@ const DatesSelector: NextPage<Props> = ({
     <>
       <div className="max-w-screen-sm mx-auto md:p-8 h-full">
         <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
-        <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
-          🏡 {__('bookings_summary_step_dates_title')}
-        </h1>
+        <Heading className="pb-4 mt-8">
+          <span className="mr-2">🏡</span>
+          <span>{__('bookings_summary_step_dates_title')}</span>
+        </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
 
         <div className="mt-16 flex flex-col gap-16">

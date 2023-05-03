@@ -10,6 +10,7 @@ import CheckoutTotal from '../../../components/CheckoutTotal';
 import PageError from '../../../components/PageError';
 import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
+import HeadingRow from '../../../components/ui/HeadingRow';
 import ProgressBar from '../../../components/ui/ProgressBar';
 import Row from '../../../components/ui/Row';
 
@@ -44,7 +45,6 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
     rentalFiat,
     useTokens,
     start,
-    end,
     dailyRentalToken,
     duration,
     volunteerId,
@@ -111,18 +111,22 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
         <BookingBackButton onClick={goBack} name={__('buttons_back')} />
-        <h1 className="step-title font-normal pb-2 flex space-x-1 items-center mt-8">
+        <Heading
+          level={1}
+          className="pb-4 mt-8"
+        >
           <span className="mr-1">💰</span>
           <span>{__('bookings_checkout_step_title')}</span>
-        </h1>
+        </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
         <div className="mt-16 flex flex-col gap-16">
           <div>
             {eventPrice && (
               <div>
-                <h2 className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2">
-                  🎉 {__('bookings_checkout_ticket_cost')}
-                </h2>
+                <HeadingRow>
+                  <span className="mr-2">🎉</span>
+                  <span>{__('bookings_checkout_ticket_cost')}</span>
+                </HeadingRow>
                 <div className="mb-16 mt-4">
                   <Row
                     rowKey={ticketOption?.name}
@@ -132,10 +136,10 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
               </div>
             )}
 
-            <Heading className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2">
-              <span className="mr-1">🏡</span>
+            <HeadingRow>
+              <span className="mr-2">🏡</span>
               <span>{__('bookings_checkout_step_accomodation')}</span>
-            </Heading>
+            </HeadingRow>
             <div className="flex justify-between items-center mt-3">
               <p>{listingName}</p>
               <p className="font-bold">{priceFormat(accomodationCost)}</p>
@@ -164,13 +168,10 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
             )}
           </div>
           <div>
-            <Heading
-              level={2}
-              className="text-2xl leading-10 font-normal border-solid border-b border-neutral-200 pb-2 mb-3"
-            >
-              <span className="mr-1">🛠</span>
+            <HeadingRow>
+              <span className="mr-2">🛠</span>
               <span>{__('bookings_checkout_step_utility_title')}</span>
-            </Heading>
+            </HeadingRow>
             <div className="flex justify-between items-center mt-3">
               <p> {__('bookings_summary_step_utility_total')}</p>
               <p className="font-bold">{priceFormat(utilityFiat)}</p>
