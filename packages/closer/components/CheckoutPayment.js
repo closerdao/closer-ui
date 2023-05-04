@@ -86,7 +86,7 @@ const CheckoutPayment = ({
       <Elements stripe={stripe}>
         <CheckoutForm
           type="booking"
-          _id={bookingId} toPay
+          _id={bookingId}
           onSuccess={onSuccess}
           email={user.email}
           name={user.screenname}
