@@ -7,7 +7,7 @@ interface ButtonProps {
   onClick?: (() => void) | (() => Promise<void>);
   infoText?: string | React.ReactNode;
   className?: string;
-  type?: 'primary' | 'secondary';
+  type?: 'primary' | 'secondary' | 'instantSave' | 'inline';
   isEnabled?: boolean;
   isLoading?: boolean;
 }
@@ -27,14 +27,25 @@ const Button = ({
         onClick={onClick}
         disabled={!isEnabled}
         className={` 
-        border-2 flex justify-center w-full text-lg rounded-full uppercase tracking-wide p-2  
+        border-2 bg-accent border-accent  border-light flex justify-center text-lg rounded-full uppercase tracking-wide p-2  
+        ${type === 'primary' ? 'w-full' : ''}
         ${
-          type === 'primary' && isEnabled
-            ? 'bg-accent text-white border-transparent'
+          type === 'secondary'
+            ? 'w-full bg-white text-accent border-accent '
             : ''
         }
-        ${type === 'secondary' ? 'bg-white  text-accent border-accent ' : ''}
-        ${!isEnabled ? 'bg-neutral border-2 text-light border-light' : ''}
+        ${type === 'inline' ? 'w-auto text-md pl-4 pr-5 py-1.5' : ''}
+        ${
+          type === 'instantSave'
+            ? 'w-auto absolute right-2 top-[45px] text-md pl-4 pr-5 py-0.5'
+            : ''
+        }
+        
+        ${
+          !isEnabled
+            ? 'bg-neutral text-disabled-dark border-2 text-light border-disabled-dark'
+            : 'text-white bg-accent'
+        }
         ${className || ''}
         `}
       >
