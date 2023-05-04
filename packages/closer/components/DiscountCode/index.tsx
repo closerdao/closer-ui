@@ -38,8 +38,8 @@ const DiscountCode = ({
   };
   return (
     <div>
-      <div className="flex basis-20">
-        <Heading level={4} className="text-[14px] mt-2 basis-1/2">
+      <div className="blcok sm:flex basis-20">
+        <Heading level={4} className="text-[14px] mt-2 basis-1/2 mb-4 sm: mb-0">
           {__('bookings_dates_step_tickets_discount_code')}:
         </Heading>
         <Input
@@ -48,15 +48,16 @@ const DiscountCode = ({
           onChange={(e: ChangeEvent<HTMLInputElement>) =>
             setDiscountCode(e.target.value)
           }
-          placeholder="enter code"
+          placeholder={__('bookings_dates_step_tickets_discount_code_placeholder')}
           className=""
         />
         <Button
           type="inline"
           onClick={handleApplyDiscountCode}
           isEnabled={selectedTicketOption && discountCode ? true : false}
+          className='mt-4 ml-0 sm:mt-0 sm:ml-4'
         >
-          Apply
+          {__('apply_submit_button')}
         </Button>
       </div>
       <div>
