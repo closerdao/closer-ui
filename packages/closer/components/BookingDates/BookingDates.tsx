@@ -20,7 +20,10 @@ interface Props {
   setStartDate: (startDate: Date) => void;
   setEndDate: (endDate: Dayjs) => void;
   eventId?: string;
-  blockedDateRanges: { start: Date; end: Date }[];
+  blockedDateRanges: (Date | {
+    from: Date;
+    to: Date;
+})[]
 }
 
 const BookingDates: FC<Props> = ({
@@ -65,22 +68,22 @@ const BookingDates: FC<Props> = ({
     }
   };
 
-  const isDateInRange = (date: Date) => {
-    return blockedDateRanges.some(([start, end]) => {
-      return start <= date && date <= end;
-    });
-  };
+  // const isDateInRange = (date: Date) => {
+  //   return blockedDateRanges.some(([start, end]) => {
+  //     return start <= date && date <= end;
+  //   });
+  // };
 
   // const handleSelectStartDate = (startDate: dayjs.Dayjs) => {
   const handleSelectStartDate = (startDate: Date) => {
-    if (blockedDateRanges.length) {
-      if (isDateInRange(new Date(startDate.toDate()))) {
-        console.log('date sis blocked!');
-      } else {
-        console.log('date is free!');
-        setStartDate(startDate);
-      }
-    }
+    // if (blockedDateRanges.length) {
+    //   if (isDateInRange(new Date(startDate.toDate()))) {
+    //     console.log('date sis blocked!');
+    //   } else {
+    //     console.log('date is free!');
+    //   }
+    // }
+    setStartDate(startDate);
   };
 
   return (

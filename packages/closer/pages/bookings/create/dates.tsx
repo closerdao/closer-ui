@@ -47,9 +47,10 @@ const getBlockedDateRanges = async () => {
   const futureEvents = await getFutureEvents();
   futureEvents.forEach((event: Event) => {
     if (event.blocksBookingCalendar) {
-      blockedDateRanges.push({ start: new Date(event.start), end: new Date(event.end) });
+      blockedDateRanges.push({ from: new Date(event.start), to: new Date(event.end) });
     }
   });
+  console.log('blockedDateRanges=', blockedDateRanges);
   return blockedDateRanges;
 };
 

@@ -1,12 +1,11 @@
 import { ChangeEvent, FC, useEffect, useState } from 'react';
-
-
-
-
-import dayjs from 'dayjs';
-import { DayPicker, DateRange } from 'react-day-picker';
+import { DateRange, DayPicker } from 'react-day-picker';
 // import { format } from 'date-fns';
 import 'react-day-picker/dist/style.css';
+
+import dayjs from 'dayjs';
+
+import '../public/css/react-day-picker.css';
 
 const defaultTime = dayjs().add(7, 'days').set('hour', 12).set('minute', 0);
 
@@ -16,7 +15,10 @@ interface Props {
   maxValue?: string;
   onChange: (date: dayjs.Dayjs) => void;
   showTime?: boolean;
-  blockedDateRanges: { start: Date; end: Date }[];
+  blockedDateRanges: (Date | {
+    from: Date;
+    to: Date;
+})[]
 }
 const DateTimePicker: FC<Props> = ({
   value,
@@ -24,20 +26,23 @@ const DateTimePicker: FC<Props> = ({
   maxValue = '180',
   onChange,
   showTime,
-  blockedDateRanges
+  blockedDateRanges,
 }) => {
   const [datetime, updateTime] = useState(value ? dayjs(value) : defaultTime);
 
   const [date, setDate] = useState(new Date());
-  const [range, setRange] = useState<DateRange | undefined>();
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
-  const disabledDays = [
-    new Date(2022, 5, 10),
-    new Date(2022, 5, 12),
-    new Date(2022, 5, 20),
-    { from: new Date(2022, 4, 18), to: new Date(2022, 4, 29) }
-  ];
+  // const disabledDays = [
+  //   new Date(2022, 5, 10),
+  //   new Date(2022, 5, 12),
+  //   new Date(2022, 5, 20),
+  //   { from: new Date('2023-05-14'), to: new Date('2023-05-16') },
+  // ];
 
+  useEffect(() => {
+    console.log('range=', dateRange);
+  }, [dateRange]);
 
   useEffect(() => {
     updateTime(value ? dayjs(value) : defaultTime);
@@ -67,30 +72,23 @@ const DateTimePicker: FC<Props> = ({
     onChange(newDate);
   };
 
+
+  const handleSetRange = (range:DateRange | undefined) => {
+    setDateRange(range)
+  }
+
   return (
     <div>
-    
-      
-
-    <DayPicker
-        disabled={disabledDays}
+      {JSON.stringify(blockedDateRanges)}
+      <DayPicker
+        disabled={blockedDateRanges}
         mode="range"
         defaultMonth={new Date()}
-        numberOfMonths={2}
-        onSelect={setRange}
-        selected={range}
-        // modifiersClassNames={{
-        //   selected: 'my-selected',
-        //   today: 'my-today'
-        // }}
-        styles={{
-          
-          caption: { color: 'blue' },
-          day: { color: 'red' },
-          cell: { backgroundColor: 'blue' },
-        }}
+        // numberOfMonths={2}
+        onSelect={handleSetRange}
+        selected={dateRange}
+
       />
-      
 
       <div className={`${showTime ? 'flex cols-2' : ''}`}>
         <input
