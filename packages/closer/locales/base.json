@@ -272,6 +272,7 @@
   "bookings_title_checked-in": "You checked in.",
   "bookings_title_checked-out": "You checked out.",
   "bookings_title": "My bookings",
+  "paid_bookings_title": "Guest bookings",
   "bookings_notes": "Notes",
   "bookings_summary": "Summary",
   "bookings_status": "Status:",
