@@ -22,12 +22,36 @@ import {
   DEFAULT_CURRENCY,
 } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import { Event } from '../../../types';
 import { TicketOption } from '../../../types';
 import { BookingSettings, VolunteerOpportunity } from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
+
+
+const getFutureEvents = async () => {
+  const res = await api.get(
+    `/event?&where=${JSON.stringify({
+      end: {
+        $gt: new Date(),
+      },
+    })}`,
+  );
+  return res.data.results;
+};
+
+const getBlockedDateRanges = async () => {
+  const blockedDateRanges: any[] = [];
+  const futureEvents = await getFutureEvents();
+  futureEvents.forEach((event: Event) => {
+    if (event.blocksBookingCalendar) {
+      blockedDateRanges.push({ start: new Date(event.start), end: new Date(event.end) });
+    }
+  });
+  return blockedDateRanges;
+};
 
 interface Props {
   error?: string;
@@ -56,6 +80,16 @@ const DatesSelector: NextPage<Props> = ({
     eventId,
     volunteerId,
   } = router.query || {};
+
+  const [blockedDateRanges, setBlockedDateRanges] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!eventId && !volunteerId) { 
+      (async () => {
+        setBlockedDateRanges(await getBlockedDateRanges())
+      })()
+    } 
+  },[])
 
   const initialStartDate = savedStartDate
     ? dayjs(savedStartDate as string, 'YYYY-MM-DD').set('hour', 16)
@@ -98,6 +132,15 @@ const DatesSelector: NextPage<Props> = ({
   const [selectedTicketOption, selectTicketOption] = useState<any>(null);
   const [discountCode, setDiscountCode] = useState('');
 
+  const handleSelectDates = (event: any) => {
+    // const value = event.target.value;
+    // if (blockedDates.includes(value)) {
+    //   event.target.setCustomValidity('This date range is unavailable');
+    // } else {
+    //   event.target.setCustomValidity('');
+    // }
+  };
+
   const handleNext = async () => {
     setHandleNextError(null);
     try {
@@ -112,7 +155,7 @@ const DatesSelector: NextPage<Props> = ({
         ...(eventId && { eventId: eventId as string }),
         ...(volunteerId && { volunteerId: volunteerId as string }),
         ticketOption: selectedTicketOption?.name,
-        discountCode: discountCode
+        discountCode: discountCode,
       };
 
       if (data.start === data.end || selectedTicketOption?.isDayTicket) {
@@ -190,15 +233,18 @@ const DatesSelector: NextPage<Props> = ({
             />
           )}
 
-          { selectedTicketOption?.isDayTicket !== true && <BookingDates
-            conditions={settings?.conditions}
-            startDate={start}
-            endDate={end}
-            setStartDate={setStartDate}
-            setEndDate={setEndDate}
-            isMember={isMember}
-            eventId={eventId as string}
-          /> }
+          {selectedTicketOption?.isDayTicket !== true && (
+            <BookingDates
+              conditions={settings?.conditions}
+              startDate={start}
+              endDate={end}
+              setStartDate={setStartDate}
+              setEndDate={setEndDate}
+              isMember={isMember}
+              eventId={eventId as string}
+              blockedDateRanges={blockedDateRanges}
+            />
+          )}
           <BookingGuests
             adults={adults}
             kids={kids}
@@ -209,9 +255,9 @@ const DatesSelector: NextPage<Props> = ({
             setInfants={setInfants}
             setPets={setPets}
           />
-          { handleNextError &&
-            <div className="error-box">{ handleNextError }</div>
-          }
+          {handleNextError && (
+            <div className="error-box">{handleNextError}</div>
+          )}
           <Button
             onClick={handleNext}
             isEnabled={
@@ -234,7 +280,9 @@ DatesSelector.getInitialProps = async ({ query }) => {
   try {
     const { eventId, volunteerId } = query;
     const {
-      data: { results: { value: settings } },
+      data: {
+        results: { value: settings },
+      },
     } = await api.get('/config/booking');
     if (eventId) {
       const ticketsAvailable = await api.get(

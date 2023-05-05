@@ -13,11 +13,14 @@ dayjs.extend(relativeTime);
 interface Props {
   isMember?: boolean;
   conditions?: BookingConditions;
-  startDate: Dayjs;
+  // startDate: Dayjs;
+  startDate: Date;
   endDate: Dayjs;
-  setStartDate: (startDate: Dayjs) => void;
+  // setStartDate: (startDate: Dayjs) => void;
+  setStartDate: (startDate: Date) => void;
   setEndDate: (endDate: Dayjs) => void;
   eventId?: string;
+  blockedDateRanges: { start: Date; end: Date }[];
 }
 
 const BookingDates: FC<Props> = ({
@@ -28,6 +31,7 @@ const BookingDates: FC<Props> = ({
   setStartDate,
   setEndDate,
   eventId,
+  blockedDateRanges,
 }) => {
   const { member, guest } = conditions || {};
 
@@ -61,6 +65,24 @@ const BookingDates: FC<Props> = ({
     }
   };
 
+  const isDateInRange = (date: Date) => {
+    return blockedDateRanges.some(([start, end]) => {
+      return start <= date && date <= end;
+    });
+  };
+
+  // const handleSelectStartDate = (startDate: dayjs.Dayjs) => {
+  const handleSelectStartDate = (startDate: Date) => {
+    if (blockedDateRanges.length) {
+      if (isDateInRange(new Date(startDate.toDate()))) {
+        console.log('date sis blocked!');
+      } else {
+        console.log('date is free!');
+        setStartDate(startDate);
+      }
+    }
+  };
+
   return (
     <div>
       <HeadingRow>
@@ -73,6 +95,7 @@ const BookingDates: FC<Props> = ({
           <label className="capitalize font-normal mb-0" htmlFor="start">
             {__('listings_book_check_in')}
           </label>
+          {JSON.stringify(blockedDateRanges)}
           <DateTimePicker
             value={startDate.format('YYYY-MM-DD')}
             minValue={eventId ? minDate.current : dayjs().format('YYYY-MM-DD')}
@@ -88,8 +111,9 @@ const BookingDates: FC<Props> = ({
                     )
                     .format('YYYY-MM-DD')
             }
-            onChange={(start) => setStartDate(start)}
+            onChange={(start) => handleSelectStartDate(start)}
             showTime={false}
+            blockedDateRanges={blockedDateRanges}
           />
         </div>
         <div>
