@@ -45,8 +45,8 @@ describe('Select accomodation type page', () => {
     };
     renderWithProviders(<AccomodationSelector {...props} />);
 
-    const cards = screen.getAllByRole('heading', { level: 1 });
-    expect(cards).toHaveLength(3);
+    const cards = screen.getAllByRole('heading', { level: 4 });
+    expect(cards).toHaveLength(2);
     const cardTitle = screen.getByRole('heading', { name: /magical cave/i });
     const button1 = screen.getAllByRole('button', {
       name: /sign in to book/i,

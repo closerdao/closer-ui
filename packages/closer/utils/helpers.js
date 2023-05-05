@@ -304,3 +304,12 @@ export const getVatInfo = (total) => {
   }
   return '';  
 };
+
+export const getCurrencySymbol = (currency) => {
+  const symbol = {
+    USD: '$',
+    EUR: '€',
+    TDF: '$TDF',
+  };
+  return `${symbol[currency]}`;
+};
