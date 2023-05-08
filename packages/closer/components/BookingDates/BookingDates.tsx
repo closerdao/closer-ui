@@ -1,45 +1,52 @@
-import { FC, useRef } from 'react';
+import { FC } from 'react';
 
-import dayjs, { Dayjs } from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
+import dayjs from 'dayjs';
+// import relativeTime from 'dayjs/plugin/relativeTime';
+import utc from 'dayjs/plugin/utc';
 
 import { BookingConditions } from '../../types';
 import { __ } from '../../utils/helpers';
 import DateTimePicker from '../DateTimePicker';
 import HeadingRow from '../ui/HeadingRow';
 
-dayjs.extend(relativeTime);
+// dayjs.extend(relativeTime);
+dayjs.extend(utc);
 
 interface Props {
   isMember?: boolean;
   conditions?: BookingConditions;
-  // startDate: Dayjs;
-  startDate: Date;
-  endDate: Dayjs;
-  // setStartDate: (startDate: Dayjs) => void;
-  setStartDate: (startDate: Date) => void;
-  setEndDate: (endDate: Dayjs) => void;
+  startDate?: string | null;
+  endDate?: string | null;
+  setStartDate: (startDate: string | null) => void;
+  setEndDate: (endDate: string | null) => void;
   eventId?: string;
-  blockedDateRanges: (Date | {
-    from: Date;
-    to: Date;
-})[]
+  blockedDateRanges: (
+    | Date
+    | {
+        from: Date;
+        to: Date;
+      }
+  )[];
+  savedStartDate?: string;
+  savedEndDate?: string ;
 }
 
 const BookingDates: FC<Props> = ({
   isMember,
   conditions,
-  startDate,
-  endDate,
+  // startDate,
+  // endDate,
   setStartDate,
   setEndDate,
   eventId,
   blockedDateRanges,
+  savedStartDate,
+  savedEndDate,
 }) => {
   const { member, guest } = conditions || {};
 
-  const minDate = useRef(startDate.format('YYYY-MM-DD'));
-  const maxDate = useRef(endDate.format('YYYY-MM-DD'));
+  // const minDate = useRef(startDate);
+  // const maxDate = useRef(endDate);
 
   if (!member || !guest) {
     console.error(
@@ -68,24 +75,6 @@ const BookingDates: FC<Props> = ({
     }
   };
 
-  // const isDateInRange = (date: Date) => {
-  //   return blockedDateRanges.some(([start, end]) => {
-  //     return start <= date && date <= end;
-  //   });
-  // };
-
-  // const handleSelectStartDate = (startDate: dayjs.Dayjs) => {
-  const handleSelectStartDate = (startDate: Date) => {
-    // if (blockedDateRanges.length) {
-    //   if (isDateInRange(new Date(startDate.toDate()))) {
-    //     console.log('date sis blocked!');
-    //   } else {
-    //     console.log('date is free!');
-    //   }
-    // }
-    setStartDate(startDate);
-  };
-
   return (
     <div>
       <HeadingRow>
@@ -93,56 +82,33 @@ const BookingDates: FC<Props> = ({
         <span>{__('bookings_dates_step_subtitle')}</span>
       </HeadingRow>
       <p>{renderConditionsDescription()}</p>
-      <div className="mt-8 flex justify-between items-center md:px-20">
+      <div className="mt-8 flex justify-between items-center">
         <div>
-          <label className="capitalize font-normal mb-0" htmlFor="start">
-            {__('listings_book_check_in')}
-          </label>
-          {JSON.stringify(blockedDateRanges)}
           <DateTimePicker
-            value={startDate.format('YYYY-MM-DD')}
-            minValue={eventId ? minDate.current : dayjs().format('YYYY-MM-DD')}
-            maxValue={
-              eventId
-                ? maxDate.current
-                : dayjs()
-                    .add(
-                      isMember
-                        ? member.maxBookingHorizon
-                        : guest.maxBookingHorizon,
-                      'days',
-                    )
-                    .format('YYYY-MM-DD')
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+            maxDuration={
+              isMember
+                ? conditions?.member.maxDuration
+                : conditions?.guest.maxDuration
             }
-            onChange={(start) => handleSelectStartDate(start)}
-            showTime={false}
+            // minValue={eventId ? minDate.current : dayjs().format('YYYY-MM-DD')}
+            // maxValue={
+            //   eventId
+            //     ? maxDate.current
+            //     : dayjs()
+            //         .add(
+            //           isMember
+            //             ? member.maxBookingHorizon
+            //             : guest.maxBookingHorizon,
+            //           'days',
+            //         )
+            //         .format('YYYY-MM-DD')
+            // }
+            // showTime={false}
             blockedDateRanges={blockedDateRanges}
-          />
-        </div>
-        <div>
-          <label className="capitalize font-normal mb-0" htmlFor="end">
-            {__('listings_book_check_out')}
-          </label>
-
-          <DateTimePicker
-            value={endDate.format('YYYY-MM-DD')}
-            minValue={
-              eventId
-                ? minDate.current
-                : dayjs(startDate).add(1, 'days').format('YYYY-MM-DD')
-            }
-            maxValue={
-              eventId
-                ? maxDate.current
-                : dayjs(startDate)
-                    .add(
-                      isMember ? member?.maxDuration : guest?.maxDuration,
-                      'days',
-                    )
-                    .format('YYYY-MM-DD')
-            }
-            onChange={(end) => setEndDate(end)}
-            showTime={false}
+            savedStartDate={savedStartDate}
+            savedEndDate={savedEndDate}
           />
         </div>
       </div>
