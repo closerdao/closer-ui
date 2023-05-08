@@ -1,7 +1,6 @@
 import Head from 'next/head';
 
 import { FC, useState } from 'react';
-import React from 'react';
 
 import UploadPhoto from '../../components/UploadPhoto';
 import Heading from '../../components/ui/Heading';
@@ -28,6 +27,7 @@ const SKILLS_EXAMPLES = ['javascript', 'woodworking', 'farming'];
 const SettingsPage: FC = () => {
   const { user, isAuthenticated, refetchUser } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const [hasSaved, setHasSaved] = useState(false);
   const { platform } = usePlatform() as any;
 
   const saveUserData =
@@ -54,9 +54,11 @@ const SettingsPage: FC = () => {
         };
       }
       try {
+        setHasSaved(false);
         await platform.user.patch(user?._id, payload);
         await refetchUser();
         setError(null);
+        setHasSaved(true);
       } catch (err) {
         const errorMessage = parseMessageFromError(err);
         setError(errorMessage);
@@ -79,22 +81,30 @@ const SettingsPage: FC = () => {
             <span className="block sm:inline">{error}</span>
           </div>
         )}
-        <Heading level={3} className="border-b border-divider pb-2.5 leading-9 mt-12">
+        <Heading
+          level={3}
+          className="border-b border-divider pb-2.5 leading-9 mt-12"
+        >
           ⭐ Account
         </Heading>
         <Input
           label="Name"
           value={user.screenname}
-          onChange={saveUserData('screenname')}
+          onChange={saveUserData('screenname') as any}
           className="mt-4"
+          isInstantSave={true}
+          hasSaved={hasSaved}
+          setHasSaved={setHasSaved}
         />
         <Input
           label="Email"
           value={user.email}
-          onChange={saveUserData('email')}
+          onChange={saveUserData('email') as any}
           className="mt-8"
           validation="email"
           isDisabled
+          hasSaved={hasSaved}
+          setHasSaved={setHasSaved}
         />
         <div className="md:w-72 relative mt-8">
           <label className="font-medium text-complimentary-light" htmlFor="">
@@ -107,14 +117,20 @@ const SettingsPage: FC = () => {
             className="my-4"
           />
         </div>
-        <Heading level={3} className="border-b border-divider pb-2.5 leading-9 mt-12">
+        <Heading
+          level={3}
+          className="border-b border-divider pb-2.5 leading-9 mt-12"
+        >
           🔰 Recommended
         </Heading>
         <Input
           label="Dietary Preferences"
           className="mt-4"
-          onChange={saveUserData('diet')}
+          onChange={saveUserData('diet') as any}
           value={user?.preferences?.diet}
+          isInstantSave={true}
+          hasSaved={hasSaved}
+          setHasSaved={setHasSaved}
         />
         <Select
           label="Shared Accommodation Preference"
@@ -127,8 +143,11 @@ const SettingsPage: FC = () => {
         <Input
           label="What is your superpower?"
           value={user?.preferences?.superpower}
-          onChange={saveUserData('superpower')}
+          onChange={saveUserData('superpower') as any}
           className="mt-8"
+          isInstantSave={true}
+          hasSaved={hasSaved}
+          setHasSaved={setHasSaved}
         />
         <MultiSelect
           label="What skills do you have?"
@@ -138,26 +157,38 @@ const SettingsPage: FC = () => {
           options={SKILLS_EXAMPLES}
           placeholder="Pick or create yours"
         />
-        <Heading level={3} className="border-b border-divider pb-2.5 leading-9 mt-12">
+        <Heading
+          level={3}
+          className="border-b border-divider pb-2.5 leading-9 mt-12"
+        >
           🔰 Optional
         </Heading>
         <Input
           label="What do you dream of creating?"
           value={user?.preferences?.dream}
-          onChange={saveUserData('dream')}
+          onChange={saveUserData('dream') as any}
           className="mt-4"
+          isInstantSave={true}
+          hasSaved={hasSaved}
+          setHasSaved={setHasSaved}
         />
         <Input
           label="What do you need?"
           value={user?.preferences?.needs}
           className="mt-8"
-          onChange={saveUserData('needs')}
+          onChange={saveUserData('needs') as any}
+          isInstantSave={true}
+          hasSaved={hasSaved}
+          setHasSaved={setHasSaved}
         />
         <Input
           label="Anything we should know? Anything you would like to share?"
           value={user?.preferences?.moreInfo}
           className="mt-8"
-          onChange={saveUserData('moreInfo')}
+          onChange={saveUserData('moreInfo') as any}
+          isInstantSave={true}
+          hasSaved={hasSaved}
+          setHasSaved={setHasSaved}
         />
       </div>
     </>
