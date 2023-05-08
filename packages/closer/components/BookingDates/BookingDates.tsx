@@ -34,8 +34,6 @@ interface Props {
 const BookingDates: FC<Props> = ({
   isMember,
   conditions,
-  // startDate,
-  // endDate,
   setStartDate,
   setEndDate,
   eventId,

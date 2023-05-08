@@ -276,7 +276,6 @@ const DatesSelector: NextPage<Props> = ({
             <div className="error-box">{handleNextError}</div>
           )}
 
-          {savedStartDate}
           <Button
             onClick={handleNext}
             isEnabled={

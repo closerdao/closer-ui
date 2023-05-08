@@ -86,6 +86,8 @@ const DateTimePicker: FC<Props> = ({
 
   const handleSelectDay = (range: DateRange | undefined) => {
     if (range?.from?.toString() == range?.to?.toString()) {
+      setEndDate('');
+      setStartDate('');
       setDateRange({ from: undefined, to: undefined });
       return;
     }
