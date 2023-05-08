@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
-import { SubscriptionPlan, Subscriptions } from '../../types/subscriptions';
-import { __ } from '../../utils/helpers';
+import { SubscriptionPlan } from '../../types/subscriptions';
+import { __, getCurrencySymbol } from '../../utils/helpers';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Heading from '../ui/Heading';
@@ -9,19 +9,19 @@ import Heading from '../ui/Heading';
 interface SubscriptionCardsProps {
   clickHandler: (priceId: string) => void;
   filteredSubscriptionPlans: SubscriptionPlan[];
-  config: Subscriptions['config'];
   userActivePlan?: SubscriptionPlan;
   validUntil?: Date;
   cancelledAt?: Date;
+  currency: string;
 }
 
 const SubscriptionCards = ({
   clickHandler,
   filteredSubscriptionPlans,
-  config,
   userActivePlan,
   validUntil,
   cancelledAt,
+  currency,
 }: SubscriptionCardsProps) => {
   const getSubscriptionInfoText = (plan: SubscriptionPlan) => {
     if (userActivePlan?.title === plan.title && validUntil && !cancelledAt) {
@@ -83,8 +83,8 @@ const SubscriptionCards = ({
                     __('subscriptions_free')
                   ) : (
                     <div>
-                      <div>
-                        {config.symbol}
+                        <div>
+                        {getCurrencySymbol(currency)}
                         {plan.price}
                       </div>
                       <p className="text-sm font-normal">

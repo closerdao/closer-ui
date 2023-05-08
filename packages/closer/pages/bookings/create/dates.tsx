@@ -281,7 +281,6 @@ DatesSelector.getInitialProps = async ({ query }) => {
       const ticketsAvailable = await api.get(
         `/bookings/event/${eventId}/availability`,
       );
-
       return {
         settings: settings as BookingSettings,
         ticketOptions: ticketsAvailable.data.ticketOptions,

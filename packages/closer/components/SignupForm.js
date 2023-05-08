@@ -35,8 +35,13 @@ const SignupForm = () => {
     }
     try {
       const referredBy = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
-      await signup({ ...application, ...(referredBy && { referredBy }) });
-      setSubmitted(true);
+      const response = await signup({ ...application, ...(referredBy && { referredBy }) });
+
+      if (response && response._id) {
+        setSubmitted(true);
+      } else {
+        console.log('Invalid response', response);
+      }
     } catch (err) {
       setError(err.message);
     }

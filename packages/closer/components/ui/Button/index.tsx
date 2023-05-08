@@ -28,26 +28,24 @@ const Button = ({
         disabled={!isEnabled}
         className={` 
         border-2 bg-accent border-accent  border-light flex justify-center text-lg rounded-full uppercase tracking-wide p-2  
+        ${type === 'primary' ? 'w-full' : ''}
         ${
-          type === 'primary'
-            ? 'w-full'
+          type === 'secondary'
+            ? 'w-full bg-white text-accent border-accent '
             : ''
         }
-        ${type === 'secondary' ? 'w-full bg-white text-accent border-accent ' : ''}
-        ${
-          type === 'inline' 
-            ? (className =
-                'w-auto ml-4 text-md pl-4 pr-5 py-1.5')
-            : ''
-        }
+        ${type === 'inline' ? 'w-auto text-md pl-4 pr-5 py-1.5' : ''}
         ${
           type === 'instantSave'
-            ? className =
-                'w-auto absolute right-2 top-[45px] text-md pl-4 pr-5 py-0.5'
+            ? 'w-auto absolute right-2 top-[45px] text-md pl-4 pr-5 py-0.5'
             : ''
         }
         
-        ${!isEnabled ? 'bg-neutral text-disabled border-2 text-light border-disabled' : 'text-white bg-accent'}
+        ${
+          !isEnabled
+            ? 'bg-neutral text-disabled-dark border-2 text-light border-disabled-dark'
+            : 'text-white bg-accent'
+        }
         ${className || ''}
         `}
       >

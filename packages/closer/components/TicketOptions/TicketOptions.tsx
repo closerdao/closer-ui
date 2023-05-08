@@ -7,6 +7,7 @@ import {
 } from '../../types';
 import { __, priceFormat } from '../../utils/helpers';
 import DiscountCode from '../DiscountCode';
+import HeadingRow from '../ui/HeadingRow';
 
 interface Props {
   items?: TicketOption[];
@@ -81,17 +82,11 @@ const TicketOptions: FC<Props> = ({
   eventId,
 }) => {
   return (
-    <div>
-      <h2 className="mb-3 text-2xl leading-10 font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center">
-        <span className="mr-1">🎟</span>
+    <>
+      <HeadingRow>
+        <span className="mr-2">🎟</span>
         <span>{__('bookings_dates_step_tickets_title')}</span>
-      </h2>
-
-      {/* TODO: convert to reusable components:
-      <Heading level={2} className="mb-8">
-        🎟 {__('bookings_dates_step_tickets_title')}
-      </Heading> */}
-
+      </HeadingRow>
       <div className="ticket-options my-4 flex flex-row flex-wrap">
         {volunteer ? (
           <Ticket
@@ -127,7 +122,7 @@ const TicketOptions: FC<Props> = ({
         setDiscountCode={setDiscountCode}
         selectedTicketOption={selectedTicketOption}
       />
-    </div>
+    </>
   );
 };
 
