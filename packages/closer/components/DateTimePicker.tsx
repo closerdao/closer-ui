@@ -4,7 +4,6 @@ import 'react-day-picker/dist/style.css';
 
 import dayjs from 'dayjs';
 
-import '../public/css/react-day-picker.css';
 import { __ } from '../utils/helpers';
 import { ErrorMessage } from './ui';
 

@@ -28,7 +28,7 @@ interface Props {
       }
   )[];
   savedStartDate?: string;
-  savedEndDate?: string ;
+  savedEndDate?: string;
 }
 
 const BookingDates: FC<Props> = ({

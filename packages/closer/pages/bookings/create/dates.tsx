@@ -283,7 +283,7 @@ const DatesSelector: NextPage<Props> = ({
               (eventId && selectedTicketOption && start && end) ||
               volunteerId ||
               (!eventId && !volunteerId)
-                ? start && end  
+                ? start && end
                   ? true
                   : savedStartDate && savedEndDate
                   ? true
