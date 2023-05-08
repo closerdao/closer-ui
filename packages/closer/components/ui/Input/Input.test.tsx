@@ -13,18 +13,18 @@ describe('Input', () => {
     expect(label).toBeInTheDocument();
   });
 
-  test('calls onBlur when user clicks outside the input', () => {
+  test('calls onBlur when user clicks outside the isInstantSave input', () => {
     const onBlur = jest.fn();
-    const { getByLabelText } = render(<Input label="Name" onBlur={onBlur} />);
+    const { getByLabelText } = render(<Input isInstantSave={true} label="Name" onBlur={onBlur} />);
     const input = getByLabelText('Name');
     fireEvent.blur(input);
     expect(onBlur).toHaveBeenCalled();
   });
 
-  test('calls onChange when user presses enter', () => {
+  test('calls onChange when user presses enter on isInstantSave input', () => {
     const onChange = jest.fn();
     const { getByLabelText } = render(
-      <Input label="Name" onChange={onChange} />,
+      <Input label="Name" isInstantSave={true} onChange={onChange} />,
     );
     const input = getByLabelText('Name');
     fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
@@ -37,9 +37,9 @@ describe('Input', () => {
     expect(input.disabled).toBe(true);
   });
 
-  test('displays validation error when input is invalid', () => {
+  test('displays validation error when isInstantSave input is invalid', () => {
     const { getByLabelText, getByText } = render(
-      <Input label="Email" validation="email" />,
+      <Input isInstantSave={true} label="Email" validation="email" />,
     );
     const input = getByLabelText('Email');
     fireEvent.change(input, { target: { value: 'invalid-email' } });
