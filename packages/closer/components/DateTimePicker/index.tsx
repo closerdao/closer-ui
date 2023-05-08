@@ -1,11 +1,11 @@
-import { FC, ReactNode, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DateRange, DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 
 import dayjs from 'dayjs';
 
-import { __ } from '../utils/helpers';
-import { ErrorMessage } from './ui';
+import { __ } from '../../utils/helpers';
+import { ErrorMessage } from '../ui';
 
 interface Props {
   value?: string;
@@ -23,21 +23,24 @@ interface Props {
   )[];
   savedStartDate?: string;
   savedEndDate?: string;
+  defaultMonth?: Date;
 }
-const DateTimePicker: FC<Props> = ({
+const DateTimePicker = ({
   setStartDate,
   setEndDate,
   maxDuration,
   blockedDateRanges,
   savedStartDate,
   savedEndDate,
-}) => {
+  defaultMonth
+}: Props) => {
+  console.log('blockedDateRanges', blockedDateRanges);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [dateError, setDateError] = useState<ReactNode | null | string>(null);
+  const [dateError, setDateError] = useState<null | string>(null);
   const [isOneMonthCalendar, setIsOneMonthCalendar] = useState(false);
-  const [blockedMaxDurationRange, setBlockedMaxDurationRange] = useState<
-    ({ after: Date } | { before: Date })[] | []
-  >([]);
+  // const [blockedMaxDurationRange, setBlockedMaxDurationRange] = useState<
+  //   ({ after: Date } | { before: Date })[] | []
+  // >([]);
 
   useEffect(() => {
     const handleWindowResize = () => {
@@ -85,53 +88,15 @@ const DateTimePicker: FC<Props> = ({
   };
 
   const handleSelectDay = (range: DateRange | undefined) => {
+    setDateError(null);
     if (range?.from?.toString() == range?.to?.toString()) {
       setEndDate('');
       setStartDate('');
       setDateRange({ from: undefined, to: undefined });
       return;
     }
-    setDateError(null);
     if (!includesBlockedDateRange(range)) {
       setDateRange(range);
-
-      if (range?.from && !range?.to && maxDuration) {
-        setBlockedMaxDurationRange([
-          {
-            before: new Date(
-              new Date(range?.from).setDate(
-                new Date(range?.from).getDate() - maxDuration,
-              ),
-            ),
-          },
-          {
-            after: new Date(
-              new Date(range?.from).setDate(
-                new Date(range?.from).getDate() + maxDuration,
-              ),
-            ),
-          },
-        ]);
-      } else if (range?.from && range?.to && maxDuration) {
-        setBlockedMaxDurationRange([
-          {
-            before: new Date(
-              new Date(range?.to).setDate(
-                new Date(range?.to).getDate() - maxDuration,
-              ),
-            ),
-          },
-          {
-            after: new Date(
-              new Date(range?.from).setDate(
-                new Date(range?.from).getDate() + maxDuration,
-              ),
-            ),
-          },
-        ]);
-      } else {
-        setBlockedMaxDurationRange([]);
-      }
 
       if (range?.to) {
         setEndDate(dayjs(range?.to).format('YYYY-MM-DD'));
@@ -144,6 +109,7 @@ const DateTimePicker: FC<Props> = ({
         setStartDate(null);
       }
     } else {
+      // TODO: decide if we allow  members to book during events / edit error message
       setDateError(
         'Please make separate bookings if you would like to stay before and after events',
       );
@@ -152,7 +118,7 @@ const DateTimePicker: FC<Props> = ({
 
   return (
     <div className="">
-      <div className="border-2 py-3 px-8 rounded-full w-full bg-neutral mb-8">
+      <div data-testid="dates" className="border-2 py-3 px-8 rounded-full w-full bg-neutral mb-8">
         <span>
           {dateRange?.from
             ? dayjs(dateRange?.from).format('LL')
@@ -168,12 +134,13 @@ const DateTimePicker: FC<Props> = ({
 
       <div className="">
         <DayPicker
-          disabled={[...blockedDateRanges, ...blockedMaxDurationRange]}
+          disabled={[...blockedDateRanges]}
           mode="range"
-          defaultMonth={new Date()}
+          defaultMonth={defaultMonth}
           numberOfMonths={isOneMonthCalendar ? 1 : 2}
           onSelect={handleSelectDay}
           selected={dateRange}
+          max={maxDuration}
         />
         {dateError && <ErrorMessage error={dateError} />}
       </div>

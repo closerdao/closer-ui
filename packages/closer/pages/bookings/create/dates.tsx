@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import BookingDates from '../../../components/BookingDates/BookingDates';
 import BookingGuests from '../../../components/BookingGuests';
@@ -28,22 +28,12 @@ import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
 
-const getFutureEvents = async () => {
-  const res = await api.get(
-    `/event?&where=${JSON.stringify({
-      end: {
-        $gt: new Date(),
-      },
-    })}`,
-  );
-  return res.data.results;
-};
-
 interface Props {
   error?: string;
   settings?: BookingSettings;
   ticketOptions?: TicketOption[];
   volunteer?: VolunteerOpportunity;
+  futureEvents?: Event[];
 }
 
 const DatesSelector: NextPage<Props> = ({
@@ -51,6 +41,7 @@ const DatesSelector: NextPage<Props> = ({
   settings,
   ticketOptions,
   volunteer,
+  futureEvents,
 }) => {
   const router = useRouter();
   const { user } = useAuth();
@@ -79,14 +70,17 @@ const DatesSelector: NextPage<Props> = ({
     return 0;
   };
 
-  const getBlockedDateRanges = async () => {
+  const memoizedBlockedDateRanges = useMemo(() => {
+    return getBlockedDateRanges();
+  }, [futureEvents, savedStartDate, savedEndDate]);
+
+  function getBlockedDateRanges() {
     const blockedDateRanges: any[] = [];
     if (eventId) {
       blockedDateRanges.push({ before: new Date(savedStartDate as string) });
       blockedDateRanges.push({ after: new Date(savedEndDate as string) });
     }
-    const futureEvents = await getFutureEvents();
-    futureEvents.forEach((event: Event) => {
+    futureEvents?.forEach((event: Event) => {
       if (event.blocksBookingCalendar) {
         blockedDateRanges.push({
           from: new Date(event.start),
@@ -99,7 +93,7 @@ const DatesSelector: NextPage<Props> = ({
       after: new Date().setDate(new Date().getDate() + getMaxBookingHorizon()),
     });
     return blockedDateRanges;
-  };
+  }
 
   useEffect(() => {
     if (eventId) {
@@ -115,39 +109,9 @@ const DatesSelector: NextPage<Props> = ({
       ]);
     }
     if (!eventId && !volunteerId) {
-      (async () => {
-        setBlockedDateRanges(await getBlockedDateRanges());
-      })();
+      setBlockedDateRanges(memoizedBlockedDateRanges);
     }
   }, []);
-
-  // const initialStartDate = savedStartDate
-  //   ? dayjs(savedStartDate as string, 'YYYY-MM-DD').set('hour', 16)
-  //   : dayjs().add(3, 'days').set('hour', 16);
-  // const initialEndDate = savedEndDate
-  //   ? dayjs(savedEndDate as string, 'YYYY-MM-DD').set('hour', 11)
-  //   : dayjs().add(6, 'days').set('hour', 11);
-
-  // useEffect(() => {
-  //   // Always do navigations after the first render
-  //   const isEndTheSameDay = initialEndDate.isSame(initialStartDate, 'day');
-  //   const newEndDate = initialStartDate.add(1, 'day').set('hour', 11);
-  //   if (isEndTheSameDay) {
-  //     setEndDate(newEndDate);
-  //     router.replace(
-  //       {
-  //         pathname: router.pathname,
-  //         query: {
-  //           ...router.query,
-  //           start: savedStartDate,
-  //           end: newEndDate.format('YYYY-MM-DD'),
-  //         },
-  //       },
-  //       undefined,
-  //       { shallow: true },
-  //     );
-  //   }
-  // }, []);
 
   const [start, setStartDate] = useState<string | null>();
   const [end, setEndDate] = useState<string | null>();
@@ -307,6 +271,7 @@ const DatesSelector: NextPage<Props> = ({
 DatesSelector.getInitialProps = async ({ query }) => {
   try {
     const { eventId, volunteerId } = query;
+
     const {
       data: {
         results: { value: settings },
@@ -327,6 +292,20 @@ DatesSelector.getInitialProps = async ({ query }) => {
       return {
         settings: settings as BookingSettings,
         volunteer: volunteer.data.results,
+      };
+    }
+    if (!eventId && !volunteerId) {
+      const res = await api.get(
+        `/event?&where=${JSON.stringify({
+          end: {
+            $gt: new Date(),
+          },
+        })}`,
+      );
+
+      return {
+        settings: settings as BookingSettings,
+        futureEvents: res.data.results,
       };
     }
     return {

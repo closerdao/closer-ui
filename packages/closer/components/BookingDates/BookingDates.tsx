@@ -1,16 +1,9 @@
 import { FC } from 'react';
 
-import dayjs from 'dayjs';
-// import relativeTime from 'dayjs/plugin/relativeTime';
-import utc from 'dayjs/plugin/utc';
-
 import { BookingConditions } from '../../types';
 import { __ } from '../../utils/helpers';
 import DateTimePicker from '../DateTimePicker';
 import HeadingRow from '../ui/HeadingRow';
-
-// dayjs.extend(relativeTime);
-dayjs.extend(utc);
 
 interface Props {
   isMember?: boolean;
@@ -40,9 +33,6 @@ const BookingDates: FC<Props> = ({
   savedEndDate,
 }) => {
   const { member, guest } = conditions || {};
-
-  // const minDate = useRef(startDate);
-  // const maxDate = useRef(endDate);
 
   if (!member || !guest) {
     console.error(
@@ -88,23 +78,10 @@ const BookingDates: FC<Props> = ({
                 ? conditions?.member.maxDuration
                 : conditions?.guest.maxDuration
             }
-            // minValue={eventId ? minDate.current : dayjs().format('YYYY-MM-DD')}
-            // maxValue={
-            //   eventId
-            //     ? maxDate.current
-            //     : dayjs()
-            //         .add(
-            //           isMember
-            //             ? member.maxBookingHorizon
-            //             : guest.maxBookingHorizon,
-            //           'days',
-            //         )
-            //         .format('YYYY-MM-DD')
-            // }
-            // showTime={false}
             blockedDateRanges={blockedDateRanges}
             savedStartDate={savedStartDate}
             savedEndDate={savedEndDate}
+            defaultMonth={new Date()}
           />
         </div>
       </div>
