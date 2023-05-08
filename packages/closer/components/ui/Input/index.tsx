@@ -1,13 +1,20 @@
-import React, { ChangeEvent, useRef, useState } from 'react';
+import React, {
+  ChangeEvent,
+  Dispatch,
+  SetStateAction,
+  useRef,
+  useState,
+} from 'react';
 
-import { CheckIcon } from '../../icons/CheckIcon';
+import { __ } from '../../../utils/helpers';
+import Button from '../Button';
 
 type InputProps = {
   id?: string;
   label?: string;
   value?: string;
-  onChange?: (value: string) => void;
-  onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void;
+  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   type?: 'text' | 'password';
   isRequired?: boolean;
   placeholder?: string;
@@ -16,6 +23,9 @@ type InputProps = {
   dataTestId?: string;
   validation?: 'email' | 'number';
   isDisabled?: boolean;
+  isInstantSave?: boolean;
+  hasSaved?: boolean;
+  setHasSaved?: Dispatch<SetStateAction<boolean>>;
 };
 
 const Input = React.memo(
@@ -33,6 +43,9 @@ const Input = React.memo(
     onBlur,
     validation,
     isDisabled = false,
+    isInstantSave = false,
+    hasSaved,
+    setHasSaved,
   }: InputProps) => {
     const [localValue, setLocalValue] = useState(value || '');
     const [isEditing, setIsEditing] = useState(false);
@@ -69,23 +82,6 @@ const Input = React.memo(
       }
     };
 
-    const handleClick = () => {
-      setIsEditing(true);
-      if (inputRef?.current) {
-        (inputRef.current as HTMLInputElement).focus();
-      }
-    };
-
-    const handleSubmit = () => {
-      if (onChangeRef.current && isValidValue(localValue)) {
-        onChangeRef.current(localValue);
-        setIsEditing(false);
-        if (inputRef?.current) {
-          (inputRef.current as HTMLInputElement).blur();
-        }
-      }
-    };
-
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === 'Enter') {
         event.preventDefault();
@@ -102,8 +98,22 @@ const Input = React.memo(
     };
 
     const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-      setIsEditing(false);
       onBlur && onBlur(event);
+      setTimeout(() => {
+        setIsEditing(false);
+        if (setHasSaved) {
+          setHasSaved(false);
+        }
+      }, 2000);
+    };
+
+    const handleSubmit = () => {
+      if (onChangeRef.current && isValidValue(localValue)) {
+        onChangeRef.current(localValue as any);
+        if (inputRef?.current) {
+          (inputRef.current as HTMLInputElement).blur();
+        }
+      }
     };
 
     const validationError =
@@ -113,49 +123,52 @@ const Input = React.memo(
 
     return (
       <div className={`flex flex-col gap-4 relative ${className}`}>
-        {isEditing && isValidValue(localValue) && (
-          <CheckIcon
-            className="absolute right-4 top-12 mt-1"
-          />
-        )}
         {label && (
           <label className="font-medium text-complimentary-light" id={label}>
             {label}
           </label>
         )}
-        <input
-          id={id}
-          type={type}
-          value={localValue}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          onFocus={handleFocus}
-          required={isRequired}
-          placeholder={placeholder}
-          className={`new-input px-4 py-3 rounded-lg ${
-            isValid
-              ? 'border-neutral bg-neutral'
-              : 'border-accent-core border bg-accent-light'
-          } ${
-            isDisabled
-              ? 'text-gray-300 border-gray-300 cursor-not-allowed'
-              : 'text-complimentary-core'
-          }`}
-          data-testid={dataTestId}
-          autoFocus={autoFocus}
-          aria-label={label}
-          aria-required={isRequired}
-          aria-invalid={!isValidValue(localValue)}
-          ref={inputRef}
-          onKeyDown={handleKeyDown}
-          pattern={
-            validation
-              ? validationPatterns[validation].toString().slice(1, -1)
-              : undefined
-          }
-          disabled={isDisabled}
-          aria-labelledby={label}
-        />
+        <div>
+          <input
+            id={id}
+            type={type}
+            value={isInstantSave ? localValue : value}
+            onChange={isInstantSave ? handleChange : onChange}
+            onBlur={isInstantSave ? handleBlur : undefined}
+            onFocus={isInstantSave ? handleFocus : undefined}
+            required={isRequired}
+            placeholder={placeholder}
+            className={`new-input px-4 py-3 rounded-lg ${
+              isValid
+                ? 'border-neutral bg-neutral'
+                : 'border-accent-core border bg-accent-light'
+            } ${
+              isDisabled
+                ? 'text-gray-300 border-gray-300 cursor-not-allowed'
+                : 'text-complimentary-core'
+            }`}
+            data-testid={dataTestId}
+            autoFocus={autoFocus}
+            aria-label={label}
+            aria-required={isRequired}
+            aria-invalid={!isValidValue(localValue)}
+            ref={inputRef}
+            onKeyDown={isInstantSave ? handleKeyDown : undefined}
+            pattern={
+              validation
+                ? validationPatterns[validation].toString().slice(1, -1)
+                : undefined
+            }
+            disabled={isDisabled}
+            aria-labelledby={label}
+          />
+          {isEditing && isInstantSave && isValidValue(localValue) && (
+            <Button type="instantSave" onClick={handleSubmit}>
+              {hasSaved ? __('edit_model_saved') : __('edit_model_save')}
+            </Button>
+          )}
+        </div>
+
         {validationError && (
           <span className="text-red-500 text-sm">{validationError}</span>
         )}

@@ -19,7 +19,6 @@ interface Props {
   endDate?: string | null;
   setStartDate: (startDate: string | null) => void;
   setEndDate: (endDate: string | null) => void;
-  eventId?: string;
   blockedDateRanges: (
     | Date
     | {
@@ -36,7 +35,6 @@ const BookingDates: FC<Props> = ({
   conditions,
   setStartDate,
   setEndDate,
-  eventId,
   blockedDateRanges,
   savedStartDate,
   savedEndDate,

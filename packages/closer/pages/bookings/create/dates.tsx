@@ -108,6 +108,12 @@ const DatesSelector: NextPage<Props> = ({
         { after: new Date(savedEndDate as string) },
       ]);
     }
+    if (volunteerId) {
+      setBlockedDateRanges([
+        { before: new Date(savedStartDate as string) },
+        { after: new Date(savedEndDate as string) },
+      ]);
+    }
     if (!eventId && !volunteerId) {
       (async () => {
         setBlockedDateRanges(await getBlockedDateRanges());
@@ -245,6 +251,7 @@ const DatesSelector: NextPage<Props> = ({
               volunteer={volunteer}
               discountCode={discountCode}
               setDiscountCode={setDiscountCode}
+              eventId={eventId as string}
             />
           )}
 
@@ -256,7 +263,6 @@ const DatesSelector: NextPage<Props> = ({
               setStartDate={setStartDate}
               setEndDate={setEndDate}
               isMember={isMember}
-              eventId={eventId as string}
               blockedDateRanges={blockedDateRanges}
               savedStartDate={savedStartDate as string}
               savedEndDate={savedEndDate as string}
@@ -280,7 +286,7 @@ const DatesSelector: NextPage<Props> = ({
             onClick={handleNext}
             isEnabled={
               (eventId && selectedTicketOption && start && end) ||
-              volunteerId ||
+              (volunteerId && start && end) ||
               (!eventId && !volunteerId)
                 ? start && end
                   ? true
