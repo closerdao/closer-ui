@@ -27,7 +27,7 @@ const Button = ({
         onClick={onClick}
         disabled={!isEnabled || isLoading}
         className={` 
-        border-2 bg-accent border-accent  border-light flex justify-center text-lg rounded-full uppercase tracking-wide p-2  
+        border-2 bg-accent border-accent border-light flex justify-center text-lg rounded-full uppercase tracking-wide py-1 px-3  
         ${type === 'primary' ? 'w-full' : ''}
         ${
           type === 'secondary'
