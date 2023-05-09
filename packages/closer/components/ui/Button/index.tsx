@@ -25,7 +25,7 @@ const Button = ({
     <div>
       <button
         onClick={onClick}
-        disabled={!isEnabled}
+        disabled={!isEnabled || isLoading}
         className={` 
         border-2 bg-accent border-accent  border-light flex justify-center text-lg rounded-full uppercase tracking-wide p-2  
         ${type === 'primary' ? 'w-full' : ''}
@@ -42,15 +42,17 @@ const Button = ({
         }
         
         ${
-          !isEnabled
+          !isEnabled || isLoading
             ? 'bg-neutral text-disabled-dark border-2 text-light border-disabled-dark'
             : 'text-white bg-accent'
         }
         ${className || ''}
         `}
       >
-        <div className="mt-[7px] mr-1.5">{isLoading && <Spinner />}</div>
-        {children}
+        {isLoading ?
+          <Spinner />:
+          children
+        }
       </button>
       {infoText && <div className="text-sm text-center pt-2">{infoText}</div>}
     </div>
