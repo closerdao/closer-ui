@@ -43,7 +43,7 @@ const Button = ({
         
         ${
           !isEnabled
-            ? 'bg-neutral text-disabled-dark border-2 text-light border-disabled-dark'
+            ? 'bg-neutral text-disabled border-2 text-light border-disabled'
             : 'text-white bg-accent'
         }
         ${className || ''}
