@@ -5,7 +5,8 @@ import { Button, Card, Heading } from '../../../components/ui';
 
 import { useConfig } from 'closer';
 import { __ } from 'closer/utils/helpers';
-import TokenBuyWidget from '../../../components/TokenBuyWidget';
+// import TokenBuyWidget from '../../../components/TokenBuyWidget';
+import router from 'next/router';
 
 const PublicTokenSalePage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
@@ -20,15 +21,15 @@ const PublicTokenSalePage = () => {
       <main className="pt-16 pb-24 md:flex-row flex-wrap">
         {/* <TokenBuyWidget weeks={3} selectedAccomodation="Glamping"/> */}
         <section className="mb-10">
-          <div className='rounded-lg h-[700px] flex items-center flex-col bg-center bg-[#333333] bg-cover bg-no-repeat text-white bg-[url("/images/token-sale/token-sale-hero.png")]'>
-            <h1 className="mb-8 mt-[280px] w-[600px] text-center font-extrabold text-6xl uppercase">
+          <div className='rounded-lg h-[500px] md:h-[700px] flex items-center flex-col bg-center bg-[#333333] bg-cover bg-no-repeat text-white bg-[url("/images/token-sale/token-sale-hero.png")]'>
+            <h1 className="px-4 mb-8 mt-[170px] md:mt-[280px] max-w-[600px] text-center font-extrabold text-3xl md:text-6xl uppercase">
               {__('token_sale_public_sale_announcement')}
             </h1>
 
-            <h2 className="mb-8 text-center leading-5 w-[460px] font-bold uppercase text-md">
+            <h2 className="px-4 mb-8 text-center leading-5 max-w-[460px] font-bold uppercase text-md">
               {__('token_sale_public_sale_subheading')}
             </h2>
-            <Button className="!w-60 font-bold mb-8 relative">
+            <Button className="!w-60 font-bold mb-3 md:mb-8 relative">
               <Image
                 className="absolute left-[200px] w-14 h-18"
                 src="/images/token-sale/arrow.png"
@@ -39,7 +40,7 @@ const PublicTokenSalePage = () => {
               {__('token_sale_public_sale_buy_token')}
             </Button>
             <h3 className="font-bold text-2xl">
-              {__('token_sale_public_sale_tokens_left')}
+              N {__('token_sale_public_sale_tokens_left')}
             </h3>
           </div>
         </section>
@@ -58,7 +59,9 @@ const PublicTokenSalePage = () => {
                   {__('token_sale_public_sale_heading_white_paper')}
                 </Heading>
                 <p>{__('token_sale_public_sale_intro_white_paper')}</p>
-                <Button className="text-[17px]">
+                <Button className="text-[17px]" onClick={() => {
+                  router.push('/')
+                }}>
                   {__('token_sale_public_sale_button_read')}
                 </Button>
               </Card>
@@ -100,7 +103,7 @@ const PublicTokenSalePage = () => {
                 <div className="text-right text-sm">
                   {__('token_sale_public_sale_price_per_night')}
                 </div>
-                <div className="grid grid-cols-[60px_250px_auto]">
+                <div className="grid grid-cols-[55px_auto_65px]">
                   <p>
                     <Image
                       src="/images/token-sale/van.png"
@@ -116,7 +119,7 @@ const PublicTokenSalePage = () => {
                     {__('token_sale_public_sale_token_symbol')}0.5
                   </p>
                 </div>
-                <div className="grid grid-cols-[60px_250px_auto]">
+                <div className="grid grid-cols-[55px_auto_65px]">
                   <p>
                     <Image
                       src="/images/token-sale/camping.png"
@@ -132,7 +135,7 @@ const PublicTokenSalePage = () => {
                     {__('token_sale_public_sale_token_symbol')}0.5
                   </p>
                 </div>
-                <div className="grid grid-cols-[60px_250px_auto]">
+                <div className="grid grid-cols-[55px_auto_65px]">
                   <p>
                     <Image
                       src="/images/token-sale/camping.png"
@@ -148,7 +151,7 @@ const PublicTokenSalePage = () => {
                     {__('token_sale_public_sale_token_symbol')}1
                   </p>
                 </div>
-                <div className="grid grid-cols-[60px_250px_auto]">
+                <div className="grid grid-cols-[55px_auto_65px]">
                   <p>
                     <Image
                       src="/images/token-sale/hotel.png"
@@ -157,17 +160,17 @@ const PublicTokenSalePage = () => {
                       height={38}
                     />
                   </p>
-                  <p className=" pt-1">
+                  <p className="pt-1">
                     {__('token_sale_public_sale_shared_suite')}
                     <span className="block text-xs text-accent">
                       {__('token_sale_public_sale_coming_2023')}
                     </span>
                   </p>
-                  <p className=" text-right text-accent pt-2">
+                  <p className="text-right text-accent pt-2">
                     {__('token_sale_public_sale_token_symbol')}1
                   </p>
                 </div>
-                <div className="grid grid-cols-[60px_250px_auto]">
+                <div className="grid grid-cols-[55px_auto_65px]">
                   <p>
                     <Image
                       src="/images/token-sale/hotel.png"
@@ -186,7 +189,7 @@ const PublicTokenSalePage = () => {
                     {__('token_sale_public_sale_token_symbol')}2
                   </p>
                 </div>
-                <div className="grid grid-cols-[60px_250px_auto]">
+                <div className="grid grid-cols-[55px_auto_65px]">
                   <p>
                     <Image
                       src="/images/token-sale/hotel.png"
@@ -205,7 +208,7 @@ const PublicTokenSalePage = () => {
                     {__('token_sale_public_sale_token_symbol')}3
                   </p>
                 </div>
-                <div className="grid grid-cols-[60px_250px_auto]">
+                <div className="grid grid-cols-[55px_auto_65px]">
                   <p>
                     <Image
                       src="/images/token-sale/hotel.png"
@@ -288,7 +291,7 @@ const PublicTokenSalePage = () => {
               </h2>
               <div>{__('token_sale_public_sale_subheading_tokenomics')}</div>
             </div>
-            <div className="grid grid-cols-2 gap-3 md:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
               <Card className="mb-0">
                 <Heading level={3} className="uppercase text-center">
                   {__('token_sale_public_sale_subheading_base_price')}
@@ -367,9 +370,9 @@ const PublicTokenSalePage = () => {
               </h2>
               <div>{__('token_sale_public_sale_subheading_roadmap')}</div>
             </div>
-            <div>
+            <div className='max-w-[600px]'>
 
-              <div className="grid grid-cols-[45px_350px]">
+              <div className="grid grid-cols-[37px_270px]">
                 <div className="w-7 flex justify-center">
                   <div className="bg-accent w-[4px] h-[40px]"></div>
                 </div>
@@ -382,7 +385,7 @@ const PublicTokenSalePage = () => {
                 <div className='h-40'></div>
               </div>
               
-              <div className="grid grid-cols-[45px_350px]">
+              <div className="grid grid-cols-[37px_270px]">
                 <div className="w-7 flex justify-center">
                   <div className="bg-accent w-[4px] h-[40px]"></div>
                 </div>
@@ -407,7 +410,7 @@ const PublicTokenSalePage = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-[45px_350px]">
+              <div className="grid grid-cols-[37px_270px]">
                 <div className="w-7 flex justify-center">
                   <div className="bg-accent w-[4px] h-[40px]"></div>
                 </div>
@@ -422,7 +425,7 @@ const PublicTokenSalePage = () => {
                 </div>
               </div>
              
-              <div className="grid grid-cols-[45px_350px]">
+              <div className="grid grid-cols-[37px_270px]">
                 <div className="w-7 flex justify-center">
                   <div className="bg-accent-light w-[4px] h-[40px]"></div>
                 </div>
@@ -444,7 +447,7 @@ const PublicTokenSalePage = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-[45px_350px]">
+              <div className="grid grid-cols-[37px_270px]">
                 <div className="w-7 flex justify-center">
                   <div className="bg-accent-light w-[4px] h-[40px]"></div>
                 </div>
@@ -467,7 +470,7 @@ const PublicTokenSalePage = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-[45px_350px]">
+              <div className="grid grid-cols-[37px_270px]">
                 <div className="w-7 flex justify-center">
                   <div className="bg-accent-light w-[4px] h-[40px]"></div>
                 </div>
