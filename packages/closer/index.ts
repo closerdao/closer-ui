@@ -85,6 +85,7 @@ export { default as EditTaskPage } from './pages/tasks/edit/[slug]';
 export { default as TicketPage } from './pages/tickets/[slug]/index';
 export { default as TicketsInvoicePage } from './pages/tickets/[slug]/invoice';
 export { default as TokenSalePage } from './pages/token-sale';
+export { default as PublicTokenSalePage } from './pages/token-sale/sale-open';
 export { default as TokenSaleReferralPage } from './pages/token-sale/[referralId]';
 export { default as SearchPage } from './pages/blog/index';
 export { default as KeywordPage } from './pages/blog/search/[keyword]';

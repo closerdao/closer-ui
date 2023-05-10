@@ -27,11 +27,11 @@ const Button = ({
         onClick={onClick}
         disabled={!isEnabled}
         className={` 
-        border-2 bg-accent border-accent  border-light flex justify-center text-lg rounded-full uppercase tracking-wide p-2  
+        border-2 bg-accent border-accent text-white border-light flex justify-center text-lg rounded-full uppercase tracking-wide p-2  
         ${type === 'primary' ? 'w-full' : ''}
         ${
           type === 'secondary'
-            ? 'w-full bg-white text-accent border-accent '
+            ? 'w-full bg-white !text-accent border-accent '
             : ''
         }
         ${type === 'inline' ? 'w-auto text-md pl-4 pr-5 py-1.5' : ''}
@@ -43,8 +43,8 @@ const Button = ({
         
         ${
           !isEnabled
-            ? 'bg-neutral text-disabled border-2 text-light border-disabled'
-            : 'text-white bg-accent'
+            ? 'bg-neutral border-2 !text-disabled border-disabled'
+            : ''
         }
         ${className || ''}
         `}

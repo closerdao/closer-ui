@@ -3,6 +3,7 @@ const closerTheme = require('closer/theme');
 const defaultTheme = require('tailwindcss/defaultTheme');
 
 const tdfTheme = {
+  
   extend: {
     ...closerTheme.extend,
     colors: {
@@ -36,6 +37,7 @@ const tdfTheme = {
       card: '#ebf1f6',
       error: '#9f1f42',
       line: '#a3a3a3',
+
     },
     fontFamily: {
       sans: ['Barlow', ...defaultTheme.fontFamily.sans],
