@@ -356,6 +356,7 @@
   "listings_book_day": "Day",
   "listings_book_check_in": "Check in",
   "listings_book_check_out": "Check out",
+  "listings_book_select_date": "Select date",
   "listings_book_accomodation_type": "Accommodation type",
   "listings_book_button": "Book",
   "listings_create_title": "Create Listing",
