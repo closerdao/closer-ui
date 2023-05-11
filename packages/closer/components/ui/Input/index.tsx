@@ -18,6 +18,7 @@ type InputProps = {
   type?: 'text' | 'password';
   isRequired?: boolean;
   placeholder?: string;
+  successMessage?: string;
   className?: string;
   autoFocus?: boolean;
   dataTestId?: string;
@@ -42,6 +43,7 @@ const Input = React.memo(
     autoFocus,
     onBlur,
     validation,
+    successMessage,
     isDisabled = false,
     isInstantSave = false,
     hasSaved,
@@ -170,9 +172,12 @@ const Input = React.memo(
           )}
         </div>
 
-        {validationError && (
+        {validationError ? (
           <span className="text-red-500 text-sm">{validationError}</span>
-        )}
+        ) :
+        successMessage ? (
+          <span className="text-green-500 text-sm">{successMessage}</span>
+        ) : null}
       </div>
     );
   },

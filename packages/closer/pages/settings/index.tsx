@@ -13,6 +13,7 @@ import { useAuth } from '../../contexts/auth';
 import { type User } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
 import { parseMessageFromError } from '../../utils/common';
+import api from '../../utils/api';
 
 type UpdateUserFunction = (value: string | string[]) => Promise<void>;
 
@@ -27,6 +28,8 @@ const SKILLS_EXAMPLES = ['javascript', 'woodworking', 'farming', 'cooking', 'gar
 const SettingsPage: FC = () => {
   const { user, isAuthenticated, refetchUser } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const [phoneSaved, setPhoneSaved] = useState<boolean | null>(null);
+  const [emailSaved, setEmailSaved] = useState<boolean | null>(null);
   const [hasSaved, setHasSaved] = useState(false);
   const { platform } = usePlatform() as any;
 
@@ -64,6 +67,28 @@ const SettingsPage: FC = () => {
         setError(errorMessage);
       }
     };
+  const savePhone = async (phone: string) => {
+    try {
+      setPhoneSaved(false);
+      await api.post('/auth/phone/update', { phone });
+      setError(null);
+      setPhoneSaved(true);
+    } catch (err) {
+      const errorMessage = parseMessageFromError(err);
+      setError(errorMessage);
+    }
+  }
+  const saveEmail = async (email: string) => {
+    try {
+      setEmailSaved(false);
+      await api.post('/auth/email/update', { email });
+      setError(null);
+      setEmailSaved(true);
+    } catch (err) {
+      const errorMessage = parseMessageFromError(err);
+      setError(errorMessage);
+    }
+  }
 
   if (!isAuthenticated || !user) {
     return <PageNotFound error="Sorry, this page does not exist" />;
@@ -99,22 +124,20 @@ const SettingsPage: FC = () => {
         <Input
           label="Email"
           value={user.email}
-          onChange={saveUserData('email') as any}
+          onChange={phone => saveEmail(phone)}
+          successMessage={emailSaved ? 'You will receive a link to confirm via email.' : undefined}
           className="mt-8"
           validation="email"
-          isDisabled
-          hasSaved={hasSaved}
-          setHasSaved={setHasSaved}
+          isInstantSave={true}
         />
         <Input
           label="Phone"
           value={user.phone}
-          onChange={saveUserData('phone') as any}
+          onChange={phone => savePhone(phone)}
+          successMessage={ phoneSaved ? 'You will receive a link to confirm via text.' : undefined }
           className="mt-8"
           validation="phone"
-          hasSaved={hasSaved}
           isInstantSave={true}
-          setHasSaved={setHasSaved}
         />
         <div className="md:w-72 relative mt-8">
           <label className="font-medium text-complimentary-light" htmlFor="">
@@ -139,8 +162,6 @@ const SettingsPage: FC = () => {
           onChange={saveUserData('diet') as any}
           value={user?.preferences?.diet}
           isInstantSave={true}
-          hasSaved={hasSaved}
-          setHasSaved={setHasSaved}
         />
         <Select
           label="Shared Accommodation Preference"
