@@ -22,7 +22,7 @@ const SHARED_ACCOMODATION_PREFERENCES = [
   { label: 'Female Only', value: 'female only' },
 ];
 
-const SKILLS_EXAMPLES = ['javascript', 'woodworking', 'farming'];
+const SKILLS_EXAMPLES = ['javascript', 'woodworking', 'farming', 'cooking', 'gardening', 'plumbing', 'carpentry'];
 
 const SettingsPage: FC = () => {
   const { user, isAuthenticated, refetchUser } = useAuth();
@@ -104,6 +104,16 @@ const SettingsPage: FC = () => {
           validation="email"
           isDisabled
           hasSaved={hasSaved}
+          setHasSaved={setHasSaved}
+        />
+        <Input
+          label="Phone"
+          value={user.phone}
+          onChange={saveUserData('phone') as any}
+          className="mt-8"
+          validation="phone"
+          hasSaved={hasSaved}
+          isInstantSave={true}
           setHasSaved={setHasSaved}
         />
         <div className="md:w-72 relative mt-8">

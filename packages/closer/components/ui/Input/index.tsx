@@ -21,7 +21,7 @@ type InputProps = {
   className?: string;
   autoFocus?: boolean;
   dataTestId?: string;
-  validation?: 'email' | 'number';
+  validation?: 'email' | 'number' | 'phone' | 'url';
   isDisabled?: boolean;
   isInstantSave?: boolean;
   hasSaved?: boolean;
@@ -60,6 +60,7 @@ const Input = React.memo(
 
     const validationPatterns = {
       email: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+      phone: /^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/i,
     } as Record<string, RegExp>;
 
     const isValidValue = (value: string) => {
