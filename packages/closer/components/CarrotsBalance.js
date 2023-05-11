@@ -7,13 +7,10 @@ import { usePlatform } from '../contexts/platform';
 const Wallet = () => {
   const { platform } = usePlatform();
   const [error, setErrors] = useState(false);
-  const [balanceTotal, setBalanceTotal] = useState(0);
 
   const loadData = async () => {
     try {
-      const balance = await platform.carrots.getBalance();
-      console.log('balance', balance);
-      // setBalanceTotal(balance);
+      await platform.carrots.getBalance();
     } catch (err) {
       console.log('Load error', err);
       setErrors(err.message);
@@ -25,14 +22,10 @@ const Wallet = () => {
   }, []);
 
   return (
-    <div className="p-4 flex flex-col rounded-lg shadow-4xl">
+    <div className="pt-2 flex flex-col items-center justify-center space-2">
       {error && <div className="validation-error">{error}</div>}
-      <div className="flex flex-col gap-2 mt-4">
-        <div className="flex justify-between items-center">
-          <p>{__('carrots_balance')}</p>
-          <p className="font-bold">{balanceTotal.toFixed(2)}</p>
-        </div>
-      </div>
+      <p>{__('carrots_balance')}</p>
+      <p className="font-bold">{(platform.carrots.findBalance('carrots') || 0 ).toFixed(2)}</p>
       {/* <CarrotActions COMING SOON /> */}
     </div>
   );
