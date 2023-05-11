@@ -1,14 +1,39 @@
 import React from 'react';
 
+import { VariantProps, cva } from 'class-variance-authority';
+
 import Spinner from '../Spinner';
 
-interface ButtonProps {
+const buttonStyles = cva(
+  'px-4 border-2 border-accent flex justify-center text-lg rounded-full uppercase tracking-wide ',
+  {
+    variants: {
+      type: {
+        primary: 'h-12 w-full',
+        secondary: 'w-full bg-white text-accent',
+        instantSave:
+          'w-auto h-9 absolute right-2 top-[45px] text-md pl-4 pr-5 py-0.5',
+        inline: ' text-md pl-4 pr-5 py-1.5',
+        default: 'py-2 h-12',
+      },
+      isEnabled: {
+        true: 'text-white bg-accent bg-accent ',
+        false: 'bg-neutral text-disabled text-light border-disabled',
+      },
+    },
+
+    defaultVariants: {
+      type: 'primary',
+      isEnabled: true,
+    },
+  },
+);
+
+interface ButtonProps extends VariantProps<typeof buttonStyles> {
   children: React.ReactNode;
   onClick?: (() => void) | (() => Promise<void>);
   infoText?: string | React.ReactNode;
   className?: string;
-  type?: 'primary' | 'secondary' | 'instantSave' | 'inline';
-  isEnabled?: boolean;
   isLoading?: boolean;
 }
 
@@ -17,8 +42,8 @@ const Button = ({
   onClick,
   infoText,
   className,
-  type = 'primary',
-  isEnabled = true,
+  type,
+  isEnabled,
   isLoading,
 }: ButtonProps) => {
   return (
@@ -27,25 +52,7 @@ const Button = ({
         onClick={onClick}
         disabled={!isEnabled}
         className={` 
-        border-2 bg-accent border-accent  border-light flex justify-center text-lg rounded-full uppercase tracking-wide p-2  
-        ${type === 'primary' ? 'w-full' : ''}
-        ${
-          type === 'secondary'
-            ? 'w-full bg-white text-accent border-accent '
-            : ''
-        }
-        ${type === 'inline' ? 'w-auto text-md pl-4 pr-5 py-1.5' : ''}
-        ${
-          type === 'instantSave'
-            ? 'w-auto absolute right-2 top-[45px] text-md pl-4 pr-5 py-0.5'
-            : ''
-        }
-        
-        ${
-          !isEnabled
-            ? 'bg-neutral text-disabled border-2 text-light border-disabled'
-            : 'text-white bg-accent'
-        }
+         ${buttonStyles({ type, isEnabled })}
         ${className || ''}
         `}
       >
