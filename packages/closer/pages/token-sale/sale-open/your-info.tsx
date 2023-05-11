@@ -1,0 +1,198 @@
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+
+import { ChangeEvent, useContext, useEffect, useState } from 'react';
+
+import Wallet from '../../../components/Wallet';
+import {
+  BackButton,
+  Button,
+  ErrorMessage,
+  Heading,
+  Input,
+  ProgressBar,
+} from '../../../components/ui';
+
+import { TOKEN_SALE_STEPS } from '../../../constants';
+import { WalletState } from '../../../contexts/wallet';
+import { useConfig } from '../../../hooks/useConfig';
+import api from '../../../utils/api';
+import { parseMessageFromError } from '../../../utils/common';
+import { __ } from '../../../utils/helpers';
+
+const YourInfoPage = () => {
+  const { PLATFORM_NAME } = useConfig() || {};
+  const router = useRouter();
+  const { nationality, tokens } = router.query;
+  const isWalletEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
+  const { isWalletReady } = useContext(WalletState);
+
+  const [formData, setFormData] = useState({
+    required: {
+      name: '',
+      phone: '',
+      address: '',
+      postalCode: '',
+      city: '',
+    },
+    optional: {
+      taxNo: '',
+    },
+  });
+  const [errorMessage, setErrorMessage] = useState();
+  const [canContinue, setCanContinue] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isWalletReady && isFormValid()) {
+      setCanContinue(true);
+    } else {
+      setCanContinue(false);
+    }
+  }, [isWalletReady, formData]);
+
+  const goBack = () => {
+    router.push(`/token-sale/sale-open/token-counter?tokens=${tokens}`);
+  };
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      optional: { ...formData.optional, [event.target.id]: event.target.value },
+      required: { ...formData.required, [event.target.id]: event.target.value },
+    });
+  };
+
+  // /auth/kyc {
+  // legalName: String,
+  // TIN: String, (optional)
+  // address1: String,
+  // address2: String, (optional)
+  // postalCode: String,
+  // city: String,
+  // state: String, (optional)
+  // country: String, -> one of the country codes from /meta/countries
+  // }
+  const handleNext = async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.post('/application', {
+        legalName: formData.required.name,
+        TIN: formData.optional.taxNo,
+        address1: formData.required.address,
+        address2: '',
+        postalCode: formData.required.postalCode,
+        city: formData.required.city,
+        state: '',
+        country: nationality,
+      });
+      router.push(`/token-sale/sale-open/checkout?tokens=${tokens}`);
+      console.log('res', res);
+    } catch (error) {
+      setErrorMessage(parseMessageFromError(error));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const isFormValid = () => {
+    if (Object.values(formData.required).every((value) => value)) {
+      return true;
+    }
+    return false;
+  };
+
+  return (
+    <>
+      <Head>
+        <title>{`
+        ${__('token_sale_heading_your_info')} - 
+        ${__(
+          'token_sale_public_sale_announcement',
+        )} - ${PLATFORM_NAME}`}</title>
+      </Head>
+
+      <div className="w-full max-w-screen-sm mx-auto p-8">
+        <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
+
+        <Heading level={1} className="mb-4">
+          🤓 {__('token_sale_heading_your_info')}
+        </Heading>
+
+        <ProgressBar steps={TOKEN_SALE_STEPS} />
+
+        <main className="pt-14 pb-24">
+          <Heading level={3} hasBorder={true}>
+            ⭐ {__('token_sale_heading_required')}
+          </Heading>
+
+          <div>
+            <fieldset className="flex flex-col gap-6 mb-16">
+              <Input
+                label={__('token_sale_label_name')}
+                onChange={handleChange}
+                value={formData.required.name}
+                id="name"
+                isRequired={true}
+                className="mt-4"
+              />
+              <Input
+                label={__('token_sale_label_phone')}
+                onChange={handleChange}
+                value={formData.required.phone}
+                id="phone"
+                isRequired={true}
+                className="mt-4"
+              />
+              <Input
+                label={__('token_sale_label_tax_no')}
+                onChange={handleChange}
+                value={formData.optional.taxNo}
+                id="taxNo"
+                isRequired={false}
+                className="mt-4"
+              />
+              <Input
+                label={__('token_sale_label_address')}
+                onChange={handleChange}
+                value={formData.required.address}
+                id="address"
+                isRequired={true}
+                className="mt-4"
+              />
+              <Input
+                label={__('token_sale_label_postal_code')}
+                onChange={handleChange}
+                value={formData.required.postalCode}
+                id="postalCode"
+                isRequired={true}
+                className="mt-4"
+              />
+              <Input
+                label={__('token_sale_label_city')}
+                onChange={handleChange}
+                value={formData.required.city}
+                id="city"
+                isRequired={true}
+                className="mt-4"
+              />
+              {errorMessage && <ErrorMessage error={errorMessage} />}
+            </fieldset>
+
+            {isWalletEnabled && (
+              <div className="mb-16">
+                <Wallet />
+              </div>
+            )}
+
+            <Button onClick={handleNext} isEnabled={canContinue} isLoading={isLoading}>
+              {__('token_sale_button_continue')}
+            </Button>
+          </div>
+        </main>
+      </div>
+    </>
+  );
+};
+
+export default YourInfoPage;

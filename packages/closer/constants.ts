@@ -42,5 +42,10 @@ export const SUBSCRIPTION_STEPS = [
   'success',
 ];
 
+export const TOKEN_SALE_STEPS = [
+  'nationality',
+  'your info',
+];
+
 export const DEFAULT_CURRENCY = CURRENCIES[0]; // EUR
 export const REFERRAL_ID_LOCAL_STORAGE_KEY = 'referredByUserId';

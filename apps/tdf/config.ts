@@ -23,6 +23,32 @@ const config = {
 
   STRIPE_CUSTOMER_PORTAL_URL:
     'https://billing.stripe.com/p/login/test_dR69Cl1Igat5dhK3cc',
+  
+    ACCOMODATION_COST: [
+      {
+        name: 'Glamping',
+        price: 1,
+        iconPath: '/images/token-sale/tent-icon.svg',
+      },
+      {
+        name: 'Van parking',
+        price: 0.5,
+        iconPath: '/images/token-sale/car-icon.svg',
+      },
+      {
+        name: 'Outdoor Camping',
+        price: 0.5,
+        iconPath: '/images/token-sale/tent-icon.svg',
+      },
+      {
+        name: 'Private suite',
+        description: '*coming 2023*',
+        price: 3,
+        iconPath: '/images/token-sale/suite-icon.svg',
+      },
+    ],
+    TOKEN_PRICE: 230.23,
+    SOURCE_TOKEN: 'CEUR'
 };
 
 export default config;

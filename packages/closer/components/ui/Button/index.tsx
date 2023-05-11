@@ -25,19 +25,19 @@ const Button = ({
     <div>
       <button
         onClick={onClick}
-        disabled={!isEnabled}
+        disabled={!isEnabled || isLoading}
         className={` 
-        border-2 bg-accent border-accent text-white border-light flex justify-center text-lg rounded-full uppercase tracking-wide p-2  
-        ${type === 'primary' ? 'w-full' : ''}
+       text-auto  border-2 bg-accent border-accent  border-light flex justify-center text-lg rounded-full uppercase tracking-wide p-2  
+        ${type === 'primary' ? 'w-full text-white' : ''}
         ${
           type === 'secondary'
-            ? 'w-full bg-white !text-accent border-accent '
+            ? 'w-full bg-white text-accent border-accent hover:bg-accent hover:text-white '
             : ''
         }
-        ${type === 'inline' ? 'w-auto text-md pl-4 pr-5 py-1.5' : ''}
+        ${type === 'inline' ? 'text-white w-auto text-md pl-4 pr-5 py-1.5' : ''}
         ${
           type === 'instantSave'
-            ? 'w-auto absolute right-2 top-[45px] text-md pl-4 pr-5 py-0.5'
+            ? 'text-white w-auto absolute right-2 top-[45px] text-md pl-4 pr-5 py-0.5'
             : ''
         }
         

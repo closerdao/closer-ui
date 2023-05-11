@@ -24,6 +24,7 @@ interface Props {
 }
 
 const Summary = ({ subscriptionPlans }: Props) => {
+  
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId } = router.query;

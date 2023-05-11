@@ -13,7 +13,6 @@ interface Props {
 }
 
 const Subscriptions = ({ subscriptionPlans }: Props) => {
-  console.log('subscriptionPlans=', subscriptionPlans);
 
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
@@ -108,7 +107,7 @@ export async function getServerSideProps() {
     const {
       data: { results },
     } = await api.get('/config/subscriptions');
-
+console.log('results.value.plans=', results.value.plans);
     return {
       props: {
         subscriptionPlans: results.value.plans,

@@ -1,12 +1,11 @@
 import Head from 'next/head';
 import Image from 'next/image';
+import router from 'next/router';
 
 import { Button, Card, Heading } from '../../../components/ui';
 
 import { useConfig } from 'closer';
 import { __ } from 'closer/utils/helpers';
-// import TokenBuyWidget from '../../../components/TokenBuyWidget';
-import router from 'next/router';
 
 const PublicTokenSalePage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
@@ -19,7 +18,6 @@ const PublicTokenSalePage = () => {
       </Head>
 
       <main className="pt-16 pb-24 md:flex-row flex-wrap">
-        {/* <TokenBuyWidget weeks={3} selectedAccomodation="Glamping"/> */}
         <section className="mb-10">
           <div className='rounded-lg h-[500px] md:h-[700px] flex items-center flex-col bg-center bg-[#333333] bg-cover bg-no-repeat text-white bg-[url("/images/token-sale/token-sale-hero.png")]'>
             <h1 className="px-4 mb-8 mt-[170px] md:mt-[280px] max-w-[600px] text-center font-extrabold text-3xl md:text-6xl uppercase">
@@ -29,7 +27,7 @@ const PublicTokenSalePage = () => {
             <h2 className="px-4 mb-8 text-center leading-5 max-w-[460px] font-bold uppercase text-md">
               {__('token_sale_public_sale_subheading')}
             </h2>
-            <Button className="!w-60 font-bold mb-3 md:mb-8 relative">
+            <Button className="!w-60 font-bold mb-3 md:mb-8 relative" onClick={()=>{router.push('/token-sale/sale-open/nationality')}}>
               <Image
                 className="absolute left-[200px] w-14 h-18"
                 src="/images/token-sale/arrow.png"
@@ -59,9 +57,12 @@ const PublicTokenSalePage = () => {
                   {__('token_sale_public_sale_heading_white_paper')}
                 </Heading>
                 <p>{__('token_sale_public_sale_intro_white_paper')}</p>
-                <Button className="text-[17px]" onClick={() => {
-                  router.push('/')
-                }}>
+                <Button
+                  className="text-[17px]"
+                  onClick={() => {
+                    router.push('/');
+                  }}
+                >
                   {__('token_sale_public_sale_button_read')}
                 </Button>
               </Card>
@@ -370,33 +371,40 @@ const PublicTokenSalePage = () => {
               </h2>
               <div>{__('token_sale_public_sale_subheading_roadmap')}</div>
             </div>
-            <div className='max-w-[600px]'>
+            <div className="max-w-[600px]">
+              <div className="grid grid-cols-[37px_270px]">
+                <div className="w-7 flex justify-center">
+                  <div className="bg-accent w-[4px] h-[40px]"></div>
+                </div>
+                <div className="text-accent">
+                  {__('token_sale_public_sale_roadmap_subheading_1')}
+                </div>
+                <div className="w-7 h-7 bg-accent rounded-full"></div>
+                <Heading level={3} className="">
+                  {__('token_sale_public_sale_roadmap_heading_1')}
+                </Heading>
+                <div className="w-7 flex justify-center">
+                  <div className="bg-accent w-[4px] h-auto"></div>
+                </div>
+                <div className="h-40"></div>
+              </div>
 
               <div className="grid grid-cols-[37px_270px]">
                 <div className="w-7 flex justify-center">
                   <div className="bg-accent w-[4px] h-[40px]"></div>
                 </div>
-                <div className='text-accent'>{__('token_sale_public_sale_roadmap_subheading_1')}</div>
+                <div className="text-accent">
+                  {__('token_sale_public_sale_roadmap_subheading_2')}
+                </div>
                 <div className="w-7 h-7 bg-accent rounded-full"></div>
-                <Heading level={3} className=''>{__('token_sale_public_sale_roadmap_heading_1')}</Heading>
+                <Heading level={3} className="">
+                  {__('token_sale_public_sale_roadmap_heading_2')}
+                </Heading>
                 <div className="w-7 flex justify-center">
                   <div className="bg-accent w-[4px] h-auto"></div>
                 </div>
-                <div className='h-40'></div>
-              </div>
-              
-              <div className="grid grid-cols-[37px_270px]">
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent w-[4px] h-[40px]"></div>
-                </div>
-                <div className='text-accent'>{__('token_sale_public_sale_roadmap_subheading_2')}</div>
-                <div className="w-7 h-7 bg-accent rounded-full"></div>
-                <Heading level={3} className=''>{__('token_sale_public_sale_roadmap_heading_2')}</Heading>
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent w-[4px] h-auto"></div>
-                </div>
-                <div className='pb-20'>
-                  <ul className='list-disc pl-5 my-4'>
+                <div className="pb-20">
+                  <ul className="list-disc pl-5 my-4">
                     <li>{__('token_sale_public_sale_roadmap_2_point_1')}</li>
                     <li>{__('token_sale_public_sale_roadmap_2_point_2')}</li>
                     <li>{__('token_sale_public_sale_roadmap_2_point_3')}</li>
@@ -414,29 +422,38 @@ const PublicTokenSalePage = () => {
                 <div className="w-7 flex justify-center">
                   <div className="bg-accent w-[4px] h-[40px]"></div>
                 </div>
-                <div className='text-accent'></div>
+                <div className="text-accent"></div>
                 <div className="w-7 h-7 bg-accent-light border-4 border-accent rounded-full"></div>
-                <Heading level={3} className=''>{__('token_sale_public_sale_roadmap_heading_3')}</Heading>
+                <Heading level={3} className="">
+                  {__('token_sale_public_sale_roadmap_heading_3')}
+                </Heading>
                 <div className="w-7 flex justify-center">
                   <div className="bg-accent-light w-[4px] h-auto"></div>
                 </div>
-                <div className='pb-20'>
-                  <Button type="secondary" className='my-6'> {__('token_sale_public_sale_roadmap_3_cta_button')}</Button>
+                <div className="pb-20">
+                  <Button type="secondary" className="my-6">
+                    {' '}
+                    {__('token_sale_public_sale_roadmap_3_cta_button')}
+                  </Button>
                 </div>
               </div>
-             
+
               <div className="grid grid-cols-[37px_270px]">
                 <div className="w-7 flex justify-center">
                   <div className="bg-accent-light w-[4px] h-[40px]"></div>
                 </div>
-                <div className='text-accent'>{__('token_sale_public_sale_roadmap_subheading_4')}</div>
+                <div className="text-accent">
+                  {__('token_sale_public_sale_roadmap_subheading_4')}
+                </div>
                 <div className="w-7 h-7 bg-accent-light rounded-full"></div>
-                <Heading level={3} className=''>{__('token_sale_public_sale_roadmap_heading_4')}</Heading>
+                <Heading level={3} className="">
+                  {__('token_sale_public_sale_roadmap_heading_4')}
+                </Heading>
                 <div className="w-7 flex justify-center">
                   <div className="bg-accent-light w-[4px] h-auto"></div>
                 </div>
-                <div className='pb-20'>
-                  <ul className='list-disc pl-5 my-4'>
+                <div className="pb-20">
+                  <ul className="list-disc pl-5 my-4">
                     <li>{__('token_sale_public_sale_roadmap_4_point_1')}</li>
                     <li>{__('token_sale_public_sale_roadmap_4_point_2')}</li>
                     <li>{__('token_sale_public_sale_roadmap_4_point_3')}</li>
@@ -451,14 +468,18 @@ const PublicTokenSalePage = () => {
                 <div className="w-7 flex justify-center">
                   <div className="bg-accent-light w-[4px] h-[40px]"></div>
                 </div>
-                <div className='text-accent'>{__('token_sale_public_sale_roadmap_subheading_5')}</div>
+                <div className="text-accent">
+                  {__('token_sale_public_sale_roadmap_subheading_5')}
+                </div>
                 <div className="w-7 h-7 bg-accent-light rounded-full"></div>
-                <Heading level={3} className=''>{__('token_sale_public_sale_roadmap_heading_5')}</Heading>
+                <Heading level={3} className="">
+                  {__('token_sale_public_sale_roadmap_heading_5')}
+                </Heading>
                 <div className="w-7 flex justify-center">
                   <div className="bg-accent-light w-[4px] h-auto"></div>
                 </div>
-                <div className='pb-20'>
-                  <ul className='list-disc pl-5 my-4'>
+                <div className="pb-20">
+                  <ul className="list-disc pl-5 my-4">
                     <li>{__('token_sale_public_sale_roadmap_5_point_1')}</li>
                     <li>{__('token_sale_public_sale_roadmap_5_point_2')}</li>
                     <li>{__('token_sale_public_sale_roadmap_5_point_3')}</li>
@@ -474,14 +495,18 @@ const PublicTokenSalePage = () => {
                 <div className="w-7 flex justify-center">
                   <div className="bg-accent-light w-[4px] h-[40px]"></div>
                 </div>
-                <div className='text-accent'>{__('token_sale_public_sale_roadmap_subheading_6')}</div>
+                <div className="text-accent">
+                  {__('token_sale_public_sale_roadmap_subheading_6')}
+                </div>
                 <div className="w-7 h-7 bg-accent-light rounded-full"></div>
-                <Heading level={3} className=''>{__('token_sale_public_sale_roadmap_heading_6')}</Heading>
+                <Heading level={3} className="">
+                  {__('token_sale_public_sale_roadmap_heading_6')}
+                </Heading>
                 <div className="w-7 flex justify-center">
                   <div className="bg-accent-light w-[4px] h-auto"></div>
                 </div>
-                <div className='pb-20'>
-                  <ul className='list-disc pl-5 my-4'>
+                <div className="pb-20">
+                  <ul className="list-disc pl-5 my-4">
                     <li>{__('token_sale_public_sale_roadmap_6_point_1')}</li>
                     <li>{__('token_sale_public_sale_roadmap_6_point_2')}</li>
                     <li>{__('token_sale_public_sale_roadmap_6_point_3')}</li>
@@ -490,7 +515,6 @@ const PublicTokenSalePage = () => {
                   </ul>
                 </div>
               </div>
-
             </div>
           </div>
         </section>

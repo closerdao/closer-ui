@@ -505,5 +505,25 @@
   "event_description_title": "Event description",
   "volunteer_description_title": "Opportunity description",
   "volunteer_edit_page_title": "Edit volunteer opportunity",
-  "volunteer_edit_page_delete": "Delete opportunity"
+  "volunteer_edit_page_delete": "Delete opportunity",
+
+  "token_sale_heading_nationality": "Nationality",
+  "token_sale_heading_required": "Required",
+  "token_sale_label_name": "Full legal name",
+  "token_sale_label_nationality": "Please, select your nationality",
+  "token_sale_label_phone": "Phone number",
+  "token_sale_label_tax_no": "Tax number",
+  "token_sale_label_address": "Residential address",
+  "token_sale_label_postal_code": "Postal code",
+  "token_sale_label_city": "City",
+  "token_sale_button_continue": "Continue",
+  "token_sale_restricted_nationality_warning": "Unfortunately we cannot process American / Swiss nationals at this time. Sorry! ",
+  "token_sale_heading_token_counter": "Token counter",
+  "token_sale_heading_checkout": "Checkout",
+  "token_sale_checkout_your_purchse": "Your purchase",
+  "token_sale_checkout_total": "Total",
+  "token_sale_checkout_your_balance": "Your balance",
+  "token_sale_checkout_button_sign_transaction": "Sign transaction",
+  "token_sale_checkout_vat": "Inc. VAT",
+  "token_sale_heading_your_info": "Your info"
 }
