@@ -5,6 +5,7 @@ import { __ } from '../utils/helpers';
 import { links } from '../utils/navigation';
 import Profile from './Profile';
 import Wallet from './Wallet';
+import CarrotsBalance from './CarrotsBalance';
 
 const MemberMenu = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -22,9 +23,12 @@ const MemberMenu = () => {
 
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
+  const isCarrotsEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true';
   return (
     <nav className="flex flex-col gap-4">
       <Profile />
+      {isCarrotsEnabled && <CarrotsBalance />}
       {isWalletEnabled && <Wallet />}
       {filteredLinks.map((link) => (
         <Link

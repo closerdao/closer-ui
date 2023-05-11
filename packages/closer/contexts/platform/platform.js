@@ -509,6 +509,21 @@ export const PlatformProvider = ({ children }) => {
       }),
   };
 
+  platform.carrots = {
+    getBalance: () =>
+      api.get('/carrots/balance').then((res) => {
+        const results = fromJS(res.data.results);
+        const action = {
+          filterKey: 'balance',
+          model: 'carrots',
+          results,
+          type: constants.GET_SUCCESS,
+        };
+        dispatch(action);
+        return action;
+      }),
+  };
+
   return (
     <PlatformContext.Provider value={{ platform }}>
       {children}
