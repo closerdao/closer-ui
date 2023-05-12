@@ -9,6 +9,7 @@
   "apply_phone_number": "Phone Number",
   "apply_email": "Email",
   "apply_submit_button": "Apply",
+  "apply_submit_button_help": "Select a ticket to apply discount, then click Apply",
   "apply_name": "Name",
   "auth_error_401_message": "Invalid username or password",
   "autocomplete_close": "Close",

@@ -1,4 +1,4 @@
-import { ChangeEvent, Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 
 import { TicketOption } from '../../types';
 import api from '../../utils/api';
@@ -45,17 +45,16 @@ const DiscountCode = ({
         <Input
           type="text"
           value={discountCode}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            setDiscountCode(e.target.value)
-          }
+          onChange={(value) => setDiscountCode(value)}
           placeholder={__('bookings_dates_step_tickets_discount_code_placeholder')}
           className=""
         />
         <Button
           type="inline"
           onClick={handleApplyDiscountCode}
-          isEnabled={selectedTicketOption && discountCode ? true : false}
+          isEnabled={!!(discountCode && selectedTicketOption)}
           className='mt-4 ml-0 sm:mt-0 sm:ml-4'
+          title={__('apply_submit_button_help')}
         >
           {__('apply_submit_button')}
         </Button>

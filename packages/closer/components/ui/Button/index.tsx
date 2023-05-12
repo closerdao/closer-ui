@@ -7,6 +7,7 @@ interface ButtonProps {
   onClick?: (() => void) | (() => Promise<void>);
   infoText?: string | React.ReactNode;
   className?: string;
+  title?: string;
   type?: 'primary' | 'secondary' | 'instantSave' | 'inline';
   isEnabled?: boolean;
   isLoading?: boolean;
@@ -18,6 +19,7 @@ const Button = ({
   infoText,
   className,
   type = 'primary',
+  title,
   isEnabled = true,
   isLoading,
 }: ButtonProps) => {
@@ -26,6 +28,7 @@ const Button = ({
       <button
         onClick={onClick}
         disabled={!isEnabled || isLoading}
+        title={title}
         className={` 
         border-2 bg-accent border-accent border-light flex justify-center text-lg rounded-full uppercase tracking-wide py-1 px-3  
         ${type === 'primary' ? 'w-full' : ''}

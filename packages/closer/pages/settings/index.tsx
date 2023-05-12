@@ -115,7 +115,7 @@ const SettingsPage: FC = () => {
         <Input
           label="Name"
           value={user.screenname}
-          onChange={saveUserData('screenname') as any}
+          onChange={saveUserData('screenname')}
           className="mt-4"
           isInstantSave={true}
           hasSaved={hasSaved}
