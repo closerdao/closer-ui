@@ -107,7 +107,6 @@ export async function getServerSideProps() {
     const {
       data: { results },
     } = await api.get('/config/subscriptions');
-console.log('results.value.plans=', results.value.plans);
     return {
       props: {
         subscriptionPlans: results.value.plans,

@@ -13,6 +13,7 @@ import {
 import Select from '../../../components/ui/Select/Dropdown';
 
 import { TOKEN_SALE_STEPS } from '../../../constants';
+import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
@@ -20,10 +21,17 @@ import { __ } from '../../../utils/helpers';
 const NationalityPage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
   const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
 
   const [nationality, setNationality] = useState('');
   const [countries, setCountries] = useState();
   const [isRestictedNationality, setIsRestictedNationality] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push(`/login?back=${encodeURIComponent(router.asPath)}`);
+    }
+  }, [isAuthenticated, isLoading]);
 
   useEffect(() => {
     const getContries = async () => {
@@ -54,7 +62,9 @@ const NationalityPage = () => {
   };
 
   const handleNext = async () => {
-    router.push(`/token-sale/sale-open/token-counter?nationality=${nationality}`);
+    router.push(
+      `/token-sale/sale-open/token-counter?nationality=${nationality}`,
+    );
   };
 
   const handleChange = (value: string) => {

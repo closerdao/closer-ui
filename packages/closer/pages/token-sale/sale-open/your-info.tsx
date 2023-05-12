@@ -14,6 +14,7 @@ import {
 } from '../../../components/ui';
 
 import { TOKEN_SALE_STEPS } from '../../../constants';
+import { useAuth } from '../../../contexts/auth';
 import { WalletState } from '../../../contexts/wallet';
 import { useConfig } from '../../../hooks/useConfig';
 import api from '../../../utils/api';
@@ -27,6 +28,7 @@ const YourInfoPage = () => {
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
   const { isWalletReady } = useContext(WalletState);
+  const { isAuthenticated, isLoading } = useAuth();
 
   const [formData, setFormData] = useState({
     required: {
@@ -42,7 +44,13 @@ const YourInfoPage = () => {
   });
   const [errorMessage, setErrorMessage] = useState();
   const [canContinue, setCanContinue] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isApiLoading, setApiIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push(`/login?back=${encodeURIComponent(router.asPath)}`);
+    }
+  }, [isAuthenticated, isLoading]);
 
   useEffect(() => {
     if (isWalletReady && isFormValid()) {
@@ -57,10 +65,20 @@ const YourInfoPage = () => {
   };
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      optional: { ...formData.optional, [event.target.id]: event.target.value },
-      required: { ...formData.required, [event.target.id]: event.target.value },
-    });
+    if (event.target.id === 'taxNo') {
+      setFormData({
+        optional: { ...formData.optional, taxNo: event.target.value },
+        required: { ...formData.required },
+      });
+    } else {
+      setFormData({
+        optional: { ...formData.optional },
+        required: {
+          ...formData.required,
+          [event.target.id]: event.target.value,
+        },
+      });
+    }
   };
 
   // /auth/kyc {
@@ -75,7 +93,7 @@ const YourInfoPage = () => {
   // }
   const handleNext = async () => {
     try {
-      setIsLoading(true);
+      setApiIsLoading(true);
       const res = await api.post('/application', {
         legalName: formData.required.name,
         TIN: formData.optional.taxNo,
@@ -91,12 +109,26 @@ const YourInfoPage = () => {
     } catch (error) {
       setErrorMessage(parseMessageFromError(error));
     } finally {
-      setIsLoading(false);
+      setApiIsLoading(false);
     }
   };
 
+  const isPhoneValid = (phone: string) => {
+    const regex = /^[0-9()\-\s]{5,}$/;
+    return regex.test(phone);
+  };
+
+  const isTaxNoValid = (taxNo: string) => {
+    const regex = /^[0-9\-\s]{6,}$/;
+    return taxNo === '' || regex.test(taxNo);
+  };
+
   const isFormValid = () => {
-    if (Object.values(formData.required).every((value) => value)) {
+    if (
+      Object.values(formData.required).every((value) => value) &&
+      isPhoneValid(formData.required.phone) &&
+      isTaxNoValid(formData.optional.taxNo)
+    ) {
       return true;
     }
     return false;
@@ -185,7 +217,11 @@ const YourInfoPage = () => {
               </div>
             )}
 
-            <Button onClick={handleNext} isEnabled={canContinue} isLoading={isLoading}>
+            <Button
+              onClick={handleNext}
+              isEnabled={canContinue}
+              isLoading={isApiLoading}
+            >
               {__('token_sale_button_continue')}
             </Button>
           </div>

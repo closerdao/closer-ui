@@ -8,15 +8,21 @@ import { TOKEN_SALE_STEPS } from '../../../constants';
 import { useConfig } from '../../../hooks/useConfig';
 import { __ } from '../../../utils/helpers';
 import { useEffect, useState } from 'react';
+import { useAuth } from '../../../contexts/auth';
 
 const TokenCounterPage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
   const router = useRouter();
   const { nationality, tokens } = router.query;
-
-  console.log('tokens=', tokens);
+  const { isAuthenticated, isLoading } = useAuth();
 
   const [tokensToBuy, setTokensToBuy] = useState(tokens ? Number(tokens) : 10);
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push(`/login?back=${encodeURIComponent(router.asPath)}`);
+    }
+  }, [isAuthenticated, isLoading]);
 
   useEffect(() => {
     if (tokens) {

@@ -9,17 +9,17 @@ const buttonStyles = cva(
   {
     variants: {
       type: {
-        primary: 'h-12 w-full',
-        secondary: 'w-full bg-white text-accent',
+        primary: 'w-full py-2 bg-accent text-white hover:bg-white hover:text-accent',
+        secondary: 'w-full bg-white text-accent py-2 hover:bg-accent hover:text-white ',
         instantSave:
-          'w-auto h-9 absolute right-2 top-[45px] text-md pl-4 pr-5 py-0.5',
-        inline: ' text-md pl-4 pr-5 py-1.5',
-        default: 'py-2 h-12',
+          'w-auto absolute right-2 top-[45px] text-md pl-4 pr-5 py-0.5 bg-accent text-white',
+        inline: ' text-md pl-4 pr-5 py-1.5 bg-accent text-white',
+        default: 'py-2 h-12 ',
       },
       isEnabled: {
-        true: 'text-white bg-accent bg-accent ',
-        false: 'bg-neutral text-disabled text-light border-disabled',
-      },
+        true: '',
+        false: 'bg-neutral border-disabled !text-disabled hover:bg-neutral',
+      }
     },
 
     defaultVariants: {
@@ -43,7 +43,7 @@ const Button = ({
   infoText,
   className,
   type,
-  isEnabled,
+  isEnabled=true,
   isLoading,
 }: ButtonProps) => {
   return (

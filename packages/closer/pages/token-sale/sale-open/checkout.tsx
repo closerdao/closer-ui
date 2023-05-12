@@ -1,6 +1,8 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
+import { useEffect } from 'react';
+
 import {
   BackButton,
   Button,
@@ -10,6 +12,7 @@ import {
 } from '../../../components/ui';
 
 import { TOKEN_SALE_STEPS } from '../../../constants';
+import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
 import { __ } from '../../../utils/helpers';
 
@@ -18,6 +21,13 @@ const TokenSaleCheckoutPage = () => {
   const router = useRouter();
   const { tokens } = router.query;
   const { SOURCE_TOKEN, TOKEN_PRICE } = useConfig() || {};
+  const { isAuthenticated, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push(`/login?back=${encodeURIComponent(router.asPath)}`);
+    }
+  }, [isAuthenticated, isLoading]);
 
   const goBack = async () => {
     router.push(`/token-sale/sale-open/your-info?tokens=${tokens}`);
