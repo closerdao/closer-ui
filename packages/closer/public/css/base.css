@@ -2,8 +2,8 @@
 
 @layer base {
   body {
-    /*  dark:bg-background-dark  dark:text-foreground-dark min-h-screen  text-foreground */
-    @apply min-h-screen bg-background text-foreground flex flex-col;
+     /* dark:bg-background-dark  dark:text-foreground-dark min-h-screen  text-foreground */
+    @apply min-h-screen  text-foreground flex flex-col ;
   }
 
   #__next {
@@ -88,4 +88,7 @@
   .step-title {
     @apply text-[32px] leading-12 font-normal;
   }
+
+
 }
+

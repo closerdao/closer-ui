@@ -1,4 +1,4 @@
-import { calculateRefundTotal, checkIfBookingEqBlockchain } from '../helpers';
+import { calculateRefundTotal } from '../helpers';
 
 const POLICY_MOCK = {
   default: 1,
@@ -9,7 +9,7 @@ const POLICY_MOCK = {
 
 describe('calculateRefundTotal', () => {
   it('should return initialValue * defaultRefund if start date > 30 days ', () => {
-    let targetDate = new Date();
+    const targetDate = new Date();
     targetDate.setDate(targetDate.getDate() + 31);
     const args = {
       initialValue: 100,
@@ -22,7 +22,7 @@ describe('calculateRefundTotal', () => {
   });
 
   it('should return initialValue * lastmonth if start date > 7 days ', () => {
-    let targetDate = new Date();
+    const targetDate = new Date();
     targetDate.setDate(targetDate.getDate() + 7);
     targetDate.setHours(targetDate.getHours() + 1);
     const args = {
@@ -36,7 +36,7 @@ describe('calculateRefundTotal', () => {
   });
 
   it('should return initialValue * lastweek if start date > 3 day ', () => {
-    let targetDate = new Date();
+    const targetDate = new Date();
     targetDate.setDate(targetDate.getDate() + 3);
     targetDate.setHours(targetDate.getHours() + 1);
     const args = {
@@ -50,7 +50,7 @@ describe('calculateRefundTotal', () => {
   });
 
   it('should return initialValue * lastday if start date > 1 day ', () => {
-    let targetDate = new Date();
+    const targetDate = new Date();
     targetDate.setDate(targetDate.getDate() + 1);
     targetDate.setHours(targetDate.getHours() + 1);
     const args = {
@@ -64,7 +64,7 @@ describe('calculateRefundTotal', () => {
   });
 
   it('should return 0 if start date is in the past or equal to now', () => {
-    let targetDate = new Date();
+    const targetDate = new Date();
     const args = {
       initialValue: 100,
       policy: POLICY_MOCK,
@@ -73,4 +73,3 @@ describe('calculateRefundTotal', () => {
     expect(calculateRefundTotal(args)).toBe(0);
   });
 });
-

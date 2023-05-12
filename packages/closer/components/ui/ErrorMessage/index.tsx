@@ -6,7 +6,7 @@ interface ErrorMessageProps {
 
 const ErrorMessage = ({ error }: ErrorMessageProps) => {
   const errorMessage = parseMessageFromError(error);
-  return <p className="text-red-500 mb-4">{String(errorMessage)}</p>;
+  return <p className="text-error mb-4 py-2 bg-red-100 rounded-md px-4">{String(errorMessage)}</p>;
 };
 
 export default ErrorMessage;

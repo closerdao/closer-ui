@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
@@ -17,8 +17,7 @@ import dayjs from 'dayjs';
 import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import api from '../../../utils/api';
-import { priceFormat } from '../../../utils/helpers';
-import { __ } from '../../../utils/helpers';
+import { __, priceFormat } from '../../../utils/helpers';
 
 const maxVolunteers = 20;
 const formatName = (name) => name && name.split('_').join(' ');

@@ -8,7 +8,10 @@ const Bookings = ({ filter }) => {
   const { platform } = usePlatform();
 
   const loadData = async () => {
-    await Promise.all([platform.booking.get(filter), platform.listing.get()]);
+    await Promise.all([
+      platform.booking.get(filter),
+      platform.listing.get()
+    ]);
   };
 
   useEffect(() => {
@@ -17,24 +20,20 @@ const Bookings = ({ filter }) => {
     }
   }, [filter]);
 
-  const myBookings = platform.booking.find(filter);
-  const noBookings = myBookings && myBookings.count() === 0;
-  const error = myBookings && myBookings.get('error');
+  const bookings = platform.booking.find(filter);
+  const error = bookings && bookings.get('error');
   const listings = platform.listing.find();
 
   if (error) {
     return <div className="validation-error">{JSON.stringify(error)}</div>;
   }
 
-  if (!myBookings || !listings) {
-    return null;
-  }
-
   return (
     <div className="columns mt-8">
       <div className="bookings-list mt-8 flex flex-wrap gap-4">
-        {noBookings && <p className="mt-4">{__('no_bookings')}</p>}
-        {myBookings.map((booking) => {
+        {!bookings || bookings.count() === 0 ?
+        <p className="mt-4">{__('no_bookings')}</p>:
+        bookings.map((booking) => {
           const listingId = booking.get('listing');
           const listing = listings.find(
             (listing) => listing.get('_id') === listingId,

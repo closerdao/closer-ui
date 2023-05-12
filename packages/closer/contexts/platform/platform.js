@@ -205,6 +205,16 @@ const reducer = (state, action) => {
           receivedAt: Date.now(),
         }),
       );
+    case constants.GET_BALANCE_SUCCESS:
+      return state.setIn(
+        ['balance', action.filterKey],
+        Map({
+          data: action.results,
+          loading: false,
+          error: null,
+          receivedAt: Date.now(),
+        }),
+      );
     default:
       console.warn('Unknown action type', action.type);
       return null;
@@ -507,6 +517,23 @@ export const PlatformProvider = ({ children }) => {
         dispatch(action);
         return action;
       }),
+  };
+
+  platform.carrots = {
+    getBalance: () =>
+      api.get('/carrots/balance').then((res) => {
+        const results = fromJS(res.data.results);
+        const action = {
+          filterKey: 'carrots',
+          results,
+          type: constants.GET_BALANCE_SUCCESS,
+        };
+        dispatch(action);
+        return action;
+      }),
+
+    findBalance: (filterKey) =>
+      state.getIn(['balance', filterKey, 'data']),
   };
 
   return (

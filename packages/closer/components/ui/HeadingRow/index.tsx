@@ -11,7 +11,7 @@ const HeadingRow = ({ children, className, level }: HeadingRowProps) => {
 
   return (
     <div className="border-solid border-b pb-2 border-neutral-200 mb-4">
-      <Heading className={`${className} flex justify-start items-center`} level={level}>
+      <Heading className={`${className} font-normal flex justify-start items-center`} level={level}>
         {children}
       </Heading>
     </div>
