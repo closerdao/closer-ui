@@ -10,6 +10,7 @@ import TicketOptions from '../../../components/TicketOptions';
 import BackButton from '../../../components/ui/BackButton';
 import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
+import HeadingRow from '../../../components/ui/HeadingRow';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import { NextPage } from 'next';
@@ -204,10 +205,10 @@ const DatesSelector: NextPage<Props> = ({
         <div className="mt-16 flex flex-col gap-16">
           {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' && (
             <div>
-              <h2 className="mb-3 text-2xl leading-10 font-normal border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center">
-                <span className="mr-1">💰</span>
+              <HeadingRow>
+                <span className="mr-2">💰</span>
                 <span>{__('bookings_dates_step_payment_title')}</span>
-              </h2>
+              </HeadingRow>
               <CurrencySwitch
                 selectedCurrency={currency}
                 onSelect={selectCurrency}
