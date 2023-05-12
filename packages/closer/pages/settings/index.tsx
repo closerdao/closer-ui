@@ -124,7 +124,7 @@ const SettingsPage: FC = () => {
         <Input
           label="Email"
           value={user.email}
-          onChange={phone => saveEmail(phone)}
+          onChange={email => saveEmail(email)}
           successMessage={emailSaved ? 'You will receive a link to confirm via email.' : undefined}
           className="mt-8"
           validation="email"
