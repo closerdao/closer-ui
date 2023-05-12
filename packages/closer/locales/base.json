@@ -102,7 +102,6 @@
   "bookings_summary_step_dates_default_commitment": "4 hours a day",
   "bookings_summary_step_dates_event": "Event",
   "bookings_summary_step_dates_ticket_option": "Ticket option",
-
   "bookings_summary_step_accomodation_type_description": "Daily rate * Nights * Guests",
   "bookings_summary_step_costs_title": "Costs",
   "bookings_summary_step_utility_total": "Utility",
@@ -138,6 +137,7 @@
   "cancel_booking_refund_total": "Refund Total",
   "cancel_booking_fiat_description": "FIAT",
   "cancel_booking_token_description": "$TDF",
+  "carrots_balance": "🥕",
   "create_post_remove": "Remove",
   "create_post_title": "Create post",
   "create_post_submit_button": "Publish",
@@ -271,6 +271,7 @@
   "bookings_title_checked-in": "You checked in.",
   "bookings_title_checked-out": "You checked out.",
   "bookings_title": "My bookings",
+  "paid_bookings_title": "Guest bookings",
   "bookings_notes": "Notes",
   "bookings_summary": "Summary",
   "bookings_status": "Status:",

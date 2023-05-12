@@ -44,7 +44,7 @@ const DatesSelector: NextPage<Props> = ({
   futureEvents,
 }) => {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const isMember = user?.roles.includes('member');
   const {
     start: savedStartDate,
@@ -144,6 +144,15 @@ const DatesSelector: NextPage<Props> = ({
       };
 
       if (data.start === data.end || selectedTicketOption?.isDayTicket) {
+        if (!isAuthenticated) {
+          router.push({
+            pathname: '/login',
+            query: {
+              back: router.asPath,
+            },
+          });
+          return;
+        }
         // Single day ticket - no accomodation needed.
         const {
           data: { results: newBooking },

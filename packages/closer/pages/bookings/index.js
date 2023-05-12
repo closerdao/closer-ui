@@ -14,7 +14,7 @@ const BookingsDirectory = () => {
     myBookings: user && {
       where: {
         createdBy: user._id,
-        status: ['open', 'pending', 'confirmed', 'paid', 'checkedIn', 'checkedOut'],
+        // status: ['open', 'pending', 'confirmed', 'tokens-staked', 'credits-paid', 'paid', 'checked-in', 'checked-out'],
         end: {
           $gt: new Date(),
         },
@@ -41,7 +41,7 @@ const BookingsDirectory = () => {
       <Head>
         <title>{__('bookings_title')}</title>
       </Head>
-      <div className="main-content intro w-full">
+      <div className="max-w-screen-lg mx-auto">
         <Tabs
           tabs={[
             {
@@ -54,7 +54,7 @@ const BookingsDirectory = () => {
               value: 'past-bookings',
               content: <Bookings filter={filters.pastBookings} />,
             },
-          ]}
+          ].filter(tab => tab?.content) }
         />
       </div>
     </>

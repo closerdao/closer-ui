@@ -18,6 +18,14 @@ const BookingsRequests = () => {
         },
       },
     },
+    paidBookings: user && {
+      where: {
+        status: ['paid'],
+        end: {
+          $gt: new Date(),
+        },
+      },
+    },
   };
 
   if (!user || !user.roles.includes('space-host')) {
@@ -33,9 +41,15 @@ const BookingsRequests = () => {
       <Head>
         <title>{__('booking_requests_title')}</title>
       </Head>
-      <div className="main-content intro fullwidth">
-        <Heading className="page-title">{__('booking_requests_title')}</Heading>
-        <Bookings filter={filters.openBookings} />
+      <div className="max-w-screen-lg mx-auto">
+        <section>
+          <Heading level={2}>{__('booking_requests_title')}</Heading>
+          <Bookings filter={filters.openBookings} />
+        </section>
+        <section>
+          <Heading level={2}>{__('paid_bookings_title')}</Heading>
+          <Bookings filter={filters.paidBookings} />
+        </section>
       </div>
     </>
   );
