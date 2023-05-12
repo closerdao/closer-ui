@@ -28,6 +28,7 @@
     "@web3-react/injected-connector": "^6.0.7",
     "axios": "^0.21.1",
     "chart.js": "^3.7.1",
+    "class-variance-authority": "^0.6.0",
     "date-fns": "^2.30.0",
     "dayjs": "^1.10.4",
     "ethers": "^5.7.1",

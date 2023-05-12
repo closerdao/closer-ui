@@ -32,15 +32,11 @@ const DateTimePicker = ({
   blockedDateRanges,
   savedStartDate,
   savedEndDate,
-  defaultMonth
+  defaultMonth,
 }: Props) => {
-  console.log('blockedDateRanges', blockedDateRanges);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [dateError, setDateError] = useState<null | string>(null);
   const [isOneMonthCalendar, setIsOneMonthCalendar] = useState(false);
-  // const [blockedMaxDurationRange, setBlockedMaxDurationRange] = useState<
-  //   ({ after: Date } | { before: Date })[] | []
-  // >([]);
 
   useEffect(() => {
     const handleWindowResize = () => {
@@ -118,18 +114,23 @@ const DateTimePicker = ({
 
   return (
     <div className="">
-      <div data-testid="dates" className="border-2 py-3 px-8 rounded-full w-full bg-neutral mb-8">
-        <span>
-          {dateRange?.from
-            ? dayjs(dateRange?.from).format('LL')
-            : __('listings_book_check_in')}{' '}
-          —{' '}
-        </span>
-        <span>
-          {dateRange?.to
-            ? dayjs(dateRange?.to).format('LL')
-            : __('listings_book_check_out')}
-        </span>
+      <div data-testid="dates" className="w-full flex mb-8">
+        <div>
+          <div className="text-sm mb-2">{__('listings_book_check_in')}</div>
+          <div className="text-sm border bordr-disabled rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
+            {dateRange?.from
+              ? dayjs(dateRange?.from).format('LL')
+              : __('listings_book_select_date')}{' '}
+          </div>
+        </div>
+        <div>
+          <div className="text-sm mb-2">{__('listings_book_check_out')}</div>
+          <div className="text-sm border bordr-disabled rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
+            {dateRange?.to
+              ? dayjs(dateRange?.to).format('LL')
+              : __('listings_book_select_date')}
+          </div>
+        </div>
       </div>
 
       <div className="">
