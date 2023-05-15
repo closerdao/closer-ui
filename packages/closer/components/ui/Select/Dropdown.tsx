@@ -13,6 +13,7 @@ const Dropdown: FC<DropdownProps> = React.memo(
     placeholder = 'Select an option',
     className,
     dataTestId,
+    size
   }) => {
 
     const onChangeRef = useRef(onChange);
@@ -53,7 +54,7 @@ const Dropdown: FC<DropdownProps> = React.memo(
             </div>
           )}
           className=" focus:!shadow-xl  focus:ring-2 focus:ring-offset-0 focus:!ring-accent-core "
-          containerClassName="!border-none rounded-md focus:!shadow-xl focus:!border-accent-core focus:ring-0 focus:ring-offset-0 focus:!ring-accent-core bg-neutral py-2.5"
+          containerClassName={`!border-none rounded-md focus:!shadow-xl focus:!border-accent-core focus:ring-0 focus:ring-offset-0 focus:!ring-accent-core bg-neutral py-2.5 ${size ==='large' && 'h-[54px]'}`}
         />
       </div>
     );

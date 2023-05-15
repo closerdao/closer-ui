@@ -528,5 +528,8 @@
   "token_sale_heading_success": "Success",
   "token_sale_success_message": "Your tokens are In Your wallet!",
   "token_sale_success_purchase_number": "Your Purchase # is:",
+  "token_sale_widget_stay": "I want to stay in",
+  "token_sale_widget_for": "for",
+  "token_sale_widget_days": "days a year",
   "token_sale_heading_your_info": "Your info"
 }

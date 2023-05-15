@@ -8,7 +8,7 @@ export const useBuyTokens = () => {
   const getTokenPrice = async () => {
     return Promise.resolve({
       status: 'success',
-      price: 0.1,
+      price: 230.23,
       error: null,
     });
   };

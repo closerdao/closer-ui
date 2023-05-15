@@ -64,7 +64,7 @@ const TokenCounterPage = () => {
         )} - ${PLATFORM_NAME}`}</title>
       </Head>
 
-      <div className="w-full max-w-screen-sm mx-auto p-8">
+      <div className="w-full max-w-screen-sm mx-auto py-8 px-4">
         <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-4">

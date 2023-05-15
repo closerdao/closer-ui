@@ -21,4 +21,5 @@ export interface DropdownProps extends BaseProps {
   value?: string;
   onChange?: (value: string) => void;
   options: Item[];
+  size?: 'large' | 'medium'
 }

@@ -24,7 +24,9 @@ const TokenSaleCheckoutPage = () => {
   const { buyTokens } = useBuyTokens();
   const router = useRouter();
   const { tokens } = router.query;
-  const { SOURCE_TOKEN, TOKEN_PRICE } = useConfig() || {};
+  const { SOURCE_TOKEN } = useConfig() || {};
+  const { getTokenPrice } = useBuyTokens();
+  const [tokenPrice, setTokenPrice] = useState<number>(0);
   const { isAuthenticated, isLoading, user } = useAuth();
 
   const [web3Error, setWeb3Error] = useState<string | null>(null);
@@ -34,6 +36,13 @@ const TokenSaleCheckoutPage = () => {
       router.push(`/login?back=${encodeURIComponent(router.asPath)}`);
     }
   }, [isAuthenticated, isLoading]);
+
+  useEffect(() => {
+    (async () => {
+      const getPrice = await getTokenPrice();
+      setTokenPrice(getPrice.price);
+    })();
+  }, []);
 
   const goBack = async () => {
     if (user && user.kycPassed) {
@@ -85,7 +94,7 @@ const TokenSaleCheckoutPage = () => {
         )} - ${PLATFORM_NAME}`}</title>
       </Head>
 
-      <div className="w-full max-w-screen-sm mx-auto p-8">
+      <div className="w-full max-w-screen-sm mx-auto py-8 px-4">
         <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-4">
@@ -105,7 +114,7 @@ const TokenSaleCheckoutPage = () => {
                 value={tokens?.toString()}
                 additionalInfo={`1 ${__(
                   'token_sale_token_symbol',
-                )} = ${TOKEN_PRICE} ${SOURCE_TOKEN}`}
+                )} = ${tokenPrice} ${SOURCE_TOKEN}`}
               />
             </div>
             <Button
@@ -125,7 +134,7 @@ const TokenSaleCheckoutPage = () => {
               <Row
                 rowKey={__('token_sale_checkout_total')}
                 value={`${__('token_sale_source_token')} ${
-                  Number(TOKEN_PRICE) * Number(tokens)
+                  Number(tokenPrice) * Number(tokens)
                 } `}
                 additionalInfo={__('token_sale_checkout_vat')}
               />
