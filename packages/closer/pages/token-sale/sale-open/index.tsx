@@ -2,13 +2,36 @@ import Head from 'next/head';
 import Image from 'next/image';
 import router from 'next/router';
 
+import { useEffect, useState } from 'react';
+
 import { Button, Card, Heading } from '../../../components/ui';
 
-import { useConfig } from 'closer';
+import { useAuth, useConfig } from 'closer';
 import { __ } from 'closer/utils/helpers';
+
+import { useBuyTokens } from '../../../hooks/useBuyTokens';
 
 const PublicTokenSalePage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
+  const { user } = useAuth();
+  const { getTokensAvailableForPurchase } = useBuyTokens();
+  const [tokensAvailable, setTokensAvailable] = useState<number | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const getTokensAvailable = await getTokensAvailableForPurchase();
+      setTokensAvailable(getTokensAvailable.tokensAvailable);
+    })();
+  }, []);
+
+  const handleNext = async () => {
+    if (user && user.kycPassed === true) {
+      router.push('/token-sale/sale-open/token-counter');
+    } else {
+      router.push('/token-sale/sale-open/nationality');
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto">
       <Head>
@@ -27,7 +50,10 @@ const PublicTokenSalePage = () => {
             <h2 className="px-4 mb-8 text-center leading-5 max-w-[460px] font-bold uppercase text-md">
               {__('token_sale_public_sale_subheading')}
             </h2>
-            <Button className="!w-60 font-bold mb-3 md:mb-8 relative" onClick={()=>{router.push('/token-sale/sale-open/nationality')}}>
+            <Button
+              className="!w-60 font-bold mb-3 md:mb-8 relative"
+              onClick={handleNext}
+            >
               <Image
                 className="absolute left-[200px] w-14 h-18"
                 src="/images/token-sale/arrow.png"
@@ -37,9 +63,11 @@ const PublicTokenSalePage = () => {
               />
               {__('token_sale_public_sale_buy_token')}
             </Button>
-            <h3 className="font-bold text-2xl">
-              N {__('token_sale_public_sale_tokens_left')}
-            </h3>
+            {tokensAvailable && (
+              <h3 className="font-bold text-2xl">
+                {tokensAvailable} {__('token_sale_public_sale_tokens_left')}
+              </h3>
+            )}
           </div>
         </section>
 

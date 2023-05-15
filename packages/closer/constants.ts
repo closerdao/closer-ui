@@ -44,7 +44,10 @@ export const SUBSCRIPTION_STEPS = [
 
 export const TOKEN_SALE_STEPS = [
   'nationality',
+  'token counter',
   'your info',
+  'checkout',
+  'success'
 ];
 
 export const DEFAULT_CURRENCY = CURRENCIES[0]; // EUR

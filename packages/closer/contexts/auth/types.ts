@@ -6,6 +6,7 @@ export type User = {
   walletAddress: string;
   nonce: string;
   email_verified: boolean;
+  kycPassed: boolean;
   photo: string;
   lastactive: string;
   lastlogin: string;

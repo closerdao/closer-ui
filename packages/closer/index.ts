@@ -89,6 +89,7 @@ export { default as TokenCounterPage } from './pages/token-sale/sale-open/token-
 export { default as NationalityPage } from './pages/token-sale/sale-open/nationality';
 export { default as YourInfoPage } from './pages/token-sale/sale-open/your-info';
 export { default as TokenSaleCheckoutPage } from './pages/token-sale/sale-open/checkout';
+export { default as TokenSaleSuccessPage } from './pages/token-sale/sale-open/success';
 export { default as SearchPage } from './pages/blog/index';
 export { default as KeywordPage } from './pages/blog/search/[keyword]';
 export { default as Page401 } from './pages/401';

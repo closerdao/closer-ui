@@ -19,7 +19,7 @@ import { WalletState } from '../../../contexts/wallet';
 import { useConfig } from '../../../hooks/useConfig';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { __ } from '../../../utils/helpers';
+import { __, isInputValid } from '../../../utils/helpers';
 
 const YourInfoPage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
@@ -28,7 +28,7 @@ const YourInfoPage = () => {
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
   const { isWalletReady } = useContext(WalletState);
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, refetchUser, user } = useAuth();
 
   const [formData, setFormData] = useState({
     required: {
@@ -45,6 +45,12 @@ const YourInfoPage = () => {
   const [errorMessage, setErrorMessage] = useState();
   const [canContinue, setCanContinue] = useState(false);
   const [isApiLoading, setApiIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (user && user.kycPassed) {
+      router.push('/token-sale/sale-open/checkout');
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -94,7 +100,7 @@ const YourInfoPage = () => {
   const handleNext = async () => {
     try {
       setApiIsLoading(true);
-      const res = await api.post('/application', {
+      await api.post('/auth/kyc', {
         legalName: formData.required.name,
         TIN: formData.optional.taxNo,
         address1: formData.required.address,
@@ -104,8 +110,8 @@ const YourInfoPage = () => {
         state: '',
         country: nationality,
       });
+      refetchUser()
       router.push(`/token-sale/sale-open/checkout?tokens=${tokens}`);
-      console.log('res', res);
     } catch (error) {
       setErrorMessage(parseMessageFromError(error));
     } finally {
@@ -113,21 +119,11 @@ const YourInfoPage = () => {
     }
   };
 
-  const isPhoneValid = (phone: string) => {
-    const regex = /^[0-9()\-\s]{5,}$/;
-    return regex.test(phone);
-  };
-
-  const isTaxNoValid = (taxNo: string) => {
-    const regex = /^[0-9\-\s]{6,}$/;
-    return taxNo === '' || regex.test(taxNo);
-  };
-
   const isFormValid = () => {
     if (
       Object.values(formData.required).every((value) => value) &&
-      isPhoneValid(formData.required.phone) &&
-      isTaxNoValid(formData.optional.taxNo)
+      isInputValid(formData.required.phone, 'phone') &&
+      isInputValid(formData.optional.taxNo, 'taxNo')
     ) {
       return true;
     }
@@ -219,7 +215,7 @@ const YourInfoPage = () => {
 
             <Button
               onClick={handleNext}
-              isEnabled={canContinue}
+              isEnabled={canContinue && !isApiLoading}
               isLoading={isApiLoading}
             >
               {__('token_sale_button_continue')}

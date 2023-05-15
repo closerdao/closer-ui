@@ -519,12 +519,14 @@
   "token_sale_label_city": "City",
   "token_sale_button_continue": "Continue",
   "token_sale_restricted_nationality_warning": "Unfortunately we cannot process American / Swiss nationals at this time. Sorry! ",
-  "token_sale_heading_token_counter": "Token counter",
+  "token_sale_heading_token_counter": "How Many Tokens Do you want?",
   "token_sale_heading_checkout": "Checkout",
   "token_sale_checkout_your_purchse": "Your purchase",
   "token_sale_checkout_total": "Total",
-  "token_sale_checkout_your_balance": "Your balance",
   "token_sale_checkout_button_sign_transaction": "Sign transaction",
   "token_sale_checkout_vat": "Inc. VAT",
+  "token_sale_heading_success": "Success",
+  "token_sale_success_message": "Your tokens are In Your wallet!",
+  "token_sale_success_purchase_number": "Your Purchase # is:",
   "token_sale_heading_your_info": "Your info"
 }

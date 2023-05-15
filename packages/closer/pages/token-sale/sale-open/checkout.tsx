@@ -1,11 +1,12 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import {
   BackButton,
   Button,
+  ErrorMessage,
   Heading,
   ProgressBar,
   Row,
@@ -13,15 +14,20 @@ import {
 
 import { TOKEN_SALE_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import { useBuyTokens } from '../../../hooks/useBuyTokens';
 import { useConfig } from '../../../hooks/useConfig';
+import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
 
 const TokenSaleCheckoutPage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
+  const { buyTokens } = useBuyTokens();
   const router = useRouter();
   const { tokens } = router.query;
   const { SOURCE_TOKEN, TOKEN_PRICE } = useConfig() || {};
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  const [web3Error, setWeb3Error] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -30,15 +36,43 @@ const TokenSaleCheckoutPage = () => {
   }, [isAuthenticated, isLoading]);
 
   const goBack = async () => {
-    router.push(`/token-sale/sale-open/your-info?tokens=${tokens}`);
+    if (user && user.kycPassed) {
+      router.push(`/token-sale/sale-open/token-counter?tokens=${tokens}`);
+    } else {
+      router.push(`/token-sale/sale-open/your-info?tokens=${tokens}`);
+    }
   };
 
   const handleSignTransaction = async () => {
-    console.log('sign transaction');
+    setWeb3Error(null);
+    try {
+      const {
+        status,
+        transactionId,
+        amountOfTokensPurchased,
+        error,
+      }: {
+        status: string;
+        transactionId: string | null;
+        amountOfTokensPurchased: number | null;
+        error: string | null;
+      } = await buyTokens(Number(tokens));
+
+      if (status === 'success') {
+        router.push(
+          `/token-sale/sale-open/success?amountOfTokensPurchased=${amountOfTokensPurchased}&transactionId=${transactionId}`,
+        );
+      }
+      if (error) {
+        setWeb3Error(error);
+      }
+    } catch (error) {
+      setWeb3Error(parseMessageFromError(error));
+    }
   };
 
   const handleEditAmount = () => {
-    console.log('edit amount');
+    router.push(`/token-sale/sale-open/token-counter?tokens=${tokens}`);
   };
 
   return (
@@ -95,16 +129,13 @@ const TokenSaleCheckoutPage = () => {
                 } `}
                 additionalInfo={__('token_sale_checkout_vat')}
               />
-              <Row
-                rowKey={__('token_sale_checkout_your_balance')}
-                value={'How can we get CEUR balance from wallet?'}
-                additionalInfo={__('token_sale_checkout_vat')}
-              />
+          
             </div>
           </div>
           <Button onClick={handleSignTransaction}>
             {__('token_sale_checkout_button_sign_transaction')}
           </Button>
+          {web3Error && <ErrorMessage error={web3Error} />}
         </main>
       </div>
     </>

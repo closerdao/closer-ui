@@ -313,3 +313,17 @@ export const getCurrencySymbol = (currency) => {
   };
   return `${symbol[currency]}`;
 };
+
+const validationPatterns = {
+  email: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+  phone: /^[0-9()\-\s]{5,}$/,
+  taxNo: /^$|^[0-9()\-\s]{6,}$/,
+} ;
+
+export const isInputValid = (value, validation) => {
+  const pattern = validationPatterns[validation];
+  if (pattern) {
+    return pattern.test(value);
+  }
+  return true;
+};

@@ -1,6 +1,6 @@
 // import { AxiosError } from 'axios';
 
-export const parseMessageFromError = (err: any) => {
+export const parseMessageFromError = (err: any ) => {
   if (typeof err === 'string') {
     return err;
   }

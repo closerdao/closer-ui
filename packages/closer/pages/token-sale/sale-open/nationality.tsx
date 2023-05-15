@@ -39,7 +39,7 @@ const NationalityPage = () => {
       try {
         const res = await api.get('/meta/countries');
         res.data.results.forEach((country: any) => {
-          countryList.push({ label: country.name, value: country.name });
+          countryList.push({ label: country.name, value: country.code });
         });
         setCountries(countryList);
       } catch (error) {
@@ -50,7 +50,7 @@ const NationalityPage = () => {
   }, []);
 
   useEffect(() => {
-    if (nationality === 'United States' || nationality === 'Switzerland') {
+    if (nationality === 'US' || nationality === 'CH') {
       setIsRestictedNationality(true);
     } else {
       setIsRestictedNationality(false);
@@ -68,7 +68,6 @@ const NationalityPage = () => {
   };
 
   const handleChange = (value: string) => {
-    console.log('val=', value);
     setNationality(value);
   };
 
