@@ -6,8 +6,12 @@ import { useAuth } from '../contexts/auth';
 import { cdn } from '../utils/api';
 import { __ } from '../utils/helpers.js';
 
+import CarrotsBalance from './CarrotsBalance';
+
 const Profile = () => {
   const { user } = useAuth();
+  const isCarrotsEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true';
   return (
     <div className="w-full">
       <div className="flex justify-center items-center w-24 h-24 absolute left-0 right-0 mx-auto -translate-y-1/2 z-20">
@@ -30,7 +34,7 @@ const Profile = () => {
         </Link>
       </div>
 
-      <div className="pt-14 px-4 pb-8 shadow-xl relative rounded-lg w-full">
+      <div className="pt-12 p-2 shadow-xl relative rounded-lg w-full">
         <div className="text-center">
           <p className="font-black uppercase">{user.screenname}</p>
           <p>{__('navigation_member')}</p>
@@ -49,6 +53,9 @@ const Profile = () => {
               </div>
             )}
           </div> */}
+        </div>
+        <div className="flex justify-center space-between">
+          {isCarrotsEnabled && <CarrotsBalance />}
         </div>
       </div>
     </div>

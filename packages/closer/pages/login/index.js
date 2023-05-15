@@ -4,6 +4,8 @@ import { useRouter } from 'next/router';
 
 import { useContext, useState } from 'react';
 
+import Button from '../../components/ui/Button';
+
 import { useAuth } from '../../contexts/auth';
 import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import api from '../../utils/api';
@@ -24,12 +26,15 @@ const Login = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setLoading] = useState(false);
+  const [isWeb3Loading, setWeb3Loading] = useState(false);
 
   if (isAuthenticated) {
     router.push(redirectBack);
   }
 
   const signInWithWallet = async (walletAddress) => {
+    setWeb3Loading(true);
     try {
       const {
         data: { nonce },
@@ -52,6 +57,8 @@ const Login = () => {
         return;
       }
       console.error(e);
+    } finally {
+      setWeb3Loading(false);
     }
   };
 
@@ -65,8 +72,10 @@ const Login = () => {
 
   const onSubmit = async (event) => {
     event.preventDefault();
-    login(email, password);
+    setLoading(true);
     setError('');
+    await login(email, password);
+    setLoading(false);
   };
 
   return (
@@ -116,17 +125,19 @@ const Login = () => {
 
           <div className="flex flex-col justify-between items-center gap-4 sm:flex-row">
             <div className="flex flex-col gap-4 w-full sm:flex-row py-6">
-              <button type="submit" className="btn-primary w-full sm:w-auto">
+              <Button isLoading={ isLoading }>
                 {__('login_submit')}
-              </button>
+              </Button>
               {process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true' && (
-                <button
+                <Button
                   type="submit"
+                  isEnabled={ !isLoading }
+                  isLoading={ isWeb3Loading }
                   className="btn-primary"
                   onClick={walletConnectAndSignInFlow}
                 >
                   {__('blockchain_sign_in_with_wallet')}
-                </button>
+                </Button>
               )}
             </div>
 
