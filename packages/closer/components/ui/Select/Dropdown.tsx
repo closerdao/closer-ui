@@ -5,6 +5,7 @@ import { DropdownProps, Item } from './types';
 
 const Dropdown: FC<DropdownProps> = React.memo(
   ({
+    id,
     label,
     value,
     options,

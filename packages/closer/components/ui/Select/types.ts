@@ -18,6 +18,7 @@ export type Item = {
 };
 
 export interface DropdownProps extends BaseProps {
+  id?: string;
   value?: string;
   onChange?: (value: string) => void;
   options: Item[];

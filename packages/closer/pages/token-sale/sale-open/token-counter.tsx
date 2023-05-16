@@ -82,7 +82,7 @@ const TokenCounterPage = () => {
           </fieldset>
           <Button
             onClick={handleNext}
-            isEnabled={nationality !== ''}
+            isEnabled={Boolean(nationality && tokensToBuy)}
             className="mt-10"
           >
             {__('token_sale_button_continue')}

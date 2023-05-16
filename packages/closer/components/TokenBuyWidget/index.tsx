@@ -6,11 +6,10 @@ import React, {
   useState,
 } from 'react';
 
-import Select from '../components/ui/Select/Dropdown';
-
-import { useBuyTokens } from '../hooks/useBuyTokens';
-import { useConfig } from '../hooks/useConfig';
-import { __ } from '../utils/helpers';
+import { useBuyTokens } from '../../hooks/useBuyTokens';
+import { useConfig } from '../../hooks/useConfig';
+import { __ } from '../../utils/helpers';
+import Select from '../ui/Select/Dropdown';
 
 interface Props {
   tokensToBuy: number;
@@ -21,9 +20,11 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
   const { ACCOMODATION_COST, SOURCE_TOKEN } = useConfig() || {};
   const { getTokenPrice } = useBuyTokens();
   const [tokenPrice, setTokenPrice] = useState<number>(0);
+
   const accommodationOptions = ACCOMODATION_COST.map((option: any) => {
     return { label: option.name, value: option.name };
   });
+
   const [selectedAccommodation, setSelectedAccommodation] = useState(
     ACCOMODATION_COST[0].name,
   );
@@ -51,7 +52,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
     )?.price;
     setSelectedAccommodation(value);
     setTokensToBuy(Math.ceil(daysToStay * price));
-    setTokensToSpend(Math.ceil(daysToStay * price * tokenPrice));
+    setTokensToSpend(Math.ceil(Math.ceil(daysToStay * price) * tokenPrice));
   };
 
   const handleTokensToBuyChange = (
@@ -91,7 +92,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
     const value =
       event.target.value === '' ? 0 : parseInt(event.target.value, 10);
     setTokensToBuy(Math.ceil(value * price));
-    setTokensToSpend(Math.ceil(value * price * tokenPrice));
+    setTokensToSpend(Math.ceil(Math.ceil(value * price) * tokenPrice));
     setDaysToStay(value);
   };
 
@@ -101,10 +102,14 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
         1 {__('token_sale_token_symbol')} = {tokenPrice} {SOURCE_TOKEN}
       </p>
       <div className="flex gap-4">
-        <p className="font-bold bg-accent-light py-3.5 px-6 rounded-md text-xl">
+        <label
+          htmlFor="tokensToBuy"
+          className="font-bold bg-accent-light py-3.5 px-6 rounded-md text-xl"
+        >
           {__('token_sale_token_symbol')}
-        </p>
+        </label>
         <input
+          id="tokensToBuy"
           value={tokensToBuy}
           onChange={handleTokensToBuyChange}
           className="h-14 px-4 pr-8 rounded-md text-xl bg-neutral text-black !border-none"
@@ -112,10 +117,11 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
       </div>
 
       <div className="flex gap-4">
-        <p className="font-bold bg-accent-light py-3.5 px-6 rounded-md text-xl">
+        <label htmlFor='tokensToSpend' className="font-bold bg-accent-light py-3.5 px-6 rounded-md text-xl">
           {__('token_sale_source_token')}
-        </p>
+        </label>
         <input
+          id="tokensToSpend"
           value={tokensToSpend}
           onChange={handleTokensToSpendChange}
           className="h-14 px-4 pr-8 rounded-md text-xl bg-neutral text-black !border-none"
@@ -123,11 +129,12 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
       </div>
 
       <div className="flex gap-4 flex-wrap sm:flex-nowrap ">
-        <p className="font-bold bg-accent-light w-1/2 py-3.5 px-6 rounded-md text-xl">
+        <label htmlFor='accommodationOptions' className="font-bold bg-accent-light w-1/2 py-3.5 px-6 rounded-md text-xl">
           {__('token_sale_widget_stay')}
-        </p>
+        </label>
 
         <Select
+          id='accommodationOptions'
           value={selectedAccommodation}
           options={accommodationOptions}
           className="w-1/2"
@@ -138,10 +145,11 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
       </div>
 
       <div className="flex gap-4 flex-wrap">
-        <p className="w-auto font-bold bg-accent-light py-3.5 px-6 rounded-md text-xl">
+        <label htmlFor='daysToStay' className="w-auto font-bold bg-accent-light py-3.5 px-6 rounded-md text-xl">
           {__('token_sale_widget_for')}
-        </p>
+        </label>
         <input
+          id='daysToStay'
           value={daysToStay}
           onChange={handleDaysToStayChange}
           className="w-auto h-14 px-4 pr-8 rounded-md text-xl bg-neutral text-black"
