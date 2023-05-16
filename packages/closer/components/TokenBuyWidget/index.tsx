@@ -67,7 +67,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
       event.target.value === '' ? 0 : parseInt(event.target.value, 10);
 
     setTokensToBuy(value);
-    setTokensToSpend(Math.ceil(value * tokenPrice));
+    setTokensToSpend(Number((value * tokenPrice).toFixed(2)));
     setDaysToStay(Math.floor(value / price));
   };
 
@@ -78,7 +78,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
       event.target.value === '' ? 0 : parseInt(event.target.value, 10);
 
     setTokensToBuy(Math.ceil(value / tokenPrice));
-    setTokensToSpend(Math.ceil(value));
+    setTokensToSpend(Number(value.toFixed(2)));
     setDaysToStay(Math.floor(value / tokenPrice));
   };
 
@@ -92,7 +92,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
     const value =
       event.target.value === '' ? 0 : parseInt(event.target.value, 10);
     setTokensToBuy(Math.ceil(value * price));
-    setTokensToSpend(Math.ceil(Math.ceil(value * price) * tokenPrice));
+    setTokensToSpend(Number((Math.ceil(value * price) * tokenPrice).toFixed(2)));
     setDaysToStay(value);
   };
 
