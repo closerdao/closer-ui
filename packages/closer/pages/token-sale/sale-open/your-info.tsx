@@ -89,16 +89,6 @@ const YourInfoPage = () => {
     }
   };
 
-  // /auth/kyc {
-  // legalName: String,
-  // TIN: String, (optional)
-  // address1: String,
-  // address2: String, (optional)
-  // postalCode: String,
-  // city: String,
-  // state: String, (optional)
-  // country: String, -> one of the country codes from /meta/countries
-  // }
   const handleNext = async () => {
     try {
       setApiIsLoading(true);
