@@ -16,13 +16,17 @@ import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
 import { __ } from '../../../utils/helpers';
 
+const DEFAULT_TOKENS = 10;
+
 const TokenCounterPage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
   const router = useRouter();
   const { nationality, tokens } = router.query;
   const { isAuthenticated, isLoading, user } = useAuth();
 
-  const [tokensToBuy, setTokensToBuy] = useState(tokens ? Number(tokens) : 10);
+  const [tokensToBuy, setTokensToBuy] = useState(
+    tokens !== undefined ? Number(tokens) : DEFAULT_TOKENS,
+  );
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -31,14 +35,16 @@ const TokenCounterPage = () => {
   }, [isAuthenticated, isLoading]);
 
   useEffect(() => {
-    if (tokens) {
+    if (router.query.tokens && router.query.tokens !== 'undefined') {
       setTokensToBuy(Number(tokens));
+    } else {
+      setTokensToBuy(DEFAULT_TOKENS);
     }
-  }, [tokens]);
+  }, [router]);
 
   const goBack = async () => {
     if (user && user.kycPassed) {
-      router.push('/token-sale/sale-open');
+      router.push(`/token-sale/sale-open?nationality=${nationality}`);
     } else {
       router.push('/token-sale/sale-open/nationality');
     }

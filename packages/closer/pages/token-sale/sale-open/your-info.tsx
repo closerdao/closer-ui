@@ -67,7 +67,9 @@ const YourInfoPage = () => {
   }, [isWalletReady, formData]);
 
   const goBack = () => {
-    router.push(`/token-sale/sale-open/token-counter?tokens=${tokens}`);
+    router.push(
+      `/token-sale/sale-open/token-counter?tokens=${tokens}&nationality=${nationality}`,
+    );
   };
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -110,7 +112,7 @@ const YourInfoPage = () => {
         state: '',
         country: nationality,
       });
-      refetchUser()
+      refetchUser();
       router.push(`/token-sale/sale-open/checkout?tokens=${tokens}`);
     } catch (error) {
       setErrorMessage(parseMessageFromError(error));
