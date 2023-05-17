@@ -8,7 +8,6 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
 import CheckoutForm from '../../../components/CheckoutForm';
-import DateTimePicker from '../../../components/DateTimePicker';
 import Tabs from '../../../components/Tabs';
 import Heading from '../../../components/ui/Heading';
 
@@ -18,6 +17,7 @@ import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import api from '../../../utils/api';
 import { __, priceFormat } from '../../../utils/helpers';
+import DatePickerAdmin from '../../../components/DatePickerAdmin/DatePickerAdmin';
 
 const maxVolunteers = 20;
 const formatName = (name) => name && name.split('_').join(' ');
@@ -317,7 +317,7 @@ const EventCheckout = ({ event, error }) => {
                   </select>
                 ) : (
                   field.fieldType === 'datetime' && (
-                    <DateTimePicker
+                    <DatePickerAdmin
                       value={signup.fields[field.name]}
                       onChange={(value) =>
                         setField(
