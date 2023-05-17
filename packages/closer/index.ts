@@ -77,6 +77,7 @@ export { default as SetPasswordPage } from './pages/login/set-password';
 export { default as MemberPage } from './pages/members/[slug]';
 export { default as MembersPage } from './pages/members/index';
 export { default as SettingsPage } from './pages/settings';
+export { default as CarrotsPage } from './pages/settings/carrots';
 export { default as SignUpPage } from './pages/signup';
 export { default as TasksPage } from './pages/tasks';
 export { default as TaskPage } from './pages/tasks/[slug]';

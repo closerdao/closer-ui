@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 
 import { __ } from '../utils/helpers';
 import { usePlatform } from '../contexts/platform';
+import Link from 'next/link';
 
-
-const Wallet = () => {
+const CarrotsBalance = () => {
   const { platform } = usePlatform();
   const [error, setErrors] = useState(false);
 
@@ -22,13 +22,12 @@ const Wallet = () => {
   }, []);
 
   return (
-    <div className="pt-2 flex flex-col items-center justify-center space-2">
+    <div className="pt-2 flex flex-row items-center justify-center space-2">
       {error && <div className="validation-error">{error}</div>}
-      <p>{__('carrots_balance')}</p>
-      <p className="font-bold">{(platform.carrots.findBalance('carrots') || 0 ).toFixed(2)}</p>
+      <Link href='/settings/carrots' className="font-bold text-accent text-2xl">{__('carrots_balance')} {(platform.carrots.findBalance('carrots') || 0 ).toFixed(2)}</Link>
       {/* <CarrotActions COMING SOON /> */}
     </div>
   );
 };
 
-export default Wallet;
+export default CarrotsBalance;
