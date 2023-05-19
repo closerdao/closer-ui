@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { FC } from 'react';
 
 import Profile from '../../components/Profile';
-import RedeemCarrots from '../../components/RedeemCarrots';
+import RedeemCredits from '../../components/RedeemCredits';
 import { Card } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
@@ -12,7 +12,7 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { __ } from '../../utils/helpers';
 
-const CarrotsPage: FC = () => {
+const CreditsPage: FC = () => {
   const { user, isAuthenticated } = useAuth();
   const { platform }: any = usePlatform();
   const router = useRouter();
@@ -75,7 +75,7 @@ const CarrotsPage: FC = () => {
           <p className="mb-4">{__('carrots_how_to_use_2')}</p>
         </div>
 
-        <RedeemCarrots />
+        <RedeemCredits />
 
         <Heading level={3}>{__('carrots_subheading_how_to_harvest')}</Heading>
 
@@ -90,4 +90,4 @@ const CarrotsPage: FC = () => {
   );
 };
 
-export default CarrotsPage;
+export default CreditsPage;

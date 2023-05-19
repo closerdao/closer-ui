@@ -5,20 +5,17 @@ import { FaUser } from '@react-icons/all-files/fa/FaUser';
 import { useAuth } from '../contexts/auth';
 import { cdn } from '../utils/api';
 import { __ } from '../utils/helpers.js';
-import CarrotsBalance from './CarrotsBalance';
+import CreditsBalance from './CreditsBalance';
 import { Button, Heading } from './ui';
 
 const Profile = () => {
   const { user } = useAuth();
 
-  console.log('user', user);
   const isCarrotsEnabled = process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true';
   return (
     <div className="w-full">
       <div className="py-4 px-2 shadow-xl relative rounded-lg w-full">
         <div className="flex items-start">
-          
-
           <div className="flex justify-center items-center w-24 h-24 md:w-32 md:h-32 mx-auto mb-4">
             <Link
               href={`/members/${user?.slug}`}
@@ -41,7 +38,7 @@ const Profile = () => {
 
           <div className="w-1/3 absolute right-4">
             <Button type="secondary" className="!w-[80px] !text-accent ml-auto">
-             {__('generic_edit_button')}
+              {__('generic_edit_button')}
             </Button>
           </div>
         </div>
@@ -54,7 +51,6 @@ const Profile = () => {
             {user.preferences?.superpower
               ? user.preferences?.superpower
               : __('navigation_member')}{' '}
-              
           </p>
           {/* <div className="mt-1 w-full">
             {user.roles && (
@@ -73,8 +69,8 @@ const Profile = () => {
           </div> */}
         </div>
         <div className="flex space-between justify-center w-full">
-            {isCarrotsEnabled && <CarrotsBalance />}
-          </div>
+          {isCarrotsEnabled && <CreditsBalance />}
+        </div>
       </div>
     </div>
   );

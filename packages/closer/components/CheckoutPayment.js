@@ -22,6 +22,7 @@ const CheckoutPayment = ({
   bookingId,
   buttonDisabled,
   useTokens,
+  useCredits,
   totalToPayInFiat,
   dailyTokenValue,
   startDate,
@@ -77,6 +78,21 @@ const CheckoutPayment = ({
     }
   };
 
+  const payWithCredits = async () => {
+    console.log('payWithCredits');
+    console.log('bookingId', bookingId);
+    try {
+      const res = await api.post(`/bookings/${bookingId}/credit-payment`, {
+        useCredits: true,
+      });
+
+      console.log('checkout res =', res.data.results);
+
+
+
+    } catch (error) {}
+  };
+
   return (
     <div>
       <HeadingRow>
@@ -84,6 +100,7 @@ const CheckoutPayment = ({
         <span>{__('bookings_checkout_step_payment_title')}</span>
       </HeadingRow>
       <Elements stripe={stripe}>
+        total to pay in foat={totalToPayInFiat.val}
         <CheckoutForm
           type="booking"
           _id={bookingId}
@@ -95,6 +112,7 @@ const CheckoutPayment = ({
           cardElementClassName="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-4"
           buttonDisabled={buttonDisabled || !hasComplied}
           prePayInTokens={useTokens && payTokens}
+          payWithCredits={useCredits && payWithCredits}
           isProcessingTokenPayment={isStaking}
           total={totalToPayInFiat.val}
           currency={totalToPayInFiat.cur}

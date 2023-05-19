@@ -21,6 +21,7 @@ const tdfTheme = {
       'accent-alt-dark': '#42CC93',
       'accent-alt-medium': '#97FFD4',
       'accent-alt-light': '#D4FFED',
+      'system-success': '#58B741',
       // TODO: decide with Daneel about brand color system
       neutral: '#F8F3F5', //disabled button bg
       // 'neutral-dark': '#EDE8EB' ,

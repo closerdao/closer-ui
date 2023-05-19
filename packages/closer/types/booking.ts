@@ -52,6 +52,7 @@ export type Booking = {
   infants: number;
   pets: number;
   useTokens: boolean;
+  useCredits: boolean;
   utilityFiat: Price<CloserCurrencies.EUR>;
   rentalFiat: Price<CloserCurrencies.EUR>;
   rentalToken: Price<CloserCurrencies.TDF | CloserCurrencies.ETH>;
