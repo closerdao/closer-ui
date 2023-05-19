@@ -1,6 +1,8 @@
 import Link from 'next/link';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import { useRouter } from 'next/router';
+import {  useEffect } from 'react';
 
 import { useAuth } from '../contexts/auth';
 import { cdn } from '../utils/api';
@@ -9,9 +11,21 @@ import CreditsBalance from './CreditsBalance';
 import { Button, Heading } from './ui';
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      router.push(`/login?back=${router.asPath}`);
+    }
+  }, [isAuthenticated, user]);
 
   const isCarrotsEnabled = process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true';
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="w-full">
       <div className="py-4 px-2 shadow-xl relative rounded-lg w-full">
@@ -37,7 +51,7 @@ const Profile = () => {
           </div>
 
           <div className="w-1/3 absolute right-4">
-            <Button type="secondary" className="!w-[80px] !text-accent ml-auto">
+            <Button onClick={()=> {router.push(`/members/${user.slug}`)}} type="secondary" className="!w-[80px] !text-accent ml-auto">
               {__('generic_edit_button')}
             </Button>
           </div>

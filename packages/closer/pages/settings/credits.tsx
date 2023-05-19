@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 
 import Profile from '../../components/Profile';
 import RedeemCredits from '../../components/RedeemCredits';
@@ -17,9 +17,12 @@ const CreditsPage: FC = () => {
   const { platform }: any = usePlatform();
   const router = useRouter();
 
-  if (!isAuthenticated || !user) {
-    router.push(`/login?back=${router.asPath}`);
-  }
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      router.push(`/login?back=${router.asPath}`);
+    }
+  }, [isAuthenticated, user]);
+  
 
   return (
     <>
@@ -75,7 +78,7 @@ const CreditsPage: FC = () => {
           <p className="mb-4">{__('carrots_how_to_use_2')}</p>
         </div>
 
-        <RedeemCredits />
+        <RedeemCredits isDemo={true} />
 
         <Heading level={3}>{__('carrots_subheading_how_to_harvest')}</Heading>
 

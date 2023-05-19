@@ -44,6 +44,7 @@ const CheckoutForm = ({
   onSuccess,
   cardElementClassName = '',
   prePayInTokens,
+  hasAppliedCredits,
   payWithCredits,
   isProcessingTokenPayment = false,
   children: conditions,
@@ -58,17 +59,13 @@ const CheckoutForm = ({
     !stripe || buttonDisabled || processing || isProcessingTokenPayment;
 
   const handleSubmit = async (event) => {
-
     event.preventDefault();
     setProcessing(true);
-    if (payWithCredits) {
+
+    if (hasAppliedCredits) {
       await payWithCredits();
     }
 
-   
-
-
- 
     if (prePayInTokens) {
       const res = await prePayInTokens();
       const { error } = res || {};
@@ -113,13 +110,11 @@ const CheckoutForm = ({
           fields,
           volunteer,
         },
-        );
-      
-      console.log('payment=', payment);
+      );
 
       if (onSuccess) {
         setProcessing(false);
-        // onSuccess(payment);
+        onSuccess(payment);
       }
     } catch (err) {
       setProcessing(false);
@@ -155,7 +150,6 @@ const CheckoutForm = ({
 
   return (
     <form onSubmit={handleSubmit}>
-      total = {total}
       {error && (
         <div className="text-red-500 mb-4">
           <p>{String(error)}</p>

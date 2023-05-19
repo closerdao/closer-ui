@@ -50,7 +50,6 @@ const Checkout = ({
     rentalToken,
     rentalFiat,
     useTokens,
-    useCredits,
     start,
     dailyRentalToken,
     duration,
@@ -58,11 +57,6 @@ const Checkout = ({
     eventPrice,
     total,
   } = booking || {};
-
-  // console.log('creditsBalance', creditsBalance);
-  // console.log('booking=', booking);
-  // console.log('booking.total=', total);
-  // console.log('booking.useCredits=', useCredits);
 
   const { balanceAvailable } = useContext(WalletState);
   const { user, isAuthenticated } = useAuth();
@@ -73,7 +67,7 @@ const Checkout = ({
     : false;
 
   const canApplyCredits =
-    creditsBalance && rentalFiat.val && creditsBalance >= rentalToken.val;
+    creditsBalance && creditsBalance >= rentalToken.val;
 
   const listingName = listing?.name;
 
@@ -95,32 +89,10 @@ const Checkout = ({
       const res = await api.post(`/bookings/${booking._id}/update-payment`, {
         useCredits: true,
       });
-      // console.log('res', res.data.results);
-      console.log('rentalFiat', res.data.results.rentalFiat);
-      console.log('useTokens', res.data.results.useTokens);
-      console.log('total', res.data.results.total);
-
       setUpdatedTotal(res.data.results.total);
       setUpdatedRentalFiat(res.data.results.rentalFiat);
       setHasAppliedCredits(true);
-
-
-
-        const {
-          data: { results: b },
-        } = await api.get(`/booking/${booking._id}`);
-        console.log('b', b);
-  
-      
-     
-
-      // TODO: pay with credits:
-      // const res2 = await api.post(`/bookings/${booking._id}/credit-payment`, {
-      //   useCredits: true,
-      // });
-      // console.log('res2', res2.data.results);
     } catch (error) {
-      console.log('error=====', error);
       setCreditsError(parseMessageFromError(error));
     }
   };
@@ -188,7 +160,7 @@ const Checkout = ({
             </p>
 
             {process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' &&
-              canApplyCredits && (
+              canApplyCredits ? (
                 <RedeemCredits
                   rentalFiat={rentalFiat}
                   rentalToken={rentalToken}
@@ -197,7 +169,7 @@ const Checkout = ({
                   creditsError={creditsError}
                   className="my-12"
                 />
-              )}
+              ) : null}
 
             {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' &&
               rentalToken &&
@@ -234,10 +206,6 @@ const Checkout = ({
           </div>
           <CheckoutTotal total={updatedTotal} />
 
-          booking status = {booking.status}
-          booking total = {booking.total.val}
-
-
           {booking.total.val > 0 ? (
             <CheckoutPayment
               bookingId={booking._id}
@@ -246,7 +214,7 @@ const Checkout = ({
                 (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)
               }
               useTokens={useTokens}
-              useCredits={useCredits}
+              hasAppliedCredits={hasAppliedCredits}
               totalToPayInFiat={updatedTotal}
               dailyTokenValue={dailyRentalToken?.val}
               startDate={start}
