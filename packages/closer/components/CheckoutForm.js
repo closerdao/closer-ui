@@ -4,6 +4,7 @@ import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
+import { ErrorMessage } from './ui';
 import Button from './ui/Button';
 
 const cardStyle = {
@@ -63,7 +64,16 @@ const CheckoutForm = ({
     setProcessing(true);
 
     if (hasAppliedCredits) {
-      await payWithCredits();
+      const res = await payWithCredits();
+
+      const status = res.data.results.status;
+      const { error } = res || {};
+      if (error || status !== 'credits-paid') {
+        setProcessing(false);
+        setError(__('carrots_error_message'));
+        console.error(error);
+        return;
+      }
     }
 
     if (prePayInTokens) {
@@ -150,11 +160,7 @@ const CheckoutForm = ({
 
   return (
     <form onSubmit={handleSubmit}>
-      {error && (
-        <div className="text-red-500 mb-4">
-          <p>{String(error)}</p>
-        </div>
-      )}
+      {error && <ErrorMessage error={error} />}
       <CardElement
         options={cardStyle}
         className={cardElementClassName}

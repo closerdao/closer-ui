@@ -163,6 +163,7 @@
   "carrots_how_to_harvest_3": "*coming soon* Rewards for completing actions",
   "carrots_how_to_harvest_4": "*coming soon* Stay Packages",
   "carrots_success_message": "carrots redeemed successfully! Accommodation cost updated.",
+  "carrots_error_message": "Carrots payment failed, please, try again.",
 
   "create_post_remove": "Remove",
   "create_post_title": "Create post",

@@ -4,7 +4,6 @@ import { useState } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { useAuth } from '../contexts/auth';
 
 import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
@@ -54,7 +53,6 @@ const CheckoutPayment = ({
   });
 
   const router = useRouter();
-  const {  refetchUser } = useAuth();
   const [hasComplied, setCompliance] = useState(false);
   const [error, setError] = useState(null);
 
@@ -86,10 +84,8 @@ const CheckoutPayment = ({
 
   const payWithCredits = async () => {
     try {
-      await api.post(`/bookings/${bookingId}/credit-payment`, {
-        useCredits: true,
-      });
-      refetchUser()
+      const res = await api.post(`/bookings/${bookingId}/credit-payment`, {});
+      return res
     } catch (error) {
       setError(parseMessageFromError(error));
     }

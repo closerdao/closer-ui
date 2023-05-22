@@ -20,7 +20,7 @@ const Profile = () => {
     }
   }, [isAuthenticated, user]);
 
-  const isCarrotsEnabled = process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true';
+  const isCreditsEnabled = process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true';
 
   if (!isAuthenticated) {
     return null;
@@ -83,7 +83,7 @@ const Profile = () => {
           </div> */}
         </div>
         <div className="flex space-between justify-center w-full">
-          {isCarrotsEnabled && <CreditsBalance />}
+          {isCreditsEnabled && <CreditsBalance />}
         </div>
       </div>
     </div>
