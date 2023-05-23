@@ -167,7 +167,7 @@ const PublicTokenSalePage = () => {
                   height={100}
                 />
 
-                <div className="flex gap-3">
+                <div className="flex gap-3 text-sm">
                   <span className="bg-accent-light rounded-full px-3 py-1">
                     {__('token_sale_public_sale_tokenomics')}
                   </span>
@@ -198,7 +198,7 @@ const PublicTokenSalePage = () => {
                   height={100}
                 />
 
-                <div className="flex gap-3">
+                <div className="flex gap-3 text-sm">
                   <span className="bg-accent-light rounded-full px-3 py-1">
                     {__('token_sale_public_sale_tokenomics')}
                   </span>
@@ -229,7 +229,7 @@ const PublicTokenSalePage = () => {
                   height={100}
                 />
 
-                <div className="flex gap-3">
+                <div className="flex gap-3 text-sm">
                   <span className="bg-accent-light rounded-full px-3 py-1">
                     {__('token_sale_public_sale_tokenomics')}
                   </span>
@@ -260,7 +260,7 @@ const PublicTokenSalePage = () => {
                   height={100}
                 />
 
-                <div className="flex gap-3">
+                <div className="flex gap-3 text-sm">
                   <span className="bg-accent-light rounded-full px-3 py-1">
                     {__('token_sale_public_sale_lifestyle')}
                   </span>
