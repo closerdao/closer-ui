@@ -77,7 +77,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
     const value =
       event.target.value === '' ? 0 : parseInt(event.target.value, 10);
 
-    setTokensToBuy(Math.ceil(value / tokenPrice));
+    setTokensToBuy(Math.floor(value / tokenPrice));
     setTokensToSpend(Number(value.toFixed(2)));
     setDaysToStay(Math.floor(value / tokenPrice));
   };

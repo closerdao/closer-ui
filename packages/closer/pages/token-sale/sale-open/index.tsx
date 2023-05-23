@@ -79,8 +79,24 @@ const PublicTokenSalePage = () => {
               </h2>
               <div>{__('token_sale_public_sale_key_info_subhead')}</div>
             </div>
-            <div className="flex flex-col md:flex-row gap-2 md:gap-6">
-              <Card className="mb-8 px-6 py-8 text-center flex flex-col gap-8 md:w-1/3">
+            <div className="flex flex-col sm:flex-row divide-x flex-wrap">
+              <div className="mb-8 px-6 py-8 text-center flex flex-col gap-8 w-full sm:w-1/2 lg:w-1/4">
+                <Heading level={3} className="uppercase text-center">
+                  {__('token_sale_public_sale_heading_pink_paper')}
+                </Heading>
+                <p>{__('token_sale_public_sale_intro_pink_paper')}</p>
+                <Button
+                  className="text-[17px]"
+                  onClick={() => {
+                    router.push(
+                      'https://docs.google.com/document/d/177JkHCy0AhplsaEEYpFHBsiI6d4uLk0TgURSKfBIewE/edit',
+                    );
+                  }}
+                >
+                  {__('token_sale_public_sale_button_read')}
+                </Button>
+              </div>
+              <div className="mb-8 px-6 py-8 text-center flex flex-col gap-8 w-full sm:w-1/2 lg:w-1/4">
                 <Heading level={3} className="uppercase text-center">
                   {__('token_sale_public_sale_heading_white_paper')}
                 </Heading>
@@ -88,28 +104,177 @@ const PublicTokenSalePage = () => {
                 <Button
                   className="text-[17px]"
                   onClick={() => {
-                    router.push('/');
+                    router.push(
+                      'https://oasa.earth/papers/OASA-Whitepaper-V1.2.pdf',
+                    );
                   }}
                 >
                   {__('token_sale_public_sale_button_read')}
                 </Button>
-              </Card>
-              <Card className="mb-8 px-6 py-8 text-center flex flex-col gap-8 md:w-1/3">
+              </div>
+              <div className="mb-8 px-6 py-8 text-center flex flex-col gap-8 w-full sm:w-1/2 lg:w-1/4">
                 <Heading level={3} className="uppercase text-center">
-                  {__('token_sale_public_sale_heading_investor_doc')}
+                  {__('token_sale_public_sale_heading_oasa_website')}
                 </Heading>
                 <p>{__('token_sale_public_sale_intro_investor_doc')}</p>
-                <Button className="text-[17px]">
+                <Button
+                  className="text-[17px]"
+                  onClick={() => {
+                    router.push('https://oasa.earth');
+                  }}
+                >
+                  {__('token_sale_public_sale_visit_site_button')}
+                </Button>
+              </div>
+              <div className="mb-8 px-6 py-8 text-center flex flex-col gap-8 w-full sm:w-1/2 lg:w-1/4">
+                <Heading level={3} className="uppercase text-center">
+                  {__('token_sale_public_sale_heading_terms')}
+                </Heading>
+                <p>{__('token_sale_public_sale_intro_terms')}</p>
+                <Button
+                  className="text-[17px]"
+                  onClick={() => {
+                    router.push('/legal/terms');
+                  }}
+                >
                   {__('token_sale_public_sale_button_read')}
                 </Button>
-              </Card>
-              <Card className="mb-8 px-6 py-8 text-center flex flex-col gap-8  md:w-1/3">
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="flex items-center flex-col py-24">
+          <div className="w-full sm:w-[80%] ">
+            <div className="text-center mb-20">
+              <h2 className="mb-4 text-5xl font-bold">
+                {__('token_sale_public_sale_key_info')}
+              </h2>
+              <div>{__('token_sale_public_sale_key_info_subhead')}</div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-[2%] flex-wrap">
+              <Card className="mb-8 px-6 py-8 text-center items-center flex flex-col gap-4 w-full sm:w-[49%] lg:w-[22%]">
                 <Heading level={3} className="uppercase text-center">
-                  {__('token_sale_public_sale_heading_chat_to_us')}
+                  {__('token_sale_public_sale_sam')}
+                  <span className="block text-sm font-normal capitalize">
+                    {__('token_sale_public_sale_visionary')}
+                  </span>
                 </Heading>
-                <p>{__('token_sale_public_sale_intro_chat_to_us')}</p>
-                <Button className="text-[17px]">
-                  {__('token_sale_public_sale_button_book')}
+                <Image
+                  src={'/images/token-sale/sam.jpg'}
+                  alt="Sam"
+                  width={100}
+                  height={100}
+                />
+
+                <div className="flex gap-3">
+                  <span className="bg-accent-light rounded-full px-3 py-1">
+                    {__('token_sale_public_sale_tokenomics')}
+                  </span>
+                  <span className="bg-accent-light rounded-full px-3 py-1">
+                    {__('token_sale_public_sale_vision')}
+                  </span>
+                </div>
+                <Button
+                  className="text-[17px]"
+                  onClick={() => {
+                    router.push('/');
+                  }}
+                >
+                  {__('token_sale_public_sale_button_book_a_call')}
+                </Button>
+              </Card>
+              <Card className="mb-8 px-6 py-8 text-center items-center flex flex-col gap-4 w-full sm:w-[49%] lg:w-[22%]">
+                <Heading level={3} className="uppercase text-center">
+                  {__('token_sale_public_sale_bea')}
+                  <span className="block text-sm font-normal capitalize">
+                    {__('token_sale_public_sale_exec')}
+                  </span>
+                </Heading>
+                <Image
+                  src={'/images/token-sale/bea.jpg'}
+                  alt="Bea"
+                  width={100}
+                  height={100}
+                />
+
+                <div className="flex gap-3">
+                  <span className="bg-accent-light rounded-full px-3 py-1">
+                    {__('token_sale_public_sale_tokenomics')}
+                  </span>
+                  <span className="bg-accent-light rounded-full px-3 py-1">
+                    {__('token_sale_public_sale_lifestyle')}
+                  </span>
+                </div>
+                <Button
+                  className="text-[17px]"
+                  onClick={() => {
+                    router.push('/');
+                  }}
+                >
+                  {__('token_sale_public_sale_button_book_a_call')}
+                </Button>
+              </Card>
+              <Card className="mb-8 px-6 py-8 text-center items-center flex flex-col gap-4 w-full sm:w-[49%] lg:w-[22%]">
+                <Heading level={3} className="uppercase text-center">
+                  {__('token_sale_public_sale_sam')}
+                  <span className="block text-sm font-normal capitalize">
+                    {__('token_sale_public_sale_governance_lead')}
+                  </span>
+                </Heading>
+                <Image
+                  src={'/images/token-sale/charlie.jpg'}
+                  alt="Cahrlie"
+                  width={100}
+                  height={100}
+                />
+
+                <div className="flex gap-3">
+                  <span className="bg-accent-light rounded-full px-3 py-1">
+                    {__('token_sale_public_sale_tokenomics')}
+                  </span>
+                  <span className="bg-accent-light rounded-full px-3 py-1">
+                    {__('token_sale_public_sale_governance')}
+                  </span>
+                </div>
+                <Button
+                  className="text-[17px]"
+                  onClick={() => {
+                    router.push('/');
+                  }}
+                >
+                  {__('token_sale_public_sale_button_book_a_call')}
+                </Button>
+              </Card>
+              <Card className="mb-8 px-6 py-8 text-center items-center flex flex-col gap-4 w-full sm:w-[49%] lg:w-[22%]">
+                <Heading level={3} className="uppercase text-center">
+                  {__('token_sale_public_sale_juliana')}
+                  <span className="block text-sm font-normal capitalize">
+                    {__('token_sale_public_sale_space_host')}
+                  </span>
+                </Heading>
+                <Image
+                  src={'/images/token-sale/juliana.jpg'}
+                  alt="Juliana"
+                  width={100}
+                  height={100}
+                />
+
+                <div className="flex gap-3">
+                  <span className="bg-accent-light rounded-full px-3 py-1">
+                    {__('token_sale_public_sale_lifestyle')}
+                  </span>
+                  <span className="bg-accent-light rounded-full px-3 py-1">
+                    {__('token_sale_public_sale_community')}
+                  </span>
+                </div>
+                <Button
+                  className="text-[17px]"
+                  onClick={() => {
+                    router.push('/');
+                  }}
+                >
+                  {__('token_sale_public_sale_button_book_a_call')}
                 </Button>
               </Card>
             </div>
@@ -230,7 +395,7 @@ const PublicTokenSalePage = () => {
                   <p className=" pt-1">
                     {__('token_sale_public_sale_studio')}
                     <span className="block text-xs text-accent">
-                      {__('token_sale_public_sale_coming_2023')}
+                      {__('token_sale_public_sale_coming_2024')}
                     </span>
                   </p>
                   <p className=" text-right text-accent pt-2">
@@ -249,7 +414,7 @@ const PublicTokenSalePage = () => {
                   <p className=" pt-1">
                     {__('token_sale_public_sale_house')}
                     <span className="block text-xs text-accent">
-                      {__('token_sale_public_sale_coming_2023')}
+                      {__('token_sale_public_sale_coming_2024')}
                     </span>
                   </p>
                   <p className=" text-right text-accent pt-2">
@@ -459,7 +624,11 @@ const PublicTokenSalePage = () => {
                   <div className="bg-accent-light w-[4px] h-auto"></div>
                 </div>
                 <div className="pb-20">
-                  <Button type="secondary" className="my-6">
+                  <Button
+                    onClick={() => router.push('/token-sale/sale-open')}
+                    type="secondary"
+                    className="my-6"
+                  >
                     {' '}
                     {__('token_sale_public_sale_roadmap_3_cta_button')}
                   </Button>
