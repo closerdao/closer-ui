@@ -4,6 +4,7 @@ import React, {
   SetStateAction,
   useRef,
   useState,
+  useEffect,
 } from 'react';
 
 import { __ } from '../../../utils/helpers';
@@ -83,6 +84,12 @@ const Input = React.memo(
         onChange(newValue);
       }
     };
+
+    useEffect(() => {
+      if (value) {
+        setIsValid(isValidValue(value));
+      }
+    }, [value]);
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === 'Enter') {
@@ -171,12 +178,12 @@ const Input = React.memo(
           )}
         </div>
 
-        {validationError ? (
-          <span className="text-red-500 text-sm">{validationError}</span>
-        ) :
-        successMessage ? (
-          <span className="text-green-500 text-sm">{successMessage}</span>
-        ) : null}
+        { validationError ?
+          <span className="text-red-500 text-sm">{validationError}</span>:
+          successMessage ?
+            <span className="text-green-500 text-sm">{successMessage}</span>:
+            null
+        }
       </div>
     );
   },

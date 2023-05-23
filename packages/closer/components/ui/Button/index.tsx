@@ -24,17 +24,17 @@ const Button = ({
   isLoading,
 }: ButtonProps) => {
   return (
-    <div>
+    <>
       <button
         onClick={onClick}
         disabled={!isEnabled || isLoading}
         title={title}
+        // flex justify-center 
         className={` 
-        border-2 bg-accent border-accent border-light flex justify-center text-lg rounded-full uppercase tracking-wide py-1 px-3  
-        ${type === 'primary' ? 'w-full' : ''}
+        border-2 bg-accent border-accent border-light text-lg rounded-full uppercase tracking-wide py-1 px-3  
         ${
           type === 'secondary'
-            ? 'w-full bg-white text-accent border-accent '
+            ? 'bg-white text-accent border-accent '
             : ''
         }
         ${type === 'inline' ? 'w-auto text-md pl-4 pr-5 py-1.5' : ''}
@@ -58,8 +58,8 @@ const Button = ({
         }
       </button>
       {infoText && <div className="text-sm text-center pt-2">{infoText}</div>}
-    </div>
-  );
+    </>
+  )
 };
 
 export default Button;
