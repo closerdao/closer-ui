@@ -86,8 +86,9 @@ const Checkout = ({
 
   const applyCredits = async () => {
     try {
+      setCreditsError(null)
       const res = await api.post(`/bookings/${booking._id}/update-payment`, {
-        useCredits: true,
+        useCredits: true, 
       });
       setUpdatedTotal(res.data.results.total);
       setUpdatedRentalFiat(res.data.results.rentalFiat);
