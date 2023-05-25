@@ -15,7 +15,7 @@ import { SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
 
-const subscriptionPlans = [
+const subscriptionPlansTmp = [
   {
     slug: 'explorer',
     title: 'Explorer',
@@ -64,9 +64,26 @@ const subscriptionPlans = [
     tier: 3,
     monthlyCredits: 3,
     price: 120,
-    perks: [
-      'Harvest 🥕 Carrots Monthly',
-
+    perks: ['Harvest 🥕 Carrots Monthly'],
+    variants: [
+      {
+        title: 'Balcony gardener',
+        monthlyCredits: 2,
+        price: 60,
+        priceId: 'price_1Mqtp0Gtt5D0VKR297NwmzIy',
+      },
+      {
+        title: 'Home gardener',
+        monthlyCredits: 4,
+        price: 120,
+        priceId: 'price_1Mqtp0Gtt5D0VKR297NwmzIy',
+      },
+      {
+        title: 'Market gardener',
+        monthlyCredits: 6,
+        price: 180,
+        priceId: 'price_1Mqtp0Gtt5D0VKR297NwmzIy',
+      },
     ],
     billingPeriod: 'month',
   },
@@ -80,10 +97,7 @@ const subscriptionPlans = [
     tier: 3,
     monthlyCredits: 3,
     price: 120,
-    perks: [
-     
-
-    ],
+    perks: [],
     billingPeriod: 'month',
   },
 ];
@@ -92,7 +106,7 @@ interface Props {
   subscriptionPlans: SubscriptionPlan[];
 }
 
-const SubscriptionsPage: NextPage<Props> = ({ subscriptionPlansTmp }) => {
+const SubscriptionsPage: NextPage<any> = ({ subscriptionPlans }) => {
   console.log('subscriptionPlans=', subscriptionPlans);
 
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -112,8 +126,13 @@ const SubscriptionsPage: NextPage<Props> = ({ subscriptionPlansTmp }) => {
     setUserActivePlan(selectedSubscription);
   }, [user]);
 
-  const handleNext = (priceId: string) => {
-    if (!isAuthenticated) {
+  const handleNext = (priceId: string, hasVariants: boolean, slug: string) => {
+    console.log('hasVariants=', hasVariants);
+    if (hasVariants) { 
+      // Subscription has ariants - redirect to variant selection page
+      router.push(`/subscriptions/${slug}`);
+     } else if (!isAuthenticated) {
+
       // User has no account - must start with creating one.
       router.push(
         `/signup?back=${encodeURIComponent(
@@ -128,7 +147,8 @@ const SubscriptionsPage: NextPage<Props> = ({ subscriptionPlansTmp }) => {
             (user?.email as string),
         )}`,
       );
-    } else {
+    } 
+    else {
       // User does not yet have a subscription, we can show the checkout
       router.push(`/subscriptions/summary?priceId=${priceId}`);
     }
@@ -159,7 +179,7 @@ const SubscriptionsPage: NextPage<Props> = ({ subscriptionPlansTmp }) => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-screen-md mx-auto">
       <Head>
         <title>{`${__('subscriptions_title')} - ${PLATFORM_NAME}`}</title>
       </Head>
@@ -193,7 +213,7 @@ SubscriptionsPage.getInitialProps = async () => {
 
     return {
       // subscriptionPlans: results.value.plans,
-      subscriptionPlansTmp: results.value.plans,
+      subscriptionPlans: subscriptionPlansTmp,
     };
   } catch (err: any) {
     return {

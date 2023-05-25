@@ -23,7 +23,7 @@ interface Props {
   subscriptionPlans: SubscriptionPlan[];
 }
 
-const Summary = ({ subscriptionPlans }: Props) => {
+const SubscriptionsSummaryPage = ({ subscriptionPlans }: Props) => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId } = router.query;
@@ -166,4 +166,4 @@ export async function getServerSideProps() {
   }
 }
 
-export default Summary;
+export default SubscriptionsSummaryPage;

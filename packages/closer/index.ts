@@ -90,7 +90,9 @@ export { default as SearchPage } from './pages/blog/index';
 export { default as KeywordPage } from './pages/blog/search/[keyword]';
 export { default as Page401 } from './pages/401';
 export { default as Page404 } from './pages/404';
-
+export { default as SubscriptionsPage } from './pages/subscriptions/index';
+export { default as SubscriptionPlanPage } from './pages/subscriptions/[slug]';
+export { default as SubscriptionsSummaryPage } from './pages/subscriptions/summary';
 
 // Utils
 export { default as api } from './utils/api';

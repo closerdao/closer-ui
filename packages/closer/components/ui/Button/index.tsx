@@ -10,6 +10,7 @@ interface ButtonProps {
   type?: 'primary' | 'secondary' | 'instantSave' | 'inline';
   isEnabled?: boolean;
   isLoading?: boolean;
+  size?: 'small' | 'medium' | 'large';
 }
 
 const Button = ({
@@ -20,6 +21,7 @@ const Button = ({
   type = 'primary',
   isEnabled = true,
   isLoading,
+  size 
 }: ButtonProps) => {
   return (
     <div>
@@ -40,6 +42,8 @@ const Button = ({
             ? 'w-auto absolute right-2 top-[45px] text-md pl-4 pr-5 py-0.5'
             : ''
         }
+
+        ${size === 'small' ? 'text-sm' : ''}
         
         ${
           !isEnabled || isLoading
