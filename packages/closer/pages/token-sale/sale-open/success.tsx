@@ -9,6 +9,7 @@ import { TOKEN_SALE_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
 import { __ } from '../../../utils/helpers';
+import PageNotFound from '../../404';
 
 const TokenSaleSuccessPage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
@@ -25,6 +26,10 @@ const TokenSaleSuccessPage = () => {
   const goBack = async () => {
     router.push('/token-sale/sale-open');
   };
+
+  if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
+    return <PageNotFound />;
+  }
 
   return (
     <>

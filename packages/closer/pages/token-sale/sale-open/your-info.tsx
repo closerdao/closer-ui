@@ -20,6 +20,7 @@ import { useConfig } from '../../../hooks/useConfig';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, isInputValid } from '../../../utils/helpers';
+import PageNotFound from '../../404';
 
 const YourInfoPage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
@@ -121,6 +122,10 @@ const YourInfoPage = () => {
     }
     return false;
   };
+
+  if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
+    return <PageNotFound />;
+  }
 
   return (
     <>

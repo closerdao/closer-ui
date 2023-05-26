@@ -15,6 +15,7 @@ import { TOKEN_SALE_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
 import { __ } from '../../../utils/helpers';
+import PageNotFound from '../../404';
 
 const DEFAULT_TOKENS = 10;
 
@@ -59,6 +60,10 @@ const TokenCounterPage = () => {
       );
     }
   };
+
+  if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
+    return <PageNotFound />;
+  }
 
   return (
     <>

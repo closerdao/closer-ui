@@ -17,6 +17,7 @@ import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
+import PageNotFound from '../../404';
 
 const NationalityPage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
@@ -70,6 +71,10 @@ const NationalityPage = () => {
   const handleChange = (value: string) => {
     setNationality(value);
   };
+
+  if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
+    return <PageNotFound />;
+  }
 
   return (
     <>
