@@ -11,7 +11,7 @@ interface Props {
   onChange: (date: dayjs.Dayjs) => void;
   showTime?: boolean;
 }
-const DatePickerAdmin: FC<Props> = ({
+const DatePickerLegacy: FC<Props> = ({
   value,
   minValue,
   maxValue = '180',
@@ -65,4 +65,4 @@ const DatePickerAdmin: FC<Props> = ({
   );
 };
 
-export default DatePickerAdmin;
+export default DatePickerLegacy;
