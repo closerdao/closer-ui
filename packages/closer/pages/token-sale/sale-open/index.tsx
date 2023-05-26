@@ -32,6 +32,26 @@ const PublicTokenSalePage = () => {
     }
   };
 
+  if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
+    return (
+      <>
+        <Head>
+          <title>{`${__(
+            'token_sale_public_sale_heading',
+          )} - ${PLATFORM_NAME}`}</title>
+        </Head>
+
+        <div className="max-w-6xl mx-auto">
+          <Heading level={1} className="mb-14">
+            {__('token_sale_public_sale_heading')}
+          </Heading>
+
+          <Heading level={2}>Coming soon!</Heading>
+        </div>
+      </>
+    );
+  }
+
   return (
     <div className="max-w-6xl mx-auto">
       <Head>
@@ -86,7 +106,7 @@ const PublicTokenSalePage = () => {
                 </Heading>
                 <p>{__('token_sale_public_sale_intro_pink_paper')}</p>
                 <Button
-                  className="text-[17px]"
+                  className="text-[16px]"
                   onClick={() => {
                     router.push(
                       'https://docs.google.com/document/d/177JkHCy0AhplsaEEYpFHBsiI6d4uLk0TgURSKfBIewE/edit',
@@ -102,7 +122,7 @@ const PublicTokenSalePage = () => {
                 </Heading>
                 <p>{__('token_sale_public_sale_intro_white_paper')}</p>
                 <Button
-                  className="text-[17px]"
+                  className="text-[16px]"
                   onClick={() => {
                     router.push(
                       'https://oasa.earth/papers/OASA-Whitepaper-V1.2.pdf',
@@ -118,7 +138,7 @@ const PublicTokenSalePage = () => {
                 </Heading>
                 <p>{__('token_sale_public_sale_intro_investor_doc')}</p>
                 <Button
-                  className="text-[17px]"
+                  className="text-[16px]"
                   onClick={() => {
                     router.push('https://oasa.earth');
                   }}
@@ -132,7 +152,7 @@ const PublicTokenSalePage = () => {
                 </Heading>
                 <p>{__('token_sale_public_sale_intro_terms')}</p>
                 <Button
-                  className="text-[17px]"
+                  className="text-[16px]"
                   onClick={() => {
                     router.push('/legal/terms');
                   }}
@@ -153,7 +173,7 @@ const PublicTokenSalePage = () => {
               <div>{__('token_sale_public_sale_key_info_subhead')}</div>
             </div>
             <div className="flex flex-col sm:flex-row gap-[2%] flex-wrap">
-              <Card className="mb-8 px-6 py-8 text-center items-center flex flex-col gap-4 w-full sm:w-[49%] lg:w-[22%]">
+              <Card className="mb-8 px-6 py-8 text-center items-center flex flex-col gap-4 w-full sm:w-[49%] lg:w-[23%]">
                 <Heading level={3} className="uppercase text-center">
                   {__('token_sale_public_sale_sam')}
                   <span className="block text-sm font-normal capitalize">
@@ -167,16 +187,16 @@ const PublicTokenSalePage = () => {
                   height={100}
                 />
 
-                <div className="flex gap-3 text-sm">
-                  <span className="bg-accent-light rounded-full px-3 py-1">
+                <div className="text-sm text-center w-auto">
+                  <div className="bg-accent-light rounded-full px-3 py-1 mb-1">
                     {__('token_sale_public_sale_tokenomics')}
-                  </span>
-                  <span className="bg-accent-light rounded-full px-3 py-1">
+                  </div>
+                  <div className="bg-accent-light rounded-full px-3 py-1 mb-1">
                     {__('token_sale_public_sale_vision')}
-                  </span>
+                  </div>
                 </div>
                 <Button
-                  className="text-[17px]"
+                  className="text-[16px]"
                   onClick={() => {
                     router.push('/');
                   }}
@@ -184,7 +204,7 @@ const PublicTokenSalePage = () => {
                   {__('token_sale_public_sale_button_book_a_call')}
                 </Button>
               </Card>
-              <Card className="mb-8 px-6 py-8 text-center items-center flex flex-col gap-4 w-full sm:w-[49%] lg:w-[22%]">
+              <Card className="mb-8 py-8 text-center items-center flex flex-col gap-4 w-full sm:w-[49%] lg:w-[23%]">
                 <Heading level={3} className="uppercase text-center">
                   {__('token_sale_public_sale_bea')}
                   <span className="block text-sm font-normal capitalize">
@@ -198,16 +218,16 @@ const PublicTokenSalePage = () => {
                   height={100}
                 />
 
-                <div className="flex gap-3 text-sm">
-                  <span className="bg-accent-light rounded-full px-3 py-1">
+                <div className="text-sm text-center w-auto">
+                  <div className="bg-accent-light rounded-full px-3 py-1 mb-1">
                     {__('token_sale_public_sale_tokenomics')}
-                  </span>
-                  <span className="bg-accent-light rounded-full px-3 py-1">
+                  </div>
+                  <div className="bg-accent-light rounded-full px-3 py-1 mb-1">
                     {__('token_sale_public_sale_lifestyle')}
-                  </span>
+                  </div>
                 </div>
                 <Button
-                  className="text-[17px]"
+                  className="text-[16px]"
                   onClick={() => {
                     router.push('/');
                   }}
@@ -215,7 +235,7 @@ const PublicTokenSalePage = () => {
                   {__('token_sale_public_sale_button_book_a_call')}
                 </Button>
               </Card>
-              <Card className="mb-8 px-6 py-8 text-center items-center flex flex-col gap-4 w-full sm:w-[49%] lg:w-[22%]">
+              <Card className="mb-8 px-6 py-8 text-center items-center flex flex-col gap-4 w-full sm:w-[49%] lg:w-[23%]">
                 <Heading level={3} className="uppercase text-center">
                   {__('token_sale_public_sale_sam')}
                   <span className="block text-sm font-normal capitalize">
@@ -229,16 +249,16 @@ const PublicTokenSalePage = () => {
                   height={100}
                 />
 
-                <div className="flex gap-3 text-sm">
-                  <span className="bg-accent-light rounded-full px-3 py-1">
+                <div className="text-sm text-center w-auto">
+                  <div className="bg-accent-light rounded-full px-3 py-1 mb-1">
                     {__('token_sale_public_sale_tokenomics')}
-                  </span>
-                  <span className="bg-accent-light rounded-full px-3 py-1">
+                  </div>
+                  <div className="bg-accent-light rounded-full px-3 py-1 mb-1">
                     {__('token_sale_public_sale_governance')}
-                  </span>
+                  </div>
                 </div>
                 <Button
-                  className="text-[17px]"
+                  className="text-[16px]"
                   onClick={() => {
                     router.push('/');
                   }}
@@ -246,7 +266,7 @@ const PublicTokenSalePage = () => {
                   {__('token_sale_public_sale_button_book_a_call')}
                 </Button>
               </Card>
-              <Card className="mb-8 px-6 py-8 text-center items-center flex flex-col gap-4 w-full sm:w-[49%] lg:w-[22%]">
+              <Card className="mb-8 px-6 py-8 text-center items-center flex flex-col gap-4 w-full sm:w-[49%] lg:w-[23%]">
                 <Heading level={3} className="uppercase text-center">
                   {__('token_sale_public_sale_juliana')}
                   <span className="block text-sm font-normal capitalize">
@@ -260,16 +280,16 @@ const PublicTokenSalePage = () => {
                   height={100}
                 />
 
-                <div className="flex gap-3 text-sm">
-                  <span className="bg-accent-light rounded-full px-3 py-1">
+                <div className="text-sm text-center w-auto">
+                  <div className="bg-accent-light rounded-full px-3 py-1 mb-1">
                     {__('token_sale_public_sale_lifestyle')}
-                  </span>
-                  <span className="bg-accent-light rounded-full px-3 py-1">
+                  </div>
+                  <div className="bg-accent-light rounded-full px-3 py-1 mb-1">
                     {__('token_sale_public_sale_community')}
-                  </span>
+                  </div>
                 </div>
                 <Button
-                  className="text-[17px]"
+                  className="text-[16px]"
                   onClick={() => {
                     router.push('/');
                   }}
