@@ -8,7 +8,7 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
 import CheckoutForm from '../../../components/CheckoutForm';
-import DateTimePicker from '../../../components/DateTimePicker';
+import DatePickerLegacy from '../../../components/DatePickerLegacy/DatePickerLegacy';
 import Tabs from '../../../components/Tabs';
 import Heading from '../../../components/ui/Heading';
 
@@ -317,7 +317,7 @@ const EventCheckout = ({ event, error }) => {
                   </select>
                 ) : (
                   field.fieldType === 'datetime' && (
-                    <DateTimePicker
+                    <DatePickerLegacy
                       value={signup.fields[field.name]}
                       onChange={(value) =>
                         setField(
