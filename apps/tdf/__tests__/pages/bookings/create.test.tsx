@@ -4,7 +4,7 @@ import { renderWithProviders } from '@/test/utils';
 import { screen } from '@testing-library/react';
 
 describe('DateSelector', () => {
-  it('should render and have a proper title and search button enabled', () => {
+  it('should render and have a proper title and search button disabled by default', () => {
     renderWithProviders(<DateSelector />);
 
     const title = screen.getByRole('heading', {
@@ -12,6 +12,6 @@ describe('DateSelector', () => {
     });
     const button = screen.getByRole('button', { name: /search/i });
     expect(title).toBeInTheDocument();
-    expect(button).toBeEnabled();
+    expect(button).toBeDisabled();
   });
 });

@@ -96,8 +96,8 @@ const CheckoutPayment = ({
           buttonDisabled={buttonDisabled || !hasComplied}
           prePayInTokens={useTokens && payTokens}
           isProcessingTokenPayment={isStaking}
-          total={totalToPayInFiat}
-          currency="EUR"
+          total={totalToPayInFiat.val}
+          currency={totalToPayInFiat.cur}
           hasComplied={hasComplied}
         >
           <Conditions setComply={onComply} visitorsGuide={VISITORS_GUIDE} />
@@ -111,7 +111,7 @@ CheckoutPayment.propTypes = {
   bookingId: PropTypes.string.isRequired,
   buttonDisabled: PropTypes.bool.isRequired,
   useTokens: PropTypes.bool.isRequired,
-  totalToPayInFiat: PropTypes.number.isRequired,
+  totalToPayInFiat: PropTypes.object.isRequired,
   dailyTokenValue: PropTypes.number.isRequired,
   start: PropTypes.string,
   totalNights: PropTypes.number.isRequired,

@@ -19,6 +19,10 @@ module.exports = {
       failure: '#DB4726',
       success: '#58B741',
       pending: '#E8AB1B',
+
+      // colors to review:
+      'disabled': '#9C9C9C',
+      'accent-dark': '#000000'
     },
     boxShadow: {
       xl: '0px 1px 3px rgba(0, 0, 0, 0.12), 0px 1px 1px rgba(0, 0, 0, 0.14), 0px 2px 1px -1px rgba(0, 0, 0, 0.2)',
