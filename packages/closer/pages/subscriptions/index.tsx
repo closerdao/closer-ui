@@ -14,93 +14,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
-
-const subscriptionPlansTmp = [
-  {
-    slug: 'explorer',
-    title: 'Explorer',
-    emoji: '🕵🏽‍♀️',
-    description:
-      'The perfect starting point if you’re new to regeneration, and want to dip your toe before buckling up for the adventure.',
-    priceId: 'free',
-    tier: 1,
-    monthlyCredits: 0,
-    price: 0,
-    perks: [
-      'Book 🎉 Events',
-      'Apply To 💪🏽 Volunteer',
-      'Quests (Coming Soon)',
-      'Monthly Newsletters',
-    ],
-    billingPeriod: 'month',
-  },
-  {
-    slug: 'wanderer',
-    title: 'Wanderer',
-    emoji: '👩🏽‍🌾',
-    description: 'Stay in the loop and see if TDF is for you',
-    priceId: 'price_1MqtoHGtt5D0VKR2Has7KE5X',
-    tier: 2,
-    available: true,
-    monthlyCredits: 0,
-    price: 10,
-    perks: [
-      'Book 🏡 Stays',
-      'Event Discounts',
-      'TDF Community Calls',
-      'Discord Access',
-      'Welcome Gift',
-    ],
-
-    billingPeriod: 'month',
-  },
-  {
-    slug: 'pioneer',
-    title: 'Pioneer',
-    available: true,
-    emoji: '👨🏽‍🚀',
-    description: 'BE THE LOOP. CONTINUOUSLY SUPPORT AND COME TO TDF ',
-    priceId: 'price_1Mqtp0Gtt5D0VKR297NwmzIy',
-    tier: 3,
-    monthlyCredits: 3,
-    price: 120,
-    perks: ['Harvest 🥕 Carrots Monthly'],
-    variants: [
-      {
-        title: 'Balcony gardener',
-        monthlyCredits: 2,
-        price: 60,
-        priceId: 'price_1Mqtp0Gtt5D0VKR297NwmzIy',
-      },
-      {
-        title: 'Home gardener',
-        monthlyCredits: 4,
-        price: 120,
-        priceId: 'price_1Mqtp0Gtt5D0VKR297NwmzIy',
-      },
-      {
-        title: 'Market gardener',
-        monthlyCredits: 6,
-        price: 180,
-        priceId: 'price_1Mqtp0Gtt5D0VKR297NwmzIy',
-      },
-    ],
-    billingPeriod: 'month',
-  },
-  {
-    slug: 'sheep',
-    title: 'Sheep',
-    available: false,
-    emoji: '👨🏽‍🚀',
-    description: '',
-    priceId: 'price_1Mqtp0Gtt5D0VKR297NwmzIy',
-    tier: 3,
-    monthlyCredits: 3,
-    price: 120,
-    perks: [],
-    billingPeriod: 'month',
-  },
-];
+import { subscriptionPlansTmp } from './subcsriptionsTmp';
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
@@ -128,11 +42,10 @@ const SubscriptionsPage: NextPage<any> = ({ subscriptionPlans }) => {
 
   const handleNext = (priceId: string, hasVariants: boolean, slug: string) => {
     console.log('hasVariants=', hasVariants);
-    if (hasVariants) { 
+    if (hasVariants) {
       // Subscription has ariants - redirect to variant selection page
       router.push(`/subscriptions/${slug}`);
-     } else if (!isAuthenticated) {
-
+    } else if (!isAuthenticated) {
       // User has no account - must start with creating one.
       router.push(
         `/signup?back=${encodeURIComponent(
@@ -147,8 +60,7 @@ const SubscriptionsPage: NextPage<any> = ({ subscriptionPlans }) => {
             (user?.email as string),
         )}`,
       );
-    } 
-    else {
+    } else {
       // User does not yet have a subscription, we can show the checkout
       router.push(`/subscriptions/summary?priceId=${priceId}`);
     }

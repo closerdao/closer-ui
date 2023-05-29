@@ -7,17 +7,18 @@ import {
   BackButton,
   Button,
   Heading,
-  HeadingRow,
-  Page404,
   ProgressBar,
   Row,
-  api,
-  useAuth,
-  useConfig,
-} from 'closer';
-import { DEFAULT_CURRENCY, SUBSCRIPTION_STEPS } from 'closer/constants';
-import { SelectedPlan, SubscriptionPlan } from 'closer/types/subscriptions';
-import { __, getVatInfo, priceFormat } from 'closer/utils/helpers';
+} from '../../components/ui/';
+
+import Page404 from '../404';
+import { DEFAULT_CURRENCY, SUBSCRIPTION_STEPS } from '../../constants';
+import { useAuth } from '../../contexts/auth';
+import { useConfig } from '../../hooks/useConfig';
+import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
+import api from '../../utils/api';
+import { __, getVatInfo, priceFormat } from '../../utils/helpers';
+import { subscriptionPlansTmp } from './subcsriptionsTmp';
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
@@ -26,31 +27,48 @@ interface Props {
 const SubscriptionsSummaryPage = ({ subscriptionPlans }: Props) => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
-  const { priceId } = router.query;
+  const { priceId, monthlyCredits } = router.query;
+
   const { PLATFORM_NAME } = useConfig() || {};
 
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
 
-
-
-  useEffect(() => {
-    if (user?.subscription && user.subscription.priceId) {
-      router.push('/subscriptions');
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (user?.subscription && user.subscription.priceId) {
+  //     router.push('/subscriptions');
+  //   }
+  // }, []);
 
   useEffect(() => {
-    if (priceId) {
+    if (priceId && subscriptionPlans) {
+      console.log('priceId=', priceId);
+      console.log('subscriptionPlans=', subscriptionPlans);
       const selectedSubscription = subscriptionPlans.find(
         (plan: SubscriptionPlan) => plan.priceId === priceId,
       );
-      setSelectedPlan({
-        title: selectedSubscription?.title as string,
-        monthlyCredits: selectedSubscription?.monthlyCredits as number,
-        price: selectedSubscription?.price as number,
-      });
+
+      console.log('selectedSubscription=', selectedSubscription);
+
+      if (selectedSubscription?.variants) {
+        const selectedVariant = selectedSubscription.variants.find(
+          (variant: any) => variant.monthlyCredits === Number(monthlyCredits),
+        );
+        setSelectedPlan({
+          title: `${selectedSubscription?.title as string} - ${
+            selectedVariant?.title as string
+          }`,
+          monthlyCredits: Number(monthlyCredits),
+          price: selectedSubscription?.price * Number(monthlyCredits),
+        });
+      } else {
+        setSelectedPlan({
+          title: selectedSubscription?.title as string,
+          monthlyCredits: selectedSubscription?.monthlyCredits as number,
+          price: selectedSubscription?.price as number,
+        });
+      }
     }
-  }, [priceId]);
+  }, [priceId, subscriptionPlans]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -67,11 +85,14 @@ const SubscriptionsSummaryPage = ({ subscriptionPlans }: Props) => {
   const handleEditPlan = () => {
     router.push('/subscriptions');
   };
+
   const handleCheckout = () => {
     if (selectedPlan?.price === 0) {
       router.push(`/subscriptions/success?priceId=${priceId}`);
     } else {
-      router.push(`/subscriptions/checkout?priceId=${priceId}`);
+      router.push(
+        `/subscriptions/checkout?priceId=${priceId}&monthlyCredits=${monthlyCredits}`,
+      );
     }
   };
 
@@ -99,12 +120,9 @@ const SubscriptionsSummaryPage = ({ subscriptionPlans }: Props) => {
 
         <main className="pt-14 pb-24 md:flex-row flex-wrap">
           <div className="mb-14">
-            <HeadingRow>
-              <span className="mr-2">♻️</span>
-              <span>
-                {__('subscriptions_summary_your_subscription_subtitle')}
-              </span>
-            </HeadingRow>
+            <Heading level={2} className="border-b pb-2 mb-6 text-xl">
+              ♻️ {__('subscriptions_summary_your_subscription_subtitle')}
+            </Heading>
             <div className="mb-10">
               <Row
                 rowKey={__('subscriptions_summary_tier')}
@@ -121,10 +139,9 @@ const SubscriptionsSummaryPage = ({ subscriptionPlans }: Props) => {
           </div>
 
           <div className="mb-14">
-            <HeadingRow>
-              <span className="mr-2">💰</span>
-              <span>{__('subscriptions_summary_costs_subtitle')}</span>
-            </HeadingRow>
+            <Heading level={2} className="border-b pb-2 mb-6 text-xl">
+              💰 {__('subscriptions_summary_costs_subtitle')}
+            </Heading>
             <div className="mb-10">
               <Row
                 rowKey={__('subscriptions_summary_subscription')}
@@ -147,23 +164,23 @@ const SubscriptionsSummaryPage = ({ subscriptionPlans }: Props) => {
   );
 };
 
-export async function getServerSideProps() {
+SubscriptionsSummaryPage.getInitialProps = async () => {
   try {
     const {
       data: { results },
     } = await api.get('/config/subscriptions');
 
+    // console.log('results.value.plans=', results.value.plans);
+
     return {
-      props: {
-        subscriptionPlans: results.value.plans,
-      },
+      // subscriptionPlans: results.value.plans,
+      subscriptionPlans: subscriptionPlansTmp,
     };
-  } catch (error) {
-    console.error(error);
+  } catch (err: any) {
     return {
       subscriptionPlans: [],
     };
   }
-}
+};
 
 export default SubscriptionsSummaryPage;

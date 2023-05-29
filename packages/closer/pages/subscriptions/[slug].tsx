@@ -11,96 +11,13 @@ import { useConfig } from '../../hooks/useConfig';
 import {
   SubscriptionPlan,
   SubscriptionVariant,
+  Tier,
 } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { __, getCurrencySymbol } from '../../utils/helpers';
 
-const subscriptionPlansTmp = [
-  {
-    slug: 'explorer',
-    title: 'Explorer',
-    emoji: '🕵🏽‍♀️',
-    description:
-      'The perfect starting point if you’re new to regeneration, and want to dip your toe before buckling up for the adventure.',
-    priceId: 'free',
-    tier: 1,
-    monthlyCredits: 0,
-    price: 0,
-    perks: [
-      'Book 🎉 Events',
-      'Apply To 💪🏽 Volunteer',
-      'Quests (Coming Soon)',
-      'Monthly Newsletters',
-    ],
-    billingPeriod: 'month',
-  },
-  {
-    slug: 'wanderer',
-    title: 'Wanderer',
-    emoji: '👩🏽‍🌾',
-    description: 'Stay in the loop and see if TDF is for you',
-    priceId: 'price_1MqtoHGtt5D0VKR2Has7KE5X',
-    tier: 2,
-    available: true,
-    monthlyCredits: 0,
-    price: 10,
-    perks: [
-      'Book 🏡 Stays',
-      'Event Discounts',
-      'TDF Community Calls',
-      'Discord Access',
-      'Welcome Gift',
-    ],
+import { subscriptionPlansTmp } from './subcsriptionsTmp';
 
-    billingPeriod: 'month',
-  },
-  {
-    slug: 'pioneer',
-    title: 'Pioneer',
-    available: true,
-    emoji: '👨🏽‍🚀',
-    description: 'BE THE LOOP. CONTINUOUSLY SUPPORT AND COME TO TDF ',
-    priceId: 'price_1Mqtp0Gtt5D0VKR297NwmzIy',
-    tier: 3,
-    monthlyCredits: 3,
-    price: 120,
-    perks: ['Harvest 🥕 Carrots Monthly'],
-    variants: [
-      {
-        title: 'Balcony gardener',
-        monthlyCredits: 2,
-        price: 60,
-        priceId: 'price_11',
-      },
-      {
-        title: 'Home gardener',
-        monthlyCredits: 4,
-        price: 120,
-        priceId: 'price_12',
-      },
-      {
-        title: 'Market gardener',
-        monthlyCredits: 6,
-        price: 180,
-        priceId: 'price_13',
-      },
-    ],
-    billingPeriod: 'month',
-  },
-  {
-    slug: 'sheep',
-    title: 'Sheep',
-    available: false,
-    emoji: '👨🏽‍🚀',
-    description: '',
-    priceId: 'price_1Mqtp0Gtt5D0VKR297NwmzIy',
-    tier: 3,
-    monthlyCredits: 3,
-    price: 120,
-    perks: [],
-    billingPeriod: 'month',
-  },
-];
 
 interface Props {
   subscriptionPlan: SubscriptionPlan;
@@ -127,7 +44,7 @@ const SubscriptionPlanPage: NextPage<any> = ({ subscriptionPlan, slug }) => {
   //   setUserActivePlan(selectedSubscription);
   // }, [user]);
 
-  const handleNext = (priceId: string) => {
+  const handleNext = (priceId: string, monthlyCredits: number) => {
     // console.log('hasVariants=', hasVariants);
     if (!isAuthenticated) {
       // User has no account - must start with creating one.
@@ -139,9 +56,17 @@ const SubscriptionPlanPage: NextPage<any> = ({ subscriptionPlan, slug }) => {
     } 
     else {
       // User does not yet have a subscription, we can show the checkout
-      router.push(`/subscriptions/summary?priceId=${priceId}`);
+      router.push(`/subscriptions/summary?priceId=${priceId}&monthlyCredits=${monthlyCredits}`);
     }
   };
+
+  const getSubscriptionVariantPrice = (credits: number) => {
+    const priceTier = subscriptionPlan.tiers.find((tier: Tier) => { 
+     return tier.minAmount <= credits && tier.maxAmount >= credits
+    })
+    console.log('pricePerCredit=', priceTier.unitPrice);
+    return priceTier.unitPrice * credits
+  }
 
   if (isLoading) {
     return null;
@@ -191,7 +116,9 @@ const SubscriptionPlanPage: NextPage<any> = ({ subscriptionPlan, slug }) => {
                   <div className="text-center">
                     <div className=" font-bold text-xl">
                       {getCurrencySymbol(DEFAULT_CURRENCY)}
-                      {variant.price}
+                      {/* TODO: use tiered pricing or volume pricing: */}
+                      {getSubscriptionVariantPrice(variant.monthlyCredits)}
+                      {/* {variant.monthlyCredits * subscriptionPlan.price} */}
                     </div>
                     <p className="text-sm font-normal">
                       {__('subscriptions_summary_per_month')}
@@ -199,7 +126,7 @@ const SubscriptionPlanPage: NextPage<any> = ({ subscriptionPlan, slug }) => {
                   </div>
                   <Button
                     isEnabled={true}
-                    onClick={() => handleNext(variant.priceId)}
+                    onClick={() => handleNext(subscriptionPlan.priceId, variant.monthlyCredits)}
                     size="medium"
                     className=" border"
                   >

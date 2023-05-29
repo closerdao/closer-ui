@@ -72,8 +72,7 @@ const Success = ({ subscriptionPlans }: Props) => {
       <div className="w-full max-w-screen-sm mx-auto p-8">
         <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
 
-        <Heading level={1} className="mb-6">
-          {' '}
+        <Heading level={1} className="mb-4">
           🎊 {__('subscriptions_success_title')}
         </Heading>
 
@@ -111,23 +110,6 @@ const Success = ({ subscriptionPlans }: Props) => {
   );
 };
 
-export async function getServerSideProps() {
-  try {
-    const {
-      data: { results },
-    } = await api.get('/config/subscriptions');
 
-    return {
-      props: {
-        subscriptionPlans: results.value.plans,
-      },
-    };
-  } catch (error) {
-    console.error(error);
-    return {
-      subscriptionPlans: [],
-    };
-  }
-}
 
 export default Success;

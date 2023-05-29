@@ -6,21 +6,23 @@ import { useEffect, useState } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
-import {
-  BackButton,
-  Heading,
-  HeadingRow,
-  Page404,
-  ProgressBar,
-  Row,
-  SubscriptionCheckoutForm,
-  api,
-  useAuth,
-  useConfig,
-} from 'closer';
-import { DEFAULT_CURRENCY, SUBSCRIPTION_STEPS } from 'closer/constants';
-import { SelectedPlan, SubscriptionPlan } from 'closer/types/subscriptions';
-import { __, getVatInfo, priceFormat } from 'closer/utils/helpers';
+import SubscriptionCheckoutForm from '../../components/SubscriptionCheckoutForm';
+import { BackButton, Heading, ProgressBar, Row } from '../../components/ui/';
+
+import Page404 from '../404';
+import { DEFAULT_CURRENCY, SUBSCRIPTION_STEPS } from '../../constants';
+import { useAuth } from '../../contexts/auth';
+import { useConfig } from '../../hooks/useConfig';
+import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
+import api from '../../utils/api';
+import { __, getVatInfo, priceFormat } from '../../utils/helpers';
+import { subscriptionPlansTmp } from './subcsriptionsTmp';
+
+const test = async () => {
+  const response = await api.post('/subscription', {});
+
+  console.log('response=', response.data.results.products.data);
+};
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUB_KEY as string,
@@ -30,18 +32,18 @@ interface Props {
   subscriptionPlans: SubscriptionPlan[];
 }
 
-const Checkout = ({ subscriptionPlans }: Props) => {
+const SubscriptionsCheckoutPage = ({ subscriptionPlans }: Props) => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
-  const { priceId } = router.query;
+  const { priceId, monthlyCredits } = router.query;
   const { PLATFORM_NAME } = useConfig() || {};
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
 
-  useEffect(() => {
-    if (user?.subscription && user.subscription.priceId) {
-      router.push('/subscriptions');
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (user?.subscription && user.subscription.priceId) {
+  //     router.push('/subscriptions');
+  //   }
+  // }, []);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -64,7 +66,7 @@ const Checkout = ({ subscriptionPlans }: Props) => {
   }, [priceId]);
 
   const goBack = () => {
-    router.push(`/subscriptions/summary?priceId=${priceId}`);
+    router.push(`/subscriptions/summary?priceId=${priceId}&monthlyCredits=${monthlyCredits}`);
   };
 
   if (process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true') {
@@ -80,9 +82,10 @@ const Checkout = ({ subscriptionPlans }: Props) => {
       </Head>
 
       <div className="w-full max-w-screen-sm mx-auto p-8">
+        {/* <Button onClick={test}>Test</Button> */}
         <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
 
-        <Heading level={1} className="mb-6">
+        <Heading level={1} className="mb-4">
           💰 {__('subscriptions_checkout_title')}
         </Heading>
 
@@ -90,15 +93,23 @@ const Checkout = ({ subscriptionPlans }: Props) => {
 
         <main className="pt-14 pb-24 md:flex-row flex-wrap">
           <div className="mb-10">
-            <HeadingRow>
+            <Heading level={2} className="border-b pb-2 mb-6 text-xl">
               <span className="mr-2">♻️</span>
               {__('subscriptions_title')}
-            </HeadingRow>
+            </Heading>
 
             <Row
               className="mb-4"
-              rowKey={selectedPlan?.title}
-              value={`${priceFormat(selectedPlan?.price, DEFAULT_CURRENCY)}`}
+              rowKey={`${selectedPlan?.title} - ${Number(monthlyCredits)} ${__(
+                'subscriptions_credits_included',
+              )} `}
+              value={`${
+                selectedPlan &&
+                priceFormat(
+                  selectedPlan?.price * Number(monthlyCredits),
+                  DEFAULT_CURRENCY,
+                )
+              }`}
               additionalInfo={`${__(
                 'bookings_checkout_step_total_description',
               )} ${getVatInfo({
@@ -109,15 +120,16 @@ const Checkout = ({ subscriptionPlans }: Props) => {
           </div>
 
           <div className="mb-14">
-            <HeadingRow>
+            <Heading level={2} className="border-b pb-2 mb-6 text-xl">
               <span className="mr-2">💲</span>
               {__('subscriptions_checkout_payment_subtitle')}
-            </HeadingRow>
+            </Heading>
             <div className="mb-10">
               <Elements stripe={stripePromise}>
                 <SubscriptionCheckoutForm
                   userEmail={user?.email}
                   priceId={priceId}
+                  monthlyCredits={Number(monthlyCredits)}
                 />
               </Elements>
             </div>
@@ -128,23 +140,42 @@ const Checkout = ({ subscriptionPlans }: Props) => {
   );
 };
 
-export async function getServerSideProps() {
+SubscriptionsCheckoutPage.getInitialProps = async () => {
   try {
     const {
       data: { results },
     } = await api.get('/config/subscriptions');
 
+    // console.log('results.value.plans=', results.value.plans);
+
     return {
-      props: {
-        subscriptionPlans: results.value.plans,
-      },
+      // subscriptionPlans: results.value.plans,
+      subscriptionPlans: subscriptionPlansTmp,
     };
-  } catch (error) {
-    console.error(error);
+  } catch (err: any) {
     return {
       subscriptionPlans: [],
     };
   }
-}
+};
 
-export default Checkout;
+// export async function getServerSideProps() {
+//   try {
+//     const {
+//       data: { results },
+//     } = await api.get('/config/subscriptions');
+//     console.log('results=', results.value.plans);
+//     return {
+//       props: {
+//         subscriptionPlans: results.value.plans,
+//       },
+//     };
+//   } catch (error) {
+//     console.error(error);
+//     return {
+//       subscriptionPlans: [],
+//     };
+//   }
+// }
+
+export default SubscriptionsCheckoutPage;

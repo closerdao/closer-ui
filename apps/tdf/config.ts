@@ -23,6 +23,7 @@ const config = {
 
   STRIPE_CUSTOMER_PORTAL_URL:
     'https://billing.stripe.com/p/login/test_dR69Cl1Igat5dhK3cc',
+  
 };
 
 export default config;

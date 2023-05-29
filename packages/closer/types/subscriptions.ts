@@ -4,6 +4,13 @@ export interface SubscriptionVariant {
   price: number;
   priceId: string;
 }
+
+export interface Tier {
+  unitPrice: number;
+  minAmount: number;
+  maxAmount: number;
+}
+
 export interface SubscriptionPlan {
   slug: string;
   title: string;
@@ -17,6 +24,7 @@ export interface SubscriptionPlan {
   perks: string[];
   billingPeriod: string;
   variants?: SubscriptionVariant[];
+  tiers?: Tier[];
 }
 
 export interface Subscriptions {

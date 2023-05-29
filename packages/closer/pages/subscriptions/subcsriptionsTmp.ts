@@ -1,0 +1,92 @@
+export const subscriptionPlansTmp = [
+  {
+    slug: 'explorer',
+    title: 'Explorer',
+    emoji: '🕵🏽‍♀️',
+    description: 'DIP YOUR TOE BEFORE BUCKLING UP FOR THE ADVENTURE',
+    priceId: 'free',
+    tier: 1,
+    monthlyCredits: 0,
+    price: 0,
+    perks: [
+      'Book 🎉 Events',
+      'Apply To 💪🏽 Volunteer',
+      'Quests (Coming Soon)',
+      'Monthly Newsletters',
+    ],
+    billingPeriod: 'month',
+  },
+  {
+    slug: 'wanderer',
+    title: 'Wanderer',
+    emoji: '👩🏽‍🌾',
+    description: 'Stay in the loop and see if TDF is for you',
+    priceId: 'price_1MqtoHGtt5D0VKR2Has7KE5X',
+    tier: 2,
+    available: true,
+    monthlyCredits: 0,
+    price: 10,
+    perks: [
+      'Book 🏡 Stays',
+      'Event Discounts',
+      'TDF Community Calls',
+      'Discord Access',
+      'Welcome Gift',
+    ],
+    billingPeriod: 'month',
+  },
+  {
+    slug: 'pioneer',
+    title: 'Pioneer',
+    available: true,
+    emoji: '👨🏽‍🚀',
+    description: 'BE THE LOOP. CONTINUOUSLY SUPPORT AND COME TO TDF ',
+    priceId: 'price_1NC0FUGtt5D0VKR2bSAlztLN',
+    tier: 3,
+    monthlyCredits: 0,
+    price: 60,   
+    perks: ['Harvest 🥕 Carrots Monthly'],
+    billingPeriod: 'month',
+    tiers: [
+      {
+        unitPrice: 30,
+        minAmount: 1,
+        maxAmount: 10,
+      },
+      {
+        unitPrice: 25,
+        minAmount: 11,
+        maxAmount: 31,
+      },
+    ],
+    variants: [
+      {
+        title: 'Balcony gardener',
+        monthlyCredits: 2,
+      },
+      {
+        title: 'Home gardener',
+        monthlyCredits: 4,
+      },
+      {
+        title: 'Market gardener',
+        monthlyCredits: 20,
+      },
+    ],
+  },
+  {
+    slug: 'sheep',
+    title: 'Sheep',
+    available: false,
+    emoji: '👨🏽‍🚀',
+    description: 'Be the dream. make tdf one of your homes. get your $tdf and make sure to get your membersheep ',
+    priceId: '',
+    tier: 4,
+    monthlyCredits: 0,
+    price: 120,
+    perks: [],
+    billingPeriod: 'month',
+  },
+];
+
+
