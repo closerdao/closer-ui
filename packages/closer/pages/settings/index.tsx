@@ -33,6 +33,8 @@ const SettingsPage: FC = () => {
   const [updatePhone, toggleUpdatePhone] = useState<boolean | null>(null);
   const [updateEmail, toggleUpdateEmail] = useState<boolean | null>(null);
   const [phoneSaved, setPhoneSaved] = useState<boolean | null>(null);
+  const [emailSaving, setEmailSaving] = useState<boolean | null>(null);
+  const [phoneSaving, setPhoneSaving] = useState<boolean | null>(null);
   const [emailSaved, setEmailSaved] = useState<boolean | null>(null);
   const [hasSaved, setHasSaved] = useState(false);
   const { platform } = usePlatform() as any;
@@ -76,6 +78,7 @@ const SettingsPage: FC = () => {
       }
     };
   const savePhone = async (phone: string) => {
+    setPhoneSaving(true);
     try {
       setPhoneSaved(false);
       await api.post('/auth/phone/update', { phone });
@@ -84,9 +87,12 @@ const SettingsPage: FC = () => {
     } catch (err) {
       const errorMessage = parseMessageFromError(err);
       setError(errorMessage);
+    } finally {
+      setPhoneSaving(false);
     }
   }
   const saveEmail = async (email: string) => {
+    setEmailSaving(true);
     try {
       setEmailSaved(false);
       await api.post('/auth/email/update', { email });
@@ -95,6 +101,8 @@ const SettingsPage: FC = () => {
     } catch (err) {
       const errorMessage = parseMessageFromError(err);
       setError(errorMessage);
+    } finally {
+      setEmailSaving(false);
     }
   }
 
@@ -143,9 +151,10 @@ const SettingsPage: FC = () => {
             <>
               <Button
                 onClick={() => saveEmail(user.email)}
+                isEnabled={ !emailSaving }
                 type="inline"
               >
-                Verify Email
+                {emailSaving ? 'Verifying...' : 'Verify Email'}
               </Button> 
               <Button
                 onClick={() => { setUser({ ...user, email: initialUser?.email || user.email }); toggleUpdateEmail(false) }}
@@ -179,9 +188,10 @@ const SettingsPage: FC = () => {
             <>
               <Button
                 onClick={() => savePhone(user.phone)}
+                isEnabled={!phoneSaving}
                 type="inline"
               >
-                Verify Phone
+                {phoneSaving ? 'Verifying...' : 'Verify Phone' }
               </Button>
               <Button
                 onClick={() => { setUser({ ...user, phone: initialUser?.phone || user.phone }); toggleUpdatePhone(false) }}
