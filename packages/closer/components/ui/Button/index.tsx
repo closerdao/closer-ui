@@ -1,14 +1,73 @@
 import React from 'react';
 
+import { VariantProps, cva } from 'class-variance-authority';
+
 import Spinner from '../Spinner';
 
-interface ButtonProps {
+// Blueprint for design system
+// Button component has following props directly related to styling:
+// - color
+// - size (default=medium)
+// - isEnabled (default=true)
+// - isLoading 
+// - isFullWidth (default=true)
+// - isInline
+// type is legacy prop and should be replaced by new props. Before we remove type, we should add empty={true} to new buttons to override default styles
+
+const buttonStyles = cva(
+  // 'px-4 border-2 border-accent flex justify-center text-lg rounded-full uppercase tracking-wide ',
+  'px-4 border-2 flex justify-center items-center text-lg rounded-full uppercase tracking-wide',
+  {
+    variants: {
+      color: {
+        accent: 'bg-accent border-accent text-white hover:enabled:bg-accent-dark hover:enabled:border-accent-dark', // default pink button
+        'dominant-accent':
+          'bg-dominant border-accent text-accent hover:enabled:bg-accent-light', //white with pink border
+        // 'dominant-complimentary': 'bg-dominant text-complimentary border-complimentary hover:bg-neutral', //white with black text
+        // 'complimentary': 'bg-complimentary text-white hover:bg-complimentary-light', // black with white text
+      },
+      size: {
+        small: 'text-sm min-h-[32px]',
+        medium: 'text-md min-h-[44px]',
+        large: 'text-xl min-h-[48px]',
+      },
+      isFullWidth: {
+        true: 'w-full',
+        false: 'w-auto',
+      },
+      type: {
+        primary:
+          'w-full py-2 bg-accent border-accent text-white',
+        secondary:
+          'w-full enabled:bg-white border-accent text-accent py-2 ',
+        instantSave:
+          'w-auto absolute right-2 top-[45px] text-md pl-4 pr-5 py-0.5 bg-accent text-white',
+        inline: 'border-accent text-md pl-4 pr-5 py-1.5 bg-accent text-white',
+        empty: '', // remove empty prop after all buttons are refactored
+        default: 'py-2 h-12 ',
+      }, //deprecate type, because it does not relate directly to design system
+
+      isEnabled: {
+        true: '',
+        false: 'bg-neutral border-disabled !text-disabled',
+      },
+    },
+
+    defaultVariants: {
+      type: 'primary',
+      isEnabled: true,
+      isFullWidth: true,
+      // color: 'accent',
+      size: 'medium',
+    },
+  },
+);
+
+interface ButtonProps extends VariantProps<typeof buttonStyles> {
   children: React.ReactNode;
   onClick?: (() => void) | (() => Promise<void>);
   infoText?: string | React.ReactNode;
   className?: string;
-  type?: 'primary' | 'secondary' | 'instantSave' | 'inline';
-  isEnabled?: boolean;
   isLoading?: boolean;
 }
 
@@ -17,9 +76,12 @@ const Button = ({
   onClick,
   infoText,
   className,
-  type = 'primary',
+  type,
   isEnabled = true,
   isLoading,
+  color,
+  isFullWidth,
+  size
 }: ButtonProps) => {
   return (
     <div>
@@ -27,32 +89,11 @@ const Button = ({
         onClick={onClick}
         disabled={!isEnabled || isLoading}
         className={` 
-        border-2 bg-accent border-accent border-light flex justify-center text-lg rounded-full uppercase tracking-wide py-1 px-3  
-        ${type === 'primary' ? 'w-full' : ''}
-        ${
-          type === 'secondary'
-            ? 'w-full bg-white text-accent border-accent '
-            : ''
-        }
-        ${type === 'inline' ? 'w-auto text-md pl-4 pr-5 py-1.5' : ''}
-        ${
-          type === 'instantSave'
-            ? 'w-auto absolute right-2 top-[45px] text-md pl-4 pr-5 py-0.5'
-            : ''
-        }
-        
-        ${
-          !isEnabled || isLoading
-            ? 'bg-neutral text-disabled-dark border-2 text-light border-disabled-dark'
-            : 'text-white bg-accent'
-        }
+         ${buttonStyles({ type, color, isFullWidth, size, isEnabled })}
         ${className || ''}
         `}
       >
-        {isLoading ?
-          <Spinner />:
-          children
-        }
+        {isLoading ? <Spinner /> : children}
       </button>
       {infoText && <div className="text-sm text-center pt-2">{infoText}</div>}
     </div>
