@@ -47,6 +47,17 @@ const GuestMenu = () => (
         </button>
 
       </Link>
+
+      <p className="text-center mt-4">
+        🐛
+        <Link
+          className="text-accent underline"
+          href="https://tally.so/r/nPD171"
+          target="_blank"
+        >
+          Report a Bug
+        </Link>
+      </p>
     </div>
   </nav>
 );

@@ -13,11 +13,10 @@ interface Props {
 }
 
 const Subscriptions = ({ subscriptionPlans }: Props) => {
-  console.log('subscriptionPlans=', subscriptionPlans);
 
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
-  const { PLATFORM_NAME, STRIPE_CUSTOMER_PORTAL_URL } = useConfig() || {};
+  const { PLATFORM_NAME } = useConfig() || {};
 
   const plans: SubscriptionPlan[] = subscriptionPlans;
   const paidSubscriptionPlans = plans.filter((plan) => plan.price !== 0);
@@ -43,7 +42,7 @@ const Subscriptions = ({ subscriptionPlans }: Props) => {
     } else if (userActivePlan?.priceId !== 'free') {
       // User has a subscription - must be managed in Stripe.
       router.push(
-        `${STRIPE_CUSTOMER_PORTAL_URL}?prefilled_email=${encodeURIComponent(
+        `${process.env.NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL}?prefilled_email=${encodeURIComponent(
           (user?.subscription?.stripeCustomerEmail as string) ||
             (user?.email as string),
         )}`,

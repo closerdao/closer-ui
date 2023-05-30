@@ -21,7 +21,8 @@
         "NEXT_PUBLIC_FEATURE_WEB3_WALLET",
         "NEXT_PUBLIC_FEATURE_CARROTS",
         "STRIPE_SECRET_KEY",
-        "NEXT_PUBLIC_VAT_RATE"
+        "NEXT_PUBLIC_VAT_RATE",
+        "NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL"
       ]
     },
     "lint": {

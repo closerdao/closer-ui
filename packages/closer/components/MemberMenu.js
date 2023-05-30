@@ -17,7 +17,7 @@ const MemberMenu = () => {
           user.roles.some((role) => link.roles.includes(role)))) &&
       (!link.subscriptions ||
         (isAuthenticated &&
-          link.subscriptions.includes(user.subscription?.plan)))
+          link.subscriptions.includes(user.subscription?.plan))),
   );
 
   const isWalletEnabled =
@@ -39,6 +39,17 @@ const MemberMenu = () => {
       <button className="btn w-full uppercase" onClick={logout}>
         {__('navigation_sign_out')}
       </button>
+
+      <p className="text-center mt-4">
+        🐛
+        <Link
+          className="text-accent underline"
+          href="https://tally.so/r/nPD171"
+          target="_blank"
+        >
+          Report a Bug
+        </Link>
+      </p>
     </nav>
   );
 };
