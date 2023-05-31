@@ -28,6 +28,7 @@ import { BookingSettings } from '../../../types/api';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, priceFormat } from '../../../utils/helpers';
+import { NextApiRequest } from 'next';
 
 interface Props extends BaseBookingParams {
   listing: Listing;
@@ -234,11 +235,21 @@ const Checkout = ({
   );
 };
 
-Checkout.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
+Checkout.getInitialProps = async ({
+  req,
+  query,
+}: {
+  req: NextApiRequest;
+  query: ParsedUrlQuery;
+}) => {
   try {
     const {
       data: { results: booking },
-    } = await api.get(`/booking/${query.slug}`);
+    } = await api.get(`/booking/${query.slug}`, {
+      headers: req?.cookies?.access_token && {
+        Authorization: `Bearer ${req?.cookies?.access_token}`,
+      },
+    });
 
     const [
       {
@@ -251,9 +262,21 @@ Checkout.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
       },
     ] = await Promise.all([
       api.get('/config/booking'),
-      booking.eventId && api.get(`/event/${booking.eventId}`),
-      booking.listing && api.get(`/listing/${booking.listing}`),
-      api.get('/carrots/balance'),
+      booking.eventId && api.get(`/event/${booking.eventId}`, {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        },
+      }),
+      booking.listing && api.get(`/listing/${booking.listing}`, {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        },
+      }),
+      api.get('/carrots/balance', {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        },
+      }),
     ]);
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;

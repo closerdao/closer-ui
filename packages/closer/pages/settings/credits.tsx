@@ -76,6 +76,8 @@ const CreditsPage: FC = () => {
         <div>
           <p className="mb-4">{__('carrots_how_to_use_1')}</p>
           <p className="mb-4">{__('carrots_how_to_use_2')}</p>
+          <p className="mb-4">{__('carrots_how_to_use_3')}</p>
+          <p className="mb-4">{__('carrots_how_to_use_4')}</p>
         </div>
 
         <RedeemCredits isDemo={true} />
