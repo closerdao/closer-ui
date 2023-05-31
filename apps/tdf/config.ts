@@ -21,9 +21,6 @@ const config = {
   VISITORS_GUIDE:
     'https://docs.google.com/document/d/198vWYEQCC1lELQa8f76Jcw3l3UDiPcBKt04PGFKnUvg/edit',
 
-  STRIPE_CUSTOMER_PORTAL_URL:
-    'https://billing.stripe.com/p/login/test_dR69Cl1Igat5dhK3cc',
-  
 };
 
 export default config;
