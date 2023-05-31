@@ -11,6 +11,7 @@ import Heading from '../../components/ui/Heading';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { __ } from '../../utils/helpers';
+import { Page404 } from '../..';
 
 const CreditsPage: FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -23,6 +24,9 @@ const CreditsPage: FC = () => {
     }
   }, [isAuthenticated, user]);
   
+  if (process.env.NEXT_PUBLIC_FEATURE_CARROTS !== 'true') {
+    return <Page404 error="" />;
+  }
 
   return (
     <>
