@@ -4,7 +4,7 @@ import objectPath from 'object-path';
 
 import { __ } from '../utils/helpers';
 import Autocomplete from './Autocomplete';
-import DatePickerAdmin from './DatePickerAdmin/DatePickerAdmin';
+import DatePickerLegacy from './DatePickerLegacy/DatePickerLegacy';
 import DiscountsEditor from './DiscountsEditor';
 import FieldsEditor from './FieldsEditor';
 import PhotosEditor from './PhotosEditor';
@@ -53,7 +53,7 @@ const FormField = ({
             />
           )}
           {type === 'datetime' && (
-            <DatePickerAdmin
+            <DatePickerLegacy
               value={objectPath.get(data, name)}
               onChange={(value) => update(name, value)}
             />

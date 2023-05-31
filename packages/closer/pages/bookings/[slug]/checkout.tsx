@@ -50,6 +50,7 @@ const Checkout = ({
     utilityFiat,
     rentalToken,
     rentalFiat,
+    eventFiat,
     useTokens,
     start,
     dailyRentalToken,
@@ -139,7 +140,7 @@ const Checkout = ({
                 <div className="mb-16 mt-4">
                   <Row
                     rowKey={ticketOption?.name}
-                    value={`${priceFormat(eventPrice.val, eventPrice.cur)}`}
+                    value={`${priceFormat(eventFiat.val, eventFiat.cur)}`}
                   />
                 </div>
               </div>
