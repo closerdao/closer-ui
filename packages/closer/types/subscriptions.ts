@@ -12,9 +12,9 @@ export interface Tier {
 }
 
 export interface SubscriptionPlan {
-  slug: string;
+  slug?: string;
   title: string;
-  available: boolean;
+  available?: boolean;
   emoji: string;
   description: string;
   priceId: string;
@@ -39,4 +39,6 @@ export interface SelectedPlan {
   title: string;
   monthlyCredits: number;
   price: number;
+  variants?: SubscriptionVariant[];
+  tiers?: Tier[];
 }

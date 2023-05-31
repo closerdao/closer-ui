@@ -11,20 +11,30 @@ import {
   Row,
 } from '../../components/ui/';
 
+import { NextPage } from 'next';
+
 import Page404 from '../404';
 import { DEFAULT_CURRENCY, SUBSCRIPTION_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
-import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
+import {
+  SelectedPlan,
+  SubscriptionPlan,
+  SubscriptionVariant,
+} from '../../types/subscriptions';
 import api from '../../utils/api';
-import { __, getVatInfo, priceFormat } from '../../utils/helpers';
-import { subscriptionPlansTmp } from './subcsriptionsTmp';
+import {
+  __,
+  getSubscriptionVariantPrice,
+  getVatInfo,
+  priceFormat,
+} from '../../utils/helpers';
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
 }
 
-const SubscriptionsSummaryPage = ({ subscriptionPlans }: Props) => {
+const SubscriptionsSummaryPage: NextPage<Props> = ({ subscriptionPlans }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId, monthlyCredits } = router.query;
@@ -33,32 +43,34 @@ const SubscriptionsSummaryPage = ({ subscriptionPlans }: Props) => {
 
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
 
-  // useEffect(() => {
-  //   if (user?.subscription && user.subscription.priceId) {
-  //     router.push('/subscriptions');
-  //   }
-  // }, []);
+  useEffect(() => {
+    if (user?.subscription && user.subscription.priceId) {
+      router.push('/subscriptions');
+    }
+  }, []);
 
   useEffect(() => {
     if (priceId && subscriptionPlans) {
-      console.log('priceId=', priceId);
-      console.log('subscriptionPlans=', subscriptionPlans);
       const selectedSubscription = subscriptionPlans.find(
         (plan: SubscriptionPlan) => plan.priceId === priceId,
       );
 
-      console.log('selectedSubscription=', selectedSubscription);
-
       if (selectedSubscription?.variants) {
         const selectedVariant = selectedSubscription.variants.find(
-          (variant: any) => variant.monthlyCredits === Number(monthlyCredits),
+          (variant: SubscriptionVariant) =>
+            variant.monthlyCredits === Number(monthlyCredits),
         );
         setSelectedPlan({
           title: `${selectedSubscription?.title as string} - ${
             selectedVariant?.title as string
           }`,
           monthlyCredits: Number(monthlyCredits),
-          price: selectedSubscription?.price * Number(monthlyCredits),
+          price: getSubscriptionVariantPrice(
+            Number(monthlyCredits),
+            selectedSubscription,
+          ),
+          variants: selectedSubscription?.variants,
+          tiers: selectedSubscription?.tiers,
         });
       } else {
         setSelectedPlan({
@@ -68,7 +80,7 @@ const SubscriptionsSummaryPage = ({ subscriptionPlans }: Props) => {
         });
       }
     }
-  }, [priceId, subscriptionPlans]);
+  }, [priceId, subscriptionPlans, monthlyCredits]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -128,10 +140,12 @@ const SubscriptionsSummaryPage = ({ subscriptionPlans }: Props) => {
                 rowKey={__('subscriptions_summary_tier')}
                 value={selectedPlan?.title}
               />
-              <Row
-                rowKey={__('subscriptions_summary_stays_per_month')}
-                value={selectedPlan?.monthlyCredits}
-              />
+              {selectedPlan?.tiers && (
+                <Row
+                  rowKey={__('subscriptions_summary_stays_per_month')}
+                  value={selectedPlan?.monthlyCredits}
+                />
+              )}
             </div>
             <Button className="mt-3" type="secondary" onClick={handleEditPlan}>
               {__('subscriptions_summary_edit_button')}
@@ -170,13 +184,10 @@ SubscriptionsSummaryPage.getInitialProps = async () => {
       data: { results },
     } = await api.get('/config/subscriptions');
 
-    // console.log('results.value.plans=', results.value.plans);
-
     return {
-      // subscriptionPlans: results.value.plans,
-      subscriptionPlans: subscriptionPlansTmp,
+      subscriptionPlans: results.value.plans,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     return {
       subscriptionPlans: [],
     };

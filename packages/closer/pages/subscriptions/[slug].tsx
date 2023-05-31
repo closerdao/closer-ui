@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { Button, Card, Heading } from '../../components/ui';
 
 import { NextPage } from 'next';
+import { ParsedUrlQuery } from 'querystring';
 
 import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
@@ -11,41 +12,31 @@ import { useConfig } from '../../hooks/useConfig';
 import {
   SubscriptionPlan,
   SubscriptionVariant,
-  Tier,
 } from '../../types/subscriptions';
 import api from '../../utils/api';
-import { __, getCurrencySymbol } from '../../utils/helpers';
-
-import { subscriptionPlansTmp } from './subcsriptionsTmp';
-
+import {
+  __,
+  getCurrencySymbol,
+  getSubscriptionVariantPrice,
+} from '../../utils/helpers';
 
 interface Props {
-  subscriptionPlan: SubscriptionPlan;
-  slug: string;
+  subscriptionPlans: SubscriptionPlan[];
+  slug?: string | string[] | undefined;
 }
 
-const SubscriptionPlanPage: NextPage<any> = ({ subscriptionPlan, slug }) => {
-  console.log('subscriptionPlan=', subscriptionPlan);
+const SubscriptionPlanPage: NextPage<Props> = ({ subscriptionPlans, slug }) => {
+  const router = useRouter();
+
+  const subscriptionPlan = subscriptionPlans.find((plan: SubscriptionPlan) => {
+    return plan.slug === slug;
+  });
 
   const { isAuthenticated, isLoading, user } = useAuth();
-  const router = useRouter();
-  const { PLATFORM_NAME, STRIPE_CUSTOMER_PORTAL_URL } = useConfig() || {};
 
-  // const plans: SubscriptionPlan[] = subscriptionPlans;
-  // const paidSubscriptionPlans = plans.filter((plan) => plan.price !== 0);
-
-  // const [userActivePlan, setUserActivePlan] = useState<SubscriptionPlan>();
-
-  // useEffect(() => {
-  //   const selectedSubscription = subscriptionPlans.find(
-  //     (plan: SubscriptionPlan) =>
-  //       plan.priceId === (user?.subscription?.priceId || 'free'),
-  //   );
-  //   setUserActivePlan(selectedSubscription);
-  // }, [user]);
+  const { PLATFORM_NAME } = useConfig() || {};
 
   const handleNext = (priceId: string, monthlyCredits: number) => {
-    // console.log('hasVariants=', hasVariants);
     if (!isAuthenticated) {
       // User has no account - must start with creating one.
       router.push(
@@ -53,20 +44,13 @@ const SubscriptionPlanPage: NextPage<any> = ({ subscriptionPlan, slug }) => {
           `/subscriptions/summary?priceId=${priceId}`,
         )}`,
       );
-    } 
-    else {
+    } else {
       // User does not yet have a subscription, we can show the checkout
-      router.push(`/subscriptions/summary?priceId=${priceId}&monthlyCredits=${monthlyCredits}`);
+      router.push(
+        `/subscriptions/summary?priceId=${priceId}&monthlyCredits=${monthlyCredits}`,
+      );
     }
   };
-
-  const getSubscriptionVariantPrice = (credits: number) => {
-    const priceTier = subscriptionPlan.tiers.find((tier: Tier) => { 
-     return tier.minAmount <= credits && tier.maxAmount >= credits
-    })
-    console.log('pricePerCredit=', priceTier.unitPrice);
-    return priceTier.unitPrice * credits
-  }
 
   if (isLoading) {
     return null;
@@ -97,89 +81,77 @@ const SubscriptionPlanPage: NextPage<any> = ({ subscriptionPlan, slug }) => {
           ></div>
         </div>
 
-        {subscriptionPlan.variants.map((variant: SubscriptionVariant) => {
-          return (
-            <div key={variant.title}>
-              <Card>
-                <div className="flex flex-col gap-4 sm:gap-1 sm:flex-row items-center justify-between">
-                  <Heading
-                    level={3}
-                    className="uppercase w-full sm:w-2/5 text-center sm:text-left"
-                  >
-                    {variant.title}
-                  </Heading>
-                  <div className="text-center">
-                    <p className="text-accent text-2xl font-bold">
-                      {variant.monthlyCredits} 🥕
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <div className=" font-bold text-xl">
-                      {getCurrencySymbol(DEFAULT_CURRENCY)}
-                      {/* TODO: use tiered pricing or volume pricing: */}
-                      {getSubscriptionVariantPrice(variant.monthlyCredits)}
-                      {/* {variant.monthlyCredits * subscriptionPlan.price} */}
+        {subscriptionPlan?.variants &&
+          subscriptionPlan.variants.map((variant: SubscriptionVariant) => {
+            return (
+              <div key={variant.title}>
+                <Card>
+                  <div className="flex flex-col gap-4 sm:gap-1 sm:flex-row items-center justify-between">
+                    <Heading
+                      level={3}
+                      className="uppercase w-full sm:w-2/5 text-center sm:text-left"
+                    >
+                      {variant.title}
+                    </Heading>
+                    <div className="text-center">
+                      <p className="text-accent text-2xl font-bold">
+                        {variant.monthlyCredits} 🥕
+                      </p>
                     </div>
-                    <p className="text-sm font-normal">
-                      {__('subscriptions_summary_per_month')}
-                    </p>
+                    <div className="text-center">
+                      <div className=" font-bold text-xl">
+                        {getCurrencySymbol(DEFAULT_CURRENCY)}
+                        {getSubscriptionVariantPrice(
+                          variant.monthlyCredits,
+                          subscriptionPlan,
+                        )}
+                      </div>
+                      <p className="text-sm font-normal">
+                        {__('subscriptions_summary_per_month')}
+                      </p>
+                    </div>
+                    <Button
+                      isEnabled={true}
+                      onClick={() =>
+                        handleNext(
+                          subscriptionPlan.priceId,
+                          variant.monthlyCredits,
+                        )
+                      }
+                      size="medium"
+                      className=" border"
+                    >
+                      {__('subscriptions_subscribe_button')}
+                    </Button>
                   </div>
-                  <Button
-                    isEnabled={true}
-                    onClick={() => handleNext(subscriptionPlan.priceId, variant.monthlyCredits)}
-                    size="medium"
-                    className=" border"
-                  >
-                    {__('subscriptions_subscribe_button')}
-                  </Button>
-                </div>
-              </Card>
-            </div>
-          );
-        })}
+                </Card>
+              </div>
+            );
+          })}
       </main>
     </div>
   );
 };
 
-SubscriptionPlanPage.getInitialProps = async ({ query }) => {
+SubscriptionPlanPage.getInitialProps = async ({
+  query,
+}: {
+  query: ParsedUrlQuery;
+}) => {
   try {
     const {
       data: { results },
     } = await api.get('/config/subscriptions');
 
-    console.log('query.slug=', query.slug);
-    const subscriptionPlan = subscriptionPlansTmp.find((plan) => {
-      return plan.slug === query.slug;
-    });
-
-    // console.log('subscriptionPlan=', subscriptionPlan);
-    // console.log('query.slug=', query.slug);
-
     return {
-      // subscriptionPlans: results.value.plans,
-      subscriptionPlan,
+      subscriptionPlans: results.value.plans,
       slug: query.slug,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     return {
-      subscriptionPlan: [],
+      subscriptionPlans: [],
     };
   }
-
-  // try {
-  //   const res = await api.get(`/user/${query.slug}`);
-
-  //   return {
-  //     member: res.data.results,
-  //   };
-  // } catch (err) {
-  //   console.log('Error', err.message);
-
-  //   return {
-  //     loadError: err.message,
-  //   };
-  // }
 };
 
 export default SubscriptionPlanPage;

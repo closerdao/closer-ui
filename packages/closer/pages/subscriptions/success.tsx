@@ -3,26 +3,25 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
-import {
-  BackButton,
-  Button,
-  Heading,
-  Page404,
-  ProgressBar,
-  api,
-  useAuth,
-  useConfig,
-} from 'closer';
-import { SUBSCRIPTION_STEPS } from 'closer/constants';
-import { SelectedPlan, SubscriptionPlan } from 'closer/types/subscriptions';
-import { __ } from 'closer/utils/helpers';
+import { BackButton, Button, Heading, ProgressBar } from '../../components/ui/';
+
+import { NextPage } from 'next';
+
+import Page404 from '../404';
+import { SUBSCRIPTION_STEPS } from '../../constants';
+import { useAuth } from '../../contexts/auth';
+import { useConfig } from '../../hooks/useConfig';
+import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
+import api from '../../utils/api';
+import { __ } from '../../utils/helpers';
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
 }
 
-const Success = ({ subscriptionPlans }: Props) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
+const SubscriptionSuccessPage: NextPage<Props> = ({ subscriptionPlans }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+
   const router = useRouter();
   const { priceId, subscriptionId } = router.query;
   const { PLATFORM_NAME } = useConfig() || {};
@@ -110,6 +109,20 @@ const Success = ({ subscriptionPlans }: Props) => {
   );
 };
 
+SubscriptionSuccessPage.getInitialProps = async () => {
+  try {
+    const {
+      data: { results },
+    } = await api.get('/config/subscriptions');
 
+    return {
+      subscriptionPlans: results.value.plans,
+    };
+  } catch (err: unknown) {
+    return {
+      subscriptionPlans: [],
+    };
+  }
+};
 
-export default Success;
+export default SubscriptionSuccessPage;

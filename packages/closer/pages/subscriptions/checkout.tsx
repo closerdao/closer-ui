@@ -9,20 +9,24 @@ import { loadStripe } from '@stripe/stripe-js';
 import SubscriptionCheckoutForm from '../../components/SubscriptionCheckoutForm';
 import { BackButton, Heading, ProgressBar, Row } from '../../components/ui/';
 
+import { NextPage } from 'next';
+
 import Page404 from '../404';
 import { DEFAULT_CURRENCY, SUBSCRIPTION_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
-import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
+import {
+  SelectedPlan,
+  SubscriptionPlan,
+  SubscriptionVariant,
+} from '../../types/subscriptions';
 import api from '../../utils/api';
-import { __, getVatInfo, priceFormat } from '../../utils/helpers';
-import { subscriptionPlansTmp } from './subcsriptionsTmp';
-
-const test = async () => {
-  const response = await api.post('/subscription', {});
-
-  console.log('response=', response.data.results.products.data);
-};
+import {
+  __,
+  getSubscriptionVariantPrice,
+  getVatInfo,
+  priceFormat,
+} from '../../utils/helpers';
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUB_KEY as string,
@@ -32,18 +36,20 @@ interface Props {
   subscriptionPlans: SubscriptionPlan[];
 }
 
-const SubscriptionsCheckoutPage = ({ subscriptionPlans }: Props) => {
+const SubscriptionsCheckoutPage: NextPage<Props> = ({
+  subscriptionPlans,
+}: Props) => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId, monthlyCredits } = router.query;
   const { PLATFORM_NAME } = useConfig() || {};
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
 
-  // useEffect(() => {
-  //   if (user?.subscription && user.subscription.priceId) {
-  //     router.push('/subscriptions');
-  //   }
-  // }, []);
+  useEffect(() => {
+    if (user?.subscription && user.subscription.priceId) {
+      router.push('/subscriptions');
+    }
+  }, []);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -57,16 +63,37 @@ const SubscriptionsCheckoutPage = ({ subscriptionPlans }: Props) => {
         (plan: SubscriptionPlan) => plan.priceId === priceId,
       );
 
-      setSelectedPlan({
-        title: selectedSubscription?.title as string,
-        monthlyCredits: selectedSubscription?.monthlyCredits as number,
-        price: selectedSubscription?.price as number,
-      });
+      if (selectedSubscription?.variants) {
+        const selectedVariant = selectedSubscription.variants.find(
+          (variant: SubscriptionVariant) =>
+            variant.monthlyCredits === Number(monthlyCredits),
+        );
+        setSelectedPlan({
+          title: `${selectedSubscription?.title as string} - ${
+            selectedVariant?.title as string
+          }`,
+          monthlyCredits: Number(monthlyCredits),
+          price: getSubscriptionVariantPrice(
+            Number(monthlyCredits),
+            selectedSubscription,
+          ) as number,
+          variants: selectedSubscription?.variants,
+          tiers: selectedSubscription?.tiers,
+        });
+      } else {
+        setSelectedPlan({
+          title: selectedSubscription?.title as string,
+          monthlyCredits: selectedSubscription?.monthlyCredits as number,
+          price: selectedSubscription?.price as number,
+        });
+      }
     }
   }, [priceId]);
 
   const goBack = () => {
-    router.push(`/subscriptions/summary?priceId=${priceId}&monthlyCredits=${monthlyCredits}`);
+    router.push(
+      `/subscriptions/summary?priceId=${priceId}&monthlyCredits=${monthlyCredits}`,
+    );
   };
 
   if (process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true') {
@@ -82,7 +109,6 @@ const SubscriptionsCheckoutPage = ({ subscriptionPlans }: Props) => {
       </Head>
 
       <div className="w-full max-w-screen-sm mx-auto p-8">
-        {/* <Button onClick={test}>Test</Button> */}
         <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-4">
@@ -100,13 +126,16 @@ const SubscriptionsCheckoutPage = ({ subscriptionPlans }: Props) => {
 
             <Row
               className="mb-4"
-              rowKey={`${selectedPlan?.title} - ${Number(monthlyCredits)} ${__(
-                'subscriptions_credits_included',
-              )} `}
+              rowKey={` ${selectedPlan?.title} ${
+                Number(monthlyCredits)
+                  ? `- ${Number(selectedPlan?.monthlyCredits)}
+                    ${__('subscriptions_credits_included')}`
+                  : ''
+              }  `}
               value={`${
                 selectedPlan &&
                 priceFormat(
-                  selectedPlan?.price * Number(monthlyCredits),
+                  getSubscriptionVariantPrice(monthlyCredits, selectedPlan),
                   DEFAULT_CURRENCY,
                 )
               }`}
@@ -146,36 +175,14 @@ SubscriptionsCheckoutPage.getInitialProps = async () => {
       data: { results },
     } = await api.get('/config/subscriptions');
 
-    // console.log('results.value.plans=', results.value.plans);
-
     return {
-      // subscriptionPlans: results.value.plans,
-      subscriptionPlans: subscriptionPlansTmp,
+      subscriptionPlans: results.value.plans,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     return {
       subscriptionPlans: [],
     };
   }
 };
-
-// export async function getServerSideProps() {
-//   try {
-//     const {
-//       data: { results },
-//     } = await api.get('/config/subscriptions');
-//     console.log('results=', results.value.plans);
-//     return {
-//       props: {
-//         subscriptionPlans: results.value.plans,
-//       },
-//     };
-//   } catch (error) {
-//     console.error(error);
-//     return {
-//       subscriptionPlans: [],
-//     };
-//   }
-// }
 
 export default SubscriptionsCheckoutPage;

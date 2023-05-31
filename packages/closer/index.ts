@@ -94,6 +94,7 @@ export { default as SubscriptionsPage } from './pages/subscriptions/index';
 export { default as SubscriptionPlanPage } from './pages/subscriptions/[slug]';
 export { default as SubscriptionsSummaryPage } from './pages/subscriptions/summary';
 export { default as SubscriptionsCheckoutPage } from './pages/subscriptions/checkout';
+export { default as SubscriptionSuccessPage } from './pages/subscriptions/success';
 
 // Utils
 export { default as api } from './utils/api';

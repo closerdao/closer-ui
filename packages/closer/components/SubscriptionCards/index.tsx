@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 import dayjs from 'dayjs';
 
 import { SubscriptionPlan } from '../../types/subscriptions';
@@ -5,7 +7,6 @@ import { __, getCurrencySymbol } from '../../utils/helpers';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Heading from '../ui/Heading';
-import Image from 'next/image';
 
 interface SubscriptionCardsProps {
   clickHandler: (priceId: string, hasVariants: boolean, slug: string) => void;
@@ -63,13 +64,18 @@ const SubscriptionCards = ({
               }`}
             >
               <div className="flex items-center gap-4 flex-col md:flex-row">
-                <Image alt={plan.slug} src={`/images/subscriptions/${plan.slug}.png`} width={200} height={320} />
+                <Image
+                  alt={plan.slug || ''}
+                  src={`/images/subscriptions/${plan.slug}.png`}
+                  width={200}
+                  height={320}
+                />
 
                 <div className="w-[90%] md:w-[60%]">
                   <Heading level={2} className="border-b-0 mb-6">
                     {plan.title}
                   </Heading>
-                  
+
                   <Heading level={4} className="mb-4 text-sm uppercase">
                     {plan.description}
                   </Heading>
@@ -101,7 +107,9 @@ const SubscriptionCards = ({
                             {plan.variants.map((variant) => {
                               return (
                                 <div key={variant.title}>
-                                  <div className='text-accent'>🥕 {variant.monthlyCredits}</div>
+                                  <div className="text-accent">
+                                    🥕 {variant.monthlyCredits}
+                                  </div>
                                   <div>
                                     {getCurrencySymbol(currency)}
                                     {variant.monthlyCredits * plan.price}
@@ -109,7 +117,6 @@ const SubscriptionCards = ({
                                   <p className="text-sm font-normal">
                                     {__('subscriptions_summary_per_month')}
                                   </p>
-                                 
                                 </div>
                               );
                             })}
@@ -130,15 +137,17 @@ const SubscriptionCards = ({
                       </div>{' '}
                       <Button
                         isEnabled={true}
-                        onClick={() => clickHandler(plan.priceId, !!plan.variants, plan.slug)}
+                        onClick={() =>
+                          clickHandler(plan.priceId, !!plan.variants, plan.slug as string)
+                        }
                         infoText={getSubscriptionInfoText(plan)}
                         className={` ${plan.price === 0 ? 'mb-7' : ''} || ''`}
                         size="small"
                       >
                         {plan.price === 0
                           ? __('subscriptions_create_account_button')
-                          : userActivePlan?.title === plan.title
-                          ? __('subscriptions_active_button')
+                          : userActivePlan?.price !== 0
+                          ? __('subscriptions_manage_button')
                           : __('subscriptions_subscribe_button')}
                       </Button>
                     </>

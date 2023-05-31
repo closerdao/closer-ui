@@ -14,16 +14,14 @@ import { useConfig } from '../../hooks/useConfig';
 import { SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
-import { subscriptionPlansTmp } from './subcsriptionsTmp';
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
 }
 
-const SubscriptionsPage: NextPage<any> = ({ subscriptionPlans }) => {
-  console.log('subscriptionPlans=', subscriptionPlans);
-
+const SubscriptionsPage: NextPage<Props> = ({ subscriptionPlans }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
+
   const router = useRouter();
   const { PLATFORM_NAME, STRIPE_CUSTOMER_PORTAL_URL } = useConfig() || {};
 
@@ -41,11 +39,7 @@ const SubscriptionsPage: NextPage<any> = ({ subscriptionPlans }) => {
   }, [user]);
 
   const handleNext = (priceId: string, hasVariants: boolean, slug: string) => {
-    console.log('hasVariants=', hasVariants);
-    if (hasVariants) {
-      // Subscription has ariants - redirect to variant selection page
-      router.push(`/subscriptions/${slug}`);
-    } else if (!isAuthenticated) {
+    if (!isAuthenticated) {
       // User has no account - must start with creating one.
       router.push(
         `/signup?back=${encodeURIComponent(
@@ -55,14 +49,21 @@ const SubscriptionsPage: NextPage<any> = ({ subscriptionPlans }) => {
     } else if (userActivePlan?.priceId !== 'free') {
       // User has a subscription - must be managed in Stripe.
       router.push(
-        `${STRIPE_CUSTOMER_PORTAL_URL}?prefilled_email=${encodeURIComponent(
+        `${
+          process.env.NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL
+        }?prefilled_email=${encodeURIComponent(
           (user?.subscription?.stripeCustomerEmail as string) ||
             (user?.email as string),
         )}`,
       );
     } else {
-      // User does not yet have a subscription, we can show the checkout
-      router.push(`/subscriptions/summary?priceId=${priceId}`);
+      if (hasVariants) {
+        // User does not yet have a subscription and subscription has avriants - redirect to variant selection page
+        router.push(`/subscriptions/${slug}`);
+      } else {
+        // User does not yet have a subscription, we can show the checkout
+        router.push(`/subscriptions/summary?priceId=${priceId}`);
+      }
     }
   };
 
@@ -121,13 +122,10 @@ SubscriptionsPage.getInitialProps = async () => {
       data: { results },
     } = await api.get('/config/subscriptions');
 
-    console.log('results.value.plans=', results.value.plans);
-
     return {
-      // subscriptionPlans: results.value.plans,
-      subscriptionPlans: subscriptionPlansTmp,
+      subscriptionPlans: results.value.plans,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     return {
       subscriptionPlans: [],
     };
