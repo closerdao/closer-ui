@@ -23,7 +23,7 @@ const SubscriptionsPage: NextPage<Props> = ({ subscriptionPlans }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
 
   const router = useRouter();
-  const { PLATFORM_NAME, STRIPE_CUSTOMER_PORTAL_URL } = useConfig() || {};
+  const { PLATFORM_NAME } = useConfig() || {};
 
   const plans: SubscriptionPlan[] = subscriptionPlans;
   const paidSubscriptionPlans = plans.filter((plan) => plan.price !== 0);
