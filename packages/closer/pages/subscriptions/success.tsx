@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
+import PageError from '../../components/PageError';
 import { BackButton, Button, Heading, ProgressBar } from '../../components/ui/';
 
 import { NextPage } from 'next';
@@ -13,13 +14,18 @@ import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
+  error?: string;
 }
 
-const SubscriptionSuccessPage: NextPage<Props> = ({ subscriptionPlans }) => {
+const SubscriptionSuccessPage: NextPage<Props> = ({
+  subscriptionPlans,
+  error,
+}) => {
   const { isAuthenticated, isLoading } = useAuth();
 
   const router = useRouter();
@@ -55,6 +61,10 @@ const SubscriptionSuccessPage: NextPage<Props> = ({ subscriptionPlans }) => {
   const handleViewSubscription = () => {
     router.push('/subscriptions');
   };
+
+  if (error) {
+    return <PageError error={error} />;
+  }
 
   if (process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true') {
     return <Page404 error="" />;
@@ -121,6 +131,7 @@ SubscriptionSuccessPage.getInitialProps = async () => {
   } catch (err: unknown) {
     return {
       subscriptionPlans: [],
+      error: parseMessageFromError(err),
     };
   }
 };

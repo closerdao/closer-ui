@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
+import PageError from '../../components/PageError';
 import SubscriptionCheckoutForm from '../../components/SubscriptionCheckoutForm';
 import { BackButton, Heading, ProgressBar, Row } from '../../components/ui/';
 
@@ -21,6 +22,7 @@ import {
   SubscriptionVariant,
 } from '../../types/subscriptions';
 import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
 import {
   __,
   getSubscriptionVariantPrice,
@@ -34,11 +36,13 @@ const stripePromise = loadStripe(
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
+  error?: string;
 }
 
 const SubscriptionsCheckoutPage: NextPage<Props> = ({
   subscriptionPlans,
-}: Props) => {
+  error,
+}) => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId, monthlyCredits } = router.query;
@@ -95,6 +99,10 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
       `/subscriptions/summary?priceId=${priceId}&monthlyCredits=${monthlyCredits}`,
     );
   };
+
+  if (error) {
+    return <PageError error={error} />;
+  }
 
   if (process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true') {
     return <Page404 error="" />;
@@ -181,6 +189,7 @@ SubscriptionsCheckoutPage.getInitialProps = async () => {
   } catch (err: unknown) {
     return {
       subscriptionPlans: [],
+      error: parseMessageFromError(err),
     };
   }
 };

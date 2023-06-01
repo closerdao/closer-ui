@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
+import PageError from '../../components/PageError';
 import SubscriptionCards from '../../components/SubscriptionCards';
 import { Heading } from '../../components/ui/';
 
@@ -13,13 +14,15 @@ import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import { SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
+  error?: string;
 }
 
-const SubscriptionsPage: NextPage<Props> = ({ subscriptionPlans }) => {
+const SubscriptionsPage: NextPage<Props> = ({ subscriptionPlans, error }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
 
   const router = useRouter();
@@ -66,6 +69,10 @@ const SubscriptionsPage: NextPage<Props> = ({ subscriptionPlans }) => {
       }
     }
   };
+
+  if (error) {
+    return <PageError error={error} />;
+  }
 
   if (isLoading) {
     return null;
@@ -128,6 +135,7 @@ SubscriptionsPage.getInitialProps = async () => {
   } catch (err: unknown) {
     return {
       subscriptionPlans: [],
+      error: parseMessageFromError(err),
     };
   }
 };

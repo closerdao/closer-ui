@@ -19,13 +19,16 @@ import {
   getCurrencySymbol,
   getSubscriptionVariantPrice,
 } from '../../utils/helpers';
+import { parseMessageFromError } from '../../utils/common';
+import PageError from '../../components/PageError';
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
   slug?: string | string[] | undefined;
+  error?: string
 }
 
-const SubscriptionPlanPage: NextPage<Props> = ({ subscriptionPlans, slug }) => {
+const SubscriptionPlanPage: NextPage<Props> = ({ subscriptionPlans, slug, error }) => {
   const router = useRouter();
 
   const subscriptionPlan = subscriptionPlans.find((plan: SubscriptionPlan) => {
@@ -51,6 +54,10 @@ const SubscriptionPlanPage: NextPage<Props> = ({ subscriptionPlans, slug }) => {
       );
     }
   };
+
+  if (error) {
+    return <PageError error={error} />;
+  }
 
   if (isLoading) {
     return null;
@@ -150,6 +157,7 @@ SubscriptionPlanPage.getInitialProps = async ({
   } catch (err: unknown) {
     return {
       subscriptionPlans: [],
+      error: parseMessageFromError(err),
     };
   }
 };

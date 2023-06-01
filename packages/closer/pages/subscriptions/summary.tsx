@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
+import PageError from '../../components/PageError';
 import {
   BackButton,
   Button,
@@ -23,6 +24,7 @@ import {
   SubscriptionVariant,
 } from '../../types/subscriptions';
 import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
 import {
   __,
   getSubscriptionVariantPrice,
@@ -32,9 +34,13 @@ import {
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
+  error?: string;
 }
 
-const SubscriptionsSummaryPage: NextPage<Props> = ({ subscriptionPlans }) => {
+const SubscriptionsSummaryPage: NextPage<Props> = ({
+  subscriptionPlans,
+  error,
+}) => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId, monthlyCredits } = router.query;
@@ -107,6 +113,10 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({ subscriptionPlans }) => {
       );
     }
   };
+
+  if (error) {
+    return <PageError error={error} />;
+  }
 
   if (process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true') {
     return <Page404 error="" />;
@@ -190,6 +200,7 @@ SubscriptionsSummaryPage.getInitialProps = async () => {
   } catch (err: unknown) {
     return {
       subscriptionPlans: [],
+      error: parseMessageFromError(err),
     };
   }
 };
