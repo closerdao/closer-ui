@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
+import { ErrorMessage } from './ui';
 import Button from './ui/Button';
 
 const cardStyle = {
@@ -44,9 +45,11 @@ const CheckoutForm = ({
   onSuccess,
   cardElementClassName = '',
   prePayInTokens,
+  hasAppliedCredits,
+  payWithCredits,
   isProcessingTokenPayment = false,
   children: conditions,
-  hasComplied
+  hasComplied,
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -59,6 +62,23 @@ const CheckoutForm = ({
   const handleSubmit = async (event) => {
     event.preventDefault();
     setProcessing(true);
+
+    if (hasAppliedCredits) {
+      try {
+        const res = await payWithCredits();
+        const status = res.data.results.status;
+        if (status !== 'credits-paid') {
+          setProcessing(false);
+          setError(__('carrots_error_message'));
+          return;
+        }
+      } catch (error) {
+        setError(error);
+        console.error(error);
+      } finally {
+        setProcessing(false);
+      }
+    }
 
     if (prePayInTokens) {
       const res = await prePayInTokens();
@@ -105,6 +125,7 @@ const CheckoutForm = ({
           volunteer,
         },
       );
+
       if (onSuccess) {
         setProcessing(false);
         onSuccess(payment);
@@ -143,11 +164,7 @@ const CheckoutForm = ({
 
   return (
     <form onSubmit={handleSubmit}>
-      {error && (
-        <div className="text-red-500 mb-4">
-          <p>{String(error)}</p>
-        </div>
-      )}
+      {error && <ErrorMessage error={error} />}
       <CardElement
         options={cardStyle}
         className={cardElementClassName}
@@ -162,7 +179,6 @@ const CheckoutForm = ({
           {renderButtonText()}
         </Button>
       </div>
-
       {cancelUrl && (
         <a href={cancelUrl} className="mt-4 ml-2">
           {__('generic_cancel')}
