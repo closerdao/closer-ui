@@ -64,15 +64,19 @@ const CheckoutForm = ({
     setProcessing(true);
 
     if (hasAppliedCredits) {
-      const res = await payWithCredits();
-
-      const status = res.data.results.status;
-      const { error } = res || {};
-      if (error || status !== 'credits-paid') {
-        setProcessing(false);
-        setError(__('carrots_error_message'));
+      try {
+        const res = await payWithCredits();
+        const status = res.data.results.status;
+        if (status !== 'credits-paid') {
+          setProcessing(false);
+          setError(__('carrots_error_message'));
+          return;
+        }
+      } catch (error) {
+        setError(error);
         console.error(error);
-        return;
+      } finally {
+        setProcessing(false);
       }
     }
 
