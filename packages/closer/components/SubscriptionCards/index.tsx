@@ -45,11 +45,6 @@ const SubscriptionCards = ({
         return <>{__('subscriptions_cancelled')}</>;
       }
     }
-    // if (plan.price !== 0) {
-    //   return __('subscriptions_cancel_anytime');
-    // } else {
-    //   return null;
-    // }
   };
 
   return (
@@ -59,7 +54,7 @@ const SubscriptionCards = ({
           filteredSubscriptionPlans.map((plan) => (
             <Card
               key={plan.title}
-              className={`w-full pb-8 ${
+              className={`w-full pb-8 mb-6 ${
                 !plan.available && plan.price && 'bg-accent-light'
               }`}
             >
