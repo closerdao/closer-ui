@@ -37,7 +37,7 @@ const RedeemCredits = ({
             <div className="flex w-full justify-center items-center mb-6">
               <div className="w-2/5">
                 <Heading level={4}>{isDemo ? 1 : rentalToken?.val}</Heading>
-                <div className="text-xs">{__('carrots_carrots_to_redeem')}</div>
+                <div className="text-xs">{rentalToken?.val === 1 ? __('carrots_carrots_to_redeem_singular') : __('carrots_carrots_to_redeem')}</div>
               </div>
               <div className="w-1/10">
                 <Heading level={4}>=</Heading>
@@ -52,13 +52,10 @@ const RedeemCredits = ({
             <Button onClick={applyCredits}>
               {__('carrots_button_apply_discount')}
             </Button>
-            {/* <Button type="secondary" className="!text-accent">
-              {__('carrots_button_save')}
-            </Button> */}
           </>
         ) : (
           <div className="text-system-success font-bold">
-            🥕 {rentalToken?.val} {__('carrots_success_message')}
+            🥕 {rentalToken?.val} {rentalToken?.val === 1 ? __('carrots_success_message_singular') : __('carrots_success_message')}
           </div>
         )}
         {creditsError && <ErrorMessage error={creditsError} />}

@@ -157,6 +157,7 @@
   "carrots_heading_redeem": "Redeem Your Carrots",
   "carrots_get_discount": "Get a discount on your accommodation",
   "carrots_carrots_to_redeem": "Carrots to redeem",
+  "carrots_carrots_to_redeem_singular": "Carrot to redeem",
   "carrots_off_accommodation": "Off accommodation",
   "carrots_button_apply_discount": "Apply discount",
   "carrots_button_save": "Save for later",
@@ -165,6 +166,7 @@
   "carrots_how_to_harvest_3": "*coming soon* Rewards for completing actions",
   "carrots_how_to_harvest_4": "*coming soon* Stay Packages",
   "carrots_success_message": "carrots redeemed successfully! Accommodation cost updated.",
+  "carrots_success_message_singular": "carrot redeemed successfully! Accommodation cost updated.",
   "carrots_error_message": "Carrots payment failed, please, try again.",
 
   "create_post_remove": "Remove",
