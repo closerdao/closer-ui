@@ -26,29 +26,29 @@ export const closerConfig = {
       create: 'member',
     },
   },
-  ACCOMODATION_COST: [
-    {
-      name: 'Glamping',
-      price: 1,
-      iconPath: '/images/token-sale/tent-icon.svg',
-    },
-    {
-      name: 'Van parking',
-      price: 0.5,
-      iconPath: '/images/token-sale/car-icon.svg',
-    },
-    {
-      name: 'Outdoor Camping',
-      price: 0.5,
-      iconPath: '/images/token-sale/tent-icon.svg',
-    },
-    {
-      name: 'Private suite',
-      description: '*coming 2023*',
-      price: 3,
-      iconPath: '/images/token-sale/suite-icon.svg',
-    },
-  ],
+  // ACCOMODATION_COST: [
+  //   {
+  //     name: 'Glamping',
+  //     price: 1,
+  //     iconPath: '/images/token-sale/tent-icon.svg',
+  //   },
+  //   {
+  //     name: 'Van parking',
+  //     price: 0.5,
+  //     iconPath: '/images/token-sale/car-icon.svg',
+  //   },
+  //   {
+  //     name: 'Outdoor Camping',
+  //     price: 0.5,
+  //     iconPath: '/images/token-sale/tent-icon.svg',
+  //   },
+  //   {
+  //     name: 'Private suite',
+  //     description: '*coming 2023*',
+  //     price: 3,
+  //     iconPath: '/images/token-sale/suite-icon.svg',
+  //   },
+  // ],
   TOKEN_PRICE: 230.23,
   SOURCE_TOKEN: 'CEUR'
 };

@@ -88,7 +88,7 @@ const Summary = ({ booking, listing, event, error }: Props) => {
   };
 
   const goBack = () => {
-    router.push(`/bookings/${booking._id}/questions`);
+    router.push(`/bookings/${booking._id}/questions?goBack=true`);
   };
 
   if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
