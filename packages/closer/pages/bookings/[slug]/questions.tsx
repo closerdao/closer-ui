@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import BookingBackButton from '../../../components/BookingBackButton';
 import PageError from '../../../components/PageError';
 import QuestionnaireItem from '../../../components/QuestionnaireItem';
+import { Heading } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
@@ -126,10 +127,11 @@ const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
           onClick={resetBooking}
           name={__('buttons_back_to_dates')}
         />
-        <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
-          <span className="mr-1">📄</span>
+
+        <Heading level={1} className="pb-4 mt-8">
+          <span className="mr-4">📄</span>
           <span>{__('bookings_questionnaire_step_title')}</span>
-        </h1>
+        </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
         <div className="my-16 gap-16 mt-16">
           {questions?.map((question) => (
