@@ -37,14 +37,14 @@ const RedeemCredits = ({
             <div className="flex w-full justify-center items-center mb-6">
               <div className="w-2/5">
                 <Heading level={4}>{isDemo ? 1 : rentalToken?.val}</Heading>
-                <div className="text-xs">{rentalToken?.val === 1 ? __('carrots_carrots_to_redeem_singular') : __('carrots_carrots_to_redeem')}</div>
+                <div className="text-xs">{rentalToken?.val === 1 || isDemo ? __('carrots_carrots_to_redeem_singular') : __('carrots_carrots_to_redeem')}</div>
               </div>
               <div className="w-1/10">
                 <Heading level={4}>=</Heading>
               </div>
               <div className="w-2/5">
                 <Heading level={4}>
-                  {isDemo ? priceFormat(60) : priceFormat(rentalFiat)}
+                  {isDemo ? priceFormat(30) : priceFormat(rentalFiat)}
                 </Heading>
                 <div className="text-xs">{__('carrots_off_accommodation')}</div>
               </div>
