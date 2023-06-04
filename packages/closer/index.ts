@@ -86,6 +86,12 @@ export { default as TicketPage } from './pages/tickets/[slug]/index';
 export { default as TicketsInvoicePage } from './pages/tickets/[slug]/invoice';
 export { default as TokenSalePage } from './pages/token-sale';
 export { default as TokenSaleReferralPage } from './pages/token-sale/[referralId]';
+export { default as SubscriptionsPage } from './pages/subscriptions/index';
+export { default as SubscriptionPlanPage } from './pages/subscriptions/[slug]';
+export { default as SubscriptionsSummaryPage } from './pages/subscriptions/summary';
+export { default as SubscriptionsCheckoutPage } from './pages/subscriptions/checkout';
+export { default as SubscriptionSuccessPage } from './pages/subscriptions/success';
+
 // Types
 export * from './types/';
 // Utils
