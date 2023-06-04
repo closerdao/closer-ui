@@ -8,7 +8,7 @@ interface CardProps {
 const Card = ({ children, className }: CardProps) => {
   return (
     <div
-      className={`rounded-md shadow-xl p-4  mb-6 flex flex-col justify-between gap-4 ${className || ''}`}
+      className={`rounded-md shadow-xl p-4 flex flex-col justify-between gap-4 ${className || ''}`}
     >
       {children}
     </div>
