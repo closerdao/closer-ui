@@ -100,7 +100,6 @@ const DatesSelector: NextPage<Props> = ({
 
   useEffect(() => {
     if (user) {
-      console.log('user', user);
       if (
         !user.subscription ||
         !user.subscription.plan ||
