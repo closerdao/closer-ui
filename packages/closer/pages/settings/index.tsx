@@ -232,6 +232,7 @@ const SettingsPage: FC = () => {
           label="Dietary Preferences"
           className="mt-4"
           onChange={saveUserData('diet') as any}
+          hasSaved={hasSaved}
           value={user?.preferences?.diet}
           isInstantSave={true}
         />

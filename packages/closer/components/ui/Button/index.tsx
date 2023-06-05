@@ -42,7 +42,7 @@ const buttonStyles = cva(
           'w-full enabled:bg-white border-accent text-accent py-2 ',
         instantSave:
           'w-auto absolute right-2 top-[45px] text-md pl-4 pr-5 py-0.5 bg-accent text-white',
-        inline: 'border-accent text-md pl-4 pr-5 py-1.5 bg-accent text-white',
+        inline: '!w-auto !inline border-accent text-md pl-4 pr-5 py-1.5 bg-accent text-white',
         empty: '', // remove empty prop after all buttons are refactored
         default: 'py-2 h-12 ',
       }, //deprecate type, because it does not relate directly to design system

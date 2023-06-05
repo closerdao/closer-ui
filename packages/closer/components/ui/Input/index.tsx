@@ -2,13 +2,12 @@ import React, {
   ChangeEvent,
   Dispatch,
   SetStateAction,
+  useEffect,
   useRef,
   useState,
-  useEffect,
 } from 'react';
 
 import { __ } from '../../../utils/helpers';
-import Button from '../Button';
 
 type InputProps = {
   id?: string;
@@ -63,7 +62,8 @@ const Input = React.memo(
 
     const validationPatterns = {
       email: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-      phone: /^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/i,
+      phone:
+        /^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/i,
     } as Record<string, RegExp>;
 
     const isValidValue = (value: string) => {
@@ -91,6 +91,16 @@ const Input = React.memo(
       }
     }, [value]);
 
+    useEffect(() => {
+      if (isInstantSave && hasSaved) {
+        setTimeout(() => {
+          if (setHasSaved) {
+            setHasSaved(false);
+          }
+        }, 2000);
+      }
+    }, [hasSaved]);
+
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === 'Enter') {
         event.preventDefault();
@@ -108,12 +118,7 @@ const Input = React.memo(
 
     const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
       onBlur && onBlur(event);
-      setTimeout(() => {
-        setIsEditing(false);
-        if (setHasSaved) {
-          setHasSaved(false);
-        }
-      }, 2000);
+      setIsEditing(false);
     };
 
     const handleSubmit = () => {
@@ -171,19 +176,19 @@ const Input = React.memo(
             disabled={isDisabled}
             aria-labelledby={label}
           />
+
           {isEditing && isInstantSave && isValidValue(localValue) && (
-            <Button type="instantSave" onClick={handleSubmit}>
-              {hasSaved ? __('edit_model_saved') : __('edit_model_save')}
-            </Button>
+            <div className="text-disabled absolute right-2 top-[52px]">
+              {hasSaved && __('settings_saved')}
+            </div>
           )}
         </div>
 
-        { validationError ?
-          <span className="text-red-500 text-sm">{validationError}</span>:
-          successMessage ?
-            <span className="text-green-500 text-sm">{successMessage}</span>:
-            null
-        }
+        {validationError ? (
+          <span className="text-red-500 text-sm">{validationError}</span>
+        ) : successMessage ? (
+          <span className="text-green-500 text-sm">{successMessage}</span>
+        ) : null}
       </div>
     );
   },
