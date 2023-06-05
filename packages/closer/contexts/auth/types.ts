@@ -44,6 +44,7 @@ export type User = {
   managedBy: string[];
   _id: string;
   subscription: {
+    plan: string;
     tier: string;
     validUntil?: Date;
     cancelledAt?: Date;

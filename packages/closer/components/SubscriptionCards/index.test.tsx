@@ -14,7 +14,8 @@ describe('SubscriptionCards', () => {
 
     render(
       <SubscriptionCards
-        config={subscriptions.config}
+        // config={subscriptions.config}
+        currency="EUR"
         filteredSubscriptionPlans={
           isAuthenticated ? paidSubscriptionPlans : subscriptions.plans
         }
@@ -22,7 +23,7 @@ describe('SubscriptionCards', () => {
       />,
     );
 
-    const cardTitles = screen.getAllByRole('heading', { level: 3 });
+    const cardTitles = screen.getAllByRole('heading', { level: 2 });
     expect(cardTitles).toHaveLength(3);
   });
 
@@ -31,7 +32,7 @@ describe('SubscriptionCards', () => {
 
     render(
       <SubscriptionCards
-        config={subscriptions.config}
+        currency="EUR"
         filteredSubscriptionPlans={
           isAuthenticated ? paidSubscriptionPlans : subscriptions.plans
         }
@@ -39,7 +40,7 @@ describe('SubscriptionCards', () => {
       />,
     );
 
-    const cardTitles = screen.getAllByRole('heading', { level: 3 });
+    const cardTitles = screen.getAllByRole('heading', { level: 2 });
     expect(cardTitles).toHaveLength(2);
 
     const freePlanTitle = screen.queryByRole('heading', { name: /explorer/i });

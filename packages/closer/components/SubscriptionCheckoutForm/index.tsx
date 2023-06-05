@@ -14,11 +14,13 @@ import { Button, ErrorMessage } from '../ui/';
 interface SubscriptionCheckoutFormProps {
   userEmail?: string;
   priceId: string | string[] | undefined;
+  monthlyCredits?: number;
 }
 
 function SubscriptionCheckoutForm({
   userEmail,
   priceId,
+  monthlyCredits
 }: SubscriptionCheckoutFormProps) {
   const [isSubmitEnabled, setIsSubmitEnabled] = useState(true);
   const [error, setError] = useState<unknown>();
@@ -71,6 +73,7 @@ function SubscriptionCheckoutForm({
         email: userEmail,
         paymentMethod: createdPaymentMethod?.paymentMethod.id,
         priceId,
+        monthlyCredits
       });
 
       if (response.data.results.status === 'active') {
