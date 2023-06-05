@@ -168,6 +168,9 @@
   "carrots_success_message": "carrots redeemed successfully! Accommodation cost updated.",
   "carrots_success_message_singular": "carrot redeemed successfully! Accommodation cost updated.",
   "carrots_error_message": "Carrots payment failed, please, try again.",
+  
+  "unlock_stays_heading": "Stays",
+  "unlock_stays_subheading": "Become a wanderer to unlock stay bookings",
 
   "create_post_remove": "Remove",
   "create_post_title": "Create post",
