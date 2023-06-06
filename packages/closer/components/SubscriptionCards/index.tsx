@@ -3,7 +3,7 @@ import Image from 'next/image';
 import dayjs from 'dayjs';
 
 import { SubscriptionPlan } from '../../types/subscriptions';
-import { __, getCurrencySymbol } from '../../utils/helpers';
+import { __, getCurrencySymbol, getSubscriptionVariantPrice } from '../../utils/helpers';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Heading from '../ui/Heading';
@@ -107,7 +107,7 @@ const SubscriptionCards = ({
                                   </div>
                                   <div>
                                     {getCurrencySymbol(currency)}
-                                    {variant.monthlyCredits * plan.price}
+                                    {getSubscriptionVariantPrice(variant.monthlyCredits, plan)}
                                   </div>
                                   <p className="text-sm font-normal">
                                     {__('subscriptions_summary_per_month')}
