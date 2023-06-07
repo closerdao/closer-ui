@@ -7,7 +7,8 @@ import Autocomplete from './Autocomplete';
 import DiscountsEditor from './DiscountsEditor';
 import FieldsEditor from './FieldsEditor';
 import PhotosEditor from './PhotosEditor';
-import PriceEditor, { currencies } from './PriceEditor';
+import PriceEditor from './PriceEditor';
+import { CURRENCIES_WITH_LABELS } from '../constants';
 import Switch from './Switch';
 import Tag from './Tag';
 import TicketOptionsEditor from './TicketOptionsEditor';
@@ -89,7 +90,7 @@ const FormField = ({
                         update(`${name}.${index}.cur`, e.target.value)
                       }
                     >
-                      {currencies.map((opt) => (
+                      {CURRENCIES_WITH_LABELS.map((opt) => (
                         <option value={opt.value} key={opt.value}>
                           {opt.symbol} - {opt.label}
                         </option>
