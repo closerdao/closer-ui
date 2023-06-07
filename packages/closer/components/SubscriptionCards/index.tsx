@@ -133,7 +133,11 @@ const SubscriptionCards = ({
                       <Button
                         isEnabled={true}
                         onClick={() =>
-                          clickHandler(plan.priceId, !!plan.variants, plan.slug as string)
+                          clickHandler(
+                            plan.priceId,
+                            !!plan.variants,
+                            plan.slug as string,
+                          )
                         }
                         infoText={getSubscriptionInfoText(plan)}
                         className={` ${plan.price === 0 ? 'mb-7' : ''} || ''`}

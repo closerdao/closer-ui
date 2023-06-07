@@ -1,42 +1,70 @@
 import Head from 'next/head';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
+import AccommodationOptions from '../../components/AccommodationOptions';
 import PageError from '../../components/PageError';
+import Reviews from '../../components/Reviews';
 import SubscriptionCards from '../../components/SubscriptionCards';
-import { Button, Card, Heading } from '../../components/ui/';
+import { Button, Heading } from '../../components/ui/';
 
 import { NextPage } from 'next';
 
 import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import { Listing } from '../../types';
 import { SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
-import Image from 'next/image';
-
-const TESTIMONIALS = [
+const REVIEWS = [
   {
-    name: 'Vinay',
-    rating: 3,
-    text: '“Don’t come here. The community is way too kind. The nature is way too peaceful. The ideas are way too beautiful. It’ll ruin your life. But maybe that’s exactly what you’re looking for...”',
-    photo: '/images/testimonials/testimonial-author-1.jpg',
+    name: 'Jeremy Agnew',
+    rating: 5,
+    text: 'A wondrous magical place where musicians turn up out the blue and made the hills come alive with traditional Alentejo music; where lovely people from around the world are building an inspirational new village on the edge of Abela; where the older generation welcomed them with open hearts and arms at the invigoration they are bringing to this cute little town with a deep cultural heritage. TDF is where we all want to live!',
+    photo: '/images/reviews/r-1.png',
   },
-  { name: 'Vova', rating: 5, text: 'I like TDF!', photo: '/images/testimonials/testimonial-author-1.jpg' },
+  {
+    name: 'Vinay Chaudhri',
+    rating: 5,
+    text: 'Don’t come here. The community is way too kind. The nature is way too peaceful. The ideas are way too beautiful. It’ll ruin your life. But maybe that’s exactly what you’re looking for...🤣 …',
+    photo: '/images/reviews/r-2.png',
+  },
+  {
+    name: 'Kyle Schutter',
+    rating: 5,
+    text: 'A place for bohemian makers, the intersection of Permaculture and crypto. My kind of place.',
+    photo: '/images/reviews/r-3.png',
+  },
+  {
+    name: 'Julian Guderley',
+    rating: 5,
+    text: 'Powerful innovation space. Re:Build Event with many aspects, diverse learnings and brilliant people.',
+    photo: '/images/reviews/r-4.png',
+  },
+  {
+    name: 'Vincent Spehner',
+    rating: 5,
+    text: 'Simply awesome. The future of humanity',
+    photo: '/images/reviews/r-5.png',
+  },
 ];
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
+  listings: Listing[];
   error?: string;
 }
 
-const SubscriptionsPage: NextPage<Props> = ({ subscriptionPlans, error }) => {
-
-  console.log('subscriptionPlans=', subscriptionPlans);
+const SubscriptionsPage: NextPage<Props> = ({
+  subscriptionPlans,
+  listings,
+  error,
+}) => {
   const { isAuthenticated, isLoading, user } = useAuth();
 
   const router = useRouter();
@@ -113,29 +141,32 @@ const SubscriptionsPage: NextPage<Props> = ({ subscriptionPlans, error }) => {
   }
 
   return (
-    <div className="max-w-screen-md mx-auto">
+    <div className="max-w-screen-lg mx-auto">
       <Head>
         <title>{`${__('subscriptions_title')} - ${PLATFORM_NAME}`}</title>
       </Head>
       <main className="pt-16 pb-24 md:flex-row flex-wrap">
         <div className="flex justify-center">
-          <div className="">
-            <Heading level={1} className="mb-6 uppercase text-center">
-              <div className="font-extrabold text-4xl">
+          <div>
+            <Heading
+              level={1}
+              className="mb-6 uppercase text-center font-normal"
+            >
+              <div className="font-extrabold text-5xl">
                 {__('pricing_and_product_heading_1')}
               </div>
-              <div className="font-extrabold text-3xl">
+              <div className="font-extrabold text-5xl">
                 {__('pricing_and_product_heading_2')}
               </div>
-              <div className="font-extrabold text-[3.5rem] leading-12">
+              <div className="font-extrabold text-7xl leading-12">
                 {__('pricing_and_product_heading_3')}
               </div>
             </Heading>
-            <div>
-              <p className="mb-4 max-w-[470px]">
+            <div className="flex justify-center flex-wrap ">
+              <p className="mb-4 max-w-[630px]">
                 {__('pricing_and_product_intro_1')}
               </p>
-              <p className="mb-4 max-w-[470px]">
+              <p className="mb-4 font-bold uppercase max-w-[630px]">
                 {__('pricing_and_product_intro_2')}
               </p>
             </div>
@@ -152,53 +183,225 @@ const SubscriptionsPage: NextPage<Props> = ({ subscriptionPlans, error }) => {
           currency={DEFAULT_CURRENCY}
         />
 
-        {/* testimonials wip */}
-        {/* <Card className="mb-6">
-          {TESTIMONIALS.map((testimonial) => {
-            return (
-              <>
-                <div className="border flex ">
-                  <Image src={testimonial.photo} alt='tesimonial 1' width={100} height={100} />
-                  <div>
-                    <div className='w-full'>
-                      <Heading level={3}>{testimonial.name}</Heading>
-                      <ul className="flex justify-center">
-                        {[...Array(5).keys()].map((i) => {
-                          const rating = i + 1;
-                          return (
-                            <li key={i}>
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="currentColor"
-                                className={`mr-1 h-5 w-5 ${
-                                  testimonial.rating >= rating
-                                    ? 'text-accent'
-                                    : 'text-disabled'
-                                } `}
-                              >
-                                <path
-                                  fill-rule="evenodd"
-                                  d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
-                                  clip-rule="evenodd"
-                                />
-                              </svg>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
-                  </div>
-                <p>{testimonial.text}</p>
-                </div>
-              </>
-            );
-          })}
-        </Card> */}
+        <section className="flex items-center flex-col py-24">
+          <div className="w-full  ">
+            <div className="text-center mb-20 flex flex-wrap justify-center">
+              <Heading
+                level={2}
+                className="mb-4 uppercase pt-60 w-full font-bold text-6xl bg-[url(/images/illy-token.png)] bg-no-repeat bg-[center_top]"
+              >
+                {__('pricing_and_product_heading_funding_your_stay')}
+              </Heading>
+              <p className="mb-4 w-full">
+                {__('pricing_and_product_subheading_accommodation')}
+              </p>
+              <div
+                className="mb-10"
+                dangerouslySetInnerHTML={{
+                  __html: __('pricing_and_product_funding_your_stay_intro'),
+                }}
+              />
+              <div className="mb-10 w-full flex flex-wrap justify-center">
+                <span className="mb-4 bg-black text-white rounded-full py-1 px-4 uppercase mx-2">
+                  {__('pricing_and_product_cost_of_events')}
+                </span>{' '}
+                =
+                <span className="mb-4 bg-accent-light text-accent rounded-full py-1 px-4 uppercase mx-2">
+                  {__('pricing_and_product_event_fee')}
+                </span>{' '}
+                +
+                <span className="mb-4 bg-accent-light text-accent rounded-full py-1 px-4 uppercase mx-2">
+                  {__('pricing_and_product_utility_fee_2')}
+                </span>{' '}
+                +
+                <span className="mb-4 bg-accent-light text-accent rounded-full py-1 px-4 uppercase mx-2">
+                  {__('pricing_and_product_accommodation_fee')}
+                </span>
+              </div>
+              <div className="mb-10 w-full flex flex-wrap justify-center">
+                <span className="mb-4 bg-black text-white rounded-full py-1 px-4 uppercase mx-2">
+                  {__('pricing_and_product_cost_of_stays')}
+                </span>{' '}
+                =
+                <span className="mb-4 bg-accent-light text-accent rounded-full py-1 px-4 uppercase mx-2">
+                  {__('pricing_and_product_utility_fee_2')}
+                </span>{' '}
+                +
+                <span className="mb-4 bg-accent-light text-accent rounded-full py-1 px-4 uppercase mx-2">
+                  {__('pricing_and_product_accommodation_fee')}
+                </span>
+              </div>
+              <div className="mb-10 w-full flex flex-wrap justify-center">
+                <span className="mb-4 bg-black text-white rounded-full py-1 px-4 uppercase mx-2">
+                  {__('pricing_and_product_cost_of_volunteering')}
+                </span>{' '}
+                =
+                <span className="mb-4 bg-accent-light text-accent rounded-full py-1 px-4 uppercase mx-2">
+                  {__('pricing_and_product_utility_fee_2')}
+                </span>
+              </div>
+              <div
+                className="mb-10"
+                dangerouslySetInnerHTML={{
+                  __html: __('pricing_and_product_costs_info'),
+                }}
+              />
+            </div>
 
-        <Card>
-          <div className="flex flex-col sm:flex-row divide-x flex-wrap">
-            <div className="mb-8 px-6 py-8 text-center flex flex-col gap-8 w-full sm:w-1/2 lg:w-1/4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col justify-between w-[80%] sm:w-1/2 bg-[url(/images/subscriptions/funding-bg-1.jpg)] p-4 bg-cover">
+                <div>
+                  <Heading level={2} className="uppercase text-4xl mb-6">
+                    {__('pricing_and_product_heading_carrots')}
+                  </Heading>
+                  <p className="text-sm mb-4">
+                    {__('pricing_and_product_carrots_text_1')}
+                  </p>
+                  <p className="text-sm mb-10">
+                    {__('pricing_and_product_carrots_text_2')}
+                  </p>
+                </div>
+                <div className="flex justify-end">
+                  <Button
+                    size="small"
+                    isFullWidth={false}
+                    onClick={() => {
+                      router.push('/settings/credits');
+                    }}
+                  >
+                    {__('pricing_and_product_learn_more_button')}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex flex-col justify-between w-[80%] sm:w-1/2 bg-[url(/images/subscriptions/funding-bg-2.jpg)] p-4 bg-cover">
+                <div>
+                  <Heading level={2} className="uppercase text-4xl mb-6">
+                    {__('pricing_and_product_heading_tdf')}
+                  </Heading>
+                  <p className="text-sm mb-4">
+                    {__('pricing_and_product_tdf_text_1')}
+                  </p>
+                  <p className="text-sm mb-10">
+                    {__('pricing_and_product_tdf_text_2')}
+                  </p>
+                </div>
+                <div className="flex justify-end">
+                  {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && (
+                    <Button
+                      size="small"
+                      isFullWidth={false}
+                      onClick={() => {
+                        router.push('/settings/token');
+                      }}
+                    >
+                      {__('pricing_and_product_learn_more_button')}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="flex items-center flex-col py-24">
+          <div className="w-full  ">
+            <div className="text-center mb-20 flex flex-wrap justify-center">
+              <Heading
+                level={2}
+                className="mb-4 uppercase w-full font-bold text-4xl sm:text-6xl"
+              >
+                {__('pricing_and_product_heading_accommodation')}
+              </Heading>
+              <p className="mb-4 w-full">
+                {__('pricing_and_product_subheading_accommodation')}
+              </p>
+              <p className=" pl-5 bg-[center_left] mb-4 bg-[url(/images/icon-info.svg)] bg-no-repeat">
+                {__('pricing_and_product_subheading_additional_fees')}
+              </p>
+            </div>
+            <AccommodationOptions listings={listings} />
+          </div>
+        </section>
+
+        <section className="bg-neutral py-16 my-16">
+          <div className="text-center mb-6 flex flex-wrap justify-center">
+            <Heading
+              level={2}
+              className="mb-4 uppercase w-full font-bold text-4xl sm:text-6xl"
+            >
+              {__('pricing_and_product_heading_say_cheese')}
+            </Heading>
+            <p className="mb-4 w-full">
+              {__('pricing_and_product_subheading_say_cheese')}
+            </p>
+          </div>
+          <div className="flex justify-center sm:justify-between  flex-wrap ">
+            <Image
+              src="/images/gallery/gallery-1.jpg"
+              alt={PLATFORM_NAME}
+              width={556}
+              height={354}
+              className="mb-4 w-[80%] sm:w-[32%]"
+            />
+            <Image
+              src="/images/gallery/gallery-2.jpg"
+              alt={PLATFORM_NAME}
+              width={225}
+              height={354}
+              className="mb-4 w-[80%] sm:w-[16%]"
+            />
+            <Image
+              src="/images/gallery/gallery-3.jpg"
+              alt={PLATFORM_NAME}
+              width={556}
+              height={354}
+              className="mb-4 w-[80%] sm:w-[32%]"
+            />
+            <Image
+              src="/images/gallery/gallery-4.jpg"
+              alt={PLATFORM_NAME}
+              width={225}
+              height={354}
+              className="mb-4 w-[80%] sm:w-[16%]"
+            />
+
+            <Image
+              src="/images/gallery/gallery-5.jpg"
+              alt={PLATFORM_NAME}
+              width={225}
+              height={354}
+              className="mb-4 w-[80%] sm:w-[16%]"
+            />
+            <Image
+              src="/images/gallery/gallery-6.jpg"
+              alt={PLATFORM_NAME}
+              width={556}
+              height={354}
+              className="mb-4 w-[80%] sm:w-[32%]"
+            />
+            <Image
+              src="/images/gallery/gallery-7.jpg"
+              alt={PLATFORM_NAME}
+              width={225}
+              height={354}
+              className="mb-4 w-[80%] sm:w-[16%]"
+            />
+            <Image
+              src="/images/gallery/gallery-8.jpg"
+              alt={PLATFORM_NAME}
+              width={556}
+              height={354}
+              className="mb-4 w-[80%] sm:w-[32%]"
+            />
+          </div>
+        </section>
+
+        {/* <Reviews reviews={REVIEWS} /> */}
+
+        <section className="">
+          <div className="flex flex-col sm:flex-row divide-x-0 lg:divide-x flex-wrap">
+            <div className="justify-between mb-8 px-4 py-8 text-center flex flex-col gap-8 w-[80%] sm:w-1/2 lg:w-1/4">
               <Heading level={3} className="uppercase text-center">
                 {__('heading_pink_paper')}
               </Heading>
@@ -214,7 +417,7 @@ const SubscriptionsPage: NextPage<Props> = ({ subscriptionPlans, error }) => {
                 {__('read_button')}
               </Button>
             </div>
-            <div className="mb-8 px-6 py-8 text-center flex flex-col gap-8 w-full sm:w-1/2 lg:w-1/4">
+            <div className="justify-between mb-8 px-4 py-8 text-center flex flex-col gap-8 w-[80%] sm:w-1/2 lg:w-1/4">
               <Heading level={3} className="uppercase text-center">
                 {__('heading_white_paper')}
               </Heading>
@@ -230,7 +433,7 @@ const SubscriptionsPage: NextPage<Props> = ({ subscriptionPlans, error }) => {
                 {__('read_button')}
               </Button>
             </div>
-            <div className="mb-8 px-6 py-8 text-center flex flex-col gap-8 w-full sm:w-1/2 lg:w-1/4">
+            <div className="justify-between  mb-8 px-4 py-8 text-center flex flex-col gap-8 w-[80%] sm:w-1/2 lg:w-1/4">
               <Heading level={3} className="uppercase text-center">
                 {__('heading_oasa_website')}
               </Heading>
@@ -244,7 +447,7 @@ const SubscriptionsPage: NextPage<Props> = ({ subscriptionPlans, error }) => {
                 {__('visit_site_button')}
               </Button>
             </div>
-            <div className="mb-8 px-6 py-8 text-center flex flex-col gap-8 w-full sm:w-1/2 lg:w-1/4">
+            <div className="justify-between  mb-8 px-4 py-8 text-center flex flex-col gap-8 w-[80%] sm:w-1/2 lg:w-1/4">
               <Heading level={3} className="uppercase text-center">
                 {__('heading_terms')}
               </Heading>
@@ -259,7 +462,7 @@ const SubscriptionsPage: NextPage<Props> = ({ subscriptionPlans, error }) => {
               </Button>
             </div>
           </div>
-        </Card>
+        </section>
       </main>
     </div>
   );
@@ -267,16 +470,26 @@ const SubscriptionsPage: NextPage<Props> = ({ subscriptionPlans, error }) => {
 
 SubscriptionsPage.getInitialProps = async () => {
   try {
-    const {
-      data: { results },
-    } = await api.get('/config/subscriptions');
+    const [
+      {
+        data: { results: subscriptions },
+      },
+      {
+        data: { results: listings },
+      },
+    ] = await Promise.all([
+      api.get('/config/subscriptions'),
+      api.get('/listing'),
+    ]);
 
     return {
-      subscriptionPlans: results.value.plans,
+      subscriptionPlans: subscriptions.value.plans,
+      listings: listings,
     };
   } catch (err: unknown) {
     return {
       subscriptionPlans: [],
+      listings: [],
       error: parseMessageFromError(err),
     };
   }
