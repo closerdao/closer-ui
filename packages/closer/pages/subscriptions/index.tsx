@@ -397,7 +397,7 @@ const SubscriptionsPage: NextPage<Props> = ({
           </div>
         </section>
 
-        {/* <Reviews reviews={REVIEWS} /> */}
+        <Reviews reviews={REVIEWS} />
 
         <section className="">
           <div className="flex flex-col sm:flex-row divide-x-0 lg:divide-x flex-wrap">
