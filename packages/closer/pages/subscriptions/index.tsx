@@ -21,6 +21,7 @@ import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
+// Reviews are taken from Google maps:
 const REVIEWS = [
   {
     name: 'Jeremy Agnew',
@@ -147,18 +148,18 @@ const SubscriptionsPage: NextPage<Props> = ({
       </Head>
       <main className="pt-16 pb-24 md:flex-row flex-wrap">
         <div className="flex justify-center">
-          <div>
+          <div className="w-full">
             <Heading
               level={1}
-              className="mb-6 uppercase text-center font-normal"
+              className="font-extrabold mb-6 uppercase text-center"
             >
-              <div className="font-extrabold text-5xl">
+              <div className="text-2xl sm:text-5xl">
                 {__('pricing_and_product_heading_1')}
               </div>
-              <div className="font-extrabold text-5xl">
+              <div className="text-2xl sm:text-5xl">
                 {__('pricing_and_product_heading_2')}
               </div>
-              <div className="font-extrabold text-7xl leading-12">
+              <div className="text-5xl sm:text-7xl leading-12">
                 {__('pricing_and_product_heading_3')}
               </div>
             </Heading>
@@ -249,7 +250,7 @@ const SubscriptionsPage: NextPage<Props> = ({
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex flex-col justify-between w-[80%] sm:w-1/2 bg-[url(/images/subscriptions/funding-bg-1.jpg)] p-4 bg-cover">
+              <div className="flex flex-col justify-between w-[100%] sm:w-1/2 bg-[url(/images/subscriptions/funding-bg-1.jpg)] p-4 bg-cover">
                 <div>
                   <Heading level={2} className="uppercase text-4xl mb-6">
                     {__('pricing_and_product_heading_carrots')}
@@ -274,7 +275,7 @@ const SubscriptionsPage: NextPage<Props> = ({
                 </div>
               </div>
 
-              <div className="flex flex-col justify-between w-[80%] sm:w-1/2 bg-[url(/images/subscriptions/funding-bg-2.jpg)] p-4 bg-cover">
+              <div className="flex flex-col justify-between w-[100%] sm:w-1/2 bg-[url(/images/subscriptions/funding-bg-2.jpg)] p-4 bg-cover">
                 <div>
                   <Heading level={2} className="uppercase text-4xl mb-6">
                     {__('pricing_and_product_heading_tdf')}
@@ -316,13 +317,12 @@ const SubscriptionsPage: NextPage<Props> = ({
               <p className="mb-4 w-full">
                 {__('pricing_and_product_subheading_accommodation')}
               </p>
-              <p className=" pl-5 bg-[center_left] mb-4 bg-[url(/images/icon-info.svg)] bg-no-repeat">
-                {__('pricing_and_product_subheading_additional_fees')}
-              </p>
             </div>
             <AccommodationOptions listings={listings} />
           </div>
         </section>
+
+        
 
         <section className="bg-neutral py-16 my-16">
           <div className="text-center mb-6 flex flex-wrap justify-center">
@@ -400,7 +400,7 @@ const SubscriptionsPage: NextPage<Props> = ({
         <Reviews reviews={REVIEWS} />
 
         <section className="">
-          <div className="flex flex-col sm:flex-row divide-x-0 lg:divide-x flex-wrap">
+          <div className="flex flex-col sm:flex-row divide-x-0 lg:divide-x flex-wrap items-center">
             <div className="justify-between mb-8 px-4 py-8 text-center flex flex-col gap-8 w-[80%] sm:w-1/2 lg:w-1/4">
               <Heading level={3} className="uppercase text-center">
                 {__('heading_pink_paper')}
