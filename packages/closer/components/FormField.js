@@ -130,7 +130,7 @@ const FormField = ({
                   e.preventDefault();
                   update(
                     name,
-                    (objectPath.get(data, name) || []).concat(currencies[0]),
+                    (objectPath.get(data, name) || []).concat(CURRENCIES_WITH_LABELS[0]),
                   );
                 }}
               >
