@@ -9,6 +9,7 @@
   "apply_phone_number": "Phone Number",
   "apply_email": "Email",
   "apply_submit_button": "Apply",
+  "apply_submit_button_help": "Select a ticket to apply discount, then click Apply",
   "apply_name": "Name",
   "auth_error_401_message": "Invalid username or password",
   "autocomplete_close": "Close",
@@ -444,6 +445,7 @@
   "settings_your_subscription_manage_subscription_button": "Manage subscription",
   "settings_your_subscription_upgrade_to": "Upgrade to",
   "settings_your_subscription_upgrade_button": "Upgrade",
+  "settings_saved": "Saved!",
 
   "subscriptions_title": "Subscriptions",
   "subscriptions_about_you_title": "About you",
