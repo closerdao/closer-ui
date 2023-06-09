@@ -14,7 +14,7 @@ interface Props {
   setStartDate: (date: string | null) => void;
   setEndDate: (date: string | null) => void;
   maxDuration?: number;
-  blockedDateRanges: (
+  blockedDateRanges?: (
     | Date
     | {
         from: Date;
@@ -24,6 +24,7 @@ interface Props {
   savedStartDate?: string;
   savedEndDate?: string;
   defaultMonth?: Date;
+  isAdmin?: boolean;
 }
 const DateTimePicker = ({
   setStartDate,
@@ -33,6 +34,7 @@ const DateTimePicker = ({
   savedStartDate,
   savedEndDate,
   defaultMonth,
+  isAdmin
 }: Props) => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [dateError, setDateError] = useState<null | string>(null);
@@ -54,7 +56,7 @@ const DateTimePicker = ({
   }, []);
 
   useEffect(() => {
-    if (savedStartDate && savedEndDate) {
+    if (savedStartDate && savedEndDate && setEndDate && setStartDate) {
       handleSelectDay(dateRange);
       setEndDate(savedEndDate);
       setStartDate(savedStartDate);
@@ -63,14 +65,14 @@ const DateTimePicker = ({
         to: new Date(savedEndDate),
       });
     }
-    if (!savedStartDate && !savedEndDate) {
+    if (!savedStartDate && !savedEndDate && setEndDate && setStartDate) {
       setEndDate('');
       setStartDate('');
     }
   }, [savedStartDate, savedEndDate]);
 
   const includesBlockedDateRange = (range: DateRange | undefined) => {
-    if (range) {
+    if (range && blockedDateRanges) {
       return blockedDateRanges.some((blockedDateRange) => {
         if (!(blockedDateRange instanceof Date) && range.from && range.to) {
           return (
@@ -93,7 +95,6 @@ const DateTimePicker = ({
     }
     if (!includesBlockedDateRange(range)) {
       setDateRange(range);
-
       if (range?.to) {
         setEndDate(dayjs(range?.to).format('YYYY-MM-DD'));
       } else {
@@ -116,7 +117,7 @@ const DateTimePicker = ({
     <div className="">
       <div data-testid="dates" className="w-full flex mb-8">
         <div>
-          <div className="text-sm mb-2">{__('listings_book_check_in')}</div>
+          <div className="text-sm mb-2">{isAdmin ? __('events_event_start_date') : __('listings_book_check_in')}</div>
           <div className="text-sm border bordr-disabled rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
             {dateRange?.from
               ? dayjs(dateRange?.from).format('LL')
@@ -124,7 +125,7 @@ const DateTimePicker = ({
           </div>
         </div>
         <div>
-          <div className="text-sm mb-2">{__('listings_book_check_out')}</div>
+          <div className="text-sm mb-2">{isAdmin ? __('events_event_end_date') : __('listings_book_check_out')}</div>
           <div className="text-sm border bordr-disabled rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
             {dateRange?.to
               ? dayjs(dateRange?.to).format('LL')

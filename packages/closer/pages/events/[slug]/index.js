@@ -43,8 +43,7 @@ const Event = ({ event, error }) => {
   const start = event && event.start && dayjs(event.start);
   const end = event && event.end && dayjs(event.end);
   const duration = end && end.diff(start, 'hour', true);
-  const isThisYear = dayjs().isSame(start, 'year');
-  const dateFormat = isThisYear ? 'MMMM Do HH:mm' : 'YYYY MMMM Do HH:mm';
+  const dateFormat = 'MMMM DD YYYY';
   const myTickets = platform.ticket.find(myTicketFilter);
   const ticketsCount = event?.ticketOptions
     ? (platform.ticket.findCount(allTicketFilter) || event?.attendees?.length) -
@@ -159,7 +158,7 @@ const Event = ({ event, error }) => {
                 <label className="text-xl font-light">
                   {start && start.format(dateFormat)}
                   {end && duration > 24 && ` - ${end.format(dateFormat)}`}
-                  {end && duration <= 24 && ` - ${end.format('HH:mm')}`}
+                  {end && duration <= 24 && ` - ${end.format('MMMM DD YYYY')}`}
                 </label>
                 {event.address && (
                   <h3 className="text-lg font-light text-gray-500">

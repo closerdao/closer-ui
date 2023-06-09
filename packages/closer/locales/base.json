@@ -353,6 +353,8 @@
   "events_upcoming": "Upcoming events",
   "events_past": "Past events",
   "events_link": "Create event",
+  "events_event_start_date": "Event start date",
+  "events_event_end_date": "Event end date",
   "generic_back": "Back",
   "generic_cancel": "Cancel",
   "generic_next": "Next",
