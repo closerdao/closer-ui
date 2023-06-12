@@ -68,6 +68,8 @@ const SubscriptionsPage: NextPage<Props> = ({
 }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
 
+  console.log('subscriptionPlans=',subscriptionPlans);
+
   const router = useRouter();
   const { PLATFORM_NAME } = useConfig() || {};
 

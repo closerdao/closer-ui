@@ -6,13 +6,13 @@ const colors = {
   orange: 'bg-orange-200 text-orange-700',
   red: 'bg-red-200 text-red-700',
   white: 'bg-white-200 text-gray-700',
-  primary: 'bg-primary text-gray-100',
+  primary: 'bg-accent-light text-accent',
 };
 
 const Tag = ({ color, children, remove, className }) => {
   return (
     <span
-      className={`${colors[color]} ${className} inline-flex items-center text-sm rounded-lg overflow-hidden`}
+      className={`${colors[color]} ${className} pr-1 normal-case	font-normal inline-flex items-center text-sm rounded-full overflow-hidden`}
     >
       <span
         className="ml-2 mr-1 leading-relaxed truncate max-w-xs px-1"
