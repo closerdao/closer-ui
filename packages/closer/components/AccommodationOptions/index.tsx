@@ -5,6 +5,13 @@ import { Listing } from '../../types/booking';
 import { __, getCurrencySymbol } from '../../utils/helpers';
 import { Card, Heading } from '../ui';
 
+const ACCOMMODATION_IMAGES = [
+  'illy-camping.png',
+  'illy-glamping-private.png',
+  'illy-glamping-tent.png',
+  'illy-van-parking-space.png',
+];
+
 interface Props {
   listings: Listing[];
 }
@@ -14,73 +21,126 @@ const AccommodationOptions = ({ listings }: Props) => {
 
   return (
     <div className="flex flex-col sm:flex-row gap-[2%] flex-wrap">
-      {listings.map((listing) => {
+      {listings.map((listing, i) => {
         return (
           <Card
             key={listing.slug}
             className="mb-8 px-4 py-6 text-center items-center flex flex-col justify-netween gap-4 w-full sm:w-[49%] lg:w-[23%]"
           >
-            <div
-              className="
+            {listing.name.toLowerCase().includes('private') && (
+              <>
+                <div
+                  className="
                        w-full flex flex-wrap justify-center"
-            >
-              <Image
-                src={`/images/accommodation/illy-${listing.slug}.png`}
-                alt={listing.name}
-                width={233}
-                height={240}
-                className="w-full mb-3 max-w-[240px]"
-              />
-              <Heading level={3} className="uppercase text-center w-full">
-                {listing.name}
-              </Heading>
-            </div>
-
-            {listing.slug === 'glamping-private' && (
-              <div className="text-sm">
-                <p className="mb-4">
-                  {__('pricing_and_product_glamping_text_1')}
-                </p>
-                <p className="mb-4">
-                  {__('pricing_and_product_glamping_text_2')}
-                </p>
-                <p className="mb-4 font-bold">
-                  {__('pricing_and_product_glamping_text_3')}
-                </p>
-              </div>
+                >
+                  <Image
+                    src={`/images/accommodation/${ACCOMMODATION_IMAGES[1]}`}
+                    alt={listing.name}
+                    width={233}
+                    height={240}
+                    className="w-full mb-3 max-w-[240px]"
+                  />
+                  <Heading level={3} className="uppercase text-center w-full">
+                    {listing.name}
+                  </Heading>
+                </div>
+                <div className="text-sm">
+                  <p className="mb-4">
+                    {__('pricing_and_product_glamping_text_1')}
+                  </p>
+                  <p className="mb-4">
+                    {__('pricing_and_product_glamping_text_2')}
+                  </p>
+                  <p className="mb-4 font-bold">
+                    {__('pricing_and_product_glamping_text_3')}
+                  </p>
+                </div>
+              </>
             )}
-            {listing.slug === 'glamping-tent' && (
-              <div className="text-sm">
-                <p className="mb-4">
-                  {__('pricing_and_product_glamping_shared_text_1')}
-                </p>
-                <p className="mb-4 font-bold">
-                  {__('pricing_and_product_glamping_shared_text_2')}
-                </p>
-              </div>
+            {listing.name.toLowerCase().includes('shared') && (
+              <>
+                <div
+                  className="
+                   w-full flex flex-wrap justify-center"
+                >
+                  <Image
+                    src={`/images/accommodation/${ACCOMMODATION_IMAGES[2]}`}
+                    alt={listing.name}
+                    width={233}
+                    height={240}
+                    className="w-full mb-3 max-w-[240px]"
+                  />
+                  <Heading level={3} className="uppercase text-center w-full">
+                    {listing.name}
+                  </Heading>
+                </div>
+                <div className="text-sm">
+                  <p className="mb-4">
+                    {__('pricing_and_product_glamping_shared_text_1')}
+                  </p>
+                  <p className="mb-4 font-bold">
+                    {__('pricing_and_product_glamping_shared_text_2')}
+                  </p>
+                </div>
+              </>
             )}
-            {listing.slug === 'camping' && (
-              <div className="text-sm">
-                <p className="mb-4">
-                  {__('pricing_and_product_camping_text_1')}
-                </p>
-                <p className="mb-4 font-bold">
-                  {__('pricing_and_product_camping_text_2')}
-                </p>
-              </div>
+            {listing.name.toLowerCase().includes('camping') && (
+              <>
+                {' '}
+                <div
+                  className="
+               w-full flex flex-wrap justify-center"
+                >
+                  <Image
+                    src={`/images/accommodation/${ACCOMMODATION_IMAGES[0]}`}
+                    alt={listing.name}
+                    width={233}
+                    height={240}
+                    className="w-full mb-3 max-w-[240px]"
+                  />
+                  <Heading level={3} className="uppercase text-center w-full">
+                    {listing.name}
+                  </Heading>
+                </div>
+                <div className="text-sm">
+                  <p className="mb-4">
+                    {__('pricing_and_product_camping_text_1')}
+                  </p>
+                  <p className="mb-4 font-bold">
+                    {__('pricing_and_product_camping_text_2')}
+                  </p>
+                </div>
+              </>
             )}
-            {listing.slug === 'van-parking-space' && (
-              <div className="text-sm">
-                <p className="mb-4">
-                  {__('pricing_and_product_van_parking_text_1')}
-                </p>
-                <p className="mb-4 font-bold">
-                  {__('pricing_and_product_van_parking_text_2')}
-                </p>
-                <p className="mb-4 font-bold">
-                  {__('pricing_and_product_van_parking_text_3')}
-                </p>
-              </div>
+            {listing.name.toLowerCase().includes('van') && (
+              <>
+                <div
+                  className="
+               w-full flex flex-wrap justify-center"
+                >
+                  <Image
+                    src={`/images/accommodation/${ACCOMMODATION_IMAGES[3]}`}
+                    alt={listing.name}
+                    width={233}
+                    height={240}
+                    className="w-full mb-3 max-w-[240px]"
+                  />
+                  <Heading level={3} className="uppercase text-center w-full">
+                    {listing.name}
+                  </Heading>
+                </div>
+                <div className="text-sm">
+                  <p className="mb-4">
+                    {__('pricing_and_product_van_parking_text_1')}
+                  </p>
+                  <p className="mb-4 font-bold">
+                    {__('pricing_and_product_van_parking_text_2')}
+                  </p>
+                  <p className="mb-4 font-bold">
+                    {__('pricing_and_product_van_parking_text_3')}
+                  </p>
+                </div>
+              </>
             )}
 
             <div>
