@@ -88,7 +88,7 @@ const SubscriptionCards = ({
                   </ul>
                 </div>
 
-                <div className=" w-[290px] text-center">
+                <div className="w-[290px] text-center flex flex-wrap justify-center">
                   {plan.available === false ? (
                     <Heading level={3} className="uppercase">
                       <span className="block">🤩</span>
@@ -133,10 +133,15 @@ const SubscriptionCards = ({
                       <Button
                         isEnabled={true}
                         onClick={() =>
-                          clickHandler(plan.priceId, !!plan.variants, plan.slug as string)
+                          clickHandler(
+                            plan.priceId,
+                            !!plan.variants,
+                            plan.slug as string,
+                          )
                         }
+                        isFullWidth={false}
                         infoText={getSubscriptionInfoText(plan)}
-                        className={` ${plan.price === 0 ? 'mb-7' : ''} || ''`}
+                        className={`${plan.price === 0 ? 'mb-7' : ''}`}
                         size="small"
                       >
                         {plan.price === 0

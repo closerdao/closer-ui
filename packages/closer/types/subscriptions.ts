@@ -42,3 +42,10 @@ export interface SelectedPlan {
   variants?: SubscriptionVariant[];
   tiers?: Tier[];
 }
+
+export interface Review {
+  name: string;
+  rating: number;
+  text: string;
+  photo: string;
+}

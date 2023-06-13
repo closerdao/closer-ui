@@ -33,7 +33,8 @@ const buttonStyles = cva(
       },
       isFullWidth: {
         true: 'w-full',
-        false: 'w-auto',
+        // temporary override until we update all buttons:
+        false: '!w-auto',
       },
       type: {
         primary:

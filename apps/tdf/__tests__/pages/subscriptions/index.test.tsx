@@ -4,22 +4,23 @@ import { renderWithProviders } from '@/test/utils';
 import { screen } from '@testing-library/react';
 
 import { subscriptions } from '../../mocks/subscriptions';
+import { listings } from '../../mocks/listings';
 
 describe('Subscriptions', () => {
   it('should have a proper title', () => {
     renderWithProviders(
-      <SubscriptionsPage subscriptionPlans={subscriptions.plans} />,
+      <SubscriptionsPage listings={listings} subscriptionPlans={subscriptions.plans} />,
     );
 
     const title = screen.getByRole('heading', {
-      name: /Subscriptions/i,
+      name: /ONE REGENERATIVE CO-LIVING/i,
     });
 
     expect(title).toBeInTheDocument();
   });
 
   it('should show free plan card by default', () => {
-    renderWithProviders(<SubscriptionsPage subscriptionPlans={subscriptions.plans} />);
+    renderWithProviders(<SubscriptionsPage listings={listings}  subscriptionPlans={subscriptions.plans} />);
 
     const createAccountButton = screen.getByRole('button', {
       name: /create account/i,
