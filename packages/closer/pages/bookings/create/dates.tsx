@@ -101,9 +101,11 @@ const DatesSelector: NextPage<Props> = ({
   useEffect(() => {
     if (user) {
       if (
-        !user.subscription ||
-        !user.subscription.plan ||
-        !STAY_BOOKING_ALLOWED_PLANS.includes(user.subscription.plan)
+        (!user.subscription ||
+          !user.subscription.plan ||
+          !STAY_BOOKING_ALLOWED_PLANS.includes(user.subscription.plan)) &&
+        !volunteerId &&
+        !eventId
       ) {
         router.push('/bookings/unlock-stays');
       }
