@@ -8,8 +8,8 @@ import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
 import Button from '../../../components/ui/Button';
-import ProgressBar from '../../../components/ui/ProgressBar';
 import Heading from '../../../components/ui/Heading';
+import ProgressBar from '../../../components/ui/ProgressBar';
 
 import { NextApiRequest } from 'next';
 import { ParsedUrlQuery } from 'querystring';
@@ -33,6 +33,8 @@ interface Props extends BaseBookingParams {
 
 const Summary = ({ booking, listing, event, error }: Props) => {
   const router = useRouter();
+  const config = useConfig();
+  const { STAY_BOOKING_ALLOWED_PLANS } = config || {};
   const { isAuthenticated, user } = useAuth();
   const [handleNextError, setHandleNextError] = useState<string | null>(null);
   const [hasComplied, setCompliance] = useState(false);
@@ -62,7 +64,9 @@ const Summary = ({ booking, listing, event, error }: Props) => {
 
   useEffect(() => {
     if (user) {
-      setIsMember(user?.roles.includes('member'));
+      setIsMember(
+        STAY_BOOKING_ALLOWED_PLANS.includes(user?.subscription?.plan),
+      );
     }
   }, [user]);
 
@@ -106,16 +110,11 @@ const Summary = ({ booking, listing, event, error }: Props) => {
   return (
     <div className="w-full max-w-screen-sm mx-auto p-8">
       <BookingBackButton onClick={goBack} name={__('buttons_back')} />
-      <Heading
-        level={1}
-        className="pb-4 mt-8"
-      >
+      <Heading level={1} className="pb-4 mt-8">
         <span className="mr-4">📑</span>
         <span>{__('bookings_summary_step_title')}</span>
       </Heading>
-      { handleNextError && (
-        <div className="error-box">{handleNextError}</div>
-      ) }
+      {handleNextError && <div className="error-box">{handleNextError}</div>}
       <ProgressBar steps={BOOKING_STEPS} />
       {booking && (
         <div className="mt-16 flex flex-col gap-16">
@@ -132,7 +131,7 @@ const Summary = ({ booking, listing, event, error }: Props) => {
           <SummaryCosts
             utilityFiat={utilityFiat}
             useTokens={useTokens}
-            accomodationCost={ useTokens ? rentalToken : rentalFiat }
+            accomodationCost={useTokens ? rentalToken : rentalFiat}
             totalToken={rentalToken}
             totalFiat={total}
             eventCost={eventFiat}
@@ -147,10 +146,7 @@ const Summary = ({ booking, listing, event, error }: Props) => {
 
           {volunteerId ? (
             <>
-              <Conditions
-                setComply={onComply}
-                visitorsGuide={VISITORS_GUIDE}
-              />
+              <Conditions setComply={onComply} visitorsGuide={VISITORS_GUIDE} />
               <Button
                 isEnabled={hasComplied}
                 className="booking-btn"
