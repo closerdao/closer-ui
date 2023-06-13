@@ -11,21 +11,23 @@ import { NextPage } from 'next';
 import PageNotFound from '../404';
 import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
+import { useConfig } from '../../hooks/useConfig';
 import { SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __, getCurrencySymbol } from '../../utils/helpers';
-
-const STAY_BOOKING_ALLOWED_PLANS = ['wanderer', 'pioneer', 'sheep'];
-const MIN_ALLOWED_PLAN = 'wanderer';
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
 }
 
 const UnlockStaysPage: NextPage<Props> = ({ subscriptionPlans }) => {
+  const config = useConfig();
+  const { STAY_BOOKING_ALLOWED_PLANS, MIN_INSTANT_BOOKING_ALLOWED_PLAN } =
+    config || {};
+
   const allowedSubscriptionPlan = subscriptionPlans.find(
-    (plan: SubscriptionPlan) => plan.slug === MIN_ALLOWED_PLAN,
+    (plan: SubscriptionPlan) => plan.slug === MIN_INSTANT_BOOKING_ALLOWED_PLAN,
   );
 
   const router = useRouter();
