@@ -23,7 +23,7 @@ const MemberMenu = () => {
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
   return (
-    <nav className="flex flex-col gap-4">
+    <nav className="flex flex-col gap-4 ">
       <Profile />
       {isWalletEnabled && <Wallet />}
       {filteredLinks.map((link) => (

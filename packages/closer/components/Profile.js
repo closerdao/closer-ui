@@ -1,43 +1,71 @@
 import Link from 'next/link';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import { useRouter } from 'next/router';
+import {  useEffect } from 'react';
 
 import { useAuth } from '../contexts/auth';
 import { cdn } from '../utils/api';
 import { __ } from '../utils/helpers.js';
-
-import CarrotsBalance from './CarrotsBalance';
+import CreditsBalance from './CreditsBalance';
+import { Button, Heading } from './ui';
 
 const Profile = () => {
-  const { user } = useAuth();
-  const isCarrotsEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true';
+  const { user, isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      router.push(`/login?back=${router.asPath}`);
+    }
+  }, [isAuthenticated, user]);
+
+  const isCreditsEnabled = process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true';
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="w-full">
-      <div className="flex justify-center items-center w-24 h-24 absolute left-0 right-0 mx-auto -translate-y-1/2 z-20">
-        <Link
-          href={`/members/${user?.slug}`}
-          passHref
-          title="View profile"
-          className="md:flex md:flex-row items-center cursor-pointer"
-        >
-          {user.photo ? (
-            <img
-              src={`${cdn}${user.photo}-profile-lg.jpg`}
-              loading="lazy"
-              alt={user.screenname}
-              className="w-32 md:w-44 rounded-full"
-            />
-          ) : (
-            <FaUser className="text-gray-200 text-6xl" />
-          )}
-        </Link>
-      </div>
+      <div className="py-4 px-2 shadow-xl relative rounded-lg w-full">
+        <div className="flex items-start">
+          <div className="flex justify-center items-center w-24 h-24 md:w-32 md:h-32 mx-auto mb-4">
+            <Link
+              href={`/members/${user?.slug}`}
+              passHref
+              title="View profile"
+              className="md:flex md:flex-row items-center cursor-pointer"
+            >
+              {user.photo ? (
+                <img
+                  src={`${cdn}${user.photo}-profile-lg.jpg`}
+                  loading="lazy"
+                  alt={user.screenname}
+                  className="rounded-full "
+                />
+              ) : (
+                <FaUser className="text-gray-200 text-6xl" />
+              )}
+            </Link>
+          </div>
 
-      <div className="pt-12 p-2 shadow-xl relative rounded-lg w-full">
+          <div className="w-1/3 absolute right-4">
+            <Button onClick={()=> {router.push(`/members/${user.slug}`)}} type="secondary" className="!w-[80px] !text-accent ml-auto">
+              {__('generic_edit_button')}
+            </Button>
+          </div>
+        </div>
+
         <div className="text-center">
-          <p className="font-black uppercase">{user.screenname}</p>
-          <p>{__('navigation_member')}</p>
+          <Heading level={2} className="font-bold">
+            {user.screenname}
+          </Heading>
+          <p>
+            {user.preferences?.superpower
+              ? user.preferences?.superpower
+              : __('navigation_member')}{' '}
+          </p>
           {/* <div className="mt-1 w-full">
             {user.roles && (
               <div className="text-sm mt-1 tags">
@@ -54,8 +82,8 @@ const Profile = () => {
             )}
           </div> */}
         </div>
-        <div className="flex justify-center space-between">
-          {isCarrotsEnabled && <CarrotsBalance />}
+        <div className="flex space-between justify-center w-full">
+          {isCreditsEnabled && <CreditsBalance />}
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ export type User = {
   timezone: string;
   slug: string;
   email: string;
+  phone: string;
   walletAddress: string;
   nonce: string;
   email_verified: boolean;
@@ -43,6 +44,7 @@ export type User = {
   managedBy: string[];
   _id: string;
   subscription: {
+    plan: string;
     tier: string;
     validUntil?: Date;
     cancelledAt?: Date;

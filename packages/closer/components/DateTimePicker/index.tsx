@@ -135,7 +135,7 @@ const DateTimePicker = ({
 
       <div className="">
         <DayPicker
-          disabled={[...blockedDateRanges]}
+          disabled={blockedDateRanges ? [...blockedDateRanges] : []}
           mode="range"
           defaultMonth={defaultMonth}
           numberOfMonths={isOneMonthCalendar ? 1 : 2}
