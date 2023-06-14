@@ -43,7 +43,7 @@ const buttonStyles = cva(
           'w-full enabled:bg-white border-accent text-accent py-2 ',
         instantSave:
           'w-auto absolute right-2 top-[45px] text-md pl-4 pr-5 py-0.5 bg-accent text-white',
-        inline: 'border-accent text-md pl-4 pr-5 py-1.5 bg-accent text-white',
+        inline: '!w-auto !inline border-accent text-md pl-4 pr-5 py-1.5 bg-accent text-white',
         empty: '', // remove empty prop after all buttons are refactored
         default: 'py-2 h-12 ',
       }, //deprecate type, because it does not relate directly to design system
@@ -69,6 +69,9 @@ interface ButtonProps extends VariantProps<typeof buttonStyles> {
   onClick?: (() => void) | (() => Promise<void>);
   infoText?: string | React.ReactNode;
   className?: string;
+  title?: string;
+  type?: 'primary' | 'secondary' | 'instantSave' | 'inline';
+  isEnabled?: boolean;
   isLoading?: boolean;
   size?: 'small' | 'medium' | 'large';
 }
@@ -78,7 +81,8 @@ const Button = ({
   onClick,
   infoText,
   className,
-  type,
+  type = 'primary',
+  title,
   isEnabled = true,
   isLoading,
   color,
@@ -86,20 +90,22 @@ const Button = ({
   size
 }: ButtonProps) => {
   return (
-    <div>
+    <>
       <button
         onClick={onClick}
         disabled={!isEnabled || isLoading}
+        title={title}
+        // flex justify-center 
         className={` 
          ${buttonStyles({ type, color, isFullWidth, size, isEnabled })}
-        ${className || ''}
+         ${className || ''}
         `}
       >
         {isLoading ? <Spinner /> : children}
       </button>
       {infoText && <div className="text-sm text-center pt-2">{infoText}</div>}
-    </div>
-  );
+    </>
+  )
 };
 
 export default Button;

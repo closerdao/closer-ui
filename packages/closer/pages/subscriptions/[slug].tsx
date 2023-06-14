@@ -92,7 +92,7 @@ const SubscriptionPlanPage: NextPage<Props> = ({ subscriptionPlans, slug, error 
           subscriptionPlan.variants.map((variant: SubscriptionVariant) => {
             return (
               <div key={variant.title}>
-                <Card>
+                <Card className='mb-4'>
                   <div className="flex flex-col gap-4 sm:gap-1 sm:flex-row items-center justify-between">
                     <Heading
                       level={3}
@@ -126,6 +126,7 @@ const SubscriptionPlanPage: NextPage<Props> = ({ subscriptionPlans, slug, error 
                         )
                       }
                       size="medium"
+                      isFullWidth={false}
                       className=" border"
                     >
                       {__('subscriptions_subscribe_button')}

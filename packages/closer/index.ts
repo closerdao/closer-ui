@@ -91,6 +91,7 @@ export { default as SubscriptionPlanPage } from './pages/subscriptions/[slug]';
 export { default as SubscriptionsSummaryPage } from './pages/subscriptions/summary';
 export { default as SubscriptionsCheckoutPage } from './pages/subscriptions/checkout';
 export { default as SubscriptionSuccessPage } from './pages/subscriptions/success';
+export { default as UnlockStaysPage } from './pages/bookings/unlock-stays';
 
 // Types
 export * from './types/';
