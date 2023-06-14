@@ -97,3 +97,4 @@ export * from './types/';
 // Utils
 export { default as api } from './utils/api';
 export * from './utils/blockchain';
+export * from './utils/helpers';

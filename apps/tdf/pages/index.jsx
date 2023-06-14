@@ -3,17 +3,16 @@ import Image from 'next/image';
 import Link from 'next/link';
 import router from 'next/router';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import {
-  Button,
-  EventsList,
-  Heading,
-  Newsletter,
-  Tag,
-  useAuth,
-  usePlatform,
-} from 'closer';
+import EventsList from 'closer/components/EventsList';
+import Newsletter from 'closer/components/Newsletter';
+
+import { Button, Card, Heading, Tag, useAuth, usePlatform } from 'closer';
+// import  parseMessageFromError  from 'closer';
+// import api from 'closer';
+import api from 'closer/utils/api';
+import { __ } from 'closer/utils/helpers';
 import { event } from 'nextjs-google-analytics';
 
 const loadTime = new Date();
@@ -27,7 +26,7 @@ const RESOURCES_KEY = { sort_by: 'created' };
 //   id: number;
 // };
 // : NextPage
-const HomePage = () => {
+const HomePage = ({ subscriptionPlans }) => {
   const { isAuthenticated } = useAuth();
   const { platform } = usePlatform();
   const [loadedResources, setLoadedResources] = useState(false);
@@ -117,7 +116,7 @@ const HomePage = () => {
                 }
                 className="btn-primary"
               >
-                GET MEMBERSHIP
+                Join the dream
               </Link>
             </>
           )}
@@ -149,7 +148,7 @@ const HomePage = () => {
       <section className="text-center  flex justify-center flex-wrap mb-12 ">
         <Heading level={1} className="uppercase max-w-[750px] mb-12 ">
           <span className="block text-5xl font-extrabold">Discover</span>
-          <span className="block text-7xl  font-extrabold">
+          <span className="block text-5xl sm:text-7xl font-extrabold">
             Traditional Dream Factory
           </span>
         </Heading>
@@ -163,7 +162,10 @@ const HomePage = () => {
               height={131}
               alt="Land"
             />
-            <Heading className="mt-8 mb-2 uppercase text-5xl" level={2}>
+            <Heading
+              className="mt-24 sm:mt-8 mb-2 uppercase text-5xl"
+              level={2}
+            >
               The <br />
               land
             </Heading>
@@ -189,7 +191,10 @@ const HomePage = () => {
               height={144}
               alt="Land"
             />
-            <Heading className="mt-8 mb-2 uppercase text-5xl" level={2}>
+            <Heading
+              className="mt-24 sm:mt-8 mb-2 uppercase text-5xl"
+              level={2}
+            >
               The <br />
               dream
             </Heading>
@@ -217,7 +222,10 @@ const HomePage = () => {
               height={155}
               alt="Land"
             />
-            <Heading className="mt-8 mb-2 uppercase text-5xl" level={2}>
+            <Heading
+              className="mt-24 sm:mt-8 mb-2 uppercase text-5xl"
+              level={2}
+            >
               <br />
               DAO
             </Heading>
@@ -250,7 +258,10 @@ const HomePage = () => {
               height={155}
               alt="Land"
             />
-            <Heading className="mt-8 mb-2 uppercase text-5xl" level={2}>
+            <Heading
+              className="mt-24 sm:mt-8 mb-2 uppercase text-4xl sm:text-5xl"
+              level={2}
+            >
               <br />
               Governance
             </Heading>
@@ -267,8 +278,11 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="relative p-4 text-left w-full  bg-neutral">
-            <Heading className="mt-8 mb-2 uppercase text-5xl" level={2}>
+          <div className="relative p-4 text-left w-full sm:w-[98%] bg-neutral">
+            <Heading
+              className="mt-8 mb-2 uppercase text-4xl sm:text-5xl"
+              level={2}
+            >
               FROM OWNERSHIP TO STEWARDSHIP
             </Heading>
             <p className="text-md mb-4 max-w-3xl">
@@ -511,7 +525,7 @@ const HomePage = () => {
       <section className="flex flex-wrap justify-center">
         <div>
           <Heading
-            className="mb-6 max-w-3xl text-center mt-8  uppercase text-5xl bg-[url(/images/landing/spade.png)] bg-no-repeat pt-[170px] bg-top"
+            className="text-4xl mb-6 max-w-3xl text-center mt-8  uppercase sm:text-5xl bg-[url(/images/landing/spade.png)] bg-no-repeat pt-[170px] bg-top"
             level={2}
           >
             The Journey of our decentralised co-living
@@ -525,8 +539,8 @@ const HomePage = () => {
 
       <section className="flex items-center flex-col py-24">
         <div className="w-full sm:w-[80%] flex items-center flex-col">
-          <div className="max-w-[800px] border">
-            <div className="grid grid-cols-[37px_370px]">
+          <div className="max-w-[800px]">
+            <div className="grid grid-cols-[37px_240px] sm:grid-cols-[37px_370px]">
               <div className="w-7 h-7 bg-accent-alt rounded-full"></div>
 
               <Heading level={4} className="text-accent">
@@ -536,7 +550,7 @@ const HomePage = () => {
               <div className="w-7 flex justify-center">
                 <div className="bg-accent-alt w-[4px] h-auto"></div>
               </div>
-              <div className="pb-20 uppercase">
+              <div className="pb-12 uppercase">
                 <p>
                   <strong>Keys To The Chicken Farm. </strong>
                 </p>
@@ -544,72 +558,70 @@ const HomePage = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-[37px_370px]">
+            <div className="grid grid-cols-[37px_240px] sm:grid-cols-[37px_370px]">
               <div className="w-7 h-7 bg-accent-alt rounded-full"></div>
               <Heading level={4} className="uppercase text-accent">
-                <span className="font-normal">2021-2022</span> Phase 1 -
-                Completed
+                <span className="font-normal">2021-2022 Phase 1 -</span>
               </Heading>
               <div className="w-7 flex justify-center">
                 <div className="bg-accent-alt w-[4px] h-auto"></div>
               </div>
-              <div className="pb-20">
+              <div className="pb-12">
+                <Heading level={4} className="uppercase text-accent">
+                  Completed
+                </Heading>
                 <p className="uppercase font-bold">Operational CO-LIVING</p>
-                <ul className=" pl-5 my-4 list-none">
-                  <li className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    {' '}
+                <ul className=" my-4 list-none">
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     Operational Event Venue (up to 100 guests)
                   </li>
-                  <li className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     10 Glamping Accommodations
                   </li>
-                  <li className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     Food Forest V1
                   </li>
-                  <li className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     Reforestation V1
                   </li>
-                  <li className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     Grey Water Treatment (Halophyte Filter) V1
                   </li>
-                  <li className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    {' '}
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     Solar Energy
                   </li>
-                  <li className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    {' '}
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     Functional Workshop and Makerspaces
                   </li>
-                  <li className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    {' '}
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     Industrial Kitchen
                   </li>
-                  <li className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    {' '}
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     Sauna
                   </li>
-                  <li className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    {' '}
-                    Co-Working Space and Starlink{' '}
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    Co-Working Space and Starlink
                   </li>
                 </ul>
               </div>
             </div>
 
-            <div className="grid grid-cols-[37px_370px]">
+            <div className="grid grid-cols-[37px_240px] sm:grid-cols-[37px_370px]">
               <div className="w-7 flex justify-center">
                 <div className="bg-accent-alt w-[4px] h-[40px]"></div>
               </div>
               <div className="text-accent-alt"></div>
               <div className="w-7 h-7 bg-accent-alt-light border-4 border-accent-alt rounded-full"></div>
               <Heading level={4} className="uppercase text-accent">
-                <span className="font-normal">2023 -2024</span> Phase 2 -
-                FUNDRAISING
+                <span className="font-normal">2023 - 2024 Phase 2 -</span>
               </Heading>
               <div className="w-7 flex justify-center">
                 <div className="bg-accent-alt-light w-[4px] h-auto"></div>
               </div>
-              <div className="pb-20">
+              <div className="pb-12">
+                <Heading level={4} className="uppercase text-accent">
+                  FUNDRAISING
+                </Heading>
                 <p className="uppercase font-bold">LAND, CO-LIVING & WATER</p>
 
                 <p className="uppercase font-bold mt-6">We are here</p>
@@ -618,38 +630,74 @@ const HomePage = () => {
                   <Button
                     onClick={() => router.push('/token')}
                     className="my-6"
+                    size="small"
                   >
                     Help us fund phase 2
                   </Button>
-                      )}
-                      
-                      <ul>
-                        <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">Co-Living Building Renovation (roof, windows, insulation, flooring, energy and heating systems)</li>
-                        <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">6 Suites with Private Bath</li>
-                        <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">Natural Pool</li>
-                        <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">Water Systems V2 (Co-Living Building & Land Water Capture)</li>
-                        <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">Pay Off Loan & Transfer Chicken Farm Property Title into Enseada Sonhadora (local SPV owned by OASA, read Whitepaper) </li>
-                        <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">Kitchen V2</li>
-                        <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">Team Operations & Salaries</li>
-                      </ul>
+                )}
+
+                <ul>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    Co-Living Building Renovation (roof, windows, insulation,
+                    flooring, energy and heating systems)
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    6 Suites with Private Bath
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    Natural Pool
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    Water Systems V2 (Co-Living Building & Land Water Capture)
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    Pay Off Loan & Transfer Chicken Farm Property into Enseada
+                    Sonhadora (local SPV owned by OASA){' '}
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    Kitchen V2
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    Team Operations & Salaries
+                  </li>
+                </ul>
               </div>
             </div>
 
-            <div className="grid grid-cols-[37px_370px]">
+            <div className="grid grid-cols-[37px_240px] sm:grid-cols-[37px_370px]">
               <div className="w-7 flex justify-center">
                 <div className="bg-accent-alt-light w-[4px] h-[40px]"></div>
               </div>
-              <div className="text-accent-alt">6</div>
+              <div className="text-accent-alt"></div>
               <div className="w-7 h-7 bg-accent-alt-light rounded-full"></div>
-              <Heading level={3} className="">
-                7
+              <Heading level={4} className="font-normal uppercase text-accent">
+                2024-2025 Phase 3
               </Heading>
+
               <div className="w-7 flex justify-center">
                 <div className="bg-accent-alt-light w-[4px] h-auto"></div>
               </div>
-              <div className="pb-20">
-                <ul className="list-disc pl-5 my-4">
-                  <li>8</li>
+              <div className="pb-12">
+                <p className="font-bold uppercase mb-6">
+                  Dream Spaces & Expansion
+                </p>
+                <ul>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    8 Suites added to Co-Living
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    Workshop Building Renovation
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    Co-Working Garden
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    Farm to Table Restaurant + Cafe + Industrial Kitchen
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    Purchase Land (currently rent contract with option to buy,
+                    25he)
+                  </li>
                 </ul>
               </div>
             </div>
@@ -658,17 +706,33 @@ const HomePage = () => {
               <div className="w-7 flex justify-center">
                 <div className="bg-accent-alt-light w-[4px] h-[40px]"></div>
               </div>
-              <div className="text-accent-alt">9</div>
+              <div className="text-accent-alt"></div>
               <div className="w-7 h-7 bg-accent-alt-light rounded-full"></div>
-              <Heading level={3} className="">
-                9
+              <Heading level={4} className="font-normal uppercase text-accent">
+                2025 Phase 4
               </Heading>
               <div className="w-7 flex justify-center">
                 <div className="bg-accent-alt-light w-[4px] h-auto"></div>
               </div>
-              <div className="pb-20">
-                <ul className="list-disc pl-5 my-4">
-                  <li>1111</li>
+              <div className="pb-12">
+                <p className="font-bold uppercase mb-6">Finishing Touches</p>
+
+                <ul>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    4 Studios
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    Family House
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    Green Roof
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    Greenhouse (made out of old warehouses windows)
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    Spa
+                  </li>
                 </ul>
               </div>
             </div>
@@ -677,17 +741,31 @@ const HomePage = () => {
               <div className="w-7 flex justify-center">
                 <div className="bg-accent-alt-light w-[4px] h-[40px]"></div>
               </div>
-              <div className="text-accent">1</div>
+              <div className="text-accent"></div>
               <div className="w-7 h-7 bg-accent-alt-light rounded-full"></div>
-              <Heading level={3} className="">
-                1
+              <Heading level={4} className="uppercase text-accent">
+                TDF: GO LIVE EVENT 🎉🎉🎉
               </Heading>
               <div className="w-7 flex justify-center">
                 <div className="bg-accent-alt-light w-[4px] h-auto"></div>
               </div>
-              <div className="pb-20">
-                <ul className="list-disc pl-5 my-4">
-                  <li>1</li>
+              <div className="pb-12">
+                <ul className="mt-6">
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    TDF V1 IS READY!
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    $TDF UNSTAKED
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    TDF V2 Dream Session: Co-housing and Permanent Living?
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    4000m2 of permits to build
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    Governance Structure V2: Post Roadmap Era
+                  </li>
                 </ul>
               </div>
             </div>
@@ -695,56 +773,170 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* <section className="mb-12 max-w-6xl mx-auto md:flex md:space-x-20">
-        <div className="relative mb-6 md:mb-0 card p-12 bg-secondary-light">
-          <p className="mb-6 font-bold text-xl">
-            Traditional Dream Factory are pioneers of regeneration, challengers
-            of tomorrow, and prototypers of a better way of living. It’s our
-            mission to co-create a more sustainable world for generations to
-            come.
+      <section className="text-center flex justify-center flex-wrap mb-12">
+        <div className="max-w-[720px]">
+          <Heading
+            className="text-4xl mb-6 max-w-3xl text-center mt-8 font-extrabold uppercase sm:text-5xl"
+            level={2}
+          >
+            <p className="text-7xl">TDF </p>
+            VISIT, BUILD & JOIN
+          </Heading>
+          <p className="font-bold mb-6">
+            At TDF we’re a passionate and fun group of friends, doers and
+            dreamers.
           </p>
-          <p className="text-xl font-bold">Will you join us?</p>
-          <div className="absolute -bottom-24 -right-24">
-            <img
-              src="/images/graphics/mushroom.png?"
-              width="220"
-              alt="TDF Mushroom"
+          <p className="font-bold mb-6">
+            We are actively looking for 80-100 folks to join our flock, to
+            become a fellow Sheep.
+          </p>
+          <p className="mb-6">
+            We crafted different journeys for curious souls to visit and build,
+            to see if there’s a vibe to join. Currently, our focus is on opening
+            doors to share our work and co-create, all the while supporting our
+            team’s work and our Roadmap construction.
+            <strong>
+              With this in mind, we put together a visit & support model built
+              with reciprocity at its core. It combines TDF’s needs, whilst
+              providing folks with a easy way to visit, surprises and gratitude
+              nudges on the ground.
+            </strong>
+          </p>
+          <p className="mb-6">
+            There’s different ways for you to interact with our ecosystem,
+            depending on your capacity and desire to step in. All is well, all
+            paths lead to the same beautiful chicken farm full of sheep 🐑.
+          </p>
+          <p className="mb-6">Come and visit us!</p>
+        </div>
+      </section>
+
+      <section className="flex justify-center flex-wrap mb-[120px]">
+        <div className="flex flex-col sm:flex-row gap-[2%] justify-between flex-wrap w-full sm:max-w-6xl">
+          {subscriptionPlans &&
+            subscriptionPlans.map((plan) => (
+              <Card
+                key={plan.title}
+                className="mb-8 px-4 py-6 text-center items-center flex flex-col justify-netween gap-4 w-full sm:w-[49%] lg:w-[23%]"
+              >
+                <div className="flex items-center gap-4 flex-col">
+                  <Heading level={2} className="uppercase mb-6">
+                    {plan.title}
+                  </Heading>
+                  <Image
+                    alt={plan.slug || ''}
+                    src={`/images/subscriptions/${plan.slug}.png`}
+                    width={200}
+                    height={320}
+                  />
+
+                  {plan.available === false ? (
+                    <Heading level={3} className="uppercase">
+                      <span className="block">🤩</span>
+                      {__('generic_coming_soon')}
+                    </Heading>
+                  ) : (
+                    <div className="w-[90%] px-7 text-left">
+                      <ul className="mb-4">
+                        {plan.perks.map((perk) => {
+                          return (
+                            <li
+                              key={perk}
+                              className="bg-[length:16px_16px]  bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5"
+                            >
+                              <span className="block">{perk}</span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                <div className="w-[290px] text-center flex flex-wrap justify-center">
+                  <Button
+                    onClick={() => {
+                      router.push('/subscriptions');
+                    }}
+                    size="small"
+                  >
+                    Explore
+                  </Button>
+                </div>
+              </Card>
+            ))}
+        </div>
+        <div className="p-6 text-left w-full bg-accent-alt-light rounded-md max-w-6xl">
+          <Heading className="mb-2 uppercase" level={4}>
+            Which path is for me?
+          </Heading>
+          <p className="text-md mb-4 max-w-3xl">
+            Want to see how the subscriptions compare to one another to choose
+            the best option is right for you?
+          </p>
+          <Button
+            size="small"
+            isFullWidth={false}
+            onClick={() => {
+              router.push('/subscriptions');
+            }}
+          >
+            Compare subscriptions
+          </Button>
+        </div>
+      </section>
+
+      <section className="flex justify-center mb-[120px]">
+        <div className="max-w-6xl flex flex-wrap">
+          <div className="w-full md:w-3/5">
+            <Image
+              src="/images/landing/illy-oasa.png"
+              alt="OASA"
+              width={656}
+              height={435}
             />
           </div>
-        </div>
-        <div className="relative text-right p-12">
-          <Heading display level={3}>
-            Co-create the regenerative dream
-          </Heading>
-          <p className="my-4">
-            Invest in a DAO-based future of regenerative living. Help us
-            transition to a land of freedom, and rewild a world we can all
-            enjoy. Don’t just dream it. Sign up and join us as a key player in
-            bringing this dream to reality.
-          </p>
-          {!isAuthenticated && (
-            <div className="mb-4">
-              <Link
-                href="/signup"
-                type="submit"
-                onClick={() =>
-                  event('click', {
-                    category: 'HomePage',
-                    label: 'Secure your place now',
-                  })
-                }
-                className="btn-primary btn-large"
-              >
-                SECURE YOUR PLACE NOW
-              </Link>
-            </div>
-          )}
-        </div>
-      </section> */}
+          <div className="w-full md:w-2/5 px-4">
+            <Heading level={2} className="text-5xl ">
+              OASA
+            </Heading>
+            <Heading level={3} className="uppercase mb-6">
+              A web3 powered <br />
+              nature conservancy network <br />
+              serving regenerative living places and the planet
+            </Heading>
+            <p className="mb-6  ">
+              When humans thrive together, magical things happen. OASA Projects
+              have <strong>regeneration, creativity, innovation</strong> and{' '}
+              <strong>playfulness</strong> at their core.
+            </p>
+            <p className="mb-6 uppercase font-bold">The goal?</p>
+            <p className="mb-6 ">
+              To acquire 100.000he of land to be held in a land
+              conservation-like set up. 100,000 hectares of beautiful land
+              waiting to be rewilded, nutritious landscapes to be grown, homes
+              to be cultivated.
+            </p>
 
-      <section className="mb-12 max-w-6xl mx-auto md:pt-20">
-        <Heading display level={3} className="text-center py-12 px-4 mb-6">
-          A prototype for a future of beautiful, connected regenerative living
+            <Button
+              size="small"
+              isFullWidth={false}
+              onClick={() => {
+                router.push('/subscriptions');
+              }}
+            >
+              Learn more about OASA
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="mb-12 max-w-6xl mx-auto md:pt-20 pb-20">
+        <Heading
+          display
+          level={3}
+          className="text-center font-bold py-12 px-4 mb-6"
+        >
+          A prototype FOR regenerative living
         </Heading>
         <ul className="flex flex-wrap text-center divide-x">
           <ul className="flex flex-wrap text-center divide-x">
@@ -767,72 +959,54 @@ const HomePage = () => {
         </ul>
       </section>
 
-      <section className="mb-12 mt-24 max-w-6xl mx-auto text-center">
-        <Heading display level={3}>
-          Discover
-          <br />
-          <span className="md:text-7xl">Abela</span>
-        </Heading>
-        <p>a small Portuguese village of 400 inhabitants</p>
-      </section>
-      <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:space-x-4">
-        <div className="relative mb-6 md:mb-0">
-          <img
-            src="/images/landing/land.jpg"
-            alt="Tree, at Traditional Dream Factory"
-          />
-          <div className="absolute bottom-0 left-0 right-0 text-white p-6 text-xs md:text-xl">
-            <Heading display level={3} className="md:text-6xl text-xl">
-              THE LAND
+      <section className="mb-20 flex justify-center">
+        <div className='w-full max-w-6xl h-[500px] md:h-[600px] flex items-center flex-col bg-center bg-[#333333] bg-cover bg-no-repeat  bg-[url("/images/landing/token-sale-inverted.jpg")]'>
+          <Heading
+            level={2}
+            className="px-4 mb-8 mt-[180px] md:mt-[200px] max-w-[600px] text-center font-extrabold text-3xl sm:text-5xl md:text-6xl uppercase"
+          >
+            $TDF Public Sale Now OPEN!
+          </Heading>
+
+          <h2 className="px-4 mb-8 text-center leading-5 max-w-[460px] font-bold uppercase text-md">
+            The first crypto token that provides you with housing & food, while
+            regenerating the planet
+          </h2>
+
+          {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' ? (
+            <Button
+              onClick={() => router.push('/token')}
+              className="!w-60 font-bold mb-3 md:mb-8 relative"
+            >
+              <Image
+                className="absolute left-[200px] w-14 h-18"
+                src="/images/token-sale/arrow.png"
+                alt="arrow"
+                width={85}
+                height={99}
+              />
+              Buy $TDF
+            </Button>
+          ) : (
+            <Heading level={3} className="uppercase">
+              Coming soon!
             </Heading>
-            <p className="mt-2">
-              In 2020, we set our sights on a small, arid plot of land in the
-              village of Abela, Portugal. Home to an old poultry farm, the land
-              is surrounded by beautiful hills and valleys, protected oak trees,
-              a flowing river, an earth-built farmhouse, and the old community
-              mill.
-            </p>
-            <p className="mt-2">
-              This poultry farm is our playground for change. The ground is
-              ready to be relearned, rewilded and reincarnated into a brighter,
-              abundant future.
-            </p>
-          </div>
-        </div>
-        <div className="relative">
-          <img src="/images/landing/dream.jpg" alt="Dream at TDF" />
-          <div className="absolute bottom-0 left-0 right-0 text-white p-6 text-xs md:text-xl md:text-right">
-            <Heading display level={3} className="md:text-6xl text-xl">
-              THE DREAM
-            </Heading>
-            <p className="mt-2">
-              A burgeoning web3-powered regenerative village, shepherded by an
-              inclusive and indomitable community fighting for better. Shared
-              between 80-100 villagers, members will co-live purposefully in
-              tune with the earth’s cycles, co-create in a space that will help
-              them foster their own dreams, and empower them to drive positive
-              change, together. 
-            </p>
-            <p className="mt-2">
-              We may be dreamers and futurists, but our dreams are rooted in
-              realism. A new life of regeneration and co-living is waiting, and
-              it starts at TDF in Abela.
-            </p>
-          </div>
+          )}
         </div>
       </section>
-      <section className="mb-12 max-w-6xl mx-auto md:pt-20 text-center md:text-left md:flex md:space-x-12">
-        <div className="md:max-w-lg">
-          <Heading display level={2} className="mb-6">
+
+      <section className="mb-20 max-w-6xl mx-auto md:pt-20 text-center md:text-left md:flex md:space-x-12">
+        <div className="md:max-w-lg w-full md:w-1/3">
+          <Heading display level={2} className="mb-6 text-3xl">
             JOIN FELLOW FUTURISTS FOR UPCOMING EVENTS
           </Heading>
-          <p className="mb-6 text-xs md:text-base">
+          <p className="mb-6 text-sm md:text-base">
             TDF is more than the land from which we build. Regeneration
-            transcends soil, bricks and mortar, and farming practices. It
-            replenishes our souls, too, by uniting thinkers, earth warriors,
-            travellers and impact investors, to supercharge a movement that will
-            bring us all closer to a circular economy. Find a TDF event where
-            you can get involved in the mission.
+            transcends soil, bricks and mortar and farming practices. It is also
+            about our souls. It gathers thinkers, artists, farmers, developers,
+            entrepreneurs, healers, investors - all to supercharge a movement
+            that will bring us all closer to a regenerative whole-system. Come
+            to TDF for an event where you can meet all these folks.
           </p>
         </div>
         <div className="flex-grow">
@@ -848,16 +1022,16 @@ const HomePage = () => {
         </div>
       </section>
 
-      <section className="mb-12 max-w-6xl mx-auto md:pt-20 text-center md:flex md:justify-center">
+      <section className="mb-12 max-w-6xl mx-auto md:pt-20 text-center flex justify-center">
         <div className="md:max-w-lg" id="subscribe">
           <Heading display level={3} className="mb-6">
-            Your guide to
+            <span className="text-4xl">Your guide to</span>
             <br />
-            <span className="text-3xl md:text-6xl">becoming a</span>
+            <span className="text-5xl">becoming a</span>
             <br />
-            TDF VISIONARY
+            <span className="text-4xl">TDF VISIONARY</span>
           </Heading>
-          <Heading display level={4} className="mb-6">
+          <Heading display level={4} className="mb-6 max-w-xs">
             Ready to change the way we live for good?
           </Heading>
           <p className="mb-6">We’re excited to have you on board.</p>
@@ -871,6 +1045,23 @@ const HomePage = () => {
       </section>
     </div>
   );
+};
+
+HomePage.getInitialProps = async () => {
+  try {
+    const {
+      data: { results: subscriptions },
+    } = await api.get('/config/subscriptions');
+
+    return {
+      subscriptionPlans: subscriptions.value.plans,
+    };
+  } catch (err) {
+    return {
+      subscriptionPlans: [],
+      error: err,
+    };
+  }
 };
 
 export default HomePage;
