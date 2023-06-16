@@ -25,6 +25,7 @@ export interface SubscriptionPlan {
   billingPeriod: string;
   variants?: SubscriptionVariant[];
   tiers?: Tier[];
+  note?: string;
 }
 
 export interface Subscriptions {

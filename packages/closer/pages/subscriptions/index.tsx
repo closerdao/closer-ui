@@ -69,10 +69,10 @@ const SubscriptionsPage: NextPage<Props> = ({
   const { isAuthenticated, isLoading, user } = useAuth();
 
   const router = useRouter();
+
   const { PLATFORM_NAME } = useConfig() || {};
 
   const plans: SubscriptionPlan[] = subscriptionPlans;
-  const paidSubscriptionPlans = plans.filter((plan) => plan.price !== 0);
 
   const [userActivePlan, setUserActivePlan] = useState<SubscriptionPlan>();
 
@@ -174,9 +174,7 @@ const SubscriptionsPage: NextPage<Props> = ({
           </div>
         </div>
         <SubscriptionCards
-          filteredSubscriptionPlans={
-            isAuthenticated ? paidSubscriptionPlans : plans
-          }
+          plans={plans}
           clickHandler={handleNext}
           userActivePlan={userActivePlan}
           validUntil={user?.subscription?.validUntil}
@@ -321,8 +319,6 @@ const SubscriptionsPage: NextPage<Props> = ({
             <AccommodationOptions listings={listings} />
           </div>
         </section>
-
-        
 
         <section className="bg-neutral py-16 my-16">
           <div className="text-center mb-6 flex flex-wrap justify-center">
