@@ -9,6 +9,8 @@ import Logo from './Logo';
 import MemberMenu from './MemberMenu';
 import Menu from './MenuContainer';
 import ProfilePhoto from './ProfilePhoto';
+import { Button } from './ui';
+import { __ } from '../utils/helpers';
 
 const Navigation = () => {
   const [navOpen, setNavOpen] = useState(false);
@@ -37,7 +39,10 @@ const Navigation = () => {
     <div className="NavContainer h-20 md:pt-0 top-0 left-0 right-0 fixed z-20 bg-background shadow">
       <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
         <Logo />
-        <div className="flex gap-4">
+        <div className="flex gap-3 w-auto">
+          <Button onClick={()=> router.push('/bookings/create/dates')} size='small' type='secondary'>{__('navigation_stay')}</Button>
+          {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' &&  <Button onClick={() => router.push('/token')} size='small'>{__('navigation_buy_token')}</Button>}
+         
           {isAuthenticated && (
             <Link
               href={`/members/${user?.slug}`}

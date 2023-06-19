@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 
 import AccommodationOptions from '../../components/AccommodationOptions';
 import PageError from '../../components/PageError';
+import Resources from '../../components/Resources';
 import Reviews from '../../components/Reviews';
 import SubscriptionCards from '../../components/SubscriptionCards';
 import { Button, Heading } from '../../components/ui/';
@@ -69,10 +70,10 @@ const SubscriptionsPage: NextPage<Props> = ({
   const { isAuthenticated, isLoading, user } = useAuth();
 
   const router = useRouter();
+
   const { PLATFORM_NAME } = useConfig() || {};
 
   const plans: SubscriptionPlan[] = subscriptionPlans;
-  const paidSubscriptionPlans = plans.filter((plan) => plan.price !== 0);
 
   const [userActivePlan, setUserActivePlan] = useState<SubscriptionPlan>();
 
@@ -174,9 +175,7 @@ const SubscriptionsPage: NextPage<Props> = ({
           </div>
         </div>
         <SubscriptionCards
-          filteredSubscriptionPlans={
-            isAuthenticated ? paidSubscriptionPlans : plans
-          }
+          plans={plans}
           clickHandler={handleNext}
           userActivePlan={userActivePlan}
           validUntil={user?.subscription?.validUntil}
@@ -322,8 +321,6 @@ const SubscriptionsPage: NextPage<Props> = ({
           </div>
         </section>
 
-        
-
         <section className="bg-neutral py-16 my-16">
           <div className="text-center mb-6 flex flex-wrap justify-center">
             <Heading
@@ -398,71 +395,7 @@ const SubscriptionsPage: NextPage<Props> = ({
         </section>
 
         <Reviews reviews={REVIEWS} />
-
-        <section className="">
-          <div className="flex flex-col sm:flex-row divide-x-0 lg:divide-x flex-wrap items-center">
-            <div className="justify-between mb-8 px-4 py-8 text-center flex flex-col gap-8 w-[80%] sm:w-1/2 lg:w-1/4">
-              <Heading level={3} className="uppercase text-center">
-                {__('heading_pink_paper')}
-              </Heading>
-              <p>{__('intro_pink_paper')}</p>
-              <Button
-                className="text-[16px]"
-                onClick={() => {
-                  router.push(
-                    'https://docs.google.com/document/d/177JkHCy0AhplsaEEYpFHBsiI6d4uLk0TgURSKfBIewE/edit',
-                  );
-                }}
-              >
-                {__('read_button')}
-              </Button>
-            </div>
-            <div className="justify-between mb-8 px-4 py-8 text-center flex flex-col gap-8 w-[80%] sm:w-1/2 lg:w-1/4">
-              <Heading level={3} className="uppercase text-center">
-                {__('heading_white_paper')}
-              </Heading>
-              <p>{__('intro_white_paper')}</p>
-              <Button
-                className="text-[16px]"
-                onClick={() => {
-                  router.push(
-                    'https://oasa.earth/papers/OASA-Whitepaper-V1.2.pdf',
-                  );
-                }}
-              >
-                {__('read_button')}
-              </Button>
-            </div>
-            <div className="justify-between  mb-8 px-4 py-8 text-center flex flex-col gap-8 w-[80%] sm:w-1/2 lg:w-1/4">
-              <Heading level={3} className="uppercase text-center">
-                {__('heading_oasa_website')}
-              </Heading>
-              <p>{__('intro_oasa_website')}</p>
-              <Button
-                className="text-[16px]"
-                onClick={() => {
-                  router.push('https://oasa.earth');
-                }}
-              >
-                {__('visit_site_button')}
-              </Button>
-            </div>
-            <div className="justify-between  mb-8 px-4 py-8 text-center flex flex-col gap-8 w-[80%] sm:w-1/2 lg:w-1/4">
-              <Heading level={3} className="uppercase text-center">
-                {__('heading_terms')}
-              </Heading>
-              <p>{__('intro_terms')}</p>
-              <Button
-                className="text-[16px]"
-                onClick={() => {
-                  router.push('/legal/terms');
-                }}
-              >
-                {__('read_button')}
-              </Button>
-            </div>
-          </div>
-        </section>
+        <Resources />
       </main>
     </div>
   );

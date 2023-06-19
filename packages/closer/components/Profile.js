@@ -1,8 +1,9 @@
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+
+import { useEffect } from 'react';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
-import { useRouter } from 'next/router';
-import {  useEffect } from 'react';
 
 import { useAuth } from '../contexts/auth';
 import { cdn } from '../utils/api';
@@ -10,21 +11,17 @@ import { __ } from '../utils/helpers.js';
 import CreditsBalance from './CreditsBalance';
 import { Button, Heading } from './ui';
 
-const Profile = () => {
+const Profile = ({ isDemo }) => {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isAuthenticated || !user) {
+    if ((!isAuthenticated || !user) && !isDemo) {
       router.push(`/login?back=${router.asPath}`);
     }
   }, [isAuthenticated, user]);
 
   const isCreditsEnabled = process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true';
-
-  if (!isAuthenticated) {
-    return null;
-  }
 
   return (
     <div className="w-full">
@@ -37,7 +34,7 @@ const Profile = () => {
               title="View profile"
               className="md:flex md:flex-row items-center cursor-pointer"
             >
-              {user.photo ? (
+              {user?.photo ? (
                 <img
                   src={`${cdn}${user.photo}-profile-lg.jpg`}
                   loading="lazy"
@@ -51,7 +48,13 @@ const Profile = () => {
           </div>
 
           <div className="w-1/3 absolute right-4">
-            <Button onClick={()=> {router.push(`/members/${user.slug}`)}} type="secondary" className="!w-[80px] !text-accent ml-auto">
+            <Button
+              onClick={() => {
+                router.push(`/members/${user?.slug}`);
+              }}
+              type="secondary"
+              className="!w-[80px] !text-accent ml-auto"
+            >
               {__('generic_edit_button')}
             </Button>
           </div>
@@ -59,11 +62,11 @@ const Profile = () => {
 
         <div className="text-center">
           <Heading level={2} className="font-bold">
-            {user.screenname}
+            {user?.screenname}
           </Heading>
           <p>
-            {user.preferences?.superpower
-              ? user.preferences?.superpower
+            {user?.preferences?.superpower
+              ? user?.preferences?.superpower
               : __('navigation_member')}{' '}
           </p>
           {/* <div className="mt-1 w-full">
@@ -83,7 +86,7 @@ const Profile = () => {
           </div> */}
         </div>
         <div className="flex space-between justify-center w-full">
-          {isCreditsEnabled && <CreditsBalance />}
+          {isCreditsEnabled && <CreditsBalance isDemo={isDemo} />}
         </div>
       </div>
     </div>
