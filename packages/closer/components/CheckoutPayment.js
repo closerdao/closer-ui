@@ -30,6 +30,7 @@ const CheckoutPayment = ({
   startDate,
   totalNights,
   user,
+  eventId,
 }) => {
   const { VISITORS_GUIDE } = useConfig() || {};
 
@@ -59,7 +60,11 @@ const CheckoutPayment = ({
   const onComply = (isComplete) => setCompliance(isComplete);
 
   const onSuccess = () => {
-    router.push(`/bookings/${bookingId}/confirmation`);
+    router.push(
+      `/bookings/${bookingId}/confirmation${
+        eventId ? `?eventId=${eventId}` : ''
+      }`,
+    );
   };
 
   const payTokens = async () => {
@@ -85,7 +90,7 @@ const CheckoutPayment = ({
   const payWithCredits = async () => {
     try {
       const res = await api.post(`/bookings/${bookingId}/credit-payment`, {});
-      return res
+      return res;
     } catch (error) {
       setError(parseMessageFromError(error));
     }
