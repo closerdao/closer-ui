@@ -113,6 +113,14 @@ const DatesSelector: NextPage<Props> = ({
   }, [user]);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      router.push({
+        pathname: '/login',
+        query: {
+          back: router.asPath,
+        },
+      });
+    }
     if (eventId) {
       setBlockedDateRanges([
         { before: new Date(savedStartDate as string) },
