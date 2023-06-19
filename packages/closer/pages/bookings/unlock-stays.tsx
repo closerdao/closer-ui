@@ -94,7 +94,13 @@ const UnlockStaysPage: NextPage<Props> = ({ subscriptionPlans }) => {
                       key={perk}
                       className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5"
                     >
-                      <span className="block">{perk}</span>
+                      <span className="block">
+                        {perk.includes('<') ? (
+                          <span dangerouslySetInnerHTML={{ __html: perk }} />
+                        ) : (
+                          perk
+                        )}
+                      </span>
                     </li>
                   );
                 })}
