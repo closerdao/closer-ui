@@ -2,6 +2,7 @@ import React, {
   ChangeEvent,
   Dispatch,
   SetStateAction,
+  useEffect,
   useRef,
   useState,
 } from 'react';
@@ -69,7 +70,7 @@ const Input = React.memo(
       if (validation) {
         const pattern = validationPatterns[validation];
         if (pattern) {
-          return pattern.test(value);
+          return !!pattern.test(value);
         }
       }
       return true;
@@ -83,6 +84,22 @@ const Input = React.memo(
         onChange(newValue as any);
       }
     };
+
+    useEffect(() => {
+      if (value) {
+        setIsValid(isValidValue(value));
+      }
+    }, [value]);
+
+    useEffect(() => {
+      if (isInstantSave && hasSaved) {
+        setTimeout(() => {
+          if (setHasSaved) {
+            setHasSaved(false);
+          }
+        }, 2000);
+      }
+    }, [hasSaved]);
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === 'Enter') {
@@ -101,12 +118,7 @@ const Input = React.memo(
 
     const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
       onBlur && onBlur(event);
-      setTimeout(() => {
-        setIsEditing(false);
-        if (setHasSaved) {
-          setHasSaved(false);
-        }
-      }, 2000);
+      setIsEditing(false);
     };
 
     const handleSubmit = () => {
@@ -135,7 +147,7 @@ const Input = React.memo(
             id={id}
             type={type}
             value={isInstantSave ? localValue : value}
-            onChange={isInstantSave ? handleChange : onChange}
+            onChange={handleChange}
             onBlur={isInstantSave ? handleBlur : undefined}
             onFocus={isInstantSave ? handleFocus : undefined}
             required={isRequired}
@@ -164,6 +176,7 @@ const Input = React.memo(
             disabled={isDisabled}
             aria-labelledby={label}
           />
+
           {isEditing && isInstantSave && isValidValue(localValue) && (
             <div className="text-disabled absolute right-2 top-[52px]">
               {hasSaved && __('settings_saved')}

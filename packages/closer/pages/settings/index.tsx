@@ -66,9 +66,6 @@ const SettingsPage: FC = () => {
           },
         };
       }
-
-
-      console.log('wrwerewwrerwerewerw');
       try {
         setHasSaved(false);
         await platform.user.patch(user?._id, payload);
