@@ -10,17 +10,22 @@ import Photo from '../../../components/Photo';
 import Heading from '../../../components/ui/Heading';
 
 import dayjs from 'dayjs';
-import advancedFormat from 'dayjs/plugin/advancedFormat';
 
 import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
+import { useConfig } from '../../../hooks/useConfig';
 import api, { cdn } from '../../../utils/api';
 import { prependHttp } from '../../../utils/helpers';
 
-dayjs.extend(advancedFormat);
+const timezone = require('dayjs/plugin/timezone');
+const utc = require('dayjs/plugin/utc');
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const Event = ({ event, error }) => {
+  const config = useConfig();
+  const { PLATFORM_TIMEZONE } = config || {};
   const [photo, setPhoto] = useState(event && event.photo);
   const [password, setPassword] = useState('');
   const [featured, setFeatured] = useState(event && !!event.featured);
@@ -43,7 +48,8 @@ const Event = ({ event, error }) => {
   const start = event && event.start && dayjs(event.start);
   const end = event && event.end && dayjs(event.end);
   const duration = end && end.diff(start, 'hour', true);
-  const dateFormat = 'MMMM DD YYYY';
+  const dateFormat = 'MMMM DD YYYY HH:mm';
+
   const myTickets = platform.ticket.find(myTicketFilter);
   const ticketsCount = event?.ticketOptions
     ? (platform.ticket.findCount(allTicketFilter) || event?.attendees?.length) -
@@ -156,9 +162,14 @@ const Event = ({ event, error }) => {
               />
               <div className="md:w-1/2 p-2">
                 <label className="text-xl font-light">
-                  {start && start.format(dateFormat)}
-                  {end && duration > 24 && ` - ${end.format(dateFormat)}`}
-                  {end && duration <= 24 && ` - ${end.format('MMMM DD YYYY')}`}
+                  {start &&
+                    dayjs(start).tz(PLATFORM_TIMEZONE).format(dateFormat)}
+                  {end &&
+                    duration > 24 &&
+                    ` - ${dayjs(end).tz(PLATFORM_TIMEZONE).format(dateFormat)}`}
+                  {end &&
+                    duration <= 24 &&
+                    ` - ${dayjs(end).tz(PLATFORM_TIMEZONE).format('HH:mm')}`}
                 </label>
                 {event.address && (
                   <h3 className="text-lg font-light text-gray-500">
@@ -390,8 +401,8 @@ Event.getInitialProps = async ({ req, query }) => {
       data: { results: event },
     } = await api.get(`/event/${query.slug}`, {
       headers: req?.cookies?.access_token && {
-        Authorization: `Bearer ${req?.cookies?.access_token}`
-      }
+        Authorization: `Bearer ${req?.cookies?.access_token}`,
+      },
     });
     return { event };
   } catch (err) {

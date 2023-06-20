@@ -1,29 +1,19 @@
 import Head from 'next/head';
-import { useRouter } from 'next/router';
 
-import { FC, useEffect } from 'react';
+import { FC } from 'react';
 
 import Profile from '../../components/Profile';
 import RedeemCredits from '../../components/RedeemCredits';
 import { Card } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
-import { useAuth } from '../../contexts/auth';
+import { Page404 } from '../..';
 import { usePlatform } from '../../contexts/platform';
 import { __ } from '../../utils/helpers';
-import { Page404 } from '../..';
 
 const CreditsPage: FC = () => {
-  const { user, isAuthenticated } = useAuth();
   const { platform }: any = usePlatform();
-  const router = useRouter();
 
-  useEffect(() => {
-    if (!isAuthenticated || !user) {
-      router.push(`/login?back=${router.asPath}`);
-    }
-  }, [isAuthenticated, user]);
-  
   if (process.env.NEXT_PUBLIC_FEATURE_CARROTS !== 'true') {
     return <Page404 error="" />;
   }
@@ -72,7 +62,7 @@ const CreditsPage: FC = () => {
 
         <div>
           <p className="mb-4">{__('carrots_where_1')}</p>
-          <Profile />
+          <Profile isDemo={true} />
         </div>
 
         <Heading level={3}>{__('carrots_subheading_how_to_use')}</Heading>

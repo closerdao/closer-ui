@@ -29,6 +29,8 @@ import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
 
+const STAY_BOOKING_ALLOWED_PLANS = ['wanderer', 'pioneer', 'sheep'];
+
 interface Props {
   error?: string;
   settings?: BookingSettings;
@@ -97,6 +99,28 @@ const DatesSelector: NextPage<Props> = ({
   }
 
   useEffect(() => {
+    if (user) {
+      if (
+        (!user.subscription ||
+          !user.subscription.plan ||
+          !STAY_BOOKING_ALLOWED_PLANS.includes(user.subscription.plan)) &&
+        !volunteerId &&
+        !eventId
+      ) {
+        router.push('/bookings/unlock-stays');
+      }
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push({
+        pathname: '/login',
+        query: {
+          back: router.asPath,
+        },
+      });
+    }
     if (eventId) {
       setBlockedDateRanges([
         { before: new Date(savedStartDate as string) },

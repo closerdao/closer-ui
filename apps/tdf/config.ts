@@ -2,6 +2,7 @@ const config = {
   PORT: 14444,
   PLATFORM_NAME: 'Traditional Dream Factory',
   PLATFORM_LEGAL_ADDRESS: 'Cerca do Aviario, Abela, Portugal',
+  PLATFORM_TIMEZONE: 'Europe/Lisbon',
   DEFAULT_TITLE: 'Traditional Dream Factory',
   DEFAULT_DESCRIPTION: '',
   SEMANTIC_URL: 'https://traditionaldreamfactory.com',
@@ -20,7 +21,9 @@ const config = {
   },
   VISITORS_GUIDE:
     'https://docs.google.com/document/d/198vWYEQCC1lELQa8f76Jcw3l3UDiPcBKt04PGFKnUvg/edit',
-
+  STAY_BOOKING_ALLOWED_PLANS: ['wanderer', 'pioneer', 'sheep'],
+  MIN_INSTANT_BOOKING_ALLOWED_PLAN: 'wanderer',
+  FACEBOOK_PIXEL_ID: '761004479106346',
 };
 
 export default config;

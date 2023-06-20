@@ -25,6 +25,7 @@ export interface SubscriptionPlan {
   billingPeriod: string;
   variants?: SubscriptionVariant[];
   tiers?: Tier[];
+  note?: string;
 }
 
 export interface Subscriptions {
@@ -41,4 +42,11 @@ export interface SelectedPlan {
   price: number;
   variants?: SubscriptionVariant[];
   tiers?: Tier[];
+}
+
+export interface Review {
+  name: string;
+  rating: number;
+  text: string;
+  photo: string;
 }

@@ -15,7 +15,7 @@ const Heading = ({ level = 1, children, className, display }: HeadingProps) => {
     1: `text-3xl ${display?'uppercase md-6xl font-black':'font-bold'}`,
     2: `text-2xl ${display?'uppercase md-5xl font-black':'font-bold'}`,
     3: `text-xl ${display?'uppercase md-4xl font-black':'font-bold'}`,
-    4: `text-lg ${display?'uppercase md-3xl font-black':'font-bold'}`,
+    4: `text-lg ${display?'uppercase md-3xl font-bold':'font-bold'}`,
   } as Record<number, string>;
 
   return (

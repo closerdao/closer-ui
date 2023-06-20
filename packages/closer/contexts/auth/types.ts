@@ -3,6 +3,7 @@ export type User = {
   timezone: string;
   slug: string;
   email: string;
+  phone: string;
   walletAddress: string;
   nonce: string;
   email_verified: boolean;

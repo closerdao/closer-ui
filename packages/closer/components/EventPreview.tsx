@@ -1,14 +1,19 @@
 import Link from 'next/link';
 
-import React, { FC } from 'react';
+import { FC } from 'react';
 
 import { MdLocationOn } from '@react-icons/all-files/md/MdLocationOn';
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
+const timezone = require('dayjs/plugin/timezone');
+const utc = require('dayjs/plugin/utc');
 
+import { useConfig } from '../hooks/useConfig';
 import { Event, VolunteerOpportunity } from '../types';
 import { cdn } from '../utils/api';
 
+dayjs.extend(utc);
+dayjs.extend(timezone);
 dayjs.extend(advancedFormat);
 
 interface BaseProps {
@@ -44,6 +49,8 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
   const isThisYear = dayjs().isSame(start, 'year');
   const dateFormat = isThisYear ? 'MMMM Do HH:mm' : 'YYYY MMMM Do HH:mm';
   const linkHref = isVolunteerCard ? `/volunteer/${slug}` : `/events/${slug}`;
+  const config = useConfig();
+  const { PLATFORM_TIMEZONE } = config || {};
 
   return (
     <div role="listitem" className={className}>
@@ -53,11 +60,14 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
         }`}
       >
         <p className="text-xs font-light">
-          {startDate && startDate.format(dateFormat)}
-          {endDate && duration <= 24 && ` - ${endDate.format('HH:mm')}`}
+          {startDate &&
+            dayjs(startDate).tz(PLATFORM_TIMEZONE).format(dateFormat)}
           {endDate &&
-            duration >= 24 &&
-            ` - ${endDate.format(dateFormat)}`}
+            duration > 24 &&
+            ` - ${dayjs(endDate).tz(PLATFORM_TIMEZONE).format(dateFormat)}`}
+          {endDate &&
+            duration <= 24 &&
+            ` - ${dayjs(endDate).tz(PLATFORM_TIMEZONE).format('HH:mm')}`}
         </p>
         <div
           className={`${

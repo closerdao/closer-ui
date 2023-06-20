@@ -62,6 +62,7 @@ const EditModel: FC<Props> = ({
   isPublic,
 }) => {
   const { isAuthenticated, user } = useAuth();
+  const dateFormat = 'YYYY-MMMM-DD-HH:mm';
   const initialModel =
     initialData ||
     fields.reduce(
@@ -109,10 +110,8 @@ const EditModel: FC<Props> = ({
     option?: string,
     actionType?: string,
   ) => {
-
     const copy = { ...data };
 
-    console.log('copy=', copy);
     objectPath.set(copy, name, value);
     setData(copy);
 
@@ -133,7 +132,6 @@ const EditModel: FC<Props> = ({
     }
   };
   const save = async (updatedData: any) => {
-    console.log('updatedData=', updatedData);
     setErrors(null);
     try {
       validate(updatedData);
@@ -252,11 +250,9 @@ const EditModel: FC<Props> = ({
                   setEndDate={setEndDate}
                   isAdmin={true}
                   savedStartDate={
-                    data.start && dayjs(data.start).format('YYYY-MM-DD')
+                    data.start && dayjs(data.start).format(dateFormat)
                   }
-                  savedEndDate={
-                    data.end && dayjs(data.end).format('YYYY-MM-DD')
-                  }
+                  savedEndDate={data.end && dayjs(data.end).format(dateFormat)}
                   defaultMonth={new Date()}
                 />
               ),
@@ -273,12 +269,12 @@ const EditModel: FC<Props> = ({
         ) : (
           fields &&
           filterFields(fields, data).map((field) => (
-              <FormField
-                {...field}
-                key={field.name}
-                data={data}
-                update={update}
-              />
+            <FormField
+              {...field}
+              key={field.name}
+              data={data}
+              update={update}
+            />
           ))
         )}
 

@@ -17,8 +17,7 @@ import Row from '../../../components/ui/Row';
 
 import { ParsedUrlQuery } from 'querystring';
 
-import PageNotAllowed from '../../401';
-import PageNotFound from '../../404';
+import { NextApiRequest } from 'next';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
@@ -28,7 +27,8 @@ import { BookingSettings } from '../../../types/api';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, priceFormat } from '../../../utils/helpers';
-import { NextApiRequest } from 'next';
+import PageNotAllowed from '../../401';
+import PageNotFound from '../../404';
 
 interface Props extends BaseBookingParams {
   listing: Listing;
@@ -45,6 +45,7 @@ const Checkout = ({
   settings,
   creditsBalance,
   error,
+  event
 }: Props) => {
   const {
     utilityFiat,
@@ -68,7 +69,7 @@ const Checkout = ({
     ? balanceAvailable < rentalToken.val
     : false;
 
-  const canApplyCredits =
+  const canApplyCredits = rentalToken?.val &&
     creditsBalance && creditsBalance >= rentalToken.val;
 
   const listingName = listing?.name;
@@ -152,7 +153,7 @@ const Checkout = ({
             </HeadingRow>
             <div className="flex justify-between items-center mt-3">
               <p>{listingName}</p>
-              {useTokens ? (
+              {useTokens && rentalToken ? (
                 <p className="font-bold">{priceFormat(rentalToken)}</p>
               ) : (
                 <p className="font-bold">{priceFormat(updatedRentalFiat)}</p>
@@ -166,7 +167,7 @@ const Checkout = ({
               canApplyCredits ? (
                 <RedeemCredits
                   rentalFiat={rentalFiat}
-                  rentalToken={rentalToken}
+                  rentalToken={rentalToken || { val: 0, cur: 'TDF' }}
                   applyCredits={applyCredits}
                   hasAppliedCredits={hasAppliedCredits}
                   creditsError={creditsError}
@@ -219,11 +220,12 @@ const Checkout = ({
               useTokens={useTokens}
               hasAppliedCredits={hasAppliedCredits}
               totalToPayInFiat={updatedTotal}
-              dailyTokenValue={dailyRentalToken?.val}
+              dailyTokenValue={dailyRentalToken?.val || 0}
               startDate={start}
               totalNights={duration}
               user={user}
               settings={settings}
+              eventId={event?._id}
             />
           ) : (
             <Button className="booking-btn" onClick={handleNext}>
