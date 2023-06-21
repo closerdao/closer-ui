@@ -11,8 +11,8 @@ interface Props {
   value?: string;
   minValue?: string | null;
   maxValue?: string | null;
-  setStartDate: (date: string | null) => void;
-  setEndDate: (date: string | null) => void;
+  setStartDate: (date: string | null | Date) => void;
+  setEndDate: (date: string | null | Date) => void;
   maxDuration?: number;
   blockedDateRanges?: (
     | Date
@@ -39,6 +39,7 @@ const DateTimePicker = ({
   isAdmin,
 }: Props) => {
   const dateFormat = 'YYYY-MMMM-DD-HH:mm';
+  const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [dateError, setDateError] = useState<null | string>(null);
   const [isOneMonthCalendar, setIsOneMonthCalendar] = useState(false);
@@ -81,7 +82,7 @@ const DateTimePicker = ({
     }
   }, [savedStartDate, savedEndDate]);
 
-  const getDateTime = (date: string, hours: number, minutes: number) => {
+  const getDateTime = (date: string | Date, hours: number, minutes: number) => {
     return new Date(
       new Date(date).getFullYear(),
       new Date(date).getMonth(),
@@ -92,21 +93,21 @@ const DateTimePicker = ({
   };
 
   const handleTimeChange: ChangeEventHandler<HTMLInputElement> = (event) => {
-    const time = event.target.value || '12:00';
-    // if (!time) {
-    //   time = '12:00';
-    // }
+    let time = event.target.value;
+    if (!time) {
+      time = '12:00';
+    }
     const [hours, minutes] = time.split(':').map((str) => parseInt(str, 10));
 
     if (event.target.id === 'startTime') {
       const newDate = getDateTime(savedStartDate as string, hours, minutes);
-      setStartDate(dayjs(newDate).format(dateFormat));
+      setStartDate(newDate);
       setStartTime(dayjs(newDate).format('HH:mm'));
     }
 
     if (event.target.id === 'endTime') {
       const newDate = getDateTime(savedEndDate as string, hours, minutes);
-      setEndDate(dayjs(newDate).format(dateFormat));
+      setEndDate(newDate);
       setEndTime(dayjs(newDate).format('HH:mm'));
     }
   };
@@ -136,9 +137,9 @@ const DateTimePicker = ({
             12,
             0,
           );
-          setEndDate(dayjs(newDate).format(dateFormat));
+          setEndDate(newDate);
         } else {
-          setEndDate(dayjs(range?.to).format(dateFormat));
+          setEndDate(range?.to);
         }
       } else {
         setEndDate(null);
@@ -150,9 +151,9 @@ const DateTimePicker = ({
             12,
             0,
           );
-          setStartDate(dayjs(newDate).format(dateFormat));
+          setStartDate(newDate);
         } else {
-          setStartDate(dayjs(range?.from).format(dateFormat));
+          setStartDate(range?.from);
         }
       } else {
         setStartDate(null);
@@ -207,26 +208,31 @@ const DateTimePicker = ({
         {dateError && <ErrorMessage error={dateError} />}
 
         {isAdmin && (
-          <div className="text-sm mb-2 flex">
-            <div className="w-[136px] mr-2">
-              <Input
-                label={__('events_event_start_time')}
-                value={startTime}
-                isDisabled={!Boolean(dateRange?.from)}
-                type="time"
-                id="startTime"
-                onChange={handleTimeChange}
-              />
+          <div>
+            <div className="text-sm mb-2 flex">
+              <div className="w-[136px] mr-2">
+                <Input
+                  label={__('events_event_start_time')}
+                  value={startTime}
+                  isDisabled={!Boolean(dateRange?.from)}
+                  type="time"
+                  id="startTime"
+                  onChange={handleTimeChange}
+                />
+              </div>
+              <div className="w-[136px]">
+                <Input
+                  label={__('events_event_end_time')}
+                  value={endTime}
+                  isDisabled={!Boolean(dateRange?.to)}
+                  type="time"
+                  id="endTime"
+                  onChange={handleTimeChange}
+                />
+              </div>
             </div>
-            <div className="w-[136px]">
-              <Input
-                label={__('events_event_end_time')}
-                value={endTime}
-                isDisabled={!Boolean(dateRange?.to)}
-                type="time"
-                id="endTime"
-                onChange={handleTimeChange}
-              />
+            <div className='text-sm mt-4'>
+              {localTimezone} {__('events_time')}
             </div>
           </div>
         )}

@@ -363,6 +363,7 @@
   "events_event_start_time": "Event start time",
   "events_event_end_date": "Event end date",
   "events_event_end_time": "Event end time",
+  "events_time": "time",
   "generic_back": "Back",
   "generic_cancel": "Cancel",
   "generic_next": "Next",

@@ -2,7 +2,6 @@ const config = {
   PORT: 14444,
   PLATFORM_NAME: 'Traditional Dream Factory',
   PLATFORM_LEGAL_ADDRESS: 'Cerca do Aviario, Abela, Portugal',
-  PLATFORM_TIMEZONE: 'Europe/Lisbon',
   DEFAULT_TITLE: 'Traditional Dream Factory',
   DEFAULT_DESCRIPTION: '',
   SEMANTIC_URL: 'https://traditionaldreamfactory.com',

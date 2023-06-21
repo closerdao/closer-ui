@@ -138,8 +138,8 @@ const DatesSelector: NextPage<Props> = ({
     }
   }, []);
 
-  const [start, setStartDate] = useState<string | null>();
-  const [end, setEndDate] = useState<string | null>();
+  const [start, setStartDate] = useState<string | null | Date>();
+  const [end, setEndDate] = useState<string | null | Date>();
   const [adults, setAdults] = useState<number>(Number(savedAdults) || 1);
   const [kids, setKids] = useState<number>(Number(savedKids) || 0);
   const [infants, setInfants] = useState<number>(Number(savedInfants) || 0);
@@ -196,7 +196,7 @@ const DatesSelector: NextPage<Props> = ({
         });
         router.push(`/bookings/${newBooking._id}/questions`);
       } else {
-        const urlParams = new URLSearchParams(data);
+        const urlParams = new URLSearchParams(data.toString());
         router.push(`/bookings/create/accomodation?${urlParams}`);
       }
     } catch (err: any) {

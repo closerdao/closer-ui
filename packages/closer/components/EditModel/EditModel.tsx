@@ -1,6 +1,5 @@
 import { FC, useEffect, useState } from 'react';
 
-import dayjs from 'dayjs';
 import objectPath from 'object-path';
 
 import { useAuth } from '../../contexts/auth';
@@ -62,7 +61,6 @@ const EditModel: FC<Props> = ({
   isPublic,
 }) => {
   const { isAuthenticated, user } = useAuth();
-  const dateFormat = 'YYYY-MMMM-DD-HH:mm';
   const initialModel =
     initialData ||
     fields.reduce(
@@ -75,10 +73,10 @@ const EditModel: FC<Props> = ({
   const [data, setData] = useState(initialModel);
   const [error, setErrors] = useState<string | null>(null);
 
-  const [startDate, setStartDate] = useState<string | null>(
+  const [startDate, setStartDate] = useState<string | null | Date>(
     data.start && data.start,
   );
-  const [endDate, setEndDate] = useState<string | null>(data.end && data.end);
+  const [endDate, setEndDate] = useState<string | null | Date>(data.end && data.end);
 
   useEffect(() => {
     setData({ ...data, start: startDate, end: endDate });
@@ -250,9 +248,9 @@ const EditModel: FC<Props> = ({
                   setEndDate={setEndDate}
                   isAdmin={true}
                   savedStartDate={
-                    data.start && dayjs(data.start).format(dateFormat)
+                    data.start && data.start
                   }
-                  savedEndDate={data.end && dayjs(data.end).format(dateFormat)}
+                  savedEndDate={data.end && data.end}
                   defaultMonth={new Date()}
                 />
               ),

@@ -1,4 +1,4 @@
-import { ChangeEventHandler, Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 
 import { TicketOption } from '../../types';
 import api from '../../utils/api';
@@ -37,27 +37,26 @@ const DiscountCode = ({
     setDiscountResult({ ...res.data });
   };
 
-  const handleSetDiscountCode: ChangeEventHandler<HTMLInputElement> = (event) => { 
-
-  }
   return (
     <div>
       <div className="blcok sm:flex basis-20">
-        <Heading level={4} className="text-[14px] mt-2 basis-1/2 mb-4 sm: mb-0">
+        <Heading level={4} className="text-[14px] mt-2 basis-1/2 sm: mb-0">
           {__('bookings_dates_step_tickets_discount_code')}:
         </Heading>
         <Input
           type="text"
           value={discountCode}
           onChange={(e) => setDiscountCode(e.target.value)}
-          placeholder={__('bookings_dates_step_tickets_discount_code_placeholder')}
+          placeholder={__(
+            'bookings_dates_step_tickets_discount_code_placeholder',
+          )}
           className=""
         />
         <Button
           type="inline"
           onClick={handleApplyDiscountCode}
           isEnabled={!!(discountCode && selectedTicketOption)}
-          className='mt-4 ml-0 sm:mt-0 sm:ml-4'
+          className="mt-4 ml-0 sm:mt-0 sm:ml-4"
           title={__('apply_submit_button_help')}
         >
           {__('apply_submit_button')}

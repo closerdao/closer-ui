@@ -14,18 +14,13 @@ import dayjs from 'dayjs';
 import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
-import { useConfig } from '../../../hooks/useConfig';
 import api, { cdn } from '../../../utils/api';
 import { prependHttp } from '../../../utils/helpers';
-
-const timezone = require('dayjs/plugin/timezone');
-const utc = require('dayjs/plugin/utc');
-dayjs.extend(utc);
-dayjs.extend(timezone);
+import { __ } from '../../../utils/helpers';
 
 const Event = ({ event, error }) => {
-  const config = useConfig();
-  const { PLATFORM_TIMEZONE } = config || {};
+  const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
   const [photo, setPhoto] = useState(event && event.photo);
   const [password, setPassword] = useState('');
   const [featured, setFeatured] = useState(event && !!event.featured);
@@ -48,7 +43,8 @@ const Event = ({ event, error }) => {
   const start = event && event.start && dayjs(event.start);
   const end = event && event.end && dayjs(event.end);
   const duration = end && end.diff(start, 'hour', true);
-  const dateFormat = 'MMMM DD YYYY HH:mm';
+  const isThisYear = dayjs().isSame(start, 'year');
+  const dateFormat = isThisYear ? 'MMMM Do HH:mm' : 'YYYY MMMM Do HH:mm';
 
   const myTickets = platform.ticket.find(myTicketFilter);
   const ticketsCount = event?.ticketOptions
@@ -162,14 +158,12 @@ const Event = ({ event, error }) => {
               />
               <div className="md:w-1/2 p-2">
                 <label className="text-xl font-light">
-                  {start &&
-                    dayjs(start).tz(PLATFORM_TIMEZONE).format(dateFormat)}
+                  {start && dayjs(start).format(dateFormat)}
                   {end &&
                     duration > 24 &&
-                    ` - ${dayjs(end).tz(PLATFORM_TIMEZONE).format(dateFormat)}`}
-                  {end &&
-                    duration <= 24 &&
-                    ` - ${dayjs(end).tz(PLATFORM_TIMEZONE).format('HH:mm')}`}
+                    ` - ${dayjs(end).format(dateFormat)}`}
+                  {end && duration <= 24 && ` - ${dayjs(end).format('HH:mm')}`}{' '}
+                  ({localTimezone} {__('events_time')})
                 </label>
                 {event.address && (
                   <h3 className="text-lg font-light text-gray-500">
