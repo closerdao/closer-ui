@@ -1,5 +1,3 @@
-import { CloserCurrencies } from './types/currency';
-
 export const blockchainConfig = {
   BLOCKCHAIN_NETWORK_ID: 44787,
   BLOCKCHAIN_NAME: 'CELO ALFAJORES',
@@ -11,125 +9,15 @@ export const blockchainConfig = {
     decimals: 18,
   },
   BLOCKCHAIN_DAO_TOKEN: {
-    address: '0xA1885AC1A36C645651CE267ac15E8d33FC34446e',
-    name: CloserCurrencies.TDF,
-    symbol: CloserCurrencies.TDF,
+    address: '0x01d5a642ff16fd4148F2A91DE248B4BD80377490',
+    name: 'TDF',
+    symbol: 'TDF',
     decimals: 18,
   },
   BLOCKCHAIN_CROWDSALE_CONTRACT_ADDRESS:
-    '0xA3145DBd2E9E4778934D61f7814AF2b6eF3F06E2',
-  BLOCKCHAIN_DAO_DIAMOND_ADDRESS: '0x743C187B61EfDdD464722afdC40738FDa7ADD6B3',
+    '0xe13C9A06C7494fc9b9BbD8ea1C3693479007A1ad',
+  BLOCKCHAIN_DAO_DIAMOND_ADDRESS: '0xEd9fDECF279a5969e2da774dfe24AFEc39e6228f',
   BLOCKCHAIN_DAO_TOKEN_ABI: [
-    {
-      anonymous: false,
-      inputs: [
-        {
-          indexed: false,
-          internalType: 'address',
-          name: 'previousAdmin',
-          type: 'address',
-        },
-        {
-          indexed: false,
-          internalType: 'address',
-          name: 'newAdmin',
-          type: 'address',
-        },
-      ],
-      name: 'AdminChanged',
-      type: 'event',
-    },
-    {
-      anonymous: false,
-      inputs: [
-        {
-          indexed: true,
-          internalType: 'address',
-          name: 'beacon',
-          type: 'address',
-        },
-      ],
-      name: 'BeaconUpgraded',
-      type: 'event',
-    },
-    {
-      anonymous: false,
-      inputs: [
-        {
-          indexed: true,
-          internalType: 'address',
-          name: 'implementation',
-          type: 'address',
-        },
-      ],
-      name: 'Upgraded',
-      type: 'event',
-    },
-    {
-      stateMutability: 'payable',
-      type: 'fallback',
-    },
-    {
-      inputs: [],
-      name: 'admin',
-      outputs: [
-        {
-          internalType: 'address',
-          name: 'admin_',
-          type: 'address',
-        },
-      ],
-      stateMutability: 'nonpayable',
-      type: 'function',
-    },
-    {
-      inputs: [],
-      name: 'implementation',
-      outputs: [
-        {
-          internalType: 'address',
-          name: 'implementation_',
-          type: 'address',
-        },
-      ],
-      stateMutability: 'nonpayable',
-      type: 'function',
-    },
-    {
-      inputs: [
-        {
-          internalType: 'address',
-          name: 'newImplementation',
-          type: 'address',
-        },
-      ],
-      name: 'upgradeTo',
-      outputs: [],
-      stateMutability: 'nonpayable',
-      type: 'function',
-    },
-    {
-      inputs: [
-        {
-          internalType: 'address',
-          name: 'newImplementation',
-          type: 'address',
-        },
-        {
-          internalType: 'bytes',
-          name: 'data',
-          type: 'bytes',
-        },
-      ],
-      name: 'upgradeToAndCall',
-      outputs: [],
-      stateMutability: 'payable',
-      type: 'function',
-    },
-    {
-      stateMutability: 'payable',
-      type: 'receive',
-    },
     {
       anonymous: false,
       inputs: [
@@ -645,27 +533,6 @@ export const blockchainConfig = {
       stateMutability: 'nonpayable',
       type: 'function',
     },
-    {
-      inputs: [
-        {
-          internalType: 'address',
-          name: '_logic',
-          type: 'address',
-        },
-        {
-          internalType: 'address',
-          name: 'admin_',
-          type: 'address',
-        },
-        {
-          internalType: 'bytes',
-          name: '_data',
-          type: 'bytes',
-        },
-      ],
-      stateMutability: 'payable',
-      type: 'constructor',
-    },
   ],
   BLOCKCHAIN_DIAMOND_ABI: [
     {
@@ -981,6 +848,25 @@ export const blockchainConfig = {
       name: 'cancelAccommodationFor',
       outputs: [],
       stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'account_',
+          type: 'address',
+        },
+      ],
+      name: 'checkedInNightsByYearFor',
+      outputs: [
+        {
+          internalType: 'uint16[2][]',
+          name: '',
+          type: 'uint16[2][]',
+        },
+      ],
+      stateMutability: 'view',
       type: 'function',
     },
     {
@@ -1740,7 +1626,7 @@ export const blockchainConfig = {
           type: 'uint256',
         },
       ],
-      name: 'mintTokensFor',
+      name: 'mintCommunityTokenTo',
       outputs: [],
       stateMutability: 'nonpayable',
       type: 'function',
@@ -2173,93 +2059,36 @@ export const blockchainConfig = {
   ],
   BLOCKCHAIN_CROWDSALE_CONTRACT_ABI: [
     {
+      anonymous: false,
       inputs: [
         {
-          internalType: 'uint256',
-          name: 'weiAmount',
-          type: 'uint256',
+          indexed: false,
+          internalType: 'uint8',
+          name: 'version',
+          type: 'uint8',
         },
       ],
-      name: 'buy',
-      outputs: [],
-      stateMutability: 'nonpayable',
-      type: 'function',
+      name: 'Initialized',
+      type: 'event',
     },
     {
+      anonymous: false,
       inputs: [
         {
+          indexed: true,
           internalType: 'address',
-          name: 'beneficiary',
+          name: 'previousOwner',
           type: 'address',
         },
         {
-          internalType: 'uint256',
-          name: 'weiAmount',
-          type: 'uint256',
-        },
-      ],
-      name: 'buyFor',
-      outputs: [],
-      stateMutability: 'nonpayable',
-      type: 'function',
-    },
-    {
-      inputs: [],
-      name: 'pause',
-      outputs: [],
-      stateMutability: 'nonpayable',
-      type: 'function',
-    },
-    {
-      inputs: [],
-      name: 'renounceOwnership',
-      outputs: [],
-      stateMutability: 'nonpayable',
-      type: 'function',
-    },
-    {
-      inputs: [
-        {
-          internalType: 'uint256',
-          name: '_price',
-          type: 'uint256',
-        },
-      ],
-      name: 'setPrice',
-      outputs: [],
-      stateMutability: 'nonpayable',
-      type: 'function',
-    },
-    {
-      inputs: [
-        {
+          indexed: true,
           internalType: 'address',
-          name: '_token',
+          name: 'newOwner',
           type: 'address',
-        },
-        {
-          internalType: 'address',
-          name: '_quote',
-          type: 'address',
-        },
-        {
-          internalType: 'address payable',
-          name: '_wallet',
-          type: 'address',
-        },
-        {
-          internalType: 'uint256',
-          name: '_price',
-          type: 'uint256',
-        },
-        {
-          internalType: 'uint256',
-          name: '_minTokenBuyAmount',
-          type: 'uint256',
         },
       ],
-      stateMutability: 'nonpayable',
-      type: 'constructor',
+      name: 'OwnershipTransferStarted',
+      type: 'event',
     },
     {
       anonymous: false,
@@ -2298,40 +2127,9 @@ export const blockchainConfig = {
       inputs: [
         {
           indexed: false,
-          internalType: 'uint256',
-          name: 'prevPrice',
-          type: 'uint256',
-        },
-        {
-          indexed: false,
-          internalType: 'uint256',
-          name: 'newPrice',
-          type: 'uint256',
-        },
-      ],
-      name: 'PriceChanged',
-      type: 'event',
-    },
-    {
-      anonymous: false,
-      inputs: [
-        {
-          indexed: true,
           internalType: 'address',
-          name: 'purchaser',
+          name: 'to',
           type: 'address',
-        },
-        {
-          indexed: true,
-          internalType: 'address',
-          name: 'beneficiary',
-          type: 'address',
-        },
-        {
-          indexed: false,
-          internalType: 'uint256',
-          name: 'value',
-          type: 'uint256',
         },
         {
           indexed: false,
@@ -2340,28 +2138,8 @@ export const blockchainConfig = {
           type: 'uint256',
         },
       ],
-      name: 'TokensPurchased',
+      name: 'SuccessBuy',
       type: 'event',
-    },
-    {
-      inputs: [
-        {
-          internalType: 'address',
-          name: 'newOwner',
-          type: 'address',
-        },
-      ],
-      name: 'transferOwnership',
-      outputs: [],
-      stateMutability: 'nonpayable',
-      type: 'function',
-    },
-    {
-      inputs: [],
-      name: 'unpause',
-      outputs: [],
-      stateMutability: 'nonpayable',
-      type: 'function',
     },
     {
       anonymous: false,
@@ -2378,12 +2156,133 @@ export const blockchainConfig = {
     },
     {
       inputs: [],
-      name: 'minTokenBuyAmount',
+      name: 'acceptOwnership',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'uint256',
+          name: 'amount',
+          type: 'uint256',
+        },
+      ],
+      name: 'buy',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'spender',
+          type: 'address',
+        },
+        {
+          internalType: 'address',
+          name: 'to',
+          type: 'address',
+        },
+        {
+          internalType: 'uint256',
+          name: 'amount',
+          type: 'uint256',
+        },
+      ],
+      name: 'buyFrom',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'calculateCurrentPrice',
+      outputs: [
+        {
+          internalType: 'uint256',
+          name: '_currentPrice',
+          type: 'uint256',
+        },
+      ],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'uint256',
+          name: 'amount',
+          type: 'uint256',
+        },
+      ],
+      name: 'calculateTotalCost',
+      outputs: [
+        {
+          internalType: 'uint256',
+          name: 'newPrice',
+          type: 'uint256',
+        },
+        {
+          internalType: 'uint256',
+          name: 'totalCost',
+          type: 'uint256',
+        },
+      ],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'currentPrice',
       outputs: [
         {
           internalType: 'uint256',
           name: '',
           type: 'uint256',
+        },
+      ],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'token_',
+          type: 'address',
+        },
+        {
+          internalType: 'address',
+          name: 'quote_',
+          type: 'address',
+        },
+        {
+          internalType: 'address',
+          name: 'minter_',
+          type: 'address',
+        },
+        {
+          internalType: 'address',
+          name: 'treasury_',
+          type: 'address',
+        },
+      ],
+      name: 'initialize',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'minter',
+      outputs: [
+        {
+          internalType: 'contract IMinterDAO',
+          name: '',
+          type: 'address',
         },
       ],
       stateMutability: 'view',
@@ -2404,6 +2303,13 @@ export const blockchainConfig = {
     },
     {
       inputs: [],
+      name: 'pause',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [],
       name: 'paused',
       outputs: [
         {
@@ -2417,7 +2323,33 @@ export const blockchainConfig = {
     },
     {
       inputs: [],
-      name: 'price',
+      name: 'pendingOwner',
+      outputs: [
+        {
+          internalType: 'address',
+          name: '',
+          type: 'address',
+        },
+      ],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'priceCurveMaxValue',
+      outputs: [
+        {
+          internalType: 'uint256',
+          name: '',
+          type: 'uint256',
+        },
+      ],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'priceCurveMinValue',
       outputs: [
         {
           internalType: 'uint256',
@@ -2433,7 +2365,7 @@ export const blockchainConfig = {
       name: 'quote',
       outputs: [
         {
-          internalType: 'contract IERC20',
+          internalType: 'contract IERC20Upgradeable',
           name: '',
           type: 'address',
         },
@@ -2443,7 +2375,14 @@ export const blockchainConfig = {
     },
     {
       inputs: [],
-      name: 'remainingTokens',
+      name: 'renounceOwnership',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'saleHardCap',
       outputs: [
         {
           internalType: 'uint256',
@@ -2452,6 +2391,45 @@ export const blockchainConfig = {
         },
       ],
       stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'uint256',
+          name: 'supply',
+          type: 'uint256',
+        },
+      ],
+      name: 'setMaxLiquidSupply',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'uint256',
+          name: 'newPrice',
+          type: 'uint256',
+        },
+      ],
+      name: 'setNewPrice',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'treasury_',
+          type: 'address',
+        },
+      ],
+      name: 'setTreasury',
+      outputs: [],
+      stateMutability: 'nonpayable',
       type: 'function',
     },
     {
@@ -2459,7 +2437,33 @@ export const blockchainConfig = {
       name: 'token',
       outputs: [
         {
-          internalType: 'contract IERC20',
+          internalType: 'contract IERC20Upgradeable',
+          name: '',
+          type: 'address',
+        },
+      ],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'newOwner',
+          type: 'address',
+        },
+      ],
+      name: 'transferOwnership',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'treasury',
+      outputs: [
+        {
+          internalType: 'address',
           name: '',
           type: 'address',
         },
@@ -2469,28 +2473,9 @@ export const blockchainConfig = {
     },
     {
       inputs: [],
-      name: 'wallet',
-      outputs: [
-        {
-          internalType: 'address payable',
-          name: '',
-          type: 'address',
-        },
-      ],
-      stateMutability: 'view',
-      type: 'function',
-    },
-    {
-      inputs: [],
-      name: 'weiRaised',
-      outputs: [
-        {
-          internalType: 'uint256',
-          name: '',
-          type: 'uint256',
-        },
-      ],
-      stateMutability: 'view',
+      name: 'unpause',
+      outputs: [],
+      stateMutability: 'nonpayable',
       type: 'function',
     },
   ],
