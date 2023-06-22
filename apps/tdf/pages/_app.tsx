@@ -1,7 +1,8 @@
 import { AppProps } from 'next/app';
+import { useRouter } from 'next/router';
 import Script from 'next/script';
 
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 
 import { ErrorBoundary, Layout } from '@/components';
 
@@ -22,6 +23,7 @@ import 'closer/public/styles.css';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import config from '../config';
+import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 
 export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
   const library = new Web3Provider(provider);
@@ -30,6 +32,16 @@ export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
 
 const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
   const { FACEBOOK_PIXEL_ID } = config || {};
+  const router = useRouter();
+  const { query } = router;
+  const referral = query.referral;
+
+  useEffect(() => {
+    const currentReferralId = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
+    if (!currentReferralId && referral) {
+      localStorage.setItem(REFERRAL_ID_LOCAL_STORAGE_KEY, referral as string);
+    }
+  }, []);
 
   return (
     <>

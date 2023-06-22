@@ -92,6 +92,7 @@ export { default as SubscriptionsSummaryPage } from './pages/subscriptions/summa
 export { default as SubscriptionsCheckoutPage } from './pages/subscriptions/checkout';
 export { default as SubscriptionSuccessPage } from './pages/subscriptions/success';
 export { default as UnlockStaysPage } from './pages/bookings/unlock-stays';
+export { default as ReferralsPage } from './pages/settings/referrals';
 
 // Types
 export * from './types/';
