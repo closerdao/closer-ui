@@ -2,10 +2,12 @@ import React, {
   Dispatch,
   FC,
   SetStateAction,
+  useContext,
   useEffect,
   useState,
 } from 'react';
 
+import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
 import { __ } from '../../utils/helpers';
@@ -20,6 +22,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
   const { ACCOMODATION_COST, SOURCE_TOKEN } = useConfig() || {};
   const { getTokenPrice } = useBuyTokens();
   const [tokenPrice, setTokenPrice] = useState<number>(0);
+  const { isWalletConnected } = useContext(WalletState);
 
   const accommodationOptions = ACCOMODATION_COST.map((option: any) => {
     return { label: option.name, value: option.name };
@@ -32,13 +35,14 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
   const [daysToStay, setDaysToStay] = useState(0);
 
   useEffect(() => {
-    (async () => {
-      const getPrice = await getTokenPrice();
-      setTokenPrice(getPrice.price);
-    })();
+    isWalletConnected &&
+      (async () => {
+        const price = await getTokenPrice();
+        setTokenPrice(price);
+      })();
 
     setDaysToStay(tokensToBuy);
-  }, []);
+  }, [isWalletConnected]);
 
   useEffect(() => {
     if (tokenPrice) {
@@ -92,7 +96,9 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
     const value =
       event.target.value === '' ? 0 : parseInt(event.target.value, 10);
     setTokensToBuy(Math.ceil(value * price));
-    setTokensToSpend(Number((Math.ceil(value * price) * tokenPrice).toFixed(2)));
+    setTokensToSpend(
+      Number((Math.ceil(value * price) * tokenPrice).toFixed(2)),
+    );
     setDaysToStay(value);
   };
 
@@ -117,7 +123,10 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
       </div>
 
       <div className="flex gap-4">
-        <label htmlFor='tokensToSpend' className="font-bold bg-accent-light py-3.5 px-6 rounded-md text-xl">
+        <label
+          htmlFor="tokensToSpend"
+          className="font-bold bg-accent-light py-3.5 px-6 rounded-md text-xl"
+        >
           {__('token_sale_source_token')}
         </label>
         <input
@@ -129,12 +138,15 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
       </div>
 
       <div className="flex gap-4 flex-wrap sm:flex-nowrap ">
-        <label htmlFor='accommodationOptions' className="font-bold bg-accent-light w-1/2 py-3.5 px-6 rounded-md text-xl">
+        <label
+          htmlFor="accommodationOptions"
+          className="font-bold bg-accent-light w-1/2 py-3.5 px-6 rounded-md text-xl"
+        >
           {__('token_sale_widget_stay')}
         </label>
 
         <Select
-          id='accommodationOptions'
+          id="accommodationOptions"
           value={selectedAccommodation}
           options={accommodationOptions}
           className="w-1/2"
@@ -145,11 +157,14 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
       </div>
 
       <div className="flex gap-4 flex-wrap">
-        <label htmlFor='daysToStay' className="w-auto font-bold bg-accent-light py-3.5 px-6 rounded-md text-xl">
+        <label
+          htmlFor="daysToStay"
+          className="w-auto font-bold bg-accent-light py-3.5 px-6 rounded-md text-xl"
+        >
           {__('token_sale_widget_for')}
         </label>
         <input
-          id='daysToStay'
+          id="daysToStay"
           value={daysToStay}
           onChange={handleDaysToStayChange}
           className="w-auto h-14 px-4 pr-8 rounded-md text-xl bg-neutral text-black"

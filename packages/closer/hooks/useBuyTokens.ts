@@ -30,17 +30,16 @@ export const useBuyTokens = () => {
 
   const getTokenPrice = async () => {
     const { TdfToken } = getContractInstances();
-
     const { a, b, c } = BONDING_CURVE_COEFFICIENTS;
 
     try {
       const supplyInWei = await TdfToken.totalSupply();
       const supply = parseInt(utils.formatEther(supplyInWei));
       const currentPrice = c - a / supply ** 2 + b / supply ** 3;
-      return currentPrice.toFixed(2).toString();
+      return parseFloat(currentPrice.toFixed(2));
     } catch (error) {
       console.log(error);
-      return null;
+      return 0;
     }
   };
 
