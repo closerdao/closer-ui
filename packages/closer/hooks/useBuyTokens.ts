@@ -1,16 +1,47 @@
-// This is a  simplified mock.
-// Required new functionality:
-// - get token price
-// - buy tokens
-// - get amount of tokens available for purchase
+import { useContext } from 'react';
+
+import { Contract, utils } from 'ethers';
+
+import { BONDING_CURVE_COEFFICIENTS } from '../constants';
+import { WalletState } from '../contexts/wallet';
+import { useConfig } from './useConfig';
 
 export const useBuyTokens = () => {
+  const { library } = useContext(WalletState);
+  const {
+    BLOCKCHAIN_CROWDSALE_CONTRACT_ADDRESS,
+    BLOCKCHAIN_CROWDSALE_CONTRACT_ABI,
+    BLOCKCHAIN_DAO_TOKEN,
+    BLOCKCHAIN_DAO_TOKEN_ABI,
+  } = useConfig();
+
+  const getContractInstances = () => ({
+    Crowdsale: new Contract(
+      BLOCKCHAIN_CROWDSALE_CONTRACT_ADDRESS,
+      BLOCKCHAIN_CROWDSALE_CONTRACT_ABI,
+      library && library.getUncheckedSigner(),
+    ),
+    TdfToken: new Contract(
+      BLOCKCHAIN_DAO_TOKEN.address,
+      BLOCKCHAIN_DAO_TOKEN_ABI,
+      library && library.getUncheckedSigner(),
+    ),
+  });
+
   const getTokenPrice = async () => {
-    return Promise.resolve({
-      status: 'success',
-      price: 230.23,
-      error: null,
-    });
+    const { TdfToken } = getContractInstances();
+
+    const { a, b, c } = BONDING_CURVE_COEFFICIENTS;
+
+    try {
+      const supplyInWei = await TdfToken.totalSupply();
+      const supply = parseInt(utils.formatEther(supplyInWei));
+      const currentPrice = c - a / supply ** 2 + b / supply ** 3;
+      return currentPrice.toFixed(2).toString();
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
   };
 
   const getTokensAvailableForPurchase = async () => {
@@ -28,12 +59,6 @@ export const useBuyTokens = () => {
       amountOfTokensPurchased: 15,
       error: null,
     });
-    // return Promise.resolve({
-    //   status: 'failed',
-    //   transactionId: 'transactionId',
-    //   amountOfTokensPurchased: 0,
-    //   error: 'error buying tokens',
-    // });
   };
   return { getTokenPrice, buyTokens, getTokensAvailableForPurchase };
 };

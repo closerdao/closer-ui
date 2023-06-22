@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
 import {
   BackButton,
@@ -14,6 +14,7 @@ import {
 
 import { TOKEN_SALE_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import { WalletState } from '../../../contexts/wallet';
 import { useBuyTokens } from '../../../hooks/useBuyTokens';
 import { useConfig } from '../../../hooks/useConfig';
 import { parseMessageFromError } from '../../../utils/common';
@@ -21,13 +22,13 @@ import { __ } from '../../../utils/helpers';
 
 const TokenSaleCheckoutPage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
-  const { buyTokens } = useBuyTokens();
   const router = useRouter();
   const { tokens } = router.query;
   const { SOURCE_TOKEN } = useConfig() || {};
-  const { getTokenPrice } = useBuyTokens();
+  const { getTokenPrice, buyTokens } = useBuyTokens();
   const [tokenPrice, setTokenPrice] = useState<number>(0);
   const { isAuthenticated, isLoading, user } = useAuth();
+  const { isWalletReady } = useContext(WalletState);
 
   const [web3Error, setWeb3Error] = useState<string | null>(null);
 
@@ -38,11 +39,12 @@ const TokenSaleCheckoutPage = () => {
   }, [isAuthenticated, isLoading]);
 
   useEffect(() => {
-    (async () => {
-      const getPrice = await getTokenPrice();
-      setTokenPrice(getPrice.price);
-    })();
-  }, []);
+    isWalletReady &&
+      (async () => {
+        const getPrice = await getTokenPrice();
+        setTokenPrice(getPrice.price);
+      })();
+  }, [isWalletReady]);
 
   const goBack = async () => {
     if (user && user.kycPassed) {
@@ -138,7 +140,6 @@ const TokenSaleCheckoutPage = () => {
                 } `}
                 additionalInfo={__('token_sale_checkout_vat')}
               />
-          
             </div>
           </div>
           <Button onClick={handleSignTransaction}>
