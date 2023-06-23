@@ -33,7 +33,7 @@ const TokenSaleCheckoutPage = () => {
 
   const [web3Error, setWeb3Error] = useState<string | null>(null);
 
-  const unitPrice = total / parseInt(tokens as string);
+  const unitPrice = (total / parseInt(tokens as string)).toFixed(2);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
