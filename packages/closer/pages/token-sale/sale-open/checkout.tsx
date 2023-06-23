@@ -26,13 +26,14 @@ const TokenSaleCheckoutPage = () => {
   const { tokens } = router.query;
   const { SOURCE_TOKEN } = useConfig() || {};
   const { buyTokens, getTotalCost } = useBuyTokens();
-  const [tokenPrice, setTokenPrice] = useState<number>(0);
   const [total, setTotal] = useState<number>(0);
 
   const { isAuthenticated, isLoading, user } = useAuth();
   const { isWalletReady } = useContext(WalletState);
 
   const [web3Error, setWeb3Error] = useState<string | null>(null);
+
+  const unitPrice = total / parseInt(tokens as string);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -118,7 +119,7 @@ const TokenSaleCheckoutPage = () => {
                 value={tokens?.toString()}
                 additionalInfo={`1 ${__(
                   'token_sale_token_symbol',
-                )} = ${tokenPrice} ${SOURCE_TOKEN}`}
+                )} = ${unitPrice} ${SOURCE_TOKEN}`}
               />
             </div>
             <Button
