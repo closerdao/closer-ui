@@ -51,15 +51,10 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
     if (currentSupply) {
       const price = getCurrentUnitPrice(currentSupply);
       setTokenPrice(price);
-    }
-  }, [currentSupply]);
-
-  useEffect(() => {
-    if (currentSupply) {
       const totalPrice = getTotalPrice(currentSupply, tokensToBuy);
       setTokensToSpend(totalPrice);
     }
-  }, [tokensToBuy]);
+  }, [currentSupply, tokensToBuy]);
 
   const handleAccommodationSelect = (value: string) => {
     const price = ACCOMODATION_COST.find(
