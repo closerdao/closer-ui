@@ -25,8 +25,10 @@ const TokenSaleCheckoutPage = () => {
   const router = useRouter();
   const { tokens } = router.query;
   const { SOURCE_TOKEN } = useConfig() || {};
-  const { getTokenPrice, buyTokens } = useBuyTokens();
+  const { buyTokens, getTotalCost } = useBuyTokens();
   const [tokenPrice, setTokenPrice] = useState<number>(0);
+  const [total, setTotal] = useState<number>(0);
+
   const { isAuthenticated, isLoading, user } = useAuth();
   const { isWalletReady } = useContext(WalletState);
 
@@ -41,8 +43,8 @@ const TokenSaleCheckoutPage = () => {
   useEffect(() => {
     isWalletReady &&
       (async () => {
-        const getPrice = await getTokenPrice();
-        setTokenPrice(getPrice.price);
+        const totalCost = await getTotalCost(tokens as string);
+        setTotal(totalCost);
       })();
   }, [isWalletReady]);
 
@@ -135,9 +137,7 @@ const TokenSaleCheckoutPage = () => {
             <div className="flex flex-col gap-6">
               <Row
                 rowKey={__('token_sale_checkout_total')}
-                value={`${__('token_sale_source_token')} ${
-                  Number(tokenPrice) * Number(tokens)
-                } `}
+                value={`${__('token_sale_source_token')} ${total} `}
                 additionalInfo={__('token_sale_checkout_vat')}
               />
             </div>

@@ -57,9 +57,19 @@ export const useBuyTokens = () => {
     });
   };
 
+  const getTotalCost = async (amount: string) => {
+    const amountInWei = utils.parseEther(amount);
+    const { Crowdsale } = getContractInstances();
+
+    const { totalCost } = await Crowdsale.calculateTotalCost(amountInWei);
+
+    return parseFloat(utils.formatEther(totalCost));
+  };
+
   return {
     getCurrentSupply,
     buyTokens,
     getTokensAvailableForPurchase,
+    getTotalCost,
   };
 };
