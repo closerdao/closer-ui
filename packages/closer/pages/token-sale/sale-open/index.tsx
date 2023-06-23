@@ -2,27 +2,33 @@ import Head from 'next/head';
 import Image from 'next/image';
 import router from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
 import { Button, Card, Heading } from '../../../components/ui';
 
 import { useAuth, useConfig } from 'closer';
 import { __ } from 'closer/utils/helpers';
 
+import { WalletState } from '../../../contexts/wallet';
 import { useBuyTokens } from '../../../hooks/useBuyTokens';
+import { getRemainingTokens } from '../../../utils/bondingCurve';
 
 const PublicTokenSalePage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
   const { user } = useAuth();
-  const { getTokensAvailableForPurchase } = useBuyTokens();
+  const { getCurrentSupply } = useBuyTokens();
   const [tokensAvailable, setTokensAvailable] = useState<number | null>(null);
+  const { isWalletReady } = useContext(WalletState);
 
   useEffect(() => {
-    (async () => {
-      const getTokensAvailable = await getTokensAvailableForPurchase();
-      setTokensAvailable(getTokensAvailable.tokensAvailable);
-    })();
-  }, []);
+    if (isWalletReady) {
+      (async () => {
+        const supply = await getCurrentSupply();
+        const remainingAmount = getRemainingTokens(supply);
+        setTokensAvailable(remainingAmount);
+      })();
+    }
+  }, [isWalletReady]);
 
   const handleNext = async () => {
     if (user && user.kycPassed === true) {
