@@ -2,7 +2,6 @@ import { useContext } from 'react';
 
 import { Contract, utils } from 'ethers';
 
-import { BONDING_CURVE_COEFFICIENTS } from '../constants';
 import { WalletState } from '../contexts/wallet';
 import { useConfig } from './useConfig';
 
@@ -28,15 +27,13 @@ export const useBuyTokens = () => {
     ),
   });
 
-  const getTokenPrice = async () => {
+  const getCurrentSupply = async () => {
     const { TdfToken } = getContractInstances();
-    const { a, b, c } = BONDING_CURVE_COEFFICIENTS;
 
     try {
       const supplyInWei = await TdfToken.totalSupply();
       const supply = parseInt(utils.formatEther(supplyInWei));
-      const currentPrice = c - a / supply ** 2 + b / supply ** 3;
-      return parseFloat(currentPrice.toFixed(2));
+      return supply;
     } catch (error) {
       console.log(error);
       return 0;
@@ -59,5 +56,10 @@ export const useBuyTokens = () => {
       error: null,
     });
   };
-  return { getTokenPrice, buyTokens, getTokensAvailableForPurchase };
+
+  return {
+    getCurrentSupply,
+    buyTokens,
+    getTokensAvailableForPurchase,
+  };
 };

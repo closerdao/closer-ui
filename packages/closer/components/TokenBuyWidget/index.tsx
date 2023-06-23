@@ -10,6 +10,7 @@ import React, {
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
+import { getCurrentUnitPrice, getTotalPrice } from '../../utils/bondingCurve';
 import { __ } from '../../utils/helpers';
 import Select from '../ui/Select/Dropdown';
 
@@ -20,9 +21,10 @@ interface Props {
 
 const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
   const { ACCOMODATION_COST, SOURCE_TOKEN } = useConfig() || {};
-  const { getTokenPrice } = useBuyTokens();
+  const { getCurrentSupply } = useBuyTokens();
   const [tokenPrice, setTokenPrice] = useState<number>(0);
-  const { isWalletConnected } = useContext(WalletState);
+  const [currentSupply, setCurrentSupply] = useState<number>(0);
+  const { isWalletReady } = useContext(WalletState);
 
   const accommodationOptions = ACCOMODATION_COST.map((option: any) => {
     return { label: option.name, value: option.name };
@@ -35,20 +37,29 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
   const [daysToStay, setDaysToStay] = useState(0);
 
   useEffect(() => {
-    isWalletConnected &&
+    if (isWalletReady) {
       (async () => {
-        const price = await getTokenPrice();
-        setTokenPrice(price);
+        const supply = await getCurrentSupply();
+        setCurrentSupply(supply);
       })();
+    }
 
     setDaysToStay(tokensToBuy);
-  }, [isWalletConnected]);
+  }, [isWalletReady]);
 
   useEffect(() => {
-    if (tokenPrice) {
-      setTokensToSpend(Math.ceil(tokensToBuy * tokenPrice));
+    if (currentSupply) {
+      const price = getCurrentUnitPrice(currentSupply);
+      setTokenPrice(price);
     }
-  }, [tokenPrice]);
+  }, [currentSupply]);
+
+  useEffect(() => {
+    if (currentSupply) {
+      const totalPrice = getTotalPrice(currentSupply, tokensToBuy);
+      setTokensToSpend(totalPrice);
+    }
+  }, [tokensToBuy]);
 
   const handleAccommodationSelect = (value: string) => {
     const price = ACCOMODATION_COST.find(
