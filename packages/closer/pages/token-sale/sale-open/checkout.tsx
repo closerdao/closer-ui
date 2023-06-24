@@ -25,8 +25,10 @@ const TokenSaleCheckoutPage = () => {
   const router = useRouter();
   const { tokens } = router.query;
   const { SOURCE_TOKEN } = useConfig() || {};
-  const { buyTokens, getTotalCost } = useBuyTokens();
+  const { buyTokens, getTotalCost, isCeurApproved, approveCeur, isPending } =
+    useBuyTokens();
   const [total, setTotal] = useState<number>(0);
+  const [isApproved, setIsApproved] = useState<boolean>(false);
 
   const { isAuthenticated, isLoading, user } = useAuth();
   const { isWalletReady } = useContext(WalletState);
@@ -46,6 +48,8 @@ const TokenSaleCheckoutPage = () => {
       (async () => {
         const totalCost = await getTotalCost(tokens as string);
         setTotal(totalCost);
+        const isAllowanceSufficient = await isCeurApproved(tokens as string);
+        setIsApproved(isAllowanceSufficient);
       })();
   }, [isWalletReady]);
 
@@ -57,30 +61,22 @@ const TokenSaleCheckoutPage = () => {
     }
   };
 
-  const handleSignTransaction = async () => {
-    setWeb3Error(null);
-    try {
-      const {
-        status,
-        transactionId,
-        amountOfTokensPurchased,
-        error,
-      }: {
-        status: string;
-        transactionId: string | null;
-        amountOfTokensPurchased: number | null;
-        error: string | null;
-      } = await buyTokens(Number(tokens));
+  const handleApprovalTx = async () => {
+    const { success, error } = await approveCeur(total);
+    if (success) {
+      setIsApproved(true);
+    } else {
+      setWeb3Error(parseMessageFromError(error));
+    }
+  };
 
-      if (status === 'success') {
-        router.push(
-          `/token-sale/sale-open/success?amountOfTokensPurchased=${amountOfTokensPurchased}&transactionId=${transactionId}`,
-        );
-      }
-      if (error) {
-        setWeb3Error(error);
-      }
-    } catch (error) {
+  const handlePurchaseTx = async () => {
+    const { success, hash, error } = await buyTokens(tokens as string);
+    if (success) {
+      router.push(
+        `/token-sale/sale-open/success?amountOfTokensPurchased=${tokens}&transactionId=${hash}`,
+      );
+    } else {
       setWeb3Error(parseMessageFromError(error));
     }
   };
@@ -143,9 +139,19 @@ const TokenSaleCheckoutPage = () => {
               />
             </div>
           </div>
-          <Button onClick={handleSignTransaction}>
-            {__('token_sale_checkout_button_sign_transaction')}
-          </Button>
+          {isApproved ? (
+            <Button onClick={handlePurchaseTx} isEnabled={!isPending}>
+              {isPending
+                ? __('token_sale_checkout_button_pending_transaction')
+                : __('token_sale_checkout_button_purchase_transaction')}
+            </Button>
+          ) : (
+            <Button onClick={handleApprovalTx} isEnabled={!isPending}>
+              {isPending
+                ? __('token_sale_checkout_button_pending_transaction')
+                : __('token_sale_checkout_button_approve_transaction')}
+            </Button>
+          )}
           {web3Error && <ErrorMessage error={web3Error} />}
         </main>
       </div>
