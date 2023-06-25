@@ -13,7 +13,7 @@ export const useBuyTokens = () => {
     BLOCKCHAIN_DAO_TOKEN,
     BLOCKCHAIN_DAO_TOKEN_ABI,
     CEUR_TOKEN_ADDRESS,
-  } = useConfig();
+  } = useConfig() || {};
   const [isPending, setPending] = useState(false);
 
   const getContractInstances = () => ({

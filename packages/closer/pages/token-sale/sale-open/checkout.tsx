@@ -71,10 +71,10 @@ const TokenSaleCheckoutPage = () => {
   };
 
   const handlePurchaseTx = async () => {
-    const { success, hash, error } = await buyTokens(tokens as string);
+    const { success, txHash, error } = await buyTokens(tokens as string);
     if (success) {
       router.push(
-        `/token-sale/sale-open/success?amountOfTokensPurchased=${tokens}&transactionId=${hash}`,
+        `/token-sale/sale-open/success?amountOfTokensPurchased=${tokens}&transactionId=${txHash}`,
       );
     } else {
       setWeb3Error(parseMessageFromError(error));
