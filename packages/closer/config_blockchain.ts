@@ -14,7 +14,7 @@ const alfajoresConfig = {
     symbol: 'TDF',
     decimals: 18,
   },
-  BLOCKCHAIN_CROWDSALE_CONTRACT_ADDRESS:
+  BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS:
     '0xe13C9A06C7494fc9b9BbD8ea1C3693479007A1ad',
   BLOCKCHAIN_DAO_DIAMOND_ADDRESS: '0xEd9fDECF279a5969e2da774dfe24AFEc39e6228f',
   CEUR_TOKEN_ADDRESS: '0x10d87342579d7be3655Ac40Ef7A8614c87EA3c4e',
@@ -2073,7 +2073,7 @@ export const blockchainConfig = {
       type: 'function',
     },
   ],
-  BLOCKCHAIN_CROWDSALE_CONTRACT_ABI: [
+  BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI: [
     {
       anonymous: false,
       inputs: [

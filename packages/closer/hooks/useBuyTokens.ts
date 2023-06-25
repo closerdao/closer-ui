@@ -8,8 +8,8 @@ import { useConfig } from './useConfig';
 export const useBuyTokens = () => {
   const { library, account } = useContext(WalletState);
   const {
-    BLOCKCHAIN_CROWDSALE_CONTRACT_ADDRESS,
-    BLOCKCHAIN_CROWDSALE_CONTRACT_ABI,
+    BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS,
+    BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
     BLOCKCHAIN_DAO_TOKEN,
     BLOCKCHAIN_DAO_TOKEN_ABI,
     CEUR_TOKEN_ADDRESS,
@@ -18,8 +18,8 @@ export const useBuyTokens = () => {
 
   const getContractInstances = () => ({
     Crowdsale: new Contract(
-      BLOCKCHAIN_CROWDSALE_CONTRACT_ADDRESS,
-      BLOCKCHAIN_CROWDSALE_CONTRACT_ABI,
+      BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS,
+      BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
       library && library.getUncheckedSigner(),
     ),
     TdfToken: new Contract(
@@ -64,10 +64,16 @@ export const useBuyTokens = () => {
       setPending(true);
       const receipt = await tx.wait();
       const success = receipt.status === 1;
+      console.log(receipt);
+      console.log({
+        error: success ? null : new Error('reverted'),
+        success,
+        txHash: receipt.transactionHash,
+      });
       return {
         error: success ? null : new Error('reverted'),
         success,
-        txHash: receipt.hash,
+        txHash: receipt.transactionHash,
       };
     } catch (error) {
       //User rejected transaction
@@ -75,7 +81,7 @@ export const useBuyTokens = () => {
       return {
         error,
         success: false,
-        hash: null,
+        txHash: null,
       };
     } finally {
       setPending(false);
@@ -112,7 +118,7 @@ export const useBuyTokens = () => {
       return {
         error: success ? null : new Error('reverted'),
         success,
-        txHash: receipt.hash,
+        txHash: receipt.transactionHash,
       };
     } catch (error) {
       //User rejected transaction
@@ -120,7 +126,7 @@ export const useBuyTokens = () => {
       return {
         error,
         success: false,
-        hash: null,
+        txHash: null,
       };
     } finally {
       setPending(false);
