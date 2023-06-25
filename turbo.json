@@ -22,7 +22,8 @@
         "NEXT_PUBLIC_FEATURE_CARROTS",
         "STRIPE_SECRET_KEY",
         "NEXT_PUBLIC_VAT_RATE",
-        "NEXT_PUBLIC_FEATURE_TOKEN_SALE"
+        "NEXT_PUBLIC_FEATURE_TOKEN_SALE",
+        "NEXT_PUBLIC_NETWORK"
       ]
     },
     "lint": {

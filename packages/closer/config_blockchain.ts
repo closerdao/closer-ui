@@ -1,4 +1,4 @@
-export const blockchainConfig = {
+const alfajoresConfig = {
   BLOCKCHAIN_NETWORK_ID: 44787,
   BLOCKCHAIN_NAME: 'CELO ALFAJORES',
   BLOCKCHAIN_RPC_URL: 'https://alfajores-forno.celo-testnet.org',
@@ -18,6 +18,21 @@ export const blockchainConfig = {
     '0xe13C9A06C7494fc9b9BbD8ea1C3693479007A1ad',
   BLOCKCHAIN_DAO_DIAMOND_ADDRESS: '0xEd9fDECF279a5969e2da774dfe24AFEc39e6228f',
   CEUR_TOKEN_ADDRESS: '0x10d87342579d7be3655Ac40Ef7A8614c87EA3c4e',
+};
+
+const celoConfig = {};
+
+const getNetworkConfig = () => {
+  const network = process.env.NEXT_PUBLIC_NETWORK;
+  if (network === 'alfajores') {
+    return alfajoresConfig;
+  } else if (network === 'celo') {
+    return celoConfig;
+  }
+};
+
+export const blockchainConfig = {
+  ...getNetworkConfig(),
   BLOCKCHAIN_DAO_TOKEN_ABI: [
     {
       anonymous: false,
