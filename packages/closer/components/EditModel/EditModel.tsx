@@ -1,13 +1,13 @@
-import React, { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
 import objectPath from 'object-path';
 
 import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { getSample } from '../../utils/helpers';
-import { __ } from '../../utils/helpers';
+import { __, getSample } from '../../utils/helpers';
 import { trackEvent } from '../Analytics';
+import DateTimePicker from '../DateTimePicker';
 import FormField from '../FormField';
 import Tabs from '../Tabs';
 
@@ -72,6 +72,16 @@ const EditModel: FC<Props> = ({
     );
   const [data, setData] = useState(initialModel);
   const [error, setErrors] = useState<string | null>(null);
+
+  const [startDate, setStartDate] = useState<string | null | Date>(
+    data.start && data.start,
+  );
+  const [endDate, setEndDate] = useState<string | null | Date>(data.end && data.end);
+
+  useEffect(() => {
+    setData({ ...data, start: startDate, end: endDate });
+  }, [endDate, startDate]);
+
   const fieldsByTab: Record<string, any> = {
     general: [],
   };
@@ -99,6 +109,7 @@ const EditModel: FC<Props> = ({
     actionType?: string,
   ) => {
     const copy = { ...data };
+
     objectPath.set(copy, name, value);
     setData(copy);
 
@@ -160,6 +171,7 @@ const EditModel: FC<Props> = ({
           data: { results: modelData },
         } = await api.get(`${endpoint}/${id}`);
         setData(modelData);
+
         // Look out for dependent data
         await Promise.all(
           fields.map(async (field) => {
@@ -230,6 +242,18 @@ const EditModel: FC<Props> = ({
             tabs={Object.keys(fieldsByTab).map((key) => ({
               title: key,
               value: key,
+              datePicker: (
+                <DateTimePicker
+                  setStartDate={setStartDate}
+                  setEndDate={setEndDate}
+                  isAdmin={true}
+                  savedStartDate={
+                    data.start && data.start
+                  }
+                  savedEndDate={data.end && data.end}
+                  defaultMonth={new Date()}
+                />
+              ),
               content: filterFields(fieldsByTab[key], data).map((field) => (
                 <FormField
                   {...field}
@@ -251,6 +275,7 @@ const EditModel: FC<Props> = ({
             />
           ))
         )}
+
         <div className="py-6 flex items-center">
           <button type="submit" className="btn-primary">
             {__('edit_model_save')}

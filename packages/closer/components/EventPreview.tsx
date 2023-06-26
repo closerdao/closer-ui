@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import React, { FC } from 'react';
+import { FC } from 'react';
 
 import { MdLocationOn } from '@react-icons/all-files/md/MdLocationOn';
 import dayjs from 'dayjs';
@@ -8,6 +8,7 @@ import advancedFormat from 'dayjs/plugin/advancedFormat';
 
 import { Event, VolunteerOpportunity } from '../types';
 import { cdn } from '../utils/api';
+import { __ } from '../utils/helpers';
 
 dayjs.extend(advancedFormat);
 
@@ -44,6 +45,7 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
   const isThisYear = dayjs().isSame(start, 'year');
   const dateFormat = isThisYear ? 'MMMM Do HH:mm' : 'YYYY MMMM Do HH:mm';
   const linkHref = isVolunteerCard ? `/volunteer/${slug}` : `/events/${slug}`;
+  const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   return (
     <div role="listitem" className={className}>
@@ -53,11 +55,12 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
         }`}
       >
         <p className="text-xs font-light">
-          {startDate && startDate.format(dateFormat)}
-          {endDate && duration <= 24 && ` - ${endDate.format('HH:mm')}`}
+          {startDate && dayjs(startDate).format(dateFormat)}
           {endDate &&
-            duration >= 24 &&
-            ` - ${endDate.format(dateFormat)}`}
+            duration > 24 &&
+            ` - ${dayjs(endDate).format(dateFormat)}`}
+          {endDate && duration <= 24 && ` - ${dayjs(endDate).format('HH:mm')}`}{' '}
+          ({localTimezone} {__('events_time')})
         </p>
         <div
           className={`${
