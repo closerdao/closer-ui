@@ -62,7 +62,6 @@ export { default as EditChannelPage } from './pages/edit-channel/[slug]';
 // Pages
 export { default as EventsPage } from './pages/events';
 export { default as EventPage } from './pages/events/[slug]';
-export { default as CheckoutEventPage } from './pages/events/[slug]/checkout';
 export { default as EditEventPage } from './pages/events/[slug]/edit';
 export { default as TicketsEventPage } from './pages/events/[slug]/tickets';
 export { default as CreateEventPage } from './pages/events/create';
