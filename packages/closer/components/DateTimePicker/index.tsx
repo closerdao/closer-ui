@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { DateRange, DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 
@@ -11,10 +11,10 @@ interface Props {
   value?: string;
   minValue?: string | null;
   maxValue?: string | null;
-  setStartDate: (date: string | null) => void;
-  setEndDate: (date: string | null) => void;
+  setStartDate: (date: string | null) => void | Dispatch<SetStateAction<string | undefined>>;
+  setEndDate: (date: string | null) => void  | Dispatch<SetStateAction<string | undefined>>;
   maxDuration?: number;
-  blockedDateRanges: (
+  blockedDateRanges?: (
     | Date
     | {
         from: Date;
@@ -66,12 +66,16 @@ const DateTimePicker = ({
     if (!savedStartDate && !savedEndDate) {
       setEndDate('');
       setStartDate('');
+      setDateRange({
+        from: undefined,
+        to: undefined,
+      });
     }
   }, [savedStartDate, savedEndDate]);
 
   const includesBlockedDateRange = (range: DateRange | undefined) => {
     if (range) {
-      return blockedDateRanges.some((blockedDateRange) => {
+      return blockedDateRanges?.some((blockedDateRange) => {
         if (!(blockedDateRange instanceof Date) && range.from && range.to) {
           return (
             blockedDateRange.from >= range.from &&

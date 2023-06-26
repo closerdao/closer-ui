@@ -24,7 +24,7 @@ const Dropdown: FC<DropdownProps> = React.memo(
     };
 
     return (
-      <div className={`flex flex-col gap-4 relative ${className}`}>
+      <div className={'flex flex-col gap-4 relative '}>
         {label && (
           <label className="font-medium text-complimentary-light">
             {label}
@@ -45,14 +45,14 @@ const Dropdown: FC<DropdownProps> = React.memo(
               aria-selected={props?.selected}
               className={`rw-list-option ${
                 props?.selected ? 'bg-accent-light' : 'bg-transparent'
-              }`}
+              } `}
               onClick={(event) => props?.onSelect(props?.dataItem, event)}
             >
               {props.dataItem.label}
             </div>
           )}
-          className="focus:!shadow-xl focus:!border-accent-core focus:ring-2 focus:ring-offset-0 focus:!ring-accent-core"
-          containerClassName="focus:!shadow-xl focus:!border-accent-core focus:ring-0 focus:ring-offset-0 focus:!ring-accent-core"
+          className=" focus:!shadow-xl focus:!border-accent-core focus:ring-2 focus:ring-offset-0 focus:!ring-accent-core"
+          containerClassName={`py-1 border-2 focus:!shadow-xl focus:!border-accent-core focus:ring-0 focus:ring-offset-0 focus:!ring-accent-core ${className}`}
         />
       </div>
     );
