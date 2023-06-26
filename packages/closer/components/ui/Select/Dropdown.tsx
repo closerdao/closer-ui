@@ -13,6 +13,7 @@ const Dropdown: FC<DropdownProps> = React.memo(
     placeholder = 'Select an option',
     className,
     dataTestId,
+    isDisabled,
   }) => {
     const onChangeRef = useRef(onChange);
     if (onChange !== onChangeRef.current) {
@@ -31,6 +32,7 @@ const Dropdown: FC<DropdownProps> = React.memo(
           </label>
         )}
         <DropdownList
+          disabled={isDisabled}
           value={value}
           dataKey="value"
           textField="label"
@@ -51,8 +53,8 @@ const Dropdown: FC<DropdownProps> = React.memo(
               {props.dataItem.label}
             </div>
           )}
-          className=" focus:!shadow-xl focus:!border-accent-core focus:ring-2 focus:ring-offset-0 focus:!ring-accent-core"
-          containerClassName={`py-1 border-2 focus:!shadow-xl focus:!border-accent-core focus:ring-0 focus:ring-offset-0 focus:!ring-accent-core ${className}`}
+          className=" "
+          containerClassName={`py-1 border-2  ${className}`}
         />
       </div>
     );

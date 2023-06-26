@@ -35,7 +35,7 @@ const Bookings = ({ filter }) => {
   }
 
   return (
-    <>
+    <section className=' min-h-[100vh]'>
       {loading ? (
         <p className="my-16 flex items-center gap-2">
           <Spinner /> {__('generic_loading')}
@@ -74,7 +74,7 @@ const Bookings = ({ filter }) => {
           </div>
         </div>
       )}
-    </>
+    </section>
   );
 };
 
