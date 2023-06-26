@@ -155,8 +155,8 @@ const DatesSelector: NextPage<Props> = ({
     setHandleNextError(null);
     try {
       const data = {
-        start: start || '',
-        end: end || '',
+        start: String(start) || '',
+        end: String(end) || '',
         adults: String(adults),
         kids: String(kids),
         infants: String(infants),
@@ -196,7 +196,7 @@ const DatesSelector: NextPage<Props> = ({
         });
         router.push(`/bookings/${newBooking._id}/questions`);
       } else {
-        const urlParams = new URLSearchParams(data.toString());
+        const urlParams = new URLSearchParams(data);
         router.push(`/bookings/create/accomodation?${urlParams}`);
       }
     } catch (err: any) {
