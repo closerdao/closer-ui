@@ -133,7 +133,7 @@ const DateTimePicker = ({
       if (range?.to) {
         if (endTime === '12:00') {
           const newDate = getDateTime(
-            dayjs(range?.to).format(dateFormat) as string,
+           range?.to,
             12,
             0,
           );
@@ -147,7 +147,7 @@ const DateTimePicker = ({
       if (range?.from) {
         if (startTime === '12:00') {
           const newDate = getDateTime(
-            dayjs(range?.from).format(dateFormat) as string,
+            range?.from,
             12,
             0,
           );
@@ -175,7 +175,7 @@ const DateTimePicker = ({
               ? __('events_event_start_date')
               : __('listings_book_check_in')}
           </div>
-          <div className="text-sm border bordr-disabled rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
+          <div className="text-sm border border-disabled rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
             {dateRange?.from
               ? dayjs(dateRange?.from).format('LL')
               : __('listings_book_select_date')}{' '}
