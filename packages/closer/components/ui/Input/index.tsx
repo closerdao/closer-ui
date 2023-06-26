@@ -13,9 +13,9 @@ type InputProps = {
   id?: string;
   label?: string;
   value?: string;
-  onChange?: (value: string) => void;
+  onChange?: (e: ChangeEvent<HTMLInputElement> ) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
-  type?: 'text' | 'password';
+  type?: 'text' | 'password' | 'time';
   isRequired?: boolean;
   placeholder?: string;
   successMessage?: string;
@@ -81,7 +81,7 @@ const Input = React.memo(
       setLocalValue(newValue);
       setIsValid(isValidValue(newValue));
       if (onChange) {
-        onChange(newValue);
+        onChange(newValue as any);
       }
     };
 
@@ -147,7 +147,7 @@ const Input = React.memo(
             id={id}
             type={type}
             value={isInstantSave ? localValue : value}
-            onChange={handleChange}
+            onChange={isInstantSave ? handleChange : onChange}
             onBlur={isInstantSave ? handleBlur : undefined}
             onFocus={isInstantSave ? handleFocus : undefined}
             required={isRequired}

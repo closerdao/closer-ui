@@ -166,7 +166,7 @@ export const getSample = (field) => {
           name: '',
           icon: null,
           price: 0,
-          currency: 'USD',
+          currency: 'EUR',
           disclaimer: '',
           limit: 0,
         },
