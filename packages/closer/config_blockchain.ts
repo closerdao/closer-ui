@@ -32,6 +32,12 @@ const getNetworkConfig = () => {
 };
 
 export const blockchainConfig = {
+  BLOCKCHAIN_DAO_TOKEN: {
+    address: '0x01d5a642ff16fd4148F2A91DE248B4BD80377490',
+    name: 'TDF',
+    symbol: 'TDF',
+    decimals: 18,
+  },
   ...getNetworkConfig(),
   BLOCKCHAIN_DAO_TOKEN_ABI: [
     {

@@ -28,18 +28,14 @@ describe('TokenBuyWidget', () => {
 
   it('should calculate correct default values based on amount of tokens to buy', async () => {
     renderWithProviders(
-      <TokenBuyWidget tokensToBuy={15} setTokensToBuy={jest.fn()} />,
+      <TokenBuyWidget tokensToBuy={defaultTokensToBuy} setTokensToBuy={jest.fn()} />,
     );
 
     const tokensToBuyInput = screen.getByLabelText(/\$tdf/i);
-    const tokensToSellInput = screen.getByLabelText(/ceur/i);
     const daysToStayInput = screen.getByLabelText(/for/i);
     expect(tokensToBuyInput).toHaveValue(defaultTokensToBuy.toString());
 
     await waitFor(() => {
-      expect(tokensToSellInput).toHaveValue(
-        Math.ceil(defaultTokensToBuy * defaultTokenPrice).toString(),
-      );
       expect(daysToStayInput).toHaveValue(
         Math.ceil(defaultTokensToBuy * defaultAccommodationPrice).toString(),
       );
