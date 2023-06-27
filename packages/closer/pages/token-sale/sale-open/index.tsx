@@ -11,20 +11,18 @@ import { __ } from 'closer/utils/helpers';
 
 import { WalletState } from '../../../contexts/wallet';
 import { useBuyTokens } from '../../../hooks/useBuyTokens';
-import { getRemainingTokens } from '../../../utils/bondingCurve';
 
 const PublicTokenSalePage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
   const { user } = useAuth();
-  const { getCurrentSupply } = useBuyTokens();
+  const { getTokensAvailableForPurchase } = useBuyTokens();
   const [tokensAvailable, setTokensAvailable] = useState<number | null>(null);
   const { isWalletReady } = useContext(WalletState);
 
   useEffect(() => {
     if (isWalletReady) {
       (async () => {
-        const supply = await getCurrentSupply();
-        const remainingAmount = getRemainingTokens(supply);
+        const remainingAmount = await getTokensAvailableForPurchase();
         setTokensAvailable(remainingAmount);
       })();
     }

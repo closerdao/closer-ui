@@ -17,7 +17,7 @@ export const useBuyTokens = () => {
   const [isPending, setPending] = useState(false);
 
   const getContractInstances = () => ({
-    Crowdsale: new Contract(
+    DynamicSale: new Contract(
       BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS,
       BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
       library && library.getUncheckedSigner(),
@@ -48,19 +48,26 @@ export const useBuyTokens = () => {
   };
 
   const getTokensAvailableForPurchase = async () => {
-    return Promise.resolve({
-      status: 'success',
-      tokensAvailable: 1500,
-      error: null,
-    });
+    const { TdfToken, DynamicSale } = getContractInstances();
+
+    try {
+      const supply = await TdfToken.totalSupply();
+      const saleCap = await DynamicSale.saleHardCap();
+
+      const remainingTokens = saleCap.sub(supply);
+      return parseInt(utils.formatEther(remainingTokens));
+    } catch (error) {
+      console.log(error);
+      return 0;
+    }
   };
 
   const buyTokens = async (amount: string) => {
-    const { Crowdsale } = getContractInstances();
+    const { DynamicSale } = getContractInstances();
     const amountInWei = utils.parseEther(amount);
 
     try {
-      const tx = await Crowdsale.buy(amountInWei);
+      const tx = await DynamicSale.buy(amountInWei);
       setPending(true);
       const receipt = await tx.wait();
       const success = receipt.status === 1;
@@ -90,28 +97,28 @@ export const useBuyTokens = () => {
 
   const getTotalCost = async (amount: string) => {
     const amountInWei = utils.parseEther(amount);
-    const { Crowdsale } = getContractInstances();
-    const { totalCost } = await Crowdsale.calculateTotalCost(amountInWei);
+    const { DynamicSale } = getContractInstances();
+    const { totalCost } = await DynamicSale.calculateTotalCost(amountInWei);
     return parseFloat(utils.formatEther(totalCost));
   };
 
   const isCeurApproved = async (tdfAmount: string) => {
     const amountInWei = utils.parseEther(tdfAmount);
-    const { Crowdsale, Ceur } = getContractInstances();
-    const { totalCost } = await Crowdsale.calculateTotalCost(amountInWei);
-    const allowance = await Ceur.allowance(account, Crowdsale.address);
+    const { DynamicSale, Ceur } = getContractInstances();
+    const { totalCost } = await DynamicSale.calculateTotalCost(amountInWei);
+    const allowance = await Ceur.allowance(account, DynamicSale.address);
     return allowance.gte(totalCost);
   };
 
   const approveCeur = async (amount: number) => {
-    const { Ceur, Crowdsale } = getContractInstances();
+    const { Ceur, DynamicSale } = getContractInstances();
     // we add a small buffer to the approval amount to make up for price increases
     // that might occur after approval
     const bufferFactor = 1.05;
     const approvalAmount = utils.parseEther((bufferFactor * amount).toString());
 
     try {
-      const tx = await Ceur.approve(Crowdsale.address, approvalAmount);
+      const tx = await Ceur.approve(DynamicSale.address, approvalAmount);
       setPending(true);
       const receipt = await tx.wait();
       const success = receipt.status === 1;
