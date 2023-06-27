@@ -7,17 +7,17 @@ import BookingWallet from '../../../components/BookingWallet';
 import CheckoutPayment from '../../../components/CheckoutPayment';
 import CheckoutTotal from '../../../components/CheckoutTotal';
 import PageError from '../../../components/PageError';
+import RedeemCredits from '../../../components/RedeemCredits';
 import Button from '../../../components/ui/Button';
-import Heading from '../../../components/ui/Heading';
 import Checkbox from '../../../components/ui/Checkbox';
+import Heading from '../../../components/ui/Heading';
 import HeadingRow from '../../../components/ui/HeadingRow';
 import ProgressBar from '../../../components/ui/ProgressBar';
 import Row from '../../../components/ui/Row';
 
 import { ParsedUrlQuery } from 'querystring';
 
-import PageNotAllowed from '../../401';
-import PageNotFound from '../../404';
+import { NextApiRequest } from 'next';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
@@ -27,6 +27,8 @@ import { BookingSettings } from '../../../types/api';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, priceFormat } from '../../../utils/helpers';
+import PageNotAllowed from '../../401';
+import PageNotFound from '../../404';
 
 interface Props extends BaseBookingParams {
   listing: Listing;
@@ -34,32 +36,50 @@ interface Props extends BaseBookingParams {
   settings: BookingSettings;
   error?: string;
   event?: Event;
+  creditsBalance?: number;
 }
 
-const Checkout = ({ booking, listing, settings, error }: Props) => {
+const Checkout = ({
+  booking,
+  listing,
+  settings,
+  creditsBalance,
+  error,
+  event
+}: Props) => {
   const {
     utilityFiat,
     rentalToken,
     rentalFiat,
+    eventFiat,
     useTokens,
     start,
     dailyRentalToken,
     duration,
     ticketOption,
     eventPrice,
+    total,
   } = booking || {};
 
   const { balanceAvailable } = useContext(WalletState);
+  const { user, isAuthenticated } = useAuth();
+  const router = useRouter();
 
   const isNotEnoughBalance = rentalToken?.val
     ? balanceAvailable < rentalToken.val
     : false;
-  const { user, isAuthenticated } = useAuth();
+
+  const canApplyCredits = rentalToken?.val &&
+    creditsBalance && creditsBalance >= rentalToken.val;
 
   const listingName = listing?.name;
-  const [hasAgreedToWalletDisclaimer, setWalletDisclaimer] = useState(false);
 
-  const router = useRouter();
+  const [hasAgreedToWalletDisclaimer, setWalletDisclaimer] = useState(false);
+  const [updatedRentalFiat, setUpdatedRentalFiat] = useState(rentalFiat);
+  const [updatedTotal, setUpdatedTotal] = useState(total);
+  const [hasAppliedCredits, setHasAppliedCredits] = useState(false);
+  const [creditsError, setCreditsError] = useState(null);
+
   const goBack = () => {
     router.push(`/bookings/${booking._id}/summary`);
   };
@@ -67,8 +87,21 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
     router.push(`/bookings/${booking._id}/confirmation`);
   };
 
+  const applyCredits = async () => {
+    try {
+      setCreditsError(null)
+      const res = await api.post(`/bookings/${booking._id}/update-payment`, {
+        useCredits: true, 
+      });
+      setUpdatedTotal(res.data.results.total);
+      setUpdatedRentalFiat(res.data.results.rentalFiat);
+      setHasAppliedCredits(true);
+    } catch (error) {
+      setCreditsError(parseMessageFromError(error));
+    }
+  };
+
   const { platform }: any = usePlatform();
-  // TODO: add types to platform
 
   const switchToEUR = async () => {
     // TODO - this should not be possible - should enable a custom endpoint to change the booking type
@@ -92,10 +125,7 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
         <BookingBackButton onClick={goBack} name={__('buttons_back')} />
-        <Heading
-          level={1}
-          className="pb-4 mt-8"
-        >
+        <Heading level={1} className="pb-4 mt-8">
           <span className="mr-1">💰</span>
           <span>{__('bookings_checkout_step_title')}</span>
         </Heading>
@@ -111,7 +141,7 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
                 <div className="mb-16 mt-4">
                   <Row
                     rowKey={ticketOption?.name}
-                    value={`${priceFormat(eventPrice.val, eventPrice.cur)}`}
+                    value={`${priceFormat(eventFiat.val, eventFiat.cur)}`}
                   />
                 </div>
               </div>
@@ -123,32 +153,47 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
             </HeadingRow>
             <div className="flex justify-between items-center mt-3">
               <p>{listingName}</p>
-              { useTokens ?
-                <p className="font-bold">{priceFormat(rentalToken)}</p>:
-                <p className="font-bold">{priceFormat(rentalFiat)}</p>
-              }
+              {useTokens && rentalToken ? (
+                <p className="font-bold">{priceFormat(rentalToken)}</p>
+              ) : (
+                <p className="font-bold">{priceFormat(updatedRentalFiat)}</p>
+              )}
             </div>
             <p className="text-right text-xs">
               {__('bookings_checkout_step_accomodation_description')}
             </p>
 
-            {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' && rentalToken && rentalToken.val > 0 &&  (
-              <div className="mt-4">
-                <BookingWallet
-                  toPay={rentalToken.val}
-                  switchToEUR={switchToEUR}
+            {process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' &&
+              canApplyCredits ? (
+                <RedeemCredits
+                  rentalFiat={rentalFiat}
+                  rentalToken={rentalToken || { val: 0, cur: 'TDF' }}
+                  applyCredits={applyCredits}
+                  hasAppliedCredits={hasAppliedCredits}
+                  creditsError={creditsError}
+                  className="my-12"
                 />
-                <Checkbox
-                  isChecked={hasAgreedToWalletDisclaimer}
-                  onChange={() =>
-                    setWalletDisclaimer(!hasAgreedToWalletDisclaimer)
-                  } 
-                  className="mt-8"
-                >
-                  {__('bookings_checkout_step_wallet_disclaimer')}
-                </Checkbox>
-              </div>
-            )}
+              ) : null}
+
+            {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' &&
+              rentalToken &&
+              rentalToken.val > 0 && (
+                <div className="mt-4">
+                  <BookingWallet
+                    toPay={rentalToken.val}
+                    switchToEUR={switchToEUR}
+                  />
+                  <Checkbox
+                    isChecked={hasAgreedToWalletDisclaimer}
+                    onChange={() =>
+                      setWalletDisclaimer(!hasAgreedToWalletDisclaimer)
+                    }
+                    className="mt-8"
+                  >
+                    {__('bookings_checkout_step_wallet_disclaimer')}
+                  </Checkbox>
+                </div>
+              )}
           </div>
           <div>
             <HeadingRow>
@@ -163,7 +208,8 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
               {__('bookings_summary_step_utility_description')}
             </p>
           </div>
-          <CheckoutTotal total={booking.total} />
+          <CheckoutTotal total={updatedTotal} />
+
           {booking.total.val > 0 ? (
             <CheckoutPayment
               bookingId={booking._id}
@@ -172,12 +218,14 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
                 (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)
               }
               useTokens={useTokens}
-              totalToPayInFiat={booking.total as any}
-              dailyTokenValue={dailyRentalToken?.val}
+              hasAppliedCredits={hasAppliedCredits}
+              totalToPayInFiat={updatedTotal}
+              dailyTokenValue={dailyRentalToken?.val || 0}
               startDate={start}
               totalNights={duration}
               user={user}
               settings={settings}
+              eventId={event?._id}
             />
           ) : (
             <Button className="booking-btn" onClick={handleNext}>
@@ -190,11 +238,21 @@ const Checkout = ({ booking, listing, settings, error }: Props) => {
   );
 };
 
-Checkout.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
+Checkout.getInitialProps = async ({
+  req,
+  query,
+}: {
+  req: NextApiRequest;
+  query: ParsedUrlQuery;
+}) => {
   try {
     const {
       data: { results: booking },
-    } = await api.get(`/booking/${query.slug}`);
+    } = await api.get(`/booking/${query.slug}`, {
+      headers: req?.cookies?.access_token && {
+        Authorization: `Bearer ${req?.cookies?.access_token}`,
+      },
+    });
 
     const [
       {
@@ -202,15 +260,31 @@ Checkout.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
       },
       optionalEvent,
       optionalListing,
+      {
+        data: { results: creditsBalance },
+      },
     ] = await Promise.all([
       api.get('/config/booking'),
-      booking.eventId && api.get(`/event/${booking.eventId}`),
-      booking.listing && api.get(`/listing/${booking.listing}`),
+      booking.eventId && api.get(`/event/${booking.eventId}`, {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        },
+      }),
+      booking.listing && api.get(`/listing/${booking.listing}`, {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        },
+      }),
+      api.get('/carrots/balance', {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        },
+      }),
     ]);
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
 
-    return { booking, listing, settings, event, error: null };
+    return { booking, listing, settings, event, creditsBalance, error: null };
   } catch (err) {
     console.log(err);
     return {
@@ -218,6 +292,7 @@ Checkout.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
       booking: null,
       listing: null,
       settings: null,
+      creditsBalance: null,
     };
   }
 };

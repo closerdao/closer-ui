@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 import { useDebounce } from '../hooks/useDebounce';
 import { Question } from '../types';
@@ -48,9 +48,7 @@ const QuestionnaireItem = ({
             placeholder={__('generic_input_placeholder')}
             className="" // TO DO how to resolve class clash with forms.css?
             value={answer}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setAnswer(e.target.value)
-            }
+            onChange={e => setAnswer(e.target.value)}
             isRequired={required}
           />
         </>

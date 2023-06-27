@@ -4,7 +4,6 @@ import objectPath from 'object-path';
 
 import { __ } from '../utils/helpers';
 import Autocomplete from './Autocomplete';
-import DateTimePicker from './DateTimePicker';
 import DiscountsEditor from './DiscountsEditor';
 import FieldsEditor from './FieldsEditor';
 import PhotosEditor from './PhotosEditor';
@@ -33,9 +32,12 @@ const FormField = ({
 
   return (
     <div className={`form-field w-full mb-6 form-type-${type}`} key={name}>
-      <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
+      {name !== 'start' && name !== 'end' && (
+        <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+      )}
+
       {
         <>
           {['text', 'email', 'phone', 'hidden', 'number', 'date'].includes(
@@ -50,12 +52,6 @@ const FormField = ({
               className={'bg-transparent ' + className}
               onChange={(e) => update(name, e.target.value)}
               required={required}
-            />
-          )}
-          {type === 'datetime' && (
-            <DateTimePicker
-              value={objectPath.get(data, name)}
-              onChange={(value) => update(name, value)}
             />
           )}
           {type === 'longtext' && (

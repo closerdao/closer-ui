@@ -2,26 +2,27 @@ import React, {
   ChangeEvent,
   Dispatch,
   SetStateAction,
+  useEffect,
   useRef,
   useState,
 } from 'react';
 
 import { __ } from '../../../utils/helpers';
-import Button from '../Button';
 
 type InputProps = {
   id?: string;
   label?: string;
   value?: string;
-  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
+  onChange?: (e: ChangeEvent<HTMLInputElement> ) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
-  type?: 'text' | 'password';
+  type?: 'text' | 'password' | 'time';
   isRequired?: boolean;
   placeholder?: string;
+  successMessage?: string;
   className?: string;
   autoFocus?: boolean;
   dataTestId?: string;
-  validation?: 'email' | 'number';
+  validation?: 'email' | 'number' | 'phone' | 'url';
   isDisabled?: boolean;
   isInstantSave?: boolean;
   hasSaved?: boolean;
@@ -42,6 +43,7 @@ const Input = React.memo(
     autoFocus,
     onBlur,
     validation,
+    successMessage,
     isDisabled = false,
     isInstantSave = false,
     hasSaved,
@@ -60,13 +62,15 @@ const Input = React.memo(
 
     const validationPatterns = {
       email: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+      phone:
+        /^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/i,
     } as Record<string, RegExp>;
 
     const isValidValue = (value: string) => {
       if (validation) {
         const pattern = validationPatterns[validation];
         if (pattern) {
-          return pattern.test(value);
+          return !!pattern.test(value);
         }
       }
       return true;
@@ -75,12 +79,27 @@ const Input = React.memo(
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
       const newValue = event.target.value;
       setLocalValue(newValue);
-      if (isValidValue(newValue)) {
-        setIsValid(true);
-      } else {
-        setIsValid(false);
+      setIsValid(isValidValue(newValue));
+      if (onChange) {
+        onChange(newValue as any);
       }
     };
+
+    useEffect(() => {
+      if (value) {
+        setIsValid(isValidValue(value));
+      }
+    }, [value]);
+
+    useEffect(() => {
+      if (isInstantSave && hasSaved) {
+        setTimeout(() => {
+          if (setHasSaved) {
+            setHasSaved(false);
+          }
+        }, 2000);
+      }
+    }, [hasSaved]);
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === 'Enter') {
@@ -99,12 +118,7 @@ const Input = React.memo(
 
     const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
       onBlur && onBlur(event);
-      setTimeout(() => {
-        setIsEditing(false);
-        if (setHasSaved) {
-          setHasSaved(false);
-        }
-      }, 2000);
+      setIsEditing(false);
     };
 
     const handleSubmit = () => {
@@ -162,16 +176,19 @@ const Input = React.memo(
             disabled={isDisabled}
             aria-labelledby={label}
           />
+
           {isEditing && isInstantSave && isValidValue(localValue) && (
-            <Button type="instantSave" onClick={handleSubmit}>
-              {hasSaved ? __('edit_model_saved') : __('edit_model_save')}
-            </Button>
+            <div className="text-disabled absolute right-2 top-[52px]">
+              {hasSaved && __('settings_saved')}
+            </div>
           )}
         </div>
 
-        {validationError && (
+        {validationError ? (
           <span className="text-red-500 text-sm">{validationError}</span>
-        )}
+        ) : successMessage ? (
+          <span className="text-green-500 text-sm">{successMessage}</span>
+        ) : null}
       </div>
     );
   },

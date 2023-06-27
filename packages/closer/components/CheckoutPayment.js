@@ -11,9 +11,11 @@ import PropTypes from 'prop-types';
 import { useBookingSmartContract } from '../hooks/useBookingSmartContract';
 import { useConfig } from '../hooks/useConfig';
 import api from '../utils/api';
+import { parseMessageFromError } from '../utils/common';
 import { __ } from '../utils/helpers';
 import CheckoutForm from './CheckoutForm';
 import Conditions from './Conditions';
+import { ErrorMessage } from './ui';
 import HeadingRow from './ui/HeadingRow';
 
 const stripe = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUB_KEY);
@@ -22,11 +24,13 @@ const CheckoutPayment = ({
   bookingId,
   buttonDisabled,
   useTokens,
+  hasAppliedCredits,
   totalToPayInFiat,
   dailyTokenValue,
   startDate,
   totalNights,
   user,
+  eventId,
 }) => {
   const { VISITORS_GUIDE } = useConfig() || {};
 
@@ -51,10 +55,16 @@ const CheckoutPayment = ({
 
   const router = useRouter();
   const [hasComplied, setCompliance] = useState(false);
+  const [error, setError] = useState(null);
+
   const onComply = (isComplete) => setCompliance(isComplete);
 
   const onSuccess = () => {
-    router.push(`/bookings/${bookingId}/confirmation`);
+    router.push(
+      `/bookings/${bookingId}/confirmation${
+        eventId ? `?eventId=${eventId}` : ''
+      }`,
+    );
   };
 
   const payTokens = async () => {
@@ -77,12 +87,23 @@ const CheckoutPayment = ({
     }
   };
 
+  const payWithCredits = async () => {
+    try {
+      const res = await api.post(`/bookings/${bookingId}/credit-payment`, {});
+      return res;
+    } catch (error) {
+      setError(parseMessageFromError(error));
+    }
+  };
+
   return (
     <div>
       <HeadingRow>
         <span className="mr-2">💲</span>
         <span>{__('bookings_checkout_step_payment_title')}</span>
       </HeadingRow>
+
+      {error && <ErrorMessage error={error} />}
       <Elements stripe={stripe}>
         <CheckoutForm
           type="booking"
@@ -95,6 +116,8 @@ const CheckoutPayment = ({
           cardElementClassName="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-4"
           buttonDisabled={buttonDisabled || !hasComplied}
           prePayInTokens={useTokens && payTokens}
+          hasAppliedCredits={hasAppliedCredits}
+          payWithCredits={payWithCredits}
           isProcessingTokenPayment={isStaking}
           total={totalToPayInFiat.val}
           currency={totalToPayInFiat.cur}

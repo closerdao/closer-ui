@@ -48,7 +48,10 @@ const config = {
       },
     ],
     TOKEN_PRICE: 230.23,
-    SOURCE_TOKEN: 'CEUR'
+    SOURCE_TOKEN: 'CEUR',
+  STAY_BOOKING_ALLOWED_PLANS: ['wanderer', 'pioneer', 'sheep'],
+  MIN_INSTANT_BOOKING_ALLOWED_PLAN: 'wanderer',
+  FACEBOOK_PIXEL_ID: '761004479106346',
 };
 
 export default config;

@@ -8,10 +8,10 @@ import HeadingRow from '../ui/HeadingRow';
 interface Props {
   isMember?: boolean;
   conditions?: BookingConditions;
-  startDate?: string | null;
-  endDate?: string | null;
-  setStartDate: (startDate: string | null) => void;
-  setEndDate: (endDate: string | null) => void;
+  startDate?: string | null | Date;
+  endDate?: string | null | Date;
+  setStartDate: (startDate: string | null | Date) => void;
+  setEndDate: (endDate: string | null | Date) => void;
   blockedDateRanges: (
     | Date
     | {

@@ -166,7 +166,7 @@ export const getSample = (field) => {
           name: '',
           icon: null,
           price: 0,
-          currency: 'USD',
+          currency: 'EUR',
           disclaimer: '',
           limit: 0,
         },
@@ -299,10 +299,13 @@ export const getBookingType = (eventId, volunteerId) => {
 
 export const getVatInfo = (total) => {
   if (process.env.NEXT_PUBLIC_VAT_RATE) {
-    return `${priceFormat(total.val * Number(process.env.NEXT_PUBLIC_VAT_RATE), total.cur)}
-    (${Number(process.env.NEXT_PUBLIC_VAT_RATE) * 100}%)`;  
+    return `${priceFormat(
+      total.val * Number(process.env.NEXT_PUBLIC_VAT_RATE),
+      total.cur,
+    )}
+    (${Number(process.env.NEXT_PUBLIC_VAT_RATE) * 100}%)`;
   }
-  return '';  
+  return '';
 };
 
 export const getCurrencySymbol = (currency) => {
@@ -312,6 +315,16 @@ export const getCurrencySymbol = (currency) => {
     TDF: '$TDF',
   };
   return `${symbol[currency]}`;
+};
+
+export const getSubscriptionVariantPrice = (credits, subscriptionPlan) => {
+  if (subscriptionPlan.tiers) {
+    const priceTier = subscriptionPlan.tiers.find((tier) => {
+      return tier.minAmount <= credits && tier.maxAmount >= credits;
+    });
+    return priceTier?.unitPrice && priceTier?.unitPrice * credits;
+  }
+  return subscriptionPlan.price;
 };
 
 const validationPatterns = {

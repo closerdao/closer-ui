@@ -5,9 +5,11 @@ import { useEffect, useState } from 'react';
 import BookingBackButton from '../../../components/BookingBackButton';
 import PageError from '../../../components/PageError';
 import QuestionnaireItem from '../../../components/QuestionnaireItem';
+import { Heading } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
+import dayjs from 'dayjs';
 import { ParsedUrlQuery } from 'querystring';
 
 import PageNotAllowed from '../../401';
@@ -35,6 +37,7 @@ interface Props extends BaseBookingParams {
 
 const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
   const router = useRouter();
+  const { goBack } = router.query;
   const { isAuthenticated } = useAuth();
   const questions: Question[] = prepareQuestions(eventQuestions);
 
@@ -63,6 +66,10 @@ const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
     //this is a temporary solution to redirect to summary page if there are no questions
     //once we have questions from user profile integrated we should remove this
     if (!questions?.length) {
+      if (goBack === 'true') {
+        resetBooking();
+        return;
+      }
       router.push(`/bookings/${booking._id}/summary`);
     }
   }, []);
@@ -91,7 +98,29 @@ const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
   };
 
   const resetBooking = () => {
-    router.push('/bookings/create');
+    if (booking.eventId) {
+      router.push(
+        `/bookings/create/dates?eventId=${booking.eventId}&start=${dayjs(
+          booking.start,
+        ).format('YYYY-MM-DD')}&end=${dayjs(booking.end).format('YYYY-MM-DD')}`,
+      );
+      return;
+    }
+    if (booking.volunteerId) {
+      router.push(
+        `/bookings/create/dates?volunteerId=${
+          booking.volunteerId
+        }&start=${dayjs(booking.start).format('YYYY-MM-DD')}&end=${dayjs(
+          booking.end,
+        ).format('YYYY-MM-DD')}`,
+      );
+      return;
+    }
+    router.push(
+      `/bookings/create/dates?start=${dayjs(booking.start).format(
+        'YYYY-MM-DD',
+      )}&end=${dayjs(booking.end).format('YYYY-MM-DD')}`,
+    );
   };
 
   const getAnswer = (
@@ -126,10 +155,11 @@ const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
           onClick={resetBooking}
           name={__('buttons_back_to_dates')}
         />
-        <h1 className="step-title pb-2 flex space-x-1 items-center mt-8">
-          <span className="mr-1">📄</span>
+
+        <Heading level={1} className="pb-4 mt-8">
+          <span className="mr-4">📄</span>
           <span>{__('bookings_questionnaire_step_title')}</span>
-        </h1>
+        </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
         <div className="my-16 gap-16 mt-16">
           {questions?.map((question) => (
@@ -163,7 +193,11 @@ Questionnaire.getInitialProps = async ({
       booking.eventId && (await api.get(`/event/${booking.eventId}`));
     const event = optionalEvent?.data?.results;
 
-    return { booking, eventQuestions: event?.fields, error: null };
+    return {
+      booking,
+      eventQuestions: event?.fields,
+      error: null,
+    };
   } catch (err) {
     return {
       error: parseMessageFromError(err),

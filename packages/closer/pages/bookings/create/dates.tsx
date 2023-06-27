@@ -29,6 +29,8 @@ import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
 
+const STAY_BOOKING_ALLOWED_PLANS = ['wanderer', 'pioneer', 'sheep'];
+
 interface Props {
   error?: string;
   settings?: BookingSettings;
@@ -97,6 +99,28 @@ const DatesSelector: NextPage<Props> = ({
   }
 
   useEffect(() => {
+    if (user) {
+      if (
+        (!user.subscription ||
+          !user.subscription.plan ||
+          !STAY_BOOKING_ALLOWED_PLANS.includes(user.subscription.plan)) &&
+        !volunteerId &&
+        !eventId
+      ) {
+        router.push('/bookings/unlock-stays');
+      }
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push({
+        pathname: '/login',
+        query: {
+          back: router.asPath,
+        },
+      });
+    }
     if (eventId) {
       setBlockedDateRanges([
         { before: new Date(savedStartDate as string) },
@@ -114,8 +138,8 @@ const DatesSelector: NextPage<Props> = ({
     }
   }, []);
 
-  const [start, setStartDate] = useState<string | null>();
-  const [end, setEndDate] = useState<string | null>();
+  const [start, setStartDate] = useState<string | null | Date>();
+  const [end, setEndDate] = useState<string | null | Date>();
   const [adults, setAdults] = useState<number>(Number(savedAdults) || 1);
   const [kids, setKids] = useState<number>(Number(savedKids) || 0);
   const [infants, setInfants] = useState<number>(Number(savedInfants) || 0);
@@ -131,8 +155,8 @@ const DatesSelector: NextPage<Props> = ({
     setHandleNextError(null);
     try {
       const data = {
-        start: start || '',
-        end: end || '',
+        start: String(start) || '',
+        end: String(end) || '',
         adults: String(adults),
         kids: String(kids),
         infants: String(infants),
@@ -259,15 +283,11 @@ const DatesSelector: NextPage<Props> = ({
           <Button
             onClick={handleNext}
             isEnabled={
-              (eventId && selectedTicketOption && start && end) ||
-              (volunteerId && start && end) ||
-              (!eventId && !volunteerId)
-                ? start && end
-                  ? true
-                  : savedStartDate && savedEndDate
-                  ? true
-                  : false
-                : false
+              !!(
+                (eventId && selectedTicketOption && start && end) ||
+                (volunteerId && start && end) ||
+                (!eventId && !volunteerId && start && end)
+              )
             }
           >
             {__('generic_search')}
