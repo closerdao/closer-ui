@@ -1,4 +1,10 @@
-import { ChangeEvent, Dispatch, SetStateAction, useEffect, useState } from 'react';
+import {
+  ChangeEvent,
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useState,
+} from 'react';
 
 import DateTimePicker from '../../components/DateTimePicker';
 import { Button, ErrorMessage, Input } from '../../components/ui';
@@ -77,7 +83,7 @@ const BookingsFilter = ({ setFilter }: Props) => {
     limit: 10,
   };
 
-  const events = platform.event.find(eventsFilter);
+  const events = platform?.event?.find(eventsFilter);
 
   const [error, setError] = useState(false);
 
@@ -199,8 +205,7 @@ const BookingsFilter = ({ setFilter }: Props) => {
       status: value,
     });
   };
-  const handleBookingId = (e: ChangeEvent<HTMLInputElement> ) => {
-    console.log('value=', e.target.value);
+  const handleBookingId = (e: ChangeEvent<HTMLInputElement>) => {
     setBookingId(e.target.value);
     setFilterValues({
       ...filterValues,
@@ -236,7 +241,7 @@ const BookingsFilter = ({ setFilter }: Props) => {
     <section className="flex gap-2 flex-wrap">
       <div className="md:flex-1 flex-wrap md:flex-nowrap flex gap-2 flex-col md:flex-row w-full md:w-auto mb-4">
         <div className="flex-1 min-w-full md:min-w-[160px]">
-          <div className="my-2">{__('booking_card_status')}</div>
+          <label className="block my-2">{__('booking_card_status')}</label>
           <Select
             className="rounded-full border-black py-1.5"
             value={bookingStatus}
@@ -246,7 +251,7 @@ const BookingsFilter = ({ setFilter }: Props) => {
           />
         </div>
         <div className="flex-1 min-w-full sm:min-w-[160px]">
-          <div className="my-2">{__('booking_requests_type')}</div>
+          <label className="block my-2">{__('booking_requests_type')}</label>
           <Select
             label=""
             value={bookingType}
@@ -257,7 +262,9 @@ const BookingsFilter = ({ setFilter }: Props) => {
           />
         </div>
         <div className="rounded-full flex-1 min-w-full sm:min-w-[160px]">
-          <div className="my-2">{__('booking_requests_event_name')}</div>
+          <label className="block my-2">
+            {__('booking_requests_event_name')}
+          </label>
           <Select
             isDisabled={!Boolean(events && filterValues.type === 'event')}
             className={`rounded-full  py-1.5 ${
@@ -283,7 +290,9 @@ const BookingsFilter = ({ setFilter }: Props) => {
       </div>
       <div className="md:flex-1 flex-wrap md:flex-nowrap flex gap-2 flex-col md:flex-row w-full md:w-auto mb-4">
         <div className="flex-1 min-w-[160px]">
-          <div className="my-2">{__('booking_requests_booking_number')}</div>
+          <label className="block my-2">
+            {__('booking_requests_booking_number')}
+          </label>
           <Input
             value={bookingId}
             onChange={handleBookingId as any}
@@ -293,9 +302,9 @@ const BookingsFilter = ({ setFilter }: Props) => {
           />
         </div>
         <div ref={arrivalDropdownRef} className="relative flex-1 min-w-[160px]">
-          <div className="my-2">
+          <label className="block my-2">
             {__('booking_requests_arrival_date_range')}
-          </div>
+          </label>
           <Button
             onClick={() => setShowArrivalDropdown(!showArrivalDropdown)}
             className="text-black border-black normal-case text-md py-2 text-sm"
@@ -334,9 +343,9 @@ const BookingsFilter = ({ setFilter }: Props) => {
           ref={departureDropdownRef}
           className="relative flex-1 min-w-[160px]"
         >
-          <div className="my-2">
+          <label className="block my-2">
             {__('booking_requests_departure_date_range')}
-          </div>
+          </label>
           <Button
             onClick={() => setShowDepartureDropdown(!showDepartureDropdown)}
             className="text-black border-black normal-case py-2 text-sm"
@@ -390,7 +399,7 @@ const BookingsFilter = ({ setFilter }: Props) => {
         isFullWidth={false}
         size="small"
       >
-         {__('booking_requests_departure_date')}
+        {__('booking_requests_departure_date')}
       </Button>
     </section>
   );

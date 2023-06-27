@@ -115,7 +115,7 @@ const SettingsPage: FC = () => {
       <Head>
         <title>{user.screenname} | About me</title>
       </Head>
-      <div className="max-w-screen-sm mx-auto md:p-8 h-full main-content w-full flex flex-col min-h-screen py-2">
+      <div className="max-w-screen-sm mx-auto md:p-8 h-full main-content w-full flex flex-col min-h-screen py-2 gap-10">
         <Heading>🤓 Your Info</Heading>
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-8">
@@ -132,7 +132,6 @@ const SettingsPage: FC = () => {
           label="Name"
           value={user.screenname}
           onChange={saveUserData('screenname') as any}
-          className="mt-4"
           isInstantSave={true}
           hasSaved={hasSaved}
           setHasSaved={setHasSaved}
@@ -143,10 +142,9 @@ const SettingsPage: FC = () => {
           isDisabled={!updateEmail}
           onChange={e => setUser({ ...user, email:e.target.value })}
           successMessage={emailSaved ? 'You will receive a link to confirm via email.' : undefined}
-          className="mt-8"
           validation="email"
         />
-        <div className="mt-4">
+        <div>
           {updateEmail && !emailSaved ?
             <>
               <Button
@@ -180,7 +178,6 @@ const SettingsPage: FC = () => {
           value={user.phone}
           onChange={e => setUser({ ...user, phone:e.target.value })}
           successMessage={ phoneSaved ? 'You will receive a link to confirm via text.' : undefined }
-          className="mt-8"
           validation="phone"
         />
         <div className="mt-4">
@@ -230,7 +227,6 @@ const SettingsPage: FC = () => {
         </Heading>
         <Input
           label="Dietary Preferences"
-          className="mt-4"
           onChange={saveUserData('diet') as any}
           hasSaved={hasSaved}
           value={user?.preferences?.diet}
@@ -248,7 +244,6 @@ const SettingsPage: FC = () => {
           label="What is your superpower?"
           value={user?.preferences?.superpower}
           onChange={saveUserData('superpower') as any}
-          className="mt-8"
           isInstantSave={true}
           hasSaved={hasSaved}
           setHasSaved={setHasSaved}
@@ -256,7 +251,6 @@ const SettingsPage: FC = () => {
         <MultiSelect
           label="What skills do you have?"
           values={user?.preferences?.skills}
-          className="mt-8"
           onChange={saveUserData('skills')}
           options={SKILLS_EXAMPLES}
           placeholder="Pick or create yours"
@@ -271,7 +265,6 @@ const SettingsPage: FC = () => {
           label="What do you dream of creating?"
           value={user?.preferences?.dream}
           onChange={saveUserData('dream') as any}
-          className="mt-4"
           isInstantSave={true}
           hasSaved={hasSaved}
           setHasSaved={setHasSaved}
@@ -279,7 +272,6 @@ const SettingsPage: FC = () => {
         <Input
           label="What do you need?"
           value={user?.preferences?.needs}
-          className="mt-8"
           onChange={saveUserData('needs') as any}
           isInstantSave={true}
           hasSaved={hasSaved}
@@ -288,7 +280,6 @@ const SettingsPage: FC = () => {
         <Input
           label="Anything we should know? Anything you would like to share?"
           value={user?.preferences?.moreInfo}
-          className="mt-8"
           onChange={saveUserData('moreInfo') as any}
           isInstantSave={true}
           hasSaved={hasSaved}

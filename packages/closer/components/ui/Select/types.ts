@@ -4,6 +4,7 @@ interface BaseProps {
   placeholder?: string;
   className?: string;
   dataTestId?: string;
+  id?: string;
 }
 
 export interface MultiSelectProps extends BaseProps {
