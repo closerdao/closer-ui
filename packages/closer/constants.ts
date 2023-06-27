@@ -60,5 +60,4 @@ export const BONDING_CURVE = {
     b: 32000461777723,
     c: 420,
   },
-  MAX_SUPPLY: 70_000,
 };
