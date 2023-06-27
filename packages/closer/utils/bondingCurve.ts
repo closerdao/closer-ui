@@ -16,6 +16,3 @@ export const getTotalPrice = (currentSupply: number, amount: number) => {
 
   return parseInt(totalPrice.toFixed());
 };
-
-export const getRemainingTokens = (currentSupply: number) =>
-  BONDING_CURVE.MAX_SUPPLY - currentSupply;
