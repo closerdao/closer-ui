@@ -47,6 +47,7 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
               <input
                 type="text"
                 value={option.name}
+                required={true}
                 placeholder="Regular Ticket"
                 onChange={(e) => {
                   e.preventDefault();
