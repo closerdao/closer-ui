@@ -13,7 +13,7 @@ const TokenSaleHeader = ({ title, description, saleDate }) => {
   const componentHasMounted = useHasMounted();
 
   const redirectToTokenSale = () => {
-    router.push('/token-sale');
+    router.push('/token');
   };
 
   if (!componentHasMounted || !saleDate) {

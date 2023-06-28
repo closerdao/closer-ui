@@ -5,7 +5,6 @@ import { DropdownProps, Item } from './types';
 
 const Dropdown: FC<DropdownProps> = React.memo(
   ({
-    id,
     label,
     value,
     options,
@@ -14,9 +13,8 @@ const Dropdown: FC<DropdownProps> = React.memo(
     placeholder = 'Select an option',
     className,
     dataTestId,
-    size
+    isDisabled,
   }) => {
-
     const onChangeRef = useRef(onChange);
     if (onChange !== onChangeRef.current) {
       onChangeRef.current = onChange; // prevents re-renders when parent component re-renders with the same props
@@ -27,13 +25,14 @@ const Dropdown: FC<DropdownProps> = React.memo(
     };
 
     return (
-      <div className={`flex flex-col gap-4 relative ${className}`}>
+      <div className={'flex flex-col gap-4 relative w-full'}>
         {label && (
           <label className="font-medium text-complimentary-light">
             {label}
           </label>
         )}
         <DropdownList
+          disabled={isDisabled}
           value={value}
           dataKey="value"
           textField="label"
@@ -48,14 +47,14 @@ const Dropdown: FC<DropdownProps> = React.memo(
               aria-selected={props?.selected}
               className={`rw-list-option ${
                 props?.selected ? 'bg-accent-light' : 'bg-transparent'
-              }`}
+              } `}
               onClick={(event) => props?.onSelect(props?.dataItem, event)}
             >
               {props.dataItem.label}
             </div>
           )}
-          className=" focus:!shadow-xl  focus:ring-2 focus:ring-offset-0 focus:!ring-accent-core "
-          containerClassName={`!border-none rounded-md focus:!shadow-xl focus:!border-accent-core focus:ring-0 focus:ring-offset-0 focus:!ring-accent-core bg-neutral py-2.5 ${size ==='large' && 'h-[54px]'}`}
+          className=" "
+          containerClassName={`py-3.5 border-2  ${className}`}
         />
       </div>
     );

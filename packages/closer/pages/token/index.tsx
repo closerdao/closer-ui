@@ -4,20 +4,29 @@ import router from 'next/router';
 
 import { useContext, useEffect, useState } from 'react';
 
-import { Button, Card, Heading } from '../../../components/ui';
+import Wallet from '../../components/Wallet';
+import { Button, Card, Heading } from '../../components/ui';
 
-import { useAuth, useConfig } from 'closer';
-import { __ } from 'closer/utils/helpers';
+import { useAuth } from '../../contexts/auth';
+import { WalletState } from '../../contexts/wallet';
+import { useBuyTokens } from '../../hooks/useBuyTokens';
+import { useConfig } from '../../hooks/useConfig';
+import api from '../../utils/api';
+import { __ } from '../../utils/helpers';
 
-import { WalletState } from '../../../contexts/wallet';
-import { useBuyTokens } from '../../../hooks/useBuyTokens';
+const ACCOMMODATION_ICONS = ['van.png', 'camping.png', 'hotel.png'];
 
 const PublicTokenSalePage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
   const { user } = useAuth();
   const { getTokensAvailableForPurchase } = useBuyTokens();
+  const isWalletEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
   const [tokensAvailable, setTokensAvailable] = useState<number | null>(null);
+
   const { isWalletReady } = useContext(WalletState);
+
+  const [listings, setListings] = useState<any[]>([]);
 
   useEffect(() => {
     if (isWalletReady) {
@@ -28,11 +37,19 @@ const PublicTokenSalePage = () => {
     }
   }, [isWalletReady]);
 
+  useEffect(() => {
+    (async () => {
+      const res = await api.get('/listing');
+      setListings(res.data.results);
+
+    })();
+  }, []);
+
   const handleNext = async () => {
     if (user && user.kycPassed === true) {
-      router.push('/token-sale/sale-open/token-counter');
+      router.push('/token/token-counter');
     } else {
-      router.push('/token-sale/sale-open/nationality');
+      router.push('/token/nationality');
     }
   };
 
@@ -74,19 +91,26 @@ const PublicTokenSalePage = () => {
             <h2 className="px-4 mb-8 text-center leading-5 max-w-[460px] font-bold uppercase text-md">
               {__('token_sale_public_sale_subheading')}
             </h2>
-            <Button
-              className="!w-60 font-bold mb-3 md:mb-8 relative"
-              onClick={handleNext}
-            >
-              <Image
-                className="absolute left-[200px] w-14 h-18"
-                src="/images/token-sale/arrow.png"
-                alt="arrow"
-                width={85}
-                height={99}
-              />
-              {__('token_sale_public_sale_buy_token')}
-            </Button>
+            {isWalletReady ? (
+              <Button
+                className="!w-60 font-bold mb-3 md:mb-8 relative"
+                onClick={handleNext}
+              >
+                <Image
+                  className="absolute left-[200px] w-14 h-18"
+                  src="/images/token-sale/arrow.png"
+                  alt="arrow"
+                  width={85}
+                  height={99}
+                />
+                {__('token_sale_public_sale_buy_token')}
+              </Button>
+            ) : (
+              <div className="px-6 py-2 rounded-full bg-white text-black">
+                {__('token_sale_buy_wallet_not_ready')}
+              </div>
+            )}
+
             {tokensAvailable && (
               <h3 className="font-bold text-2xl">
                 {tokensAvailable} {__('token_sale_public_sale_tokens_left')}
@@ -94,6 +118,12 @@ const PublicTokenSalePage = () => {
             )}
           </div>
         </section>
+
+        {isWalletEnabled && (
+          <div className="mb-16">
+            <Wallet />
+          </div>
+        )}
 
         <section className="flex items-center flex-col py-24">
           <div className="w-full sm:w-[80%] ">
@@ -168,13 +198,14 @@ const PublicTokenSalePage = () => {
           </div>
         </section>
 
-        <section className="flex items-center flex-col py-24">
+        {/* Ask us anything — waiting for texts and links */}
+        {/* <section className="flex items-center flex-col py-24">
           <div className="w-full sm:w-[80%] ">
             <div className="text-center mb-20">
               <h2 className="mb-4 text-5xl font-bold">
-                {__('token_sale_public_sale_key_info')}
+                {__('token_sale_public_sale_heading_ask_us_anything')}
               </h2>
-              <div>{__('token_sale_public_sale_key_info_subhead')}</div>
+              <div>{__('token_sale_public_sale_subheading_ask_us_anything')}</div>
             </div>
             <div className="flex flex-col sm:flex-row gap-[2%] flex-wrap">
               <Card className="mb-8 px-6 py-8 text-center items-center flex flex-col gap-4 w-full sm:w-[49%] lg:w-[23%]">
@@ -303,16 +334,32 @@ const PublicTokenSalePage = () => {
               </Card>
             </div>
           </div>
-        </section>
+        </section> */}
 
         <section className="flex items-center flex-col py-24">
           <div className="w-full sm:w-[80%] flex items-center flex-col">
-            <div className="text-center mb-20">
+            <div className="text-center mb-12">
               <h2 className="mb-4 text-5xl font-bold">
                 {__('token_sale_public_sale_heading_utility')}
               </h2>
               <div>{__('token_sale_public_sale_subheading_utility')}</div>
             </div>
+
+            <div className="flex flex-col w-full md:w-[460px]">
+              <div className="text-sm mt-20 mb-6 text-center">
+                {__('token_sale_public_sale_utility_info_1')}
+              </div>
+              <div className="text-sm mb-6 text-accent text-center">
+                {__('token_sale_public_sale_utility_info_2')}
+              </div>
+              <div className="text-sm mb-6 text-center">
+                {__('token_sale_public_sale_utility_info_3')}
+              </div>
+              <div className="text-sm mb-6 text-center">
+                {__('token_sale_public_sale_utility_info_4')}
+              </div>
+            </div>
+
             <div className="flex flex-col w-full md:w-[460px]">
               <Heading level={3} className="mb-6">
                 {__('token_sale_public_sale_heading_accommodation_cost')}
@@ -321,54 +368,49 @@ const PublicTokenSalePage = () => {
                 <div className="text-right text-sm">
                   {__('token_sale_public_sale_price_per_night')}
                 </div>
-                <div className="grid grid-cols-[55px_auto_65px]">
-                  <p>
-                    <Image
-                      src="/images/token-sale/van.png"
-                      alt=""
-                      width={38}
-                      height={38}
-                    />
-                  </p>
-                  <p className=" pt-1">
-                    {__('token_sale_public_sale_van_parking')}
-                  </p>
-                  <p className=" text-right text-accent pt-2">
-                    {__('token_sale_public_sale_token_symbol')}0.5
-                  </p>
-                </div>
-                <div className="grid grid-cols-[55px_auto_65px]">
-                  <p>
-                    <Image
-                      src="/images/token-sale/camping.png"
-                      alt=""
-                      width={38}
-                      height={38}
-                    />
-                  </p>
-                  <p className=" pt-1">
-                    {__('token_sale_public_sale_outdoor_camping')}
-                  </p>
-                  <p className=" text-right text-accent pt-2">
-                    {__('token_sale_public_sale_token_symbol')}0.5
-                  </p>
-                </div>
-                <div className="grid grid-cols-[55px_auto_65px]">
-                  <p>
-                    <Image
-                      src="/images/token-sale/camping.png"
-                      alt=""
-                      width={38}
-                      height={38}
-                    />
-                  </p>
-                  <p className=" pt-1">
-                    {__('token_sale_public_sale_glamping')}
-                  </p>
-                  <p className=" text-right text-accent pt-2">
-                    {__('token_sale_public_sale_token_symbol')}1
-                  </p>
-                </div>
+                {listings &&
+                  listings.map((listing: any) => {
+                    return (
+                        <div key={listing.name}>
+                          <div className="grid grid-cols-[55px_auto_65px]">
+                            <p>
+                              {listing.name.toLowerCase().includes('van') && (
+                                <Image
+                                  src={`/images/token-sale/${ACCOMMODATION_ICONS[0]}`}
+                                  alt=""
+                                  width={38}
+                                  height={38}
+                                />
+                              )}
+
+                              {(listing.name
+                                .toLowerCase()
+                                .includes('private') ||
+                                listing.name
+                                  .toLowerCase()
+                                  .includes('camping') ||
+                                listing.name
+                                  .toLowerCase()
+                                  .includes('shared')) && (
+                                <Image
+                                  src={`/images/token-sale/${ACCOMMODATION_ICONS[1]}`}
+                                  alt=""
+                                  width={38}
+                                  height={38}
+                                />
+                              )}
+                            </p>
+                            <p className=" pt-1">{listing.name}</p>
+                            <p className=" text-right text-accent pt-2">
+                              {__('token_sale_public_sale_token_symbol')}{' '}
+                              {listing.tokenPrice.val}
+                            </p>
+                          </div>
+                        </div>
+                    );
+                  })}
+
+                {/* Future accommodation types: */}
                 <div className="grid grid-cols-[55px_auto_65px]">
                   <p>
                     <Image
@@ -446,17 +488,8 @@ const PublicTokenSalePage = () => {
                   </p>
                 </div>
               </Card>
-              <div className="text-xs text-center">
+              <div className="text-accent text-sm text-center">
                 {__('token_sale_public_sale_prices_disclaimer')}
-              </div>
-              <div className="text-sm mt-20 mb-6 text-center">
-                {__('token_sale_public_sale_utility_info_1')}
-              </div>
-              <div className="text-sm mb-6 text-accent text-center">
-                {__('token_sale_public_sale_utility_info_2')}
-              </div>
-              <div className="text-sm mb-6 text-center">
-                {__('token_sale_public_sale_utility_info_3')}
               </div>
             </div>
           </div>
@@ -649,7 +682,7 @@ const PublicTokenSalePage = () => {
                 </div>
                 <div className="pb-20">
                   <Button
-                    onClick={() => router.push('/token-sale/sale-open')}
+                    onClick={() => router.push('/token')}
                     type="secondary"
                     className="my-6"
                   >

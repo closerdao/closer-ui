@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useState } from 'react';
 
+
 import {
   BackButton,
   Button,
@@ -10,15 +11,18 @@ import {
   Heading,
   ProgressBar,
   Row,
-} from '../../../components/ui';
+  Spinner,
+} from '../../components/ui';
 
-import { TOKEN_SALE_STEPS } from '../../../constants';
-import { useAuth } from '../../../contexts/auth';
-import { WalletState } from '../../../contexts/wallet';
-import { useBuyTokens } from '../../../hooks/useBuyTokens';
-import { useConfig } from '../../../hooks/useConfig';
-import { parseMessageFromError } from '../../../utils/common';
-import { __ } from '../../../utils/helpers';
+import { TOKEN_SALE_STEPS } from '../../constants';
+import { useAuth } from '../../contexts/auth';
+import { WalletState } from '../../contexts/wallet';
+import { useBuyTokens } from '../../hooks/useBuyTokens';
+import { useConfig } from '../../hooks/useConfig';
+import { parseMessageFromError } from '../../utils/common';
+import { __ } from '../../utils/helpers';
+import PageNotFound from '../404';
+import api from '../../utils/api';
 
 const TokenSaleCheckoutPage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
@@ -34,6 +38,7 @@ const TokenSaleCheckoutPage = () => {
   const { isWalletReady } = useContext(WalletState);
 
   const [web3Error, setWeb3Error] = useState<string | null>(null);
+  const [apiError, setApiError] = useState(null);
 
   const unitPrice = (total / parseInt(tokens as string)).toFixed(2);
 
@@ -55,9 +60,9 @@ const TokenSaleCheckoutPage = () => {
 
   const goBack = async () => {
     if (user && user.kycPassed) {
-      router.push(`/token-sale/sale-open/token-counter?tokens=${tokens}`);
+      router.push(`/token/token-counter?tokens=${tokens}`);
     } else {
-      router.push(`/token-sale/sale-open/your-info?tokens=${tokens}`);
+      router.push(`/token/your-info?tokens=${tokens}`);
     }
   };
 
@@ -73,8 +78,17 @@ const TokenSaleCheckoutPage = () => {
   const handlePurchaseTx = async () => {
     const { success, txHash, error } = await buyTokens(tokens as string);
     if (success) {
+      try {
+        await api.post('/metric', {
+          event: 'token-sale',
+          value: Number(tokens),
+          category: 'revenue'
+        })    
+      } catch (error: any) {
+        setApiError(parseMessageFromError(error))
+      }
       router.push(
-        `/token-sale/sale-open/success?amountOfTokensPurchased=${tokens}&transactionId=${txHash}`,
+        `/token/success?amountOfTokensPurchased=${tokens}&transactionId=${txHash}`,
       );
     } else {
       setWeb3Error(parseMessageFromError(error));
@@ -82,8 +96,12 @@ const TokenSaleCheckoutPage = () => {
   };
 
   const handleEditAmount = () => {
-    router.push(`/token-sale/sale-open/token-counter?tokens=${tokens}`);
+    router.push(`/token/token-counter?tokens=${tokens}`);
   };
+
+  if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true' || !isWalletReady) {
+    return <PageNotFound />;
+  }
 
   return (
     <>
@@ -141,18 +159,29 @@ const TokenSaleCheckoutPage = () => {
           </div>
           {isApproved ? (
             <Button onClick={handlePurchaseTx} isEnabled={!isPending}>
-              {isPending
-                ? __('token_sale_checkout_button_pending_transaction')
-                : __('token_sale_checkout_button_purchase_transaction')}
+              {isPending ? (
+                <div className="flex gap-2 items-center">
+                  <Spinner />
+                  {__('token_sale_checkout_button_pending_transaction')}
+                </div>
+              ) : (
+                __('token_sale_checkout_button_purchase_transaction')
+              )}
             </Button>
           ) : (
             <Button onClick={handleApprovalTx} isEnabled={!isPending}>
-              {isPending
-                ? __('token_sale_checkout_button_pending_transaction')
-                : __('token_sale_checkout_button_approve_transaction')}
+              {isPending ? (
+                <div className="flex gap-2 items-center">
+                  <Spinner />
+                  {__('token_sale_checkout_button_pending_transaction')}
+                </div>
+              ) : (
+                __('token_sale_checkout_button_approve_transaction')
+              )}
             </Button>
           )}
           {web3Error && <ErrorMessage error={web3Error} />}
+          {apiError && <ErrorMessage error={apiError} />}
         </main>
       </div>
     </>

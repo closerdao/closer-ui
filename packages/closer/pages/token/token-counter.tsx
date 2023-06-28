@@ -1,21 +1,17 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
-import TokenBuyWidget from '../../../components/TokenBuyWidget';
-import {
-  BackButton,
-  Button,
-  Heading,
-  ProgressBar,
-} from '../../../components/ui';
+import TokenBuyWidget from '../../components/TokenBuyWidget';
+import { BackButton, Button, Heading, ProgressBar } from '../../components/ui';
 
-import { TOKEN_SALE_STEPS } from '../../../constants';
-import { useAuth } from '../../../contexts/auth';
-import { useConfig } from '../../../hooks/useConfig';
-import { __ } from '../../../utils/helpers';
-import PageNotFound from '../../404';
+import PageNotFound from '../404';
+import { TOKEN_SALE_STEPS } from '../../constants';
+import { useAuth } from '../../contexts/auth';
+import { useConfig } from '../../hooks/useConfig';
+import { __ } from '../../utils/helpers';
+import { WalletState } from '../../contexts/wallet';
 
 const DEFAULT_TOKENS = 10;
 
@@ -24,6 +20,9 @@ const TokenCounterPage = () => {
   const router = useRouter();
   const { nationality, tokens } = router.query;
   const { isAuthenticated, isLoading, user } = useAuth();
+  const {
+    isWalletReady,
+  } = useContext(WalletState);
 
   const [tokensToBuy, setTokensToBuy] = useState(
     tokens !== undefined ? Number(tokens) : DEFAULT_TOKENS,
@@ -45,23 +44,23 @@ const TokenCounterPage = () => {
 
   const goBack = async () => {
     if (user && user.kycPassed) {
-      router.push(`/token-sale/sale-open?nationality=${nationality}`);
+      router.push(`/token?nationality=${nationality}`);
     } else {
-      router.push('/token-sale/sale-open/nationality');
+      router.push('/token/nationality');
     }
   };
 
   const handleNext = async () => {
     if (user && user.kycPassed) {
-      router.push(`/token-sale/sale-open/checkout?tokens=${tokensToBuy}`);
+      router.push(`/token/checkout?tokens=${tokensToBuy}`);
     } else {
       router.push(
-        `/token-sale/sale-open/your-info?nationality=${nationality}&tokens=${tokensToBuy}`,
+        `/token/your-info?nationality=${nationality}&tokens=${tokensToBuy}`,
       );
     }
   };
 
-  if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
+  if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true' || !isWalletReady) {
     return <PageNotFound />;
   }
 

@@ -1,21 +1,25 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect } from 'react';
+import { useContext, useEffect } from 'react';
 
-import { BackButton, Heading, ProgressBar } from '../../../components/ui';
+import { BackButton, Heading, ProgressBar } from '../../components/ui';
 
-import { TOKEN_SALE_STEPS } from '../../../constants';
-import { useAuth } from '../../../contexts/auth';
-import { useConfig } from '../../../hooks/useConfig';
-import { __ } from '../../../utils/helpers';
-import PageNotFound from '../../404';
+import PageNotFound from '../404';
+import { TOKEN_SALE_STEPS } from '../../constants';
+import { useAuth } from '../../contexts/auth';
+import { useConfig } from '../../hooks/useConfig';
+import { __ } from '../../utils/helpers';
+import { WalletState } from '../../contexts/wallet';
 
 const TokenSaleSuccessPage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
   const router = useRouter();
   const { amountOfTokensPurchased, transactionId } = router.query;
   const { isAuthenticated, isLoading } = useAuth();
+  const {
+    isWalletReady,
+  } = useContext(WalletState);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -24,10 +28,10 @@ const TokenSaleSuccessPage = () => {
   }, [isAuthenticated, isLoading]);
 
   const goBack = async () => {
-    router.push('/token-sale/sale-open');
+    router.push('/token');
   };
 
-  if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
+  if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true' || !isWalletReady) {
     return <PageNotFound />;
   }
 
@@ -66,8 +70,10 @@ const TokenSaleSuccessPage = () => {
             )}`}</Heading>
           </div>
           <Heading level={4} className="uppercase">
-            {`${__('token_sale_success_purchase_number')} ${transactionId}`}
+            {`${__('token_sale_success_purchase_number')}`}
+            <p className='break-words'>{transactionId}</p>
           </Heading>
+          
         </main>
       </div>
     </>

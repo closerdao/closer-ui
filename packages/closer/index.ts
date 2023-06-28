@@ -83,19 +83,19 @@ export { default as CreateTaskPage } from './pages/tasks/create';
 export { default as EditTaskPage } from './pages/tasks/edit/[slug]';
 export { default as TicketPage } from './pages/tickets/[slug]/index';
 export { default as TicketsInvoicePage } from './pages/tickets/[slug]/invoice';
-export { default as PublicTokenSalePage } from './pages/token-sale/sale-open';
-export { default as TokenCounterPage } from './pages/token-sale/sale-open/token-counter';
-export { default as NationalityPage } from './pages/token-sale/sale-open/nationality';
-export { default as YourInfoPage } from './pages/token-sale/sale-open/your-info';
-export { default as TokenSaleCheckoutPage } from './pages/token-sale/sale-open/checkout';
-export { default as TokenSaleSuccessPage } from './pages/token-sale/sale-open/success';
+export { default as TokenSaleCheckoutPage } from './pages/token/checkout';
+export { default as PublicTokenSalePage } from './pages/token';
+export { default as NationalityPage } from './pages/token/nationality';
+export { default as TokenSaleSuccessPage } from './pages/token/success';
+export { default as TokenCounterPage } from './pages/token/token-counter';
+export { default as YourInfoPage } from './pages/token/your-info';
 
-export { default as SubscriptionsPage } from './pages/subscriptions/index';
-export { default as SubscriptionPlanPage } from './pages/subscriptions/[slug]';
-export { default as SubscriptionsSummaryPage } from './pages/subscriptions/summary';
-export { default as SubscriptionsCheckoutPage } from './pages/subscriptions/checkout';
-export { default as SubscriptionSuccessPage } from './pages/subscriptions/success';
 export { default as UnlockStaysPage } from './pages/bookings/unlock-stays';
+export { default as SubscriptionPlanPage } from './pages/subscriptions/[slug]';
+export { default as SubscriptionsCheckoutPage } from './pages/subscriptions/checkout';
+export { default as SubscriptionsPage } from './pages/subscriptions/index';
+export { default as SubscriptionSuccessPage } from './pages/subscriptions/success';
+export { default as SubscriptionsSummaryPage } from './pages/subscriptions/summary';
 
 // Types
 export * from './types/';

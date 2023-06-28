@@ -3,7 +3,7 @@ import { screen, waitFor } from '@testing-library/react';
 import TokenBuyWidget from '.';
 import { renderWithProviders } from '../../test/utils';
 
-describe('TokenBuyWidget', () => {
+describe('TokenBuyWidget',  () => {
   const defaultTokensToBuy = 15;
   const defaultTokenPrice = 230.23;
   const defaultAccommodationPrice = 1;
@@ -18,11 +18,9 @@ describe('TokenBuyWidget', () => {
 
     const tokensToBuyInput = screen.getByLabelText(/\$tdf/i);
     const tokensToSellInput = screen.getByLabelText(/ceur/i);
-    const accommodationOptionInput = screen.getByText(/glamping/i);
     const daysToStayInput = screen.getByLabelText(/for/i);
     expect(tokensToBuyInput).toBeInTheDocument();
     expect(tokensToSellInput).toBeInTheDocument();
-    expect(accommodationOptionInput).toBeInTheDocument();
     expect(daysToStayInput).toBeInTheDocument();
   });
 

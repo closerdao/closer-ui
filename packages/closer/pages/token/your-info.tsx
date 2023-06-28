@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 
 import { ChangeEvent, useContext, useEffect, useState } from 'react';
 
-import Wallet from '../../../components/Wallet';
+import Wallet from '../../components/Wallet';
 import {
   BackButton,
   Button,
@@ -11,16 +11,16 @@ import {
   Heading,
   Input,
   ProgressBar,
-} from '../../../components/ui';
+} from '../../components/ui';
 
-import { TOKEN_SALE_STEPS } from '../../../constants';
-import { useAuth } from '../../../contexts/auth';
-import { WalletState } from '../../../contexts/wallet';
-import { useConfig } from '../../../hooks/useConfig';
-import api from '../../../utils/api';
-import { parseMessageFromError } from '../../../utils/common';
-import { __, isInputValid } from '../../../utils/helpers';
-import PageNotFound from '../../404';
+import PageNotFound from '../404';
+import { TOKEN_SALE_STEPS } from '../../constants';
+import { useAuth } from '../../contexts/auth';
+import { WalletState } from '../../contexts/wallet';
+import { useConfig } from '../../hooks/useConfig';
+import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
+import { __, isInputValid } from '../../utils/helpers';
 
 const YourInfoPage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
@@ -49,7 +49,7 @@ const YourInfoPage = () => {
 
   useEffect(() => {
     if (user && user.kycPassed) {
-      router.push('/token-sale/sale-open/checkout');
+      router.push('/token/checkout');
     }
   }, [user]);
 
@@ -69,7 +69,7 @@ const YourInfoPage = () => {
 
   const goBack = () => {
     router.push(
-      `/token-sale/sale-open/token-counter?tokens=${tokens}&nationality=${nationality}`,
+      `/token/token-counter?tokens=${tokens}&nationality=${nationality}`,
     );
   };
 
@@ -104,7 +104,7 @@ const YourInfoPage = () => {
         country: nationality,
       });
       refetchUser();
-      router.push(`/token-sale/sale-open/checkout?tokens=${tokens}`);
+      router.push(`/token/checkout?tokens=${tokens}`);
     } catch (error) {
       setErrorMessage(parseMessageFromError(error));
     } finally {
@@ -123,7 +123,7 @@ const YourInfoPage = () => {
     return false;
   };
 
-  if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
+  if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true' || !isWalletReady) {
     return <PageNotFound />;
   }
 

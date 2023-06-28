@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
 import {
   BackButton,
@@ -9,20 +9,24 @@ import {
   ErrorMessage,
   Heading,
   ProgressBar,
-} from '../../../components/ui';
-import Select from '../../../components/ui/Select/Dropdown';
+} from '../../components/ui';
+import Select from '../../components/ui/Select/Dropdown';
 
-import { TOKEN_SALE_STEPS } from '../../../constants';
-import { useAuth } from '../../../contexts/auth';
-import { useConfig } from '../../../hooks/useConfig';
-import api from '../../../utils/api';
-import { __ } from '../../../utils/helpers';
-import PageNotFound from '../../404';
+import PageNotFound from '../404';
+import { TOKEN_SALE_STEPS } from '../../constants';
+import { useAuth } from '../../contexts/auth';
+import { useConfig } from '../../hooks/useConfig';
+import api from '../../utils/api';
+import { __ } from '../../utils/helpers';
+import { WalletState } from '../../contexts/wallet';
 
 const NationalityPage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
+  const {
+    isWalletReady,
+  } = useContext(WalletState);
 
   const [nationality, setNationality] = useState('');
   const [countries, setCountries] = useState();
@@ -59,20 +63,18 @@ const NationalityPage = () => {
   }, [nationality]);
 
   const goBack = async () => {
-    router.push('/token-sale/sale-open/');
+    router.push('/token/');
   };
 
   const handleNext = async () => {
-    router.push(
-      `/token-sale/sale-open/token-counter?nationality=${nationality}`,
-    );
+    router.push(`/token/token-counter?nationality=${nationality}`);
   };
 
   const handleChange = (value: string) => {
     setNationality(value);
   };
 
-  if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
+  if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true' || !isWalletReady) {
     return <PageNotFound />;
   }
 
