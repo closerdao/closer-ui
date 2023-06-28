@@ -9,9 +9,15 @@ import Progress from '../../components/ui/ProgressBar/Progress';
 
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
-import api from '../../utils/api';
-import { __ } from '../../utils/helpers';
-import { getNextMonthName } from '../../utils/helpers';
+import api, { formatSearch } from '../../utils/api';
+import { __, getNextMonthName } from '../../utils/helpers';
+import dayjs from 'dayjs';
+
+
+const today = new Date();
+const firstDayOfCurrentMonth = dayjs(new Date(today.getFullYear(), today.getMonth(), 1)).format('YYYY-MM-DD')
+const lastDayOfCurrentMonth = dayjs(new Date(today.getFullYear(), today.getMonth() + 1, 0)).format('YYYY-MM-DD')
+
 
 const ReferralsPage = () => {
   const config = useConfig();
@@ -22,17 +28,43 @@ const ReferralsPage = () => {
 
   const [copied, setCopied] = useState(false);
   const [usersReferredByMe, setUsersReferredByMe] = useState();
+  const [creditsEarnedFromReferrals, setCreditsEarnedFromReferrals] =
+    useState();
+  const [creditsErnedThisMonth, setCreditsErnedThisMonth] = useState();
 
   useEffect(() => {
     if (user) {
-      console.log('user=', user);
-      const usersReferredByMeUrl = `/count/user?where={"referredBy":"${user?._id}"}`;
-    //   const usersReferredByMeUrl = '/count/user?where={"kycPassed":"true"}';
       (async () => {
-        const res = await api.get(usersReferredByMeUrl);
-        setUsersReferredByMe(res.data.results);
+        const res = await Promise.all([
+          api.get('/count/user', {
+            params: {
+              where: formatSearch({ referredBy: user._id }),
+            },
+          }),
+          api.get('/count/stay', {
+            params: {
+              where: formatSearch({ source: 'referral' }),
+            },
+          }),
+          api.get('/count/stay', {
+            params: {
+              where: formatSearch({
+                source: 'referral',
+                created: { $gte: firstDayOfCurrentMonth, $lte: lastDayOfCurrentMonth },
+              }),
+            },
+          }),
+          api.get('/user', {
+            params: {
+              where: formatSearch({ referredBy: user._id }),
+            },
+          }),
+        ]);
+        setUsersReferredByMe(res[0].data.results);
+        setCreditsEarnedFromReferrals(res[1].data.results);
+        setCreditsErnedThisMonth(res[2].data.results);
 
-        console.log('usersReferredByMe=', res.data.results);
+        console.log('users referred by me=', res[3].data.results);
       })();
     }
   }, [user]);
@@ -77,12 +109,7 @@ const ReferralsPage = () => {
           <p className="mb-4">{__('referrals_description_text_2')}</p>
           <p className="mb-4">{__('referrals_description_text_3')}</p>
           <p className="mb-4 text-accent font-bold">
-            <Link href="/settings/carrots">{__('referrals_credits_link')}</Link>
-          </p>
-          <p className="mb-4 text-accent font-bold">
-            <Link href="/settings/carrots">
-              {__('referrals_influencer_link')}
-            </Link>
+            <Link href="/settings/credits">{__('referrals_credits_link')}</Link>
           </p>
         </div>
         <Heading level={3} isUnderlined={true}>
@@ -111,7 +138,7 @@ const ReferralsPage = () => {
         <Heading level={3} isUnderlined={true}>
           {__('referrals_monthly_progress_heading')}
         </Heading>
-        <Progress progress={3} total={6} />
+        <Progress icon='🥕' progress={creditsErnedThisMonth === undefined ? 0 : creditsErnedThisMonth} total={6} />
         <Row
           rowKey={__('referrals_next_refresh')}
           value={`${getNextMonthName()} 1`}
@@ -124,8 +151,8 @@ const ReferralsPage = () => {
           rowKey={__('referrals_successfull_referrals')}
           value={usersReferredByMe}
         />
-        <Row rowKey={__('referrals_earned')} value="🥕 1" />
-        <Row rowKey={__('referrals_earned_by_friends')} value="🥕 2" />
+        <Row rowKey={__('referrals_earned')} value={`🥕 ${creditsEarnedFromReferrals === undefined ? '': creditsEarnedFromReferrals}`} />
+        <Row rowKey={__('referrals_earned_by_friends')} value="🥕 ?" />
       </div>
     </>
   );
