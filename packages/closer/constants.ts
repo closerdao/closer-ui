@@ -44,9 +44,10 @@ export const SUBSCRIPTION_STEPS = [
 ];
 
 export const TOKEN_SALE_STEPS = [
+  'before-you-begin',
   'nationality',
-  'token counter',
-  'your info',
+  'token-counter',
+  'your-info',
   'checkout',
   'success',
 ];

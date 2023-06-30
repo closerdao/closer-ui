@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useState } from 'react';
 
-
 import {
   BackButton,
   Button,
@@ -14,20 +13,23 @@ import {
   Spinner,
 } from '../../components/ui';
 
+import PageNotFound from '../404';
 import { TOKEN_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
+import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
-import PageNotFound from '../404';
-import api from '../../utils/api';
 
 const TokenSaleCheckoutPage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
   const router = useRouter();
-  const { tokens } = router.query;
+  const { tokens } = router.query || { tokens: '33' };
+
+  console.log('tokens=',tokens);
+
   const { SOURCE_TOKEN } = useConfig() || {};
   const { buyTokens, getTotalCost, isCeurApproved, approveCeur, isPending } =
     useBuyTokens();
@@ -82,10 +84,10 @@ const TokenSaleCheckoutPage = () => {
         await api.post('/metric', {
           event: 'token-sale',
           value: Number(tokens),
-          category: 'revenue'
-        })    
-      } catch (error: any) {
-        setApiError(parseMessageFromError(error))
+          category: 'revenue',
+        });
+      } catch (error: unknown) {
+        setApiError(parseMessageFromError(error));
       }
       router.push(
         `/token/success?amountOfTokensPurchased=${tokens}&transactionId=${txHash}`,
@@ -153,7 +155,6 @@ const TokenSaleCheckoutPage = () => {
               <Row
                 rowKey={__('token_sale_checkout_total')}
                 value={`${__('token_sale_source_token')} ${total} `}
-                additionalInfo={__('token_sale_checkout_vat')}
               />
             </div>
           </div>
@@ -180,6 +181,17 @@ const TokenSaleCheckoutPage = () => {
               )}
             </Button>
           )}
+
+          <p className="text-center">
+            {!isApproved && !isPending && __('token_sale_approve_text')}
+
+            {!isApproved && isPending && __('token_sale_approve_pending_text')}
+
+            {isApproved && !isPending && __('token_sale_buy_text')}
+
+            {isApproved && isPending && __('token_sale_buy_pending_text')}
+          </p>
+
           {web3Error && <ErrorMessage error={web3Error} />}
           {apiError && <ErrorMessage error={apiError} />}
         </main>

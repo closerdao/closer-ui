@@ -49,7 +49,7 @@ const YourInfoPage = () => {
 
   useEffect(() => {
     if (user && user.kycPassed) {
-      router.push('/token/checkout');
+      router.push(`/token/checkout?tokens=${tokens}`);
     }
   }, [user]);
 

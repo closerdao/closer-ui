@@ -4,29 +4,29 @@ import router from 'next/router';
 
 import { useContext, useEffect, useState } from 'react';
 
-import Wallet from '../../components/Wallet';
 import { Button, Card, Heading } from '../../components/ui';
 
-import { useAuth } from '../../contexts/auth';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
+import { Listing } from '../../types';
 import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
 const ACCOMMODATION_ICONS = ['van.png', 'camping.png', 'hotel.png'];
 
-const PublicTokenSalePage = () => {
+interface Props {
+  listings: Listing[];
+}
+
+const PublicTokenSalePage = ({ listings }: Props) => {
   const { PLATFORM_NAME } = useConfig() || {};
-  const { user } = useAuth();
   const { getTokensAvailableForPurchase } = useBuyTokens();
-  const isWalletEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
+
   const [tokensAvailable, setTokensAvailable] = useState<number | null>(null);
 
   const { isWalletReady } = useContext(WalletState);
-
-  const [listings, setListings] = useState<any[]>([]);
 
   useEffect(() => {
     if (isWalletReady) {
@@ -37,20 +37,8 @@ const PublicTokenSalePage = () => {
     }
   }, [isWalletReady]);
 
-  useEffect(() => {
-    (async () => {
-      const res = await api.get('/listing');
-      setListings(res.data.results);
-
-    })();
-  }, []);
-
   const handleNext = async () => {
-    if (user && user.kycPassed === true) {
-      router.push('/token/token-counter');
-    } else {
-      router.push('/token/nationality');
-    }
+    router.push('/token/before-you-begin');
   };
 
   if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
@@ -91,25 +79,20 @@ const PublicTokenSalePage = () => {
             <h2 className="px-4 mb-8 text-center leading-5 max-w-[460px] font-bold uppercase text-md">
               {__('token_sale_public_sale_subheading')}
             </h2>
-            {isWalletReady ? (
-              <Button
-                className="!w-60 font-bold mb-3 md:mb-8 relative"
-                onClick={handleNext}
-              >
-                <Image
-                  className="absolute left-[200px] w-14 h-18"
-                  src="/images/token-sale/arrow.png"
-                  alt="arrow"
-                  width={85}
-                  height={99}
-                />
-                {__('token_sale_public_sale_buy_token')}
-              </Button>
-            ) : (
-              <div className="px-6 py-2 rounded-full bg-white text-black">
-                {__('token_sale_buy_wallet_not_ready')}
-              </div>
-            )}
+
+            <Button
+              className="!w-60 font-bold mb-3 md:mb-8 relative"
+              onClick={handleNext}
+            >
+              <Image
+                className="absolute left-[200px] w-14 h-18"
+                src="/images/token-sale/arrow.png"
+                alt="arrow"
+                width={85}
+                height={99}
+              />
+              {__('token_sale_public_sale_buy_token')}
+            </Button>
 
             {tokensAvailable && (
               <h3 className="font-bold text-2xl">
@@ -118,12 +101,6 @@ const PublicTokenSalePage = () => {
             )}
           </div>
         </section>
-
-        {isWalletEnabled && (
-          <div className="mb-16">
-            <Wallet />
-          </div>
-        )}
 
         <section className="flex items-center flex-col py-24">
           <div className="w-full sm:w-[80%] ">
@@ -371,42 +348,38 @@ const PublicTokenSalePage = () => {
                 {listings &&
                   listings.map((listing: any) => {
                     return (
-                        <div key={listing.name}>
-                          <div className="grid grid-cols-[55px_auto_65px]">
-                            <p>
-                              {listing.name.toLowerCase().includes('van') && (
-                                <Image
-                                  src={`/images/token-sale/${ACCOMMODATION_ICONS[0]}`}
-                                  alt=""
-                                  width={38}
-                                  height={38}
-                                />
-                              )}
+                      <div key={listing.name}>
+                        <div className="grid grid-cols-[55px_auto_65px]">
+                          <p>
+                            {listing.name.toLowerCase().includes('van') && (
+                              <Image
+                                src={`/images/token-sale/${ACCOMMODATION_ICONS[0]}`}
+                                alt=""
+                                width={38}
+                                height={38}
+                              />
+                            )}
 
-                              {(listing.name
+                            {(listing.name.toLowerCase().includes('private') ||
+                              listing.name.toLowerCase().includes('camping') ||
+                              listing.name
                                 .toLowerCase()
-                                .includes('private') ||
-                                listing.name
-                                  .toLowerCase()
-                                  .includes('camping') ||
-                                listing.name
-                                  .toLowerCase()
-                                  .includes('shared')) && (
-                                <Image
-                                  src={`/images/token-sale/${ACCOMMODATION_ICONS[1]}`}
-                                  alt=""
-                                  width={38}
-                                  height={38}
-                                />
-                              )}
-                            </p>
-                            <p className=" pt-1">{listing.name}</p>
-                            <p className=" text-right text-accent pt-2">
-                              {__('token_sale_public_sale_token_symbol')}{' '}
-                              {listing.tokenPrice.val}
-                            </p>
-                          </div>
+                                .includes('shared')) && (
+                              <Image
+                                src={`/images/token-sale/${ACCOMMODATION_ICONS[1]}`}
+                                alt=""
+                                width={38}
+                                height={38}
+                              />
+                            )}
+                          </p>
+                          <p className=" pt-1">{listing.name}</p>
+                          <p className=" text-right text-accent pt-2">
+                            {__('token_sale_public_sale_token_symbol')}{' '}
+                            {listing.tokenPrice.val}
+                          </p>
                         </div>
+                      </div>
                     );
                   })}
 
@@ -775,6 +748,22 @@ const PublicTokenSalePage = () => {
       </main>
     </div>
   );
+};
+
+PublicTokenSalePage.getInitialProps = async () => {
+  try {
+    const {
+      data: { results: listings },
+    } = await api.get('/listing');
+    return {
+      listings: listings,
+    };
+  } catch (err: unknown) {
+    return {
+      listings: [],
+      error: parseMessageFromError(err),
+    };
+  }
 };
 
 export default PublicTokenSalePage;

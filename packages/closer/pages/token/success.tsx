@@ -8,18 +8,16 @@ import { BackButton, Heading, ProgressBar } from '../../components/ui';
 import PageNotFound from '../404';
 import { TOKEN_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
+import { WalletState } from '../../contexts/wallet';
 import { useConfig } from '../../hooks/useConfig';
 import { __ } from '../../utils/helpers';
-import { WalletState } from '../../contexts/wallet';
 
 const TokenSaleSuccessPage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
   const router = useRouter();
   const { amountOfTokensPurchased, transactionId } = router.query;
   const { isAuthenticated, isLoading } = useAuth();
-  const {
-    isWalletReady,
-  } = useContext(WalletState);
+  const { isWalletReady } = useContext(WalletState);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -71,9 +69,8 @@ const TokenSaleSuccessPage = () => {
           </div>
           <Heading level={4} className="uppercase">
             {`${__('token_sale_success_purchase_number')}`}
-            <p className='break-words'>{transactionId}</p>
+            <p className="break-words">{transactionId}</p>
           </Heading>
-          
         </main>
       </div>
     </>

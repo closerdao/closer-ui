@@ -9,9 +9,9 @@ import { BackButton, Button, Heading, ProgressBar } from '../../components/ui';
 import PageNotFound from '../404';
 import { TOKEN_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
+import { WalletState } from '../../contexts/wallet';
 import { useConfig } from '../../hooks/useConfig';
 import { __ } from '../../utils/helpers';
-import { WalletState } from '../../contexts/wallet';
 
 const DEFAULT_TOKENS = 10;
 
@@ -20,11 +20,9 @@ const TokenCounterPage = () => {
   const router = useRouter();
   const { nationality, tokens } = router.query;
   const { isAuthenticated, isLoading, user } = useAuth();
-  const {
-    isWalletReady,
-  } = useContext(WalletState);
+  const { isWalletReady } = useContext(WalletState);
 
-  const [tokensToBuy, setTokensToBuy] = useState(
+  const [tokensToBuy, setTokensToBuy] = useState<number>(
     tokens !== undefined ? Number(tokens) : DEFAULT_TOKENS,
   );
 
@@ -35,7 +33,7 @@ const TokenCounterPage = () => {
   }, [isAuthenticated, isLoading]);
 
   useEffect(() => {
-    if (router.query.tokens && router.query.tokens !== 'undefined') {
+    if (tokens && tokens !== 'undefined') {
       setTokensToBuy(Number(tokens));
     } else {
       setTokensToBuy(DEFAULT_TOKENS);
@@ -44,7 +42,7 @@ const TokenCounterPage = () => {
 
   const goBack = async () => {
     if (user && user.kycPassed) {
-      router.push(`/token?nationality=${nationality}`);
+      router.push('/token/before-you-begin');
     } else {
       router.push('/token/nationality');
     }

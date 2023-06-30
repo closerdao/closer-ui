@@ -15,22 +15,23 @@ import Select from '../../components/ui/Select/Dropdown';
 import PageNotFound from '../404';
 import { TOKEN_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
+import { WalletState } from '../../contexts/wallet';
 import { useConfig } from '../../hooks/useConfig';
 import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
-import { WalletState } from '../../contexts/wallet';
 
 const NationalityPage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
-  const {
-    isWalletReady,
-  } = useContext(WalletState);
+  const { isWalletReady } = useContext(WalletState);
 
   const [nationality, setNationality] = useState('');
   const [countries, setCountries] = useState();
   const [isRestictedNationality, setIsRestictedNationality] = useState(false);
+
+  const [error, setError] = useState();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -48,7 +49,7 @@ const NationalityPage = () => {
         });
         setCountries(countryList);
       } catch (error) {
-        console.log(error);
+        setError(parseMessageFromError(error));
       }
     };
     getContries();
@@ -113,6 +114,7 @@ const NationalityPage = () => {
                 error={__('token_sale_restricted_nationality_warning')}
               />
             )}
+            {error && <ErrorMessage error={error} />}
 
             <Button
               onClick={handleNext}

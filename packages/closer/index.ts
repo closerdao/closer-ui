@@ -89,6 +89,7 @@ export { default as NationalityPage } from './pages/token/nationality';
 export { default as TokenSaleSuccessPage } from './pages/token/success';
 export { default as TokenCounterPage } from './pages/token/token-counter';
 export { default as YourInfoPage } from './pages/token/your-info';
+export { default as TokenSaleBeforeYouBeginPage } from './pages/token/before-you-begin';
 
 export { default as UnlockStaysPage } from './pages/bookings/unlock-stays';
 export { default as SubscriptionPlanPage } from './pages/subscriptions/[slug]';
