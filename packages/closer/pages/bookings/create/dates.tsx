@@ -284,7 +284,7 @@ const DatesSelector: NextPage<Props> = ({
             onClick={handleNext}
             isEnabled={
               !!(
-                (eventId && selectedTicketOption && start && end) ||
+                (eventId && selectedTicketOption && savedStartDate && savedEndDate) ||
                 (volunteerId && start && end) ||
                 (!eventId && !volunteerId && start && end)
               )
