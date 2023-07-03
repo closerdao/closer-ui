@@ -155,8 +155,8 @@ const DatesSelector: NextPage<Props> = ({
     setHandleNextError(null);
     try {
       const data = {
-        start: String(start) || '',
-        end: String(end) || '',
+        start: String(savedStartDate) || '',
+        end: String(savedEndDate) || '',
         adults: String(adults),
         kids: String(kids),
         infants: String(infants),
@@ -279,12 +279,14 @@ const DatesSelector: NextPage<Props> = ({
           {handleNextError && (
             <div className="error-box">{handleNextError}</div>
           )}
-
           <Button
             onClick={handleNext}
             isEnabled={
               !!(
-                (eventId && selectedTicketOption && savedStartDate && savedEndDate) ||
+                (eventId &&
+                  selectedTicketOption &&
+                  savedStartDate &&
+                  savedEndDate) ||
                 (volunteerId && start && end) ||
                 (!eventId && !volunteerId && start && end)
               )
