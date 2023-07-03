@@ -27,7 +27,6 @@ interface Props {
   isAdmin?: boolean;
 }
 
-//TODO: cover edge case when event is created from other time zone than the platform
 const DateTimePicker = ({
   setStartDate,
   setEndDate,
@@ -38,13 +37,14 @@ const DateTimePicker = ({
   defaultMonth,
   isAdmin,
 }: Props) => {
-  const dateFormat = 'YYYY-MMMM-DD-HH:mm';
   const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [dateError, setDateError] = useState<null | string>(null);
   const [isOneMonthCalendar, setIsOneMonthCalendar] = useState(false);
   const [startTime, setStartTime] = useState('12:00');
   const [endTime, setEndTime] = useState('12:00');
+
+  const [isDateRangeSet, setIsDateRangeSet] = useState(false);
 
   useEffect(() => {
     const handleWindowResize = () => {
@@ -62,23 +62,16 @@ const DateTimePicker = ({
   }, []);
 
   useEffect(() => {
-    savedStartDate && setStartTime(dayjs(savedStartDate).format('HH:mm'));
-    savedEndDate && setEndTime(dayjs(savedEndDate).format('HH:mm'));
-  }, []);
-
-  useEffect(() => {
-    if (savedStartDate && savedEndDate && setEndDate && setStartDate) {
-      handleSelectDay(dateRange);
-      setEndDate(savedEndDate);
-      setStartDate(savedStartDate);
-      setDateRange({
-        from: new Date(savedStartDate),
-        to: new Date(savedEndDate),
-      });
-    }
-    if (!savedStartDate && !savedEndDate && setEndDate && setStartDate) {
-      setEndDate('');
-      setStartDate('');
+    if (savedStartDate && savedEndDate) {
+      if (!isDateRangeSet) {
+        setDateRange({
+          from: new Date(savedStartDate),
+          to: new Date(savedEndDate),
+        });
+        setEndTime(dayjs(savedEndDate).format('HH:mm'));
+        setStartTime(dayjs(savedStartDate).format('HH:mm'));
+      }
+      setIsDateRangeSet(true);
     }
   }, [savedStartDate, savedEndDate]);
 
@@ -98,17 +91,19 @@ const DateTimePicker = ({
       time = '12:00';
     }
     const [hours, minutes] = time.split(':').map((str) => parseInt(str, 10));
-
     if (event.target.id === 'startTime') {
-      const newDate = getDateTime(savedStartDate as string, hours, minutes);
-      setStartDate(newDate);
-      setStartTime(dayjs(newDate).format('HH:mm'));
+      const formattedDate = getDateTime(
+        savedStartDate as string,
+        hours,
+        minutes,
+      );
+      setStartDate(formattedDate);
+      setStartTime(dayjs(formattedDate).format('HH:mm'));
     }
-
     if (event.target.id === 'endTime') {
-      const newDate = getDateTime(savedEndDate as string, hours, minutes);
-      setEndDate(newDate);
-      setEndTime(dayjs(newDate).format('HH:mm'));
+      const formattedDate = getDateTime(savedEndDate as string, hours, minutes);
+      setEndDate(formattedDate);
+      setEndTime(dayjs(formattedDate).format('HH:mm'));
     }
   };
 
@@ -132,12 +127,8 @@ const DateTimePicker = ({
       setDateRange(range);
       if (range?.to) {
         if (endTime === '12:00') {
-          const newDate = getDateTime(
-           range?.to,
-            12,
-            0,
-          );
-          setEndDate(newDate);
+          const formattedDate = getDateTime(range?.to, 12, 0);
+          setEndDate(formattedDate);
         } else {
           setEndDate(range?.to);
         }
@@ -146,23 +137,14 @@ const DateTimePicker = ({
       }
       if (range?.from) {
         if (startTime === '12:00') {
-          const newDate = getDateTime(
-            range?.from,
-            12,
-            0,
-          );
-          setStartDate(newDate);
+          const formattedDate = getDateTime(range?.from, 12, 0);
+          setStartDate(formattedDate);
         } else {
           setStartDate(range?.from);
         }
       } else {
         setStartDate(null);
       }
-    } else {
-      // TODO: decide if we allow  members to book during events / edit error message
-      setDateError(
-        'Please make separate bookings if you would like to stay before and after events',
-      );
     }
   };
 
@@ -231,7 +213,7 @@ const DateTimePicker = ({
                 />
               </div>
             </div>
-            <div className='text-sm mt-4'>
+            <div className="text-sm mt-4">
               {localTimezone} {__('events_time')}
             </div>
           </div>
