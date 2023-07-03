@@ -10,17 +10,17 @@ import Photo from '../../../components/Photo';
 import Heading from '../../../components/ui/Heading';
 
 import dayjs from 'dayjs';
-import advancedFormat from 'dayjs/plugin/advancedFormat';
 
 import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import api, { cdn } from '../../../utils/api';
 import { prependHttp } from '../../../utils/helpers';
-
-dayjs.extend(advancedFormat);
+import { __ } from '../../../utils/helpers';
 
 const Event = ({ event, error }) => {
+  const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
   const [photo, setPhoto] = useState(event && event.photo);
   const [password, setPassword] = useState('');
   const [featured, setFeatured] = useState(event && !!event.featured);
@@ -45,6 +45,7 @@ const Event = ({ event, error }) => {
   const duration = end && end.diff(start, 'hour', true);
   const isThisYear = dayjs().isSame(start, 'year');
   const dateFormat = isThisYear ? 'MMMM Do HH:mm' : 'YYYY MMMM Do HH:mm';
+
   const myTickets = platform.ticket.find(myTicketFilter);
   const ticketsCount = event?.ticketOptions
     ? (platform.ticket.findCount(allTicketFilter) || event?.attendees?.length) -
@@ -157,9 +158,12 @@ const Event = ({ event, error }) => {
               />
               <div className="md:w-1/2 p-2">
                 <label className="text-xl font-light">
-                  {start && start.format(dateFormat)}
-                  {end && duration > 24 && ` - ${end.format(dateFormat)}`}
-                  {end && duration <= 24 && ` - ${end.format('HH:mm')}`}
+                  {start && dayjs(start).format(dateFormat)}
+                  {end &&
+                    duration > 24 &&
+                    ` - ${dayjs(end).format(dateFormat)}`}
+                  {end && duration <= 24 && ` - ${dayjs(end).format('HH:mm')}`}{' '}
+                  ({localTimezone} {__('events_time')})
                 </label>
                 {event.address && (
                   <h3 className="text-lg font-light text-gray-500">
@@ -391,8 +395,8 @@ Event.getInitialProps = async ({ req, query }) => {
       data: { results: event },
     } = await api.get(`/event/${query.slug}`, {
       headers: req?.cookies?.access_token && {
-        Authorization: `Bearer ${req?.cookies?.access_token}`
-      }
+        Authorization: `Bearer ${req?.cookies?.access_token}`,
+      },
     });
     return { event };
   } catch (err) {

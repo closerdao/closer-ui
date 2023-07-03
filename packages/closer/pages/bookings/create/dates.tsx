@@ -138,8 +138,8 @@ const DatesSelector: NextPage<Props> = ({
     }
   }, []);
 
-  const [start, setStartDate] = useState<string | null>();
-  const [end, setEndDate] = useState<string | null>();
+  const [start, setStartDate] = useState<string | null | Date>();
+  const [end, setEndDate] = useState<string | null | Date>();
   const [adults, setAdults] = useState<number>(Number(savedAdults) || 1);
   const [kids, setKids] = useState<number>(Number(savedKids) || 0);
   const [infants, setInfants] = useState<number>(Number(savedInfants) || 0);
@@ -155,8 +155,8 @@ const DatesSelector: NextPage<Props> = ({
     setHandleNextError(null);
     try {
       const data = {
-        start: start || '',
-        end: end || '',
+        start: String(start) || '',
+        end: String(end) || '',
         adults: String(adults),
         kids: String(kids),
         infants: String(infants),

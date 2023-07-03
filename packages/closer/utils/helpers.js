@@ -168,7 +168,7 @@ export const getSample = (field) => {
           name: '',
           icon: null,
           price: 0,
-          currency: 'USD',
+          currency: 'EUR',
           disclaimer: '',
           limit: 0,
         },
@@ -333,4 +333,17 @@ export const getNextMonthName = () => {
   const currentDate = dayjs();
   const nextMonth = currentDate.add(1, 'month');
   return nextMonth.format('MMMM');
+};
+const validationPatterns = {
+  email: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+  phone: /^[0-9()+-\s]{5,}$/,
+  taxNo: /^$|^[0-9()\-\s]{6,}$/,
+} ;
+
+export const isInputValid = (value, validation) => {
+  const pattern = validationPatterns[validation];
+  if (pattern) {
+    return pattern.test(value);
+  }
+  return true;
 };

@@ -5,10 +5,10 @@ interface HeadingProps extends React.HTMLAttributes<HTMLHeadingElement> {
   children: React.ReactNode;
   className?: string;
   display?: boolean;
-  isUnderlined?: boolean;
+  hasBorder?: boolean;
 }
 
-const Heading = ({ level = 1, children, className, display, isUnderlined }: HeadingProps) => {
+const Heading = ({ level = 1, children, className, display, hasBorder }: HeadingProps) => {
   const HeadingTag = ({ ...props }: React.HTMLAttributes<HTMLHeadingElement>) =>
     React.createElement(`h${level}`, props, children);
 
@@ -20,7 +20,7 @@ const Heading = ({ level = 1, children, className, display, isUnderlined }: Head
   } as Record<number, string>;
 
   return (
-    <HeadingTag className={`${styleMap[level]} ${isUnderlined ? 'border-b pb-4': ''} ${className}`}>
+    <HeadingTag className={`${styleMap[level]} ${hasBorder ? 'border-b border-divider pb-2.5 leading-9 mt-12  mb-6' : ''} ${className}`}>
       {display?'YES':'NO'} {children}
     </HeadingTag>
   );

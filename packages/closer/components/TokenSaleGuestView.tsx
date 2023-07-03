@@ -33,12 +33,12 @@ const TokenSaleGuestView: FC = () => {
             {__('token_sale_invite_page_cta')}
           </p>
           <div className="mt-8 md:mt-16 flex gap-4">
-            <Link href="/login?back=/token-sale" legacyBehavior>
+            <Link href="/login?back=/token" legacyBehavior>
               <button className="btn w-full md:w-fit uppercase">
                 {__('navigation_sign_in')}
               </button>
             </Link>
-            <Link href="/signup?back=/token-sale" legacyBehavior>
+            <Link href="/signup?back=/token" legacyBehavior>
               <button className="btn w-full md:w-fit uppercase">
                 {__('navigation_register')}
               </button>

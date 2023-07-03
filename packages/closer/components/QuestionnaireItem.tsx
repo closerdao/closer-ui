@@ -48,7 +48,7 @@ const QuestionnaireItem = ({
             placeholder={__('generic_input_placeholder')}
             className="" // TO DO how to resolve class clash with forms.css?
             value={answer}
-            onChange={value => setAnswer(value)}
+            onChange={e => setAnswer(e.target.value)}
             isRequired={required}
           />
         </>

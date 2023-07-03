@@ -131,7 +131,7 @@ const SettingsPage: FC = () => {
         <Input
           label="Name"
           value={user.screenname}
-          onChange={saveUserData('screenname')}
+          onChange={saveUserData('screenname') as any}
           className="mt-4"
           isInstantSave={true}
           hasSaved={hasSaved}
@@ -141,7 +141,7 @@ const SettingsPage: FC = () => {
           label="Email"
           value={user.email}
           isDisabled={!updateEmail}
-          onChange={email => setUser({ ...user, email })}
+          onChange={e => setUser({ ...user, email:e.target.value })}
           successMessage={emailSaved ? 'You will receive a link to confirm via email.' : undefined}
           className="mt-8"
           validation="email"
@@ -178,7 +178,7 @@ const SettingsPage: FC = () => {
           label="Phone"
           isDisabled={!updatePhone}
           value={user.phone}
-          onChange={phone => setUser({ ...user, phone })}
+          onChange={e => setUser({ ...user, phone:e.target.value })}
           successMessage={ phoneSaved ? 'You will receive a link to confirm via text.' : undefined }
           className="mt-8"
           validation="phone"

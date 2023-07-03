@@ -46,57 +46,42 @@ const HomePage = ({ subscriptionPlans }: Props) => {
             Your home for the future.
           </p>
 
+          <div className="mb-4">
+            <Link
+              href="/subscriptions"
+              type="submit"
+              onClick={() =>
+                event('click', {
+                  category: 'HomePage',
+                  label: 'Join the Dream',
+                })
+              }
+              className="btn-primary btn-large"
+            >
+              JOIN THE DREAM
+            </Link>
+          </div>
+
           {!isAuthenticated && (
-            <div className="mb-4">
-              <Link
-                href="/signup"
-                type="submit"
-                onClick={() =>
-                  event('click', {
-                    category: 'HomePage',
-                    label: 'Join the Dream',
-                  })
-                }
-                className="btn-primary btn-large"
-              >
-                JOIN THE DREAM
-              </Link>
-            </div>
-          )}
-          {!isAuthenticated ? (
-            <div>
-              <Link
-                href="/pdf/tdf-private-sale.pdf"
-                target="_blank"
-                type="submit"
-                onClick={(e) => {
-                  e.preventDefault();
-                  event('click', {
-                    category: 'HomePage',
-                    label: 'Download Investor Pack',
-                  });
-                  document?.getElementById('subscribe')?.scrollIntoView();
-                }}
-                className="btn-primary-light md:text-xl"
-              >
-                Download Investor pack
-              </Link>
-            </div>
-          ) : (
             <>
-              <Link
-                href="/subscriptions"
-                type="submit"
-                onClick={() =>
-                  event('click', {
-                    category: 'HomePage',
-                    label: 'Get Membership',
-                  })
-                }
-                className="btn-primary"
-              >
-                Join the dream
-              </Link>
+              <div>
+                <Link
+                  href="/pdf/tdf-private-sale.pdf"
+                  target="_blank"
+                  type="submit"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    event('click', {
+                      category: 'HomePage',
+                      label: 'Download Investor Pack',
+                    });
+                    document?.getElementById('subscribe')?.scrollIntoView();
+                  }}
+                  className="btn-primary-light md:text-xl"
+                >
+                  Download Investor pack
+                </Link>
+              </div>
             </>
           )}
         </div>

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 import PropTypes from 'prop-types';
 
@@ -49,6 +49,7 @@ const Tabs = ({ tabs, onChange, initialCurrentTab }) => {
       </div>
       <div className="tab-content mt-4 mb-8 py-4">
         {tabs && tabs[currentTab] && tabs[currentTab].content}
+        {tabs[currentTab].title === 'general' && tabs[currentTab].datePicker}
       </div>
     </>
   );
