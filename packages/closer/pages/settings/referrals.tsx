@@ -7,17 +7,20 @@ import { useEffect, useState } from 'react';
 import { Card, Heading, Row } from '../../components/ui';
 import Progress from '../../components/ui/ProgressBar/Progress';
 
+import dayjs from 'dayjs';
+
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import api, { formatSearch } from '../../utils/api';
 import { __, getNextMonthName } from '../../utils/helpers';
-import dayjs from 'dayjs';
-
 
 const today = new Date();
-const firstDayOfCurrentMonth = dayjs(new Date(today.getFullYear(), today.getMonth(), 1)).format('YYYY-MM-DD')
-const lastDayOfCurrentMonth = dayjs(new Date(today.getFullYear(), today.getMonth() + 1, 0)).format('YYYY-MM-DD')
-
+const firstDayOfCurrentMonth = dayjs(
+  new Date(today.getFullYear(), today.getMonth(), 1),
+).format('YYYY-MM-DD');
+const lastDayOfCurrentMonth = dayjs(
+  new Date(today.getFullYear(), today.getMonth() + 1, 0),
+).format('YYYY-MM-DD');
 
 const ReferralsPage = () => {
   const config = useConfig();
@@ -50,21 +53,17 @@ const ReferralsPage = () => {
             params: {
               where: formatSearch({
                 source: 'referral',
-                created: { $gte: firstDayOfCurrentMonth, $lte: lastDayOfCurrentMonth },
+                created: {
+                  $gte: firstDayOfCurrentMonth,
+                  $lte: lastDayOfCurrentMonth,
+                },
               }),
-            },
-          }),
-          api.get('/user', {
-            params: {
-              where: formatSearch({ referredBy: user._id }),
             },
           }),
         ]);
         setUsersReferredByMe(res[0].data.results);
         setCreditsEarnedFromReferrals(res[1].data.results);
         setCreditsErnedThisMonth(res[2].data.results);
-
-        console.log('users referred by me=', res[3].data.results);
       })();
     }
   }, [user]);
@@ -138,7 +137,13 @@ const ReferralsPage = () => {
         <Heading level={3} isUnderlined={true}>
           {__('referrals_monthly_progress_heading')}
         </Heading>
-        <Progress icon='🥕' progress={creditsErnedThisMonth === undefined ? 0 : creditsErnedThisMonth} total={6} />
+        <Progress
+          icon="🥕"
+          progress={
+            creditsErnedThisMonth === undefined ? 0 : creditsErnedThisMonth
+          }
+          total={6}
+        />
         <Row
           rowKey={__('referrals_next_refresh')}
           value={`${getNextMonthName()} 1`}
@@ -151,8 +156,17 @@ const ReferralsPage = () => {
           rowKey={__('referrals_successfull_referrals')}
           value={usersReferredByMe}
         />
-        <Row rowKey={__('referrals_earned')} value={`🥕 ${creditsEarnedFromReferrals === undefined ? '': creditsEarnedFromReferrals}`} />
-        <Row rowKey={__('referrals_earned_by_friends')} value="🥕 ?" />
+        <Row
+          rowKey={__('referrals_earned')}
+          value={`🥕 ${
+            creditsEarnedFromReferrals === undefined
+              ? ''
+              : creditsEarnedFromReferrals
+          }`}
+        />
+
+        {/* We need a way to fetch amount of carrots that were earned by user's friends through referrals */}
+        {/* <Row rowKey={__('referrals_earned_by_friends')} value="🥕 ?" /> */}
       </div>
     </>
   );
