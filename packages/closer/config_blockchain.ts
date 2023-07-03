@@ -9,15 +9,15 @@ const alfajoresConfig = {
     decimals: 18,
   },
   BLOCKCHAIN_DAO_TOKEN: {
-    address: '0x01d5a642ff16fd4148F2A91DE248B4BD80377490',
+    address: '0x264C27Cfe514E430e3E35e5F7fAcdbF976E2a611',
     name: 'TDF',
     symbol: 'TDF',
     decimals: 18,
   },
   BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS:
-    '0xe13C9A06C7494fc9b9BbD8ea1C3693479007A1ad',
-  BLOCKCHAIN_DAO_DIAMOND_ADDRESS: '0xEd9fDECF279a5969e2da774dfe24AFEc39e6228f',
-  CEUR_TOKEN_ADDRESS: '0x10d87342579d7be3655Ac40Ef7A8614c87EA3c4e',
+    '0x9FEcD2e17d8aBcfC0BbFb3fC79197033B9347D76',
+  BLOCKCHAIN_DAO_DIAMOND_ADDRESS: '0x063Ac15fa27F0068f34347d4EEC8777c531eeC3F',
+  CEUR_TOKEN_ADDRESS: '0x83D99fb09b5BFc790D3e08c697b0852ECE40123C',
 };
 
 const celoConfig = {};
@@ -33,7 +33,7 @@ const getNetworkConfig = () => {
 
 export const blockchainConfig = {
   BLOCKCHAIN_DAO_TOKEN: {
-    address: '0x01d5a642ff16fd4148F2A91DE248B4BD80377490',
+    address: '0x264C27Cfe514E430e3E35e5F7fAcdbF976E2a611',
     name: 'TDF',
     symbol: 'TDF',
     decimals: 18,
@@ -1867,6 +1867,11 @@ export const blockchainConfig = {
         {
           internalType: 'address',
           name: 'token',
+          type: 'address',
+        },
+        {
+          internalType: 'address',
+          name: '_treasury',
           type: 'address',
         },
       ],
