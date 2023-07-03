@@ -15,12 +15,14 @@ export interface MultiSelectProps extends BaseProps {
 
 export type Item = {
   value: string;
-  label: string;
+  label: string | number;
 };
 
 export interface DropdownProps extends BaseProps {
+  id?: string;
   value?: string;
   onChange?: (value: string) => void;
   options: Item[];
   isDisabled?: boolean;
+  size?: 'large' | 'medium'
 }

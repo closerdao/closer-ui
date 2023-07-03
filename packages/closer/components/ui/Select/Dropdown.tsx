@@ -25,7 +25,7 @@ const Dropdown: FC<DropdownProps> = React.memo(
     };
 
     return (
-      <div className={'flex flex-col gap-4 relative '}>
+      <div className={'flex flex-col gap-4 relative w-full'}>
         {label && (
           <label className="font-medium text-complimentary-light">
             {label}
@@ -54,7 +54,7 @@ const Dropdown: FC<DropdownProps> = React.memo(
             </div>
           )}
           className=" "
-          containerClassName={`py-1 border-2  ${className}`}
+          containerClassName={`py-3.5 border-2  ${className}`}
         />
       </div>
     );
