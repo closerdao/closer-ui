@@ -100,7 +100,7 @@ const ReferralsPage = () => {
           </Heading>
         </div>
 
-        <Heading level={3} isUnderlined={true}>
+        <Heading level={3} hasBorder={true}>
           {__('referrals_description_heading')}
         </Heading>
         <div>
@@ -111,7 +111,7 @@ const ReferralsPage = () => {
             <Link href="/settings/credits">{__('referrals_credits_link')}</Link>
           </p>
         </div>
-        <Heading level={3} isUnderlined={true}>
+        <Heading level={3} hasBorder={true}>
           {__('referrals_your_link_heading')}
         </Heading>
 
@@ -134,7 +134,7 @@ const ReferralsPage = () => {
             </button>
           </div>
         </Card>
-        <Heading level={3} isUnderlined={true}>
+        <Heading level={3} hasBorder={true}>
           {__('referrals_monthly_progress_heading')}
         </Heading>
         <Progress
@@ -149,7 +149,7 @@ const ReferralsPage = () => {
           value={`${getNextMonthName()} 1`}
         />
 
-        <Heading level={3} isUnderlined={true}>
+        <Heading level={3} hasBorder={true}>
           {__('referrals_all_time_progress_heading')}
         </Heading>
         <Row
