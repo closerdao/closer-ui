@@ -1,3 +1,5 @@
+import { useRouter } from 'next/router';
+
 import { ChangeEventHandler, useEffect, useState } from 'react';
 import { DateRange, DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
@@ -37,6 +39,8 @@ const DateTimePicker = ({
   defaultMonth,
   isAdmin,
 }: Props) => {
+  const router = useRouter();
+  const { volunteerId } = router.query;
   const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [dateError, setDateError] = useState<null | string>(null);
@@ -62,7 +66,7 @@ const DateTimePicker = ({
   }, []);
 
   useEffect(() => {
-    if (savedStartDate && savedEndDate) {
+    if (savedStartDate && savedEndDate && !volunteerId) {
       if (!isDateRangeSet) {
         setDateRange({
           from: new Date(savedStartDate),
@@ -159,7 +163,7 @@ const DateTimePicker = ({
           </div>
           <div className="text-sm border border-disabled rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
             {dateRange?.from
-              ? dayjs(dateRange?.from).format('LL')
+              ? dayjs(dateRange?.from).format('ll')
               : __('listings_book_select_date')}{' '}
           </div>
         </div>
@@ -171,7 +175,7 @@ const DateTimePicker = ({
           </div>
           <div className="text-sm border bordr-disabled rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
             {dateRange?.to
-              ? dayjs(dateRange?.to).format('LL')
+              ? dayjs(dateRange?.to).format('ll')
               : __('listings_book_select_date')}
           </div>
         </div>
