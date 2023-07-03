@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 
 import DateTimePicker from '.';
+jest.mock('next/router', () => require('next-router-mock'));
 
 describe('DateTimePicker', () => {
   it('should have proper title and have buttons enabled or disabled based on blocked date ranges', () => {
