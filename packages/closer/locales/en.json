@@ -44,7 +44,6 @@
   "token_sale_public_sale_heading_investor_doc": "Investor  doc",
   "token_sale_public_sale_heading_chat_to_us": "Chat to us — AMA",
 
-
   "token_sale_public_sale_intro_white_paper": "The finer details of OASA’s vision and tokenomics, and how you can join our nature backed economy via blockchain membership.",
   "token_sale_public_sale_intro_investor_doc": "OASA is a Web3-powered nature conservancy network. TDF is the first prototype in its ecosystem.",
   "token_sale_public_sale_intro_chat_to_us": "The foundation of our values, processes, responsibilities and the inner workings of TDF, a font in constant growth.",
@@ -65,7 +64,7 @@
   "token_sale_public_sale_coming_2023": "*Coming 2023",
   "token_sale_public_sale_coming_2024": "*Coming 2024",
   "token_sale_public_sale_prices_disclaimer": "Utility fee charged separately (Supplies, insurance, accounting, energy, water, sewage, internet, food, maintenance) ~10€ / day initial projection.",
-    "token_sale_public_sale_utility_info_1": "1 $TDF = 1 night per year - forever - in a Shared Suite or a Glamping ",
+  "token_sale_public_sale_utility_info_1": "1 $TDF = 1 night per year - forever - in a Shared Suite or a Glamping ",
   "token_sale_public_sale_utility_info_2": "Your $TDF tokens give you access to your chosen accommodation. The utility fee includes energy, water, internet, taxes, food, salaries, maintenance etc.",
   "token_sale_public_sale_utility_info_3": "Token holders must go through a Membersheep onboarding process in order to stay more than 14 days. Once verified as member, they get access to “instant book”. Non-members can submit booking requests.",
   "token_sale_public_sale_utility_info_4": "$TDF tokens also give governance rights in the TDF DAO. ",
@@ -145,28 +144,3 @@
 
   "token_sale_public_sale_tokens_left": "tokens left"
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

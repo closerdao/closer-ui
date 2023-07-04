@@ -96,6 +96,14 @@ const TokenSaleBeforeYouBeginPage = () => {
               <li className="mb-1.5">
                 <Link
                   className="text-accent font-bold underline"
+                  href={__('token_sale_complete_guide_link')}
+                >
+                  {__('token_sale_complete_guide')}
+                </Link>
+              </li>
+              <li className="mb-1.5">
+                <Link
+                  className="text-accent font-bold underline"
                   href={__('token_sale_before_you_begin_guide_1_link')}
                 >
                   {__('token_sale_before_you_begin_guide_1')}

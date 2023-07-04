@@ -18,6 +18,12 @@ import Select from '../ui/Select/Dropdown';
 import { Item } from '../ui/Select/types';
 
 const MAX_TOKENS_PER_TRANSACTION = 100;
+const FUTURE_ACCOMMODATION_TYPES = [
+  { name: __('token_sale_public_sale_shared_suite'), price: 1 },
+  { name: __('token_sale_public_sale_private_suite'), price: 2 },
+  { name: __('token_sale_public_sale_studio'), price: 3 },
+  { name: __('token_sale_public_sale_house'), price: 5 },
+];
 
 interface Props {
   tokensToBuy: number;
@@ -48,9 +54,24 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
         return { label: option.name, value: option.name };
       });
 
+      const labelsFuture = FUTURE_ACCOMMODATION_TYPES.map(
+        (accommodatinType: any) => {
+          return { label: accommodatinType.name, value: accommodatinType.name };
+        },
+      );
+
       const prices = res.data.results.map((option: any) => {
         return option.tokenPrice.val;
       });
+
+      const pricesFuture = FUTURE_ACCOMMODATION_TYPES.map(
+        (accommodatinType: any) => {
+          return accommodatinType.price;
+        },
+      );
+
+      labels.push(...labelsFuture);
+      prices.push(...pricesFuture);
 
       setAccommodationOptions({ labels, prices });
       setSelectedAccommodation({
@@ -269,6 +290,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
       <div className="flex flex-col gap-4">
         <Information>{__('token_sale_gas_fees_note')}</Information>
         <Information>{__('token_sale_max_amount_note')}</Information>
+        <Information>{__('token_sale_price_disclaimer')}</Information>
       </div>
     </div>
   );
