@@ -7,6 +7,7 @@ import React, {
   useState,
 } from 'react';
 
+import { SALES_CONFIG } from '../../constants';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
@@ -17,7 +18,8 @@ import { Information } from '../ui';
 import Select from '../ui/Select/Dropdown';
 import { Item } from '../ui/Select/types';
 
-const MAX_TOKENS_PER_TRANSACTION = 100;
+const { MAX_TOKENS_PER_TRANSACTION, MAX_WALLET_BALANCE } = SALES_CONFIG;
+
 const FUTURE_ACCOMMODATION_TYPES = [
   { name: __('token_sale_public_sale_shared_suite'), price: 1 },
   { name: __('token_sale_public_sale_private_suite'), price: 2 },
@@ -32,9 +34,10 @@ interface Props {
 
 const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
   const { SOURCE_TOKEN } = useConfig() || {};
-  const { getCurrentSupply } = useBuyTokens();
+  const { getCurrentSupply, getUserTdfBalance } = useBuyTokens();
   const [tokenPrice, setTokenPrice] = useState<number>(0);
   const [currentSupply, setCurrentSupply] = useState<number>(0);
+  const [userTdfBalance, setUserTdfBalance] = useState<number>(0);
   const { isWalletReady } = useContext(WalletState);
   const [accommodationOptions, setAccommodationOptions] = useState<{
     labels: Item[];
@@ -85,7 +88,9 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
     if (isWalletReady) {
       (async () => {
         const supply = await getCurrentSupply();
+        const tdfBalance = await getUserTdfBalance();
         setCurrentSupply(supply);
+        setUserTdfBalance(tdfBalance);
       })();
     }
 
@@ -291,6 +296,10 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
         <Information>{__('token_sale_gas_fees_note')}</Information>
         <Information>{__('token_sale_max_amount_note')}</Information>
         <Information>{__('token_sale_price_disclaimer')}</Information>
+        <Information>
+          {__('token_sale_max_wallet_balance')}
+          {Math.max(MAX_WALLET_BALANCE - userTdfBalance, 0)}
+        </Information>
       </div>
     </div>
   );

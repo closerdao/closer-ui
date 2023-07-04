@@ -47,6 +47,19 @@ export const useBuyTokens = () => {
     }
   };
 
+  const getUserTdfBalance = async () => {
+    const { TdfToken } = getContractInstances();
+
+    try {
+      const balanceInWei = await TdfToken.balanceOf(account);
+      const balance = parseInt(utils.formatEther(balanceInWei));
+      return balance;
+    } catch (error) {
+      console.log(error);
+      return 0;
+    }
+  };
+
   const getTokensAvailableForPurchase = async () => {
     const { TdfToken, DynamicSale } = getContractInstances();
 
@@ -145,6 +158,7 @@ export const useBuyTokens = () => {
     buyTokens,
     getTokensAvailableForPurchase,
     getTotalCost,
+    getUserTdfBalance,
     isCeurApproved,
     approveCeur,
     isPending,

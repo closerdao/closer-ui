@@ -169,7 +169,7 @@
   "carrots_success_message": "carrots redeemed successfully! Accommodation cost updated.",
   "carrots_success_message_singular": "carrot redeemed successfully! Accommodation cost updated.",
   "carrots_error_message": "Carrots payment failed, please, try again.",
-  
+
   "unlock_stays_heading": "Stays",
   "unlock_stays_subheading": "Become a wanderer to unlock stay bookings",
 
@@ -493,7 +493,7 @@
   "subscriptions_pioneer_title": "Become a pioneer",
   "subscriptions_pioneer_intro_text": "With these subscription packages you can continuously support us and get some Carrots  in return. You can then use your Carrots to cover your Accommodation Fee at TDF. Wo oh! Experience living at TDF, with no specific dates or long-term commitment required. Come!",
   "subscriptions_credits_included": "carrots included",
-  
+
   "pricing_and_product_heading_1": "One regenerative co-living.",
   "pricing_and_product_heading_2": "Four paths leading to the same",
   "pricing_and_product_heading_3": "beautiful dream.",
@@ -530,10 +530,9 @@
   "pricing_and_product_learn_more_button": "Learn more",
   "pricing_and_product_heading_say_cheese": "Say cheese",
   "pricing_and_product_subheading_say_cheese": "Get acquainted with the extraordinary characters and destinations that await your arrival",
-  
+
   "pricing_and_product_cost_per_night": "Cost per night",
 
-  
   "heading_white_paper": "White paper",
   "intro_white_paper": "The finer details of OASA’s vision and tokenomics, and how you can join our nature backed economy via block-chain membership.",
   "heading_pink_paper": "Pink paper",
@@ -651,6 +650,7 @@
   "token_sale_before_you_begin_guide_link_contact": "https://t.me/+T8NAQJfobqhjYzE0",
   "token_sale_i_should_buy": "I should buy",
   "token_sale_gas_fees_note": "Gas fees are paid in CELO not cEUR. Max fee is ~0.0008 CELO",
+  "token_sale_max_wallet_balance": "The total amount of $TDF you can buy is ",
   "token_sale_max_amount_note": "Max amount of $TDF per transaction is 100",
   "token_sale_receive": "(Receive)",
   "token_sale_pay": "(Pay)",
@@ -662,6 +662,5 @@
   "token_sale_ceur_disclaimer": "Make sure you have enough cEUR balance in your wallet",
   "token_sale_complete_guide": "Complete written guide",
   "token_sale_complete_guide_link": "https://docs.google.com/document/d/15oNl7wU7O5qz7qgS8rbfB4zEcs5_A0M3Fv-uWjI90Z8/edit?pli=1#heading=h.zff9f8hcokrw",
-  "generic_edit_button": "Edit" 
-  
+  "generic_edit_button": "Edit"
 }
