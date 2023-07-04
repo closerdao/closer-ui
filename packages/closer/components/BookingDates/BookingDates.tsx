@@ -34,7 +34,7 @@ const BookingDates: FC<Props> = ({
   savedStartDate,
   savedEndDate,
   eventStartDate,
-  eventEndDate
+  eventEndDate,
 }) => {
   const { member, guest } = conditions || {};
 
