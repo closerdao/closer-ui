@@ -25,6 +25,8 @@ interface Props {
   )[];
   savedStartDate?: string;
   savedEndDate?: string;
+  eventStartDate?: string;
+  eventEndDate?: string;
   defaultMonth?: Date;
   isAdmin?: boolean;
 }
@@ -36,6 +38,8 @@ const DateTimePicker = ({
   blockedDateRanges,
   savedStartDate,
   savedEndDate,
+  eventStartDate,
+  eventEndDate,
   defaultMonth,
   isAdmin,
 }: Props) => {
@@ -72,12 +76,32 @@ const DateTimePicker = ({
           from: new Date(savedStartDate),
           to: new Date(savedEndDate),
         });
-        setEndTime(dayjs(savedEndDate).format('HH:mm'));
-        setStartTime(dayjs(savedStartDate).format('HH:mm'));
+        if (isAdmin) {
+          setEndTime(dayjs(savedEndDate).format('HH:mm'));
+          setStartTime(dayjs(savedStartDate).format('HH:mm'));
+        }
       }
       setIsDateRangeSet(true);
     }
   }, [savedStartDate, savedEndDate]);
+
+  useEffect(() => {
+    if (eventStartDate && eventEndDate) {
+      if (!isDateRangeSet) {
+        setDateRange({
+          from: new Date(eventStartDate),
+          to: new Date(eventEndDate),
+        });
+        setStartDate(eventStartDate);
+        setEndDate(eventEndDate);
+        updateDateRange({
+          from: new Date(eventStartDate),
+          to: new Date(eventEndDate),
+        })
+      }
+      setIsDateRangeSet(true);
+    }
+  }, [eventStartDate, eventEndDate]);
 
   const getDateTime = (date: string | Date, hours: number, minutes: number) => {
     return new Date(
@@ -125,8 +149,7 @@ const DateTimePicker = ({
     return false;
   };
 
-  const handleSelectDay = (range: DateRange | undefined) => {
-    setDateError(null);
+  const updateDateRange = (range: DateRange | undefined) => { 
     if (!includesBlockedDateRange(range)) {
       setDateRange(range);
       if (range?.to) {
@@ -150,6 +173,11 @@ const DateTimePicker = ({
         setStartDate(null);
       }
     }
+  }
+
+  const handleSelectDay = (range: DateRange | undefined) => {
+    setDateError(null);
+    updateDateRange(range);
   };
 
   return (
@@ -161,7 +189,7 @@ const DateTimePicker = ({
               ? __('events_event_start_date')
               : __('listings_book_check_in')}
           </div>
-          <div className="text-sm border border-disabled rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
+          <div className="text-sm border rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
             {dateRange?.from
               ? dayjs(dateRange?.from).format('ll')
               : __('listings_book_select_date')}{' '}

@@ -204,9 +204,9 @@ const Event = ({ event, error }) => {
                           <Link
                             href={`/bookings/create/dates/?eventId=${
                               event._id
-                            }&start=${start.format(
+                            }&eventStartDate=${start.format(
                               'YYYY-MM-DD',
-                            )}&end=${end.format('YYYY-MM-DD')}`}
+                            )}&eventEndDate=${end.format('YYYY-MM-DD')}`}
                             className="btn-primary mr-2"
                           >
                             Buy ticket
