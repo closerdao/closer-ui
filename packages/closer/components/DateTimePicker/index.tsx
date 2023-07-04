@@ -25,6 +25,8 @@ interface Props {
   )[];
   savedStartDate?: string;
   savedEndDate?: string;
+  eventStartDate?: string;
+  eventEndDate?: string;
   defaultMonth?: Date;
   isAdmin?: boolean;
 }
@@ -36,6 +38,8 @@ const DateTimePicker = ({
   blockedDateRanges,
   savedStartDate,
   savedEndDate,
+  eventStartDate,
+  eventEndDate,
   defaultMonth,
   isAdmin,
 }: Props) => {
@@ -72,12 +76,37 @@ const DateTimePicker = ({
           from: new Date(savedStartDate),
           to: new Date(savedEndDate),
         });
-        setEndTime(dayjs(savedEndDate).format('HH:mm'));
-        setStartTime(dayjs(savedStartDate).format('HH:mm'));
+        if (isAdmin) {
+          setEndTime(dayjs(savedEndDate).format('HH:mm'));
+          setStartTime(dayjs(savedStartDate).format('HH:mm'));
+        }
       }
       setIsDateRangeSet(true);
     }
   }, [savedStartDate, savedEndDate]);
+
+  useEffect(() => {
+    if (eventStartDate && eventEndDate) {
+      if (!isDateRangeSet) {
+        if (!volunteerId) {
+          setDateRange({
+            from: new Date(eventStartDate),
+            to: new Date(eventEndDate),
+          });
+          console.log('debug 7');
+          console.log('eventStartDate=', eventStartDate);
+          
+          setStartDate(eventStartDate);
+          setEndDate(eventEndDate);
+        }
+        // updateDateRange({
+        //   from: new Date(eventStartDate),
+        //   to: new Date(eventEndDate),
+        // })
+      }
+      setIsDateRangeSet(true);
+    }
+  }, [eventStartDate, eventEndDate]);
 
   const getDateTime = (date: string | Date, hours: number, minutes: number) => {
     return new Date(
@@ -125,9 +154,11 @@ const DateTimePicker = ({
     return false;
   };
 
-  const handleSelectDay = (range: DateRange | undefined) => {
-    setDateError(null);
+  const updateDateRange = (range: DateRange | undefined) => { 
+    console.log('update date range!!!!!!');
+    console.log('range?.from=',range?.from);
     if (!includesBlockedDateRange(range)) {
+      console.log('debug2');
       setDateRange(range);
       if (range?.to) {
         if (endTime === '12:00') {
@@ -140,16 +171,34 @@ const DateTimePicker = ({
         setEndDate(null);
       }
       if (range?.from) {
-        if (startTime === '12:00') {
-          const formattedDate = getDateTime(range?.from, 12, 0);
-          setStartDate(formattedDate);
+        console.log('debug3');
+        if(isAdmin){
+          if (startTime === '12:00') {
+            console.log('debug4');
+            const formattedDate = getDateTime(range?.from, 12, 0);
+            setStartDate(formattedDate);
+          } else {
+            console.log('setting start date!!!!');
+            setStartDate(range?.from);
+          }
         } else {
+          console.log('debug5');
           setStartDate(range?.from);
+          
         }
+        
+        
+        
       } else {
         setStartDate(null);
+        console.log('debug6');
       }
     }
+  }
+
+  const handleSelectDay = (range: DateRange | undefined) => {
+    setDateError(null);
+    updateDateRange(range);
   };
 
   return (
@@ -161,7 +210,7 @@ const DateTimePicker = ({
               ? __('events_event_start_date')
               : __('listings_book_check_in')}
           </div>
-          <div className="text-sm border border-disabled rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
+          <div className="text-sm border rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
             {dateRange?.from
               ? dayjs(dateRange?.from).format('ll')
               : __('listings_book_select_date')}{' '}
