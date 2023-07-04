@@ -155,6 +155,7 @@ const TokenSaleCheckoutPage = () => {
               <Row
                 rowKey={__('token_sale_checkout_total')}
                 value={`${__('token_sale_source_token')} ${total} `}
+                additionalInfo={ __('token_sale_ceur_disclaimer')}
               />
             </div>
           </div>
