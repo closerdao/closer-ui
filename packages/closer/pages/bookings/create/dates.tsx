@@ -38,6 +38,7 @@ interface Props {
   ticketOptions?: TicketOption[];
   volunteer?: VolunteerOpportunity;
   futureEvents?: Event[];
+  event?: Event;
 }
 
 const DatesSelector: NextPage<Props> = ({
@@ -46,6 +47,7 @@ const DatesSelector: NextPage<Props> = ({
   ticketOptions,
   volunteer,
   futureEvents,
+  event
 }) => {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
@@ -53,8 +55,6 @@ const DatesSelector: NextPage<Props> = ({
   const {
     start: savedStartDate,
     end: savedEndDate,
-    eventStartDate,
-    eventEndDate,
     adults: savedAdults,
     kids: savedKids,
     infants: savedInfants,
@@ -127,8 +127,8 @@ const DatesSelector: NextPage<Props> = ({
     //   ]);
     // }
     if (eventId) {
-      blockedDateRanges.push({ before: new Date(eventStartDate as string) });
-      blockedDateRanges.push({ after: new Date(eventEndDate as string) });
+      blockedDateRanges.push({ before: new Date(event?.start as string) });
+      blockedDateRanges.push({ after: new Date(event?.end as string) });
     }
 
     if (volunteerId) {
@@ -155,12 +155,12 @@ const DatesSelector: NextPage<Props> = ({
   const [selectedTicketOption, selectTicketOption] = useState<any>(null);
   const [discountCode, setDiscountCode] = useState('');
 
-  useEffect(() => {
-    if (!volunteerId) {
-      setStartDate(savedStartDate as string);
-      setEndDate(savedEndDate as string);
-    }
-  }, [savedStartDate, savedEndDate]);
+  // useEffect(() => {
+  //   if (!volunteerId) {
+  //     setStartDate(savedStartDate as string);
+  //     setEndDate(savedEndDate as string);
+  //   }
+  // }, [savedStartDate, savedEndDate]);
 
   const handleNext = async () => {
     setHandleNextError(null);
@@ -272,8 +272,8 @@ const DatesSelector: NextPage<Props> = ({
               blockedDateRanges={blockedDateRanges}
               savedStartDate={savedStartDate as string}
               savedEndDate={savedEndDate as string}
-              eventStartDate={eventStartDate as string}
-              eventEndDate={eventEndDate as string}
+              eventStartDate={event?.start ? event?.start : volunteer?.start }
+              eventEndDate={event?.end ? event?.end : volunteer?.end}
             />
           )}
           <BookingGuests
@@ -323,9 +323,12 @@ DatesSelector.getInitialProps = async ({ query }) => {
       const ticketsAvailable = await api.get(
         `/bookings/event/${eventId}/availability`,
       );
+
+      const event = await api.get(`/event/${eventId}`);
       return {
         settings: settings as BookingSettings,
         ticketOptions: ticketsAvailable.data.ticketOptions,
+        event: event.data.results,
       };
     }
     if (volunteerId) {

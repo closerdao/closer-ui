@@ -88,16 +88,21 @@ const DateTimePicker = ({
   useEffect(() => {
     if (eventStartDate && eventEndDate) {
       if (!isDateRangeSet) {
-        setDateRange({
-          from: new Date(eventStartDate),
-          to: new Date(eventEndDate),
-        });
-        setStartDate(eventStartDate);
-        setEndDate(eventEndDate);
-        updateDateRange({
-          from: new Date(eventStartDate),
-          to: new Date(eventEndDate),
-        })
+        if (!volunteerId) {
+          setDateRange({
+            from: new Date(eventStartDate),
+            to: new Date(eventEndDate),
+          });
+          console.log('debug 7');
+          console.log('eventStartDate=', eventStartDate);
+          
+          setStartDate(eventStartDate);
+          setEndDate(eventEndDate);
+        }
+        // updateDateRange({
+        //   from: new Date(eventStartDate),
+        //   to: new Date(eventEndDate),
+        // })
       }
       setIsDateRangeSet(true);
     }
@@ -150,7 +155,10 @@ const DateTimePicker = ({
   };
 
   const updateDateRange = (range: DateRange | undefined) => { 
+    console.log('update date range!!!!!!');
+    console.log('range?.from=',range?.from);
     if (!includesBlockedDateRange(range)) {
+      console.log('debug2');
       setDateRange(range);
       if (range?.to) {
         if (endTime === '12:00') {
@@ -163,14 +171,27 @@ const DateTimePicker = ({
         setEndDate(null);
       }
       if (range?.from) {
-        if (startTime === '12:00') {
-          const formattedDate = getDateTime(range?.from, 12, 0);
-          setStartDate(formattedDate);
+        console.log('debug3');
+        if(isAdmin){
+          if (startTime === '12:00') {
+            console.log('debug4');
+            const formattedDate = getDateTime(range?.from, 12, 0);
+            setStartDate(formattedDate);
+          } else {
+            console.log('setting start date!!!!');
+            setStartDate(range?.from);
+          }
         } else {
+          console.log('debug5');
           setStartDate(range?.from);
+          
         }
+        
+        
+        
       } else {
         setStartDate(null);
+        console.log('debug6');
       }
     }
   }
