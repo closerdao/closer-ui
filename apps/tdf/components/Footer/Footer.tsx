@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { FC } from 'react';
 
 export const Footer: FC = () => (
@@ -21,6 +22,8 @@ export const Footer: FC = () => (
         Campaign designed by{' '}
         <a href="https://zebragrowth.com/">Zebra</a>.
       </p>
+
+      <p><Link href='/pdf/TDF-PP.pdf'>Privacy policy</Link></p>
       <div className="social mt-4 flex flex-row justify-center">
         <a
           href="https://t.me/traditionaldreamfactor"
