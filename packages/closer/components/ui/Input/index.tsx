@@ -139,7 +139,7 @@ const Input = React.memo(
       <div className={`flex flex-col gap-4 relative ${className}`}>
         {label && (
           <label className="font-medium text-complimentary-light" id={label}>
-            {label}
+             {isRequired && '* '}{label}
           </label>
         )}
         <div>

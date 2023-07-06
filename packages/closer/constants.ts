@@ -19,7 +19,8 @@ export const BOOKING_STEPS = [
 
 export const CURRENCIES: CloserCurrencies[] = [
   CloserCurrencies.EUR,
-  blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol,
+  CloserCurrencies.TDF,
+  // blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol,
 ];
 
 export const CURRENCIES_WITH_LABELS = [
@@ -42,5 +43,27 @@ export const SUBSCRIPTION_STEPS = [
   'success',
 ];
 
+export const TOKEN_SALE_STEPS = [
+  'before-you-begin',
+  'nationality',
+  'token-counter',
+  'your-info',
+  'checkout',
+  'success',
+];
+
 export const DEFAULT_CURRENCY = CURRENCIES[0]; // EUR
 export const REFERRAL_ID_LOCAL_STORAGE_KEY = 'referredByUserId';
+
+export const BONDING_CURVE = {
+  COEFFICIENTS: {
+    a: -11680057722,
+    b: 32000461777723,
+    c: 420,
+  },
+};
+
+export const SALES_CONFIG = {
+  MAX_WALLET_BALANCE: 915,
+  MAX_TOKENS_PER_TRANSACTION: 100,
+};

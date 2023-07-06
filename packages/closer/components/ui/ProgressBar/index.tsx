@@ -14,6 +14,7 @@ const ProgressBar = ({ steps }: ProgressBarProps) => {
       .split('/')
       [router.pathname.split('/').length - 1].includes(step),
   );
+
   let currentStepIndex;
   if (currentStep) {
     currentStepIndex = steps.indexOf(currentStep);

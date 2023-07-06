@@ -2,6 +2,7 @@ import { useContext } from 'react';
 
 import { WalletDispatch, WalletState } from '../contexts/wallet';
 import { __ } from '../utils/helpers';
+import { Button } from './ui';
 
 const WalletActions = () => {
   const { switchNetwork, connectWallet } = useContext(WalletDispatch);
@@ -9,9 +10,9 @@ const WalletActions = () => {
 
   if (isWalletConnected && !isCorrectNetwork) {
     return (
-      <button className="btn mt-4 w-full uppercase" onClick={switchNetwork}>
+      <Button type='secondary' className=" mt-4 w-full uppercase" onClick={switchNetwork}>
         {__('wallet_switch_network')}
-      </button>
+      </Button>
     );
   }
 
@@ -19,9 +20,9 @@ const WalletActions = () => {
     return (
       <>
         <p className="my-4 text-xs">{__('wallet_not_connected_cta')}</p>
-        <button className="btn mt-4 w-full uppercase" onClick={connectWallet}>
+        <Button type='secondary' className=" mt-4 w-full uppercase" onClick={connectWallet}>
           {__('wallet_not_connected_button')}
-        </button>
+        </Button>
       </>
     );
   }
