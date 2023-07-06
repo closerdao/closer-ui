@@ -42,27 +42,7 @@ const celoConfig = {
   CEUR_TOKEN_ADDRESS: '0xd8763cba276a3738e6de85b4b3bf5fded6d6ca73',
 };
 
-const getNetworkConfigAndABIs = () => {
-  const network = process.env.NEXT_PUBLIC_NETWORK;
-  if (network === 'alfajores') {
-    return alfajoresConfig;
-  } else if (network === 'celo') {
-    return celoConfig;
-  }
-};
-const getABIs = () => {
-  const network = process.env.NEXT_PUBLIC_NETWORK;
-  if (network === 'alfajores') {
-    return alfajoresABIs;
-  } else if (network === 'celo') {
-    return celoABIs;
-  }
-};
 
-export const blockchainConfig = {
-  ...getNetworkConfigAndABIs(),
-  ...getABIs(),
-};
 
 const celoABIs = {
   BLOCKCHAIN_DAO_TOKEN_ABI: [
@@ -5022,4 +5002,26 @@ const alfajoresABIs = {
       type: 'function',
     },
   ],
+};
+
+const getNetworkConfig = () => {
+  const network = process.env.NEXT_PUBLIC_NETWORK;
+  if (network === 'celo') {
+    return celoConfig;
+  } else {
+    return alfajoresConfig;
+  }
+};
+const getABIs = () => {
+  const network = process.env.NEXT_PUBLIC_NETWORK;
+  if (network === 'alfajores') {
+    return alfajoresABIs;
+  } else if (network === 'celo') {
+    return celoABIs;
+  }
+};
+
+export const blockchainConfig = {
+  ...getNetworkConfig(),
+  ...getABIs(),
 };
