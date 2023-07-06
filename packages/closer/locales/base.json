@@ -663,5 +663,8 @@
   "token_sale_ceur_disclaimer": "Make sure you have enough cEUR balance in your wallet",
   "token_sale_complete_guide": "Complete written guide",
   "token_sale_complete_guide_link": "https://drive.google.com/drive/folders/1MkGLpHBFvVxU0VOzN0L4R-SKpVg12tKX?usp=sharing",
+  "cookie_consent_text": "We use cookies to improve your experience and analyse the use of our web site.",
+  "cookie_consent_text_link": "Read cookie policy",
+  "cookie_consent_button": "Accept and close",
   "generic_edit_button": "Edit"
 }
