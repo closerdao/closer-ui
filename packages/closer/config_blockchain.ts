@@ -43,7 +43,6 @@ const celoConfig = {
 };
 
 
-
 const celoABIs = {
   BLOCKCHAIN_DAO_TOKEN_ABI: [
     {
