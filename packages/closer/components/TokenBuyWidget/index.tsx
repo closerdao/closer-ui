@@ -21,10 +21,30 @@ import { Item } from '../ui/Select/types';
 const { MAX_TOKENS_PER_TRANSACTION, MAX_WALLET_BALANCE } = SALES_CONFIG;
 
 const FUTURE_ACCOMMODATION_TYPES = [
-  { name: __('token_sale_public_sale_shared_suite'), price: 1 },
-  { name: __('token_sale_public_sale_private_suite'), price: 2 },
-  { name: __('token_sale_public_sale_studio'), price: 3 },
-  { name: __('token_sale_public_sale_house'), price: 5 },
+  {
+    name: `${__('token_sale_public_sale_shared_suite')} (${__(
+      'generic_coming_soon',
+    )})`,
+    price: 1,
+  },
+  {
+    name: `${__('token_sale_public_sale_private_suite')} (${__(
+      'generic_coming_soon',
+    )})`,
+    price: 2,
+  },
+  {
+    name: `${__('token_sale_public_sale_studio')} (${__(
+      'generic_coming_soon',
+    )})`,
+    price: 3,
+  },
+  {
+    name: `${__('token_sale_public_sale_house')} (${__(
+      'generic_coming_soon',
+    )})`,
+    price: 5,
+  },
 ];
 
 interface Props {
@@ -202,8 +222,6 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
     }
     return amount;
   };
-
-  console.log(tokensToBuy);
 
   return (
     <div className="flex flex-col gap-4 my-10">

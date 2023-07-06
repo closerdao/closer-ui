@@ -28,8 +28,6 @@ const TokenSaleCheckoutPage = () => {
   const router = useRouter();
   const { tokens } = router.query || { tokens: '33' };
 
-  console.log('tokens=',tokens);
-
   const { SOURCE_TOKEN } = useConfig() || {};
   const { buyTokens, getTotalCost, isCeurApproved, approveCeur, isPending } =
     useBuyTokens();
@@ -41,6 +39,8 @@ const TokenSaleCheckoutPage = () => {
 
   const [web3Error, setWeb3Error] = useState<string | null>(null);
   const [apiError, setApiError] = useState(null);
+
+  const [isMetamaskLoading, setIsMetamaskLoading] = useState(false);
 
   const unitPrice = (total / parseInt(tokens as string)).toFixed(2);
 
@@ -69,15 +69,22 @@ const TokenSaleCheckoutPage = () => {
   };
 
   const handleApprovalTx = async () => {
+    setWeb3Error(null);
+    setApiError(null);
+    setIsMetamaskLoading(true);
     const { success, error } = await approveCeur(total);
     if (success) {
       setIsApproved(true);
     } else {
       setWeb3Error(parseMessageFromError(error));
     }
+    setIsMetamaskLoading(false);
   };
 
   const handlePurchaseTx = async () => {
+    setWeb3Error(null);
+    setApiError(null);
+    setIsMetamaskLoading(true);
     const { success, txHash, error } = await buyTokens(tokens as string);
     if (success) {
       try {
@@ -88,12 +95,15 @@ const TokenSaleCheckoutPage = () => {
         });
       } catch (error: unknown) {
         setApiError(parseMessageFromError(error));
+      } finally {
+        setIsMetamaskLoading(false);
       }
       router.push(
         `/token/success?amountOfTokensPurchased=${tokens}&transactionId=${txHash}`,
       );
     } else {
       setWeb3Error(parseMessageFromError(error));
+      setIsMetamaskLoading(false);
     }
   };
 
@@ -146,7 +156,6 @@ const TokenSaleCheckoutPage = () => {
               {__('subscriptions_summary_edit_button')}
             </Button>
           </div>
-
           <div className="">
             <Heading level={3} hasBorder={true}>
               ➕ {__('token_sale_checkout_total')}
@@ -155,13 +164,16 @@ const TokenSaleCheckoutPage = () => {
               <Row
                 rowKey={__('token_sale_checkout_total')}
                 value={`${__('token_sale_source_token')} ${total} `}
-                additionalInfo={ __('token_sale_ceur_disclaimer')}
+                additionalInfo={__('token_sale_ceur_disclaimer')}
               />
             </div>
           </div>
           {isApproved ? (
-            <Button onClick={handlePurchaseTx} isEnabled={!isPending}>
-              {isPending ? (
+            <Button
+              onClick={handlePurchaseTx}
+              isEnabled={!isPending && !isMetamaskLoading}
+            >
+              {isPending || isMetamaskLoading ? (
                 <div className="flex gap-2 items-center">
                   <Spinner />
                   {__('token_sale_checkout_button_pending_transaction')}
@@ -171,8 +183,11 @@ const TokenSaleCheckoutPage = () => {
               )}
             </Button>
           ) : (
-            <Button onClick={handleApprovalTx} isEnabled={!isPending}>
-              {isPending ? (
+            <Button
+              onClick={handleApprovalTx}
+              isEnabled={!isPending && !isMetamaskLoading}
+            >
+              {isPending || isMetamaskLoading ? (
                 <div className="flex gap-2 items-center">
                   <Spinner />
                   {__('token_sale_checkout_button_pending_transaction')}
@@ -182,7 +197,6 @@ const TokenSaleCheckoutPage = () => {
               )}
             </Button>
           )}
-
           <p className="text-center">
             {!isApproved && !isPending && __('token_sale_approve_text')}
 
@@ -192,7 +206,6 @@ const TokenSaleCheckoutPage = () => {
 
             {isApproved && isPending && __('token_sale_buy_pending_text')}
           </p>
-
           {web3Error && <ErrorMessage error={web3Error} />}
           {apiError && <ErrorMessage error={apiError} />}
         </main>
