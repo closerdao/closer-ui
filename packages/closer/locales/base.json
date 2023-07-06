@@ -634,6 +634,7 @@
   "token_sale_heading_before_you_begin": "Before you Begin",
   "token_sale_before_you_begin_text_1": "You are about to buy $TDF tokens.",
   "token_sale_before_you_begin_text_2": "We recommend you do this in one go.",
+  "token_sale_before_you_begin_text_3": "The limit per one transaction is 100 $TDF. The total limit per wallet is 915 $TDF",
   "token_sale_before_you_begin_checklist_heading": "Checklist",
   "token_sale_before_you_begin_need_help_heading": "Need Help?",
   "token_sale_before_you_begin_checklist_1": "Have A Metamask Wallet",
