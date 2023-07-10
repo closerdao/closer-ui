@@ -12,23 +12,10 @@ import Select from '../../components/ui/Select/Dropdown';
 
 import dayjs from 'dayjs';
 
+import { BOOKING_STATUS_OPTIONS, BOOKING_TYPE_OPTIONS } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
 import { useOutsideClick } from '../../hooks/useOutsideClick';
 import { __ } from '../../utils/helpers';
-
-const statusOptions = [
-  { label: 'Any', value: 'any' },
-  { label: 'Paid', value: 'paid' },
-  { label: 'Pending', value: 'pending' },
-  { label: 'Open', value: 'open' },
-];
-
-const typeOptions = [
-  { label: 'Any', value: 'any' },
-  { label: 'Volunteering', value: 'volunteer' },
-  { label: 'Event', value: 'event' },
-  { label: 'Stay', value: 'stay' },
-];
 
 const MAX_BOOKINGS = 200;
 const loadTime = new Date();
@@ -115,6 +102,12 @@ const BookingsFilter = ({ setFilter }: Props) => {
   }, []);
 
   useEffect(() => {
+    const arrivalFrom = new Date(filterValues.arrivalFromDate);
+    arrivalFrom.setDate(arrivalFrom.getDate() - 1);
+
+    const departureFrom = new Date(filterValues.departureFromDate);
+    departureFrom.setDate(departureFrom.getDate() - 1);
+
     const getFilter = {
       where: {
         ...(filterValues.type === 'event' && { eventId: { $exists: true } }),
@@ -125,9 +118,7 @@ const BookingsFilter = ({ setFilter }: Props) => {
           volunteerId: { $exists: false },
           eventId: { $exists: false },
         }),
-        ...(filterValues.status === 'paid' && { status: ['paid'] }),
-        ...(filterValues.status === 'open' && { status: ['open'] }),
-        ...(filterValues.status === 'pending' && { status: ['pending'] }),
+        ...(filterValues.status !== 'any' && { status: [bookingStatus] }),
         ...(filterValues.bookingId !== '' && { _id: filterValues.bookingId }),
         ...(filterValues.selectedEvent.label !== 'any' && {
           eventId: filterValues.selectedEvent.value,
@@ -136,22 +127,22 @@ const BookingsFilter = ({ setFilter }: Props) => {
         ...(filterValues.arrivalToDate &&
           filterValues.arrivalFromDate && {
             start: {
-              $lt: new Date(filterValues.arrivalToDate),
-              $gt: new Date(filterValues.arrivalFromDate),
+              $lte: new Date(filterValues.arrivalToDate),
+              $gte: arrivalFrom,
             },
           }),
         ...(filterValues.departureToDate &&
           filterValues.departureFromDate && {
             end: {
-              $lt: new Date(filterValues.departureToDate),
-              $gt: new Date(filterValues.departureFromDate),
+              $lte: new Date(filterValues.departureToDate),
+              $gte: departureFrom,
             },
           }),
         ...(!filterValues.departureToDate &&
           !filterValues.departureFromDate && { end: { $gt: new Date() } }),
       },
       limit: MAX_BOOKINGS,
-      sort_by: filterValues.sortBy || 'start',
+      sort_by: filterValues.sortBy,
     };
 
     setFilter(getFilter as any);
@@ -243,9 +234,9 @@ const BookingsFilter = ({ setFilter }: Props) => {
         <div className="flex-1 min-w-full md:min-w-[160px]">
           <label className="block my-2">{__('booking_card_status')}</label>
           <Select
-            className="rounded-full border-black py-1.5"
+            className="rounded-full border-black "
             value={bookingStatus}
-            options={statusOptions}
+            options={BOOKING_STATUS_OPTIONS}
             onChange={handleBookingStatus}
             isRequired
           />
@@ -255,8 +246,8 @@ const BookingsFilter = ({ setFilter }: Props) => {
           <Select
             label=""
             value={bookingType}
-            options={typeOptions}
-            className="rounded-full border-black py-1.5"
+            options={BOOKING_TYPE_OPTIONS}
+            className="rounded-full border-black"
             onChange={handleBookingType}
             isRequired
           />
@@ -267,7 +258,7 @@ const BookingsFilter = ({ setFilter }: Props) => {
           </label>
           <Select
             isDisabled={!Boolean(events && filterValues.type === 'event')}
-            className={`rounded-full  py-1.5 ${
+            className={`rounded-full ${
               Boolean(events && filterValues.type === 'event') && 'border-black'
             }`}
             value={selectedEvent.label}
@@ -400,6 +391,16 @@ const BookingsFilter = ({ setFilter }: Props) => {
         size="small"
       >
         {__('booking_requests_departure_date')}
+      </Button>
+      <Button
+        isEnabled={filterValues.sortBy !== '-created'}
+        onClick={() => setFilterValues({ ...filterValues, sortBy: '-created' })}
+        type="secondary"
+        isFullWidth={false}
+        size="small"
+      >
+        {/* {__('booking_requests_departure_date')} */}
+        Newest first
       </Button>
     </section>
   );

@@ -170,7 +170,7 @@
   "carrots_success_message": "carrots redeemed successfully! Accommodation cost updated.",
   "carrots_success_message_singular": "carrot redeemed successfully! Accommodation cost updated.",
   "carrots_error_message": "Carrots payment failed, please, try again.",
-  
+
   "unlock_stays_heading": "Stays",
   "unlock_stays_subheading": "Become a wanderer to unlock stay bookings",
 
@@ -292,12 +292,14 @@
   "booking_requests_sort_by": "Sort by:",
   "booking_requests_arrival_date": "Arrival date",
   "booking_requests_departure_date": "Departure date",
+  "booking_requests_diet": "Diet: ",
   "booking_card_id": "Booking #",
   "booking_card_status": "Status",
   "booking_card_message": "Message",
   "booking_card_guests": "Guests",
   "booking_card_checkin": "Check in",
   "booking_card_checkout": "Check out",
+  "booking_card_nights": "Nights",
   "booking_card_type": "Accommodation type",
   "booking_card_booking_type": "Booking type",
   "booking_card_payment_accomodation": "Payment Accommodation",
@@ -507,7 +509,7 @@
   "subscriptions_pioneer_title": "Become a pioneer",
   "subscriptions_pioneer_intro_text": "With these subscription packages you can continuously support us and get some Carrots  in return. You can then use your Carrots to cover your Accommodation Fee at TDF. Wo oh! Experience living at TDF, with no specific dates or long-term commitment required. Come!",
   "subscriptions_credits_included": "carrots included",
-  
+
   "pricing_and_product_heading_1": "One regenerative co-living.",
   "pricing_and_product_heading_2": "Four paths leading to the same",
   "pricing_and_product_heading_3": "beautiful dream.",
@@ -544,10 +546,9 @@
   "pricing_and_product_learn_more_button": "Learn more",
   "pricing_and_product_heading_say_cheese": "Say cheese",
   "pricing_and_product_subheading_say_cheese": "Get acquainted with the extraordinary characters and destinations that await your arrival",
-  
+
   "pricing_and_product_cost_per_night": "Cost per night",
 
-  
   "heading_white_paper": "White paper",
   "intro_white_paper": "The finer details of OASA’s vision and tokenomics, and how you can join our nature backed economy via block-chain membership.",
   "heading_pink_paper": "Pink paper",
@@ -671,6 +672,5 @@
   "token_sale_approve_pending_text": "This can take up to 30 seconds... please wait, don’t close or reload this tab!",
   "token_sale_buy_text": "This will complete your checkout. Make sure to have some CELO to pay for gas!",
   "token_sale_buy_pending_text": "This can take up to 30 seconds... please wait, don’t close or reload this tab!",
-  "generic_edit_button": "Edit" 
-  
+  "generic_edit_button": "Edit"
 }

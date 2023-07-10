@@ -1,12 +1,15 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
+import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import axios from 'axios';
 import dayjs from 'dayjs';
 
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
+import { cdn } from '../utils/api';
 import { __, getBookingType, priceFormat } from '../utils/helpers';
-import ProfilePhoto from './ProfilePhoto';
 import { Button } from './ui';
 
 const getStatusText = (status, updated) => {
@@ -38,7 +41,11 @@ const statusColor = {
   'checked-out': 'bg-success',
 };
 
-const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
+const BookingListPreview = ({
+  booking: bookingMapItem,
+  listingName,
+  userInfo,
+}) => {
   const {
     _id,
     start,
@@ -56,6 +63,9 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
     volunteerId,
   } = bookingMapItem.toJS();
   const router = useRouter();
+
+  const photoUrl = userInfo ? `${cdn}${userInfo?.photo}-profile-sm.jpg` : null;
+
   const { user } = useAuth();
   const { platform } = usePlatform();
   const startFormatted = dayjs(start).format('DD/MM/YYYY');
@@ -65,8 +75,31 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
 
   const bookingType = getBookingType(eventId, volunteerId);
 
+  const t = () => {
+    fetch('/api/booking', {
+      method: 'POST',
+      headers: {},
+      body: JSON.stringify({
+        bookingId: _id,
+      }),
+    });
+
+    axios.post(
+      '/api/booking',
+      {
+        id: 3,
+        name: 'Test',
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+  };
+
   const isBookingCancelable =
-    createdBy === user._id &&
+    createdBy === user?._id &&
     (status === 'open' || status === 'pending' || status === 'confirmed');
 
   const confirmBooking = async () => {
@@ -81,7 +114,7 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
       <div className="flex flex-col gap-3">
         <div>
           <p className="card-feature text-center">{createdFormatted}</p>
-      
+
           <p className="card-feature text-center">
             {__('booking_card_id')}
             {_id}
@@ -93,12 +126,35 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
           </p>
         </div>
         {router.pathname.includes('requests') && (
-          <Link passHref href={`/members/${createdBy}`}>
-            {' '}
-            <div className="bg-neutral rounded-md py-2 text-center flex items-center gap-2 hover:bg-accent hover:text-white justify-center">
-              <ProfilePhoto user={user} size="6" /> {user && user.screenname}
-            </div>
-          </Link>
+          <>
+            <Link passHref href={`/members/${createdBy}`}>
+              <div className="bg-neutral rounded-md py-1.5 text-center flex items-center gap-2 hover:bg-accent hover:text-white justify-center">
+                {userInfo?.photo ? (
+                  <Image
+                    src={photoUrl}
+                    alt={userInfo?.name}
+                    width={30}
+                    height={30}
+                    className="rounded-full"
+                  />
+                ) : (
+                  <FaUser className="text-success w-[3opx] h-[30px] " />
+                )}
+                {userInfo?.name && userInfo?.name}
+              </div>
+            </Link>
+            <p className="text-center text-sm">
+              {userInfo?.email && userInfo?.email}
+            </p>
+            {userInfo?.phone && (
+              <p className="text-center text-sm">{userInfo?.phone}</p>
+            )}
+            {userInfo?.diet && (
+              <p className="text-center text-sm">
+                {__('booking_requests_diet')} {userInfo?.diet}
+              </p>
+            )}
+          </>
         )}
 
         <div className="bg-neutral rounded-md py-1 text-center">
@@ -123,6 +179,10 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
         <div>
           <p className="card-feature">{__('booking_card_checkout')}</p>
           <p>{endFormatted}</p>
+        </div>
+        <div>
+          <p className="card-feature">{__('booking_card_nights')}</p>
+          <p>{dayjs(end).diff(dayjs(start), 'day')}</p>
         </div>
         <div>
           <p className="card-feature">{__('booking_card_type')}</p>
@@ -168,20 +228,21 @@ const BookingListPreview = ({ booking: bookingMapItem, listingName }) => {
                 </Button>
               </Link>
             )}
-            {status === 'open' && (
+            {!router.pathname.includes('requests') && status === 'open' && (
               <Link passHref href={`/bookings/${_id}/summary`}>
                 <Button type="secondary">
                   {__('booking_card_checkout_button')}
                 </Button>
               </Link>
             )}
-            {status === 'confirmed' && (
-              <Link passHref href={`/bookings/${_id}/checkout`}>
-                <Button type="secondary">
-                  {__('booking_card_checkout_button')}
-                </Button>
-              </Link>
-            )}
+            {!router.pathname.includes('requests') &&
+              status === 'confirmed' && (
+                <Link passHref href={`/bookings/${_id}/checkout`}>
+                  <Button type="secondary">
+                    {__('booking_card_checkout_button')}
+                  </Button>
+                </Link>
+              )}
             {user && isBookingCancelable && (
               <Link passHref href={`/bookings/${_id}/cancel`}>
                 <Button type="secondary" className="  uppercase">

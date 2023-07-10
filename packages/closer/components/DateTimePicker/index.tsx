@@ -1,4 +1,10 @@
-import { ChangeEventHandler, Dispatch, SetStateAction, useEffect, useState } from 'react';
+import {
+  ChangeEventHandler,
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useState,
+} from 'react';
 import { DateRange, DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 
@@ -11,8 +17,12 @@ interface Props {
   value?: string;
   minValue?: string | null;
   maxValue?: string | null;
-  setStartDate: (date: string | null | Date) => void | Dispatch<SetStateAction<string | undefined>>;
-  setEndDate: (date: string | null | Date) => void  | Dispatch<SetStateAction<string | undefined>>;
+  setStartDate: (
+    date: string | null | Date,
+  ) => void | Dispatch<SetStateAction<string | undefined>>;
+  setEndDate: (
+    date: string | null | Date,
+  ) => void | Dispatch<SetStateAction<string | undefined>>;
   maxDuration?: number;
   blockedDateRanges?: (
     | Date
@@ -136,11 +146,7 @@ const DateTimePicker = ({
       setDateRange(range);
       if (range?.to) {
         if (endTime === '12:00') {
-          const newDate = getDateTime(
-           range?.to,
-            12,
-            0,
-          );
+          const newDate = getDateTime(range?.to, 12, 0);
           setEndDate(newDate);
         } else {
           setEndDate(range?.to);
@@ -150,11 +156,7 @@ const DateTimePicker = ({
       }
       if (range?.from) {
         if (startTime === '12:00') {
-          const newDate = getDateTime(
-            range?.from,
-            12,
-            0,
-          );
+          const newDate = getDateTime(range?.from, 12, 0);
           setStartDate(newDate);
         } else {
           setStartDate(range?.from);
@@ -235,7 +237,7 @@ const DateTimePicker = ({
                 />
               </div>
             </div>
-            <div className='text-sm mt-4'>
+            <div className="text-sm mt-4">
               {localTimezone} {__('events_time')}
             </div>
           </div>
