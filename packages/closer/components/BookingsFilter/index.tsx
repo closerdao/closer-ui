@@ -67,7 +67,6 @@ const BookingsFilter = ({ setFilter }: Props) => {
     where: {
       end: { $gt: loadTime },
     },
-    limit: 10,
   };
 
   const events = platform?.event?.find(eventsFilter);
@@ -81,6 +80,8 @@ const BookingsFilter = ({ setFilter }: Props) => {
         return { label: event.toJSON().name, value: event.toJSON()._id };
       })
       .toJSON();
+
+  console.log('eventsData=', eventsData);
 
   function handleClickOutsideArrivalDropdown() {
     setShowArrivalDropdown(false);

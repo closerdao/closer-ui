@@ -1,23 +1,38 @@
 import { useEffect, useState } from 'react';
 
 import { usePlatform } from '../contexts/platform';
-import api from '../utils/api';
 import { __ } from '../utils/helpers';
 import BookingListPreview from './BookingListPreview';
 import { Heading, Spinner } from './ui';
 
+const loadTime = new Date();
+const MAX_USERS_TO_FETCH = 2000;
+
 const Bookings = ({ filter }) => {
   const { platform } = usePlatform();
+
+  const eventsFilter = {
+    where: {
+      end: { $gte: loadTime },
+    },
+  };
+
+  const events = platform.event.find(eventsFilter);
+  const bookings = platform.booking.find(filter);
+  const error = bookings && bookings.get('error');
+  const listings = platform.listing.find();
+  const allUsers = platform.user.find({ limit: MAX_USERS_TO_FETCH });
+
   const [loading, setLoading] = useState(false);
-  const [allUsers, setAllUsers] = useState();
 
   const loadData = async () => {
     try {
       setLoading(true);
       await Promise.all([
+        platform.event.get(eventsFilter),
         platform.booking.get(filter),
         platform.listing.get(),
-        platform.user.get(),
+        platform.user.get({ limit: MAX_USERS_TO_FETCH }),
       ]);
     } catch (err) {
     } finally {
@@ -30,18 +45,6 @@ const Bookings = ({ filter }) => {
       loadData();
     }
   }, [filter]);
-
-  useEffect(() => {
-    (async () => {
-      const users = await api.get('/user?limit=500');
-      setAllUsers(users.data.results);
-    })();
-  }, []);
-
-  const bookings = platform.booking.find(filter);
-
-  const error = bookings && bookings.get('error');
-  const listings = platform.listing.find();
 
   if (error) {
     return <div className="validation-error">{JSON.stringify(error)}</div>;
@@ -76,15 +79,18 @@ const Bookings = ({ filter }) => {
 
                 const userId = booking.get('createdBy');
                 const user =
-                  allUsers && allUsers.find((user) => user._id === userId);
+                  allUsers && allUsers.toJS().find((user) => user._id === userId);
 
                 const userInfo = user && {
                   name: user.screenname,
                   photo: user.photo,
-                  email: user.email,
-                  phone: user.phone,
-                  diet: user?.preferences?.diet,
                 };
+
+                const currentEvent = events?.toJS()?.find((event) => {
+                  return event._id === booking.get('eventId');
+                });
+
+                const eventName = currentEvent && currentEvent.name;
 
                 return (
                   <BookingListPreview
@@ -93,6 +99,7 @@ const Bookings = ({ filter }) => {
                     listingName={listingName}
                     filter={filter}
                     userInfo={userInfo}
+                    eventName={eventName || null}
                   />
                 );
               })

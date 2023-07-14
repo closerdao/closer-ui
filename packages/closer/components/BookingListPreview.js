@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
-import axios from 'axios';
 import dayjs from 'dayjs';
 
 import { useAuth } from '../contexts/auth';
@@ -45,6 +44,7 @@ const BookingListPreview = ({
   booking: bookingMapItem,
   listingName,
   userInfo,
+  eventName,
 }) => {
   const {
     _id,
@@ -61,6 +61,7 @@ const BookingListPreview = ({
     utilityFiat,
     eventId,
     volunteerId,
+    eventFiat,
   } = bookingMapItem.toJS();
   const router = useRouter();
 
@@ -74,29 +75,6 @@ const BookingListPreview = ({
   const isNotPaid = status === 'open';
 
   const bookingType = getBookingType(eventId, volunteerId);
-
-  const t = () => {
-    fetch('/api/booking', {
-      method: 'POST',
-      headers: {},
-      body: JSON.stringify({
-        bookingId: _id,
-      }),
-    });
-
-    axios.post(
-      '/api/booking',
-      {
-        id: 3,
-        name: 'Test',
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-  };
 
   const isBookingCancelable =
     createdBy === user?._id &&
@@ -143,23 +121,15 @@ const BookingListPreview = ({
                 {userInfo?.name && userInfo?.name}
               </div>
             </Link>
-            <p className="text-center text-sm">
-              {userInfo?.email && userInfo?.email}
-            </p>
-            {userInfo?.phone && (
-              <p className="text-center text-sm">{userInfo?.phone}</p>
-            )}
-            {userInfo?.diet && (
-              <p className="text-center text-sm">
-                {__('booking_requests_diet')} {userInfo?.diet}
-              </p>
-            )}
           </>
         )}
 
         <div className="bg-neutral rounded-md py-1 text-center">
           {bookingType.charAt(0).toUpperCase() + bookingType.slice(1)}
+
+          {eventName && ` — ${eventName}`}
         </div>
+
         <div>
           <p className="card-feature">{__('booking_card_guests')}</p>
           <p>{adults}</p>
@@ -208,6 +178,19 @@ const BookingListPreview = ({
             )}
           </p>
         </div>
+        {eventFiat !== undefined && (
+          <div>
+            <p className="card-feature">{__('booking_card_payment_event')}</p>
+            <p>
+              {priceFormat(eventFiat)}{' '}
+              {isNotPaid && (
+                <span className="text-failure">
+                  {__('booking_card_unpaid')}
+                </span>
+              )}
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="mt-8 flex flex-col gap-4">
@@ -231,7 +214,7 @@ const BookingListPreview = ({
             {!router.pathname.includes('requests') && status === 'open' && (
               <Link passHref href={`/bookings/${_id}/summary`}>
                 <Button type="secondary">
-                  {__('booking_card_checkout_button')}
+                  💰 {__('booking_card_checkout_button')}
                 </Button>
               </Link>
             )}
@@ -239,7 +222,7 @@ const BookingListPreview = ({
               status === 'confirmed' && (
                 <Link passHref href={`/bookings/${_id}/checkout`}>
                   <Button type="secondary">
-                    {__('booking_card_checkout_button')}
+                    💰 {__('booking_card_checkout_button')}
                   </Button>
                 </Link>
               )}
