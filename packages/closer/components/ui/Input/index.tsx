@@ -13,7 +13,7 @@ type InputProps = {
   id?: string;
   label?: string;
   value?: string;
-  onChange?: (e: ChangeEvent<HTMLInputElement> ) => void;
+  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   type?: 'text' | 'password' | 'time';
   isRequired?: boolean;
@@ -139,7 +139,8 @@ const Input = React.memo(
       <div className={`flex flex-col gap-4 relative ${className}`}>
         {label && (
           <label className="font-medium text-complimentary-light" id={label}>
-             {isRequired && '* '}{label}
+            {isRequired && '* '}
+            {label}
           </label>
         )}
         <div>

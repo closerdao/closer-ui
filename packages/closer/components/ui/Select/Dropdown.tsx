@@ -25,7 +25,7 @@ const Dropdown: FC<DropdownProps> = React.memo(
     };
 
     return (
-      <div className={'flex flex-col gap-4 relative w-full'}>
+      <div className={' relative w-full'}>
         {label && (
           <label className="font-medium text-complimentary-light">
             {label}

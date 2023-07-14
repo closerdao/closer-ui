@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { FormEvent } from 'react';
 
 import { VariantProps, cva } from 'class-variance-authority';
+import { twMerge } from 'tailwind-merge';
 
 import Spinner from '../Spinner';
 
@@ -9,7 +10,7 @@ import Spinner from '../Spinner';
 // - color
 // - size (default=medium)
 // - isEnabled (default=true)
-// - isLoading 
+// - isLoading
 // - isFullWidth (default=true)
 // - isInline
 // type is legacy prop and should be replaced by new props. Before we remove type, we should add empty={true} to new buttons to override default styles
@@ -20,7 +21,8 @@ const buttonStyles = cva(
   {
     variants: {
       color: {
-        accent: 'bg-accent border-accent text-white hover:enabled:bg-accent-dark hover:enabled:border-accent-dark', // default pink button
+        accent:
+          'bg-accent border-accent text-white hover:enabled:bg-accent-dark hover:enabled:border-accent-dark', // default pink button
         'dominant-accent':
           'bg-dominant border-accent text-accent hover:enabled:bg-accent-light', //white with pink border
         // 'dominant-complimentary': 'bg-dominant text-complimentary border-complimentary hover:bg-neutral', //white with black text
@@ -37,13 +39,12 @@ const buttonStyles = cva(
         false: '!w-auto',
       },
       type: {
-        primary:
-          'w-full py-2 bg-accent border-accent text-white',
-        secondary:
-          'w-full enabled:bg-white border-accent text-accent py-2 ',
+        primary: 'w-full py-2 bg-accent border-accent text-white',
+        secondary: 'w-full enabled:bg-white border-accent text-accent py-2 ',
         instantSave:
           'w-auto absolute right-2 top-[45px] text-md pl-4 pr-5 py-0.5 bg-accent text-white',
-        inline: '!w-auto !inline border-accent text-md pl-4 pr-5 py-1.5 bg-accent text-white',
+        inline:
+          '!w-auto !inline border-accent text-md pl-4 pr-5 py-1.5 bg-accent text-white',
         empty: '', // remove empty prop after all buttons are refactored
         default: 'py-2 h-12 ',
       }, //deprecate type, because it does not relate directly to design system
@@ -66,7 +67,7 @@ const buttonStyles = cva(
 
 interface ButtonProps extends VariantProps<typeof buttonStyles> {
   children: React.ReactNode;
-  onClick?: (() => void) | (() => Promise<void>);
+  onClick?: (() => void) | (() => Promise<void>) | ((event:FormEvent) => void);
   infoText?: string | React.ReactNode;
   className?: string;
   title?: string;
@@ -87,7 +88,7 @@ const Button = ({
   isLoading,
   color,
   isFullWidth,
-  size
+  size,
 }: ButtonProps) => {
   return (
     <>
@@ -95,17 +96,19 @@ const Button = ({
         onClick={onClick}
         disabled={!isEnabled || isLoading}
         title={title}
-        // flex justify-center 
+        // flex justify-center
         className={` 
-         ${buttonStyles({ type, color, isFullWidth, size, isEnabled })}
-         ${className || ''}
+        ${twMerge(
+          buttonStyles({ type, color, isFullWidth, size, isEnabled }),
+          className,
+        )}
         `}
       >
         {isLoading ? <Spinner /> : children}
       </button>
       {infoText && <div className="text-sm text-center pt-2">{infoText}</div>}
     </>
-  )
+  );
 };
 
 export default Button;

@@ -35,7 +35,7 @@ const Bookings = ({ filter }) => {
         <p className="mt-4">{__('no_bookings')}</p>:
         bookings.map((booking) => {
           const listingId = booking.get('listing');
-          const listing = listings.find(
+          const listing = listings && listings.find(
             (listing) => listing.get('_id') === listingId,
           );
           if (!listing){
