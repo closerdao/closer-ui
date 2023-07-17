@@ -8,6 +8,7 @@ import CheckoutPayment from '../../../components/CheckoutPayment';
 import CheckoutTotal from '../../../components/CheckoutTotal';
 import PageError from '../../../components/PageError';
 import RedeemCredits from '../../../components/RedeemCredits';
+import { ErrorMessage } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
 import Checkbox from '../../../components/ui/Checkbox';
 import Heading from '../../../components/ui/Heading';
@@ -79,12 +80,31 @@ const Checkout = ({
   const [updatedTotal, setUpdatedTotal] = useState(total);
   const [hasAppliedCredits, setHasAppliedCredits] = useState(false);
   const [creditsError, setCreditsError] = useState(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const goBack = () => {
     router.push(`/bookings/${booking._id}/summary`);
   };
-  const handleNext = () => {
-    router.push(`/bookings/${booking._id}/confirmation`);
+
+  const handleFreeBooking = async () => {
+    try {
+      await api.post('/bookings/payment', {
+        type: 'booking',
+        ticketOption,
+        total,
+        _id: booking._id,
+        email: user?.email,
+        name: user?.screenname,
+      });
+    } catch (error) {
+      setPaymentError(parseMessageFromError(error));
+    }
+
+    router.push(
+      `/bookings/${booking._id}/confirmation${
+        event?._id ? `?eventId=${event?._id}` : ''
+      }`,
+    );
   };
 
   const applyCredits = async () => {
@@ -229,10 +249,12 @@ const Checkout = ({
               eventId={event?._id}
             />
           ) : (
-            <Button className="booking-btn" onClick={handleNext}>
+            <Button className="booking-btn" onClick={handleFreeBooking}>
               {__('buttons_booking_request')}
             </Button>
           )}
+
+          {paymentError && <ErrorMessage error={paymentError} />}
         </div>
       </div>
     </>
