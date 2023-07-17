@@ -60,6 +60,7 @@ const Checkout = ({
     ticketOption,
     eventPrice,
     total,
+    adults,
   } = booking || {};
 
   const { balanceAvailable } = useContext(WalletState);
@@ -71,7 +72,9 @@ const Checkout = ({
     : false;
 
   const canApplyCredits =
-    rentalToken?.val && creditsBalance && creditsBalance >= rentalToken.val;
+    rentalToken?.val &&
+    creditsBalance &&
+    creditsBalance >= (rentalToken?.val as number) * duration * adults;
 
   const listingName = listing?.name;
 
@@ -184,10 +187,13 @@ const Checkout = ({
             </p>
 
             {process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' &&
-            canApplyCredits && !useTokens ? (
+            canApplyCredits &&
+            !useTokens ? (
               <RedeemCredits
                 rentalFiat={rentalFiat}
                 rentalToken={rentalToken || { val: 0, cur: 'TDF' }}
+                duration={duration}
+                adults={adults}
                 applyCredits={applyCredits}
                 hasAppliedCredits={hasAppliedCredits}
                 creditsError={creditsError}
