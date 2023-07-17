@@ -184,7 +184,7 @@ const Checkout = ({
             </p>
 
             {process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' &&
-            canApplyCredits ? (
+            canApplyCredits && !useTokens ? (
               <RedeemCredits
                 rentalFiat={rentalFiat}
                 rentalToken={rentalToken || { val: 0, cur: 'TDF' }}
@@ -197,7 +197,8 @@ const Checkout = ({
 
             {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' &&
               rentalToken &&
-              rentalToken.val > 0 && (
+              rentalToken.val > 0 &&
+              useTokens && (
                 <div className="mt-4">
                   <BookingWallet
                     toPay={rentalToken.val}
