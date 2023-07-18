@@ -19,11 +19,11 @@ import {
   WalletProvider,
   blockchainConfig,
 } from 'closer';
+import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import 'closer/public/styles.css';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import config from '../config';
-import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 
 export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
   const library = new Web3Provider(provider);
@@ -37,11 +37,10 @@ const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
   const referral = query.referral;
 
   useEffect(() => {
-    const currentReferralId = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
-    if (!currentReferralId && referral) {
+    if (referral) {
       localStorage.setItem(REFERRAL_ID_LOCAL_STORAGE_KEY, referral as string);
     }
-  }, []);
+  }, [referral]);
 
   return (
     <>

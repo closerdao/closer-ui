@@ -44,14 +44,18 @@ const ReferralsPage = () => {
               where: formatSearch({ referredBy: user._id }),
             },
           }),
-          api.get('/count/stay', {
-            params: {
-              where: formatSearch({ source: 'referral' }),
-            },
-          }),
-          api.get('/count/stay', {
+          api.get('/stay', {
             params: {
               where: formatSearch({
+                userId: user._id,
+                source: 'referral',
+              }),
+            },
+          }),
+          api.get('/stay', {
+            params: {
+              where: formatSearch({
+                userId: user._id,
                 source: 'referral',
                 created: {
                   $gte: firstDayOfCurrentMonth,
@@ -61,9 +65,23 @@ const ReferralsPage = () => {
             },
           }),
         ]);
+
+        const creditsEarned = res[1].data.results.reduce(
+          (acc: number, curr: { amount: number }) => {
+            return acc + curr.amount;
+          },
+          0,
+        );
+        const creditsThisMonth = res[2].data.results.reduce(
+          (acc: number, curr: { amount: number }) => {
+            return acc + curr.amount;
+          },
+          0,
+        );
+
         setUsersReferredByMe(res[0].data.results);
-        setCreditsEarnedFromReferrals(res[1].data.results);
-        setCreditsErnedThisMonth(res[2].data.results);
+        setCreditsEarnedFromReferrals(creditsEarned);
+        setCreditsErnedThisMonth(creditsThisMonth);
       })();
     }
   }, [user]);
@@ -137,13 +155,7 @@ const ReferralsPage = () => {
         <Heading level={3} hasBorder={true}>
           {__('referrals_monthly_progress_heading')}
         </Heading>
-        <Progress
-          icon="🥕"
-          progress={
-            creditsErnedThisMonth === undefined ? 0 : creditsErnedThisMonth
-          }
-          total={6}
-        />
+        <Progress icon="🥕" progress={creditsErnedThisMonth ?? 0} total={6} />
         <Row
           rowKey={__('referrals_next_refresh')}
           value={`${getNextMonthName()} 1`}
@@ -164,9 +176,6 @@ const ReferralsPage = () => {
               : creditsEarnedFromReferrals
           }`}
         />
-
-        {/* We need a way to fetch amount of carrots that were earned by user's friends through referrals */}
-        {/* <Row rowKey={__('referrals_earned_by_friends')} value="🥕 ?" /> */}
       </div>
     </>
   );
