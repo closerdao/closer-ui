@@ -125,16 +125,6 @@ const SignupForm = () => {
             }
           />
           <Input
-            label={__('signup_form_phone_number')}
-            placeholder={__('signup_form_phone_number')}
-            value={application.phone}
-            onChange={(e) =>
-              updateApplication({
-                phone: e.target.value,
-              })
-            }
-          />
-          <Input
             type="password"
             label={__('signup_form_password')}
             value={application.password}
