@@ -14,8 +14,9 @@ import Heading from './ui/Heading';
 const SignupForm = () => {
   const router = useRouter();
   const { back } = router.query || {};
-  const [submitted, setSubmitted] = useState(false);
   const { signup, isAuthenticated, error, setError } = useAuth();
+  const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [application, setApplication] = useState({
     screenname: '',
     phone: '',
@@ -25,7 +26,8 @@ const SignupForm = () => {
     source: typeof window !== 'undefined' && window.location.href,
   });
 
-  const submit = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
+    setIsLoading(true);
     e.preventDefault();
     setError(null);
     if (!application.email) {
@@ -47,6 +49,8 @@ const SignupForm = () => {
       }
     } catch (err: unknown) {
       setError(parseMessageFromError(err));
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -94,7 +98,7 @@ const SignupForm = () => {
           <p>{__('signup_success_cta')}</p>
         </>
       ) : (
-        <form className=" flex flex-col gap-4" onSubmit={submit}>
+        <form className=" flex flex-col gap-4" onSubmit={handleSubmit}>
           <input
             type="hidden"
             name="backurl"
@@ -142,7 +146,10 @@ const SignupForm = () => {
           />
           {error && <ErrorMessage error={error} />}
           <div className="w-full my-4">
-            <Button isEnabled={!isSignupDisabled}>
+            <Button
+              isEnabled={!isSignupDisabled && !isLoading}
+              isLoading={isLoading}
+            >
               {__('signup_form_create')}
             </Button>
           </div>

@@ -11,6 +11,7 @@ import Switcher from '../../components/ui/Switcher';
 import { useAuth } from '../../contexts/auth';
 import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
 const loginOptions =
@@ -40,6 +41,7 @@ const Login = () => {
   const [isWeb3Loading, setWeb3Loading] = useState(false);
   const [isLoginWithWallet, setisLoginWithWallet] = useState(false);
   const [selectedSwitcherOption, setSelectedSwitcherOption] = useState('Email');
+  const [web3Error, setWeb3Error] = useState(null);
 
   if (isAuthenticated) {
     router.push(redirectBack);
@@ -54,6 +56,7 @@ const Login = () => {
   }, [selectedSwitcherOption]);
 
   const signInWithWallet = async (walletAddress: string) => {
+    setWeb3Error(null);
     setWeb3Loading(true);
     try {
       const {
@@ -73,7 +76,7 @@ const Login = () => {
       }
     } catch (e: any) {
       if (e.response?.status === 401) {
-        setError(e.response.data.error);
+        setWeb3Error(e.response.data.error);
         return;
       }
       console.error(e);
@@ -84,9 +87,14 @@ const Login = () => {
 
   const walletConnectAndSignInFlow = async (event: FormEvent) => {
     event.preventDefault();
-    const activated = await injected.activate();
-    if (activated?.account) {
-      signInWithWallet(activated.account);
+    setWeb3Error(null);
+    try {
+      const activated = await injected.activate();
+      if (activated?.account) {
+        signInWithWallet(activated.account);
+      }
+    } catch (error) {
+      setWeb3Error(parseMessageFromError(error));
     }
   };
 
@@ -141,19 +149,27 @@ const Login = () => {
 
                 <div className="flex flex-col justify-between items-center gap-4 sm:flex-row">
                   <div className="flex flex-col gap-4 w-full sm:flex-row py-6">
-                    <Button isLoading={isLoading}>{__('login_submit')}</Button>
+                    <Button
+                      isEnabled={!isWeb3Loading && !isLoading}
+                      isLoading={isLoading}
+                    >
+                      {__('login_submit')}
+                    </Button>
                   </div>
                 </div>
               </form>
             ) : (
-              <Button
-                isEnabled={!isWeb3Loading}
-                isLoading={isWeb3Loading}
-                className="btn-primary"
-                onClick={walletConnectAndSignInFlow}
-              >
-                {__('blockchain_sign_in_with_wallet')}
-              </Button>
+              <div>
+                {web3Error && <ErrorMessage error={web3Error} />}
+                <Button
+                  isEnabled={!isWeb3Loading && !isLoading}
+                  isLoading={isWeb3Loading}
+                  className="btn-primary"
+                  onClick={walletConnectAndSignInFlow}
+                >
+                  {__('blockchain_sign_in_with_wallet')}
+                </Button>
+              </div>
             )}
           </Card>
           <div className="text-center text-sm">
