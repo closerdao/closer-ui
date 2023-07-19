@@ -1,10 +1,6 @@
-import {
-  ChangeEventHandler,
-  Dispatch,
-  SetStateAction,
-  useEffect,
-  useState,
-} from 'react';
+import { useRouter } from 'next/router';
+
+import { ChangeEventHandler, useEffect, useState } from 'react';
 import { DateRange, DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 
@@ -17,12 +13,8 @@ interface Props {
   value?: string;
   minValue?: string | null;
   maxValue?: string | null;
-  setStartDate: (
-    date: string | null | Date,
-  ) => void | Dispatch<SetStateAction<string | undefined>>;
-  setEndDate: (
-    date: string | null | Date,
-  ) => void | Dispatch<SetStateAction<string | undefined>>;
+  setStartDate: (date: string | null | Date) => void;
+  setEndDate: (date: string | null | Date) => void;
   maxDuration?: number;
   blockedDateRanges?: (
     | Date
@@ -33,11 +25,12 @@ interface Props {
   )[];
   savedStartDate?: string;
   savedEndDate?: string;
+  eventStartDate?: string;
+  eventEndDate?: string;
   defaultMonth?: Date;
   isAdmin?: boolean;
 }
 
-//TODO: cover edge case when event is created from other time zone than the platform
 const DateTimePicker = ({
   setStartDate,
   setEndDate,
@@ -45,16 +38,21 @@ const DateTimePicker = ({
   blockedDateRanges,
   savedStartDate,
   savedEndDate,
+  eventStartDate,
+  eventEndDate,
   defaultMonth,
   isAdmin,
 }: Props) => {
-  const dateFormat = 'YYYY-MMMM-DD-HH:mm';
+  const router = useRouter();
+  const { volunteerId } = router.query;
   const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [dateError, setDateError] = useState<null | string>(null);
   const [isOneMonthCalendar, setIsOneMonthCalendar] = useState(false);
   const [startTime, setStartTime] = useState('12:00');
   const [endTime, setEndTime] = useState('12:00');
+
+  const [isDateRangeSet, setIsDateRangeSet] = useState(false);
 
   useEffect(() => {
     const handleWindowResize = () => {
@@ -72,29 +70,61 @@ const DateTimePicker = ({
   }, []);
 
   useEffect(() => {
-    savedStartDate && setStartTime(dayjs(savedStartDate).format('HH:mm'));
-    savedEndDate && setEndTime(dayjs(savedEndDate).format('HH:mm'));
-  }, []);
-
-  useEffect(() => {
-    if (savedStartDate && savedEndDate && setEndDate && setStartDate) {
-      handleSelectDay(dateRange);
-      setEndDate(savedEndDate);
-      setStartDate(savedStartDate);
-      setDateRange({
-        from: new Date(savedStartDate),
-        to: new Date(savedEndDate),
-      });
-    }
-    if (!savedStartDate && !savedEndDate && setEndDate && setStartDate) {
-      setEndDate('');
-      setStartDate('');
-      setDateRange({
-        from: undefined,
-        to: undefined,
-      });
+    if (savedStartDate && savedEndDate && !volunteerId) {
+      if (!isDateRangeSet) {
+        setDateRange({
+          from: new Date(savedStartDate),
+          to: new Date(savedEndDate),
+        });
+        if (isAdmin) {
+          setEndTime(dayjs(savedEndDate).format('HH:mm'));
+          setStartTime(dayjs(savedStartDate).format('HH:mm'));
+        }
+      }
+      setIsDateRangeSet(true);
     }
   }, [savedStartDate, savedEndDate]);
+
+  useEffect(() => {
+    if (eventStartDate && eventEndDate) {
+      if (!isDateRangeSet) {
+        if (
+          (eventStartDate !== savedStartDate ||
+            eventEndDate !== savedEndDate) &&
+          !volunteerId
+        ) {
+          setDateRange({
+            from: new Date(savedStartDate as string),
+            to: new Date(savedEndDate as string),
+          });
+          setEndDate(savedEndDate as string);
+          setStartDate(savedStartDate as string);
+        } else {
+          if (!volunteerId) {
+            setDateRange({
+              from: new Date(eventStartDate),
+              to: new Date(eventEndDate),
+            });
+            setStartDate(eventStartDate);
+            setEndDate(eventEndDate);
+          }
+        }
+      }
+      if (
+        volunteerId &&
+        (dayjs(eventStartDate).format('YYYY-MM-DD') !== savedStartDate ||
+          dayjs(eventEndDate).format('YYYY-MM-DD') !== savedEndDate)
+      ) {
+        setDateRange({
+          from: new Date(savedStartDate as string),
+          to: new Date(savedEndDate as string),
+        });
+        setEndDate(savedStartDate as string);
+        setStartDate(savedEndDate as string);
+      }
+      setIsDateRangeSet(true);
+    }
+  }, [eventStartDate, eventEndDate]);
 
   const getDateTime = (date: string | Date, hours: number, minutes: number) => {
     return new Date(
@@ -112,17 +142,19 @@ const DateTimePicker = ({
       time = '12:00';
     }
     const [hours, minutes] = time.split(':').map((str) => parseInt(str, 10));
-
     if (event.target.id === 'startTime') {
-      const newDate = getDateTime(savedStartDate as string, hours, minutes);
-      setStartDate(newDate);
-      setStartTime(dayjs(newDate).format('HH:mm'));
+      const formattedDate = getDateTime(
+        savedStartDate as string,
+        hours,
+        minutes,
+      );
+      setStartDate(formattedDate);
+      setStartTime(dayjs(formattedDate).format('HH:mm'));
     }
-
     if (event.target.id === 'endTime') {
-      const newDate = getDateTime(savedEndDate as string, hours, minutes);
-      setEndDate(newDate);
-      setEndTime(dayjs(newDate).format('HH:mm'));
+      const formattedDate = getDateTime(savedEndDate as string, hours, minutes);
+      setEndDate(formattedDate);
+      setEndTime(dayjs(formattedDate).format('HH:mm'));
     }
   };
 
@@ -140,14 +172,13 @@ const DateTimePicker = ({
     return false;
   };
 
-  const handleSelectDay = (range: DateRange | undefined) => {
-    setDateError(null);
+  const updateDateRange = (range: DateRange | undefined) => {
     if (!includesBlockedDateRange(range)) {
       setDateRange(range);
       if (range?.to) {
         if (endTime === '12:00') {
-          const newDate = getDateTime(range?.to, 12, 0);
-          setEndDate(newDate);
+          const formattedDate = getDateTime(range?.to, 12, 0);
+          setEndDate(formattedDate);
         } else {
           setEndDate(range?.to);
         }
@@ -155,21 +186,25 @@ const DateTimePicker = ({
         setEndDate(null);
       }
       if (range?.from) {
-        if (startTime === '12:00') {
-          const newDate = getDateTime(range?.from, 12, 0);
-          setStartDate(newDate);
+        if (isAdmin) {
+          if (startTime === '12:00') {
+            const formattedDate = getDateTime(range?.from, 12, 0);
+            setStartDate(formattedDate);
+          } else {
+            setStartDate(range?.from);
+          }
         } else {
           setStartDate(range?.from);
         }
       } else {
         setStartDate(null);
       }
-    } else {
-      // TODO: decide if we allow  members to book during events / edit error message
-      setDateError(
-        'Please make separate bookings if you would like to stay before and after events',
-      );
     }
+  };
+
+  const handleSelectDay = (range: DateRange | undefined) => {
+    setDateError(null);
+    updateDateRange(range);
   };
 
   return (
@@ -181,9 +216,9 @@ const DateTimePicker = ({
               ? __('events_event_start_date')
               : __('listings_book_check_in')}
           </div>
-          <div className="text-sm border border-disabled rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
+          <div className="text-sm border rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
             {dateRange?.from
-              ? dayjs(dateRange?.from).format('LL')
+              ? dayjs(dateRange?.from).format('ll')
               : __('listings_book_select_date')}{' '}
           </div>
         </div>
@@ -195,7 +230,7 @@ const DateTimePicker = ({
           </div>
           <div className="text-sm border bordr-disabled rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
             {dateRange?.to
-              ? dayjs(dateRange?.to).format('LL')
+              ? dayjs(dateRange?.to).format('ll')
               : __('listings_book_select_date')}
           </div>
         </div>
