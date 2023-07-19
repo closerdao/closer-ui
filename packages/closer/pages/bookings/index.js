@@ -7,6 +7,8 @@ import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { __ } from '../../utils/helpers';
 
+const bookingsToShowLimit = 50;
+
 const BookingsDirectory = () => {
   const { user } = useAuth();
 
@@ -14,17 +16,28 @@ const BookingsDirectory = () => {
     myBookings: user && {
       where: {
         createdBy: user._id,
-        // status: ['open', 'pending', 'confirmed', 'tokens-staked', 'credits-paid', 'paid', 'checked-in', 'checked-out'],
+        status: [
+          'open',
+          'pending',
+          'confirmed',
+          'tokens-staked',
+          'credits-paid',
+          'paid',
+          'checked-in',
+          'checked-out',
+        ],
         end: {
           $gt: new Date(),
         },
       },
+      limit: bookingsToShowLimit,
     },
     pastBookings: user && {
       where: {
         createdBy: user._id,
         end: { $lt: new Date() },
       },
+      limit: bookingsToShowLimit,
     },
   };
 
@@ -54,7 +67,7 @@ const BookingsDirectory = () => {
               value: 'past-bookings',
               content: <Bookings filter={filters.pastBookings} />,
             },
-          ].filter(tab => tab?.content) }
+          ].filter((tab) => tab?.content)}
         />
       </div>
     </>

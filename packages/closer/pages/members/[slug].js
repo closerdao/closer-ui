@@ -8,6 +8,7 @@ import Linkify from 'react-linkify';
 import ConnectedWallet from '../../components/ConnectedWallet';
 import EventsList from '../../components/EventsList';
 import UploadPhoto from '../../components/UploadPhoto';
+import { Card } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
@@ -20,6 +21,7 @@ import api, { cdn } from '../../utils/api';
 import { __ } from '../../utils/helpers';
 
 const MemberPage = ({ member }) => {
+  const { user } = useAuth();
   const router = useRouter();
   const [introMessage, setMessage] = useState('');
   const [openIntro, setOpenIntro] = useState(false);
@@ -181,8 +183,7 @@ const MemberPage = ({ member }) => {
                       }}
                       label={member.photo ? 'Change photo' : 'Add photo'}
                     />
-                  ):
-                  member?.photo ? (
+                  ) : member?.photo ? (
                     <img
                       src={`${cdn}${member.photo}-profile-lg.jpg`}
                       loading="lazy"
@@ -230,6 +231,96 @@ const MemberPage = ({ member }) => {
                         ))}
                       </div>
                     )}
+
+                    {user && user.roles.includes('space-host') && (
+                      <Card className="my-6 bg-accent-light">
+                        {member?.email && (
+                          <p>
+                            {__('user_data_email')}{' '}
+                            <span className="font-bold">{member.email}</span>
+                          </p>
+                        )}
+                        {member?.phone && (
+                          <p>
+                            {__('user_data_phone')}{' '}
+                            <span className="font-bold">{member.phone}</span>
+                          </p>
+                        )}
+                        {member?.preferences?.sharedAccomodation && (
+                          <p>
+                            {__('user_data_shared_accommodation')}{' '}
+                            <span className="font-bold">
+                              {member.preferences.sharedAccomodation}
+                            </span>
+                          </p>
+                        )}
+                        {member?.preferences?.diet && (
+                          <p>
+                            {__('user_data_diet')}{' '}
+                            <span className="font-bold">
+                              {member.preferences.diet}
+                            </span>
+                          </p>
+                        )}
+                        {member?.preferences?.skills && (
+                          <p>
+                            {__('user_data_skills')}{' '}
+                            <span className="font-bold">
+                              {member.preferences.skills.map((skill, i) => {
+                                if (
+                                  i ===
+                                  member.preferences.skills.length - 1
+                                ) {
+                                  return skill;
+                                }
+                                return skill + ', ';
+                              })}
+                            </span>
+                          </p>
+                        )}
+                        {member?.preferences?.superpower && (
+                          <p>
+                            {__('user_data_superpower')}{' '}
+                            <span className="font-bold">
+                              {member.preferences.superpower}
+                            </span>
+                          </p>
+                        )}
+                        {member?.preferences?.needs && (
+                          <p>
+                            {__('user_data_needs')}{' '}
+                            <span className="font-bold">
+                              {member.preferences.needs}
+                            </span>
+                          </p>
+                        )}
+                        {member?.preferences?.dream && (
+                          <p>
+                            {__('user_data_dream')}{' '}
+                            <span className="font-bold">
+                              {member.preferences.dream}
+                            </span>
+                          </p>
+                        )}
+                        {member?.preferences?.moreInfo && (
+                          <p>
+                            {__('user_data_more_info')}{' '}
+                            <span className="font-bold">
+                              {member.preferences.moreInfo}
+                            </span>
+                          </p>
+                        )}
+                        {member?.subscription?.plan && (
+                          <p>
+                            {__('user_data_subscription')}{' '}
+                            <span className="font-bold">
+                              {member.subscription.plan}
+                            </span>
+                          </p>
+                        )}
+                      </Card>
+                    )}
+
                     {editProfile ? (
                       <input
                         autoFocus
@@ -460,9 +551,17 @@ const MemberPage = ({ member }) => {
   );
 };
 
-MemberPage.getInitialProps = async ({ query }) => {
+MemberPage.getInitialProps = async ({ req, query }) => {
   try {
-    const res = await api.get(`/user/${query.slug}`);
+    const res = await api.get(
+      `/user/${query.slug}`,
+
+      {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        },
+      },
+    );
 
     return {
       member: res.data.results,

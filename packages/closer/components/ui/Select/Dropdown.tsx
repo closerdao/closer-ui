@@ -54,7 +54,7 @@ const Dropdown: FC<DropdownProps> = React.memo(
             </div>
           )}
           className=" "
-          containerClassName={`py-3.5 border-2  ${className}`}
+          containerClassName={`border-2  ${className}`}
         />
       </div>
     );
