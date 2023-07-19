@@ -37,7 +37,7 @@ export const links = [
     enabled: true,
   },
   {
-    label: 'Referrals',
+    label: 'Refer a friend',
     url: '/settings/referrals',
     enabled: true,
   },
