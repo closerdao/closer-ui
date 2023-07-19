@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import advancedFormat from 'dayjs/plugin/advancedFormat';
 
 import { blockchainConfig } from '../config_blockchain';
 import { REFUND_PERIODS } from '../constants';
@@ -11,6 +12,7 @@ import en from '../locales/en';
 dayjs.extend(localizedFormat);
 dayjs.extend(relativeTime);
 dayjs.extend(duration);
+dayjs.extend(advancedFormat);
 
 // TODO: convert to typescript
 
@@ -327,6 +329,11 @@ export const getSubscriptionVariantPrice = (credits, subscriptionPlan) => {
   return subscriptionPlan.price;
 };
 
+export const getNextMonthName = () => {
+  const currentDate = dayjs();
+  const nextMonth = currentDate.add(1, 'month');
+  return nextMonth.format('MMMM');
+};
 const validationPatterns = {
   email: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
   phone: /^[0-9()+-\s]{5,}$/,

@@ -37,6 +37,11 @@ export const links = [
     enabled: true,
   },
   {
+    label: 'Refer a friend',
+    url: '/settings/referrals',
+    enabled: true,
+  },
+  {
     label: 'Governance',
     url: 'https://snapshot.org/#/traditionaldreamfactory.eth',
     target: '_blank',
