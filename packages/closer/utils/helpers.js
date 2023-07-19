@@ -290,11 +290,11 @@ export const getAccommodationCost = (
 export const getBookingType = (eventId, volunteerId) => {
   let bookingType;
   if (eventId) {
-    bookingType = 'event';
+    bookingType = '🎉 Event';
   } else if (volunteerId) {
-    bookingType = 'volunteer';
+    bookingType = '💪🏽 Volunteer';
   } else {
-    bookingType = 'stay';
+    bookingType = '🏡 Stay';
   }
   return bookingType;
 };
@@ -338,12 +338,22 @@ const validationPatterns = {
   email: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
   phone: /^[0-9()+-\s]{5,}$/,
   taxNo: /^$|^[0-9()\-\s]{6,}$/,
-} ;
+  swissAddress: /Switzerland/i,
+  usAddress: /\s\b(us|usa|united\sstates)\b/,
+};
 
-export const isInputValid = (value, validation) => {
+const doesRegexMatch = (value, validation) => {
   const pattern = validationPatterns[validation];
   if (pattern) {
     return pattern.test(value);
   }
   return true;
+};
+
+export const isInputValid = (value, validation) => {
+  return doesRegexMatch(value, validation);
+};
+
+export const doesAddressMatchPattern = (value, validation) => {
+  return doesRegexMatch(value, validation);
 };

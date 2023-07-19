@@ -7,13 +7,34 @@ import React, {
   useState,
 } from 'react';
 
+import { VariantProps, cva } from 'class-variance-authority';
+import { twMerge } from 'tailwind-merge';
+
 import { __ } from '../../../utils/helpers';
 
-type InputProps = {
+const inputStyles = cva('new-input px-4 py-3 rounded-lg', {
+  variants: {
+    isDisabled: {
+      true: 'text-gray-300 border-gray-300 cursor-not-allowed',
+      false: 'text-complimentary-core',
+    },
+    isValid: {
+      true: 'border-neutral bg-neutral',
+      false: 'border-accent-core border bg-accent-light',
+    },
+  },
+
+  defaultVariants: {
+    isDisabled: false,
+    isValid: true,
+  },
+});
+
+interface InputProps extends VariantProps<typeof inputStyles> {
   id?: string;
   label?: string;
   value?: string;
-  onChange?: (e: ChangeEvent<HTMLInputElement> ) => void;
+  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   type?: 'text' | 'password' | 'time';
   isRequired?: boolean;
@@ -27,7 +48,7 @@ type InputProps = {
   isInstantSave?: boolean;
   hasSaved?: boolean;
   setHasSaved?: Dispatch<SetStateAction<boolean>>;
-};
+}
 
 const Input = React.memo(
   ({
@@ -136,10 +157,11 @@ const Input = React.memo(
         : null;
 
     return (
-      <div className={`flex flex-col gap-4 relative ${className}`}>
+      <div className={'flex flex-col gap-4 relative '}>
         {label && (
           <label className="font-medium text-complimentary-light" id={label}>
-             {isRequired && '* '}{label}
+            {isRequired && '* '}
+            {label}
           </label>
         )}
         <div>
@@ -152,15 +174,9 @@ const Input = React.memo(
             onFocus={isInstantSave ? handleFocus : undefined}
             required={isRequired}
             placeholder={placeholder}
-            className={`new-input px-4 py-3 rounded-lg ${
-              isValid
-                ? 'border-neutral bg-neutral'
-                : 'border-accent-core border bg-accent-light'
-            } ${
-              isDisabled
-                ? 'text-gray-300 border-gray-300 cursor-not-allowed'
-                : 'text-complimentary-core'
-            }`}
+            className={`
+            ${twMerge(inputStyles({ isValid, isDisabled }), className)}
+            `}
             data-testid={dataTestId}
             autoFocus={autoFocus}
             aria-label={label}

@@ -28,7 +28,7 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
   if (!volunteer) {
     return null;
   }
-
+  const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const start = dayjs(startDate);
   const end = dayjs(endDate);
   const duration = end.diff(start, 'hour', true);
@@ -54,6 +54,7 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
                   {start && start.format(dateFormat)}
                   {end && duration > 24 && ` - ${end.format(dateFormat)}`}
                   {end && duration <= 24 && ` - ${end.format('HH:mm')}`}
+                  {' '}({localTimezone} {__('events_time')})
                 </span>
               </div>
               <Heading className="md:text-4xl font-bold">{name}</Heading>

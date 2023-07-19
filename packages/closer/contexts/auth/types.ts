@@ -76,7 +76,7 @@ export type AuthenticationContext = {
     onSuccess: (status: string) => void,
   ) => Promise<void>;
   setUser: (user: User | null) => void;
-  setError: (msg: string) => void;
+  setError: (msg: string | null) => void;
   loadUserFromCookies: () => Promise<void>;
   refetchUser: () => Promise<void>;
 };

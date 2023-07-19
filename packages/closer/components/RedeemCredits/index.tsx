@@ -10,6 +10,8 @@ interface Props {
   hasAppliedCredits?: boolean;
   creditsError?: string | null | undefined;
   isDemo?: boolean;
+  duration?: number;
+  adults?: number;
 }
 
 const RedeemCredits = ({
@@ -20,11 +22,14 @@ const RedeemCredits = ({
   hasAppliedCredits,
   creditsError,
   isDemo,
+  duration=1,
+  adults=1,
 }: Props) => {
   return (
     <div className={`${className ? className : ''}`}>
       <Card className="text-center gap-4">
-        {(!hasAppliedCredits && rentalFiat?.val) || isDemo ? (
+        {(!hasAppliedCredits && (rentalFiat?.val || rentalToken?.val)) ||
+        isDemo ? (
           <>
             <Heading level={2}>
               {__('carrots_heading_redeem')} {isDemo && '[DEMO]'}
@@ -36,8 +41,16 @@ const RedeemCredits = ({
             <p className="mb-4">{__('carrots_get_discount')}</p>
             <div className="flex w-full justify-center items-center mb-6">
               <div className="w-2/5">
-                <Heading level={4}>{isDemo ? 1 : rentalToken?.val}</Heading>
-                <div className="text-xs">{rentalToken?.val === 1 || isDemo ? __('carrots_carrots_to_redeem_singular') : __('carrots_carrots_to_redeem')}</div>
+                <Heading level={4}>
+                  {isDemo
+                    ? 1
+                    : (rentalToken?.val as number) * duration * adults}
+                </Heading>
+                <div className="text-xs">
+                  {(rentalToken?.val as number) * duration * adults === 1 || isDemo
+                    ? __('carrots_carrots_to_redeem_singular')
+                    : __('carrots_carrots_to_redeem')}
+                </div>
               </div>
               <div className="w-1/10">
                 <Heading level={4}>=</Heading>
@@ -55,7 +68,10 @@ const RedeemCredits = ({
           </>
         ) : (
           <div className="text-system-success font-bold">
-            🥕 {rentalToken?.val} {rentalToken?.val === 1 ? __('carrots_success_message_singular') : __('carrots_success_message')}
+            🥕 {(rentalToken?.val as number) * duration * adults}{' '}
+            {(rentalToken?.val as number) * duration * adults === 1
+              ? __('carrots_success_message_singular')
+              : __('carrots_success_message')}
           </div>
         )}
         {creditsError && <ErrorMessage error={creditsError} />}

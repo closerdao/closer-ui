@@ -7,6 +7,7 @@ import React, {
   useState,
 } from 'react';
 
+import { SALES_CONFIG } from '../../constants';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
@@ -17,7 +18,34 @@ import { Information } from '../ui';
 import Select from '../ui/Select/Dropdown';
 import { Item } from '../ui/Select/types';
 
-const MAX_TOKENS_PER_TRANSACTION = 100;
+const { MAX_TOKENS_PER_TRANSACTION, MAX_WALLET_BALANCE } = SALES_CONFIG;
+
+const FUTURE_ACCOMMODATION_TYPES = [
+  {
+    name: `${__('token_sale_public_sale_shared_suite')} (${__(
+      'generic_coming_soon',
+    )})`,
+    price: 1,
+  },
+  {
+    name: `${__('token_sale_public_sale_private_suite')} (${__(
+      'generic_coming_soon',
+    )})`,
+    price: 2,
+  },
+  {
+    name: `${__('token_sale_public_sale_studio')} (${__(
+      'generic_coming_soon',
+    )})`,
+    price: 3,
+  },
+  {
+    name: `${__('token_sale_public_sale_house')} (${__(
+      'generic_coming_soon',
+    )})`,
+    price: 5,
+  },
+];
 
 interface Props {
   tokensToBuy: number;
@@ -26,9 +54,10 @@ interface Props {
 
 const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
   const { SOURCE_TOKEN } = useConfig() || {};
-  const { getCurrentSupply } = useBuyTokens();
+  const { getCurrentSupply, getUserTdfBalance } = useBuyTokens();
   const [tokenPrice, setTokenPrice] = useState<number>(0);
   const [currentSupply, setCurrentSupply] = useState<number>(0);
+  const [userTdfBalance, setUserTdfBalance] = useState<number>(0);
   const { isWalletReady } = useContext(WalletState);
   const [accommodationOptions, setAccommodationOptions] = useState<{
     labels: Item[];
@@ -48,9 +77,24 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
         return { label: option.name, value: option.name };
       });
 
+      const labelsFuture = FUTURE_ACCOMMODATION_TYPES.map(
+        (accommodatinType: any) => {
+          return { label: accommodatinType.name, value: accommodatinType.name };
+        },
+      );
+
       const prices = res.data.results.map((option: any) => {
         return option.tokenPrice.val;
       });
+
+      const pricesFuture = FUTURE_ACCOMMODATION_TYPES.map(
+        (accommodatinType: any) => {
+          return accommodatinType.price;
+        },
+      );
+
+      labels.push(...labelsFuture);
+      prices.push(...pricesFuture);
 
       setAccommodationOptions({ labels, prices });
       setSelectedAccommodation({
@@ -64,7 +108,9 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
     if (isWalletReady) {
       (async () => {
         const supply = await getCurrentSupply();
+        const tdfBalance = await getUserTdfBalance();
         setCurrentSupply(supply);
+        setUserTdfBalance(tdfBalance);
       })();
     }
 
@@ -92,12 +138,10 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
       1;
 
     setSelectedAccommodation({ name: value, price });
-    setTokensToBuy(
-      Math.ceil(daysToStay * price) <= MAX_TOKENS_PER_TRANSACTION
-        ? Math.ceil(daysToStay * price)
-        : MAX_TOKENS_PER_TRANSACTION,
-    );
-    setTokensToSpend(Math.ceil(Math.ceil(daysToStay * price) * tokenPrice));
+    const possibleAmount = calculatePossibleAmount(daysToStay * price);
+    const priceForTotalAmount = getTotalPrice(currentSupply, possibleAmount);
+    setTokensToBuy(possibleAmount);
+    setTokensToSpend(priceForTotalAmount);
   };
 
   const handleTokensToBuyChange = (
@@ -115,15 +159,13 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
     const value =
       event.target.value === '' ? 0 : parseInt(event.target.value, 10);
 
-    const tokens =
-      value <= MAX_TOKENS_PER_TRANSACTION ? value : MAX_TOKENS_PER_TRANSACTION;
+    const possibleAmount = calculatePossibleAmount(value);
+    const priceForTotalAmount = getTotalPrice(currentSupply, possibleAmount);
 
-    console.log('tokens=', tokens);
-    console.log('Number((tokens * tokenPrice))=', Number(tokens * tokenPrice));
-    setTokensToBuy(tokens);
-    setTokensToSpend(Number(tokens * tokenPrice));
+    setTokensToBuy(possibleAmount);
+    setTokensToSpend(priceForTotalAmount);
     if (price) {
-      setDaysToStay(Math.floor(tokens / Number(price)));
+      setDaysToStay(Math.floor(possibleAmount / Number(price)));
     }
   };
 
@@ -132,20 +174,17 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
   ) => {
     const value =
       event.target.value === '' ? 0 : parseInt(event.target.value, 10);
-    const tokens =
-      Math.floor(value / tokenPrice) <= MAX_TOKENS_PER_TRANSACTION
-        ? Math.floor(value / tokenPrice)
-        : MAX_TOKENS_PER_TRANSACTION;
-    setTokensToBuy(tokens);
 
-    const toSpend =
-      Number(value.toFixed(2)) / tokenPrice <= MAX_TOKENS_PER_TRANSACTION
-        ? Number(value.toFixed(2))
-        : MAX_TOKENS_PER_TRANSACTION * tokenPrice;
-    setTokensToSpend(toSpend);
+    const possibleAmount = calculatePossibleAmount(value);
+    const priceForTotalAmount = getTotalPrice(currentSupply, possibleAmount);
+
+    setTokensToBuy(possibleAmount);
+    setTokensToSpend(priceForTotalAmount);
 
     setDaysToStay(
-      Math.floor(toSpend / tokenPrice / selectedAccommodation.price),
+      Math.floor(
+        priceForTotalAmount / tokenPrice / selectedAccommodation.price,
+      ),
     );
   };
 
@@ -164,14 +203,24 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
       event.target.value === '' ? 0 : parseInt(event.target.value, 10);
 
     if (price) {
-      const tokens =
-        Math.ceil(value * Number(price)) <= MAX_TOKENS_PER_TRANSACTION
-          ? Math.ceil(value * Number(price))
-          : MAX_TOKENS_PER_TRANSACTION;
-      setTokensToBuy(tokens);
-      setTokensToSpend(Number((tokens * tokenPrice).toFixed(2)));
-      setDaysToStay(tokens / price);
+      const possibleAmount = calculatePossibleAmount(value * Number(price));
+      const priceForTotalAmount = getTotalPrice(currentSupply, possibleAmount);
+
+      setTokensToBuy(possibleAmount);
+      setTokensToSpend(priceForTotalAmount);
+      setDaysToStay(possibleAmount / price);
     }
+  };
+
+  const calculatePossibleAmount = (desiredAmount: number) => {
+    let amount = desiredAmount;
+    if (amount > MAX_TOKENS_PER_TRANSACTION) {
+      amount = MAX_TOKENS_PER_TRANSACTION;
+    }
+    if (userTdfBalance + amount > MAX_WALLET_BALANCE) {
+      amount = MAX_WALLET_BALANCE - userTdfBalance;
+    }
+    return amount;
   };
 
   return (
@@ -269,6 +318,11 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
       <div className="flex flex-col gap-4">
         <Information>{__('token_sale_gas_fees_note')}</Information>
         <Information>{__('token_sale_max_amount_note')}</Information>
+        <Information>{__('token_sale_price_disclaimer')}</Information>
+        <Information>
+          {__('token_sale_max_wallet_balance')}
+          {Math.max(MAX_WALLET_BALANCE - userTdfBalance, 0)}
+        </Information>
       </div>
     </div>
   );

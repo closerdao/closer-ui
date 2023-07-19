@@ -20,7 +20,7 @@ import { WalletState } from '../../contexts/wallet';
 import { useConfig } from '../../hooks/useConfig';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __, isInputValid } from '../../utils/helpers';
+import { __, doesAddressMatchPattern, isInputValid } from '../../utils/helpers';
 
 const YourInfoPage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
@@ -116,7 +116,9 @@ const YourInfoPage = () => {
     if (
       Object.values(formData.required).every((value) => value) &&
       isInputValid(formData.required.phone, 'phone') &&
-      isInputValid(formData.optional.taxNo, 'taxNo')
+      isInputValid(formData.optional.taxNo, 'taxNo') &&
+      !doesAddressMatchPattern(formData.required.address, 'usAddress') &&
+      !doesAddressMatchPattern(formData.required.address, 'swissAddress')
     ) {
       return true;
     }
@@ -185,6 +187,18 @@ const YourInfoPage = () => {
                 isRequired={true}
                 className="mt-4"
               />
+              {(doesAddressMatchPattern(
+                formData.required.address,
+                'usAddress',
+              ) ||
+                doesAddressMatchPattern(
+                  formData.required.address,
+                  'swissAddress',
+                )) && (
+                <ErrorMessage
+                  error={__('token_sale_restricted_nationality_warning')}
+                />
+              )}
               <Input
                 label={__('token_sale_label_postal_code')}
                 onChange={handleChange}

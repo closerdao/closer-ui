@@ -1,8 +1,11 @@
 import { AppProps } from 'next/app';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Script from 'next/script';
 
 import { FC, useEffect } from 'react';
+
+import CookieConsent from 'react-cookie-consent';
 
 import { ErrorBoundary, Layout } from '@/components';
 
@@ -17,6 +20,7 @@ import {
   ConfigProvider,
   PlatformProvider,
   WalletProvider,
+  __,
   blockchainConfig,
 } from 'closer';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
@@ -79,6 +83,26 @@ fbq('track', 'PageView');
           </AuthProvider>
         </ErrorBoundary>
       </ConfigProvider>
+      <CookieConsent
+        buttonText={__('cookie_consent_button')}
+        expires={365}
+        style={{ background: '#ffffff', borderTop: '1px solid #F3F4F6' }}
+        buttonStyle={{
+          borderRadius: '20px',
+          padding: '5px 15px 5px 15px',
+          color: '#FE4FB7',
+          background: '#ffffff',
+          fontSize: '13px',
+          border: '1px solid #FE4FB7',
+        }}
+      >
+        <div className="text-black text-sm">
+          {__('cookie_consent_text')}{' '}
+          <Link className="underline" href="/pdf/TDF-Cookies.pdf">
+            {__('cookie_consent_text_link')}
+          </Link>
+        </div>
+      </CookieConsent>
     </>
   );
 };

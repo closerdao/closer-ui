@@ -55,10 +55,34 @@ export const TOKEN_SALE_STEPS = [
 export const DEFAULT_CURRENCY = CURRENCIES[0]; // EUR
 export const REFERRAL_ID_LOCAL_STORAGE_KEY = 'referredByUserId';
 
+export const BOOKING_STATUS_OPTIONS = [
+  { label: 'Any', value: 'any' },
+  { label: 'Open', value: 'open' },
+  { label: 'Pending', value: 'pending' },
+  { label: 'Confirmed', value: 'confirmed' },
+  { label: 'Paid', value: 'paid' },
+  { label: 'Tokens-staked', value: 'tokens-staked' },
+  { label: 'Credits-paid', value: 'credits-paid' },
+  { label: 'Checked-in', value: 'checked-in' },
+  { label: 'Checked-out', value: 'checked-out' },
+];
+
+export const BOOKING_TYPE_OPTIONS = [
+  { label: 'Any', value: 'any' },
+  { label: 'Volunteering', value: 'volunteer' },
+  { label: 'Event', value: 'event' },
+  { label: 'Stay', value: 'stay' },
+];
+
 export const BONDING_CURVE = {
   COEFFICIENTS: {
     a: -11680057722,
     b: 32000461777723,
     c: 420,
   },
+};
+
+export const SALES_CONFIG = {
+  MAX_WALLET_BALANCE: 915,
+  MAX_TOKENS_PER_TRANSACTION: 100,
 };

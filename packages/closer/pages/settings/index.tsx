@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { FC, useEffect, useState } from 'react';
 
 import UploadPhoto from '../../components/UploadPhoto';
+import { Button } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select/Dropdown';
@@ -12,9 +13,8 @@ import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { type User } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
-import { parseMessageFromError } from '../../utils/common';
 import api from '../../utils/api';
-import { Button } from '../../components/ui';
+import { parseMessageFromError } from '../../utils/common';
 
 type UpdateUserFunction = (value: string | string[]) => Promise<void>;
 
@@ -24,7 +24,15 @@ const SHARED_ACCOMODATION_PREFERENCES = [
   { label: 'Female Only', value: 'female only' },
 ];
 
-const SKILLS_EXAMPLES = ['javascript', 'woodworking', 'farming', 'cooking', 'gardening', 'plumbing', 'carpentry'];
+const SKILLS_EXAMPLES = [
+  'javascript',
+  'woodworking',
+  'farming',
+  'cooking',
+  'gardening',
+  'plumbing',
+  'carpentry',
+];
 
 const SettingsPage: FC = () => {
   const { user: initialUser, isAuthenticated, refetchUser } = useAuth();
@@ -90,7 +98,7 @@ const SettingsPage: FC = () => {
     } finally {
       setPhoneSaving(false);
     }
-  }
+  };
   const saveEmail = async (email: string) => {
     setEmailSaving(true);
     try {
@@ -104,7 +112,7 @@ const SettingsPage: FC = () => {
     } finally {
       setEmailSaving(false);
     }
-  }
+  };
 
   if (!isAuthenticated || !user) {
     return <PageNotFound error="Please log in to see this page." />;
@@ -115,7 +123,7 @@ const SettingsPage: FC = () => {
       <Head>
         <title>{user.screenname} | About me</title>
       </Head>
-      <div className="max-w-screen-sm mx-auto md:p-8 h-full main-content w-full flex flex-col min-h-screen py-2">
+      <div className="max-w-screen-sm mx-auto md:p-8 h-full main-content w-full flex flex-col min-h-screen py-2 gap-10">
         <Heading>🤓 Your Info</Heading>
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-8">
@@ -132,7 +140,6 @@ const SettingsPage: FC = () => {
           label="Name"
           value={user.screenname}
           onChange={saveUserData('screenname') as any}
-          className="mt-4"
           isInstantSave={true}
           hasSaved={hasSaved}
           setHasSaved={setHasSaved}
@@ -143,75 +150,83 @@ const SettingsPage: FC = () => {
           isDisabled={!updateEmail}
           onChange={e => setUser({ ...user, email:e.target.value })}
           successMessage={emailSaved ? 'You will receive a link to confirm via email.' : undefined}
-          className="mt-8"
           validation="email"
         />
-        <div className="mt-4">
+        <div>
           {updateEmail && !emailSaved ?
             <>
               <Button
                 onClick={() => saveEmail(user.email)}
-                isEnabled={ !emailSaving }
+                isEnabled={!emailSaving}
                 type="inline"
               >
                 {emailSaving ? 'Verifying...' : 'Verify Email'}
-              </Button> 
+              </Button>
               <Button
-                onClick={() => { setUser({ ...user, email: initialUser?.email || user.email }); toggleUpdateEmail(false) }}
+                onClick={() => {
+                  setUser({ ...user, email: initialUser?.email || user.email });
+                  toggleUpdateEmail(false);
+                }}
                 className="ml-4"
                 type="inline"
               >
                 Cancel
               </Button>
-            </>:
-            !emailSaved &&
-            <Button
-              onClick={() => toggleUpdateEmail(!updateEmail)}
-              type="inline"
-            >
-              Edit Email
-            </Button>
-          }
+            </>
+           : (
+            !emailSaved && (
+              <Button
+                onClick={() => toggleUpdateEmail(!updateEmail)}
+                type="inline"
+              >
+                Edit Email
+              </Button>
+            )
+          )}
         </div>
-        
+
         <Input
           label="Phone"
           isDisabled={!updatePhone}
           value={user.phone}
           onChange={e => setUser({ ...user, phone:e.target.value })}
           successMessage={ phoneSaved ? 'You will receive a link to confirm via text.' : undefined }
-          className="mt-8"
           validation="phone"
         />
-        <div className="mt-4">
-          { updatePhone && !phoneSaved ?
+        <div>
+          {updatePhone && !phoneSaved ? (
             <>
               <Button
                 onClick={() => savePhone(user.phone)}
                 isEnabled={!phoneSaving}
                 type="inline"
               >
-                {phoneSaving ? 'Verifying...' : 'Verify Phone' }
+                {phoneSaving ? 'Verifying...' : 'Verify Phone'}
               </Button>
               <Button
-                onClick={() => { setUser({ ...user, phone: initialUser?.phone || user.phone }); toggleUpdatePhone(false) }}
+                onClick={() => {
+                  setUser({ ...user, phone: initialUser?.phone || user.phone });
+                  toggleUpdatePhone(false);
+                }}
                 className="ml-4"
                 type="inline"
               >
                 Cancel
               </Button>
-            </> :
-            !phoneSaved &&
-            <Button
-              onClick={() => toggleUpdatePhone(!updatePhone)}
-              type="inline"
-            >
-              Edit Phone
-            </Button>
-          }
+            </>
+          ) : (
+            !phoneSaved && (
+              <Button
+                onClick={() => toggleUpdatePhone(!updatePhone)}
+                type="inline"
+              >
+                Edit Phone
+              </Button>
+            )
+          )}
         </div>
 
-        <div className="md:w-72 relative mt-8">
+        <div className="md:w-72 relative mt-8 flex flex-col gap-6">
           <label className="font-medium text-complimentary-light" htmlFor="">
             Profile Picture
           </label>
@@ -230,7 +245,6 @@ const SettingsPage: FC = () => {
         </Heading>
         <Input
           label="Dietary Preferences"
-          className="mt-4"
           onChange={saveUserData('diet') as any}
           hasSaved={hasSaved}
           value={user?.preferences?.diet}
@@ -248,7 +262,6 @@ const SettingsPage: FC = () => {
           label="What is your superpower?"
           value={user?.preferences?.superpower}
           onChange={saveUserData('superpower') as any}
-          className="mt-8"
           isInstantSave={true}
           hasSaved={hasSaved}
           setHasSaved={setHasSaved}
@@ -256,7 +269,6 @@ const SettingsPage: FC = () => {
         <MultiSelect
           label="What skills do you have?"
           values={user?.preferences?.skills}
-          className="mt-8"
           onChange={saveUserData('skills')}
           options={SKILLS_EXAMPLES}
           placeholder="Pick or create yours"
@@ -271,7 +283,6 @@ const SettingsPage: FC = () => {
           label="What do you dream of creating?"
           value={user?.preferences?.dream}
           onChange={saveUserData('dream') as any}
-          className="mt-4"
           isInstantSave={true}
           hasSaved={hasSaved}
           setHasSaved={setHasSaved}
@@ -279,7 +290,6 @@ const SettingsPage: FC = () => {
         <Input
           label="What do you need?"
           value={user?.preferences?.needs}
-          className="mt-8"
           onChange={saveUserData('needs') as any}
           isInstantSave={true}
           hasSaved={hasSaved}
@@ -288,7 +298,6 @@ const SettingsPage: FC = () => {
         <Input
           label="Anything we should know? Anything you would like to share?"
           value={user?.preferences?.moreInfo}
-          className="mt-8"
           onChange={saveUserData('moreInfo') as any}
           isInstantSave={true}
           hasSaved={hasSaved}

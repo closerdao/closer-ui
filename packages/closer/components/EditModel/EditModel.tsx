@@ -73,10 +73,8 @@ const EditModel: FC<Props> = ({
   const [data, setData] = useState(initialModel);
   const [error, setErrors] = useState<string | null>(null);
 
-  const [startDate, setStartDate] = useState<string | null | Date>(
-    data.start && data.start,
-  );
-  const [endDate, setEndDate] = useState<string | null | Date>(data.end && data.end);
+  const [startDate, setStartDate] = useState<string | null | Date>(data.start);
+  const [endDate, setEndDate] = useState<string | null | Date>(data.end);
 
   useEffect(() => {
     setData({ ...data, start: startDate, end: endDate });
@@ -247,9 +245,7 @@ const EditModel: FC<Props> = ({
                   setStartDate={setStartDate}
                   setEndDate={setEndDate}
                   isAdmin={true}
-                  savedStartDate={
-                    data.start && data.start
-                  }
+                  savedStartDate={data.start && data.start}
                   savedEndDate={data.end && data.end}
                   defaultMonth={new Date()}
                 />
@@ -274,6 +270,19 @@ const EditModel: FC<Props> = ({
               update={update}
             />
           ))
+        )}
+
+        {endpoint === '/volunteer' && (
+          <div>
+            <DateTimePicker
+              setStartDate={setStartDate}
+              setEndDate={setEndDate}
+              isAdmin={true}
+              savedStartDate={data.start}
+              savedEndDate={data.end}
+              defaultMonth={new Date()}
+            />
+          </div>
         )}
 
         <div className="py-6 flex items-center">
