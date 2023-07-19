@@ -9,6 +9,7 @@ import Progress from '../../components/ui/ProgressBar/Progress';
 
 import dayjs from 'dayjs';
 
+import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import api, { formatSearch } from '../../utils/api';
@@ -25,7 +26,7 @@ const lastDayOfCurrentMonth = dayjs(
 const ReferralsPage = () => {
   const config = useConfig();
   const { SEMANTIC_URL } = config || {};
-  const { user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const referralLink = `${SEMANTIC_URL}/signup/?referral=${user?._id}`;
 
@@ -99,6 +100,11 @@ const ReferralsPage = () => {
       },
     );
   };
+
+  if (!isAuthenticated || !user) {
+    return <PageNotFound error="Please log in to see this page." />;
+  }
+
   return (
     <>
       <Head>
