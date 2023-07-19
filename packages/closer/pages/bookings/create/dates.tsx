@@ -13,6 +13,7 @@ import Heading from '../../../components/ui/Heading';
 import HeadingRow from '../../../components/ui/HeadingRow';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
+import dayjs from 'dayjs';
 import { NextPage } from 'next';
 
 import PageNotFound from '../../404';
@@ -37,6 +38,7 @@ interface Props {
   ticketOptions?: TicketOption[];
   volunteer?: VolunteerOpportunity;
   futureEvents?: Event[];
+  event?: Event;
 }
 
 const DatesSelector: NextPage<Props> = ({
@@ -45,6 +47,7 @@ const DatesSelector: NextPage<Props> = ({
   ticketOptions,
   volunteer,
   futureEvents,
+  event,
 }) => {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
@@ -78,24 +81,20 @@ const DatesSelector: NextPage<Props> = ({
   }, [futureEvents, savedStartDate, savedEndDate]);
 
   function getBlockedDateRanges() {
-    const blockedDateRanges: any[] = [];
-    if (eventId) {
-      blockedDateRanges.push({ before: new Date(savedStartDate as string) });
-      blockedDateRanges.push({ after: new Date(savedEndDate as string) });
-    }
+    const dateRanges: any[] = [];
     futureEvents?.forEach((event: Event) => {
       if (event.blocksBookingCalendar) {
-        blockedDateRanges.push({
+        dateRanges.push({
           from: new Date(event.start),
           to: new Date(event.end),
         });
       }
     });
-    blockedDateRanges.push({ before: new Date() });
-    blockedDateRanges.push({
+    dateRanges.push({ before: new Date() });
+    dateRanges.push({
       after: new Date().setDate(new Date().getDate() + getMaxBookingHorizon()),
     });
-    return blockedDateRanges;
+    return dateRanges;
   }
 
   useEffect(() => {
@@ -121,18 +120,22 @@ const DatesSelector: NextPage<Props> = ({
         },
       });
     }
+
     if (eventId) {
-      setBlockedDateRanges([
-        { before: new Date(savedStartDate as string) },
-        { after: new Date(savedEndDate as string) },
+      setBlockedDateRanges((ranges) => [
+        ...ranges,
+        { before: new Date(event?.start as string) },
+        { after: new Date(event?.end as string) },
       ]);
     }
     if (volunteerId) {
-      setBlockedDateRanges([
-        { before: new Date(savedStartDate as string) },
-        { after: new Date(savedEndDate as string) },
+      setBlockedDateRanges((ranges) => [
+        ...ranges,
+        { before: new Date(volunteer?.start as string) },
+        { after: new Date(volunteer?.end as string) },
       ]);
     }
+
     if (!eventId && !volunteerId) {
       setBlockedDateRanges(memoizedBlockedDateRanges);
     }
@@ -151,12 +154,17 @@ const DatesSelector: NextPage<Props> = ({
   const [selectedTicketOption, selectTicketOption] = useState<any>(null);
   const [discountCode, setDiscountCode] = useState('');
 
+  useEffect(() => {
+    setStartDate(savedStartDate as string);
+    setEndDate(savedEndDate as string);
+  }, [savedStartDate, savedEndDate]);
+
   const handleNext = async () => {
     setHandleNextError(null);
     try {
       const data = {
-        start: String(start) || '',
-        end: String(end) || '',
+        start: String(dayjs(start as string).format('YYYY-MM-DD')) || '',
+        end: String(dayjs(end as string).format('YYYY-MM-DD')) || '',
         adults: String(adults),
         kids: String(kids),
         infants: String(infants),
@@ -240,7 +248,6 @@ const DatesSelector: NextPage<Props> = ({
               />
             </div>
           )}
-
           {eventId && (
             <TicketOptions
               items={ticketOptions}
@@ -252,18 +259,17 @@ const DatesSelector: NextPage<Props> = ({
               eventId={eventId as string}
             />
           )}
-
           {selectedTicketOption?.isDayTicket !== true && (
             <BookingDates
               conditions={settings?.conditions}
-              startDate={start}
-              endDate={end}
               setStartDate={setStartDate}
               setEndDate={setEndDate}
               isMember={isMember}
               blockedDateRanges={blockedDateRanges}
               savedStartDate={savedStartDate as string}
               savedEndDate={savedEndDate as string}
+              eventStartDate={event?.start ? event?.start : volunteer?.start}
+              eventEndDate={event?.end ? event?.end : volunteer?.end}
             />
           )}
           <BookingGuests
@@ -279,7 +285,6 @@ const DatesSelector: NextPage<Props> = ({
           {handleNextError && (
             <div className="error-box">{handleNextError}</div>
           )}
-
           <Button
             onClick={handleNext}
             isEnabled={
@@ -308,12 +313,15 @@ DatesSelector.getInitialProps = async ({ query }) => {
       },
     } = await api.get('/config/booking');
     if (eventId) {
-      const ticketsAvailable = await api.get(
-        `/bookings/event/${eventId}/availability`,
-      );
+      const [ticketsAvailable, event] = await Promise.all([
+        await api.get(`/bookings/event/${eventId}/availability`),
+        await api.get(`/event/${eventId}`),
+      ]);
+
       return {
         settings: settings as BookingSettings,
         ticketOptions: ticketsAvailable.data.ticketOptions,
+        event: event.data.results,
       };
     }
     if (volunteerId) {

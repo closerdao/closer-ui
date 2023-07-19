@@ -5,7 +5,13 @@ import { useRouter } from 'next/router';
 import { useContext, useEffect } from 'react';
 
 import Wallet from '../../components/Wallet';
-import { BackButton, Button, Heading, ProgressBar } from '../../components/ui';
+import {
+  BackButton,
+  Button,
+  Card,
+  Heading,
+  ProgressBar,
+} from '../../components/ui';
 
 import PageNotFound from '../404';
 import { TOKEN_SALE_STEPS } from '../../constants';
@@ -16,7 +22,7 @@ import { __ } from '../../utils/helpers';
 
 const TokenSaleBeforeYouBeginPage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
-  const router = useRouter();  
+  const router = useRouter();
 
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
@@ -68,6 +74,7 @@ const TokenSaleBeforeYouBeginPage = () => {
         <main className="pt-14 pb-24 flex flex-col gap-4">
           <p>{__('token_sale_before_you_begin_text_1')}</p>
           <p>{__('token_sale_before_you_begin_text_2')}</p>
+          <p>{__('token_sale_before_you_begin_text_3')}</p>
           <div>
             <Heading level={3} hasBorder={true}>
               💰 {__('token_sale_before_you_begin_checklist_heading')}
@@ -93,6 +100,16 @@ const TokenSaleBeforeYouBeginPage = () => {
               💰 {__('token_sale_before_you_begin_need_help_heading')}
             </Heading>
             <ul>
+              <li className="mb-1.5">
+                <Card className="mb-4">
+                  <Link
+                    className="text-accent font-bold underline"
+                    href={__('token_sale_complete_guide_link')}
+                  >
+                    📄 {__('token_sale_complete_guide')}
+                  </Link>
+                </Card>
+              </li>
               <li className="mb-1.5">
                 <Link
                   className="text-accent font-bold underline"
@@ -120,7 +137,7 @@ const TokenSaleBeforeYouBeginPage = () => {
               <li className="mb-1.5">
                 <Link
                   className="text-accent font-bold underline"
-                  href="https://t.me/traditionaldreamfactor"
+                  href={__('token_sale_before_you_begin_guide_link_contact')}
                 >
                   {__('token_sale_before_you_begin_guide_4')}
                 </Link>

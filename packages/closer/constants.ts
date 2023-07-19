@@ -81,3 +81,8 @@ export const BONDING_CURVE = {
     c: 420,
   },
 };
+
+export const SALES_CONFIG = {
+  MAX_WALLET_BALANCE: 915,
+  MAX_TOKENS_PER_TRANSACTION: 100,
+};

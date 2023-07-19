@@ -21,6 +21,8 @@ interface Props {
   )[];
   savedStartDate?: string;
   savedEndDate?: string;
+  eventStartDate?: string;
+  eventEndDate?: string;
 }
 
 const BookingDates: FC<Props> = ({
@@ -31,6 +33,8 @@ const BookingDates: FC<Props> = ({
   blockedDateRanges,
   savedStartDate,
   savedEndDate,
+  eventStartDate,
+  eventEndDate,
 }) => {
   const { member, guest } = conditions || {};
 
@@ -81,6 +85,8 @@ const BookingDates: FC<Props> = ({
             blockedDateRanges={blockedDateRanges}
             savedStartDate={savedStartDate}
             savedEndDate={savedEndDate}
+            eventStartDate={eventStartDate}
+            eventEndDate={eventEndDate}
             defaultMonth={new Date()}
           />
         </div>
