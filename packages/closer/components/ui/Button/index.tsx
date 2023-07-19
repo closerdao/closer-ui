@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FormEvent } from 'react';
 
 import { VariantProps, cva } from 'class-variance-authority';
 import { twMerge } from 'tailwind-merge';
@@ -67,7 +67,7 @@ const buttonStyles = cva(
 
 interface ButtonProps extends VariantProps<typeof buttonStyles> {
   children: React.ReactNode;
-  onClick?: (() => void) | (() => Promise<void>);
+  onClick?: (() => void) | (() => Promise<void>) | ((event:FormEvent) => void);
   infoText?: string | React.ReactNode;
   className?: string;
   title?: string;

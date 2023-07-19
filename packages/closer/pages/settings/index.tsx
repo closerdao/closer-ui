@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { FC, useEffect, useState } from 'react';
 
 import UploadPhoto from '../../components/UploadPhoto';
+import { Button } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select/Dropdown';
@@ -12,9 +13,8 @@ import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { type User } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
-import { parseMessageFromError } from '../../utils/common';
 import api from '../../utils/api';
-import { Button } from '../../components/ui';
+import { parseMessageFromError } from '../../utils/common';
 
 type UpdateUserFunction = (value: string | string[]) => Promise<void>;
 
@@ -24,7 +24,15 @@ const SHARED_ACCOMODATION_PREFERENCES = [
   { label: 'Female Only', value: 'female only' },
 ];
 
-const SKILLS_EXAMPLES = ['javascript', 'woodworking', 'farming', 'cooking', 'gardening', 'plumbing', 'carpentry'];
+const SKILLS_EXAMPLES = [
+  'javascript',
+  'woodworking',
+  'farming',
+  'cooking',
+  'gardening',
+  'plumbing',
+  'carpentry',
+];
 
 const SettingsPage: FC = () => {
   const { user: initialUser, isAuthenticated, refetchUser } = useAuth();
@@ -90,7 +98,7 @@ const SettingsPage: FC = () => {
     } finally {
       setPhoneSaving(false);
     }
-  }
+  };
   const saveEmail = async (email: string) => {
     setEmailSaving(true);
     try {
@@ -104,7 +112,7 @@ const SettingsPage: FC = () => {
     } finally {
       setEmailSaving(false);
     }
-  }
+  };
 
   if (!isAuthenticated || !user) {
     return <PageNotFound error="Please log in to see this page." />;
@@ -149,29 +157,34 @@ const SettingsPage: FC = () => {
             <>
               <Button
                 onClick={() => saveEmail(user.email)}
-                isEnabled={ !emailSaving }
+                isEnabled={!emailSaving}
                 type="inline"
               >
                 {emailSaving ? 'Verifying...' : 'Verify Email'}
-              </Button> 
+              </Button>
               <Button
-                onClick={() => { setUser({ ...user, email: initialUser?.email || user.email }); toggleUpdateEmail(false) }}
+                onClick={() => {
+                  setUser({ ...user, email: initialUser?.email || user.email });
+                  toggleUpdateEmail(false);
+                }}
                 className="ml-4"
                 type="inline"
               >
                 Cancel
               </Button>
-            </>:
-            !emailSaved &&
-            <Button
-              onClick={() => toggleUpdateEmail(!updateEmail)}
-              type="inline"
-            >
-              Edit Email
-            </Button>
-          }
+            </>
+           : (
+            !emailSaved && (
+              <Button
+                onClick={() => toggleUpdateEmail(!updateEmail)}
+                type="inline"
+              >
+                Edit Email
+              </Button>
+            )
+          )}
         </div>
-        
+
         <Input
           label="Phone"
           isDisabled={!updatePhone}
@@ -180,35 +193,40 @@ const SettingsPage: FC = () => {
           successMessage={ phoneSaved ? 'You will receive a link to confirm via text.' : undefined }
           validation="phone"
         />
-        <div className="mt-4">
-          { updatePhone && !phoneSaved ?
+        <div>
+          {updatePhone && !phoneSaved ? (
             <>
               <Button
                 onClick={() => savePhone(user.phone)}
                 isEnabled={!phoneSaving}
                 type="inline"
               >
-                {phoneSaving ? 'Verifying...' : 'Verify Phone' }
+                {phoneSaving ? 'Verifying...' : 'Verify Phone'}
               </Button>
               <Button
-                onClick={() => { setUser({ ...user, phone: initialUser?.phone || user.phone }); toggleUpdatePhone(false) }}
+                onClick={() => {
+                  setUser({ ...user, phone: initialUser?.phone || user.phone });
+                  toggleUpdatePhone(false);
+                }}
                 className="ml-4"
                 type="inline"
               >
                 Cancel
               </Button>
-            </> :
-            !phoneSaved &&
-            <Button
-              onClick={() => toggleUpdatePhone(!updatePhone)}
-              type="inline"
-            >
-              Edit Phone
-            </Button>
-          }
+            </>
+          ) : (
+            !phoneSaved && (
+              <Button
+                onClick={() => toggleUpdatePhone(!updatePhone)}
+                type="inline"
+              >
+                Edit Phone
+              </Button>
+            )
+          )}
         </div>
 
-        <div className="md:w-72 relative mt-8">
+        <div className="md:w-72 relative mt-8 flex flex-col gap-6">
           <label className="font-medium text-complimentary-light" htmlFor="">
             Profile Picture
           </label>

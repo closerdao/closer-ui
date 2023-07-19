@@ -49,10 +49,10 @@ describe('Select accomodation type page', () => {
     expect(cards).toHaveLength(2);
     const cardTitle = screen.getByRole('heading', { name: /magical cave/i });
     const button1 = screen.getAllByRole('button', {
-      name: /sign in to book/i,
+      name: /log in to book/i,
     })[0];
     const button2 = screen.getAllByRole('button', {
-      name: /sign in to book/i,
+      name: /log in to book/i,
     })[1];
     expect(cardTitle).toBeInTheDocument();
     expect(button1).toBeEnabled();

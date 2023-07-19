@@ -27,10 +27,10 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const [isLoading, setLoading] = useState<boolean>(true);
   let errorTimeout: any;
 
-  const setError = useCallback((msg: string) => {
+  const setError = useCallback((msg: string | null) => {
     clearTimeout(errorTimeout);
     setErrorState(msg);
-    errorTimeout = setTimeout(() => setErrorState(null), 5000);
+    errorTimeout = setTimeout(() => setErrorState(null), 7000);
   }, []);
 
   async function loadUserFromCookies() {
