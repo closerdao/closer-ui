@@ -4,8 +4,7 @@ import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import { BigNumber, Contract } from 'ethers';
 
-import { WalletDispatch } from '../contexts/wallet';
-import { WalletState } from '../contexts/wallet';
+import { WalletDispatch, WalletState } from '../contexts/wallet';
 import { checkIfBookingEqBlockchain } from '../utils/helpers';
 import { useConfig } from './useConfig';
 

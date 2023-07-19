@@ -8,6 +8,7 @@ import CheckoutPayment from '../../../components/CheckoutPayment';
 import CheckoutTotal from '../../../components/CheckoutTotal';
 import PageError from '../../../components/PageError';
 import RedeemCredits from '../../../components/RedeemCredits';
+import { ErrorMessage } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
 import Checkbox from '../../../components/ui/Checkbox';
 import Heading from '../../../components/ui/Heading';
@@ -15,9 +16,11 @@ import HeadingRow from '../../../components/ui/HeadingRow';
 import ProgressBar from '../../../components/ui/ProgressBar';
 import Row from '../../../components/ui/Row';
 
+import { NextApiRequest } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
-import { NextApiRequest } from 'next';
+import PageNotAllowed from '../../401';
+import PageNotFound from '../../404';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
@@ -27,8 +30,6 @@ import { BookingSettings } from '../../../types/api';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, priceFormat } from '../../../utils/helpers';
-import PageNotAllowed from '../../401';
-import PageNotFound from '../../404';
 
 interface Props extends BaseBookingParams {
   listing: Listing;
@@ -45,7 +46,7 @@ const Checkout = ({
   settings,
   creditsBalance,
   error,
-  event
+  event,
 }: Props) => {
   const {
     utilityFiat,
@@ -59,6 +60,7 @@ const Checkout = ({
     ticketOption,
     eventPrice,
     total,
+    adults,
   } = booking || {};
 
   const { balanceAvailable } = useContext(WalletState);
@@ -69,8 +71,10 @@ const Checkout = ({
     ? balanceAvailable < rentalToken.val
     : false;
 
-  const canApplyCredits = rentalToken?.val &&
-    creditsBalance && creditsBalance >= rentalToken.val;
+  const canApplyCredits =
+    rentalToken?.val &&
+    creditsBalance &&
+    creditsBalance >= (rentalToken?.val as number) * duration * adults;
 
   const listingName = listing?.name;
 
@@ -79,19 +83,38 @@ const Checkout = ({
   const [updatedTotal, setUpdatedTotal] = useState(total);
   const [hasAppliedCredits, setHasAppliedCredits] = useState(false);
   const [creditsError, setCreditsError] = useState(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const goBack = () => {
     router.push(`/bookings/${booking._id}/summary`);
   };
-  const handleNext = () => {
-    router.push(`/bookings/${booking._id}/confirmation`);
+
+  const handleFreeBooking = async () => {
+    try {
+      await api.post('/bookings/payment', {
+        type: 'booking',
+        ticketOption,
+        total,
+        _id: booking._id,
+        email: user?.email,
+        name: user?.screenname,
+      });
+    } catch (error) {
+      setPaymentError(parseMessageFromError(error));
+    }
+
+    router.push(
+      `/bookings/${booking._id}/confirmation${
+        event?._id ? `?eventId=${event?._id}` : ''
+      }`,
+    );
   };
 
   const applyCredits = async () => {
     try {
-      setCreditsError(null)
+      setCreditsError(null);
       const res = await api.post(`/bookings/${booking._id}/update-payment`, {
-        useCredits: true, 
+        useCredits: true,
       });
       setUpdatedTotal(res.data.results.total);
       setUpdatedRentalFiat(res.data.results.rentalFiat);
@@ -164,20 +187,24 @@ const Checkout = ({
             </p>
 
             {process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' &&
-              canApplyCredits ? (
-                <RedeemCredits
-                  rentalFiat={rentalFiat}
-                  rentalToken={rentalToken || { val: 0, cur: 'TDF' }}
-                  applyCredits={applyCredits}
-                  hasAppliedCredits={hasAppliedCredits}
-                  creditsError={creditsError}
-                  className="my-12"
-                />
-              ) : null}
+            canApplyCredits &&
+            !useTokens ? (
+              <RedeemCredits
+                rentalFiat={rentalFiat}
+                rentalToken={rentalToken || { val: 0, cur: 'TDF' }}
+                duration={duration}
+                adults={adults}
+                applyCredits={applyCredits}
+                hasAppliedCredits={hasAppliedCredits}
+                creditsError={creditsError}
+                className="my-12"
+              />
+            ) : null}
 
             {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' &&
               rentalToken &&
-              rentalToken.val > 0 && (
+              rentalToken.val > 0 &&
+              useTokens && (
                 <div className="mt-4">
                   <BookingWallet
                     toPay={rentalToken.val}
@@ -228,10 +255,12 @@ const Checkout = ({
               eventId={event?._id}
             />
           ) : (
-            <Button className="booking-btn" onClick={handleNext}>
+            <Button className="booking-btn" onClick={handleFreeBooking}>
               {__('buttons_booking_request')}
             </Button>
           )}
+
+          {paymentError && <ErrorMessage error={paymentError} />}
         </div>
       </div>
     </>
@@ -265,16 +294,18 @@ Checkout.getInitialProps = async ({
       },
     ] = await Promise.all([
       api.get('/config/booking'),
-      booking.eventId && api.get(`/event/${booking.eventId}`, {
-        headers: req?.cookies?.access_token && {
-          Authorization: `Bearer ${req?.cookies?.access_token}`,
-        },
-      }),
-      booking.listing && api.get(`/listing/${booking.listing}`, {
-        headers: req?.cookies?.access_token && {
-          Authorization: `Bearer ${req?.cookies?.access_token}`,
-        },
-      }),
+      booking.eventId &&
+        api.get(`/event/${booking.eventId}`, {
+          headers: req?.cookies?.access_token && {
+            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          },
+        }),
+      booking.listing &&
+        api.get(`/listing/${booking.listing}`, {
+          headers: req?.cookies?.access_token && {
+            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          },
+        }),
       api.get('/carrots/balance', {
         headers: req?.cookies?.access_token && {
           Authorization: `Bearer ${req?.cookies?.access_token}`,

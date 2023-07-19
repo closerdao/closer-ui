@@ -123,7 +123,7 @@ const SettingsPage: FC = () => {
       <Head>
         <title>{user.screenname} | About me</title>
       </Head>
-      <div className="max-w-screen-sm mx-auto md:p-8 h-full main-content w-full flex flex-col gap-6 min-h-screen py-2">
+      <div className="max-w-screen-sm mx-auto md:p-8 h-full main-content w-full flex flex-col min-h-screen py-2 gap-10">
         <Heading>🤓 Your Info</Heading>
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-8">
@@ -148,17 +148,12 @@ const SettingsPage: FC = () => {
           label="Email"
           value={user.email}
           isDisabled={!updateEmail}
-          onChange={(e) => setUser({ ...user, email: e.target.value })}
-          successMessage={
-            emailSaved
-              ? 'You will receive a link to confirm via email.'
-              : undefined
-          }
-          className="mt-8"
+          onChange={e => setUser({ ...user, email:e.target.value })}
+          successMessage={emailSaved ? 'You will receive a link to confirm via email.' : undefined}
           validation="email"
         />
         <div>
-          {updateEmail && !emailSaved ? (
+          {updateEmail && !emailSaved ?
             <>
               <Button
                 onClick={() => saveEmail(user.email)}
@@ -178,7 +173,7 @@ const SettingsPage: FC = () => {
                 Cancel
               </Button>
             </>
-          ) : (
+           : (
             !emailSaved && (
               <Button
                 onClick={() => toggleUpdateEmail(!updateEmail)}
@@ -194,13 +189,8 @@ const SettingsPage: FC = () => {
           label="Phone"
           isDisabled={!updatePhone}
           value={user.phone}
-          onChange={(e) => setUser({ ...user, phone: e.target.value })}
-          successMessage={
-            phoneSaved
-              ? 'You will receive a link to confirm via text.'
-              : undefined
-          }
-          className="mt-8"
+          onChange={e => setUser({ ...user, phone:e.target.value })}
+          successMessage={ phoneSaved ? 'You will receive a link to confirm via text.' : undefined }
           validation="phone"
         />
         <div>
@@ -272,7 +262,6 @@ const SettingsPage: FC = () => {
           label="What is your superpower?"
           value={user?.preferences?.superpower}
           onChange={saveUserData('superpower') as any}
-          className="mt-8"
           isInstantSave={true}
           hasSaved={hasSaved}
           setHasSaved={setHasSaved}
@@ -280,7 +269,6 @@ const SettingsPage: FC = () => {
         <MultiSelect
           label="What skills do you have?"
           values={user?.preferences?.skills}
-          className="mt-8"
           onChange={saveUserData('skills')}
           options={SKILLS_EXAMPLES}
           placeholder="Pick or create yours"
@@ -302,7 +290,6 @@ const SettingsPage: FC = () => {
         <Input
           label="What do you need?"
           value={user?.preferences?.needs}
-          className="mt-8"
           onChange={saveUserData('needs') as any}
           isInstantSave={true}
           hasSaved={hasSaved}
@@ -311,7 +298,6 @@ const SettingsPage: FC = () => {
         <Input
           label="Anything we should know? Anything you would like to share?"
           value={user?.preferences?.moreInfo}
-          className="mt-8"
           onChange={saveUserData('moreInfo') as any}
           isInstantSave={true}
           hasSaved={hasSaved}

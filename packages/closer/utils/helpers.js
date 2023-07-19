@@ -288,11 +288,11 @@ export const getAccommodationCost = (
 export const getBookingType = (eventId, volunteerId) => {
   let bookingType;
   if (eventId) {
-    bookingType = 'event';
+    bookingType = '🎉 Event';
   } else if (volunteerId) {
-    bookingType = 'volunteer';
+    bookingType = '💪🏽 Volunteer';
   } else {
-    bookingType = 'stay';
+    bookingType = '🏡 Stay';
   }
   return bookingType;
 };

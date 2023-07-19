@@ -1,6 +1,9 @@
 import Head from 'next/head';
 
+import { useState } from 'react';
+
 import Bookings from '../../components/Bookings';
+import BookingsFilter from '../../components/BookingsFilter';
 import Heading from '../../components/ui/Heading';
 
 import PageNotFound from '../404';
@@ -9,24 +12,12 @@ import { __ } from '../../utils/helpers';
 
 const BookingsRequests = () => {
   const { user } = useAuth();
-  const filters = {
-    openBookings: user && {
-      where: {
-        status: ['pending'],
-        end: {
-          $gt: new Date(),
-        },
-      },
+
+  const [filter, setFilter] = useState({
+    where: {
+      end: { $gt: new Date() },
     },
-    paidBookings: user && {
-      where: {
-        status: ['paid'],
-        end: {
-          $gt: new Date(),
-        },
-      },
-    },
-  };
+  });
 
   if (!user || !user.roles.includes('space-host')) {
     return <PageNotFound error="User may not access" />;
@@ -41,15 +32,12 @@ const BookingsRequests = () => {
       <Head>
         <title>{__('booking_requests_title')}</title>
       </Head>
-      <div className="max-w-screen-lg mx-auto">
-        <section>
-          <Heading level={2}>{__('booking_requests_title')}</Heading>
-          <Bookings filter={filters.openBookings} />
-        </section>
-        <section>
-          <Heading level={2}>{__('paid_bookings_title')}</Heading>
-          <Bookings filter={filters.paidBookings} />
-        </section>
+      <div className="max-w-screen-lg mx-auto flex flex-col gap-10">
+        <Heading level={1}>{__('booking_requests_title')}</Heading>
+
+        <BookingsFilter setFilter={setFilter} />
+
+        <Bookings filter={filter} />
       </div>
     </>
   );
