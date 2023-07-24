@@ -49,12 +49,6 @@ const HomePage = ({ subscriptionPlans }: Props) => {
             <Link
               href="/subscriptions"
               type="submit"
-              onClick={() =>
-                event('click', {
-                  category: 'HomePage',
-                  label: 'Join the Dream',
-                })
-              }
               className="btn-primary btn-large"
             >
               JOIN THE DREAM
