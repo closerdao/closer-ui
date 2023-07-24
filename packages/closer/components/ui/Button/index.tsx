@@ -96,7 +96,6 @@ const Button = ({
         onClick={onClick}
         disabled={!isEnabled || isLoading}
         title={title}
-        // flex justify-center
         className={` 
         ${twMerge(
           buttonStyles({ type, color, isFullWidth, size, isEnabled }),
