@@ -1,8 +1,10 @@
 import { AppProps } from 'next/app';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import Script from 'next/script';
 
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
+
 import CookieConsent from 'react-cookie-consent';
 
 import { ErrorBoundary, Layout } from '@/components';
@@ -21,6 +23,7 @@ import {
   __,
   blockchainConfig,
 } from 'closer';
+import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import 'closer/public/styles.css';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
@@ -33,6 +36,15 @@ export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
 
 const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
   const { FACEBOOK_PIXEL_ID } = config || {};
+  const router = useRouter();
+  const { query } = router;
+  const referral = query.referral;
+
+  useEffect(() => {
+    if (referral) {
+      localStorage.setItem(REFERRAL_ID_LOCAL_STORAGE_KEY, referral as string);
+    }
+  }, [referral]);
 
   return (
     <>

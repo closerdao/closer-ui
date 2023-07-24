@@ -3,11 +3,13 @@ import Signup from '@/pages/signup';
 import { render, screen } from '@testing-library/react';
 import { AuthProvider } from 'closer';
 
+import { subscriptions } from '../../mocks/subscriptions';
+
 describe('Signup', () => {
-  it('should have sign up button enabled', () => {
+  it('should have proper heading', () => {
     render(
       <AuthProvider>
-        <Signup />
+        <Signup subscriptionPlans={subscriptions.plans} />
       </AuthProvider>,
     );
 
@@ -18,10 +20,10 @@ describe('Signup', () => {
   it('should have a Create account button disabled by default', () => {
     render(
       <AuthProvider>
-        <Signup />
+        <Signup subscriptionPlans={subscriptions.plans} />
       </AuthProvider>,
     );
-    const button = screen.getByRole('button', { name: /create account/i });
+    const button = screen.getByRole('button', { name: /sign up/i });
 
     expect(button).toBeDisabled();
   });

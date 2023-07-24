@@ -7906,6 +7906,11 @@ symbol-tree@^3.2.4:
   resolved "https://registry.npmjs.org/symbol-tree/-/symbol-tree-3.2.4.tgz"
   integrity sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw==
 
+tailwind-merge@^1.13.2:
+  version "1.13.2"
+  resolved "https://registry.yarnpkg.com/tailwind-merge/-/tailwind-merge-1.13.2.tgz#1d06c9e95ffda2320efc50ed33c65be0cda23091"
+  integrity sha512-R2/nULkdg1VR/EL4RXg4dEohdoxNUJGLMnWIQnPKL+O9Twu7Cn3Rxi4dlXkDzZrEGtR+G+psSXFouWlpTyLhCQ==
+
 tailwindcss@^3.0.7:
   version "3.2.7"
   resolved "https://registry.npmjs.org/tailwindcss/-/tailwindcss-3.2.7.tgz"

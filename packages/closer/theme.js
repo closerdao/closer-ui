@@ -19,6 +19,8 @@ module.exports = {
       failure: '#DB4726',
       success: '#58B741',
       pending: '#E8AB1B',
+      // 'system-success': '#58B741',
+      // 'system-warning': '#E8AB1B',
 
       // colors to review:
       'disabled': '#9C9C9C',
