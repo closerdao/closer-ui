@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
@@ -27,24 +28,33 @@ const Signup = ({ subscriptionPlans }: Props) => {
   const defaultSubscriptionPlan = subscriptionPlans.find(
     (plan: SubscriptionPlan) => plan.priceId === 'free',
   );
+  const router = useRouter();
+  const { referral } = router.query || {};
 
   useEffect(() => {
-    const referredBy = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
+    let referredBy = null;
+    if (referral) {
+      referredBy = referral;
+    } else {
+      referredBy = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
+    }
 
-    (async function getReferrer() {
-      try {
-        const res = await api.get(`/user/${referredBy}`);
-        const referrer = res.data.results;
-        if (referrer) {
-          const referrerPhotoUrl = referrer.photo
-            ? `${cdn}${referrer.photo}-profile-sm.jpg`
-            : null;
-          setReferrerName(referrer.screenname);
-          setReferrerPhoto(referrerPhotoUrl);
-        }
-      } catch (error) {}
-    })();
-  }, []);
+    if (referredBy) {
+      (async function getReferrer() {
+        try {
+          const res = await api.get(`/user/${referredBy}`);
+          const referrer = res.data.results;
+          if (referrer) {
+            const referrerPhotoUrl = referrer.photo
+              ? `${cdn}${referrer.photo}-profile-sm.jpg`
+              : null;
+            setReferrerName(referrer.screenname);
+            setReferrerPhoto(referrerPhotoUrl);
+          }
+        } catch (error) {}
+      })();
+    }
+  }, [router.query]);
 
   return (
     <>
