@@ -85,7 +85,7 @@ const SubscriptionsPage: NextPage<Props> = ({
     setUserActivePlan(selectedSubscription);
   }, [user]);
 
-  const handleNext = (priceId: string, hasVariants: boolean, slug: string) => {
+  const handleNext = (priceId: string, slug: string) => {
     if (!isAuthenticated) {
       // User has no account - must start with creating one.
       router.push(
@@ -104,13 +104,7 @@ const SubscriptionsPage: NextPage<Props> = ({
         )}`,
       );
     } else {
-      if (hasVariants) {
-        // User does not yet have a subscription and subscription has avriants - redirect to variant selection page
-        router.push(`/subscriptions/${slug}`);
-      } else {
-        // User does not yet have a subscription, we can show the checkout
-        router.push(`/subscriptions/summary?priceId=${priceId}`);
-      }
+      router.push(`/subscriptions/${slug}`);
     }
   };
 

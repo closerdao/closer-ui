@@ -97,7 +97,9 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   }, [isAuthenticated, isLoading]);
 
   const goBack = () => {
-    router.push('/subscriptions');
+    router.push(
+      `/subscriptions/${selectedPlan?.title.split(' ')[0].toLowerCase()}`,
+    );
   };
 
   const handleEditPlan = () => {
