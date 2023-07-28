@@ -33,7 +33,6 @@ const CheckoutForm = ({
   ticketOption,
   _id,
   buttonText,
-  buttonDisabled,
   email,
   name,
   message,
@@ -56,8 +55,6 @@ const CheckoutForm = ({
   const [error, setError] = useState(null);
   const [submitDisabled, setSubmitDisabled] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const isButtonDisabled =
-    !stripe || buttonDisabled || processing || isProcessingTokenPayment;
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -66,19 +63,11 @@ const CheckoutForm = ({
 
     if (hasAppliedCredits) {
       try {
-        const res = await payWithCredits();
-        const status = res.data.results.status;
-        if (status !== 'credits-paid') {
-          setProcessing(false);
-          setError(__('carrots_error_message'));
-          return;
-        }
+        await payWithCredits();
       } catch (error) {
         setError(error);
         console.error(error);
-      } finally {
-        setProcessing(false);
-      }
+      } 
     }
 
     if (prePayInTokens) {
@@ -169,7 +158,7 @@ const CheckoutForm = ({
           }
         } catch (err) {
           setError(err);
-        }
+        } 
       }
 
       // 3d secure NOT required for this payment
@@ -235,7 +224,9 @@ const CheckoutForm = ({
       {conditions}
       <div className="mt-8">
         <Button
-          isEnabled={!isButtonDisabled && !submitDisabled && hasComplied}
+          isEnabled={
+           !submitDisabled && hasComplied && !processing
+          }
           isSpinnerVisible={processing || isProcessingTokenPayment}
         >
           {renderButtonText()}
