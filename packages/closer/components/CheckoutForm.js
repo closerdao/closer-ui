@@ -68,16 +68,17 @@ const CheckoutForm = ({
       try {
         const res = await payWithCredits();
         const status = res.data.results.status;
-        if (status !== 'credits-paid') {
-          setProcessing(false);
-          setError(__('carrots_error_message'));
-          return;
-        }
+        console.log('status=', status);
+        // if (status !== 'credits-paid') {
+        //   setProcessing(false);
+        //   setError(__('carrots_error_message'));
+        //   return;
+        // }
       } catch (error) {
         setError(error);
         console.error(error);
       } finally {
-        setProcessing(false);
+        // setProcessing(false);
       }
     }
 
@@ -169,7 +170,7 @@ const CheckoutForm = ({
           }
         } catch (err) {
           setError(err);
-        }
+        } 
       }
 
       // 3d secure NOT required for this payment
@@ -234,9 +235,6 @@ const CheckoutForm = ({
       />
       {conditions}
       <div className="mt-8">
-        <div>processing = {processing.toString()}</div>
-        <div>submitDisabled = {submitDisabled.toString()}</div>
-        <div>hasComplied = {hasComplied.toString()}</div>
         <Button
           isEnabled={
            !submitDisabled && hasComplied && !processing
