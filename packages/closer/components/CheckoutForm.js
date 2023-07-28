@@ -114,6 +114,8 @@ const CheckoutForm = ({
         },
       });
 
+      console.log('createdPaymentMethod', createdPaymentMethod);
+
       if (createdPaymentMethod?.error) {
         setError(createdPaymentMethod.error || '');
         return;
