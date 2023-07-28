@@ -62,6 +62,7 @@ const CheckoutForm = ({
   const handleSubmit = async (event) => {
     event.preventDefault();
     setProcessing(true);
+    setError(null);
 
     if (hasAppliedCredits) {
       try {
@@ -105,6 +106,18 @@ const CheckoutForm = ({
         setError('No token returned from Stripe.');
         return;
       }
+      const createdPaymentMethod = await stripe?.createPaymentMethod({
+        type: 'card',
+        card: elements?.getElement(CardElement) || { token: '' },
+        billing_details: {
+          email,
+        },
+      });
+
+      if (createdPaymentMethod?.error) {
+        setError(createdPaymentMethod.error || '');
+        return;
+      }
 
       const {
         data: { results: payment },
@@ -123,12 +136,59 @@ const CheckoutForm = ({
           message,
           fields,
           volunteer,
+          paymentMethod: createdPaymentMethod?.paymentMethod.id,
         },
       );
 
-      if (onSuccess) {
-        setProcessing(false);
-        onSuccess(payment);
+      // 3d secure required for this payment
+      if (payment.paymentIntent.status === 'requires_action') {
+        try {
+          const confirmationResult = await stripe?.confirmCardPayment(
+            payment.paymentIntent.client_secret,
+          );
+          if (confirmationResult?.error) {
+            setError(confirmationResult?.error);
+          }
+          if (confirmationResult?.paymentIntent?.status === 'succeeded') {
+            const confirmationResponse = await api.post(
+              '/bookings/payment/confirmation',
+              {
+                paymentMethod: createdPaymentMethod?.paymentMethod.id,
+                paymentId: payment.paymentIntent.id,
+                bookingId: _id,
+                token: token.id,
+              },
+            );
+
+            if (confirmationResponse.status === 200) {
+              if (onSuccess) {
+                setProcessing(false);
+                onSuccess(payment);
+              }
+            }
+          }
+        } catch (err) {
+          setError(err);
+        }
+      }
+
+      // 3d secure NOT required for this payment
+      if (payment.paymentIntent.status === 'succeeded') {
+        const confirmationResponse = await api.post(
+          '/bookings/payment/confirmation',
+          {
+            paymentMethod: createdPaymentMethod?.paymentMethod.id,
+            paymentId: payment.paymentIntent.id,
+            bookingId: _id,
+            token: token.id,
+          },
+        );
+        if (confirmationResponse.status === 200) {
+          if (onSuccess) {
+            setProcessing(false);
+            onSuccess(payment);
+          }
+        }
       }
     } catch (err) {
       setProcessing(false);
@@ -138,6 +198,8 @@ const CheckoutForm = ({
           ? err.response.data.error
           : err.message;
       setError(errorMessage);
+    } finally {
+      setProcessing(false);
     }
   };
 
