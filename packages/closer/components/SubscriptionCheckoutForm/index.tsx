@@ -20,10 +20,10 @@ interface SubscriptionCheckoutFormProps {
 function SubscriptionCheckoutForm({
   userEmail,
   priceId,
-  monthlyCredits
+  monthlyCredits,
 }: SubscriptionCheckoutFormProps) {
   const [isSubmitEnabled, setIsSubmitEnabled] = useState(true);
-  const [error, setError] = useState<unknown>();
+  const [error, setError] = useState<any>();
   const [isLoading, setIsLoading] = useState(false);
   const [hasAcceptedConditions, setHasAcceptedConditions] = useState(false);
   const { refetchUser } = useAuth();
@@ -55,6 +55,7 @@ function SubscriptionCheckoutForm({
 
   const createSubscription = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError('');
     setIsLoading(true);
     try {
       const createdPaymentMethod = await stripe?.createPaymentMethod({
@@ -73,18 +74,58 @@ function SubscriptionCheckoutForm({
         email: userEmail,
         paymentMethod: createdPaymentMethod?.paymentMethod.id,
         priceId,
-        monthlyCredits
+        monthlyCredits,
       });
 
-      if (response.data.results.status === 'active') {
-        await refetchUser();
+      const subscriptionId = response.data.results.subscription;
 
-        router.push(
-          `/subscriptions/success?subscriptionId=${response.data.results.subscription}&priceId=${priceId}`,
-        );
+      // 3d secure required for this payment
+      if (response.data.results.status === 'requires_action') {
+        try {
+          const confirmationResult = await stripe?.confirmCardPayment(
+            response.data.results.clientSecret,
+          );
+          if (confirmationResult?.error) {
+            setError(confirmationResult?.error);
+          }
+          if (confirmationResult?.paymentIntent?.status === 'succeeded') {
+            const validationResponse = await api.post(
+              '/subscription/validation',
+              {
+                subscriptionId,
+                monthlyCredits,
+                paymentMethod: createdPaymentMethod?.paymentMethod.id,
+              },
+            );
+
+            if (validationResponse.data.results.status === 'succeeded') {
+              await refetchUser();
+              router.push(
+                `/subscriptions/success?subscriptionId=${subscriptionId}&priceId=${priceId}`,
+              );
+            }
+          }
+        } catch (err) {
+          setError(err);
+        }
+      }
+
+      // 3d secure NOT required for this payment
+      if (response.data.results.status === 'active') {
+        const validationResponse = await api.post('/subscription/validation', {
+          subscriptionId,
+          monthlyCredits,
+          paymentMethod: createdPaymentMethod?.paymentMethod.id,
+        });
+
+        if (validationResponse.data.results.status === 'succeeded') {
+          await refetchUser();
+          router.push(
+            `/subscriptions/success?subscriptionId=${subscriptionId}&priceId=${priceId}`,
+          );
+        }
       }
     } catch (err) {
-      console.log(err);
       setError(err);
     } finally {
       setIsLoading(false);
@@ -99,7 +140,7 @@ function SubscriptionCheckoutForm({
         options={cardElementOptions}
         className="w-full h-14 rounded-md bg-neutral px-4 py-4 mb-4"
       />
-      {typeof error === 'object' && <ErrorMessage error={error} />}
+      {error && <ErrorMessage error={error} />}
 
       <div className="my-8">
         <SubscriptionConditions
