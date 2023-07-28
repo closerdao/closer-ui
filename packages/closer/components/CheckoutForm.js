@@ -234,9 +234,6 @@ const CheckoutForm = ({
       />
       {conditions}
       <div className="mt-8">
-        <div>processing = {processing.toString()}</div>
-        <div>submitDisabled = {submitDisabled.toString()}</div>
-        <div>hasComplied = {hasComplied.toString()}</div>
         <Button
           isEnabled={
            !submitDisabled && hasComplied && !processing
