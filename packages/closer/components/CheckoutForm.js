@@ -56,8 +56,8 @@ const CheckoutForm = ({
   const [error, setError] = useState(null);
   const [submitDisabled, setSubmitDisabled] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const isButtonDisabled =
-    !stripe || buttonDisabled || processing || isProcessingTokenPayment;
+  // const isButtonDisabled =
+  //   !stripe || buttonDisabled || processing || isProcessingTokenPayment;
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -113,8 +113,6 @@ const CheckoutForm = ({
           email,
         },
       });
-
-      console.log('createdPaymentMethod', createdPaymentMethod);
 
       if (createdPaymentMethod?.error) {
         setError(createdPaymentMethod.error || '');
@@ -236,8 +234,13 @@ const CheckoutForm = ({
       />
       {conditions}
       <div className="mt-8">
+        <div>processing = {processing.toString()}</div>
+        <div>submitDisabled = {submitDisabled.toString()}</div>
+        <div>hasComplied = {hasComplied.toString()}</div>
         <Button
-          isEnabled={!isButtonDisabled && !submitDisabled && hasComplied}
+          isEnabled={
+           !submitDisabled && hasComplied && !processing
+          }
           isSpinnerVisible={processing || isProcessingTokenPayment}
         >
           {renderButtonText()}
