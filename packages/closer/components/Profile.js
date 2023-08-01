@@ -50,7 +50,7 @@ const Profile = ({ isDemo }) => {
           <div className="w-1/3 absolute right-4">
             <Button
               onClick={() => {
-                router.push(`/members/${user?.slug}`);
+                router.push('/settings');
               }}
               type="secondary"
               className="!w-[80px] !text-accent ml-auto"
