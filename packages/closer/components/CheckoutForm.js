@@ -33,7 +33,6 @@ const CheckoutForm = ({
   ticketOption,
   _id,
   buttonText,
-  buttonDisabled,
   email,
   name,
   message,
@@ -56,8 +55,6 @@ const CheckoutForm = ({
   const [error, setError] = useState(null);
   const [submitDisabled, setSubmitDisabled] = useState(true);
   const [processing, setProcessing] = useState(false);
-  // const isButtonDisabled =
-  //   !stripe || buttonDisabled || processing || isProcessingTokenPayment;
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -66,20 +63,11 @@ const CheckoutForm = ({
 
     if (hasAppliedCredits) {
       try {
-        const res = await payWithCredits();
-        const status = res.data.results.status;
-        console.log('status=', status);
-        // if (status !== 'credits-paid') {
-        //   setProcessing(false);
-        //   setError(__('carrots_error_message'));
-        //   return;
-        // }
+        await payWithCredits();
       } catch (error) {
         setError(error);
         console.error(error);
-      } finally {
-        // setProcessing(false);
-      }
+      } 
     }
 
     if (prePayInTokens) {
