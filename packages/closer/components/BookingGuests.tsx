@@ -54,7 +54,7 @@ const BookingGuests = ({
         {adults > 1 && (
           <div className="my-10 flex flex-row justify-between">
             <label htmlFor="separateBeds" className="text-md">
-              {__('bookings_does_need_double_bed')}
+              {__('bookings_does_prefer_single_beds')}
             </label>
             <Switch
               disabled={false}
