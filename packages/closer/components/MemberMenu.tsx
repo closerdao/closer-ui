@@ -11,7 +11,6 @@ import NavLink from './ui/NavLink';
 import Switcher from './ui/Switcher';
 
 const filterLinks = (option: string, roles: string[]) => {
-  console.log('roles=', links);
   switch (option) {
     case 'Guest':
     case 'member':
