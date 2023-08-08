@@ -1,17 +1,19 @@
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
 import ApplicationForm from '../../components/ApplicationForm';
 import SignupForm from '../../components/SignupForm';
-import { Card } from '../../components/ui';
+import { Card, ErrorMessage } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
+import { usePlatform } from '../../contexts/platform';
 import { SubscriptionPlan } from '../../types/subscriptions';
 import api, { cdn } from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
@@ -22,28 +24,40 @@ interface Props {
 }
 
 const Signup = ({ subscriptionPlans }: Props) => {
-  const [referrerName, setReferrerName] = useState<null | string>(null);
-  const [referrerPhoto, setReferrerPhoto] = useState<null | string>(null);
+  const { platform }: any = usePlatform();
+
+  const [error, setError] = useState(false);
+
   const defaultSubscriptionPlan = subscriptionPlans.find(
     (plan: SubscriptionPlan) => plan.priceId === 'free',
   );
 
-  useEffect(() => {
-    const referredBy = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
+  const router = useRouter();
+  const { referral } = router.query || {};
 
-    (async function getReferrer() {
-      try {
-        const res = await api.get(`/user/${referredBy}`);
-        const referrer = res.data.results;
-        if (referrer) {
-          const referrerPhotoUrl = referrer.photo
-            ? `${cdn}${referrer.photo}-profile-sm.jpg`
-            : null;
-          setReferrerName(referrer.screenname);
-          setReferrerPhoto(referrerPhotoUrl);
-        }
-      } catch (error) {}
-    })();
+  let referredBy: null | string = null;
+
+  if (typeof window !== 'undefined') {
+    if (referral) {
+      referredBy = referral as string;
+    } else {
+      referredBy = localStorage.getItem(
+        REFERRAL_ID_LOCAL_STORAGE_KEY,
+      ) as string;
+    }
+  }
+  const referrer = platform?.user.findOne(referredBy);
+
+  const loadData = async () => {
+    try {
+      await platform.user.getOne(referredBy);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   return (
@@ -87,15 +101,20 @@ const Signup = ({ subscriptionPlans }: Props) => {
                   })}
                 </ul>
 
-                {referrerName && (
+                {error && <ErrorMessage error={error} />}
+
+                {referrer && (
                   <div className="flex items-center gap-4 ">
                     {__('signup_form_referrer')}{' '}
                     <Card className="bg-accent-light py-2">
                       <div className="flex items-center gap-2">
-                        {referrerPhoto ? (
+                        {referrer ? (
                           <Image
-                            src={referrerPhoto}
-                            alt={referrerName}
+                            src={
+                              referrer &&
+                              `${cdn}${referrer.get('photo')}-profile-sm.jpg`
+                            }
+                            alt={''}
                             width={30}
                             height={30}
                             className="rounded-full"
@@ -103,7 +122,7 @@ const Signup = ({ subscriptionPlans }: Props) => {
                         ) : (
                           <FaUser className="text-success w-[3opx] h-[30px] " />
                         )}
-                        <span>{referrerName}</span>
+                        <span>{referrer.get('screenname')}</span>
                       </div>
                     </Card>
                   </div>
