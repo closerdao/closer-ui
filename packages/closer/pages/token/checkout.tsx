@@ -76,7 +76,7 @@ const TokenSaleCheckoutPage = () => {
     if (success) {
       setIsApproved(true);
     } else {
-      setWeb3Error(parseMessageFromError(error));
+      setWeb3Error(__('token_sale_approval_error'));
     }
     setIsMetamaskLoading(false);
   };
@@ -102,7 +102,7 @@ const TokenSaleCheckoutPage = () => {
         `/token/success?amountOfTokensPurchased=${tokens}&transactionId=${txHash}`,
       );
     } else {
-      setWeb3Error(parseMessageFromError(error));
+      setWeb3Error(__('token_sale_buy_error'));
       setIsMetamaskLoading(false);
     }
   };

@@ -521,7 +521,6 @@
   "subscriptions_pioneer_title": "Become a pioneer",
   "subscriptions_pioneer_intro_text": "With these subscription packages you can continuously support us and get some Carrots  in return. You can then use your Carrots to cover your Accommodation Fee at TDF. Wo oh! Experience living at TDF, with no specific dates or long-term commitment required. Come!",
   "subscriptions_credits_included": "carrots included",
-  
   "referrals_heading": "Referrals",
   "referrals_subheading": "Invite your friends and earn 🥕 carrots",
   "referrals_description_heading": "🏆 Description & Rewards",
@@ -538,8 +537,6 @@
   "referrals_earned": "Earned",
   "referrals_earned_by_friends": "Earned By Friends",
   "referrals_link_copied": "Link copied!",
-  
-
   "pricing_and_product_heading_1": "One regenerative co-living.",
   "pricing_and_product_heading_2": "Four paths leading to the same",
   "pricing_and_product_heading_3": "beautiful dream.",
@@ -709,6 +706,8 @@
   "token_sale_ceur_disclaimer": "Make sure you have enough cEUR balance in your wallet",
   "token_sale_complete_guide": "Complete written guide",
   "token_sale_complete_guide_link": "https://drive.google.com/drive/folders/1MkGLpHBFvVxU0VOzN0L4R-SKpVg12tKX?usp=sharing",
+  "token_sale_approval_error": "Error approving CEUR. Please, make sure the amount to approve you entered is ~5% greater than total.",
+  "token_sale_buy_error": "Error purchasing CEUR. Please make sure you have sufficient CEUR balance and CELO balance to pay gas fees.",
   "cookie_consent_text": "We use cookies to improve your experience and analyse the use of our web site.",
   "cookie_consent_text_link": "Read cookie policy",
   "cookie_consent_button": "Accept and close",
