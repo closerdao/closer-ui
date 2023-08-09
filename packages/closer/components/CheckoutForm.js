@@ -49,6 +49,7 @@ const CheckoutForm = ({
   isProcessingTokenPayment = false,
   children: conditions,
   hasComplied,
+  buttonDisabled
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -225,7 +226,7 @@ const CheckoutForm = ({
       <div className="mt-8">
         <Button
           isEnabled={
-           !submitDisabled && hasComplied && !processing
+           !submitDisabled && hasComplied && !processing && !buttonDisabled
           }
           isSpinnerVisible={processing || isProcessingTokenPayment}
         >
