@@ -92,7 +92,7 @@
   "bookings_checkout_step_total_title": "Total",
   "bookings_checkout_step_payment_title": "Payment",
   "bookings_checkout_step_payment_button": "Pay",
-  "bookings_checkout_step_wallet_disclaimer": "I acknowledge that my tokens are being staked for 1 year upon payment.",
+  "bookings_checkout_step_wallet_disclaimer": "I acknowledge that: (1) my tokens are being staked for 1 year upon payment, (2) token refund is not currently available.",
   "bookings_checkout_step_accomodation_not_enough_balance": "You don't have enough token to pay for your accommodation.",
   "bookings_summary_step_title": "Summary",
   "bookings_summary_step_dates_title": "Your Stay",
@@ -118,6 +118,10 @@
   "bookings_confirmation_step_volunteer_application_button": "View application",
   "bookings_confirmation_step_you_are_coming": "You are coming to",
   "bookings_select_dates_button": "Select dates",
+  "bookings_does_prefer_single_beds": "I prefer single beds (applies to private accommodation)",
+  "bookings_heading_extras": "Extras",
+  "bookings_pickup": "Pick me up from the train/bus station",
+  "bookings_pickup_disclaimer": "Paid in cash ~€5-15",
   "buttons_select": "Select",
   "buttons_back": "< Back",
   "buttons_back_to": "< Back to ",
@@ -313,6 +317,8 @@
   "booking_card_feedback_button": "Give us your feedback",
   "booking_card_payment_utility": "Payment Utility Cost",
   "booking_card_payment_event": "Event Cost",
+  "booking_card_pickup_needed": "Pickup needed",
+  "booking_card_separate_beds_needed": "Single beds needed",
   "bookings_id": "Booking #",
   "bookings_edit_slug_title": "Edit",
   "bookings_edit_slug_not_found": "Event_not_found",
@@ -716,6 +722,7 @@
   "user_data_dream": "Dream:",
   "user_data_more_info": "More info:",
   "user_data_subscription": "Subscription plan:",
+  "report_a_bug": "Report a Bug",
 
   "generic_edit_button": "Edit"
 }

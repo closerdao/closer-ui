@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
-import { trackEvent } from './Analytics';
 
 const attemptSignup = async (event, request) => {
   event.preventDefault();
@@ -34,7 +33,6 @@ const Newsletter = ({ placement, ctaText, className, onSuccess }) => {
               tags: [placement, router.asPath, `ref:${referrer}`],
             })
               .then(() => {
-                trackEvent(placement, 'Lead');
                 setSignupCompleted(true);
                 setSignupError(null);
                 localStorage.setItem('signupCompleted', true);
@@ -43,7 +41,6 @@ const Newsletter = ({ placement, ctaText, className, onSuccess }) => {
                 }
               })
               .catch((err) => {
-                trackEvent(placement, 'LeadError');
                 setSignupError(
                   (err.response &&
                     err.response.data &&

@@ -17,10 +17,8 @@ export const Footer: FC = () => (
         >
           braulioamado
         </a>
-        . Illustrations by Silvia Bastos. Platform developed by{' '}
-        <a href="https://closer.earth">Closer</a>.{' '}
-        Campaign designed by{' '}
-        <a href="https://zebragrowth.com/">Zebra</a>.
+        . Platform developed by{' '}
+        <a href="https://closer.earth">Closer</a>.
       </p>
 
       <p><Link href='/pdf/TDF-PP.pdf'>Privacy policy</Link></p>
