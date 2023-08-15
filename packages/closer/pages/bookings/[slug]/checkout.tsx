@@ -192,8 +192,6 @@ const Checkout = ({
               <RedeemCredits
                 rentalFiat={rentalFiat}
                 rentalToken={rentalToken || { val: 0, cur: 'TDF' }}
-                duration={duration}
-                adults={adults}
                 applyCredits={applyCredits}
                 hasAppliedCredits={hasAppliedCredits}
                 creditsError={creditsError}
