@@ -97,6 +97,7 @@ export { default as NationalityPage } from './pages/token/nationality';
 export { default as TokenSaleSuccessPage } from './pages/token/success';
 export { default as TokenCounterPage } from './pages/token/token-counter';
 export { default as YourInfoPage } from './pages/token/your-info';
+export { default as ResourcesPage } from './pages/resources';
 
 // Types
 export * from './types/';

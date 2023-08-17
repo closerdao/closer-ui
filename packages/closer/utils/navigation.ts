@@ -59,4 +59,9 @@ export const links = [
     url: '/subscriptions',
     enabled: process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true',
   },
+  {
+    label: 'Resources',
+    url: '/resources',
+    enabled: 'true',
+  },
 ];
