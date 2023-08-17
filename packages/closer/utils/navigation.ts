@@ -74,6 +74,6 @@ export const links = [
   {
     label: 'Resources',
     url: '/resources',
-    enabled: 'true',
+    enabled: true,
   },
 ];
