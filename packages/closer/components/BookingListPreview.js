@@ -62,6 +62,8 @@ const BookingListPreview = ({
     eventId,
     volunteerId,
     eventFiat,
+    doesNeedPickup,
+    doesNeedSeparateBeds,
   } = bookingMapItem.toJS();
   const router = useRouter();
 
@@ -189,6 +191,21 @@ const BookingListPreview = ({
                 </span>
               )}
             </p>
+          </div>
+        )}
+
+        {doesNeedPickup && doesNeedPickup === true && (
+          <div>
+            <p className="card-feature">{__('booking_card_pickup_needed')}</p>
+            <p>✅</p>
+          </div>
+        )}
+        {doesNeedSeparateBeds && doesNeedSeparateBeds === true && (
+          <div>
+            <p className="card-feature">
+              {__('booking_card_separate_beds_needed')}
+            </p>
+            <p>✅</p>
           </div>
         )}
       </div>

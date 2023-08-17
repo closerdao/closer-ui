@@ -18,6 +18,8 @@ export interface BaseBookingParams {
   discountCode?: string;
   ticketOption?: TicketOption
   useTokens?: boolean | undefined;
+  doesNeedPickup?: boolean | undefined;
+  doesNeedSeparateBeds?: boolean | undefined;
 }
 
 export type Listing = {

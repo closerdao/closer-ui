@@ -1,5 +1,10 @@
 export const links = [
   {
+    label: 'Subscriptions',
+    url: '/subscriptions',
+    enabled: process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true',
+  },
+  {
     label: 'Events',
     url: '/events',
     enabled: true,
@@ -27,14 +32,14 @@ export const links = [
     enabled: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
   },
   {
+    label: '$TDF token',
+    url: '/token',
+    enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
+  },
+  {
     label: 'My bookings',
     url: '/bookings',
     enabled: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
-  },
-  {
-    label: 'Settings',
-    url: '/settings',
-    enabled: true,
   },
   {
     label: 'Refer a friend',
@@ -49,15 +54,22 @@ export const links = [
     roles: ['member'],
   },
   {
-    label: 'Admin',
+    label: 'User list',
     url: '/admin',
     enabled: true,
     roles: ['admin'],
   },
   {
-    label: 'Subscriptions',
-    url: '/subscriptions',
-    enabled: process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true',
+    label: 'New event',
+    url: '/events/create',
+    enabled: true,
+    roles: ['event-creator'],
+  },
+  {
+    label: 'New volunteer',
+    url: '/volunteer/create',
+    enabled: true,
+    roles: ['steward'],
   },
   {
     label: 'Resources',

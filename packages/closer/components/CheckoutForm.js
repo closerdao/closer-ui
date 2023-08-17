@@ -33,7 +33,6 @@ const CheckoutForm = ({
   ticketOption,
   _id,
   buttonText,
-  buttonDisabled,
   email,
   name,
   message,
@@ -50,34 +49,26 @@ const CheckoutForm = ({
   isProcessingTokenPayment = false,
   children: conditions,
   hasComplied,
+  buttonDisabled
 }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [error, setError] = useState(null);
   const [submitDisabled, setSubmitDisabled] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const isButtonDisabled =
-    !stripe || buttonDisabled || processing || isProcessingTokenPayment;
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setProcessing(true);
+    setError(null);
 
     if (hasAppliedCredits) {
       try {
-        const res = await payWithCredits();
-        const status = res.data.results.status;
-        if (status !== 'credits-paid') {
-          setProcessing(false);
-          setError(__('carrots_error_message'));
-          return;
-        }
+        await payWithCredits();
       } catch (error) {
         setError(error);
         console.error(error);
-      } finally {
-        setProcessing(false);
-      }
+      } 
     }
 
     if (prePayInTokens) {
@@ -105,6 +96,18 @@ const CheckoutForm = ({
         setError('No token returned from Stripe.');
         return;
       }
+      const createdPaymentMethod = await stripe?.createPaymentMethod({
+        type: 'card',
+        card: elements?.getElement(CardElement) || { token: '' },
+        billing_details: {
+          email,
+        },
+      });
+
+      if (createdPaymentMethod?.error) {
+        setError(createdPaymentMethod.error || '');
+        return;
+      }
 
       const {
         data: { results: payment },
@@ -123,12 +126,59 @@ const CheckoutForm = ({
           message,
           fields,
           volunteer,
+          paymentMethod: createdPaymentMethod?.paymentMethod.id,
         },
       );
 
-      if (onSuccess) {
-        setProcessing(false);
-        onSuccess(payment);
+      // 3d secure required for this payment
+      if (payment.paymentIntent.status === 'requires_action') {
+        try {
+          const confirmationResult = await stripe?.confirmCardPayment(
+            payment.paymentIntent.client_secret,
+          );
+          if (confirmationResult?.error) {
+            setError(confirmationResult?.error);
+          }
+          if (confirmationResult?.paymentIntent?.status === 'succeeded') {
+            const confirmationResponse = await api.post(
+              '/bookings/payment/confirmation',
+              {
+                paymentMethod: createdPaymentMethod?.paymentMethod.id,
+                paymentId: payment.paymentIntent.id,
+                bookingId: _id,
+                token: token.id,
+              },
+            );
+
+            if (confirmationResponse.status === 200) {
+              if (onSuccess) {
+                setProcessing(false);
+                onSuccess(payment);
+              }
+            }
+          }
+        } catch (err) {
+          setError(err);
+        } 
+      }
+
+      // 3d secure NOT required for this payment
+      if (payment.paymentIntent.status === 'succeeded') {
+        const confirmationResponse = await api.post(
+          '/bookings/payment/confirmation',
+          {
+            paymentMethod: createdPaymentMethod?.paymentMethod.id,
+            paymentId: payment.paymentIntent.id,
+            bookingId: _id,
+            token: token.id,
+          },
+        );
+        if (confirmationResponse.status === 200) {
+          if (onSuccess) {
+            setProcessing(false);
+            onSuccess(payment);
+          }
+        }
       }
     } catch (err) {
       setProcessing(false);
@@ -138,6 +188,8 @@ const CheckoutForm = ({
           ? err.response.data.error
           : err.message;
       setError(errorMessage);
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -173,7 +225,9 @@ const CheckoutForm = ({
       {conditions}
       <div className="mt-8">
         <Button
-          isEnabled={!isButtonDisabled && !submitDisabled && hasComplied}
+          isEnabled={
+           !submitDisabled && hasComplied && !processing && !buttonDisabled
+          }
           isSpinnerVisible={processing || isProcessingTokenPayment}
         >
           {renderButtonText()}

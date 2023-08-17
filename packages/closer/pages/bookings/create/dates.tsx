@@ -6,6 +6,7 @@ import BookingDates from '../../../components/BookingDates/BookingDates';
 import BookingGuests from '../../../components/BookingGuests';
 import CurrencySwitch from '../../../components/CurrencySwitch';
 import PageError from '../../../components/PageError';
+import Switch from '../../../components/Switch';
 import TicketOptions from '../../../components/TicketOptions';
 import BackButton from '../../../components/ui/BackButton';
 import Button from '../../../components/ui/Button';
@@ -153,6 +154,8 @@ const DatesSelector: NextPage<Props> = ({
   );
   const [selectedTicketOption, selectTicketOption] = useState<any>(null);
   const [discountCode, setDiscountCode] = useState('');
+  const [doesNeedPickup, setDoesNeedPickup] = useState(false);
+  const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
 
   useEffect(() => {
     setStartDate(savedStartDate as string);
@@ -174,6 +177,8 @@ const DatesSelector: NextPage<Props> = ({
         ...(volunteerId && { volunteerId: volunteerId as string }),
         ticketOption: selectedTicketOption?.name,
         discountCode: discountCode,
+        doesNeedPickup: String(doesNeedPickup),
+        doesNeedSeparateBeds: String(doesNeedSeparateBeds),
       };
 
       if (data.start === data.end || selectedTicketOption?.isDayTicket) {
@@ -201,6 +206,8 @@ const DatesSelector: NextPage<Props> = ({
           discountCode: data.discountCode,
           isDayTicket: true,
           children: kids,
+          doesNeedPickup,
+          doesNeedSeparateBeds,
         });
         router.push(`/bookings/${newBooking._id}/questions`);
       } else {
@@ -281,7 +288,31 @@ const DatesSelector: NextPage<Props> = ({
             setKids={setKids}
             setInfants={setInfants}
             setPets={setPets}
+            doesNeedSeparateBeds={doesNeedSeparateBeds}
+            setDoesNeedSeparateBeds={setDoesNeedSeparateBeds}
           />
+
+          <div>
+            <HeadingRow>
+              <span className="mr-2">➕</span>
+              <span>{__('bookings_heading_extras')}</span>
+            </HeadingRow>
+            <div className="my-10 flex flex-row justify-between flex-wrap">
+              <label htmlFor="separateBeds" className="text-md">
+                {__('bookings_pickup')}
+              </label>
+              <Switch
+                disabled={false}
+                name="pickup"
+                label=""
+                onChange={setDoesNeedPickup}
+                checked={doesNeedPickup}
+                />
+              <div className='w-full text-xs'>{__('bookings_pickup_disclaimer')}</div>
+            </div>
+                
+          </div>
+
           {handleNextError && (
             <div className="error-box">{handleNextError}</div>
           )}

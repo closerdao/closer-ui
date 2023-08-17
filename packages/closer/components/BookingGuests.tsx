@@ -1,8 +1,20 @@
-import PropTypes from 'prop-types';
-
 import { __ } from '../utils/helpers';
 import Counter from './Counter';
+import Switch from './Switch';
 import HeadingRow from './ui/HeadingRow';
+
+interface Props {
+  adults: number;
+  kids: number;
+  infants: number;
+  pets: number;
+  setAdults: (value: number) => void;
+  setKids: (value: number) => void;
+  setInfants: (value: number) => void;
+  setPets: (value: number) => void;
+  doesNeedSeparateBeds?: boolean;
+  setDoesNeedSeparateBeds?: (value: boolean) => void;
+}
 
 const BookingGuests = ({
   adults,
@@ -13,7 +25,9 @@ const BookingGuests = ({
   setKids,
   setInfants,
   setPets,
-}) => {
+  doesNeedSeparateBeds,
+  setDoesNeedSeparateBeds,
+}: Props) => {
   return (
     <div>
       <HeadingRow>
@@ -37,20 +51,23 @@ const BookingGuests = ({
           <p className="flex-1">{__('bookings_dates_step_guests_pets')}</p>
           <Counter value={pets} setFn={setPets} minValue={0} />
         </div>
+        {adults > 1 && (
+          <div className="my-10 flex flex-row justify-between">
+            <label htmlFor="separateBeds" className="text-md">
+              {__('bookings_does_prefer_single_beds')}
+            </label>
+            <Switch
+              disabled={false}
+              name="separateBeds"
+              label=""
+              onChange={setDoesNeedSeparateBeds}
+              checked={doesNeedSeparateBeds}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
-};
-
-BookingGuests.propTypes = {
-  adults: PropTypes.number,
-  kids: PropTypes.number,
-  infants: PropTypes.number,
-  pets: PropTypes.number,
-  setAdults: PropTypes.func,
-  setKids: PropTypes.func,
-  setInfants: PropTypes.func,
-  setPets: PropTypes.func,
 };
 
 export default BookingGuests;

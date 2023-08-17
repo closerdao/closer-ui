@@ -57,8 +57,23 @@ const Booking = ({ booking, error }) => {
           </p>
           <p>
             {__('bookings_total')}
-            <b>{booking.total ? priceFormat(booking.total?.val, booking.total?.cur) : 0}</b>
+            <b>
+              {booking.total ? (
+                <>
+                  {priceFormat(booking.total?.val, booking.total?.cur)},{' '}
+                  {booking.total
+                    ? priceFormat(
+                        booking.rentalToken?.val,
+                        booking.rentalToken?.cur,
+                      )
+                    : 0}
+                </>
+              ) : (
+                0
+              )}
+            </b>
           </p>
+
           <p>
             {__('bookings_id')} <b>{booking._id}</b>
           </p>

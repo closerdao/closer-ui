@@ -3,8 +3,10 @@ import { useRouter } from 'next/router';
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingStepsInfo from '../../../components/BookingStepsInfo';
 import ListingCard from '../../../components/ListingCard';
-import ProgressBar from '../../../components/ui/ProgressBar';
 import Heading from '../../../components/ui/Heading';
+import ProgressBar from '../../../components/ui/ProgressBar';
+
+import { ParsedUrlQuery } from 'querystring';
 
 import PageNotFound from '../../404';
 import { blockchainConfig } from '../../../config_blockchain';
@@ -13,7 +15,6 @@ import { useAuth } from '../../../contexts/auth';
 import { BaseBookingParams, Listing } from '../../../types';
 import api from '../../../utils/api';
 import { __, getBookingType } from '../../../utils/helpers';
-import { ParsedUrlQuery } from 'querystring';
 
 interface Props extends BaseBookingParams {
   listings: Listing[];
@@ -35,6 +36,8 @@ const AccomodationSelector = ({
   volunteerId,
   ticketOption,
   discountCode,
+  doesNeedPickup,
+  doesNeedSeparateBeds,
 }: Props) => {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
@@ -58,6 +61,8 @@ const AccomodationSelector = ({
 
         ...(eventId && { eventId, ticketOption }),
         ...(volunteerId && { volunteerId }),
+        doesNeedPickup,
+        doesNeedSeparateBeds,
       });
       if (volunteerId) {
         router.push(`/bookings/${newBooking._id}/summary`);
@@ -74,7 +79,7 @@ const AccomodationSelector = ({
     return <PageNotFound />;
   }
   if (error) {
-    return <PageNotFound error={ error } />;
+    return <PageNotFound error={error} />;
   }
 
   if (!start || !adults || !end) {
@@ -141,7 +146,11 @@ const AccomodationSelector = ({
   );
 };
 
-AccomodationSelector.getInitialProps = async ({ query }: { query: ParsedUrlQuery } ) => {
+AccomodationSelector.getInitialProps = async ({
+  query,
+}: {
+  query: ParsedUrlQuery;
+}) => {
   try {
     const {
       start,
@@ -155,7 +164,8 @@ AccomodationSelector.getInitialProps = async ({ query }: { query: ParsedUrlQuery
       volunteerId,
       ticketOption,
       discountCode,
-      
+      doesNeedPickup,
+      doesNeedSeparateBeds,
     }: BaseBookingParams = query || {};
     const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
     const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
@@ -189,12 +199,14 @@ AccomodationSelector.getInitialProps = async ({ query }: { query: ParsedUrlQuery
       volunteerId,
       ticketOption,
       discountCode,
+      doesNeedPickup,
+      doesNeedSeparateBeds,
     };
   } catch (err: any) {
     console.log(err);
     return {
-      error: err.response?.data?.error || err.message
-    }
+      error: err.response?.data?.error || err.message,
+    };
   }
 };
 
