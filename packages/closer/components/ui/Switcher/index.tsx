@@ -4,14 +4,15 @@ interface Props {
   options: string[] | null;
   selectedOption: string;
   setSelectedOption: Dispatch<SetStateAction<string>>;
+  optionsTitles?: string[]
 }
 
-const Switcher = ({ options, selectedOption, setSelectedOption }: Props) => {
+const Switcher = ({ options, selectedOption, setSelectedOption, optionsTitles }: Props) => {
   return (
     <>
       {options && (
         <div className="border border-gray-600 rounded-full w-full flex p-[2px]">
-          {options?.map((option) => (
+          {options?.map((option, i) => (
             <button
               disabled={option === selectedOption}
               onClick={() => {
@@ -22,7 +23,7 @@ const Switcher = ({ options, selectedOption, setSelectedOption }: Props) => {
               }`}
               key={option}
             >
-              {option}
+              {optionsTitles ? optionsTitles[i] : option}
             </button>
           ))}
         </div>

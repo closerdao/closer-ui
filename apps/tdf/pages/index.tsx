@@ -11,6 +11,7 @@ import { Button, Card, Heading, Tag, useAuth } from 'closer';
 import { SubscriptionPlan } from 'closer/types/subscriptions';
 import api from 'closer/utils/api';
 import { __ } from 'closer/utils/helpers';
+import { event } from 'nextjs-google-analytics';
 
 const loadTime = new Date();
 
@@ -50,6 +51,12 @@ const HomePage = ({ subscriptionPlans }: Props) => {
               href="/subscriptions"
               type="submit"
               className="btn-primary btn-large"
+              onClick={() =>
+                event('click', {
+                  category: 'HomePage',
+                  label: 'Join the Dream',
+                })
+              }
             >
               JOIN THE DREAM
             </Link>
@@ -63,6 +70,14 @@ const HomePage = ({ subscriptionPlans }: Props) => {
                   target="_blank"
                   type="submit"
                   className="btn-primary-light md:text-xl"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    event('click', {
+                      category: 'HomePage',
+                      label: 'Download Investor Pack',
+                    });
+                    document?.getElementById('subscribe')?.scrollIntoView();
+                  }}
                 >
                   Download Investor pack
                 </Link>
