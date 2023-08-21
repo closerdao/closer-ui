@@ -64,8 +64,8 @@ const RedeemCredits = ({
           </>
         ) : (
           <div className="text-system-success font-bold">
-            🥕 {(rentalToken?.val as number) }{' '}
-            {(rentalToken?.val as number)  === 1
+            🥕 {rentalToken?.val as number}{' '}
+            {(rentalToken?.val as number) === 1
               ? __('carrots_success_message_singular')
               : __('carrots_success_message')}
           </div>
