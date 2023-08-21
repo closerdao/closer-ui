@@ -218,6 +218,7 @@
   "listing_preview_private": "This is a private unit",
   "listing_preview_beds": "This is a shared space with up to %s beds",
   "listing_preview_sign_in_to_book": "Log in to book",
+  "listing_preview_max_beds": "can accommodate up to %s people.",
   "member_home_title": "Aloha",
   "member_home_add_channel": "+add-channel",
   "member_list_see_profile": "See profile",
