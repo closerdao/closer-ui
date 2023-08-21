@@ -15,7 +15,7 @@ const Checkbox = ({
   id,
 }: CheckboxProps) => {
   return (
-    <div className={`flex items-top gap-3 w-full mb-2 ${className}`}>
+    <div className={`flex items-top gap-3 mb-2 ${className}`}>
       <input
         id={id}
         type="checkbox"

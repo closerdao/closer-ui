@@ -55,7 +55,7 @@ export const links = [
   },
   {
     label: 'User list',
-    url: '/admin',
+    url: '/admin/manage-users',
     enabled: true,
     roles: ['admin'],
   },

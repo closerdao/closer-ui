@@ -10,8 +10,6 @@ interface Props {
   hasAppliedCredits?: boolean;
   creditsError?: string | null | undefined;
   isDemo?: boolean;
-  duration?: number;
-  adults?: number;
 }
 
 const RedeemCredits = ({
@@ -22,8 +20,6 @@ const RedeemCredits = ({
   hasAppliedCredits,
   creditsError,
   isDemo,
-  duration=1,
-  adults=1,
 }: Props) => {
   return (
     <div className={`${className ? className : ''}`}>
@@ -44,10 +40,10 @@ const RedeemCredits = ({
                 <Heading level={4}>
                   {isDemo
                     ? 1
-                    : (rentalToken?.val as number) * duration * adults}
+                    : (rentalToken?.val as number) }
                 </Heading>
                 <div className="text-xs">
-                  {(rentalToken?.val as number) * duration * adults === 1 || isDemo
+                  {(rentalToken?.val as number)  === 1 || isDemo
                     ? __('carrots_carrots_to_redeem_singular')
                     : __('carrots_carrots_to_redeem')}
                 </div>
@@ -68,8 +64,8 @@ const RedeemCredits = ({
           </>
         ) : (
           <div className="text-system-success font-bold">
-            🥕 {(rentalToken?.val as number) * duration * adults}{' '}
-            {(rentalToken?.val as number) * duration * adults === 1
+            🥕 {(rentalToken?.val as number) }{' '}
+            {(rentalToken?.val as number)  === 1
               ? __('carrots_success_message_singular')
               : __('carrots_success_message')}
           </div>

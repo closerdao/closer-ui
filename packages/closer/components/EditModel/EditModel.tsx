@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __, getSample } from '../../utils/helpers';
+import { trackEvent } from '../Analytics';
 import DateTimePicker from '../DateTimePicker';
 import FormField from '../FormField';
 import Tabs from '../Tabs';
@@ -132,6 +133,7 @@ const EditModel: FC<Props> = ({
       validate(updatedData);
       const method = id ? 'patch' : 'post';
       const route = id ? `${endpoint}/${id}` : endpoint;
+      trackEvent(`EditModel:${endpoint}:${id ? id : 'new'}`, method);
       const {
         data: { results: savedData },
       } = await api[method](route, updatedData);
@@ -150,6 +152,7 @@ const EditModel: FC<Props> = ({
           `Attempting to delete ${endpoint} but no _id provided.`,
         );
       }
+      trackEvent(`EditModel:${endpoint}:${id ? id : 'new'}`, 'delete');
       await api.delete(`${endpoint}/${data._id}`);
       if (onDelete) {
         onDelete();
