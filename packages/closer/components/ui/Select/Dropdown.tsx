@@ -53,8 +53,8 @@ const Dropdown: FC<DropdownProps> = React.memo(
               {props.dataItem.label}
             </div>
           )}
-          className=" "
-          containerClassName={`border-2  ${className}`}
+          className=""
+          containerClassName={` border-2  ${className}`}
         />
       </div>
     );

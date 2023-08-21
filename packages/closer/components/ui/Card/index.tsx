@@ -1,4 +1,5 @@
 import React from 'react';
+import { twMerge } from 'tailwind-merge';
 
 interface CardProps {
   children: React.ReactNode;
@@ -8,7 +9,7 @@ interface CardProps {
 const Card = ({ children, className }: CardProps) => {
   return (
     <div
-      className={`rounded-md shadow-xl p-4 flex flex-col justify-between gap-4 ${className || ''}`}
+      className={`${twMerge('rounded-md shadow-xl p-4 flex flex-col justify-between gap-4', className || '')}`}
     >
       {children}
     </div>
