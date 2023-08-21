@@ -14,6 +14,7 @@ const Dropdown: FC<DropdownProps> = React.memo(
     className,
     dataTestId,
     isDisabled,
+    size,
   }) => {
     const onChangeRef = useRef(onChange);
     if (onChange !== onChangeRef.current) {
@@ -53,8 +54,10 @@ const Dropdown: FC<DropdownProps> = React.memo(
               {props.dataItem.label}
             </div>
           )}
-          className=""
-          containerClassName={` border-2  ${className}`}
+          className=" "
+          containerClassName={`${
+            size === 'large' ? 'py-3.5' : ''
+          } border-2  ${className}`}
         />
       </div>
     );
