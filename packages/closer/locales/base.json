@@ -633,7 +633,7 @@
   "wallet_not_connected_button_title": "Please connect your wallet to book with $TDF",
   "wallet_tdf": "$TDF (Total)",
   "wallet_tdf_available": "$TDF (Available)",
-  "wallet_pop": "POP",
+  "wallet_pop": "Presence",
   "wallet_ceur": "cEUR",
   "wallet_booking_insufficient_balance": "Insufficient Balance",
   "wallet_booking_available_balance": "Available Balance",
