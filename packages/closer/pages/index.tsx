@@ -2,11 +2,10 @@ import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import React from 'react';
-
 import Heading from '../components/ui/Heading';
 
 import { NextPage } from 'next';
+import { event } from 'nextjs-google-analytics';
 
 import { useAuth } from '../contexts/auth';
 import { useConfig } from '../hooks/useConfig';
@@ -40,6 +39,9 @@ const Index: NextPage = () => {
               href="/signup"
               id="cta-signup"
               className="btn-primary text-3xl px-8 py-4 block text-center mx-auto mt-8 mb-6 rounded-full "
+              onClick={() =>
+                event('click', { category: 'HomePage', label: 'Signup' })
+              }
             >
               Launch your web3 land based project
             </Link>
