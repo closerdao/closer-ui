@@ -400,8 +400,7 @@ const BookingsFilter = ({ setFilter }: Props) => {
         isFullWidth={false}
         size="small"
       >
-        {/* {__('booking_requests_departure_date')} */}
-        Newest first
+        {__('booking_requests_newest_first')}
       </Button>
     </section>
   );

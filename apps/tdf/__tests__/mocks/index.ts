@@ -34,6 +34,75 @@ export const user = {
   },
 };
 
+export const adminUser = {
+  screenname: 'Vladimir Vashnev',
+  timezone: null,
+  slug: 'v',
+  tagline: '',
+  about: '',
+  email: 'vashnev@gmail.com',
+  walletAddress: '0x420e347634c65c8cd9c929838b54d05e27f14d9b',
+  nonce:
+    'BHaklvyxzhct5wee1U25zSAr8K+68t+fyh7Tdi1Jssk6VHgo5T4q6Ogrw+ej2yytO1uu1B/Bm299pWY3IqpmvA==',
+  email_verified: false,
+  kycPassed: true,
+  phone_verified: true,
+  photo: '6463cb24ca92735b7a69e3b5',
+  lastactive: '2023-03-22T10:51:14.867Z',
+  lastlogin: '2023-08-16T14:15:47.422Z',
+  subscription: {
+    plan: 'pioneer',
+    monthlyCredits: 0,
+    price: 60,
+    priceId: 'price_1NDN1eGtt5D0VKR2pf7lwOHv',
+    billingPeriod: 'month',
+    subscriptionId: 'sub_1NDmPZGtt5D0VKR2u8ZvtnFN',
+    validUntil: '2023-07-27T10:37:49.000Z',
+  },
+  roles: [
+    'admin',
+  ],
+  viewChannels: [],
+  manageChannels: [],
+  location: null,
+  preferences: {
+    sharedAccomodation: 'male only',
+    skills: ['javascript', 'farming', 'woodworking'],
+    diet: 'vegs   please',
+    superpower: 'i can read',
+    dream: 'good ',
+    moreInfo: 'yoyo',
+    needs: 'funny',
+  },
+  settings: {
+    newsletter_weekly: true,
+  },
+  actions: {
+    login: '2023-08-16T14:15:47.422Z',
+    'tdf-visitor': '2023-08-23T00:00:00.000Z',
+    'event-attendee': '2023-08-29T00:00:00.000Z',
+    'wallet-connected': '2023-07-03T09:30:46.581Z',
+    unsubscribe: '2023-06-04T14:18:30.193Z',
+    'subscribe-sub_1NCeI0Gtt5D0VKR2NRsV5LzL': '2023-05-28T07:45:22.756Z',
+    'subscribe-sub_1NDlqoGtt5D0VKR2WpiG0STV': '2023-05-31T10:01:57.393Z',
+    'subscribe-sub_1NDmPZGtt5D0VKR2u8ZvtnFN': '2023-05-31T10:37:51.488Z',
+  },
+  links: [
+    {
+      url: 'url',
+      name: 'lalal',
+      _id: '641addddf72ea12f5e9ab852',
+    },
+  ],
+  visibleBy: [],
+  createdBy: null,
+  updated: '2023-08-11T14:22:53.579Z',
+  created: '2023-03-22T10:51:14.867Z',
+  attributes: [],
+  managedBy: [],
+  _id: '641adda2f72ea12f5e9ab851',
+};
+
 export const bookingSettings = {
   utilityFiat: { val: 10, cur: 'EUR' },
   utilityToken: { val: 0.01, cur: 'ETH' },
