@@ -59,7 +59,7 @@ const UsersFilter = ({ setWhere, setPage, page, sortBy, setSortBy }: Props) => {
           'subscription.plan': subscriptionTier,
         }),
       ...(whereValues.subscriptionTier === 'explorer' && {
-        subscription: { $exists: false },
+        'subscription.plan': { $exists: false },
       }),
 
       ...(whereValues.memberStatus === 'any'
@@ -219,7 +219,12 @@ const UsersFilter = ({ setWhere, setPage, page, sortBy, setSortBy }: Props) => {
         setSelectedOption={setSortBy}
       />
 
-      <Button onClick={handleClearFilters} isFullWidth={false} className="my-6" type="secondary">
+      <Button
+        onClick={handleClearFilters}
+        isFullWidth={false}
+        className="my-6"
+        type="secondary"
+      >
         {__('manage_users_lear_filters_button')}
       </Button>
     </section>
