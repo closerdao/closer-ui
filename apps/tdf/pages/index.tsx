@@ -31,13 +31,13 @@ const HomePage = ({ subscriptionPlans }: Props) => {
           content="Traditional Dream Factory (TDF) is a regenerative playground in Abela, Portugal."
         />
       </Head>
-      <section className="absolute overflow-hidden left-0 h-[100vh] min-h-[100vh] min-w-[100vw] bg-cover bg-no-repeat bg-[url(/images/landing/hero-optimized.jpg)] text-right pb-12 -mt-6 mb-12 md:mb-[100vh] ">
+      <section className="absolute overflow-hidden left-0 h-[100vh] min-h-[100vh] min-w-[100vw] bg-accent-light pb-12 -mt-6 mb-12 md:mb-[100vh] text-right">
         <div className="h-[100vh]">
           <YoutubeEmbed isBackgroundVideo={true} embedId="VkoqvPcaRpk" />
         </div>
         <div className="max-w-6xl absolute right-5 sm:right-10 top-10 ">
           <Heading
-            className="drop-shadow-lg md:mt-6 mb-6 md:mb-12 text-4xl sm:text-7xl md:text-8xl text-white ml-8 "
+            className="drop-shadow-lg md:mt-6 mb-6 md:mb-12 text-4xl sm:text-7xl md:text-8xl text-white ml-8 text-right"
             data-testid="page-title"
             display
           >
