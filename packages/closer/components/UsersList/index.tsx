@@ -258,7 +258,7 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
   };
 
   return (
-    <section className="flex gap-2 flex-col min-h-[450px]">
+    <section className="flex gap-2 flex-col min-h-[500px]">
       {isInfoModalOpened && (
         <Modal closeModal={closeModal}>
           {action === 'Add role' && (
