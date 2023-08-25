@@ -6,9 +6,9 @@ import Resources from '../../components/Resources';
 import { ErrorMessage, Heading } from '../../components/ui';
 
 import { useConfig } from '../../hooks/useConfig';
+import { FormattedFaqs, QuestionAndAnswer } from '../../types/resources';
 import { __ } from '../../utils/helpers';
 import { prepareFaqsData } from '../../utils/resources';
-import { FormattedFaqs, QuestionAndAnswer } from '../../types/resources';
 
 interface Props {
   faqsData: any[];
@@ -92,7 +92,7 @@ const ResourcesPage = ({ faqsData }: Props) => {
                       </summary>
                       <div className=" ">
                         {questionsAndAnswers.map(
-                          (questionAndAnswer: { q: string; a: string }) => {
+                          (questionAndAnswer: QuestionAndAnswer) => {
                             return (
                               <div
                                 key={questionAndAnswer.q}
@@ -124,6 +124,31 @@ const ResourcesPage = ({ faqsData }: Props) => {
                               "
                                   >
                                     {questionAndAnswer.a}
+                                    {questionAndAnswer.linkTexts && (
+                                      <ul>
+                                        {questionAndAnswer.linkTexts.map(
+                                          (linkText, index) => {
+                                            return (
+                                              <li key={linkText}>
+                                                <a
+                                                  href={
+                                                    (questionAndAnswer?.linkUrls &&
+                                                      questionAndAnswer
+                                                        ?.linkUrls[index]) ||
+                                                    ''
+                                                  }
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="underline text-accent hover:text-black font-bold"
+                                                >
+                                                  {linkText}
+                                                </a>
+                                              </li>
+                                            );
+                                          },
+                                        )}
+                                      </ul>
+                                    )}
                                   </div>
                                 </details>
                               </div>
