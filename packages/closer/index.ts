@@ -22,6 +22,7 @@ export { default as Input } from './components/ui/Input';
 export { default as ProgressBar } from './components/ui/ProgressBar';
 export { default as Row } from './components/ui/Row';
 export { default as Spinner } from './components/ui/Spinner';
+export { default as YoutubeEmbed } from './components/YoutubeEmbed';
 // Config
 export * from './config_blockchain';
 export * from './contexts/auth';
