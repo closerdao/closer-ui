@@ -71,7 +71,7 @@ const ResourcesPage = ({ faqsData }: Props) => {
                   >
                     <details className="group py-2 ">
                       <summary className="flex cursor-pointer items-center justify-between py-1 hover:text-c-blue ">
-                        <p className="uppercase font-bold my-2">
+                        <p className="uppercase font-bold text-lg my-2">
                           {category[0]}
                         </p>
                         <svg
@@ -90,7 +90,7 @@ const ResourcesPage = ({ faqsData }: Props) => {
                           ></path>
                         </svg>
                       </summary>
-                      <div className=" ">
+                      <div className="px-4">
                         {questionsAndAnswers.map(
                           (questionAndAnswer: QuestionAndAnswer) => {
                             return (
@@ -100,7 +100,7 @@ const ResourcesPage = ({ faqsData }: Props) => {
                               >
                                 <details className="group/level2">
                                   <summary className="flex cursor-pointer items-center justify-between py-1 hover:text-c-blue pr-3">
-                                    <p className="uppercase font-bold px-4 py-3">
+                                    <p className="font-bold px-4 py-3">
                                       {questionAndAnswer.q}
                                     </p>
                                     <svg
@@ -125,12 +125,12 @@ const ResourcesPage = ({ faqsData }: Props) => {
                                   >
                                     {questionAndAnswer.a}
                                     {questionAndAnswer.linkTexts && (
-                                      <ul>
+                                      <>
                                         {questionAndAnswer.linkTexts.map(
                                           (linkText, index) => {
                                             return (
-                                              <li key={linkText}>
-                                                <a
+                                              <>
+                                                {' '}<a key={linkText}
                                                   href={
                                                     (questionAndAnswer?.linkUrls &&
                                                       questionAndAnswer
@@ -139,15 +139,15 @@ const ResourcesPage = ({ faqsData }: Props) => {
                                                   }
                                                   target="_blank"
                                                   rel="noopener noreferrer"
-                                                  className="underline text-accent hover:text-black font-bold"
+                                                  className="underline text-accent hover:text-black"
                                                 >
                                                   {linkText}
                                                 </a>
-                                              </li>
+                                              </>
                                             );
                                           },
                                         )}
-                                      </ul>
+                                      </>
                                     )}
                                   </div>
                                 </details>
