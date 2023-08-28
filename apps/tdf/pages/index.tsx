@@ -66,28 +66,6 @@ const HomePage = ({ subscriptionPlans }: Props) => {
             </Link>
           </div>
 
-          {!isAuthenticated && (
-            <>
-              <div>
-                <Link
-                  href="/pdf/tdf-private-sale.pdf"
-                  target="_blank"
-                  type="submit"
-                  className="btn-primary-light md:text-xl"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    event('click', {
-                      category: 'HomePage',
-                      label: 'Download Investor Pack',
-                    });
-                    document?.getElementById('subscribe')?.scrollIntoView();
-                  }}
-                >
-                  Download Investor pack
-                </Link>
-              </div>
-            </>
-          )}
         </div>
       </section>
 
@@ -949,7 +927,8 @@ const HomePage = ({ subscriptionPlans }: Props) => {
             />
           </div>
         </section>
-        <section className="mb-12 max-w-6xl mx-auto md:pt-20 text-center flex justify-center">
+        
+        <section className=" mb-[120vh] max-w-6xl mx-auto md:pt-20 text-center flex justify-center">
           <div className="md:max-w-lg" id="subscribe">
             <Heading display level={3} className="mb-6">
               <span className="text-4xl">Your guide to</span>
