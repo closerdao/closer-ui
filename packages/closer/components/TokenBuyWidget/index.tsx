@@ -307,6 +307,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
         <div className="flex-1 relative">
           <input
             id="tokensToSpend"
+            disabled={true}
             value={tokensToSpend}
             onChange={handleTokensToSpendChange}
             className="h-14 px-4 pr-8 rounded-md text-xl bg-neutral text-black !border-none"

@@ -74,6 +74,50 @@ export const BOOKING_TYPE_OPTIONS = [
   { label: 'Stay', value: 'stay' },
 ];
 
+export const USER_ROLE_OPTIONS = [
+  { label: 'Any', value: 'any' },
+  { label: 'Admin', value: 'admin' },
+  { label: 'Event creator', value: 'event-creator' },
+  { label: 'Space host', value: 'space-host' },
+  { label: 'Steward', value: 'steward' },
+  { label: 'Community-curator', value: 'community-curator' },
+  { label: 'Member', value: 'member' },
+];
+
+export const USER_MEMBER_STATUS_OPTIONS = [
+  { label: 'Any', value: 'any' },
+  { label: 'Member', value: 'member' },
+  { label: 'Not member', value: 'Not Memebr' },
+];
+
+export const ACTIONS = [
+  { label: 'Send carrots', value: 'Send carrots' },
+  { label: 'Export selected (CSV)', value: 'Export selected (CSV)' },
+  { label: 'Add role', value: 'Add role' },
+  { label: 'Remove role', value: 'Remove role' },
+  { label: 'Copy emails', value: 'Copy emails' },
+  { label: 'Unlink wallet', value: 'Unlink wallet' },
+];
+
+export const SUBSCRIPTION_TIER_OPTIONS = [
+  { label: 'Any', value: 'any' },
+  { label: 'Explorer', value: 'explorer' },
+  { label: 'Wanderer', value: 'wanderer' },
+  { label: 'Pioneer', value: 'pioneer' },
+  { label: 'Sheep', value: 'sheep' },
+];
+
+export const USER_CREATED_OPTIONS = [
+  { label: 'Any', value: 'any' },
+  { label: 'Last week', value: 'last-week' },
+  { label: 'Last month', value: 'last-month' },
+  { label: 'Last 3 months', value: 'last-3-months' },
+  { label: 'Last 6 months', value: 'last-6-months' },
+];
+
+export const USER_SORT_OPTIONS = ['-created', 'screenname'];
+export const USER_SORT_TITLE_OPTIONS = ['Newest first', 'Name'];
+
 export const BONDING_CURVE = {
   COEFFICIENTS: {
     a: -11680057722,
