@@ -237,6 +237,7 @@
   "navigation_subscriptions": "Subscriptions",
   "navigation_stay": "Stay",
   "navigation_buy_token": "Buy $TDF",
+  "navigation_resources": "Resources",
   "newsletter_success": "Thanks, we will be in touch soon!",
   "newsletter_body": "Keep in the loop, subscribe:",
   "newsletter_signup": "Subscribe",
@@ -771,6 +772,14 @@
   "manage_users_save_all": "Export all user records",
   "manage_users_preparing_data": "Preparing data...",
   "manage_users_lear_filters_button": "Clear filters",
+
+  "resources_heading": "Resourceful by nature",
+  "resources_subheading": "Welcome to our ever-evolving potting shed of TDF tools, village build updates, subscription packages, news about magical future gatherings, the inner workings of our project, and the small, but oh-so-important legal print. Check back here regularly to watch us grow!",
+  "resources_faq_heading": "Frequently asked questions",
+  "resources_faq_subheading": "Got a question? We’re an open source.",
+  "resources_resources_heading": "Put the kettle on and get to know us a little better",
+  "resources_resources_subheading": "Read all about our dream: the mission, vision and how we got here, with our digital papers",
+  "resources_faqs_error": "Error fetching FAQs",
 
   "generic_edit_button": "Edit"
 }
