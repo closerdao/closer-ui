@@ -71,4 +71,9 @@ export const links = [
     enabled: true,
     roles: ['steward'],
   },
+  {
+    label: 'Resources',
+    url: '/resources',
+    enabled: true,
+  },
 ];
