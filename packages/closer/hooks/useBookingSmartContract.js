@@ -2,6 +2,7 @@ import { useContext, useState } from 'react';
 
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
+import { utils } from 'ethers';
 import { BigNumber, Contract } from 'ethers';
 
 import { WalletDispatch, WalletState } from '../contexts/wallet';
@@ -59,9 +60,16 @@ export const useBookingSmartContract = ({ bookingNights }) => {
 
     try {
       setPending(true);
-      const pricePerNightBigNum = BigNumber.from(dailyValue).mul(
-        BigNumber.from(10).pow(BigNumber.from(BLOCKCHAIN_DAO_TOKEN.decimals)),
+
+      console.log('dailyValue =', dailyValue);
+
+      const pricePerNightBigNum = utils.parseUnits(
+        dailyValue.toString(),
+        BLOCKCHAIN_DAO_TOKEN.decimals,
       );
+
+      console.log('pricePerNightBigNum =', pricePerNightBigNum);
+
       const tx3 = await Diamond.bookAccommodation(
         bookingNights,
         pricePerNightBigNum,

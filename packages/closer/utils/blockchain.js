@@ -1,5 +1,5 @@
 import { BigNumber, Contract, utils } from 'ethers';
-import { isAddress } from 'ethers/lib/utils.js';
+import { formatUnits, isAddress } from 'ethers/lib/utils.js';
 
 import { blockchainConfig } from '../config_blockchain';
 
@@ -37,8 +37,7 @@ export function formatBigNumberForDisplay(
     throw new Error('Too many decimals');
   }
   if (BigNumber.isBigNumber(bigNumber)) {
-    const divisor = BigNumber.from(10).pow(tokenDecimals - displayDecimals);
-    return bigNumber.div(divisor).toString() / 10 ** displayDecimals;
+    return Number(formatUnits(bigNumber, tokenDecimals));
   } else return null;
 }
 
