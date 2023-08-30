@@ -14,6 +14,12 @@ const alfajoresConfig = {
     symbol: 'TDF',
     decimals: 18,
   },
+  BLOCKCHAIN_CEUR_TOKEN: {
+    address: '0x0C9861e64Fd62b5d753e623879Efdc04E273A7b5',
+    name: 'fakeEUR',
+    symbol: 'fakeEUR',
+    decimals: 18,
+  },
   BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS:
     '0xB5A76b174C09962518838D32351Ce59955Fb6dc9',
   BLOCKCHAIN_DAO_DIAMOND_ADDRESS: '0x4928882f5152958cB8648D74aAd8Af24a90c6751',
@@ -36,12 +42,18 @@ const celoConfig = {
     symbol: 'TDF',
     decimals: 18,
   },
+  BLOCKCHAIN_CEUR_TOKEN: {
+    address: '0xD8763CBa276a3738E6DE85b4b3bF5FDed6D6cA73',
+    name: 'cEUR',
+    symbol: 'cEUR',
+    decimals: 18,
+  },
+
   BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS:
     '0xEaa00a0e0D29D1F883485E8f98A0E8FfD75B23FB',
   BLOCKCHAIN_DAO_DIAMOND_ADDRESS: '0x475398EeE0E22cb6fe5403ffA294Fb10Ad989e17',
   CEUR_TOKEN_ADDRESS: '0xd8763cba276a3738e6de85b4b3bf5fded6d6ca73',
 };
-
 
 const celoABIs = {
   BLOCKCHAIN_DAO_TOKEN_ABI: [

@@ -138,6 +138,7 @@ const AccomodationSelector = ({
               useTokens={useTokens}
               bookingType={bookingType}
               isAuthenticated={isAuthenticated}
+              adults={Number(adults)}
             />
           ))}
         </div>

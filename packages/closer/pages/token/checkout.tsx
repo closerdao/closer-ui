@@ -35,7 +35,7 @@ const TokenSaleCheckoutPage = () => {
   const [isApproved, setIsApproved] = useState<boolean>(false);
 
   const { isAuthenticated, isLoading, user } = useAuth();
-  const { isWalletReady } = useContext(WalletState);
+  const { isWalletReady, balanceCeurAvailable } = useContext(WalletState);
 
   const [web3Error, setWeb3Error] = useState<string | null>(null);
   const [apiError, setApiError] = useState(null);
@@ -76,7 +76,7 @@ const TokenSaleCheckoutPage = () => {
     if (success) {
       setIsApproved(true);
     } else {
-      setWeb3Error(parseMessageFromError(error));
+      setWeb3Error(__('token_sale_approval_error'));
     }
     setIsMetamaskLoading(false);
   };
@@ -102,7 +102,7 @@ const TokenSaleCheckoutPage = () => {
         `/token/success?amountOfTokensPurchased=${tokens}&transactionId=${txHash}`,
       );
     } else {
-      setWeb3Error(parseMessageFromError(error));
+      setWeb3Error(__('token_sale_buy_error'));
       setIsMetamaskLoading(false);
     }
   };
@@ -168,10 +168,18 @@ const TokenSaleCheckoutPage = () => {
               />
             </div>
           </div>
+
+          {balanceCeurAvailable < total && (
+            <div className="font-bold">
+              {__('token_sale_not_enough_ceur_error')}
+            </div>
+          )}
           {isApproved ? (
             <Button
               onClick={handlePurchaseTx}
-              isEnabled={!isPending && !isMetamaskLoading}
+              isEnabled={
+                !isPending && !isMetamaskLoading && balanceCeurAvailable > total
+              }
             >
               {isPending || isMetamaskLoading ? (
                 <div className="flex gap-2 items-center">
@@ -185,7 +193,9 @@ const TokenSaleCheckoutPage = () => {
           ) : (
             <Button
               onClick={handleApprovalTx}
-              isEnabled={!isPending && !isMetamaskLoading}
+              isEnabled={
+                !isPending && !isMetamaskLoading && balanceCeurAvailable > total
+              }
             >
               {isPending || isMetamaskLoading ? (
                 <div className="flex gap-2 items-center">

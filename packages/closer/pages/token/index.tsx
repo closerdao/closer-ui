@@ -1,11 +1,19 @@
 import Head from 'next/head';
 import Image from 'next/image';
-import router from 'next/router';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useState } from 'react';
 
+import Ama from '../../components/Ama';
+import Modal from '../../components/Modal';
+import PeekIntoFuture from '../../components/PeekIntoFuture';
+import PhotoGallery from '../../components/PhotoGallery';
+import TokenCounterSimple from '../../components/TokenCounterSimple';
+import YoutubeEmbed from '../../components/YoutubeEmbed';
 import { Button, Card, Heading } from '../../components/ui';
 
+import { INVESTMENT_COMPARISON } from '../../constants';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
@@ -15,6 +23,7 @@ import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
 const ACCOMMODATION_ICONS = ['van.png', 'camping.png', 'hotel.png'];
+const DEFAULT_TOKENS = 10;
 
 interface Props {
   listings: Listing[];
@@ -23,10 +32,19 @@ interface Props {
 const PublicTokenSalePage = ({ listings }: Props) => {
   const { PLATFORM_NAME } = useConfig() || {};
   const { getTokensAvailableForPurchase } = useBuyTokens();
+  const { isWalletReady } = useContext(WalletState);
+  const router = useRouter();
+  const { tokens } = router.query;
+
+  const [tokensToBuy, setTokensToBuy] = useState<number>(
+    tokens !== undefined ? Number(tokens) : DEFAULT_TOKENS,
+  );
 
   const [tokensAvailable, setTokensAvailable] = useState<number | null>(null);
+  const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
+  const [selectedInvestmentIndex, setSelectedInvestmentIndex] = useState(0);
 
-  const { isWalletReady } = useContext(WalletState);
+  const selectedInvestment = INVESTMENT_COMPARISON[selectedInvestmentIndex];
 
   useEffect(() => {
     if (isWalletReady) {
@@ -39,6 +57,18 @@ const PublicTokenSalePage = ({ listings }: Props) => {
 
   const handleNext = async () => {
     router.push('/token/before-you-begin');
+  };
+
+  const openModal = () => {
+    setIsInfoModalOpened(true);
+  };
+
+  const closeModal = () => {
+    setIsInfoModalOpened(false);
+  };
+
+  const handleShowVideo = () => {
+    openModal();
   };
 
   if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
@@ -69,33 +99,42 @@ const PublicTokenSalePage = ({ listings }: Props) => {
         )} - ${PLATFORM_NAME}`}</title>
       </Head>
 
-      <main className="pt-16 pb-24 md:flex-row flex-wrap">
+      <section className="flex gap-2 flex-col">
+        {isInfoModalOpened && (
+          <Modal doesShowVideo={true} closeModal={closeModal}>
+            <YoutubeEmbed embedId="VkoqvPcaRpk" />
+          </Modal>
+        )}
+      </section>
+
+      <main className="pt-4 pb-24 md:flex-row flex-wrap">
         <section className="mb-10">
-          <div className='rounded-lg h-[500px] md:h-[700px] flex items-center flex-col bg-center bg-[#333333] bg-cover bg-no-repeat text-white bg-[url("/images/token-sale/token-sale-hero.png")]'>
-            <h1 className="px-4 mb-8 mt-[170px] md:mt-[280px] max-w-[600px] text-center font-extrabold text-3xl md:text-6xl uppercase">
+          <div className='rounded-lg h-[500px] md:h-[700px] flex items-center flex-col bg-center bg-[#333333] bg-cover bg-no-repeat text-white bg-[url("/images/token-sale/token-sale-hero.webp")]'>
+            <h1 className="drop-shadow-[1px_2px_2px_rgba(254,79,183,1)] px-4 mb-2 sm:mb-8 mt-[20px] sm:mt-[70px] md:mt-[190px] max-w-[700px] text-center font-extrabold text-5xl md:text-6xl uppercase">
               {__('token_sale_public_sale_announcement')}
             </h1>
 
-            <h2 className="px-4 mb-8 text-center leading-5 max-w-[460px] font-bold uppercase text-md">
+            <h2 className="drop-shadow-lg px-4 mb-8 text-center leading-7 max-w-[600px] font-bold text-lg sm:text-2xl">
               {__('token_sale_public_sale_subheading')}
             </h2>
+
+            {isWalletReady && (
+              <TokenCounterSimple
+                tokensToBuy={tokensToBuy}
+                setTokensToBuy={setTokensToBuy}
+              />
+            )}
 
             <Button
               className="!w-60 font-bold mb-3 md:mb-8 relative"
               onClick={handleNext}
+              size="small"
             >
-              <Image
-                className="absolute left-[200px] w-14 h-18"
-                src="/images/token-sale/arrow.png"
-                alt="arrow"
-                width={85}
-                height={99}
-              />
               {__('token_sale_public_sale_buy_token')}
             </Button>
 
             {tokensAvailable && (
-              <h3 className="font-bold text-2xl">
+              <h3 className="font-bold text-2xl bg-accent-light text-accent py-2 text-center w-60 px-6 rounded-full">
                 {tokensAvailable} {__('token_sale_public_sale_tokens_left')}
               </h3>
             )}
@@ -103,644 +142,485 @@ const PublicTokenSalePage = ({ listings }: Props) => {
         </section>
 
         <section className="flex items-center flex-col py-24">
-          <div className="w-full sm:w-[80%] ">
-            <div className="text-center mb-20">
-              <h2 className="mb-4 text-5xl font-bold">
-                {__('token_sale_public_sale_key_info')}
-              </h2>
-              <div>{__('token_sale_public_sale_key_info_subhead')}</div>
-            </div>
-            <div className="flex flex-col sm:flex-row divide-x flex-wrap">
-              <div className="mb-8 px-6 py-8 text-center flex flex-col gap-8 w-full sm:w-1/2 lg:w-1/4">
-                <Heading level={3} className="uppercase text-center">
-                  {__('token_sale_public_sale_heading_pink_paper')}
-                </Heading>
-                <p>{__('token_sale_public_sale_intro_pink_paper')}</p>
-                <Button
-                  className="text-[16px]"
-                  onClick={() => {
-                    router.push(
-                      'https://docs.google.com/document/d/177JkHCy0AhplsaEEYpFHBsiI6d4uLk0TgURSKfBIewE/edit',
-                    );
-                  }}
-                >
-                  {__('token_sale_public_sale_button_read')}
-                </Button>
-              </div>
-              <div className="mb-8 px-6 py-8 text-center flex flex-col gap-8 w-full sm:w-1/2 lg:w-1/4">
-                <Heading level={3} className="uppercase text-center">
-                  {__('token_sale_public_sale_heading_white_paper')}
-                </Heading>
-                <p>{__('token_sale_public_sale_intro_white_paper')}</p>
-                <Button
-                  className="text-[16px]"
-                  onClick={() => {
-                    router.push(
-                      'https://oasa.earth/papers/OASA-Whitepaper-V1.2.pdf',
-                    );
-                  }}
-                >
-                  {__('token_sale_public_sale_button_read')}
-                </Button>
-              </div>
-              <div className="mb-8 px-6 py-8 text-center flex flex-col gap-8 w-full sm:w-1/2 lg:w-1/4">
-                <Heading level={3} className="uppercase text-center">
-                  {__('token_sale_public_sale_heading_oasa_website')}
-                </Heading>
-                <p>{__('token_sale_public_sale_intro_investor_doc')}</p>
-                <Button
-                  className="text-[16px]"
-                  onClick={() => {
-                    router.push('https://oasa.earth');
-                  }}
-                >
-                  {__('token_sale_public_sale_visit_site_button')}
-                </Button>
-              </div>
-              <div className="mb-8 px-6 py-8 text-center flex flex-col gap-8 w-full sm:w-1/2 lg:w-1/4">
-                <Heading level={3} className="uppercase text-center">
-                  {__('token_sale_public_sale_heading_terms')}
-                </Heading>
-                <p>{__('token_sale_public_sale_intro_terms')}</p>
-                <Button
-                  className="text-[16px]"
-                  onClick={() => {
-                    router.push('/legal/terms');
-                  }}
-                >
-                  {__('token_sale_public_sale_button_read')}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Ask us anything — waiting for texts and links */}
-        {/* <section className="flex items-center flex-col py-24">
-          <div className="w-full sm:w-[80%] ">
-            <div className="text-center mb-20">
-              <h2 className="mb-4 text-5xl font-bold">
-                {__('token_sale_public_sale_heading_ask_us_anything')}
-              </h2>
-              <div>{__('token_sale_public_sale_subheading_ask_us_anything')}</div>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-[2%] flex-wrap">
-              <Card className="mb-8 px-6 py-8 text-center items-center flex flex-col gap-4 w-full sm:w-[49%] lg:w-[23%]">
-                <Heading level={3} className="uppercase text-center">
-                  {__('token_sale_public_sale_sam')}
-                  <span className="block text-sm font-normal capitalize">
-                    {__('token_sale_public_sale_visionary')}
-                  </span>
-                </Heading>
-                <Image
-                  src={'/images/token-sale/sam.jpg'}
-                  alt="Sam"
-                  width={100}
-                  height={100}
-                />
-
-                <div className="text-sm text-center w-auto">
-                  <div className="bg-accent-light rounded-full px-3 py-1 mb-1">
-                    {__('token_sale_public_sale_tokenomics')}
-                  </div>
-                  <div className="bg-accent-light rounded-full px-3 py-1 mb-1">
-                    {__('token_sale_public_sale_vision')}
-                  </div>
-                </div>
-                <Button
-                  className="text-[16px]"
-                  onClick={() => {
-                    router.push('/');
-                  }}
-                >
-                  {__('token_sale_public_sale_button_book_a_call')}
-                </Button>
-              </Card>
-              <Card className="mb-8 py-8 text-center items-center flex flex-col gap-4 w-full sm:w-[49%] lg:w-[23%]">
-                <Heading level={3} className="uppercase text-center">
-                  {__('token_sale_public_sale_bea')}
-                  <span className="block text-sm font-normal capitalize">
-                    {__('token_sale_public_sale_exec')}
-                  </span>
-                </Heading>
-                <Image
-                  src={'/images/token-sale/bea.jpg'}
-                  alt="Bea"
-                  width={100}
-                  height={100}
-                />
-
-                <div className="text-sm text-center w-auto">
-                  <div className="bg-accent-light rounded-full px-3 py-1 mb-1">
-                    {__('token_sale_public_sale_tokenomics')}
-                  </div>
-                  <div className="bg-accent-light rounded-full px-3 py-1 mb-1">
-                    {__('token_sale_public_sale_lifestyle')}
-                  </div>
-                </div>
-                <Button
-                  className="text-[16px]"
-                  onClick={() => {
-                    router.push('/');
-                  }}
-                >
-                  {__('token_sale_public_sale_button_book_a_call')}
-                </Button>
-              </Card>
-              <Card className="mb-8 px-6 py-8 text-center items-center flex flex-col gap-4 w-full sm:w-[49%] lg:w-[23%]">
-                <Heading level={3} className="uppercase text-center">
-                  {__('token_sale_public_sale_sam')}
-                  <span className="block text-sm font-normal capitalize">
-                    {__('token_sale_public_sale_governance_lead')}
-                  </span>
-                </Heading>
-                <Image
-                  src={'/images/token-sale/charlie.jpg'}
-                  alt="Cahrlie"
-                  width={100}
-                  height={100}
-                />
-
-                <div className="text-sm text-center w-auto">
-                  <div className="bg-accent-light rounded-full px-3 py-1 mb-1">
-                    {__('token_sale_public_sale_tokenomics')}
-                  </div>
-                  <div className="bg-accent-light rounded-full px-3 py-1 mb-1">
-                    {__('token_sale_public_sale_governance')}
-                  </div>
-                </div>
-                <Button
-                  className="text-[16px]"
-                  onClick={() => {
-                    router.push('/');
-                  }}
-                >
-                  {__('token_sale_public_sale_button_book_a_call')}
-                </Button>
-              </Card>
-              <Card className="mb-8 px-6 py-8 text-center items-center flex flex-col gap-4 w-full sm:w-[49%] lg:w-[23%]">
-                <Heading level={3} className="uppercase text-center">
-                  {__('token_sale_public_sale_juliana')}
-                  <span className="block text-sm font-normal capitalize">
-                    {__('token_sale_public_sale_space_host')}
-                  </span>
-                </Heading>
-                <Image
-                  src={'/images/token-sale/juliana.jpg'}
-                  alt="Juliana"
-                  width={100}
-                  height={100}
-                />
-
-                <div className="text-sm text-center w-auto">
-                  <div className="bg-accent-light rounded-full px-3 py-1 mb-1">
-                    {__('token_sale_public_sale_lifestyle')}
-                  </div>
-                  <div className="bg-accent-light rounded-full px-3 py-1 mb-1">
-                    {__('token_sale_public_sale_community')}
-                  </div>
-                </div>
-                <Button
-                  className="text-[16px]"
-                  onClick={() => {
-                    router.push('/');
-                  }}
-                >
-                  {__('token_sale_public_sale_button_book_a_call')}
-                </Button>
-              </Card>
-            </div>
-          </div>
-        </section> */}
-
-        <section className="flex items-center flex-col py-24">
-          <div className="w-full sm:w-[80%] flex items-center flex-col">
-            <div className="text-center mb-12">
-              <h2 className="mb-4 text-5xl font-bold">
-                {__('token_sale_public_sale_heading_utility')}
-              </h2>
-              <div>{__('token_sale_public_sale_subheading_utility')}</div>
-            </div>
-
-            <div className="flex flex-col w-full md:w-[460px]">
-              <div className="text-sm mt-20 mb-6 text-center">
-                {__('token_sale_public_sale_utility_info_1')}
-              </div>
-              <div className="text-sm mb-6 text-accent text-center">
-                {__('token_sale_public_sale_utility_info_2')}
-              </div>
-              <div className="text-sm mb-6 text-center">
-                {__('token_sale_public_sale_utility_info_3')}
-              </div>
-              <div className="text-sm mb-6 text-center">
-                {__('token_sale_public_sale_utility_info_4')}
-              </div>
-            </div>
-
-            <div className="flex flex-col w-full md:w-[460px]">
-              <Heading level={3} className="mb-6">
-                {__('token_sale_public_sale_heading_accommodation_cost')}
+          <div className="text-center mb-20 w-full">
+            <div className="w-full flex items-center flex-col">
+              <Heading
+                level={2}
+                className="mb-4 text-5xl font-bold max-w-[600px]"
+              >
+                {__('token_sale_meet_your_home_heading')}
               </Heading>
-              <Card className="mb-8 px-6 py-8 text-left flex flex-col gap-1 text-md">
-                <div className="text-right text-sm">
-                  {__('token_sale_public_sale_price_per_night')}
-                </div>
-                {listings &&
-                  listings.map((listing: any) => {
-                    return (
-                      <div key={listing.name}>
-                        <div className="grid grid-cols-[55px_auto_65px]">
-                          <p>
-                            {listing.name.toLowerCase().includes('van') && (
-                              <Image
-                                src={`/images/token-sale/${ACCOMMODATION_ICONS[0]}`}
-                                alt=""
-                                width={38}
-                                height={38}
-                              />
-                            )}
-
-                            {(listing.name.toLowerCase().includes('private') ||
-                              listing.name.toLowerCase().includes('camping') ||
-                              listing.name
-                                .toLowerCase()
-                                .includes('shared')) && (
-                              <Image
-                                src={`/images/token-sale/${ACCOMMODATION_ICONS[1]}`}
-                                alt=""
-                                width={38}
-                                height={38}
-                              />
-                            )}
-                          </p>
-                          <p className=" pt-1">{listing.name}</p>
-                          <p className=" text-right text-accent pt-2">
-                            {__('token_sale_public_sale_token_symbol')}{' '}
-                            {listing.tokenPrice.val}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                {/* Future accommodation types: */}
-                <div className="grid grid-cols-[55px_auto_65px]">
-                  <p>
-                    <Image
-                      src="/images/token-sale/hotel.png"
-                      alt=""
-                      width={38}
-                      height={38}
-                    />
-                  </p>
-                  <p className="pt-1">
-                    {__('token_sale_public_sale_shared_suite')}
-                    <span className="block text-xs text-accent">
-                      {__('token_sale_public_sale_coming_2023')}
-                    </span>
-                  </p>
-                  <p className="text-right text-accent pt-2">
-                    {__('token_sale_public_sale_token_symbol')}1
-                  </p>
-                </div>
-                <div className="grid grid-cols-[55px_auto_65px]">
-                  <p>
-                    <Image
-                      src="/images/token-sale/hotel.png"
-                      alt=""
-                      width={38}
-                      height={38}
-                    />
-                  </p>
-                  <p className=" pt-1">
-                    {__('token_sale_public_sale_private_suite')}
-                    <span className="block text-xs text-accent">
-                      {__('token_sale_public_sale_coming_2023')}
-                    </span>
-                  </p>
-                  <p className=" text-right text-accent pt-2">
-                    {__('token_sale_public_sale_token_symbol')}2
-                  </p>
-                </div>
-                <div className="grid grid-cols-[55px_auto_65px]">
-                  <p>
-                    <Image
-                      src="/images/token-sale/hotel.png"
-                      alt=""
-                      width={38}
-                      height={38}
-                    />
-                  </p>
-                  <p className=" pt-1">
-                    {__('token_sale_public_sale_studio')}
-                    <span className="block text-xs text-accent">
-                      {__('token_sale_public_sale_coming_2024')}
-                    </span>
-                  </p>
-                  <p className=" text-right text-accent pt-2">
-                    {__('token_sale_public_sale_token_symbol')}3
-                  </p>
-                </div>
-                <div className="grid grid-cols-[55px_auto_65px]">
-                  <p>
-                    <Image
-                      src="/images/token-sale/hotel.png"
-                      alt=""
-                      width={38}
-                      height={38}
-                    />
-                  </p>
-                  <p className=" pt-1">
-                    {__('token_sale_public_sale_house')}
-                    <span className="block text-xs text-accent">
-                      {__('token_sale_public_sale_coming_2024')}
-                    </span>
-                  </p>
-                  <p className=" text-right text-accent pt-2">
-                    {__('token_sale_public_sale_token_symbol')}5
-                  </p>
-                </div>
-              </Card>
-              <div className="text-accent text-sm text-center">
-                {__('token_sale_public_sale_prices_disclaimer')}
-              </div>
+              <Heading level={3} className="text-md max-w-[600px]">
+                {__('token_sale_meet_your_home_subheading')}
+              </Heading>
             </div>
+
+            <PhotoGallery className="mt-12" />
           </div>
         </section>
 
-        <section className="flex items-center flex-col py-24">
-          <div className="w-full sm:w-[80%] flex items-center flex-col">
-            <div className="text-center mb-20">
-              <h2 className="mb-4 text-5xl font-bold">
-                {__('token_sale_public_sale_heading_why_now')}
-              </h2>
+        <section className="flex items-center flex-col mb-32">
+          <div className="w-full flex flex-col  gap-20">
+            <div className="w-full flex items-center flex-col">
+              <Heading level={2} className="text-lg text-center max-w-[640px]">
+                {__('token_sale_tdf_heading')}
+              </Heading>
             </div>
-            <div className="flex flex-col w-full md:w-[460px]">
-              <div>
-                <ul className="flex flex-col gap-3 mb-10">
-                  <li className='bg-[url("/images/token-sale/bullet.png")] bg-no-repeat pl-8'>
-                    {__('token_sale_public_sale_benefit_1')}
+            <div className="flex gap-10 justify-center items-center flex-col md:flex-row">
+              <Image
+                className="w-full md:w-1/2 max-w-[430px]"
+                src="/images/token-sale/tdf-token.png"
+                width={430}
+                height={465}
+                alt={__('token_sale_tdf_heading')}
+              />
+              <div className="w-full md:w-1/2 flex flex-col gap-7 max-w-[430px] ">
+                <ul className="flex flex-col gap-5 ">
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    <Heading level={5} className=" font-bold uppercase">
+                      {__('token_sale_tdf_token_1')}
+                    </Heading>
+                    <div>{__('token_sale_tdf_token_1_sub')}</div>
                   </li>
-                  <li className='bg-[url("/images/token-sale/bullet.png")] bg-no-repeat pl-8'>
-                    {__('token_sale_public_sale_benefit_2')}
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    <Heading level={5} className=" font-bold uppercase">
+                      {__('token_sale_tdf_token_2')}
+                    </Heading>
+                    <div>{__('token_sale_tdf_token_2_sub')}</div>
                   </li>
-                  <li className='bg-[url("/images/token-sale/bullet.png")] bg-no-repeat pl-8'>
-                    {__('token_sale_public_sale_benefit_3')}
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    <Heading level={5} className=" font-bold uppercase">
+                      {__('token_sale_tdf_token_3')}
+                    </Heading>
+                    <div>{__('token_sale_tdf_token_3_sub')}</div>
                   </li>
-                  <li className='bg-[url("/images/token-sale/bullet.png")] bg-no-repeat pl-8'>
-                    {__('token_sale_public_sale_benefit_4')}
-                  </li>
-                  <li className='bg-[url("/images/token-sale/bullet.png")] bg-no-repeat pl-8'>
-                    {__('token_sale_public_sale_benefit_5')}
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    <Heading level={5} className=" font-bold uppercase">
+                      {__('token_sale_tdf_token_4')}
+                    </Heading>
+                    <div>{__('token_sale_tdf_token_4_sub')}</div>
                   </li>
                 </ul>
-                <div>
-                  <p className="text-xs mb-4">
-                    {__('token_sale_public_sale_example')}
+                <Button
+                  isFullWidth={false}
+                  type="secondary"
+                  onClick={handleShowVideo}
+                >
+                  {__('token_sale_tdf_watch_video_button')}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="flex items-center flex-col">
+          <div className="w-full flex flex-col  gap-20">
+            <div className="flex gap-10 justify-center items-center flex-col md:flex-row">
+              <Heading level={2} className="text-4xl max-w-[640px]">
+                {__('token_sale_tdf_accommodation_heading')}
+              </Heading>
+              <Image
+                className="w-full md:w-1/2 max-w-[430px]"
+                src="/images/token-sale/accommodation.png"
+                width={577}
+                height={535}
+                alt={__('token_sale_tdf_accommodation_heading')}
+              />
+            </div>
+            <div className="flex gap-10 justify-center items-start flex-col md:flex-row">
+              <div className="flex flex-col w-full md:w-[460px]">
+                <Heading level={3} className="mb-6">
+                  {__('token_sale_public_sale_heading_accommodation_cost')}
+                </Heading>
+                <Card className="mb-8 px-6 py-8 text-left flex flex-col gap-1 text-md">
+                  <div className="text-right text-sm">
+                    {__('token_sale_public_sale_price_per_night')}
+                  </div>
+                  {listings &&
+                    listings.map((listing: any) => {
+                      return (
+                        <div key={listing.name}>
+                          <div className="grid grid-cols-[55px_auto_65px]">
+                            <p>
+                              {listing.name.toLowerCase().includes('van') && (
+                                <Image
+                                  src={`/images/token-sale/${ACCOMMODATION_ICONS[0]}`}
+                                  alt=""
+                                  width={38}
+                                  height={38}
+                                />
+                              )}
+
+                              {(listing.name
+                                .toLowerCase()
+                                .includes('private') ||
+                                listing.name
+                                  .toLowerCase()
+                                  .includes('camping') ||
+                                listing.name
+                                  .toLowerCase()
+                                  .includes('shared')) && (
+                                <Image
+                                  src={`/images/token-sale/${ACCOMMODATION_ICONS[1]}`}
+                                  alt=""
+                                  width={38}
+                                  height={38}
+                                />
+                              )}
+                            </p>
+                            <p className=" pt-1">{listing.name}</p>
+                            <p className=" text-right text-accent pt-2">
+                              {__('token_sale_public_sale_token_symbol')}{' '}
+                              {listing.tokenPrice.val}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                  {/* Future accommodation types: */}
+                  <div className="grid grid-cols-[55px_auto_65px]">
+                    <p>
+                      <Image
+                        src="/images/token-sale/hotel.png"
+                        alt=""
+                        width={38}
+                        height={38}
+                      />
+                    </p>
+                    <p className="pt-1">
+                      {__('token_sale_public_sale_shared_suite')}
+                      <span className="block text-xs text-accent">
+                        {__('token_sale_public_sale_coming_2023')}
+                      </span>
+                    </p>
+                    <p className="text-right text-accent pt-2">
+                      {__('token_sale_public_sale_token_symbol')} 1
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-[55px_auto_65px]">
+                    <p>
+                      <Image
+                        src="/images/token-sale/hotel.png"
+                        alt=""
+                        width={38}
+                        height={38}
+                      />
+                    </p>
+                    <p className=" pt-1">
+                      {__('token_sale_public_sale_private_suite')}
+                      <span className="block text-xs text-accent">
+                        {__('token_sale_public_sale_coming_2023')}
+                      </span>
+                    </p>
+                    <p className=" text-right text-accent pt-2">
+                      {__('token_sale_public_sale_token_symbol')} 2
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-[55px_auto_65px]">
+                    <p>
+                      <Image
+                        src="/images/token-sale/hotel.png"
+                        alt=""
+                        width={38}
+                        height={38}
+                      />
+                    </p>
+                    <p className=" pt-1">
+                      {__('token_sale_public_sale_studio')}
+                      <span className="block text-xs text-accent">
+                        {__('token_sale_public_sale_coming_2024')}
+                      </span>
+                    </p>
+                    <p className=" text-right text-accent pt-2">
+                      {__('token_sale_public_sale_token_symbol')} 3
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-[55px_auto_65px]">
+                    <p>
+                      <Image
+                        src="/images/token-sale/hotel.png"
+                        alt=""
+                        width={38}
+                        height={38}
+                      />
+                    </p>
+                    <p className=" pt-1">
+                      {__('token_sale_public_sale_house')}
+                      <span className="block text-xs text-accent">
+                        {__('token_sale_public_sale_coming_2024')}
+                      </span>
+                    </p>
+                    <p className=" text-right text-accent pt-2">
+                      {__('token_sale_public_sale_token_symbol')} 5
+                    </p>
+                  </div>
+                </Card>
+                <div className="text-sm ">
+                  {__('token_sale_public_sale_prices_disclaimer')}
+                </div>
+              </div>
+
+              <div className="bg-accent-light p-8">
+                <div className="text-2xl font-bold flex flex-col gap-6 mb-6">
+                  <p>
+                    {__('token_sale_tdf_utility_1')}
+                    <Link className="text-accent underline" href="/events">
+                      {__('token_sale_tdf_utility_2')}
+                    </Link>{' '}
+                    {__('token_sale_tdf_utility_3')}{' '}
+                    <Link
+                      className="text-accent underline"
+                      href="/bookings/create/dates"
+                    >
+                      {__('token_sale_tdf_utility_4')}
+                    </Link>
                   </p>
-                  <p className="text-xs">
-                    {__('token_sale_public_sale_example_text')}
-                  </p>
+
+                  <p>{__('token_sale_tdf_utility_5')}</p>
+                </div>
+
+                <p>{__('token_sale_tdf_utility_note_1')}</p>
+                <p>{__('token_sale_tdf_utility_note_2')}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="flex items-center flex-col py-12 bg-accent-light my-20 px-2 sm:px-6">
+          <div className="text-center w-full">
+            <div className="w-full flex items-center flex-col gap-4">
+              <Heading level={2} className="text-lg font-bold max-w-[600px]">
+                {__('token_sale_investment_heading')}
+              </Heading>
+
+              <div className="flex w-full justify-center gap-4 mb-6 flex-col sm:flex-row">
+                <div className="w-full sm:w-1/3 flex justify-center sm:justify-end">
+                  {selectedInvestmentIndex > 0 ? (
+                    <Button
+                      type="secondary"
+                      isFullWidth={false}
+                      className="h-[25px]"
+                      onClick={() =>
+                        setSelectedInvestmentIndex((prevIndex) => prevIndex - 1)
+                      }
+                    >
+                      ← {__('token_sale_decrease_button')}
+                    </Button>
+                  ) : null}
+                </div>
+
+                <Heading
+                  level={3}
+                  className="mb-4 text-5xl font-bold w-full sm:w-1/3"
+                >
+                  {selectedInvestment.amount}
+                </Heading>
+
+                <div className="w-full sm:w-1/3 flex justify-center sm:justify-start">
+                  {selectedInvestmentIndex <
+                  INVESTMENT_COMPARISON.length - 1 ? (
+                    <Button
+                      type="secondary"
+                      isFullWidth={false}
+                      className="h-[25px]"
+                      onClick={() =>
+                        setSelectedInvestmentIndex((prevIndex) => prevIndex + 1)
+                      }
+                    >
+                      {__('token_sale_increase_button')} →
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="flex gap-1 sm:gap-10">
+                <div className="bg-white shadow-md rounded-md p-2 sm:p-6 text-left flex flex-col justify-between w-1/2">
+                  <Heading level={3} className="text-md font-normal mb-10 h-16">
+                    {__('token_sale_renting_title')}
+                  </Heading>
+                  <Heading level={4} className="h-[120px]">
+                    {selectedInvestment.renting.term[0]}
+                  </Heading>
+
+                  <div>
+                    <Heading level={5} className="uppercase font-bold mb-4">
+                      {__('token_sale_extra_costs')}
+                    </Heading>
+                    <div>
+                      <p>{selectedInvestment.renting.extraCosts[0]}</p>
+                      <p>{selectedInvestment.renting.extraCosts[1]}</p>
+                      <p>{selectedInvestment.renting.extraCosts[2]}</p>
+                      <p className="pt-4">{__('token_sale_asset_held')} €0</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white shadow-md rounded-md p-2 sm:p-6 text-left w-1/2">
+                  <Heading level={3} className="text-md font-normal mb-10 h-16">
+                    {__('token_sale_tdf_title')}
+                  </Heading>
+
+                  <div className="h-[120px]">
+                    <Heading level={4}>
+                      {selectedInvestment.tdf.term[0]}
+                    </Heading>
+                    <Heading level={4}>
+                      {selectedInvestment.tdf.term[1]}
+                    </Heading>
+                  </div>
+
+                  <Heading level={5} className="uppercase font-bold mb-4">
+                    {__('token_sale_extra_costs')}
+                  </Heading>
+
+                  <div>
+                    <p>{selectedInvestment.tdf.extraCosts[0]}</p>
+                    <p>{selectedInvestment.tdf.extraCosts[1]}</p>
+                    <p>{selectedInvestment.tdf.extraCosts[2]}</p>
+                    <p className="pt-4">
+                      {__('token_sale_asset_held')} {selectedInvestment.amount}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="flex items-center flex-col py-24">
-          <div className="w-full sm:w-[80%] flex items-center flex-col">
-            <div className="text-center mb-20">
-              <h2 className="mb-4 text-5xl font-bold">
-                {__('token_sale_public_sale_heading_tokenomics')}
-              </h2>
-              <div>{__('token_sale_public_sale_subheading_tokenomics')}</div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
-              <Card className="mb-0">
-                <Heading level={3} className="uppercase text-center">
-                  {__('token_sale_public_sale_subheading_base_price')}
+        <section className="flex items-center flex-col mb-32">
+          <div className="w-full flex flex-col  gap-20">
+            <div className="flex gap-20 justify-center items-center flex-col md:flex-row">
+              <Image
+                className="w-full md:w-1/3 max-w-[413px]"
+                src="/images/token-sale/dive-deeper.png"
+                width={413}
+                height={548}
+                alt={__('token_sale_tdf_heading')}
+              />
+              <div className="w-full md:w-2/3 flex flex-col gap-7 max-w-[430px] ">
+                <Heading level={2} className="text-5xl">
+                  {__('token_sale_dive_deeper_heading')}
                 </Heading>
-                <Image
-                  src="/images/token-sale/tokenomics1.png"
-                  alt="tokenomics"
-                  width={415}
-                  height={227}
-                />
-              </Card>
-              <Card className="!mb-0">
-                <Heading level={3} className="uppercase text-center">
-                  {__('token_sale_public_sale_subheading_target_supply')}
-                </Heading>
-                <Image
-                  src="/images/token-sale/tokenomics2.png"
-                  alt="tokenomics"
-                  width={415}
-                  height={227}
-                />
-              </Card>
-              <Card className="">
-                <Heading level={3} className="uppercase text-center">
-                  {__('token_sale_public_sale_subheading_sale_price')}
-                </Heading>
-                <Image
-                  src="/images/token-sale/tokenomics3.png"
-                  alt="tokenomics"
-                  width={415}
-                  height={227}
-                />
-              </Card>
-              <Card className="">
-                <Heading level={3} className="uppercase text-center">
-                  {__('token_sale_public_sale_subheading_liquidity')}
-                </Heading>
-                <Image
-                  src="/images/token-sale/tokenomics4.png"
-                  alt="tokenomics"
-                  width={415}
-                  height={227}
-                />
-              </Card>
-              <Card className="">
-                <Heading level={3} className="uppercase text-center">
-                  {__('token_sale_public_sale_subheading_future_scenarios')}
-                </Heading>
-                <Image
-                  src="/images/token-sale/tokenomics5.png"
-                  alt="tokenomics"
-                  width={415}
-                  height={227}
-                />
-              </Card>
-              <Card className="">
-                <Heading level={3} className="uppercase text-center">
-                  {__('token_sale_public_sale_subheading_distribution')}
-                </Heading>
-                <Image
-                  src="/images/token-sale/tokenomics6.png"
-                  alt="tokenomics"
-                  width={415}
-                  height={227}
-                />
-              </Card>
+                <div className="flex gap-8">
+                  <ul className="flex flex-col gap-5 ">
+                    <li>
+                      <Link
+                        className="text-accent underline font-bold"
+                        href="https://oasa.earth/papers/OASA-Whitepaper-V1.2.pdf"
+                      >
+                        {__('token_sale_white_paper')}
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        className="text-accent underline font-bold"
+                        href="https://docs.google.com/document/d/177JkHCy0AhplsaEEYpFHBsiI6d4uLk0TgURSKfBIewE/edit"
+                      >
+                        {__('token_sale_pink_paper')}
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        className="text-accent underline font-bold"
+                        href="https://oasa.earth/"
+                      >
+                        {__('token_sale_oasa_website')}
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        className="text-accent underline font-bold"
+                        href="/legal/terms"
+                      >
+                        {__('token_sale_terms')}
+                      </Link>
+                    </li>
+                  </ul>
+                  <ul className="flex flex-col gap-5 ">
+                    <li>
+                      <Link
+                        className="text-accent underline font-bold"
+                        href="/pdf/private-sale.pdf"
+                      >
+                        {__('token_sale_doc')}
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        className="text-accent underline font-bold"
+                        href="https://drive.google.com/file/d/1oQX49SQ5T_8c9_SuHQbGw9dNKM8jVLrq/view"
+                      >
+                        {__('token_sale_interior_design_report')}
+                      </Link>
+                    </li>
+                    {/* <li>
+                      <Link className="text-accent underline font-bold" href="">
+                        {__('token_sale_smart_design_report')}
+                      </Link>
+                    </li> */}
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        <section className="flex items-center flex-col py-24">
-          <div className="w-full sm:w-[80%] flex items-center flex-col">
-            <div className="text-center mb-20">
-              <h2 className="mb-4 text-5xl font-bold">
-                {__('token_sale_public_sale_heading_roadmap')}
-              </h2>
-              <div>{__('token_sale_public_sale_subheading_roadmap')}</div>
-            </div>
-            <div className="max-w-[600px]">
-              <div className="grid grid-cols-[37px_270px]">
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent w-[4px] h-[40px]"></div>
-                </div>
-                <div className="text-accent">
-                  {__('token_sale_public_sale_roadmap_subheading_1')}
-                </div>
-                <div className="w-7 h-7 bg-accent rounded-full"></div>
-                <Heading level={3} className="">
-                  {__('token_sale_public_sale_roadmap_heading_1')}
-                </Heading>
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent w-[4px] h-auto"></div>
-                </div>
-                <div className="h-40"></div>
+        <PeekIntoFuture />
+
+        <Ama />
+
+        <section className="flex items-center flex-col py-24 ">
+          <div className="w-full">
+            <div className="flex items-center  w-full flex-col gap-16">
+              <Heading
+                level={2}
+                className="mb-4 text-5xl font-bold max-w-[500px] text-center"
+              >
+                {__('token_sale_become_member_heading')}
+              </Heading>
+              <div className="bg-accent-light text-left p-6 max-w-[500px]">
+                <ul className="font-bold text-lg ">
+                  <li>{__('token_sale_member_benefit_1')}</li>
+                  <li>{__('token_sale_member_benefit_2')}</li>
+                  <li>{__('token_sale_member_benefit_3')}</li>
+                </ul>
               </div>
 
-              <div className="grid grid-cols-[37px_270px]">
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent w-[4px] h-[40px]"></div>
-                </div>
-                <div className="text-accent">
-                  {__('token_sale_public_sale_roadmap_subheading_2')}
-                </div>
-                <div className="w-7 h-7 bg-accent rounded-full"></div>
-                <Heading level={3} className="">
-                  {__('token_sale_public_sale_roadmap_heading_2')}
+              <div className="max-w-[500px] flex flex-col gap-3">
+                <Heading level={5} className="text-accent">
+                  {__('token_sale_member_step')} 1
                 </Heading>
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent w-[4px] h-auto"></div>
-                </div>
-                <div className="pb-20">
-                  <ul className="list-disc pl-5 my-4">
-                    <li>{__('token_sale_public_sale_roadmap_2_point_1')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_2_point_2')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_2_point_3')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_2_point_4')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_2_point_5')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_2_point_6')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_2_point_7')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_2_point_8')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_2_point_9')}</li>
-                  </ul>
-                </div>
+                <Heading level={5} className="font-bold">
+                  {__('token_sale_member_step_1')}
+                </Heading>
+                <p>{__('token_sale_member_step_1_text')} </p>
               </div>
-
-              <div className="grid grid-cols-[37px_270px]">
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent w-[4px] h-[40px]"></div>
-                </div>
-                <div className="text-accent"></div>
-                <div className="w-7 h-7 bg-accent-light border-4 border-accent rounded-full"></div>
-                <Heading level={3} className="">
-                  {__('token_sale_public_sale_roadmap_heading_3')}
+              <div className="max-w-[500px] flex flex-col gap-3">
+                <Heading level={5} className="text-accent">
+                  {__('token_sale_member_step')} 2
                 </Heading>
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent-light w-[4px] h-auto"></div>
-                </div>
-                <div className="pb-20">
-                  <Button
-                    onClick={() => router.push('/token')}
-                    type="secondary"
-                    className="my-6"
-                  >
-                    {' '}
-                    {__('token_sale_public_sale_roadmap_3_cta_button')}
-                  </Button>
-                </div>
+                <Heading level={5} className="font-bold">
+                  {__('token_sale_member_step_2')}
+                </Heading>
+                <p>{__('token_sale_member_step_2_text')} </p>
               </div>
-
-              <div className="grid grid-cols-[37px_270px]">
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent-light w-[4px] h-[40px]"></div>
-                </div>
-                <div className="text-accent">
-                  {__('token_sale_public_sale_roadmap_subheading_4')}
-                </div>
-                <div className="w-7 h-7 bg-accent-light rounded-full"></div>
-                <Heading level={3} className="">
-                  {__('token_sale_public_sale_roadmap_heading_4')}
+              <div className="max-w-[500px] flex flex-col gap-3">
+                <Heading level={5} className="text-accent">
+                  {__('token_sale_member_step')} 3
                 </Heading>
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent-light w-[4px] h-auto"></div>
-                </div>
-                <div className="pb-20">
-                  <ul className="list-disc pl-5 my-4">
-                    <li>{__('token_sale_public_sale_roadmap_4_point_1')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_4_point_2')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_4_point_3')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_4_point_4')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_4_point_5')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_4_point_6')}</li>
-                  </ul>
-                </div>
+                <Heading level={5} className="font-bold">
+                  {__('token_sale_member_step_3')}
+                </Heading>
+                <p>{__('token_sale_member_step_3_text')} </p>
               </div>
-
-              <div className="grid grid-cols-[37px_270px]">
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent-light w-[4px] h-[40px]"></div>
-                </div>
-                <div className="text-accent">
-                  {__('token_sale_public_sale_roadmap_subheading_5')}
-                </div>
-                <div className="w-7 h-7 bg-accent-light rounded-full"></div>
-                <Heading level={3} className="">
-                  {__('token_sale_public_sale_roadmap_heading_5')}
+              <div className="max-w-[500px] w-full flex flex-col gap-3">
+                <Heading level={5} className="text-accent">
+                  {__('token_sale_member_step')} 4
                 </Heading>
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent-light w-[4px] h-auto"></div>
-                </div>
-                <div className="pb-20">
-                  <ul className="list-disc pl-5 my-4">
-                    <li>{__('token_sale_public_sale_roadmap_5_point_1')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_5_point_2')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_5_point_3')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_5_point_4')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_5_point_5')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_5_point_6')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_5_point_7')}</li>
-                  </ul>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-[37px_270px]">
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent-light w-[4px] h-[40px]"></div>
-                </div>
-                <div className="text-accent">
-                  {__('token_sale_public_sale_roadmap_subheading_6')}
-                </div>
-                <div className="w-7 h-7 bg-accent-light rounded-full"></div>
-                <Heading level={3} className="">
-                  {__('token_sale_public_sale_roadmap_heading_6')}
+                <Heading level={5} className="font-bold">
+                  {__('token_sale_member_step_4')}
                 </Heading>
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent-light w-[4px] h-auto"></div>
-                </div>
-                <div className="pb-20">
-                  <ul className="list-disc pl-5 my-4">
-                    <li>{__('token_sale_public_sale_roadmap_6_point_1')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_6_point_2')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_6_point_3')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_6_point_4')}</li>
-                    <li>{__('token_sale_public_sale_roadmap_6_point_5')}</li>
-                  </ul>
-                </div>
+                <p>{__('token_sale_member_step_4_text')} </p>
               </div>
             </div>
           </div>

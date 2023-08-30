@@ -74,6 +74,159 @@ export const BOOKING_TYPE_OPTIONS = [
   { label: 'Stay', value: 'stay' },
 ];
 
+export const USER_ROLE_OPTIONS = [
+  { label: 'Any', value: 'any' },
+  { label: 'Admin', value: 'admin' },
+  { label: 'Event creator', value: 'event-creator' },
+  { label: 'Space host', value: 'space-host' },
+  { label: 'Steward', value: 'steward' },
+  { label: 'Community-curator', value: 'community-curator' },
+  { label: 'Member', value: 'member' },
+];
+
+export const USER_MEMBER_STATUS_OPTIONS = [
+  { label: 'Any', value: 'any' },
+  { label: 'Member', value: 'member' },
+  { label: 'Not member', value: 'Not Memebr' },
+];
+
+export const ACTIONS = [
+  { label: 'Send carrots', value: 'Send carrots' },
+  { label: 'Export selected (CSV)', value: 'Export selected (CSV)' },
+  { label: 'Add role', value: 'Add role' },
+  { label: 'Remove role', value: 'Remove role' },
+  { label: 'Copy emails', value: 'Copy emails' },
+  { label: 'Unlink wallet', value: 'Unlink wallet' },
+];
+
+export const SUBSCRIPTION_TIER_OPTIONS = [
+  { label: 'Any', value: 'any' },
+  { label: 'Explorer', value: 'explorer' },
+  { label: 'Wanderer', value: 'wanderer' },
+  { label: 'Pioneer', value: 'pioneer' },
+  { label: 'Sheep', value: 'sheep' },
+];
+
+export const USER_CREATED_OPTIONS = [
+  { label: 'Any', value: 'any' },
+  { label: 'Last week', value: 'last-week' },
+  { label: 'Last month', value: 'last-month' },
+  { label: 'Last 3 months', value: 'last-3-months' },
+  { label: 'Last 6 months', value: 'last-6-months' },
+];
+
+export const USER_SORT_OPTIONS = ['-created', 'screenname'];
+export const USER_SORT_TITLE_OPTIONS = ['Newest first', 'Name'];
+
+export const INVESTMENT_COMPARISON = [
+  {
+    amount: '€1,100',
+    renting: {
+      term: ['1 Month'],
+      extraCosts: ['Food - €500', 'Utility - €200', 'Co-working - €400'],
+    },
+    tdf: {
+      term: ['~4 $TDF', '4 days per year'],
+      extraCosts: [
+        'Food: Included',
+        'Utility: €10 p/day',
+        'Co-working: Included',
+      ],
+    },
+  },
+  {
+    amount: '€3,300',
+    renting: {
+      term: ['3 Months'],
+      extraCosts: [
+        'Food - €500 x 3',
+        'Utility - €200 x 3',
+        'Co-working - €400 x 3',
+      ],
+    },
+    tdf: {
+      term: ['~14 $TDF', '2 weeks per year'],
+      extraCosts: [
+        'Food: Included',
+        'Utility: €10 p/day',
+        'Co-working: Included',
+      ],
+    },
+  },
+  {
+    amount: '€7,000',
+    renting: {
+      term: ['6 Months'],
+      extraCosts: [
+        'Food - €500 x 6',
+        'Utility - €200 x 6',
+        'Co-working - €400 x 6',
+      ],
+    },
+    tdf: {
+      term: ['~30 $TDF', '1 month per year'],
+      extraCosts: [
+        'Food: Included',
+        'Utility: €10 p/day',
+        'Co-working: Included',
+      ],
+    },
+  },
+  {
+    amount: '€21,000',
+    renting: {
+      term: ['19 Months'],
+      extraCosts: [
+        'Food - €500 x 19',
+        'Utility - €200 x 19',
+        'Co-working - €400 x 19',
+      ],
+    },
+    tdf: {
+      term: ['~90 $TDF', '3 months per year'],
+      extraCosts: [
+        'Food: Included',
+        'Utility: €10 p/day',
+        'Co-working: Included',
+      ],
+    },
+  },
+  {
+    amount: '€84,680',
+    renting: {
+      term: ['6 years'],
+      extraCosts: [
+        'Food - €500 x 72',
+        'Utility - €200 x 72',
+        'Co-working - €400 x 72',
+      ],
+    },
+    tdf: {
+      term: ['~365 $TDF', 'You just Got a full time home!'],
+      extraCosts: [
+        'Food: Included',
+        'Utility: €10 p/day',
+        'Co-working: Included',
+      ],
+    },
+  },
+  {
+    amount: '278,000',
+    renting: {
+      term: ['Finally Bought a home!'],
+      extraCosts: ['Food - €500', 'Utility - €200', 'Co-working - €400'],
+    },
+    tdf: {
+      term: ['You spend the rest on building regen startups'],
+      extraCosts: [
+        'Food: Included',
+        'Utility: €10 p/day',
+        'Co-working: Included',
+      ],
+    },
+  },
+];
+
 export const BONDING_CURVE = {
   COEFFICIENTS: {
     a: -11680057722,

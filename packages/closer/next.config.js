@@ -13,7 +13,7 @@ const withMDX = require('@next/mdx')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  presets: ["next/babel"],
+  presets: ['next/babel'],
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   images: {
     remotePatterns: [
@@ -22,7 +22,7 @@ const nextConfig = {
       },
     ],
   },
-}
+};
 
 // Merge MDX config with Next.js config
-module.exports = withMDX(nextConfig)
+module.exports = withMDX(nextConfig);
