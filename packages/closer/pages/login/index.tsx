@@ -112,7 +112,7 @@ const Login = () => {
         <title>{__('login_title')}</title>
       </Head>
       <main className="flex flex-col items-center">
-        <section className="min-w-prose w-96 flex flex-col gap-8 py-20">
+        <section className="min-w-prose w-[280px] sm:w-96 flex flex-col gap-8 py-20">
           <Heading
             level={1}
             className="uppercase text-5xl sm:text-6xl font-extrabold"
