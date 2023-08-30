@@ -70,7 +70,7 @@ const HomePage = ({ subscriptionPlans }: Props) => {
         </div>
       </section>
 
-     <div className='relative top-[105vh]'>
+     <div className='relative top-[105vh]'> 
         <section className="text-center flex justify-center flex-wrap mb-12 ">
           <div className="max-w-[720px]">
             <p className="mb-6 ">
@@ -955,27 +955,6 @@ const HomePage = ({ subscriptionPlans }: Props) => {
 
       <Ama id='ama'/>
 
-      <section className="mb-12 max-w-6xl mx-auto md:pt-20 text-center flex justify-center">
-        <div className="md:max-w-lg" id="subscribe">
-          <Heading display level={3} className="mb-6">
-            <span className="text-4xl">Your guide to</span>
-            <br />
-            <span className="text-5xl">becoming a</span>
-            <br />
-            <span className="text-4xl">TDF VISIONARY</span>
-          </Heading>
-          <Heading display level={4} className="mb-6 max-w-xs">
-            Ready to change the way we live for good?
-          </Heading>
-          <p className="mb-6">We’re excited to have you on board.</p>
-          <Newsletter
-            placement="Landing"
-            className="card"
-            ctaText="Download your VISIONARY packs"
-            onSuccess={() => window.open('/pdf/private-sale.pdf')}
-          />
-        </div>
-      </section>
     </div>
   );
 };
