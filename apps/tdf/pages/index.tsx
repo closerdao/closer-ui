@@ -13,6 +13,7 @@ import { SubscriptionPlan } from 'closer/types/subscriptions';
 import api from 'closer/utils/api';
 import { __ } from 'closer/utils/helpers';
 import { event } from 'nextjs-google-analytics';
+import Ama from 'closer/components/Ama';
 
 const loadTime = new Date();
 
@@ -69,7 +70,7 @@ const HomePage = ({ subscriptionPlans }: Props) => {
         </div>
       </section>
 
-      <div className='relative top-[105vh]'>
+     <div className='relative top-[105vh]'> 
         <section className="text-center flex justify-center flex-wrap mb-12 ">
           <div className="max-w-[720px]">
             <p className="mb-6 ">
@@ -927,6 +928,8 @@ const HomePage = ({ subscriptionPlans }: Props) => {
             />
           </div>
         </section>
+
+        <Ama id='ama'/>
         
         <section className=" mb-[120vh] max-w-6xl mx-auto md:pt-20 text-center flex justify-center">
           <div className="md:max-w-lg" id="subscribe">
@@ -951,6 +954,8 @@ const HomePage = ({ subscriptionPlans }: Props) => {
         </section>
       </div>
 
+
+    
 
     </div>
   );
