@@ -928,6 +928,8 @@ const HomePage = ({ subscriptionPlans }: Props) => {
             />
           </div>
         </section>
+
+        <Ama id='ama'/>
         
         <section className=" mb-[120vh] max-w-6xl mx-auto md:pt-20 text-center flex justify-center">
           <div className="md:max-w-lg" id="subscribe">
@@ -953,7 +955,7 @@ const HomePage = ({ subscriptionPlans }: Props) => {
       </div>
 
 
-      <Ama id='ama'/>
+    
 
     </div>
   );
