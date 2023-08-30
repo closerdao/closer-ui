@@ -260,6 +260,7 @@
   "signup_form_referrer": "You have been referred by",
   "signup_form_get_credits": "Get 🥕 2 carrots for signing up. ",
   "signup_form_credit_learn_more": "Learn more",
+  "signup_form_email_consent": "I agree to be contacted via email",
   "task_list_empty_message": "No tasks yet.",
   "ticket_list_id": "Ticket ID:",
   "ticket_list_holder": "Ticket holder:",
