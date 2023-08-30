@@ -118,6 +118,115 @@ export const USER_CREATED_OPTIONS = [
 export const USER_SORT_OPTIONS = ['-created', 'screenname'];
 export const USER_SORT_TITLE_OPTIONS = ['Newest first', 'Name'];
 
+export const INVESTMENT_COMPARISON = [
+  {
+    amount: '€1,100',
+    renting: {
+      term: ['1 Month'],
+      extraCosts: ['Food - €500', 'Utility - €200', 'Co-working - €400'],
+    },
+    tdf: {
+      term: ['~4 $TDF', '4 days per year'],
+      extraCosts: [
+        'Food: Included',
+        'Utility: €10 p/day',
+        'Co-working: Included',
+      ],
+    },
+  },
+  {
+    amount: '€3,300',
+    renting: {
+      term: ['3 Months'],
+      extraCosts: [
+        'Food - €500 x 3',
+        'Utility - €200 x 3',
+        'Co-working - €400 x 3',
+      ],
+    },
+    tdf: {
+      term: ['~14 $TDF', '2 weeks per year'],
+      extraCosts: [
+        'Food: Included',
+        'Utility: €10 p/day',
+        'Co-working: Included',
+      ],
+    },
+  },
+  {
+    amount: '€7,000',
+    renting: {
+      term: ['6 Months'],
+      extraCosts: [
+        'Food - €500 x 6',
+        'Utility - €200 x 6',
+        'Co-working - €400 x 6',
+      ],
+    },
+    tdf: {
+      term: ['~30 $TDF', '1 month per year'],
+      extraCosts: [
+        'Food: Included',
+        'Utility: €10 p/day',
+        'Co-working: Included',
+      ],
+    },
+  },
+  {
+    amount: '€21,000',
+    renting: {
+      term: ['19 Months'],
+      extraCosts: [
+        'Food - €500 x 19',
+        'Utility - €200 x 19',
+        'Co-working - €400 x 19',
+      ],
+    },
+    tdf: {
+      term: ['~90 $TDF', '3 months per year'],
+      extraCosts: [
+        'Food: Included',
+        'Utility: €10 p/day',
+        'Co-working: Included',
+      ],
+    },
+  },
+  {
+    amount: '€84,680',
+    renting: {
+      term: ['6 years'],
+      extraCosts: [
+        'Food - €500 x 72',
+        'Utility - €200 x 72',
+        'Co-working - €400 x 72',
+      ],
+    },
+    tdf: {
+      term: ['~365 $TDF', 'You just Got a full time home!'],
+      extraCosts: [
+        'Food: Included',
+        'Utility: €10 p/day',
+        'Co-working: Included',
+      ],
+    },
+  },
+  {
+    amount: '278,000',
+    renting: {
+      term: ['Finally Bought a home!'],
+      extraCosts: ['Food - €500', 'Utility - €200', 'Co-working - €400'],
+    },
+    tdf: {
+      term: ['You spend the rest on building regen startups'],
+      extraCosts: [
+        'Food: Included',
+        'Utility: €10 p/day',
+        'Co-working: Included',
+      ],
+    },
+  },
+];
+
 export const BONDING_CURVE = {
   COEFFICIENTS: {
     a: -11680057722,

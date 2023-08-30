@@ -46,6 +46,8 @@
     "react-dom": "^18.2.0",
     "react-dropzone": "^11.3.2",
     "react-ga": "^3.3.0",
+    "react-grid-gallery": "^1.0.0",
+    "react-image-lightbox": "^5.1.4",
     "react-linkify": "^1.0.0-alpha",
     "react-markdown": "^8.0.5",
     "react-qr-code": "^2.0.3",
