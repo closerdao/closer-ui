@@ -4,7 +4,7 @@ interface Props {
 }
 
 const YoutubeEmbed = ({ embedId, isBackgroundVideo }: Props) => (
-  <div>
+  <div className="h-full">
     <iframe
       className={`${
         isBackgroundVideo
