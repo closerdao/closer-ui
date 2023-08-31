@@ -9,6 +9,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { FormattedFaqs, QuestionAndAnswer } from '../../types/resources';
 import { __ } from '../../utils/helpers';
 import { prepareFaqsData } from '../../utils/resources';
+import Ama from '../../components/Ama';
 
 interface Props {
   faqsData: any[];
@@ -178,6 +179,8 @@ const ResourcesPage = ({ faqsData }: Props) => {
           </div>
           <Resources />
         </section>
+
+        <Ama id='ama'/>
       </main>
     </div>
   );
