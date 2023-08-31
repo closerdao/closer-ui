@@ -43,6 +43,7 @@
     "react-countdown": "^2.3.5",
     "react-csv": "^2.2.2",
     "react-day-picker": "^8.7.1",
+    "react-device-detect": "^2.2.3",
     "react-dom": "^18.2.0",
     "react-dropzone": "^11.3.2",
     "react-ga": "^3.3.0",

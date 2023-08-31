@@ -3,17 +3,18 @@ import Image from 'next/image';
 import Link from 'next/link';
 import router from 'next/router';
 
+import { isMobile } from 'react-device-detect';
+
+import Ama from 'closer/components/Ama';
 import EventsList from 'closer/components/EventsList';
 import Newsletter from 'closer/components/Newsletter';
 import Resources from 'closer/components/Resources';
 
-import { Button, Card, Heading, Tag, useAuth } from 'closer';
-import { YoutubeEmbed } from 'closer';
+import { Button, Card, Heading, Tag, YoutubeEmbed } from 'closer';
 import { SubscriptionPlan } from 'closer/types/subscriptions';
 import api from 'closer/utils/api';
 import { __ } from 'closer/utils/helpers';
 import { event } from 'nextjs-google-analytics';
-import Ama from 'closer/components/Ama';
 
 const loadTime = new Date();
 
@@ -21,8 +22,6 @@ interface Props {
   subscriptionPlans: SubscriptionPlan[];
 }
 const HomePage = ({ subscriptionPlans }: Props) => {
-  const { isAuthenticated } = useAuth();
-
   return (
     <div>
       <Head>
@@ -34,10 +33,25 @@ const HomePage = ({ subscriptionPlans }: Props) => {
       </Head>
       <section className="absolute overflow-hidden left-0 h-[100vh] min-h-[100vh] min-w-[100vw] bg-accent-light pb-12 -mt-6 mb-12 md:mb-[100vh] text-right">
         <div className="h-[100vh]">
-          <YoutubeEmbed isBackgroundVideo={true} embedId="VkoqvPcaRpk" />
+          {isMobile ? (
+            <video
+              loop={true}
+              muted={true}
+              autoPlay={true}
+              playsInline={true}
+              className="w-full h-full object-cover"
+            >
+              <source
+                src="https://cdn.oasa.co/video/tdf-360-mute.mp4"
+                type="video/mp4"
+              />
+            </video>
+          ) : (
+            <YoutubeEmbed isBackgroundVideo={true} embedId="VkoqvPcaRpk" />
+          )}
         </div>
         <div className="absolute left-0 top-0 w-full h-full flex justify-center">
-          <div className='max-w-6xl flex justify-center flex-col items-center'>
+          <div className="max-w-6xl flex justify-center flex-col items-center">
             <Heading
               className="text-center drop-shadow-lg mb-6 md:mb-4 text-4xl sm:text-7xl md:text-8xl text-white"
               data-testid="page-title"
@@ -68,11 +82,10 @@ const HomePage = ({ subscriptionPlans }: Props) => {
               </Link>
             </div>
           </div>
-
         </div>
       </section>
 
-     <div className='relative top-[105vh]'> 
+      <div className="relative top-[105vh]">
         <section className="text-center flex justify-center flex-wrap mb-12 ">
           <div className="max-w-[720px]">
             <p className="mb-6 ">
@@ -80,17 +93,17 @@ const HomePage = ({ subscriptionPlans }: Props) => {
               space in Abela, Portugal.
             </p>
             <p className="mb-6 font-bold">
-              We are pioneering a model for regenerative co-living while creating
-              positive loops in all interactions between stakeholders including
-              nature, all life, and future generations. The idea is to prove we
-              can optimise resources while nurturing a creative and thriving
-              community and at the same time leave a positive trace on the
-              environment.
+              We are pioneering a model for regenerative co-living while
+              creating positive loops in all interactions between stakeholders
+              including nature, all life, and future generations. The idea is to
+              prove we can optimise resources while nurturing a creative and
+              thriving community and at the same time leave a positive trace on
+              the environment.
             </p>
             <p className="mb-6">
-              TDF opened its gates in April 2021 and been named as “synchronicity
-              paradise” where solarpunks, artists, families, regenerators, crypto
-              folks, entrepreneurs and digital nomads meet.
+              TDF opened its gates in April 2021 and been named as
+              “synchronicity paradise” where solarpunks, artists, families,
+              regenerators, crypto folks, entrepreneurs and digital nomads meet.
             </p>
           </div>
         </section>
@@ -121,15 +134,16 @@ const HomePage = ({ subscriptionPlans }: Props) => {
               </Heading>
               <p className="text-md mb-4">
                 In 2020, we set our sights on a small, arid plot of land in the
-                village of Abela, Portugal. Home to an old chicken farm, the land
-                is surrounded by beautiful hills and valleys, protected oak trees,
-                a winter-and-soon-to-be-also-summer-flowing river, a farmhouse,
-                and an old community mill.
+                village of Abela, Portugal. Home to an old chicken farm, the
+                land is surrounded by beautiful hills and valleys, protected oak
+                trees, a winter-and-soon-to-be-also-summer-flowing river, a
+                farmhouse, and an old community mill.
               </p>
               <p className="text-md mb-4">
-                We purchased the land in Spring 2021, and now this chicken farm is
-                our playground for change. The ground is being relearned, rewilded
-                and cultivated into a lusher, moister and greener future.
+                We purchased the land in Spring 2021, and now this chicken farm
+                is our playground for change. The ground is being relearned,
+                rewilded and cultivated into a lusher, moister and greener
+                future.
               </p>
             </div>
             <div className="relative p-4 text-left w-full md:w-[48%] bg-gradient-to-r from-[#ffeef8] to-accent-light">
@@ -149,12 +163,12 @@ const HomePage = ({ subscriptionPlans }: Props) => {
               </Heading>
               <p className="text-md mb-4">
                 A burgeoning web3-powered regenerative co-living, TDF is
-                shepherded by creative, playful and innovative folks. Designed to
-                be stewarded by 80-100 members, these continuously return to TDF
-                year after year, deepening their connection with the land and each
-                other. TDF is a beloved home — a modern, comfortable space where
-                friends gather, dreams are pursued, and positive change is driven,
-                all while having fun.
+                shepherded by creative, playful and innovative folks. Designed
+                to be stewarded by 80-100 members, these continuously return to
+                TDF year after year, deepening their connection with the land
+                and each other. TDF is a beloved home — a modern, comfortable
+                space where friends gather, dreams are pursued, and positive
+                change is driven, all while having fun.
               </p>
               <p className="text-md mb-4">
                 We are dreamers and futurists, and don’t worry - our dreams are
@@ -188,8 +202,8 @@ const HomePage = ({ subscriptionPlans }: Props) => {
                   <strong>$TDF</strong> (the amount of tokens you hold)
                 </li>
                 <li>
-                  <strong>Proof of Presence</strong> (the amount of time you spend
-                  at TDF per year)
+                  <strong>Proof of Presence</strong> (the amount of time you
+                  spend at TDF per year)
                 </li>
                 <li>Proof of Sweat (how much labour you’ve put into TDF)</li>
               </ul>
@@ -221,7 +235,8 @@ const HomePage = ({ subscriptionPlans }: Props) => {
                 future generations.
               </p>
               <p>
-                We see decentralisation as a practice, a verb, rather than a noun.{' '}
+                We see decentralisation as a practice, a verb, rather than a
+                noun.{' '}
               </p>
             </div>
             <div className="p-4 text-left w-full md:w-[48%] bg-neutral">
@@ -237,17 +252,17 @@ const HomePage = ({ subscriptionPlans }: Props) => {
                 <strong>
                   TDF is a blueprint for a system where the land owns itself
                 </strong>
-                ! The land belongs to OASA (a Land Trust-like Association), whilst
-                TDF Members have the right of utilising the facilities we build on
-                it, paired with the duty to care for and to bring more life to its
-                soils. It&apos;s a new way of seeing home that goes beyond owning
-                it. We&apos;re designing and building 7 generations ahead,
-                focusing on the kind of ancestors we want to be. Our model is
-                circular, designed to generate multiple kinds of wealth and
-                capital to stakeholders that go beyond TDF Members and include the
-                land, the local socio-economical system and more. TDF is living
-                example of a big playground for regenerative living systems. And
-                it&apos;s only the start!
+                ! The land belongs to OASA (a Land Trust-like Association),
+                whilst TDF Members have the right of utilising the facilities we
+                build on it, paired with the duty to care for and to bring more
+                life to its soils. It&apos;s a new way of seeing home that goes
+                beyond owning it. We&apos;re designing and building 7
+                generations ahead, focusing on the kind of ancestors we want to
+                be. Our model is circular, designed to generate multiple kinds
+                of wealth and capital to stakeholders that go beyond TDF Members
+                and include the land, the local socio-economical system and
+                more. TDF is living example of a big playground for regenerative
+                living systems. And it&apos;s only the start!
               </p>
             </div>
           </div>
@@ -262,9 +277,9 @@ const HomePage = ({ subscriptionPlans }: Props) => {
               Traditional Dream Factory
             </Heading>
             <p className="text-center md:text-left mb-6">
-              Our co-living quarters will be home to 14 large suites with a living
-              room & kitchen, 3 loft studios with a music production live-in
-              studio, and a private house for families or friends.
+              Our co-living quarters will be home to 14 large suites with a
+              living room & kitchen, 3 loft studios with a music production
+              live-in studio, and a private house for families or friends.
             </p>
             <p className="text-center md:text-left mb-6 uppercase font-bold">
               The TDF village is made up of:
@@ -320,7 +335,9 @@ const HomePage = ({ subscriptionPlans }: Props) => {
                   />
                   <Heading display level={4} className="md:text-sm">
                     Veggie farm{' '}
-                    <small className="text-sm font-light">(for 30+ people)</small>
+                    <small className="text-sm font-light">
+                      (for 30+ people)
+                    </small>
                     <Tag className="m-1" color="primary">
                       Just arrived!
                     </Tag>
@@ -444,7 +461,8 @@ const HomePage = ({ subscriptionPlans }: Props) => {
         <section>
           <div className="w-full flex justify-center flex-wrap mb-24">
             <p className="w-full font-bold uppercase text-center mb-6">
-              Check out our yearly reports to see everything we have done so far!
+              Check out our yearly reports to see everything we have done so
+              far!
             </p>
             <Link
               href="/pdf/2021-TDF-report.pdf"
@@ -601,7 +619,10 @@ const HomePage = ({ subscriptionPlans }: Props) => {
                 </div>
                 <div className="text-accent-alt"></div>
                 <div className="w-7 h-7 bg-accent-alt-light rounded-full"></div>
-                <Heading level={4} className="font-normal uppercase text-accent">
+                <Heading
+                  level={4}
+                  className="font-normal uppercase text-accent"
+                >
                   2024-2025 Phase 3
                 </Heading>
                 <div className="w-7 flex justify-center">
@@ -637,7 +658,10 @@ const HomePage = ({ subscriptionPlans }: Props) => {
                 </div>
                 <div className="text-accent-alt"></div>
                 <div className="w-7 h-7 bg-accent-alt-light rounded-full"></div>
-                <Heading level={4} className="font-normal uppercase text-accent">
+                <Heading
+                  level={4}
+                  className="font-normal uppercase text-accent"
+                >
                   2025 Phase 4
                 </Heading>
                 <div className="w-7 flex justify-center">
@@ -717,15 +741,15 @@ const HomePage = ({ subscriptionPlans }: Props) => {
               become a fellow Sheep.
             </p>
             <p className="mb-6">
-              We crafted different journeys for curious souls to visit and build,
-              to see if there’s a vibe to join. Currently, our focus is on opening
-              doors to share our work and co-create, all the while supporting our
-              team’s work and our Roadmap construction.
+              We crafted different journeys for curious souls to visit and
+              build, to see if there’s a vibe to join. Currently, our focus is
+              on opening doors to share our work and co-create, all the while
+              supporting our team’s work and our Roadmap construction.
               <strong>
                 With this in mind, we put together a visit & support model built
                 with reciprocity at its core. It combines TDF’s needs, whilst
-                providing folks with a easy way to visit, surprises and gratitude
-                nudges on the ground.
+                providing folks with a easy way to visit, surprises and
+                gratitude nudges on the ground.
               </strong>
             </p>
             <p className="mb-6">
@@ -803,8 +827,8 @@ const HomePage = ({ subscriptionPlans }: Props) => {
                 Which path is for me?
               </Heading>
               <p className="text-md mb-4 max-w-3xl">
-                Want to see how the subscriptions compare to one another to choose
-                the best option is right for you?
+                Want to see how the subscriptions compare to one another to
+                choose the best option is right for you?
               </p>
               <Button
                 size="small"
@@ -838,8 +862,9 @@ const HomePage = ({ subscriptionPlans }: Props) => {
                 serving regenerative living places and the planet
               </Heading>
               <p className="mb-6  ">
-                When humans thrive together, magical things happen. OASA Projects
-                have <strong>regeneration, creativity, innovation</strong> and{' '}
+                When humans thrive together, magical things happen. OASA
+                Projects have{' '}
+                <strong>regeneration, creativity, innovation</strong> and{' '}
                 <strong>playfulness</strong> at their core.
               </p>
               <p className="mb-6 uppercase font-bold">The goal?</p>
@@ -880,8 +905,8 @@ const HomePage = ({ subscriptionPlans }: Props) => {
               $TDF Public Sale Now OPEN!
             </Heading>
             <h2 className="px-4 mb-8 text-center leading-5 max-w-[460px] font-bold uppercase text-md">
-              The first crypto token that provides you with housing & food, while
-              regenerating the planet
+              The first crypto token that provides you with housing & food,
+              while regenerating the planet
             </h2>
             {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' ? (
               <Button
@@ -911,11 +936,12 @@ const HomePage = ({ subscriptionPlans }: Props) => {
             </Heading>
             <p className="mb-6 text-sm md:text-base">
               TDF is more than the land from which we build. Regeneration
-              transcends soil, bricks and mortar and farming practices. It is also
-              about our souls. It gathers thinkers, artists, farmers, developers,
-              entrepreneurs, healers, investors - all to supercharge a movement
-              that will bring us all closer to a regenerative whole-system. Come
-              to TDF for an event where you can meet all these folks.
+              transcends soil, bricks and mortar and farming practices. It is
+              also about our souls. It gathers thinkers, artists, farmers,
+              developers, entrepreneurs, healers, investors - all to supercharge
+              a movement that will bring us all closer to a regenerative
+              whole-system. Come to TDF for an event where you can meet all
+              these folks.
             </p>
           </div>
           <div className="flex-grow">
@@ -931,8 +957,8 @@ const HomePage = ({ subscriptionPlans }: Props) => {
           </div>
         </section>
 
-        <Ama id='ama'/>
-        
+        <Ama id="ama" />
+
         <section className=" mb-[120vh] max-w-6xl mx-auto md:pt-20 text-center flex justify-center">
           <div className="md:max-w-lg" id="subscribe">
             <Heading display level={3} className="mb-6">
@@ -955,10 +981,6 @@ const HomePage = ({ subscriptionPlans }: Props) => {
           </div>
         </section>
       </div>
-
-
-    
-
     </div>
   );
 };
