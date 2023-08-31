@@ -36,35 +36,37 @@ const HomePage = ({ subscriptionPlans }: Props) => {
         <div className="h-[100vh]">
           <YoutubeEmbed isBackgroundVideo={true} embedId="VkoqvPcaRpk" />
         </div>
-        <div className="max-w-6xl absolute right-5 sm:right-10 top-10 ">
-          <Heading
-            className="drop-shadow-lg md:mt-6 mb-6 md:mb-12 text-4xl sm:text-7xl md:text-8xl text-white ml-8 text-right"
-            data-testid="page-title"
-            display
-          >
-            Discover <br />
-            the power of <br />
-            regenerative <br />
-            co-living.
-          </Heading>
-          <p className="md:mt-10 mb-6 md:mb-12 text-2xl md:text-4xl text-white ml-8 font-bold">
-            Your home for the future.
-          </p>
-
-          <div className="mb-4">
-            <Link
-              href="/subscriptions"
-              type="submit"
-              className="btn-primary btn-large"
-              onClick={() =>
-                event('click', {
-                  category: 'HomePage',
-                  label: 'Join the Dream',
-                })
-              }
+        <div className="absolute left-0 top-0 w-full h-full flex justify-center">
+          <div className='max-w-6xl flex justify-center flex-col items-center'>
+            <Heading
+              className="text-center drop-shadow-lg mb-6 md:mb-4 text-4xl sm:text-7xl md:text-8xl text-white"
+              data-testid="page-title"
+              display
+              level={1}
             >
-              JOIN THE DREAM
-            </Link>
+              Discover <br />
+              the power of <br />
+              regenerative <br />
+              co-living.
+            </Heading>
+            <p className="drop-shadow-lg md:mt-4 mb-6 md:mb-6 text-2xl md:text-4xl text-white font-bold">
+              Your home for the future.
+            </p>
+            <div>
+              <Link
+                href="/subscriptions"
+                type="submit"
+                className="btn-primary btn-large"
+                onClick={() =>
+                  event('click', {
+                    category: 'HomePage',
+                    label: 'Join the Dream',
+                  })
+                }
+              >
+                JOIN THE DREAM
+              </Link>
+            </div>
           </div>
 
         </div>
