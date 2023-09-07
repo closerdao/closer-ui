@@ -5,9 +5,8 @@ import router from 'next/router';
 
 import { isMobile } from 'react-device-detect';
 
-import Ama from 'closer/components/Ama';
 import EventsList from 'closer/components/EventsList';
-import Newsletter from 'closer/components/Newsletter';
+import PhotoGallery from 'closer/components/PhotoGallery';
 import Resources from 'closer/components/Resources';
 
 import { Button, Card, Heading, Tag, YoutubeEmbed } from 'closer';
@@ -68,9 +67,9 @@ const HomePage = ({ subscriptionPlans }: Props) => {
             </p>
             <div>
               <Link
-                href="/subscriptions"
+                href="/signup"
                 type="submit"
-                className="btn-primary btn-large"
+                className="bg-accent text-white rounded-full py-2.5 px-8 text-xl"
                 onClick={() =>
                   event('click', {
                     category: 'HomePage',
@@ -86,187 +85,6 @@ const HomePage = ({ subscriptionPlans }: Props) => {
       </section>
 
       <div className="relative top-[105vh]">
-        <section className="text-center flex justify-center flex-wrap mb-12 ">
-          <div className="max-w-[720px]">
-            <p className="mb-6 ">
-              Traditional Dream Factory is a web3-powered regenerative co-living
-              space in Abela, Portugal.
-            </p>
-            <p className="mb-6 font-bold">
-              We are pioneering a model for regenerative co-living while
-              creating positive loops in all interactions between stakeholders
-              including nature, all life, and future generations. The idea is to
-              prove we can optimise resources while nurturing a creative and
-              thriving community and at the same time leave a positive trace on
-              the environment.
-            </p>
-            <p className="mb-6">
-              TDF opened its gates in April 2021 and been named as
-              “synchronicity paradise” where solarpunks, artists, families,
-              regenerators, crypto folks, entrepreneurs and digital nomads meet.
-            </p>
-          </div>
-        </section>
-        <section className="text-center  flex justify-center flex-wrap mb-12 ">
-          <div className="w-full flex justify-center">
-            <Heading level={1} className="uppercase max-w-[750px] mb-12 ">
-              <span className="block text-5xl font-extrabold">Discover</span>
-              <span className="block text-5xl sm:text-7xl font-extrabold">
-                Traditional Dream Factory
-              </span>
-            </Heading>
-          </div>
-          <div className="flex flex-wrap gap-4 w-full max-w-6xl justify-center">
-            <div className="relative p-4 text-left w-full md:w-[48%] bg-gradient-to-r from-accent-alt-light to-accent-alt-medium">
-              <Image
-                className="absolute right-[10px] top-[10px]"
-                src="/images/landing/illy-land.png"
-                width={191}
-                height={131}
-                alt="Land"
-              />
-              <Heading
-                className="mt-24 sm:mt-8 mb-2 uppercase text-5xl"
-                level={2}
-              >
-                The <br />
-                land
-              </Heading>
-              <p className="text-md mb-4">
-                In 2020, we set our sights on a small, arid plot of land in the
-                village of Abela, Portugal. Home to an old chicken farm, the
-                land is surrounded by beautiful hills and valleys, protected oak
-                trees, a winter-and-soon-to-be-also-summer-flowing river, a
-                farmhouse, and an old community mill.
-              </p>
-              <p className="text-md mb-4">
-                We purchased the land in Spring 2021, and now this chicken farm
-                is our playground for change. The ground is being relearned,
-                rewilded and cultivated into a lusher, moister and greener
-                future.
-              </p>
-            </div>
-            <div className="relative p-4 text-left w-full md:w-[48%] bg-gradient-to-r from-[#ffeef8] to-accent-light">
-              <Image
-                className="absolute right-[10px] top-[-20px]"
-                src="/images/landing/illy-dream.png"
-                width={186}
-                height={144}
-                alt="Land"
-              />
-              <Heading
-                className="mt-24 sm:mt-8 mb-2 uppercase text-5xl"
-                level={2}
-              >
-                The <br />
-                dream
-              </Heading>
-              <p className="text-md mb-4">
-                A burgeoning web3-powered regenerative co-living, TDF is
-                shepherded by creative, playful and innovative folks. Designed
-                to be stewarded by 80-100 members, these continuously return to
-                TDF year after year, deepening their connection with the land
-                and each other. TDF is a beloved home — a modern, comfortable
-                space where friends gather, dreams are pursued, and positive
-                change is driven, all while having fun.
-              </p>
-              <p className="text-md mb-4">
-                We are dreamers and futurists, and don’t worry - our dreams are
-                rooted in realism. A new life of regeneration and co-living is
-                emerging, and it starts at TDF in Abela.
-              </p>
-            </div>
-            <div className="relative p-4 text-left w-full md:w-[48%] bg-gradient-to-r from-[#ffeef8] to-accent-light">
-              <Image
-                className="absolute right-[20px] top-[-25px]"
-                src="/images/landing/illy-dao.png"
-                width={158}
-                height={155}
-                alt="Land"
-              />
-              <Heading
-                className="mt-24 sm:mt-8 mb-2 uppercase text-5xl"
-                level={2}
-              >
-                <br />
-                DAO
-              </Heading>
-              <p className="text-md mb-4">
-                TDF is a Decentralised Autonomous Organisation - aka a DAO,
-                legally recognised in Switzerland through OASA (read more about
-                this in OASAs Whitepaper). TDF DAO makes decisions based on
-                different governance parameters:
-              </p>
-              <ul className="mb-4 list-disc pl-5">
-                <li>
-                  <strong>$TDF</strong> (the amount of tokens you hold)
-                </li>
-                <li>
-                  <strong>Proof of Presence</strong> (the amount of time you
-                  spend at TDF per year)
-                </li>
-                <li>Proof of Sweat (how much labour you’ve put into TDF)</li>
-              </ul>
-              <p className="text-md mb-4">
-                *Presence and Sweat collected only by TDF Members (Sheep 🐑)
-              </p>
-            </div>
-            <div className="relative p-4 text-left w-full md:w-[48%] bg-gradient-to-r from-accent-alt-light to-accent-alt-medium">
-              <Image
-                className="absolute right-[20px] top-[-25px]"
-                src="/images/landing/illy-governance.png"
-                width={120}
-                height={155}
-                alt="Land"
-              />
-              <Heading
-                className="mt-24 sm:mt-8 mb-2 uppercase text-4xl sm:text-5xl"
-                level={2}
-              >
-                <br />
-                Governance
-              </Heading>
-              <p className="text-md mb-4">
-                TDF is operated on principles of decentralised decision-making,
-                regenerative working cultures, agile development, Sociocracy 3.0
-                and likely many more. By decentralisation we mean that
-                decision-making considers people and the different ways they
-                interact with the TDF ecosystem, local stakeholders, nature and
-                future generations.
-              </p>
-              <p>
-                We see decentralisation as a practice, a verb, rather than a
-                noun.{' '}
-              </p>
-            </div>
-            <div className="p-4 text-left w-full md:w-[48%] bg-neutral">
-              <Heading
-                className="mt-8 mb-2 uppercase text-4xl sm:text-5xl"
-                level={2}
-              >
-                FROM OWNERSHIP TO STEWARDSHIP
-              </Heading>
-              <p className="text-md mb-4 max-w-3xl">
-                We&apos;re exploring new models for living together and
-                challenging traditional ideas of ownership:{' '}
-                <strong>
-                  TDF is a blueprint for a system where the land owns itself
-                </strong>
-                ! The land belongs to OASA (a Land Trust-like Association),
-                whilst TDF Members have the right of utilising the facilities we
-                build on it, paired with the duty to care for and to bring more
-                life to its soils. It&apos;s a new way of seeing home that goes
-                beyond owning it. We&apos;re designing and building 7
-                generations ahead, focusing on the kind of ancestors we want to
-                be. Our model is circular, designed to generate multiple kinds
-                of wealth and capital to stakeholders that go beyond TDF Members
-                and include the land, the local socio-economical system and
-                more. TDF is living example of a big playground for regenerative
-                living systems. And it&apos;s only the start!
-              </p>
-            </div>
-          </div>
-        </section>
         <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2">
           <div className="md:max-w-xl">
             <Heading
@@ -480,249 +298,24 @@ const HomePage = ({ subscriptionPlans }: Props) => {
             </Link>
           </div>
         </section>
-        <section className="flex flex-wrap justify-center">
-          <div>
-            <Heading
-              className="text-4xl mb-6 max-w-3xl text-center mt-8  uppercase sm:text-5xl bg-[url(/images/landing/spade.png)] bg-no-repeat pt-[170px] bg-top"
-              level={2}
-            >
-              The Journey of our decentralised co-living
-            </Heading>
-            <p className="text-center">
-              Where we’ve been and where we’re going - see our{' '}
-              <strong>Roadmap</strong>:
-            </p>
-          </div>
-        </section>
-        <section className="flex items-center flex-col py-24">
-          <div className="w-full sm:w-[80%] flex items-center flex-col">
-            <div className="max-w-[800px]">
-              <div className="grid grid-cols-[37px_240px] sm:grid-cols-[37px_370px]">
-                <div className="w-7 h-7 bg-accent-alt rounded-full"></div>
-                <Heading level={4} className="text-accent">
-                  APRIL 2021
-                </Heading>
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent-alt w-[4px] h-auto"></div>
-                </div>
-                <div className="pb-12 uppercase">
-                  <p>
-                    <strong>Keys To The Chicken Farm. </strong>
-                  </p>
-                  <p>We move in to the ‘áviário’</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-[37px_240px] sm:grid-cols-[37px_370px]">
-                <div className="w-7 h-7 bg-accent-alt rounded-full"></div>
-                <Heading level={4} className="uppercase text-accent">
-                  <span className="font-normal">2021-2022 Phase 1 -</span>
-                </Heading>
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent-alt w-[4px] h-auto"></div>
-                </div>
-                <div className="pb-12">
-                  <Heading level={4} className="uppercase text-accent">
-                    Completed
-                  </Heading>
-                  <p className="uppercase font-bold">Operational CO-LIVING</p>
-                  <ul className=" my-4 list-none">
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Operational Event Venue (up to 100 guests)
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      10 Glamping Accommodations
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Food Forest V1
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Reforestation V1
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Grey Water Treatment (Halophyte Filter) V1
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Solar Energy
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Functional Workshop and Makerspaces
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Industrial Kitchen
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Sauna
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Co-Working Space and Starlink
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              <div className="grid grid-cols-[37px_240px] sm:grid-cols-[37px_370px]">
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent-alt w-[4px] h-[40px]"></div>
-                </div>
-                <div className="text-accent-alt"></div>
-                <div className="w-7 h-7 bg-accent-alt-light border-4 border-accent-alt rounded-full"></div>
-                <Heading level={4} className="uppercase text-accent">
-                  <span className="font-normal">2023 - 2024 Phase 2 -</span>
-                </Heading>
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent-alt-light w-[4px] h-auto"></div>
-                </div>
-                <div className="pb-12">
-                  <Heading level={4} className="uppercase text-accent">
-                    FUNDRAISING
-                  </Heading>
-                  <p className="uppercase font-bold">LAND, CO-LIVING & WATER</p>
-                  <p className="uppercase font-bold mt-6">We are here</p>
-                  {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE && (
-                    <Button
-                      onClick={() => router.push('/token')}
-                      className="my-6"
-                      size="small"
-                    >
-                      Help us fund phase 2
-                    </Button>
-                  )}
-                  <ul>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Co-Living Building Renovation (roof, windows, insulation,
-                      flooring, energy and heating systems)
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      6 Suites with Private Bath
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Natural Pool
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Water Systems V2 (Co-Living Building & Land Water Capture)
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Pay Off Loan & Transfer Chicken Farm Property into Enseada
-                      Sonhadora (local SPV owned by OASA){' '}
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Kitchen V2
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Team Operations & Salaries
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              <div className="grid grid-cols-[37px_240px] sm:grid-cols-[37px_370px]">
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent-alt-light w-[4px] h-[40px]"></div>
-                </div>
-                <div className="text-accent-alt"></div>
-                <div className="w-7 h-7 bg-accent-alt-light rounded-full"></div>
-                <Heading
-                  level={4}
-                  className="font-normal uppercase text-accent"
-                >
-                  2024-2025 Phase 3
-                </Heading>
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent-alt-light w-[4px] h-auto"></div>
-                </div>
-                <div className="pb-12">
-                  <p className="font-bold uppercase mb-6">
-                    Dream Spaces & Expansion
-                  </p>
-                  <ul>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      8 Suites added to Co-Living
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Workshop Building Renovation
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Co-Working Garden
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Farm to Table Restaurant + Cafe + Industrial Kitchen
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Purchase Land (currently rent contract with option to buy,
-                      25he)
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              <div className="grid grid-cols-[37px_270px]">
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent-alt-light w-[4px] h-[40px]"></div>
-                </div>
-                <div className="text-accent-alt"></div>
-                <div className="w-7 h-7 bg-accent-alt-light rounded-full"></div>
-                <Heading
-                  level={4}
-                  className="font-normal uppercase text-accent"
-                >
-                  2025 Phase 4
-                </Heading>
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent-alt-light w-[4px] h-auto"></div>
-                </div>
-                <div className="pb-12">
-                  <p className="font-bold uppercase mb-6">Finishing Touches</p>
-                  <ul>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      4 Studios
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Family House
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Green Roof
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Greenhouse (made out of old warehouses windows)
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Spa
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              <div className="grid grid-cols-[37px_270px]">
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent-alt-light w-[4px] h-[40px]"></div>
-                </div>
-                <div className="text-accent"></div>
-                <div className="w-7 h-7 bg-accent-alt-light rounded-full"></div>
-                <Heading level={4} className="uppercase text-accent">
-                  TDF: GO LIVE EVENT 🎉🎉🎉
-                </Heading>
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent-alt-light w-[4px] h-auto"></div>
-                </div>
-                <div className="pb-12">
-                  <ul className="mt-6">
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      TDF V1 IS READY!
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      $TDF UNSTAKED
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      TDF V2 Dream Session: Co-housing and Permanent Living?
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      4000m2 of permits to build
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Governance Structure V2: Post Roadmap Era
-                    </li>
-                  </ul>
-                </div>
-              </div>
+
+        <section className="flex items-center flex-col py-12 ">
+          <div className="text-center mb-20 w-full md:max-w-6xl">
+            <div className="w-full flex items-center flex-col">
+              <Heading
+                level={2}
+                className="mb-4 text-5xl font-bold max-w-[600px]"
+              >
+                {__('token_sale_meet_your_home_heading')}
+              </Heading>
+              <Heading level={3} className="text-md max-w-[600px]">
+                {__('token_sale_meet_your_home_subheading')}
+              </Heading>
             </div>
+            <PhotoGallery className="mt-12" />
           </div>
         </section>
+
         <section className="text-center flex justify-center flex-wrap mb-12">
           <div className="max-w-[720px]">
             <Heading
@@ -761,12 +354,12 @@ const HomePage = ({ subscriptionPlans }: Props) => {
           </div>
         </section>
         <section className="flex justify-center flex-wrap mb-[120px]">
-          <div className="flex flex-col sm:flex-row gap-[2%] justify-between flex-wrap w-full sm:max-w-6xl">
+          <div className="flex flex-col sm:flex-row gap-5 justify-between flex-wrap w-full sm:max-w-6xl">
             {subscriptionPlans &&
               subscriptionPlans.map((plan) => (
                 <Card
                   key={plan.title}
-                  className="mb-8 px-4 py-6 text-center items-center flex flex-col justify-between gap-4 w-full sm:w-[49%] lg:w-[23%]"
+                  className="mb-8 px-4 py-6 text-center items-center flex flex-col justify-between gap-4 w-full sm:flex-1"
                 >
                   <div className="flex items-center gap-4 flex-col">
                     <Heading level={2} className="uppercase mb-6">
@@ -896,39 +489,7 @@ const HomePage = ({ subscriptionPlans }: Props) => {
           </Heading>
           <Resources />
         </section>
-        <section className="mb-20 flex justify-center">
-          <div className='w-full max-w-6xl h-[500px] md:h-[600px] flex items-center flex-col bg-center bg-[#333333] bg-cover bg-no-repeat  bg-[url("/images/landing/token-sale-inverted.jpg")]'>
-            <Heading
-              level={2}
-              className="px-4 mb-8 mt-[180px] md:mt-[200px] max-w-[600px] text-center font-extrabold text-3xl sm:text-5xl md:text-6xl uppercase"
-            >
-              $TDF Public Sale Now OPEN!
-            </Heading>
-            <h2 className="px-4 mb-8 text-center leading-5 max-w-[460px] font-bold uppercase text-md">
-              The first crypto token that provides you with housing & food,
-              while regenerating the planet
-            </h2>
-            {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' ? (
-              <Button
-                onClick={() => router.push('/token')}
-                className="!w-60 font-bold mb-3 md:mb-8 relative"
-              >
-                <Image
-                  className="absolute left-[200px] w-14 h-18"
-                  src="/images/token-sale/arrow.png"
-                  alt="arrow"
-                  width={85}
-                  height={99}
-                />
-                Buy $TDF
-              </Button>
-            ) : (
-              <Heading level={3} className="uppercase">
-                Coming soon!
-              </Heading>
-            )}
-          </div>
-        </section>
+
         <section className="mb-20 max-w-6xl mx-auto md:pt-20 text-center md:text-left md:flex md:space-x-12">
           <div className="md:max-w-lg w-full md:w-1/3">
             <Heading display level={2} className="mb-6 text-3xl">
@@ -957,29 +518,10 @@ const HomePage = ({ subscriptionPlans }: Props) => {
           </div>
         </section>
 
-        <Ama id="ama" />
+        {/* <Ama id="ama" /> */}
 
-        <section className=" mb-[120vh] max-w-6xl mx-auto md:pt-20 text-center flex justify-center">
-          <div className="md:max-w-lg" id="subscribe">
-            <Heading display level={3} className="mb-6">
-              <span className="text-4xl">Your guide to</span>
-              <br />
-              <span className="text-5xl">becoming a</span>
-              <br />
-              <span className="text-4xl">TDF VISIONARY</span>
-            </Heading>
-            <Heading display level={4} className="mb-6 max-w-xs">
-              Ready to change the way we live for good?
-            </Heading>
-            <p className="mb-6">We’re excited to have you on board.</p>
-            <Newsletter
-              placement="Landing"
-              className="card"
-              ctaText="Download your VISIONARY packs"
-              onSuccess={() => window.open('/pdf/private-sale.pdf')}
-            />
-          </div>
-        </section>
+        {/* this is needed because video embed in the header causes layout to be cut off at the bottom of the page */}
+        <section className="mb-[120vh]"></section>
       </div>
     </div>
   );
