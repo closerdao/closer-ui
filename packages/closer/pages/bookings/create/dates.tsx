@@ -24,6 +24,7 @@ import {
   DEFAULT_CURRENCY,
 } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import { User } from '../../../contexts/auth/types';
 import { Event, TicketOption } from '../../../types';
 import { BookingSettings, VolunteerOpportunity } from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
@@ -67,6 +68,20 @@ const DatesSelector: NextPage<Props> = ({
 
   const [blockedDateRanges, setBlockedDateRanges] = useState<any[]>([]);
 
+  const canBookStays = (user: User) => {
+    if (
+      (!user.subscription ||
+        !user.subscription.plan ||
+        !STAY_BOOKING_ALLOWED_PLANS.includes(user.subscription.plan)) &&
+      !user.roles.includes('member') &&
+      !volunteerId &&
+      !eventId
+    ) {
+      return false;
+    }
+    return true;
+  };
+
   const getMaxBookingHorizon = () => {
     if (settings) {
       if (isMember) {
@@ -100,13 +115,7 @@ const DatesSelector: NextPage<Props> = ({
 
   useEffect(() => {
     if (user) {
-      if (
-        (!user.subscription ||
-          !user.subscription.plan ||
-          !STAY_BOOKING_ALLOWED_PLANS.includes(user.subscription.plan)) &&
-        !volunteerId &&
-        !eventId
-      ) {
+      if (!canBookStays(user)) {
         router.push('/bookings/unlock-stays');
       }
     }
@@ -307,10 +316,11 @@ const DatesSelector: NextPage<Props> = ({
                 label=""
                 onChange={setDoesNeedPickup}
                 checked={doesNeedPickup}
-                />
-              <div className='w-full text-xs'>{__('bookings_pickup_disclaimer')}</div>
+              />
+              <div className="w-full text-xs">
+                {__('bookings_pickup_disclaimer')}
+              </div>
             </div>
-                
           </div>
 
           {handleNextError && (
