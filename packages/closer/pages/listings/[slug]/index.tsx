@@ -190,8 +190,8 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
         data: { results: newBooking },
       } = await api.post('/bookings/request', {
         useTokens: currency === CURRENCIES[1],
-        start,
-        end,
+        start: String(start),
+        end: String(end),
         adults,
         infants,
         pets,
@@ -211,6 +211,7 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
   };
 
   const fetchPrices = async () => {
+    console.log('end=', end);
     setApiError(null);
     try {
       const {
@@ -403,29 +404,6 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
                           currencies={CURRENCIES}
                         />
                       )}
-
-                      {/* {listing.fiatPrice && (
-                        <p className="text-left">
-                          <span className="font-bold text-md sm:text-2xl">
-                            {currency === CURRENCIES[1]
-                              ? priceFormat(
-                                  listing.tokenPrice.val * bookingPeriod[1],
-                                  listing.tokenPrice.cur,
-                                )
-                              : priceFormat(
-                                  listing.fiatPrice.val * bookingPeriod[1],
-                                  listing.fiatPrice.cur,
-                                )}{' '}
-                          </span>
-
-                          {bookingPeriod[0] === 'night' &&
-                            __('listing_preview_per_night')}
-                          {bookingPeriod[0] === 'week' &&
-                            __('listing_preview_per_week')}
-                          {bookingPeriod[0] === 'month' &&
-                            __('listing_preview_per_month')}
-                        </p>
-                      )} */}
 
                       <div className="block sm:hidden">
                         {currency === CURRENCIES[1] ? (
