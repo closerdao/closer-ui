@@ -13,13 +13,7 @@ const UpcomingEventsIntro = () => {
               JOIN FELLOW FUTURISTS FOR UPCOMING EVENTS
             </Heading>
             <p className="mb-6 text-sm md:text-base">
-              TDF is more than the land from which we build. Regeneration
-              transcends soil, bricks and mortar and farming practices. It is
-              also about our souls. It gathers thinkers, artists, farmers,
-              developers, entrepreneurs, healers, investors - all to supercharge
-              a movement that will bring us all closer to a regenerative
-              whole-system. Come to TDF for an event where you can meet all
-              these folks.
+              {'TDF isn\'t just land; it\'s where artists, farmers, developers, entrepreneurs, and healers converge for holistic regeneration. Join an event to connect with these visionaries.'}
             </p>
           </div>
           <div className="flex-grow">
