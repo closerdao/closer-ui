@@ -14,7 +14,6 @@ interface Props {
   setPets: (value: number) => void;
   doesNeedSeparateBeds?: boolean;
   setDoesNeedSeparateBeds?: (value: boolean) => void;
-  shouldHideTitle?: boolean;
 }
 
 const BookingGuests = ({
@@ -28,18 +27,14 @@ const BookingGuests = ({
   setPets,
   doesNeedSeparateBeds,
   setDoesNeedSeparateBeds,
-  shouldHideTitle,
 }: Props) => {
   return (
     <div>
-      {!shouldHideTitle && (
-        <HeadingRow>
-          <span className="mr-2">👨‍👩‍👦</span>
-          <span>{__('bookings_dates_step_guests_title')}</span>
-        </HeadingRow>
-      )}
-
-      <div className="mt-4 ">
+      <HeadingRow>
+        <span className="mr-2">👨‍👩‍👦</span>
+        <span>{__('bookings_dates_step_guests_title')}</span>
+      </HeadingRow>
+      <div className="mt-4">
         <div className="flex space-between items-center">
           <p className="flex-1">{__('bookings_dates_step_guests_adults')}</p>
           <Counter value={adults} setFn={setAdults} minValue={1} />
@@ -57,9 +52,9 @@ const BookingGuests = ({
           <Counter value={pets} setFn={setPets} minValue={0} />
         </div>
         {adults > 1 && (
-          <div className="my-6  mb-0 flex flex-row justify-between items-center">
-            <label htmlFor="separateBeds" className={`${shouldHideTitle ? 'text-sm' : 'text-md'}  `}>
-            {__('bookings_does_prefer_single_beds')}
+          <div className="my-10 flex flex-row justify-between">
+            <label htmlFor="separateBeds" className="text-md">
+              {__('bookings_does_prefer_single_beds')}
             </label>
             <Switch
               disabled={false}

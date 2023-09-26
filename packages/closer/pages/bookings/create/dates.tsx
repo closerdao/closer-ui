@@ -30,7 +30,7 @@ import { BookingSettings, VolunteerOpportunity } from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { __, getMaxBookingHorizon } from '../../../utils/helpers';
+import { __ } from '../../../utils/helpers';
 
 const STAY_BOOKING_ALLOWED_PLANS = ['wanderer', 'pioneer', 'sheep'];
 
@@ -67,13 +67,29 @@ const DatesSelector: NextPage<Props> = ({
   } = router.query || {};
 
   const [blockedDateRanges, setBlockedDateRanges] = useState<any[]>([]);
+
   const canBookStays = (user: User) => {
     if (
-      !user.roles.includes('member') 
+      (!user.subscription ||
+        !user.subscription.plan ||
+        !STAY_BOOKING_ALLOWED_PLANS.includes(user.subscription.plan)) &&
+      !user.roles.includes('member') &&
+      !volunteerId &&
+      !eventId
     ) {
       return false;
     }
     return true;
+  };
+
+  const getMaxBookingHorizon = () => {
+    if (settings) {
+      if (isMember) {
+        return settings?.conditions.member.maxBookingHorizon;
+      }
+      return settings?.conditions.guest.maxBookingHorizon;
+    }
+    return 0;
   };
 
   const memoizedBlockedDateRanges = useMemo(() => {
@@ -92,9 +108,7 @@ const DatesSelector: NextPage<Props> = ({
     });
     dateRanges.push({ before: new Date() });
     dateRanges.push({
-      after: new Date().setDate(
-        new Date().getDate() + getMaxBookingHorizon(settings, isMember)[0],
-      ),
+      after: new Date().setDate(new Date().getDate() + getMaxBookingHorizon()),
     });
     return dateRanges;
   }

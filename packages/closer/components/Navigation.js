@@ -39,18 +39,18 @@ const Navigation = () => {
     <div className="NavContainer h-20 md:pt-0 top-0 left-0 right-0 fixed z-20 bg-background shadow">
       <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
         <Logo />
-        <div className="flex gap-3 w-auto justify-center items-center ">
+        <div className="flex gap-3 w-auto">
           <Button
-            onClick={() => router.push('/listings')}
+            onClick={() => router.push('/bookings/create/dates')}
             size="small"
-            type="primary"
+            type="secondary"
           >
-            {isAuthenticated ? __('navigation_stay') : __('navigation_visit') }
+            {__('navigation_stay')}
           </Button>
           {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && (
-            <Link href="/token" className="uppercase">
+            <Button onClick={() => router.push('/token')} size="small">
               {__('navigation_buy_token')}
-            </Link>
+            </Button>
           )}
 
           {isAuthenticated && (
@@ -63,11 +63,9 @@ const Navigation = () => {
               <ProfilePhoto user={user} size="10" />
             </Link>
           )}
-          <div className="ml-4">
-            <Menu isOpen={navOpen} toggleNav={toggleNav}>
-              {isAuthenticated ? <MemberMenu /> : <GuestMenu />}
-            </Menu>
-          </div>
+          <Menu isOpen={navOpen} toggleNav={toggleNav}>
+            {isAuthenticated ? <MemberMenu /> : <GuestMenu />}
+          </Menu>
         </div>
       </div>
     </div>

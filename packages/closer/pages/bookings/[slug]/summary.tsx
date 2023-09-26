@@ -11,7 +11,6 @@ import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
-import dayjs from 'dayjs';
 import { NextApiRequest } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
@@ -66,8 +65,7 @@ const Summary = ({ booking, listing, event, error }: Props) => {
   useEffect(() => {
     if (user) {
       setIsMember(
-        STAY_BOOKING_ALLOWED_PLANS.includes(user?.subscription?.plan) ||
-          user?.roles.includes('member'),
+        STAY_BOOKING_ALLOWED_PLANS.includes(user?.subscription?.plan),
       );
     }
   }, [user]);
@@ -94,16 +92,7 @@ const Summary = ({ booking, listing, event, error }: Props) => {
   };
 
   const goBack = () => {
-    const dateFormat = 'YYYY-MM-DD';
-    if (router.query.back) {
-      router.push(
-        `/listings/${router.query.back}?start=${dayjs(start).format(
-          dateFormat,
-        )}&end=${dayjs(end).format(dateFormat)}&adults=${adults}&useTokens=${useTokens}`,
-      );
-    } else {
-      router.push(`/bookings/${booking._id}/questions?goBack=true`);
-    }
+    router.push(`/bookings/${booking._id}/questions?goBack=true`);
   };
 
   if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
