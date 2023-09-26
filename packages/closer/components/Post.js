@@ -1,7 +1,6 @@
 import Link from 'next/link';
 
 import React, { useEffect, useState } from 'react';
-import Linkify from 'react-linkify';
 
 import { useAuth } from '../contexts/auth';
 import api, { cdn, formatSearch } from '../utils/api';
@@ -148,23 +147,12 @@ const Post = ({
         </div>
       )}
       <div className="card-body">
-        <div className="body">
-          <Linkify
-            componentDecorator={(decoratedHref, decoratedText, key) => (
-              <a
-                target="_blank"
-                rel="nofollow noreferrer"
-                href={decoratedHref}
-                key={key}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {decoratedText}
-              </a>
-            )}
-          >
-            {content}
-          </Linkify>
-        </div>
+        <div
+          dangerouslySetInnerHTML={{
+            __html: content,
+          }}
+        />
+
         {tags && tags.length > 0 && (
           <div className="tags">
             {tags.map((tag) => (

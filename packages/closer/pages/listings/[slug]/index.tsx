@@ -2,7 +2,6 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 
 import React, { useEffect, useState } from 'react';
-import Linkify from 'react-linkify';
 
 import BookingGuests from '../../../components/BookingGuests';
 import CurrencySwitcher from '../../../components/CurrencySwitcher';
@@ -303,27 +302,11 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
                 <div className="w-auto p-2 sm:pr-8 flex flex-col">
                   <div className="flex flex-col gap-6 ">
                     <section>
-                      <div>
-                        <Linkify
-                          componentDecorator={(
-                            decoratedHref,
-                            decoratedText,
-                            key,
-                          ) => (
-                            <a
-                              target="_blank"
-                              rel="nofollow noreferrer"
-                              href={decoratedHref}
-                              key={key}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {decoratedText}
-                            </a>
-                          )}
-                        >
-                          {listing.description}
-                        </Linkify>
-                      </div>
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: listing.description,
+                        }}
+                      />
                     </section>
 
                     {/* TODO: possible alternative to hardcoding amenities is adding this block to listing description with new rich text editor */}

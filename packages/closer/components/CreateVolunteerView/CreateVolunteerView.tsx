@@ -31,6 +31,7 @@ const CreateVolunteerView: FC<CreateProps | EditProps> = ({
       <EditModel
         id={data._id}
         fields={models.volunteer}
+        initialData={data}
         endpoint={'/volunteer'}
         onSave={redirectToVolunteerList}
         allowDelete

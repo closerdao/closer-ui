@@ -35,6 +35,7 @@ export type Event = {
   managedBy: string[];
   _id: string;
   visual?: string
+  featured?: boolean
 };
 export type TicketOption = {
   name: string;

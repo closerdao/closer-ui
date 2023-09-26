@@ -284,6 +284,7 @@
   "ticket_options_add_type": "Add ticket type",
   "upload_photo_loading_message": "Uploading...",
   "upload_photo_prompt_message": "Drop files here",
+  "upload_image_button": "Upload image",
   "user_list_empty": "No members.",
   "user_list_all": "See all",
   "admin_unlink_wallet": "Unlink user's wallet address",
@@ -366,6 +367,7 @@
   "bookings_checkout_ticket_cost": "Ticket cost",
   "bookings_checkout_event_cost": "Event cost",
 
+
   "blockchain_bypass_wallet": "Skip, I'll pay fiat",
   "channel_create_title": "Create Channel",
   "community_title": "Community",
@@ -407,6 +409,9 @@
   "events_event_end_date": "Event end date",
   "events_event_end_time": "Event end time",
   "events_time": "time",
+  "events_buy_ticket_button": "Buy ticket",
+  "events_see_ticket_button": "See ticket",
+  "events_discalimer": "Accommodation booking required for multi-day events",
   "generic_back": "Back",
   "generic_cancel": "Cancel",
   "generic_next": "Next",
@@ -659,10 +664,26 @@
   "volunteer_create_page_title": "Create a new volunteer opportunity",
   "volunteer_page_opportunity_ended": "This opportunity has ended",
   "volunteer_page_does_not_exist": "Volunteering opportunity does not exist",
-  "volunteers_page_title": "Work with volunteers at your village",
+  "volunteers_page_title": "Volunteering Opportunities",
+  "volunteers_page_intro_text": "Experience community living by getting your hands dirty! Be an active part of the community during your stay at TDF and help maintain the space, contribute your skills or bring something completely new and fresh. Choose an option below that resonates with you.",
+  "volunteers_page_terms_1": "Accommodation costs covered",
+  "volunteers_page_terms_2": "Pay only Utility Cost (€10 per day)",
+  "volunteers_page_terms_3": "  Food included",
+  "volunteers_page_terms_4": "~ 4 Hours of work per day",
+  "volunteers_page_terms_5": "Unlock the possibility to become a member after 14 days",
+  "volunteers_page_more_info": "For more information check out our <a class='text-accent underline' href='https://docs.google.com/document/d/177JkHCy0AhplsaEEYpFHBsiI6d4uLk0TgURSKfBIewE/edit'>Pink Paper</a>, <a class='text-accent underline' href='https://docs.google.com/document/d/198vWYEQCC1lELQa8f76Jcw3l3UDiPcBKt04PGFKnUvg/edit'>Visitors Guide</a> or <a class='text-accent underline' href='https://lu.ma/vnts9n0v'>Book An Onboarding Call</a>.",
+
   "volunteers_page_empty": "There are no volunteer opportunities at the moment.",
   "button_edit_opportunity": "Edit opportunity",
   "event_description_title": "Event description",
+  "event_view_tickets_button": "View tickets",
+  "event_organiser": "Organizer:",
+  "event_event_ended": "Event ended",
+  "event_tickets_sold": "Sold out",
+  "event_tickets_last": "Last tickets",
+  "event_tickets_available": "Available",
+
+  "event_edit_event_button": "Edit event",
   "volunteer_description_title": "Opportunity description",
   "volunteer_edit_page_title": "Edit volunteer opportunity",
   "volunteer_edit_page_delete": "Delete opportunity",
@@ -806,12 +827,6 @@
   "token_sale_member_step_3_text": "This will then be send to the DAO where you will have the opportunity to be vouched for by current members. Upon being vouched for by at least 3 current members, your application will be successful!",
   "token_sale_member_step_4": "You are now a sheep!",
   "token_sale_member_step_4_text": "Behhhh",
-
-
-
-
-
-
 
   "token_sale_approval_error": "Error approving cEUR. Please, make sure the amount to approve you entered is ~5% greater than total.",
   "token_sale_buy_error": "Error purchasing cEUR. Please make sure you have sufficient cEUR balance and CELO balance to pay gas fees.",

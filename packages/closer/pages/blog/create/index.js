@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import React, { useState } from 'react';
-import Editor from 'react-simple-wysiwyg';
+
+import RichTextEditor from '../../../components/RichTextEditor';
 
 import { useAuth } from '../../../contexts/auth';
 import api from '../../../utils/api';
@@ -14,14 +15,14 @@ const Create = () => {
   const { isAuthenticated } = useAuth();
   const [html, setHtml] = useState('');
   const [title, setTitle] = useState('');
-  const onChange = (e) => {
-    setHtml(e.target.value);
-  }
+  const onChange = (value) => {
+    setHtml(value);
+  };
 
   const persist = async () => {
     const res = await api.post('/article', { title, html });
-    router.push(decodeURIComponent(`/blog/${ res.data.results.slug }`));
-  }
+    router.push(decodeURIComponent(`/blog/${res.data.results.slug}`));
+  };
 
   return (
     <>
@@ -30,7 +31,7 @@ const Create = () => {
 
         <meta property="og:type" content="article" />
       </Head>
-      <form onSubmit={ e => e.preventDefault() }>
+      <form onSubmit={(e) => e.preventDefault()}>
         {/* { article.photo && <div className="relative w-full h-96 md:basis-1/2 md:w-96">
           <Image
             src={ fullImageUrl }
@@ -40,27 +41,26 @@ const Create = () => {
           />
         </div> } */}
         <div className="mb-4">
-          <div><Link href="/blog">◀️ Blog</Link></div>
+          <div>
+            <Link href="/blog">◀️ Blog</Link>
+          </div>
           <input
             type="text"
             className="text-xl mb-2"
             placeholder="Article Title"
-            value={ title }
-            onChange={ e => setTitle(e.target.value) }
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
           />
           {isAuthenticated && (
             <div>
-              <button
-                className="btn-primary"
-                type="submit"
-                onClick={ persist }
-              >
+              <button className="btn-primary" type="submit" onClick={persist}>
                 Save
               </button>
             </div>
           )}
         </div>
-        <Editor value={html} onChange={onChange} />
+
+        <RichTextEditor value={html} onChange={onChange} />
       </form>
     </>
   );

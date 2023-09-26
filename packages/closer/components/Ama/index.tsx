@@ -12,8 +12,8 @@ interface Props {
 
 const Ama = ({ id }: Props) => {
   return (
-    <section id={id} className="flex items-center flex-col py-24">
-      <div className=" max-w-6xl">
+    <section id={id} className="flex items-center flex-col py-24 ">
+      <div className="max-w-6xl ">
         <div className="text-center mb-20">
           <Heading level={2} className="mb-4 text-5xl font-bold">
             {__('token_sale_ama_heading')}
