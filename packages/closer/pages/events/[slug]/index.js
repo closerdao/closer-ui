@@ -342,7 +342,7 @@ const Event = ({ event, error }) => {
               </div>
             </div>
           </section>
-          <main className="main-content max-w-prose py-10">
+          <main className="main-content max-w-prose py-10 overflow-hidden">
             {((event.partners && event.partners.length > 0) ||
               (isAuthenticated && user._id === event.createdBy)) && (
               <section className="mb-6">
@@ -382,7 +382,10 @@ const Event = ({ event, error }) => {
               />
             )}
 
-            {event.description && <EventDescription event={event} />}
+              {event.description && <EventDescription event={event} />}
+              
+
+              
           </main>
         </div>
       )}

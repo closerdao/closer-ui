@@ -8,24 +8,16 @@ import { priceFormat } from '../utils/helpers';
 import { __ } from '../utils/helpers';
 import Slider from './Slider';
 
-const ListingListPreview = ({ listing, rate, book }) => {
-  const { isAuthenticated, user } = useAuth();
-  if (!listing || !isAuthenticated) {
-    return null;
-  }
+const ListingListPreview = ({ listing }) => {
+  const { user } = useAuth();
 
   return (
-    <div className="listing-list-preview card">
-      <div className="card-header">
-        <Link href={`/listings/${listing.get('slug')}`}>
-
-          <b>{listing.get('name')}</b>
-
-        </Link>
-      </div>
-      <div className="card-body">
+    <div className="flex flex-col gap-5 justify-between">
+      <div className="flex flex-col gap-5">
         {listing.get('photos') && listing.get('photos').count() > 0 && (
           <Slider
+            link={`/listings/${listing.get('slug')}`}
+            isListingPreview={true}
             slides={listing
               .get('photos')
               .toJS()
@@ -34,40 +26,53 @@ const ListingListPreview = ({ listing, rate, book }) => {
               }))}
           />
         )}
+        <Link
+          href={`/listings/${listing.get('slug')}`}
+          className="hover:text-accent uppercase font-bold block text-left"
+        >
+          {listing.get('name')}
+        </Link>
+
         {listing.get('description') && (
-          <p className="my-3">
+          <p className="text-left">
             {listing.get('description').slice(0, 120)}
             {listing.get('description').length > 120 && '...'}
           </p>
         )}
-        {listing.get('dailyRate') && (
-          <p className="text-gray-500">
-            {priceFormat(
-              listing.getIn([rate, 'val']),
-              listing.getIn([rate, 'cur']),
-            )}{' '}
+      </div>
+
+      <div className="flex flex-col gap-7">
+        {listing.get('fiatPrice') && (
+          <p className="text-left">
+            <span className="font-bold">
+              {priceFormat(
+                listing.get('fiatPrice').toJS().val,
+                listing.get('fiatPrice').toJS().cur,
+              )}{' '}
+            </span>
             {__('listing_preview_per_night')}
           </p>
         )}
-      </div>
-      <div className="card-footer">
-        {(user.roles.includes('admin') ||
-          user.roles.includes('space-host')) && (
-          <Link href={`/listings/${listing.get('slug')}/edit`} className="btn mr-2">
-            {__('listing_preview_edit')}
-          </Link>
-        )}
-        {book && (
-          <a
-            className="btn"
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              book();
-            }}
-          >
-            {__('listing_preview_book')}
-          </a>
+
+        <Link
+          href={`/listings/${listing.get('slug')}`}
+          className="rounded-full flex py-2 uppercase text-accent bg-white border-2 justify-center border-accent"
+        >
+          {__('listing_preview_book')}
+        </Link>
+
+        {user && user.roles.includes('space-host') && (
+          <div className="card-footer">
+            {(user.roles.includes('admin') ||
+              user.roles.includes('space-host')) && (
+              <Link
+                href={`/listings/${listing.get('slug')}/edit`}
+                className="btn mr-2"
+              >
+                {__('listing_preview_edit')}
+              </Link>
+            )}
+          </div>
         )}
       </div>
     </div>

@@ -41,7 +41,7 @@ const Navigation = () => {
         <Logo />
         <div className="flex gap-3 w-auto">
           <Button
-            onClick={() => router.push('/bookings/create/dates')}
+            onClick={() => router.push('/listings')}
             size="small"
             type="secondary"
           >

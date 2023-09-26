@@ -1,8 +1,10 @@
+import ReactGA from 'react-ga';
+
 import dayjs from 'dayjs';
+import advancedFormat from 'dayjs/plugin/advancedFormat';
 import duration from 'dayjs/plugin/duration';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import advancedFormat from 'dayjs/plugin/advancedFormat';
 
 import { blockchainConfig } from '../config_blockchain';
 import { REFUND_PERIODS } from '../constants';
@@ -191,7 +193,7 @@ export const getSample = (field) => {
     case 'currencies':
       return [
         {
-          cur: 'USD',
+          cur: 'EUR',
           val: 0,
         },
       ];
@@ -411,4 +413,28 @@ export const prepareUserDataForCsvExport = (usersData) => {
   });
 
   return { headers, data };
+};
+
+export const sendAnalyticsEvent = (action, category, label) => {
+  ReactGA.event({
+    action,
+    category,
+    label,
+  });
+};
+
+export const getMaxBookingHorizon = (settings, isMember) => {
+  if (settings) {
+    if (isMember) {
+      return [
+        settings?.conditions.member.maxBookingHorizon,
+        settings?.conditions.member.maxDuration,
+      ];
+    }
+    return [
+      settings?.conditions.guest.maxBookingHorizon,
+      settings?.conditions.guest.maxDuration,
+    ];
+  }
+  return [0, 0];
 };
