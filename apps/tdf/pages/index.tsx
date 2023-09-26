@@ -47,36 +47,38 @@ const HomePage = ({ subscriptionPlans }: Props) => {
             <YoutubeEmbed isBackgroundVideo={true} embedId="VkoqvPcaRpk" />
           )}
         </div>
-        <div className="absolute left-0 top-0 w-full h-full flex justify-center">
-          <div className="max-w-6xl flex justify-center flex-col items-center">
-            <Heading
-              className="text-center drop-shadow-lg mb-6 md:mb-4 text-4xl sm:text-7xl md:text-8xl text-white"
-              data-testid="page-title"
-              display
-              level={1}
-            >
-              Discover <br />
-              the power of <br />
-              regenerative <br />
-              co-living.
-            </Heading>
-            <p className="drop-shadow-lg md:mt-4 mb-6 md:mb-6 text-2xl md:text-4xl text-white font-bold">
-              Your home for the future.
-            </p>
-            <div>
-              <Link
-                href="/signup"
-                type="submit"
-                className="bg-accent text-white rounded-full py-2.5 px-8 text-xl"
-                onClick={() =>
-                  event('click', {
-                    category: 'HomePage',
-                    label: 'Join the Dream',
-                  })
-                }
+        <div className="absolute left-0 top-0 w-full h-full flex justify-center ">
+          <div className="w-full flex justify-center flex-col items-center">
+            <div className=' max-w-6xl w-full p-6'>
+              <Heading
+                className=" w-6xl text-right drop-shadow-lg mb-6 md:mb-4 text-4xl sm:text-7xl md:text-8xl text-white"
+                data-testid="page-title"
+                display
+                level={1}
               >
-                JOIN THE DREAM
-              </Link>
+                Discover <br />
+                the power of <br />
+                regenerative <br />
+                co-living.
+              </Heading>
+              <p className="drop-shadow-lg md:mt-4 mb-6 md:mb-6 text-2xl md:text-4xl text-white font-bold">
+                Your home for the future.
+              </p>
+              <div>
+                <Link
+                  href="/signup"
+                  type="submit"
+                  className="bg-accent text-white rounded-full py-2.5 px-8 text-xl"
+                  onClick={() =>
+                    event('click', {
+                      category: 'HomePage',
+                      label: 'Join the Dream',
+                    })
+                  }
+                >
+                  JOIN THE DREAM
+                </Link>
+              </div>
             </div>
           </div>
         </div>
