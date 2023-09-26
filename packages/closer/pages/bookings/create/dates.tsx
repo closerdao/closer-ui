@@ -67,15 +67,9 @@ const DatesSelector: NextPage<Props> = ({
   } = router.query || {};
 
   const [blockedDateRanges, setBlockedDateRanges] = useState<any[]>([]);
-
   const canBookStays = (user: User) => {
     if (
-      (!user.subscription ||
-        !user.subscription.plan ||
-        !STAY_BOOKING_ALLOWED_PLANS.includes(user.subscription.plan)) &&
-      !user.roles.includes('member') &&
-      !volunteerId &&
-      !eventId
+      !user.roles.includes('member') 
     ) {
       return false;
     }
