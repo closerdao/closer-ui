@@ -19,6 +19,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@react-google-maps/api": "^2.19.2",
     "@react-icons/all-files": "^4.1.0",
     "@stripe/react-stripe-js": "^1.4.1",
     "@stripe/stripe-js": "^1.16.0",

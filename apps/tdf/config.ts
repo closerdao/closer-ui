@@ -13,6 +13,7 @@ const config = {
   TWITTER_URL: 'https://twitter.com/traditionaldreamfactory',
   LOGO_HEADER: '/images/logo.png',
   LOGO_FOOTER: '/images/logo.svg',
+  LOCATION_COORDINATES: { lat: 38.003164469592555, lng: -8.55915483117878 },
   PERMISSIONS: {
     event: {
       create: 'event-creator',

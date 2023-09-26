@@ -6,17 +6,15 @@ import router from 'next/router';
 import { isMobile } from 'react-device-detect';
 
 import Ama from 'closer/components/Ama';
-import EventsList from 'closer/components/EventsList';
 import Newsletter from 'closer/components/Newsletter';
 import Resources from 'closer/components/Resources';
+import UpcomingEventsIntro from 'closer/components/UpcomingEventsIntro';
 
 import { Button, Card, Heading, Tag, YoutubeEmbed } from 'closer';
 import { SubscriptionPlan } from 'closer/types/subscriptions';
 import api from 'closer/utils/api';
 import { __ } from 'closer/utils/helpers';
 import { event } from 'nextjs-google-analytics';
-
-const loadTime = new Date();
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
@@ -761,12 +759,12 @@ const HomePage = ({ subscriptionPlans }: Props) => {
           </div>
         </section>
         <section className="flex justify-center flex-wrap mb-[120px]">
-          <div className="flex flex-col sm:flex-row gap-[2%] justify-between flex-wrap w-full sm:max-w-6xl">
+          <div className="flex flex-col sm:flex-row gap-5 justify-between flex-wrap w-full sm:max-w-6xl">
             {subscriptionPlans &&
               subscriptionPlans.map((plan) => (
                 <Card
                   key={plan.title}
-                  className="mb-8 px-4 py-6 text-center items-center flex flex-col justify-between gap-4 w-full sm:w-[49%] lg:w-[23%]"
+                  className="mb-8 px-4 py-6 text-center items-center flex flex-col justify-between gap-4 w-full sm:flex-1"
                 >
                   <div className="flex items-center gap-4 flex-col">
                     <Heading level={2} className="uppercase mb-6">
@@ -929,33 +927,8 @@ const HomePage = ({ subscriptionPlans }: Props) => {
             )}
           </div>
         </section>
-        <section className="mb-20 max-w-6xl mx-auto md:pt-20 text-center md:text-left md:flex md:space-x-12">
-          <div className="md:max-w-lg w-full md:w-1/3">
-            <Heading display level={2} className="mb-6 text-3xl">
-              JOIN FELLOW FUTURISTS FOR UPCOMING EVENTS
-            </Heading>
-            <p className="mb-6 text-sm md:text-base">
-              TDF is more than the land from which we build. Regeneration
-              transcends soil, bricks and mortar and farming practices. It is
-              also about our souls. It gathers thinkers, artists, farmers,
-              developers, entrepreneurs, healers, investors - all to supercharge
-              a movement that will bring us all closer to a regenerative
-              whole-system. Come to TDF for an event where you can meet all
-              these folks.
-            </p>
-          </div>
-          <div className="flex-grow">
-            <EventsList
-              limit={2}
-              cols={2}
-              where={{
-                end: {
-                  $gt: loadTime,
-                },
-              }}
-            />
-          </div>
-        </section>
+
+        <UpcomingEventsIntro />
 
         <Ama id="ama" />
 

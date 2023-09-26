@@ -39,6 +39,7 @@ const ListingCard = ({
       {listing.photos && listing.photos.length > 0 && (
         <div className="relative h-48 rounded-lg my-4 overflow-hidden">
           <Image
+            className='object-cover'
             priority
             src={`${cdn}${listing.photos[0]}-post-md.jpg`}
             alt={name}
