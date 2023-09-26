@@ -6,4 +6,7 @@
 @import './css/forms.css';
 @import './css/custom.css';
 @import 'react-widgets/styles.css';
-@import './css/react-day-picker.css'
+@import './css/react-day-picker.css';
+@import './css/react-image-lightbox.css';
+@import './css/quill-rich-text-editor.css';
+

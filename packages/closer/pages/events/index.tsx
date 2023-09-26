@@ -38,6 +38,7 @@ const Events: NextPage = () => {
           </div>
         </div>
         <EventsList
+          cols={2}
           limit={30}
           where={{
             end: {
@@ -53,6 +54,7 @@ const Events: NextPage = () => {
           </Heading>
         </div>
         <EventsList
+          cols={2}
           limit={30}
           where={{
             end: {

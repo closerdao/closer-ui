@@ -27,7 +27,7 @@ const EditVolunteerOportunity: NextPage<{
         <Heading level={2} className="mb-2">
           {__('volunteer_edit_page_title')}
         </Heading>
-        <CreateVolunteerView isEditMode data={volunteer} />
+        <CreateVolunteerView isEditMode={true} data={volunteer} />
       </div>
     </>
   );

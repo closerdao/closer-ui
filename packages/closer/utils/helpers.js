@@ -1,8 +1,10 @@
+import ReactGA from 'react-ga';
+
 import dayjs from 'dayjs';
+import advancedFormat from 'dayjs/plugin/advancedFormat';
 import duration from 'dayjs/plugin/duration';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import advancedFormat from 'dayjs/plugin/advancedFormat';
 
 import { blockchainConfig } from '../config_blockchain';
 import { REFUND_PERIODS } from '../constants';
@@ -191,7 +193,7 @@ export const getSample = (field) => {
     case 'currencies':
       return [
         {
-          cur: 'USD',
+          cur: 'EUR',
           val: 0,
         },
       ];
@@ -356,4 +358,83 @@ export const isInputValid = (value, validation) => {
 
 export const doesAddressMatchPattern = (value, validation) => {
   return doesRegexMatch(value, validation);
+};
+
+export const getCreatedPeriodFilter = (period) => {
+  {
+    const today = new Date();
+    let startDate;
+
+    switch (period) {
+      case 'last-week':
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - 7);
+        break;
+      case 'last-month':
+        startDate = new Date(today);
+        startDate.setMonth(today.getMonth() - 1);
+        break;
+      case 'last-3-months':
+        startDate = new Date(today);
+        startDate.setMonth(today.getMonth() - 3);
+        break;
+      case 'last-6-months':
+        startDate = new Date(today);
+        startDate.setMonth(today.getMonth() - 6);
+        break;
+      default:
+        return null;
+    }
+
+    return {
+      $gte: startDate,
+    };
+  }
+};
+
+export const prepareUserDataForCsvExport = (usersData) => {
+  const headers = [
+    { label: 'Name', key: 'name' },
+    { label: 'Email', key: 'email' },
+    { label: 'Wallet address', key: 'walletAddress' },
+    { label: 'Roles', key: 'roles' },
+    { label: 'Created', key: 'created' },
+  ];
+
+  const data = usersData.map((userMap) => {
+    const user = userMap.toJS();
+    return {
+      name: user.screenname,
+      email: user.email,
+      walletAddress: user.walletAddress || '-',
+      created: user.created,
+      roles: (user.roles && user.roles.join()) || '-',
+    };
+  });
+
+  return { headers, data };
+};
+
+export const sendAnalyticsEvent = (action, category, label) => {
+  ReactGA.event({
+    action,
+    category,
+    label,
+  });
+};
+
+export const getMaxBookingHorizon = (settings, isMember) => {
+  if (settings) {
+    if (isMember) {
+      return [
+        settings?.conditions.member.maxBookingHorizon,
+        settings?.conditions.member.maxDuration,
+      ];
+    }
+    return [
+      settings?.conditions.guest.maxBookingHorizon,
+      settings?.conditions.guest.maxDuration,
+    ];
+  }
+  return [0, 0];
 };

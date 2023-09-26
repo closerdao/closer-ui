@@ -13,6 +13,7 @@ const config = {
   TWITTER_URL: 'https://twitter.com/traditionaldreamfactory',
   LOGO_HEADER: '/images/logo.png',
   LOGO_FOOTER: '/images/logo.svg',
+  LOCATION_COORDINATES: { lat: 38.003164469592555, lng: -8.55915483117878 },
   PERMISSIONS: {
     event: {
       create: 'event-creator',
@@ -23,32 +24,32 @@ const config = {
 
   STRIPE_CUSTOMER_PORTAL_URL:
     'https://billing.stripe.com/p/login/test_dR69Cl1Igat5dhK3cc',
-  
-    // ACCOMODATION_COST: [
-    //   {
-    //     name: 'Glamping',
-    //     price: 1,
-    //     iconPath: '/images/token-sale/tent-icon.svg',
-    //   },
-    //   {
-    //     name: 'Van parking',
-    //     price: 0.5,
-    //     iconPath: '/images/token-sale/car-icon.svg',
-    //   },
-    //   {
-    //     name: 'Outdoor Camping',
-    //     price: 0.5,
-    //     iconPath: '/images/token-sale/tent-icon.svg',
-    //   },
-    //   {
-    //     name: 'Private suite',
-    //     description: '*coming 2023*',
-    //     price: 3,
-    //     iconPath: '/images/token-sale/suite-icon.svg',
-    //   },
-    // ],
-    TOKEN_PRICE: 230.23,
-    SOURCE_TOKEN: 'CEUR',
+
+  // ACCOMODATION_COST: [
+  //   {
+  //     name: 'Glamping',
+  //     price: 1,
+  //     iconPath: '/images/token-sale/tent-icon.svg',
+  //   },
+  //   {
+  //     name: 'Van parking',
+  //     price: 0.5,
+  //     iconPath: '/images/token-sale/car-icon.svg',
+  //   },
+  //   {
+  //     name: 'Outdoor Camping',
+  //     price: 0.5,
+  //     iconPath: '/images/token-sale/tent-icon.svg',
+  //   },
+  //   {
+  //     name: 'Private suite',
+  //     description: '*coming 2023*',
+  //     price: 3,
+  //     iconPath: '/images/token-sale/suite-icon.svg',
+  //   },
+  // ],
+  TOKEN_PRICE: 230.23,
+  SOURCE_TOKEN: 'CEUR',
   STAY_BOOKING_ALLOWED_PLANS: ['wanderer', 'pioneer', 'sheep'],
   MIN_INSTANT_BOOKING_ALLOWED_PLAN: 'wanderer',
   FACEBOOK_PIXEL_ID: '761004479106346',

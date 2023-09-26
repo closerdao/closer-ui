@@ -14,6 +14,7 @@ const Wallet = () => {
     hasSameConnectedAccount,
     isWalletConnected,
     isCorrectNetwork,
+    balanceCeurAvailable,
   } = useContext(WalletState);
 
   return (
@@ -22,12 +23,16 @@ const Wallet = () => {
       {isWalletReady && (
         <div className="flex flex-col gap-2 mt-4">
           <div className="flex justify-between items-center">
+            <p>{__('wallet_ceur')}</p>
+            <p className="font-bold">{balanceCeurAvailable.toFixed(2)}</p>
+          </div>
+          <div className="flex justify-between items-center">
             <p>{__('wallet_tdf')}</p>
-            <p className="font-bold">{balanceTotal.toFixed(2)}</p>
+            <p className="font-bold">{balanceTotal}</p>
           </div>
           <div className="flex justify-between items-center">
             <p>{__('wallet_tdf_available')}</p>
-            <p className="font-bold">{balanceAvailable.toFixed(2)}</p>
+            <p className="font-bold">{balanceAvailable}</p>
           </div>
           <div className="flex justify-between items-center">
             <p>{__('wallet_pop')}</p>

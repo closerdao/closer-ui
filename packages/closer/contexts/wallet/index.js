@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState } from 'react';
+import { createContext, useEffect, useState } from 'react';
 
 import { UnsupportedChainIdError, useWeb3React } from '@web3-react/core';
 import {
@@ -31,6 +31,7 @@ const {
   BLOCKCHAIN_NATIVE_TOKEN,
   BLOCKCHAIN_NETWORK_ID,
   BLOCKCHAIN_RPC_URL,
+  BLOCKCHAIN_CEUR_TOKEN,
 } = blockchainConfig;
 
 const injected = new InjectedConnector({
@@ -94,6 +95,14 @@ export const WalletProvider = ({ children }) => {
     },
   );
 
+  const { data: balanceCeurToken, mutate: updateCeurBalance } = useSWR(
+    [BLOCKCHAIN_CEUR_TOKEN.address, 'balanceOf', account],
+    {
+      fetcher: fetcher(library, BLOCKCHAIN_DAO_TOKEN_ABI),
+      fallbackData: BigNumber.from(0),
+    },
+  );
+
   const { data: lockedStake } = useSWR(
     [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'lockedStake', account],
     {
@@ -135,6 +144,10 @@ export const WalletProvider = ({ children }) => {
   const balanceAvailable = formatBigNumberForDisplay(
     balanceDAOToken,
     BLOCKCHAIN_DAO_TOKEN.decimals,
+  );
+  const balanceCeurAvailable = formatBigNumberForDisplay(
+    balanceCeurToken,
+    BLOCKCHAIN_CEUR_TOKEN.decimals,
   );
 
   const connectWallet = async () => {
@@ -248,6 +261,7 @@ export const WalletProvider = ({ children }) => {
         isWalletConnected,
         bookedDates: bookedDates?.flat(),
         hasSameConnectedAccount,
+        balanceCeurAvailable,
       }}
     >
       <WalletDispatch.Provider
@@ -257,6 +271,7 @@ export const WalletProvider = ({ children }) => {
           connectWallet,
           updateWalletBalance,
           refetchBookingDates,
+          updateCeurBalance,
         }}
       >
         {children}

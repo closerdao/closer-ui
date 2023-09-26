@@ -50,22 +50,32 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
   return (
     <div role="listitem" className={className}>
       <div
-        className={`h-full ${
-          isListView ? 'flex flex-row' : 'card rounded overflow-hidden'
-        }`}
+        className={`h-full card rounded overflow-hidden
+        ${
+          isVolunteerCard
+            ? 'flex gap-8 p-4 px-8'
+            : 'card rounded overflow-hidden'
+        }  
+        `}
       >
-        <p className="text-xs font-light">
-          {startDate && dayjs(startDate).format(dateFormat)}
-          {endDate &&
-            duration > 24 &&
-            ` - ${dayjs(endDate).format(dateFormat)}`}
-          {endDate && duration <= 24 && ` - ${dayjs(endDate).format('HH:mm')}`}{' '}
-          ({localTimezone} {__('events_time')})
-        </p>
+        {!isVolunteerCard && (
+          <p className="text-xs font-light">
+            {startDate && dayjs(startDate).format(dateFormat)}
+            {endDate &&
+              duration > 24 &&
+              ` - ${dayjs(endDate).format(dateFormat)}`}
+            {endDate &&
+              duration <= 24 &&
+              ` - ${dayjs(endDate).format('HH:mm')}`}{' '}
+            ({localTimezone} {__('events_time')})
+          </p>
+        )}
         <div
           className={`${
             isListView ? 'w-24 mt-3 mr-3 h-24' : '-mx-4 mt-4 h-44 md:h-50 '
-          } bg-gray-50 overflow-hidden`}
+          } bg-gray-50 overflow-hidden
+          ${isVolunteerCard && 'w-[100px] h-[100px]'}
+            `}
         >
           <Link href={linkHref}>
             {photo ? (
@@ -85,9 +95,17 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
             )}
           </Link>
         </div>
-        <div className={`p-2 ${isListView ? 'w-2/3' : 'text-left'}`}>
+        <div
+          className={` p-2  ${isListView ? 'w-2/3' : 'text-left'} first-letter:
+        ${isVolunteerCard ? 'w-2/3' : ''}
+        `}
+        >
           <div className="event-description">
-            <h4 className={`${isListView ? 'text-sm' : 'font-bold text-xl'}`}>
+            <h4
+              className={`${isListView ? 'text-sm' : 'font-bold text-xl'}
+            // ${isVolunteerCard && 'w-2/3'}
+            `}
+            >
               <Link href={linkHref}>{name}</Link>
             </h4>
             {virtual && (
@@ -101,9 +119,6 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
                 <MdLocationOn />
                 <p className="text-sm">{address || location}</p>
               </div>
-            )}
-            {isVolunteerCard && description && (
-              <p className="text-sm line-clamp-3 mt-4">{description}</p>
             )}
           </div>
         </div>

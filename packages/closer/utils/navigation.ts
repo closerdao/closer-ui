@@ -28,7 +28,7 @@ export const links = [
   },
   {
     label: 'Book a stay',
-    url: '/bookings/create',
+    url: '/listings',
     enabled: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
   },
   {
@@ -55,7 +55,7 @@ export const links = [
   },
   {
     label: 'User list',
-    url: '/admin',
+    url: '/admin/manage-users',
     enabled: true,
     roles: ['admin'],
   },
@@ -70,5 +70,10 @@ export const links = [
     url: '/volunteer/create',
     enabled: true,
     roles: ['steward'],
+  },
+  {
+    label: 'Resources',
+    url: '/resources',
+    enabled: true,
   },
 ];

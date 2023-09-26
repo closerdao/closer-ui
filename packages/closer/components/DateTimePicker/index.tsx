@@ -23,8 +23,8 @@ interface Props {
         to: Date;
       }
   )[];
-  savedStartDate?: string;
-  savedEndDate?: string;
+  savedStartDate?: string | Date | null;
+  savedEndDate?: string | Date | null;
   eventStartDate?: string;
   eventEndDate?: string;
   defaultMonth?: Date;

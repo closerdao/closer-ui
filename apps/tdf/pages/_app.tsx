@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import Script from 'next/script';
 
 import { FC, useEffect } from 'react';
-
 import CookieConsent from 'react-cookie-consent';
 
 import { ErrorBoundary, Layout } from '@/components';
@@ -25,7 +24,7 @@ import {
 } from 'closer';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import 'closer/public/styles.css';
-import TagManager from 'react-gtm-module';
+import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import config from '../config';
 
@@ -45,12 +44,6 @@ const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
       localStorage.setItem(REFERRAL_ID_LOCAL_STORAGE_KEY, referral as string);
     }
   }, [referral]);
-
-  useEffect(() => {
-    if (process.env.NEXT_PUBLIC_GOOGLE_TAG_MANAGER) {
-      TagManager.initialize({ gtmId: process.env.NEXT_PUBLIC_GOOGLE_TAG_MANAGER });
-    }
-  }, []);
 
   return (
     <>
@@ -80,6 +73,7 @@ fbq('track', 'PageView');
               <Web3ReactProvider getLibrary={getLibrary}>
                 <WalletProvider>
                   <Layout>
+                    <GoogleAnalytics trackPageViews />
                     <Component {...pageProps} config={config} />
                   </Layout>
                 </WalletProvider>

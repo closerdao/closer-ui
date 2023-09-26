@@ -8,7 +8,7 @@ import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import { useAuth } from '../contexts/auth';
 import { parseMessageFromError } from '../utils/common';
 import { __, isInputValid } from '../utils/helpers';
-import { Button, Card, ErrorMessage, Input } from './ui';
+import { Button, Card, Checkbox, ErrorMessage, Input } from './ui';
 import Heading from './ui/Heading';
 
 const SignupForm = () => {
@@ -26,6 +26,7 @@ const SignupForm = () => {
     source: typeof window !== 'undefined' && window.location.href,
   });
 
+  const [isEmailConsent, setIsEmailConsent] = useState(true);
   const handleSubmit = async (e: FormEvent) => {
     setIsLoading(true);
     e.preventDefault();
@@ -134,10 +135,19 @@ const SignupForm = () => {
               })
             }
           />
+          <Checkbox
+            className="my-4"
+            id="emailConsent"
+            isChecked={isEmailConsent}
+            onChange={() => setIsEmailConsent(!isEmailConsent)}
+          >
+            {__('signup_form_email_consent')}
+          </Checkbox>
+
           {error && <ErrorMessage error={error} />}
           <div className="w-full my-4">
             <Button
-              isEnabled={!isSignupDisabled && !isLoading}
+              isEnabled={!isSignupDisabled && !isLoading && isEmailConsent}
               isLoading={isLoading}
             >
               {__('signup_form_create')}

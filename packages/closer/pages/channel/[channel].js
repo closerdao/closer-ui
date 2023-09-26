@@ -2,12 +2,11 @@ import Head from 'next/head';
 import Link from 'next/link';
 
 import React from 'react';
-import Linkify from 'react-linkify';
-import Heading from '../../components/ui/Heading';
 
 import PostList from '../../components/PostList';
 import UpcomingEvents from '../../components/UpcomingEvents';
 import UserList from '../../components/UserList';
+import Heading from '../../components/ui/Heading';
 
 import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
@@ -47,27 +46,11 @@ const ChannelPage = ({ channel }) => {
               </div>
               {channel.description && (
                 <div className="channel-sub-header">
-                  <p className="about-text">
-                    <Linkify
-                      componentDecorator={(
-                        decoratedHref,
-                        decoratedText,
-                        key,
-                      ) => (
-                        <a
-                          target="_blank"
-                          rel="nofollow noreferrer"
-                          href={decoratedHref}
-                          key={key}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {decoratedText}
-                        </a>
-                      )}
-                    >
-                      {channel.description}
-                    </Linkify>
-                  </p>
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: channel.description,
+                    }}
+                  />
                 </div>
               )}
               <PostList
