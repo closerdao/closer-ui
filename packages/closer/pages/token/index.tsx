@@ -625,6 +625,251 @@ const PublicTokenSalePage = ({ listings }: Props) => {
             </div>
           </div>
         </section>
+
+        <section className="flex flex-wrap justify-center">
+          <div>
+            <Heading
+              className="text-4xl mb-6 max-w-3xl text-center mt-8  uppercase sm:text-5xl bg-[url(/images/landing/spade.png)] bg-no-repeat pt-[170px] bg-top"
+              level={2}
+            >
+              The Journey of our decentralised co-living
+            </Heading>
+            <p className="text-center">
+              Where we’ve been and where we’re going - see our{' '}
+              <strong>Roadmap</strong>:
+            </p>
+          </div>
+        </section>
+        <section className="flex items-center flex-col py-24">
+          <div className="w-full sm:w-[80%] flex items-center flex-col">
+            <div className="max-w-[800px]">
+              <div className="grid grid-cols-[37px_240px] sm:grid-cols-[37px_370px]">
+                <div className="w-7 h-7 bg-accent-alt rounded-full"></div>
+                <Heading level={4} className="text-accent">
+                  APRIL 2021
+                </Heading>
+                <div className="w-7 flex justify-center">
+                  <div className="bg-accent-alt w-[4px] h-auto"></div>
+                </div>
+                <div className="pb-12 uppercase">
+                  <p>
+                    <strong>Keys To The Chicken Farm. </strong>
+                  </p>
+                  <p>We move in to the ‘áviário’</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-[37px_240px] sm:grid-cols-[37px_370px]">
+                <div className="w-7 h-7 bg-accent-alt rounded-full"></div>
+                <Heading level={4} className="uppercase text-accent">
+                  <span className="font-normal">2021-2022 Phase 1 -</span>
+                </Heading>
+                <div className="w-7 flex justify-center">
+                  <div className="bg-accent-alt w-[4px] h-auto"></div>
+                </div>
+                <div className="pb-12">
+                  <Heading level={4} className="uppercase text-accent">
+                    Completed
+                  </Heading>
+                  <p className="uppercase font-bold">Operational CO-LIVING</p>
+                  <ul className=" my-4 list-none">
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Operational Event Venue (up to 100 guests)
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      10 Glamping Accommodations
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Food Forest V1
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Reforestation V1
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Grey Water Treatment (Halophyte Filter) V1
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Solar Energy
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Functional Workshop and Makerspaces
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Industrial Kitchen
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Sauna
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Co-Working Space and Starlink
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div className="grid grid-cols-[37px_240px] sm:grid-cols-[37px_370px]">
+                <div className="w-7 flex justify-center">
+                  <div className="bg-accent-alt w-[4px] h-[40px]"></div>
+                </div>
+                <div className="text-accent-alt"></div>
+                <div className="w-7 h-7 bg-accent-alt-light border-4 border-accent-alt rounded-full"></div>
+                <Heading level={4} className="uppercase text-accent">
+                  <span className="font-normal">2023 - 2024 Phase 2 -</span>
+                </Heading>
+                <div className="w-7 flex justify-center">
+                  <div className="bg-accent-alt-light w-[4px] h-auto"></div>
+                </div>
+                <div className="pb-12">
+                  <Heading level={4} className="uppercase text-accent">
+                    FUNDRAISING
+                  </Heading>
+                  <p className="uppercase font-bold">LAND, CO-LIVING & WATER</p>
+                  <p className="uppercase font-bold mt-6">We are here</p>
+                  {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE && (
+                    <Button
+                      onClick={() => router.push('/token')}
+                      className="my-6"
+                      size="small"
+                    >
+                      Help us fund phase 2
+                    </Button>
+                  )}
+                  <ul>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Co-Living Building Renovation (roof, windows, insulation,
+                      flooring, energy and heating systems)
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      6 Suites with Private Bath
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Natural Pool
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Water Systems V2 (Co-Living Building & Land Water Capture)
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Pay Off Loan & Transfer Chicken Farm Property into Enseada
+                      Sonhadora (local SPV owned by OASA){' '}
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Kitchen V2
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Team Operations & Salaries
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div className="grid grid-cols-[37px_240px] sm:grid-cols-[37px_370px]">
+                <div className="w-7 flex justify-center">
+                  <div className="bg-accent-alt-light w-[4px] h-[40px]"></div>
+                </div>
+                <div className="text-accent-alt"></div>
+                <div className="w-7 h-7 bg-accent-alt-light rounded-full"></div>
+                <Heading
+                  level={4}
+                  className="font-normal uppercase text-accent"
+                >
+                  2024-2025 Phase 3
+                </Heading>
+                <div className="w-7 flex justify-center">
+                  <div className="bg-accent-alt-light w-[4px] h-auto"></div>
+                </div>
+                <div className="pb-12">
+                  <p className="font-bold uppercase mb-6">
+                    Dream Spaces & Expansion
+                  </p>
+                  <ul>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      8 Suites added to Co-Living
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Workshop Building Renovation
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Co-Working Garden
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Farm to Table Restaurant + Cafe + Industrial Kitchen
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Purchase Land (currently rent contract with option to buy,
+                      25he)
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div className="grid grid-cols-[37px_270px]">
+                <div className="w-7 flex justify-center">
+                  <div className="bg-accent-alt-light w-[4px] h-[40px]"></div>
+                </div>
+                <div className="text-accent-alt"></div>
+                <div className="w-7 h-7 bg-accent-alt-light rounded-full"></div>
+                <Heading
+                  level={4}
+                  className="font-normal uppercase text-accent"
+                >
+                  2025 Phase 4
+                </Heading>
+                <div className="w-7 flex justify-center">
+                  <div className="bg-accent-alt-light w-[4px] h-auto"></div>
+                </div>
+                <div className="pb-12">
+                  <p className="font-bold uppercase mb-6">Finishing Touches</p>
+                  <ul>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      4 Studios
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Family House
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Green Roof
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Greenhouse (made out of old warehouses windows)
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Spa
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div className="grid grid-cols-[37px_270px]">
+                <div className="w-7 flex justify-center">
+                  <div className="bg-accent-alt-light w-[4px] h-[40px]"></div>
+                </div>
+                <div className="text-accent"></div>
+                <div className="w-7 h-7 bg-accent-alt-light rounded-full"></div>
+                <Heading level={4} className="uppercase text-accent">
+                  TDF: GO LIVE EVENT 🎉🎉🎉
+                </Heading>
+                <div className="w-7 flex justify-center">
+                  <div className="bg-accent-alt-light w-[4px] h-auto"></div>
+                </div>
+                <div className="pb-12">
+                  <ul className="mt-6">
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      TDF V1 IS READY!
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      $TDF UNSTAKED
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      TDF V2 Dream Session: Co-housing and Permanent Living?
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      4000m2 of permits to build
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Governance Structure V2: Post Roadmap Era
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
       </main>
     </div>
   );
