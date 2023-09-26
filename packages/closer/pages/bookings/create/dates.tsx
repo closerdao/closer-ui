@@ -24,12 +24,13 @@ import {
   DEFAULT_CURRENCY,
 } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import { User } from '../../../contexts/auth/types';
 import { Event, TicketOption } from '../../../types';
 import { BookingSettings, VolunteerOpportunity } from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { __ } from '../../../utils/helpers';
+import { __, getMaxBookingHorizon } from '../../../utils/helpers';
 
 const STAY_BOOKING_ALLOWED_PLANS = ['wanderer', 'pioneer', 'sheep'];
 
@@ -66,15 +67,13 @@ const DatesSelector: NextPage<Props> = ({
   } = router.query || {};
 
   const [blockedDateRanges, setBlockedDateRanges] = useState<any[]>([]);
-
-  const getMaxBookingHorizon = () => {
-    if (settings) {
-      if (isMember) {
-        return settings?.conditions.member.maxBookingHorizon;
-      }
-      return settings?.conditions.guest.maxBookingHorizon;
+  const canBookStays = (user: User) => {
+    if (
+      !user.roles.includes('member') 
+    ) {
+      return false;
     }
-    return 0;
+    return true;
   };
 
   const memoizedBlockedDateRanges = useMemo(() => {
@@ -93,20 +92,16 @@ const DatesSelector: NextPage<Props> = ({
     });
     dateRanges.push({ before: new Date() });
     dateRanges.push({
-      after: new Date().setDate(new Date().getDate() + getMaxBookingHorizon()),
+      after: new Date().setDate(
+        new Date().getDate() + getMaxBookingHorizon(settings, isMember)[0],
+      ),
     });
     return dateRanges;
   }
 
   useEffect(() => {
     if (user) {
-      if (
-        (!user.subscription ||
-          !user.subscription.plan ||
-          !STAY_BOOKING_ALLOWED_PLANS.includes(user.subscription.plan)) &&
-        !volunteerId &&
-        !eventId
-      ) {
+      if (!canBookStays(user)) {
         router.push('/bookings/unlock-stays');
       }
     }
@@ -307,10 +302,11 @@ const DatesSelector: NextPage<Props> = ({
                 label=""
                 onChange={setDoesNeedPickup}
                 checked={doesNeedPickup}
-                />
-              <div className='w-full text-xs'>{__('bookings_pickup_disclaimer')}</div>
+              />
+              <div className="w-full text-xs">
+                {__('bookings_pickup_disclaimer')}
+              </div>
             </div>
-                
           </div>
 
           {handleNextError && (
