@@ -17,7 +17,7 @@ export const BOOKING_STEPS = [
   'confirmation',
 ];
 
-export const CURRENCIES: CloserCurrencies[] = [
+export const CURRENCIES: CloserCurrencies[]  = [
   CloserCurrencies.EUR,
   CloserCurrencies.TDF,
   // blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol,
