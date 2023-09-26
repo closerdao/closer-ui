@@ -25,7 +25,7 @@ describe('Volunteer', () => {
     );
     const title = screen.getByRole('heading', { level: 1 });
 
-    expect(title).toHaveTextContent(/volunteer at TDF/i);
+    expect(title).toHaveTextContent(/Volunteering Opportunities/i);
     const volCard = screen.getAllByRole('listitem');
     expect(volCard).toHaveLength(eventListMock.length);
   });
