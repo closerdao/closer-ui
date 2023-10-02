@@ -94,7 +94,9 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
                     Number(duration) <= 24 &&
                     ` - ${dayjs(end).format('HH:mm')}`}{' '}
                   {end && end.isBefore(dayjs()) && (
-                    <p className="text-disabled">{__('event_event_ended')}</p>
+                    <p className="text-disabled">
+                      {__('volunteer_opportunity_ended')}
+                    </p>
                   )}
                 </label>
               </div>
@@ -117,8 +119,8 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
                 )}
               </div>
               <div className="h-auto fixed bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px]">
-                <Card className="bg-white border border-gray-100">
-                  {!isEnded && (
+                {!isEnded && (
+                  <Card className="bg-white border border-gray-100">
                     <LinkButton
                       href={`/bookings/create/dates?volunteerId=${
                         volunteer._id
@@ -128,8 +130,8 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
                     >
                       {__('apply_submit_button')}
                     </LinkButton>
-                  )}
-                </Card>
+                  </Card>
+                )}
               </div>
             </div>
           </div>
