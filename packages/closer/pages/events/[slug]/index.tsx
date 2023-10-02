@@ -120,6 +120,11 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
             content={`${cdn}${photo}-place-lg.jpg`}
           />
         )}
+        <link
+          rel="canonical"
+          href={`https://www.traditionaldreamfactory.com/events/${event.slug}`}
+          key="canonical"
+        />
       </Head>
 
       {event.password && event.password !== password ? (

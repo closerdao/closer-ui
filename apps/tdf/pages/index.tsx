@@ -27,6 +27,11 @@ const HomePage = ({ subscriptionPlans }: Props) => {
           name="description"
           content="Traditional Dream Factory (TDF) is a regenerative playground in Abela, Portugal."
         />
+        <link
+          rel="canonical"
+          href="https://www.traditionaldreamfactory.com/"
+          key="canonical"
+        />
       </Head>
       <section className="absolute overflow-hidden left-0 h-[100vh] min-h-[100vh] min-w-[100vw] bg-accent-light pb-12 -mt-6 mb-12 md:mb-[100vh] text-right">
         <div className="h-[100vh]">
