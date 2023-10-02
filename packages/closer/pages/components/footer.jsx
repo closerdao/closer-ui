@@ -1,13 +1,13 @@
-import React from "react";
-import Flogo from "../../public/assets/svg/Footers.svg";
-import Flogo2 from "../../public/assets/svg/Facebook.svg";
-import Flogo3 from "../../public/assets/svg/Linkedin.svg";
-import Flogo4 from "../../public/assets/svg/Instagram.svg";
-import Flogo5 from "../../public/assets/svg/Youtube.svg";
-import Flogo6 from "../../public/assets/svg/Twitter.svg";
-import Flogo7 from "../../public/assets/svg/Email.svg";
-import Flogo8 from "../../public/assets/svg/Location.svg";
-import Image from "next/image";
+import React from 'react';
+import Flogo from '../../public/assets/svg/Footers.svg';
+import Flogo2 from '../../public/assets/svg/Facebook.svg';
+import Flogo3 from '../../public/assets/svg/Linkedin.svg';
+import Flogo4 from '../../public/assets/svg/Instagram.svg';
+import Flogo5 from '../../public/assets/svg/Youtube.svg';
+import Flogo6 from '../../public/assets/svg/Twitter.svg';
+import Flogo7 from '../../public/assets/svg/Email.svg';
+import Flogo8 from '../../public/assets/svg/Location.svg';
+import Image from 'next/image';
 export default function Footer() {
   return (
     <div className="bg-[#171717] py-20 ">

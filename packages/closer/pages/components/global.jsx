@@ -1,28 +1,28 @@
-import React from "react";
-import Globals from "../../public/assets/png/global.png";
-import Image from "next/image";
-import Tick from "../../public/assets/svg/Section-4-Tick-Icon.svg";
-import Map from "../../public/assets/png/map.png";
-import MobMap from "../../public/assets/png/mobMap.png";
-import Digital from "../../public/assets/jpg/digital.jpg";
-import MobDigital from "../../public/assets/png/mobDigital.png";
+import React from 'react';
+import Globals from '../../public/assets/png/global.png';
+import Image from 'next/image';
+import Tick from '../../public/assets/svg/Section-4-Tick-Icon.svg';
+import Map from '../../public/assets/png/map.png';
+import MobMap from '../../public/assets/png/mobMap.png';
+import Digital from '../../public/assets/jpg/digital.jpg';
+import MobDigital from '../../public/assets/png/mobDigital.png';
 
 // array
 const types = [
   {
     img: Tick,
-    title: "Native community token",
-    para: "Proof of Presence is our game-changing feature that tracks and rewards your active participation within a community. The more time you spend, the more Presence you collect, and the more influence you have in decision-making. It's your passport to a richer, more connected community experience.",
+    title: 'Native community token',
+    para: 'Proof of Presence is our game-changing feature that tracks and rewards your active participation within a community. The more time you spend, the more Presence you collect, and the more influence you have in decision-making. It\'s your passport to a richer, more connected community experience.',
   },
   {
     img: Tick,
-    title: "Proof of Presence",
-    para: "Proof of Presence is our game-changing feature that tracks and rewards your active participation within a community. The more time you spend, the more Presence you collect, and the more influence you have in decision-making. It's your passport to a richer, more connected community experience.",
+    title: 'Proof of Presence',
+    para: 'Proof of Presence is our game-changing feature that tracks and rewards your active participation within a community. The more time you spend, the more Presence you collect, and the more influence you have in decision-making. It\'s your passport to a richer, more connected community experience.',
   },
   {
     img: Tick,
-    title: "Proof of Sweat",
-    para: "Proof of Presence is our game-changing feature that tracks and rewards your active participation within a community. The more time you spend, the more Presence you collect, and the more influence you have in decision-making. It's your passport to a richer, more connected community experience.",
+    title: 'Proof of Sweat',
+    para: 'Proof of Presence is our game-changing feature that tracks and rewards your active participation within a community. The more time you spend, the more Presence you collect, and the more influence you have in decision-making. It\'s your passport to a richer, more connected community experience.',
   },
 ];
 

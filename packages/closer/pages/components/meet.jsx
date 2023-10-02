@@ -1,38 +1,38 @@
-import React from "react";
-import Ava from "../../public/assets/png/ava.png";
-import Ava2 from "../../public/assets/png/ava2.png";
-import Ava3 from "../../public/assets/png/ava3.png";
-import Ava4 from "../../public/assets/png/ava4.png";
-import Ava5 from "../../public/assets/png/ava5.png";
-import Hire from "../../public/assets/svg/hire.svg";
-import Image from "next/image";
+import React from 'react';
+import Ava from '../../public/assets/png/ava.png';
+import Ava2 from '../../public/assets/png/ava2.png';
+import Ava3 from '../../public/assets/png/ava3.png';
+import Ava4 from '../../public/assets/png/ava4.png';
+import Ava5 from '../../public/assets/png/ava5.png';
+import Hire from '../../public/assets/svg/hire.svg';
+import Image from 'next/image';
 
 const inno = [
   {
     img: Ava,
-    title: "Sam (Founder)",
-    moto: " Tech veteran with 10 years spanning startups to corporates.",
+    title: 'Sam (Founder)',
+    moto: ' Tech veteran with 10 years spanning startups to corporates.',
   },
   {
     img: Ava2,
-    title: "Vlad (Fullstack Dev)",
-    moto: "React maestro, turning code into intuitive interfaces.",
+    title: 'Vlad (Fullstack Dev)',
+    moto: 'React maestro, turning code into intuitive interfaces.',
   },
   {
     img: Ava3,
-    title: "Marvin (Web3 Dev)",
-    moto: " Decentralized dev ace, hailing from Curve Labs.",
+    title: 'Marvin (Web3 Dev)',
+    moto: ' Decentralized dev ace, hailing from Curve Labs.',
   },
 
   {
     img: Ava4,
-    title: "Daneel (UX Lead)",
-    moto: "Designer with a regenerative flair",
+    title: 'Daneel (UX Lead)',
+    moto: 'Designer with a regenerative flair',
   },
   {
     img: Ava5,
-    title: "Marek (Product Manager) ",
-    moto: "Tech veteran with 10 years spanning startups to corporates.",
+    title: 'Marek (Product Manager) ',
+    moto: 'Tech veteran with 10 years spanning startups to corporates.',
   },
 ];
 

@@ -1,35 +1,35 @@
-import React from "react";
-import SS from "../../public/assets/png/ss.png";
-import Image from "next/image";
-import Icon from "../../public/assets/png/icon.png";
-import Icon2 from "../../public/assets/png/icon2.png";
-import Icon3 from "../../public/assets/png/icon3.png";
-import Icon4 from "../../public/assets/png/icon4.png";
+import React from 'react';
+import SS from '../../public/assets/png/ss.png';
+import Image from 'next/image';
+import Icon from '../../public/assets/png/icon.png';
+import Icon2 from '../../public/assets/png/icon2.png';
+import Icon3 from '../../public/assets/png/icon3.png';
+import Icon4 from '../../public/assets/png/icon4.png';
 
 const product = [
   {
     pic: Icon,
-    title: "Integrated Events & ticketing platform",
+    title: 'Integrated Events & ticketing platform',
     description:
-      "A powerful tool that enables regenerative communities to seamlessly organize and manage events within their ecosystem.",
+      'A powerful tool that enables regenerative communities to seamlessly organize and manage events within their ecosystem.',
   },
   {
     pic: Icon2,
-    title: "Community management & subscriptions",
+    title: 'Community management & subscriptions',
     description:
-      "Community Management & Subscriptions facilitate revenue generation for communities by granting access to digital content, including online courses, and enhancing overall community engagement.",
+      'Community Management & Subscriptions facilitate revenue generation for communities by granting access to digital content, including online courses, and enhancing overall community engagement.',
   },
   {
     pic: Icon3,
-    title: "Proof of Presence Governance",
+    title: 'Proof of Presence Governance',
     description:
-      "Proof of Presence Governance empowers community members to influence decision-making based on their active participation within regenerative communities.",
+      'Proof of Presence Governance empowers community members to influence decision-making based on their active participation within regenerative communities.',
   },
   {
     pic: Icon4,
-    title: "Token Based Access to Physical Spaces",
+    title: 'Token Based Access to Physical Spaces',
     description:
-      "Token-Based Access to Physical Spaces provides seamless entry and resource utilization within regenerative communities through utility tokens.",
+      'Token-Based Access to Physical Spaces provides seamless entry and resource utilization within regenerative communities through utility tokens.',
   },
 ];
 

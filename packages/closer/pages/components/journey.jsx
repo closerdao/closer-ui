@@ -1,41 +1,41 @@
-import React from "react";
-import BluTick from "../../public/assets/svg/blue-tick.svg";
-import Image from "next/image";
-import Line from "../../public/assets/png/line.png";
+import React from 'react';
+import BluTick from '../../public/assets/svg/blue-tick.svg';
+import Image from 'next/image';
+import Line from '../../public/assets/png/line.png';
 
 const jour = {
-  year: "2023",
+  year: '2023',
   pic: BluTick,
-  text: "1 active village",
-  text2: "5 Proof of concepts",
+  text: '1 active village',
+  text2: '5 Proof of concepts',
   line: Line,
-  heading: "Increased Utility",
-  text3: "Financed tokens",
-  text4: "Snapshot integration",
-  years: "2024",
+  heading: 'Increased Utility',
+  text3: 'Financed tokens',
+  text4: 'Snapshot integration',
+  years: '2024',
   pics: BluTick,
-  texts: "6 active village",
-  texts2: "6 Proof of concepts",
+  texts: '6 active village',
+  texts2: '6 Proof of concepts',
   lines: Line,
-  headings: "Blockchain upgrades",
-  texts3: "Improved Proof of Presence",
-  texts4: "Celo migration to L2 rollup",
-  texts5: "Enable multichain deployments",
-  headings2: "Cross village data sharing",
+  headings: 'Blockchain upgrades',
+  texts3: 'Improved Proof of Presence',
+  texts4: 'Celo migration to L2 rollup',
+  texts5: 'Enable multichain deployments',
+  headings2: 'Cross village data sharing',
   texts6:
-    "Using Murmoring or other protocol to propagate public events etc to the network",
-  texts7: "NFT skill & memberships badges that are transferable",
-  texts8: "Proof of Regeneration",
-  yearss: "2025",
+    'Using Murmoring or other protocol to propagate public events etc to the network',
+  texts7: 'NFT skill & memberships badges that are transferable',
+  texts8: 'Proof of Regeneration',
+  yearss: '2025',
   picss: BluTick,
-  textss: "1 active village",
-  textss2: "20 Proof of concepts",
+  textss: '1 active village',
+  textss2: '20 Proof of concepts',
   liness: Line,
-  headingss: "Village token index",
+  headingss: 'Village token index',
   textss3:
-    "Partner with IndexCoop to release an index of Closer enabled communities",
-  headingss2: "Token swaps",
-  textss4: "Provide liquidity for cross village token trading",
+    'Partner with IndexCoop to release an index of Closer enabled communities',
+  headingss2: 'Token swaps',
+  textss4: 'Provide liquidity for cross village token trading',
 };
 
 export default function Journey() {
@@ -62,8 +62,8 @@ export default function Journey() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mt-10 w-[90%] xl:w-[80%] 2xl:w-[1100px] mx-auto">
           <div
             style={{
-              border: " 1px solid var(--Main, #67F8C0)",
-              borderRadius: "20px",
+              border: ' 1px solid var(--Main, #67F8C0)',
+              borderRadius: '20px',
             }}
             className="p-5"
           >
@@ -107,8 +107,8 @@ export default function Journey() {
           </div>
           <div
             style={{
-              border: " 1px solid var(--Main, #67F8C0)",
-              borderRadius: "20px",
+              border: ' 1px solid var(--Main, #67F8C0)',
+              borderRadius: '20px',
             }}
             className="p-5"
           >
@@ -185,8 +185,8 @@ export default function Journey() {
 
           <div
             style={{
-              border: " 1px solid var(--Main, #67F8C0)",
-              borderRadius: "20px",
+              border: ' 1px solid var(--Main, #67F8C0)',
+              borderRadius: '20px',
             }}
             className="p-5"
           >

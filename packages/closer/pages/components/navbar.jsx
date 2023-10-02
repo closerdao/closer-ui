@@ -1,11 +1,11 @@
-import React from "react";
-import Logo from "../../public/assets/svg/logo.svg";
-import Image from "next/image";
-import { Dialog, Transition } from "@headlessui/react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
-import AnchorLink from "react-anchor-link-smooth-scroll";
-import { Fragment } from "react";
-import { useState } from "react";
+import React from 'react';
+import Logo from '../../public/assets/svg/logo.svg';
+import Image from 'next/image';
+import { Dialog, Transition } from '@headlessui/react';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import AnchorLink from 'react-anchor-link-smooth-scroll';
+import { Fragment } from 'react';
+import { useState } from 'react';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
