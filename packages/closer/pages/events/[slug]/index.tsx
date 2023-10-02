@@ -266,147 +266,133 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
                       </div>
                     </div>
                     <div className="h-auto fixed bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px]">
-                      <Card className="bg-white border border-gray-100">
-                        {event.ticketOptions.map((ticket: any) => (
-                          <div
-                            key={ticket.name}
-                            className="hidden sm:flex flex-col gap-1"
-                          >
-                            <div className="flex flex-col bg-accent-light rounded-md p-2 items-center ">
-                              <p className="text-lg text-center">
-                                {ticket.name}
-                              </p>
-                              <p className="text-md font-bold">
-                                {priceFormat(ticket.price)}
-                              </p>
-                              <p>
-                                {!ticket.limit ? (
-                                  <span className="text-xs text-error">
-                                    {__('event_tickets_sold')}
-                                  </span>
-                                ) : ticket.limit > 10 ? (
-                                  <span className="text-xs text-success">
-                                    {__('event_tickets_available')}
-                                  </span>
-                                ) : (
-                                  <span className="text-xs text-pending">
-                                    {__('event_tickets_last')}
-                                  </span>
-                                )}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-
-                        <Information>
-                         {__('events_discalimer')}
-                        </Information>
-
-                        <div className="mt-4 event-actions flex items-center">
-                          {event.ticket && start && start.isAfter(dayjs()) ? (
-                            <Link
-                              href={prependHttp(event.ticket)}
-                              className="btn-primary mr-2"
-                              target="_blank"
-                              rel="noreferrer nofollow"
+                      {end && !end.isBefore(dayjs()) && (
+                        <Card className="bg-white border border-gray-100">
+                          {event.ticketOptions.map((ticket: any) => (
+                            <div
+                              key={ticket.name}
+                              className="hidden sm:flex flex-col gap-1"
                             >
-                              {__('events_buy_ticket_button')}
-                            </Link>
-                          ) : event.paid ? (
-                            <>
-                              {myTickets && myTickets.count() > 0 ? (
-                                <Link
-                                  as={`/tickets/${myTickets
-                                    .first()
-                                    .get('_id')}`}
-                                  href="/tickets/[slug]"
-                                  className="btn-primary mr-2"
-                                >
-                                  {__('events_see_ticket_button')}
-                                </Link>
-                              ) : (
+                              <div className="flex flex-col bg-accent-light rounded-md p-2 items-center ">
+                                <p className="text-lg text-center">
+                                  {ticket.name}
+                                </p>
+                                <p className="text-md font-bold">
+                                  {priceFormat(ticket.price)}
+                                </p>
+                                <p>
+                                  {!ticket.limit ? (
+                                    <span className="text-xs text-error">
+                                      {__('event_tickets_sold')}
+                                    </span>
+                                  ) : ticket.limit > 10 ? (
+                                    <span className="text-xs text-success">
+                                      {__('event_tickets_available')}
+                                    </span>
+                                  ) : (
+                                    <span className="text-xs text-pending">
+                                      {__('event_tickets_last')}
+                                    </span>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+
+                          <Information>{__('events_discalimer')}</Information>
+
+                          <div className="mt-4 event-actions flex items-center">
+                            {event.ticket && start && start.isAfter(dayjs()) ? (
+                              <Link
+                                href={prependHttp(event.ticket)}
+                                className="btn-primary mr-2"
+                                target="_blank"
+                                rel="noreferrer nofollow"
+                              >
+                                {__('events_buy_ticket_button')}
+                              </Link>
+                            ) : event.paid ? (
+                              <>
+                                {myTickets && myTickets.count() > 0 ? (
+                                  <Link
+                                    as={`/tickets/${myTickets
+                                      .first()
+                                      .get('_id')}`}
+                                    href="/tickets/[slug]"
+                                    className="btn-primary mr-2"
+                                  >
+                                    {__('events_see_ticket_button')}
+                                  </Link>
+                                ) : (
+                                  end &&
+                                  end.isAfter(dayjs()) &&
+                                  (event.stripePub ||
+                                    process.env.NEXT_PUBLIC_STRIPE_PUB_KEY) && (
+                                    <LinkButton
+                                      href={`/bookings/create/dates/?eventId=${
+                                        event._id
+                                      }&start=${
+                                        start ? start.format('YYYY-MM-DD') : ''
+                                      }&end=${
+                                        end ? end.format('YYYY-MM-DD') : ''
+                                      }`}
+                                      className=""
+                                    >
+                                      Buy ticket
+                                    </LinkButton>
+                                  )
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                {start &&
+                                start.isBefore(
+                                  dayjs().subtract(15, 'minutes'),
+                                ) &&
                                 end &&
                                 end.isAfter(dayjs()) &&
-                                (event.stripePub ||
-                                  process.env.NEXT_PUBLIC_STRIPE_PUB_KEY) && (
-                                  <LinkButton
-                                    href={`/bookings/create/dates/?eventId=${
-                                      event._id
-                                    }&start=${
-                                      start ? start.format('YYYY-MM-DD') : ''
-                                    }&end=${
-                                      end ? end.format('YYYY-MM-DD') : ''
-                                    }`}
-                                    className=""
+                                event.location ? (
+                                  <a
+                                    className="btn-primary mr-2"
+                                    href={event.location}
                                   >
-                                    Buy ticket
-                                  </LinkButton>
-                                )
-                              )}
-                            </>
-                          ) : (
-                            <>
-                              {start &&
-                              start.isBefore(dayjs().subtract(15, 'minutes')) &&
-                              end &&
-                              end.isAfter(dayjs()) &&
-                              event.location ? (
-                                <a
-                                  className="btn-primary mr-2"
-                                  href={event.location}
-                                >
-                                  Join call
-                                </a>
-                              ) : start &&
-                                start.isBefore(dayjs()) &&
-                                end &&
-                                end.isAfter(dayjs()) ? (
-                                // <span className="p3 mr-2" href={event.location}>
-                                <span className="p3 mr-2">ONGOING</span>
-                              ) : !isAuthenticated && event.recording ? (
-                                <Link
-                                  as={`/signup?back=${encodeURIComponent(
-                                    `/events/${event.slug}`,
-                                  )}`}
-                                  href="/signup"
-                                  className="btn-primary mr-2"
-                                >
-                                  Signup to watch recording
-                                </Link>
-                              ) : !isAuthenticated &&
-                                start &&
-                                start.isAfter(dayjs()) ? (
-                                <Link
-                                  as={`/signup?back=${encodeURIComponent(
-                                    `/events/${event.slug}`,
-                                  )}`}
-                                  href="/signup"
-                                  className="btn-primary mr-2"
-                                >
-                                  Signup to RSVP
-                                </Link>
-                              ) : end &&
-                                end.isBefore(dayjs()) &&
-                                user &&
-                                attendees?.includes(user._id) ? (
-                                <a
-                                  href="#"
-                                  className="btn-primary mr-2"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    attendEvent(
-                                      event._id,
-                                      !attendees?.includes(user._id),
-                                    );
-                                  }}
-                                >
-                                  Cancel RSVP
-                                </a>
-                              ) : (
-                                end &&
-                                user &&
-                                end.isBefore(dayjs()) && (
-                                  <button
+                                    Join call
+                                  </a>
+                                ) : start &&
+                                  start.isBefore(dayjs()) &&
+                                  end &&
+                                  end.isAfter(dayjs()) ? (
+                                  // <span className="p3 mr-2" href={event.location}>
+                                  <span className="p3 mr-2">ONGOING</span>
+                                ) : !isAuthenticated && event.recording ? (
+                                  <Link
+                                    as={`/signup?back=${encodeURIComponent(
+                                      `/events/${event.slug}`,
+                                    )}`}
+                                    href="/signup"
+                                    className="btn-primary mr-2"
+                                  >
+                                    Signup to watch recording
+                                  </Link>
+                                ) : !isAuthenticated &&
+                                  start &&
+                                  start.isAfter(dayjs()) ? (
+                                  <Link
+                                    as={`/signup?back=${encodeURIComponent(
+                                      `/events/${event.slug}`,
+                                    )}`}
+                                    href="/signup"
+                                    className="btn-primary mr-2"
+                                  >
+                                    Signup to RSVP
+                                  </Link>
+                                ) : end &&
+                                  end.isBefore(dayjs()) &&
+                                  user &&
+                                  attendees?.includes(user._id) ? (
+                                  <a
+                                    href="#"
+                                    className="btn-primary mr-2"
                                     onClick={(e) => {
                                       e.preventDefault();
                                       attendEvent(
@@ -414,16 +400,32 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
                                         !attendees?.includes(user._id),
                                       );
                                     }}
-                                    className="btn-primary mr-2"
                                   >
-                                    Attend
-                                  </button>
-                                )
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </Card>
+                                    Cancel RSVP
+                                  </a>
+                                ) : (
+                                  end &&
+                                  user &&
+                                  end.isBefore(dayjs()) && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        attendEvent(
+                                          event._id,
+                                          !attendees?.includes(user._id),
+                                        );
+                                      }}
+                                      className="btn-primary mr-2"
+                                    >
+                                      Attend
+                                    </button>
+                                  )
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </Card>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -431,7 +433,7 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
             </div>
           </section>
 
-          <main className="max-w-prose py-10">
+          <main className="max-w-prose py-10 w-full">
             {((event.partners && event.partners.length > 0) ||
               (isAuthenticated && user?._id === event.createdBy)) && (
               <section className="mb-6">
@@ -462,13 +464,15 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
             )}
 
             {attendees && attendees.length > 0 && (
-              <EventAttendees
-                event={event}
-                start={start}
-                attendees={attendees}
-                ticketsCount={ticketsCount}
-                platform={platform}
-              />
+              <div>
+                <EventAttendees
+                  event={event}
+                  start={start}
+                  attendees={attendees}
+                  ticketsCount={ticketsCount}
+                  platform={platform}
+                />
+              </div>
             )}
           </main>
         </div>
