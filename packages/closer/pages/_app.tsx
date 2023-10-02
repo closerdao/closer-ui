@@ -3,20 +3,12 @@ import { useRouter } from 'next/router';
 
 import { FC } from 'react';
 
-import Footer from '../components/Footer';
-import Layout from '../components/Layout';
-import { AppHead } from '../components/Metatags';
-import Navigation from '../components/Navigation';
 
 import { ExternalProvider, Web3Provider } from '@ethersproject/providers';
-import { Web3ReactProvider } from '@web3-react/core';
 
 import { closerConfig } from '../config';
 import { blockchainConfig } from '../config_blockchain';
-import { AuthProvider } from '../contexts/auth';
 import { ConfigProvider } from '../contexts/config';
-import { PlatformProvider } from '../contexts/platform';
-import { WalletProvider } from '../contexts/wallet';
 import '../public/styles.css';
 
 const Application: FC<AppProps> = ({ Component, pageProps }) => {
@@ -33,7 +25,8 @@ const Application: FC<AppProps> = ({ Component, pageProps }) => {
 
   return (
     <ConfigProvider config={{ ...closerConfig, ...blockchainConfig }}>
-      <AuthProvider>
+      <Component {...pageProps} />
+      {/* <AuthProvider>
         <PlatformProvider>
           <Web3ReactProvider getLibrary={getLibrary}>
             <WalletProvider>
@@ -48,7 +41,7 @@ const Application: FC<AppProps> = ({ Component, pageProps }) => {
             </WalletProvider>
           </Web3ReactProvider>
         </PlatformProvider>
-      </AuthProvider>
+      </AuthProvider> */}
     </ConfigProvider>
   );
 };
