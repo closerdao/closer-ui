@@ -16,6 +16,7 @@ import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
+import { event as gaEvent } from 'nextjs-google-analytics'; 
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
@@ -45,6 +46,11 @@ const SubscriptionSuccessPage: NextPage<Props> = ({
         monthlyCredits: selectedSubscription?.monthlyCredits as number,
         price: selectedSubscription?.price as number,
       });
+
+      gaEvent('subscription_confirm', {
+        category: 'sales',
+        label: 'subscription',
+        });
     }
   }, [priceId]);
 

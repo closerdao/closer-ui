@@ -28,6 +28,11 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
     <div className="flex justify-center">
       <Head>
         <title>{__('volunteers_page_title')}</title>
+        <link
+          rel="canonical"
+          href="https://www.traditionaldreamfactory.com/volunteer"
+          key="canonical"
+        />
       </Head>
 
       <div className="flex flex-col gap-10 max-w-4xl">
