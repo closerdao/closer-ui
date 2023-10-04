@@ -4,13 +4,14 @@ import { useRouter } from 'next/router';
 
 import { FormEvent, useEffect, useState } from 'react';
 
+import { event as gaEvent } from 'nextjs-google-analytics';
+
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import { useAuth } from '../contexts/auth';
 import { parseMessageFromError } from '../utils/common';
 import { __, isInputValid } from '../utils/helpers';
 import { Button, Card, Checkbox, ErrorMessage, Input } from './ui';
 import Heading from './ui/Heading';
-import { event as gaEvent } from 'nextjs-google-analytics'; 
 
 const SignupForm = () => {
   const router = useRouter();
@@ -49,7 +50,7 @@ const SignupForm = () => {
         gaEvent('sign_up', {
           category: 'signing',
           label: 'success',
-          });
+        });
       } else {
         console.log('Invalid response', response);
       }
