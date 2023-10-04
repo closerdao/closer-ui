@@ -100,6 +100,10 @@ export { default as TokenCounterPage } from './pages/token/token-counter';
 export { default as YourInfoPage } from './pages/token/your-info';
 export { default as ResourcesPage } from './pages/resources';
 export { default as ManageUsersPage } from './pages/admin/manage-users';
+export { default as EditVolunteerOportunity } from './pages/volunteer/[slug]/edit';
+export { default as VolunteerPage } from './pages/volunteer/[slug]/';
+export { default as VolunteerOpportunitiesPage } from './pages/volunteer/';
+export { default as CreateVolunteerOportunity } from './pages/volunteer/create';
 
 // Types
 export * from './types/';

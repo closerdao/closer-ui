@@ -106,6 +106,7 @@ const EditModel: FC<Props> = ({
     option?: string,
     actionType?: string,
   ) => {
+
     const copy = { ...data };
 
     objectPath.set(copy, name, value);
@@ -168,6 +169,8 @@ const EditModel: FC<Props> = ({
         const {
           data: { results: modelData },
         } = await api.get(`${endpoint}/${id}`);
+
+        console.log('modelData=',modelData);
         setData(modelData);
 
         // Look out for dependent data
@@ -186,6 +189,8 @@ const EditModel: FC<Props> = ({
                 data: { results },
               } = await api.get(field.endpoint, { params });
               update(field.name, results);
+
+              console.log('results=',results);
             }
           }),
         );

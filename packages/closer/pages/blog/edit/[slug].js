@@ -3,7 +3,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import React, { useState } from 'react';
-import Editor from 'react-simple-wysiwyg';
 
 import Heading from '../../../components/ui/Heading';
 
@@ -11,11 +10,13 @@ import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import api, { cdn } from '../../../utils/api';
 
+import RichTextEditor from '../../../components/RichTextEditor';
+
 const Article = ({ article, error }) => {
   const { user, isAuthenticated } = useAuth();
   const [html, setHtml] = useState(article.html);
-  const onChange = (e) => {
-    setHtml(e.target.value);
+  const onChange = (value) => {
+    setHtml(value);
   };
 
   const persist = async () => {
@@ -92,7 +93,8 @@ const Article = ({ article, error }) => {
           )}
         </div>
       </section>
-      <Editor value={html} onChange={onChange} />
+      {/* <Editor value={html} onChange={onChange} /> */}
+      <RichTextEditor value={html} onChange={onChange} />
 
       <section className="col right-col">
         <h3 className="mt-8">Posted</h3>

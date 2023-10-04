@@ -2,7 +2,6 @@ import Head from 'next/head';
 import Link from 'next/link';
 
 import React, { useState } from 'react';
-import Linkify from 'react-linkify';
 
 import ProfilePhoto from '../../components/ProfilePhoto';
 import Heading from '../../components/ui/Heading';
@@ -61,23 +60,11 @@ const Task = ({ task, error }) => {
               <Heading>{task.title}</Heading>
               {error && <div className="validation-error">{error}</div>}
               <section>
-                <p className="about-text">
-                  <Linkify
-                    componentDecorator={(decoratedHref, decoratedText, key) => (
-                      <a
-                        target="_blank"
-                        rel="nofollow noreferrer"
-                        href={decoratedHref}
-                        key={key}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {decoratedText}
-                      </a>
-                    )}
-                  >
-                    {task.description}
-                  </Linkify>
-                </p>
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: task.description,
+                  }}
+                />
               </section>
             </div>
           </div>

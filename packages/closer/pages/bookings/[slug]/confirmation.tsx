@@ -17,6 +17,7 @@ import { BaseBookingParams, Booking, Event } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
+import { event as gaEvent } from 'nextjs-google-analytics'; 
 
 interface Props extends BaseBookingParams {
   booking: Booking;
@@ -39,7 +40,11 @@ const ConfirmationStep = ({ error, booking, event }: Props) => {
     if (status !== 'pending' && status !== 'paid') {
       console.log('status not pending not paid');
       // startNewBooking();
-    }
+    } else if (status === 'paid') {
+      gaEvent('booking_confirm', {
+      category: 'booking',
+      label: 'booking',
+      });}
   }, [status]);
 
   const viewBooking = (id: string) => {

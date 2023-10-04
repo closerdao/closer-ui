@@ -27,6 +27,11 @@ const HomePage = ({ subscriptionPlans }: Props) => {
           name="description"
           content="Traditional Dream Factory (TDF) is a regenerative playground in Abela, Portugal."
         />
+        <link
+          rel="canonical"
+          href="https://www.traditionaldreamfactory.com/"
+          key="canonical"
+        />
       </Head>
       <section className="absolute overflow-hidden left-0 h-[100vh] min-h-[100vh] min-w-[100vw] bg-accent-light pb-12 -mt-6 mb-12 md:mb-[100vh] text-right">
         <div className="h-[100vh]">
@@ -49,7 +54,7 @@ const HomePage = ({ subscriptionPlans }: Props) => {
         </div>
         <div className="absolute left-0 top-0 w-full h-full flex justify-center ">
           <div className="w-full flex justify-center flex-col items-center">
-            <div className=' max-w-6xl w-full p-6'>
+            <div className=" max-w-6xl w-full p-6">
               <Heading
                 className=" w-6xl text-right drop-shadow-lg mb-6 md:mb-4 text-4xl sm:text-7xl md:text-8xl text-white"
                 data-testid="page-title"

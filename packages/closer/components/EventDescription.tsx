@@ -1,8 +1,6 @@
-import React, { FC } from 'react';
-import Linkify from 'react-linkify';
+import React, { FC, useEffect, useState } from 'react';
 
 import { type Event, VolunteerOpportunity } from '../types';
-import { __ } from '../utils/helpers';
 
 interface Props {
   event: Event | VolunteerOpportunity;
@@ -10,30 +8,21 @@ interface Props {
 }
 
 const EventDescription: FC<Props> = ({ event, isVolunteer = false }) => {
+  const [initialRenderComplete, setInitialRenderComplete] = useState(false);
+
+  // This useEffect is needed to fix next js hydration issue
+  useEffect(() => {
+    setInitialRenderComplete(true);
+  }, []);
+
   return (
-    <section className="mb-6">
-      <h3 className="font-bold text-2xl">
-        {isVolunteer
-          ? __('volunteer_description_title')
-          : __('event_description_title')}
-      </h3>
-      <p className="whitespace-pre-line">
-        <Linkify
-          componentDecorator={(decoratedHref, decoratedText, key) => (
-            <a
-              target="_blank"
-              rel="nofollow noreferrer"
-              href={decoratedHref}
-              key={key}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {decoratedText}
-            </a>
-          )}
-        >
-          {event.description}
-        </Linkify>
-      </p>
+    <section className="mb-6 flex flex-col gap-6">
+      {initialRenderComplete && (
+        <p
+          className="rich-text"
+          dangerouslySetInnerHTML={{ __html: event.description }}
+        />
+      )}
     </section>
   );
 };

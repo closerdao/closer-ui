@@ -4,6 +4,8 @@ import { useRouter } from 'next/router';
 
 import { FormEvent, useEffect, useState } from 'react';
 
+import { event as gaEvent } from 'nextjs-google-analytics';
+
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import { useAuth } from '../contexts/auth';
 import { parseMessageFromError } from '../utils/common';
@@ -45,6 +47,10 @@ const SignupForm = () => {
 
       if (response && response._id) {
         setSubmitted(true);
+        gaEvent('sign_up', {
+          category: 'signing',
+          label: 'success',
+        });
       } else {
         console.log('Invalid response', response);
       }

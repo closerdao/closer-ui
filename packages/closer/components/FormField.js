@@ -2,13 +2,14 @@ import { useState } from 'react';
 
 import objectPath from 'object-path';
 
+import { CURRENCIES_WITH_LABELS } from '../constants';
 import { __ } from '../utils/helpers';
 import Autocomplete from './Autocomplete';
 import DiscountsEditor from './DiscountsEditor';
 import FieldsEditor from './FieldsEditor';
 import PhotosEditor from './PhotosEditor';
 import PriceEditor from './PriceEditor';
-import { CURRENCIES_WITH_LABELS } from '../constants';
+import RichTextEditor from './RichTextEditor';
 import Switch from './Switch';
 import Tag from './Tag';
 import TicketOptionsEditor from './TicketOptionsEditor';
@@ -30,6 +31,8 @@ const FormField = ({
   max,
 }) => {
   const [addTag, setAddTag] = useState('');
+
+  // const editorRef = useRef(null);
 
   return (
     <div className={`form-field w-full mb-6 form-type-${type}`} key={name}>
@@ -56,12 +59,9 @@ const FormField = ({
             />
           )}
           {type === 'longtext' && (
-            <textarea
+            <RichTextEditor
               value={objectPath.get(data, name)}
-              placeholder={placeholder}
-              onChange={(e) => update(name, e.target.value)}
-              required={required}
-              className={`${className} textarea bg-transparent`}
+              onChange={(value) => update(name, value)}
             />
           )}
           {type === 'currency' && (
@@ -130,7 +130,9 @@ const FormField = ({
                   e.preventDefault();
                   update(
                     name,
-                    (objectPath.get(data, name) || []).concat(CURRENCIES_WITH_LABELS[0]),
+                    (objectPath.get(data, name) || []).concat(
+                      CURRENCIES_WITH_LABELS[0],
+                    ),
                   );
                 }}
               >

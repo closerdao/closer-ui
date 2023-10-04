@@ -84,17 +84,23 @@ const UploadPhoto: FC<Props> = ({
           alt={user.screenname}
           className="w-32 md:w-44 rounded-full peer"
         />
+      ) : model === 'event' || model === 'volunteer' ? (
+        <Button size="small">{__('upload_image_button')} </Button>
       ) : (
         <FaUser className="text-gray-200 text-6xl peer" />
       )}
-      <div
-        className={`mt-4 md:absolute md:invisible md:peer-hover:visible md:top-0 md:left-0 w-full h-full items-center ${
-          isMinimal ? '' : 'flex items-center justify-center'
-        }`}
-      >
-        <input {...getInputProps()} className="w-full h-full" />
-        <Button className="opacity-75">{label}</Button>
-      </div>
+
+      {model !== 'event' && model !== 'volunteer' && (
+        <div
+          className={`mt-4 md:absolute md:invisible md:peer-hover:visible md:top-0 md:left-0 w-full h-full items-center ${
+            isMinimal ? '' : 'flex items-center justify-center'
+          }`}
+        >
+          <input {...getInputProps()} className="w-full h-full" />
+          <Button className="opacity-75">{label}</Button>
+        </div>
+      )}
+
       {error && <p className="text-red-500 mt-2">{error}</p>}
       {loading && <p>{__('upload_photo_loading_message')}</p>}
       {isDragActive && <p>{__('upload_photo_prompt_message')}</p>}

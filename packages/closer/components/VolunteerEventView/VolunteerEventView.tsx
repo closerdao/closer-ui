@@ -1,6 +1,6 @@
-import Link from 'next/link';
+import Image from 'next/image';
 
-import { FC } from 'react';
+import { FC, useState } from 'react';
 
 import dayjs from 'dayjs';
 
@@ -9,6 +9,9 @@ import { VolunteerOpportunity } from '../../types';
 import { cdn } from '../../utils/api';
 import { __ } from '../../utils/helpers';
 import EventDescription from '../EventDescription';
+import EventPhoto from '../EventPhoto';
+import UploadPhoto from '../UploadPhoto';
+import { Card, LinkButton } from '../ui';
 import Heading from '../ui/Heading';
 
 interface Props {
@@ -19,81 +22,121 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
   const {
     name,
     description,
-    photo,
+    photo: volunteerPhoto,
     start: startDate,
     end: endDate,
   } = volunteer || {};
-  const { user } = useAuth();
+
+  const { user, isAuthenticated } = useAuth();
+  const [photo, setPhoto] = useState(volunteer && volunteerPhoto);
   const hasStewardRole = user?.roles?.includes('steward');
   if (!volunteer) {
     return null;
   }
-  const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const start = dayjs(startDate);
   const end = dayjs(endDate);
   const duration = end.diff(start, 'hour', true);
   const isThisYear = dayjs().isSame(start, 'year');
-  const dateFormat = isThisYear ? 'MMMM Do HH:mm' : 'YYYY MMMM Do HH:mm';
+  const dateFormat = isThisYear ? 'MMMM Do' : 'MMMM Do';
   const isEnded = end.isBefore(dayjs());
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <section className="mb-5">
-        <div className="md:flex flex-row justify-center items-center gap-4">
-          <div className="md:w-1/2 relative bg-gray-50">
-            <img
-              className="object-cover md:h-full md:w-full"
-              src={`${cdn}${photo}-max-lg.jpg`}
-              alt={name}
-            />
-          </div>
-          <div className="md:w-1/2 justify-between flex flex-col self-stretch">
-            <div>
-              <div className="flex items-center gap-2 md:whitespace-nowrap">
-                <span className="text-lg font-light">
-                  {start && start.format(dateFormat)}
-                  {end && duration > 24 && ` - ${end.format(dateFormat)}`}
-                  {end && duration <= 24 && ` - ${end.format('HH:mm')}`}
-                  {' '}({localTimezone} {__('events_time')})
-                </span>
+    <div className="w-full flex items-center flex-col gap-4">
+      <section className=" w-full flex justify-center max-w-4xl">
+        <div className="w-full relative">
+          <EventPhoto
+            event={null}
+            user={user}
+            photo={photo}
+            cdn={cdn}
+            isAuthenticated={isAuthenticated}
+            setPhoto={setPhoto}
+          />
+
+          {hasStewardRole && (
+            <div className="absolute right-0 bottom-0 p-8 flex flex-col gap-4">
+              <LinkButton
+                size="small"
+                href={volunteer.slug && `/volunteer/${volunteer.slug}/edit`}
+              >
+                {__('button_edit_opportunity')}
+              </LinkButton>
+
+              <UploadPhoto
+                model="volunteer"
+                isMinimal
+                id={volunteer._id}
+                onSave={(id) => setPhoto(id)}
+                label={photo ? 'Change photo' : 'Add photo'}
+              />
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className=" w-full flex justify-center">
+        <div className="max-w-4xl w-full ">
+          <div className="w-full py-2">
+            <div className="w-full flex flex-col sm:flex-row gap-4 sm:gap-8">
+              <div className="flex gap-1 items-center min-w-[120px]">
+                <Image
+                  alt="calendar icon"
+                  src="/images/icons/calendar-icon.svg"
+                  width={20}
+                  height={20}
+                />
+                <label className="text-sm uppercase font-bold flex gap-1">
+                  {start && dayjs(start).format(dateFormat)}
+                  {end &&
+                    Number(duration) > 24 &&
+                    ` - ${dayjs(end).format(dateFormat)}`}
+                  {end &&
+                    Number(duration) <= 24 &&
+                    ` - ${dayjs(end).format('HH:mm')}`}{' '}
+                  {end && end.isBefore(dayjs()) && (
+                    <p className="text-disabled">
+                      {__('volunteer_opportunity_ended')}
+                    </p>
+                  )}
+                </label>
               </div>
-              <Heading className="md:text-4xl font-bold">{name}</Heading>
-              {isEnded && (
-                <h3 className="p3 mr-2 italic">
-                  {__('volunteer_page_opportunity_ended')}
-                </h3>
-              )}
-              <div className="mt-4 event-actions flex items-center">
-                {!isEnded && (
-                  <Link
-                    href={`/bookings/create/dates?volunteerId=${
-                      volunteer._id
-                    }&start=${start.format('YYYY-MM-DD')}&end=${end.format(
-                      'YYYY-MM-DD',
-                    )}`}
-                  >
-                    <button className="btn-primary mr-2">
-                      {__('apply_submit_button')}
-                    </button>
-                  </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className=" w-full flex justify-center min-h-[400px]">
+        <div className="max-w-4xl w-full">
+          <div className="flex flex-col sm:flex-row">
+            <div className="flex items-start justify-between gap-6 w-full">
+              <div className="flex flex-col gap-10 w-full sm:w-2/3">
+                <Heading className="md:text-4xl mt-4 font-bold">{name}</Heading>
+
+                {description && (
+                  <section className="">
+                    <EventDescription event={volunteer} isVolunteer={true} />
+                  </section>
                 )}
-                {hasStewardRole && (
-                  <Link href={`/volunteer/${volunteer.slug}/edit`}>
-                    <button className="btn-primary inline-flex items-center">
-                      {__('button_edit_opportunity')}
-                    </button>
-                  </Link>
+              </div>
+              <div className="h-auto fixed bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px]">
+                {!isEnded && (
+                  <Card className="bg-white border border-gray-100">
+                    <LinkButton
+                      href={`/bookings/create/dates?volunteerId=${
+                        volunteer._id
+                      }&start=${start.format('YYYY-MM-DD')}&end=${end.format(
+                        'YYYY-MM-DD',
+                      )}`}
+                    >
+                      {__('apply_submit_button')}
+                    </LinkButton>
+                  </Card>
                 )}
               </div>
             </div>
           </div>
         </div>
       </section>
-      {description && (
-        <section className="max-w-prose py-10 mx-auto">
-          <EventDescription event={volunteer} isVolunteer={true} />
-        </section>
-      )}
     </div>
   );
 };

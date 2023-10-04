@@ -1,4 +1,4 @@
-const EXTERNAL_DATA_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://traditionaldreamfactory.com';
+const EXTERNAL_DATA_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://www.traditionaldreamfactory.com';
 import { api } from 'closer';
 
 function generateSiteMap({ volunteerOpportunities, articles, events, members }) {
