@@ -159,7 +159,7 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
       ) : (
         <div className="w-full flex items-center flex-col gap-4">
           <section className=" w-full flex justify-center max-w-4xl">
-              <div className={`"w-full relative bg-accent-light rounded-md " ${canEditEvent ? ' min-h-[350px] w-full': ''}`}>
+              <div className={`"w-full relative bg-accent-light rounded-md w-full " ${canEditEvent ? ' min-h-[400px] ': ''}`}>
               <EventPhoto
                 event={event}
                 user={user}
