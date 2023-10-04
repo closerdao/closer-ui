@@ -38,6 +38,11 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
   const [photo, setPhoto] = useState(event && event.photo);
   const [password, setPassword] = useState('');
   const [attendees, setAttendees] = useState(event && (event.attendees || []));
+
+  const canEditEvent = user ? (user?._id === event.createdBy ||
+    user?.roles.includes('admin')) : false
+ 
+  
   const myTicketFilter = event && {
     where: {
       event: event._id,
@@ -154,7 +159,7 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
       ) : (
         <div className="w-full flex items-center flex-col gap-4">
           <section className=" w-full flex justify-center max-w-4xl">
-            <div className="w-full relative">
+              <div className={`"w-full relative bg-accent-light rounded-md " ${canEditEvent ? ' min-h-[350px] w-full': ''}`}>
               <EventPhoto
                 event={event}
                 user={user}
@@ -163,10 +168,8 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
                 isAuthenticated={isAuthenticated}
                 setPhoto={setPhoto}
               />
-
-              {(user?._id === event.createdBy ||
-                user?.roles.includes('admin')) && (
-                <div className="absolute right-0 bottom-0 p-8 flex flex-col gap-4">
+              {canEditEvent && (
+                <div className="absolute right-0 bottom-0 p-8 flex flex-col gap-4 ">
                   <LinkButton
                     size="small"
                     href={event.slug && `/events/${event.slug}/tickets`}
@@ -182,8 +185,7 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
                   </LinkButton>
 
                   {isAuthenticated &&
-                    (user._id === event.createdBy ||
-                      user.roles.includes('admin')) && (
+                    canEditEvent && (
                       <UploadPhoto
                         model="event"
                         isMinimal
@@ -273,7 +275,7 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
                     <div className="h-auto fixed bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px]">
                       {end && !end.isBefore(dayjs()) && (
                         <Card className="bg-white border border-gray-100">
-                          {event.ticketOptions.map((ticket: any) => (
+                          {event.paid && event.ticketOptions.map((ticket: any) => (
                             <div
                               key={ticket.name}
                               className="hidden sm:flex flex-col gap-1"
