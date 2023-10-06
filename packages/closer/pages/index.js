@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import Navbar from './home/navbar';
 import Banner from '../public/assets/jpg/home-banner.jpg';
 import MobileBanner from '../public/assets/jpg/mobile-banner.jpg';
@@ -37,8 +38,19 @@ export default function Home() {
             The operating system for regenerative communities.
           </p>
           <div className="mt-5 ">
-            <button className="py-3 px-6 rounded-xl bg-gradient-to-r from-[#67F8C0] to-[#3F91DD]  font-[700] font-urbanist text-[#171717] text-lg">Get Started</button>
-            <button className="ml-5 py-3 px-6 rounded-xl border-[1px] border-white font-[700] font-urbanist text-white text-lg">Learn More</button>
+            <Link
+              href="https://traditionaldreamfactory.com/?utm_source=closer&utm_medium=website"
+              target="_blank"
+              className="py-3 px-6 rounded-xl bg-gradient-to-r from-[#67F8C0] to-[#3F91DD] font-[700] font-urbanist text-[#171717]"
+            >
+              See it in action
+            </Link>
+            <Link
+              href="mailto:team@closer.earth"
+              target="_blank"
+              className="ml-5 py-3 px-6 rounded-xl border-[1px] border-white font-[700] font-urbanist text-white text-xs lg:text-sm">
+              Learn More
+            </Link>
           </div>
         </div>
       </div>

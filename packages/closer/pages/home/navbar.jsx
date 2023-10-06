@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import Logo from '../../public/assets/svg/logo.svg';
 import Image from 'next/image';
 import { Dialog, Transition } from '@headlessui/react';
@@ -46,12 +47,14 @@ export default function Navbar() {
             <p className="self-center cursor-pointer font-urbanist font-[300] text-sm xl:text-md text-white hover:bg-clip-text hover:text-transparent hover:bg-gradient-to-t from-[#67F8C0] to-[#3F91DD]">
               Investment
             </p>
-            {/* <button className="font-urbanist font-[600] text-sm xl:text-md bg-clip-text text-transparent bg-gradient-to-t from-[#67F8C0] to-[#3F91DD] border-[1px] border-[#67F8C0] rounded-lg py-2 px-5">
+
+            <Link
+              href="mailto:team@closer.earth"
+              target="_blank"
+              className="font-urbanist font-[600] text-sm xl:text-md bg-clip-text text-transparent bg-gradient-to-r from-[#67F8C0] to-[#3F91DD] border-[1px] border-l-[#67F8C0] border-t-[#67F8C0] border-r-[#3F91DD] border-b-[#3F91DD] rounded-lg py-2 px-5"
+            >
               Contact Us
-            </button> */}
-            <button class="font-urbanist font-[600] text-sm xl:text-md bg-clip-text text-transparent bg-gradient-to-r from-[#67F8C0] to-[#3F91DD] border-[1px] border-l-[#67F8C0] border-t-[#67F8C0] border-r-[#3F91DD] border-b-[#3F91DD] rounded-lg py-2 px-5">
-              Contact Us
-            </button>
+            </Link>
           </div>
           <div className="block md:hidden">
             <p className="self-center ml-4 font-urbanist font-[700] text-[30px] text-white">
@@ -173,9 +176,13 @@ export default function Navbar() {
                         <p className="text-center cursor-pointer  mt-5 font-[400] font-urbanist text-[16px] text-white  ">
                           Investment
                         </p>
-                        <button className="w-[40%] mx-auto mt-10 font-urbanist font-[600] text-[15px] bg-clip-text text-transparent bg-gradient-to-t from-[#67F8C0] to-[#3F91DD] border-[1px] border-l-[#67F8C0] border-t-[#67F8C0] border-r-[#3F91DD] border-b-[#3F91DD] rounded-lg py-2 px-5">
+                        <Link
+                          href="mailto:team@closer.earth"
+                          target="_blank"
+                          className="w-[40%] mx-auto mt-10 font-urbanist font-[600] text-[15px] bg-clip-text text-transparent bg-gradient-to-t from-[#67F8C0] to-[#3F91DD] border-[1px] border-l-[#67F8C0] border-t-[#67F8C0] border-r-[#3F91DD] border-b-[#3F91DD] rounded-lg py-2 px-5"
+                        >
                           Contact Us
-                        </button>
+                        </Link>
                       </div>
                     </div>
                   </Dialog.Panel>
