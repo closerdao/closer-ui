@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import SS from '../../public/assets/png/ss.png';
 import Image from 'next/image';
 import Icon from '../../public/assets/png/icon.png';
@@ -42,19 +43,24 @@ export default function Product() {
             <p className="global-txt font-urbanist font-[700] text-3xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-2xl  text-white">
               Our Current Product
             </p>
-            <p className="global-para mt-3 font-urbanist font-[400] text-sm md:text-xs lg:text-sm text-[#A5A5A5] md:w-[90%]">
-              Lorem ipsum dolor sit amet consectetur. Risus porttitor orci
-              convallis turpis est leo tellus facilisi et. Consectetur pulvinar
-              euismod purus gravida ferment
-            </p>
+
+            <p className="font-urbanist my-4 text-white">Our current product empowers regenerative communities by enabling them to issue utility tokens for access rights, fostering sustainable living and land stewardship.</p>
 
             <div className="mt-5 ">
-              <button className="py-3 px-6 rounded-xl bg-gradient-to-r from-[#67F8C0] to-[#3F91DD]  font-[700] font-urbanist text-[#171717] text-xs lg:text-sm">
-                Explore
-              </button>
-              <button className="ml-5 py-3 px-6 rounded-xl border-[1px] border-white font-[700] font-urbanist text-white text-xs lg:text-sm">
+
+              <Link
+                href="https://traditionaldreamfactory.com/?utm_source=closer&utm_medium=website"
+                target="_blank"
+                className="py-3 px-6 rounded-xl bg-gradient-to-r from-[#67F8C0] to-[#3F91DD] font-[700] font-urbanist text-[#171717]"
+              >
+                See it in action
+              </Link>
+              <Link
+                href="mailto:team@closer.earth"
+                target="_blank"
+                className="ml-5 py-3 px-6 rounded-xl border-[1px] border-white font-[700] font-urbanist text-white text-xs lg:text-sm">
                 Learn More
-              </button>
+              </Link>
             </div>
           </div>
           <div className="mt-10 md:mt-0">
@@ -64,7 +70,7 @@ export default function Product() {
 
         <div className="grid md:grid-cols-2 w-[90%] xl:w-[80%] 2xl:w-[1100px] mx-auto mt-10 md:mt-20">
           {product.map((x) => (
-            <div className="flex mt-10">
+            <div className="flex mt-10" key={ x.title }>
               <Image
                 src={x.pic}
                 alt=""

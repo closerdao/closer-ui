@@ -38,24 +38,11 @@ export default function Global() {
             <p className="global-txt font-urbanist font-[700] text-3xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-2xl  text-white">
               The Global Challenge
             </p>
-            <p className="global-para mt-4 font-urbanist font-[400] md:leading-[15px] lg:leading-normal  text-lg md:text-xs lg:text-sm xl:text-lg 2xl:text-xs text-white md:w-[70%]">
-              Over the past century, the environment has faced significant
-              degradation leading to loss of biodiversity, soil depletion, and
-              disrupted water cycles. Centralized food production models and
-              non-sustainable land management have been major contributors.
-            </p>
-
-            <p className="global-para mt-3 font-urbanist font-[400] md:leading-[15px] lg:leading-normal text-lg md:text-xs lg:text-sm xl:text-lg 2xl:text-xs text-white md:w-[70%]">
-              Climate change and environmental degradation call for an urgent
-              transformation in land management practices. For the planet to
-              sustain life, revitalizing localized food production, restoring
-              soil, enhancing water retention, and preserving biodiversity are
-              paramount.
-            </p>
-
-            <p className="global-para mt-3 font-urbanist font-[400] md:leading-[15px] lg:leading-normal text-lg md:text-xs lg:text-sm xl:text-lg 2xl:text-xs text-white md:w-[70%]">
-              We see villages as the dormant powerhouses ready to become the
-              socioeconomic hubs spearheading the regenerative transformation.
+            <p className="global-para mt-4 font-urbanist font-[400] md:leading-[15px] lg:leading-normal  text-white md:w-[70%]">
+              Environmental degradation, caused by centralized food production and unsustainable land management, necessitates an urgent shift toward localized food production, soil restoration, improved water retention, and biodiversity preservation.
+              <br />
+              <br />
+              We see villages as the dormant powerhouses ready to become the socioeconomic hubs spearheading the regenerative transformation.
             </p>
           </div>
         </div>
@@ -65,7 +52,7 @@ export default function Global() {
         <div className="grid md:grid-cols-3 gap-5 w-[90%] xl:w-[80%] 2xl:w-[1100px] mx-auto">
           {/* mapping */}
           {types.map((item) => (
-            <div>
+            <div key={ item.title }>
               <Image src={item.img} alt="" />
               <p className="titles mt-2 font-urbanist font-[700] text-xl md:text-sm lg:text-xl text-[#171717]">
                 {item.title}
@@ -98,7 +85,7 @@ export default function Global() {
             emerge as the <br /> guardians of ecological <br /> transformation.
           </p>
 
-          <p className="mt-5 font-urbanist font-[400] text-lg md:text-xs lg:text-sm  xl:text-lg 2xl:text-xs text-[#171717] text-center">
+          <p className="mt-5 font-urbanist font-[400] text-[#171717] text-center">
             Through our platform, these communities not only gain the knowledge
             and technological tools but also the social capabilities needed to
             track and drive positive impact on the environment. By becoming
