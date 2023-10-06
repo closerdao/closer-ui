@@ -107,9 +107,9 @@ export default function Meet() {
       <div className="bg-[#1C1C1C] py-20">
         <div className="bg-[#171717] w-[80%] xl:w-[70%] 2xl:w-[1100px] mx-auto  py-20 px-5 md:px-20 rounded-2xl text-center">
           <p className="lines font-urbanist font-[700] text-lg md:text-xl lg:text-2xl xl:text-3xl text-white">
-            Driven by regeneration? Whether you're looking to fund impact drive
+            {`Driven by regeneration? Whether you're looking to fund impact drive
             technology solutions or pioneering new communities, we need you.
-            Connect with Closer. Shape the future, pragmatically.
+            Connect with Closer. Shape the future, pragmatically.`}
           </p>
 
           <Link
