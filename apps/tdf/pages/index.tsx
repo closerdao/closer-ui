@@ -54,7 +54,7 @@ const HomePage = ({ subscriptionPlans }: Props) => {
         </div>
         <div className="absolute left-0 top-0 w-full h-full flex justify-center ">
           <div className="w-full flex justify-center flex-col items-center">
-            <div className=' max-w-6xl w-full p-6'>
+            <div className=" max-w-6xl w-full p-6">
               <Heading
                 className=" w-6xl text-right drop-shadow-lg mb-6 md:mb-4 text-4xl sm:text-7xl md:text-8xl text-white"
                 data-testid="page-title"
