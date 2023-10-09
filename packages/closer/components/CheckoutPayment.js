@@ -68,6 +68,10 @@ const CheckoutPayment = ({
   };
 
   const payTokens = async () => {
+    if (!process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING) {
+      throw new Error('Token payment not enabled.');
+    }
+
     const { success: stakingSuccess, error: stakingError } = await stakeTokens(
       dailyTokenValue,
     );
@@ -115,7 +119,7 @@ const CheckoutPayment = ({
           submitButtonClassName="booking-btn mt-8"
           cardElementClassName="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-4"
           buttonDisabled={buttonDisabled}
-          prePayInTokens={useTokens && payTokens}
+          prePayInTokens={process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING && useTokens && payTokens}
           hasAppliedCredits={hasAppliedCredits}
           payWithCredits={payWithCredits}
           isProcessingTokenPayment={isStaking}

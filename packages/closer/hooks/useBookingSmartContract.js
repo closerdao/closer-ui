@@ -3,7 +3,7 @@ import { useContext, useState } from 'react';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import { utils } from 'ethers';
-import { BigNumber, Contract } from 'ethers';
+import { Contract } from 'ethers';
 
 import { WalletDispatch, WalletState } from '../contexts/wallet';
 import { checkIfBookingEqBlockchain } from '../utils/helpers';
@@ -17,6 +17,11 @@ export const useBookingSmartContract = ({ bookingNights }) => {
     BLOCKCHAIN_DAO_TOKEN,
     BLOCKCHAIN_DIAMOND_ABI,
   } = useConfig();
+
+  if (!BLOCKCHAIN_DAO_DIAMOND_ADDRESS || !BLOCKCHAIN_DAO_TOKEN || !BLOCKCHAIN_DIAMOND_ABI) {
+    throw new Error('Missing blockchain config.');
+  }
+
   const { isWalletReady, account, library } = useContext(WalletState);
   const { updateWalletBalance, refetchBookingDates } =
     useContext(WalletDispatch);
