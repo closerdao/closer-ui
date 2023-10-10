@@ -1,0 +1,77 @@
+@tailwind components;
+
+@layer components {
+  .btn,
+  .btn[type='submit'] {
+    @apply cursor-pointer inline-block py-2 px-4 rounded-full text-foreground border-2 border-foreground focus:outline-none disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed hover:border-foreground hover:bg-foreground hover:text-white;
+  }
+  .btn-primary,
+  .btn-primary[type='submit'] {
+    @apply text-base cursor-pointer inline-block py-2 px-4 rounded-full text-white border-0 border-primary bg-primary focus:outline-none disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed uppercase;
+  }
+  .btn-primary-light,
+  .btn-primary-light[type='submit'] {
+    @apply text-base cursor-pointer inline-block py-2 px-4 rounded-full text-primary border-0 border-primary bg-primary-light focus:outline-none disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed uppercase;
+  }
+  .btn-primary-large {
+    @apply: btn-primary md:text-4xl;
+  }
+  .btn-light {
+    @apply: bg-primary-light;
+  }
+  .btn-small,
+  .btn-small[type='submit'] {
+    @apply btn py-0 px-2 text-sm hover:bg-primary text-primary hover:text-white bg-transparent border-2 border-primary disabled:hover:bg-transparent disabled:border-gray-400 disabled:text-gray-400;
+  }
+  .btn-secondary,
+  .btn-secondary[type='submit'] {
+    @apply btn hover:bg-secondary text-secondary hover:text-white bg-transparent border-2 border-secondary disabled:hover:bg-transparent disabled:border-gray-400 disabled:text-gray-400;
+  }
+  .btn-primary.active {
+    @apply bg-primary text-white hover:bg-transparent hover:text-primary;
+  }
+  .form-field {
+    @apply mb-4;
+  }
+  .toggle-bg:after {
+    content: '';
+    @apply absolute top-0.5 left-0.5 bg-white border border-gray-300 rounded-full h-5 w-5 transition shadow-sm;
+  }
+
+  input:checked + .toggle-bg:after {
+    transform: translateX(100%);
+    @apply border-white;
+  }
+  input:checked + .toggle-bg {
+    @apply bg-primary border-primary;
+  }
+
+  input,
+  textarea,
+  .input,
+  .textarea {
+    @apply w-full;
+  }
+
+  textarea,
+  .textarea {
+    @apply p-2 text-foreground block border-0 border-b-2 border-transparent focus:outline-none focus:border-primary;
+  }
+
+  input[type='email'],
+  input[type='password']:not(.new-input),
+  input[type='text']:not(.new-input),
+  input[type='phone'],
+  input[type='number'],
+  input[type='date'] {
+    @apply p-2 text-foreground block border-0 border-b-2 border-transparent ring-transparent focus:outline-none focus:border-primary;
+  }
+
+  select {
+    @apply text-base border-gray-200 border-2 rounded-lg ring-transparent appearance-none focus:border-primary outline-none max-w-full;
+  }
+
+  .switch .label {
+    @apply mb-0 ml-2;
+  }
+}
