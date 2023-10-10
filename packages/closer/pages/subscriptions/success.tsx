@@ -7,16 +7,16 @@ import PageError from '../../components/PageError';
 import { BackButton, Button, Heading, ProgressBar } from '../../components/ui/';
 
 import { NextPage } from 'next';
+import { event as gaEvent } from 'nextjs-google-analytics';
 
 import Page404 from '../404';
-import { SUBSCRIPTION_STEPS } from '../../constants';
+import { DEFAULT_CURRENCY, SUBSCRIPTION_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers';
-import { event as gaEvent } from 'nextjs-google-analytics'; 
+import { __ } from '../../utils/helpers'; 
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
@@ -50,7 +50,9 @@ const SubscriptionSuccessPage: NextPage<Props> = ({
       gaEvent('subscription_confirm', {
         category: 'sales',
         label: 'subscription',
-        });
+        value: selectedPlan?.price,
+        currency: DEFAULT_CURRENCY,
+      });
     }
   }, [priceId]);
 
