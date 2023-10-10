@@ -210,14 +210,18 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
   };
 
   const fetchPrices = async () => {
-    console.log('end=', end);
+    const formattedStart = new Date(start as string | Date)
+      .toString()
+      .slice(0, 10);
+    const formattedEnd = new Date(end as string | Date).toString().slice(0, 10);
+
     setApiError(null);
     try {
       const {
         data: { results, availability },
       } = await api.post('/bookings/availability', {
-        start,
-        end,
+        start: formattedStart,
+        end: formattedEnd,
         adults,
         children: kids,
         infants,
