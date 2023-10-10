@@ -16,7 +16,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers';
+import { __ } from '../../utils/helpers'; 
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
