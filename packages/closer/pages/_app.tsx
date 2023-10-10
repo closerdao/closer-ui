@@ -10,6 +10,14 @@ import { closerConfig } from '../config';
 import { blockchainConfig } from '../config_blockchain';
 import { ConfigProvider } from '../contexts/config';
 import '../public/styles.css';
+import { Web3ReactProvider } from '@web3-react/core';
+import { Footer } from 'react-day-picker';
+import Layout from '../components/Layout';
+import { AppHead } from '../components/Metatags';
+import Navigation from '../components/Navigation';
+import { AuthProvider } from '../contexts/auth';
+import { PlatformProvider } from '../contexts/platform';
+import { WalletProvider } from '../contexts/wallet';
 
 const Application: FC<AppProps> = ({ Component, pageProps }) => {
   const router = useRouter();
@@ -25,8 +33,8 @@ const Application: FC<AppProps> = ({ Component, pageProps }) => {
 
   return (
     <ConfigProvider config={{ ...closerConfig, ...blockchainConfig }}>
-      <Component {...pageProps} />
-      {/* <AuthProvider>
+      {/* <Component {...pageProps} /> */}
+      <AuthProvider>
         <PlatformProvider>
           <Web3ReactProvider getLibrary={getLibrary}>
             <WalletProvider>
@@ -41,7 +49,7 @@ const Application: FC<AppProps> = ({ Component, pageProps }) => {
             </WalletProvider>
           </Web3ReactProvider>
         </PlatformProvider>
-      </AuthProvider> */}
+      </AuthProvider>
     </ConfigProvider>
   );
 };
