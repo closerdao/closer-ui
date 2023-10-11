@@ -76,4 +76,9 @@ export const links = [
     url: '/resources',
     enabled: true,
   },
+  {
+    label: 'Online courses',
+    url: '/learn/category/all',
+    enabled: true,
+  },
 ];

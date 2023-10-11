@@ -104,6 +104,10 @@ export { default as EditVolunteerOportunity } from './pages/volunteer/[slug]/edi
 export { default as VolunteerPage } from './pages/volunteer/[slug]/';
 export { default as VolunteerOpportunitiesPage } from './pages/volunteer/';
 export { default as CreateVolunteerOportunity } from './pages/volunteer/create';
+export { default as LearnCategoryPage } from './pages/learn/category/[slug]/';
+export { default as CreateLessonPage } from './pages/learn/create';
+export { default as LessonPage } from './pages/learn/[slug]/';
+export { default as EditLessonPage } from './pages/learn/[slug]/edit';
 
 // Types
 export * from './types/';

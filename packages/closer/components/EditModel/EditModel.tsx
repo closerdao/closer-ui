@@ -37,7 +37,7 @@ interface Props {
   onUpdate?: (
     name: string,
     value: any,
-    option?: string,
+    option?: any,
     actionType?: string,
   ) => void;
   onError?: (error: string) => void;

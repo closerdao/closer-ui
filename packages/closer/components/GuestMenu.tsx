@@ -17,6 +17,7 @@ const GuestMenu = () => (
       <NavLink href="/events">{__('navigation_events')}</NavLink>
       <NavLink href="/volunteer">{__('navigation_volunteer')}</NavLink>
       <NavLink href="/resources">{__('navigation_resources')}</NavLink>
+      <NavLink href="/learn/category/all">{__('navigation_online_courses')}</NavLink>
 
       <ReportABug />
     </div>
