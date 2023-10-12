@@ -128,6 +128,9 @@ const LearnCategoryPage: NextPage = () => {
 
             {error && <ErrorMessage error={error} />}
             {isLoading && <Spinner />}
+            {lessons && lessons.size === 0 && (
+              <Heading level={1}>{__('generic_coming_soon')}</Heading>
+            )}
 
             <LessonsList lessons={lessons} />
 
