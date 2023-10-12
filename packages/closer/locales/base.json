@@ -246,6 +246,7 @@
   "navigation_visit": "Try us out",
   "navigation_buy_token": "Invest",
   "navigation_resources": "Resources",
+  "navigation_online_courses": "Online courses",
   "newsletter_success": "Thanks, we will be in touch soon!",
   "newsletter_body": "Keep in the loop, subscribe:",
   "newsletter_signup": "Subscribe",
@@ -366,7 +367,6 @@
   "bookings_event_confirmation_see_you_soon": "See you soon 🌱",
   "bookings_checkout_ticket_cost": "Ticket cost",
   "bookings_checkout_event_cost": "Event cost",
-
 
   "blockchain_bypass_wallet": "Skip, I'll pay fiat",
   "channel_create_title": "Create Channel",
@@ -893,6 +893,26 @@
   "resources_resources_heading": "Put the kettle on and get to know us a little better",
   "resources_resources_subheading": "Read all about our dream: the mission, vision and how we got here, with our digital papers",
   "resources_faqs_error": "Error fetching FAQs",
+
+  "learn_heading": "Online courses",
+  "learn_categories_heading": "Categories",
+  "learn_courses": "courses",
+  "learn_lesson_category": "Category",
+  "learn_lesson_created_by": "Lesson by:",
+  "learn_lessons_heading": "Lessons",
+  "learn_introduction_heading": "Introduction",
+  "learn_full_lesson_heading": "Full lesson",
+  "learn_create_lesson_hading": "Create lesson",
+  "learn_edit_lesson_hading": "Edit lesson",
+  "learn_tags_heading": "Tags",
+  "learn_get_access_button": "Get full access",
+  "learn_cta": "Subscribe to unlock all lessons",
+  "learn_loading_video": "Loading video",
+  "learn_edit_heading": "Edit lesson:",
+  "learn_categories_all": "All",
+  "learn_no_lessons_found": "No lessons found",
+  "learn_create_lesson": "Create lesson",
+  "learn_all_courses": "Back to all courses",
 
   "generic_edit_button": "Edit"
 }
