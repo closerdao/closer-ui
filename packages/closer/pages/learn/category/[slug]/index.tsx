@@ -92,17 +92,20 @@ const LearnCategoryPage: NextPage = () => {
         <title>{`${__('learn_heading')} - ${PLATFORM_NAME}`}</title>
       </Head>
       <main className="main-content w-full max-w-6xl">
-        <header className="flex justify-between">
-          <Heading
-            level={1}
-            className="mt-10 mb-16 uppercase text-5xl font-extrabold"
-          >
-            {__('learn_heading')}
-          </Heading>
+        <header className="lg:flex lg:justify-between mb-8">
+          <div>
+            <Heading
+              level={1}
+              className="mt-10 mb-2 uppercase text-5xl font-extrabold"
+            >
+              {__('learn_heading')}
+            </Heading>
+            <p className="max-w-4xl">{__('learn_subheading')}</p>
+          </div>
 
           <div className="action">
             {user && user.roles.includes('admin') && (
-              <Link href="/learn/create" className="mt-10  btn-primary">
+              <Link href="/learn/create" className="mt-10 btn-primary inline-block">
                 {__('learn_create_lesson_hading')}
               </Link>
             )}
