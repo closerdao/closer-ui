@@ -45,13 +45,14 @@ const LearnCategoryPage: NextPage = () => {
   const totalLessons = platform.lesson.findCount(filter);
   const allLessons = platform.lesson.find();
 
-  const categories = lessons && allLessons && [
-    ...new Set(
-      allLessons.toJS().map((lesson: Lesson) => {
-        return lesson.category;
-      }),
-    ),
-  ];
+  const categories = lessons &&
+    allLessons && [
+      ...new Set(
+        allLessons.toJS().map((lesson: Lesson) => {
+          return lesson.category;
+        }),
+      ),
+    ];
 
   function getCategoryWhere() {
     if (category === 'all') {
@@ -88,7 +89,7 @@ const LearnCategoryPage: NextPage = () => {
   return (
     <>
       <Head>
-        <title>{`${PLATFORM_NAME} - ${__('learn_heading')}`}</title>
+        <title>{`${__('learn_heading')} - ${PLATFORM_NAME}`}</title>
       </Head>
       <main className="main-content w-full max-w-6xl">
         <header className="flex justify-between">
@@ -127,7 +128,7 @@ const LearnCategoryPage: NextPage = () => {
 
             {error && <ErrorMessage error={error} />}
             {isLoading && <Spinner />}
-            
+
             <LessonsList lessons={lessons} />
 
             {lessons && totalLessons > LESSONS_PER_PAGE && (

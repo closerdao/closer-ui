@@ -32,10 +32,13 @@ interface Props {
 const LessonPage = ({ lesson, lessonCreator, error }: Props) => {
   const { user } = useAuth();
 
-  const canViewLessons =
-    Boolean(user && (user?.subscription?.plan || !lesson.paid));
+  const canViewLessons = Boolean(
+    user && (user?.subscription?.plan || !lesson.paid),
+  );
 
-  const [isVideoPreview, setIsVideoPreview] = useState(true);
+  const [isVideoPreview, setIsVideoPreview] = useState(
+    Boolean(lesson.previewVideo),
+  );
   const [isVideoLoading, setIsVideoLoading] = useState(false);
 
   const handleShowPreview = () => {
@@ -55,15 +58,25 @@ const LessonPage = ({ lesson, lessonCreator, error }: Props) => {
     <>
       <Head>
         <title>{lesson.title}</title>
-        <meta name="description" content={lesson.description} />
+        <meta name="description" content={lesson.summary} />
         <meta property="og:type" content="lesson" />
       </Head>
 
       <div className="w-full flex items-center flex-col gap-4">
-        <section className=" w-full flex justify-center max-w-4xl">
+        <section className="w-full flex justify-center max-w-4xl flex-wrap">
+          <Link
+            href="/learn/category/all"
+            className="hover:text-accent w-full my-4"
+          >
+            &lt; {__('learn_all_courses')}
+          </Link>
           <div className="w-full relative">
             <LessonVideo
-              videoUrl={isVideoPreview ? lesson.previewVideo : lesson.fullVideo}
+              videoUrl={
+                isVideoPreview && lesson.previewVideo
+                  ? lesson.previewVideo
+                  : lesson.fullVideo
+              }
               isUnlocked={canViewLessons || isVideoPreview}
               setIsVideoLoading={setIsVideoLoading}
               isVideoLoading={isVideoLoading}
@@ -116,12 +129,6 @@ const LessonPage = ({ lesson, lessonCreator, error }: Props) => {
             <div className="flex-col-reverse sm:flex-row static flex items-start justify-between gap-6 w-full">
               <div className="flex flex-col gap-10 w-full sm:w-2/3">
                 <div>
-                  <Link
-                    href="/learn/category/all"
-                    className="hover:text-accent"
-                  >
-                    &lt; {__('learn_all_courses')}
-                  </Link>
                   <Heading level={1} className="md:text-4xl mt-2 font-bold">
                     {lesson.title}
                   </Heading>
@@ -136,45 +143,49 @@ const LessonPage = ({ lesson, lessonCreator, error }: Props) => {
               <div className="h-auto static sm:sticky bottom-0 left-0  sm:top-[100px] w-full sm:w-[250px]">
                 <Card className="bg-white border border-gray-100 gap-6">
                   <Heading level={2}>{__('learn_lessons_heading')}</Heading>
-
                   <div className="flex flex-col">
-                    <button
-                      onClick={handleShowPreview}
-                      disabled={isVideoPreview}
-                      className={`flex gap-2 py-1 px-2 rounded-md ${
-                        isVideoPreview
-                          ? 'bg-accent-light font-bold'
-                          : 'bg-transparent font-normal'
-                      }`}
-                    >
-                      <div className="border-accent border rounded-full flex justify-center items-center w-[21px] h-[21px]">
-                        <IconPlay />
-                      </div>
-                      {__('learn_introduction_heading')}
-                    </button>
-                    <button
-                      onClick={handleShowFullVideo}
-                      disabled={!isVideoPreview}
-                      className={`flex gap-2 py-1 px-2 rounded-md ${
-                        !isVideoPreview
-                          ? 'bg-accent-light font-bold'
-                          : 'bg-transparent font-normal'
-                      }`}
-                    >
-                      {canViewLessons ? (
+                    {lesson.previewVideo && (
+                      <button
+                        onClick={handleShowPreview}
+                        disabled={isVideoPreview}
+                        className={`flex gap-2 py-1 px-2 rounded-md ${
+                          isVideoPreview
+                            ? 'bg-accent-light font-bold'
+                            : 'bg-transparent font-normal'
+                        }`}
+                      >
                         <div className="border-accent border rounded-full flex justify-center items-center w-[21px] h-[21px]">
                           <IconPlay />
                         </div>
-                      ) : (
-                        <div className=" flex justify-center items-center w-[21px] h-[21px]">
-                          <IconLocked />
-                        </div>
-                      )}
-                      {__('learn_full_lesson_heading')}
-                    </button>
+                        {__('learn_introduction_heading')}
+                      </button>
+                    )}
+
+                    {lesson.fullVideo && (
+                      <button
+                        onClick={handleShowFullVideo}
+                        disabled={!isVideoPreview}
+                        className={`flex gap-2 py-1 px-2 rounded-md ${
+                          !isVideoPreview
+                            ? 'bg-accent-light font-bold'
+                            : 'bg-transparent font-normal'
+                        }`}
+                      >
+                        {canViewLessons ? (
+                          <div className="border-accent border rounded-full flex justify-center items-center w-[21px] h-[21px]">
+                            <IconPlay />
+                          </div>
+                        ) : (
+                          <div className=" flex justify-center items-center w-[21px] h-[21px]">
+                            <IconLocked />
+                          </div>
+                        )}
+                        {__('learn_full_lesson_heading')}
+                      </button>
+                    )}
                   </div>
 
-                  {!canViewLessons && (
+                  {!canViewLessons && lesson.fullVideo && (
                     <LinkButton href="/subscriptions">
                       {__('learn_get_access_button')}
                     </LinkButton>

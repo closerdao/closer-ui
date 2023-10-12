@@ -283,6 +283,7 @@ const models = {
       label: 'Category',
       public: true,
       editable: true,
+      required: true,
       type: 'text',
     },
     {

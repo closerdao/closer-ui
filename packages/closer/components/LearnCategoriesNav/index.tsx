@@ -12,11 +12,11 @@ interface Props {
 
 const LearnCategoriesNav = ({ categories, currentCategory }: Props) => {
   return (
-    <ul className="flex flex-col">
+    <ul className="flex flex-col gap-0.5">
       <li>
         <Link
           className={`block p-1 px-2 rounded-md hover:bg-accent-light ${
-            currentCategory === (__('learn_categories_all')).toLowerCase()
+            currentCategory === __('learn_categories_all').toLowerCase()
               ? 'font-bold bg-accent-light'
               : 'bg-transparent'
           } `}
@@ -31,7 +31,7 @@ const LearnCategoriesNav = ({ categories, currentCategory }: Props) => {
             <li key={navCategory}>
               <Link
                 className={`block p-1 px-2 rounded-md hover:bg-accent-light ${
-                    currentCategory === navCategory
+                  currentCategory === navCategory
                     ? 'font-bold bg-accent-light'
                     : 'bg-transparent'
                 } `}
