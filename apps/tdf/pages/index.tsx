@@ -101,7 +101,7 @@ const HomePage = ({ subscriptionPlans }: Props) => {
             </Heading>
             <p className="text-center md:text-left mb-6">
               Our co-living quarters will be home to 14 large suites with a
-              living room & kitchen, 3 loft studios with a music production
+              living room & kitchen, 4 loft studios with a music production
               live-in studio, and a private house for families or friends.
             </p>
             <p className="text-center md:text-left mb-6 uppercase font-bold">
@@ -147,7 +147,7 @@ const HomePage = ({ subscriptionPlans }: Props) => {
                   />
                   <Heading display level={4} className="md:text-sm">
                     Food Forest + REFORESTATION
-                    <p className="text-sm font-light">(w/ 200+ trees)</p>
+                    <p className="text-sm font-light">(w/ 2000+ trees)</p>
                   </Heading>
                 </li>
                 <li className="flex justify-start items-center">
@@ -309,53 +309,38 @@ const HomePage = ({ subscriptionPlans }: Props) => {
             <div className="w-full flex items-center flex-col">
               <Heading
                 level={2}
-                className="mb-4 text-5xl font-bold max-w-[600px]"
+                className="text-2xl font-bold"
               >
-                {__('token_sale_meet_your_home_heading')}
-              </Heading>
-              <Heading level={3} className="text-md max-w-[600px]">
-                {__('token_sale_meet_your_home_subheading')}
+                {'Meet your new home, way of life, and tribe. Join a unique blend of solarpunks, web3 aficionados, holistic healers, permaculture pioneers, tree enthusiasts, tech wizards, and regenerative innovators. Together, we\'re reshaping communal living.'}
               </Heading>
             </div>
-            <PhotoGallery className="mt-12" />
+            <PhotoGallery className="mt-8" />
           </div>
         </section>
 
         <section className="text-center flex justify-center flex-wrap mb-12">
           <div className="max-w-[720px]">
             <Heading
-              className="text-4xl mb-6 max-w-3xl text-center mt-8 font-extrabold uppercase sm:text-5xl"
+              className="text-2xl mb-6 max-w-3xl text-center mt-8 italic"
               level={2}
             >
-              <p className="text-7xl">TDF </p>
-              VISIT, BUILD & JOIN
+              TDF is a model for a regenerative economy. We are looking for 300 forward-thinking doer-dreamers to co-create a habitat where nature thrives. No fleeting promises here, just a space designed for regenerative living and deep connection. 🐑
             </Heading>
-            <p className="font-bold mb-6">
-              At TDF we’re a passionate and fun group of friends, doers and
-              dreamers.
-            </p>
-            <p className="font-bold mb-6">
-              We are actively looking for 80-100 folks to join our flock, to
-              become a fellow Sheep.
-            </p>
-            <p className="mb-6">
-              We crafted different journeys for curious souls to visit and
-              build, to see if there’s a vibe to join. Currently, our focus is
-              on opening doors to share our work and co-create, all the while
-              supporting our team’s work and our Roadmap construction.
-              <strong>
-                With this in mind, we put together a visit & support model built
-                with reciprocity at its core. It combines TDF’s needs, whilst
-                providing folks with a easy way to visit, surprises and
-                gratitude nudges on the ground.
-              </strong>
-            </p>
-            <p className="mb-6">
-              There’s different ways for you to interact with our ecosystem,
-              depending on your capacity and desire to step in. All is well, all
-              paths lead to the same beautiful chicken farm full of sheep 🐑.
-            </p>
-            <p className="mb-6">Come and visit us!</p>
+            <div>
+              <Link
+                href="/signup"
+                type="submit"
+                className="bg-accent text-white rounded-full py-2.5 px-8 text-xl"
+                onClick={() =>
+                  event('click', {
+                    category: 'HomePage',
+                    label: 'Join the Dreamers',
+                  })
+                }
+              >
+                JOIN THE DREAMERS
+              </Link>
+            </div>
           </div>
         </section>
         <section className="flex justify-center flex-wrap mb-[120px]">
@@ -420,7 +405,7 @@ const HomePage = ({ subscriptionPlans }: Props) => {
               ))}
           </div>
           <div className="w-full flex justify-center">
-            <div className="p-6 text-left w-full bg-accent-alt-light rounded-md max-w-6xl">
+            <div className="p-6 text-left w-full rounded-md max-w-6xl">
               <Heading className="mb-2 uppercase" level={4}>
                 Which path is for me?
               </Heading>
@@ -440,48 +425,21 @@ const HomePage = ({ subscriptionPlans }: Props) => {
             </div>
           </div>
         </section>
-        <section className="flex justify-center mb-[120px]">
+        <section className="flex justify-center mb-[120px] py-16 bg-accent-alt-light">
           <div className="max-w-6xl flex flex-wrap">
-            <div className="w-full md:w-3/5">
-              <Image
-                src="/images/landing/illy-oasa.png"
-                alt="OASA"
-                width={656}
-                height={435}
-              />
-            </div>
-            <div className="w-full md:w-2/5 px-4">
-              <Heading level={2} className="text-5xl ">
-                OASA
-              </Heading>
-              <Heading level={3} className="uppercase mb-6">
-                A web3 powered <br />
-                nature conservancy network <br />
-                serving regenerative living places and the planet
-              </Heading>
-              <p className="mb-6  ">
-                When humans thrive together, magical things happen. OASA
-                Projects have{' '}
-                <strong>regeneration, creativity, innovation</strong> and{' '}
-                <strong>playfulness</strong> at their core.
-              </p>
-              <p className="mb-6 uppercase font-bold">The goal?</p>
-              <p className="mb-6 ">
-                To acquire 100.000he of land to be held in a land
-                conservation-like set up. 100,000 hectares of beautiful land
-                waiting to be rewilded, nutritious landscapes to be grown, homes
-                to be cultivated.
-              </p>
-              <Button
-                size="small"
-                isFullWidth={false}
-                onClick={() => {
-                  router.push('https://oasa.earth/');
-                }}
-              >
-                Learn more about OASA
-              </Button>
-            </div>
+            <Heading level={3} className="mb-8">
+              TDF is part of the OASA network - transforming ownership into stewardship. The TDF project is bound by the <Link href="https://docs.google.com/document/d/1Ocv9rtRkDxsJmeRxrL6mV07EyWcHc2YqfN8mHoylO2E/edit" className="underline">Regenerative Land Stewardship Principles</Link> set forth by OASA. By accessing TDF lands, our members and visitors must abide by our regenerative ethos. OASA is on a bold mission to conserve 100.000 ha of land globally - and TDF is its first prototype in utilising real estate as a vehicle for ecological restoration.
+            </Heading>
+            <Button
+              size="small"
+              isFullWidth={false}
+              onClick={() => {
+                router.push('https://oasa.earth/');
+              }}
+              type="secondary"
+            >
+              Learn more about OASA
+            </Button>
           </div>
         </section>
         <section className="mb-12 max-w-6xl mx-auto md:pt-20 pb-20">
@@ -490,7 +448,7 @@ const HomePage = ({ subscriptionPlans }: Props) => {
             level={3}
             className="text-center font-bold py-12 px-4 mb-6"
           >
-            A prototype FOR regenerative living
+            A prototype for regenerative living
           </Heading>
           <Resources />
         </section>
