@@ -81,4 +81,9 @@ export const links = [
     url: '/learn/category/all',
     enabled: true,
   },
+  {
+    label: 'Blog',
+    url: '/blog',
+    enabled: true,
+  },
 ];
