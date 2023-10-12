@@ -12,3 +12,5 @@ export const checkListingAvaialbility = (
   return isListingAvailable;
 };
 
+export const formatDate = (date: Date | string | null) =>
+  new Date(date as string | Date).toString().slice(0, 10);
