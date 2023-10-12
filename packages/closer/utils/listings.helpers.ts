@@ -14,14 +14,6 @@ export const checkListingAvaialbility = (
   return isListingAvailable;
 };
 
-export const formatStartDate = (date: Date | string | null) =>
-  dayjs(date, 'YYYY-MM-DD')
-    .set('hours', 16)
-    .set('seconds', 0)
-    .set('minutes', 0);
+export const formatDate = (date: Date | string | null) =>
+  new Date(date as string | Date).toString().slice(0, 10);
 
-export const formatEndDate = (date: Date | string | null) =>
-  dayjs(date, 'YYYY-MM-DD')
-    .set('hours', 16)
-    .set('seconds', 0)
-    .set('minutes', 0);

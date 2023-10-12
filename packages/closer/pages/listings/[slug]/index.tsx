@@ -37,8 +37,7 @@ import {
 import { priceFormat } from '../../../utils/helpers';
 import {
   checkListingAvaialbility,
-  formatEndDate,
-  formatStartDate,
+  formatDate,
 } from '../../../utils/listings.helpers';
 
 interface Props {
@@ -193,8 +192,8 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
         data: { results: newBooking },
       } = await api.post('/bookings/request', {
         useTokens: currency === CURRENCIES[1],
-        start: String(start),
-        end: String(end),
+        start: formatDate(start),
+        end: formatDate(end),
         adults,
         infants,
         pets,
@@ -219,8 +218,8 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
       const {
         data: { results, availability },
       } = await api.post('/bookings/availability', {
-        start: formatStartDate(start),
-        end: formatEndDate(end),
+        start: formatDate(start),
+        end: formatDate(end),
         adults,
         children: kids,
         infants,
