@@ -35,7 +35,11 @@ import {
   sendAnalyticsEvent,
 } from '../../../utils/helpers';
 import { priceFormat } from '../../../utils/helpers';
-import { checkListingAvaialbility } from '../../../utils/listings.helpers';
+import {
+  checkListingAvaialbility,
+  formatEndDate,
+  formatStartDate,
+} from '../../../utils/listings.helpers';
 
 interface Props {
   listing: Listing | null;
@@ -210,14 +214,13 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
   };
 
   const fetchPrices = async () => {
-    console.log('end=', end);
     setApiError(null);
     try {
       const {
         data: { results, availability },
       } = await api.post('/bookings/availability', {
-        start,
-        end,
+        start: formatStartDate(start),
+        end: formatEndDate(end),
         adults,
         children: kids,
         infants,

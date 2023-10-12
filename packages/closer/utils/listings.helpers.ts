@@ -1,3 +1,5 @@
+import dayjs from 'dayjs';
+
 export const checkListingAvaialbility = (
   listingId: string | undefined,
   availability: { day: string; listings: string[]; available: boolean }[],
@@ -12,3 +14,14 @@ export const checkListingAvaialbility = (
   return isListingAvailable;
 };
 
+export const formatStartDate = (date: Date | string | null) =>
+  dayjs(date, 'YYYY-MM-DD')
+    .set('hours', 16)
+    .set('seconds', 0)
+    .set('minutes', 0);
+
+export const formatEndDate = (date: Date | string | null) =>
+  dayjs(date, 'YYYY-MM-DD')
+    .set('hours', 16)
+    .set('seconds', 0)
+    .set('minutes', 0);
