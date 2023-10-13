@@ -323,6 +323,8 @@
   "booking_requests_newest_first": "Newest first",
   "booking_requests_diet": "Diet: ",
   "current_bookings_title": "🏡 Current Bookings",
+  "current_bookings_people_here": "people are here now",
+  "user_preview_stay": "Stay",
   "booking_card_id": "Booking #",
   "booking_card_status": "Status",
   "booking_card_message": "Message",
