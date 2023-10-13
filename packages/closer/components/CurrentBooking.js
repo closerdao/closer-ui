@@ -18,12 +18,6 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
       end: { $gte: leftAfter },
     },
   };
-
-  // FIXME: pull this out?
-  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  // a filter logic to see who is currently here...
-  const isHere = (b) => (b.start < tomorrow) && (b.end > yesterday);
   
   const [loading, setLoading] = useState(false);
 
@@ -45,7 +39,6 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
     const listingName = listings?.find(
       (listing) => listing.get('_id') === listingId,
     )?.get('name') || __('no_listing_type');
-    console.log(listingName);
 
     const userId = b.get('createdBy');
     const user =
@@ -56,7 +49,6 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
       photo: user.photo,
       preferences: user.preferences,
     };
-    console.log(userInfo);
 
     return {
       _id: b.get('_id'),
@@ -72,9 +64,12 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
     }
   }) : [];
   
-  const countHere = booked ? booked.filter(isHere).map(b => b.adults + b.children).reduce((a, b) => a + b, 0): 0;
-  console.log(`people: ${countHere}`);
 
+  // FIXME: pull this out?
+  const current = new Date();
+  const justLeft = booked ? booked.filter(b => (b.end < current)) : [];
+  const isHere = booked ? booked.filter(b => (b.end >= current) && (b.start <= current)) : [];
+  const willArrive = booked ? booked.filter(b => (b.start > current)) : [];
 
   const loadData = async () => {
     try {
@@ -112,13 +107,48 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
       ) : (
         <div className="columns mt-8">
           <Heading level={2} className="border-b pb-4">
-            {countHere} {__('current_bookings_people_here')}
+            {isHere.size} {__('current_bookings_people_here')}
           </Heading>
           <div className="bookings-list mt-8 flex flex-wrap gap-4">
-            {!booked.size ? (
+            {!isHere.size ? (
               <p className="mt-4">{__('no_bookings')}</p>
             ) : (
-              booked.map((b) => {
+              isHere.map((b) => {
+                return (
+                  <UserPreview
+                    key={b._id}
+                    booking={b}
+                  />
+                );
+              })
+            )}
+          </div>
+          <Heading level={2} className="border-b pb-4 pt-8">
+            {willArrive.size} {__('current_bookings_will_arrive')}
+          </Heading>
+          <div className="bookings-list mt-8 flex flex-wrap gap-4">
+            {!willArrive.size ? (
+              <p className="mt-4">{__('no_bookings')}</p>
+            ) : (
+              willArrive.map((b) => {
+
+                return (
+                  <UserPreview
+                    key={b._id}
+                    booking={b}
+                  />
+                );
+              })
+            )}
+          </div>
+          <Heading level={2} className="border-b pb-4 pt-8">
+            {justLeft.size} {__('current_bookings_just_left')}
+          </Heading>
+          <div className="bookings-list mt-8 flex flex-wrap gap-4">
+            {!justLeft.size ? (
+              <p className="mt-4">{__('no_bookings')}</p>
+            ) : (
+              justLeft.map((b) => {
 
                 return (
                   <UserPreview

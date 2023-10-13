@@ -65,7 +65,7 @@ const UserPreview = ({
 
         <div>
           <p className="card-feature">{__('user_data_diet')}</p>
-          <p>{userInfo.preferences?.diet}</p>
+          <p>{userInfo?.preferences?.diet}</p>
         </div>
 
         <div>
