@@ -3,34 +3,43 @@ import { api } from 'closer';
 
 function generateSiteMap({ volunteerOpportunities, articles, lessons, events, members }) {
   return `<?xml version="1.0" encoding="UTF-8"?>
-   <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-     <url>
-       <loc>${EXTERNAL_DATA_URL}</loc>
-     </url>
-     <url>
-       <loc>${EXTERNAL_DATA_URL}/roadmap</loc>
-     </url>
-     <url>
-       <loc>${EXTERNAL_DATA_URL}/impact-map</loc>
-     </url>
-     <url>
-       <loc>${EXTERNAL_DATA_URL}/blog</loc>
-     </url>
+  <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+      <loc>${EXTERNAL_DATA_URL}</loc>
+    </url>
+    <url>
+      <loc>${EXTERNAL_DATA_URL}/roadmap</loc>
+    </url>
+    <url>
+      <loc>${EXTERNAL_DATA_URL}/impact-map</loc>
+    </url>
+    <url>
+      <loc>${EXTERNAL_DATA_URL}/blog</loc>
+    </url>
+    <url>
+      <loc>${EXTERNAL_DATA_URL}/learn/category/all</loc>
+    </url>
+    <url>
+      <loc>${EXTERNAL_DATA_URL}/learn/category/TDF</loc>
+    </url>
+    <url>
+      <loc>${EXTERNAL_DATA_URL}/learn/category/land</loc>
+    </url>
      ${articles
        .map(({ slug }) => {
          return `
-           <url>
-               <loc>${EXTERNAL_DATA_URL}/blog/${slug}</loc>
-           </url>
-         `;
+          <url>
+              <loc>${EXTERNAL_DATA_URL}/blog/${slug}</loc>
+          </url>
+        `;
        })
      .join('')}
      ${lessons
        .map(({ slug }) => {
          return `
-           <url>
-               <loc>${EXTERNAL_DATA_URL}/learn/${slug}</loc>
-           </url>
+          <url>
+            <loc>${EXTERNAL_DATA_URL}/learn/${slug}</loc>
+          </url>
          `;
        })
      .join('')}
@@ -40,52 +49,52 @@ function generateSiteMap({ volunteerOpportunities, articles, lessons, events, me
      ${events
        .map(({ slug }) => {
          return `
-           <url>
-               <loc>${EXTERNAL_DATA_URL}/events/${slug}</loc>
-           </url>
-         `;
+          <url>
+            <loc>${EXTERNAL_DATA_URL}/events/${slug}</loc>
+          </url>
+        `;
        })
      .join('')}
-     <url>
-       <loc>${EXTERNAL_DATA_URL}/legal/privacy</loc>
-     </url>
-     <url>
-       <loc>${EXTERNAL_DATA_URL}/login</loc>
-     </url>
-     <url>
-       <loc>${EXTERNAL_DATA_URL}/members</loc>
-     </url>
+    <url>
+      <loc>${EXTERNAL_DATA_URL}/legal/privacy</loc>
+    </url>
+    <url>
+      <loc>${EXTERNAL_DATA_URL}/login</loc>
+    </url>
+    <url>
+      <loc>${EXTERNAL_DATA_URL}/members</loc>
+    </url>
      ${members
        .map(({ slug }) => {
          return `
-           <url>
-               <loc>${EXTERNAL_DATA_URL}/members/${slug}</loc>
-           </url>
-         `;
+          <url>
+              <loc>${EXTERNAL_DATA_URL}/members/${slug}</loc>
+          </url>
+        `;
        })
      .join('')}
-     <url>
-       <loc>${EXTERNAL_DATA_URL}/signup</loc>
-     </url>
-     <url>
-       <loc>${EXTERNAL_DATA_URL}/subscriptions</loc>
-     </url>
-     <url>
-       <loc>${EXTERNAL_DATA_URL}/token-sale</loc>
-     </url>
-     <url>
-       <loc>${EXTERNAL_DATA_URL}/volunteer</loc>
-     </url>
+    <url>
+      <loc>${EXTERNAL_DATA_URL}/signup</loc>
+    </url>
+    <url>
+      <loc>${EXTERNAL_DATA_URL}/subscriptions</loc>
+    </url>
+    <url>
+      <loc>${EXTERNAL_DATA_URL}/token-sale</loc>
+    </url>
+    <url>
+      <loc>${EXTERNAL_DATA_URL}/volunteer</loc>
+    </url>
      ${volunteerOpportunities
        .map(({ slug }) => {
          return `
-           <url>
-               <loc>${EXTERNAL_DATA_URL}/volunteer/${slug}</loc>
-           </url>
-         `;
+          <url>
+              <loc>${EXTERNAL_DATA_URL}/volunteer/${slug}</loc>
+          </url>
+        `;
        })
      .join('')}
-   </urlset>
+  </urlset>
  `;
 }
 
