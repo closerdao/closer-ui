@@ -13,7 +13,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
   const filter = {
     where: {
       // status: { $nin: ['open', 'pending'] }, // confirmed and various ways to pay...
-      status: { $in: ['paid', 'checked-in', 'checked-out'] }, // confirmed and various ways to pay...
+      status: { $in: ['confirmed', 'paid', 'checked-in', 'checked-out'] }, // confirmed and various ways to pay...
       start: { $lte: arriveBefore },
       end: { $gte: leftAfter },
     },
@@ -34,6 +34,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
     const start = Date.parse(b.get('start'));
     const end =  Date.parse(b.get('end'));
     const doesNeedPickup = b.get('doesNeedPickup') ?? false;
+    const status =  b.get('status') ?? 'unknown';
 
     const listingId = b.get('listing');
     const listingName = listings?.find(
@@ -61,6 +62,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
       userInfo,
       userId,
       doesNeedPickup,
+      status,
     }
   }) : [];
   

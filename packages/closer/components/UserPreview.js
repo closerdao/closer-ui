@@ -11,6 +11,7 @@ const UserPreview = ({
   booking: bookingItem,
 }) => {
   const {
+    _id,
     start,
     end,
     userId,
@@ -20,6 +21,7 @@ const UserPreview = ({
     listingName,
     userInfo,
     doesNeedPickup,
+    status,
   } = bookingItem;
 
   const photoUrl = userInfo ? `${cdn}${userInfo?.photo}-profile-lg.jpg` : null;
@@ -58,9 +60,14 @@ const UserPreview = ({
 
         <div>
           <p className="card-feature">{__('booking_card_guests')}</p>
-          <p>{adults} Adults</p> 
-          { children ? (<p>{children} Children</p>): '' } 
-          { infants ? (<p>{infants} Infants</p>): '' } 
+          <p>{adults + children + infants} Guests
+            { children || infants ? `(${children} Children, ${infants} Infants)` : '' } 
+          </p> 
+        </div>
+
+        <div>
+          <p className="card-feature">{__('booking_card_status')}</p>
+          <p>{status}</p> 
         </div>
 
         <div>
@@ -77,6 +84,9 @@ const UserPreview = ({
           <p className="card-feature">{__('user_preview_stay')}</p>
           <p>{startFormatted} - {endFormatted}</p>
         </div>
+
+        <p className="card-feature">Booking # {_id}</p>
+
       </div>
     </div>
   );
