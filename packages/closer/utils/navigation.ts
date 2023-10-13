@@ -77,8 +77,13 @@ export const links = [
     enabled: true,
   },
   {
-    label: 'Online courses',
+    label: 'Learning hub',
     url: '/learn/category/all',
+    enabled: true,
+  },
+  {
+    label: 'Blog',
+    url: '/blog',
     enabled: true,
   },
 ];
