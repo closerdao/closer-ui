@@ -1,5 +1,4 @@
 import Head from 'next/head';
-import Image from 'next/image';
 import Link from 'next/link';
 
 import { useState } from 'react';
@@ -19,7 +18,7 @@ import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { Lesson } from '../../../types/lesson';
-import api, { cdn } from '../../../utils/api';
+import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
 
@@ -101,19 +100,6 @@ const LessonPage = ({ lesson, lessonCreator, error }: Props) => {
           <div className="max-w-4xl w-full ">
             <div className="w-full py-2">
               <div className="w-full flex flex-col sm:flex-row gap-4 sm:gap-8">
-                <div className="flex items-center text-sm uppercase font-bold gap-1">
-                  <p className="">{__('learn_lesson_created_by')}</p>
-
-                  <Image
-                    src={`${cdn}${lessonCreator?.photo}-profile-lg.jpg`}
-                    loading="lazy"
-                    alt={lessonCreator?.screenname}
-                    className=" rounded-full"
-                    width={25}
-                    height={25}
-                  />
-                  <p>{lessonCreator?.screenname}</p>
-                </div>
                 <div className="flex items-center text-sm uppercase font-bold gap-1">
                   <div>
                     {__('learn_lesson_category')}: {lesson.category}
