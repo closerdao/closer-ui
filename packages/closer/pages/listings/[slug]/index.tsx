@@ -100,6 +100,8 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
     savedUseTokens === 'true' ? CURRENCIES[1] : DEFAULT_CURRENCY,
   );
 
+  const [calendarError, setCalendarError] = useState<string | null>(null);
+
   const isWeb3BookingEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
 
@@ -120,13 +122,24 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
   }, [router.query]);
 
   useEffect(() => {
-    (async () => {
-      const listingPrices = await fetchPrices();
-      setIsListingAvailable(listingPrices.isListingAvailable);
-      setRentalPrice(listingPrices?.prices[0]);
-      setUtilityPrice(listingPrices?.prices[1]);
-      setTokenPrice(listingPrices?.prices[2]);
-    })();
+    setCalendarError(null);
+
+    const isCalendarSelectionValid = end && formatDate(start) !== formatDate(end)
+    if (!end) {
+      setCalendarError(__('bookings_incomplete_dates_error'));
+    }
+    if (formatDate(start) === formatDate(end)) {
+      setCalendarError(__('bookings_date_range_error'));
+    }
+    if (isCalendarSelectionValid) {
+      (async () => {
+        const listingPrices = await fetchPrices();
+        setIsListingAvailable(listingPrices.isListingAvailable);
+        setRentalPrice(listingPrices?.prices[0]);
+        setUtilityPrice(listingPrices?.prices[1]);
+        setTokenPrice(listingPrices?.prices[2]);
+      })();
+    }
   }, [adults, start, end]);
 
   useEffect(() => {
@@ -496,6 +509,11 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
                             error={parseMessageFromError(apiError)}
                           />
                         )}
+                        {calendarError && (
+                          <ErrorMessage
+                            error={parseMessageFromError(calendarError)}
+                          />
+                        )}
                       </div>
                       <div className="flex flex-col gap-2">
                         <div className="hidden sm:block">
@@ -513,7 +531,10 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
                         <Button
                           onClick={bookListing}
                           isEnabled={Boolean(
-                            start && end && isListingAvailable,
+                            start &&
+                              end &&
+                              isListingAvailable &&
+                              !calendarError,
                           )}
                           className=" text-lg btn-primary text-center h-[32px] sm:h-auto sm:mt-4"
                         >
@@ -528,7 +549,7 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
                     </div>
 
                     <div className="hidden sm:block w-full">
-                      {isListingAvailable ? (
+                      {isListingAvailable && !calendarError ? (
                         <>
                           {' '}
                           <div className="flex justify-between items-center mt-3">
