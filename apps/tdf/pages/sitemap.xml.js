@@ -1,7 +1,7 @@
 const EXTERNAL_DATA_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://www.traditionaldreamfactory.com';
 import { api } from 'closer';
 
-function generateSiteMap({ volunteerOpportunities, articles, events, members }) {
+function generateSiteMap({ volunteerOpportunities, articles, lessons, events, members }) {
   return `<?xml version="1.0" encoding="UTF-8"?>
    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
      <url>
@@ -21,6 +21,15 @@ function generateSiteMap({ volunteerOpportunities, articles, events, members }) 
          return `
            <url>
                <loc>${EXTERNAL_DATA_URL}/blog/${slug}</loc>
+           </url>
+         `;
+       })
+     .join('')}
+     ${lessons
+       .map(({ slug }) => {
+         return `
+           <url>
+               <loc>${EXTERNAL_DATA_URL}/learn/${slug}</loc>
            </url>
          `;
        })
@@ -86,9 +95,10 @@ function SiteMap() {
 
 export async function getServerSideProps({ res }) {
   // We generate the XML sitemap with the posts data
-  const [volunteerOpportunities, articles, events, members] = await Promise.all([
+  const [volunteerOpportunities, articles, lessons, events, members] = await Promise.all([
     api.get('/volunteer?limit=500').then(action => action.data.results),
     api.get('/article?limit=500').then(action => action.data.results),
+    api.get('/lesson?limit=500').then(action => action.data.results),
     api.get('/event?limit=500').then(action => action.data.results),
     api.get('/user?role=member&limit=500').then(action => action.data.results),
   ]);
@@ -96,6 +106,7 @@ export async function getServerSideProps({ res }) {
   const sitemap = generateSiteMap({
     volunteerOpportunities,
     articles,
+    lessons,
     events,
     members
   });
