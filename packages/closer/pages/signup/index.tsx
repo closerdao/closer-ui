@@ -104,39 +104,41 @@ const Signup = ({ subscriptionPlans }: Props) => {
                 {error && <ErrorMessage error={error} />}
 
                 {referrer && (
-                  <div className="flex items-center gap-4 ">
-                    {__('signup_form_referrer')}{' '}
-                    <Card className="bg-accent-light py-2">
-                      <div className="flex items-center gap-2">
-                        {referrer ? (
-                          <Image
-                            src={
-                              referrer &&
-                              `${cdn}${referrer.get('photo')}-profile-sm.jpg`
-                            }
-                            alt={''}
-                            width={30}
-                            height={30}
-                            className="rounded-full"
-                          />
-                        ) : (
-                          <FaUser className="text-success w-[3opx] h-[30px] " />
-                        )}
-                        <span>{referrer.get('screenname')}</span>
-                      </div>
-                    </Card>
+                  <div>
+                    <div className="flex items-center gap-4 ">
+                      {__('signup_form_referrer')}{' '}
+                      <Card className="bg-accent-light py-2">
+                        <div className="flex items-center gap-2">
+                          {referrer ? (
+                            <Image
+                              src={
+                                referrer &&
+                                `${cdn}${referrer.get('photo')}-profile-sm.jpg`
+                              }
+                              alt={''}
+                              width={30}
+                              height={30}
+                              className="rounded-full"
+                            />
+                          ) : (
+                            <FaUser className="text-success w-[3opx] h-[30px] " />
+                          )}
+                          <span>{referrer.get('screenname')}</span>
+                        </div>
+                      </Card>
+                    </div>
+
+                    <div>
+                      {__('signup_form_get_credits')}{' '}
+                      <Link
+                        className="text-accent font-bold underline"
+                        href="/settings/credits"
+                      >
+                        {__('signup_form_credit_learn_more')}
+                      </Link>
+                    </div>
                   </div>
                 )}
-              </div>
-
-              <div>
-                {__('signup_form_get_credits')}{' '}
-                <Link
-                  className="text-accent font-bold underline"
-                  href="/settings/credits"
-                >
-                  {__('signup_form_credit_learn_more')}
-                </Link>
               </div>
             </div>
             <div className="w-full md:w-1/2">

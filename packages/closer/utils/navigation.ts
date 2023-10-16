@@ -31,11 +31,11 @@ export const links = [
     url: '/listings',
     enabled: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
   },
-  {
-    label: '$TDF token',
-    url: '/token',
-    enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
-  },
+  // {
+  //   label: 'Invest',
+  //   url: '/token',
+  //   enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
+  // },
   {
     label: 'My bookings',
     url: '/bookings',
