@@ -1,7 +1,6 @@
 import Head from 'next/head';
 
 import CurrentBooking from '../../components/CurrentBooking';
-// import { useState } from 'react';
 import Heading from '../../components/ui/Heading';
 
 import PageNotFound from '../404';

@@ -76,7 +76,6 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
   const loadData = async () => {
     try {
       setLoading(true);
-      console.log('Loading data...');
 
       await Promise.all([
         platform.booking.get(filter),

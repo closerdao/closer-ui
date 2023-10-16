@@ -20,8 +20,6 @@ const Bookings = ({ filter }) => {
 
   const events = platform.event.find(eventsFilter);
   const bookings = platform.booking.find(filter);
-  console.log('before');
-  console.log(bookings);
   const error = bookings && bookings.get('error');
   const listings = platform.listing.find();
   const allUsers = platform.user.find({ limit: MAX_USERS_TO_FETCH });
@@ -37,8 +35,6 @@ const Bookings = ({ filter }) => {
         platform.listing.get(),
         platform.user.get({ limit: MAX_USERS_TO_FETCH }),
       ]);
-      console.log('after');
-      console.log(bookings);
     } catch (err) {
     } finally {
       setLoading(false);
