@@ -74,7 +74,7 @@ const Checkout = ({
   const canApplyCredits =
     rentalToken?.val &&
     creditsBalance &&
-    creditsBalance >= (rentalToken?.val as number) * duration * adults;
+    creditsBalance >= (rentalToken?.val as number);
 
   const listingName = listing?.name;
 
