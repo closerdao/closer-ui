@@ -15,7 +15,7 @@ import Heading from './ui/Heading';
 
 const SignupForm = () => {
   const router = useRouter();
-  const { back } = router.query || {};
+  const { back, source } = router.query || {};
   const { signup, isAuthenticated, error, setError } = useAuth();
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -62,7 +62,15 @@ const SignupForm = () => {
   };
 
   const redirect = () => {
-    router.push(decodeURIComponent((back as string) || '/settings'));
+    if (source) {
+      router.push(
+        `${decodeURIComponent(back as string)}&source=${source}` || '/settings',
+      );
+      return;
+    }
+    router.push(
+      `${decodeURIComponent(back as string)}&back=${back}` || '/settings',
+    );
   };
 
   useEffect(() => {

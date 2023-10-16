@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 import { useState } from 'react';
 
@@ -22,15 +23,24 @@ import { Lesson } from '../../../types/lesson';
 import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
+import { SubscriptionPlan } from '../../../types/subscriptions';
+
+const MIN_SUBSCRIPTION_PLAN = 'Wanderer';
 
 interface Props {
   lesson: Lesson;
   lessonCreator: User;
   error?: string;
+  subscriptions?: any[]
 }
 
-const LessonPage = ({ lesson, lessonCreator, error }: Props) => {
+const LessonPage = ({ lesson, lessonCreator, subscriptions, error }: Props) => {
+  const { asPath } = useRouter();
   const { user } = useAuth();
+
+  const subscriptionPriceId = subscriptions?.find((subscription: SubscriptionPlan) => {
+    return subscription.title === MIN_SUBSCRIPTION_PLAN && subscription.priceId;
+  }).priceId
 
   const canViewLessons = Boolean(
     user && (user?.subscription?.plan || !lesson.paid),
@@ -186,7 +196,7 @@ const LessonPage = ({ lesson, lessonCreator, error }: Props) => {
                   </div>
 
                   {!canViewLessons && lesson.fullVideo && (
-                    <LinkButton href="/subscriptions">
+                    <LinkButton href={`/subscriptions/checkout?priceId=${subscriptionPriceId}&source=${asPath}`}>
                       {__('learn_get_access_button')}
                     </LinkButton>
                   )}
@@ -218,13 +228,22 @@ LessonPage.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
-    const {
-      data: { results: lesson },
-    } = await api.get(`/lesson/${query.slug}`, {
-      headers: req?.cookies?.access_token && {
-        Authorization: `Bearer ${req?.cookies?.access_token}`,
+    const [
+      {
+        data: { results: subscriptions },
       },
-    });
+      {
+        data: { results: lesson },
+      },
+    ] = await Promise.all([
+      api.get('/config/subscriptions'),
+      await api.get(`/lesson/${query.slug}`, {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        },
+      }),
+    ]);
+
     const lessonCreatorId = lesson.createdBy;
     const {
       data: { results: lessonCreator },
@@ -234,7 +253,7 @@ LessonPage.getInitialProps = async ({
       },
     });
 
-    return { lesson, lessonCreator };
+    return { subscriptions: subscriptions.value.plans, lesson, lessonCreator };
   } catch (err: unknown) {
     return {
       error: parseMessageFromError(err),

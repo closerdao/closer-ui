@@ -92,7 +92,7 @@ const LearnCategoryPage: NextPage = () => {
         <title>{`${__('learn_heading')} - ${PLATFORM_NAME}`}</title>
       </Head>
       <main className="main-content w-full max-w-6xl">
-        <header className="lg:flex lg:justify-between mb-8">
+        <header className="lg:flex lg:justify-between mb-14">
           <div>
             <Heading
               level={1}
@@ -105,7 +105,10 @@ const LearnCategoryPage: NextPage = () => {
 
           <div className="action">
             {user && user.roles.includes('admin') && (
-              <Link href="/learn/create" className="mt-10 btn-primary inline-block">
+              <Link
+                href="/learn/create"
+                className="mt-10 btn-primary inline-block"
+              >
                 {__('learn_create_lesson_hading')}
               </Link>
             )}

@@ -15,12 +15,14 @@ interface SubscriptionCheckoutFormProps {
   userEmail?: string;
   priceId: string | string[] | undefined;
   monthlyCredits?: number;
+  source?: string;
 }
 
 function SubscriptionCheckoutForm({
   userEmail,
   priceId,
   monthlyCredits,
+  source,
 }: SubscriptionCheckoutFormProps) {
   const [isSubmitEnabled, setIsSubmitEnabled] = useState(true);
   const [error, setError] = useState<any>();
@@ -52,6 +54,16 @@ function SubscriptionCheckoutForm({
       },
     },
   };
+
+  const redirect = (subscriptionId:string) => {
+    if (source) {
+      router.push(source);
+    } else {
+      router.push(
+        `/subscriptions/success?subscriptionId=${subscriptionId}&priceId=${priceId}`,
+      );
+    }
+  }
 
   const createSubscription = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -100,9 +112,7 @@ function SubscriptionCheckoutForm({
 
             if (validationResponse.data.results.status === 'succeeded') {
               await refetchUser();
-              router.push(
-                `/subscriptions/success?subscriptionId=${subscriptionId}&priceId=${priceId}`,
-              );
+              redirect(subscriptionId)
             }
           }
         } catch (err) {
@@ -120,9 +130,7 @@ function SubscriptionCheckoutForm({
 
         if (validationResponse.data.results.status === 'succeeded') {
           await refetchUser();
-          router.push(
-            `/subscriptions/success?subscriptionId=${subscriptionId}&priceId=${priceId}`,
-          );
+          redirect(subscriptionId)
         }
       }
     } catch (err) {
