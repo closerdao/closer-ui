@@ -21,6 +21,12 @@ export const links = [
     roles: ['space-host'],
   },
   {
+    label: 'Current bookings',
+    url: '/bookings/current',
+    enabled: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
+    roles: ['space-host'],
+  },
+  {
     label: 'Edit listings',
     url: '/listings',
     enabled: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
