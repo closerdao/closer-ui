@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import LessonDescription from '../../../components/LessonDescription';
 import LessonVideo from '../../../components/LessonVideo';
@@ -20,10 +20,10 @@ import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { Lesson } from '../../../types/lesson';
+import { SubscriptionPlan } from '../../../types/subscriptions';
 import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
-import { SubscriptionPlan } from '../../../types/subscriptions';
 
 const MIN_SUBSCRIPTION_PLAN = 'Wanderer';
 
@@ -31,16 +31,23 @@ interface Props {
   lesson: Lesson;
   lessonCreator: User;
   error?: string;
-  subscriptions?: any[]
+  subscriptions?: any[];
 }
 
 const LessonPage = ({ lesson, lessonCreator, subscriptions, error }: Props) => {
   const { asPath } = useRouter();
-  const { user } = useAuth();
+  const { user, refetchUser } = useAuth();
+  const [hasRefetchedUser, setHasRefetchedUser] = useState(false);
 
-  const subscriptionPriceId = subscriptions?.find((subscription: SubscriptionPlan) => {
-    return subscription.title === MIN_SUBSCRIPTION_PLAN && subscription.priceId;
-  }).priceId
+  const subscriptionPriceId = subscriptions?.find(
+    (subscription: SubscriptionPlan) => {
+      return (
+        subscription.title === MIN_SUBSCRIPTION_PLAN && subscription.priceId
+      );
+    },
+  ).priceId;
+
+  const getAccessUrl = `/subscriptions/checkout?priceId=${subscriptionPriceId}&source=${asPath}`;
 
   const canViewLessons = Boolean(
     user && (user?.subscription?.plan || !lesson.paid),
@@ -50,6 +57,15 @@ const LessonPage = ({ lesson, lessonCreator, subscriptions, error }: Props) => {
     Boolean(lesson.previewVideo),
   );
   const [isVideoLoading, setIsVideoLoading] = useState(false);
+
+  useEffect(() => {
+    if (user && !hasRefetchedUser) {
+      setTimeout(() => {
+        refetchUser();
+        setHasRefetchedUser(true);
+      }, 1000);
+    }
+  }, [user]);
 
   const handleShowPreview = () => {
     setIsVideoPreview(true);
@@ -90,6 +106,7 @@ const LessonPage = ({ lesson, lessonCreator, subscriptions, error }: Props) => {
               isUnlocked={canViewLessons || isVideoPreview}
               setIsVideoLoading={setIsVideoLoading}
               isVideoLoading={isVideoLoading}
+              getAccessUrl={getAccessUrl}
             />
 
             {(user?._id === lesson.createdBy ||
@@ -196,7 +213,7 @@ const LessonPage = ({ lesson, lessonCreator, subscriptions, error }: Props) => {
                   </div>
 
                   {!canViewLessons && lesson.fullVideo && (
-                    <LinkButton href={`/subscriptions/checkout?priceId=${subscriptionPriceId}&source=${asPath}`}>
+                    <LinkButton href={getAccessUrl}>
                       {__('learn_get_access_button')}
                     </LinkButton>
                   )}

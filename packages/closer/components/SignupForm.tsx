@@ -169,7 +169,7 @@ const SignupForm = () => {
           </div>
           <div className="text-center text-sm">
             {__('signup_form_have_account')}{' '}
-            <Link className="text-accent underline font-bold" href="/login">
+            <Link className="text-accent underline font-bold" href={`/login?back=${back}&source=${source}`}>
               {__('login_title')}{' '}
             </Link>
           </div>
