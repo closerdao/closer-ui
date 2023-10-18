@@ -33,11 +33,15 @@ const Login = () => {
       redirectTo('/');
       return;
     }
-    if (hasSubscription && source !== 'undefined') {
+    if (!source) {
+      redirectTo(back);
+      return;
+    }
+    if (hasSubscription && source) {
       redirectTo(source);
       return;
     }
-    if (source !== 'undefined') {
+    if (!hasSubscription && source !== 'undefined') {
       const redirectUrl = back
         ? `${decodeURIComponent(back).replace(
             'back=',
@@ -47,11 +51,6 @@ const Login = () => {
       redirectTo(redirectUrl);
       return;
     }
-    const redirectUrl = back
-      ? decodeURIComponent(back).replace('back=', '')
-      : '/';
-    redirectTo(redirectUrl);
-    return;
   };
 
   const redirectTo = (url: string) => {
