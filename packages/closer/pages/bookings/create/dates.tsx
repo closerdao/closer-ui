@@ -32,7 +32,6 @@ import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, getMaxBookingHorizon } from '../../../utils/helpers';
 
-const STAY_BOOKING_ALLOWED_PLANS = ['wanderer', 'pioneer', 'sheep'];
 
 interface Props {
   error?: string;
@@ -101,7 +100,7 @@ const DatesSelector: NextPage<Props> = ({
 
   useEffect(() => {
     if (user) {
-      if (!canBookStays(user)) {
+      if (!canBookStays(user) && !eventId && !volunteerId) {
         router.push('/bookings/unlock-stays');
       }
     }
@@ -110,7 +109,7 @@ const DatesSelector: NextPage<Props> = ({
   useEffect(() => {
     if (!isAuthenticated) {
       router.push({
-        pathname: '/login',
+        pathname: '/signup',
         query: {
           back: router.asPath,
         },

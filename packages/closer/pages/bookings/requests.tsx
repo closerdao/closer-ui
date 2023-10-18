@@ -14,9 +14,7 @@ const BookingsRequests = () => {
   const { user } = useAuth();
 
   const [filter, setFilter] = useState({
-    where: {
-      end: { $gt: new Date() },
-    },
+    where: {},
   });
 
   if (!user || !user.roles.includes('space-host')) {

@@ -11,6 +11,7 @@ import { useAuth } from '../../contexts/auth';
 import { WalletState } from '../../contexts/wallet';
 import { useConfig } from '../../hooks/useConfig';
 import { __ } from '../../utils/helpers';
+import { event as gaEvent } from 'nextjs-google-analytics'; 
 
 const TokenSaleSuccessPage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
@@ -24,6 +25,13 @@ const TokenSaleSuccessPage = () => {
       router.push(`/login?back=${encodeURIComponent(router.asPath)}`);
     }
   }, [isAuthenticated, isLoading]);
+
+  useEffect(() => {
+    gaEvent('token_success', {
+    category: 'sales',
+    label: 'token',
+    });
+    }, []);
 
   const goBack = async () => {
     router.push('/token');

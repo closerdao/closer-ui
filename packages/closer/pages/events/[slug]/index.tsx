@@ -38,6 +38,11 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
   const [photo, setPhoto] = useState(event && event.photo);
   const [password, setPassword] = useState('');
   const [attendees, setAttendees] = useState(event && (event.attendees || []));
+
+  const canEditEvent = user ? (user?._id === event.createdBy ||
+    user?.roles.includes('admin')) : false
+ 
+  
   const myTicketFilter = event && {
     where: {
       event: event._id,
@@ -120,6 +125,11 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
             content={`${cdn}${photo}-place-lg.jpg`}
           />
         )}
+        <link
+          rel="canonical"
+          href={`https://www.traditionaldreamfactory.com/events/${event.slug}`}
+          key="canonical"
+        />
       </Head>
 
       {event.password && event.password !== password ? (
@@ -149,7 +159,7 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
       ) : (
         <div className="w-full flex items-center flex-col gap-4">
           <section className=" w-full flex justify-center max-w-4xl">
-            <div className="w-full relative">
+              <div className={`"w-full relative bg-accent-light rounded-md w-full " ${canEditEvent ? ' min-h-[400px] ': ''}`}>
               <EventPhoto
                 event={event}
                 user={user}
@@ -158,10 +168,8 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
                 isAuthenticated={isAuthenticated}
                 setPhoto={setPhoto}
               />
-
-              {(user?._id === event.createdBy ||
-                user?.roles.includes('admin')) && (
-                <div className="absolute right-0 bottom-0 p-8 flex flex-col gap-4">
+              {canEditEvent && (
+                <div className="absolute right-0 bottom-0 p-8 flex flex-col gap-4 ">
                   <LinkButton
                     size="small"
                     href={event.slug && `/events/${event.slug}/tickets`}
@@ -177,8 +185,7 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
                   </LinkButton>
 
                   {isAuthenticated &&
-                    (user._id === event.createdBy ||
-                      user.roles.includes('admin')) && (
+                    canEditEvent && (
                       <UploadPhoto
                         model="event"
                         isMinimal
@@ -249,12 +256,11 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
             </div>
           </section>
 
-          <section className=" w-full flex justify-center min-h-[400px] ">
-            <div className="max-w-4xl">
-              <div className="w-full">
-                <div className="flex flex-col sm:flex-row">
-                  <div className="flex items-start justify-between gap-6">
-                    <div className="flex flex-col gap-10 w-full sm:w-2/3">
+          <section className=" w-full flex justify-center min-h-[400px]">
+        <div className="max-w-4xl w-full">
+          <div className="flex flex-col sm:flex-row">
+            <div className="flex items-start justify-between gap-6 w-full">
+              <div className="flex flex-col gap-10 w-full sm:w-2/3">
                       <Heading className="md:text-4xl mt-4 font-bold">
                         {event.name}
                       </Heading>
@@ -268,7 +274,7 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
                     <div className="h-auto fixed bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px]">
                       {end && !end.isBefore(dayjs()) && (
                         <Card className="bg-white border border-gray-100">
-                          {event.ticketOptions.map((ticket: any) => (
+                          {event.paid && event.ticketOptions.map((ticket: any) => (
                             <div
                               key={ticket.name}
                               className="hidden sm:flex flex-col gap-1"
@@ -301,7 +307,7 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
 
                           <Information>{__('events_discalimer')}</Information>
 
-                          <div className="mt-4 event-actions flex items-center">
+                            <div className="mt-4 event-actions flex items-center">
                             {event.ticket && start && start.isAfter(dayjs()) ? (
                               <Link
                                 href={prependHttp(event.ticket)}
@@ -430,7 +436,7 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
                   </div>
                 </div>
               </div>
-            </div>
+        
           </section>
 
           <main className="max-w-prose py-10 w-full">

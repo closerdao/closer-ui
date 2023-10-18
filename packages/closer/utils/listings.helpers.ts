@@ -12,3 +12,13 @@ export const checkListingAvaialbility = (
   return isListingAvailable;
 };
 
+export const formatDate = (date: Date | string | null) => {
+  if (!date) return null;
+  const dateObj = new Date(date as string | Date);
+  const year = dateObj.getFullYear();
+  const month = (dateObj.getMonth() + 1).toString().padStart(2, '0'); // Month is zero-based
+  const day = dateObj.getDate().toString().padStart(2, '0');
+
+  const formattedDate = `${year}-${month}-${day}`;
+  return formattedDate;
+};

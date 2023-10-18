@@ -1,5 +1,6 @@
 export const closerConfig = {
   PLATFORM_NAME: 'Closer',
+  APP_NAME: 'closer',
   GA_ANALYTICS: false,
   FB_DOMAIN_VERIFICATION: false,
   PLATFORM_LEGAL_ADDRESS: 'TBD, Portugal',

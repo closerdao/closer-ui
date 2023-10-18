@@ -55,57 +55,59 @@ const Article = ({ article, error }) => {
           />
         )}
       </Head>
-      <section>
-        {article.photo && (
-          <div className="relative w-full h-96 md:basis-1/2 md:w-96">
-            <Image
-              src={fullImageUrl}
-              alt={article.title}
-              fill={true}
-              className="bg-cover bg-center"
-            />
-          </div>
-        )}
-        <div className="mb-4">
-          <div>
-            <Link href="/blog">◀️ Blog</Link>
-          </div>
-          <Heading>{article.title}</Heading>
-          <Heading level={2} className="opacity-50 mb-4">
-            {article.category}
-          </Heading>
-          {isAuthenticated && user._id === article.createdBy && (
-            <div>
-              <Link href={`/blog/edit/${article.slug}`} className="btn-primary">
-                Edit
-              </Link>
+      <main className="main-content w-full max-w-6xl">
+        <section>
+          {article.photo && (
+            <div className="relative w-full h-96 md:basis-1/2 md:w-96">
+              <Image
+                src={fullImageUrl}
+                alt={article.title}
+                fill={true}
+                className="bg-cover bg-center"
+              />
             </div>
           )}
-        </div>
-      </section>
-      <section
-        className="article limit-width padding-right"
-        dangerouslySetInnerHTML={{ __html: article.html }}
-      />
-      <section className="col right-col">
-        <h3 className="mt-8">Posted</h3>
-        <p>{createdAt}</p>
-        <h3 className="mt-8">Tags</h3>
-        <p className="tags">
-          {article.tags &&
-            article.tags.length > 0 &&
-            article.tags.map((tag) => (
-              <Link
-                key={tag}
-                as={`/blog/search/${tag}`}
-                href="/blog/search/[keyword]"
-                className="mr-4 mb-2 text-xs inline-flex items-center font-bold leading-sm uppercase text-black px-3 py-1 bg-gray-200 rounded-full"
-              >
-                {tag}
-              </Link>
-            ))}
-        </p>
-      </section>
+          <div className="mb-4">
+            <div>
+              <Link href="/blog">◀️ Blog</Link>
+            </div>
+            <Heading>{article.title}</Heading>
+            <Heading level={2} className="opacity-50 mb-4">
+              {article.category}
+            </Heading>
+            {isAuthenticated && user._id === article.createdBy && (
+              <div>
+                <Link href={`/blog/edit/${article.slug}`} className="btn-primary">
+                  Edit
+                </Link>
+              </div>
+            )}
+          </div>
+        </section>
+        <section
+          className="article limit-width padding-right"
+          dangerouslySetInnerHTML={{ __html: article.html }}
+        />
+        <section className="col right-col">
+          <h3 className="mt-8">Posted</h3>
+          <p>{createdAt}</p>
+          <h3 className="mt-8">Tags</h3>
+          <p className="tags">
+            {article.tags &&
+              article.tags.length > 0 &&
+              article.tags.map((tag) => (
+                <Link
+                  key={tag}
+                  as={`/blog/search/${tag}`}
+                  href="/blog/search/[keyword]"
+                  className="mr-4 mb-2 text-xs inline-flex items-center font-bold leading-sm uppercase text-black px-3 py-1 bg-gray-200 rounded-full"
+                >
+                  {tag}
+                </Link>
+              ))}
+          </p>
+        </section>
+      </main>
     </>
   );
 };

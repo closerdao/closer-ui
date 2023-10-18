@@ -44,7 +44,7 @@ export const links = [
   {
     label: 'Refer a friend',
     url: '/settings/referrals',
-    enabled: true,
+    enabled: process.env.NEXT_PUBLIC_FEATURE_REFERRAL === 'true',
   },
   {
     label: 'Governance',
@@ -75,5 +75,15 @@ export const links = [
     label: 'Resources',
     url: '/resources',
     enabled: true,
+  },
+  {
+    label: 'Learning hub',
+    url: '/learn/category/all',
+    enabled: process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true',
+  },
+  {
+    label: 'Blog',
+    url: '/blog',
+    enabled: process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true',
   },
 ];

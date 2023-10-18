@@ -10,7 +10,7 @@ import { useConfig } from '../../hooks/useConfig';
 import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
 
-const Search = ({ tags, error, articles }) => {
+const Search = ({ error, articles }) => {
   const { PLATFORM_NAME } = useConfig();
   const { isAuthenticated } = useAuth();
   return (
@@ -18,7 +18,7 @@ const Search = ({ tags, error, articles }) => {
       <Head>
         <title>{`${__('generic_search')} - ${PLATFORM_NAME}`}</title>
       </Head>
-      <section className="article limit-width">
+      <main className="main-content w-full max-w-6xl">
         <Heading className="mb-4">{PLATFORM_NAME} Blog</Heading>
         {isAuthenticated && (
           <div className="mb-4">
@@ -27,7 +27,7 @@ const Search = ({ tags, error, articles }) => {
             </Link>
           </div>
         )}
-        <div className="grid md:grid-cols-2 gap-8">
+        <section className="grid md:grid-cols-2 gap-8">
           {error ? (
             <div className="validation-error">{error}</div>
           ) : articles ? (
@@ -50,28 +50,8 @@ const Search = ({ tags, error, articles }) => {
           ) : (
             <div className="Loading">{__('generic_loading')}</div>
           )}
-        </div>
-      </section>
-
-      <section className="mt-8">
-        <Heading level={2}>{__('search_related_content')}</Heading>
-        <div className="tags py-4">
-          {tags
-            ? tags.map((tag) => (
-                <Link
-                  as={`/blog/search/${encodeURIComponent(tag)}`}
-                  href="/blog/search/[keyword]"
-                  key={tag}
-                  className="mr-4 mb-2 text-xs inline-flex items-center font-bold leading-sm uppercase px-3 py-1 bg-gray-200 rounded-full"
-                >
-                  {tag}
-                </Link>
-              ))
-            : !error && (
-                <span className="Loading">{__('generic_loading')}</span>
-              )}
-        </div>
-      </section>
+        </section>
+      </main>
     </>
   );
 };
