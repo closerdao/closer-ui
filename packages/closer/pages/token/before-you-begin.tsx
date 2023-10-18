@@ -32,7 +32,7 @@ const TokenSaleBeforeYouBeginPage = () => {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push(`/login?back=${encodeURIComponent(router.asPath)}`);
+      router.push(`/signup?back=${encodeURIComponent(router.asPath)}`);
     }
   }, [isAuthenticated, isLoading]);
 
