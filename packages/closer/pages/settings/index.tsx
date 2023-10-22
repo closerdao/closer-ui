@@ -326,11 +326,7 @@ const SettingsPage: FC = () => {
         <div className="flex items-center justify-start gap-2">
           <Checkbox
             isChecked={user?.settings?.newsletter_weekly}
-            value={ !!user?.settings?.newsletter_weekly }
             onChange={ saveSettings('newsletter_weekly') }
-            isInstantSave={true}
-            hasSaved={hasSaved}
-            setHasSaved={setHasSaved}
           />
           <label>Weekly newsletter</label>
         </div>
