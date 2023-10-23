@@ -36,8 +36,10 @@ import {
 } from '../../../utils/helpers';
 import { priceFormat } from '../../../utils/helpers';
 import {
-  checkListingAvaialbility,
+  checkListingAvailability,
   formatDate,
+  getBlockedDateRanges,
+  getUnavailableDates,
 } from '../../../utils/listings.helpers';
 
 interface Props {
@@ -68,6 +70,8 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
 
   const defaultCheckInDate = new Date().toISOString();
   const defaultCheckOutDate = dayjs(new Date()).add(7, 'day').toISOString();
+
+  const [maxHorizon, maxDuration] = getMaxBookingHorizon(settings, isMember);
 
   const [showGuestsDropdown, setShowGuestsDropdown] = useState(false);
   const [start, setStartDate] = useState<string | null | Date>(
@@ -102,6 +106,8 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
 
   const [calendarError, setCalendarError] = useState<string | null>(null);
 
+  const [unavailableDates, setUnavailableDates] = useState<any[]>([]);
+
   const isWeb3BookingEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
 
@@ -109,6 +115,44 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
 
   const isTokenPaymentSelected =
     savedUseTokens === 'true' || currency === CURRENCIES[1];
+
+  const getAvailability = async (
+    startDate: Date | string | null,
+    endDate: Date | string | null,
+  ) => {
+    try {
+      const {
+        data: { results, availability },
+      } = await api.post('/bookings/availability', {
+        start: formatDate(startDate),
+        end: formatDate(endDate),
+        adults,
+        children: kids,
+        infants,
+        pets,
+        useTokens: isTokenPaymentSelected,
+      });
+      return { results, availability };
+    } catch (error) {
+      console.log(error);
+      return { results: null, availability: null };
+    }
+  };
+
+  useEffect(() => {
+    (async () => {
+      const availableStart = new Date();
+      const availableEnd = new Date(
+        new Date(new Date()).setDate(new Date().getDate() + maxHorizon - 1),
+      );
+      const { availability } = await getAvailability(
+        availableStart,
+        availableEnd,
+      );
+      const listingId = listing?._id;
+      setUnavailableDates(getUnavailableDates(availability, listingId || null));
+    })();
+  }, []);
 
   useEffect(() => {
     if (savedStartDate) {
@@ -158,44 +202,6 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
     };
   }, []);
 
-  function getBlockedDateRanges() {
-    const [maxHorizon, maxDuration] = getMaxBookingHorizon(settings, isMember);
-    const dateRanges: any[] = [];
-    dateRanges.push({ before: new Date() });
-    dateRanges.push({
-      after: new Date().setDate(new Date().getDate() + maxHorizon),
-    });
-
-    if (start) {
-      dateRanges.push({
-        after: new Date(
-          new Date(start as string).getTime() +
-            maxDuration * 24 * 60 * 60 * 1000,
-        ),
-      });
-      dateRanges.push({
-        before: new Date(
-          new Date(end as string).getTime() - maxDuration * 24 * 60 * 60 * 1000,
-        ),
-      });
-      dateRanges.push({
-        before: new Date(
-          new Date(start as string).getTime() -
-            maxDuration * 24 * 60 * 60 * 1000,
-        ),
-      });
-    }
-    if (end) {
-      dateRanges.push({
-        before: new Date(
-          new Date(start as string).getTime() -
-            maxDuration * 24 * 60 * 60 * 1000,
-        ),
-      });
-    }
-    return dateRanges;
-  }
-
   const bookListing = async () => {
     if (!isAuthenticated) {
       router.push(`/signup?back=${encodeURIComponent(router.asPath)}`);
@@ -229,24 +235,14 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
   const fetchPrices = async () => {
     setApiError(null);
     try {
-      const {
-        data: { results, availability },
-      } = await api.post('/bookings/availability', {
-        start: formatDate(start),
-        end: formatDate(end),
-        adults,
-        children: kids,
-        infants,
-        pets,
-        useTokens: isTokenPaymentSelected,
-      });
+      const { availability, results } = await getAvailability(start, end);
 
-      const isListingAvailable = checkListingAvaialbility(
+      const isListingAvailable = checkListingAvailability(
         listing?._id,
         availability,
       );
 
-      const currentListing = results.filter((result: any) => {
+      const currentListing = results?.filter((result: Listing) => {
         return result.name === listing?.name;
       });
 
@@ -435,7 +431,13 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
                           end={(savedEndDate as string) || end}
                           start={(savedStartDate as string) || start}
                           isSmallScreen={isSmallScreen}
-                          blockedDateRanges={getBlockedDateRanges()}
+                          blockedDateRanges={getBlockedDateRanges(
+                            start,
+                            end,
+                            maxHorizon,
+                            maxDuration,
+                            unavailableDates,
+                          )}
                         />
                       </div>
 

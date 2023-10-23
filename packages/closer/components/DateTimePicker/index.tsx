@@ -69,8 +69,45 @@ const DateTimePicker = ({
     };
   }, []);
 
+  const checkDefaultDatesAreAvailable = (
+    blockedDateRanges: Date[],
+    start: Date,
+    end: Date,
+  ) => {
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
+    return !blockedDateRanges?.some((date) => {
+      date.setHours(0, 0, 0, 0);
+      return date >= start && date <= end;
+    });
+  };
+
+  const getBlockedDays = (dateArray: any[]) => {
+    return dateArray?.map((date) => {
+        if (date instanceof Date) {
+          return date;
+        }
+        return null;
+      })
+      .filter((date) => date !== null);
+  };
+
   useEffect(() => {
-    if (savedStartDate && savedEndDate && !volunteerId) {
+    const blockedDays = getBlockedDays(blockedDateRanges as any[]);
+
+    const defaultDatesAreAvailable = checkDefaultDatesAreAvailable(
+      blockedDays as Date[],
+      new Date(savedStartDate as string),
+      new Date(savedEndDate as string),
+    );
+
+    if (
+      savedStartDate &&
+      savedEndDate &&
+      !volunteerId &&
+      defaultDatesAreAvailable
+    ) {
       if (!isDateRangeSet) {
         setDateRange({
           from: new Date(savedStartDate),
@@ -82,6 +119,9 @@ const DateTimePicker = ({
         }
       }
       setIsDateRangeSet(true);
+    } else {
+      setStartDate(null);
+      setEndDate(null);
     }
   }, [savedStartDate, savedEndDate]);
 
@@ -238,7 +278,7 @@ const DateTimePicker = ({
 
       <div>
         <DayPicker
-          disabled={blockedDateRanges ? [...blockedDateRanges] : []}
+          disabled={blockedDateRanges || []}
           mode="range"
           defaultMonth={defaultMonth}
           numberOfMonths={isOneMonthCalendar ? 1 : 2}
