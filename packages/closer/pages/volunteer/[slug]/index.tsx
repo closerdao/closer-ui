@@ -10,9 +10,10 @@ import { __ } from '../../../utils/helpers';
 
 interface Props {
   volunteer: VolunteerOpportunity;
+  descriptionText?: string;
 }
 
-const VolunteerPage: NextPage<Props> = ({ volunteer }) => {
+const VolunteerPage: NextPage<Props> = ({ volunteer, descriptionText }) => {
   const { photo, name, description } = volunteer || {};
 
   if (!volunteer)
@@ -20,25 +21,39 @@ const VolunteerPage: NextPage<Props> = ({ volunteer }) => {
 
   return (
     <>
-      <Metatags imageId={photo} title={name} description={description} />
+      <Metatags
+        imageId={photo}
+        title={name}
+        description={descriptionText || ''}
+      />
       <VolunteerEventView volunteer={volunteer} />
     </>
   );
 };
 
 VolunteerPage.getInitialProps = async (context) => {
+  const { convert } = require('html-to-text');
   try {
     const id = context.query.slug;
     const {
       data: { results: volunteer },
     } = await api.get(`/volunteer/${id}`);
+    const options = {
+      baseElements: { selectors: ['p', 'h2', 'span'] },
+    };
+    const descriptionText = convert(volunteer.description, options)
+      .trim()
+      .slice(0, 100);
+
     return {
       volunteer,
+      descriptionText,
     };
   } catch (error) {
     console.error(error);
     return {
       volunteer: null,
+      descriptionText: null,
     };
   }
 };
