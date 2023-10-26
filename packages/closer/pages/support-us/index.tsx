@@ -22,9 +22,22 @@ import { Button, Card, Heading, LinkButton } from '../../components/ui';
 
 import PageNotFound from '../404';
 import { usePlatform } from '../../contexts/platform';
+import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
 
-const SupportUsPage = ({}) => {
+interface Props {
+  fundraisingConfig: {
+    videoId: string;
+    wandererUrl: string;
+    pioneerUrl: string;
+    oneMonthSharedUrl: string;
+    oneMonthPrivateUrl: string;
+    buy10TdfUrl: string;
+    hostEventUrl: string;
+  };
+}
+
+const SupportUsPage = ({ fundraisingConfig }: Props) => {
   const { platform }: any = usePlatform();
   const filter = {
     where: { 'subscription.plan': 'wanderer' },
@@ -124,11 +137,11 @@ const SupportUsPage = ({}) => {
       <div className="w-full flex items-center flex-col gap-12 mt-6">
         <section className="w-full flex flex-col gap-4 sm:gap-0 sm:flex-row justify-center max-w-3xl">
           <div className="w-full sm:w-2/3 h-[288px] sm:rounded-l-md overflow-hidden">
-            <YoutubeEmbed embedId="VkoqvPcaRpk" />
+            <YoutubeEmbed embedId={fundraisingConfig.videoId} />
           </div>
           <div className="flex flex-col gap-6 bg-accent-light w-full sm:w-1/3 sm:rounded-r-md p-5 text-center justify-center">
             <LinkButton
-              href="/subscriptions/checkout?priceId=price_1NGHnoGtt5D0VKR2SeTQxIYz"
+              href={fundraisingConfig.wandererUrl}
               className="font-bold text-xl p-1"
             >
               Subscribe
@@ -205,7 +218,7 @@ const SupportUsPage = ({}) => {
               </li>
             </ul>
             <LinkButton
-              href="/subscriptions/checkout?priceId=price_1NGHnoGtt5D0VKR2SeTQxIYz"
+              href={fundraisingConfig.wandererUrl}
               className="w-[240px]"
             >
               Subscribe (€10/m)
@@ -222,7 +235,10 @@ const SupportUsPage = ({}) => {
                 Free nights of stay each month (20%+ discount on stays)
               </li>
             </ul>
-            <LinkButton href="/subscriptions/pioneer" className="w-[240px]">
+            <LinkButton
+              href={fundraisingConfig.pioneerUrl}
+              className="w-[240px]"
+            >
               Subscribe (from €30/m)
             </LinkButton>
           </Card>
@@ -235,7 +251,10 @@ const SupportUsPage = ({}) => {
               30 nights of shared glamping, access to co-working and to a
               network of regenerative entrepreneurs.
             </p>
-            <LinkButton href="/" className="w-[240px]">
+            <LinkButton
+              href={fundraisingConfig.oneMonthSharedUrl}
+              className="w-[240px]"
+            >
               €395
             </LinkButton>
           </Card>
@@ -248,7 +267,10 @@ const SupportUsPage = ({}) => {
               30 nights of private glamping, access to co-working and to a
               network of regenerative entrepreneurs.
             </p>
-            <LinkButton href="/" className="w-[240px]">
+            <LinkButton
+              href={fundraisingConfig.oneMonthPrivateUrl}
+              className="w-[240px]"
+            >
               €695
             </LinkButton>
           </Card>
@@ -259,7 +281,10 @@ const SupportUsPage = ({}) => {
               Access TDF 10 nights, each year, forever - in a basic
               accommodation.
             </p>
-            <LinkButton href="/token" className="w-[240px]">
+            <LinkButton
+              href={fundraisingConfig.buy10TdfUrl}
+              className="w-[240px]"
+            >
               €2500
             </LinkButton>
           </Card>
@@ -270,7 +295,10 @@ const SupportUsPage = ({}) => {
               We organize an al inclusive 3 day event for your startup, friends
               or family (up to 50 guests).
             </p>
-            <LinkButton href="/" className="w-[240px]">
+            <LinkButton
+              href={fundraisingConfig.hostEventUrl}
+              className="w-[240px]"
+            >
               €9500
             </LinkButton>
           </Card>
@@ -278,6 +306,23 @@ const SupportUsPage = ({}) => {
       </div>
     </>
   );
+};
+
+SupportUsPage.getInitialProps = async () => {
+  try {
+    const {
+      data: { results: fundraisingConfig },
+    } = await api.get('/config/fundraiser');
+
+    return {
+      fundraisingConfig,
+    };
+  } catch (err) {
+    return {
+      fundraisingConfig: {},
+      error: err,
+    };
+  }
 };
 
 export default SupportUsPage;
