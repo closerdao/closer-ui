@@ -151,6 +151,13 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
       );
       const listingId = listing?._id;
       setUnavailableDates(getUnavailableDates(availability, listingId || null));
+      const listingPrices = await fetchPrices();
+      setIsListingAvailable(listingPrices.isListingAvailable);
+
+      if (!listingPrices.isListingAvailable) {
+        setStartDate('');
+        setEndDate('');
+      }
     })();
   }, []);
 
@@ -183,11 +190,6 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
         setRentalPrice(listingPrices?.prices[0]);
         setUtilityPrice(listingPrices?.prices[1]);
         setTokenPrice(listingPrices?.prices[2]);
-
-        if (!listingPrices.isListingAvailable) {
-          setStartDate('');
-          setEndDate('');
-        }
       })();
     }
   }, [adults, start, end]);
