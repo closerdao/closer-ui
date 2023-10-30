@@ -32,6 +32,7 @@ interface Props {
     pioneerUrl: string;
     oneMonthSharedUrl: string;
     oneMonthPrivateUrl: string;
+    buy5TdfUrl: string;
     buy10TdfUrl: string;
     hostEventUrl: string;
   };
@@ -157,9 +158,12 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
           </div>
         </section>
         <section className=" w-full flex flex-col gap-6 justify-center max-w-3xl">
+          <Heading level={1} className="uppercase text-accent">
+            We need your support
+          </Heading>
           <Heading level={2}>
-            With the collective strength of just 300 supporters contributing
-            €10/month, we can open the next iteration of TDF in 2024.
+            With the collective strength of just 300 supporters contributing €10
+            per month, we can open the next iteration of TDF in 2024.
           </Heading>
           <p>
             Our journey over the last three years has laid the groundwork for a
@@ -216,12 +220,15 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                 Access to community and our expansive network of regenerators
               </li>
+              <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                Access to discord
+              </li>
             </ul>
             <LinkButton
-              href={fundraisingConfig.wandererUrl}
-              className="w-[240px]"
+              href={fundraisingConfig.wandererUrl || '/subscriptions/checkout?priceId=price_1NGHnoGtt5D0VKR2SeTQxIYz'}
+              className="w-[255px] text-[13px] sm:text-[16px] sm:w-[320px]"
             >
-              Subscribe (€10/m)
+              Subscribe (€10 per month)
             </LinkButton>
           </Card>
 
@@ -232,14 +239,14 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
                 Everything from the Wanderer subscription
               </li>
               <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                Free nights of stay each month (20%+ discount on stays)
+                Get 20% discount on stays by pre-paying every month
               </li>
             </ul>
             <LinkButton
               href={fundraisingConfig.pioneerUrl}
-              className="w-[240px]"
+              className="w-[255px] text-[13px] sm:text-[16px] sm:w-[320px]"
             >
-              Subscribe (from €30/m)
+              Subscribe (from €30 per month)
             </LinkButton>
           </Card>
 
@@ -247,10 +254,19 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             <Heading level={3}>
               Book one month co-living in shared glamping for 2024
             </Heading>
-            <p>
-              30 nights of shared glamping, access to co-working and to a
-              network of regenerative entrepreneurs.
-            </p>
+
+            <ul>
+              <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                Meet in person with a thriving network of regenerative
+                entrepreneurs
+              </li>
+              <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                30 nights of shared glamping
+              </li>
+              <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                Access to co-working
+              </li>
+            </ul>
             <LinkButton
               href={fundraisingConfig.oneMonthSharedUrl}
               className="w-[240px]"
@@ -263,10 +279,18 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             <Heading level={3}>
               Book one month co-living in private glamping for 2024
             </Heading>
-            <p>
-              30 nights of private glamping, access to co-working and to a
-              network of regenerative entrepreneurs.
-            </p>
+            <ul>
+              <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                Meet in person with a thriving network of regenerative
+                entrepreneurs
+              </li>
+              <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                30 nights of private glamping
+              </li>
+              <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                Access to co-working
+              </li>
+            </ul>
             <LinkButton
               href={fundraisingConfig.oneMonthPrivateUrl}
               className="w-[240px]"
@@ -276,13 +300,33 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
           </Card>
 
           <Card className="border-gray-200 border-2">
-            <Heading level={3}>Buy 10 $TDF</Heading>
+            <Heading level={3}>Buy 5 TDF tokens</Heading>
             <p>
-              Access TDF 10 nights, each year, forever - in a basic
-              accommodation.
+              Access TDF 5 nights, each year, forever - in a basic
+              accommodation. The TDF Token is your key to our co-living space,
+              and it also gives you governance rights in the TDF DAO so you can
+              raise your voice on important topics.
             </p>
             <LinkButton
-              href={fundraisingConfig.buy10TdfUrl}
+              href={fundraisingConfig.buy5TdfUrl || '/token/checkout?tokens=5'}
+              className="w-[240px]"
+            >
+              €1250
+            </LinkButton>
+          </Card>
+
+          <Card className="border-gray-200 border-2">
+            <Heading level={3}>Buy 10 TDF tokens</Heading>
+            <p>
+              Access TDF 10 nights, each year, forever - in a basic
+              accommodation. The TDF Token is your key to our co-living space,
+              and it also gives you governance rights in the TDF DAO so you can
+              raise your voice on important topics.
+            </p>
+            <LinkButton
+              href={
+                fundraisingConfig.buy10TdfUrl || '/token/checkout?tokens=10'
+              }
               className="w-[240px]"
             >
               €2500
@@ -292,7 +336,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
           <Card className="border-gray-200 border-2">
             <Heading level={3}>Host an event at TDF in 2024</Heading>
             <p>
-              We organize an al inclusive 3 day event for your startup, friends
+              We organize an all inclusive 3 day event for your startup, friends
               or family (up to 50 guests).
             </p>
             <LinkButton
