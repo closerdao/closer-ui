@@ -55,6 +55,7 @@ export { default as CreateBookingDatesPage } from './pages/bookings/create/dates
 export { default as CreateBookingPage } from './pages/bookings/create/index';
 export { default as EditBookingPage } from './pages/bookings/edit/[slug]';
 export { default as BookingsPage } from './pages/bookings/index';
+export { default as CurrentBookingsPage } from './pages/bookings/current';
 export { default as BookingsRequestsPage } from './pages/bookings/requests';
 export { default as ChannelPage } from './pages/channel/[channel]';
 export { default as CreateChannelPage } from './pages/channel/create';
