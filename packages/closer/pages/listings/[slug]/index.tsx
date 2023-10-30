@@ -155,14 +155,14 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
   }, []);
 
   useEffect(() => {
-    // if (savedStartDate) {
-    //   setStartDate(savedStartDate as string);
-    // }
-    // if (savedEndDate) {
-    //   setEndDate(savedEndDate as string);
-    // }
-    // setStartDate(defaultCheckInDate);
-    // setEndDate(defaultCheckOutDate);
+    if (savedStartDate) {
+      setStartDate(savedStartDate as string);
+    }
+    if (savedEndDate) {
+      setEndDate(savedEndDate as string);
+    }
+    setStartDate(defaultCheckInDate);
+    setEndDate(defaultCheckOutDate);
   }, [router.query]);
 
   useEffect(() => {
