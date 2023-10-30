@@ -15,16 +15,15 @@ const SubscriptionConditions = ({
 }: SubscriptionConditionsProps) => {
   const [isSubscriptionsTermsChecked, setIsSubscriptionsTermsChecked] =
     useState(false);
-  const [isSaveCardChecked, setIsSaveCardChecked] = useState(false);
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
 
   useEffect(() => {
-    if (isSubscriptionsTermsChecked && isSaveCardChecked) {
+    if (isSubscriptionsTermsChecked) {
       setHasAcceptedConditions(true);
     } else {
       setHasAcceptedConditions(false);
     }
-  }, [isSubscriptionsTermsChecked, isSaveCardChecked]);
+  }, [isSubscriptionsTermsChecked]);
 
   const openModal = () => {
     setIsInfoModalOpened(true);
@@ -45,12 +44,6 @@ const SubscriptionConditions = ({
           </div>
         </Modal>
       )}
-      <Checkbox
-        id="isSaveCardChecked"
-        onChange={() => setIsSaveCardChecked(!isSaveCardChecked)}
-      >
-        {__('subscriptions_checkout_save_card_for_later')}
-      </Checkbox>
       <Checkbox
         id="isSubscriptionsTermsChecked"
         onChange={() =>
