@@ -23,6 +23,7 @@ const RedeemCredits = ({
 }: Props) => {
   return (
     <div className={`${className ? className : ''}`}>
+     <Heading level={4} className='mb-8'>This block will appear on Checkout page: </Heading> 
       <Card className="text-center gap-4">
         {(!hasAppliedCredits && (rentalFiat?.val || rentalToken?.val)) ||
         isDemo ? (
@@ -38,12 +39,10 @@ const RedeemCredits = ({
             <div className="flex w-full justify-center items-center mb-6">
               <div className="w-2/5">
                 <Heading level={4}>
-                  {isDemo
-                    ? 1
-                    : (rentalToken?.val as number) }
+                  {isDemo ? 1 : (rentalToken?.val as number)}
                 </Heading>
                 <div className="text-xs">
-                  {(rentalToken?.val as number)  === 1 || isDemo
+                  {(rentalToken?.val as number) === 1 || isDemo
                     ? __('carrots_carrots_to_redeem_singular')
                     : __('carrots_carrots_to_redeem')}
                 </div>
@@ -57,10 +56,13 @@ const RedeemCredits = ({
                 </Heading>
                 <div className="text-xs">{__('carrots_off_accommodation')}</div>
               </div>
-            </div>
-            <Button onClick={applyCredits}>
-              {__('carrots_button_apply_discount')}
-            </Button>
+              </div>
+              
+            {!isDemo && (
+              <Button onClick={applyCredits}>
+                {__('carrots_button_apply_discount')}
+              </Button>
+            )}
           </>
         ) : (
           <div className="text-system-success font-bold">
