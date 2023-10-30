@@ -30,19 +30,20 @@ interface Props {
   event: Event;
   eventCreator: User;
   error?: string;
+  descriptionText?: string;
 }
 
-const EventPage = ({ event, eventCreator, error }: Props) => {
+const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
   const { platform }: any = usePlatform();
   const { user, isAuthenticated } = useAuth();
   const [photo, setPhoto] = useState(event && event.photo);
   const [password, setPassword] = useState('');
   const [attendees, setAttendees] = useState(event && (event.attendees || []));
 
-  const canEditEvent = user ? (user?._id === event.createdBy ||
-    user?.roles.includes('admin')) : false
- 
-  
+  const canEditEvent = user
+    ? user?._id === event.createdBy || user?.roles.includes('admin')
+    : false;
+
   const myTicketFilter = event && {
     where: {
       event: event._id,
@@ -109,7 +110,7 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
     <>
       <Head>
         <title>{event.name}</title>
-        <meta name="description" content={event.description} />
+        <meta name="description" content={descriptionText} />
         <meta property="og:type" content="event" />
         {photo && (
           <meta
@@ -159,7 +160,11 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
       ) : (
         <div className="w-full flex items-center flex-col gap-4">
           <section className=" w-full flex justify-center max-w-4xl">
-              <div className={`"w-full relative bg-accent-light rounded-md w-full " ${canEditEvent ? ' min-h-[400px] ': ''}`}>
+            <div
+              className={`"w-full relative bg-accent-light rounded-md w-full " ${
+                canEditEvent ? ' min-h-[400px] ' : ''
+              }`}
+            >
               <EventPhoto
                 event={event}
                 user={user}
@@ -184,16 +189,15 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
                     {__('event_edit_event_button')}
                   </LinkButton>
 
-                  {isAuthenticated &&
-                    canEditEvent && (
-                      <UploadPhoto
-                        model="event"
-                        isMinimal
-                        id={event._id}
-                        onSave={(id) => setPhoto(id)}
-                        label={photo ? 'Change photo' : 'Add photo'}
-                      />
-                    )}
+                  {isAuthenticated && canEditEvent && (
+                    <UploadPhoto
+                      model="event"
+                      isMinimal
+                      id={event._id}
+                      onSave={(id) => setPhoto(id)}
+                      label={photo ? 'Change photo' : 'Add photo'}
+                    />
+                  )}
                 </div>
               )}
             </div>
@@ -275,40 +279,41 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
                     <div className="h-auto fixed bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px]">
                       {end && !end.isBefore(dayjs()) && (
                         <Card className="bg-white border border-gray-100">
-                          {event.paid && event.ticketOptions.map((ticket: any) => (
-                            <div
-                              key={ticket.name}
-                              className="hidden sm:flex flex-col gap-1"
-                            >
-                              <div className="flex flex-col bg-accent-light rounded-md p-2 items-center ">
-                                <p className="text-lg text-center">
-                                  {ticket.name}
-                                </p>
-                                <p className="text-md font-bold">
-                                  {priceFormat(ticket.price)}
-                                </p>
-                                <p>
-                                  {!ticket.limit ? (
-                                    <span className="text-xs text-error">
-                                      {__('event_tickets_sold')}
-                                    </span>
-                                  ) : ticket.limit > 10 ? (
-                                    <span className="text-xs text-success">
-                                      {__('event_tickets_available')}
-                                    </span>
-                                  ) : (
-                                    <span className="text-xs text-pending">
-                                      {__('event_tickets_last')}
-                                    </span>
-                                  )}
-                                </p>
+                          {event.paid &&
+                            event.ticketOptions.map((ticket: any) => (
+                              <div
+                                key={ticket.name}
+                                className="hidden sm:flex flex-col gap-1"
+                              >
+                                <div className="flex flex-col bg-accent-light rounded-md p-2 items-center ">
+                                  <p className="text-lg text-center">
+                                    {ticket.name}
+                                  </p>
+                                  <p className="text-md font-bold">
+                                    {priceFormat(ticket.price)}
+                                  </p>
+                                  <p>
+                                    {!ticket.limit ? (
+                                      <span className="text-xs text-error">
+                                        {__('event_tickets_sold')}
+                                      </span>
+                                    ) : ticket.limit > 10 ? (
+                                      <span className="text-xs text-success">
+                                        {__('event_tickets_available')}
+                                      </span>
+                                    ) : (
+                                      <span className="text-xs text-pending">
+                                        {__('event_tickets_last')}
+                                      </span>
+                                    )}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ))}
 
                           <Information>{__('events_discalimer')}</Information>
 
-                            <div className="mt-4 event-actions flex items-center">
+                          <div className="mt-4 event-actions flex items-center">
                             {event.ticket && start && start.isAfter(dayjs()) ? (
                               <Link
                                 href={prependHttp(event.ticket)}
@@ -495,6 +500,7 @@ EventPage.getInitialProps = async ({
   req: NextApiRequest;
   query: ParsedUrlQuery;
 }) => {
+  const { convert } = require('html-to-text');
   try {
     const {
       data: { results: event },
@@ -503,6 +509,14 @@ EventPage.getInitialProps = async ({
         Authorization: `Bearer ${req?.cookies?.access_token}`,
       },
     });
+
+    const options = {
+      baseElements: { selectors: ['p', 'h2', 'span'] },
+    };
+    const descriptionText = convert(event.description, options)
+      .trim()
+      .slice(0, 100);
+
     const eventCreatorId = event.createdBy;
     const {
       data: { results: eventCreator },
@@ -512,7 +526,7 @@ EventPage.getInitialProps = async ({
       },
     });
 
-    return { event, eventCreator };
+    return { event, eventCreator, descriptionText };
   } catch (err: unknown) {
     console.log('Error', err);
     return {

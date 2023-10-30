@@ -44,9 +44,15 @@ interface Props {
   listing: Listing | null;
   error?: string;
   settings: BookingSettings | null;
+  descriptionText?: string | null;
 }
 
-const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
+const ListingPage: NextPage<Props> = ({
+  listing,
+  settings,
+  error,
+  descriptionText,
+}) => {
   const config = useConfig();
   const { LOCATION_COORDINATES } = config || {};
   const router = useRouter();
@@ -281,7 +287,7 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
     <>
       <Head>
         <title>{listing.name}</title>
-        <meta name="description" content={listing.description} />
+        <meta name="description" content={descriptionText || ''} />
         <meta property="og:type" content="listing" />
         {photo && (
           <meta
@@ -622,21 +628,31 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
 };
 
 ListingPage.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
+  const { convert } = require('html-to-text');
   try {
     const [listing, settings] = await Promise.all([
       await api.get(`/listing/${query.slug}`),
       await api.get('/config/booking'),
     ]);
 
+    const options = {
+      baseElements: { selectors: ['p', 'h2', 'span'] },
+    };
+    const descriptionText = convert(listing.data.results.description, options)
+      .trim()
+      .slice(0, 100);
+
     return {
       listing: listing.data.results,
       settings: settings.data.results.value,
+      descriptionText,
     };
   } catch (err: unknown) {
     return {
       error: parseMessageFromError(err),
       listing: null,
       settings: null,
+      descriptionText: null,
     };
   }
 };
