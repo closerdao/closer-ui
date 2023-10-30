@@ -6,8 +6,8 @@ export const checkListingAvailability = (
     return false;
   }
   const isListingAvailable =
-    availability.every((day) => day.listings.includes(listingId)) &&
-    availability.every((day) => day.available);
+    availability.every((day) => day?.listings?.includes(listingId)) &&
+    availability.every((day) => day?.available);
 
   return isListingAvailable;
 };
@@ -79,7 +79,7 @@ export const getUnavailableDates = (
   const unavailableDates = availability
     ?.map((date) => {
       const isListingAvailable =
-        date.listings.includes(listingId) && date.available;
+        date?.listings?.includes(listingId) && date.available;
       return isListingAvailable ? null : new Date(date.day);
     })
     .filter((el) => el !== null);

@@ -155,14 +155,14 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
   }, []);
 
   useEffect(() => {
-    if (savedStartDate) {
-      setStartDate(savedStartDate as string);
-    }
-    if (savedEndDate) {
-      setEndDate(savedEndDate as string);
-    }
-    setStartDate(defaultCheckInDate);
-    setEndDate(defaultCheckOutDate);
+    // if (savedStartDate) {
+    //   setStartDate(savedStartDate as string);
+    // }
+    // if (savedEndDate) {
+    //   setEndDate(savedEndDate as string);
+    // }
+    // setStartDate(defaultCheckInDate);
+    // setEndDate(defaultCheckOutDate);
   }, [router.query]);
 
   useEffect(() => {
@@ -183,6 +183,11 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
         setRentalPrice(listingPrices?.prices[0]);
         setUtilityPrice(listingPrices?.prices[1]);
         setTokenPrice(listingPrices?.prices[2]);
+
+        if (!listingPrices.isListingAvailable) {
+          setStartDate('');
+          setEndDate('');
+        }
       })();
     }
   }, [adults, start, end]);
