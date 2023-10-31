@@ -124,7 +124,8 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
   useEffect(() => {
     setCalendarError(null);
 
-    const isCalendarSelectionValid = end && formatDate(start) !== formatDate(end)
+    const isCalendarSelectionValid =
+      end && formatDate(start) !== formatDate(end);
     if (!end) {
       setCalendarError(__('bookings_incomplete_dates_error'));
     }
@@ -197,7 +198,7 @@ const ListingPage: NextPage<Props> = ({ listing, settings, error }) => {
 
   const bookListing = async () => {
     if (!isAuthenticated) {
-      router.push(`/login?back=${encodeURIComponent(router.asPath)}`);
+      router.push(`/signup?back=${encodeURIComponent(router.asPath)}`);
     }
     setApiError(null);
     try {

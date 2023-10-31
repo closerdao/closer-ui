@@ -15,6 +15,7 @@ interface Props {
   isUnlocked: boolean;
   setIsVideoLoading: Dispatch<SetStateAction<boolean>>;
   isVideoLoading: boolean;
+  getAccessUrl: string;
 }
 
 const LessonVideo = ({
@@ -22,6 +23,7 @@ const LessonVideo = ({
   isUnlocked,
   setIsVideoLoading,
   isVideoLoading,
+  getAccessUrl,
 }: Props) => {
   const videoPlatform = getVideoPlatform(videoUrl);
   const embedId =
@@ -55,7 +57,7 @@ const LessonVideo = ({
         <div className="w-60 text-center flex flex-col gap-4 items-center">
           <Heading level={2}>{__('learn_cta')}</Heading>
 
-          <LinkButton href="/subscriptions" className="w-[200px]">
+          <LinkButton href={getAccessUrl} className="w-[200px]">
             {__('learn_get_access_button')}
           </LinkButton>
         </div>

@@ -25,14 +25,45 @@ const Login = () => {
 
   const router = useRouter();
 
-  const redirectBack = router.query?.back
-    ? decodeURIComponent(
-        new URLSearchParams(router.query as unknown as string).get('back') ||
-          '',
-      ).replace('back=', '')
-    : '/';
+  const redirect = (hasSubscription: boolean) => {
+    const source = decodeURIComponent(getQueryParam('source'));
+    const back = decodeURIComponent(getQueryParam('back'));
 
-  const { isAuthenticated, login, setAuthentification, error, setError } =
+    if (!source && !back) {
+      redirectTo('/');
+      return;
+    }
+    if (!source) {
+      redirectTo(back);
+      return;
+    }
+    if (hasSubscription && source) {
+      redirectTo(source);
+      return;
+    }
+    if (!hasSubscription && source !== 'undefined') {
+      const redirectUrl = back
+        ? `${decodeURIComponent(back).replace(
+            'back=',
+            '',
+          )}&source=${source.replace('&source=', '')}`
+        : '/';
+      redirectTo(redirectUrl);
+      return;
+    }
+  };
+
+  const redirectTo = (url: string) => {
+    router.push(url);
+  };
+
+  const getQueryParam = (param: string) => {
+    return (
+      new URLSearchParams(router.query as unknown as string).get(param) || ''
+    );
+  };
+
+  const { isAuthenticated, user, login, setAuthentification, error, setError } =
     useAuth();
 
   const [email, setEmail] = useState('');
@@ -44,7 +75,11 @@ const Login = () => {
   const [web3Error, setWeb3Error] = useState(null);
 
   if (isAuthenticated) {
-    router.push(redirectBack);
+    if (user && user?.subscription?.plan) {
+      redirect(true);
+    } else {
+      redirect(false);
+    }
   }
 
   useEffect(() => {

@@ -308,7 +308,7 @@ const EventPage = ({ event, eventCreator, error }: Props) => {
 
                           <Information>{__('events_discalimer')}</Information>
 
-                          <div className="mt-4 event-actions flex items-center">
+                            <div className="mt-4 event-actions flex items-center">
                             {event.ticket && start && start.isAfter(dayjs()) ? (
                               <Link
                                 href={prependHttp(event.ticket)}

@@ -15,7 +15,7 @@ import Heading from './ui/Heading';
 
 const SignupForm = () => {
   const router = useRouter();
-  const { back } = router.query || {};
+  const { back, source } = router.query || {};
   const { signup, isAuthenticated, error, setError } = useAuth();
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,6 +27,10 @@ const SignupForm = () => {
     fields: {},
     source: typeof window !== 'undefined' && window.location.href,
   });
+
+  const signupQuery = source
+    ? `/?back=${back}&source=${source}`
+    : `/?back=${back}`;
 
   const [isEmailConsent, setIsEmailConsent] = useState(true);
   const handleSubmit = async (e: FormEvent) => {
@@ -62,7 +66,15 @@ const SignupForm = () => {
   };
 
   const redirect = () => {
-    router.push(decodeURIComponent((back as string) || '/settings'));
+    if (source) {
+      router.push(
+        `${decodeURIComponent(back as string)}&source=${source}` || '/settings',
+      );
+      return;
+    }
+    router.push(
+      `${decodeURIComponent(back as string)}&back=${back}` || '/settings',
+    );
   };
 
   useEffect(() => {
@@ -161,7 +173,10 @@ const SignupForm = () => {
           </div>
           <div className="text-center text-sm">
             {__('signup_form_have_account')}{' '}
-            <Link className="text-accent underline font-bold" href="/login">
+            <Link
+              className="text-accent underline font-bold"
+              href={`/login${signupQuery}`}
+            >
               {__('login_title')}{' '}
             </Link>
           </div>
