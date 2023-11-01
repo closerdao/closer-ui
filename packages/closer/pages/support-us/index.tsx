@@ -15,6 +15,7 @@ import {
   WhatsappShareButton,
 } from 'react-share';
 import { FacebookIcon } from 'react-share';
+import { event } from 'nextjs-google-analytics';
 
 import Modal from '../../components/Modal';
 import YoutubeEmbed from '../../components/YoutubeEmbed';
@@ -24,6 +25,7 @@ import PageNotFound from '../404';
 import { usePlatform } from '../../contexts/platform';
 import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
+
 
 interface Props {
   fundraisingConfig: {
@@ -41,11 +43,10 @@ interface Props {
 const SupportUsPage = ({ fundraisingConfig }: Props) => {
   const { platform }: any = usePlatform();
   const filter = {
-    where: { 'subscription.plan': 'wanderer' },
-    limit: 300,
+    where: { 'subscription.plan': 'wanderer' }
   };
 
-  const wandererCount = platform.user.findCount(filter);
+  const wandererCount = platform.user.findCount(filter) || 0;
 
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
 
@@ -150,7 +151,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
 
             <div className="w-full rounded-full bg-gray-200">
               <div
-                style={{ width: `${300 / wandererCount}%` }}
+                style={{ width: `${Math.min(wandererCount, 300) / 300}%` }}
                 className="bg-accent h-[18px] rounded-full"
               ></div>
             </div>
@@ -227,6 +228,12 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             <LinkButton
               href={fundraisingConfig.wandererUrl || '/subscriptions/checkout?priceId=price_1NGHnoGtt5D0VKR2SeTQxIYz'}
               className="w-[255px] text-[13px] sm:text-[16px] sm:w-[320px]"
+              onClick={() =>
+                event('click', {
+                  category: 'Fundraiser',
+                  label: 'Subscribe (€10 per month)',
+                })
+              }
             >
               Subscribe (€10 per month)
             </LinkButton>
@@ -245,6 +252,12 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             <LinkButton
               href={fundraisingConfig.pioneerUrl}
               className="w-[255px] text-[13px] sm:text-[16px] sm:w-[320px]"
+              onClick={() =>
+                event('click', {
+                  category: 'Fundraiser',
+                  label: 'Subscribe (from €30 per month)',
+                })
+              }
             >
               Subscribe (from €30 per month)
             </LinkButton>
@@ -252,7 +265,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
 
           <Card className="border-gray-200 border-2">
             <Heading level={3}>
-              Book one month co-living in shared glamping for 2024
+              Book one month co-living in shared glamping from March 2024 to June 2024.
             </Heading>
 
             <ul>
@@ -270,6 +283,12 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             <LinkButton
               href={fundraisingConfig.oneMonthSharedUrl}
               className="w-[240px]"
+              onClick={() =>
+                event('click', {
+                  category: 'Fundraiser',
+                  label: 'Book one month co-living in shared glamping',
+                })
+              }
             >
               €395
             </LinkButton>
@@ -277,7 +296,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
 
           <Card className="border-gray-200 border-2">
             <Heading level={3}>
-              Book one month co-living in private glamping for 2024
+              Book one month co-living in private glamping from March 2024 to June 2024.
             </Heading>
             <ul>
               <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
@@ -294,8 +313,14 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             <LinkButton
               href={fundraisingConfig.oneMonthPrivateUrl}
               className="w-[240px]"
+              onClick={() =>
+                event('click', {
+                  category: 'Fundraiser',
+                  label: 'Book one month co-living in private glamping',
+                })
+              }
             >
-              €695
+              €895
             </LinkButton>
           </Card>
 
@@ -311,7 +336,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               href={fundraisingConfig.buy5TdfUrl || '/token/checkout?tokens=5'}
               className="w-[240px]"
             >
-              €1250
+              ~€1250
             </LinkButton>
           </Card>
 
@@ -329,7 +354,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               }
               className="w-[240px]"
             >
-              €2500
+              ~€2500
             </LinkButton>
           </Card>
 
@@ -340,7 +365,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               or family (up to 50 guests).
             </p>
             <LinkButton
-              href={fundraisingConfig.hostEventUrl}
+              href="mailto:space@traditionaldreamfactory.com?subject=Host an event at TDF in 2024"
               className="w-[240px]"
             >
               €9500
