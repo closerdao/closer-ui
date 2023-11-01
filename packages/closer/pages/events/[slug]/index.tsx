@@ -229,19 +229,20 @@ const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
                       )}
                     </label>
                   </div>
-                  <div className="flex gap-1 items-center">
-                    <Image
-                      alt="location icon"
-                      src="/images/icons/pin-icon.svg"
-                      width={20}
-                      height={20}
-                    />
-                    {event.address && (
+
+                  {event.address && (
+                    <div className="flex gap-1 items-center">
+                      <Image
+                        alt="location icon"
+                        src="/images/icons/pin-icon.svg"
+                        width={20}
+                        height={20}
+                      />
                       <p className="text-sm uppercase font-bold">
                         {event.address}
                       </p>
-                    )}
-                  </div>
+                    </div>
+                  )}
                   <div className="flex items-center text-sm uppercase font-bold gap-1">
                     <p className="">{__('event_organiser')}</p>
 
