@@ -77,8 +77,6 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
     return <PageNotFound />;
   }
 
-  console.log('fundraisingConfig', fundraisingConfig);
-
   return (
     <>
       <Head>
@@ -386,7 +384,7 @@ SupportUsPage.getInitialProps = async () => {
     } = await api.get('/config/fundraiser');
 
     return {
-      fundraisingConfig,
+      fundraisingConfig: fundraisingConfig?.value,
     };
   } catch (err) {
     return {
