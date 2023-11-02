@@ -109,6 +109,7 @@ export { default as LearnCategoryPage } from './pages/learn/category/[slug]/';
 export { default as CreateLessonPage } from './pages/learn/create';
 export { default as LessonPage } from './pages/learn/[slug]/';
 export { default as EditLessonPage } from './pages/learn/[slug]/edit';
+export { default as SupportUsPage } from './pages/support-us';
 
 // Types
 export * from './types/';

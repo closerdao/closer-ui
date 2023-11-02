@@ -670,12 +670,11 @@
   "volunteers_page_title": "Volunteering Opportunities",
   "volunteers_page_intro_text": "Experience community living by getting your hands dirty! Be an active part of the community during your stay at TDF and help maintain the space, contribute your skills or bring something completely new and fresh. Choose an option below that resonates with you.",
   "volunteers_page_terms_1": "Accommodation costs covered",
-  "volunteers_page_terms_2": "Pay only Utility Cost (€10 per day)",
-  "volunteers_page_terms_3": "  Food included",
+  "volunteers_page_terms_2": "Pay only Utility Cost",
+  "volunteers_page_terms_3": "Food included",
   "volunteers_page_terms_4": "~ 4 Hours of work per day",
   "volunteers_page_terms_5": "Unlock the possibility to become a member after 14 days",
   "volunteers_page_more_info": "For more information check out our <a class='text-accent underline' href='https://docs.google.com/document/d/177JkHCy0AhplsaEEYpFHBsiI6d4uLk0TgURSKfBIewE/edit'>Pink Paper</a>, <a class='text-accent underline' href='https://docs.google.com/document/d/198vWYEQCC1lELQa8f76Jcw3l3UDiPcBKt04PGFKnUvg/edit'>Visitors Guide</a> or <a class='text-accent underline' href='https://lu.ma/vnts9n0v'>Book An Onboarding Call</a>.",
-
   "volunteers_page_empty": "There are no volunteer opportunities at the moment.",
   "button_edit_opportunity": "Edit opportunity",
   "event_description_title": "Event description",
@@ -685,13 +684,11 @@
   "event_tickets_sold": "Sold out",
   "event_tickets_last": "Last tickets",
   "event_tickets_available": "Available",
-
   "event_edit_event_button": "Edit event",
   "volunteer_description_title": "Opportunity description",
   "volunteer_edit_page_title": "Edit volunteer opportunity",
   "volunteer_edit_page_delete": "Delete opportunity",
   "volunteer_opportunity_ended": "Opportunity ended",
-
   "token_sale_heading_nationality": "Nationality",
   "token_sale_heading_required": "Required",
   "token_sale_label_name": "Full legal name",
@@ -917,6 +914,8 @@
   "learn_no_lessons_found": "No lessons found",
   "learn_create_lesson": "Create lesson",
   "learn_all_courses": "Back to all courses",
+
+  "support_us_heading": "Support Traditional Dream Factory",
 
   "generic_edit_button": "Edit"
 }
