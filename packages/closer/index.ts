@@ -23,6 +23,7 @@ export { default as ProgressBar } from './components/ui/ProgressBar';
 export { default as Row } from './components/ui/Row';
 export { default as Spinner } from './components/ui/Spinner';
 export { default as YoutubeEmbed } from './components/YoutubeEmbed';
+export { default as Prompts } from './components/Prompts';
 // Config
 export * from './config_blockchain';
 export * from './contexts/auth';
@@ -109,6 +110,7 @@ export { default as LearnCategoryPage } from './pages/learn/category/[slug]/';
 export { default as CreateLessonPage } from './pages/learn/create';
 export { default as LessonPage } from './pages/learn/[slug]/';
 export { default as EditLessonPage } from './pages/learn/[slug]/edit';
+export { default as SupportUsPage } from './pages/support-us';
 
 // Types
 export * from './types/';

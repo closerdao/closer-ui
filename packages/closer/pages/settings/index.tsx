@@ -139,6 +139,7 @@ const SettingsPage: FC = () => {
       </Head>
       <div className="max-w-screen-sm mx-auto md:p-8 h-full main-content w-full flex flex-col min-h-screen py-2 gap-10">
         <Heading>🤓 Your Info</Heading>
+
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-8">
             <span className="block sm:inline">{error}</span>
@@ -162,12 +163,16 @@ const SettingsPage: FC = () => {
           label="Email"
           value={user.email}
           isDisabled={!updateEmail}
-          onChange={e => setUser({ ...user, email:e.target.value })}
-          successMessage={emailSaved ? 'You will receive a link to confirm via email.' : undefined}
+          onChange={(e) => setUser({ ...user, email: e.target.value })}
+          successMessage={
+            emailSaved
+              ? 'You will receive a link to confirm via email.'
+              : undefined
+          }
           validation="email"
         />
         <div>
-          {updateEmail && !emailSaved ?
+          {updateEmail && !emailSaved ? (
             <>
               <Button
                 onClick={() => saveEmail(user.email)}
@@ -187,7 +192,7 @@ const SettingsPage: FC = () => {
                 Cancel
               </Button>
             </>
-           : (
+          ) : (
             !emailSaved && (
               <Button
                 onClick={() => toggleUpdateEmail(!updateEmail)}
@@ -203,8 +208,12 @@ const SettingsPage: FC = () => {
           label="Phone"
           isDisabled={!updatePhone}
           value={user.phone}
-          onChange={e => setUser({ ...user, phone:e.target.value })}
-          successMessage={ phoneSaved ? 'You will receive a link to confirm via text.' : undefined }
+          onChange={(e) => setUser({ ...user, phone: e.target.value })}
+          successMessage={
+            phoneSaved
+              ? 'You will receive a link to confirm via text.'
+              : undefined
+          }
           validation="phone"
         />
         <div>
@@ -240,7 +249,7 @@ const SettingsPage: FC = () => {
           )}
         </div>
 
-        <div className="md:w-72 relative mt-8 flex flex-col gap-6">
+        <div className="md:w-72 relative mt-8 flex flex-col gap-6 group">
           <label className="font-medium text-complimentary-light" htmlFor="">
             Profile Picture
           </label>
@@ -251,6 +260,8 @@ const SettingsPage: FC = () => {
             className="my-4"
           />
         </div>
+
+        <div id="recommended"></div>
         <Heading
           level={3}
           className="border-b border-divider pb-2.5 leading-9 mt-12"

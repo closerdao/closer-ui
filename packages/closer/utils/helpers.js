@@ -438,3 +438,21 @@ export const getMaxBookingHorizon = (settings, isMember) => {
   }
   return [0, 0];
 };
+
+export const calculateFullDaysDifference = (targetDate) => {
+  const currentDate = new Date();
+  const timeDifference = currentDate - new Date(targetDate);
+  const millisecondsInADay = 24 * 60 * 60 * 1000;
+  const fullDaysDifference = Math.floor(timeDifference / millisecondsInADay);
+  return fullDaysDifference;
+};
+
+export const doAllKeysHaveValues = (obj, keys) => {
+  if (!obj) return false;
+  for (const key of keys) {
+    if (!(key in obj) || !obj[key]) {
+      return false;
+    }
+  }
+  return true;
+};
