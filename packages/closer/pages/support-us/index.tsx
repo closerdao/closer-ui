@@ -77,6 +77,8 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
     return <PageNotFound />;
   }
 
+  console.log('fundraisingConfig', fundraisingConfig);
+
   return (
     <>
       <Head>
