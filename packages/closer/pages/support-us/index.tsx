@@ -384,7 +384,7 @@ SupportUsPage.getInitialProps = async () => {
     } = await api.get('/config/fundraiser');
 
     return {
-      fundraisingConfig,
+      fundraisingConfig: fundraisingConfig?.value,
     };
   } catch (err) {
     return {
