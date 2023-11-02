@@ -149,9 +149,9 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               Subscribe
             </LinkButton>
 
-            <div className="w-full rounded-full bg-gray-200">
+            <div className="w-full rounded-full bg-gray-200 overflow-hidden">
               <div
-                style={{ width: `${Math.min(wandererCount, 300) / 300}%` }}
+                style={{ width: `${(Math.min(wandererCount, 300) / 300) * 100}%` }}
                 className="bg-accent h-[18px] rounded-full"
               ></div>
             </div>
