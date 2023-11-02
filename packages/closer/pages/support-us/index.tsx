@@ -246,7 +246,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
                 Everything from the Wanderer subscription
               </li>
               <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                Get 20% discount on stays by pre-paying every month
+                Get 25% discount on stays by pre-paying every month
               </li>
             </ul>
             <LinkButton

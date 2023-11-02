@@ -129,7 +129,7 @@ export const INVESTMENT_COMPARISON = [
       term: ['~4 $TDF', '4 days per year'],
       extraCosts: [
         'Food: Included',
-        'Utility: €10 p/day',
+        'Utility: €12 p/day',
         'Co-working: Included',
       ],
     },
@@ -148,7 +148,7 @@ export const INVESTMENT_COMPARISON = [
       term: ['~14 $TDF', '2 weeks per year'],
       extraCosts: [
         'Food: Included',
-        'Utility: €10 p/day',
+        'Utility: €12 p/day',
         'Co-working: Included',
       ],
     },
@@ -167,7 +167,7 @@ export const INVESTMENT_COMPARISON = [
       term: ['~30 $TDF', '1 month per year'],
       extraCosts: [
         'Food: Included',
-        'Utility: €10 p/day',
+        'Utility: €12 p/day',
         'Co-working: Included',
       ],
     },
@@ -186,7 +186,7 @@ export const INVESTMENT_COMPARISON = [
       term: ['~90 $TDF', '3 months per year'],
       extraCosts: [
         'Food: Included',
-        'Utility: €10 p/day',
+        'Utility: €12 p/day',
         'Co-working: Included',
       ],
     },
@@ -205,7 +205,7 @@ export const INVESTMENT_COMPARISON = [
       term: ['~365 $TDF', 'You just Got a full time home!'],
       extraCosts: [
         'Food: Included',
-        'Utility: €10 p/day',
+        'Utility: €12 p/day',
         'Co-working: Included',
       ],
     },
@@ -220,7 +220,7 @@ export const INVESTMENT_COMPARISON = [
       term: ['You spend the rest on building regen startups'],
       extraCosts: [
         'Food: Included',
-        'Utility: €10 p/day',
+        'Utility: €12 p/day',
         'Co-working: Included',
       ],
     },
