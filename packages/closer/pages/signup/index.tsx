@@ -14,6 +14,7 @@ import { FaUser } from '@react-icons/all-files/fa/FaUser';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
+import { useConfig } from '../../hooks/useConfig';
 import { SubscriptionPlan } from '../../types/subscriptions';
 import api, { cdn } from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
@@ -24,6 +25,9 @@ interface Props {
 }
 
 const Signup = ({ subscriptionPlans }: Props) => {
+  const config = useConfig();
+  const { APP_NAME } = config || {};
+
   const { platform }: any = usePlatform();
 
   const [error, setError] = useState(false);
@@ -75,31 +79,37 @@ const Signup = ({ subscriptionPlans }: Props) => {
                 level={1}
                 className="uppercase text-5xl sm:text-6xl font-extrabold"
               >
-                {__('signup_title')}
+                {__('signup_title', APP_NAME)}
               </Heading>
 
               <div>
-                <Heading level={4} className="mb-4 text-sm uppercase">
-                  {defaultSubscriptionPlan?.description}
-                </Heading>
-                <ul className="mb-4">
-                  {defaultSubscriptionPlan?.perks.map((perk) => {
-                    return (
-                      <li
-                        key={perk}
-                        className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5"
-                      >
-                        <span className="block">
-                          {perk.includes('<') ? (
-                            <span dangerouslySetInnerHTML={{ __html: perk }} />
-                          ) : (
-                            perk
-                          )}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
+                {process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true' && (
+                  <>
+                    <Heading level={4} className="mb-4 text-sm uppercase">
+                      {defaultSubscriptionPlan?.description}
+                    </Heading>
+                    <ul className="mb-4">
+                      {defaultSubscriptionPlan?.perks.map((perk) => {
+                        return (
+                          <li
+                            key={perk}
+                            className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5"
+                          >
+                            <span className="block">
+                              {perk.includes('<') ? (
+                                <span
+                                  dangerouslySetInnerHTML={{ __html: perk }}
+                                />
+                              ) : (
+                                perk
+                              )}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </>
+                )}
 
                 {error && <ErrorMessage error={error} />}
 
@@ -128,16 +138,17 @@ const Signup = ({ subscriptionPlans }: Props) => {
                   </div>
                 )}
               </div>
-
-              <div>
-                {__('signup_form_get_credits')}{' '}
-                <Link
-                  className="text-accent font-bold underline"
-                  href="/settings/credits"
-                >
-                  {__('signup_form_credit_learn_more')}
-                </Link>
-              </div>
+              {process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' && (
+                <div>
+                  {__('signup_form_get_credits')}{' '}
+                  <Link
+                    className="text-accent font-bold underline"
+                    href="/settings/credits"
+                  >
+                    {__('signup_form_credit_learn_more')}
+                  </Link>
+                </div>
+              )}
             </div>
             <div className="w-full md:w-1/2">
               <SignupForm />

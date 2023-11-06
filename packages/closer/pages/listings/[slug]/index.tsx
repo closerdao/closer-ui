@@ -58,7 +58,7 @@ const ListingPage: NextPage<Props> = ({
   descriptionText,
 }) => {
   const config = useConfig();
-  const { LOCATION_COORDINATES } = config || {};
+  const { LOCATION_COORDINATES, PLATFORM_LEGAL_ADDRESS } = config || {};
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const isMember = user && user.roles.includes('member');
@@ -358,11 +358,12 @@ const ListingPage: NextPage<Props> = ({
 
           <div>
             <section className="flex justify-left min-h-[400px] ">
-              <div className="max-w-4xl w-full  flex flex-col sm:flex-row place-items-start justify-between">
-                <div className="w-auto p-2 sm:pr-8 flex flex-col">
-                  <div className="flex flex-col gap-6 ">
+              <div className="max-w-4xl w-full flex flex-col sm:flex-row place-items-start justify-between">
+                <div className="p-2 sm:pr-8 flex flex-col w-full">
+                  <div className="flex flex-col gap-6  ">
                     <section>
                       <div
+                        className="rich-text"
                         dangerouslySetInnerHTML={{
                           __html: listing.description,
                         }}
@@ -370,10 +371,10 @@ const ListingPage: NextPage<Props> = ({
                     </section>
 
                     {/* TODO: possible alternative to hardcoding amenities is adding this block to listing description with new rich text editor */}
-                    <Heading level={2} className="text-lg uppercase mt-6">
+                    {/* <Heading level={2} className="text-lg uppercase mt-6">
                       Amenities:
                     </Heading>
-                    <div className="flex gap-6">
+                    <div className=" flex gap-6">
                       <div className="flex flex-col gap-6 w-1/2">
                         <div>
                           <Heading level={3} className="text-lg">
@@ -422,7 +423,7 @@ const ListingPage: NextPage<Props> = ({
                           3k trees planted
                         </div>
                       </div>
-                    </div>
+                    </div> */}
                   </div>
 
                   <div className=" my-16 flex flex-col gap-6">
@@ -430,7 +431,7 @@ const ListingPage: NextPage<Props> = ({
                       {__('listing_preview_location')}
                     </Heading>
                     <Heading level={3} className="text-md font-normal">
-                      {__('listing_preview_address')}
+                      {PLATFORM_LEGAL_ADDRESS}
                     </Heading>
                     <GoogleMaps height={400} location={LOCATION_COORDINATES} />
                   </div>

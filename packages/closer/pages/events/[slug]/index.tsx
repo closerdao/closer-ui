@@ -443,7 +443,7 @@ const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
                   </div>
                 </div>
               </div>
-            </div>
+        </div>
           </section>
 
           <main className="max-w-prose py-10 w-full">

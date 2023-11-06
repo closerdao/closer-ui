@@ -14,6 +14,7 @@ import { Button } from './ui';
 
 const Navigation = () => {
   const [navOpen, setNavOpen] = useState(false);
+  
   const toggleNav = () => {
     setNavOpen((isOpen) => !isOpen);
   };

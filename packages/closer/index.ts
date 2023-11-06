@@ -23,6 +23,7 @@ export { default as ProgressBar } from './components/ui/ProgressBar';
 export { default as Row } from './components/ui/Row';
 export { default as Spinner } from './components/ui/Spinner';
 export { default as YoutubeEmbed } from './components/YoutubeEmbed';
+export { default as Resources } from './components/Resources';
 export { default as Prompts } from './components/Prompts';
 // Config
 export * from './config_blockchain';
@@ -99,7 +100,6 @@ export { default as NationalityPage } from './pages/token/nationality';
 export { default as TokenSaleSuccessPage } from './pages/token/success';
 export { default as TokenCounterPage } from './pages/token/token-counter';
 export { default as YourInfoPage } from './pages/token/your-info';
-export { default as ResourcesPage } from './pages/resources';
 export { default as ManageUsersPage } from './pages/admin/manage-users';
 export { default as EditVolunteerOportunity } from './pages/volunteer/[slug]/edit';
 export { default as VolunteerPage } from './pages/volunteer/[slug]/';

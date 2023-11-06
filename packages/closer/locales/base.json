@@ -260,7 +260,6 @@
   "signup_body": "Join the dreamers and makers of tomorrow.",
   "signup_success": "Welcome! We look forward to connecting with you.",
   "signup_success_cta": "You will be redirected back in a second",
-  "signup_title": "Sign Up & Become an Explorer",
   "signup_sub_title": "and start building the dream.",
   "signup_form_name": "Name",
   "signup_form_phone_number": "Phone number (optional)",
@@ -454,7 +453,9 @@
   "listings_book_accomodation_type": "Accommodation type",
   "listings_book_button": "Book",
   "listings_create_title": "Create Listing",
-  "listings_title": "Book your stay at Traditional Dream Factory",
+  "listings_title": "Book your stay at ",
+
+  
   "listings_create": "Create",
   "listings_book": "Book",
   "login_forgot_password_title": "Reset password",
@@ -886,12 +887,7 @@
   "manage_users_preparing_data": "Preparing data...",
   "manage_users_lear_filters_button": "Clear filters",
 
-  "resources_heading": "Resourceful by nature",
-  "resources_subheading": "Welcome to our ever-evolving potting shed of TDF tools, village build updates, subscription packages, news about magical future gatherings, the inner workings of our project, and the small, but oh-so-important legal print. Check back here regularly to watch us grow!",
-  "resources_faq_heading": "Frequently asked questions",
-  "resources_faq_subheading": "Got a question? We’re an open source.",
-  "resources_resources_heading": "Put the kettle on and get to know us a little better",
-  "resources_resources_subheading": "Read all about our dream: the mission, vision and how we got here, with our digital papers",
+
   "resources_faqs_error": "Error fetching FAQs",
 
   "learn_heading": "TDF Learning Hub",

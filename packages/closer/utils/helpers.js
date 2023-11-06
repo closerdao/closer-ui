@@ -10,6 +10,8 @@ import { blockchainConfig } from '../config_blockchain';
 import { REFUND_PERIODS } from '../constants';
 import base from '../locales/base';
 import en from '../locales/en';
+import foz from '../locales/foz';
+import tdf from '../locales/tdf';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(relativeTime);
@@ -20,14 +22,24 @@ dayjs.extend(advancedFormat);
 
 const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
 
-let language = Object.assign({}, base, en);
+const appDictionaries = {
+  tdf,
+  foz,
+};
 
+let appDictionary = {};
+
+let language = Object.assign({}, base, en);
 const ONE_HOUR = 60 * 60 * 1000;
 
 export const __ = (key, paramValue) => {
   if (paramValue) {
-    return language[key].replace('%s', paramValue);
+    if (paramValue in appDictionaries) {
+      appDictionary = appDictionaries[paramValue];
+    }
+    return appDictionary[key]?.replace('%s', paramValue) || '';
   }
+
   return language[key] || `__${key}_missing__`;
 };
 
