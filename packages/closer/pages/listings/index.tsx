@@ -9,9 +9,12 @@ import Heading from '../../components/ui/Heading';
 
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
+import { useConfig } from '../../hooks/useConfig';
 import { __ } from '../../utils/helpers';
 
 const Listings = () => {
+  const config = useConfig();
+  const { PLATFORM_NAME, APP_NAME } = config || {};
   const { platform }: any = usePlatform();
   const { user } = useAuth();
 
@@ -28,7 +31,9 @@ const Listings = () => {
   return (
     <>
       <Head>
-        <title>{__('listings_title')}</title>
+        <title>
+          {__('listings_title')} {PLATFORM_NAME}
+        </title>
       </Head>
       {listings && listings.get('error') && (
         <div className="validation-error">{listings.get('error')}</div>
@@ -37,8 +42,10 @@ const Listings = () => {
       <section className="text-center flex justify-center flex-wrap mb-12 ">
         <div className="md:max-w-5xl">
           <div className="mb-6 flex justify-between flex-col sm:flex-row gap-4">
-            <Heading>{__('listings_title')}</Heading>
-
+            <Heading>
+              {__('listings_title')}
+              {PLATFORM_NAME}
+            </Heading>
             {(user?.roles.includes('admin') ||
               user?.roles.includes('space-host')) && (
               <div className="user-actions">

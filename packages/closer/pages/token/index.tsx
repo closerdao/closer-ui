@@ -78,6 +78,11 @@ const PublicTokenSalePage = ({ listings }: Props) => {
           <title>{`${__(
             'token_sale_public_sale_heading',
           )} - ${PLATFORM_NAME}`}</title>
+          <link
+          rel="canonical"
+          href="https://www.traditionaldreamfactory.com/token"
+          key="canonical"
+        />
         </Head>
 
         <div className="max-w-6xl mx-auto">

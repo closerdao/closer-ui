@@ -20,6 +20,11 @@ const Events: NextPage = () => {
     <>
       <Head>
         <title>{`${PLATFORM_NAME} - ${__('events_title')}`}</title>
+        <link
+          rel="canonical"
+          href="https://www.traditionaldreamfactory.com/events"
+          key="canonical"
+        />
       </Head>
       <div className="main-content w-full mb-12">
         <div className="flex justify-between">

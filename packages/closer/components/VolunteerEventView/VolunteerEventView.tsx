@@ -64,7 +64,6 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
 
               <UploadPhoto
                 model="volunteer"
-                isMinimal
                 id={volunteer._id}
                 onSave={(id) => setPhoto(id)}
                 label={photo ? 'Change photo' : 'Add photo'}

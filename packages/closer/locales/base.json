@@ -120,6 +120,8 @@
   "bookings_confirmation_step_you_are_coming": "You are coming to",
   "bookings_select_dates_button": "Select dates",
   "bookings_select_stay_dates": "Select stay dates",
+  "bookings_date_range_error": "Please select a valid date range",
+  "bookings_incomplete_dates_error": "Please select checkout date",
   "bookings_does_prefer_single_beds": "I prefer single beds (applies to private accommodation)",
   "bookings_heading_extras": "Extras",
   "bookings_pickup": "Pick me up from the train/bus station",
@@ -246,6 +248,8 @@
   "navigation_visit": "Try us out",
   "navigation_buy_token": "Invest",
   "navigation_resources": "Resources",
+  "navigation_online_courses": "Learning hub",
+  "navigation_blog": "Blog",
   "newsletter_success": "Thanks, we will be in touch soon!",
   "newsletter_body": "Keep in the loop, subscribe:",
   "newsletter_signup": "Subscribe",
@@ -256,7 +260,6 @@
   "signup_body": "Join the dreamers and makers of tomorrow.",
   "signup_success": "Welcome! We look forward to connecting with you.",
   "signup_success_cta": "You will be redirected back in a second",
-  "signup_title": "Sign Up & Become an Explorer",
   "signup_sub_title": "and start building the dream.",
   "signup_form_name": "Name",
   "signup_form_phone_number": "Phone number (optional)",
@@ -367,7 +370,6 @@
   "bookings_checkout_ticket_cost": "Ticket cost",
   "bookings_checkout_event_cost": "Event cost",
 
-
   "blockchain_bypass_wallet": "Skip, I'll pay fiat",
   "channel_create_title": "Create Channel",
   "community_title": "Community",
@@ -451,7 +453,9 @@
   "listings_book_accomodation_type": "Accommodation type",
   "listings_book_button": "Book",
   "listings_create_title": "Create Listing",
-  "listings_title": "Book your stay at Traditional Dream Factory",
+  "listings_title": "Book your stay at ",
+
+  
   "listings_create": "Create",
   "listings_book": "Book",
   "login_forgot_password_title": "Reset password",
@@ -667,12 +671,11 @@
   "volunteers_page_title": "Volunteering Opportunities",
   "volunteers_page_intro_text": "Experience community living by getting your hands dirty! Be an active part of the community during your stay at TDF and help maintain the space, contribute your skills or bring something completely new and fresh. Choose an option below that resonates with you.",
   "volunteers_page_terms_1": "Accommodation costs covered",
-  "volunteers_page_terms_2": "Pay only Utility Cost (€10 per day)",
-  "volunteers_page_terms_3": "  Food included",
+  "volunteers_page_terms_2": "Pay only Utility Cost",
+  "volunteers_page_terms_3": "Food included",
   "volunteers_page_terms_4": "~ 4 Hours of work per day",
   "volunteers_page_terms_5": "Unlock the possibility to become a member after 14 days",
   "volunteers_page_more_info": "For more information check out our <a class='text-accent underline' href='https://docs.google.com/document/d/177JkHCy0AhplsaEEYpFHBsiI6d4uLk0TgURSKfBIewE/edit'>Pink Paper</a>, <a class='text-accent underline' href='https://docs.google.com/document/d/198vWYEQCC1lELQa8f76Jcw3l3UDiPcBKt04PGFKnUvg/edit'>Visitors Guide</a> or <a class='text-accent underline' href='https://lu.ma/vnts9n0v'>Book An Onboarding Call</a>.",
-
   "volunteers_page_empty": "There are no volunteer opportunities at the moment.",
   "button_edit_opportunity": "Edit opportunity",
   "event_description_title": "Event description",
@@ -682,13 +685,11 @@
   "event_tickets_sold": "Sold out",
   "event_tickets_last": "Last tickets",
   "event_tickets_available": "Available",
-
   "event_edit_event_button": "Edit event",
   "volunteer_description_title": "Opportunity description",
   "volunteer_edit_page_title": "Edit volunteer opportunity",
   "volunteer_edit_page_delete": "Delete opportunity",
   "volunteer_opportunity_ended": "Opportunity ended",
-
   "token_sale_heading_nationality": "Nationality",
   "token_sale_heading_required": "Required",
   "token_sale_label_name": "Full legal name",
@@ -886,13 +887,31 @@
   "manage_users_preparing_data": "Preparing data...",
   "manage_users_lear_filters_button": "Clear filters",
 
-  "resources_heading": "Resourceful by nature",
-  "resources_subheading": "Welcome to our ever-evolving potting shed of TDF tools, village build updates, subscription packages, news about magical future gatherings, the inner workings of our project, and the small, but oh-so-important legal print. Check back here regularly to watch us grow!",
-  "resources_faq_heading": "Frequently asked questions",
-  "resources_faq_subheading": "Got a question? We’re an open source.",
-  "resources_resources_heading": "Put the kettle on and get to know us a little better",
-  "resources_resources_subheading": "Read all about our dream: the mission, vision and how we got here, with our digital papers",
+
   "resources_faqs_error": "Error fetching FAQs",
+
+  "learn_heading": "TDF Learning Hub",
+  "learn_subheading": "Dive into TDF's Learning Hub and tap into a reservoir of actionable knowledge: from permaculture, to water systems, to unraveling the intricacies of web3. Harness our three years of hands-on experience to fuel your own regenerative journey.",
+  "learn_categories_heading": "Categories",
+  "learn_courses": "courses",
+  "learn_lesson_category": "Category",
+  "learn_lesson_created_by": "Lesson by:",
+  "learn_lessons_heading": "Lessons",
+  "learn_introduction_heading": "Introduction",
+  "learn_full_lesson_heading": "Full lesson",
+  "learn_create_lesson_hading": "Create lesson",
+  "learn_edit_lesson_hading": "Edit lesson",
+  "learn_tags_heading": "Tags",
+  "learn_get_access_button": "Get full access",
+  "learn_cta": "Subscribe to unlock all lessons",
+  "learn_loading_video": "Loading video",
+  "learn_edit_heading": "Edit lesson:",
+  "learn_categories_all": "All",
+  "learn_no_lessons_found": "No lessons found",
+  "learn_create_lesson": "Create lesson",
+  "learn_all_courses": "Back to all courses",
+
+  "support_us_heading": "Support Traditional Dream Factory",
 
   "generic_edit_button": "Edit"
 }

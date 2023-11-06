@@ -34,10 +34,14 @@ const ListingListPreview = ({ listing }) => {
         </Link>
 
         {listing.get('description') && (
-          <p className="text-left">
-            {listing.get('description').slice(0, 120)}
-            {listing.get('description').length > 120 && '...'}
-          </p>
+          <p
+            className="rich-text text-left"
+            dangerouslySetInnerHTML={{
+              __html: `${listing.get('description').slice(0, 120)} ${
+                listing.get('description').length > 120 && '...'
+              }`,
+            }}
+          />
         )}
       </div>
 
