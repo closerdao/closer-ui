@@ -120,7 +120,7 @@
   "bookings_confirmation_step_you_are_coming": "You are coming to",
   "bookings_select_dates_button": "Select dates",
   "bookings_select_stay_dates": "Select stay dates",
-  "bookings_date_range_error": "Please select a valid date range",
+  "bookings_date_range_error": "Please select stay dates",
   "bookings_incomplete_dates_error": "Please select checkout date",
   "bookings_does_prefer_single_beds": "I prefer single beds (applies to private accommodation)",
   "bookings_heading_extras": "Extras",

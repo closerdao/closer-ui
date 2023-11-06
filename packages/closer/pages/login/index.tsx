@@ -8,11 +8,14 @@ import { Card, ErrorMessage, Heading, Input } from '../../components/ui';
 import Button from '../../components/ui/Button';
 import Switcher from '../../components/ui/Switcher';
 
+import dayjs from 'dayjs';
+
 import { useAuth } from '../../contexts/auth';
 import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
+import { getQueryParam } from '../../utils/login.helpers';
 
 const loginOptions =
   process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true'
@@ -24,17 +27,25 @@ const Login = () => {
   const { signMessage } = useContext(WalletDispatch);
 
   const router = useRouter();
+  const { adults, useTokens } = router.query || {};
+
+  const source = decodeURIComponent(getQueryParam(router.query, 'source'));
+  const back = decodeURIComponent(getQueryParam(router.query, 'back'));
+  const start = decodeURIComponent(getQueryParam(router.query, 'start'));
+  const end = decodeURIComponent(getQueryParam(router.query, 'end'));
 
   const redirect = (hasSubscription: boolean) => {
-    const source = decodeURIComponent(getQueryParam('source'));
-    const back = decodeURIComponent(getQueryParam('back'));
-
+    const dateFormat = 'YYYY-MM-DD';
     if (!source && !back) {
       redirectTo('/');
       return;
     }
     if (!source) {
-      redirectTo(back);
+      redirectTo(
+        `${back}?start=${dayjs(start as string).format(dateFormat)}&end=${dayjs(
+          end as string,
+        ).format(dateFormat)}&adults=${adults}&useTokens=${useTokens}`,
+      );
       return;
     }
     if (hasSubscription && source) {
@@ -55,12 +66,6 @@ const Login = () => {
 
   const redirectTo = (url: string) => {
     router.push(url);
-  };
-
-  const getQueryParam = (param: string) => {
-    return (
-      new URLSearchParams(router.query as unknown as string).get(param) || ''
-    );
   };
 
   const { isAuthenticated, user, login, setAuthentification, error, setError } =
