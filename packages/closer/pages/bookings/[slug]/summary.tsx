@@ -97,7 +97,7 @@ const Summary = ({ booking, listing, event, error }: Props) => {
     const dateFormat = 'YYYY-MM-DD';
     if (router.query.back) {
       router.push(
-        `/listings/${router.query.back}?start=${dayjs(start).format(
+        `/${router.query.back}?start=${dayjs(start).format(
           dateFormat,
         )}&end=${dayjs(end).format(dateFormat)}&adults=${adults}&useTokens=${useTokens}`,
       );

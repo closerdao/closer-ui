@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 
 import { FormEvent, useEffect, useState } from 'react';
 
+import dayjs from 'dayjs';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
@@ -15,8 +16,10 @@ import Heading from './ui/Heading';
 
 const SignupForm = () => {
   const router = useRouter();
-  const { back, source } = router.query || {};
+  const { back, source, start, end, adults, useTokens } = router.query || {};
+
   const { signup, isAuthenticated, error, setError } = useAuth();
+
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [application, setApplication] = useState({
@@ -27,12 +30,17 @@ const SignupForm = () => {
     fields: {},
     source: typeof window !== 'undefined' && window.location.href,
   });
-
+  const dateFormat = 'YYYY-MM-DD';
   const signupQuery = source
-    ? `/?back=${back}&source=${source}`
-    : `/?back=${back}`;
+    ? `/?back=${back}&source=${source}&start=${start}&end=${end}&adults=${adults}&useTokens=${useTokens}`
+    : `/?back=${back}&start=${dayjs(start as string).format(
+        dateFormat,
+      )}&end=${dayjs(end as string).format(
+        dateFormat,
+      )}&adults=${adults}&useTokens=${useTokens}`;
 
   const [isEmailConsent, setIsEmailConsent] = useState(true);
+
   const handleSubmit = async (e: FormEvent) => {
     setIsLoading(true);
     e.preventDefault();
