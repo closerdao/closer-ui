@@ -13,7 +13,7 @@ import TokenCounterSimple from '../../components/TokenCounterSimple';
 import YoutubeEmbed from '../../components/YoutubeEmbed';
 import { Button, Card, Heading } from '../../components/ui';
 
-import { INVESTMENT_COMPARISON } from '../../constants';
+// import { INVESTMENT_COMPARISON } from '../../constants';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
@@ -42,9 +42,9 @@ const PublicTokenSalePage = ({ listings }: Props) => {
 
   const [tokensAvailable, setTokensAvailable] = useState<number | null>(null);
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
-  const [selectedInvestmentIndex, setSelectedInvestmentIndex] = useState(0);
+  // const [selectedInvestmentIndex, setSelectedInvestmentIndex] = useState(0);
 
-  const selectedInvestment = INVESTMENT_COMPARISON[selectedInvestmentIndex];
+  // const selectedInvestment = INVESTMENT_COMPARISON[selectedInvestmentIndex];
 
   useEffect(() => {
     if (isWalletReady) {
@@ -115,28 +115,39 @@ const PublicTokenSalePage = ({ listings }: Props) => {
       <main className="pt-4 pb-24 md:flex-row flex-wrap">
         <section className="mb-10">
           <div className='rounded-lg h-[500px] md:h-[700px] flex items-center flex-col bg-center bg-[#333333] bg-cover bg-no-repeat text-white bg-[url("/images/token-sale/token-sale-hero.webp")]'>
-            <h1 className="drop-shadow-[1px_2px_2px_rgba(254,79,183,1)] px-4 mb-2 sm:mb-8 mt-[20px] sm:mt-[70px] md:mt-[190px] max-w-[700px] text-center font-extrabold text-5xl md:text-6xl uppercase">
+            {/* <h1 className="drop-shadow-[1px_2px_2px_rgba(254,79,183,1)] px-4 mb-2 sm:mb-8 mt-[20px] sm:mt-[70px] md:mt-[190px] max-w-[700px] text-center font-extrabold text-5xl md:text-6xl uppercase">
               {__('token_sale_public_sale_announcement')}
-            </h1>
-
-            <h2 className="drop-shadow-lg px-4 mb-8 text-center leading-7 max-w-[600px] font-bold text-lg sm:text-2xl">
+            </h1> */}
+            <Heading level={1} className="drop-shadow-lg mb-8 text-center max-w-[600px] mt-64">
               {__('token_sale_public_sale_subheading')}
-            </h2>
+            </Heading>
 
-            {isWalletReady && (
-              <TokenCounterSimple
-                tokensToBuy={tokensToBuy}
-                setTokensToBuy={setTokensToBuy}
-              />
+            {isWalletReady ? (
+              <div>
+                <TokenCounterSimple
+                  tokensToBuy={tokensToBuy}
+                  setTokensToBuy={setTokensToBuy}
+                />
+
+                <Button
+                  className="!w-60 font-bold mb-3 md:mb-8 relative"
+                  onClick={handleNext}
+                  size="small"
+                >
+                  {__('token_sale_public_sale_buy_token')}
+                </Button>
+              </div>
+            ) : (
+              <div>
+                <Button
+                  onClick={() => {
+                    router.push('https://calendly.com/samueldelesque');
+                  }}
+                >
+                  {__('token_sale_public_sale_button_book_a_call')}
+                </Button>
+              </div>
             )}
-
-            <Button
-              className="!w-60 font-bold mb-3 md:mb-8 relative"
-              onClick={handleNext}
-              size="small"
-            >
-              {__('token_sale_public_sale_buy_token')}
-            </Button>
 
             {tokensAvailable && (
               <h3 className="font-bold text-2xl bg-accent-light text-accent py-2 text-center w-60 px-6 rounded-full">
@@ -167,9 +178,12 @@ const PublicTokenSalePage = ({ listings }: Props) => {
         <section className="flex items-center flex-col mb-32">
           <div className="w-full flex flex-col  gap-20">
             <div className="w-full flex items-center flex-col">
-              <Heading level={2} className="text-lg text-center max-w-[640px]">
-                {__('token_sale_tdf_heading')}
+              <Heading level={2} className="text-center max-w-[380px] mb-6">
+                {__('token_sale_tdf_intro_title')}
               </Heading>
+              <p className="text-center max-w-[640px] text-lg">
+                {__('token_sale_tdf_subtitle')}
+              </p>
             </div>
             <div className="flex gap-10 justify-center items-center flex-col md:flex-row">
               <Image
@@ -204,6 +218,12 @@ const PublicTokenSalePage = ({ listings }: Props) => {
                       {__('token_sale_tdf_token_4')}
                     </Heading>
                     <div>{__('token_sale_tdf_token_4_sub')}</div>
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    <Heading level={5} className=" font-bold uppercase">
+                      {__('token_sale_tdf_token_5')}
+                    </Heading>
+                    <div>{__('token_sale_tdf_token_5_sub')}</div>
                   </li>
                 </ul>
                 <Button
@@ -376,7 +396,7 @@ const PublicTokenSalePage = ({ listings }: Props) => {
                     {__('token_sale_tdf_utility_3')}{' '}
                     <Link
                       className="text-accent underline"
-                      href="/bookings/create/dates"
+                      href="/listings"
                     >
                       {__('token_sale_tdf_utility_4')}
                     </Link>
@@ -392,7 +412,7 @@ const PublicTokenSalePage = ({ listings }: Props) => {
           </div>
         </section>
 
-        <section className="flex items-center flex-col py-12 bg-accent-light my-20 px-2 sm:px-6">
+        {/* <section className="flex items-center flex-col py-12 bg-accent-light my-20 px-2 sm:px-6">
           <div className="text-center w-full">
             <div className="w-full flex items-center flex-col gap-4">
               <Heading level={2} className="text-lg font-bold max-w-[600px]">
@@ -490,7 +510,7 @@ const PublicTokenSalePage = ({ listings }: Props) => {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
 
         <section className="flex items-center flex-col mb-32">
           <div className="w-full flex flex-col  gap-20">
