@@ -160,6 +160,14 @@ const Login = () => {
             {__('login_title')}
           </Heading>
 
+          {back && (
+            <p>
+              {__('log_in_redirect_message')}{' '}
+              <strong>{back.substring(back[0] === '/' ? 1 : 0)}</strong>{' '}
+              {__('log_in_redirect_message_page')}
+            </p>
+          )}
+
           {process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true' && (
             <Switcher
               options={loginOptions}
