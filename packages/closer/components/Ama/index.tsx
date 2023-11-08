@@ -1,10 +1,9 @@
-import Image from 'next/image';
 import router from 'next/router';
 
 import React from 'react';
 
 import { __ } from '../../utils/helpers';
-import { Button, Card, Heading } from '../ui';
+import { Button, Heading } from '../ui';
 
 interface Props {
   id?: string;
@@ -14,7 +13,7 @@ const Ama = ({ id }: Props) => {
   return (
     <section id={id} className="flex items-center flex-col py-24 ">
       <div className="max-w-6xl ">
-        <div className="text-center mb-20">
+        <div className="text-center mb-8">
           <Heading level={2} className="mb-4 text-5xl font-bold">
             {__('token_sale_ama_heading')}
           </Heading>
@@ -24,7 +23,18 @@ const Ama = ({ id }: Props) => {
             </Heading>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
+
+        <div className="flex items-center">
+          <Button
+            className="text-[16px]"
+            onClick={() => {
+              router.push('https://calendly.com/samueldelesque');
+            }}
+          >
+            {__('token_sale_public_sale_button_book_a_call')}
+          </Button>
+        </div>
+        {/* <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
           <Card className="mb-8 px-6 py-8 text-center items-center flex flex-col gap-4 w-full sm:w-[49%] lg:w-[19%]">
             <Heading level={3} className="text-center">
               {__('token_sale_public_sale_sam')}
@@ -210,7 +220,7 @@ const Ama = ({ id }: Props) => {
               {__('token_sale_public_sale_button_book_a_call')}
             </Button>
           </Card>
-        </div>
+        </div> */}
       </div>
     </section>
   );
