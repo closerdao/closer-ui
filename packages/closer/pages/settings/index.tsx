@@ -129,7 +129,9 @@ const SettingsPage: FC = () => {
   };
 
   if (!isAuthenticated || !user) {
-    return <PageNotFound error="Please log in to see this page." />;
+    return (
+      <PageNotFound back="/settings" error="Please log in to see this page." />
+    );
   }
 
   return (
