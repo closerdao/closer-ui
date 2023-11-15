@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import dayjs from 'dayjs';
@@ -14,6 +15,8 @@ interface Props {
   listingName: string;
   userInfo: any;
   eventName: string;
+  volunteerName: string;
+  link: string | null;
 }
 
 const BookingListPreview = ({
@@ -21,6 +24,8 @@ const BookingListPreview = ({
   listingName,
   userInfo,
   eventName,
+  volunteerName,
+  link,
 }: Props) => {
   const {
     _id,
@@ -59,108 +64,117 @@ const BookingListPreview = ({
   };
 
   return (
-    <div className="sm:max-w-[330px] min-w-[220px] max-w-full w-full sm:w-1/3 bg-white rounded-lg p-4 shadow-xl flex-1  flex flex-col ">
-      <div className="flex flex-col gap-3">
-        <div>
-          <p className="card-feature text-center">{createdFormatted}</p>
+    <div className="gap-2 sm:max-w-[330px] min-w-[220px] max-w-full w-full sm:w-1/3 bg-white rounded-lg p-4 shadow-xl flex-1  flex flex-col ">
+      <div>
+        <p className="card-feature text-center">{createdFormatted}</p>
 
-          <p className="card-feature text-center">
-            {__('booking_card_id')}
-            {_id}
-          </p>
-          <p
-            className={`mt-2 capitalize opacity-100 text-base p-1 text-white text-center rounded-md ${STATUS_COLOR[status]}`}
-          >
-            {status}
-          </p>
-        </div>
-        {router.pathname.includes('requests') && (
-          <UserInfoButton userInfo={userInfo} createdBy={createdBy} />
-        )}
+        <Link
+          className="text-disabled text-xs bg-neutral rounded-md py-1.5 text-center flex items-center gap-2 hover:bg-accent hover:text-white justify-center"
+          href={`/bookings/${_id}`}
+        >
+          #{_id}
+        </Link>
+        <p
+          className={`mt-2 capitalize opacity-100 text-base p-1 text-white text-center rounded-md ${STATUS_COLOR[status]}`}
+        >
+          {status}
+        </p>
+      </div>
+      {router.pathname.includes('requests') && (
+        <UserInfoButton userInfo={userInfo} createdBy={createdBy} />
+      )}
 
-        <div className="bg-neutral rounded-md py-1 text-center">
+      {link ? (
+        <Link
+          className="bg-neutral rounded-md py-1.5 text-center flex items-center gap-2 hover:bg-accent hover:text-white justify-center"
+          href={link}
+        >
           {bookingType.charAt(0).toUpperCase() + bookingType.slice(1)}
-
           {eventName && ` — ${eventName}`}
-        </div>
+          {volunteerName && ` — ${volunteerName}`}
+        </Link>
+      ) : (
+        <p className="bg-neutral rounded-md py-1.5 text-center flex items-center gap-2  justify-center">
+          {bookingType.charAt(0).toUpperCase() + bookingType.slice(1)}
+          {eventName && ` — ${eventName}`}
+          {volunteerName && ` — ${volunteerName}`}
+        </p>
+      )}
 
-        <div>
-          <p className="card-feature">{__('booking_card_guests')}</p>
-          <p>{adults}</p>
-        </div>
+      <div>
+        <p className="card-feature">{__('booking_card_guests')}</p>
+        <p>{adults}</p>
+      </div>
 
-        {!router.pathname.includes('requests') && (
-          <div>
-            <p className="card-feature">{__('booking_card_message')}</p>
-            <p>{getStatusText(status, updated)}</p>
-          </div>
-        )}
+      {!router.pathname.includes('requests') && (
+        <div>
+          <p className="card-feature">{__('booking_card_message')}</p>
+          <p>{getStatusText(status, updated)}</p>
+        </div>
+      )}
 
+      <div>
+        <p className="card-feature">{__('booking_card_checkin')}</p>
+        <p>{startFormatted}</p>
+      </div>
+      <div>
+        <p className="card-feature">{__('booking_card_checkout')}</p>
+        <p>{endFormatted}</p>
+      </div>
+      <div>
+        <p className="card-feature">{__('booking_card_nights')}</p>
+        <p>{dayjs(end).diff(dayjs(start), 'day')}</p>
+      </div>
+      <div>
+        <p className="card-feature">{__('booking_card_type')}</p>
+        <p>{listingName}</p>
+      </div>
+      <div>
+        <p className="card-feature">
+          {__('booking_card_payment_accomodation')}
+        </p>
+        <p>
+          {useTokens ? priceFormat(rentalToken) : priceFormat(rentalFiat)}{' '}
+          {isNotPaid && (
+            <span className="text-failure">{__('booking_card_unpaid')}</span>
+          )}
+        </p>
+      </div>
+      <div>
+        <p className="card-feature">{__('booking_card_payment_utility')}</p>
+        <p>
+          {priceFormat(utilityFiat)}{' '}
+          {isNotPaid && (
+            <span className="text-failure">{__('booking_card_unpaid')}</span>
+          )}
+        </p>
+      </div>
+      {eventFiat !== undefined && (
         <div>
-          <p className="card-feature">{__('booking_card_checkin')}</p>
-          <p>{startFormatted}</p>
+          <p className="card-feature">{__('booking_card_payment_event')}</p>
+          <p>
+            {priceFormat(eventFiat)}{' '}
+            {isNotPaid && (
+              <span className="text-failure">{__('booking_card_unpaid')}</span>
+            )}
+          </p>
         </div>
+      )}
+
+      {doesNeedPickup && doesNeedPickup === true && (
         <div>
-          <p className="card-feature">{__('booking_card_checkout')}</p>
-          <p>{endFormatted}</p>
+          <p className="card-feature">{__('booking_card_pickup_needed')}</p>
+          <p>✅</p>
         </div>
-        <div>
-          <p className="card-feature">{__('booking_card_nights')}</p>
-          <p>{dayjs(end).diff(dayjs(start), 'day')}</p>
-        </div>
-        <div>
-          <p className="card-feature">{__('booking_card_type')}</p>
-          <p>{listingName}</p>
-        </div>
+      )}
+      {doesNeedSeparateBeds && doesNeedSeparateBeds === true && (
         <div>
           <p className="card-feature">
-            {__('booking_card_payment_accomodation')}
+            {__('booking_card_separate_beds_needed')}
           </p>
-          <p>
-            {useTokens ? priceFormat(rentalToken) : priceFormat(rentalFiat)}{' '}
-            {isNotPaid && (
-              <span className="text-failure">{__('booking_card_unpaid')}</span>
-            )}
-          </p>
+          <p>✅</p>
         </div>
-        <div>
-          <p className="card-feature">{__('booking_card_payment_utility')}</p>
-          <p>
-            {priceFormat(utilityFiat)}{' '}
-            {isNotPaid && (
-              <span className="text-failure">{__('booking_card_unpaid')}</span>
-            )}
-          </p>
-        </div>
-        {eventFiat !== undefined && (
-          <div>
-            <p className="card-feature">{__('booking_card_payment_event')}</p>
-            <p>
-              {priceFormat(eventFiat)}{' '}
-              {isNotPaid && (
-                <span className="text-failure">
-                  {__('booking_card_unpaid')}
-                </span>
-              )}
-            </p>
-          </div>
-        )}
-
-        {doesNeedPickup && doesNeedPickup === true && (
-          <div>
-            <p className="card-feature">{__('booking_card_pickup_needed')}</p>
-            <p>✅</p>
-          </div>
-        )}
-        {doesNeedSeparateBeds && doesNeedSeparateBeds === true && (
-          <div>
-            <p className="card-feature">
-              {__('booking_card_separate_beds_needed')}
-            </p>
-            <p>✅</p>
-          </div>
-        )}
-      </div>
+      )}
 
       <BookingRequestButtons
         _id={_id}
