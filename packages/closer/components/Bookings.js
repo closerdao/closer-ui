@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { usePlatform } from '../contexts/platform';
 import { __ } from '../utils/helpers';
-import BookingListPreview from './BookingListPreview';
+import BookingListPreview from './BookingListPreview/BookingListPreview';
 import { Heading, Spinner } from './ui';
 
 const loadTime = new Date();
@@ -80,12 +80,15 @@ const Bookings = ({ filter }) => {
 
                 const userId = booking.get('createdBy');
                 const user =
-                  allUsers && allUsers.toJS().find((user) => user._id === userId);
+                  allUsers &&
+                  allUsers.toJS().find((user) => user._id === userId);
 
                 const userInfo = user && {
                   name: user.screenname,
                   photo: user.photo,
                 };
+
+            
 
                 const currentEvent = events?.toJS()?.find((event) => {
                   return event._id === booking.get('eventId');
