@@ -57,6 +57,7 @@
     "react-markdown": "^8.0.5",
     "react-qr-code": "^2.0.3",
     "react-quill": "^2.0.0",
+    "react-share": "^4.4.1",
     "react-simple-wysiwyg": "^2.2.5",
     "react-widgets": "^5.8.4",
     "react-youtube-embed": "^1.0.3",

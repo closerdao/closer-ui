@@ -80,7 +80,8 @@ const BookingListPreview = ({
 
   const isBookingCancelable =
     createdBy === user?._id &&
-    (status === 'open' || status === 'pending' || status === 'confirmed');
+    (status === 'open' || status === 'pending' || status === 'confirmed') &&
+    dayjs().isBefore(dayjs(end));
 
   const confirmBooking = async () => {
     await platform.bookings.confirm(_id);
@@ -228,21 +229,20 @@ const BookingListPreview = ({
                 </Button>
               </Link>
             )}
-            {!router.pathname.includes('requests') && status === 'open' && (
+            { status === 'open' && (
               <Link passHref href={`/bookings/${_id}/summary`}>
                 <Button type="secondary">
                   💰 {__('booking_card_checkout_button')}
                 </Button>
               </Link>
             )}
-            {!router.pathname.includes('requests') &&
-              status === 'confirmed' && (
-                <Link passHref href={`/bookings/${_id}/checkout`}>
-                  <Button type="secondary">
-                    💰 {__('booking_card_checkout_button')}
-                  </Button>
-                </Link>
-              )}
+            { status === 'confirmed' && (
+              <Link passHref href={`/bookings/${_id}/checkout`}>
+                <Button type="secondary">
+                  💰 {__('booking_card_checkout_button')}
+                </Button>
+              </Link>
+            )}
             {user && isBookingCancelable && (
               <Link passHref href={`/bookings/${_id}/cancel`}>
                 <Button type="secondary" className="  uppercase">

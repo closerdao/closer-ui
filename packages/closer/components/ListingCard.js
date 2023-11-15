@@ -1,6 +1,8 @@
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 
+import { useEffect, useState } from 'react';
+
 import PropTypes from 'prop-types';
 
 import { cdn } from '../utils/api';
@@ -21,6 +23,23 @@ const ListingCard = ({
   const { name, description, rentalFiat, rentalToken, utilityFiat, available } =
     listing;
 
+  const [firstPHtml, setFirstPHtml] = useState('');
+
+  // const firstParagraphHTML = extractFirstParagraph(description);
+
+  useEffect(() => {
+    const extractFirstParagraph = (html) => {
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      const paragraphs = div.querySelectorAll('p');
+      if (paragraphs.length > 0) {
+        return paragraphs[0].outerHTML;
+      }
+      return '';
+    };
+    setFirstPHtml(extractFirstParagraph(description));
+  }, []);
+
   const handleBooking = () => {
     if (!isAuthenticated) {
       router.push(`/login?back=${router.asPath}`);
@@ -39,7 +58,7 @@ const ListingCard = ({
       {listing.photos && listing.photos.length > 0 && (
         <div className="relative h-48 rounded-lg my-4 overflow-hidden">
           <Image
-            className='object-cover'
+            className="object-cover"
             priority
             src={`${cdn}${listing.photos[0]}-post-md.jpg`}
             alt={name}
@@ -49,7 +68,12 @@ const ListingCard = ({
         </div>
       )}
       <ul className="list-disc px-4 flex-1">
-        <li>{description}</li>
+        <li
+          dangerouslySetInnerHTML={{
+            __html: firstPHtml,
+          }}
+        />
+
         <li>
           {listing.private
             ? __('listing_preview_private')

@@ -20,7 +20,7 @@ const Modal = ({
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
       <div className="fixed inset-0 bg-black opacity-50" onClick={closeModal} />
       <div
-        className={` relative bg-white z-[101] shadow-lg   ${twMerge(
+        className={`p-5 rounded-md relative bg-white z-[101] shadow-lg   ${twMerge(
           ' w-full h-full md:h-2/3 sm:p-8 md:w-[500px]',
           doesShowVideo ? 'pt-20 sm:pt-20 md:w-[850px] md:h-[600px]' : '',
 

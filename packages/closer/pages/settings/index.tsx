@@ -6,6 +6,7 @@ import UploadPhoto from '../../components/UploadPhoto';
 import { Button } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 import Input from '../../components/ui/Input';
+import Checkbox from '../../components/ui/Checkbox';
 import Select from '../../components/ui/Select/Dropdown';
 import MultiSelect from '../../components/ui/Select/MultiSelect';
 
@@ -52,7 +53,7 @@ const SettingsPage: FC = () => {
   }, [initialUser]);
 
   const saveUserData =
-    (attribute: keyof User['preferences'] | keyof User): UpdateUserFunction =>
+    (attribute: keyof User['preferences'] | keyof User | keyof User['settings']): UpdateUserFunction =>
     async (value: string | string[]) => {
       const prefKeys = [
         'diet',
@@ -85,6 +86,19 @@ const SettingsPage: FC = () => {
         setError(errorMessage);
       }
     };
+  const saveSettings = (field: string) => async (event: any) => {
+    const value = !!event.target.checked;
+    try {
+      setHasSaved(false);
+      await platform.user.patch(user?._id, { settings: { [field]: value } });
+      await refetchUser();
+      setError(null);
+      setHasSaved(true);
+    } catch (err) {
+      const errorMessage = parseMessageFromError(err);
+      setError(errorMessage);
+    }
+  };
   const savePhone = async (phone: string) => {
     setPhoneSaving(true);
     try {
@@ -115,7 +129,9 @@ const SettingsPage: FC = () => {
   };
 
   if (!isAuthenticated || !user) {
-    return <PageNotFound error="Please log in to see this page." />;
+    return (
+      <PageNotFound back="/settings" error="Please log in to see this page." />
+    );
   }
 
   return (
@@ -125,6 +141,7 @@ const SettingsPage: FC = () => {
       </Head>
       <div className="max-w-screen-sm mx-auto md:p-8 h-full main-content w-full flex flex-col min-h-screen py-2 gap-10">
         <Heading>🤓 Your Info</Heading>
+
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-8">
             <span className="block sm:inline">{error}</span>
@@ -148,12 +165,16 @@ const SettingsPage: FC = () => {
           label="Email"
           value={user.email}
           isDisabled={!updateEmail}
-          onChange={e => setUser({ ...user, email:e.target.value })}
-          successMessage={emailSaved ? 'You will receive a link to confirm via email.' : undefined}
+          onChange={(e) => setUser({ ...user, email: e.target.value })}
+          successMessage={
+            emailSaved
+              ? 'You will receive a link to confirm via email.'
+              : undefined
+          }
           validation="email"
         />
         <div>
-          {updateEmail && !emailSaved ?
+          {updateEmail && !emailSaved ? (
             <>
               <Button
                 onClick={() => saveEmail(user.email)}
@@ -173,7 +194,7 @@ const SettingsPage: FC = () => {
                 Cancel
               </Button>
             </>
-           : (
+          ) : (
             !emailSaved && (
               <Button
                 onClick={() => toggleUpdateEmail(!updateEmail)}
@@ -189,8 +210,12 @@ const SettingsPage: FC = () => {
           label="Phone"
           isDisabled={!updatePhone}
           value={user.phone}
-          onChange={e => setUser({ ...user, phone:e.target.value })}
-          successMessage={ phoneSaved ? 'You will receive a link to confirm via text.' : undefined }
+          onChange={(e) => setUser({ ...user, phone: e.target.value })}
+          successMessage={
+            phoneSaved
+              ? 'You will receive a link to confirm via text.'
+              : undefined
+          }
           validation="phone"
         />
         <div>
@@ -226,7 +251,7 @@ const SettingsPage: FC = () => {
           )}
         </div>
 
-        <div className="md:w-72 relative mt-8 flex flex-col gap-6">
+        <div className="md:w-72 relative mt-8 flex flex-col gap-6 group">
           <label className="font-medium text-complimentary-light" htmlFor="">
             Profile Picture
           </label>
@@ -237,6 +262,8 @@ const SettingsPage: FC = () => {
             className="my-4"
           />
         </div>
+
+        <div id="recommended"></div>
         <Heading
           level={3}
           className="border-b border-divider pb-2.5 leading-9 mt-12"
@@ -303,6 +330,19 @@ const SettingsPage: FC = () => {
           hasSaved={hasSaved}
           setHasSaved={setHasSaved}
         />
+        <Heading
+          level={3}
+          className="border-b border-divider pb-2.5 leading-9 mt-12"
+        >
+          🔰 Notifications
+        </Heading>
+        <div className="flex items-center justify-start gap-2">
+          <Checkbox
+            isChecked={user?.settings?.newsletter_weekly}
+            onChange={ saveSettings('newsletter_weekly') }
+          />
+          <label>Weekly newsletter</label>
+        </div>
       </div>
     </>
   );

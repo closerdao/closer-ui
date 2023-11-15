@@ -16,7 +16,43 @@ interface Props {
   label?: string;
   isMinimal?: boolean;
   className?: string;
+  isPrompt?: boolean;
 }
+
+interface UploadPhotoButtonProps {
+  isMinimal?: boolean;
+  isPrompt?: boolean;
+  label?: string;
+  getInputProps: any;
+}
+
+const UploadPhotoButton = ({
+  isMinimal,
+  isPrompt,
+  label,
+  getInputProps,
+}: UploadPhotoButtonProps) => {
+  return (
+    <div
+      className={`absolute md:top-0 md:left-0 w-full h-full items-center ${
+        isMinimal
+          ? 'h-[30px] w-[120px] visible'
+          : 'invisible md:group-hover:visible flex items-center justify-center'
+      }`}
+    >
+      <Button
+        onClick={(e) => {
+          e.preventDefault();
+        }}
+        size="small"
+        className="opacity-75 "
+      >
+        {isPrompt ? '+' : label}
+      </Button>
+      <input {...getInputProps()} className="w-full h-full" />
+    </div>
+  );
+};
 
 const UploadPhoto: FC<Props> = ({
   model,
@@ -25,6 +61,7 @@ const UploadPhoto: FC<Props> = ({
   label,
   isMinimal = false,
   className,
+  isPrompt = false,
 }) => {
   const { isAuthenticated, user, refetchUser } = useAuth();
   const [error, setErrors] = useState<string | null>(null);
@@ -76,33 +113,49 @@ const UploadPhoto: FC<Props> = ({
   const isUserPhoto = model === 'user' && id === user?._id;
 
   return (
-    <div>
-      <div {...getRootProps()} className={`w-fit relative ${className}`}>
+    <>
+      <div {...getRootProps()} className={`${isMinimal ? 'w-[120px]': 'w-fit '} relative ${className}`}>
         {isUserPhoto && user?.photo ? (
           <img
             src={`${cdn}${user.photo}-profile-lg.jpg`}
             loading="lazy"
             alt={user.screenname}
-            className="w-32 md:w-44 rounded-full peer"
+            className="group w-32 md:w-44 rounded-full peer"
           />
         ) : model === 'event' || model === 'volunteer' ? (
-          <Button size="small">{__('upload_image_button')} </Button>
+          <Button size="small" className="group ">
+            {__('upload_image_button')}{' '}
+          </Button>
         ) : (
-          <FaUser className="text-gray-200 text-6xl peer" />
+          <div className="relative group">
+            {!isMinimal && (
+              <FaUser
+                className={` ${
+                  isPrompt ? 'text-3xl text-gray-400' : 'text-gray-200 text-8xl'
+                } `}
+              />
+            )}
+            <UploadPhotoButton
+              isMinimal={isMinimal}
+              isPrompt={isPrompt}
+              label={label}
+              getInputProps={getInputProps}
+            />
+          </div>
         )}
-        <div
-          className={`mt-4 absolute invisible md:peer-hover:visible md:top-0 md:left-0 w-full h-full items-center ${
-            isMinimal ? '' : 'flex items-center justify-center'
-          }`}
-        >
-          <input {...getInputProps()} className="w-full h-full" />
-          <Button className="opacity-75">{label}</Button>
-        </div>
+
+        <UploadPhotoButton
+          isMinimal={isMinimal}
+          isPrompt={isPrompt}
+          label={label}
+          getInputProps={getInputProps}
+        />
+
         {error && <p className="text-red-500 mt-2">{error}</p>}
-        {loading && <p>{__('upload_photo_loading_message')}</p>}
+        {loading && <p className='absolute top-[40px]'>{__('upload_photo_loading_message')}</p>}
         {isDragActive && <p>{__('upload_photo_prompt_message')}</p>}
       </div>
-    </div>
+    </>
   );
 };
 

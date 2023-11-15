@@ -8,7 +8,7 @@ import { priceFormat } from '../utils/helpers';
 import { __ } from '../utils/helpers';
 import Slider from './Slider';
 
-const ListingListPreview = ({ listing }) => {
+const ListingListPreview = ({ listing, isAdminPage }) => {
   const { user } = useAuth();
 
   return (
@@ -16,7 +16,7 @@ const ListingListPreview = ({ listing }) => {
       <div className="flex flex-col gap-5">
         {listing.get('photos') && listing.get('photos').count() > 0 && (
           <Slider
-            link={`/listings/${listing.get('slug')}`}
+            link={`/stay/${listing.get('slug')}`}
             isListingPreview={true}
             slides={listing
               .get('photos')
@@ -27,23 +27,21 @@ const ListingListPreview = ({ listing }) => {
           />
         )}
         <Link
-          href={`/listings/${listing.get('slug')}`}
+          href={`/stay/${listing.get('slug')}`}
           className="hover:text-accent uppercase font-bold block text-left"
         >
           {listing.get('name')}
         </Link>
 
         {listing.get('description') && (
-          <div>
-            <p
-              className="text-left"
-              dangerouslySetInnerHTML={{
-                __html: `${listing.get('description').slice(0, 120)}${
-                  listing.get('description').length > 120 ? '...' : ''
-                }`,
-              }}
-            />
-          </div>
+          <p
+            className="rich-text text-left"
+            dangerouslySetInnerHTML={{
+              __html: `${listing.get('description').slice(0, 120)} ${
+                listing.get('description').length > 120 && '...'
+              }`,
+            }}
+          />
         )}
       </div>
 
@@ -60,14 +58,16 @@ const ListingListPreview = ({ listing }) => {
           </p>
         )}
 
-        <Link
-          href={`/listings/${listing.get('slug')}`}
-          className="rounded-full flex py-2 uppercase text-accent bg-white border-2 justify-center border-accent"
-        >
-          {__('listing_preview_book')}
-        </Link>
+        {!isAdminPage && (
+          <Link
+            href={`/stay/${listing.get('slug')}`}
+            className="rounded-full flex py-2 uppercase text-accent bg-white border-2 justify-center border-accent"
+          >
+            {__('listing_preview_book')}
+          </Link>
+        )}
 
-        {user && user.roles.includes('space-host') && (
+        {user && user.roles.includes('space-host') && isAdminPage && (
           <div className="card-footer">
             {(user.roles.includes('admin') ||
               user.roles.includes('space-host')) && (
