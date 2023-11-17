@@ -45,7 +45,8 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   const router = useRouter();
   const { priceId, monthlyCredits } = router.query;
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
-  const monthlyCreditsSelected = Math.min(parseFloat(monthlyCredits as string) || selectedPlan?.monthlyCredits || 1, MAX_CREDITS_PER_MONTH);
+  const defaultMonthlyCredits = Math.min(parseFloat(monthlyCredits as string) || selectedPlan?.monthlyCredits || 1, MAX_CREDITS_PER_MONTH);
+  const [monthlyCreditsSelected, setMonthlyCreditsSelected] = useState<number>(defaultMonthlyCredits);
 
   const { PLATFORM_NAME } = useConfig() || {};
 
