@@ -16,7 +16,7 @@ import {
 import { NextPage } from 'next';
 
 import Page404 from '../404';
-import { DEFAULT_CURRENCY, SUBSCRIPTION_STEPS } from '../../constants';
+import { DEFAULT_CURRENCY, SUBSCRIPTION_STEPS, MAX_CREDITS_PER_MONTH } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import {
@@ -37,8 +37,6 @@ interface Props {
   error?: string;
 }
 
-const MAX_CREDITS_PER_MONTH = 90;
-
 const SubscriptionsSummaryPage: NextPage<Props> = ({
   subscriptionPlans,
   error,
@@ -46,7 +44,7 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId, monthlyCredits } = router.query;
-  const [monthlyCreditsSelected, setMonthlyCreditsSelected] = useState<number>(Math.min(parseFloat(monthlyCredits as string), MAX_CREDITS_PER_MONTH));
+  const [monthlyCreditsSelected, setMonthlyCreditsSelected] = useState<number>(Math.min(parseFloat(monthlyCredits as string) || 1, MAX_CREDITS_PER_MONTH));
 
   const { PLATFORM_NAME } = useConfig() || {};
 
