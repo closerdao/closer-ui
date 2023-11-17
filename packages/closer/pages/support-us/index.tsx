@@ -226,7 +226,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               </li>
             </ul>
             <LinkButton
-              href={fundraisingConfig.wandererUrl || '/subscriptions/checkout?priceId=price_1NGHnoGtt5D0VKR2SeTQxIYz'}
+              href={fundraisingConfig.wandererUrl}
               className="w-[255px] text-[13px] sm:text-[16px] sm:w-[320px]"
               onClick={() =>
                 event('click', {

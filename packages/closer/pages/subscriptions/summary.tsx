@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import PageError from '../../components/PageError';
+import Counter from '../../components/Counter';
 import {
   BackButton,
   Button,
@@ -21,21 +22,22 @@ import { useConfig } from '../../hooks/useConfig';
 import {
   SelectedPlan,
   SubscriptionPlan,
-  SubscriptionVariant,
 } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import {
   __,
-  getSubscriptionVariantPrice,
   getVatInfo,
   priceFormat,
+  calculateSubscriptionPrice
 } from '../../utils/helpers';
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
   error?: string;
 }
+
+const MAX_CREDITS_PER_MONTH = 90;
 
 const SubscriptionsSummaryPage: NextPage<Props> = ({
   subscriptionPlans,
@@ -44,6 +46,7 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId, monthlyCredits } = router.query;
+  const [monthlyCreditsSelected, setMonthlyCreditsSelected] = useState<number>(Math.min(parseFloat(monthlyCredits as string), MAX_CREDITS_PER_MONTH));
 
   const { PLATFORM_NAME } = useConfig() || {};
 
@@ -61,30 +64,12 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
         (plan: SubscriptionPlan) => plan.priceId === priceId,
       );
 
-      if (selectedSubscription?.variants) {
-        const selectedVariant = selectedSubscription.variants.find(
-          (variant: SubscriptionVariant) =>
-            variant.monthlyCredits === Number(monthlyCredits),
-        );
-        setSelectedPlan({
-          title: `${selectedSubscription?.title as string} - ${
-            selectedVariant?.title as string
-          }`,
-          monthlyCredits: Number(monthlyCredits),
-          price: getSubscriptionVariantPrice(
-            Number(monthlyCredits),
-            selectedSubscription,
-          ),
-          variants: selectedSubscription?.variants,
-          tiers: selectedSubscription?.tiers,
-        });
-      } else {
-        setSelectedPlan({
-          title: selectedSubscription?.title as string,
-          monthlyCredits: selectedSubscription?.monthlyCredits as number,
-          price: selectedSubscription?.price as number,
-        });
-      }
+      setSelectedPlan({
+        title: selectedSubscription?.title as string,
+        monthlyCredits: selectedSubscription?.monthlyCredits as number,
+        price: selectedSubscription?.price as number,
+        tiers: selectedSubscription?.tiers,
+      });
     }
   }, [priceId, subscriptionPlans, monthlyCredits]);
 
@@ -109,7 +94,7 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
       router.push(`/subscriptions/success?priceId=${priceId}`);
     } else {
       router.push(
-        `/subscriptions/checkout?priceId=${priceId}&monthlyCredits=${monthlyCredits}`,
+        `/subscriptions/checkout?priceId=${priceId}&monthlyCredits=${monthlyCreditsSelected}`,
       );
     }
   };
@@ -121,6 +106,8 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   if (process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true') {
     return <Page404 error="" />;
   }
+  
+  const total = calculateSubscriptionPrice(selectedPlan, monthlyCreditsSelected);
 
   return (
     <>
@@ -150,12 +137,19 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
                 rowKey={__('subscriptions_summary_tier')}
                 value={selectedPlan?.title}
               />
-              {selectedPlan?.tiers && (
-                <Row
-                  rowKey={__('subscriptions_summary_stays_per_month')}
-                  value={selectedPlan?.monthlyCredits}
-                />
-              )}
+              { selectedPlan?.tiers &&
+                <div className="flex space-between items-center mt-9">
+                  <p className="flex-1">{__('subscriptions_summary_stays_per_month')}</p>
+                  <Counter
+                    value={monthlyCreditsSelected}
+                    setFn={(value) => {
+                      setMonthlyCreditsSelected(value);
+                    }}
+                    minValue={1}
+                    maxValue={90}
+                  />
+                </div>
+              }
             </div>
             <Button className="mt-3" type="secondary" onClick={handleEditPlan}>
               {__('subscriptions_summary_edit_button')}
@@ -169,11 +163,11 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
             <div className="mb-10">
               <Row
                 rowKey={__('subscriptions_summary_subscription')}
-                value={`${priceFormat(selectedPlan?.price, DEFAULT_CURRENCY)}`}
+                value={`${priceFormat(total, DEFAULT_CURRENCY)}`}
                 additionalInfo={`${__(
                   'bookings_checkout_step_total_description',
                 )} ${getVatInfo({
-                  val: selectedPlan?.price,
+                  val: total,
                   cur: DEFAULT_CURRENCY,
                 })} ${__('subscriptions_summary_per_month')}`}
               />
