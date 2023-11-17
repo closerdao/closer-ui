@@ -31,7 +31,7 @@ const Counter = ({ value, minValue, maxValue, setFn }) => {
 Counter.defaultProps = {
   value: 0,
   minValue: 0,
-  maxValue: -1,
+  maxValue: 999999999,
   setFn: () => null,
 };
 
