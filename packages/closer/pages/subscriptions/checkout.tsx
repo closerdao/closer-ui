@@ -45,9 +45,9 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId, monthlyCredits, source } = router.query;
-  const monthlyCreditsSelected = Math.min(parseFloat(monthlyCredits as string) || 1, MAX_CREDITS_PER_MONTH);
-  const { PLATFORM_NAME } = useConfig() || {};
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
+  const monthlyCreditsSelected = Math.min(parseFloat(monthlyCredits as string) || selectedPlan?.monthlyCredits || 1, MAX_CREDITS_PER_MONTH);
+  const { PLATFORM_NAME } = useConfig() || {};
 
   useEffect(() => {
     if (user?.subscription && user.subscription.priceId) {
