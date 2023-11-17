@@ -13,19 +13,18 @@ import { BackButton, Heading, ProgressBar, Row } from '../../components/ui/';
 import { NextPage } from 'next';
 
 import Page404 from '../404';
-import { DEFAULT_CURRENCY, SUBSCRIPTION_STEPS } from '../../constants';
+import { DEFAULT_CURRENCY, SUBSCRIPTION_STEPS, MAX_CREDITS_PER_MONTH } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import {
   SelectedPlan,
   SubscriptionPlan,
-  SubscriptionVariant,
 } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import {
   __,
-  getSubscriptionVariantPrice,
+  calculateSubscriptionPrice,
   getVatInfo,
   priceFormat,
 } from '../../utils/helpers';
@@ -46,6 +45,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId, monthlyCredits, source } = router.query;
+  const monthlyCreditsSelected = Math.min(parseFloat(monthlyCredits as string) || 1, MAX_CREDITS_PER_MONTH);
   const { PLATFORM_NAME } = useConfig() || {};
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
 
@@ -62,37 +62,19 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
   }, [isAuthenticated, isLoading]);
 
   useEffect(() => {
-    if (priceId) {
+    if (priceId && subscriptionPlans) {
       const selectedSubscription = subscriptionPlans.find(
         (plan: SubscriptionPlan) => plan.priceId === priceId,
       );
 
-      if (selectedSubscription?.variants) {
-        const selectedVariant = selectedSubscription.variants.find(
-          (variant: SubscriptionVariant) =>
-            variant.monthlyCredits === Number(monthlyCredits),
-        );
-        setSelectedPlan({
-          title: `${selectedSubscription?.title as string} - ${
-            selectedVariant?.title as string
-          }`,
-          monthlyCredits: Number(monthlyCredits),
-          price: getSubscriptionVariantPrice(
-            Number(monthlyCredits),
-            selectedSubscription,
-          ) as number,
-          variants: selectedSubscription?.variants,
-          tiers: selectedSubscription?.tiers,
-        });
-      } else {
-        setSelectedPlan({
-          title: selectedSubscription?.title as string,
-          monthlyCredits: selectedSubscription?.monthlyCredits as number,
-          price: selectedSubscription?.price as number,
-        });
-      }
+      setSelectedPlan({
+        title: selectedSubscription?.title as string,
+        monthlyCredits: selectedSubscription?.monthlyCredits as number,
+        price: selectedSubscription?.price as number,
+        tiers: selectedSubscription?.tiers,
+      });
     }
-  }, [priceId]);
+  }, [priceId, subscriptionPlans]);
 
   const goBack = () => {
     router.push(
@@ -107,6 +89,8 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
   if (process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true') {
     return <Page404 error="" />;
   }
+
+  const total = calculateSubscriptionPrice(selectedPlan, monthlyCreditsSelected);
 
   return (
     <>
@@ -135,22 +119,22 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
             <Row
               className="mb-4"
               rowKey={` ${selectedPlan?.title} ${
-                Number(monthlyCredits)
-                  ? `- ${Number(selectedPlan?.monthlyCredits)}
+                Number(monthlyCreditsSelected)
+                  ? `- ${Number(monthlyCreditsSelected)}
                     ${__('subscriptions_credits_included')}`
                   : ''
               }  `}
               value={`${
                 selectedPlan &&
                 priceFormat(
-                  getSubscriptionVariantPrice(monthlyCredits, selectedPlan),
+                  total,
                   DEFAULT_CURRENCY,
                 )
               }`}
               additionalInfo={`${__(
                 'bookings_checkout_step_total_description',
               )} ${getVatInfo({
-                val: selectedPlan?.price,
+                val: total,
                 cur: DEFAULT_CURRENCY,
               })} ${__('subscriptions_summary_per_month')}`}
             />

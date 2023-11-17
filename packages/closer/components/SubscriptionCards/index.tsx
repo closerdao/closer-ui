@@ -30,7 +30,7 @@ const SubscriptionCards = ({
   currency,
   plans
 }: SubscriptionCardsProps) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   
   const paidSubscriptionPlans = plans.filter((plan) => plan.price !== 0);
 const filteredPlans = isAuthenticated ? paidSubscriptionPlans : plans

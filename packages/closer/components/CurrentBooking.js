@@ -12,8 +12,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
 
   const filter = {
     where: {
-      // status: { $nin: ['open', 'pending'] }, // confirmed and various ways to pay...
-      status: { $in: ['confirmed', 'paid', 'checked-in', 'checked-out'] }, // confirmed and various ways to pay...
+      status: { $in: ['paid', 'checked-in', 'checked-out'] },
       start: { $lte: arriveBefore },
       end: { $gte: leftAfter },
     },
