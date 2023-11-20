@@ -15,7 +15,7 @@ import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
-
+ 
 const loginOptions =
   process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true'
     ? ['Email', 'Wallet']

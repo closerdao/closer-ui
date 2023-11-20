@@ -320,6 +320,7 @@ const ListingPage: NextPage<Props> = ({
       <Head>
         <title>{listing.name}</title>
         <meta name="description" content={descriptionText || ''} />
+        <meta name="description" content={descriptionText || ''} />
         <meta property="og:type" content="listing" />
         {photo && (
           <meta
