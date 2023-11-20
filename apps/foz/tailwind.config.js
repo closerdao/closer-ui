@@ -9,4 +9,9 @@ module.exports = {
   ],
   theme: tdfTheme,
   plugins: [require('@tailwindcss/line-clamp')],
+  safelist: [
+    {
+      pattern: /bg-(failure|pending|success)/,
+    }
+  ]
 };
