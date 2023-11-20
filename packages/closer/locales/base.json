@@ -230,6 +230,7 @@
   "listing_preview_location": "Location",
   "listing_preview_address": "Fábrica de Sonhos Tradicional, 7540-011, Abela, Santiago do Cacém, Portugal",
   "listing_listings_available": "spaces available",
+  "listing_no_listings_found": "No listings found",
   "member_home_title": "Aloha",
   "member_home_add_channel": "+add-channel",
   "member_list_see_profile": "See profile",
@@ -461,6 +462,7 @@
   "listings_book_button": "Book",
   "listings_create_title": "Create Listing",
   "listings_title": "Book your stay at ",
+  "listings_edit_title": "Edit listings",
 
   
   "listings_create": "Create",

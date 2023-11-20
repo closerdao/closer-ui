@@ -34,7 +34,7 @@ export const links = [
   },
   {
     label: 'Book a stay',
-    url: '/listings',
+    url: '/stay',
     enabled: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
   },
   // {
@@ -91,5 +91,11 @@ export const links = [
     label: 'Blog',
     url: '/blog',
     enabled: process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true',
+  },
+  {
+    label: 'Edit listings',
+    url: '/admin/listings',
+    enabled: true,
+    roles: ['admin'],
   },
 ];

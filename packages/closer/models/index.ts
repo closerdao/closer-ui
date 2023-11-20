@@ -416,6 +416,21 @@ const models = {
       min: 1,
       required: false,
     },
+    {
+      name: 'availableFor',
+      label: 'Available for',
+      ownerVisible: true,
+      editable: true,
+      enum: [
+        'volunteer',
+        'guests',
+        'team',
+        'events',
+      ],
+      default: [],
+      type: 'multi-select',
+      options: ['guests', 'volunteer', 'team', 'events'],
+    },
   ],
   booking: [
     { name: 'start', label: 'Start date', type: 'date' },

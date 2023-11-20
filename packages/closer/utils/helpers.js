@@ -162,7 +162,7 @@ export const getSample = (field) => {
       return 0;
     case 'currency':
       return {
-        cur: 'USD',
+        cur: 'EUR',
         val: 0,
       };
     case 'tags':

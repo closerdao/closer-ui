@@ -38,11 +38,7 @@ import { priceFormat } from '../../../utils/helpers';
 import {
   checkListingAvailability,
   formatDate,
-  getBlockedDateRanges,
-  getUnavailableDates,
 } from '../../../utils/listings.helpers';
-
-const MAX_DAYS_TO_CHECK_AVAILABILITY = 60;
 
 interface Props {
   listing: Listing | null;
@@ -58,9 +54,8 @@ const ListingPage: NextPage<Props> = ({
   descriptionText,
 }) => {
 
-  console.log('listing=',listing);
   const config = useConfig();
-  const { LOCATION_COORDINATES, PLATFORM_LEGAL_ADDRESS } = config || {};
+  const { LOCATION_COORDINATES } = config || {};
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const isMember = user && user.roles.includes('member');
@@ -81,14 +76,12 @@ const ListingPage: NextPage<Props> = ({
   const defaultCheckInDate = new Date().toISOString();
   const defaultCheckOutDate = dayjs(new Date()).add(7, 'day').toISOString();
 
-  const [maxHorizon, maxDuration] = getMaxBookingHorizon(settings, isMember);
-
   const [showGuestsDropdown, setShowGuestsDropdown] = useState(false);
   const [start, setStartDate] = useState<string | null | Date>(
-    defaultCheckInDate || (savedStartDate as string) || new Date(),
+    (savedStartDate as string) || (defaultCheckInDate as string),
   );
   const [end, setEndDate] = useState<string | null | Date>(
-    defaultCheckOutDate || (savedEndDate as string),
+    (savedEndDate as string) || (defaultCheckOutDate as string),
   );
   const [adults, setAdults] = useState<number>(Number(savedAdults) || 1);
   const [kids, setKids] = useState<number>(Number(savedKids) || 0);
@@ -108,14 +101,13 @@ const ListingPage: NextPage<Props> = ({
 
   const [apiError, setApiError] = useState(null);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
-  const [isListingAvailable, setIsListingAvailable] = useState(true);
+  const [isListingAvailable, setIsListingAvailable] = useState(false);
 
   const [currency, setCurrency] = useState<CloserCurrencies>(
     savedUseTokens === 'true' ? CURRENCIES[1] : DEFAULT_CURRENCY,
   );
 
   const [calendarError, setCalendarError] = useState<string | null>(null);
-  const [unavailableDates, setUnavailableDates] = useState<any[]>([]);
 
   const isWeb3BookingEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
@@ -125,71 +117,15 @@ const ListingPage: NextPage<Props> = ({
   const isTokenPaymentSelected =
     savedUseTokens === 'true' || currency === CURRENCIES[1];
 
-  const getAvailability = async (
-    startDate: Date | string | null,
-    endDate: Date | string | null,
-  ) => {
-    try {
-      const {
-        data: { results, availability },
-      } = await api.post('/bookings/availability', {
-        start: formatDate(startDate),
-        end: formatDate(endDate),
-        adults,
-        children: kids,
-        infants,
-        pets,
-        useTokens: isTokenPaymentSelected,
-      });
-
-      return { results, availability };
-    } catch (error) {
-      return { results: null, availability: null };
-    }
-  };
-
   useEffect(() => {
-    (async () => {
-      const availableStart = new Date();
-      const availableEnd = new Date(
-        new Date(new Date()).setDate(
-          new Date().getDate() + MAX_DAYS_TO_CHECK_AVAILABILITY,
-        ),
-      );
-      const { availability } = await getAvailability(
-        availableStart,
-        availableEnd,
-      );
-      const listingId = listing?._id;
-      setUnavailableDates(getUnavailableDates(availability, listingId || null));
-      const listingPrices = await fetchPrices();
-
-      if (
-        !listingPrices.isListingAvailable &&
-        !savedStartDate &&
-        !savedEndDate
-      ) {
-        setStartDate('');
-        setEndDate('');
-      }
-    })();
-  }, []);
-
-  useEffect(() => {
-    if (savedStartDate && savedEndDate) {
-      setIsListingAvailable(true);
-    }
-
     if (savedStartDate) {
       setStartDate(savedStartDate as string);
-    } else {
-      setStartDate(defaultCheckInDate);
     }
     if (savedEndDate) {
       setEndDate(savedEndDate as string);
-    } else {
-      setEndDate(defaultCheckOutDate);
     }
+    setStartDate(defaultCheckInDate);
+    setEndDate(defaultCheckOutDate);
   }, [router.query]);
 
   useEffect(() => {
@@ -229,33 +165,47 @@ const ListingPage: NextPage<Props> = ({
     };
   }, []);
 
-  const getUrlParams = () => {
-    const params = {
-      start: String(start),
-      end: String(end),
-      adults: String(adults),
-      ...(kids && { kids: String(kids) }),
-      ...(infants && { infants: String(infants) }),
-      ...(pets && { pets: String(pets) }),
-    };
-    const urlParams = new URLSearchParams(params);
-    return urlParams;
-  };
+  function getBlockedDateRanges() {
+    const [maxHorizon, maxDuration] = getMaxBookingHorizon(settings, isMember);
+    const dateRanges: any[] = [];
+    dateRanges.push({ before: new Date() });
+    dateRanges.push({
+      after: new Date().setDate(new Date().getDate() + maxHorizon),
+    });
 
-  const redirectToSummary = (bookingId: string) => {
-    router.push(
-      `/bookings/${bookingId}/summary?back=listings/${
-        listing?.slug
-      }&${getUrlParams()}`,
-    );
-  };
-  const redirectToSignup = () => {
-    router.push(`/signup?back=listings/${listing?.slug}&${getUrlParams()}`);
-  };
+    if (start) {
+      dateRanges.push({
+        after: new Date(
+          new Date(start as string).getTime() +
+            maxDuration * 24 * 60 * 60 * 1000,
+        ),
+      });
+      dateRanges.push({
+        before: new Date(
+          new Date(end as string).getTime() - maxDuration * 24 * 60 * 60 * 1000,
+        ),
+      });
+      dateRanges.push({
+        before: new Date(
+          new Date(start as string).getTime() -
+            maxDuration * 24 * 60 * 60 * 1000,
+        ),
+      });
+    }
+    if (end) {
+      dateRanges.push({
+        before: new Date(
+          new Date(start as string).getTime() -
+            maxDuration * 24 * 60 * 60 * 1000,
+        ),
+      });
+    }
+    return dateRanges;
+  }
 
   const bookListing = async () => {
     if (!isAuthenticated) {
-      redirectToSignup();
+      router.push(`/signup?back=${encodeURIComponent(router.asPath)}`);
     }
     setApiError(null);
     try {
@@ -275,7 +225,8 @@ const ListingPage: NextPage<Props> = ({
         doesNeedSeparateBeds: doesNeedSeparateBeds.toString(),
       });
       sendAnalyticsEvent('Click', 'ListingPage', 'Book');
-      redirectToSummary(newBooking._id);
+
+      router.push(`/bookings/${newBooking._id}/summary?back=${listing?.slug}`);
     } catch (err: any) {
       setApiError(err);
     } finally {
@@ -285,14 +236,24 @@ const ListingPage: NextPage<Props> = ({
   const fetchPrices = async () => {
     setApiError(null);
     try {
-      const { availability, results } = await getAvailability(start, end);
+      const {
+        data: { results, availability },
+      } = await api.post('/bookings/availability', {
+        start: formatDate(start),
+        end: formatDate(end),
+        adults,
+        children: kids,
+        infants,
+        pets,
+        useTokens: isTokenPaymentSelected,
+      });
 
       const isListingAvailable = checkListingAvailability(
         listing?._id,
         availability,
       );
 
-      const currentListing = results?.filter((result: Listing) => {
+      const currentListing = results.filter((result: any) => {
         return result.name === listing?.name;
       });
 
@@ -310,7 +271,7 @@ const ListingPage: NextPage<Props> = ({
       setApiError(parseMessageFromError(error));
       return {
         isListingAvailable: false,
-        prices: [0, 0, 0],
+        prices: [0, 0],
       };
     }
   };
@@ -360,12 +321,11 @@ const ListingPage: NextPage<Props> = ({
 
           <div>
             <section className="flex justify-left min-h-[400px] ">
-              <div className="max-w-4xl w-full flex flex-col sm:flex-row place-items-start justify-between">
-                <div className="p-2 sm:pr-8 flex flex-col w-full">
-                  <div className="flex flex-col gap-6  ">
+              <div className="max-w-4xl w-full  flex flex-col sm:flex-row place-items-start justify-between">
+                <div className="w-auto p-2 sm:pr-8 flex flex-col">
+                  <div className="flex flex-col gap-6 ">
                     <section>
                       <div
-                        className="rich-text"
                         dangerouslySetInnerHTML={{
                           __html: listing.description,
                         }}
@@ -373,10 +333,10 @@ const ListingPage: NextPage<Props> = ({
                     </section>
 
                     {/* TODO: possible alternative to hardcoding amenities is adding this block to listing description with new rich text editor */}
-                    {/* <Heading level={2} className="text-lg uppercase mt-6">
+                    <Heading level={2} className="text-lg uppercase mt-6">
                       Amenities:
                     </Heading>
-                    <div className=" flex gap-6">
+                    <div className="flex gap-6">
                       <div className="flex flex-col gap-6 w-1/2">
                         <div>
                           <Heading level={3} className="text-lg">
@@ -425,7 +385,7 @@ const ListingPage: NextPage<Props> = ({
                           3k trees planted
                         </div>
                       </div>
-                    </div> */}
+                    </div>
                   </div>
 
                   <div className=" my-16 flex flex-col gap-6">
@@ -433,7 +393,7 @@ const ListingPage: NextPage<Props> = ({
                       {__('listing_preview_location')}
                     </Heading>
                     <Heading level={3} className="text-md font-normal">
-                      {PLATFORM_LEGAL_ADDRESS}
+                      {__('listing_preview_address')}
                     </Heading>
                     <GoogleMaps height={400} location={LOCATION_COORDINATES} />
                   </div>
@@ -482,13 +442,7 @@ const ListingPage: NextPage<Props> = ({
                           end={(savedEndDate as string) || end}
                           start={(savedStartDate as string) || start}
                           isSmallScreen={isSmallScreen}
-                          blockedDateRanges={getBlockedDateRanges(
-                            start,
-                            end,
-                            maxHorizon,
-                            maxDuration,
-                            unavailableDates,
-                          )}
+                          blockedDateRanges={getBlockedDateRanges()}
                         />
                       </div>
 
