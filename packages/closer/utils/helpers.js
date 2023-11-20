@@ -162,7 +162,7 @@ export const getSample = (field) => {
       return 0;
     case 'currency':
       return {
-        cur: 'USD',
+        cur: 'EUR',
         val: 0,
       };
     case 'tags':
@@ -299,18 +299,6 @@ export const getAccommodationCost = (
   } else {
     return rentalFiat?.val || 0;
   }
-};
-
-export const getBookingType = (eventId, volunteerId) => {
-  let bookingType;
-  if (eventId) {
-    bookingType = '🎉 Event';
-  } else if (volunteerId) {
-    bookingType = '💪🏽 Volunteer';
-  } else {
-    bookingType = '🏡 Stay';
-  }
-  return bookingType;
 };
 
 export const getVatInfo = (total) => {

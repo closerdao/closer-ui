@@ -42,7 +42,7 @@ const Navigation = () => {
         <Logo />
         <div className="flex gap-3 w-auto justify-center items-center ">
           <Button
-            onClick={() => router.push('/listings')}
+            onClick={() => router.push('/stay')}
             size="small"
             type="primary"
           >

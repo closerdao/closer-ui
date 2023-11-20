@@ -1,16 +1,19 @@
 import Head from 'next/head';
-import Link from 'next/link';
 
 import React, { useEffect } from 'react';
 
 import ListingListPreview from '../../components/ListingListPreview';
+import UpcomingEventsIntro from '../../components/UpcomingEventsIntro';
 import Heading from '../../components/ui/Heading';
 
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
+import { useConfig } from '../../hooks/useConfig';
 import { __ } from '../../utils/helpers';
 
-const Listings = () => {
+const StayPage = () => {
+  const config = useConfig();
+  const { PLATFORM_NAME } = config || {};
   const { platform }: any = usePlatform();
   const { user } = useAuth();
   const isTeamMember = false;
@@ -37,7 +40,9 @@ const Listings = () => {
   return (
     <>
       <Head>
-        <title>{__('listings_edit_title')}</title>
+        <title>
+          {__('listings_title')} {PLATFORM_NAME}
+        </title>
       </Head>
       {listings && listings.get('error') && (
         <div className="validation-error">{listings.get('error')}</div>
@@ -46,19 +51,10 @@ const Listings = () => {
       <section className="text-center flex justify-center flex-wrap mb-12 ">
         <div className="md:max-w-5xl">
           <div className="mb-6 flex justify-between flex-col sm:flex-row gap-4">
-            <Heading>{__('listings_edit_title')}</Heading>
-            {(user?.roles.includes('admin') ||
-              user?.roles.includes('space-host')) && (
-              <div className="user-actions">
-                <Link
-                  as="/listings/create"
-                  href="/listings/create"
-                  className="btn-primary"
-                >
-                  {__('listings_create')}
-                </Link>
-              </div>
-            )}
+            <Heading>
+              {__('listings_title')}
+              {PLATFORM_NAME}
+            </Heading>
           </div>
           <div className="grid md:grid-cols-4 gap-x-12 md:gap-x-5 gap-y-16">
             {listings &&
@@ -68,7 +64,7 @@ const Listings = () => {
               listings.map((listing: any) => {
                 return (
                   <ListingListPreview
-                    isAdminPage={true}
+                    isAdminPage={false}
                     key={listing.get('_id')}
                     listing={listing}
                   />
@@ -80,7 +76,7 @@ const Listings = () => {
               guestListings.map((listing: any) => {
                 return (
                   <ListingListPreview
-                    isAdminPage={true}
+                    isAdminPage={false}
                     key={listing.get('_id')}
                     listing={listing}
                   />
@@ -93,8 +89,14 @@ const Listings = () => {
           </div>
         </div>
       </section>
+
+      <section className="text-center flex justify-center flex-wrap mb-12 ">
+        <div className="md:max-w-5xl">
+          <UpcomingEventsIntro />
+        </div>
+      </section>
     </>
   );
 };
 
-export default Listings;
+export default StayPage;

@@ -80,5 +80,10 @@ export type Booking = {
   >;
   isDayTicket: boolean;
   eventFiat: Price<CloserCurrencies.EUR>;
-
+  doesNeedSeparateBeds?: boolean;
+  doesNeedPickup?: boolean;
 };
+
+export interface StatusColor {
+  [key: string]: string;
+}

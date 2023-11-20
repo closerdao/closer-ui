@@ -170,7 +170,6 @@ const EditModel: FC<Props> = ({
           data: { results: modelData },
         } = await api.get(`${endpoint}/${id}`);
 
-        console.log('modelData=',modelData);
         setData(modelData);
 
         // Look out for dependent data

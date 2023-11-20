@@ -51,6 +51,9 @@ const Summary = ({ booking, listing, event, error }: Props) => {
     start,
     end,
     adults,
+    children,
+    pets,
+    infants,
     volunteerId,
     eventId,
     ticketOption,
@@ -132,9 +135,13 @@ const Summary = ({ booking, listing, event, error }: Props) => {
           <SummaryDates
             isDayTicket={booking?.isDayTicket}
             totalGuests={adults}
+            kids={children}
+            infants={infants}
+            pets={pets}
             startDate={start}
             endDate={end}
             listingName={listing?.name}
+            listingUrl={listing?.slug}
             volunteerId={volunteerId}
             eventName={event?.name}
             ticketOption={ticketOption?.name}
