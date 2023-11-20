@@ -75,7 +75,7 @@ const BookingListPreview = ({
           #{_id}
         </Link>
         <p
-          className={`mt-2 capitalize opacity-100 text-base p-1 text-white text-center rounded-md ${STATUS_COLOR[status]}`}
+          className={` mt-2 capitalize opacity-100 text-base p-1 text-white text-center rounded-md  bg-${STATUS_COLOR[status]}`}
         >
           {status}
         </p>

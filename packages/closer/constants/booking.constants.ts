@@ -1,12 +1,12 @@
 import { StatusColor } from '../types';
 
 export const STATUS_COLOR: StatusColor = {
-  cancelled: 'bg-failure',
-  rejected: 'bg-failure',
-  open: 'bg-pending',
-  pending: 'bg-pending',
-  confirmed: 'bg-success',
-  paid: 'bg-success',
-  'checked-in': 'bg-success',
-  'checked-out': 'bg-success',
+  cancelled: 'failure',
+  rejected: 'failure',
+  open: 'pending',
+  pending: 'pending',
+  confirmed: 'success',
+  paid: 'success',
+  'checked-in': 'success',
+  'checked-out': 'success',
 };

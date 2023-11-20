@@ -16,6 +16,7 @@ import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
 import { STATUS_COLOR } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
 import { Booking, Event, Listing, VolunteerOpportunity } from '../../../types';
 import api from '../../../utils/api';
@@ -30,15 +31,23 @@ interface Props {
   listing: Listing;
   event: Event;
   volunteer: VolunteerOpportunity;
+  bookingCreatedBy: User;
 }
 
-const BookingPage = ({ booking, listing, event, volunteer, error }: Props) => {
+const BookingPage = ({
+  booking,
+  listing,
+  event,
+  volunteer,
+  error,
+  bookingCreatedBy,
+}: Props) => {
   const { platform }: any = usePlatform();
   const { isAuthenticated, user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
-  const userInfo = user && {
-    name: user.screenname,
-    photo: user.photo,
+  const userInfo = bookingCreatedBy && {
+    name: bookingCreatedBy.screenname,
+    photo: bookingCreatedBy.photo,
   };
 
   const {
@@ -113,7 +122,7 @@ const BookingPage = ({ booking, listing, event, volunteer, error }: Props) => {
             </p>
           </div>
           <p
-            className={`${STATUS_COLOR[status]} mt-2 
+            className={`bg-${STATUS_COLOR[status]}  mt-2 
             capitalize opacity-100 text-base p-1 text-white text-center rounded-md`}
           >
             {status}
@@ -188,32 +197,50 @@ BookingPage.getInitialProps = async ({
       data: { results: booking },
     } = await api.get(`/booking/${query.slug}`);
 
-    const [optionalEvent, optionalListing, optionalVolunteer] =
-      await Promise.all([
-        booking.eventId &&
-          api.get(`/event/${booking.eventId}`, {
-            headers: req?.cookies?.access_token && {
-              Authorization: `Bearer ${req?.cookies?.access_token}`,
-            },
-          }),
-        booking.listing &&
-          api.get(`/listing/${booking.listing}`, {
-            headers: req?.cookies?.access_token && {
-              Authorization: `Bearer ${req?.cookies?.access_token}`,
-            },
-          }),
-        booking.volunteerId &&
-          api.get(`/volunteer/${booking.volunteerId}`, {
-            headers: req?.cookies?.access_token && {
-              Authorization: `Bearer ${req?.cookies?.access_token}`,
-            },
-          }),
-      ]);
+    const [
+      optionalEvent,
+      optionalListing,
+      optionalVolunteer,
+      optionalCreatedBy,
+    ] = await Promise.all([
+      booking.eventId &&
+        api.get(`/event/${booking.eventId}`, {
+          headers: req?.cookies?.access_token && {
+            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          },
+        }),
+      booking.listing &&
+        api.get(`/listing/${booking.listing}`, {
+          headers: req?.cookies?.access_token && {
+            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          },
+        }),
+      booking.volunteerId &&
+        api.get(`/volunteer/${booking.volunteerId}`, {
+          headers: req?.cookies?.access_token && {
+            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          },
+        }),
+      booking.createdBy &&
+        api.get(`/user/${booking.createdBy}`, {
+          headers: req?.cookies?.access_token && {
+            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          },
+        }),
+    ]);
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
     const volunteer = optionalVolunteer?.data?.results;
+    const bookingCreatedBy = optionalCreatedBy?.data?.results;
 
-    return { booking, listing, event, volunteer, error: null };
+    return {
+      booking,
+      listing,
+      event,
+      volunteer,
+      error: null,
+      bookingCreatedBy,
+    };
   } catch (err: any) {
     console.log('Error', err.message);
 
@@ -223,6 +250,7 @@ BookingPage.getInitialProps = async ({
       listing: null,
       event: null,
       volunteer: null,
+      createdBy: null,
     };
   }
 };
