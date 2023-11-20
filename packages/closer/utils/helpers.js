@@ -301,18 +301,6 @@ export const getAccommodationCost = (
   }
 };
 
-export const getBookingType = (eventId, volunteerId) => {
-  let bookingType;
-  if (eventId) {
-    bookingType = '🎉 Event';
-  } else if (volunteerId) {
-    bookingType = '💪🏽 Volunteer';
-  } else {
-    bookingType = '🏡 Stay';
-  }
-  return bookingType;
-};
-
 export const getVatInfo = (total) => {
   if (process.env.NEXT_PUBLIC_VAT_RATE) {
     return `${priceFormat(

@@ -35,7 +35,6 @@ interface Props {
 }
 
 const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
-  console.log('eventCreator=', eventCreator);
   const { platform }: any = usePlatform();
   const { user, isAuthenticated } = useAuth();
   const [photo, setPhoto] = useState(event && event.photo);
@@ -43,7 +42,7 @@ const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
   const [attendees, setAttendees] = useState(event && (event.attendees || []));
 
   const canEditEvent = user
-    ? user?._id === event.createdBy || user?.roles.includes('admin')
+    ? user?._id === event?.createdBy || user?.roles.includes('admin')
     : false;
 
   const myTicketFilter = event && {
@@ -443,7 +442,7 @@ const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
                   </div>
                 </div>
               </div>
-        </div>
+            </div>
           </section>
 
           <main className="max-w-prose py-10 w-full">

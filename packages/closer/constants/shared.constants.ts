@@ -1,5 +1,5 @@
-import { blockchainConfig } from './config_blockchain';
-import { CloserCurrencies } from './types/currency';
+import { blockchainConfig } from '../config_blockchain';
+import { CloserCurrencies } from '../types/currency';
 
 export const REFUND_PERIODS = {
   MONTH: 30,
