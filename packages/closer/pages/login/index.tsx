@@ -8,6 +8,8 @@ import { Card, ErrorMessage, Heading, Input } from '../../components/ui';
 import Button from '../../components/ui/Button';
 import Switcher from '../../components/ui/Switcher';
 
+import dayjs from 'dayjs';
+
 import { useAuth } from '../../contexts/auth';
 import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import api from '../../utils/api';
@@ -24,15 +26,43 @@ const Login = () => {
   const { signMessage } = useContext(WalletDispatch);
 
   const router = useRouter();
+  const { back, source, start, end, adults, useTokens } = router.query || {};
 
-  const redirectBack = router.query?.back
-    ? decodeURIComponent(
-        new URLSearchParams(router.query as unknown as string).get('back') ||
-          '',
-      ).replace('back=', '')
-    : '/';
+  const redirect = (hasSubscription: boolean) => {
+    const dateFormat = 'YYYY-MM-DD';
+    if (!source && !back) {
+      redirectTo('/');
+      return;
+    }
+    if (!source && back) {
+      redirectTo(
+        `${back}?start=${dayjs(start as string).format(dateFormat)}&end=${dayjs(
+          end as string,
+        ).format(dateFormat)}&adults=${adults}&useTokens=${useTokens}`,
+      );
+      return;
+    }
 
-  const { isAuthenticated, login, setAuthentification, error, setError } =
+    if (hasSubscription && source) {
+      redirectTo(source as string);
+      return;
+    }
+    if (!hasSubscription && source !== 'undefined') {
+      const redirectUrl = back
+        ? `${decodeURIComponent(back as string).replace('back=', '')}&source=${(
+            source as string
+          ).replace('&source=', '')}`
+        : '/';
+      redirectTo(redirectUrl);
+      return;
+    }
+  };
+
+  const redirectTo = (url: string) => {
+    router.push(url);
+  };
+
+  const { isAuthenticated, user, login, setAuthentification, error, setError } =
     useAuth();
 
   const [email, setEmail] = useState('');
@@ -44,7 +74,11 @@ const Login = () => {
   const [web3Error, setWeb3Error] = useState(null);
 
   if (isAuthenticated) {
-    router.push(redirectBack);
+    if (user && user?.subscription?.plan) {
+      redirect(true);
+    } else {
+      redirect(false);
+    }
   }
 
   useEffect(() => {
@@ -119,6 +153,14 @@ const Login = () => {
           >
             {__('login_title')}
           </Heading>
+
+          {back && (
+            <p>
+              {__('log_in_redirect_message')}{' '}
+              <strong>{typeof back === 'string' && back.substring(back[0] === '/' ? 1 : 0)}</strong>{' '}
+              {__('log_in_redirect_message_page')}
+            </p>
+          )}
 
           {process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true' && (
             <Switcher

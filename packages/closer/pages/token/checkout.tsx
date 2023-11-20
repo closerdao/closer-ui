@@ -51,6 +51,12 @@ const TokenSaleCheckoutPage = () => {
   }, [isAuthenticated, isLoading]);
 
   useEffect(() => {
+    if (!isWalletReady) {
+      router.push('/token/before-you-begin');
+    }
+  }, [])
+
+  useEffect(() => {
     isWalletReady &&
       (async () => {
         const totalCost = await getTotalCost(tokens as string);
@@ -111,7 +117,8 @@ const TokenSaleCheckoutPage = () => {
     router.push(`/token/token-counter?tokens=${tokens}`);
   };
 
-  if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true' || !isWalletReady) {
+
+  if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
     return <PageNotFound />;
   }
 

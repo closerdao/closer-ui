@@ -89,6 +89,6 @@ describe('DateTimePicker', () => {
     );
 
     const dates = screen.getByTestId('dates');
-    expect(dates).toHaveTextContent(/may 10, 2023.*may 11, 2023$/i);
+    expect(dates).toHaveTextContent(/May 10, 2023.*May 11, 2023/i);
   });
 });

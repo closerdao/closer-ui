@@ -170,7 +170,6 @@ const EditModel: FC<Props> = ({
           data: { results: modelData },
         } = await api.get(`${endpoint}/${id}`);
 
-        console.log('modelData=',modelData);
         setData(modelData);
 
         // Look out for dependent data
@@ -245,7 +244,7 @@ const EditModel: FC<Props> = ({
             tabs={Object.keys(fieldsByTab).map((key) => ({
               title: key,
               value: key,
-              datePicker: (
+              datePicker: endpoint !== '/listing' ? (
                 <DateTimePicker
                   setStartDate={setStartDate}
                   setEndDate={setEndDate}
@@ -253,8 +252,8 @@ const EditModel: FC<Props> = ({
                   savedStartDate={data.start && data.start}
                   savedEndDate={data.end && data.end}
                   defaultMonth={new Date()}
-                />
-              ),
+                /> 
+              ): null,
               content: filterFields(fieldsByTab[key], data).map((field) => (
                 <FormField
                   {...field}

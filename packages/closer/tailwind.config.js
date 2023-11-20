@@ -14,4 +14,9 @@ module.exports = {
     },
   },
   plugins: [require('@tailwindcss/forms'), require('@tailwindcss/line-clamp')],
+  safelist: [
+    {
+      pattern: /bg-(failure|pending|success)/,
+    }
+  ]
 };

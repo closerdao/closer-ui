@@ -14,7 +14,8 @@ import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { BaseBookingParams, Listing } from '../../../types';
 import api from '../../../utils/api';
-import { __, getBookingType } from '../../../utils/helpers';
+import { __ } from '../../../utils/helpers';
+import { getBookingType } from '../../../utils/booking.helpers';
 
 interface Props extends BaseBookingParams {
   listings: Listing[];

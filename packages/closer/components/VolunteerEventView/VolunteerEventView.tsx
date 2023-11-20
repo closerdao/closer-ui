@@ -10,7 +10,7 @@ import { cdn } from '../../utils/api';
 import { __ } from '../../utils/helpers';
 import EventDescription from '../EventDescription';
 import EventPhoto from '../EventPhoto';
-import UploadPhoto from '../UploadPhoto';
+import UploadPhoto from '../UploadPhoto/UploadPhoto';
 import { Card, LinkButton } from '../ui';
 import Heading from '../ui/Heading';
 
@@ -64,7 +64,6 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
 
               <UploadPhoto
                 model="volunteer"
-                isMinimal
                 id={volunteer._id}
                 onSave={(id) => setPhoto(id)}
                 label={photo ? 'Change photo' : 'Add photo'}

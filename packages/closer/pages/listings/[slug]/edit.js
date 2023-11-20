@@ -24,23 +24,25 @@ const EditListing = ({ listing }) => {
       <Head>
         <title>{`${listing.name} - ${__('listings_slug_edit_title')}`}</title>
       </Head>
-      <div className="w-full">
-        <Heading level={2} className="mb-2">
-          Edit Listing <i>{listing.name}</i>
-        </Heading>
-        <EditModel
-          id={listing._id}
-          endpoint={'/listing'}
-          fields={models.listing}
-          buttonText="Save"
-          onSave={(listing) => router.push(`/listings/${listing.slug}`)}
-          onUpdate={(name, value, option, actionType) =>
-            onUpdate(name, value, option, actionType)
-          }
-          allowDelete
-          deleteButton="Delete Listing"
-          onDelete={() => router.push('/')}
-        />
+      <div className="justify-center flex">
+        <section className="max-w-4xl w-full">
+          <Heading level={2} className="mb-2">
+            Edit Listing <i>{listing.name}</i>
+          </Heading>
+          <EditModel
+            id={listing._id}
+            endpoint={'/listing'}
+            fields={models.listing}
+            buttonText="Save"
+            onSave={(listing) => router.push(`/listings/${listing.slug}`)}
+            onUpdate={(name, value, option, actionType) =>
+              onUpdate(name, value, option, actionType)
+            }
+            allowDelete
+            deleteButton="Delete Listing"
+            onDelete={() => router.push('/')}
+          />
+        </section>
       </div>
     </>
   );

@@ -3,7 +3,7 @@ import React from 'react';
 interface CheckboxProps {
   className?: string;
   isChecked?: boolean;
-  onChange: () => void;
+  onChange: (value: any) => void;
   children?: React.ReactNode;
   id?: string;
 }

@@ -16,28 +16,25 @@ const filterLinks = (option: string, roles: string[]) => {
     case 'member':
       if (roles.includes('member')) {
         return links.filter((link: NavigationLink) => {
-          return (
-            (link.enabled &&
-              link.roles &&
-              !link.roles.includes('admin') &&
-              !link.roles.includes('steward') &&
-              !link.roles.includes('event-creator') &&
-              !link.roles.includes('space-host')) ||
-            !link.roles
-          );
+          const hasRole =
+            link.enabled &&
+            link.roles &&
+            !['admin', 'member', 'steward', 'event-creator', 'space-host'].some(
+              (role) => link?.roles?.includes(role),
+            );
+
+          return hasRole || (!link.roles && link.enabled);
         });
       } else {
         return links.filter((link: NavigationLink) => {
-          return (
-            (link.enabled &&
-              link.roles &&
-              !link.roles.includes('admin') &&
-              !link.roles.includes('member') &&
-              !link.roles.includes('steward') &&
-              !link.roles.includes('event-creator') &&
-              !link.roles.includes('space-host')) ||
-            !link.roles
-          );
+          const hasRole =
+            link.enabled &&
+            link.roles &&
+            !['admin', 'member', 'steward', 'event-creator', 'space-host'].some(
+              (role) => link?.roles?.includes(role),
+            );
+
+          return hasRole || (!link.roles && link.enabled);
         });
       }
     case 'Admin':

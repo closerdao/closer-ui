@@ -13,7 +13,7 @@ const Logo: FC = () => {
       {LOGO_HEADER ? (
         <img src={LOGO_HEADER} alt={PLATFORM_NAME} className="h-12" />
       ) : (
-        PLATFORM_NAME
+        <div className='font-bold text-xl'>{PLATFORM_NAME}</div>
       )}
     </Link>
   );

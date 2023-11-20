@@ -45,7 +45,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
 }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
-  const { priceId, monthlyCredits } = router.query;
+  const { priceId, monthlyCredits, source } = router.query;
   const { PLATFORM_NAME } = useConfig() || {};
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
 
@@ -167,6 +167,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
                   userEmail={user?.email}
                   priceId={priceId}
                   monthlyCredits={Number(monthlyCredits)}
+                  source={source as string}
                 />
               </Elements>
             </div>

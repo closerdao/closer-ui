@@ -1,8 +1,8 @@
 import Head from 'next/head';
-import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import LessonDescription from '../../../components/LessonDescription';
 import LessonVideo from '../../../components/LessonVideo';
@@ -19,18 +19,34 @@ import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { Lesson } from '../../../types/lesson';
-import api, { cdn } from '../../../utils/api';
+import { SubscriptionPlan } from '../../../types/subscriptions';
+import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
+
+const MIN_SUBSCRIPTION_PLAN = 'Wanderer';
 
 interface Props {
   lesson: Lesson;
   lessonCreator: User;
   error?: string;
+  subscriptions?: any[];
 }
 
-const LessonPage = ({ lesson, lessonCreator, error }: Props) => {
-  const { user } = useAuth();
+const LessonPage = ({ lesson, lessonCreator, subscriptions, error }: Props) => {
+  const { asPath } = useRouter();
+  const { user, refetchUser } = useAuth();
+  const [hasRefetchedUser, setHasRefetchedUser] = useState(false);
+
+  const subscriptionPriceId = subscriptions?.find(
+    (subscription: SubscriptionPlan) => {
+      return (
+        subscription.title === MIN_SUBSCRIPTION_PLAN && subscription.priceId
+      );
+    },
+  ).priceId;
+
+  const getAccessUrl = `/subscriptions/checkout?priceId=${subscriptionPriceId}&source=${asPath}`;
 
   const canViewLessons = Boolean(
     user && (user?.subscription?.plan || !lesson.paid),
@@ -40,6 +56,15 @@ const LessonPage = ({ lesson, lessonCreator, error }: Props) => {
     Boolean(lesson.previewVideo),
   );
   const [isVideoLoading, setIsVideoLoading] = useState(false);
+
+  useEffect(() => {
+    if (user && !hasRefetchedUser) {
+      setTimeout(() => {
+        refetchUser();
+        setHasRefetchedUser(true);
+      }, 1000);
+    }
+  }, [user]);
 
   const handleShowPreview = () => {
     setIsVideoPreview(true);
@@ -80,6 +105,7 @@ const LessonPage = ({ lesson, lessonCreator, error }: Props) => {
               isUnlocked={canViewLessons || isVideoPreview}
               setIsVideoLoading={setIsVideoLoading}
               isVideoLoading={isVideoLoading}
+              getAccessUrl={getAccessUrl}
             />
 
             {(user?._id === lesson.createdBy ||
@@ -101,19 +127,6 @@ const LessonPage = ({ lesson, lessonCreator, error }: Props) => {
           <div className="max-w-4xl w-full ">
             <div className="w-full py-2">
               <div className="w-full flex flex-col sm:flex-row gap-4 sm:gap-8">
-                <div className="flex items-center text-sm uppercase font-bold gap-1">
-                  <p className="">{__('learn_lesson_created_by')}</p>
-
-                  <Image
-                    src={`${cdn}${lessonCreator?.photo}-profile-lg.jpg`}
-                    loading="lazy"
-                    alt={lessonCreator?.screenname}
-                    className=" rounded-full"
-                    width={25}
-                    height={25}
-                  />
-                  <p>{lessonCreator?.screenname}</p>
-                </div>
                 <div className="flex items-center text-sm uppercase font-bold gap-1">
                   <div>
                     {__('learn_lesson_category')}: {lesson.category}
@@ -186,7 +199,7 @@ const LessonPage = ({ lesson, lessonCreator, error }: Props) => {
                   </div>
 
                   {!canViewLessons && lesson.fullVideo && (
-                    <LinkButton href="/subscriptions">
+                    <LinkButton href={getAccessUrl}>
                       {__('learn_get_access_button')}
                     </LinkButton>
                   )}
@@ -218,13 +231,22 @@ LessonPage.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
-    const {
-      data: { results: lesson },
-    } = await api.get(`/lesson/${query.slug}`, {
-      headers: req?.cookies?.access_token && {
-        Authorization: `Bearer ${req?.cookies?.access_token}`,
+    const [
+      {
+        data: { results: subscriptions },
       },
-    });
+      {
+        data: { results: lesson },
+      },
+    ] = await Promise.all([
+      api.get('/config/subscriptions'),
+      await api.get(`/lesson/${query.slug}`, {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        },
+      }),
+    ]);
+
     const lessonCreatorId = lesson.createdBy;
     const {
       data: { results: lessonCreator },
@@ -234,7 +256,7 @@ LessonPage.getInitialProps = async ({
       },
     });
 
-    return { lesson, lessonCreator };
+    return { subscriptions: subscriptions.value.plans, lesson, lessonCreator };
   } catch (err: unknown) {
     return {
       error: parseMessageFromError(err),

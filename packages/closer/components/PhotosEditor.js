@@ -4,7 +4,7 @@ import { TiDelete } from '@react-icons/all-files/ti/TiDelete';
 
 import { __ } from '../utils/helpers';
 import Photo from './Photo';
-import UploadPhoto from './UploadPhoto';
+import UploadPhoto from './UploadPhoto/UploadPhoto';
 
 const PhotosEditor = ({ value, onChange }) => {
   const hasMultiplePhotos = Array.isArray(value);

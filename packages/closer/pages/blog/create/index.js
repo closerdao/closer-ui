@@ -31,7 +31,7 @@ const Create = () => {
 
         <meta property="og:type" content="article" />
       </Head>
-      <form onSubmit={(e) => e.preventDefault()}>
+      <form onSubmit={(e) => e.preventDefault()} className="main-content w-full max-w-6xl">
         {/* { article.photo && <div className="relative w-full h-96 md:basis-1/2 md:w-96">
           <Image
             src={ fullImageUrl }
