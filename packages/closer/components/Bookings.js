@@ -101,6 +101,8 @@ const Bookings = ({ filter }) => {
                   photo: user.photo,
                 };
 
+            
+
                 const currentEvent = events?.toJS()?.find((event) => {
                   return event._id === booking.get('eventId');
                 });
