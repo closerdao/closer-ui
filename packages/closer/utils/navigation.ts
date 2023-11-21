@@ -92,10 +92,4 @@ export const links = [
     url: '/blog',
     enabled: process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true',
   },
-  {
-    label: 'Edit listings',
-    url: '/admin/listings',
-    enabled: true,
-    roles: ['admin'],
-  },
 ];

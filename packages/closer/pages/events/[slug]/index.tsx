@@ -8,7 +8,7 @@ import EventAttendees from '../../../components/EventAttendees';
 import EventDescription from '../../../components/EventDescription';
 import EventPhoto from '../../../components/EventPhoto';
 import Photo from '../../../components/Photo';
-import UploadPhoto from '../../../components/UploadPhoto';
+import UploadPhoto from '../../../components/UploadPhoto/UploadPhoto';
 import { Card, Information, LinkButton } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
@@ -37,6 +37,7 @@ interface Props {
 const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
   const { platform }: any = usePlatform();
   const { user, isAuthenticated } = useAuth();
+
   const [photo, setPhoto] = useState(event && event.photo);
   const [password, setPassword] = useState('');
   const [attendees, setAttendees] = useState(event && (event.attendees || []));
@@ -70,6 +71,12 @@ const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
       event?.attendees?.length
     : event?.attendees && event.attendees.length;
 
+  useEffect(() => {
+    if (event) {
+      loadData();
+    }
+  }, [event, user]);
+
   const loadData = async () => {
     if (event?.attendees && event.attendees.length > 0) {
       const params = { where: { _id: { $in: event.attendees } } };
@@ -96,12 +103,6 @@ const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
       alert(`Could not RSVP: ${err}`);
     }
   };
-
-  useEffect(() => {
-    if (event) {
-      loadData();
-    }
-  }, [event, user]);
 
   if (!event) {
     return <PageNotFound error={error} />;

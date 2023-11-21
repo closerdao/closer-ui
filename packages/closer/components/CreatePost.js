@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/auth';
 import api, { cdn } from '../utils/api';
 import { getHashTags, getUrls } from '../utils/helpers';
 import { __ } from '../utils/helpers';
-import UploadPhoto from './UploadPhoto';
+import UploadPhoto from './UploadPhoto/UploadPhoto';
 
 const filterTags = (tags) => Array.from(new Set(tags));
 

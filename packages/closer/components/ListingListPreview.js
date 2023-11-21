@@ -8,11 +8,11 @@ import { priceFormat } from '../utils/helpers';
 import { __ } from '../utils/helpers';
 import Slider from './Slider';
 
-const ListingListPreview = ({ listing, isAdminPage }) => {
+const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
   const { user } = useAuth();
 
   return (
-    <div className="flex flex-col gap-5 justify-between">
+    <div className="flex flex-col gap-5 justify-between mb-8">
       <div className="flex flex-col gap-5">
         {listing.get('photos') && listing.get('photos').count() > 0 && (
           <Slider
@@ -47,15 +47,35 @@ const ListingListPreview = ({ listing, isAdminPage }) => {
 
       <div className="flex flex-col gap-7">
         {listing.get('fiatPrice') && (
-          <p className="text-left">
-            <span className="font-bold">
-              {priceFormat(
-                listing.get('fiatPrice').toJS().val,
-                listing.get('fiatPrice').toJS().cur,
-              )}{' '}
-            </span>
-            {__('listing_preview_per_night')}
-          </p>
+          <div>
+            <p className="text-left">
+              <span className="font-bold">
+                {priceFormat(
+                  listing.get('fiatPrice').toJS().val,
+                  listing.get('fiatPrice').toJS().cur,
+                )}{' '}
+              </span>
+              {__('listing_preview_per_night')}
+            </p>
+            <p className="text-left">
+              <span className="">
+                {priceFormat(
+                  listing.get('fiatPrice').toJS().val * (1 - discounts.weekly) * 7,
+                  listing.get('fiatPrice').toJS().cur,
+                )}{' '}
+              </span>
+              {__('listing_preview_per_week')}
+            </p>
+            <p className="text-left">
+              <span className="">
+                {priceFormat(
+                  listing.get('fiatPrice').toJS().val * (1 - discounts.monthly) * 30,
+                  listing.get('fiatPrice').toJS().cur,
+                )}{' '}
+              </span>
+              {__('listing_preview_per_month')}
+            </p>
+          </div>
         )}
 
         {!isAdminPage && (

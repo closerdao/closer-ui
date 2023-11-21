@@ -9,9 +9,16 @@ import Heading from '../../components/ui/Heading';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
+import { BookingSettings } from '../../types';
+import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
-const StayPage = () => {
+interface Props {
+  settings: BookingSettings;
+}
+
+const StayPage = ({ settings }: Props) => {
   const config = useConfig();
   const { PLATFORM_NAME } = config || {};
   const { platform }: any = usePlatform();
@@ -64,6 +71,7 @@ const StayPage = () => {
               listings.map((listing: any) => {
                 return (
                   <ListingListPreview
+                    discounts={settings.discounts}
                     isAdminPage={false}
                     key={listing.get('_id')}
                     listing={listing}
@@ -76,6 +84,7 @@ const StayPage = () => {
               guestListings.map((listing: any) => {
                 return (
                   <ListingListPreview
+                    discounts={settings.discounts}
                     isAdminPage={false}
                     key={listing.get('_id')}
                     listing={listing}
@@ -97,6 +106,24 @@ const StayPage = () => {
       </section>
     </>
   );
+};
+
+StayPage.getInitialProps = async () => {
+  try {
+    const {
+      data: {
+        results: { value: settings },
+      },
+    } = await api.get('/config/booking');
+
+    return {
+      settings: settings as BookingSettings,
+    };
+  } catch (err) {
+    return {
+      error: parseMessageFromError(err),
+    };
+  }
 };
 
 export default StayPage;
