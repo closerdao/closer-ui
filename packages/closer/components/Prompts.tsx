@@ -9,7 +9,7 @@ import {
   doAllKeysHaveValues,
 } from '../utils/helpers';
 import Modal from './Modal';
-import UploadPhoto from './UploadPhoto';
+import UploadPhoto from './UploadPhoto/UploadPhoto';
 import YoutubeEmbed from './YoutubeEmbed';
 import { LinkButton } from './ui';
 import IconPlay from './ui/IconPlay';

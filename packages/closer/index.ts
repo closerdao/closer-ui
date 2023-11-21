@@ -59,6 +59,7 @@ export { default as EditBookingPage } from './pages/bookings/edit/[slug]';
 export { default as BookingsPage } from './pages/bookings/index';
 export { default as CurrentBookingsPage } from './pages/bookings/current';
 export { default as BookingsRequestsPage } from './pages/bookings/requests';
+export { default as AllBookingsRequestsPage } from './pages/bookings/all';
 export { default as ChannelPage } from './pages/channel/[channel]';
 export { default as CreateChannelPage } from './pages/channel/create';
 export { default as CommunityPage } from './pages/community';
@@ -110,6 +111,7 @@ export { default as LearnCategoryPage } from './pages/learn/category/[slug]/';
 export { default as CreateLessonPage } from './pages/learn/create';
 export { default as LessonPage } from './pages/learn/[slug]/';
 export { default as EditLessonPage } from './pages/learn/[slug]/edit';
+export { default as StayPage } from './pages/stay/';
 export { default as SupportUsPage } from './pages/support-us';
 
 // Types

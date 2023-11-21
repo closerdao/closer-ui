@@ -2,7 +2,7 @@ import Head from 'next/head';
 
 import { FC, useEffect, useState } from 'react';
 
-import UploadPhoto from '../../components/UploadPhoto';
+import UploadPhoto from '../../components/UploadPhoto/UploadPhoto';
 import { Button } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 import Input from '../../components/ui/Input';

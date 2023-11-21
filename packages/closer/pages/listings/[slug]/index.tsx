@@ -83,10 +83,10 @@ const ListingPage: NextPage<Props> = ({
 
   const [showGuestsDropdown, setShowGuestsDropdown] = useState(false);
   const [start, setStartDate] = useState<string | null | Date>(
-    defaultCheckInDate || (savedStartDate as string) || new Date(),
+    (savedStartDate as string) || null,
   );
   const [end, setEndDate] = useState<string | null | Date>(
-    defaultCheckOutDate || (savedEndDate as string),
+    (savedEndDate as string) || null,
   );
   const [adults, setAdults] = useState<number>(Number(savedAdults) || 1);
   const [kids, setKids] = useState<number>(Number(savedKids) || 0);
@@ -147,47 +147,14 @@ const ListingPage: NextPage<Props> = ({
   };
 
   useEffect(() => {
-    (async () => {
-      const availableStart = new Date();
-      const availableEnd = new Date(
-        new Date(new Date()).setDate(
-          new Date().getDate() + MAX_DAYS_TO_CHECK_AVAILABILITY,
-        ),
-      );
-      const { availability } = await getAvailability(
-        availableStart,
-        availableEnd,
-      );
-      const listingId = listing?._id;
-      setUnavailableDates(getUnavailableDates(availability, listingId || null));
-      const listingPrices = await fetchPrices();
-
-      if (
-        !listingPrices.isListingAvailable &&
-        !savedStartDate &&
-        !savedEndDate
-      ) {
-        setStartDate('');
-        setEndDate('');
-      }
-    })();
-  }, []);
-
-  useEffect(() => {
-    if (savedStartDate && savedEndDate) {
-      setIsListingAvailable(true);
-    }
-
     if (savedStartDate) {
       setStartDate(savedStartDate as string);
-    } else {
-      setStartDate(defaultCheckInDate);
     }
     if (savedEndDate) {
       setEndDate(savedEndDate as string);
-    } else {
-      setEndDate(defaultCheckOutDate);
     }
+
+    handleDefaultBookingDates();
   }, [router.query]);
 
   useEffect(() => {
@@ -202,7 +169,7 @@ const ListingPage: NextPage<Props> = ({
       setCalendarError(__('bookings_date_range_error'));
     }
     if (isCalendarSelectionValid) {
-      (async () => {
+      (async function updatePrices() {
         const listingPrices = await fetchPrices();
         setIsListingAvailable(listingPrices.isListingAvailable);
         setRentalPrice(listingPrices?.prices[0]);
@@ -227,14 +194,74 @@ const ListingPage: NextPage<Props> = ({
     };
   }, []);
 
+  const handleDefaultBookingDates = async () => {
+    const availableStart = new Date();
+    const availableEnd = new Date(
+      new Date(new Date()).setDate(
+        new Date().getDate() + MAX_DAYS_TO_CHECK_AVAILABILITY,
+      ),
+    );
+    const { availability } = await getAvailability(
+      availableStart,
+      availableEnd,
+    );
+    const listingId = listing?._id;
+    setUnavailableDates(getUnavailableDates(availability, listingId || null));
+
+    const listingPrices = await fetchPrices();
+
+    if (!listingPrices.isListingAvailable && !savedStartDate && !savedEndDate) {
+      setStartDate('');
+      setEndDate('');
+    }
+  };
+
+  const fetchPrices = async () => {
+    setApiError(null);
+    try {
+      const { availability, results } = await getAvailability(
+        start || defaultCheckInDate,
+        end || defaultCheckOutDate,
+      );
+
+      const isListingAvailable = checkListingAvailability(
+        listing?._id,
+        availability,
+      );
+
+      const currentListing = results?.filter((result: Listing) => {
+        return result.name === listing?.name;
+      });
+
+      return {
+        isListingAvailable,
+        prices: currentListing.length
+          ? [
+              currentListing[0].rentalFiat,
+              currentListing[0].utilityFiat,
+              currentListing[0].rentalToken,
+            ]
+          : [0, 0, 0],
+      };
+    } catch (error) {
+      setApiError(parseMessageFromError(error));
+      return {
+        isListingAvailable: false,
+        prices: [0, 0, 0],
+      };
+    }
+  };
+
   const getUrlParams = () => {
+    const dateFormat = 'YYYY-MM-DD';
     const params = {
-      start: String(start),
-      end: String(end),
+      start: dayjs(start as string).format(dateFormat),
+      end: dayjs(end as string).format(dateFormat),
       adults: String(adults),
       ...(kids && { kids: String(kids) }),
       ...(infants && { infants: String(infants) }),
       ...(pets && { pets: String(pets) }),
+      useTokens: String(isTokenPaymentSelected),
     };
     const urlParams = new URLSearchParams(params);
     return urlParams;
@@ -280,39 +307,6 @@ const ListingPage: NextPage<Props> = ({
     }
   };
 
-  const fetchPrices = async () => {
-    setApiError(null);
-    try {
-      const { availability, results } = await getAvailability(start, end);
-
-      const isListingAvailable = checkListingAvailability(
-        listing?._id,
-        availability,
-      );
-
-      const currentListing = results?.filter((result: Listing) => {
-        return result.name === listing?.name;
-      });
-
-      return {
-        isListingAvailable,
-        prices: currentListing.length
-          ? [
-              currentListing[0].rentalFiat,
-              currentListing[0].utilityFiat,
-              currentListing[0].rentalToken,
-            ]
-          : [0, 0, 0],
-      };
-    } catch (error) {
-      setApiError(parseMessageFromError(error));
-      return {
-        isListingAvailable: false,
-        prices: [0, 0, 0],
-      };
-    }
-  };
-
   function handleClickOutsideDepartureDropdown() {
     setShowGuestsDropdown(false);
   }
@@ -325,6 +319,7 @@ const ListingPage: NextPage<Props> = ({
     <>
       <Head>
         <title>{listing.name}</title>
+        <meta name="description" content={descriptionText || ''} />
         <meta name="description" content={descriptionText || ''} />
         <meta property="og:type" content="listing" />
         {photo && (
@@ -426,7 +421,7 @@ const ListingPage: NextPage<Props> = ({
                     </div> */}
                   </div>
 
-                  <div className=" my-16 flex flex-col gap-6">
+                  <div className="my-8 flex flex-col gap-6">
                     <Heading level={2} className="text-lg uppercase mt-6">
                       {__('listing_preview_location')}
                     </Heading>
@@ -477,8 +472,8 @@ const ListingPage: NextPage<Props> = ({
                         <ListingDateSelector
                           setStartDate={setStartDate}
                           setEndDate={setEndDate}
-                          end={(savedEndDate as string) || end}
-                          start={(savedStartDate as string) || start}
+                          end={end}
+                          start={start}
                           isSmallScreen={isSmallScreen}
                           blockedDateRanges={getBlockedDateRanges(
                             start,
@@ -561,11 +556,12 @@ const ListingPage: NextPage<Props> = ({
                             error={parseMessageFromError(apiError)}
                           />
                         )}
-                        {calendarError && (
-                          <ErrorMessage
-                            error={parseMessageFromError(calendarError)}
-                          />
-                        )}
+                        {calendarError &&
+                          calendarError !== __('bookings_date_range_error') && (
+                            <ErrorMessage
+                              error={parseMessageFromError(calendarError)}
+                            />
+                          )}
                       </div>
                       <div className="flex flex-col gap-2">
                         <div className="hidden sm:block">
@@ -578,6 +574,51 @@ const ListingPage: NextPage<Props> = ({
                             onSelect={setCurrency as any}
                             currencies={CURRENCIES}
                           />
+                        )}
+
+                        {!isSmallScreen && (
+                          <div>
+                            {dayjs(end).diff(dayjs(start), 'day') < 7 && (
+                              <p className="text-left">
+                                <span className="font-bold">
+                                  {priceFormat(
+                                    listing.fiatPrice.val,
+                                    listing.fiatPrice.cur,
+                                  )}{' '}
+                                </span>
+                                {__('listing_preview_per_night')}
+                              </p>
+                            )}
+                            {dayjs(end).diff(dayjs(start), 'day') >= 7 &&
+                              dayjs(end).diff(dayjs(start), 'day') < 30 && (
+                                <p className="text-left">
+                                  <span className="font-bold">
+                                    {settings &&
+                                      priceFormat(
+                                        listing.fiatPrice.val *
+                                          (1 - settings.discounts.weekly) *
+                                          7,
+                                        listing.fiatPrice.cur,
+                                      )}{' '}
+                                  </span>
+                                  {__('listing_preview_per_week')}
+                                </p>
+                              )}
+                            {dayjs(end).diff(dayjs(start), 'day') >= 30 && (
+                              <p className="text-left">
+                                <span className="font-bold">
+                                  {settings &&
+                                    priceFormat(
+                                      listing.fiatPrice.val *
+                                        (1 - settings.discounts.monthly) *
+                                        30,
+                                      listing.fiatPrice.cur,
+                                    )}{' '}
+                                </span>
+                                {__('listing_preview_per_month')}
+                              </p>
+                            )}
+                          </div>
                         )}
 
                         <Button

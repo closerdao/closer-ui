@@ -1,5 +1,5 @@
-import { blockchainConfig } from './config_blockchain';
-import { CloserCurrencies } from './types/currency';
+import { blockchainConfig } from '../config_blockchain';
+import { CloserCurrencies } from '../types/currency';
 
 export const REFUND_PERIODS = {
   MONTH: 30,
@@ -239,3 +239,6 @@ export const SALES_CONFIG = {
   MAX_WALLET_BALANCE: 915,
   MAX_TOKENS_PER_TRANSACTION: 100,
 };
+
+export const MAX_BOOKINGS_TO_FETCH = 2000;
+export const BOOKINGS_PER_PAGE = 50;

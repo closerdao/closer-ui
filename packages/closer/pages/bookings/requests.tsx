@@ -3,18 +3,27 @@ import Head from 'next/head';
 import { useState } from 'react';
 
 import Bookings from '../../components/Bookings';
-import BookingsFilter from '../../components/BookingsFilter';
+// import BookingsFilter from '../../components/BookingsFilter';
 import Heading from '../../components/ui/Heading';
 
 import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { __ } from '../../utils/helpers';
 
+const loadTime = new Date();
+
 const BookingsRequests = () => {
   const { user } = useAuth();
+  const [page, setPage] = useState(1);
 
-  const [filter, setFilter] = useState({
-    where: {},
+  const defaultWhere = {
+    end: { $gte: loadTime },
+    status: 'pending',
+  };
+
+  const [filter] = useState({
+    where: defaultWhere,
+    sort_by: '-created',
   });
 
   if (!user || !user.roles.includes('space-host')) {
@@ -33,9 +42,7 @@ const BookingsRequests = () => {
       <div className="max-w-screen-lg mx-auto flex flex-col gap-10">
         <Heading level={1}>{__('booking_requests_title')}</Heading>
 
-        <BookingsFilter setFilter={setFilter} />
-
-        <Bookings filter={filter} />
+        <Bookings isPagination={false} filter={filter} setPage={setPage} page={page} />
       </div>
     </>
   );

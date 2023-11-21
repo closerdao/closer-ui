@@ -17,7 +17,7 @@ const Switcher = ({
   optionsTitles,
   isTokenPaymentAvailable,
 }: Props) => {
-  const isButtonEnabled = (options: string[], i: number) => {
+  const isButtonDisabled = (options: string[], i: number) => {
     if (isTokenPaymentAvailable === undefined) {
       return options[i] === selectedOption;
     }
@@ -35,12 +35,18 @@ const Switcher = ({
         <div className="border border-gray-600 rounded-full w-full flex p-[2px]">
           {options?.map((option, i) => (
             <button
-              disabled={isButtonEnabled(options, i)}
+              disabled={isButtonDisabled(options, i)}
               onClick={() => {
                 setSelectedOption(option);
               }}
-              className={`rounded-full bg-accent-light flex-1 text-center py-1 ${
-                option !== selectedOption && 'bg-white'
+              className={` rounded-full  flex-1 text-center py-1 ${
+                option !== selectedOption ? 'bg-white ' : 'bg-accent-light'
+              }  ${
+                isButtonDisabled(options, i) &&
+                !isTokenPaymentAvailable &&
+                option !== selectedOption
+                  ? 'text-disabled'
+                  : 'text-black'
               } 
             
               `}
