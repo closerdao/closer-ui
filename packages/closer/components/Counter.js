@@ -3,8 +3,12 @@ import PropTypes from 'prop-types';
 import MinusCircleIcon from './icons/MinusCircleIcon';
 import PlusCircleIcon from './icons/PlusCircleIcon';
 
-const Counter = ({ value, minValue, setFn }) => {
-  const increment = () => setFn((prevValue) => prevValue + 1);
+const Counter = ({ value, minValue, maxValue, setFn }) => {
+  const increment = () => {
+    if (value < maxValue) {
+      setFn((prevValue) => prevValue + 1);
+    }
+  }
   const decrement = () => {
     if (value > minValue) {
       setFn((prevValue) => prevValue - 1);
@@ -27,12 +31,14 @@ const Counter = ({ value, minValue, setFn }) => {
 Counter.defaultProps = {
   value: 0,
   minValue: 0,
+  maxValue: 999999999,
   setFn: () => null,
 };
 
 Counter.propTypes = {
   value: PropTypes.number,
   minValue: PropTypes.number,
+  maxValue: PropTypes.number,
   setFn: PropTypes.func,
 };
 

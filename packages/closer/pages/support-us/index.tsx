@@ -42,11 +42,15 @@ interface Props {
 
 const SupportUsPage = ({ fundraisingConfig }: Props) => {
   const { platform }: any = usePlatform();
-  const filter = {
+  const wandererFilter = {
     where: { 'subscription.plan': 'wanderer' }
   };
+  const pioneerFilter = {
+    where: { 'subscription.plan': 'pioneer' }
+  };
 
-  const wandererCount = platform.user.findCount(filter) || 0;
+  const wandererCount = platform.user.findCount(wandererFilter) || 0;
+  const pioneerCount = platform.user.findCount(pioneerFilter) || 0;
 
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
 
@@ -65,8 +69,8 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
   const loadData = async () => {
     try {
       await Promise.all([
-        platform.user.get(filter),
-        platform.user.getCount(filter),
+        platform.user.getCount(wandererFilter),
+        platform.user.getCount(pioneerFilter),
       ]);
     } catch (err) {
     } finally {
@@ -151,11 +155,11 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
 
             <div className="w-full rounded-full bg-gray-200 overflow-hidden">
               <div
-                style={{ width: `${(Math.min(wandererCount, 300) / 300) * 100}%` }}
+                style={{ width: `${(Math.min(wandererCount + (pioneerCount * 3), 300) / 300) * 100}%` }}
                 className="bg-accent h-[18px] rounded-full"
               ></div>
             </div>
-            <strong>{wandererCount} of 300</strong>
+            <strong>{wandererCount + (pioneerCount * 3)} of 300</strong>
           </div>
         </section>
         <section className=" w-full flex flex-col gap-6 justify-center max-w-3xl">
@@ -226,7 +230,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               </li>
             </ul>
             <LinkButton
-              href={fundraisingConfig.wandererUrl || '/subscriptions/checkout?priceId=price_1NGHnoGtt5D0VKR2SeTQxIYz'}
+              href={fundraisingConfig.wandererUrl}
               className="w-[255px] text-[13px] sm:text-[16px] sm:w-[320px]"
               onClick={() =>
                 event('click', {
