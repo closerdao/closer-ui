@@ -2,7 +2,7 @@ import Head from 'next/head';
 
 import { FC, useEffect, useState } from 'react';
 
-import UploadPhoto from '../../components/UploadPhoto';
+import UploadPhoto from '../../components/UploadPhoto/UploadPhoto';
 import { Button } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 import Input from '../../components/ui/Input';
@@ -129,7 +129,9 @@ const SettingsPage: FC = () => {
   };
 
   if (!isAuthenticated || !user) {
-    return <PageNotFound error="Please log in to see this page." />;
+    return (
+      <PageNotFound back="/settings" error="Please log in to see this page." />
+    );
   }
 
   return (

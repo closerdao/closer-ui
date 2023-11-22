@@ -34,7 +34,7 @@ export const links = [
   },
   {
     label: 'Book a stay',
-    url: '/listings',
+    url: '/stay',
     enabled: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
   },
   // {

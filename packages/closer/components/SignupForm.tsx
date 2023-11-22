@@ -89,11 +89,6 @@ const SignupForm = () => {
     if (isAuthenticated) {
       redirect();
     }
-    if (submitted && back && !error) {
-      setTimeout(() => {
-        redirect();
-      }, 2000);
-    }
   }, [isAuthenticated, submitted, back]);
 
   const updateApplication = (update: any) => {

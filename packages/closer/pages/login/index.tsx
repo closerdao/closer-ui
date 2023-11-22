@@ -15,8 +15,7 @@ import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
-import { getQueryParam } from '../../utils/login.helpers';
-
+ 
 const loginOptions =
   process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true'
     ? ['Email', 'Wallet']
@@ -27,12 +26,7 @@ const Login = () => {
   const { signMessage } = useContext(WalletDispatch);
 
   const router = useRouter();
-  const { adults, useTokens } = router.query || {};
-
-  const source = decodeURIComponent(getQueryParam(router.query, 'source'));
-  const back = decodeURIComponent(getQueryParam(router.query, 'back'));
-  const start = decodeURIComponent(getQueryParam(router.query, 'start'));
-  const end = decodeURIComponent(getQueryParam(router.query, 'end'));
+  const { back, source, start, end, adults, useTokens } = router.query || {};
 
   const redirect = (hasSubscription: boolean) => {
     const dateFormat = 'YYYY-MM-DD';
@@ -40,7 +34,7 @@ const Login = () => {
       redirectTo('/');
       return;
     }
-    if (!source) {
+    if (!source && back) {
       redirectTo(
         `${back}?start=${dayjs(start as string).format(dateFormat)}&end=${dayjs(
           end as string,
@@ -48,16 +42,16 @@ const Login = () => {
       );
       return;
     }
+
     if (hasSubscription && source) {
-      redirectTo(source);
+      redirectTo(source as string);
       return;
     }
     if (!hasSubscription && source !== 'undefined') {
       const redirectUrl = back
-        ? `${decodeURIComponent(back).replace(
-            'back=',
-            '',
-          )}&source=${source.replace('&source=', '')}`
+        ? `${decodeURIComponent(back as string).replace('back=', '')}&source=${(
+            source as string
+          ).replace('&source=', '')}`
         : '/';
       redirectTo(redirectUrl);
       return;
@@ -159,6 +153,14 @@ const Login = () => {
           >
             {__('login_title')}
           </Heading>
+
+          {back && (
+            <p>
+              {__('log_in_redirect_message')}{' '}
+              <strong>{typeof back === 'string' && back.substring(back[0] === '/' ? 1 : 0)}</strong>{' '}
+              {__('log_in_redirect_message_page')}
+            </p>
+          )}
 
           {process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true' && (
             <Switcher

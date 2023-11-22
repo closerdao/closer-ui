@@ -5,6 +5,7 @@ import objectPath from 'object-path';
 import { CURRENCIES_WITH_LABELS } from '../constants';
 import { __ } from '../utils/helpers';
 import Autocomplete from './Autocomplete';
+import Checkbox from './Checkbox';
 import DiscountsEditor from './DiscountsEditor';
 import FieldsEditor from './FieldsEditor';
 import PhotosEditor from './PhotosEditor';
@@ -32,7 +33,16 @@ const FormField = ({
 }) => {
   const [addTag, setAddTag] = useState('');
 
-  // const editorRef = useRef(null);
+  const handleCheckboxChange = (optionValue) => {
+    if (objectPath.get(data, name).includes(optionValue)) {
+      update(
+        name,
+        objectPath.get(data, name).filter((value) => value !== optionValue),
+      );
+    } else {
+      update(name, [...objectPath.get(data, name), optionValue]);
+    }
+  };
 
   return (
     <div className={`form-field w-full mb-6 form-type-${type}`} key={name}>
@@ -153,6 +163,21 @@ const FormField = ({
               ))}
             </select>
           )}
+          {type === 'multi-select' && (
+            <div className="flex flex-wrap gap-4 my-6">
+              {options.map((option) => (
+                <Checkbox
+                  key={option}
+                  onChange={() => handleCheckboxChange(option)}
+                  checked={objectPath.get(data, name).includes(option)}
+                  className="mb-4"
+                >
+                  {option}
+                </Checkbox>
+              ))}
+            </div>
+          )}
+
           {type === 'switch' && (
             <Switch
               name={name}
