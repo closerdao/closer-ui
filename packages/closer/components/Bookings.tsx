@@ -1,9 +1,7 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
 import { BOOKINGS_PER_PAGE, MAX_BOOKINGS_TO_FETCH } from '../constants';
-import { User } from '../contexts/auth/types';
 import { usePlatform } from '../contexts/platform';
-import { Event } from '../types';
 import { __ } from '../utils/helpers';
 import BookingListPreview from './BookingListPreview/BookingListPreview';
 import Pagination from './Pagination';
@@ -18,16 +16,29 @@ interface Props {
 const Bookings = ({ filter, page, setPage, isPagination }: Props) => {
   const { platform }: any = usePlatform();
 
-  const eventsFilter = {
-    where: {},
-  };
-
-  const events = platform.event.find(eventsFilter);
-  const volunteer = platform.volunteer.find();
   const bookings = platform.booking.find(filter);
+  const eventsFilter = bookings && { where: {
+    _id: {
+      $in: bookings.map((booking: any) => booking.get('eventId')),
+    },
+  } };
+  const volunteerFilter = bookings && { where: {
+    _id: {
+      $in: bookings.map((booking: any) => booking.get('volunteerId')),
+    },
+  } };
+  const listingFilter = bookings && { where: {
+    _id: {
+      $in: bookings.map((booking: any) => booking.get('listing')),
+    },
+  } };
+  const userFilter = bookings && { where: {
+    _id: {
+      $in: bookings.map((booking: any) => booking.get('createdBy')),
+    },
+  } };
   const error = bookings && bookings.get('error');
-  const listings = platform.listing.find();
-  const allUsers = platform.user.find({ limit: MAX_BOOKINGS_TO_FETCH });
+
 
   const allBookings = platform.booking.find({
     where: filter.where,
@@ -38,18 +49,20 @@ const Bookings = ({ filter, page, setPage, isPagination }: Props) => {
 
   const loadData = async () => {
     try {
+      platform.booking.get(filter);
+      platform.booking.get({
+        where: filter.where,
+        limit: MAX_BOOKINGS_TO_FETCH,
+      }),
       setLoading(true);
-      await Promise.all([
-        platform.event.get(eventsFilter),
-        platform.volunteer.get(),
-        platform.booking.get(filter),
-        platform.booking.get({
-          where: filter.where,
-          limit: MAX_BOOKINGS_TO_FETCH,
-        }),
-        platform.listing.get(),
-        platform.user.get({ limit: MAX_BOOKINGS_TO_FETCH }),
-      ]);
+      if (bookings) {
+        await Promise.all([
+          platform.event.get(eventsFilter),
+          platform.volunteer.get(volunteerFilter),
+          platform.listing.get(listingFilter),
+          platform.user.get(userFilter),
+        ]);
+      }
     } catch (err) {
     } finally {
       setLoading(false);
@@ -60,7 +73,7 @@ const Bookings = ({ filter, page, setPage, isPagination }: Props) => {
     if (filter) {
       loadData();
     }
-  }, [filter, page]);
+  }, [filter, page, bookings]);
 
   if (error) {
     return <div className="validation-error">{JSON.stringify(error)}</div>;
@@ -99,35 +112,15 @@ const Bookings = ({ filter, page, setPage, isPagination }: Props) => {
                 <p className="mt-4">{__('no_bookings')}</p>
               ) : (
                 bookings.map((booking: any) => {
-                  const listingId = booking.get('listing');
-                  const listing = listings.find(
-                    (listing: any) => listing.get('_id') === listingId,
-                  );
+                  const listing = platform.listing.findOne(booking.get('listing'));
                   const listingName = listing
                     ? listing.get('name')
                     : __('no_listing_type');
-                  const userId = booking.get('createdBy');
-                  const user =
-                    allUsers &&
-                    allUsers.toJS().find((user: User) => user._id === userId);
-                  const userInfo = user && {
-                    name: user.screenname,
-                    photo: user.photo,
-                  };
-                  const currentEvent = events?.toJS()?.find((event: Event) => {
-                    return event._id === booking.get('eventId');
-                  });
-                  const eventName = currentEvent && currentEvent.name;
+                  const user = platform.user.findOne(booking.get('createdBy'));
+                  const currentEvent = platform.event.findOne(booking.get('eventId'));
 
-                  const currentVolunteer = volunteer
-                    ?.toJS()
-                    ?.find((v: Event) => {
-                      return v._id === booking.get('volunteerId');
-                    });
-                  const volunteerName =
-                    currentVolunteer && currentVolunteer.name;
+                  const currentVolunteer = platform.volunteer.findOne(booking.get('volunteerId'));
                   let link;
-
                   if (currentEvent) {
                     link = currentEvent && `/events/${currentEvent.slug}`;
                   }
@@ -141,9 +134,12 @@ const Bookings = ({ filter, page, setPage, isPagination }: Props) => {
                       key={booking.get('_id')}
                       booking={platform.booking.findOne(booking.get('_id'))}
                       listingName={listingName}
-                      userInfo={userInfo}
-                      eventName={eventName || null}
-                      volunteerName={volunteerName || null}
+                      userInfo={user && {
+                        name: user.get('screenname'),
+                        photo: user.get('photo')
+                      }}
+                      eventName={currentEvent && currentEvent.get('name')}
+                      volunteerName={currentVolunteer && currentVolunteer.get('name')}
                       link={link}
                     />
                   );
