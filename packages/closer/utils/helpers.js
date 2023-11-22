@@ -463,7 +463,7 @@ export const calculateSubscriptionPrice = (plan, monthlyCredits) => {
     return 0;
   }
 
-  if (!monthlyCredits) {
+  if (!monthlyCredits || !plan.tiers) {
     return plan.price;
   }
 
@@ -477,5 +477,5 @@ export const calculateSubscriptionPrice = (plan, monthlyCredits) => {
     }
   }
 
-  throw new Error(`Could not calculate subscription price for this amount of credits ${monthlyCredits}.`);
+  throw new Error('Could not calculate subscription price for this amount of credits', monthlyCredits);
 };
