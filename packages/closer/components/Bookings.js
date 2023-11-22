@@ -6,6 +6,7 @@ import BookingListPreview from './BookingListPreview';
 import { Heading, Spinner } from './ui';
 
 const loadTime = new Date();
+
 const MAX_USERS_TO_FETCH = 2000;
 
 const Bookings = ({ filter }) => {
