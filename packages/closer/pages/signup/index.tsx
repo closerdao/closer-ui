@@ -1,6 +1,5 @@
 import Head from 'next/head';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
@@ -142,17 +141,6 @@ const Signup = ({ subscriptionPlans }: Props) => {
                   </div>
                 )}
               </div>
-              {process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' && (
-                <div>
-                  {__('signup_form_get_credits')}{' '}
-                  <Link
-                    className="text-accent font-bold underline"
-                    href="/settings/credits"
-                  >
-                    {__('signup_form_credit_learn_more')}
-                  </Link>
-                </div>
-              )}
             </div>
             <div className="w-full md:w-1/2">
               <SignupForm />

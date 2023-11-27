@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingWallet from '../../../components/BookingWallet';
@@ -37,17 +37,9 @@ interface Props extends BaseBookingParams {
   settings: BookingSettings;
   error?: string;
   event?: Event;
-  creditsBalance?: number;
 }
 
-const Checkout = ({
-  booking,
-  listing,
-  settings,
-  creditsBalance,
-  error,
-  event,
-}: Props) => {
+const Checkout = ({ booking, listing, settings, error, event }: Props) => {
   const {
     utilityFiat,
     rentalToken,
@@ -66,15 +58,27 @@ const Checkout = ({
   const { balanceAvailable } = useContext(WalletState);
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
+  const [canApplyCredits, setCanApplyCredits] = useState(false);
 
   const isNotEnoughBalance = rentalToken?.val
     ? balanceAvailable < rentalToken.val
     : false;
 
-  const canApplyCredits =
-    rentalToken?.val &&
-    creditsBalance &&
-    creditsBalance >= (rentalToken?.val as number);
+  useEffect(() => {
+    (async () => {
+      try {
+        const creditsBalance = (await api.get('/carrots/balance')) as number;
+        const hasEnoughCredits = Boolean(
+          rentalToken?.val &&
+            creditsBalance &&
+            creditsBalance >= (rentalToken?.val as number),
+        );
+        setCanApplyCredits(hasEnoughCredits);
+      } catch (error) {
+        setCanApplyCredits(false);
+      }
+    })();
+  }, []);
 
   const listingName = listing?.name;
 
@@ -287,11 +291,12 @@ Checkout.getInitialProps = async ({
       },
       optionalEvent,
       optionalListing,
-      {
-        data: { results: creditsBalance },
-      },
     ] = await Promise.all([
-      api.get('/config/booking'),
+      api.get('/config/booking', {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        },
+      }),
       booking.eventId &&
         api.get(`/event/${booking.eventId}`, {
           headers: req?.cookies?.access_token && {
@@ -304,16 +309,11 @@ Checkout.getInitialProps = async ({
             Authorization: `Bearer ${req?.cookies?.access_token}`,
           },
         }),
-      api.get('/carrots/balance', {
-        headers: req?.cookies?.access_token && {
-          Authorization: `Bearer ${req?.cookies?.access_token}`,
-        },
-      }),
     ]);
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
 
-    return { booking, listing, settings, event, creditsBalance, error: null };
+    return { booking, listing, settings, event, error: null };
   } catch (err) {
     console.log(err);
     return {
@@ -321,7 +321,6 @@ Checkout.getInitialProps = async ({
       booking: null,
       listing: null,
       settings: null,
-      creditsBalance: null,
     };
   }
 };

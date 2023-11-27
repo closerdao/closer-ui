@@ -96,7 +96,7 @@ const TokenSaleCheckoutPage = () => {
       try {
         await api.post('/metric', {
           event: 'token-sale',
-          value: Number(tokens),
+            value: Number(tokens),
           category: 'revenue',
         });
       } catch (error: unknown) {
