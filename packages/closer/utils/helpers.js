@@ -455,3 +455,26 @@ export const doAllKeysHaveValues = (obj, keys) => {
   }
   return true;
 };
+
+
+export const calculateSubscriptionPrice = (plan, monthlyCredits) => {
+  if (!plan) {
+    return 0;
+  }
+
+  if (!monthlyCredits) {
+    return plan.price;
+  }
+
+  if (plan.tiers) {
+    const tier = plan.tiers.find(
+      (t) => monthlyCredits >= t.minAmount && monthlyCredits <= t.maxAmount,
+    );
+
+    if (tier) {
+      return tier.unitPrice * monthlyCredits;
+    }
+  }
+
+  throw new Error(`Could not calculate subscription price for this amount of credits ${monthlyCredits}.`);
+};
