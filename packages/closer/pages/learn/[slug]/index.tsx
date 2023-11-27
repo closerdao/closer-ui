@@ -49,11 +49,11 @@ const LessonPage = ({ lesson, lessonCreator, subscriptions, error }: Props) => {
   const getAccessUrl = `/subscriptions/checkout?priceId=${subscriptionPriceId}&source=${asPath}`;
 
   const canViewLessons = Boolean(
-    user && (user?.subscription?.plan || !lesson.paid),
+    user && (user?.subscription?.plan || !lesson?.paid),
   );
 
   const [isVideoPreview, setIsVideoPreview] = useState(
-    Boolean(lesson.previewVideo),
+    Boolean(lesson?.previewVideo),
   );
   const [isVideoLoading, setIsVideoLoading] = useState(false);
 
@@ -239,7 +239,7 @@ LessonPage.getInitialProps = async ({
         data: { results: lesson },
       },
     ] = await Promise.all([
-      api.get('/config/subscriptions'),
+      await api.get('/config/subscriptions'),
       await api.get(`/lesson/${query.slug}`, {
         headers: req?.cookies?.access_token && {
           Authorization: `Bearer ${req?.cookies?.access_token}`,
