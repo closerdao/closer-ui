@@ -222,7 +222,14 @@ const DatesSelector: NextPage<Props> = ({
   };
 
   const goBack = () => {
-    router.back();
+    if (volunteerId) {
+      router.push(`/volunteer/${volunteer?.slug}`);
+      return;
+    }
+    if (eventId) {
+      router.push(`/events/${event?.slug}`);
+      return;
+    }
   };
 
   if (error) {
