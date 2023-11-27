@@ -59,7 +59,7 @@ const BookingRequestButtons = ({
               </Button>
             </Link>
           )}
-          {status === 'confirmed' && (
+          {status === 'confirmed' && user && user._id === createdBy && (
             <Link passHref href={`/bookings/${_id}/checkout`}>
               <Button type="secondary">
                 💰 {__('booking_card_checkout_button')}
