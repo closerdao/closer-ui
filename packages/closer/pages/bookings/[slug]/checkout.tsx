@@ -287,9 +287,9 @@ Checkout.getInitialProps = async ({
       },
       optionalEvent,
       optionalListing,
-      {
-        data: { results: creditsBalance },
-      },
+      // {
+      //   data: { results: creditsBalance },
+      // },
     ] = await Promise.all([
       api.get('/config/booking', {
         headers: req?.cookies?.access_token && {
@@ -308,16 +308,17 @@ Checkout.getInitialProps = async ({
             Authorization: `Bearer ${req?.cookies?.access_token}`,
           },
         }),
-      api.get('/carrots/balance', {
-        headers: req?.cookies?.access_token && {
-          Authorization: `Bearer ${req?.cookies?.access_token}`,
-        },
-      }),
+      // api.get('/carrots/balance', {
+      //   headers: req?.cookies?.access_token && {
+      //     Authorization: `Bearer ${req?.cookies?.access_token}`,
+      //   },
+      // }),
     ]);
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
 
-    return { booking, listing, settings, event, creditsBalance, error: null };
+    // return { booking, listing, settings, event, creditsBalance, error: null };
+    return { booking, listing, settings, event, creditsBalance: 0, error: null };
   } catch (err) {
     console.log(err);
     return {
