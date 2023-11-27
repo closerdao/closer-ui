@@ -291,7 +291,11 @@ Checkout.getInitialProps = async ({
         data: { results: creditsBalance },
       },
     ] = await Promise.all([
-      api.get('/config/booking'),
+      api.get('/config/booking', {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        },
+      }),
       booking.eventId &&
         api.get(`/event/${booking.eventId}`, {
           headers: req?.cookies?.access_token && {
