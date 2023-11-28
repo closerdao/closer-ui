@@ -124,22 +124,30 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
               {__('subscriptions_title')}
             </Heading>
 
-            <Row
-              className="mb-4"
-              rowKey={` ${selectedPlan?.title} ${
-                Number(monthlyCreditsSelected)
-                  ? `- ${Number(monthlyCreditsSelected)}
-                    ${__('subscriptions_credits_included')}`
-                  : ''
-              }  `}
-              value={`${selectedPlan && priceFormat(total, DEFAULT_CURRENCY)}`}
-              additionalInfo={`${__(
-                'bookings_checkout_step_total_description',
-              )} ${getVatInfo({
-                val: total,
-                cur: DEFAULT_CURRENCY,
-              })} ${__('subscriptions_summary_per_month')}`}
-            />
+              {selectedPlan?.tiers && monthlyCreditsSelected && (
+              <Row
+                className="mb-4"
+                rowKey={` ${selectedPlan?.title} ${
+                  Number(monthlyCreditsSelected)
+                    ? `- ${Number(monthlyCreditsSelected)}
+                      ${__('subscriptions_credits_included')}`
+                    : ''
+                }  `}
+                value={`${
+                  selectedPlan &&
+                  priceFormat(
+                    total,
+                    DEFAULT_CURRENCY,
+                  )
+                }`}
+                additionalInfo={`${__(
+                  'bookings_checkout_step_total_description',
+                )} ${getVatInfo({
+                  val: total,
+                  cur: DEFAULT_CURRENCY,
+                })} ${__('subscriptions_summary_per_month')}`}
+              />
+            )}
           </div>
 
           <div className="mb-14">
