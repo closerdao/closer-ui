@@ -34,7 +34,7 @@ export const links = [
   },
   {
     label: 'Book a stay',
-    url: '/listings',
+    url: '/stay',
     enabled: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
   },
   // {
@@ -50,7 +50,7 @@ export const links = [
   {
     label: 'Refer a friend',
     url: '/settings/referrals',
-    enabled: true,
+    enabled: process.env.NEXT_PUBLIC_FEATURE_REFERRAL === 'true',
   },
   {
     label: 'Governance',
@@ -64,7 +64,7 @@ export const links = [
     url: '/admin/manage-users',
     enabled: true,
     roles: ['admin'],
-  },
+  }, 
   {
     label: 'New event',
     url: '/events/create',
@@ -85,11 +85,11 @@ export const links = [
   {
     label: 'Learning hub',
     url: '/learn/category/all',
-    enabled: true,
+    enabled: process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true',
   },
   {
     label: 'Blog',
     url: '/blog',
-    enabled: true,
+    enabled: process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true',
   },
 ];

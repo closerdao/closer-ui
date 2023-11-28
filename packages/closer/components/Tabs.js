@@ -49,7 +49,7 @@ const Tabs = ({ tabs, onChange, initialCurrentTab }) => {
       </div>
       <div className="tab-content mt-4 mb-8 py-4">
         {tabs && tabs[currentTab] && tabs[currentTab].content}
-        {tabs[currentTab].title === 'general' && tabs[currentTab].datePicker}
+        {tabs[currentTab].datePicker && tabs[currentTab].title === 'general' && tabs[currentTab].datePicker}
       </div>
     </>
   );

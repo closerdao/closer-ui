@@ -8,12 +8,13 @@ import { Card, ErrorMessage, Heading, Input } from '../../components/ui';
 import Button from '../../components/ui/Button';
 import Switcher from '../../components/ui/Switcher';
 
+import dayjs from 'dayjs';
+
 import { useAuth } from '../../contexts/auth';
 import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
-
 const loginOptions =
   process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true'
     ? ['Email', 'Wallet']
@@ -24,29 +25,36 @@ const Login = () => {
   const { signMessage } = useContext(WalletDispatch);
 
   const router = useRouter();
+  const { back, source, start, end, adults, useTokens, eventId, volunteerId } = router.query || {};
 
   const redirect = (hasSubscription: boolean) => {
-    const source = decodeURIComponent(getQueryParam('source'));
-    const back = decodeURIComponent(getQueryParam('back'));
-
+    const dateFormat = 'YYYY-MM-DD';
     if (!source && !back) {
       redirectTo('/');
       return;
     }
-    if (!source) {
-      redirectTo(back);
+    if (!source && back && start && end && adults) {
+      redirectTo(
+        `${back}?start=${dayjs(start as string).format(dateFormat)}&end=${dayjs(
+          end as string,
+        ).format(dateFormat)}&adults=${adults}&useTokens=${useTokens}${volunteerId ? `&volunteerId=${volunteerId}` : ''}${eventId ? `&eventId=${eventId}` : ''}`,
+      );
       return;
     }
+    if (!source && back) {
+      redirectTo(`${back}`);
+      return;
+    }
+
     if (hasSubscription && source) {
-      redirectTo(source);
+      redirectTo(source as string);
       return;
     }
     if (!hasSubscription && source !== 'undefined') {
       const redirectUrl = back
-        ? `${decodeURIComponent(back).replace(
-            'back=',
-            '',
-          )}&source=${source.replace('&source=', '')}`
+        ? `${decodeURIComponent(back as string).replace('back=', '')}&source=${(
+            source as string
+          ).replace('&source=', '')}`
         : '/';
       redirectTo(redirectUrl);
       return;
@@ -55,12 +63,6 @@ const Login = () => {
 
   const redirectTo = (url: string) => {
     router.push(url);
-  };
-
-  const getQueryParam = (param: string) => {
-    return (
-      new URLSearchParams(router.query as unknown as string).get(param) || ''
-    );
   };
 
   const { isAuthenticated, user, login, setAuthentification, error, setError } =
@@ -154,6 +156,17 @@ const Login = () => {
           >
             {__('login_title')}
           </Heading>
+
+          {back && (
+            <p>
+              {__('log_in_redirect_message')}{' '}
+              <strong>
+                {typeof back === 'string' &&
+                  back.substring(back[0] === '/' ? 1 : 0)}
+              </strong>{' '}
+              {__('log_in_redirect_message_page')}
+            </p>
+          )}
 
           {process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true' && (
             <Switcher

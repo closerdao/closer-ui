@@ -24,7 +24,7 @@ const CreateLessonPage: FC = () => {
         <EditModel
           endpoint={'/lesson'}
           fields={models.lesson}
-          onSave={(lesson) => router.push(`/lesson/category/${lesson.slug}`)}
+          onSave={(lesson) => router.push(`/learn/${lesson.slug}`)}
         />
       </div>
     </>

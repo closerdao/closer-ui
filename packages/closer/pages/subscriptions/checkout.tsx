@@ -13,13 +13,14 @@ import { BackButton, Heading, ProgressBar, Row } from '../../components/ui/';
 import { NextPage } from 'next';
 
 import Page404 from '../404';
-import { DEFAULT_CURRENCY, SUBSCRIPTION_STEPS, MAX_CREDITS_PER_MONTH } from '../../constants';
+import {
+  DEFAULT_CURRENCY,
+  MAX_CREDITS_PER_MONTH,
+  SUBSCRIPTION_STEPS,
+} from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
-import {
-  SelectedPlan,
-  SubscriptionPlan,
-} from '../../types/subscriptions';
+import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import {
@@ -46,7 +47,11 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
   const router = useRouter();
   const { priceId, monthlyCredits, source } = router.query;
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
-  const monthlyCreditsSelected = Math.min(parseFloat(monthlyCredits as string) || selectedPlan?.monthlyCredits || 1, MAX_CREDITS_PER_MONTH);
+
+  const monthlyCreditsSelected = Math.min(
+    parseFloat(monthlyCredits as string) || selectedPlan?.monthlyCredits || 0,
+    MAX_CREDITS_PER_MONTH,
+  );
   const { PLATFORM_NAME } = useConfig() || {};
 
   useEffect(() => {
@@ -90,7 +95,10 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
     return <Page404 error="" />;
   }
 
-  const total = calculateSubscriptionPrice(selectedPlan, monthlyCreditsSelected);
+  const total = calculateSubscriptionPrice(
+    selectedPlan,
+    monthlyCreditsSelected,
+  );
 
   return (
     <>

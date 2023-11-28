@@ -14,6 +14,7 @@ import { Button } from './ui';
 
 const Navigation = () => {
   const [navOpen, setNavOpen] = useState(false);
+  
   const toggleNav = () => {
     setNavOpen((isOpen) => !isOpen);
   };
@@ -41,7 +42,7 @@ const Navigation = () => {
         <Logo />
         <div className="flex gap-3 w-auto justify-center items-center ">
           <Button
-            onClick={() => router.push('/listings')}
+            onClick={() => router.push('/stay')}
             size="small"
             type="primary"
           >

@@ -81,8 +81,6 @@ const BookingsFilter = ({ setFilter }: Props) => {
       })
       .toJSON();
 
-  console.log('eventsData=', eventsData);
-
   function handleClickOutsideArrivalDropdown() {
     setShowArrivalDropdown(false);
   }

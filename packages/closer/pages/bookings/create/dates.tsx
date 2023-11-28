@@ -32,7 +32,6 @@ import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, getMaxBookingHorizon } from '../../../utils/helpers';
 
-
 interface Props {
   error?: string;
   settings?: BookingSettings;
@@ -67,9 +66,7 @@ const DatesSelector: NextPage<Props> = ({
 
   const [blockedDateRanges, setBlockedDateRanges] = useState<any[]>([]);
   const canBookStays = (user: User) => {
-    if (
-      !user.roles.includes('member') 
-    ) {
+    if (!user.roles.includes('member')) {
       return false;
     }
     return true;
@@ -108,12 +105,7 @@ const DatesSelector: NextPage<Props> = ({
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push({
-        pathname: '/signup',
-        query: {
-          back: router.asPath,
-        },
-      });
+      redirectToSignup();
     }
 
     if (eventId) {
@@ -156,6 +148,27 @@ const DatesSelector: NextPage<Props> = ({
     setEndDate(savedEndDate as string);
   }, [savedStartDate, savedEndDate]);
 
+  const getUrlParams = () => {
+    const dateFormat = 'YYYY-MM-DD';
+    const params = {
+      start: dayjs(savedStartDate as string).format(dateFormat),
+      end: dayjs(savedEndDate as string).format(dateFormat),
+      adults: String(adults),
+      ...(kids && { kids: String(kids) }),
+      ...(infants && { infants: String(infants) }),
+      ...(pets && { pets: String(pets) }),
+      ...(eventId && { eventId: eventId as string }),
+      ...(volunteerId && { volunteerId: volunteerId as string }),
+    };
+    const urlParams = new URLSearchParams(params);
+
+    return urlParams;
+  };
+
+  const redirectToSignup = () => {
+    router.push(`/signup?back=bookings/create/dates&${getUrlParams()}`);
+  };
+
   const handleNext = async () => {
     setHandleNextError(null);
     try {
@@ -177,12 +190,7 @@ const DatesSelector: NextPage<Props> = ({
 
       if (data.start === data.end || selectedTicketOption?.isDayTicket) {
         if (!isAuthenticated) {
-          router.push({
-            pathname: '/login',
-            query: {
-              back: router.asPath,
-            },
-          });
+          redirectToSignup();
           return;
         }
         // Single day ticket - no accomodation needed.
@@ -340,8 +348,8 @@ DatesSelector.getInitialProps = async ({ query }) => {
     } = await api.get('/config/booking');
     if (eventId) {
       const [ticketsAvailable, event] = await Promise.all([
-        await api.get(`/bookings/event/${eventId}/availability`),
-        await api.get(`/event/${eventId}`),
+        api.get(`/bookings/event/${eventId}/availability`),
+        api.get(`/event/${eventId}`),
       ]);
 
       return {

@@ -76,6 +76,7 @@
   "bookings_dates_step_subtitle": "Dates",
   "bookings_dates_step_guest_book_horizon": "As a guest, you can book up to %s days in advance",
   "bookings_dates_step_book_duration": "and book up to %s days of stay.",
+  "bookings_stay_duration": "Stay duration (days)",
   "bookings_dates_step_member_book_horizon": "Members can book up to %s days in advance",
   "bookings_dates_step_total": "Total Nights",
   "bookings_dates_step_payment_title": "Payment Method",
@@ -98,11 +99,12 @@
   "bookings_summary_step_title": "Summary",
   "bookings_summary_step_dates_title": "Your Stay",
   "bookings_summary_step_your_event": "Your event",
-  "bookings_summary_step_dates_number_of_guests": "Guests",
+  "bookings_summary_step_dates_number_of_guests": "Adults",
   "bookings_summary_step_dates_accomodation_type": "Accommodation",
   "bookings_summary_step_dates_commitment": "Volunteer commitment",
   "bookings_summary_step_dates_default_commitment": "4 hours a day",
   "bookings_summary_step_dates_event": "Event",
+  "bookings_summary_step_volunteer_opportunity": "Volunteer opportunity",
   "bookings_summary_step_dates_ticket_option": "Ticket option",
   "bookings_summary_step_accomodation_type_description": "Daily rate * Nights * Guests",
   "bookings_summary_step_costs_title": "Costs",
@@ -120,7 +122,7 @@
   "bookings_confirmation_step_you_are_coming": "You are coming to",
   "bookings_select_dates_button": "Select dates",
   "bookings_select_stay_dates": "Select stay dates",
-  "bookings_date_range_error": "Please select a valid date range",
+  "bookings_date_range_error": "Please select stay dates",
   "bookings_incomplete_dates_error": "Please select checkout date",
   "bookings_does_prefer_single_beds": "I prefer single beds (applies to private accommodation)",
   "bookings_heading_extras": "Extras",
@@ -228,6 +230,7 @@
   "listing_preview_location": "Location",
   "listing_preview_address": "Fábrica de Sonhos Tradicional, 7540-011, Abela, Santiago do Cacém, Portugal",
   "listing_listings_available": "spaces available",
+  "listing_no_listings_found": "No listings found",
   "member_home_title": "Aloha",
   "member_home_add_channel": "+add-channel",
   "member_list_see_profile": "See profile",
@@ -260,7 +263,6 @@
   "signup_body": "Join the dreamers and makers of tomorrow.",
   "signup_success": "Welcome! We look forward to connecting with you.",
   "signup_success_cta": "You will be redirected back in a second",
-  "signup_title": "Sign Up & Become an Explorer",
   "signup_sub_title": "and start building the dream.",
   "signup_form_name": "Name",
   "signup_form_phone_number": "Phone number (optional)",
@@ -459,7 +461,10 @@
   "listings_book_accomodation_type": "Accommodation type",
   "listings_book_button": "Book",
   "listings_create_title": "Create Listing",
-  "listings_title": "Book your stay at Traditional Dream Factory",
+  "listings_title": "Book your stay at ",
+  "listings_edit_title": "Edit listings",
+
+  
   "listings_create": "Create",
   "listings_book": "Book",
   "login_forgot_password_title": "Reset password",
@@ -890,12 +895,7 @@
   "manage_users_preparing_data": "Preparing data...",
   "manage_users_lear_filters_button": "Clear filters",
 
-  "resources_heading": "Resourceful by nature",
-  "resources_subheading": "Welcome to our ever-evolving potting shed of TDF tools, village build updates, subscription packages, news about magical future gatherings, the inner workings of our project, and the small, but oh-so-important legal print. Check back here regularly to watch us grow!",
-  "resources_faq_heading": "Frequently asked questions",
-  "resources_faq_subheading": "Got a question? We’re an open source.",
-  "resources_resources_heading": "Put the kettle on and get to know us a little better",
-  "resources_resources_subheading": "Read all about our dream: the mission, vision and how we got here, with our digital papers",
+
   "resources_faqs_error": "Error fetching FAQs",
 
   "learn_heading": "TDF Learning Hub",
@@ -919,7 +919,10 @@
   "learn_create_lesson": "Create lesson",
   "learn_all_courses": "Back to all courses",
 
+  "generic_clear_selection": "Clear selection",
   "support_us_heading": "Support Traditional Dream Factory",
+  "log_in_redirect_message": "Please log in to access ",
+  "log_in_redirect_message_page": "page",
 
   "generic_edit_button": "Edit"
 }

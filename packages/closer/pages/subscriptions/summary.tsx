@@ -3,8 +3,8 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
-import PageError from '../../components/PageError';
 import Counter from '../../components/Counter';
+import PageError from '../../components/PageError';
 import {
   BackButton,
   Button,
@@ -16,20 +16,21 @@ import {
 import { NextPage } from 'next';
 
 import Page404 from '../404';
-import { DEFAULT_CURRENCY, SUBSCRIPTION_STEPS, MAX_CREDITS_PER_MONTH } from '../../constants';
+import {
+  DEFAULT_CURRENCY,
+  MAX_CREDITS_PER_MONTH,
+  SUBSCRIPTION_STEPS,
+} from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
-import {
-  SelectedPlan,
-  SubscriptionPlan,
-} from '../../types/subscriptions';
+import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import {
   __,
+  calculateSubscriptionPrice,
   getVatInfo,
   priceFormat,
-  calculateSubscriptionPrice
 } from '../../utils/helpers';
 
 interface Props {
@@ -44,9 +45,15 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId, monthlyCredits } = router.query;
+
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
-  const defaultMonthlyCredits = Math.min(parseFloat(monthlyCredits as string) || selectedPlan?.monthlyCredits || 1, MAX_CREDITS_PER_MONTH);
-  const [monthlyCreditsSelected, setMonthlyCreditsSelected] = useState<number>(defaultMonthlyCredits);
+  const defaultMonthlyCredits = Math.min(
+    parseFloat(monthlyCredits as string) || selectedPlan?.monthlyCredits || 0,
+    MAX_CREDITS_PER_MONTH,
+  );
+  const [monthlyCreditsSelected, setMonthlyCreditsSelected] = useState<number>(
+    defaultMonthlyCredits,
+  );
 
   const { PLATFORM_NAME } = useConfig() || {};
 
@@ -62,9 +69,11 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
         (plan: SubscriptionPlan) => plan.priceId === priceId,
       );
 
+      setMonthlyCreditsSelected(selectedSubscription?.tiers ? 1 : 0);
+
       setSelectedPlan({
         title: selectedSubscription?.title as string,
-        monthlyCredits: selectedSubscription?.monthlyCredits as number,
+        monthlyCredits: selectedSubscription?.tiers ? 1 : 0,
         price: selectedSubscription?.price as number,
         tiers: selectedSubscription?.tiers,
       });
@@ -104,8 +113,11 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   if (process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true') {
     return <Page404 error="" />;
   }
-  
-  const total = calculateSubscriptionPrice(selectedPlan, monthlyCreditsSelected);
+
+  const total = calculateSubscriptionPrice(
+    selectedPlan,
+    monthlyCreditsSelected,
+  );
 
   return (
     <>
@@ -135,9 +147,11 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
                 rowKey={__('subscriptions_summary_tier')}
                 value={selectedPlan?.title}
               />
-              { selectedPlan?.tiers &&
+              {selectedPlan?.tiers && (
                 <div className="flex space-between items-center mt-9">
-                  <p className="flex-1">{__('subscriptions_summary_stays_per_month')}</p>
+                  <p className="flex-1">
+                    {__('subscriptions_summary_stays_per_month')}
+                  </p>
                   <Counter
                     value={monthlyCreditsSelected}
                     setFn={(value) => {
@@ -147,7 +161,7 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
                     maxValue={90}
                   />
                 </div>
-              }
+              )}
             </div>
             <Button className="mt-3" type="secondary" onClick={handleEditPlan}>
               {__('subscriptions_summary_edit_button')}
