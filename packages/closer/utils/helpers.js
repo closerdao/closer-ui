@@ -457,7 +457,6 @@ export const doAllKeysHaveValues = (obj, keys) => {
   return true;
 };
 
-
 export const calculateSubscriptionPrice = (plan, monthlyCredits) => {
   if (!plan) {
     return 0;
@@ -477,5 +476,7 @@ export const calculateSubscriptionPrice = (plan, monthlyCredits) => {
     }
   }
 
-  throw new Error(`Could not calculate subscription price for this amount of credits ${monthlyCredits}.`);
+  throw new Error(
+    `Could not calculate subscription price for this amount of credits ${monthlyCredits}.`,
+  );
 };

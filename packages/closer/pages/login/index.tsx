@@ -15,7 +15,6 @@ import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
- 
 const loginOptions =
   process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true'
     ? ['Email', 'Wallet']
@@ -26,7 +25,7 @@ const Login = () => {
   const { signMessage } = useContext(WalletDispatch);
 
   const router = useRouter();
-  const { back, source, start, end, adults, useTokens } = router.query || {};
+  const { back, source, start, end, adults, useTokens, eventId, volunteerId } = router.query || {};
 
   const redirect = (hasSubscription: boolean) => {
     const dateFormat = 'YYYY-MM-DD';
@@ -34,12 +33,16 @@ const Login = () => {
       redirectTo('/');
       return;
     }
-    if (!source && back) {
+    if (!source && back && start && end && adults) {
       redirectTo(
         `${back}?start=${dayjs(start as string).format(dateFormat)}&end=${dayjs(
           end as string,
-        ).format(dateFormat)}&adults=${adults}&useTokens=${useTokens}`,
+        ).format(dateFormat)}&adults=${adults}&useTokens=${useTokens}${volunteerId ? `&volunteerId=${volunteerId}` : ''}${eventId ? `&eventId=${eventId}` : ''}`,
       );
+      return;
+    }
+    if (!source && back) {
+      redirectTo(`${back}`);
       return;
     }
 
@@ -157,7 +160,10 @@ const Login = () => {
           {back && (
             <p>
               {__('log_in_redirect_message')}{' '}
-              <strong>{typeof back === 'string' && back.substring(back[0] === '/' ? 1 : 0)}</strong>{' '}
+              <strong>
+                {typeof back === 'string' &&
+                  back.substring(back[0] === '/' ? 1 : 0)}
+              </strong>{' '}
               {__('log_in_redirect_message_page')}
             </p>
           )}

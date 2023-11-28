@@ -348,8 +348,8 @@ DatesSelector.getInitialProps = async ({ query }) => {
     } = await api.get('/config/booking');
     if (eventId) {
       const [ticketsAvailable, event] = await Promise.all([
-        await api.get(`/bookings/event/${eventId}/availability`),
-        await api.get(`/event/${eventId}`),
+        api.get(`/bookings/event/${eventId}/availability`),
+        api.get(`/event/${eventId}`),
       ]);
 
       return {
