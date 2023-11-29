@@ -32,13 +32,12 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
         >
           {listing.get('name')}
         </Link>
-
         {listing.get('description') && (
           <p
             className="rich-text text-left"
             dangerouslySetInnerHTML={{
               __html: `${listing.get('description').slice(0, 120)} ${
-                listing.get('description').length > 120 && '...'
+                listing.get('description').length > 120 ? '...' : ''
               }`,
             }}
           />
@@ -60,7 +59,9 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
             <p className="text-left">
               <span className="">
                 {priceFormat(
-                  listing.get('fiatPrice').toJS().val * (1 - discounts.weekly) * 7,
+                  listing.get('fiatPrice').toJS().val *
+                    (1 - discounts.weekly) *
+                    7,
                   listing.get('fiatPrice').toJS().cur,
                 )}{' '}
               </span>
@@ -69,7 +70,9 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
             <p className="text-left">
               <span className="">
                 {priceFormat(
-                  listing.get('fiatPrice').toJS().val * (1 - discounts.monthly) * 30,
+                  listing.get('fiatPrice').toJS().val *
+                    (1 - discounts.monthly) *
+                    30,
                   listing.get('fiatPrice').toJS().cur,
                 )}{' '}
               </span>
