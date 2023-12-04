@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { CSVLink } from 'react-csv';
 
 import { usePlatform } from '../contexts/platform';
 import { __ } from '../utils/helpers';
@@ -63,6 +64,10 @@ const Bookings = ({ filter }) => {
     return <div className="validation-error">{JSON.stringify(error)}</div>;
   }
 
+  // TODO: review headers/fields
+  const headers = ['_id', 'created', 'start', 'end', 'status', 'createdBy', 'listing', 'eventId', 'volunteerId', 'adults', 'children', 'infants', 'useTokens'];
+  const csvData = bookings ? bookings.toJS() : [];
+
   return (
     <section className=" min-h-[100vh]">
       {loading ? (
@@ -76,6 +81,7 @@ const Bookings = ({ filter }) => {
             {bookings && bookings.count() === 1
               ? __('booking_requests_result')
               : __('booking_requests_results')}
+            <CSVLink headers={headers} data={csvData} filename={'bookings.csv'} className="btn btn-primary ml-16" target="_blank">Download CSV</CSVLink>
           </Heading>
           <div className="bookings-list mt-8 flex flex-wrap gap-4">
             {!bookings || bookings.count() === 0 ? (
