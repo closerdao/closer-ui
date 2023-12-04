@@ -97,7 +97,7 @@ const HomePage = ({ subscriptionPlans }: Props) => {
               display
               className="text-center md:text-left mb-6 md:text-6xl"
             >
-              Traditional Dream Factory [dev]
+              Traditional Dream Factory 
             </Heading>
             <p className="text-center md:text-left mb-6">
               Our co-living quarters will be home to 14 large suites with a
