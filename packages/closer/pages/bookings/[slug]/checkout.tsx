@@ -67,7 +67,9 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
   useEffect(() => {
     (async () => {
       try {
-        const creditsBalance = (await api.get('/carrots/balance')) as number;
+        const creditsBalance = (await api.get('/carrots/balance')).data
+          .results as number;
+        console.log('creditsBalance=', creditsBalance);
         const hasEnoughCredits = Boolean(
           rentalToken?.val &&
             creditsBalance &&
