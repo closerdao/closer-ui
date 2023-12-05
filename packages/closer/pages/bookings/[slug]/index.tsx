@@ -1,5 +1,7 @@
 import Head from 'next/head';
 
+import { useState } from 'react';
+
 import BookingRequestButtons from '../../../components/BookingRequestButtons';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
@@ -50,6 +52,8 @@ const BookingPage = ({
     photo: bookingCreatedBy.photo,
   };
 
+  const [status, setStatus] = useState(booking.status);
+
   const {
     utilityFiat,
     rentalToken,
@@ -67,20 +71,29 @@ const BookingPage = ({
     total,
     doesNeedSeparateBeds,
     doesNeedPickup,
-    status,
     createdBy,
     _id,
     created,
   } = booking || {};
+
+  const refetchStatus = async () => {
+    const {
+      data: { results: booking },
+    } = await api.get(`/booking/${_id}`);
+
+    setStatus(booking.status);
+  };
 
   const createdFormatted = dayjs(created).format('DD/MM/YYYY - HH:mm:A');
   const isNotPaid = status !== 'paid';
 
   const confirmBooking = async () => {
     await platform.bookings.confirm(_id);
+    await refetchStatus();
   };
   const rejectBooking = async () => {
     await platform.bookings.reject(_id);
+    await refetchStatus();
   };
 
   if (

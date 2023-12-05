@@ -97,9 +97,9 @@ const ListingCard = ({
       )}
       <Button
         onClick={handleBooking}
-        isEnabled={available && !(listing.private && adults > listing.beds)}
+        isEnabled={available !== false && !(listing.private && adults > listing.beds)}
       >
-        {available
+        {available !== false
           ? isAuthenticated
             ? __('listing_preview_book')
             : __('listing_preview_sign_in_to_book')
