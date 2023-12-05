@@ -21,9 +21,10 @@ import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
-import { Event } from '../../../types';
+import { BookingSettings, Event, Listing } from '../../../types';
 import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
+import { getAccommodationPriceRange } from '../../../utils/events.helpers';
 import { prependHttp, priceFormat } from '../../../utils/helpers';
 import { __ } from '../../../utils/helpers';
 
@@ -32,11 +33,22 @@ interface Props {
   eventCreator: User;
   error?: string;
   descriptionText?: string;
+  settings: BookingSettings;
+  listings: Listing[];
 }
 
-const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
+const EventPage = ({
+  event,
+  eventCreator,
+  error,
+  descriptionText,
+  listings,
+  settings,
+}: Props) => {
   const { platform }: any = usePlatform();
   const { user, isAuthenticated } = useAuth();
+
+  const dailyUtilityFee = settings.utilityFiat.val;
 
   const [photo, setPhoto] = useState(event && event.photo);
   const [password, setPassword] = useState('');
@@ -64,6 +76,10 @@ const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
   const duration = end && end.diff(start, 'hour', true);
   const isThisYear = dayjs().isSame(start, 'year');
   const dateFormat = isThisYear ? 'MMM D' : 'YYYY MMMM';
+
+  const durationInDays = dayjs(end).diff(dayjs(start), 'day');
+  const { min: minAccommodationPrice, max: maxAccommodationPrice } =
+    getAccommodationPriceRange(settings, listings, durationInDays, start);
 
   const myTickets = platform.ticket.find(myTicketFilter);
   const ticketsCount = event?.ticketOptions
@@ -314,9 +330,23 @@ const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
                               </div>
                             </div>
                           ))}
-
                         <Information>{__('events_discalimer')}</Information>
-
+                        <div className="text-sm">
+                          {__('events_accommodation')}{' '}
+                          <strong>
+                            {priceFormat(minAccommodationPrice)} -{' '}
+                            {priceFormat(maxAccommodationPrice)}
+                          </strong>
+                        </div>
+                        <div className="text-sm">
+                          {__('events_utility')}{' '}
+                          <strong>
+                            {priceFormat(
+                              dayjs(end).diff(dayjs(start), 'day') *
+                                dailyUtilityFee,
+                            )}
+                          </strong>
+                        </div>
                         <div className="mt-4 event-actions flex items-center">
                           {event.ticket && start && start.isAfter(dayjs()) ? (
                             <Link
@@ -503,22 +533,24 @@ EventPage.getInitialProps = async ({
 }) => {
   const { convert } = require('html-to-text');
   try {
-    const {
-      data: { results: event },
-    } = await api.get(`/event/${query.slug}`, {
-      headers: req?.cookies?.access_token && {
-        Authorization: `Bearer ${req?.cookies?.access_token}`,
-      },
-    });
+    const [event, listings, settings] = await Promise.all([
+      api.get(`/event/${query.slug}`, {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        },
+      }),
+      api.get('/listing'),
+      api.get('/config/booking'),
+    ]);
 
     const options = {
       baseElements: { selectors: ['p', 'h2', 'span'] },
     };
-    const descriptionText = convert(event.description, options)
+    const descriptionText = convert(event.data.results.description, options)
       .trim()
       .slice(0, 100);
 
-    const eventCreatorId = event.createdBy;
+    const eventCreatorId = event.data.results.createdBy;
     const {
       data: { results: eventCreator },
     } = await api.get(`/user/${eventCreatorId}`, {
@@ -527,7 +559,13 @@ EventPage.getInitialProps = async ({
       },
     });
 
-    return { event, eventCreator, descriptionText };
+    return {
+      event: event.data.results,
+      eventCreator,
+      descriptionText,
+      listings: listings.data.results,
+      settings: settings.data.results.value,
+    };
   } catch (err: unknown) {
     console.log('Error', err);
     return {
