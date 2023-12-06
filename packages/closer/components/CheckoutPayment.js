@@ -24,7 +24,7 @@ const CheckoutPayment = ({
   bookingId,
   buttonDisabled,
   useTokens,
-  hasAppliedCredits,
+  useCredits,
   totalToPayInFiat,
   dailyTokenValue,
   startDate,
@@ -116,7 +116,7 @@ const CheckoutPayment = ({
           cardElementClassName="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-4"
           buttonDisabled={buttonDisabled}
           prePayInTokens={useTokens && payTokens}
-          hasAppliedCredits={hasAppliedCredits}
+          useCredits={useCredits}
           payWithCredits={payWithCredits}
           isProcessingTokenPayment={isStaking}
           total={totalToPayInFiat.val}

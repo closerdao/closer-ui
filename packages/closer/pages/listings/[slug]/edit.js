@@ -34,7 +34,7 @@ const EditListing = ({ listing }) => {
             endpoint={'/listing'}
             fields={models.listing}
             buttonText="Save"
-            onSave={(listing) => router.push(`/listings/${listing.slug}`)}
+            onSave={(listing) => router.push(`/stay/${listing.slug}`)}
             onUpdate={(name, value, option, actionType) =>
               onUpdate(name, value, option, actionType)
             }

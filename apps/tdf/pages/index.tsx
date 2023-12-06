@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import router from 'next/router';
 
+import { useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
 import PhotoGallery from 'closer/components/PhotoGallery';
@@ -10,6 +11,7 @@ import Resources from 'closer/components/Resources';
 import UpcomingEventsIntro from 'closer/components/UpcomingEventsIntro';
 
 import { Button, Card, Heading, Tag, YoutubeEmbed } from 'closer';
+import { useAuth } from 'closer/contexts/auth';
 import { SubscriptionPlan } from 'closer/types/subscriptions';
 import api from 'closer/utils/api';
 import { __ } from 'closer/utils/helpers';
@@ -19,6 +21,18 @@ interface Props {
   subscriptionPlans: SubscriptionPlan[];
 }
 const HomePage = ({ subscriptionPlans }: Props) => {
+  const { user, isAuthenticated } = useAuth();
+  const [ctaButton, setCtaButton] = useState({ text: 'join the dream', link: '/signup' });
+
+  useEffect(() => {
+    if (isAuthenticated && !user?.subscription?.plan) {
+      setCtaButton({ text: 'subscribe', link: '/subscriptions' });
+    }
+    if (user && user?.subscription?.plan) {
+      setCtaButton({ text: 'book a stay', link: '/stay' });
+    }
+  }, [user, isAuthenticated]);
+
   return (
     <div>
       <Head>
@@ -71,7 +85,7 @@ const HomePage = ({ subscriptionPlans }: Props) => {
               </p>
               <div>
                 <Link
-                  href="/signup"
+                  href={ctaButton.link}
                   type="submit"
                   className="bg-accent text-white rounded-full py-2.5 px-8 text-xl"
                   onClick={() =>
@@ -81,7 +95,7 @@ const HomePage = ({ subscriptionPlans }: Props) => {
                     })
                   }
                 >
-                  JOIN THE DREAM
+                  {ctaButton.text.toUpperCase()}
                 </Link>
               </div>
             </div>
@@ -97,7 +111,7 @@ const HomePage = ({ subscriptionPlans }: Props) => {
               display
               className="text-center md:text-left mb-6 md:text-6xl"
             >
-              Traditional Dream Factory
+              Traditionl Dream Factory
             </Heading>
             <p className="text-center md:text-left mb-6">
               Our co-living quarters will be home to 14 large suites with a
@@ -307,11 +321,11 @@ const HomePage = ({ subscriptionPlans }: Props) => {
         <section className="flex items-center flex-col py-12 ">
           <div className="text-center mb-20 w-full md:max-w-6xl">
             <div className="w-full flex items-center flex-col">
-              <Heading
-                level={2}
-                className="text-2xl font-bold"
-              >
-                {'Meet your new home, way of life, and tribe. Join a unique blend of solarpunks, web3 aficionados, holistic healers, permaculture pioneers, tree enthusiasts, tech wizards, and regenerative innovators. Together, we\'re reshaping communal living.'}
+              <Heading level={2} className="text-2xl font-bold">
+                Meet your new home, way of life, and tribe. Join a unique blend
+                of solarpunks, web3 aficionados, holistic healers, permaculture
+                pioneers, tree enthusiasts, tech wizards, and regenerative
+                innovators. Together, we&rsquo;re reshaping communal living.
               </Heading>
             </div>
             <PhotoGallery className="mt-8" />
@@ -324,7 +338,10 @@ const HomePage = ({ subscriptionPlans }: Props) => {
               className="text-2xl mb-6 max-w-3xl text-center mt-8 italic"
               level={2}
             >
-              TDF is a model for a regenerative economy. We are looking for 300 forward-thinking doer-dreamers to co-create a habitat where nature thrives. No fleeting promises here, just a space designed for regenerative living and deep connection. 🐑
+              TDF is a model for a regenerative economy. We are looking for 300
+              forward-thinking doer-dreamers to co-create a habitat where nature
+              thrives. No fleeting promises here, just a space designed for
+              regenerative living and deep connection. 🐑
             </Heading>
             <div>
               <Link
@@ -428,7 +445,19 @@ const HomePage = ({ subscriptionPlans }: Props) => {
         <section className="flex justify-center mb-[120px] py-16 bg-accent-alt-light">
           <div className="max-w-6xl flex flex-wrap">
             <Heading level={3} className="mb-8">
-              TDF is part of the OASA network - transforming ownership into stewardship. The TDF project is bound by the <Link href="https://docs.google.com/document/d/1Ocv9rtRkDxsJmeRxrL6mV07EyWcHc2YqfN8mHoylO2E/edit" className="underline">Regenerative Land Stewardship Principles</Link> set forth by OASA. By accessing TDF lands, our members and visitors must abide by our regenerative ethos. OASA is on a bold mission to conserve 100.000 ha of land globally - and TDF is its first prototype in utilising real estate as a vehicle for ecological restoration.
+              TDF is part of the OASA network - transforming ownership into
+              stewardship. The TDF project is bound by the{' '}
+              <Link
+                href="https://docs.google.com/document/d/1Ocv9rtRkDxsJmeRxrL6mV07EyWcHc2YqfN8mHoylO2E/edit"
+                className="underline"
+              >
+                Regenerative Land Stewardship Principles
+              </Link>{' '}
+              set forth by OASA. By accessing TDF lands, our members and
+              visitors must abide by our regenerative ethos. OASA is on a bold
+              mission to conserve 100.000 ha of land globally - and TDF is its
+              first prototype in utilising real estate as a vehicle for
+              ecological restoration.
             </Heading>
             <Button
               size="small"

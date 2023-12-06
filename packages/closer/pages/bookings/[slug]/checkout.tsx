@@ -46,6 +46,7 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
     rentalFiat,
     eventFiat,
     useTokens,
+    useCredits,
     start,
     dailyRentalToken,
     duration,
@@ -67,7 +68,9 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
   useEffect(() => {
     (async () => {
       try {
-        const creditsBalance = (await api.get('/carrots/balance')) as number;
+        const creditsBalance = (await api.get('/carrots/balance')).data
+          .results as number;
+        console.log('creditsBalance=', creditsBalance);
         const hasEnoughCredits = Boolean(
           rentalToken?.val &&
             creditsBalance &&
@@ -247,7 +250,7 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
                 (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)
               }
               useTokens={useTokens}
-              hasAppliedCredits={hasAppliedCredits}
+              useCredits={useCredits}
               totalToPayInFiat={updatedTotal}
               dailyTokenValue={dailyRentalToken?.val || 0}
               startDate={start}
