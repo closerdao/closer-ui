@@ -48,7 +48,7 @@ const StayPage = ({ settings }: Props) => {
     <>
       <Head>
         <title>
-          {__('listings_title')} {PLATFORM_NAME}
+          {`${__('listings_title')} ${PLATFORM_NAME}`}
         </title>
       </Head>
       {listings && listings.get('error') && (

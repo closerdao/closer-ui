@@ -72,7 +72,7 @@ export { default as EditEventPage } from './pages/events/[slug]/edit';
 export { default as TicketsEventPage } from './pages/events/[slug]/tickets';
 export { default as CreateEventPage } from './pages/events/create';
 export { default as ListingsPage } from './pages/listings';
-export { default as ListingPage } from './pages/listings/[slug]';
+export { default as ListingPage } from './pages/stay/[slug]';
 export { default as EditListingPage } from './pages/listings/[slug]/edit';
 export { default as CreateListingPage } from './pages/listings/create';
 export { default as LoginPage } from './pages/login';
