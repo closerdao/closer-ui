@@ -44,6 +44,7 @@ const BookingPage = ({
   error,
   bookingCreatedBy,
 }: Props) => {
+  console.log('booking=', booking);
   const { platform }: any = usePlatform();
   const { isAuthenticated, user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
@@ -52,7 +53,7 @@ const BookingPage = ({
     photo: bookingCreatedBy.photo,
   };
 
-  const [status, setStatus] = useState(booking.status);
+  const [status, setStatus] = useState(booking?.status);
 
   const {
     utilityFiat,
@@ -210,11 +211,13 @@ BookingPage.getInitialProps = async ({
       data: { results: booking },
     } = await api.get(`/booking/${query.slug}`);
 
+    console.log('booking=', booking);
+
     const [
       optionalEvent,
       optionalListing,
       optionalVolunteer,
-      optionalCreatedBy,
+      // optionalCreatedBy,
     ] = await Promise.all([
       booking.eventId &&
         api.get(`/event/${booking.eventId}`, {
@@ -234,17 +237,22 @@ BookingPage.getInitialProps = async ({
             Authorization: `Bearer ${req?.cookies?.access_token}`,
           },
         }),
-      booking.createdBy &&
-        api.get(`/user/${booking.createdBy}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
-          },
-        }),
     ]);
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
     const volunteer = optionalVolunteer?.data?.results;
-    const bookingCreatedBy = optionalCreatedBy?.data?.results;
+
+    let bookingCreatedBy = null;
+    try {
+      const optionalCreatedBy =
+        booking.createdBy &&
+        api.get(`/user/${booking.createdBy}`, {
+          headers: req?.cookies?.access_token && {
+            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          },
+        });
+       bookingCreatedBy = optionalCreatedBy?.data?.results;
+    } catch (error) {}
 
     return {
       booking,

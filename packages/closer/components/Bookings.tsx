@@ -17,6 +17,8 @@ const Bookings = ({ filter, page, setPage, isPagination }: Props) => {
   const { platform }: any = usePlatform();
 
   const bookings = platform.booking.find(filter);
+
+  console.log('bookings=',bookings?.toJS()[0]);
   const eventsFilter = bookings && { where: {
     _id: {
       $in: bookings.map((booking: any) => booking.get('eventId')),
