@@ -72,7 +72,11 @@ const HomePage = () => {
                 display
                 level={1}
               >
-                Join us in creating the <b className="font-black">Traditional Dream Factory</b>: a future-focused village where learning, growth, and community thrive. Together, let&apos;s build <b className="font-black">a home in harmony with nature</b> — a place where dreams take root, and doers belongs. Be a part of our journey to a place you can call home.
+                Join us in creating the <b className="font-black">Traditional Dream Factory</b>: 
+                a future-focused village where learning, growth, and community thrive. 
+                Together, let&apos;s build <b className="font-black">a home in harmony with nature</b> — 
+                a place where dreams take root, and doers belongs. 
+                Be a part of our journey to a place you can call home.
               </Heading>
               <div className="flex justify-center align-center mt-12">
                 <Link

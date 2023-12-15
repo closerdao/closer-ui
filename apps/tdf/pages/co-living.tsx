@@ -34,7 +34,9 @@ const CoLivingPage = () => {
             level={1}
             className="w-6xl md:mb-4 text-2xl sm:text-4xl md:text-5xl text-center mt-20"
           >
-            We believe in leaving a <span className="text-accent-alt">positive trace</span>. We believe in the nature backed economy. We believe <span className="text-accent-alt">ecological restoration</span> and play go hand and in hand.
+            We believe in leaving a <span className="text-accent-alt">positive trace</span>. 
+            We believe in the nature backed economy. 
+            We believe <span className="text-accent-alt">ecological restoration</span> and play go hand and in hand.
           </Heading>
           <Heading
             level={1}
