@@ -7,7 +7,6 @@ import { isMobile } from 'react-device-detect';
 
 import { Heading, YoutubeEmbed } from 'closer';
 import { useAuth } from 'closer/contexts/auth';
-import api from 'closer/utils/api';
 import { event } from 'nextjs-google-analytics';
 
 const HomePage = () => {
@@ -107,23 +106,6 @@ const HomePage = () => {
       </section>
     </div>
   );
-};
-
-HomePage.getInitialProps = async () => {
-  try {
-    const {
-      data: { results: subscriptions },
-    } = await api.get('/config/subscriptions');
-
-    return {
-      subscriptionPlans: subscriptions.value.plans,
-    };
-  } catch (err) {
-    return {
-      subscriptionPlans: [],
-      error: err,
-    };
-  }
 };
 
 export default HomePage;

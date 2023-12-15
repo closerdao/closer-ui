@@ -2,14 +2,9 @@ import Head from 'next/head';
 import Link from 'next/link';
 
 import { Heading } from 'closer';
-import { SubscriptionPlan } from 'closer/types/subscriptions';
-import api from 'closer/utils/api';
 import PhotoGallery from 'closer/components/PhotoGallery';
 
-interface Props {
-  subscriptionPlans: SubscriptionPlan[];
-}
-const HomePage = ({ subscriptionPlans }: Props) => {
+const CoLivingPage = () => {
   return (
     <div>
       <Head>
@@ -60,21 +55,4 @@ const HomePage = ({ subscriptionPlans }: Props) => {
   );
 };
 
-HomePage.getInitialProps = async () => {
-  try {
-    const {
-      data: { results: subscriptions },
-    } = await api.get('/config/subscriptions');
-
-    return {
-      subscriptionPlans: subscriptions.value.plans,
-    };
-  } catch (err) {
-    return {
-      subscriptionPlans: [],
-      error: err,
-    };
-  }
-};
-
-export default HomePage;
+export default CoLivingPage;
