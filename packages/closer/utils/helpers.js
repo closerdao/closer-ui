@@ -127,12 +127,11 @@ export const priceFormat = (price, currency = 'EUR') => {
     }
     return priceValue.toLocaleString('en-US', {
       style: 'currency',
-      currency: price.cur,
+      currency: price.cur || currency,
     });
   } else {
-    console.log('Invalid price:', price);
+    return '0.00';
   }
-  return '0.00';
 };
 
 export const prependHttp = (url, { https = true } = {}) => {
@@ -304,8 +303,8 @@ export const getAccommodationCost = (
 export const getVatInfo = (total) => {
   if (process.env.NEXT_PUBLIC_VAT_RATE) {
     return `${priceFormat(
-      total.val * Number(process.env.NEXT_PUBLIC_VAT_RATE),
-      total.cur,
+      total?.val * Number(process.env.NEXT_PUBLIC_VAT_RATE),
+      total?.cur,
     )}
     (${Number(process.env.NEXT_PUBLIC_VAT_RATE) * 100}%)`;
   }

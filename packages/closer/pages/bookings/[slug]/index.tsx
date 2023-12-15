@@ -1,5 +1,7 @@
 import Head from 'next/head';
 
+import { useState } from 'react';
+
 import BookingRequestButtons from '../../../components/BookingRequestButtons';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
@@ -42,6 +44,7 @@ const BookingPage = ({
   error,
   bookingCreatedBy,
 }: Props) => {
+  console.log('booking=', booking);
   const { platform }: any = usePlatform();
   const { isAuthenticated, user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
@@ -49,6 +52,8 @@ const BookingPage = ({
     name: bookingCreatedBy.screenname,
     photo: bookingCreatedBy.photo,
   };
+
+  const [status, setStatus] = useState(booking?.status);
 
   const {
     utilityFiat,
@@ -67,20 +72,29 @@ const BookingPage = ({
     total,
     doesNeedSeparateBeds,
     doesNeedPickup,
-    status,
     createdBy,
     _id,
     created,
   } = booking || {};
+
+  const refetchStatus = async () => {
+    const {
+      data: { results: booking },
+    } = await api.get(`/booking/${_id}`);
+
+    setStatus(booking.status);
+  };
 
   const createdFormatted = dayjs(created).format('DD/MM/YYYY - HH:mm:A');
   const isNotPaid = status !== 'paid';
 
   const confirmBooking = async () => {
     await platform.bookings.confirm(_id);
+    await refetchStatus();
   };
   const rejectBooking = async () => {
     await platform.bookings.reject(_id);
+    await refetchStatus();
   };
 
   if (
@@ -197,11 +211,13 @@ BookingPage.getInitialProps = async ({
       data: { results: booking },
     } = await api.get(`/booking/${query.slug}`);
 
+    console.log('booking=', booking);
+
     const [
       optionalEvent,
       optionalListing,
       optionalVolunteer,
-      optionalCreatedBy,
+      // optionalCreatedBy,
     ] = await Promise.all([
       booking.eventId &&
         api.get(`/event/${booking.eventId}`, {
@@ -221,17 +237,22 @@ BookingPage.getInitialProps = async ({
             Authorization: `Bearer ${req?.cookies?.access_token}`,
           },
         }),
-      booking.createdBy &&
-        api.get(`/user/${booking.createdBy}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
-          },
-        }),
     ]);
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
     const volunteer = optionalVolunteer?.data?.results;
-    const bookingCreatedBy = optionalCreatedBy?.data?.results;
+
+    let bookingCreatedBy = null;
+    try {
+      const optionalCreatedBy =
+        booking.createdBy &&
+        api.get(`/user/${booking.createdBy}`, {
+          headers: req?.cookies?.access_token && {
+            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          },
+        });
+       bookingCreatedBy = optionalCreatedBy?.data?.results;
+    } catch (error) {}
 
     return {
       booking,

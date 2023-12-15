@@ -57,4 +57,5 @@ export type BookingSettings = {
     default: 1;
   };
   questions: Question[];
+  seasons: any
 };

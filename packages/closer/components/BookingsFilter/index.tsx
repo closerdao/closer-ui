@@ -12,19 +12,25 @@ import Select from '../../components/ui/Select/Dropdown';
 
 import dayjs from 'dayjs';
 
-import { BOOKING_STATUS_OPTIONS, BOOKING_TYPE_OPTIONS } from '../../constants';
+import {
+  BOOKINGS_PER_PAGE,
+  BOOKING_STATUS_OPTIONS,
+  BOOKING_TYPE_OPTIONS,
+} from '../../constants';
 import { usePlatform } from '../../contexts/platform';
 import { useOutsideClick } from '../../hooks/useOutsideClick';
 import { __ } from '../../utils/helpers';
 
-const MAX_BOOKINGS = 200;
 const loadTime = new Date();
 
 interface Props {
   setFilter: Dispatch<SetStateAction<any>>;
+  page: number;
+  setPage: Dispatch<SetStateAction<number>>;
+  defaultWhere: any;
 }
 
-const BookingsFilter = ({ setFilter }: Props) => {
+const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
   const { platform }: any = usePlatform();
   const arrivalDropdownRef = useOutsideClick(handleClickOutsideArrivalDropdown);
   const departureDropdownRef = useOutsideClick(
@@ -98,7 +104,11 @@ const BookingsFilter = ({ setFilter }: Props) => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filterValues]);
 
   useEffect(() => {
     const arrivalFrom = new Date(filterValues.arrivalFromDate);
@@ -106,6 +116,11 @@ const BookingsFilter = ({ setFilter }: Props) => {
 
     const departureFrom = new Date(filterValues.departureFromDate);
     departureFrom.setDate(departureFrom.getDate() - 1);
+
+    const isDefaultFilter =
+      !filterValues.departureToDate &&
+      !filterValues.departureFromDate &&
+      filterValues.status === 'any';
 
     const getFilter = {
       where: {
@@ -117,7 +132,9 @@ const BookingsFilter = ({ setFilter }: Props) => {
           volunteerId: { $exists: false },
           eventId: { $exists: false },
         }),
-        ...(filterValues.status !== 'any' && { status: [bookingStatus] }),
+        ...(filterValues.status !== 'any'
+          ? { status: [bookingStatus] }
+          : { status: { $ne: 'open' } }),
         ...(filterValues.bookingId !== '' && { _id: filterValues.bookingId }),
         ...(filterValues.selectedEvent.label !== 'any' && {
           eventId: filterValues.selectedEvent.value,
@@ -137,15 +154,15 @@ const BookingsFilter = ({ setFilter }: Props) => {
               $gte: departureFrom,
             },
           }),
-        ...(!filterValues.departureToDate &&
-          !filterValues.departureFromDate && { end: { $gt: new Date() } }),
+        ...(isDefaultFilter && defaultWhere),
       },
-      limit: MAX_BOOKINGS,
+      limit: BOOKINGS_PER_PAGE,
       sort_by: filterValues.sortBy,
+      page: page,
     };
 
     setFilter(getFilter as any);
-  }, [filterValues]);
+  }, [filterValues, page]);
 
   useEffect(() => {
     if (arrivalFromDate && arrivalToDate) {

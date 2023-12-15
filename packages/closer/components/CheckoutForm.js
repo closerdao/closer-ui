@@ -44,12 +44,12 @@ const CheckoutForm = ({
   onSuccess,
   cardElementClassName = '',
   prePayInTokens,
-  hasAppliedCredits,
   payWithCredits,
   isProcessingTokenPayment = false,
   children: conditions,
   hasComplied,
-  buttonDisabled
+  buttonDisabled,
+  useCredits
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -62,7 +62,7 @@ const CheckoutForm = ({
     setProcessing(true);
     setError(null);
 
-    if (hasAppliedCredits) {
+    if (useCredits) {
       try {
         await payWithCredits();
       } catch (error) {

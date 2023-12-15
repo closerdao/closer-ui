@@ -1,18 +1,28 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
+import { useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
 
 import { Heading, YoutubeEmbed } from 'closer';
-import { SubscriptionPlan } from 'closer/types/subscriptions';
+import { useAuth } from 'closer/contexts/auth';
 import api from 'closer/utils/api';
 import { event } from 'nextjs-google-analytics';
 
-interface Props {
-  subscriptionPlans: SubscriptionPlan[];
-}
-const HomePage = ({ subscriptionPlans }: Props) => {
+const HomePage = () => {
+  const { user, isAuthenticated } = useAuth();
+  const [ctaButton, setCtaButton] = useState({ text: 'join the dream', link: '/signup' });
+
+  useEffect(() => {
+    if (isAuthenticated && !user?.subscription?.plan) {
+      setCtaButton({ text: 'subscribe', link: '/subscriptions' });
+    }
+    if (user && user?.subscription?.plan) {
+      setCtaButton({ text: 'book a stay', link: '/stay' });
+    }
+  }, [user, isAuthenticated]);
+
   return (
     <div>
       <Head>
@@ -67,16 +77,16 @@ const HomePage = ({ subscriptionPlans }: Props) => {
               </Heading>
               <div className="flex justify-center align-center mt-12">
                 <Link
-                  href="/signup"
+                  href={ctaButton.link}
                   className="bg-accent text-white rounded-full py-2.5 px-8 text-xl"
                   onClick={() =>
                     event('click', {
                       category: 'HomePage',
-                      label: 'Join the Dream',
+                      label: ctaButton.text,
                     })
                   }
                 >
-                  JOIN THE DREAM
+                  {ctaButton.text.toUpperCase()}
                 </Link>
                 <Link
                   href="/what-is-tdf"

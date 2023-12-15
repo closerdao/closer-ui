@@ -80,13 +80,12 @@ const BookingListPreview = ({
           {status}
         </p>
       </div>
-      {router.pathname.includes('requests') && (
-        <UserInfoButton userInfo={userInfo} createdBy={createdBy} />
-      )}
+
+      <UserInfoButton userInfo={userInfo} createdBy={createdBy} />
 
       {link ? (
         <Link
-          className="bg-neutral rounded-md py-1.5 text-center flex items-center gap-2 hover:bg-accent hover:text-white justify-center"
+          className="bg-neutral rounded-md p-1.5 text-center flex items-center gap-2 hover:bg-accent hover:text-white justify-center"
           href={link}
         >
           {bookingType.charAt(0).toUpperCase() + bookingType.slice(1)}
@@ -94,7 +93,7 @@ const BookingListPreview = ({
           {volunteerName && ` — ${volunteerName}`}
         </Link>
       ) : (
-        <p className="bg-neutral rounded-md py-1.5 text-center flex items-center gap-2  justify-center">
+        <p className="bg-neutral rounded-md p-1.5 text-center flex items-center gap-2  justify-center">
           {bookingType.charAt(0).toUpperCase() + bookingType.slice(1)}
           {eventName && ` — ${eventName}`}
           {volunteerName && ` — ${volunteerName}`}
