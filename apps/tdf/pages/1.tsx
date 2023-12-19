@@ -307,11 +307,10 @@ const HomePage = ({ subscriptionPlans }: Props) => {
         <section className="flex items-center flex-col py-12 ">
           <div className="text-center mb-20 w-full md:max-w-6xl">
             <div className="w-full flex items-center flex-col">
-              <Heading
-                level={2}
-                className="text-2xl font-bold"
-              >
-                {'Meet your new home, way of life, and tribe. Join a unique blend of solarpunks, web3 aficionados, holistic healers, permaculture pioneers, tree enthusiasts, tech wizards, and regenerative innovators. Together, we\'re reshaping communal living.'}
+              <Heading level={2} className="text-2xl font-bold">
+                {
+                  "Meet your new home, way of life, and tribe. Join a unique blend of solarpunks, web3 aficionados, holistic healers, permaculture pioneers, tree enthusiasts, tech wizards, and regenerative innovators. Together, we're reshaping communal living."
+                }
               </Heading>
             </div>
             <PhotoGallery className="mt-8" />
@@ -324,7 +323,10 @@ const HomePage = ({ subscriptionPlans }: Props) => {
               className="text-2xl mb-6 max-w-3xl text-center mt-8 italic"
               level={2}
             >
-              TDF is a model for a regenerative economy. We are looking for 300 forward-thinking doer-dreamers to co-create a habitat where nature thrives. No fleeting promises here, just a space designed for regenerative living and deep connection. 🐑
+              TDF is a model for a regenerative economy. We are looking for 300
+              forward-thinking doer-dreamers to co-create a habitat where nature
+              thrives. No fleeting promises here, just a space designed for
+              regenerative living and deep connection. 🐑
             </Heading>
             <div>
               <Link
@@ -428,7 +430,19 @@ const HomePage = ({ subscriptionPlans }: Props) => {
         <section className="flex justify-center mb-[120px] py-16 bg-accent-alt-light">
           <div className="max-w-6xl flex flex-wrap">
             <Heading level={3} className="mb-8">
-              TDF is part of the OASA network - transforming ownership into stewardship. The TDF project is bound by the <Link href="https://docs.google.com/document/d/1Ocv9rtRkDxsJmeRxrL6mV07EyWcHc2YqfN8mHoylO2E/edit" className="underline">Regenerative Land Stewardship Principles</Link> set forth by OASA. By accessing TDF lands, our members and visitors must abide by our regenerative ethos. OASA is on a bold mission to conserve 100.000 ha of land globally - and TDF is its first prototype in utilising real estate as a vehicle for ecological restoration.
+              TDF is part of the OASA network - transforming ownership into
+              stewardship. The TDF project is bound by the{' '}
+              <Link
+                href="https://docs.google.com/document/d/1Ocv9rtRkDxsJmeRxrL6mV07EyWcHc2YqfN8mHoylO2E/edit"
+                className="underline"
+              >
+                Regenerative Land Stewardship Principles
+              </Link>{' '}
+              set forth by OASA. By accessing TDF lands, our members and
+              visitors must abide by our regenerative ethos. OASA is on a bold
+              mission to conserve 100.000 ha of land globally - and TDF is its
+              first prototype in utilising real estate as a vehicle for
+              ecological restoration.
             </Heading>
             <Button
               size="small"

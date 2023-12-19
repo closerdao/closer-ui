@@ -15,6 +15,7 @@ import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
+
 const loginOptions =
   process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true'
     ? ['Email', 'Wallet']
@@ -25,7 +26,8 @@ const Login = () => {
   const { signMessage } = useContext(WalletDispatch);
 
   const router = useRouter();
-  const { back, source, start, end, adults, useTokens, eventId, volunteerId } = router.query || {};
+  const { back, source, start, end, adults, useTokens, eventId, volunteerId } =
+    router.query || {};
 
   const redirect = (hasSubscription: boolean) => {
     const dateFormat = 'YYYY-MM-DD';
@@ -37,7 +39,9 @@ const Login = () => {
       redirectTo(
         `${back}?start=${dayjs(start as string).format(dateFormat)}&end=${dayjs(
           end as string,
-        ).format(dateFormat)}&adults=${adults}&useTokens=${useTokens}${volunteerId ? `&volunteerId=${volunteerId}` : ''}${eventId ? `&eventId=${eventId}` : ''}`,
+        ).format(dateFormat)}&adults=${adults}&useTokens=${useTokens}${
+          volunteerId ? `&volunteerId=${volunteerId}` : ''
+        }${eventId ? `&eventId=${eventId}` : ''}`,
       );
       return;
     }

@@ -47,9 +47,7 @@ const StayPage = ({ settings }: Props) => {
   return (
     <>
       <Head>
-        <title>
-          {`${__('listings_title')} ${PLATFORM_NAME}`}
-        </title>
+        <title>{`${__('listings_title')} ${PLATFORM_NAME}`}</title>
       </Head>
       {listings && listings.get('error') && (
         <div className="validation-error">{listings.get('error')}</div>

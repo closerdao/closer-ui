@@ -5,13 +5,14 @@ import { useContext, useEffect } from 'react';
 
 import { BackButton, Heading, ProgressBar } from '../../components/ui';
 
+import { event as gaEvent } from 'nextjs-google-analytics';
+
 import PageNotFound from '../404';
 import { TOKEN_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { WalletState } from '../../contexts/wallet';
 import { useConfig } from '../../hooks/useConfig';
 import { __ } from '../../utils/helpers';
-import { event as gaEvent } from 'nextjs-google-analytics'; 
 
 const TokenSaleSuccessPage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
@@ -28,10 +29,10 @@ const TokenSaleSuccessPage = () => {
 
   useEffect(() => {
     gaEvent('token_success', {
-    category: 'sales',
-    label: 'token',
+      category: 'sales',
+      label: 'token',
     });
-    }, []);
+  }, []);
 
   const goBack = async () => {
     router.push('/token');

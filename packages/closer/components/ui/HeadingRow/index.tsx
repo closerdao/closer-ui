@@ -1,4 +1,5 @@
 import React from 'react';
+
 import Heading from '../Heading';
 
 interface HeadingRowProps extends React.HTMLAttributes<HTMLHeadingElement> {
@@ -8,10 +9,12 @@ interface HeadingRowProps extends React.HTMLAttributes<HTMLHeadingElement> {
 }
 
 const HeadingRow = ({ children, className, level }: HeadingRowProps) => {
-
   return (
     <div className="border-solid border-b pb-2 border-neutral-200 mb-4">
-      <Heading className={`${className} flex justify-start items-center`} level={level}>
+      <Heading
+        className={`${className} flex justify-start items-center`}
+        level={level}
+      >
         {children}
       </Heading>
     </div>
@@ -20,7 +23,7 @@ const HeadingRow = ({ children, className, level }: HeadingRowProps) => {
 
 HeadingRow.defaultProps = {
   className: '',
-  level: 2
+  level: 2,
 };
 
 export default HeadingRow;

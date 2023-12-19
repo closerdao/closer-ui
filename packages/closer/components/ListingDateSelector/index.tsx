@@ -13,7 +13,7 @@ interface Props {
   end: string | Date | null;
   start: string | Date | null;
   isSmallScreen?: boolean;
-  blockedDateRanges?: any[]
+  blockedDateRanges?: any[];
 }
 
 const ListingDateSelector = ({
@@ -22,7 +22,7 @@ const ListingDateSelector = ({
   end,
   start,
   isSmallScreen,
-  blockedDateRanges
+  blockedDateRanges,
 }: Props) => {
   const stayDatesDropdownRef = useOutsideClick(handleClickOutsideDropdown);
 
@@ -34,11 +34,10 @@ const ListingDateSelector = ({
 
   return (
     <>
-      <div
-        ref={stayDatesDropdownRef}
-        className="static sm:relative flex-1"
-      >
-        <label className="my-2 hidden sm:block">{__('bookings_select_stay_dates')}</label>
+      <div ref={stayDatesDropdownRef} className="static sm:relative flex-1">
+        <label className="my-2 hidden sm:block">
+          {__('bookings_select_stay_dates')}
+        </label>
         <Button
           onClick={() => setShowStayDatesDropdown(!showStayDatesDropdown)}
           className="min-h-[20px] font-bold sm:font-normal underline sm:no-underline text-black border-0 sm:border-2 border-black normal-case w-auto sm:w-full py-1 px-0 sm:px-3 sm:p-3 sm:py-2 text-sm bg-white"

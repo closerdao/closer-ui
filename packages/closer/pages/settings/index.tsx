@@ -4,9 +4,9 @@ import { FC, useEffect, useState } from 'react';
 
 import UploadPhoto from '../../components/UploadPhoto/UploadPhoto';
 import { Button } from '../../components/ui';
+import Checkbox from '../../components/ui/Checkbox';
 import Heading from '../../components/ui/Heading';
 import Input from '../../components/ui/Input';
-import Checkbox from '../../components/ui/Checkbox';
 import Select from '../../components/ui/Select/Dropdown';
 import MultiSelect from '../../components/ui/Select/MultiSelect';
 
@@ -53,7 +53,12 @@ const SettingsPage: FC = () => {
   }, [initialUser]);
 
   const saveUserData =
-    (attribute: keyof User['preferences'] | keyof User | keyof User['settings']): UpdateUserFunction =>
+    (
+      attribute:
+        | keyof User['preferences']
+        | keyof User
+        | keyof User['settings'],
+    ): UpdateUserFunction =>
     async (value: string | string[]) => {
       const prefKeys = [
         'diet',
@@ -339,7 +344,7 @@ const SettingsPage: FC = () => {
         <div className="flex items-center justify-start gap-2">
           <Checkbox
             isChecked={user?.settings?.newsletter_weekly}
-            onChange={ saveSettings('newsletter_weekly') }
+            onChange={saveSettings('newsletter_weekly')}
           />
           <label>Weekly newsletter</label>
         </div>

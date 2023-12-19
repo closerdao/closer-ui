@@ -16,7 +16,7 @@ export interface BaseBookingParams {
   currency?: CloserCurrencies;
   ticketName?: string;
   discountCode?: string;
-  ticketOption?: TicketOption
+  ticketOption?: TicketOption;
   useTokens?: boolean | undefined;
   doesNeedPickup?: boolean | undefined;
   doesNeedSeparateBeds?: boolean | undefined;
@@ -73,7 +73,9 @@ export type Booking = {
   ticketOption?: TicketOption;
   eventId: string;
   volunteerId: string;
-  eventPrice?: Price<CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH>;
+  eventPrice?: Price<
+    CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH
+  >;
   eventDiscount?: Discount;
 
   total: Price<

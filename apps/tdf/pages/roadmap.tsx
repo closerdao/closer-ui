@@ -2,7 +2,7 @@ import Head from 'next/head';
 
 import React from 'react';
 
-import { Heading, Button } from 'closer';
+import { Heading } from 'closer';
 
 const RoadmapPage = () => (
   <>
@@ -35,7 +35,9 @@ const RoadmapPage = () => (
                 <div className="bg-accent-alt w-[4px] h-auto"></div>
               </div>
               <div className="pb-12">
-                <p className="uppercase font-bold">Keys to the farm & basic infrastructure</p>
+                <p className="uppercase font-bold">
+                  Keys to the farm & basic infrastructure
+                </p>
                 <ul className=" my-4 list-none">
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     Operational event venue (up to 100 guests)
@@ -96,7 +98,9 @@ const RoadmapPage = () => (
                 <div className="bg-accent-alt w-[4px] h-auto"></div>
               </div>
               <div className="pb-12">
-                <p className="uppercase font-bold">Platform & token launch, plans approved.</p>
+                <p className="uppercase font-bold">
+                  Platform & token launch, plans approved.
+                </p>
                 <ul className=" my-4 list-none">
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     Starlink
@@ -139,15 +143,6 @@ const RoadmapPage = () => (
                   FUNDRAISING
                 </Heading>
                 <p className="uppercase font-bold mt-6">We are here</p>
-                {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE && (
-                  <Button
-                    onClick={() => router.push('/token')}
-                    className="my-6"
-                    size="small"
-                  >
-                    Invest
-                  </Button>
-                )}
                 <ul>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     Co-living building renovation, with first 6 suites
@@ -176,10 +171,7 @@ const RoadmapPage = () => (
               </div>
               <div className="text-accent-alt"></div>
               <div className="w-7 h-7 bg-accent-alt-light rounded-full"></div>
-              <Heading
-                level={4}
-                className="font-normal uppercase text-accent"
-              >
+              <Heading level={4} className="font-normal uppercase text-accent">
                 2025
               </Heading>
               <div className="w-7 flex justify-center">
@@ -246,10 +238,7 @@ const RoadmapPage = () => (
               </div>
               <div className="text-accent-alt"></div>
               <div className="w-7 h-7 bg-accent-alt-light rounded-full"></div>
-              <Heading
-                level={4}
-                className="font-normal uppercase text-accent"
-              >
+              <Heading level={4} className="font-normal uppercase text-accent">
                 2026
               </Heading>
               <div className="w-7 flex justify-center">
@@ -266,7 +255,6 @@ const RoadmapPage = () => (
           </div>
         </div>
       </section>
-
     </main>
   </>
 );

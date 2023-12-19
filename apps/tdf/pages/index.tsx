@@ -4,14 +4,16 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
-
 import { Heading, YoutubeEmbed } from 'closer';
 import { useAuth } from 'closer/contexts/auth';
 import { event } from 'nextjs-google-analytics';
 
 const HomePage = () => {
   const { user, isAuthenticated } = useAuth();
-  const [ctaButton, setCtaButton] = useState({ text: 'join the dream', link: '/signup' });
+  const [ctaButton, setCtaButton] = useState({
+    text: 'join the dream',
+    link: '/signup',
+  });
 
   useEffect(() => {
     if (isAuthenticated && !user?.subscription?.plan) {
@@ -72,11 +74,11 @@ const HomePage = () => {
                 display
                 level={1}
               >
-                Join us in creating the <b className="font-black">Traditional Dream Factory</b>: 
-                a future-focused village where learning, growth, and community thrive. 
-                Together, let&apos;s build <b className="font-black">a home in harmony with nature</b> — 
-                a place where dreams take root, and doers belongs. 
-                Be a part of our journey to a place you can call home.
+                <b className="font-black">Traditional Dream Factory</b> is a
+                regenerative village blending together{' '}
+                <b className="font-black">technology, nature & community</b>. Be
+                a part of our journey to a place you can call{' '}
+                <b className="font-black">home</b>.
               </Heading>
               <div className="flex justify-center align-center mt-12">
                 <Link

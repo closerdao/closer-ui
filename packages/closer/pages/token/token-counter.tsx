@@ -50,10 +50,14 @@ const TokenCounterPage = () => {
 
   const handleNext = async () => {
     if (user && user.kycPassed) {
-      router.push(`/token/checkout?tokens=${tokensToBuy < 1 ? 1 : tokensToBuy}`);
+      router.push(
+        `/token/checkout?tokens=${tokensToBuy < 1 ? 1 : tokensToBuy}`,
+      );
     } else {
       router.push(
-        `/token/your-info?nationality=${nationality}&tokens=${tokensToBuy < 1 ? 1 : tokensToBuy}`,
+        `/token/your-info?nationality=${nationality}&tokens=${
+          tokensToBuy < 1 ? 1 : tokensToBuy
+        }`,
       );
     }
   };

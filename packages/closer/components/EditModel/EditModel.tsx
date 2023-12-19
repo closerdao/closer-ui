@@ -106,7 +106,6 @@ const EditModel: FC<Props> = ({
     option?: string,
     actionType?: string,
   ) => {
-
     const copy = { ...data };
 
     objectPath.set(copy, name, value);
@@ -189,7 +188,7 @@ const EditModel: FC<Props> = ({
               } = await api.get(field.endpoint, { params });
               update(field.name, results);
 
-              console.log('results=',results);
+              console.log('results=', results);
             }
           }),
         );
@@ -244,16 +243,17 @@ const EditModel: FC<Props> = ({
             tabs={Object.keys(fieldsByTab).map((key) => ({
               title: key,
               value: key,
-              datePicker: endpoint !== '/listing' ? (
-                <DateTimePicker
-                  setStartDate={setStartDate}
-                  setEndDate={setEndDate}
-                  isAdmin={true}
-                  savedStartDate={data.start && data.start}
-                  savedEndDate={data.end && data.end}
-                  defaultMonth={new Date()}
-                /> 
-              ): null,
+              datePicker:
+                endpoint !== '/listing' ? (
+                  <DateTimePicker
+                    setStartDate={setStartDate}
+                    setEndDate={setEndDate}
+                    isAdmin={true}
+                    savedStartDate={data.start && data.start}
+                    savedEndDate={data.end && data.end}
+                    defaultMonth={new Date()}
+                  />
+                ) : null,
               content: filterFields(fieldsByTab[key], data).map((field) => (
                 <FormField
                   {...field}

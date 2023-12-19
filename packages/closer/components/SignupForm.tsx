@@ -16,7 +16,8 @@ import Heading from './ui/Heading';
 
 const SignupForm = () => {
   const router = useRouter();
-  const { back, source, start, end, adults, useTokens, eventId, volunteerId } = router.query || {};
+  const { back, source, start, end, adults, useTokens, eventId, volunteerId } =
+    router.query || {};
 
   const { signup, isAuthenticated, error, setError } = useAuth();
 
@@ -34,14 +35,18 @@ const SignupForm = () => {
 
   const getSignupQuery = () => {
     if (source) {
-      return `/?back=${back}&source=${source}&start=${start}&end=${end}&adults=${adults}&useTokens=${useTokens}${volunteerId ? `&volunteerId=${volunteerId}` : ''}${eventId ? `&eventId=${eventId}` : ''}`;
+      return `/?back=${back}&source=${source}&start=${start}&end=${end}&adults=${adults}&useTokens=${useTokens}${
+        volunteerId ? `&volunteerId=${volunteerId}` : ''
+      }${eventId ? `&eventId=${eventId}` : ''}`;
     }
     if (!source && back && start && end && adults) {
       return `/?back=${back}&start=${dayjs(start as string).format(
         dateFormat,
       )}&end=${dayjs(end as string).format(
         dateFormat,
-      )}&adults=${adults}&useTokens=${useTokens}${volunteerId ? `&volunteerId=${volunteerId}` : ''}${eventId ? `&eventId=${eventId}` : ''}`;
+      )}&adults=${adults}&useTokens=${useTokens}${
+        volunteerId ? `&volunteerId=${volunteerId}` : ''
+      }${eventId ? `&eventId=${eventId}` : ''}`;
     }
     if (!source && back) {
       return `/?back=${back}`;
@@ -50,7 +55,9 @@ const SignupForm = () => {
       dateFormat,
     )}&end=${dayjs(end as string).format(
       dateFormat,
-    )}&adults=${adults}&useTokens=${useTokens}${volunteerId ? `&volunteerId=${volunteerId}` : ''}${eventId ? `&eventId=${eventId}` : ''}`;
+    )}&adults=${adults}&useTokens=${useTokens}${
+      volunteerId ? `&volunteerId=${volunteerId}` : ''
+    }${eventId ? `&eventId=${eventId}` : ''}`;
   };
 
   const signupQuery = getSignupQuery();

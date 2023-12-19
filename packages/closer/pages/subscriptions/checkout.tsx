@@ -124,7 +124,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
               {__('subscriptions_title')}
             </Heading>
 
-              {selectedPlan?.tiers && monthlyCreditsSelected && (
+            {selectedPlan?.tiers && monthlyCreditsSelected && (
               <Row
                 className="mb-4"
                 rowKey={` ${selectedPlan?.title} ${
@@ -134,11 +134,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
                     : ''
                 }  `}
                 value={`${
-                  selectedPlan &&
-                  priceFormat(
-                    total,
-                    DEFAULT_CURRENCY,
-                  )
+                  selectedPlan && priceFormat(total, DEFAULT_CURRENCY)
                 }`}
                 additionalInfo={`${__(
                   'bookings_checkout_step_total_description',
