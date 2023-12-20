@@ -160,6 +160,7 @@ const SettingsPage: FC = () => {
         </Heading>
         <Input
           label="Name"
+          placeholder="Your name"
           value={user.screenname}
           onChange={saveUserData('screenname') as any}
           isInstantSave={true}
@@ -277,6 +278,7 @@ const SettingsPage: FC = () => {
         </Heading>
         <Input
           label="Dietary Preferences"
+          placeholder="Vegetarian, Vegan, Gluten Free, etc."
           onChange={saveUserData('diet') as any}
           hasSaved={hasSaved}
           value={user?.preferences?.diet}
@@ -292,6 +294,7 @@ const SettingsPage: FC = () => {
         />
         <Input
           label="What is your superpower?"
+          placeholder="I am really good at ..."
           value={user?.preferences?.superpower}
           onChange={saveUserData('superpower') as any}
           isInstantSave={true}
@@ -313,6 +316,7 @@ const SettingsPage: FC = () => {
         </Heading>
         <Input
           label="What do you dream of creating?"
+          placeholder="I dream of creating ..."
           value={user?.preferences?.dream}
           onChange={saveUserData('dream') as any}
           isInstantSave={true}
@@ -320,7 +324,8 @@ const SettingsPage: FC = () => {
           setHasSaved={setHasSaved}
         />
         <Input
-          label="What do you need?"
+          label="What is one thing you currently need support with?"
+          placeholder=""
           value={user?.preferences?.needs}
           onChange={saveUserData('needs') as any}
           isInstantSave={true}
@@ -329,6 +334,7 @@ const SettingsPage: FC = () => {
         />
         <Input
           label="Anything we should know? Anything you would like to share?"
+          placeholder=""
           value={user?.preferences?.moreInfo}
           onChange={saveUserData('moreInfo') as any}
           isInstantSave={true}

@@ -104,7 +104,7 @@ const SignupForm = () => {
       return;
     }
     router.push(
-      `${decodeURIComponent(back as string)}&back=${back}` || '/settings',
+      back ? `${decodeURIComponent(back as string)}` : '/settings',
     );
   };
 
