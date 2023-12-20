@@ -34,12 +34,7 @@ const SignupForm = () => {
   const dateFormat = 'YYYY-MM-DD';
 
   const getSignupQuery = () => {
-    if (source) {
-      return `/?back=${back}&source=${source}&start=${start}&end=${end}&adults=${adults}&useTokens=${useTokens}${
-        volunteerId ? `&volunteerId=${volunteerId}` : ''
-      }${eventId ? `&eventId=${eventId}` : ''}`;
-    }
-    if (!source && back && start && end && adults) {
+    if (back && start && end && adults) {
       return `/?back=${back}&start=${dayjs(start as string).format(
         dateFormat,
       )}&end=${dayjs(end as string).format(
@@ -47,17 +42,13 @@ const SignupForm = () => {
       )}&adults=${adults}&useTokens=${useTokens}${
         volunteerId ? `&volunteerId=${volunteerId}` : ''
       }${eventId ? `&eventId=${eventId}` : ''}`;
-    }
-    if (!source && back) {
+    } else if (back && source) {
+      return `/?back=${back}&source=${source}`;
+    } else if (back) {
       return `/?back=${back}`;
+    } else {
+      return '/'
     }
-    return `/?back=${back}&start=${dayjs(start as string).format(
-      dateFormat,
-    )}&end=${dayjs(end as string).format(
-      dateFormat,
-    )}&adults=${adults}&useTokens=${useTokens}${
-      volunteerId ? `&volunteerId=${volunteerId}` : ''
-    }${eventId ? `&eventId=${eventId}` : ''}`;
   };
 
   const signupQuery = getSignupQuery();

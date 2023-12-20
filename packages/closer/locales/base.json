@@ -261,6 +261,7 @@
   "post_delete": "delete",
   "post_delete_message": "Post deleted.",
   "post_replies": "replies",
+  "signup_title": "Signup to our member platform",
   "signup_body": "Join the dreamers and makers of tomorrow.",
   "signup_success": "Welcome! We look forward to connecting with you.",
   "signup_success_cta": "You will be redirected back in a second",

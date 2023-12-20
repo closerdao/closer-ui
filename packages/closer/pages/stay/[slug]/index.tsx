@@ -269,13 +269,13 @@ const ListingPage: NextPage<Props> = ({
 
   const redirectToSummary = (bookingId: string) => {
     router.push(
-      `/bookings/${bookingId}/summary?back=listings/${
+      `/bookings/${bookingId}/summary?back=stay/${
         listing?.slug
       }&${getUrlParams()}`,
     );
   };
   const redirectToSignup = () => {
-    router.push(`/signup?back=listings/${listing?.slug}&${getUrlParams()}`);
+    router.push(`/signup?back=stay/${listing?.slug}&${getUrlParams()}`);
   };
 
   const bookListing = async () => {
