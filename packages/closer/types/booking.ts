@@ -41,6 +41,7 @@ export type Listing = {
   attributes: string[];
   managedBy: string[];
   _id: string;
+  availableFor?: string[];
 };
 
 export type Booking = {
