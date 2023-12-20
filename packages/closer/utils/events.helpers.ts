@@ -48,6 +48,7 @@ const isHighSeason = (seasons: any, startDate: any) => {
 const getMinMaxFiatPrice = (
   listings: Listing[],
 ): { min: number; max: number } => {
+  if (!listings.length) return { min: 0, max: 0 };
   let min = listings[0].fiatPrice.val;
   let max = listings[0].fiatPrice.val;
   for (const obj of listings) {
