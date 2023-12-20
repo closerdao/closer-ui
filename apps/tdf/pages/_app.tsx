@@ -65,6 +65,18 @@ fbq('track', 'PageView');
 `,
         }}
       />
+      <Script
+        id="gptconfig"
+        dangerouslySetInnerHTML={{
+          __html: `window.GPTTConfig = {
+            uuid: "a9d70d04c6b64f328acd966ad87e4fb4",
+          };`
+        }}
+      />
+      <Script
+        src="https://app.gpt-trainer.com/widget-asset.min.js"
+        defer
+      />
 
       <ConfigProvider config={{ ...config, ...blockchainConfig }}>
         <ErrorBoundary>
