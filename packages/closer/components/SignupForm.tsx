@@ -152,6 +152,7 @@ const SignupForm = () => {
 
           <Input
             label={__('signup_form_name')}
+            placeholder={__('signup_form_name_placeholder')}
             value={application.screenname}
             onChange={(e) =>
               updateApplication({
@@ -161,7 +162,7 @@ const SignupForm = () => {
           />
           <Input
             label={__('signup_form_email')}
-            placeholder={__('signup_form_email')}
+            placeholder={__('signup_form_email_placeholder')}
             value={application.email}
             onChange={(e) =>
               updateApplication({
@@ -171,6 +172,7 @@ const SignupForm = () => {
           />
           <Input
             type="password"
+            placeholder={__('signup_form_password_placeholder')}
             label={__('signup_form_password')}
             value={application.password}
             onChange={(e) =>
