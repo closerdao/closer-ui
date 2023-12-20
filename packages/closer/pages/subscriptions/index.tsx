@@ -130,10 +130,10 @@ const SubscriptionsPage: NextPage<Props> = ({
             'settings_your_subscription_title',
           )} - ${PLATFORM_NAME}`}</title>
           <link
-          rel="canonical"
-          href="https://www.traditionaldreamfactory.com/subscriptions"
-          key="canonical"
-        />
+            rel="canonical"
+            href="https://www.traditionaldreamfactory.com/subscriptions"
+            key="canonical"
+          />
         </Head>
 
         <div className="max-w-6xl mx-auto">

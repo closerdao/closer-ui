@@ -27,5 +27,4 @@ describe.skip('Signup', () => {
 
     expect(button).toBeDisabled();
   });
-
 });

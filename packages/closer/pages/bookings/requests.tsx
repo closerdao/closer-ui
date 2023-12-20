@@ -42,7 +42,12 @@ const BookingsRequests = () => {
       <div className="max-w-screen-lg mx-auto flex flex-col gap-10">
         <Heading level={1}>{__('booking_requests_title')}</Heading>
 
-        <Bookings isPagination={false} filter={filter} setPage={setPage} page={page} />
+        <Bookings
+          isPagination={false}
+          filter={filter}
+          setPage={setPage}
+          page={page}
+        />
       </div>
     </>
   );

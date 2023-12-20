@@ -28,7 +28,6 @@ export type VolunteerOpportunity = {
   _id: string;
 };
 
-
 export type Question = {
   type: 'text' | 'select';
   name: string;
@@ -57,5 +56,5 @@ export type BookingSettings = {
     default: 1;
   };
   questions: Question[];
-  seasons: any
+  seasons: any;
 };

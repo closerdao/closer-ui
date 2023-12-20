@@ -70,7 +70,7 @@ export const links = [
     url: '/admin/manage-users',
     enabled: true,
     roles: ['admin'],
-  }, 
+  },
   {
     label: 'New event',
     url: '/events/create',

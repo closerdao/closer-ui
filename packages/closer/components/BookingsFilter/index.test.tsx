@@ -4,7 +4,14 @@ import BookingsFilter from './index';
 
 describe('BookingsFilter', () => {
   it('should render the component and show proper controls', () => {
-    render(<BookingsFilter setPage={jest.fn()} page={1} defaultWhere={{}} setFilter={jest.fn()} />);
+    render(
+      <BookingsFilter
+        setPage={jest.fn()}
+        page={1}
+        defaultWhere={{}}
+        setFilter={jest.fn()}
+      />,
+    );
 
     const bookingNumberInput = screen.getByPlaceholderText(/enter booking #/i);
     const arrivalButton = screen.getByRole('button', {

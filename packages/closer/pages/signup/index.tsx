@@ -136,8 +136,6 @@ const Signup = ({ subscriptionPlans }: Props) => {
                         </div>
                       </Card>
                     </div>
-
-       
                   </div>
                 )}
               </div>

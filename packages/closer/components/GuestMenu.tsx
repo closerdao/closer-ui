@@ -4,8 +4,6 @@ import QuestionMarkIcon from './icons/QuestionMarkIcon';
 import NavLink from './ui/NavLink';
 
 const GuestMenu = () => {
-
-
   return (
     <nav>
       <div className="px-4 pb-6 shadow-xl relative rounded-lg border-3 flex flex-col gap-3">
@@ -13,7 +11,7 @@ const GuestMenu = () => {
         <p className="pt-16 mb-4 text-center">{__('navigation_sign_in_cta')}</p>
 
         <NavLink href="/login">{__('navigation_sign_in')}</NavLink>
-        <NavLink href="/signup">{__('navigation_signup')}</NavLink> 
+        <NavLink href="/signup">{__('navigation_signup')}</NavLink>
       </div>
       <div className="flex flex-col gap-3 mt-4">
         {process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true' && (
@@ -26,9 +24,14 @@ const GuestMenu = () => {
         <NavLink href="/volunteer">{__('navigation_volunteer')}</NavLink>
         <NavLink href="/resources">{__('navigation_resources')}</NavLink>
 
-        {process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true' && <NavLink href="/learn/category/all">{__('navigation_online_courses')}</NavLink>}
-        {process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true' && <NavLink href="/blog">{__('navigation_blog')}</NavLink>}
-        
+        {process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true' && (
+          <NavLink href="/learn/category/all">
+            {__('navigation_online_courses')}
+          </NavLink>
+        )}
+        {process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true' && (
+          <NavLink href="/blog">{__('navigation_blog')}</NavLink>
+        )}
 
         <ReportABug />
       </div>

@@ -28,7 +28,7 @@ const EditLessonPage = ({ lesson, error }: Props) => {
     actionType?: string,
   ) => {
     if (actionType === 'ADD' && name === 'visibleBy' && option?._id) {
-        await api.post(`/moderator/lesson/${lesson._id}/add`, option);
+      await api.post(`/moderator/lesson/${lesson._id}/add`, option);
     }
   };
   if (!lesson) {
@@ -49,7 +49,7 @@ const EditLessonPage = ({ lesson, error }: Props) => {
           <FaArrowLeft className="mr-1" /> {__('generic_back')}
         </Link>
         <Heading level={2} className="flex justify-start items-center">
-          {__('learn_edit_heading')}{' '} <i>{lesson.title}</i>
+          {__('learn_edit_heading')} <i>{lesson.title}</i>
         </Heading>
         {!process.env.NEXT_PUBLIC_STRIPE_PUB_KEY && (
           <div className="my-4 error-box italic">

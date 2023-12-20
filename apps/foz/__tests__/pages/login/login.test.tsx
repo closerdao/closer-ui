@@ -20,9 +20,10 @@ describe.skip('Login', () => {
     renderWithProviders(<Login />);
 
     const switcherEmailButton = screen.getByRole('button', { name: /email/i });
-    const switcherWalletButton = screen.getByRole('button', { name: /wallet/i });
+    const switcherWalletButton = screen.getByRole('button', {
+      name: /wallet/i,
+    });
 
-      
     expect(switcherEmailButton).toBeDisabled();
     expect(switcherWalletButton).toBeEnabled();
   });
@@ -31,7 +32,9 @@ describe.skip('Login', () => {
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET = 'false';
     renderWithProviders(<Login />);
 
-    const switcherWalletButton = screen.queryByRole('button', { name: /wallet/i });
+    const switcherWalletButton = screen.queryByRole('button', {
+      name: /wallet/i,
+    });
     expect(switcherWalletButton).not.toBeInTheDocument();
   });
 });

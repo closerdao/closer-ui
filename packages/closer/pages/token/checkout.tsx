@@ -54,7 +54,7 @@ const TokenSaleCheckoutPage = () => {
     if (!isWalletReady) {
       router.push('/token/before-you-begin');
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     isWalletReady &&
@@ -96,7 +96,7 @@ const TokenSaleCheckoutPage = () => {
       try {
         await api.post('/metric', {
           event: 'token-sale',
-            value: Number(tokens),
+          value: Number(tokens),
           category: 'revenue',
         });
       } catch (error: unknown) {
@@ -116,7 +116,6 @@ const TokenSaleCheckoutPage = () => {
   const handleEditAmount = () => {
     router.push(`/token/token-counter?tokens=${tokens}`);
   };
-
 
   if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
     return <PageNotFound />;

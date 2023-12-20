@@ -73,15 +73,12 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
                 ))}
               </ul>
             )}
-
           </div>
           <div
             dangerouslySetInnerHTML={{
               __html: __('volunteers_page_more_info', APP_NAME),
             }}
           />
-
-   
         </section>
 
         <div>
