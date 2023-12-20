@@ -309,7 +309,9 @@ const HomePage = ({ subscriptionPlans }: Props) => {
             <div className="w-full flex items-center flex-col">
               <Heading level={2} className="text-2xl font-bold">
                 {
-                  "Meet your new home, way of life, and tribe. Join a unique blend of solarpunks, web3 aficionados, holistic healers, permaculture pioneers, tree enthusiasts, tech wizards, and regenerative innovators. Together, we're reshaping communal living."
+                  `Meet your new home, way of life, and tribe. 
+                  Join a unique blend of solarpunks, web3 aficionados, holistic healers, permaculture pioneers, tree enthusiasts, tech wizards, and regenerative innovators. 
+                  Together, we're reshaping communal living.`
                 }
               </Heading>
             </div>

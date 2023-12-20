@@ -343,7 +343,7 @@ const HomePage = () => {
                   Transforming our soils into Terra Preta with Biochar
                 </Heading>
                 <p>
-                  Applying the biochar we produce to the orchard's soil is a
+                  Applying the biochar we produce to the orchard&apos;s soil is a
                   game-changer. This practice will improve soil fertility,
                   increase water retention, and stimulate microbial activity,
                   leading to healthier trees and better crop yields - all while
