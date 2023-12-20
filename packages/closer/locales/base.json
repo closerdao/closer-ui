@@ -283,6 +283,7 @@
   "ticket_list_total_cost": "Total cost:",
   "ticket_list_type": "Ticket type:",
   "ticket_list_view_ticket": "View ticket",
+  "ticket_list_view_booking": "View booking",
   "ticket_options_ticket_name": "Ticket name",
   "ticket_options_number_of_tickets": "Number of tickets",
   "ticket_options_promt_message": "Put 0 for no limits.",

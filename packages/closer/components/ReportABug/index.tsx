@@ -8,7 +8,7 @@ const ReportABug = () => {
         🐛
         <Link
           className="text-accent underline"
-          href="https://tally.so/r/nPD171"
+          href="https://forms.gle/uQQhTiFu5PRtu7Ei9"
           target="_blank"
         >
           {__('report_a_bug')}
