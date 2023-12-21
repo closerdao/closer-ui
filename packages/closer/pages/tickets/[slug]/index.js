@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 
 import QRCode from 'react-qr-code';
 
@@ -30,22 +31,20 @@ const Ticket = ({ ticket, event, error }) => {
           <div className="md:ml-6">
             <i>{__('tickets_slug_subtitle')}</i>
             <Heading level={2} className="my-3">
-              {event.name}
+              <Link
+                href={ `/events/${event.slug}` }
+              >
+                {event.name}
+              </Link>
             </Heading>
             <p>
-              {__('tickets_slug_holder')} <b>{ticket.name}</b>
+              {__('tickets_slug_holder')} <b>{ticket.name} x { ticket.quantity || 1 }</b>
             </p>
             <p>
               {__('tickets_slug_number')} <b>{ticket._id}</b>
             </p>
           </div>
         </div>
-        <br />
-        <p>
-          Make sure to check your email address. If you didn&apos;t receive the
-          ticket in your email, add no-reply@mg.oasa.co to your contacts and
-          send us an email to {config.TEAM_EMAIL} for support.
-        </p>
       </main>
     </>
   );

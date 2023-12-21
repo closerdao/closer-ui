@@ -78,6 +78,13 @@ const EventPage = ({
   const dateFormat = isThisYear ? 'MMM D' : 'YYYY MMMM';
 
   const durationInDays = dayjs(end).diff(dayjs(start), 'day');
+  const durationRateDays = durationInDays >= 28 ? 30 : durationInDays > 7 ? 7 : 1;
+  const durationName = durationInDays >= 28 ?
+    'monthly' :
+    durationInDays > 7 ?
+      'weekly' :
+      'daily';
+  const discountRate = settings ? (1 - settings.discounts[durationName]) : 0;
   const { min: minAccommodationPrice, max: maxAccommodationPrice } =
     getAccommodationPriceRange(settings, listings, durationInDays, start);
 
@@ -329,25 +336,28 @@ const EventPage = ({
                                 </p>
                               </div>
                             </div>
-                          ))}
-                        <Information>{__('events_discalimer')}</Information>
-                        <div className="text-sm">
-                          {__('events_accommodation')}{' '}
-                          <strong>
-                            {priceFormat(minAccommodationPrice)} -{' '}
-                            {priceFormat(maxAccommodationPrice)}
-                          </strong>
-                        </div>
-                        <div className="text-sm">
-                          {__('events_utility')}{' '}
-                          <strong>
-                            {priceFormat(
-                              dayjs(end).diff(dayjs(start), 'day') *
-                                dailyUtilityFee,
-                            )}
-                          </strong>
-                        </div>
-                        <div className="mt-4 event-actions flex items-center">
+                          ))
+                        }
+                        {durationInDays > 0 && (
+                          <>
+                            <Information>{__('events_disclaimer')}</Information>
+                            <div className="text-sm">
+                              {__('events_accommodation')}{' '}
+                              <strong>
+                                {priceFormat(minAccommodationPrice * discountRate)} -{' '}
+                                {priceFormat(maxAccommodationPrice * discountRate)}
+                              </strong>
+                            </div>
+                            <div className="text-sm">
+                              {__('events_utility')}{' '}
+                              <strong>
+                                {priceFormat(durationInDays * dailyUtilityFee)}
+                              </strong>
+                            </div>
+                          </>
+                        )}
+                        <div className="mt-4">
+                          {/* Event uses an external ticketing system */}
                           {event.ticket && start && start.isAfter(dayjs()) ? (
                             <Link
                               href={prependHttp(event.ticket)}
@@ -357,21 +367,31 @@ const EventPage = ({
                             >
                               {__('events_buy_ticket_button')}
                             </Link>
-                          ) : event.paid ? (
+                          ) : (event.paid || durationInDays > 0) ? (
                             <>
-                              {myTickets && myTickets.count() > 0 ? (
-                                <Link
-                                  as={`/tickets/${myTickets
-                                    .first()
-                                    .get('_id')}`}
-                                  href="/tickets/[slug]"
-                                  className="btn-primary mr-2"
-                                >
-                                  {__('events_see_ticket_button')}
-                                </Link>
-                              ) : (
-                                end &&
-                                end.isAfter(dayjs()) &&
+                              {myTickets &&
+                                <div>
+                                  <Heading level={4}>
+                                    Tickets
+                                  </Heading>
+                                  <ul className="space-y-2 divide-y mb-3">
+                                    { myTickets.map((ticket: any) => (
+                                      <li
+                                        key={ticket.get('_id')}
+                                      >
+                                        <Link
+                                          href={`/tickets/${ticket.get('_id')}`}
+                                          className="text-primary"
+                                        >
+                                          { ticket.get('name') } x { ticket.get('quantity') || 1 }
+                                        </Link>
+                                      </li>
+                                    )) }
+                                  </ul>
+                                </div>
+                              }
+                              {
+                                end && end.isAfter(dayjs()) &&
                                 (event.stripePub ||
                                   process.env.NEXT_PUBLIC_STRIPE_PUB_KEY) && (
                                   <LinkButton
@@ -384,10 +404,10 @@ const EventPage = ({
                                     }`}
                                     className=""
                                   >
-                                    Buy ticket
+                                    {__('events_buy_ticket_button') }
                                   </LinkButton>
                                 )
-                              )}
+                              }
                             </>
                           ) : (
                             <>
@@ -395,7 +415,7 @@ const EventPage = ({
                               start.isBefore(dayjs().subtract(15, 'minutes')) &&
                               end &&
                               end.isAfter(dayjs()) &&
-                              event.location ? (
+                                event.virtual && event.location ? (
                                 <a
                                   className="btn-primary mr-2"
                                   href={event.location}
@@ -447,23 +467,22 @@ const EventPage = ({
                                 >
                                   Cancel RSVP
                                 </a>
-                              ) : (
-                                end &&
+                              ) : end &&
                                 user &&
-                                end.isBefore(dayjs()) && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      attendEvent(
-                                        event._id,
-                                        !attendees?.includes(user._id),
-                                      );
-                                    }}
-                                    className="btn-primary mr-2"
-                                  >
-                                    Attend
-                                  </button>
-                                )
+                                event.virtual &&
+                                end.isAfter(dayjs()) && (
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    attendEvent(
+                                      event._id,
+                                      !attendees?.includes(user._id),
+                                    );
+                                  }}
+                                  className="btn-primary mr-2"
+                                >
+                                  Attend
+                                </button>
                               )}
                             </>
                           )}

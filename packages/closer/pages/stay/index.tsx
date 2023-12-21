@@ -23,20 +23,18 @@ const StayPage = ({ settings }: Props) => {
   const { PLATFORM_NAME } = config || {};
   const { platform }: any = usePlatform();
   const { user } = useAuth();
-  const isTeamMember = false;
-  user?.roles.includes('space-host') ||
-    user?.roles.includes('steward') ||
-    user?.roles.includes('land-manager');
+  const isTeamMember = user?.roles.some(roles => ['space-host', 'steward', 'land-manager', 'team'].includes(roles));
+  const listingFilter = { where: { availableFor: { $in: ['guests', isTeamMember ? 'team' : null].filter(e => e) } } };
 
   const loadData = async () => {
-    await Promise.all([platform.listing.get()]);
+    await Promise.all([platform.listing.get(listingFilter)]);
   };
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [isTeamMember]);
 
-  const listings = platform.listing.find();
+  const listings = platform.listing.find(listingFilter);
   const guestListings = listings?.filter((listing: any) => {
     return (
       listing.get('availableFor') !== 'team' &&
@@ -64,8 +62,6 @@ const StayPage = ({ settings }: Props) => {
           <div className="grid md:grid-cols-4 gap-x-12 md:gap-x-5 gap-y-16">
             {listings &&
               listings.count() > 0 &&
-              isTeamMember &&
-              user &&
               listings.map((listing: any) => {
                 return (
                   <ListingListPreview
@@ -76,20 +72,6 @@ const StayPage = ({ settings }: Props) => {
                   />
                 );
               })}
-            {guestListings &&
-              guestListings.count() > 0 &&
-              (!isTeamMember || !user) &&
-              guestListings.map((listing: any) => {
-                return (
-                  <ListingListPreview
-                    discounts={settings.discounts}
-                    isAdminPage={false}
-                    key={listing.get('_id')}
-                    listing={listing}
-                  />
-                );
-              })}
-
             {listings?.count() === 0 &&
               guestListings?.count() === 0 &&
               __('listing_no_listings_found')}

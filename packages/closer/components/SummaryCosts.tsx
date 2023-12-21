@@ -36,7 +36,7 @@ const SummaryCosts = ({
         <div className="flex justify-between items-center mt-3">
           <p>{__('bookings_checkout_event_cost')}</p>
           <p className="font-bold">
-            {eventDefaultCost !== eventCost?.val && (
+            {eventCost?.val !== 0 && eventDefaultCost !== eventCost?.val && (
               <span className="line-through">
                 {priceFormat(eventDefaultCost)}
               </span>

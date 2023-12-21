@@ -138,7 +138,7 @@ const DatesSelector: NextPage<Props> = ({
   const [currency, selectCurrency] = useState<CloserCurrencies>(
     (savedCurrency as CloserCurrencies) || DEFAULT_CURRENCY,
   );
-  const [selectedTicketOption, selectTicketOption] = useState<any>(null);
+  const [selectedTicketOption, selectTicketOption] = useState<any>(ticketOptions?.[0]);
   const [discountCode, setDiscountCode] = useState('');
   const [doesNeedPickup, setDoesNeedPickup] = useState(false);
   const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
@@ -250,7 +250,7 @@ const DatesSelector: NextPage<Props> = ({
         </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
 
-        <div className="mt-16 flex flex-col gap-16">
+        <div className="mt-16 flex flex-col gap-8">
           {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' && (
             <div>
               <HeadingRow>
@@ -264,7 +264,7 @@ const DatesSelector: NextPage<Props> = ({
               />
             </div>
           )}
-          {eventId && (
+          {eventId && (ticketOptions && ticketOptions.length > 0) && (
             <TicketOptions
               items={ticketOptions}
               selectedTicketOption={selectedTicketOption}
@@ -330,7 +330,7 @@ const DatesSelector: NextPage<Props> = ({
             onClick={handleNext}
             isEnabled={
               !!(
-                (eventId && selectedTicketOption && start && end) ||
+                (eventId && (!ticketOptions?.length || selectedTicketOption) && start && end) ||
                 (volunteerId && start && end) ||
                 (!eventId && !volunteerId && start && end)
               )
