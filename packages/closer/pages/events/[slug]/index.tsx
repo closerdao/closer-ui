@@ -290,11 +290,11 @@ const EventPage = ({
             </div>
           </section>
 
-          <section className=" w-full flex justify-center min-h-[400px]">
+          <section className=" w-full flex justify-center">
             <div className="max-w-4xl w-full">
               <div className="flex flex-col sm:flex-row">
                 <div className="flex items-start justify-between gap-6 w-full">
-                  <div className="flex flex-col gap-10 w-full sm:w-2/3">
+                  <div className="flex flex-col gap-3 w-full sm:w-2/3 min-h-[400px]">
                     <Heading className="md:text-4xl mt-4 font-bold">
                       {event.name}
                     </Heading>
@@ -302,8 +302,49 @@ const EventPage = ({
                     <div>
                       {event.description && <EventDescription event={event} />}
                     </div>
+
+                    {((event.partners && event.partners.length > 0) ||
+                      (isAuthenticated && user?._id === event.createdBy)) && (
+                        <section className="mb-6">
+                          <div className="flex flex-row flex-wrap justify-center items-center">
+                            {event.partners &&
+                              event.partners.map(
+                                (partner: any) =>
+                                  partner.photoUrl && (
+                                    <a
+                                      href={partner.url || '#'}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      key={partner.name}
+                                      className="mr-3"
+                                    >
+                                      <Photo
+                                        id={partner.photo}
+                                        photoUrl={partner.photoUrl}
+                                        className="w-32 h-16"
+                                        title={partner.name}
+                                        rounded={true}
+                                      />
+                                    </a>
+                                  ),
+                              )}
+                          </div>
+                        </section>
+                      )}
+
+                    {attendees && attendees.length > 0 && (
+                      <div>
+                        <EventAttendees
+                          event={event}
+                          start={start}
+                          attendees={attendees}
+                          ticketsCount={ticketsCount}
+                          platform={platform}
+                        />
+                      </div>
+                    )}
                   </div>
-                  <div className="h-auto fixed bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px]">
+                  <div className="h-auto fixed z-10 bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px]">
                     {end && !end.isBefore(dayjs()) && (
                       <Card className="bg-white border border-gray-100">
                         {event.paid &&
@@ -494,49 +535,6 @@ const EventPage = ({
               </div>
             </div>
           </section>
-
-          <main className="max-w-prose py-10 w-full">
-            {((event.partners && event.partners.length > 0) ||
-              (isAuthenticated && user?._id === event.createdBy)) && (
-              <section className="mb-6">
-                <div className="flex flex-row flex-wrap justify-center items-center">
-                  {event.partners &&
-                    event.partners.map(
-                      (partner: any) =>
-                        partner.photoUrl && (
-                          <a
-                            href={partner.url || '#'}
-                            target="_blank"
-                            rel="noreferrer"
-                            key={partner.name}
-                            className="mr-3"
-                          >
-                            <Photo
-                              id={partner.photo}
-                              photoUrl={partner.photoUrl}
-                              className="w-32 h-16"
-                              title={partner.name}
-                              rounded={true}
-                            />
-                          </a>
-                        ),
-                    )}
-                </div>
-              </section>
-            )}
-
-            {attendees && attendees.length > 0 && (
-              <div>
-                <EventAttendees
-                  event={event}
-                  start={start}
-                  attendees={attendees}
-                  ticketsCount={ticketsCount}
-                  platform={platform}
-                />
-              </div>
-            )}
-          </main>
         </div>
       )}
     </>
