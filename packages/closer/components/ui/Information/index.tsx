@@ -7,7 +7,7 @@ interface InformationProps {
 
 const Information = ({ children, className }: InformationProps) => {
   return (
-    <div className={`flex  ${className}`}>
+    <div className={`flex italic ${className}`}>
       <svg
         className="min-w-[17px]"
         width="17px"

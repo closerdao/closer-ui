@@ -446,6 +446,13 @@ export const calculateFullDaysDifference = (targetDate) => {
   return fullDaysDifference;
 };
 
+export const getBookingRate = (durationInDays) => 
+  durationInDays >= 28 ?
+    'monthly' :
+    durationInDays >= 7 ?
+      'weekly' :
+      'daily';
+
 export const doAllKeysHaveValues = (obj, keys) => {
   if (!obj) return false;
   for (const key of keys) {

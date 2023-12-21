@@ -1,4 +1,5 @@
 import { AppProps } from 'next/app';
+import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Script from 'next/script';
@@ -47,30 +48,34 @@ const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
 
   return (
     <>
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0,user-scalable=0" />
+      </Head>
+
       <Script
         id="fb-pixel"
         strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '${FACEBOOK_PIXEL_ID}');
-fbq('track', 'PageView');
-`,
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '${FACEBOOK_PIXEL_ID}');
+  fbq('track', 'PageView');
+  `,
         }}
       />
       <Script
         id="gptconfig"
         dangerouslySetInnerHTML={{
           __html: `window.GPTTConfig = {
-            uuid: "a9d70d04c6b64f328acd966ad87e4fb4",
-          };`
+              uuid: "a9d70d04c6b64f328acd966ad87e4fb4",
+            };`
         }}
       />
       <Script

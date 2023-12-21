@@ -34,7 +34,7 @@ import {
   getMaxBookingHorizon,
   sendAnalyticsEvent,
 } from '../../../utils/helpers';
-import { priceFormat } from '../../../utils/helpers';
+import { priceFormat, getBookingRate } from '../../../utils/helpers';
 import {
   formatDate,
   getBlockedDateRanges,
@@ -82,7 +82,7 @@ const ListingPage: NextPage<Props> = ({
   const [end, setEndDate] = useState<string | null | Date>(
     (savedEndDate as string) || null,
   );
-  const durationInDays = dayjs(end).diff(dayjs(start), 'day');
+  const durationInDays = dayjs(end).diff(dayjs(start), 'day') || 30;
   const [adults, setAdults] = useState<number>(Number(savedAdults) || 1);
   const [kids, setKids] = useState<number>(Number(savedKids) || 0);
   const [infants, setInfants] = useState<number>(Number(savedInfants) || 0);
@@ -90,14 +90,11 @@ const ListingPage: NextPage<Props> = ({
   const [doesNeedPickup, setDoesNeedPickup] = useState(false);
   const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
   const [isTeamBooking, setIsTeamBooking] = useState(false);
-  const durationRateDays = durationInDays >= 28 ? 30 : durationInDays > 7 ? 7 : 1;
-  const durationName = durationInDays >= 28 ?
-    'monthly':
-    durationInDays > 7 ?
-      'weekly':
-      'daily';
+  const durationRateDays = durationInDays >= 28 ? 30 : durationInDays >= 7 ? 7 : 1;
+  const durationName = getBookingRate(durationInDays);
   const discountRate = settings ? (1 - settings.discounts[durationName]) : 0;
   const accomodationTotal = listing ? listing.fiatPrice?.val * (listing.private ? 1 : adults) * durationInDays * discountRate : 0;
+  const nightlyTotal = listing ? listing.fiatPrice?.val * (listing.private ? 1 : adults) * discountRate : 0;
   const utilityTotal = settings ? settings.utilityFiat?.val * adults * durationInDays : 0;
 
   const [apiError, setApiError] = useState(null);
@@ -184,12 +181,14 @@ const ListingPage: NextPage<Props> = ({
         dayjs().add(maxHorizon, 'days').endOf('day').toDate(),
         listing?._id
       );
-      const dates = availability.map((day: any) => (
-        !day.available && day.day
-      ))
-        .filter((d: string) => d)
-        .map((d: string) => new Date(d));
-      setUnavailableDates(dates);
+      if (availability) {
+        const dates = availability.map((day: any) => (
+          !day.available && day.day
+        ))
+          .filter((d: string) => d)
+          .map((d: string) => new Date(d));
+        setUnavailableDates(dates);
+      }
       })();
   }, []);
 
@@ -328,7 +327,7 @@ const ListingPage: NextPage<Props> = ({
           )}
 
           <div>
-            <section className="flex justify-left min-h-[400px]">
+            <section className="flex justify-left">
               <div className="max-w-4xl w-full flex flex-col md:flex-row place-items-start justify-between">
                 <div className="p-2 sm:pr-8 flex flex-col w-full">
                   <div className="flex flex-col gap-6">
@@ -349,12 +348,12 @@ const ListingPage: NextPage<Props> = ({
                     <Heading level={3} className="text-md font-normal">
                       {PLATFORM_LEGAL_ADDRESS}
                     </Heading>
-                    <GoogleMaps height={400} location={LOCATION_COORDINATES} />
+                    {LOCATION_COORDINATES && <GoogleMaps height={400} location={LOCATION_COORDINATES} /> }
                   </div>
                 </div>
 
-                <div className="min-w-[220px] w-full sm:w-auto  md:min-w-[280px] fixed left-0 bottom-0 sm:sticky sm:top-[100px]">
-                  <Card className="bg-white flex-row sm:flex-col items-center border border-gray-100">
+                <div className="min-w-[220px] w-full sm:w-auto fixed left-0 bottom-0 right-0 sm:sticky">
+                  <Card className="bg-white flex-row sm:flex-col items-center border border-gray-100 pb-8">
                     <div className="w-1/2 sm:w-full flex flex-col gap-2">
                       {isWeb3BookingEnabled && (
                         <CurrencySwitcher
@@ -374,18 +373,16 @@ const ListingPage: NextPage<Props> = ({
                             )}{' '}
                             +{' '}
                             {settings?.utilityFiat && priceFormat(
-                              settings.utilityFiat?.val,
+                              utilityTotal,
                               settings.utilityFiat?.cur,
                             )}
                           </div>
                         ) : (
-                          <div className=" font-bold text-lg">
-                            {priceFormat(
-                              settings?.utilityFiat &&
-                              listing.fiatPrice &&
-                              settings?.utilityFiat?.val + listing.fiatPrice?.val,
+                          <div>
+                            <b className="text-lg">{priceFormat(
+                              nightlyTotal * durationRateDays,
                               settings?.utilityFiat?.cur,
-                            )}
+                              )}</b> <span className="opacity-70">{ __(`booking_rate_${ durationName }`) }</span>
                           </div>
                         )}
                       </div>
@@ -414,7 +411,7 @@ const ListingPage: NextPage<Props> = ({
                           onClick={() =>
                             setShowGuestsDropdown(!showGuestsDropdown)
                           }
-                          className="min-h-[20px] font-bold sm:font-normal underline sm:no-underline text-black border-0 sm:border-2 border-black normal-case w-auto sm:w-full py-1 px-0 sm:px-3 sm:p-3 sm:py-2 text-sm bg-white"
+                          className="font-bold sm:font-normal underline sm:no-underline text-black border-0 sm:border-2 border-black normal-case w-auto sm:w-full py-1 px-0 sm:px-3 sm:p-3 sm:py-2 text-sm bg-white"
                         >
                           {adults}{' '}
                           {adults > 1
@@ -427,7 +424,7 @@ const ListingPage: NextPage<Props> = ({
                         </Button>
                         {showGuestsDropdown && (
                           <div className="static sm:relative">
-                            <Card className="border border-gray-100 absolute bottom-[125px] sm:top-0 left-0 sm:bottom-auto sm:left-auto right-auto sm:right-0 bg-white p-4 w-full sm:w-[350px]">
+                            <Card className="border border-gray-100 sm:w-auto absolute z-10 left-2 right-2 sm:left-auto bottom-[175px] sm:bottom-auto sm:top-auto bg-white shadow-md rounded-md p-3">
                               <BookingGuests
                                 shouldHideTitle={true}
                                 adults={adults}

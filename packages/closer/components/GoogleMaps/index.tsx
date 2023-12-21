@@ -25,12 +25,16 @@ const GoogleMaps = ({ location, height = 450 }: Props) => {
     libraries: libraries as any,
   });
 
+  if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY) {
+    return null;
+  }
+
   if (!isLoaded) {
     return <p>Loading...</p>;
   }
 
   return (
-    <div>
+    <div className="min-h-16">
       <GoogleMap
         options={mapOptions}
         zoom={14}
