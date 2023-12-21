@@ -12,7 +12,6 @@ import HeadingRow from '../ui/HeadingRow';
 interface Props {
   items?: TicketOption[];
   selectTicketOption: (ticket: object) => void;
-  // selectedTicketOption?: object;
   selectedTicketOption?: any;
   disclaimer?: string;
   volunteer?: VolunteerOpportunity;
@@ -78,7 +77,6 @@ const TicketOptions: FC<Props> = ({
   volunteer,
   discountCode,
   setDiscountCode,
-  disclaimer,
   eventId,
 }) => {
   return (

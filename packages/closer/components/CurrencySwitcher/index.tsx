@@ -17,7 +17,8 @@ const CurrencySwitcher = ({
   onSelect,
   className,
 }: Props) => {
-  const { isWalletConnected, isCorrectNetwork, hasSameConnectedAccount } = useContext(WalletState);
+  const { isWalletConnected, isCorrectNetwork, hasSameConnectedAccount } =
+    useContext(WalletState);
   const isWeb3BookingEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
 
@@ -27,7 +28,12 @@ const CurrencySwitcher = ({
         options={currencies}
         selectedOption={selectedCurrency}
         setSelectedOption={onSelect}
-        isTokenPaymentAvailable={isWalletConnected && isWeb3BookingEnabled && isCorrectNetwork && hasSameConnectedAccount}
+        isTokenPaymentAvailable={
+          isWalletConnected &&
+          isWeb3BookingEnabled &&
+          isCorrectNetwork &&
+          hasSameConnectedAccount
+        }
       />
     </div>
   );

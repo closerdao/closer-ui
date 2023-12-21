@@ -67,7 +67,7 @@ const buttonStyles = cva(
 
 interface ButtonProps extends VariantProps<typeof buttonStyles> {
   children: React.ReactNode;
-  onClick?: (() => void) | (() => Promise<void>) | ((event:FormEvent) => void);
+  onClick?: (() => void) | (() => Promise<void>) | ((event: FormEvent) => void);
   infoText?: string | React.ReactNode;
   className?: string;
   title?: string;

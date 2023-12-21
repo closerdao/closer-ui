@@ -46,13 +46,13 @@ const Navigation = () => {
             size="small"
             type="primary"
           >
-            {isAuthenticated ? __('navigation_stay') : __('navigation_visit') }
+            {__('navigation_stay') }
           </Button>
-          {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && (
+          {/* {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && (
             <Link href="/token" className="uppercase">
               {__('navigation_buy_token')}
             </Link>
-          )}
+          )} */}
 
           {isAuthenticated && (
             <Link

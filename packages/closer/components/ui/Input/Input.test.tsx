@@ -15,7 +15,9 @@ describe('Input', () => {
 
   test('calls onBlur when user clicks outside the isInstantSave input', () => {
     const onBlur = jest.fn();
-    const { getByLabelText } = render(<Input isInstantSave={true} label="Name" onBlur={onBlur} />);
+    const { getByLabelText } = render(
+      <Input isInstantSave={true} label="Name" onBlur={onBlur} />,
+    );
     const input = getByLabelText('Name');
     fireEvent.blur(input);
     expect(onBlur).toHaveBeenCalled();

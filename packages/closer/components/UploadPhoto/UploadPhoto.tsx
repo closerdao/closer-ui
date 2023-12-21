@@ -106,7 +106,7 @@ const UploadPhoto: FC<Props> = ({
 
         {/* user photo, no photo has been added */}
         {isUserPhoto && !user?.photo && !isPrompt && (
-          <div className='group'>
+          <div className="group">
             <FaUser
               className={` ${
                 isPrompt ? 'text-3xl text-gray-400' : 'text-gray-200 text-8xl'
@@ -143,7 +143,7 @@ const UploadPhoto: FC<Props> = ({
 
         {/* upload photo from PromptsBar */}
         {isPrompt && (
-          <div className='group'>
+          <div className="group">
             <FaUser className="text-3xl text-gray-400" />
             <UploadPhotoButton
               isMinimal={isMinimal}

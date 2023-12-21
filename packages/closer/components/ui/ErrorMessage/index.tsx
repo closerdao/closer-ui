@@ -14,7 +14,7 @@ const ErrorMessage = ({ error }: ErrorMessageProps) => {
         <Image src="/images/icon-info.svg" width={16} height={16} alt="Error" />
       </div>
 
-      <p className='break-words w-[90%]'>{String(errorMessage)}</p>
+      <p className="break-words w-[90%]">{String(errorMessage)}</p>
     </div>
   );
 };

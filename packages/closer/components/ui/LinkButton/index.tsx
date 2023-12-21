@@ -72,7 +72,7 @@ const LinkButton = ({
   color,
   isFullWidth,
   size,
-  onClick
+  onClick,
 }: ButtonProps) => {
   return (
     <>
@@ -84,7 +84,7 @@ const LinkButton = ({
           className,
         )}
         `}
-        onClick={ onClick }
+        onClick={onClick}
       >
         {children}
       </Link>

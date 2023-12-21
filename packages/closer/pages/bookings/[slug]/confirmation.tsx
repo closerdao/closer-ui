@@ -9,6 +9,7 @@ import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
+import { event as gaEvent } from 'nextjs-google-analytics';
 import { ParsedUrlQuery } from 'querystring';
 
 import PageNotFound from '../../404';
@@ -17,7 +18,6 @@ import { BaseBookingParams, Booking, Event } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
-import { event as gaEvent } from 'nextjs-google-analytics'; 
 
 interface Props extends BaseBookingParams {
   booking: Booking;
@@ -42,9 +42,10 @@ const ConfirmationStep = ({ error, booking, event }: Props) => {
       // startNewBooking();
     } else if (status === 'paid') {
       gaEvent('booking_confirm', {
-      category: 'booking',
-      label: 'booking',
-      });}
+        category: 'booking',
+        label: 'booking',
+      });
+    }
   }, [status]);
 
   const viewBooking = (id: string) => {

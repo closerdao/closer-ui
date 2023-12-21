@@ -1,6 +1,7 @@
 import { FC, PropsWithChildren, useEffect, useState } from 'react';
-import { initAnalytics, trackPageView } from './Analytics';
+
 import { useConfig } from '../hooks/useConfig';
+import { initAnalytics, trackPageView } from './Analytics';
 
 const Layout: FC<PropsWithChildren> = ({ children }) => {
   const [isInitialized, setIsInitialized] = useState(false);

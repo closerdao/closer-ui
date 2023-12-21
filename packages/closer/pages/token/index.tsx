@@ -79,10 +79,10 @@ const PublicTokenSalePage = ({ listings }: Props) => {
             'token_sale_public_sale_heading',
           )} - ${PLATFORM_NAME}`}</title>
           <link
-          rel="canonical"
-          href="https://www.traditionaldreamfactory.com/token"
-          key="canonical"
-        />
+            rel="canonical"
+            href="https://www.traditionaldreamfactory.com/token"
+            key="canonical"
+          />
         </Head>
 
         <div className="max-w-6xl mx-auto">
@@ -118,7 +118,10 @@ const PublicTokenSalePage = ({ listings }: Props) => {
             {/* <h1 className="drop-shadow-[1px_2px_2px_rgba(254,79,183,1)] px-4 mb-2 sm:mb-8 mt-[20px] sm:mt-[70px] md:mt-[190px] max-w-[700px] text-center font-extrabold text-5xl md:text-6xl uppercase">
               {__('token_sale_public_sale_announcement')}
             </h1> */}
-            <Heading level={1} className="drop-shadow-lg mb-8 text-center max-w-[600px] mt-64">
+            <Heading
+              level={1}
+              className="drop-shadow-lg mb-8 text-center max-w-[600px] mt-64"
+            >
               {__('token_sale_public_sale_subheading')}
             </Heading>
 
@@ -394,10 +397,7 @@ const PublicTokenSalePage = ({ listings }: Props) => {
                       {__('token_sale_tdf_utility_2')}
                     </Link>{' '}
                     {__('token_sale_tdf_utility_3')}{' '}
-                    <Link
-                      className="text-accent underline"
-                      href="/listings"
-                    >
+                    <Link className="text-accent underline" href="/listings">
                       {__('token_sale_tdf_utility_4')}
                     </Link>
                   </p>
@@ -894,7 +894,6 @@ const PublicTokenSalePage = ({ listings }: Props) => {
             </div>
           </div>
         </section>
-        
       </main>
     </div>
   );

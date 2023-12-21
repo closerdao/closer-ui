@@ -1,5 +1,7 @@
 import Link from 'next/link';
+
 import React from 'react';
+
 import { __ } from '../../utils/helpers';
 
 const ReportABug = () => {

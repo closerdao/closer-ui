@@ -251,7 +251,7 @@ BookingPage.getInitialProps = async ({
             Authorization: `Bearer ${req?.cookies?.access_token}`,
           },
         });
-       bookingCreatedBy = optionalCreatedBy?.data?.results;
+      bookingCreatedBy = optionalCreatedBy?.data?.results;
     } catch (error) {}
 
     return {

@@ -54,7 +54,7 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
                   listing.get('fiatPrice').toJS().cur,
                 )}{' '}
               </span>
-              {__('listing_preview_per_night')}
+              {__('listing_preview_per_daily')}
             </p>
             <p className="text-left">
               <span className="">
@@ -65,7 +65,7 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
                   listing.get('fiatPrice').toJS().cur,
                 )}{' '}
               </span>
-              {__('listing_preview_per_week')}
+              {__('listing_preview_per_weekly')}
             </p>
             <p className="text-left">
               <span className="">
@@ -76,7 +76,7 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
                   listing.get('fiatPrice').toJS().cur,
                 )}{' '}
               </span>
-              {__('listing_preview_per_month')}
+              {__('listing_preview_per_monthly')}
             </p>
           </div>
         )}
