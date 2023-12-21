@@ -47,15 +47,39 @@ const ListingListPreview = ({ listing }) => {
 
       <div className="flex flex-col gap-7">
         {listing.get('fiatPrice') && (
-          <p className="text-left">
-            <span className="font-bold">
-              {priceFormat(
-                listing.get('fiatPrice').toJS().val,
-                listing.get('fiatPrice').toJS().cur,
-              )}{' '}
-            </span>
-            {__('listing_preview_per_night')}
-          </p>
+          <div>
+            <p className="text-left">
+              <span className="font-bold">
+                {priceFormat(
+                  listing.get('fiatPrice').toJS().val,
+                  listing.get('fiatPrice').toJS().cur,
+                )}{' '}
+              </span>
+              {__('listing_preview_per_daily')}
+            </p>
+            <p className="text-left">
+              <span className="">
+                {priceFormat(
+                  listing.get('fiatPrice').toJS().val *
+                    (1 - discounts.weekly) *
+                    7,
+                  listing.get('fiatPrice').toJS().cur,
+                )}{' '}
+              </span>
+              {__('listing_preview_per_weekly')}
+            </p>
+            <p className="text-left">
+              <span className="">
+                {priceFormat(
+                  listing.get('fiatPrice').toJS().val *
+                    (1 - discounts.monthly) *
+                    30,
+                  listing.get('fiatPrice').toJS().cur,
+                )}{' '}
+              </span>
+              {__('listing_preview_per_monthly')}
+            </p>
+          </div>
         )}
 
         <Link
