@@ -424,7 +424,7 @@ const ListingPage: NextPage<Props> = ({
                         </Button>
                         {showGuestsDropdown && (
                           <div className="static sm:relative">
-                            <Card className="border border-gray-100 absolute bottom-[125px] sm:top-0 left-0 sm:bottom-auto sm:left-auto right-auto sm:right-0 bg-white p-4 w-full sm:w-[350px]">
+                            <Card className="border border-gray-100 sm:w-auto absolute z-10 left-2 right-2 sm:left-auto bottom-[175px] sm:bottom-auto sm:top-auto bg-white shadow-md rounded-md p-3">
                               <BookingGuests
                                 shouldHideTitle={true}
                                 adults={adults}
