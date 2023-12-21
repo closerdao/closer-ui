@@ -4,7 +4,6 @@ import { TicketOption } from '../../types';
 import api from '../../utils/api';
 import { __, priceFormat } from '../../utils/helpers';
 import { Button } from '../ui';
-import Heading from '../ui/Heading';
 import Input from '../ui/Input';
 
 interface Props {
@@ -40,9 +39,9 @@ const DiscountCode = ({
   return (
     <div>
       <div className="blcok sm:flex basis-20">
-        <Heading level={4} className="text-[14px] mt-2 basis-1/2 sm: mb-0">
+        <p className="mt-2 basis-1/2 sm:mb-0">
           {__('bookings_dates_step_tickets_discount_code')}:
-        </Heading>
+        </p>
         <Input
           type="text"
           value={discountCode}

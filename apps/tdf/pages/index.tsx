@@ -57,9 +57,9 @@ const HomePage = () => {
             <YoutubeEmbed isBackgroundVideo={true} embedId="VkoqvPcaRpk" />
           )}
         </div>
-        <div className="absolute left-0 top-0 z-10 bg-opacity-50 bg-black w-full h-full flex justify-center ">
-          <div className="w-full h-auto overflow-scroll flex justify-center flex-col items-center">
-            <div className="max-w-6xl w-full py-32">
+        <div className="absolute left-0 top-0 z-10 bg-opacity-50 bg-black w-full h-full flex justify-center">
+          <div className="w-full h-auto overflow-scroll flex justify-start flex-col items-center">
+            <div className="max-w-6xl w-full px-4 md:py-32 py-32">
               {/* <Heading
                 className="text-center text-white text-3xl sm:text-4xl md:text-5xl"
                 data-testid="page-title"

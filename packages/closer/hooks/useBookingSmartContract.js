@@ -3,7 +3,7 @@ import { useContext, useState } from 'react';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import { utils } from 'ethers';
-import { BigNumber, Contract } from 'ethers';
+import { Contract } from 'ethers';
 
 import { WalletDispatch, WalletState } from '../contexts/wallet';
 import { checkIfBookingEqBlockchain } from '../utils/helpers';
@@ -12,6 +12,14 @@ import { useConfig } from './useConfig';
 dayjs.extend(dayOfYear);
 
 export const useBookingSmartContract = ({ bookingNights }) => {
+  if (process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET !== 'true') {
+    return {
+      stakeTokens: () => {},
+      isStaking: false,
+      checkContract: () => {},
+    };
+  }
+
   const {
     BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
     BLOCKCHAIN_DAO_TOKEN,

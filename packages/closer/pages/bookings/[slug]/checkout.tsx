@@ -53,7 +53,6 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
     ticketOption,
     eventPrice,
     total,
-    adults,
   } = booking || {};
 
   const { balanceAvailable } = useContext(WalletState);
@@ -111,9 +110,7 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
     }
 
     router.push(
-      `/bookings/${booking._id}/confirmation${
-        event?._id ? `?eventId=${event?._id}` : ''
-      }`,
+      `/bookings/${booking._id}`,
     );
   };
 
@@ -261,7 +258,7 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
             />
           ) : (
             <Button className="booking-btn" onClick={handleFreeBooking}>
-              {__('buttons_booking_request')}
+              {user?.roles.includes('member') ? __('buttons_confirm_booking') : __('buttons_booking_request')}
             </Button>
           )}
 
