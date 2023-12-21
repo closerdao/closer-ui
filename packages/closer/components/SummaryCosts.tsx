@@ -12,6 +12,7 @@ interface Props {
   eventDefaultCost?: number;
   accomodationDefaultCost?: number;
   volunteerId?: string;
+  isNotPaid?: boolean;
 }
 
 const SummaryCosts = ({
@@ -21,7 +22,8 @@ const SummaryCosts = ({
   totalToken,
   totalFiat,
   eventCost,
-  eventDefaultCost
+  eventDefaultCost,
+  isNotPaid,
 }: Props) => {
   return (
     <div>
@@ -34,7 +36,7 @@ const SummaryCosts = ({
         <div className="flex justify-between items-center mt-3">
           <p>{__('bookings_checkout_event_cost')}</p>
           <p className="font-bold">
-            {eventDefaultCost !== eventCost?.val && (
+            {eventCost?.val !== 0 && eventDefaultCost !== eventCost?.val && (
               <span className="line-through">
                 {priceFormat(eventDefaultCost)}
               </span>
@@ -48,6 +50,9 @@ const SummaryCosts = ({
         <p>{__('bookings_summary_step_dates_accomodation_type')}</p>
         <p className="font-bold">
           {priceFormat(accomodationCost)}
+          {isNotPaid && (
+            <span className="text-failure"> {__('booking_card_unpaid')}</span>
+          )}
         </p>
       </div>
       <p className="text-right text-xs">
@@ -55,7 +60,12 @@ const SummaryCosts = ({
       </p>
       <div className="flex justify-between items-center mt-3">
         <p> {__('bookings_summary_step_utility_total')}</p>
-        <p className="font-bold">{priceFormat(utilityFiat)}</p>
+        <p className="font-bold">
+          {priceFormat(utilityFiat)}
+          {isNotPaid && (
+            <span className="text-failure"> {__('booking_card_unpaid')}</span>
+          )}
+        </p>
       </div>
       <p className="text-right text-xs">
         {__('bookings_summary_step_utility_description')}
@@ -65,13 +75,25 @@ const SummaryCosts = ({
         <p className="font-bold">
           {useTokens ? (
             <>
-              <span>
-                {priceFormat(totalToken)}
-              </span>{' '}
-              + <span>{priceFormat(totalFiat)}</span>
+              <span>{priceFormat(totalToken)}</span> +{' '}
+              <span>{priceFormat(totalFiat)}</span>
+              {isNotPaid && (
+                <span className="text-failure">
+                  {' '}
+                  {__('booking_card_unpaid')}
+                </span>
+              )}
             </>
           ) : (
-            priceFormat(totalFiat)
+            <>
+              {priceFormat(totalFiat)}
+              {isNotPaid && (
+                <span className="text-failure">
+                  {' '}
+                  {__('booking_card_unpaid')}
+                </span>
+              )}
+            </>
           )}
         </p>
       </div>

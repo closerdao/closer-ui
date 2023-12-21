@@ -32,7 +32,6 @@ import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, getMaxBookingHorizon } from '../../../utils/helpers';
 
-
 interface Props {
   error?: string;
   settings?: BookingSettings;
@@ -67,9 +66,7 @@ const DatesSelector: NextPage<Props> = ({
 
   const [blockedDateRanges, setBlockedDateRanges] = useState<any[]>([]);
   const canBookStays = (user: User) => {
-    if (
-      !user.roles.includes('member') 
-    ) {
+    if (!user.roles.includes('member')) {
       return false;
     }
     return true;
@@ -108,12 +105,7 @@ const DatesSelector: NextPage<Props> = ({
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push({
-        pathname: '/signup',
-        query: {
-          back: router.asPath,
-        },
-      });
+      redirectToSignup();
     }
 
     if (eventId) {
@@ -146,7 +138,7 @@ const DatesSelector: NextPage<Props> = ({
   const [currency, selectCurrency] = useState<CloserCurrencies>(
     (savedCurrency as CloserCurrencies) || DEFAULT_CURRENCY,
   );
-  const [selectedTicketOption, selectTicketOption] = useState<any>(null);
+  const [selectedTicketOption, selectTicketOption] = useState<any>(ticketOptions?.[0]);
   const [discountCode, setDiscountCode] = useState('');
   const [doesNeedPickup, setDoesNeedPickup] = useState(false);
   const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
@@ -155,6 +147,27 @@ const DatesSelector: NextPage<Props> = ({
     setStartDate(savedStartDate as string);
     setEndDate(savedEndDate as string);
   }, [savedStartDate, savedEndDate]);
+
+  const getUrlParams = () => {
+    const dateFormat = 'YYYY-MM-DD';
+    const params = {
+      start: dayjs(savedStartDate as string).format(dateFormat),
+      end: dayjs(savedEndDate as string).format(dateFormat),
+      adults: String(adults),
+      ...(kids && { kids: String(kids) }),
+      ...(infants && { infants: String(infants) }),
+      ...(pets && { pets: String(pets) }),
+      ...(eventId && { eventId: eventId as string }),
+      ...(volunteerId && { volunteerId: volunteerId as string }),
+    };
+    const urlParams = new URLSearchParams(params);
+
+    return urlParams;
+  };
+
+  const redirectToSignup = () => {
+    router.push(`/signup?back=bookings/create/dates&${getUrlParams()}`);
+  };
 
   const handleNext = async () => {
     setHandleNextError(null);
@@ -177,12 +190,7 @@ const DatesSelector: NextPage<Props> = ({
 
       if (data.start === data.end || selectedTicketOption?.isDayTicket) {
         if (!isAuthenticated) {
-          router.push({
-            pathname: '/login',
-            query: {
-              back: router.asPath,
-            },
-          });
+          redirectToSignup();
           return;
         }
         // Single day ticket - no accomodation needed.
@@ -214,7 +222,14 @@ const DatesSelector: NextPage<Props> = ({
   };
 
   const goBack = () => {
-    router.back();
+    if (volunteerId) {
+      router.push(`/volunteer/${volunteer?.slug}`);
+      return;
+    }
+    if (eventId) {
+      router.push(`/events/${event?.slug}`);
+      return;
+    }
   };
 
   if (error) {
@@ -235,7 +250,7 @@ const DatesSelector: NextPage<Props> = ({
         </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
 
-        <div className="mt-16 flex flex-col gap-16">
+        <div className="mt-16 flex flex-col gap-8">
           {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' && (
             <div>
               <HeadingRow>
@@ -249,7 +264,7 @@ const DatesSelector: NextPage<Props> = ({
               />
             </div>
           )}
-          {eventId && (
+          {eventId && (ticketOptions && ticketOptions.length > 0) && (
             <TicketOptions
               items={ticketOptions}
               selectedTicketOption={selectedTicketOption}
@@ -315,7 +330,7 @@ const DatesSelector: NextPage<Props> = ({
             onClick={handleNext}
             isEnabled={
               !!(
-                (eventId && selectedTicketOption && start && end) ||
+                (eventId && (!ticketOptions?.length || selectedTicketOption) && start && end) ||
                 (volunteerId && start && end) ||
                 (!eventId && !volunteerId && start && end)
               )
@@ -340,8 +355,8 @@ DatesSelector.getInitialProps = async ({ query }) => {
     } = await api.get('/config/booking');
     if (eventId) {
       const [ticketsAvailable, event] = await Promise.all([
-        await api.get(`/bookings/event/${eventId}/availability`),
-        await api.get(`/event/${eventId}`),
+        api.get(`/bookings/event/${eventId}/availability`),
+        api.get(`/event/${eventId}`),
       ]);
 
       return {

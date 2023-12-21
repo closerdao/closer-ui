@@ -1,13 +1,15 @@
 import { useRouter } from 'next/router';
 
-import { ChangeEventHandler, useEffect, useState } from 'react';
+import { ChangeEventHandler, FormEvent, useEffect, useState } from 'react';
 import { DateRange, DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 
 import dayjs from 'dayjs';
 
 import { __ } from '../../utils/helpers';
+import { Button } from '../ui';
 import { ErrorMessage, Input } from '../ui';
+import { getDateTime, includesBlockedDateRange } from './dateTimePicker.utils';
 
 interface Props {
   value?: string;
@@ -84,7 +86,8 @@ const DateTimePicker = ({
   };
 
   const getBlockedDays = (dateArray: any[]) => {
-    return dateArray?.map((date) => {
+    return dateArray
+      ?.map((date) => {
         if (date instanceof Date) {
           return date;
         }
@@ -111,17 +114,13 @@ const DateTimePicker = ({
       if (!isDateRangeSet) {
         setDateRange({
           from: new Date(savedStartDate),
-          to: new Date(savedEndDate),
+          to: savedEndDate ? new Date(savedEndDate) : undefined,
         });
         if (isAdmin) {
           setEndTime(dayjs(savedEndDate).format('HH:mm'));
           setStartTime(dayjs(savedStartDate).format('HH:mm'));
         }
       }
-      setIsDateRangeSet(true);
-    } else {
-      setStartDate(null);
-      setEndDate(null);
     }
   }, [savedStartDate, savedEndDate]);
 
@@ -166,16 +165,6 @@ const DateTimePicker = ({
     }
   }, [eventStartDate, eventEndDate]);
 
-  const getDateTime = (date: string | Date, hours: number, minutes: number) => {
-    return new Date(
-      new Date(date).getFullYear(),
-      new Date(date).getMonth(),
-      new Date(date).getDate(),
-      hours,
-      minutes,
-    );
-  };
-
   const handleTimeChange: ChangeEventHandler<HTMLInputElement> = (event) => {
     let time = event.target.value;
     if (!time) {
@@ -198,25 +187,48 @@ const DateTimePicker = ({
     }
   };
 
-  const includesBlockedDateRange = (range: DateRange | undefined) => {
-    if (range && blockedDateRanges) {
-      return blockedDateRanges.some((blockedDateRange) => {
-        if (!(blockedDateRange instanceof Date) && range.from && range.to) {
-          return (
-            blockedDateRange.from >= range.from &&
-            blockedDateRange.to <= range.to
-          );
-        }
-      });
-    }
-    return false;
-  };
-
   const updateDateRange = (range: DateRange | undefined) => {
-    if (!includesBlockedDateRange(range)) {
+    if (!includesBlockedDateRange(range, blockedDateRanges)) {
+      if (range?.from && dateRange?.from && dateRange.from > range.from) {
+        setDateRange({ from: range.from, to: undefined });
+        setStartDate(range.from);
+        setEndDate(null);
+        return;
+      }
+      if (range?.from && dateRange?.from && dateRange.to) {
+        const newTo = range.to;
+        if (newTo) {
+          range = { from: newTo, to: undefined };
+          setDateRange({ from: newTo, to: undefined });
+          setStartDate(newTo as Date);
+        } else {
+          range = { from: dateRange.to, to: undefined };
+          setDateRange({ from: dateRange.to, to: undefined });
+          setStartDate(dateRange.to as Date);
+        }
+        setEndDate(null);
+        return;
+      }
+
+      if (!range && dateRange?.from?.getTime() === dateRange?.to?.getTime()) {
+        setEndDate(null);
+        setStartDate(null);
+        setDateRange({ from: undefined, to: undefined });
+        return;
+      }
+
+      if (!range?.from && dateRange?.from && dateRange?.to) {
+        range = { from: dateRange.from, to: undefined };
+        setDateRange({ from: dateRange.from, to: undefined });
+        setStartDate(dateRange.from);
+        setEndDate(null);
+        return;
+      }
+
       setDateRange(range);
+
       if (range?.to) {
-        if (endTime === '12:00') {
+        if (endTime === '12:00' && isAdmin) {
           const formattedDate = getDateTime(range?.to, 12, 0);
           setEndDate(formattedDate);
         } else {
@@ -226,19 +238,18 @@ const DateTimePicker = ({
         setEndDate(null);
       }
       if (range?.from) {
-        if (isAdmin) {
-          if (startTime === '12:00') {
-            const formattedDate = getDateTime(range?.from, 12, 0);
-            setStartDate(formattedDate);
-          } else {
-            setStartDate(range?.from);
-          }
+        if (startTime === '12:00' && isAdmin) {
+          const formattedDate = getDateTime(range?.from, 12, 0);
+          setStartDate(formattedDate);
         } else {
           setStartDate(range?.from);
         }
       } else {
-        setStartDate(null);
+        setStartDate(range?.from as Date);
       }
+    } else {
+      setStartDate(null);
+      setEndDate(null);
     }
   };
 
@@ -247,33 +258,49 @@ const DateTimePicker = ({
     updateDateRange(range);
   };
 
+  const handleClearDates = (e: FormEvent) => {
+    e.preventDefault();
+    setDateRange({ from: undefined, to: undefined });
+    setStartDate(null);
+    setEndDate(null);
+    setIsDateRangeSet(false);
+  };
+
   return (
-    <div className="">
-      <div data-testid="dates" className="w-full flex mb-8">
-        <div>
-          <div className="text-sm mb-2">
-            {isAdmin
-              ? __('events_event_start_date')
-              : __('listings_book_check_in')}
+    <div className="max-w-[550px]">
+      <div data-testid="dates" className="w-full flex mb-8 justify-between">
+        <div className="flex">
+          <div>
+            <div className="text-sm mb-2">
+              {isAdmin
+                ? __('events_event_start_date')
+                : __('listings_book_check_in')}
+            </div>
+            <div className="text-sm border rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
+              {dateRange?.from
+                ? dayjs(dateRange?.from).format('ll')
+                : __('listings_book_select_date')}{' '}
+            </div>
           </div>
-          <div className="text-sm border rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
-            {dateRange?.from
-              ? dayjs(dateRange?.from).format('ll')
-              : __('listings_book_select_date')}{' '}
+          <div>
+            <div className="text-sm mb-2">
+              {isAdmin
+                ? __('events_event_end_date')
+                : __('listings_book_check_out')}
+            </div>
+            <div className="text-sm border rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
+              {dateRange?.to
+                ? dayjs(dateRange?.to).format('ll')
+                : __('listings_book_select_date')}
+            </div>
           </div>
         </div>
-        <div>
-          <div className="text-sm mb-2">
-            {isAdmin
-              ? __('events_event_end_date')
-              : __('listings_book_check_out')}
-          </div>
-          <div className="text-sm border bordr-disabled rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
-            {dateRange?.to
-              ? dayjs(dateRange?.to).format('ll')
-              : __('listings_book_select_date')}
-          </div>
-        </div>
+        <Button
+          className="hidden sm:block sm:font-normal h-[25px] w-[130px] underline sm:no-underline text-black border-0 sm:border-2 border-black normal-case py-0.5 px-0 sm:px-3 sm:p-3 sm:py-2 text-sm bg-white"
+          onClick={handleClearDates}
+        >
+          {__('generic_clear_selection')}
+        </Button>
       </div>
 
       <div>

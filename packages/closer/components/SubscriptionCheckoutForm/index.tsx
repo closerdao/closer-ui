@@ -55,7 +55,7 @@ function SubscriptionCheckoutForm({
     },
   };
 
-  const redirect = (subscriptionId:string) => {
+  const redirect = (subscriptionId: string) => {
     if (source) {
       router.push(source);
     } else {
@@ -63,7 +63,7 @@ function SubscriptionCheckoutForm({
         `/subscriptions/success?subscriptionId=${subscriptionId}&priceId=${priceId}`,
       );
     }
-  }
+  };
 
   const createSubscription = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -112,7 +112,7 @@ function SubscriptionCheckoutForm({
 
             if (validationResponse.data.results.status === 'succeeded') {
               await refetchUser();
-              redirect(subscriptionId)
+              redirect(subscriptionId);
             }
           }
         } catch (err) {
@@ -130,7 +130,7 @@ function SubscriptionCheckoutForm({
 
         if (validationResponse.data.results.status === 'succeeded') {
           await refetchUser();
-          redirect(subscriptionId)
+          redirect(subscriptionId);
         }
       }
     } catch (err) {

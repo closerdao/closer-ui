@@ -21,7 +21,9 @@ describe('Events', () => {
     );
 
     renderWithProviders(<Events />);
-    const titleUpcoming = screen.getByRole('heading', { name: /upcoming events/i });
+    const titleUpcoming = screen.getByRole('heading', {
+      name: /upcoming events/i,
+    });
     const titlePast = screen.getByRole('heading', { name: /past events/i });
     expect(titleUpcoming).toBeInTheDocument();
     expect(titlePast).toBeInTheDocument();

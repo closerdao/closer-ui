@@ -36,10 +36,8 @@ import {
 } from '../../../utils/helpers';
 import { priceFormat } from '../../../utils/helpers';
 import {
-  checkListingAvailability,
   formatDate,
   getBlockedDateRanges,
-  getUnavailableDates,
 } from '../../../utils/listings.helpers';
 
 const MAX_DAYS_TO_CHECK_AVAILABILITY = 60;
@@ -69,40 +67,38 @@ const ListingPage: NextPage<Props> = ({
     kids: savedKids,
     infants: savedInfants,
     pets: savedPets,
-    currency: savedCurrency,
     useTokens: savedUseTokens,
   } = router.query || {};
   const guestsDropdownRef = useOutsideClick(
     handleClickOutsideDepartureDropdown,
   );
 
-  const defaultCheckInDate = new Date().toISOString();
-  const defaultCheckOutDate = dayjs(new Date()).add(7, 'day').toISOString();
-
   const [maxHorizon, maxDuration] = getMaxBookingHorizon(settings, isMember);
 
   const [showGuestsDropdown, setShowGuestsDropdown] = useState(false);
   const [start, setStartDate] = useState<string | null | Date>(
-    defaultCheckInDate || (savedStartDate as string) || new Date(),
+    (savedStartDate as string) || null,
   );
   const [end, setEndDate] = useState<string | null | Date>(
-    defaultCheckOutDate || (savedEndDate as string),
+    (savedEndDate as string) || null,
   );
+  const durationInDays = dayjs(end).diff(dayjs(start), 'day');
   const [adults, setAdults] = useState<number>(Number(savedAdults) || 1);
   const [kids, setKids] = useState<number>(Number(savedKids) || 0);
   const [infants, setInfants] = useState<number>(Number(savedInfants) || 0);
   const [pets, setPets] = useState<number>(Number(savedPets) || 0);
   const [doesNeedPickup, setDoesNeedPickup] = useState(false);
   const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
-  const [rentalPrice, setRentalPrice] = useState<{ val: 0; cur: '' } | null>(
-    null,
-  );
-  const [utilityPrice, setUtilityPrice] = useState<{ val: 0; cur: '' } | null>(
-    null,
-  );
-  const [tokenPrice, setTokenPrice] = useState<{ val: 0; cur: '' } | null>(
-    null,
-  );
+  const [isTeamBooking, setIsTeamBooking] = useState(false);
+  const durationRateDays = durationInDays >= 28 ? 30 : durationInDays > 7 ? 7 : 1;
+  const durationName = durationInDays >= 28 ?
+    'monthly':
+    durationInDays > 7 ?
+      'weekly':
+      'daily';
+  const discountRate = settings ? (1 - settings.discounts[durationName]) : 0;
+  const accomodationTotal = listing ? listing.fiatPrice?.val * (listing.private ? 1 : adults) * durationInDays * discountRate : 0;
+  const utilityTotal = settings ? settings.utilityFiat?.val * adults * durationInDays : 0;
 
   const [apiError, setApiError] = useState(null);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
@@ -122,17 +118,20 @@ const ListingPage: NextPage<Props> = ({
 
   const isTokenPaymentSelected =
     savedUseTokens === 'true' || currency === CURRENCIES[1];
+  const isTeamMember = user?.roles.some(roles => ['space-host', 'steward', 'land-manager', 'team'].includes(roles));
 
   const getAvailability = async (
     startDate: Date | string | null,
     endDate: Date | string | null,
+    listingId?: string | null,
   ) => {
     try {
       const {
         data: { results, availability },
-      } = await api.post('/bookings/availability', {
+      } = await api.post('/bookings/listing/availability', {
         start: formatDate(startDate),
         end: formatDate(endDate),
+        listing: listingId,
         adults,
         children: kids,
         infants,
@@ -142,52 +141,20 @@ const ListingPage: NextPage<Props> = ({
 
       return { results, availability };
     } catch (error) {
+      console.log('Error', error);
       return { results: null, availability: null };
     }
   };
 
   useEffect(() => {
-    (async () => {
-      const availableStart = new Date();
-      const availableEnd = new Date(
-        new Date(new Date()).setDate(
-          new Date().getDate() + MAX_DAYS_TO_CHECK_AVAILABILITY,
-        ),
-      );
-      const { availability } = await getAvailability(
-        availableStart,
-        availableEnd,
-      );
-      const listingId = listing?._id;
-      setUnavailableDates(getUnavailableDates(availability, listingId || null));
-      const listingPrices = await fetchPrices();
-
-      if (
-        !listingPrices.isListingAvailable &&
-        !savedStartDate &&
-        !savedEndDate
-      ) {
-        setStartDate('');
-        setEndDate('');
-      }
-    })();
-  }, []);
-
-  useEffect(() => {
-    if (savedStartDate && savedEndDate) {
-      setIsListingAvailable(true);
-    }
-
     if (savedStartDate) {
       setStartDate(savedStartDate as string);
-    } else {
-      setStartDate(defaultCheckInDate);
     }
     if (savedEndDate) {
       setEndDate(savedEndDate as string);
-    } else {
-      setEndDate(defaultCheckOutDate);
     }
+
+    handleDefaultBookingDates();
   }, [router.query]);
 
   useEffect(() => {
@@ -202,15 +169,29 @@ const ListingPage: NextPage<Props> = ({
       setCalendarError(__('bookings_date_range_error'));
     }
     if (isCalendarSelectionValid) {
-      (async () => {
-        const listingPrices = await fetchPrices();
-        setIsListingAvailable(listingPrices.isListingAvailable);
-        setRentalPrice(listingPrices?.prices[0]);
-        setUtilityPrice(listingPrices?.prices[1]);
-        setTokenPrice(listingPrices?.prices[2]);
+      (async function updatePrices() {
+        const { results } = await getAvailability(start, end, listing?._id);
+        setIsListingAvailable(results);
       })();
     }
   }, [adults, start, end]);
+
+  useEffect(() => {
+    // Load availability for the entire booking horizon once.
+    (async function loadAvailability() {
+      const { availability } = await getAvailability(
+        dayjs().startOf('day').toDate(),
+        dayjs().add(maxHorizon, 'days').endOf('day').toDate(),
+        listing?._id
+      );
+      const dates = availability.map((day: any) => (
+        !day.available && day.day
+      ))
+        .filter((d: string) => d)
+        .map((d: string) => new Date(d));
+      setUnavailableDates(dates);
+      })();
+  }, []);
 
   useEffect(() => {
     const handleWindowResize = () => {
@@ -227,14 +208,35 @@ const ListingPage: NextPage<Props> = ({
     };
   }, []);
 
+  const handleDefaultBookingDates = async () => {
+    const availableStart = new Date();
+    const availableEnd = new Date(
+      new Date(new Date()).setDate(
+        new Date().getDate() + MAX_DAYS_TO_CHECK_AVAILABILITY,
+      ),
+    );
+    const { results: isListingAvailable } = await getAvailability(
+      availableStart,
+      availableEnd,
+      listing?._id
+    );
+
+    if (!isListingAvailable && !savedStartDate && !savedEndDate) {
+      setStartDate('');
+      setEndDate('');
+    }
+  };
+
   const getUrlParams = () => {
+    const dateFormat = 'YYYY-MM-DD';
     const params = {
-      start: String(start),
-      end: String(end),
+      start: dayjs(start as string).format(dateFormat),
+      end: dayjs(end as string).format(dateFormat),
       adults: String(adults),
       ...(kids && { kids: String(kids) }),
       ...(infants && { infants: String(infants) }),
       ...(pets && { pets: String(pets) }),
+      useTokens: String(isTokenPaymentSelected),
     };
     const urlParams = new URLSearchParams(params);
     return urlParams;
@@ -242,13 +244,13 @@ const ListingPage: NextPage<Props> = ({
 
   const redirectToSummary = (bookingId: string) => {
     router.push(
-      `/bookings/${bookingId}/summary?back=listings/${
+      `/bookings/${bookingId}/summary?back=stay/${
         listing?.slug
       }&${getUrlParams()}`,
     );
   };
   const redirectToSignup = () => {
-    router.push(`/signup?back=listings/${listing?.slug}&${getUrlParams()}`);
+    router.push(`/signup?back=stay/${listing?.slug}&${getUrlParams()}`);
   };
 
   const bookListing = async () => {
@@ -270,6 +272,7 @@ const ListingPage: NextPage<Props> = ({
         children: kids,
         discountCode: '',
         doesNeedPickup: doesNeedPickup.toString(),
+        isTeamBooking: isTeamBooking.toString(),
         doesNeedSeparateBeds: doesNeedSeparateBeds.toString(),
       });
       sendAnalyticsEvent('Click', 'ListingPage', 'Book');
@@ -277,39 +280,6 @@ const ListingPage: NextPage<Props> = ({
     } catch (err: any) {
       setApiError(err);
     } finally {
-    }
-  };
-
-  const fetchPrices = async () => {
-    setApiError(null);
-    try {
-      const { availability, results } = await getAvailability(start, end);
-
-      const isListingAvailable = checkListingAvailability(
-        listing?._id,
-        availability,
-      );
-
-      const currentListing = results?.filter((result: Listing) => {
-        return result.name === listing?.name;
-      });
-
-      return {
-        isListingAvailable,
-        prices: currentListing.length
-          ? [
-              currentListing[0].rentalFiat,
-              currentListing[0].utilityFiat,
-              currentListing[0].rentalToken,
-            ]
-          : [0, 0, 0],
-      };
-    } catch (error) {
-      setApiError(parseMessageFromError(error));
-      return {
-        isListingAvailable: false,
-        prices: [0, 0, 0],
-      };
     }
   };
 
@@ -325,6 +295,7 @@ const ListingPage: NextPage<Props> = ({
     <>
       <Head>
         <title>{listing.name}</title>
+        <meta name="description" content={descriptionText || ''} />
         <meta name="description" content={descriptionText || ''} />
         <meta property="og:type" content="listing" />
         {photo && (
@@ -357,76 +328,21 @@ const ListingPage: NextPage<Props> = ({
           )}
 
           <div>
-            <section className="flex justify-left min-h-[400px] ">
-              <div className="max-w-4xl w-full flex flex-col sm:flex-row place-items-start justify-between">
+            <section className="flex justify-left min-h-[400px]">
+              <div className="max-w-4xl w-full flex flex-col md:flex-row place-items-start justify-between">
                 <div className="p-2 sm:pr-8 flex flex-col w-full">
-                  <div className="flex flex-col gap-6  ">
-                    <section>
+                  <div className="flex flex-col gap-6">
+                    <section className="w-full md:min-w-[450px]">
                       <div
-                        className="rich-text"
+                        className="rich-text w-full"
                         dangerouslySetInnerHTML={{
                           __html: listing.description,
                         }}
                       />
                     </section>
-
-                    {/* TODO: possible alternative to hardcoding amenities is adding this block to listing description with new rich text editor */}
-                    {/* <Heading level={2} className="text-lg uppercase mt-6">
-                      Amenities:
-                    </Heading>
-                    <div className=" flex gap-6">
-                      <div className="flex flex-col gap-6 w-1/2">
-                        <div>
-                          <Heading level={3} className="text-lg">
-                            🍽️ Food
-                          </Heading>
-                          <ul className="list-disc pl-5">
-                            <li>Farm to table experience</li>
-                            <li>
-                              Breakfast is self serve, lunch and dinner are
-                              cocreated
-                            </li>
-                            <li>Food is included in your utitity fee</li>
-                          </ul>
-                        </div>
-                        <div>
-                          <Heading level={3} className="text-lg">
-                            💦 Sauna
-                          </Heading>
-                          We have a wood fired sauna available
-                        </div>
-                        <div>
-                          <Heading level={3} className="text-lg">
-                            💻 Work
-                          </Heading>
-                          Starlink Wifi Coworking space
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-6 w-1/2">
-                        <div>
-                          <Heading level={3} className="text-lg">
-                            🛁 Bathroom
-                          </Heading>
-                          <ul className="list-disc pl-5">
-                            <li>Compost toilets on the land</li>
-                            <li>Outdoor showers (hot + cold)</li>
-                          </ul>
-                        </div>
-
-                        <div>
-                          <Heading level={3} className="text-lg">
-                            {' '}
-                            🌳 Nature{' '}
-                          </Heading>
-                          You will be surrounded by a 5ha playground with over
-                          3k trees planted
-                        </div>
-                      </div>
-                    </div> */}
                   </div>
 
-                  <div className=" my-16 flex flex-col gap-6">
+                  <div className="my-8 flex flex-col gap-6">
                     <Heading level={2} className="text-lg uppercase mt-6">
                       {__('listing_preview_location')}
                     </Heading>
@@ -452,23 +368,23 @@ const ListingPage: NextPage<Props> = ({
                       <div className="block sm:hidden">
                         {currency === CURRENCIES[1] ? (
                           <div className=" font-bold text-md">
-                            {priceFormat(
-                              tokenPrice && tokenPrice?.val,
-                              tokenPrice?.cur,
+                            {listing?.tokenPrice && priceFormat(
+                              listing.tokenPrice?.val,
+                              listing.tokenPrice?.cur,
                             )}{' '}
                             +{' '}
-                            {priceFormat(
-                              utilityPrice && utilityPrice?.val,
-                              utilityPrice?.cur,
+                            {settings?.utilityFiat && priceFormat(
+                              settings.utilityFiat?.val,
+                              settings.utilityFiat?.cur,
                             )}
                           </div>
                         ) : (
                           <div className=" font-bold text-lg">
                             {priceFormat(
-                              utilityPrice &&
-                                rentalPrice &&
-                                utilityPrice?.val + rentalPrice?.val,
-                              utilityPrice?.cur,
+                              settings?.utilityFiat &&
+                              listing.fiatPrice &&
+                              settings?.utilityFiat?.val + listing.fiatPrice?.val,
+                              settings?.utilityFiat?.cur,
                             )}
                           </div>
                         )}
@@ -477,15 +393,15 @@ const ListingPage: NextPage<Props> = ({
                         <ListingDateSelector
                           setStartDate={setStartDate}
                           setEndDate={setEndDate}
-                          end={(savedEndDate as string) || end}
-                          start={(savedStartDate as string) || start}
+                          end={end}
+                          start={start}
                           isSmallScreen={isSmallScreen}
                           blockedDateRanges={getBlockedDateRanges(
                             start,
                             end,
                             maxHorizon,
                             maxDuration,
-                            unavailableDates,
+                            unavailableDates
                           )}
                         />
                       </div>
@@ -545,6 +461,21 @@ const ListingPage: NextPage<Props> = ({
                                   {__('bookings_pickup_disclaimer')}
                                 </div>
                               </div>
+                              { isTeamMember && <div className="my-0 flex flex-row justify-between flex-wrap">
+                                <label
+                                  htmlFor="separateBeds"
+                                  className="text-sm"
+                                >
+                                  Team booking?
+                                </label>
+                                <Switch
+                                  disabled={false}
+                                  name="team-booking"
+                                  label=""
+                                  onChange={setIsTeamBooking}
+                                  checked={isTeamBooking}
+                                />
+                              </div> }
                             </Card>
                           </div>
                         )}
@@ -561,11 +492,12 @@ const ListingPage: NextPage<Props> = ({
                             error={parseMessageFromError(apiError)}
                           />
                         )}
-                        {calendarError && (
-                          <ErrorMessage
-                            error={parseMessageFromError(calendarError)}
-                          />
-                        )}
+                        {calendarError &&
+                          calendarError !== __('bookings_date_range_error') && (
+                            <ErrorMessage
+                              error={parseMessageFromError(calendarError)}
+                            />
+                          )}
                       </div>
                       <div className="flex flex-col gap-2">
                         <div className="hidden sm:block">
@@ -578,6 +510,20 @@ const ListingPage: NextPage<Props> = ({
                             onSelect={setCurrency as any}
                             currencies={CURRENCIES}
                           />
+                        )}
+
+                        {!isSmallScreen && (
+                          <div>
+                            <p className="text-left">
+                              <span className="font-bold">
+                                {priceFormat(
+                                  listing.fiatPrice.val * durationRateDays * discountRate,
+                                  listing.fiatPrice.cur,
+                                )}{' '}
+                              </span>
+                              {__(`listing_preview_per_${durationName}`)}
+                            </p>
+                          </div>
                         )}
 
                         <Button
@@ -612,19 +558,21 @@ const ListingPage: NextPage<Props> = ({
                             </p>
                             <p>
                               {currency === CURRENCIES[1]
-                                ? priceFormat(tokenPrice?.val, tokenPrice?.cur)
+                                ? priceFormat(listing.tokenPrice?.val, listing.tokenPrice?.cur)
                                 : priceFormat(
-                                    rentalPrice?.val,
-                                    rentalPrice?.cur,
-                                  )}
+                                  accomodationTotal,
+                                  listing.fiatPrice?.cur,
+                                )}
                             </p>
                           </div>
                           <div className="flex justify-between items-center mt-3">
                             <p>{__('bookings_summary_step_utility_total')}</p>
                             <p>
                               {priceFormat(
-                                utilityPrice?.val,
-                                utilityPrice?.cur,
+                                isTeamBooking ?
+                                0 :
+                                utilityTotal,
+                                settings?.utilityFiat?.cur,
                               )}
                             </p>
                           </div>
@@ -637,21 +585,21 @@ const ListingPage: NextPage<Props> = ({
                               {currency === CURRENCIES[1] ? (
                                 <div>
                                   {priceFormat(
-                                    tokenPrice && tokenPrice?.val,
-                                    tokenPrice?.cur,
+                                    listing.tokenPrice && listing.tokenPrice?.val,
+                                    listing.tokenPrice?.cur,
                                   )}{' '}
                                   +{' '}
-                                  {priceFormat(
-                                    utilityPrice && utilityPrice?.val,
-                                    utilityPrice?.cur,
+                                  {settings && priceFormat(
+                                    isTeamBooking ? 0 : utilityTotal,
+                                    settings.utilityFiat?.cur,
                                   )}
                                 </div>
                               ) : (
                                 priceFormat(
-                                  utilityPrice &&
-                                    rentalPrice &&
-                                    utilityPrice?.val + rentalPrice?.val,
-                                  utilityPrice?.cur,
+                                  settings &&
+                                  listing &&
+                                  (isTeamBooking ? 0 : utilityTotal + accomodationTotal),
+                                  listing.fiatPrice?.cur,
                                 )
                               )}
                             </div>

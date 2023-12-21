@@ -7,7 +7,7 @@ import Linkify from 'react-linkify';
 
 import ConnectedWallet from '../../components/ConnectedWallet';
 import EventsList from '../../components/EventsList';
-import UploadPhoto from '../../components/UploadPhoto';
+import UploadPhoto from '../../components/UploadPhoto/UploadPhoto';
 import { Card } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 

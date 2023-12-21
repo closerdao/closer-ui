@@ -27,6 +27,12 @@ export const links = [
     roles: ['space-host'],
   },
   {
+    label: 'All bookings',
+    url: '/bookings/all',
+    enabled: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
+    roles: ['space-host'],
+  },
+  {
     label: 'Edit listings',
     url: '/listings',
     enabled: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
@@ -34,7 +40,7 @@ export const links = [
   },
   {
     label: 'Book a stay',
-    url: '/listings',
+    url: '/stay',
     enabled: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
   },
   // {
@@ -64,7 +70,7 @@ export const links = [
     url: '/admin/manage-users',
     enabled: true,
     roles: ['admin'],
-  }, 
+  },
   {
     label: 'New event',
     url: '/events/create',

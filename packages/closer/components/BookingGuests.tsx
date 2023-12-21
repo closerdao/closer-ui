@@ -58,8 +58,11 @@ const BookingGuests = ({
         </div>
         {adults > 1 && (
           <div className="my-6  mb-0 flex flex-row justify-between items-center">
-            <label htmlFor="separateBeds" className={`${shouldHideTitle ? 'text-sm' : 'text-md'}  `}>
-            {__('bookings_does_prefer_single_beds')}
+            <label
+              htmlFor="separateBeds"
+              className={`${shouldHideTitle ? 'text-sm' : 'text-md'}  `}
+            >
+              {__('bookings_does_prefer_single_beds')}
             </label>
             <Switch
               disabled={false}

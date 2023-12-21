@@ -221,6 +221,16 @@ const models = {
       type: 'text',
       placeholder: 'https://event.com/participation',
     },
+    {
+      name: 'slug',
+      label: 'Slug',
+      public: true,
+      required: true,
+      index: 1,
+      unique: true,
+      editable: true,
+      type: 'text',
+    },
   ],
 
   lesson: [
@@ -415,6 +425,16 @@ const models = {
       type: 'number',
       min: 1,
       required: false,
+    },
+    {
+      name: 'availableFor',
+      label: 'Available for',
+      ownerVisible: true,
+      editable: true,
+      enum: ['volunteer', 'guests', 'team', 'events'],
+      default: [],
+      type: 'multi-select',
+      options: ['guests', 'volunteer', 'team', 'events'],
     },
   ],
   booking: [

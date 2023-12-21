@@ -16,7 +16,8 @@ import Heading from './ui/Heading';
 
 const SignupForm = () => {
   const router = useRouter();
-  const { back, source, start, end, adults, useTokens } = router.query || {};
+  const { back, source, start, end, adults, useTokens, eventId, volunteerId } =
+    router.query || {};
 
   const { signup, isAuthenticated, error, setError } = useAuth();
 
@@ -31,13 +32,26 @@ const SignupForm = () => {
     source: typeof window !== 'undefined' && window.location.href,
   });
   const dateFormat = 'YYYY-MM-DD';
-  const signupQuery = source
-    ? `/?back=${back}&source=${source}&start=${start}&end=${end}&adults=${adults}&useTokens=${useTokens}`
-    : `/?back=${back}&start=${dayjs(start as string).format(
+
+  const getSignupQuery = () => {
+    if (back && start && end && adults) {
+      return `/?back=${back}&start=${dayjs(start as string).format(
         dateFormat,
       )}&end=${dayjs(end as string).format(
         dateFormat,
-      )}&adults=${adults}&useTokens=${useTokens}`;
+      )}&adults=${adults}&useTokens=${useTokens}${
+        volunteerId ? `&volunteerId=${volunteerId}` : ''
+      }${eventId ? `&eventId=${eventId}` : ''}`;
+    } else if (back && source) {
+      return `/?back=${back}&source=${source}`;
+    } else if (back) {
+      return `/?back=${back}`;
+    } else {
+      return '/'
+    }
+  };
+
+  const signupQuery = getSignupQuery();
 
   const [isEmailConsent, setIsEmailConsent] = useState(true);
 
@@ -81,18 +95,13 @@ const SignupForm = () => {
       return;
     }
     router.push(
-      `${decodeURIComponent(back as string)}&back=${back}` || '/settings',
+      back ? `${decodeURIComponent(back as string)}` : '/settings',
     );
   };
 
   useEffect(() => {
     if (isAuthenticated) {
       redirect();
-    }
-    if (submitted && back && !error) {
-      setTimeout(() => {
-        redirect();
-      }, 2000);
     }
   }, [isAuthenticated, submitted, back]);
 
@@ -134,6 +143,7 @@ const SignupForm = () => {
 
           <Input
             label={__('signup_form_name')}
+            placeholder={__('signup_form_name_placeholder')}
             value={application.screenname}
             onChange={(e) =>
               updateApplication({
@@ -143,7 +153,7 @@ const SignupForm = () => {
           />
           <Input
             label={__('signup_form_email')}
-            placeholder={__('signup_form_email')}
+            placeholder={__('signup_form_email_placeholder')}
             value={application.email}
             onChange={(e) =>
               updateApplication({
@@ -153,6 +163,7 @@ const SignupForm = () => {
           />
           <Input
             type="password"
+            placeholder={__('signup_form_password_placeholder')}
             label={__('signup_form_password')}
             value={application.password}
             onChange={(e) =>

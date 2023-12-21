@@ -8,7 +8,7 @@ import EventAttendees from '../../../components/EventAttendees';
 import EventDescription from '../../../components/EventDescription';
 import EventPhoto from '../../../components/EventPhoto';
 import Photo from '../../../components/Photo';
-import UploadPhoto from '../../../components/UploadPhoto';
+import UploadPhoto from '../../../components/UploadPhoto/UploadPhoto';
 import { Card, Information, LinkButton } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
@@ -21,9 +21,10 @@ import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
-import { Event } from '../../../types';
+import { BookingSettings, Event, Listing } from '../../../types';
 import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
+import { getAccommodationPriceRange } from '../../../utils/events.helpers';
 import { prependHttp, priceFormat } from '../../../utils/helpers';
 import { __ } from '../../../utils/helpers';
 
@@ -32,18 +33,29 @@ interface Props {
   eventCreator: User;
   error?: string;
   descriptionText?: string;
+  settings: BookingSettings;
+  listings: Listing[];
 }
 
-const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
-  console.log('eventCreator=', eventCreator);
+const EventPage = ({
+  event,
+  eventCreator,
+  error,
+  descriptionText,
+  listings,
+  settings,
+}: Props) => {
   const { platform }: any = usePlatform();
   const { user, isAuthenticated } = useAuth();
+
+  const dailyUtilityFee = settings.utilityFiat.val;
+
   const [photo, setPhoto] = useState(event && event.photo);
   const [password, setPassword] = useState('');
   const [attendees, setAttendees] = useState(event && (event.attendees || []));
 
   const canEditEvent = user
-    ? user?._id === event.createdBy || user?.roles.includes('admin')
+    ? user?._id === event?.createdBy || user?.roles.includes('admin')
     : false;
 
   const myTicketFilter = event && {
@@ -65,11 +77,28 @@ const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
   const isThisYear = dayjs().isSame(start, 'year');
   const dateFormat = isThisYear ? 'MMM D' : 'YYYY MMMM';
 
+  const durationInDays = dayjs(end).diff(dayjs(start), 'day');
+  const durationRateDays = durationInDays >= 28 ? 30 : durationInDays > 7 ? 7 : 1;
+  const durationName = durationInDays >= 28 ?
+    'monthly' :
+    durationInDays > 7 ?
+      'weekly' :
+      'daily';
+  const discountRate = settings ? (1 - settings.discounts[durationName]) : 0;
+  const { min: minAccommodationPrice, max: maxAccommodationPrice } =
+    getAccommodationPriceRange(settings, listings, durationInDays, start);
+
   const myTickets = platform.ticket.find(myTicketFilter);
   const ticketsCount = event?.ticketOptions
     ? (platform.ticket.findCount(allTicketFilter) || event?.attendees?.length) -
       event?.attendees?.length
     : event?.attendees && event.attendees.length;
+
+  useEffect(() => {
+    if (event) {
+      loadData();
+    }
+  }, [event, user]);
 
   const loadData = async () => {
     if (event?.attendees && event.attendees.length > 0) {
@@ -97,12 +126,6 @@ const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
       alert(`Could not RSVP: ${err}`);
     }
   };
-
-  useEffect(() => {
-    if (event) {
-      loadData();
-    }
-  }, [event, user]);
 
   if (!event) {
     return <PageNotFound error={error} />;
@@ -313,11 +336,28 @@ const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
                                 </p>
                               </div>
                             </div>
-                          ))}
-
-                        <Information>{__('events_discalimer')}</Information>
-
-                        <div className="mt-4 event-actions flex items-center">
+                          ))
+                        }
+                        {durationInDays > 0 && (
+                          <>
+                            <Information>{__('events_disclaimer')}</Information>
+                            <div className="text-sm">
+                              {__('events_accommodation')}{' '}
+                              <strong>
+                                {priceFormat(minAccommodationPrice * discountRate)} -{' '}
+                                {priceFormat(maxAccommodationPrice * discountRate)}
+                              </strong>
+                            </div>
+                            <div className="text-sm">
+                              {__('events_utility')}{' '}
+                              <strong>
+                                {priceFormat(durationInDays * dailyUtilityFee)}
+                              </strong>
+                            </div>
+                          </>
+                        )}
+                        <div className="mt-4">
+                          {/* Event uses an external ticketing system */}
                           {event.ticket && start && start.isAfter(dayjs()) ? (
                             <Link
                               href={prependHttp(event.ticket)}
@@ -327,21 +367,31 @@ const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
                             >
                               {__('events_buy_ticket_button')}
                             </Link>
-                          ) : event.paid ? (
+                          ) : (event.paid || durationInDays > 0) ? (
                             <>
-                              {myTickets && myTickets.count() > 0 ? (
-                                <Link
-                                  as={`/tickets/${myTickets
-                                    .first()
-                                    .get('_id')}`}
-                                  href="/tickets/[slug]"
-                                  className="btn-primary mr-2"
-                                >
-                                  {__('events_see_ticket_button')}
-                                </Link>
-                              ) : (
-                                end &&
-                                end.isAfter(dayjs()) &&
+                              {myTickets &&
+                                <div>
+                                  <Heading level={4}>
+                                    Tickets
+                                  </Heading>
+                                  <ul className="space-y-2 divide-y mb-3">
+                                    { myTickets.map((ticket: any) => (
+                                      <li
+                                        key={ticket.get('_id')}
+                                      >
+                                        <Link
+                                          href={`/tickets/${ticket.get('_id')}`}
+                                          className="text-primary"
+                                        >
+                                          { ticket.get('name') } x { ticket.get('quantity') || 1 }
+                                        </Link>
+                                      </li>
+                                    )) }
+                                  </ul>
+                                </div>
+                              }
+                              {
+                                end && end.isAfter(dayjs()) &&
                                 (event.stripePub ||
                                   process.env.NEXT_PUBLIC_STRIPE_PUB_KEY) && (
                                   <LinkButton
@@ -354,10 +404,10 @@ const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
                                     }`}
                                     className=""
                                   >
-                                    Buy ticket
+                                    {__('events_buy_ticket_button') }
                                   </LinkButton>
                                 )
-                              )}
+                              }
                             </>
                           ) : (
                             <>
@@ -365,7 +415,7 @@ const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
                               start.isBefore(dayjs().subtract(15, 'minutes')) &&
                               end &&
                               end.isAfter(dayjs()) &&
-                              event.location ? (
+                                event.virtual && event.location ? (
                                 <a
                                   className="btn-primary mr-2"
                                   href={event.location}
@@ -417,23 +467,22 @@ const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
                                 >
                                   Cancel RSVP
                                 </a>
-                              ) : (
-                                end &&
+                              ) : end &&
                                 user &&
-                                end.isBefore(dayjs()) && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      attendEvent(
-                                        event._id,
-                                        !attendees?.includes(user._id),
-                                      );
-                                    }}
-                                    className="btn-primary mr-2"
-                                  >
-                                    Attend
-                                  </button>
-                                )
+                                event.virtual &&
+                                end.isAfter(dayjs()) && (
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    attendEvent(
+                                      event._id,
+                                      !attendees?.includes(user._id),
+                                    );
+                                  }}
+                                  className="btn-primary mr-2"
+                                >
+                                  Attend
+                                </button>
                               )}
                             </>
                           )}
@@ -443,7 +492,7 @@ const EventPage = ({ event, eventCreator, error, descriptionText }: Props) => {
                   </div>
                 </div>
               </div>
-        </div>
+            </div>
           </section>
 
           <main className="max-w-prose py-10 w-full">
@@ -503,22 +552,24 @@ EventPage.getInitialProps = async ({
 }) => {
   const { convert } = require('html-to-text');
   try {
-    const {
-      data: { results: event },
-    } = await api.get(`/event/${query.slug}`, {
-      headers: req?.cookies?.access_token && {
-        Authorization: `Bearer ${req?.cookies?.access_token}`,
-      },
-    });
+    const [event, listings, settings] = await Promise.all([
+      api.get(`/event/${query.slug}`, {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        },
+      }),
+      api.get('/listing'),
+      api.get('/config/booking'),
+    ]);
 
     const options = {
       baseElements: { selectors: ['p', 'h2', 'span'] },
     };
-    const descriptionText = convert(event.description, options)
+    const descriptionText = convert(event.data.results.description, options)
       .trim()
       .slice(0, 100);
 
-    const eventCreatorId = event.createdBy;
+    const eventCreatorId = event.data.results.createdBy;
     const {
       data: { results: eventCreator },
     } = await api.get(`/user/${eventCreatorId}`, {
@@ -527,7 +578,13 @@ EventPage.getInitialProps = async ({
       },
     });
 
-    return { event, eventCreator, descriptionText };
+    return {
+      event: event.data.results,
+      eventCreator,
+      descriptionText,
+      listings: listings.data.results,
+      settings: settings.data.results.value,
+    };
   } catch (err: unknown) {
     console.log('Error', err);
     return {

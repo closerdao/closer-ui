@@ -17,16 +17,18 @@ const CreateListing = () => {
       <Head>
         <title>{__('listings_create_title')}</title>
       </Head>
-      <div className="main-content intro w-full">
-        <Heading level={2} className="mb-2">
-          {__('listings_create_title')}
-        </Heading>
-        <EditModel
-          endpoint={'/listing'}
-          fields={models.listing}
-          buttonText="Create Listing"
-          onSave={(listing) => router.push(`/listings/${listing.slug}`)}
-        />
+      <div className="justify-center flex">
+        <section className="max-w-4xl w-full">
+          <Heading level={2} className="mb-2">
+            {__('listings_create_title')}
+          </Heading>
+          <EditModel
+            endpoint={'/listing'}
+            fields={models.listing}
+            buttonText="Create Listing"
+            onSave={(listing) => router.push(`/stay/${listing.slug}`)}
+          />
+        </section>
       </div>
     </>
   );

@@ -127,12 +127,11 @@ export const priceFormat = (price, currency = 'EUR') => {
     }
     return priceValue.toLocaleString('en-US', {
       style: 'currency',
-      currency: price.cur,
+      currency: price.cur || currency,
     });
   } else {
-    console.log('Invalid price:', price);
+    return '0.00';
   }
-  return '0.00';
 };
 
 export const prependHttp = (url, { https = true } = {}) => {
@@ -162,7 +161,7 @@ export const getSample = (field) => {
       return 0;
     case 'currency':
       return {
-        cur: 'USD',
+        cur: 'EUR',
         val: 0,
       };
     case 'tags':
@@ -301,23 +300,11 @@ export const getAccommodationCost = (
   }
 };
 
-export const getBookingType = (eventId, volunteerId) => {
-  let bookingType;
-  if (eventId) {
-    bookingType = '🎉 Event';
-  } else if (volunteerId) {
-    bookingType = '💪🏽 Volunteer';
-  } else {
-    bookingType = '🏡 Stay';
-  }
-  return bookingType;
-};
-
 export const getVatInfo = (total) => {
   if (process.env.NEXT_PUBLIC_VAT_RATE) {
     return `${priceFormat(
-      total.val * Number(process.env.NEXT_PUBLIC_VAT_RATE),
-      total.cur,
+      total?.val * Number(process.env.NEXT_PUBLIC_VAT_RATE),
+      total?.cur,
     )}
     (${Number(process.env.NEXT_PUBLIC_VAT_RATE) * 100}%)`;
   }
@@ -469,13 +456,12 @@ export const doAllKeysHaveValues = (obj, keys) => {
   return true;
 };
 
-
 export const calculateSubscriptionPrice = (plan, monthlyCredits) => {
   if (!plan) {
     return 0;
   }
 
-  if (!monthlyCredits) {
+  if (!monthlyCredits || !plan.tiers) {
     return plan.price;
   }
 
@@ -489,5 +475,7 @@ export const calculateSubscriptionPrice = (plan, monthlyCredits) => {
     }
   }
 
-  throw new Error(`Could not calculate subscription price for this amount of credits ${monthlyCredits}.`);
+  throw new Error(
+    `Could not calculate subscription price for this amount of credits ${monthlyCredits}.`,
+  );
 };

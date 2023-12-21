@@ -67,21 +67,3 @@ export const getBlockedDateRanges = (
 
   return dateRanges;
 };
-
-export const getUnavailableDates = (
-  availability: any[],
-  listingId: string | null,
-) => {
-  if (!listingId) {
-    return [];
-  }
-
-  const unavailableDates = availability
-    ?.map((date) => {
-      const isListingAvailable =
-        date?.listings?.includes(listingId) && date.available;
-      return isListingAvailable ? null : new Date(date.day);
-    })
-    .filter((el) => el !== null);
-  return unavailableDates;
-};

@@ -51,5 +51,5 @@ export const closerConfig = {
   //   },
   // ],
   TOKEN_PRICE: 230.23,
-  SOURCE_TOKEN: 'CEUR'
+  SOURCE_TOKEN: 'CEUR',
 };

@@ -2,11 +2,11 @@ import Head from 'next/head';
 
 import { FC, useEffect, useState } from 'react';
 
-import UploadPhoto from '../../components/UploadPhoto';
+import UploadPhoto from '../../components/UploadPhoto/UploadPhoto';
 import { Button } from '../../components/ui';
+import Checkbox from '../../components/ui/Checkbox';
 import Heading from '../../components/ui/Heading';
 import Input from '../../components/ui/Input';
-import Checkbox from '../../components/ui/Checkbox';
 import Select from '../../components/ui/Select/Dropdown';
 import MultiSelect from '../../components/ui/Select/MultiSelect';
 
@@ -53,7 +53,12 @@ const SettingsPage: FC = () => {
   }, [initialUser]);
 
   const saveUserData =
-    (attribute: keyof User['preferences'] | keyof User | keyof User['settings']): UpdateUserFunction =>
+    (
+      attribute:
+        | keyof User['preferences']
+        | keyof User
+        | keyof User['settings'],
+    ): UpdateUserFunction =>
     async (value: string | string[]) => {
       const prefKeys = [
         'diet',
@@ -129,7 +134,9 @@ const SettingsPage: FC = () => {
   };
 
   if (!isAuthenticated || !user) {
-    return <PageNotFound error="Please log in to see this page." />;
+    return (
+      <PageNotFound back="/settings" error="Please log in to see this page." />
+    );
   }
 
   return (
@@ -153,6 +160,7 @@ const SettingsPage: FC = () => {
         </Heading>
         <Input
           label="Name"
+          placeholder="Your name"
           value={user.screenname}
           onChange={saveUserData('screenname') as any}
           isInstantSave={true}
@@ -270,6 +278,7 @@ const SettingsPage: FC = () => {
         </Heading>
         <Input
           label="Dietary Preferences"
+          placeholder="Vegetarian, Vegan, Gluten Free, etc."
           onChange={saveUserData('diet') as any}
           hasSaved={hasSaved}
           value={user?.preferences?.diet}
@@ -285,6 +294,7 @@ const SettingsPage: FC = () => {
         />
         <Input
           label="What is your superpower?"
+          placeholder="I am really good at ..."
           value={user?.preferences?.superpower}
           onChange={saveUserData('superpower') as any}
           isInstantSave={true}
@@ -306,6 +316,7 @@ const SettingsPage: FC = () => {
         </Heading>
         <Input
           label="What do you dream of creating?"
+          placeholder="I dream of creating ..."
           value={user?.preferences?.dream}
           onChange={saveUserData('dream') as any}
           isInstantSave={true}
@@ -313,7 +324,8 @@ const SettingsPage: FC = () => {
           setHasSaved={setHasSaved}
         />
         <Input
-          label="What do you need?"
+          label="What is one thing you currently need support with?"
+          placeholder=""
           value={user?.preferences?.needs}
           onChange={saveUserData('needs') as any}
           isInstantSave={true}
@@ -322,6 +334,7 @@ const SettingsPage: FC = () => {
         />
         <Input
           label="Anything we should know? Anything you would like to share?"
+          placeholder=""
           value={user?.preferences?.moreInfo}
           onChange={saveUserData('moreInfo') as any}
           isInstantSave={true}
@@ -337,7 +350,7 @@ const SettingsPage: FC = () => {
         <div className="flex items-center justify-start gap-2">
           <Checkbox
             isChecked={user?.settings?.newsletter_weekly}
-            onChange={ saveSettings('newsletter_weekly') }
+            onChange={saveSettings('newsletter_weekly')}
           />
           <label>Weekly newsletter</label>
         </div>

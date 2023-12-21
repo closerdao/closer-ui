@@ -15,17 +15,17 @@ import {
   WhatsappShareButton,
 } from 'react-share';
 import { FacebookIcon } from 'react-share';
-import { event } from 'nextjs-google-analytics';
 
 import Modal from '../../components/Modal';
 import YoutubeEmbed from '../../components/YoutubeEmbed';
 import { Button, Card, Heading, LinkButton } from '../../components/ui';
 
+import { event } from 'nextjs-google-analytics';
+
 import PageNotFound from '../404';
 import { usePlatform } from '../../contexts/platform';
 import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
-
 
 interface Props {
   fundraisingConfig: {
@@ -43,10 +43,10 @@ interface Props {
 const SupportUsPage = ({ fundraisingConfig }: Props) => {
   const { platform }: any = usePlatform();
   const wandererFilter = {
-    where: { 'subscription.plan': 'wanderer' }
+    where: { 'subscription.plan': 'wanderer' },
   };
   const pioneerFilter = {
-    where: { 'subscription.plan': 'pioneer' }
+    where: { 'subscription.plan': 'pioneer' },
   };
 
   const wandererCount = platform.user.findCount(wandererFilter) || 0;
@@ -155,11 +155,16 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
 
             <div className="w-full rounded-full bg-gray-200 overflow-hidden">
               <div
-                style={{ width: `${(Math.min(wandererCount + (pioneerCount * 3), 300) / 300) * 100}%` }}
+                style={{
+                  width: `${
+                    (Math.min(wandererCount + pioneerCount * 3, 300) / 300) *
+                    100
+                  }%`,
+                }}
                 className="bg-accent h-[18px] rounded-full"
               ></div>
             </div>
-            <strong>{wandererCount + (pioneerCount * 3)} of 300</strong>
+            <strong>{wandererCount + pioneerCount * 3} of 300</strong>
           </div>
         </section>
         <section className=" w-full flex flex-col gap-6 justify-center max-w-3xl">
@@ -269,7 +274,8 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
 
           <Card className="border-gray-200 border-2">
             <Heading level={3}>
-              Book one month co-living in shared glamping from March 2024 to June 2024.
+              Book one month co-living in shared glamping from March 2024 to
+              June 2024.
             </Heading>
 
             <ul>
@@ -300,7 +306,8 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
 
           <Card className="border-gray-200 border-2">
             <Heading level={3}>
-              Book one month co-living in private glamping from March 2024 to June 2024.
+              Book one month co-living in private glamping from March 2024 to
+              June 2024.
             </Heading>
             <ul>
               <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">

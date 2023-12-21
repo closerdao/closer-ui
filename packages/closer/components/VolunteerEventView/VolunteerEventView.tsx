@@ -10,7 +10,7 @@ import { cdn } from '../../utils/api';
 import { __ } from '../../utils/helpers';
 import EventDescription from '../EventDescription';
 import EventPhoto from '../EventPhoto';
-import UploadPhoto from '../UploadPhoto';
+import UploadPhoto from '../UploadPhoto/UploadPhoto';
 import { Card, LinkButton } from '../ui';
 import Heading from '../ui/Heading';
 
@@ -108,7 +108,7 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
         <div className="max-w-4xl w-full">
           <div className="flex flex-col sm:flex-row">
             <div className="flex items-start justify-between gap-6 w-full">
-              <div className="flex flex-col gap-10 w-full sm:w-2/3">
+              <div className="flex flex-col gap-10 w-full sm:w-2/3 overflow-hidden">
                 <Heading className="md:text-4xl mt-4 font-bold">{name}</Heading>
 
                 {description && (
