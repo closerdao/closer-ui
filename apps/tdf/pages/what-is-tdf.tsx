@@ -376,7 +376,7 @@ const HomePage = () => {
               Future opportunity
             </Heading>
             <p className="text-xl sm:text-2xl md:text-3xl">
-              With options to build around 12 town homes (on 10.000m2 urban
+              With options to build around 12 town homes (on 4.000m2 urban
               lands) as well as a tiny house park, we have many opportunities
               for expansion. See our <Link
                 href="/roadmap"
