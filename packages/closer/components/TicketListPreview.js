@@ -39,9 +39,12 @@ const TicketListPreview = ({ ticket }) => {
             </p>
           ))}
       </div>
-      <div className="card-footer">
+      <div className="card-footer gap-2 flex">
         <Link href={`/tickets/${ticket.get('_id')}`} className="btn">
           {__('ticket_list_view_ticket')}
+        </Link>
+        <Link href={`/bookings/${ticket.get('booking')}`} className="btn">
+          {__('ticket_list_view_booking')}
         </Link>
       </div>
     </div>

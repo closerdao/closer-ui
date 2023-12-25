@@ -26,7 +26,7 @@ const CreateListing = () => {
             endpoint={'/listing'}
             fields={models.listing}
             buttonText="Create Listing"
-            onSave={(listing) => router.push(`/listings/${listing.slug}`)}
+            onSave={(listing) => router.push(`/stay/${listing.slug}`)}
           />
         </section>
       </div>

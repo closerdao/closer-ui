@@ -16,7 +16,8 @@ import Heading from './ui/Heading';
 
 const SignupForm = () => {
   const router = useRouter();
-  const { back, source, start, end, adults, useTokens, eventId, volunteerId } = router.query || {};
+  const { back, source, start, end, adults, useTokens, eventId, volunteerId } =
+    router.query || {};
 
   const { signup, isAuthenticated, error, setError } = useAuth();
 
@@ -33,24 +34,21 @@ const SignupForm = () => {
   const dateFormat = 'YYYY-MM-DD';
 
   const getSignupQuery = () => {
-    if (source) {
-      return `/?back=${back}&source=${source}&start=${start}&end=${end}&adults=${adults}&useTokens=${useTokens}${volunteerId ? `&volunteerId=${volunteerId}` : ''}${eventId ? `&eventId=${eventId}` : ''}`;
-    }
-    if (!source && back && start && end && adults) {
+    if (back && start && end && adults) {
       return `/?back=${back}&start=${dayjs(start as string).format(
         dateFormat,
       )}&end=${dayjs(end as string).format(
         dateFormat,
-      )}&adults=${adults}&useTokens=${useTokens}${volunteerId ? `&volunteerId=${volunteerId}` : ''}${eventId ? `&eventId=${eventId}` : ''}`;
-    }
-    if (!source && back) {
+      )}&adults=${adults}&useTokens=${useTokens}${
+        volunteerId ? `&volunteerId=${volunteerId}` : ''
+      }${eventId ? `&eventId=${eventId}` : ''}`;
+    } else if (back && source) {
+      return `/?back=${back}&source=${source}`;
+    } else if (back) {
       return `/?back=${back}`;
+    } else {
+      return '/'
     }
-    return `/?back=${back}&start=${dayjs(start as string).format(
-      dateFormat,
-    )}&end=${dayjs(end as string).format(
-      dateFormat,
-    )}&adults=${adults}&useTokens=${useTokens}${volunteerId ? `&volunteerId=${volunteerId}` : ''}${eventId ? `&eventId=${eventId}` : ''}`;
   };
 
   const signupQuery = getSignupQuery();
@@ -97,7 +95,7 @@ const SignupForm = () => {
       return;
     }
     router.push(
-      `${decodeURIComponent(back as string)}&back=${back}` || '/settings',
+      back ? `${decodeURIComponent(back as string)}` : '/settings',
     );
   };
 
@@ -145,6 +143,7 @@ const SignupForm = () => {
 
           <Input
             label={__('signup_form_name')}
+            placeholder={__('signup_form_name_placeholder')}
             value={application.screenname}
             onChange={(e) =>
               updateApplication({
@@ -154,7 +153,7 @@ const SignupForm = () => {
           />
           <Input
             label={__('signup_form_email')}
-            placeholder={__('signup_form_email')}
+            placeholder={__('signup_form_email_placeholder')}
             value={application.email}
             onChange={(e) =>
               updateApplication({
@@ -164,6 +163,7 @@ const SignupForm = () => {
           />
           <Input
             type="password"
+            placeholder={__('signup_form_password_placeholder')}
             label={__('signup_form_password')}
             value={application.password}
             onChange={(e) =>

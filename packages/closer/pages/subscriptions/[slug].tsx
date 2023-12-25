@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
+import PageError from '../../components/PageError';
 import { Button, Card, Heading } from '../../components/ui';
 
 import { NextPage } from 'next';
@@ -14,21 +15,26 @@ import {
   SubscriptionVariant,
 } from '../../types/subscriptions';
 import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
 import {
   __,
   getCurrencySymbol,
   getSubscriptionVariantPrice,
 } from '../../utils/helpers';
-import { parseMessageFromError } from '../../utils/common';
-import PageError from '../../components/PageError';
+import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
   slug?: string | string[] | undefined;
-  error?: string
+  error?: string;
 }
 
-const SubscriptionPlanPage: NextPage<Props> = ({ subscriptionPlans, slug, error }) => {
+const SubscriptionPlanPage: NextPage<Props> = ({
+  subscriptionPlans,
+  slug,
+  error,
+}) => {
+  subscriptionPlans = prepareSubscriptions(subscriptionPlans);
   const router = useRouter();
 
   const subscriptionPlan = subscriptionPlans.find((plan: SubscriptionPlan) => {
@@ -92,7 +98,7 @@ const SubscriptionPlanPage: NextPage<Props> = ({ subscriptionPlans, slug, error 
           subscriptionPlan.variants.map((variant: SubscriptionVariant) => {
             return (
               <div key={variant.title}>
-                <Card className='mb-4'>
+                <Card className="mb-4">
                   <div className="flex flex-col gap-4 sm:gap-1 sm:flex-row items-center justify-between">
                     <Heading
                       level={3}
@@ -152,7 +158,7 @@ SubscriptionPlanPage.getInitialProps = async ({
     } = await api.get('/config/subscriptions');
 
     return {
-      subscriptionPlans: results.value.plans,
+      subscriptionPlans: results.value,
       slug: query.slug,
     };
   } catch (err: unknown) {

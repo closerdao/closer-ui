@@ -102,7 +102,9 @@ const Summary = ({ booking, listing, event, error }: Props) => {
       router.push(
         `/${router.query.back}?start=${dayjs(start).format(
           dateFormat,
-        )}&end=${dayjs(end).format(dateFormat)}&adults=${adults}&useTokens=${useTokens}`,
+        )}&end=${dayjs(end).format(
+          dateFormat,
+        )}&adults=${adults}&useTokens=${useTokens}`,
       );
     } else {
       router.push(`/bookings/${booking._id}/questions?goBack=true`);

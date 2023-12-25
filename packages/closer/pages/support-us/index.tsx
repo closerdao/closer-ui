@@ -15,38 +15,38 @@ import {
   WhatsappShareButton,
 } from 'react-share';
 import { FacebookIcon } from 'react-share';
-import { event } from 'nextjs-google-analytics';
 
 import Modal from '../../components/Modal';
 import YoutubeEmbed from '../../components/YoutubeEmbed';
 import { Button, Card, Heading, LinkButton } from '../../components/ui';
+
+import { event } from 'nextjs-google-analytics';
 
 import PageNotFound from '../404';
 import { usePlatform } from '../../contexts/platform';
 import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
 
-
 interface Props {
   fundraisingConfig: {
-    videoId: string;
-    wandererUrl: string;
-    pioneerUrl: string;
-    oneMonthSharedUrl: string;
-    oneMonthPrivateUrl: string;
-    buy5TdfUrl: string;
-    buy10TdfUrl: string;
-    hostEventUrl: string;
+    videoId: { label: string; value: string };
+    wandererUrl: { label: string; value: string };
+    pioneerUrl: { label: string; value: string };
+    oneMonthSharedUrl: { label: string; value: string };
+    oneMonthPrivateUrl: { label: string; value: string };
+    buy5TdfUrl: { label: string; value: string };
+    buy10TdfUrl: { label: string; value: string };
+    hostEventUrl: { label: string; value: string };
   };
 }
 
 const SupportUsPage = ({ fundraisingConfig }: Props) => {
   const { platform }: any = usePlatform();
   const wandererFilter = {
-    where: { 'subscription.plan': 'wanderer' }
+    where: { 'subscription.plan': 'wanderer' },
   };
   const pioneerFilter = {
-    where: { 'subscription.plan': 'pioneer' }
+    where: { 'subscription.plan': 'pioneer' },
   };
 
   const wandererCount = platform.user.findCount(wandererFilter) || 0;
@@ -143,11 +143,11 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
       <div className="w-full flex items-center flex-col gap-12 mt-6">
         <section className="w-full flex flex-col gap-4 sm:gap-0 sm:flex-row justify-center max-w-3xl">
           <div className="w-full sm:w-2/3 h-[288px] sm:rounded-l-md overflow-hidden">
-            <YoutubeEmbed embedId={fundraisingConfig.videoId} />
+            <YoutubeEmbed embedId={fundraisingConfig.videoId.value} />
           </div>
           <div className="flex flex-col gap-6 bg-accent-light w-full sm:w-1/3 sm:rounded-r-md p-5 text-center justify-center">
             <LinkButton
-              href={fundraisingConfig.wandererUrl}
+              href={fundraisingConfig.wandererUrl.value}
               className="font-bold text-xl p-1"
             >
               Subscribe
@@ -155,11 +155,16 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
 
             <div className="w-full rounded-full bg-gray-200 overflow-hidden">
               <div
-                style={{ width: `${(Math.min(wandererCount + (pioneerCount * 3), 300) / 300) * 100}%` }}
+                style={{
+                  width: `${
+                    (Math.min(wandererCount + pioneerCount * 3, 300) / 300) *
+                    100
+                  }%`,
+                }}
                 className="bg-accent h-[18px] rounded-full"
               ></div>
             </div>
-            <strong>{wandererCount + (pioneerCount * 3)} of 300</strong>
+            <strong>{wandererCount + pioneerCount * 3} of 300</strong>
           </div>
         </section>
         <section className=" w-full flex flex-col gap-6 justify-center max-w-3xl">
@@ -230,7 +235,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               </li>
             </ul>
             <LinkButton
-              href={fundraisingConfig.wandererUrl}
+              href={fundraisingConfig.wandererUrl.value}
               className="w-[255px] text-[13px] sm:text-[16px] sm:w-[320px]"
               onClick={() =>
                 event('click', {
@@ -254,7 +259,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               </li>
             </ul>
             <LinkButton
-              href={fundraisingConfig.pioneerUrl}
+              href={fundraisingConfig.pioneerUrl.value}
               className="w-[255px] text-[13px] sm:text-[16px] sm:w-[320px]"
               onClick={() =>
                 event('click', {
@@ -269,7 +274,8 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
 
           <Card className="border-gray-200 border-2">
             <Heading level={3}>
-              Book one month co-living in shared glamping from March 2024 to June 2024.
+              Book one month co-living in shared glamping from March 2024 to
+              June 2024.
             </Heading>
 
             <ul>
@@ -285,7 +291,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               </li>
             </ul>
             <LinkButton
-              href={fundraisingConfig.oneMonthSharedUrl}
+              href={fundraisingConfig.oneMonthSharedUrl.value}
               className="w-[240px]"
               onClick={() =>
                 event('click', {
@@ -300,7 +306,8 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
 
           <Card className="border-gray-200 border-2">
             <Heading level={3}>
-              Book one month co-living in private glamping from March 2024 to June 2024.
+              Book one month co-living in private glamping from March 2024 to
+              June 2024.
             </Heading>
             <ul>
               <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
@@ -315,7 +322,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               </li>
             </ul>
             <LinkButton
-              href={fundraisingConfig.oneMonthPrivateUrl}
+              href={fundraisingConfig.oneMonthPrivateUrl.value}
               className="w-[240px]"
               onClick={() =>
                 event('click', {
@@ -337,7 +344,9 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               raise your voice on important topics.
             </p>
             <LinkButton
-              href={fundraisingConfig.buy5TdfUrl || '/token/checkout?tokens=5'}
+              href={
+                fundraisingConfig.buy5TdfUrl.value || '/token/checkout?tokens=5'
+              }
               className="w-[240px]"
             >
               ~€1250
@@ -354,7 +363,8 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             </p>
             <LinkButton
               href={
-                fundraisingConfig.buy10TdfUrl || '/token/checkout?tokens=10'
+                fundraisingConfig.buy10TdfUrl.value ||
+                '/token/checkout?tokens=10'
               }
               className="w-[240px]"
             >

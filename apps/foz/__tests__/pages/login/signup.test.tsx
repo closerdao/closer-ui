@@ -9,7 +9,7 @@ describe.skip('Signup', () => {
   it('should have proper heading', () => {
     render(
       <AuthProvider>
-        <Signup subscriptionPlans={subscriptions.plans} />
+        <Signup subscriptionPlans={subscriptions} />
       </AuthProvider>,
     );
 
@@ -20,12 +20,11 @@ describe.skip('Signup', () => {
   it('should have a Create account button disabled by default', () => {
     render(
       <AuthProvider>
-        <Signup subscriptionPlans={subscriptions.plans} />
+        <Signup subscriptionPlans={subscriptions} />
       </AuthProvider>,
     );
     const button = screen.getByRole('button', { name: /sign up/i });
 
     expect(button).toBeDisabled();
   });
-
 });

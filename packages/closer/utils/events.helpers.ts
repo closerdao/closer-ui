@@ -1,4 +1,5 @@
-import { BookingSettings, Listing } from '../types';
+
+import {  Listing } from '../types';
 
 const isHighSeason = (seasons: any, startDate: any) => {
   const date = new Date(startDate);
@@ -48,8 +49,8 @@ const isHighSeason = (seasons: any, startDate: any) => {
 const getMinMaxFiatPrice = (
   listings: Listing[],
 ): { min: number; max: number } => {
-  let min = listings[0].fiatPrice.val;
-  let max = listings[0].fiatPrice.val;
+  let min = listings[0]?.fiatPrice.val || 0;
+  let max = listings[0]?.fiatPrice.val || 0;
   for (const obj of listings) {
     const val = obj.fiatPrice.val;
     if (val < min) {
@@ -63,7 +64,7 @@ const getMinMaxFiatPrice = (
 };
 
 export const getAccommodationPriceRange = (
-  settings: BookingSettings,
+  settings: any,
   listings: Listing[],
   duration: number,
   start: any,
@@ -75,11 +76,18 @@ export const getAccommodationPriceRange = (
       !listing?.availableFor,
   );
   const minMaxValues = getMinMaxFiatPrice(listingsAvailableForEvents);
+  const seasons = {
+    high: {
+      start: settings.seasonsHighStart.value,
+      end: settings.seasonsHighEnd.value,
+      modifier: settings.seasonsHighModifier.value,
+    },
+  }
 
-  return isHighSeason(settings?.seasons, start)
+  return isHighSeason(seasons, start)
     ? {
-        min: minMaxValues.min * settings.seasons.high.modifier * duration,
-        max: minMaxValues.max * settings.seasons.high.modifier * duration,
+        min: minMaxValues.min * settings.seasonsHighModifier.value * duration,
+        max: minMaxValues.max * settings.seasonsHighModifier.value * duration,
       }
     : { min: minMaxValues.min * duration, max: minMaxValues.max * duration };
 };

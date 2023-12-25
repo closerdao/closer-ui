@@ -70,7 +70,7 @@ export const links = [
     url: '/admin/manage-users',
     enabled: true,
     roles: ['admin'],
-  }, 
+  },
   {
     label: 'New event',
     url: '/events/create',
@@ -97,5 +97,11 @@ export const links = [
     label: 'Blog',
     url: '/blog',
     enabled: process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true',
+  },
+  {
+    label: 'Platform settings',
+    url: '/admin/config',
+    enabled: true,
+    roles: ['admin'],
   },
 ];

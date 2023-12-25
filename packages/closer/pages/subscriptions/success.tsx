@@ -16,7 +16,8 @@ import { useConfig } from '../../hooks/useConfig';
 import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers'; 
+import { __ } from '../../utils/helpers';
+import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
@@ -27,6 +28,8 @@ const SubscriptionSuccessPage: NextPage<Props> = ({
   subscriptionPlans,
   error,
 }) => {
+  subscriptionPlans = prepareSubscriptions(subscriptionPlans);
+
   const { isAuthenticated, isLoading } = useAuth();
 
   const router = useRouter();
@@ -134,7 +137,7 @@ SubscriptionSuccessPage.getInitialProps = async () => {
     } = await api.get('/config/subscriptions');
 
     return {
-      subscriptionPlans: results.value.plans,
+      subscriptionPlans: results.value,
     };
   } catch (err: unknown) {
     return {

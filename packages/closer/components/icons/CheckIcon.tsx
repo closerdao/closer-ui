@@ -12,10 +12,7 @@ export const CheckIcon: FC<Props> = ({
   onClick,
 }) => {
   return (
-    <div
-      className={`${className}`}
-      onClick={onClick}
-    >
+    <div className={`${className}`} onClick={onClick}>
       <svg
         width="24"
         height="25"

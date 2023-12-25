@@ -7,7 +7,7 @@ import { subscriptions } from '../../mocks/subscriptions';
 
 describe('Subscriptions success', () => {
   it('should have a proper title and "View subscription" button enabled', () => {
-    renderWithProviders(<Success subscriptionPlans={subscriptions.plans} />);
+    renderWithProviders(<Success subscriptionPlans={subscriptions} />);
 
     const title = screen.getByRole('heading', {
       name: /Success/i,
