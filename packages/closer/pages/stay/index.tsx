@@ -78,14 +78,13 @@ const StayPage = ({ settings }: Props) => {
               listings.map((listing: any) => {
                 return (
                   <ListingListPreview
-                    discounts={discounts}
+                    discounts={discounts} 
                     isAdminPage={false}
                     key={listing.get('_id')}
                     listing={listing}
                   />
                 );
               })}
-
             {listings?.count() === 0 &&
               guestListings?.count() === 0 &&
               __('listing_no_listings_found')}

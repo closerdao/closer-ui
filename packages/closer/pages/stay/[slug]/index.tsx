@@ -426,7 +426,7 @@ const ListingPage: NextPage<Props> = ({
                             end,
                             maxHorizon,
                             maxDuration,
-                            unavailableDates,
+                            unavailableDates
                           )}
                         />
                       </div>

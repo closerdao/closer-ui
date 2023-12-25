@@ -513,7 +513,7 @@ const EventPage = ({
                                 >
                                   Cancel RSVP
                                 </a>
-                              ) : (
+                              ) : ( 
                                 end &&
                                 user &&
                                 event.virtual &&

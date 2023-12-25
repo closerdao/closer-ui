@@ -6,17 +6,9 @@ import { isMobile } from 'react-device-detect';
 
 import { Heading, YoutubeEmbed } from 'closer';
 import { useAuth } from 'closer/contexts/auth';
-import { SubscriptionPlan } from 'closer/types/subscriptions';
-import api from 'closer/utils/api'; 
-
-import { prepareSubscriptions } from 'closer/utils/subscriptions.helpers';
 import { event } from 'nextjs-google-analytics';
 
-interface Props {
-  subscriptionPlans: SubscriptionPlan[];
-}
-const HomePage = ({ subscriptionPlans }: Props) => {
-  subscriptionPlans = prepareSubscriptions(subscriptionPlans);
+const HomePage = () => {
   const { user, isAuthenticated } = useAuth();
   const [ctaButton, setCtaButton] = useState({
     text: 'join the dream',
@@ -120,23 +112,6 @@ const HomePage = ({ subscriptionPlans }: Props) => {
       </section>
     </div>
   );
-};
-
-HomePage.getInitialProps = async () => {
-  try {
-    const {
-      data: { results: subscriptions },
-    } = await api.get('/config/subscriptions');
-
-    return {
-      subscriptionPlans: subscriptions.value,
-    };
-  } catch (err) {
-    return {
-      subscriptionPlans: [],
-      error: err,
-    };
-  }
 };
 
 export default HomePage;

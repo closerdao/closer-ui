@@ -460,7 +460,7 @@ export const getDiscountRate = (durationName, settings) => {
     default:
       return settings.discountsDaily.value;
   }
-};
+}; 
 
 export const doAllKeysHaveValues = (obj, keys) => {
   if (!obj) return false;
