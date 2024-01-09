@@ -19,7 +19,8 @@ export const BOOKING_STEPS = [
 
 export const CURRENCIES: CloserCurrencies[] = [
   CloserCurrencies.EUR,
-  CloserCurrencies.TDF,
+  CloserCurrencies.Token,
+  // CloserCurrencies.USDC,
   // blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol,
 ];
 

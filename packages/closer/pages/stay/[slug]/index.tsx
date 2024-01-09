@@ -69,6 +69,7 @@ const ListingPage: NextPage<Props> = ({
     infants: savedInfants,
     pets: savedPets,
     useTokens: savedUseTokens,
+    useStablecoin: savedUseStablecoin,
   } = router.query || {};
   const guestsDropdownRef = useOutsideClick(
     handleClickOutsideDepartureDropdown,
@@ -115,15 +116,26 @@ const ListingPage: NextPage<Props> = ({
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [isListingAvailable, setIsListingAvailable] = useState(true);
 
-  const [currency, setCurrency] = useState<CloserCurrencies>(
-    savedUseTokens === 'true' ? CURRENCIES[1] : DEFAULT_CURRENCY,
-  );
+  const getCurrency = () => {
+    if (savedUseStablecoin === 'true') {
+      return CURRENCIES[2];
+    }
+    if (savedUseTokens === 'true') {
+      return CURRENCIES[1];
+    }
+    return DEFAULT_CURRENCY;
+  };
+
+  const [currency, setCurrency] = useState<CloserCurrencies>(getCurrency());
 
   const [calendarError, setCalendarError] = useState<string | null>(null);
   const [unavailableDates, setUnavailableDates] = useState<any[]>([]);
 
   const isWeb3BookingEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
+
+  const isStablecoinBookingEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_STABLECOIN_BOOKING === 'true';
 
   const photo = listing && listing.photos && listing.photos[0];
 
@@ -150,6 +162,7 @@ const ListingPage: NextPage<Props> = ({
         infants,
         pets,
         useTokens: isTokenPaymentSelected,
+        useStablecoin: currency === CURRENCIES[2],
       });
 
       return { results, availability };
@@ -251,6 +264,7 @@ const ListingPage: NextPage<Props> = ({
       ...(infants && { infants: String(infants) }),
       ...(pets && { pets: String(pets) }),
       useTokens: String(isTokenPaymentSelected),
+      useStablecoin: String(currency === CURRENCIES[2]),
     };
     const urlParams = new URLSearchParams(params);
     return urlParams;
@@ -277,6 +291,7 @@ const ListingPage: NextPage<Props> = ({
         data: { results: newBooking },
       } = await api.post('/bookings/request', {
         useTokens: currency === CURRENCIES[1],
+        useStablecoin: currency === CURRENCIES[2],
         start: formatDate(start),
         end: formatDate(end),
         adults,
@@ -381,7 +396,8 @@ const ListingPage: NextPage<Props> = ({
                           className="hidden sm:block"
                           selectedCurrency={currency}
                           onSelect={setCurrency as any}
-                          currencies={CURRENCIES}
+                          currencies={CURRENCIES
+                          }
                         />
                       )}
 
@@ -426,7 +442,7 @@ const ListingPage: NextPage<Props> = ({
                             end,
                             maxHorizon,
                             maxDuration,
-                            unavailableDates
+                            unavailableDates,
                           )}
                         />
                       </div>
@@ -535,7 +551,11 @@ const ListingPage: NextPage<Props> = ({
                             className="block sm:hidden"
                             selectedCurrency={currency}
                             onSelect={setCurrency as any}
-                            currencies={CURRENCIES}
+                            currencies={
+                              isStablecoinBookingEnabled
+                                ? CURRENCIES
+                                : CURRENCIES.slice(0, 2)
+                            }
                           />
                         )}
 

@@ -48,6 +48,7 @@ const Summary = ({ booking, listing, event, error }: Props) => {
     rentalToken,
     rentalFiat,
     useTokens,
+    useStablecoin,
     start,
     end,
     adults,

@@ -9,6 +9,7 @@ import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
+import { NextApiRequest } from 'next';
 import { event as gaEvent } from 'nextjs-google-analytics';
 import { ParsedUrlQuery } from 'querystring';
 
@@ -97,14 +98,29 @@ const ConfirmationStep = ({ error, booking, event }: Props) => {
 };
 
 ConfirmationStep.getInitialProps = async ({
+  req,
   query,
 }: {
+  req: NextApiRequest;
   query: ParsedUrlQuery;
 }) => {
   try {
     const {
       data: { results: booking },
     } = await api.get(`/booking/${query.slug}`);
+
+    await api.post(
+      '/paygrid-payment-verification',
+      {
+        transactionId: query.transaction_id,
+        bookingId: query.slug,
+      },
+      {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        },
+      },
+    );
 
     const optionalEvent =
       booking.eventId && (await api.get(`/event/${booking.eventId}`));

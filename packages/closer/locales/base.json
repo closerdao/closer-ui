@@ -938,5 +938,9 @@
   "booking_configs": "Booking",
   "general_configs": "General",
 
+  "pay_with_crypto_button": "Pay with crypto",
+  "no_payment_methods_available": "No payment methods are available",
+  "crypto_payment_description": "Stay at",
+
   "generic_edit_button": "Edit"
 }
