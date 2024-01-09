@@ -115,10 +115,6 @@ const DatesSelector: NextPage<Props> = ({
   }, [user]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      redirectToSignup();
-    }
-
     if (eventId) {
       setBlockedDateRanges((ranges) => [
         ...ranges,
@@ -149,7 +145,9 @@ const DatesSelector: NextPage<Props> = ({
   const [currency, selectCurrency] = useState<CloserCurrencies>(
     (savedCurrency as CloserCurrencies) || DEFAULT_CURRENCY,
   );
-  const [selectedTicketOption, selectTicketOption] = useState<any>(ticketOptions?.[0]);
+  const [selectedTicketOption, selectTicketOption] = useState<any>(
+    ticketOptions?.[0],
+  );
   const [discountCode, setDiscountCode] = useState('');
   const [doesNeedPickup, setDoesNeedPickup] = useState(false);
   const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
@@ -275,7 +273,7 @@ const DatesSelector: NextPage<Props> = ({
               />
             </div>
           )}
-          {eventId && (ticketOptions && ticketOptions.length > 0) && (
+          {eventId && ticketOptions && ticketOptions.length > 0 && (
             <TicketOptions
               items={ticketOptions}
               selectedTicketOption={selectedTicketOption}
@@ -341,7 +339,10 @@ const DatesSelector: NextPage<Props> = ({
             onClick={handleNext}
             isEnabled={
               !!(
-                (eventId && (!ticketOptions?.length || selectedTicketOption) && start && end) ||
+                (eventId &&
+                  (!ticketOptions?.length || selectedTicketOption) &&
+                  start &&
+                  end) ||
                 (volunteerId && start && end) ||
                 (!eventId && !volunteerId && start && end)
               )
