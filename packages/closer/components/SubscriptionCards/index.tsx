@@ -113,9 +113,9 @@ const SubscriptionCards = ({
                         );
                       })}
                     </ul>
-                    <div className="text-accent">
-                      {plan.note && <span>{plan.note}</span>}
-                    </div>
+                  <div className='text-accent'>
+                    {plan?.note && <span>{plan?.note}</span>}
+                  </div>
                   </div>
                   <div className="w-[290px] text-center flex flex-wrap justify-center">
                     {plan.available === false ? (

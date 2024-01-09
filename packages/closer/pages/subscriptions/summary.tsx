@@ -23,7 +23,11 @@ import {
 } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
-import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
+import {
+  SelectedPlan,
+  SubscriptionPlan,
+  Tier,
+} from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import {
@@ -32,6 +36,7 @@ import {
   getVatInfo,
   priceFormat,
 } from '../../utils/helpers';
+import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
@@ -42,6 +47,8 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   subscriptionPlans,
   error,
 }) => {
+  subscriptionPlans = prepareSubscriptions(subscriptionPlans);
+
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId, monthlyCredits } = router.query;
@@ -75,10 +82,10 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
         title: selectedSubscription?.title as string,
         monthlyCredits: selectedSubscription?.tiers ? 1 : 0,
         price: selectedSubscription?.price as number,
-        tiers: selectedSubscription?.tiers,
+        tiers: selectedSubscription?.tiers as Tier[],
       });
     }
-  }, [priceId, subscriptionPlans, monthlyCredits]);
+  }, [priceId, monthlyCredits]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -201,7 +208,7 @@ SubscriptionsSummaryPage.getInitialProps = async () => {
     } = await api.get('/config/subscriptions');
 
     return {
-      subscriptionPlans: results.value.plans,
+      subscriptionPlans: results.value,
     };
   } catch (err: unknown) {
     return {

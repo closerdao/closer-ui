@@ -29,14 +29,14 @@ import { __ } from '../../utils/helpers';
 
 interface Props {
   fundraisingConfig: {
-    videoId: string;
-    wandererUrl: string;
-    pioneerUrl: string;
-    oneMonthSharedUrl: string;
-    oneMonthPrivateUrl: string;
-    buy5TdfUrl: string;
-    buy10TdfUrl: string;
-    hostEventUrl: string;
+    videoId: { label: string; value: string };
+    wandererUrl: { label: string; value: string };
+    pioneerUrl: { label: string; value: string };
+    oneMonthSharedUrl: { label: string; value: string };
+    oneMonthPrivateUrl: { label: string; value: string };
+    buy5TdfUrl: { label: string; value: string };
+    buy10TdfUrl: { label: string; value: string };
+    hostEventUrl: { label: string; value: string };
   };
 }
 
@@ -143,11 +143,11 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
       <div className="w-full flex items-center flex-col gap-12 mt-6">
         <section className="w-full flex flex-col gap-4 sm:gap-0 sm:flex-row justify-center max-w-3xl">
           <div className="w-full sm:w-2/3 h-[288px] sm:rounded-l-md overflow-hidden">
-            <YoutubeEmbed embedId={fundraisingConfig.videoId} />
+            <YoutubeEmbed embedId={fundraisingConfig.videoId.value} />
           </div>
           <div className="flex flex-col gap-6 bg-accent-light w-full sm:w-1/3 sm:rounded-r-md p-5 text-center justify-center">
             <LinkButton
-              href={fundraisingConfig.wandererUrl}
+              href={fundraisingConfig.wandererUrl.value}
               className="font-bold text-xl p-1"
             >
               Subscribe
@@ -235,7 +235,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               </li>
             </ul>
             <LinkButton
-              href={fundraisingConfig.wandererUrl}
+              href={fundraisingConfig.wandererUrl.value}
               className="w-[255px] text-[13px] sm:text-[16px] sm:w-[320px]"
               onClick={() =>
                 event('click', {
@@ -259,7 +259,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               </li>
             </ul>
             <LinkButton
-              href={fundraisingConfig.pioneerUrl}
+              href={fundraisingConfig.pioneerUrl.value}
               className="w-[255px] text-[13px] sm:text-[16px] sm:w-[320px]"
               onClick={() =>
                 event('click', {
@@ -291,7 +291,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               </li>
             </ul>
             <LinkButton
-              href={fundraisingConfig.oneMonthSharedUrl}
+              href={fundraisingConfig.oneMonthSharedUrl.value}
               className="w-[240px]"
               onClick={() =>
                 event('click', {
@@ -322,7 +322,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               </li>
             </ul>
             <LinkButton
-              href={fundraisingConfig.oneMonthPrivateUrl}
+              href={fundraisingConfig.oneMonthPrivateUrl.value}
               className="w-[240px]"
               onClick={() =>
                 event('click', {
@@ -344,7 +344,9 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               raise your voice on important topics.
             </p>
             <LinkButton
-              href={fundraisingConfig.buy5TdfUrl || '/token/checkout?tokens=5'}
+              href={
+                fundraisingConfig.buy5TdfUrl.value || '/token/checkout?tokens=5'
+              }
               className="w-[240px]"
             >
               ~€1250
@@ -361,7 +363,8 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             </p>
             <LinkButton
               href={
-                fundraisingConfig.buy10TdfUrl || '/token/checkout?tokens=10'
+                fundraisingConfig.buy10TdfUrl.value ||
+                '/token/checkout?tokens=10'
               }
               className="w-[240px]"
             >

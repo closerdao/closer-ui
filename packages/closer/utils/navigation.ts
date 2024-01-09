@@ -98,4 +98,10 @@ export const links = [
     url: '/blog',
     enabled: process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true',
   },
+  {
+    label: 'Platform settings',
+    url: '/admin/config',
+    enabled: true,
+    roles: ['admin'],
+  },
 ];

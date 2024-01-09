@@ -7,7 +7,7 @@ import { subscriptions } from '../../mocks/subscriptions';
 
 describe('Subscriptions Summary', () => {
   it('should have a proper title and "Pay" button disabled by default', () => {
-    renderWithProviders(<Checkout subscriptionPlans={subscriptions.plans} />);
+    renderWithProviders(<Checkout subscriptionPlans={subscriptions} />);
 
     const title = screen.getByRole('heading', {
       name: /Checkout/i,

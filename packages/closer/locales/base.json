@@ -934,6 +934,13 @@
   "support_us_heading": "Support Traditional Dream Factory",
   "log_in_redirect_message": "Please log in to access ",
   "log_in_redirect_message_page": "page",
+  "platform_configs": "⚙️ Platform settings",
+  "booking_configs": "Booking",
+  "general_configs": "General",
+
+  "pay_with_crypto_button": "Pay with crypto",
+  "no_payment_methods_available": "No payment methods are available",
+  "crypto_payment_description": "Stay at",
 
   "generic_edit_button": "Edit"
 }

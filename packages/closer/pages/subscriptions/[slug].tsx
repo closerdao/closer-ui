@@ -21,6 +21,7 @@ import {
   getCurrencySymbol,
   getSubscriptionVariantPrice,
 } from '../../utils/helpers';
+import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
@@ -33,6 +34,7 @@ const SubscriptionPlanPage: NextPage<Props> = ({
   slug,
   error,
 }) => {
+  subscriptionPlans = prepareSubscriptions(subscriptionPlans);
   const router = useRouter();
 
   const subscriptionPlan = subscriptionPlans.find((plan: SubscriptionPlan) => {
@@ -156,7 +158,7 @@ SubscriptionPlanPage.getInitialProps = async ({
     } = await api.get('/config/subscriptions');
 
     return {
-      subscriptionPlans: results.value.plans,
+      subscriptionPlans: results.value,
       slug: query.slug,
     };
   } catch (err: unknown) {

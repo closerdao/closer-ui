@@ -7,7 +7,7 @@ import { subscriptions } from '../../mocks/subscriptions';
 
 describe.skip('Subscriptions Summary', () => {
   it('should have a proper title and "Edit" and "Checkout" buttons enabled', () => {
-    renderWithProviders(<Summary subscriptionPlans={subscriptions.plans} />);
+    renderWithProviders(<Summary subscriptionPlans={subscriptions} />);
 
     const title = screen.getByRole('heading', {
       name: /Summary/i,

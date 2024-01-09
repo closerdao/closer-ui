@@ -12,20 +12,26 @@ export interface Tier {
 }
 
 export interface SubscriptionPlan {
-  slug?: string;
+  slug: string;
   title: string;
-  available?: boolean;
-  emoji: string;
+  emoji?: string;
   description: string;
   priceId: string;
   tier: number;
-  monthlyCredits: number;
+  monthlyCredits?: number;
   price: number;
+  available?: boolean;
   perks: string[];
   billingPeriod: string;
+  tiers?: string | Tier[];
   variants?: SubscriptionVariant[];
-  tiers?: Tier[];
   note?: string;
+}
+
+export interface Tier {
+  unitPrice: number;
+  minAmount: number;
+  maxAmount: number;
 }
 
 export interface Subscriptions {

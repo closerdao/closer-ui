@@ -3,12 +3,14 @@ import { useMemo } from 'react';
 import { GoogleMap, useLoadScript } from '@react-google-maps/api';
 
 interface Props {
-  location: { lat: number; lng: number };
+  locationLat: number;
+  locationLon: number;
   height?: number;
 }
 
-const GoogleMaps = ({ location, height = 450 }: Props) => {
+const GoogleMaps = ({ locationLat, locationLon, height = 450 }: Props) => {
   const libraries = useMemo(() => ['places'], []);
+  const location = { lat: Number(locationLat), lng: Number(locationLon) };
   const mapCenter = useMemo(() => location, []);
 
   const mapOptions = useMemo(

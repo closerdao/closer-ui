@@ -30,7 +30,7 @@ const BookingCancelPage = ({ booking, error }: Props) => {
   };
   const { isAuthenticated, user } = useAuth();
   const isMember = user?.roles.includes('member');
-  const [policy, setPolicy] = useState(null);
+  const [policy, setPolicy] = useState<any>(null);
   const [isPolicyLoading, setPolicyLoading] = useState(false);
   const [isCancelCompleted, setCancelCompleted] = useState(false);
   const refundTotal = calculateRefundTotal({
@@ -48,9 +48,13 @@ const BookingCancelPage = ({ booking, error }: Props) => {
           data: { results: loadPolicy },
         } = await api.get('/config/booking');
 
-        const policy = loadPolicy.value.cancellationPolicy;
+        const policy = {
+          lastday: loadPolicy.value.cancellationPolicyLastday.value,
+          lastweek: loadPolicy.value.cancellationPolicyLastweek.value,
+          lastmonth: loadPolicy.value.cancellationPolicyLastmonth.value,
+          default: loadPolicy.value.cancellationPolicyDefault.value,
+        };
 
-        console.log('policy=', policy);
         setPolicy(policy);
       } catch (error) {
         console.log(error);

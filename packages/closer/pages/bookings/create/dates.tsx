@@ -26,7 +26,7 @@ import {
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { Event, TicketOption } from '../../../types';
-import { BookingSettings, VolunteerOpportunity } from '../../../types/api';
+import { VolunteerOpportunity } from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
@@ -34,7 +34,7 @@ import { __, getMaxBookingHorizon } from '../../../utils/helpers';
 
 interface Props {
   error?: string;
-  settings?: BookingSettings;
+  settings?: any;
   ticketOptions?: TicketOption[];
   volunteer?: VolunteerOpportunity;
   futureEvents?: Event[];
@@ -50,6 +50,17 @@ const DatesSelector: NextPage<Props> = ({
   event,
 }) => {
   const router = useRouter();
+
+  const conditions = {
+    member: {
+      maxDuration: settings?.memberMaxDuration.value,
+      maxBookingHorizon: settings?.memberMaxBookingHorizon.value,
+    },
+    guest: {
+      maxDuration: settings?.guestMaxDuration.value,
+      maxBookingHorizon: settings?.guestMaxBookingHorizon.value,
+    },
+  };
   const { user, isAuthenticated } = useAuth();
   const isMember = user?.roles.includes('member');
   const {
@@ -277,7 +288,7 @@ const DatesSelector: NextPage<Props> = ({
           )}
           {selectedTicketOption?.isDayTicket !== true && (
             <BookingDates
-              conditions={settings?.conditions}
+              conditions={conditions}
               setStartDate={setStartDate}
               setEndDate={setEndDate}
               isMember={isMember}
@@ -360,7 +371,7 @@ DatesSelector.getInitialProps = async ({ query }) => {
       ]);
 
       return {
-        settings: settings as BookingSettings,
+        settings: settings as any,
         ticketOptions: ticketsAvailable.data.ticketOptions,
         event: event.data.results,
       };
@@ -368,7 +379,7 @@ DatesSelector.getInitialProps = async ({ query }) => {
     if (volunteerId) {
       const volunteer = await api.get(`/volunteer/${volunteerId}`);
       return {
-        settings: settings as BookingSettings,
+        settings: settings as any,
         volunteer: volunteer.data.results,
       };
     }
@@ -382,12 +393,12 @@ DatesSelector.getInitialProps = async ({ query }) => {
       );
 
       return {
-        settings: settings as BookingSettings,
+        settings: settings as any,
         futureEvents: res.data.results,
       };
     }
     return {
-      settings: settings as BookingSettings,
+      settings: settings as any,
     };
   } catch (err) {
     return {

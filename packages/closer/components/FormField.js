@@ -30,6 +30,7 @@ const FormField = ({
   multi,
   min,
   max,
+  step
 }) => {
   const [addTag, setAddTag] = useState('');
 
@@ -59,6 +60,7 @@ const FormField = ({
           ) && (
             <input
               type={type}
+              step={step || 1}
               value={objectPath.get(data, name)}
               placeholder={placeholder}
               min={min}
