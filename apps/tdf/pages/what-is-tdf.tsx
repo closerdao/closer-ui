@@ -4,7 +4,6 @@ import Link from 'next/link';
 import PhotoGallery from 'closer/components/PhotoGallery';
 
 import { Button, Heading, Tag } from 'closer';
-import api from 'closer/utils/api';
 
 const HomePage = () => {
   return (
@@ -415,23 +414,6 @@ const HomePage = () => {
       </section>
     </div>
   );
-};
-
-HomePage.getInitialProps = async () => {
-  try {
-    const {
-      data: { results: subscriptions },
-    } = await api.get('/config/subscriptions');
-
-    return {
-      subscriptionPlans: subscriptions.value.plans,
-    };
-  } catch (err) {
-    return {
-      subscriptionPlans: [],
-      error: err,
-    };
-  }
 };
 
 export default HomePage;
