@@ -352,8 +352,8 @@ const ListingPage: NextPage<Props> = ({
                   </div>
                 </div>
 
-                <div className="min-w-[220px] w-full sm:w-auto fixed left-0 bottom-0 right-0 sm:sticky">
-                  <Card className="bg-white flex-row sm:flex-col items-center border border-gray-100 pb-8">
+                <div className="w-full sm:w-auto fixed left-0 bottom-0 right-0 sm:sticky">
+                  <Card className="min-w-[250px] bg-white flex-row sm:flex-col items-center border border-gray-100 pb-8">
                     <div className="w-1/2 sm:w-full flex flex-col gap-2">
                       {isWeb3BookingEnabled && (
                         <CurrencySwitcher
@@ -423,8 +423,8 @@ const ListingPage: NextPage<Props> = ({
                               ).toLowerCase()}
                         </Button>
                         {showGuestsDropdown && (
-                          <div className="static sm:relative">
-                            <Card className="border border-gray-100 sm:w-auto absolute z-10 left-2 right-2 sm:left-auto bottom-[175px] sm:bottom-auto sm:top-auto bg-white shadow-md rounded-md p-3">
+                          <div className="">
+                            {/* <Card className="border border-gray-100 sm:w-auto z-10 sm:left-auto bottom-[175px] sm:bottom-auto sm:top-auto bg-white shadow-md rounded-md p-3"> */}
                               <BookingGuests
                                 shouldHideTitle={true}
                                 adults={adults}
@@ -445,7 +445,10 @@ const ListingPage: NextPage<Props> = ({
                                   htmlFor="separateBeds"
                                   className="text-sm"
                                 >
-                                  {__('bookings_pickup')}
+                                {__('bookings_pickup')}
+                                <span className="w-full text-xs ml-2">
+                                  ({__('bookings_pickup_disclaimer')})
+                                </span>
                                 </label>
                                 <Switch
                                   disabled={false}
@@ -454,9 +457,6 @@ const ListingPage: NextPage<Props> = ({
                                   onChange={setDoesNeedPickup}
                                   checked={doesNeedPickup}
                                 />
-                                <div className="w-full text-xs">
-                                  {__('bookings_pickup_disclaimer')}
-                                </div>
                               </div>
                               { isTeamMember && <div className="my-0 flex flex-row justify-between flex-wrap">
                                 <label
@@ -473,7 +473,7 @@ const ListingPage: NextPage<Props> = ({
                                   checked={isTeamBooking}
                                 />
                               </div> }
-                            </Card>
+                            {/* </Card> */}
                           </div>
                         )}
                       </div>

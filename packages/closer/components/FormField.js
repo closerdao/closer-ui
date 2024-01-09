@@ -71,6 +71,7 @@ const FormField = ({
           {type === 'longtext' && (
             <RichTextEditor
               value={objectPath.get(data, name)}
+              placeholder={placeholder}
               onChange={(value) => update(name, value)}
             />
           )}

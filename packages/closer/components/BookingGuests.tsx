@@ -57,7 +57,7 @@ const BookingGuests = ({
           <Counter value={pets} setFn={setPets} minValue={0} />
         </div>
         {adults > 1 && (
-          <div className="my-6  mb-0 flex flex-row justify-between items-center">
+          <div className="my-6 flex flex-row justify-between items-center">
             <label
               htmlFor="separateBeds"
               className={`${shouldHideTitle ? 'text-sm' : 'text-md'}  `}
