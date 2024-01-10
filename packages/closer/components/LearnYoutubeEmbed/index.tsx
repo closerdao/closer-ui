@@ -21,16 +21,12 @@ const LearnYoutubeEmbed = ({ embedId, onLoad, isVideoLoading }: Props) => {
         ''
       )}
       <iframe
-       onLoad={onLoad}
+        onLoad={onLoad}
         className="w-full h-full"
-        
-      src={`${
-        
-           `https://www.youtube.com/embed/${embedId}?rel=0&showinfo=0&rel=0&autoplay=1&controls=1&modestbranding=1&showinfo=0&start=0&enablejsapi=1&&widgetid=3`
-      }`}
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowFullScreen
-    />
+        src={`${`https://www.youtube.com/embed/${embedId}?rel=0&showinfo=0&rel=0&autoplay=1&controls=1&modestbranding=1&showinfo=0&start=0&enablejsapi=1&&widgetid=3`}`}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
     </>
   );
 };

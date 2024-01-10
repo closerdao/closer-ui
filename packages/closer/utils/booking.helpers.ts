@@ -1,3 +1,4 @@
+import axios from 'axios';
 import dayjs from 'dayjs';
 
 import { __ } from './helpers';
@@ -37,4 +38,29 @@ export const getBookingType = (
     return '💪🏽 Volunteer';
   }
   return '🏡 Stay';
+};
+
+export const getPaymentMethods = (paymentConfig: any): string[] | [] => {
+  const availablePaymentMethods = [];
+  if (paymentConfig?.cardPayment.value === true) {
+    availablePaymentMethods.push('card');
+  }
+  if (
+    paymentConfig?.cryptoPayment.value === true &&
+    (paymentConfig?.polygonWalletAddress.value ||
+      paymentConfig?.ethereumWalletAddress.value)
+  ) {
+    availablePaymentMethods.push('crypto');
+  }
+  return availablePaymentMethods;
+};
+
+export const getExchangeRate = async (fromSymbol: string, toSymbol: string) => {
+  // Fixer.io access_key - gives you 1000 free requests per month
+  const access_key = '4915747b2189d439ecec3354bc404bf4';
+  const result = await axios.get(
+    `http://data.fixer.io/api/latest?access_key=${access_key}&base=${fromSymbol}&symbols=${toSymbol}`,
+  );
+  console.log('result=', result.data.rates[toSymbol]);
+  return result.data.rates[toSymbol];
 };

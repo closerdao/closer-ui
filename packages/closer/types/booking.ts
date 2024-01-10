@@ -16,7 +16,7 @@ export interface BaseBookingParams {
   currency?: CloserCurrencies;
   ticketName?: string;
   discountCode?: string;
-  ticketOption?: TicketOption
+  ticketOption?: TicketOption;
   useTokens?: boolean | undefined;
   doesNeedPickup?: boolean | undefined;
   doesNeedSeparateBeds?: boolean | undefined;
@@ -29,7 +29,7 @@ export type Listing = {
   slug: string;
   description: string;
   fiatPrice: Price<CloserCurrencies.EUR>;
-  tokenPrice: Price<CloserCurrencies.TDF | CloserCurrencies.ETH>;
+  tokenPrice: Price<CloserCurrencies.Token | CloserCurrencies.ETH>;
   rooms: number;
   beds: number;
   quantity: number;
@@ -55,12 +55,13 @@ export type Booking = {
   infants: number;
   pets: number;
   useTokens: boolean;
+  useStablecoin: boolean;
   useCredits: boolean;
   utilityFiat: Price<CloserCurrencies.EUR>;
   rentalFiat: Price<CloserCurrencies.EUR>;
-  rentalToken: Price<CloserCurrencies.TDF | CloserCurrencies.ETH>;
+  rentalToken: Price<CloserCurrencies.Token | CloserCurrencies.ETH>;
   dailyUtilityFiat: Price<CloserCurrencies.EUR>;
-  dailyRentalToken: Price<CloserCurrencies.TDF | CloserCurrencies.ETH>;
+  dailyRentalToken: Price<CloserCurrencies.Token | CloserCurrencies.ETH>;
   fields: { [key: string]: string }[];
   visibleBy: string[];
   createdBy: string;
@@ -73,11 +74,13 @@ export type Booking = {
   ticketOption?: TicketOption;
   eventId: string;
   volunteerId: string;
-  eventPrice?: Price<CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH>;
+  eventPrice?: Price<
+    CloserCurrencies.EUR | CloserCurrencies.Token | CloserCurrencies.ETH
+  >;
   eventDiscount?: Discount;
 
   total: Price<
-    CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH
+    CloserCurrencies.EUR | CloserCurrencies.Token | CloserCurrencies.ETH
   >;
   isDayTicket: boolean;
   eventFiat: Price<CloserCurrencies.EUR>;

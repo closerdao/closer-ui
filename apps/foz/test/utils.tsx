@@ -35,7 +35,7 @@ export const renderWithAuth = (ui: React.ReactElement, options = {}) => {
   function Wrapper({ children }: { children?: React.ReactNode }) {
     return (
       <ConfigProvider config={{ ...config, ...blockchainConfig }}>
-        <AuthProvider >{children}</AuthProvider>
+        <AuthProvider>{children}</AuthProvider>
       </ConfigProvider>
     );
   }

@@ -6,6 +6,7 @@ import BookingBackButton from '../../../components/BookingBackButton';
 import BookingWallet from '../../../components/BookingWallet';
 import CheckoutPayment from '../../../components/CheckoutPayment';
 import CheckoutTotal from '../../../components/CheckoutTotal';
+import CurrencySwitcher from '../../../components/CurrencySwitcher';
 import PageError from '../../../components/PageError';
 import RedeemCredits from '../../../components/RedeemCredits';
 import { ErrorMessage } from '../../../components/ui';
@@ -25,21 +26,31 @@ import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { WalletState } from '../../../contexts/wallet';
-import { BaseBookingParams, Booking, Event, Listing } from '../../../types';
-import { BookingSettings } from '../../../types/api';
+import { useConfig } from '../../../hooks/useConfig';
+import {
+  BaseBookingParams,
+  Booking,
+  CloserCurrencies,
+  Event,
+  Listing,
+} from '../../../types';
 import api from '../../../utils/api';
+import {
+  getExchangeRate,
+  getPaymentMethods,
+} from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, priceFormat } from '../../../utils/helpers';
 
 interface Props extends BaseBookingParams {
   listing: Listing;
   booking: Booking;
-  settings: BookingSettings;
   error?: string;
   event?: Event;
+  paymentConfig: any;
 }
 
-const Checkout = ({ booking, listing, settings, error, event }: Props) => {
+const Checkout = ({ booking, listing, error, event, paymentConfig }: Props) => {
   const {
     utilityFiat,
     rentalToken,
@@ -53,13 +64,22 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
     ticketOption,
     eventPrice,
     total,
-    adults,
   } = booking || {};
+  const config = useConfig();
+
+  const paymentMethods = getPaymentMethods(paymentConfig);
+
+  const merchantWallet =
+    paymentConfig?.polygonWalletAddress.value ||
+    paymentConfig?.ethereumWalletAddress.value;
 
   const { balanceAvailable } = useContext(WalletState);
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
   const [canApplyCredits, setCanApplyCredits] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<string | null>(
+    paymentMethods.length ? paymentMethods[0] : null,
+  );
 
   const isNotEnoughBalance = rentalToken?.val
     ? balanceAvailable < rentalToken.val
@@ -70,7 +90,6 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
       try {
         const creditsBalance = (await api.get('/carrots/balance')).data
           .results as number;
-        console.log('creditsBalance=', creditsBalance);
         const hasEnoughCredits = Boolean(
           rentalToken?.val &&
             creditsBalance &&
@@ -110,11 +129,7 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
       setPaymentError(parseMessageFromError(error));
     }
 
-    router.push(
-      `/bookings/${booking._id}/confirmation${
-        event?._id ? `?eventId=${event?._id}` : ''
-      }`,
-    );
+    router.push(`/bookings/${booking._id}`);
   };
 
   const applyCredits = async () => {
@@ -129,6 +144,45 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
     } catch (error) {
       setCreditsError(parseMessageFromError(error));
     }
+  };
+
+  // This is PoC, Paygrid API likely to change. Current docs: https://paygrid.notion.site/TDF-Payment-links-PoC-documentation-b99dc808a76b400bae5b10b0fefc7cb3
+  const payWithCrypto = async () => {
+    const exchangeRate = await getExchangeRate(
+      CloserCurrencies.EUR,
+      CloserCurrencies.USD,
+    );
+    const baseUrl = 'http://localhost:3000/';
+    const successUrl = `${baseUrl}bookings/${booking._id}/confirmation${
+      event?._id ? `?eventId=${event?._id}` : ''
+    }`;
+    const failUrl = `${baseUrl}bookings/${booking._id}/checkout`;
+    const amount = updatedTotal?.val * exchangeRate;
+    const paymentBaseUrl = 'https://staging.app.paygrid.co/checkout/';
+    const paymentParams = {
+      title: `${__('crypto_payment_description')} ${config?.PLATFORM_NAME}`,
+      description: '',
+      merchant: config?.PLATFORM_NAME,
+      amount: amount,
+      currencies: [
+        'usdc-polygon',
+        'usdt-polygon',
+        'dai-polygon',
+        'usdc-ethereum',
+        'usdt-ethereum',
+        'dai-ethereum',
+      ],
+      redirectSuccessURL: successUrl,
+      redirectFailedURL: failUrl,
+      status: 'active',
+      userId: merchantWallet, // should be the same wallet used in Paygrid dashboard
+      reference_id: booking._id, // booking reference ID
+      id: 1, // payment link ID
+    };
+    const jsonString = JSON.stringify(paymentParams);
+    const base64String = Buffer.from(jsonString).toString('base64');
+    const paymentLink = `${paymentBaseUrl}${base64String}`;
+    router.push(paymentLink);
   };
 
   const { platform }: any = usePlatform();
@@ -242,30 +296,56 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
           </div>
           <CheckoutTotal total={updatedTotal} />
 
-          {booking.total.val > 0 ? (
-            <CheckoutPayment
-              bookingId={booking._id}
-              buttonDisabled={
-                useTokens &&
-                (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)
-              }
-              useTokens={useTokens}
-              useCredits={useCredits}
-              totalToPayInFiat={updatedTotal}
-              dailyTokenValue={dailyRentalToken?.val || 0}
-              startDate={start}
-              totalNights={duration}
-              user={user}
-              settings={settings}
-              eventId={event?._id}
-            />
-          ) : (
-            <Button className="booking-btn" onClick={handleFreeBooking}>
-              {__('buttons_booking_request')}
-            </Button>
-          )}
+          <div className="flex flex-col gap-6">
+            <HeadingRow>
+              <span className="mr-2">💲</span>
+              <span>{__('bookings_checkout_step_payment_title')}</span>
+            </HeadingRow>
 
-          {paymentError && <ErrorMessage error={paymentError} />}
+            {!paymentMethods.length && (
+              <ErrorMessage error={__('no_payment_methods_available')} />
+            )}
+
+            {paymentMethods.length > 1 && (
+              <CurrencySwitcher
+                className="mb-6"
+                selectedCurrency={paymentMethod}
+                onSelect={setPaymentMethod as any}
+                currencies={paymentMethods}
+              />
+            )}
+
+            {booking.total.val > 0 && paymentMethod === 'crypto' && (
+              <Button className="booking-btn" onClick={payWithCrypto}>
+                {__('pay_with_crypto_button')}
+              </Button>
+            )}
+            {booking.total.val > 0 && paymentMethod === 'card' && (
+              <CheckoutPayment
+                bookingId={booking._id}
+                buttonDisabled={
+                  useTokens &&
+                  (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)
+                }
+                useTokens={useTokens}
+                useCredits={useCredits}
+                totalToPayInFiat={updatedTotal}
+                dailyTokenValue={dailyRentalToken?.val || 0}
+                startDate={start}
+                totalNights={duration}
+                user={user}
+                eventId={event?._id}
+              />
+            )}
+            {booking.total.val === 0 && (
+              <Button className="booking-btn" onClick={handleFreeBooking}>
+                {user?.roles.includes('member')
+                  ? __('buttons_confirm_booking')
+                  : __('buttons_booking_request')}
+              </Button>
+            )}
+            {paymentError && <ErrorMessage error={paymentError} />}
+          </div>
         </div>
       </div>
     </>
@@ -280,26 +360,30 @@ Checkout.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
-    const {
-      data: { results: booking },
-    } = await api.get(`/booking/${query.slug}`, {
-      headers: req?.cookies?.access_token && {
-        Authorization: `Bearer ${req?.cookies?.access_token}`,
-      },
-    });
-
-    const [
-      {
-        data: { results: settings },
-      },
-      optionalEvent,
-      optionalListing,
-    ] = await Promise.all([
-      api.get('/config/booking', {
+    const [bookingResponse, configResponse] = await Promise.all([
+      api.get(`/booking/${query.slug}`, {
         headers: req?.cookies?.access_token && {
           Authorization: `Bearer ${req?.cookies?.access_token}`,
         },
       }),
+      api.get('/config/payment', {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        },
+      }),
+    ]);
+
+    const {
+      data: { results: booking },
+    } = bookingResponse;
+
+    const {
+      data: {
+        results: { value: paymentConfig },
+      },
+    } = configResponse;
+
+    const [optionalEvent, optionalListing] = await Promise.all([
       booking.eventId &&
         api.get(`/event/${booking.eventId}`, {
           headers: req?.cookies?.access_token && {
@@ -316,14 +400,14 @@ Checkout.getInitialProps = async ({
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
 
-    return { booking, listing, settings, event, error: null };
+    return { booking, listing, event, paymentConfig, error: null };
   } catch (err) {
     console.log(err);
     return {
       error: parseMessageFromError(err),
       booking: null,
       listing: null,
-      settings: null,
+      paymentConfig: null,
     };
   }
 };

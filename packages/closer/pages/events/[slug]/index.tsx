@@ -21,11 +21,16 @@ import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
-import { BookingSettings, Event, Listing } from '../../../types';
+import { Event, Listing } from '../../../types';
 import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { getAccommodationPriceRange } from '../../../utils/events.helpers';
-import { prependHttp, priceFormat } from '../../../utils/helpers';
+import {
+  getBookingRate,
+  getDiscountRate,
+  prependHttp,
+  priceFormat,
+} from '../../../utils/helpers';
 import { __ } from '../../../utils/helpers';
 
 interface Props {
@@ -33,7 +38,7 @@ interface Props {
   eventCreator: User;
   error?: string;
   descriptionText?: string;
-  settings: BookingSettings;
+  settings: any;
   listings: Listing[];
 }
 
@@ -48,7 +53,7 @@ const EventPage = ({
   const { platform }: any = usePlatform();
   const { user, isAuthenticated } = useAuth();
 
-  const dailyUtilityFee = settings.utilityFiat.val;
+  const dailyUtilityFee = settings.utilityFiatVal.value;
 
   const [photo, setPhoto] = useState(event && event.photo);
   const [password, setPassword] = useState('');
@@ -78,6 +83,12 @@ const EventPage = ({
   const dateFormat = isThisYear ? 'MMM D' : 'YYYY MMMM';
 
   const durationInDays = dayjs(end).diff(dayjs(start), 'day');
+  const durationName = getBookingRate(durationInDays);
+
+  const discountRate = settings
+    ? 1 - getDiscountRate(durationName, settings)
+    : 0;
+
   const { min: minAccommodationPrice, max: maxAccommodationPrice } =
     getAccommodationPriceRange(settings, listings, durationInDays, start);
 
@@ -283,11 +294,11 @@ const EventPage = ({
             </div>
           </section>
 
-          <section className=" w-full flex justify-center min-h-[400px]">
+          <section className=" w-full flex justify-center">
             <div className="max-w-4xl w-full">
               <div className="flex flex-col sm:flex-row">
                 <div className="flex items-start justify-between gap-6 w-full">
-                  <div className="flex flex-col gap-10 w-full sm:w-2/3">
+                  <div className="flex flex-col gap-3 w-full sm:w-2/3 min-h-[400px]">
                     <Heading className="md:text-4xl mt-4 font-bold">
                       {event.name}
                     </Heading>
@@ -295,8 +306,49 @@ const EventPage = ({
                     <div>
                       {event.description && <EventDescription event={event} />}
                     </div>
+
+                    {((event.partners && event.partners.length > 0) ||
+                      (isAuthenticated && user?._id === event.createdBy)) && (
+                      <section className="mb-6">
+                        <div className="flex flex-row flex-wrap justify-center items-center">
+                          {event.partners &&
+                            event.partners.map(
+                              (partner: any) =>
+                                partner.photoUrl && (
+                                  <a
+                                    href={partner.url || '#'}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    key={partner.name}
+                                    className="mr-3"
+                                  >
+                                    <Photo
+                                      id={partner.photo}
+                                      photoUrl={partner.photoUrl}
+                                      className="w-32 h-16"
+                                      title={partner.name}
+                                      rounded={true}
+                                    />
+                                  </a>
+                                ),
+                            )}
+                        </div>
+                      </section>
+                    )}
+
+                    {attendees && attendees.length > 0 && (
+                      <div>
+                        <EventAttendees
+                          event={event}
+                          start={start}
+                          attendees={attendees}
+                          ticketsCount={ticketsCount}
+                          platform={platform}
+                        />
+                      </div>
+                    )}
                   </div>
-                  <div className="h-auto fixed bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px]">
+                  <div className="h-auto fixed z-10 bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px]">
                     {end && !end.isBefore(dayjs()) && (
                       <Card className="bg-white border border-gray-100">
                         {event.paid &&
@@ -330,24 +382,31 @@ const EventPage = ({
                               </div>
                             </div>
                           ))}
-                        <Information>{__('events_discalimer')}</Information>
-                        <div className="text-sm">
-                          {__('events_accommodation')}{' '}
-                          <strong>
-                            {priceFormat(minAccommodationPrice)} -{' '}
-                            {priceFormat(maxAccommodationPrice)}
-                          </strong>
-                        </div>
-                        <div className="text-sm">
-                          {__('events_utility')}{' '}
-                          <strong>
-                            {priceFormat(
-                              dayjs(end).diff(dayjs(start), 'day') *
-                                dailyUtilityFee,
-                            )}
-                          </strong>
-                        </div>
-                        <div className="mt-4 event-actions flex items-center">
+                        {durationInDays > 0 && (
+                          <>
+                            <Information>{__('events_disclaimer')}</Information>
+                            <div className="text-sm">
+                              {__('events_accommodation')}{' '}
+                              <strong>
+                                {priceFormat(
+                                  minAccommodationPrice * discountRate,
+                                )}{' '}
+                                -{' '}
+                                {priceFormat(
+                                  maxAccommodationPrice * discountRate,
+                                )}
+                              </strong>
+                            </div>
+                            <div className="text-sm">
+                              {__('events_utility')}{' '}
+                              <strong>
+                                {priceFormat(durationInDays * dailyUtilityFee)}
+                              </strong>
+                            </div>
+                          </>
+                        )}
+                        <div className="mt-4">
+                          {/* Event uses an external ticketing system */}
                           {event.ticket && start && start.isAfter(dayjs()) ? (
                             <Link
                               href={prependHttp(event.ticket)}
@@ -357,20 +416,27 @@ const EventPage = ({
                             >
                               {__('events_buy_ticket_button')}
                             </Link>
-                          ) : event.paid ? (
+                          ) : event.paid || durationInDays > 0 ? (
                             <>
-                              {myTickets && myTickets.count() > 0 ? (
-                                <Link
-                                  as={`/tickets/${myTickets
-                                    .first()
-                                    .get('_id')}`}
-                                  href="/tickets/[slug]"
-                                  className="btn-primary mr-2"
-                                >
-                                  {__('events_see_ticket_button')}
-                                </Link>
-                              ) : (
-                                end &&
+                              {myTickets && (
+                                <div>
+                                  <Heading level={4}>Tickets</Heading>
+                                  <ul className="space-y-2 divide-y mb-3">
+                                    {myTickets.map((ticket: any) => (
+                                      <li key={ticket.get('_id')}>
+                                        <Link
+                                          href={`/tickets/${ticket.get('_id')}`}
+                                          className="text-primary"
+                                        >
+                                          {ticket.get('name')} x{' '}
+                                          {ticket.get('quantity') || 1}
+                                        </Link>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                              {end &&
                                 end.isAfter(dayjs()) &&
                                 (event.stripePub ||
                                   process.env.NEXT_PUBLIC_STRIPE_PUB_KEY) && (
@@ -384,10 +450,9 @@ const EventPage = ({
                                     }`}
                                     className=""
                                   >
-                                    Buy ticket
+                                    {__('events_buy_ticket_button')}
                                   </LinkButton>
-                                )
-                              )}
+                                )}
                             </>
                           ) : (
                             <>
@@ -395,6 +460,7 @@ const EventPage = ({
                               start.isBefore(dayjs().subtract(15, 'minutes')) &&
                               end &&
                               end.isAfter(dayjs()) &&
+                              event.virtual &&
                               event.location ? (
                                 <a
                                   className="btn-primary mr-2"
@@ -447,10 +513,11 @@ const EventPage = ({
                                 >
                                   Cancel RSVP
                                 </a>
-                              ) : (
+                              ) : ( 
                                 end &&
                                 user &&
-                                end.isBefore(dayjs()) && (
+                                event.virtual &&
+                                end.isAfter(dayjs()) && (
                                   <button
                                     onClick={(e) => {
                                       e.preventDefault();
@@ -475,49 +542,6 @@ const EventPage = ({
               </div>
             </div>
           </section>
-
-          <main className="max-w-prose py-10 w-full">
-            {((event.partners && event.partners.length > 0) ||
-              (isAuthenticated && user?._id === event.createdBy)) && (
-              <section className="mb-6">
-                <div className="flex flex-row flex-wrap justify-center items-center">
-                  {event.partners &&
-                    event.partners.map(
-                      (partner: any) =>
-                        partner.photoUrl && (
-                          <a
-                            href={partner.url || '#'}
-                            target="_blank"
-                            rel="noreferrer"
-                            key={partner.name}
-                            className="mr-3"
-                          >
-                            <Photo
-                              id={partner.photo}
-                              photoUrl={partner.photoUrl}
-                              className="w-32 h-16"
-                              title={partner.name}
-                              rounded={true}
-                            />
-                          </a>
-                        ),
-                    )}
-                </div>
-              </section>
-            )}
-
-            {attendees && attendees.length > 0 && (
-              <div>
-                <EventAttendees
-                  event={event}
-                  start={start}
-                  attendees={attendees}
-                  ticketsCount={ticketsCount}
-                  platform={platform}
-                />
-              </div>
-            )}
-          </main>
         </div>
       )}
     </>

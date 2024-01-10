@@ -28,7 +28,6 @@ export type VolunteerOpportunity = {
   _id: string;
 };
 
-
 export type Question = {
   type: 'text' | 'select';
   name: string;
@@ -38,11 +37,13 @@ export type Question = {
 
 export type BookingSettings = {
   utilityFiat: Price<CloserCurrencies.EUR>;
+  utilityDayFiat: Price<CloserCurrencies.EUR>;
   utilityToken: Price<CloserCurrencies.ETH>;
   checkinTime: number;
   checkoutTime: number;
   maxDuration: number;
   minDuration: number;
+  volunteerCommitment: string;
   conditions: BookingConditions;
   discounts: {
     daily: number;
@@ -57,5 +58,15 @@ export type BookingSettings = {
     default: 1;
   };
   questions: Question[];
-  seasons: any
+  seasons: any;
 };
+
+export interface Config {
+  slug: string;
+  value: {
+    [key: string]: {
+      label: string;
+      value: string | number | boolean;
+    };
+  };
+}

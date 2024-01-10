@@ -3,11 +3,13 @@ import Head from 'next/head';
 import { Heading, useConfig } from 'closer';
 import { SubscriptionPlan } from 'closer/types/subscriptions';
 import api from 'closer/utils/api';
+import { prepareSubscriptions } from 'closer/utils/subscriptions.helpers';
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
 }
 const HomePage = ({ subscriptionPlans }: Props) => {
+  subscriptionPlans = prepareSubscriptions(subscriptionPlans);
   const { PLATFORM_NAME } = useConfig() || {};
   return (
     <div>
@@ -536,7 +538,7 @@ HomePage.getInitialProps = async () => {
     } = await api.get('/config/subscriptions');
 
     return {
-      subscriptionPlans: subscriptions.value.plans,
+      subscriptionPlans: subscriptions.value,
     };
   } catch (err) {
     return {

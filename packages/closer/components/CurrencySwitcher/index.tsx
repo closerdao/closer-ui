@@ -6,7 +6,7 @@ import Switcher from '../ui/Switcher';
 
 interface Props {
   currencies: string[] | null;
-  selectedCurrency: string | CloserCurrencies;
+  selectedCurrency: string | CloserCurrencies | null;
   onSelect: Dispatch<SetStateAction<string | CloserCurrencies>>;
   className?: string;
 }
@@ -17,9 +17,17 @@ const CurrencySwitcher = ({
   onSelect,
   className,
 }: Props) => {
-  const { isWalletConnected, isCorrectNetwork, hasSameConnectedAccount } = useContext(WalletState);
+  const { isWalletConnected, isCorrectNetwork, hasSameConnectedAccount } =
+    useContext(WalletState);
+
   const isWeb3BookingEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
+  
+  const isTokenPaymentAvailable =
+    isWalletConnected &&
+    isWeb3BookingEnabled &&
+    isCorrectNetwork &&
+    hasSameConnectedAccount;
 
   return (
     <div className={`${className ? className : ''}`}>
@@ -27,7 +35,7 @@ const CurrencySwitcher = ({
         options={currencies}
         selectedOption={selectedCurrency}
         setSelectedOption={onSelect}
-        isTokenPaymentAvailable={isWalletConnected && isWeb3BookingEnabled && isCorrectNetwork && hasSameConnectedAccount}
+        isTokenPaymentAvailable={isTokenPaymentAvailable}
       />
     </div>
   );

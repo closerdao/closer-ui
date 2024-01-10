@@ -9,10 +9,7 @@ import dayjs from 'dayjs';
 import { __ } from '../../utils/helpers';
 import { Button } from '../ui';
 import { ErrorMessage, Input } from '../ui';
-import {
-  getDateTime,
-  includesBlockedDateRange,
-} from './dateTimePicker.utils';
+import { getDateTime, includesBlockedDateRange } from './dateTimePicker.utils';
 
 interface Props {
   value?: string;
@@ -89,7 +86,8 @@ const DateTimePicker = ({
   };
 
   const getBlockedDays = (dateArray: any[]) => {
-    return dateArray?.map((date) => {
+    return dateArray
+      ?.map((date) => {
         if (date instanceof Date) {
           return date;
         }

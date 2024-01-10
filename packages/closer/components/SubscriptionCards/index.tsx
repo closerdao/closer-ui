@@ -2,6 +2,7 @@ import Image from 'next/image';
 
 import dayjs from 'dayjs';
 
+import { useAuth } from '../../contexts/auth';
 import { SubscriptionPlan } from '../../types/subscriptions';
 import {
   __,
@@ -11,7 +12,6 @@ import {
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Heading from '../ui/Heading';
-import { useAuth } from '../../contexts/auth';
 
 interface SubscriptionCardsProps {
   clickHandler: (priceId: string, hasVariants: boolean, slug: string) => void;
@@ -28,13 +28,12 @@ const SubscriptionCards = ({
   validUntil,
   cancelledAt,
   currency,
-  plans
+  plans,
 }: SubscriptionCardsProps) => {
   const { isAuthenticated } = useAuth();
-  
+
   const paidSubscriptionPlans = plans.filter((plan) => plan.price !== 0);
-const filteredPlans = isAuthenticated ? paidSubscriptionPlans : plans
-  
+  const filteredPlans = isAuthenticated ? paidSubscriptionPlans : plans;
 
   const getSubscriptionInfoText = (plan: SubscriptionPlan) => {
     if (userActivePlan?.title === plan.title && validUntil && !cancelledAt) {
@@ -63,7 +62,6 @@ const filteredPlans = isAuthenticated ? paidSubscriptionPlans : plans
       <div className="pt-16 flex gap-2 w-full flex-col">
         {filteredPlans &&
           filteredPlans.map((plan, i) => (
-            
             <>
               <Card
                 key={plan.title}
@@ -71,7 +69,6 @@ const filteredPlans = isAuthenticated ? paidSubscriptionPlans : plans
                   !plan.available && plan.price && 'bg-accent-light'
                 }`}
               >
-                
                 <div className="flex items-center gap-4 flex-col md:flex-row text-sm">
                   <Image
                     alt={plan.slug || ''}
@@ -86,7 +83,16 @@ const filteredPlans = isAuthenticated ? paidSubscriptionPlans : plans
                     <Heading level={4} className="mb-4 text-sm uppercase">
                       {plan.description}
                     </Heading>
-                    <Heading level={4} className="mb-4 text-sm uppercase text-accent">{plan.price !== 0 && plan.available && `everything on the ${isAuthenticated ? plans[i].title : plans[i-1].title} package +` }</Heading>
+                    <Heading
+                      level={4}
+                      className="mb-4 text-sm uppercase text-accent"
+                    >
+                      {plan.price !== 0 &&
+                        plan.available &&
+                        `everything on the ${
+                          isAuthenticated ? plans[i].title : plans[i - 1].title
+                        } package +`}
+                    </Heading>
                     <ul className="mb-4">
                       {plan.perks.map((perk) => {
                         return (
@@ -108,7 +114,7 @@ const filteredPlans = isAuthenticated ? paidSubscriptionPlans : plans
                       })}
                     </ul>
                   <div className='text-accent'>
-                    {plan.note && <span>{plan.note}</span>}
+                    {plan?.note && <span>{plan?.note}</span>}
                   </div>
                   </div>
                   <div className="w-[290px] text-center flex flex-wrap justify-center">

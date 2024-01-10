@@ -1,8 +1,8 @@
 import { FC, PropsWithChildren } from 'react';
 
 import { Footer } from '@/components';
-import { Prompts } from 'closer';
 
+import { Prompts } from 'closer';
 import { Navigation } from 'closer';
 
 export const Layout: FC<PropsWithChildren> = ({ children }) => {

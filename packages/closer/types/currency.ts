@@ -1,7 +1,8 @@
 export enum CloserCurrencies {
   EUR = 'EUR',
   ETH = 'ETH',
-  TDF = 'TDF',
+  Token = 'TDF',
+  USD = 'USD',
 }
 
 export type Price<T extends CloserCurrencies> = {

@@ -14,7 +14,7 @@ const AllBookingsRequestsPage = () => {
   const { user } = useAuth();
 
   const defaultWhere = {
-    status: { $ne: 'open' }
+    status: { $ne: 'open' },
   };
 
   const [filter, setFilter] = useState({
@@ -37,9 +37,19 @@ const AllBookingsRequestsPage = () => {
       </Head>
       <div className="max-w-screen-lg mx-auto flex flex-col gap-10">
         <Heading level={1}>{__('booking_requests_title_all')}</Heading>
-        <BookingsFilter setFilter={setFilter} page={page} setPage={setPage} defaultWhere={defaultWhere} />
+        <BookingsFilter
+          setFilter={setFilter}
+          page={page}
+          setPage={setPage}
+          defaultWhere={defaultWhere}
+        />
 
-        <Bookings filter={filter} setPage={setPage} page={page} isPagination={true} />
+        <Bookings
+          filter={filter}
+          setPage={setPage}
+          page={page}
+          isPagination={true}
+        />
       </div>
     </>
   );

@@ -9,6 +9,8 @@ import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
+import { NextApiRequest } from 'next';
+import { event as gaEvent } from 'nextjs-google-analytics';
 import { ParsedUrlQuery } from 'querystring';
 
 import PageNotFound from '../../404';
@@ -17,7 +19,6 @@ import { BaseBookingParams, Booking, Event } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
-import { event as gaEvent } from 'nextjs-google-analytics'; 
 
 interface Props extends BaseBookingParams {
   booking: Booking;
@@ -42,9 +43,10 @@ const ConfirmationStep = ({ error, booking, event }: Props) => {
       // startNewBooking();
     } else if (status === 'paid') {
       gaEvent('booking_confirm', {
-      category: 'booking',
-      label: 'booking',
-      });}
+        category: 'booking',
+        label: 'booking',
+      });
+    }
   }, [status]);
 
   const viewBooking = (id: string) => {
@@ -96,14 +98,29 @@ const ConfirmationStep = ({ error, booking, event }: Props) => {
 };
 
 ConfirmationStep.getInitialProps = async ({
+  req,
   query,
 }: {
+  req: NextApiRequest;
   query: ParsedUrlQuery;
 }) => {
   try {
     const {
       data: { results: booking },
     } = await api.get(`/booking/${query.slug}`);
+
+    await api.post(
+      '/paygrid-payment-verification',
+      {
+        transactionHash: query.transaction_id,
+        bookingId: query.slug,
+      },
+      {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        },
+      },
+    );
 
     const optionalEvent =
       booking.eventId && (await api.get(`/event/${booking.eventId}`));

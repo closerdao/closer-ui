@@ -6,7 +6,11 @@ interface BackButtonProps {
 }
 
 const BackButton = ({ children, handleClick }: BackButtonProps) => {
-  return <button onClick={handleClick} className="py-4">{children}</button>;
+  return (
+    <button onClick={handleClick} className="py-4">
+      {children}
+    </button>
+  );
 };
 
 export default BackButton;

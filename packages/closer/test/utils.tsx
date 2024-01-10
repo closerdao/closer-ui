@@ -5,13 +5,12 @@ import { render as rtlRender } from '@testing-library/react';
 import { Web3ReactProvider } from '@web3-react/core';
 
 import { closerConfig } from '../config';
-
 import { blockchainConfig } from '../config_blockchain';
 import { AuthProvider } from '../contexts/auth';
 import { ConfigProvider } from '../contexts/config';
 import { PlatformProvider } from '../contexts/platform';
 import { WalletProvider } from '../contexts/wallet';
-import  getLibrary  from '../pages/_app';
+import getLibrary from '../pages/_app';
 
 export const renderWithProviders = (ui: React.ReactElement, options = {}) => {
   function Wrapper({ children }: { children?: React.ReactNode }) {

@@ -16,12 +16,14 @@ import { SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __, getCurrencySymbol } from '../../utils/helpers';
+import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
 }
 
 const UnlockStaysPage: NextPage<Props> = ({ subscriptionPlans }) => {
+  subscriptionPlans = prepareSubscriptions(subscriptionPlans);
   const config = useConfig();
   const { STAY_BOOKING_ALLOWED_PLANS, MIN_INSTANT_BOOKING_ALLOWED_PLAN } =
     config || {};
@@ -129,7 +131,7 @@ UnlockStaysPage.getInitialProps = async () => {
     } = await api.get('/config/subscriptions');
 
     return {
-      subscriptionPlans: results.value.plans,
+      subscriptionPlans: results.value,
     };
   } catch (err: unknown) {
     return {

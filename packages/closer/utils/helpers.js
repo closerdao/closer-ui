@@ -426,13 +426,13 @@ export const getMaxBookingHorizon = (settings, isMember) => {
   if (settings) {
     if (isMember) {
       return [
-        settings?.conditions.member.maxBookingHorizon,
-        settings?.conditions.member.maxDuration,
+        settings.memberMaxBookingHorizon.value,
+        settings.memberMaxDuration.value,
       ];
     }
     return [
-      settings?.conditions.guest.maxBookingHorizon,
-      settings?.conditions.guest.maxDuration,
+      settings.memberMaxBookingHorizon.value,
+      settings.guestMaxDuration.value,
     ];
   }
   return [0, 0];
@@ -445,6 +445,22 @@ export const calculateFullDaysDifference = (targetDate) => {
   const fullDaysDifference = Math.floor(timeDifference / millisecondsInADay);
   return fullDaysDifference;
 };
+
+export const getBookingRate = (durationInDays) =>
+  durationInDays >= 28 ? 'monthly' : durationInDays >= 7 ? 'weekly' : 'daily';
+
+export const getDiscountRate = (durationName, settings) => {
+  switch (durationName) {
+    case 'monthly':
+      return settings.discountsMonthly.value;
+    case 'weekly':
+      return settings.discountsWeekly.value;
+    case 'daily':
+      return settings.discountsDaily.value;
+    default:
+      return settings.discountsDaily.value;
+  }
+}; 
 
 export const doAllKeysHaveValues = (obj, keys) => {
   if (!obj) return false;

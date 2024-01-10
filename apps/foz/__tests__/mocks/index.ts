@@ -59,9 +59,7 @@ export const adminUser = {
     subscriptionId: 'sub_1NDmPZGtt5D0VKR2u8ZvtnFN',
     validUntil: '2023-07-27T10:37:49.000Z',
   },
-  roles: [
-    'admin',
-  ],
+  roles: ['admin'],
   viewChannels: [],
   manageChannels: [],
   location: null,

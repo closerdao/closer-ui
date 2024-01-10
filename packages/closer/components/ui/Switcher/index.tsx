@@ -1,10 +1,11 @@
 import { Dispatch, SetStateAction } from 'react';
 
 import { CloserCurrencies } from '../../../types';
+import { capitalizeFirstLetter } from '../../../utils/learn.helpers';
 
 interface Props {
   options: string[] | null;
-  selectedOption: string | CloserCurrencies;
+  selectedOption: string | CloserCurrencies | null;
   setSelectedOption: Dispatch<SetStateAction<string | CloserCurrencies>>;
   optionsTitles?: string[];
   isTokenPaymentAvailable?: boolean;
@@ -17,22 +18,24 @@ const Switcher = ({
   optionsTitles,
   isTokenPaymentAvailable,
 }: Props) => {
+  
   const isButtonDisabled = (options: string[], i: number) => {
-    if (isTokenPaymentAvailable === undefined) {
-      return options[i] === selectedOption;
+    if (options[i] === selectedOption) {
+      return true
     }
-    if (isTokenPaymentAvailable === true) {
-      return i === options.length || options[i] === selectedOption;
+    if (options[i] === CloserCurrencies.Token && isTokenPaymentAvailable) {
+      return false
     }
-    if (isTokenPaymentAvailable === false) {
-      return i === options.length - 1 || options[i] === selectedOption;
+    if (!options.includes(CloserCurrencies.Token)) {
+      return false
     }
+    return true
   };
 
   return (
     <>
       {options && (
-        <div className="border border-gray-600 rounded-full w-full flex p-[2px]">
+        <div className="border border-gray-600 rounded-2xl sm:rounded-full w-full flex flex-col sm:flex-row p-[2px]">
           {options?.map((option, i) => (
             <button
               disabled={isButtonDisabled(options, i)}
@@ -52,7 +55,7 @@ const Switcher = ({
               `}
               key={option}
             >
-              {optionsTitles ? optionsTitles[i] : option}
+              {optionsTitles ? optionsTitles[i] : capitalizeFirstLetter(option)}
             </button>
           ))}
         </div>

@@ -16,7 +16,6 @@ import { __ } from '../utils/helpers';
 import CheckoutForm from './CheckoutForm';
 import Conditions from './Conditions';
 import { ErrorMessage } from './ui';
-import HeadingRow from './ui/HeadingRow';
 
 const stripe = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUB_KEY);
 
@@ -98,11 +97,6 @@ const CheckoutPayment = ({
 
   return (
     <div>
-      <HeadingRow>
-        <span className="mr-2">💲</span>
-        <span>{__('bookings_checkout_step_payment_title')}</span>
-      </HeadingRow>
-
       {error && <ErrorMessage error={error} />}
       <Elements stripe={stripe}>
         <CheckoutForm
@@ -138,9 +132,6 @@ CheckoutPayment.propTypes = {
   dailyTokenValue: PropTypes.number.isRequired,
   start: PropTypes.string,
   totalNights: PropTypes.number.isRequired,
-  settings: PropTypes.shape({
-    visitorsGuide: PropTypes.string,
-  }),
 };
 
 export default CheckoutPayment;

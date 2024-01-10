@@ -10,6 +10,7 @@ import { trackEvent } from '../Analytics';
 import DateTimePicker from '../DateTimePicker';
 import FormField from '../FormField';
 import Tabs from '../Tabs';
+import { Spinner } from '../ui';
 
 const filterFields = (fields: any[], data: any) =>
   fields.filter((field) => {
@@ -75,6 +76,7 @@ const EditModel: FC<Props> = ({
 
   const [startDate, setStartDate] = useState<string | null | Date>(data.start);
   const [endDate, setEndDate] = useState<string | null | Date>(data.end);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setData({ ...data, start: startDate, end: endDate });
@@ -106,7 +108,6 @@ const EditModel: FC<Props> = ({
     option?: string,
     actionType?: string,
   ) => {
-
     const copy = { ...data };
 
     objectPath.set(copy, name, value);
@@ -129,6 +130,7 @@ const EditModel: FC<Props> = ({
     }
   };
   const save = async (updatedData: any) => {
+    setIsLoading(true);
     setErrors(null);
     try {
       validate(updatedData);
@@ -143,6 +145,8 @@ const EditModel: FC<Props> = ({
       }
     } catch (err) {
       propagateError(err);
+    } finally {
+      setIsLoading(false);
     }
   };
   const deleteObject = async () => {
@@ -188,8 +192,6 @@ const EditModel: FC<Props> = ({
                 data: { results },
               } = await api.get(field.endpoint, { params });
               update(field.name, results);
-
-              console.log('results=',results);
             }
           }),
         );
@@ -244,16 +246,17 @@ const EditModel: FC<Props> = ({
             tabs={Object.keys(fieldsByTab).map((key) => ({
               title: key,
               value: key,
-              datePicker: endpoint !== '/listing' ? (
-                <DateTimePicker
-                  setStartDate={setStartDate}
-                  setEndDate={setEndDate}
-                  isAdmin={true}
-                  savedStartDate={data.start && data.start}
-                  savedEndDate={data.end && data.end}
-                  defaultMonth={new Date()}
-                /> 
-              ): null,
+              datePicker:
+                endpoint !== '/listing' ? (
+                  <DateTimePicker
+                    setStartDate={setStartDate}
+                    setEndDate={setEndDate}
+                    isAdmin={true}
+                    savedStartDate={data.start && data.start}
+                    savedEndDate={data.end && data.end}
+                    defaultMonth={new Date()}
+                  />
+                ) : null,
               content: filterFields(fieldsByTab[key], data).map((field) => (
                 <FormField
                   {...field}
@@ -272,6 +275,7 @@ const EditModel: FC<Props> = ({
               key={field.name}
               data={data}
               update={update}
+              step={field.step || 1}
             />
           ))
         )}
@@ -291,7 +295,10 @@ const EditModel: FC<Props> = ({
 
         <div className="py-6 flex items-center">
           <button type="submit" className="btn-primary">
-            {__('edit_model_save')}
+            <div className="flex gap-2 items-center">
+              {isLoading && <Spinner />}
+              {__('edit_model_save')}
+            </div>
           </button>
           {allowDelete && (
             <a

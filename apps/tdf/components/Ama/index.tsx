@@ -3,8 +3,9 @@ import router from 'next/router';
 
 import React from 'react';
 
-import { __ } from 'closer/utils/helpers';
 import { Button, Card, Heading } from 'closer/components/ui';
+
+import { __ } from 'closer/utils/helpers';
 
 interface Props {
   id?: string;
