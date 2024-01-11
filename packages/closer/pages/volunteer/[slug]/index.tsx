@@ -14,7 +14,7 @@ interface Props {
 }
 
 const VolunteerPage: NextPage<Props> = ({ volunteer, descriptionText }) => {
-  const { photo, name, description } = volunteer || {};
+  const { photo, name } = volunteer || {};
 
   if (!volunteer)
     return <NotFoundPage error={__('volunteer_page_does_not_exist')} />;

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { usePlatform } from '../contexts/platform';
 import { __ } from '../utils/helpers';
-import UserPreview from './UserPreview';
+import UserBookingPreview from './UserBookingPreview';
 import { Heading, Spinner } from './ui';
 
 const MAX_USERS_TO_FETCH = 2000;
@@ -115,7 +115,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
             ) : (
               isHere.map((b) => {
                 return (
-                  <UserPreview
+                  <UserBookingPreview
                     key={b._id}
                     booking={b}
                   />
@@ -133,7 +133,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
               willArrive.map((b) => {
 
                 return (
-                  <UserPreview
+                  <UserBookingPreview
                     key={b._id}
                     booking={b}
                   />
@@ -151,7 +151,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
               justLeft.map((b) => {
 
                 return (
-                  <UserPreview
+                  <UserBookingPreview
                     key={b._id}
                     booking={b}
                   />

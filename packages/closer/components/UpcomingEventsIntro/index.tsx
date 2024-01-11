@@ -4,6 +4,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { __ } from '../../utils/helpers';
 import EventsList from '../EventsList';
 import { Heading } from '../ui';
+import Link from 'next/link';
 
 const loadTime = new Date();
 
@@ -18,6 +19,9 @@ const UpcomingEventsIntro = () => {
         </Heading>
         <p className="mb-6 text-sm md:text-base">
           {__('events_upcoming_intro', APP_NAME)}
+        </p>
+        <p className="mb-6 text-sm md:text-base">
+          <Link href="/events" className="underline text-primary">See all events</Link>
         </p>
       </div>
       <div className="flex-grow">

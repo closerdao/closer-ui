@@ -22,40 +22,6 @@ import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
-// Reviews are taken from Google maps:
-const REVIEWS = [
-  {
-    name: 'Jeremy Agnew',
-    rating: 5,
-    text: 'A wondrous magical place where musicians turn up out the blue and made the hills come alive with traditional Alentejo music; where lovely people from around the world are building an inspirational new village on the edge of Abela; where the older generation welcomed them with open hearts and arms at the invigoration they are bringing to this cute little town with a deep cultural heritage. TDF is where we all want to live!',
-    photo: '/images/reviews/r-1.png',
-  },
-  {
-    name: 'Vinay Chaudhri',
-    rating: 5,
-    text: 'Don’t come here. The community is way too kind. The nature is way too peaceful. The ideas are way too beautiful. It’ll ruin your life. But maybe that’s exactly what you’re looking for...🤣 …',
-    photo: '/images/reviews/r-2.png',
-  },
-  {
-    name: 'Kyle Schutter',
-    rating: 5,
-    text: 'A place for bohemian makers, the intersection of Permaculture and crypto. My kind of place.',
-    photo: '/images/reviews/r-3.png',
-  },
-  {
-    name: 'Julian Guderley',
-    rating: 5,
-    text: 'Powerful innovation space. Re:Build Event with many aspects, diverse learnings and brilliant people.',
-    photo: '/images/reviews/r-4.png',
-  },
-  {
-    name: 'Vincent Spehner',
-    rating: 5,
-    text: 'Simply awesome. The future of humanity',
-    photo: '/images/reviews/r-5.png',
-  },
-];
-
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
   listings: Listing[];
@@ -399,7 +365,7 @@ const SubscriptionsPage: NextPage<Props> = ({
           </div>
         </section>
 
-        <Reviews reviews={REVIEWS} />
+        <Reviews />
         <Resources />
       </main>
     </div>

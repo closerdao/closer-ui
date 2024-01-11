@@ -12,7 +12,7 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
   const { user } = useAuth();
 
   return (
-    <div className="flex flex-col gap-5 justify-between mb-8">
+    <div className="flex flex-col gap-5 justify-between mb-8 shadow rounded-xl p-4">
       <div className="flex flex-col gap-5">
         {listing.get('photos') && listing.get('photos').count() > 0 && (
           <Slider
