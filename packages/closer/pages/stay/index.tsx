@@ -6,6 +6,7 @@ import React, { useEffect } from 'react';
 import ListingListPreview from '../../components/ListingListPreview';
 import UserPreview from '../../components/UserPreview';
 import UpcomingEventsIntro from '../../components/UpcomingEventsIntro';
+import PhotoGallery from '../../components/PhotoGallery';
 import Reviews from '../../components/Reviews';
 import Heading from '../../components/ui/Heading';
 
@@ -67,6 +68,13 @@ const StayPage = ({ settings }: Props) => {
           </Heading>
           <p>{__('stay_description')}</p>
         </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto mb-16">
+        <PhotoGallery />
+      </section>
+      
+      <section className="max-w-6xl mx-auto mb-16">
         <div className="mb-6">
           <Heading level={2} className="text-2xl pb-2 mt-8">
             {__('stay_what_to_expect_title')}
@@ -92,6 +100,8 @@ const StayPage = ({ settings }: Props) => {
             </li>
           </ul>
         </div>
+      </section>
+      <section className="max-w-6xl mx-auto mb-16">
         <div className="mb-6">
           <div className="max-w-prose">
             <Heading level={2} className="text-2xl pb-2 mt-8">
@@ -143,15 +153,8 @@ const StayPage = ({ settings }: Props) => {
             guestListings?.count() === 0 &&
             __('listing_no_listings_found')}
         </div>
-        <div className="mb-6 max-w-prose">
-          <Heading level={2} className="text-3xl mb-6 italic">
-            <blockquote>
-              <span className="text-6xl">&quot;</span>
-              {__('stay_reviews_title')}
-            </blockquote>
-          </Heading>
-          <Reviews />
-        </div>
+        
+        <Reviews />
       </section>
 
       <section className="max-w-6xl mx-auto mb-12">
