@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Review } from '../types/review';
-import Link from 'next/link';
 
 const reviewsList = [
   {
@@ -89,7 +88,7 @@ const Reviews = ({ reviews }: Props) => {
         </div>
       )
       )}
-      {activeReviews && (
+      {/* {activeReviews && (
         <Link
           href="/reviews"
           className="bold underline ml-[100px] px-12"
@@ -101,7 +100,7 @@ const Reviews = ({ reviews }: Props) => {
         >
           See more reviews
         </Link>
-      )}
+      )} */}
     </div>
   );
 };
