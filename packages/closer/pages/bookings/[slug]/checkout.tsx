@@ -48,6 +48,7 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
     useTokens,
     useCredits,
     start,
+    status,
     dailyRentalToken,
     duration,
     ticketOption,
@@ -67,9 +68,7 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
   useEffect(() => {
     (async () => {
       try {
-        const creditsBalance = (await api.get('/carrots/balance')).data
-          .results as number;
-        console.log('creditsBalance=', creditsBalance);
+        const creditsBalance = (await api.get('/carrots/balance')).data.results as number;
         const hasEnoughCredits = Boolean(
           rentalToken?.val &&
             creditsBalance &&
@@ -120,8 +119,12 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
       const res = await api.post(`/bookings/${booking._id}/update-payment`, {
         useCredits: true,
       });
+      
       setUpdatedTotal(res.data.results.total);
       setUpdatedRentalFiat(res.data.results.rentalFiat);
+
+      await api.post(`/bookings/${booking._id}/credit-payment`, {});
+
       setHasAppliedCredits(true);
     } catch (error) {
       setCreditsError(parseMessageFromError(error));
@@ -192,12 +195,12 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
 
             {process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' &&
             canApplyCredits &&
-            !useTokens ? (
+              !useTokens ? (
               <RedeemCredits
                 rentalFiat={rentalFiat}
                 rentalToken={rentalToken || { val: 0, cur: 'TDF' }}
                 applyCredits={applyCredits}
-                hasAppliedCredits={hasAppliedCredits}
+                hasAppliedCredits={hasAppliedCredits || status === 'credits-paid'}
                 creditsError={creditsError}
                 className="my-12"
               />
@@ -239,7 +242,7 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
           </div>
           <CheckoutTotal total={updatedTotal} />
 
-          {booking.total.val > 0 ? (
+          {updatedTotal.val > 0 ? (
             <CheckoutPayment
               bookingId={booking._id}
               buttonDisabled={
