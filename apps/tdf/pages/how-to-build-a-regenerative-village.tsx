@@ -20,7 +20,7 @@ const ArtFaire = () => {
         />
       </Head>
       <section className="max-w-6xl mx-auto">
-        <div className="flex md:flex-row mb-8">
+        <div className="md:flex md:flex-row mb-8">
           <img src="/images/products/how-to-build-a-regenerative-village.jpg" className="mr-8 shadow rounded-lg w-[200px]" alt="How to build a regenerative village book" />
           <div className="max-w-prose">
             <Heading
