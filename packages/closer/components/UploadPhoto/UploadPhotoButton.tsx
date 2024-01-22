@@ -20,17 +20,16 @@ const UploadPhotoButton = ({
       className={`
       
       ${twMerge(
-          ' top-0  left-0 w-full h-full items-center ',
+        ' top-0  left-0 w-full h-full items-center ',
         `${
           isMinimal
             ? ' h-[30px] w-[120px] visible'
             : 'absolute  w-full h-full invisible group-hover:visible flex  items-center justify-center'
-          } `,
-          `${
-            
-          isPrompt
-              && 'absolute  w-full h-full invisible group-hover:visible flex '
-          } `
+        } `,
+        `${
+          isPrompt &&
+          'absolute  w-full h-full invisible group-hover:visible flex '
+        } `,
       )}     `}
     >
       <Button

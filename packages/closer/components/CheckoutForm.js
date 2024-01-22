@@ -225,6 +225,7 @@ const CheckoutForm = ({
       {conditions}
       <div className="mt-8">
         <Button
+          type="submit"
           isEnabled={
            !submitDisabled && hasComplied && !processing && !buttonDisabled
           }

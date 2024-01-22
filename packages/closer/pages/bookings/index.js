@@ -6,10 +6,12 @@ import Tabs from '../../components/Tabs';
 import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { __ } from '../../utils/helpers';
+import { useConfig } from '../../hooks/useConfig';
 
 const bookingsToShowLimit = 50;
 
 const BookingsDirectory = () => {
+  const { enabledConfigs } = useConfig();
   const { user } = useAuth();
 
   const filters = {
@@ -41,7 +43,10 @@ const BookingsDirectory = () => {
     },
   };
 
-  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
+    !enabledConfigs.includes('booking')
+  ) {
     return <PageNotFound />;
   }
 

@@ -49,5 +49,3 @@ export interface ABI {
     type: string;
   };
 }
-
-

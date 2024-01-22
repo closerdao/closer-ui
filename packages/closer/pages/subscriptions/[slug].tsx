@@ -1,34 +1,32 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { Button, Card, Heading } from '../../components/ui';
+import PageError from '../../components/PageError';
+import { Heading } from '../../components/ui';
 
 import { NextPage } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
-import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
-import {
-  SubscriptionPlan,
-  SubscriptionVariant,
-} from '../../types/subscriptions';
+import { SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
-import {
-  __,
-  getCurrencySymbol,
-  getSubscriptionVariantPrice,
-} from '../../utils/helpers';
 import { parseMessageFromError } from '../../utils/common';
-import PageError from '../../components/PageError';
+import { __ } from '../../utils/helpers';
+import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
   slug?: string | string[] | undefined;
-  error?: string
+  error?: string;
 }
 
-const SubscriptionPlanPage: NextPage<Props> = ({ subscriptionPlans, slug, error }) => {
+const SubscriptionPlanPage: NextPage<Props> = ({
+  subscriptionPlans,
+  slug,
+  error,
+}) => {
+  subscriptionPlans = prepareSubscriptions(subscriptionPlans);
   const router = useRouter();
 
   const subscriptionPlan = subscriptionPlans.find((plan: SubscriptionPlan) => {
@@ -87,55 +85,6 @@ const SubscriptionPlanPage: NextPage<Props> = ({ subscriptionPlans, slug, error 
             }
           ></div>
         </div>
-
-        {subscriptionPlan?.variants &&
-          subscriptionPlan.variants.map((variant: SubscriptionVariant) => {
-            return (
-              <div key={variant.title}>
-                <Card className='mb-4'>
-                  <div className="flex flex-col gap-4 sm:gap-1 sm:flex-row items-center justify-between">
-                    <Heading
-                      level={3}
-                      className="uppercase w-full sm:w-2/5 text-center sm:text-left"
-                    >
-                      {variant.title}
-                    </Heading>
-                    <div className="text-center">
-                      <p className="text-accent text-2xl font-bold">
-                        {variant.monthlyCredits} 🥕
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <div className=" font-bold text-xl">
-                        {getCurrencySymbol(DEFAULT_CURRENCY)}
-                        {getSubscriptionVariantPrice(
-                          variant.monthlyCredits,
-                          subscriptionPlan,
-                        )}
-                      </div>
-                      <p className="text-sm font-normal">
-                        {__('subscriptions_summary_per_month')}
-                      </p>
-                    </div>
-                    <Button
-                      isEnabled={true}
-                      onClick={() =>
-                        handleNext(
-                          subscriptionPlan.priceId,
-                          variant.monthlyCredits,
-                        )
-                      }
-                      size="medium"
-                      isFullWidth={false}
-                      className=" border"
-                    >
-                      {__('subscriptions_subscribe_button')}
-                    </Button>
-                  </div>
-                </Card>
-              </div>
-            );
-          })}
       </main>
     </div>
   );
@@ -152,7 +101,7 @@ SubscriptionPlanPage.getInitialProps = async ({
     } = await api.get('/config/subscriptions');
 
     return {
-      subscriptionPlans: results.value.plans,
+      subscriptionPlans: results.value,
       slug: query.slug,
     };
   } catch (err: unknown) {

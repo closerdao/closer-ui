@@ -14,7 +14,9 @@ const config = {
   TWITTER_URL: 'https://twitter.com/',
   LOGO_HEADER: '',
   LOGO_FOOTER: '/images/logo.svg',
-  LOCATION_COORDINATES: { lat: 40.112851842555756, lng: -8.015835544223801 },
+  // LOCATION_COORDINATES: { lat: 40.112851842555756, lng: -8.015835544223801 },
+  LOCATION_LAT: 40.112851842555756,
+  LOCATION_LNG: -8.015835544223801,
   PERMISSIONS: {
     event: {
       create: 'event-creator',
@@ -31,7 +33,7 @@ const config = {
   STAY_BOOKING_ALLOWED_PLANS: ['wanderer', 'pioneer', 'sheep'],
   MIN_INSTANT_BOOKING_ALLOWED_PLAN: 'wanderer',
   FACEBOOK_PIXEL_ID: '',
-  FAQS_GOOGLE_SHEET_ID: '1dlaVEfLwHAbXCwoiDGzUd3w8d7YYnGl5dbPDINKmRUg'
+  FAQS_GOOGLE_SHEET_ID: '1dlaVEfLwHAbXCwoiDGzUd3w8d7YYnGl5dbPDINKmRUg',
 };
 
 export default config;

@@ -1,9 +1,10 @@
-import { AppProps } from 'next/app';
+import App, { AppContext, AppProps } from 'next/app';
+import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Script from 'next/script';
 
-import { FC, useEffect } from 'react';
+import { useEffect } from 'react';
 import CookieConsent from 'react-cookie-consent';
 
 import { ErrorBoundary, Layout } from '@/components';
@@ -20,20 +21,33 @@ import {
   PlatformProvider,
   WalletProvider,
   __,
+  api,
   blockchainConfig,
 } from 'closer';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import 'closer/public/styles.css';
+import { prepareGeneralConfig } from 'closer/utils/app.helpers';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
-import config from '../config';
+import appConfig from '../config';
+
+interface AppOwnProps extends AppProps {
+  configGeneral: any;
+  enabledConfigs: string[];
+}
 
 export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
   const library = new Web3Provider(provider);
   return library;
 }
 
-const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
+const MyApp = ({
+  Component,
+  pageProps,
+  configGeneral,
+  enabledConfigs,
+}: AppOwnProps) => {
+  const config = prepareGeneralConfig(configGeneral);
   const { FACEBOOK_PIXEL_ID } = config || {};
   const router = useRouter();
   const { query } = router;
@@ -47,26 +61,49 @@ const MyApp: FC<AppProps> = ({ Component, pageProps }) => {
 
   return (
     <>
+      <Head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0,user-scalable=0"
+        />
+      </Head>
+
       <Script
         id="fb-pixel"
         strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '${FACEBOOK_PIXEL_ID}');
-fbq('track', 'PageView');
-`,
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '${FACEBOOK_PIXEL_ID}');
+  fbq('track', 'PageView');
+  `,
         }}
       />
+      <Script
+        id="gptconfig"
+        dangerouslySetInnerHTML={{
+          __html: `window.GPTTConfig = {
+              uuid: "a9d70d04c6b64f328acd966ad87e4fb4",
+            };`,
+        }}
+      />
+      <Script src="https://app.gpt-trainer.com/widget-asset.min.js" defer />
 
-      <ConfigProvider config={{ ...config, ...blockchainConfig }}>
+      <ConfigProvider
+        config={{
+          ...config,
+          ...blockchainConfig,
+          ...appConfig,
+          enabledConfigs,
+        }}
+      >
         <ErrorBoundary>
           <AuthProvider>
             <PlatformProvider>
@@ -104,6 +141,27 @@ fbq('track', 'PageView');
       </CookieConsent>
     </>
   );
+};
+
+// This disables ASO everywhere https://nextjs.org/docs/pages/building-your-application/rendering/automatic-static-optimization
+// TODO in the future: either migrate to App directory or do SSR data fetching on each page that uses general configs
+MyApp.getInitialProps = async (context: AppContext) => {
+  const ctx = await App.getInitialProps(context);
+  const allConfigs = await api.get('/config');
+
+  const configGeneral = allConfigs.data.results.find(
+    (config: any) => config.slug === 'general',
+  ).value;
+
+  const enabledConfigs = allConfigs.data.results
+    .filter((config: any) => config.value.enabled)
+    .map((config: any) => config.slug);
+
+  return {
+    ...ctx,
+    configGeneral,
+    enabledConfigs,
+  };
 };
 
 export default MyApp;

@@ -34,8 +34,8 @@ export type Event = {
   attributes: string[];
   managedBy: string[];
   _id: string;
-  visual?: string
-  featured?: boolean
+  visual?: string;
+  featured?: boolean;
 };
 export type TicketOption = {
   name: string;
@@ -46,7 +46,7 @@ export type TicketOption = {
   limit: number;
   _id: string;
   available: number;
-  isDayTicket: boolean
+  isDayTicket: boolean;
 };
 
 export type Field = {

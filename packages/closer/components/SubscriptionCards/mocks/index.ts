@@ -60,8 +60,8 @@ export const config = {
         ],
         billingPeriod: 'month',
       },
-    ] ,
-  } ,
+    ],
+  },
 };
 
 export default config;

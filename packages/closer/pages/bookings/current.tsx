@@ -5,9 +5,11 @@ import Heading from '../../components/ui/Heading';
 
 import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
+import { useConfig } from '../../hooks/useConfig';
 import { __ } from '../../utils/helpers';
 
 const CurrentBookings = () => {
+  const { enabledConfigs } = useConfig();
   const { user } = useAuth();
 
   const loadTime = Date.now();
@@ -19,7 +21,10 @@ const CurrentBookings = () => {
     return <PageNotFound error="User may not access" />;
   }
 
-  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
+    !enabledConfigs.includes('booking')
+  ) {
     return <PageNotFound />;
   }
 

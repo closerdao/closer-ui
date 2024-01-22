@@ -1,4 +1,5 @@
 import Link from 'next/link';
+
 import { FC } from 'react';
 
 export const Footer: FC = () => (
@@ -17,11 +18,12 @@ export const Footer: FC = () => (
         >
           braulioamado
         </a>
-        . Platform developed by{' '}
-        <a href="https://closer.earth">Closer</a>.
+        . Platform developed by <a href="https://closer.earth">Closer</a>.
       </p>
 
-      <p><Link href='/pdf/TDF-PP.pdf'>Privacy policy</Link></p>
+      <p>
+        <Link href="/pdf/TDF-PP.pdf">Privacy policy</Link>
+      </p>
       <div className="social mt-4 flex flex-row justify-center">
         <a
           href="https://t.me/traditionaldreamfactor"

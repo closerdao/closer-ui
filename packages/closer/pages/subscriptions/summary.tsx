@@ -23,7 +23,10 @@ import {
 } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
-import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
+import {
+  SelectedPlan,
+  SubscriptionPlan, // Tier,
+} from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import {
@@ -32,6 +35,7 @@ import {
   getVatInfo,
   priceFormat,
 } from '../../utils/helpers';
+import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
@@ -42,6 +46,9 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   subscriptionPlans,
   error,
 }) => {
+  const { enabledConfigs, PLATFORM_NAME } = useConfig();
+  subscriptionPlans = prepareSubscriptions(subscriptionPlans);
+
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId, monthlyCredits } = router.query;
@@ -55,8 +62,6 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
     defaultMonthlyCredits,
   );
 
-  const { PLATFORM_NAME } = useConfig() || {};
-
   useEffect(() => {
     if (user?.subscription && user.subscription.priceId) {
       router.push('/subscriptions');
@@ -69,16 +74,16 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
         (plan: SubscriptionPlan) => plan.priceId === priceId,
       );
 
-      setMonthlyCreditsSelected(selectedSubscription?.tiers ? 1 : 0);
+      setMonthlyCreditsSelected(selectedSubscription?.monthlyCredits ? 1 : 0);
 
       setSelectedPlan({
         title: selectedSubscription?.title as string,
-        monthlyCredits: selectedSubscription?.tiers ? 1 : 0,
+        monthlyCredits: selectedSubscription?.monthlyCredits ? 1 : 0,
         price: selectedSubscription?.price as number,
-        tiers: selectedSubscription?.tiers,
+        tiersAvailable: selectedSubscription?.tiersAvailable as boolean,
       });
     }
-  }, [priceId, subscriptionPlans, monthlyCredits]);
+  }, [priceId, monthlyCredits]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -110,7 +115,10 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
     return <PageError error={error} />;
   }
 
-  if (process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true' ||
+    !enabledConfigs.includes('subscriptions')
+  ) {
     return <Page404 error="" />;
   }
 
@@ -147,7 +155,7 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
                 rowKey={__('subscriptions_summary_tier')}
                 value={selectedPlan?.title}
               />
-              {selectedPlan?.tiers && (
+              {selectedPlan?.tiersAvailable && (
                 <div className="flex space-between items-center mt-9">
                   <p className="flex-1">
                     {__('subscriptions_summary_stays_per_month')}
@@ -201,7 +209,7 @@ SubscriptionsSummaryPage.getInitialProps = async () => {
     } = await api.get('/config/subscriptions');
 
     return {
-      subscriptionPlans: results.value.plans,
+      subscriptionPlans: results.value,
     };
   } catch (err: unknown) {
     return {

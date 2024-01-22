@@ -20,7 +20,10 @@ import {
 } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
-import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
+import {
+  SelectedPlan,
+  SubscriptionPlan, // Tier,
+} from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import {
@@ -29,6 +32,7 @@ import {
   getVatInfo,
   priceFormat,
 } from '../../utils/helpers';
+import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUB_KEY as string,
@@ -43,6 +47,8 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
   subscriptionPlans,
   error,
 }) => {
+  const { enabledConfigs } = useConfig();
+  subscriptionPlans = prepareSubscriptions(subscriptionPlans);
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId, monthlyCredits, source } = router.query;
@@ -76,10 +82,10 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
         title: selectedSubscription?.title as string,
         monthlyCredits: selectedSubscription?.monthlyCredits as number,
         price: selectedSubscription?.price as number,
-        tiers: selectedSubscription?.tiers,
+        tiersAvailable: selectedSubscription?.tiersAvailable as boolean,
       });
     }
-  }, [priceId, subscriptionPlans]);
+  }, [priceId]);
 
   const goBack = () => {
     router.push(
@@ -91,7 +97,10 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
     return <PageError error={error} />;
   }
 
-  if (process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true' ||
+    !enabledConfigs.includes('subscriptions')
+  ) {
     return <Page404 error="" />;
   }
 
@@ -124,7 +133,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
               {__('subscriptions_title')}
             </Heading>
 
-              {selectedPlan?.tiers && monthlyCreditsSelected && (
+            {/* {selectedPlan?.tiers && monthlyCreditsSelected && (
               <Row
                 className="mb-4"
                 rowKey={` ${selectedPlan?.title} ${
@@ -134,11 +143,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
                     : ''
                 }  `}
                 value={`${
-                  selectedPlan &&
-                  priceFormat(
-                    total,
-                    DEFAULT_CURRENCY,
-                  )
+                  selectedPlan && priceFormat(total, DEFAULT_CURRENCY)
                 }`}
                 additionalInfo={`${__(
                   'bookings_checkout_step_total_description',
@@ -147,7 +152,27 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
                   cur: DEFAULT_CURRENCY,
                 })} ${__('subscriptions_summary_per_month')}`}
               />
-            )}
+            )} */}
+            {
+              <Row
+                className="mb-4"
+                rowKey={` ${selectedPlan?.title} ${
+                  Number(monthlyCreditsSelected)
+                    ? `- ${Number(monthlyCreditsSelected)}
+                      ${__('subscriptions_credits_included')}`
+                    : ''
+                }  `}
+                value={`${
+                  selectedPlan && priceFormat(total, DEFAULT_CURRENCY)
+                }`}
+                additionalInfo={`${__(
+                  'bookings_checkout_step_total_description',
+                )} ${getVatInfo({
+                  val: total,
+                  cur: DEFAULT_CURRENCY,
+                })} ${__('subscriptions_summary_per_month')}`}
+              />
+            }
           </div>
 
           <div className="mb-14">
@@ -156,14 +181,16 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
               {__('subscriptions_checkout_payment_subtitle')}
             </Heading>
             <div className="mb-10">
-              <Elements stripe={stripePromise}>
-                <SubscriptionCheckoutForm
-                  userEmail={user?.email}
-                  priceId={priceId}
-                  monthlyCredits={Number(monthlyCredits)}
-                  source={source as string}
-                />
-              </Elements>
+              {enabledConfigs.includes('payment') && (
+                <Elements stripe={stripePromise}>
+                  <SubscriptionCheckoutForm
+                    userEmail={user?.email}
+                    priceId={priceId}
+                    monthlyCredits={Number(monthlyCredits)}
+                    source={source as string}
+                  />
+                </Elements>
+              )}
             </div>
           </div>
         </main>
@@ -179,7 +206,7 @@ SubscriptionsCheckoutPage.getInitialProps = async () => {
     } = await api.get('/config/subscriptions');
 
     return {
-      subscriptionPlans: results.value.plans,
+      subscriptionPlans: results.value,
     };
   } catch (err: unknown) {
     return {

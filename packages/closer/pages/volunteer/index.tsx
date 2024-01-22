@@ -35,8 +35,6 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
 
   const doesHaveVolunteerTerms = !volunteerTerms.every((item) => item === '');
 
-  console.log('volunteerTerms=', volunteerTerms);
-
   return (
     <div className="flex justify-center">
       <Head>
@@ -73,15 +71,12 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
                 ))}
               </ul>
             )}
-
           </div>
           <div
             dangerouslySetInnerHTML={{
               __html: __('volunteers_page_more_info', APP_NAME),
             }}
           />
-
-   
         </section>
 
         <div>

@@ -138,9 +138,6 @@ CheckoutPayment.propTypes = {
   dailyTokenValue: PropTypes.number.isRequired,
   start: PropTypes.string,
   totalNights: PropTypes.number.isRequired,
-  settings: PropTypes.shape({
-    visitorsGuide: PropTypes.string,
-  }),
 };
 
 export default CheckoutPayment;

@@ -25,8 +25,9 @@ import {
 } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
+import { useConfig } from '../../../hooks/useConfig';
 import { Event, TicketOption } from '../../../types';
-import { BookingSettings, VolunteerOpportunity } from '../../../types/api';
+import { VolunteerOpportunity } from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
@@ -34,7 +35,7 @@ import { __, getMaxBookingHorizon } from '../../../utils/helpers';
 
 interface Props {
   error?: string;
-  settings?: BookingSettings;
+  settings?: any;
   ticketOptions?: TicketOption[];
   volunteer?: VolunteerOpportunity;
   futureEvents?: Event[];
@@ -49,7 +50,19 @@ const DatesSelector: NextPage<Props> = ({
   futureEvents,
   event,
 }) => {
+  const { enabledConfigs } = useConfig();
   const router = useRouter();
+
+  const conditions = {
+    member: {
+      maxDuration: settings?.memberMaxDuration,
+      maxBookingHorizon: settings?.memberMaxBookingHorizon,
+    },
+    guest: {
+      maxDuration: settings?.guestMaxDuration,
+      maxBookingHorizon: settings?.guestMaxBookingHorizon,
+    },
+  };
   const { user, isAuthenticated } = useAuth();
   const isMember = user?.roles.includes('member');
   const {
@@ -138,7 +151,9 @@ const DatesSelector: NextPage<Props> = ({
   const [currency, selectCurrency] = useState<CloserCurrencies>(
     (savedCurrency as CloserCurrencies) || DEFAULT_CURRENCY,
   );
-  const [selectedTicketOption, selectTicketOption] = useState<any>(null);
+  const [selectedTicketOption, selectTicketOption] = useState<any>(
+    ticketOptions?.[0],
+  );
   const [discountCode, setDiscountCode] = useState('');
   const [doesNeedPickup, setDoesNeedPickup] = useState(false);
   const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
@@ -236,7 +251,10 @@ const DatesSelector: NextPage<Props> = ({
     return <PageError error={error} />;
   }
 
-  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
+    !enabledConfigs.includes('booking')
+  ) {
     return <PageNotFound />;
   }
 
@@ -250,7 +268,7 @@ const DatesSelector: NextPage<Props> = ({
         </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
 
-        <div className="mt-16 flex flex-col gap-16">
+        <div className="mt-16 flex flex-col gap-8">
           {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' && (
             <div>
               <HeadingRow>
@@ -264,7 +282,7 @@ const DatesSelector: NextPage<Props> = ({
               />
             </div>
           )}
-          {eventId && (
+          {eventId && ticketOptions && ticketOptions.length > 0 && (
             <TicketOptions
               items={ticketOptions}
               selectedTicketOption={selectedTicketOption}
@@ -277,7 +295,7 @@ const DatesSelector: NextPage<Props> = ({
           )}
           {selectedTicketOption?.isDayTicket !== true && (
             <BookingDates
-              conditions={settings?.conditions}
+              conditions={conditions}
               setStartDate={setStartDate}
               setEndDate={setEndDate}
               isMember={isMember}
@@ -330,7 +348,10 @@ const DatesSelector: NextPage<Props> = ({
             onClick={handleNext}
             isEnabled={
               !!(
-                (eventId && selectedTicketOption && start && end) ||
+                (eventId &&
+                  (!ticketOptions?.length || selectedTicketOption) &&
+                  start &&
+                  end) ||
                 (volunteerId && start && end) ||
                 (!eventId && !volunteerId && start && end)
               )
@@ -360,7 +381,7 @@ DatesSelector.getInitialProps = async ({ query }) => {
       ]);
 
       return {
-        settings: settings as BookingSettings,
+        settings: settings as any,
         ticketOptions: ticketsAvailable.data.ticketOptions,
         event: event.data.results,
       };
@@ -368,7 +389,7 @@ DatesSelector.getInitialProps = async ({ query }) => {
     if (volunteerId) {
       const volunteer = await api.get(`/volunteer/${volunteerId}`);
       return {
-        settings: settings as BookingSettings,
+        settings: settings as any,
         volunteer: volunteer.data.results,
       };
     }
@@ -382,12 +403,12 @@ DatesSelector.getInitialProps = async ({ query }) => {
       );
 
       return {
-        settings: settings as BookingSettings,
+        settings: settings as any,
         futureEvents: res.data.results,
       };
     }
     return {
-      settings: settings as BookingSettings,
+      settings: settings as any,
     };
   } catch (err) {
     return {

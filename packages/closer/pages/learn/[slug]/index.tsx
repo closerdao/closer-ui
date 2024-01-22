@@ -23,6 +23,7 @@ import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
+import { prepareSubscriptions } from '../../../utils/subscriptions.helpers';
 
 const MIN_SUBSCRIPTION_PLAN = 'Wanderer';
 
@@ -30,10 +31,11 @@ interface Props {
   lesson: Lesson;
   lessonCreator: User;
   error?: string;
-  subscriptions?: any[];
+  subscriptions: any[];
 }
 
 const LessonPage = ({ lesson, lessonCreator, subscriptions, error }: Props) => {
+  subscriptions = prepareSubscriptions(subscriptions);
   const { asPath } = useRouter();
   const { user, refetchUser } = useAuth();
   const [hasRefetchedUser, setHasRefetchedUser] = useState(false);
@@ -256,7 +258,7 @@ LessonPage.getInitialProps = async ({
       },
     });
 
-    return { subscriptions: subscriptions.value.plans, lesson, lessonCreator };
+    return { subscriptions: subscriptions.value, lesson, lessonCreator };
   } catch (err: unknown) {
     return {
       error: parseMessageFromError(err),

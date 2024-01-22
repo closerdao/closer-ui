@@ -113,6 +113,7 @@ export { default as LessonPage } from './pages/learn/[slug]/';
 export { default as EditLessonPage } from './pages/learn/[slug]/edit';
 export { default as StayPage } from './pages/stay/';
 export { default as SupportUsPage } from './pages/support-us';
+export { default as ConfigPage } from './pages/admin/config';
 
 // Types
 export * from './types/';

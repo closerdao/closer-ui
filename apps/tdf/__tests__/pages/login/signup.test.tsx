@@ -9,9 +9,11 @@ import { subscriptions } from '../../mocks/subscriptions';
 describe('Signup', () => {
   it('should have proper heading', () => {
     render(
-      <ConfigProvider config={{ ...config, ...blockchainConfig }}>
+      <ConfigProvider
+        config={{ ...config, ...blockchainConfig, ...{ APP_NAME: 'tdf' } }}
+      >
         <AuthProvider>
-          <Signup subscriptionPlans={subscriptions.plans} />
+          <Signup subscriptionPlans={subscriptions} />
         </AuthProvider>
       </ConfigProvider>,
     );
@@ -23,7 +25,7 @@ describe('Signup', () => {
   it('should have a Create account button disabled by default', () => {
     render(
       <AuthProvider>
-        <Signup subscriptionPlans={subscriptions.plans} />
+        <Signup subscriptionPlans={subscriptions} />
       </AuthProvider>,
     );
     const button = screen.getByRole('button', { name: /sign up/i });

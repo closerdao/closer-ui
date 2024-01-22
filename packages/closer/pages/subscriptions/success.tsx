@@ -16,7 +16,8 @@ import { useConfig } from '../../hooks/useConfig';
 import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers'; 
+import { __ } from '../../utils/helpers';
+import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
@@ -27,11 +28,13 @@ const SubscriptionSuccessPage: NextPage<Props> = ({
   subscriptionPlans,
   error,
 }) => {
+  const { enabledConfigs, PLATFORM_NAME } = useConfig();
+  subscriptionPlans = prepareSubscriptions(subscriptionPlans);
+
   const { isAuthenticated, isLoading } = useAuth();
 
   const router = useRouter();
   const { priceId, subscriptionId } = router.query;
-  const { PLATFORM_NAME } = useConfig() || {};
 
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
 
@@ -45,6 +48,7 @@ const SubscriptionSuccessPage: NextPage<Props> = ({
         title: selectedSubscription?.title as string,
         monthlyCredits: selectedSubscription?.monthlyCredits as number,
         price: selectedSubscription?.price as number,
+        tiersAvailable: selectedSubscription?.tiersAvailable as boolean,
       });
 
       gaEvent('subscription_confirm', {
@@ -74,7 +78,10 @@ const SubscriptionSuccessPage: NextPage<Props> = ({
     return <PageError error={error} />;
   }
 
-  if (process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true' ||
+    !enabledConfigs.includes('subscriptions')
+  ) {
     return <Page404 error="" />;
   }
 
@@ -134,7 +141,7 @@ SubscriptionSuccessPage.getInitialProps = async () => {
     } = await api.get('/config/subscriptions');
 
     return {
-      subscriptionPlans: results.value.plans,
+      subscriptionPlans: results.value,
     };
   } catch (err: unknown) {
     return {

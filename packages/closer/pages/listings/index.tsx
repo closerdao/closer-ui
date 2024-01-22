@@ -8,19 +8,21 @@ import Heading from '../../components/ui/Heading';
 
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
-import { useConfig } from '../../hooks/useConfig';
-import { BookingSettings } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
 interface Props {
-  settings: BookingSettings;
+  settings: any;
 }
 
 const Listings = ({ settings }: Props) => {
-  const config = useConfig();
-  const { PLATFORM_NAME, APP_NAME } = config || {};
+  const discounts = {
+    daily: settings.discountsDaily,
+    weekly: settings.discountsWeekly,
+    monthly: settings.discountsMonthly,
+  };
+
   const { platform }: any = usePlatform();
   const { user } = useAuth();
   const isTeamMember = false;
@@ -78,7 +80,7 @@ const Listings = ({ settings }: Props) => {
               listings.map((listing: any) => {
                 return (
                   <ListingListPreview
-                    discounts={settings.discounts}
+                    discounts={discounts}
                     isAdminPage={true}
                     key={listing.get('_id')}
                     listing={listing}
@@ -91,7 +93,7 @@ const Listings = ({ settings }: Props) => {
               guestListings.map((listing: any) => {
                 return (
                   <ListingListPreview
-                    discounts={settings.discounts}
+                    discounts={discounts}
                     isAdminPage={true}
                     key={listing.get('_id')}
                     listing={listing}
@@ -118,7 +120,7 @@ Listings.getInitialProps = async () => {
     } = await api.get('/config/booking');
 
     return {
-      settings: settings as BookingSettings,
+      settings: settings as any,
     };
   } catch (err) {
     return {

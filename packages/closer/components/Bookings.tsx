@@ -18,29 +18,35 @@ const Bookings = ({ filter, page, setPage, isPagination }: Props) => {
 
   const bookings = platform.booking.find(filter);
 
-  console.log('bookings=',bookings?.toJS()[0]);
-  const eventsFilter = bookings && { where: {
-    _id: {
-      $in: bookings.map((booking: any) => booking.get('eventId')),
+  const eventsFilter = bookings && {
+    where: {
+      _id: {
+        $in: bookings.map((booking: any) => booking.get('eventId')),
+      },
     },
-  } };
-  const volunteerFilter = bookings && { where: {
-    _id: {
-      $in: bookings.map((booking: any) => booking.get('volunteerId')),
+  };
+  const volunteerFilter = bookings && {
+    where: {
+      _id: {
+        $in: bookings.map((booking: any) => booking.get('volunteerId')),
+      },
     },
-  } };
-  const listingFilter = bookings && { where: {
-    _id: {
-      $in: bookings.map((booking: any) => booking.get('listing')),
+  };
+  const listingFilter = bookings && {
+    where: {
+      _id: {
+        $in: bookings.map((booking: any) => booking.get('listing')),
+      },
     },
-  } };
-  const userFilter = bookings && { where: {
-    _id: {
-      $in: bookings.map((booking: any) => booking.get('createdBy')),
+  };
+  const userFilter = bookings && {
+    where: {
+      _id: {
+        $in: bookings.map((booking: any) => booking.get('createdBy')),
+      },
     },
-  } };
+  };
   const error = bookings && bookings.get('error');
-
 
   const allBookings = platform.booking.find({
     where: filter.where,
@@ -56,7 +62,7 @@ const Bookings = ({ filter, page, setPage, isPagination }: Props) => {
         where: filter.where,
         limit: MAX_BOOKINGS_TO_FETCH,
       }),
-      setLoading(true);
+        setLoading(true);
       if (bookings) {
         await Promise.all([
           platform.event.get(eventsFilter),
@@ -114,14 +120,20 @@ const Bookings = ({ filter, page, setPage, isPagination }: Props) => {
                 <p className="mt-4">{__('no_bookings')}</p>
               ) : (
                 bookings.map((booking: any) => {
-                  const listing = platform.listing.findOne(booking.get('listing'));
+                  const listing = platform.listing.findOne(
+                    booking.get('listing'),
+                  );
                   const listingName = listing
                     ? listing.get('name')
                     : __('no_listing_type');
                   const user = platform.user.findOne(booking.get('createdBy'));
-                  const currentEvent = platform.event.findOne(booking.get('eventId'));
+                  const currentEvent = platform.event.findOne(
+                    booking.get('eventId'),
+                  );
 
-                  const currentVolunteer = platform.volunteer.findOne(booking.get('volunteerId'));
+                  const currentVolunteer = platform.volunteer.findOne(
+                    booking.get('volunteerId'),
+                  );
                   let link;
                   if (currentEvent) {
                     link = currentEvent && `/events/${currentEvent.slug}`;
@@ -136,12 +148,16 @@ const Bookings = ({ filter, page, setPage, isPagination }: Props) => {
                       key={booking.get('_id')}
                       booking={platform.booking.findOne(booking.get('_id'))}
                       listingName={listingName}
-                      userInfo={user && {
-                        name: user.get('screenname'),
-                        photo: user.get('photo')
-                      }}
+                      userInfo={
+                        user && {
+                          name: user.get('screenname'),
+                          photo: user.get('photo'),
+                        }
+                      }
                       eventName={currentEvent && currentEvent.get('name')}
-                      volunteerName={currentVolunteer && currentVolunteer.get('name')}
+                      volunteerName={
+                        currentVolunteer && currentVolunteer.get('name')
+                      }
                       link={link}
                     />
                   );

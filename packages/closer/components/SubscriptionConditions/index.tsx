@@ -51,7 +51,11 @@ const SubscriptionConditions = ({
         }
       >
         {__('subscriptions_checkout_comply_with')}{' '}
-        <Link href="/legal/terms" className="text-primary underline" target="_blank">
+        <Link
+          href="/legal/terms"
+          className="text-primary underline"
+          target="_blank"
+        >
           {__('subscriptions_checkout_subscription_terms')}
         </Link>
       </Checkbox>

@@ -1,6 +1,7 @@
 import { Dispatch, SetStateAction } from 'react';
 
 import { CloserCurrencies } from '../../../types';
+import { capitalizeFirstLetter } from '../../../utils/learn.helpers';
 
 interface Props {
   options: string[] | null;
@@ -52,7 +53,7 @@ const Switcher = ({
               `}
               key={option}
             >
-              {optionsTitles ? optionsTitles[i] : option}
+              {optionsTitles ? optionsTitles[i] : capitalizeFirstLetter(option)}
             </button>
           ))}
         </div>

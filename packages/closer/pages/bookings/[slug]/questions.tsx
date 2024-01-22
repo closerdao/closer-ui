@@ -16,6 +16,7 @@ import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import { useConfig } from '../../../hooks/useConfig';
 import { BaseBookingParams, Booking, Question } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
@@ -36,6 +37,7 @@ interface Props extends BaseBookingParams {
 }
 
 const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
+  const { enabledConfigs } = useConfig();
   const router = useRouter();
   const { goBack } = router.query;
   const { isAuthenticated } = useAuth();
@@ -136,7 +138,10 @@ const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
     return '';
   };
 
-  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
+    !enabledConfigs.includes('booking')
+  ) {
     return <PageNotFound />;
   }
 

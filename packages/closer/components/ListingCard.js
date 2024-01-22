@@ -22,7 +22,7 @@ const ListingCard = ({
   const router = useRouter();
   const { name, description, rentalFiat, rentalToken, utilityFiat, available } =
     listing;
-
+  
   const [firstPHtml, setFirstPHtml] = useState('');
 
   // const firstParagraphHTML = extractFirstParagraph(description);

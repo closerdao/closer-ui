@@ -5,11 +5,13 @@ import EditModel from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
 
 import PageNotFound from '../../404';
+import { useConfig } from '../../../hooks/useConfig';
 import models from '../../../models';
 import api from '../../../utils/api';
 import { __ } from '../../../utils/helpers';
 
 const EditEvent = ({ event }) => {
+  const { enabledConfigs } = useConfig();
   const router = useRouter();
   const onUpdate = async (name, value, option, actionType) => {
     if (actionType === 'ADD' && name === 'visibleBy' && option._id) {
@@ -20,7 +22,10 @@ const EditEvent = ({ event }) => {
     return <Heading>{__('bookings_edit_slug_not_found')}</Heading>;
   }
 
-  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
+    !enabledConfigs.includes('booking')
+  ) {
     return <PageNotFound />;
   }
 

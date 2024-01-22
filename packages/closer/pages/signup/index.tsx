@@ -18,12 +18,14 @@ import { SubscriptionPlan } from '../../types/subscriptions';
 import api, { cdn } from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
+import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
   subscriptionPlans: SubscriptionPlan[];
 }
 
 const Signup = ({ subscriptionPlans }: Props) => {
+  subscriptionPlans = prepareSubscriptions(subscriptionPlans);
   const config = useConfig();
   const { APP_NAME } = config || {};
 
@@ -66,9 +68,10 @@ const Signup = ({ subscriptionPlans }: Props) => {
   return (
     <>
       <Head>
-        <title>{__('signup_title')}</title>
+        <title>{__('signup_title', APP_NAME)}</title>
       </Head>
       <main className="main-content mt-12 px-4 max-w-4xl mx-auto">
+        
         {process.env.NEXT_PUBLIC_REGISTRATION_MODE === 'curated' ? (
           <ApplicationForm />
         ) : (
@@ -88,7 +91,7 @@ const Signup = ({ subscriptionPlans }: Props) => {
                       {defaultSubscriptionPlan?.description}
                     </Heading>
                     <ul className="mb-4">
-                      {defaultSubscriptionPlan?.perks.map((perk) => {
+                      {defaultSubscriptionPlan?.perks.split(',').map((perk) => {
                         return (
                           <li
                             key={perk}
@@ -136,8 +139,6 @@ const Signup = ({ subscriptionPlans }: Props) => {
                         </div>
                       </Card>
                     </div>
-
-       
                   </div>
                 )}
               </div>
@@ -159,7 +160,7 @@ Signup.getInitialProps = async () => {
     } = await api.get('/config/subscriptions');
 
     return {
-      subscriptionPlans: subscriptions.value.plans,
+      subscriptionPlans: subscriptions.value,
     };
   } catch (err: unknown) {
     return {

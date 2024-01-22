@@ -11,6 +11,7 @@ import { ParsedUrlQuery } from 'querystring';
 import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
+import { useConfig } from '../../../hooks/useConfig';
 import { BaseBookingParams, Booking } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
@@ -22,6 +23,7 @@ interface Props extends BaseBookingParams {
 }
 
 const BookingCancelPage = ({ booking, error }: Props) => {
+  const { enabledConfigs } = useConfig();
   const router = useRouter();
   const bookingId = router.query.slug;
   const bookingPrice = booking?.total || {
@@ -30,7 +32,7 @@ const BookingCancelPage = ({ booking, error }: Props) => {
   };
   const { isAuthenticated, user } = useAuth();
   const isMember = user?.roles.includes('member');
-  const [policy, setPolicy] = useState(null);
+  const [policy, setPolicy] = useState<any>(null);
   const [isPolicyLoading, setPolicyLoading] = useState(false);
   const [isCancelCompleted, setCancelCompleted] = useState(false);
   const refundTotal = calculateRefundTotal({
@@ -48,9 +50,13 @@ const BookingCancelPage = ({ booking, error }: Props) => {
           data: { results: loadPolicy },
         } = await api.get('/config/booking');
 
-        const policy = loadPolicy.value.cancellationPolicy;
+        const policy = {
+          lastday: loadPolicy.value.cancellationPolicyLastday,
+          lastweek: loadPolicy.value.cancellationPolicyLastweek,
+          lastmonth: loadPolicy.value.cancellationPolicyLastmonth,
+          default: loadPolicy.value.cancellationPolicyDefault,
+        };
 
-        console.log('policy=', policy);
         setPolicy(policy);
       } catch (error) {
         console.log(error);
@@ -63,7 +69,12 @@ const BookingCancelPage = ({ booking, error }: Props) => {
     }
   }, [user]);
 
-  if (!booking || error || process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+  if (
+    !booking ||
+    error ||
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
+    !enabledConfigs.includes('booking')
+  ) {
     return <PageNotFound />;
   }
 
