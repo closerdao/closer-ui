@@ -101,8 +101,8 @@ const StayPage = ({ settings }: Props) => {
           </ul> */}
 
           {/* TODO - this needs to be pulled from Config once its merged! */}
-          <Heading display>
-            Principles
+          <Heading display className="mb-4">
+            Game rules
           </Heading>
           <ul className="mb-4 max-w-prose">
             <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
@@ -115,25 +115,25 @@ const StayPage = ({ settings }: Props) => {
               <b>Consent:</b> Bring awareness to your boundaries and needs and respect those of others. If it’s not a fuck yes it’s a no.
             </li>
             <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-              <b>Gifting:</b> This is a radical experiment in gifting economy. Except for food and laundry services at center camp, there will be no monetary transactions in the space. Ask yourself - what is your deepest gift that you can share?
+              <b>Gifting:</b> This is a radical experiment in the gifting economy. Except for food and laundry services at center camp, there will be no monetary transactions in the space. Ask yourself - what is your deepest gift that you can share?
             </li>
             <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-              <b>Radical Self-expression:</b> We have a cabinet of transformation where you can dress up - but please bring some funky outfits
+              <b>Radical Self-expression:</b> We have a cabinet of transformation where you can dress up - but please bring some funky outfits 🎎
             </li>
             <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
               <b>De-commodification:</b> In order to preserve the spirit of gifting, our community seeks to create social environments that are unmediated by commercial sponsorships, transactions, or advertising. We stand ready to protect our culture from such exploitation. We resist the substitution of consumption for participatory experience.
             </li>
             <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-              <b>Radical Self-reliance:</b> When you come to TDF, you are responsible for your own survival, safety, comfort, and well-being. There is food and drinks available at the center camp.
+              <b>Radical Self-reliance:</b> When you come to TDF, you are responsible for your own survival, safety, comfort, and well-being. There is food and drinks available for sale at the center camp, and you are also welcome to bring your own food - but please note that <i>we do not provide a kitchen, and that bringing alcohol to the playground is not allowed</i>.
             </li>
             <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
               <b>Communal Effort:</b> Our community values creative cooperation and collaboration. We strive to produce, promote and protect social networks, public spaces, works of art, and methods of communication that support such interaction.
             </li>
             <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-              <b>Civic Responsibility:</b> TDF is nested within the village of Abela. You are invited to meet our neighbours, and please be respectful and aware that their needs may be different to yours.
+              <b>Civic Responsibility:</b> TDF is nested within the village of Abela. You are invited to meet our neighbors, and please be respectful and aware that their needs may be different to yours.
             </li>
             <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-              <b>Participation:</b> We believe that transformative change, whether in the individual or in society, can occur only through the medium of deeply personal participation. We achieve being through doing. Everyone is invited to work. All participants are asked a very simple rule. Show up for our standup at 9am, and gift <b>4 hours of your time</b> to the common creation.
+              <b>Participation:</b> We believe that transformative change, whether in the individual or in society, can occur only through the medium of deeply personal participation. We achieve being through doing. Everyone is invited to work. All participants are asked a very simple rule. Show up for our standup at 9am, and give <i>4 hours of your time</i> to the common creation.
             </li>
           </ul>
           <div>
