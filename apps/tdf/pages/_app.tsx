@@ -146,8 +146,6 @@ MyApp.getInitialProps = async (context: AppContext) => {
   const ctx = await App.getInitialProps(context);
   const allConfigs = await api.get('/config');
 
-  console.log('allConfigs', allConfigs);
-
   const configGeneral = allConfigs.data.results.find(
     (config: any) => config.slug === 'general',
   ).value;
