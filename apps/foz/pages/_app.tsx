@@ -5,7 +5,6 @@ import Script from 'next/script';
 
 import { useEffect } from 'react';
 import CookieConsent from 'react-cookie-consent';
-import { prepareGeneralConfig } from 'closer/utils/app.helpers';
 
 import { ErrorBoundary, Layout } from '@/components';
 
@@ -26,12 +25,14 @@ import {
 } from 'closer';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import 'closer/public/styles.css';
+import { prepareGeneralConfig } from 'closer/utils/app.helpers';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import appConfig from '../config';
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
+  enabledConfigs: string[];
 }
 
 export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
@@ -39,7 +40,12 @@ export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
   return library;
 }
 
-const MyApp = ({ Component, pageProps, configGeneral }: AppOwnProps) => {
+const MyApp = ({
+  Component,
+  pageProps,
+  configGeneral,
+  enabledConfigs,
+}: AppOwnProps) => {
   const config = prepareGeneralConfig(configGeneral);
 
   const { FACEBOOK_PIXEL_ID } = config || {};
@@ -74,7 +80,14 @@ fbq('track', 'PageView');
         }}
       />
 
-      <ConfigProvider config={{ ...config, ...blockchainConfig, ...appConfig }}>
+      <ConfigProvider
+        config={{
+          ...config,
+          ...blockchainConfig,
+          ...appConfig,
+          enabledConfigs,
+        }}
+      >
         <ErrorBoundary>
           <AuthProvider>
             <PlatformProvider>
@@ -118,11 +131,20 @@ fbq('track', 'PageView');
 // TODO in the future: either migrate to App directory or do SSR data fetching on each page that uses general configs
 MyApp.getInitialProps = async (context: AppContext) => {
   const ctx = await App.getInitialProps(context);
-  const configGeneral = await api.get('/config/general');
+  const allConfigs = await api.get('/config');
+
+  const configGeneral = allConfigs.data.results.find(
+    (config: any) => config.slug === 'general',
+  ).value;
+
+  const enabledConfigs = allConfigs.data.results
+    .filter((config: any) => config.value.enabled)
+    .map((config: any) => config.slug);
 
   return {
     ...ctx,
-    configGeneral: configGeneral.data.results.value,
+    configGeneral,
+    enabledConfigs,
   };
 };
 
