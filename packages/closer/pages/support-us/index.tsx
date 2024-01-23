@@ -24,6 +24,7 @@ import { event } from 'nextjs-google-analytics';
 
 import PageNotFound from '../404';
 import { usePlatform } from '../../contexts/platform';
+import { useConfig } from '../../hooks/useConfig';
 import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
 
@@ -37,11 +38,12 @@ interface Props {
     buy5TdfUrl: string;
     buy10TdfUrl: string;
     hostEventUrl: string;
-    enabled: boolean
+    enabled: boolean;
   };
 }
 
 const SupportUsPage = ({ fundraisingConfig }: Props) => {
+  const { enabledConfigs } = useConfig();
   const { platform }: any = usePlatform();
   const wandererFilter = {
     where: { 'subscription.plan': 'wanderer' },
@@ -78,7 +80,10 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
     }
   };
 
-  if (process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US !== 'true' ||
+    !enabledConfigs?.includes('support-us')
+  ) {
     return <PageNotFound />;
   }
 
@@ -345,9 +350,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               raise your voice on important topics.
             </p>
             <LinkButton
-              href={
-                fundraisingConfig.buy5TdfUrl || '/token/checkout?tokens=5'
-              }
+              href={fundraisingConfig.buy5TdfUrl || '/token/checkout?tokens=5'}
               className="w-[240px]"
             >
               ~€1250
@@ -364,8 +367,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             </p>
             <LinkButton
               href={
-                fundraisingConfig.buy10TdfUrl ||
-                '/token/checkout?tokens=10'
+                fundraisingConfig.buy10TdfUrl || '/token/checkout?tokens=10'
               }
               className="w-[240px]"
             >
