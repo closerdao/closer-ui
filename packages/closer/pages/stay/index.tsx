@@ -133,7 +133,7 @@ const StayPage = ({ settings }: Props) => {
               <b>Civic Responsibility:</b> TDF is nested within the village of Abela. You are invited to meet our neighbours, and please be respectful and aware that their needs may be different to yours.
             </li>
             <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-              <b>Participation:</b> We believe that transformative change, whether in the individual or in society, can occur only through the medium of deeply personal participation. We achieve being through doing. Everyone is invited to work. All participants are asked a very simple rule. Show up for our standup at 9am, and gift 4 hours of your time to the common creation.
+              <b>Participation:</b> We believe that transformative change, whether in the individual or in society, can occur only through the medium of deeply personal participation. We achieve being through doing. Everyone is invited to work. All participants are asked a very simple rule. Show up for our standup at 9am, and gift <b>4 hours of your time</b> to the common creation.
             </li>
           </ul>
           <div>
@@ -144,7 +144,9 @@ const StayPage = ({ settings }: Props) => {
               {__('buttons_apply_to_stay')}
             </Link>
           </div>
-          <p className="text-sm max-w-prose mt-4"><i>{'Psss - can\'t volunteer 9-13? Email space@traditionaldreamfactory.com to arrange a paid stay or see if you an work other times.'}</i></p>
+          <p className="text-sm max-w-prose mt-4">
+            <i>{'Psss - can\'t volunteer 9-13? Email space@traditionaldreamfactory.com to arrange a paid stay or see if you an work other times.'}</i>
+          </p>
         </div>
       </section>
       <section className="max-w-6xl mx-auto mb-16">
