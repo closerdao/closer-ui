@@ -99,7 +99,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
 
   if (
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true' ||
-    !enabledConfigs.includes('subscriptions')
+    (enabledConfigs && !enabledConfigs.includes('subscriptions'))
   ) {
     return <Page404 error="" />;
   }
@@ -181,7 +181,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
               {__('subscriptions_checkout_payment_subtitle')}
             </Heading>
             <div className="mb-10">
-              {enabledConfigs.includes('payment') && (
+              {enabledConfigs && enabledConfigs.includes('payment') && (
                 <Elements stripe={stripePromise}>
                   <SubscriptionCheckoutForm
                     userEmail={user?.email}

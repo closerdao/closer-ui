@@ -101,7 +101,7 @@ const BookingPage = ({
   if (
     !booking ||
     process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
-    !enabledConfigs.includes('booking') ||
+    (enabledConfigs && !enabledConfigs.includes('booking')) ||
     (user?._id !== booking.createdBy && !isSpaceHost)
   ) {
     return <PageNotFound />;

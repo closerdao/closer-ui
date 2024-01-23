@@ -43,7 +43,7 @@ const Navigation = () => {
       <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
         <Logo />
         <div className="flex gap-3 w-auto justify-center items-center ">
-          {enabledConfigs.includes('booking') && (
+          {enabledConfigs && enabledConfigs.includes('booking') && (
             <Button
               onClick={() => router.push('/stay')}
               size="small"

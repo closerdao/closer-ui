@@ -34,7 +34,7 @@ const BookingsRequests = () => {
 
   if (
     process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
-    !enabledConfigs.includes('booking')
+    (enabledConfigs && !enabledConfigs.includes('booking'))
   ) {
     return <PageNotFound />;
   }

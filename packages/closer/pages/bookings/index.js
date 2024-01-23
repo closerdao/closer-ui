@@ -5,8 +5,8 @@ import Tabs from '../../components/Tabs';
 
 import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
-import { __ } from '../../utils/helpers';
 import { useConfig } from '../../hooks/useConfig';
+import { __ } from '../../utils/helpers';
 
 const bookingsToShowLimit = 50;
 
@@ -45,7 +45,7 @@ const BookingsDirectory = () => {
 
   if (
     process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
-    !enabledConfigs.includes('booking')
+    (enabledConfigs && !enabledConfigs.includes('booking'))
   ) {
     return <PageNotFound />;
   }

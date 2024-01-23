@@ -56,11 +56,12 @@ const MemberMenu = () => {
 
   const areSubscriptionsEnabled =
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true' &&
+    enabledConfigs &&
     enabledConfigs.includes('subscriptions');
   const isBookingEnabled =
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true' &&
+    enabledConfigs &&
     enabledConfigs.includes('booking');
-
 
   const links = [
     {

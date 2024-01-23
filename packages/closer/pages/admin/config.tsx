@@ -68,7 +68,7 @@ const ConfigPage = () => {
 
   const handleToggleConfig = (configCategory: string) => {
     let shouldEnable = false;
-    if (enabledConfigs.includes(configCategory)) {
+    if (enabledConfigs && enabledConfigs.includes(configCategory)) {
       setEnabledConfigs(
         enabledConfigs.filter((item: string) => item !== configCategory),
       );
@@ -229,7 +229,9 @@ const ConfigPage = () => {
                     <Checkbox
                       isEnabled={currentConfig !== 'general'}
                       id={currentConfig}
-                      isChecked={enabledConfigs.includes(currentConfig)}
+                      isChecked={
+                        enabledConfigs && enabledConfigs.includes(currentConfig)
+                      }
                       onChange={() => handleToggleConfig(currentConfig)}
                       className="mb-4"
                     >

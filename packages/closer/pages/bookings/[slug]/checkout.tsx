@@ -139,7 +139,7 @@ const Checkout = ({ booking, listing, error, event }: Props) => {
 
   if (
     process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
-    !enabledConfigs.includes('booking')
+    (enabledConfigs && !enabledConfigs.includes('booking'))
   ) {
     return <PageNotFound />;
   }
@@ -240,6 +240,7 @@ const Checkout = ({ booking, listing, error, event }: Props) => {
           <CheckoutTotal total={updatedTotal} />
 
           {booking.total.val > 0 ? (
+            enabledConfigs &&
             enabledConfigs.includes('payment') && (
               <CheckoutPayment
                 bookingId={booking._id}

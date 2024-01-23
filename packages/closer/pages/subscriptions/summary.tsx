@@ -117,7 +117,7 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
 
   if (
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true' ||
-    !enabledConfigs.includes('subscriptions')
+    (enabledConfigs && !enabledConfigs.includes('subscriptions'))
   ) {
     return <Page404 error="" />;
   }
