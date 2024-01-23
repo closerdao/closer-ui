@@ -9,7 +9,7 @@ import EventDescription from '../../../components/EventDescription';
 import EventPhoto from '../../../components/EventPhoto';
 import Photo from '../../../components/Photo';
 import UploadPhoto from '../../../components/UploadPhoto/UploadPhoto';
-import { Card, Information, LinkButton } from '../../../components/ui';
+import { Card, LinkButton } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
@@ -53,6 +53,7 @@ const EventPage = ({
   const [photo, setPhoto] = useState(event && event.photo);
   const [password, setPassword] = useState('');
   const [attendees, setAttendees] = useState(event && (event.attendees || []));
+  const [foodOption] = useState(event.foodOption || 'no_food');
 
   const canEditEvent = user
     ? user?._id === event?.createdBy || user?.roles.includes('admin')
@@ -78,7 +79,7 @@ const EventPage = ({
   const dateFormat = isThisYear ? 'MMM D' : 'YYYY MMMM';
 
   const durationInDays = dayjs(end).diff(dayjs(start), 'day');
-  const durationRateDays = durationInDays >= 28 ? 30 : durationInDays > 7 ? 7 : 1;
+  // const durationRateDays = durationInDays >= 28 ? 30 : durationInDays > 7 ? 7 : 1;
   const durationName = durationInDays >= 28 ?
     'monthly' :
     durationInDays > 7 ?
@@ -381,7 +382,6 @@ const EventPage = ({
                         }
                         {durationInDays > 0 && (
                           <>
-                            <Information>{__('events_disclaimer')}</Information>
                             <div className="text-sm">
                               {__('events_accommodation')}{' '}
                               <strong>
@@ -392,7 +392,7 @@ const EventPage = ({
                             <div className="text-sm">
                               {__('events_utility')}{' '}
                               <strong>
-                                {priceFormat(durationInDays * dailyUtilityFee)}
+                                  {foodOption === 'no_food' ? __('stay_food_not_included') : priceFormat(durationInDays * dailyUtilityFee)}
                               </strong>
                             </div>
                           </>
