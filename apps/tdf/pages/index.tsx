@@ -38,7 +38,7 @@ const HomePage = () => {
         />
       </Head>
       <section>
-        <div className="max-w-6xl mx-auto w-full px-4 md:h-full py-32 text-2xl">
+        <div className="max-w-6xl mx-auto w-full px-4 md:h-full py-32 text-xl md:text-2xl">
           <div className="max-w-prose">
             <Heading
               className="text-3xl sm:text-4xl md:text-5xl mb-6"
@@ -56,77 +56,11 @@ const HomePage = () => {
             <p className="mb-4">Technology is increasingly making obsolete the notion that we should have a society that distributes it’s value based on productivity. As AI and AGI rise, some see doom and loss of jobs. We see a future where humans are focused on building things out of love rather than out of necessity. We see a future where machines will be doing the bulk of manual labor and humans will choose to surround themselves by nature.</p>
             <p className="mb-4"> We see a future where <b>play</b> becomes our primary way of being.</p>
             <p className="mb-8">Join us on this experiment, opening Feb 9.</p>
-
-            <Heading display>
-              Principles
-            </Heading>
-            <ul className="mb-4">
-              <li className="mb-6">
-                <Heading level={4} className="text-2xl" display>
-                  Radical Inclusion
-                </Heading>
-                <p>Anyone may be a part of TDF. We welcome the diversity of individuals. Anyone believing in our common dream may join.</p>
-              </li>
-              <li className="mb-6">
-                <Heading level={4} className="text-2xl" display>
-                  Leave a positive trace
-                </Heading>
-                <p>We are a regenerative playground. So far we’ve planted over 3000 trees and shrubs, with 60+ species. Come and leave a mark that future generations will appreciate.</p>
-              </li>
-              <li className="mb-6">
-                <Heading level={4} className="text-2xl" display>
-                  Consent
-                </Heading>
-                <p>Bring awareness to your boundaries and needs and respect those of others. If it’s not a fuck yes it’s a no.</p>
-              </li>
-              <li className="mb-6">
-                <Heading level={4} className="text-2xl" display>
-                  Gifting
-                </Heading>
-                <p>This is a radical experiment in gifting economy. Except for food and laundry services at center camp, there will be no monetary transactions in the space. Ask yourself - what is your deepest gift that you can share?</p>
-              </li>
-              <li className="mb-6">
-                <Heading level={4} className="text-2xl" display>
-                  Radical Self-expression
-                </Heading>
-                <p>We have a cabinet of transformation where you can dress up - but please bring some funky outfits</p>
-              </li>
-              <li className="mb-6">
-                <Heading level={4} className="text-2xl" display>
-                  De-commodification
-                </Heading>
-                <p>In order to preserve the spirit of gifting, our community seeks to create social environments that are unmediated by commercial sponsorships, transactions, or advertising. We stand ready to protect our culture from such exploitation. We resist the substitution of consumption for participatory experience.</p>
-              </li>
-              <li className="mb-6">
-                <Heading level={4} className="text-2xl" display>
-                  Radical Interdependence
-                </Heading>
-                <p>We all depend on each other and on nature to thrive. We embrace our</p>
-              </li>
-              <li className="mb-6">
-                <Heading level={4} className="text-2xl" display>
-                  Communal Effort
-                </Heading>
-                <p>Our community values creative cooperation and collaboration. We strive to produce, promote and protect social networks, public spaces, works of art, and methods of communication that support such interaction.</p>
-              </li>
-              <li className="mb-6">
-                <Heading level={4} className="text-2xl" display>
-                  Civic Responsibility
-                </Heading>
-                <p>TDF is nested within the village of Abela. You are invited to meet our neighbours, and please be respectful and aware that their needs may be different to yours.</p>
-              </li>
-              <li className="mb-6">
-                <Heading level={4} className="text-2xl" display>
-                  Participation
-                </Heading>
-                <p>We believe that transformative change, whether in the individual or in society, can occur only through the medium of deeply personal participation. We achieve being through doing. Everyone is invited to work. All participants are asked a very simple rule. Show up for our standup at 9am, and gift 4 hours of your time to the common creation.</p>
-              </li>
-            </ul>
           </div>
-          <div className="flex justify-center flex-col md:flex-row align-center mt-12 text-center">
+          <div className="flex justify-start flex-col md:flex-row align-center mt-12 text-center">
             <Link
               href={ctaButton.link}
-              className="bg-accent text-white rounded-full uppercase py-2.5 px-8 text-3xl"
+              className="bg-accent text-white rounded-full py-2.5 px-8 text-2xl"
               onClick={() =>
                 event('click', {
                   category: 'HomePage',
@@ -134,7 +68,7 @@ const HomePage = () => {
                 })
               }
             >
-              Play
+              I want to play!
             </Link>
           </div>
         </div>
