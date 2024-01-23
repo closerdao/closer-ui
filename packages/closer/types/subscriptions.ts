@@ -12,20 +12,27 @@ export interface Tier {
 }
 
 export interface SubscriptionPlan {
-  slug?: string;
+  slug: string;
   title: string;
-  available?: boolean;
-  emoji: string;
+  emoji?: string;
   description: string;
   priceId: string;
   tier: number;
-  monthlyCredits: number;
+  monthlyCredits?: number;
   price: number;
-  perks: string[];
+  available: boolean;
+  tiersAvailable: boolean;
+  perks: string;
   billingPeriod: string;
-  variants?: SubscriptionVariant[];
-  tiers?: Tier[];
+  tiers?: string ;
+  variants?: SubscriptionVariant;
   note?: string;
+}
+
+export interface Tier {
+  unitPrice: number;
+  minAmount: number;
+  maxAmount: number;
 }
 
 export interface Subscriptions {
@@ -40,6 +47,7 @@ export interface SelectedPlan {
   title: string;
   monthlyCredits: number;
   price: number;
+  tiersAvailable: boolean;
   variants?: SubscriptionVariant[];
   tiers?: Tier[];
 }

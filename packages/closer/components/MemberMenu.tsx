@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react';
 
 import { useAuth } from '../contexts/auth';
+import { useConfig } from '../hooks/useConfig';
 import { NavigationLink } from '../types/nav';
 import { __ } from '../utils/helpers';
-import { links } from '../utils/navigation';
+// import { links } from '../utils/navigation';
 import Profile from './Profile';
 import ReportABug from './ReportABug';
 import Wallet from './Wallet';
 import NavLink from './ui/NavLink';
 import Switcher from './ui/Switcher';
 
-const filterLinks = (option: string, roles: string[]) => {
+const filterLinks = (links: any[], option: string, roles: string[]) => {
   switch (option) {
     case 'Guest':
     case 'member':
@@ -40,13 +41,136 @@ const filterLinks = (option: string, roles: string[]) => {
     case 'Admin':
       return links.filter((link: NavigationLink) => {
         if (link.roles) {
-          return roles.includes(link.roles[0]) && link.roles[0] !== 'member';
+          return (
+            roles.includes(link.roles[0]) &&
+            link.roles[0] !== 'member' &&
+            link.enabled
+          );
         }
       });
   }
 };
 
 const MemberMenu = () => {
+  const { enabledConfigs } = useConfig();
+
+  const areSubscriptionsEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true' &&
+    enabledConfigs &&
+    enabledConfigs.includes('subscriptions');
+  const isBookingEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true' &&
+    enabledConfigs &&
+    enabledConfigs.includes('booking');
+
+  const links = [
+    {
+      label: 'Subscriptions',
+      url: '/subscriptions',
+      enabled: areSubscriptionsEnabled,
+    },
+    {
+      label: 'Events',
+      url: '/events',
+      enabled: true,
+    },
+    {
+      label: 'Volunteer',
+      url: '/volunteer',
+      enabled: true,
+    },
+    {
+      label: 'Booking requests',
+      url: '/bookings/requests',
+      enabled: isBookingEnabled,
+      roles: ['space-host'],
+    },
+    {
+      label: 'Current bookings',
+      url: '/bookings/current',
+      enabled: isBookingEnabled,
+      roles: ['space-host'],
+    },
+    {
+      label: 'All bookings',
+      url: '/bookings/all',
+      enabled: isBookingEnabled,
+      roles: ['space-host'],
+    },
+    {
+      label: 'Edit listings',
+      url: '/listings',
+      enabled: isBookingEnabled,
+      roles: ['space-host'],
+    },
+    {
+      label: 'Book a stay',
+      url: '/stay',
+      enabled: isBookingEnabled,
+    },
+    // {
+    //   label: 'Invest',
+    //   url: '/token',
+    //   enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
+    // },
+    {
+      label: 'My bookings',
+      url: '/bookings',
+      enabled: isBookingEnabled,
+    },
+    {
+      label: 'Refer a friend',
+      url: '/settings/referrals',
+      enabled: process.env.NEXT_PUBLIC_FEATURE_REFERRAL === 'true',
+    },
+    {
+      label: 'Governance',
+      url: 'https://snapshot.org/#/traditionaldreamfactory.eth',
+      target: '_blank',
+      enabled: true,
+      roles: ['member'],
+    },
+    {
+      label: 'User list',
+      url: '/admin/manage-users',
+      enabled: true,
+      roles: ['admin'],
+    },
+    {
+      label: 'New event',
+      url: '/events/create',
+      enabled: true,
+      roles: ['event-creator'],
+    },
+    {
+      label: 'New volunteer',
+      url: '/volunteer/create',
+      enabled: true,
+      roles: ['steward'],
+    },
+    {
+      label: 'Resources',
+      url: '/resources',
+      enabled: true,
+    },
+    {
+      label: 'Learning hub',
+      url: '/learn/category/all',
+      enabled: process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true',
+    },
+    {
+      label: 'Blog',
+      url: '/blog',
+      enabled: process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true',
+    },
+    {
+      label: 'Platform settings',
+      url: '/admin/config',
+      enabled: true,
+      roles: ['admin'],
+    },
+  ];
+
   const { user, logout } = useAuth();
   const [navOptions, setNavOptions] = useState(['guest']);
   const [selectedSwitcherOption, setSelectedSwitcherOption] = useState('Guest');
@@ -75,7 +199,9 @@ const MemberMenu = () => {
   }, [user]);
 
   useEffect(() => {
-    setFilteredLinks(filterLinks(selectedSwitcherOption, user?.roles || []));
+    setFilteredLinks(
+      filterLinks(links, selectedSwitcherOption, user?.roles || []),
+    );
   }, [selectedSwitcherOption]);
 
   const isWalletEnabled =

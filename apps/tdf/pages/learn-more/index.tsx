@@ -14,14 +14,17 @@ import { Button, Card, Heading, Tag, YoutubeEmbed } from 'closer';
 import { SubscriptionPlan } from 'closer/types/subscriptions';
 import api from 'closer/utils/api';
 import { __ } from 'closer/utils/helpers';
+import { prepareSubscriptions } from 'closer/utils/subscriptions.helpers';
 import { event } from 'nextjs-google-analytics';
 
 const loadTime = new Date();
 
 interface Props {
-  subscriptionPlans: SubscriptionPlan[];
+  subscriptionsConfig: { enabled: boolean; plans: SubscriptionPlan[] };
 }
-const LearnMorePage = ({ subscriptionPlans }: Props) => {
+const LearnMorePage = ({ subscriptionsConfig }: Props) => {
+  const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
+
   return (
     <div>
       <Head>
@@ -786,7 +789,7 @@ const LearnMorePage = ({ subscriptionPlans }: Props) => {
                     ) : (
                       <div className="w-full text-left ">
                         <ul className="mb-4 w-full">
-                          {plan.perks.map((perk) => {
+                          {plan.perks.split(',').map((perk) => {
                             return (
                               <li
                                 key={perk}
@@ -992,11 +995,11 @@ LearnMorePage.getInitialProps = async () => {
     } = await api.get('/config/subscriptions');
 
     return {
-      subscriptionPlans: subscriptions.value.plans,
+      subscriptionsConfig: subscriptions.value,
     };
   } catch (err) {
     return {
-      subscriptionPlans: [],
+      subscriptionsConfig: { enabled: false, plans: [] },
       error: err,
     };
   }

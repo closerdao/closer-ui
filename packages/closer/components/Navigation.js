@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import { useAuth } from '../contexts/auth';
+import { useConfig } from '../hooks/useConfig';
 import { __ } from '../utils/helpers';
 import GuestMenu from './GuestMenu';
 import Logo from './Logo';
@@ -13,8 +14,9 @@ import ProfilePhoto from './ProfilePhoto';
 import { Button } from './ui';
 
 const Navigation = () => {
+  const { enabledConfigs } = useConfig();
   const [navOpen, setNavOpen] = useState(false);
-  
+
   const toggleNav = () => {
     setNavOpen((isOpen) => !isOpen);
   };
@@ -41,18 +43,21 @@ const Navigation = () => {
       <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
         <Logo />
         <div className="flex gap-3 w-auto justify-center items-center ">
-          <Button
-            onClick={() => router.push('/stay')}
-            size="small"
-            type="primary"
-          >
-            {isAuthenticated ? __('navigation_stay') : __('navigation_visit') }
-          </Button>
-          {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && (
+          {enabledConfigs && enabledConfigs.includes('booking') && (
+            <Button
+              onClick={() => router.push('/stay')}
+              size="small"
+              type="primary"
+            >
+              {__('navigation_stay')}
+            </Button>
+          )}
+
+          {/* {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && (
             <Link href="/token" className="uppercase">
               {__('navigation_buy_token')}
             </Link>
-          )}
+          )} */}
 
           {isAuthenticated && (
             <Link

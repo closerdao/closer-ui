@@ -1,11 +1,13 @@
 import Summary from '@/pages/subscriptions/summary';
 import { renderWithProviders } from '@/test/utils';
+
 import { screen } from '@testing-library/react';
-import { subscriptions } from '../../mocks/subscriptions';
+
+import { subscriptionsConfig } from '../../mocks/subscriptions';
 
 describe('Subscriptions Summary', () => {
   it('should have a proper title and "Edit" and "Checkout" buttons enabled', () => {
-    renderWithProviders(<Summary subscriptionPlans={subscriptions.plans}  />);
+    renderWithProviders(<Summary subscriptionsConfig={subscriptionsConfig} />);
 
     const title = screen.getByRole('heading', {
       name: /Summary/i,
@@ -19,5 +21,4 @@ describe('Subscriptions Summary', () => {
     // expect(checkoutButton).toBeInTheDocument();
     // expect(checkoutButton).toBeEnabled();
   });
-
 });

@@ -3,12 +3,14 @@ import { useMemo } from 'react';
 import { GoogleMap, useLoadScript } from '@react-google-maps/api';
 
 interface Props {
-  location: { lat: number; lng: number };
+  locationLat: number;
+  locationLon: number;
   height?: number;
 }
 
-const GoogleMaps = ({ location, height = 450 }: Props) => {
+const GoogleMaps = ({ locationLat, locationLon, height = 450 }: Props) => {
   const libraries = useMemo(() => ['places'], []);
+  const location = { lat: Number(locationLat), lng: Number(locationLon) };
   const mapCenter = useMemo(() => location, []);
 
   const mapOptions = useMemo(
@@ -25,12 +27,16 @@ const GoogleMaps = ({ location, height = 450 }: Props) => {
     libraries: libraries as any,
   });
 
+  if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY) {
+    return null;
+  }
+
   if (!isLoaded) {
     return <p>Loading...</p>;
   }
 
   return (
-    <div>
+    <div className="min-h-16">
       <GoogleMap
         options={mapOptions}
         zoom={14}

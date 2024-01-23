@@ -1,4 +1,4 @@
-import { BookingSettings, Listing } from '../types';
+import { Listing } from '../types';
 
 const isHighSeason = (seasons: any, startDate: any) => {
   const date = new Date(startDate);
@@ -48,8 +48,8 @@ const isHighSeason = (seasons: any, startDate: any) => {
 const getMinMaxFiatPrice = (
   listings: Listing[],
 ): { min: number; max: number } => {
-  let min = listings[0].fiatPrice.val;
-  let max = listings[0].fiatPrice.val;
+  let min = listings[0]?.fiatPrice.val || 0;
+  let max = listings[0]?.fiatPrice.val || 0;
   for (const obj of listings) {
     const val = obj.fiatPrice.val;
     if (val < min) {
@@ -62,12 +62,26 @@ const getMinMaxFiatPrice = (
   return { min, max };
 };
 
+function calculateDurationDiscount(duration: number, settings: any) {
+  let discount;
+  if (duration >= 28) {
+    discount = settings.discountsMonthly.value;
+  } else if (duration >= 7) {
+    discount = settings.discountsWeekly.value;
+  } else {
+    discount = settings.discountsDaily.value;
+  }
+  return discount;
+}
+
 export const getAccommodationPriceRange = (
-  settings: BookingSettings,
+  settings: any,
   listings: Listing[],
   duration: number,
   start: any,
 ) => {
+  const durationDiscount = calculateDurationDiscount(duration, settings);
+
   const listingsAvailableForEvents = listings.filter(
     (listing: Listing) =>
       listing?.availableFor?.includes('events') ||
@@ -75,11 +89,21 @@ export const getAccommodationPriceRange = (
       !listing?.availableFor,
   );
   const minMaxValues = getMinMaxFiatPrice(listingsAvailableForEvents);
+  const seasons = {
+    high: {
+      start: settings.seasonsHighStart,
+      end: settings.seasonsHighEnd,
+      modifier: settings.seasonsHighModifier,
+    },
+  }
 
-  return isHighSeason(settings?.seasons, start)
+  return isHighSeason(seasons, start)
     ? {
-        min: minMaxValues.min * settings.seasons.high.modifier * duration,
-        max: minMaxValues.max * settings.seasons.high.modifier * duration,
+        min: minMaxValues.min * settings.seasonsHighModifier * duration,
+        max: minMaxValues.max * settings.seasonsHighModifier * duration,
       }
-    : { min: minMaxValues.min * duration, max: minMaxValues.max * duration };
+    : {
+        min: minMaxValues.min * duration,
+        max: minMaxValues.max * duration * (1 - durationDiscount),
+      };
 };

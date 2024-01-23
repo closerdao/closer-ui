@@ -1,8 +1,7 @@
 export interface NavigationLink {
-    label: string;
-    url: string;
-    target?: string;
-    enabled: boolean;
-    roles?: string[];
-  }
-  
+  label: string;
+  url: string;
+  target?: string;
+  enabled: boolean;
+  roles?: string[];
+}

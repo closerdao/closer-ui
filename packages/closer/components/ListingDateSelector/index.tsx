@@ -13,7 +13,7 @@ interface Props {
   end: string | Date | null;
   start: string | Date | null;
   isSmallScreen?: boolean;
-  blockedDateRanges?: any[]
+  blockedDateRanges?: any[];
 }
 
 const ListingDateSelector = ({
@@ -22,7 +22,7 @@ const ListingDateSelector = ({
   end,
   start,
   isSmallScreen,
-  blockedDateRanges
+  blockedDateRanges,
 }: Props) => {
   const stayDatesDropdownRef = useOutsideClick(handleClickOutsideDropdown);
 
@@ -34,11 +34,10 @@ const ListingDateSelector = ({
 
   return (
     <>
-      <div
-        ref={stayDatesDropdownRef}
-        className="static sm:relative flex-1"
-      >
-        <label className="my-2 hidden sm:block">{__('bookings_select_stay_dates')}</label>
+      <div ref={stayDatesDropdownRef} className="static sm:relative flex-1">
+        <label className="my-2 hidden sm:block">
+          {__('bookings_select_stay_dates')}
+        </label>
         <Button
           onClick={() => setShowStayDatesDropdown(!showStayDatesDropdown)}
           className="min-h-[20px] font-bold sm:font-normal underline sm:no-underline text-black border-0 sm:border-2 border-black normal-case w-auto sm:w-full py-1 px-0 sm:px-3 sm:p-3 sm:py-2 text-sm bg-white"
@@ -62,7 +61,7 @@ const ListingDateSelector = ({
           )}
         </Button>
         {showStayDatesDropdown && (
-          <div className="border border-gray-100 w-full sm:w-auto absolute z-10 right-auto left-0 sm:left-auto sm:right-0 bottom-[125px] sm:bottom-auto sm:top-auto bg-white shadow-md rounded-md p-4">
+          <div className="border border-gray-100 sm:w-auto absolute z-10 left-2 right-2 sm:left-auto bottom-[175px] sm:bottom-auto sm:top-auto bg-white shadow-md rounded-md p-3">
             <DateTimePicker
               setStartDate={setStartDate as any}
               setEndDate={setEndDate as any}

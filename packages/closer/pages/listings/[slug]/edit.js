@@ -18,7 +18,6 @@ const EditListing = ({ listing }) => {
   if (!listing) {
     return <Heading>{__('listings_slug_edit_error')}</Heading>;
   }
-  console.log('listing', listing.name);
   return (
     <>
       <Head>

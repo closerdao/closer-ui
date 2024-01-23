@@ -8,11 +8,13 @@ import Heading from '../../components/ui/Heading';
 
 import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
+import { useConfig } from '../../hooks/useConfig';
 import { __ } from '../../utils/helpers';
 
 const loadTime = new Date();
 
 const BookingsRequests = () => {
+  const { enabledConfigs } = useConfig();
   const { user } = useAuth();
   const [page, setPage] = useState(1);
 
@@ -30,7 +32,10 @@ const BookingsRequests = () => {
     return <PageNotFound error="User may not access" />;
   }
 
-  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
+    (enabledConfigs && !enabledConfigs.includes('booking'))
+  ) {
     return <PageNotFound />;
   }
 
@@ -42,7 +47,12 @@ const BookingsRequests = () => {
       <div className="max-w-screen-lg mx-auto flex flex-col gap-10">
         <Heading level={1}>{__('booking_requests_title')}</Heading>
 
-        <Bookings isPagination={false} filter={filter} setPage={setPage} page={page} />
+        <Bookings
+          isPagination={false}
+          filter={filter}
+          setPage={setPage}
+          page={page}
+        />
       </div>
     </>
   );

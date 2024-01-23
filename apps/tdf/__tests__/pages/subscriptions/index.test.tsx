@@ -3,13 +3,16 @@ import { renderWithProviders } from '@/test/utils';
 
 import { screen } from '@testing-library/react';
 
-import { subscriptions } from '../../mocks/subscriptions';
 import { listings } from '../../mocks/listings';
+import { subscriptionsConfig } from '../../mocks/subscriptions';
 
 describe('Subscriptions', () => {
   it('should have a proper title', () => {
     renderWithProviders(
-      <SubscriptionsPage listings={listings} subscriptionPlans={subscriptions.plans} />,
+      <SubscriptionsPage
+        listings={listings}
+        subscriptionsConfig={subscriptionsConfig}
+      />,
     );
 
     const title = screen.getByRole('heading', {
@@ -20,7 +23,12 @@ describe('Subscriptions', () => {
   });
 
   it('should show free plan card by default', () => {
-    renderWithProviders(<SubscriptionsPage listings={listings}  subscriptionPlans={subscriptions.plans} />);
+    renderWithProviders(
+      <SubscriptionsPage
+        listings={listings}
+        subscriptionsConfig={subscriptionsConfig}
+      />,
+    );
 
     const createAccountButton = screen.getByRole('button', {
       name: /create account/i,

@@ -33,9 +33,8 @@ interface Props extends BaseBookingParams {
 }
 
 const Summary = ({ booking, listing, event, error }: Props) => {
+  const { STAY_BOOKING_ALLOWED_PLANS, enabledConfigs } = useConfig();
   const router = useRouter();
-  const config = useConfig();
-  const { STAY_BOOKING_ALLOWED_PLANS } = config || {};
   const { isAuthenticated, user } = useAuth();
   const [handleNextError, setHandleNextError] = useState<string | null>(null);
   const [hasComplied, setCompliance] = useState(false);
@@ -102,14 +101,19 @@ const Summary = ({ booking, listing, event, error }: Props) => {
       router.push(
         `/${router.query.back}?start=${dayjs(start).format(
           dateFormat,
-        )}&end=${dayjs(end).format(dateFormat)}&adults=${adults}&useTokens=${useTokens}`,
+        )}&end=${dayjs(end).format(
+          dateFormat,
+        )}&adults=${adults}&useTokens=${useTokens}`,
       );
     } else {
       router.push(`/bookings/${booking._id}/questions?goBack=true`);
     }
   };
 
-  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
+    (enabledConfigs && !enabledConfigs.includes('booking'))
+  ) {
     return <PageNotFound />;
   }
 
