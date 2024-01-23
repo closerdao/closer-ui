@@ -58,22 +58,23 @@ const REVIEWS = [
 ];
 
 interface Props {
-  subscriptionPlans: SubscriptionPlan[];
+  subscriptionsConfig: { enabled: boolean; plans: SubscriptionPlan[] };
   listings: Listing[];
   error?: string;
 }
 
 const SubscriptionsPage: NextPage<Props> = ({
-  subscriptionPlans,
+  subscriptionsConfig,
   listings,
   error,
 }) => {
+
   const { enabledConfigs, PLATFORM_NAME } = useConfig();
   const { isAuthenticated, isLoading, user } = useAuth();
 
   const router = useRouter();
 
-  const plans: any[] = prepareSubscriptions(subscriptionPlans);
+  const plans: any[] = prepareSubscriptions(subscriptionsConfig);
 
   const [userActivePlan, setUserActivePlan] = useState<SubscriptionPlan>();
 
@@ -423,12 +424,12 @@ SubscriptionsPage.getInitialProps = async () => {
     ]);
 
     return {
-      subscriptionPlans: subscriptions.value,
+      subscriptionsConfig: subscriptions.value,
       listings: listings,
     };
   } catch (err: unknown) {
     return {
-      subscriptionPlans: [],
+      subscriptionsConfig: { enabled: false, plans: [] },
       listings: [],
       error: parseMessageFromError(err),
     };

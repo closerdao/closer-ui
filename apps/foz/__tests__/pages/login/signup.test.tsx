@@ -1,16 +1,21 @@
 import Signup from '@/pages/signup';
 
 import { render, screen } from '@testing-library/react';
-import { AuthProvider } from 'closer';
+import { AuthProvider, ConfigProvider, blockchainConfig } from 'closer';
 
-import { subscriptions } from '../../mocks/subscriptions';
+import config from '../../../config';
+import { subscriptionsConfig } from '../../mocks/subscriptions';
 
-describe.skip('Signup', () => {
+describe('Signup', () => {
   it('should have proper heading', () => {
     render(
-      <AuthProvider>
-        <Signup subscriptionPlans={subscriptions} />
-      </AuthProvider>,
+      <ConfigProvider
+        config={{ ...config, ...blockchainConfig, ...{ APP_NAME: 'tdf' } }}
+      >
+        <AuthProvider>
+          <Signup subscriptionsConfig={subscriptionsConfig} />
+        </AuthProvider>
+      </ConfigProvider>,
     );
 
     const title = screen.getByRole('heading', { level: 1 });
@@ -20,9 +25,10 @@ describe.skip('Signup', () => {
   it('should have a Create account button disabled by default', () => {
     render(
       <AuthProvider>
-        <Signup subscriptionPlans={subscriptions} />
+        <Signup subscriptionsConfig={subscriptionsConfig} />
       </AuthProvider>,
     );
+
     const button = screen.getByRole('button', { name: /sign up/i });
 
     expect(button).toBeDisabled();

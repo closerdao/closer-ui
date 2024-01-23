@@ -21,11 +21,11 @@ import { __ } from '../../utils/helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
-  subscriptionPlans: SubscriptionPlan[];
+  subscriptionsConfig: { enabled: boolean; plans: SubscriptionPlan[] };
 }
 
-const Signup = ({ subscriptionPlans }: Props) => {
-  subscriptionPlans = prepareSubscriptions(subscriptionPlans);
+const Signup = ({ subscriptionsConfig }: Props) => {
+  const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
   const config = useConfig();
   const { APP_NAME } = config || {};
 
@@ -33,7 +33,7 @@ const Signup = ({ subscriptionPlans }: Props) => {
 
   const [error, setError] = useState(false);
 
-  const defaultSubscriptionPlan = subscriptionPlans.find(
+  const defaultSubscriptionPlan = subscriptionPlans && subscriptionPlans.find(
     (plan: SubscriptionPlan) => plan.priceId === 'free',
   );
 
@@ -71,7 +71,6 @@ const Signup = ({ subscriptionPlans }: Props) => {
         <title>{__('signup_title', APP_NAME)}</title>
       </Head>
       <main className="main-content mt-12 px-4 max-w-4xl mx-auto">
-        
         {process.env.NEXT_PUBLIC_REGISTRATION_MODE === 'curated' ? (
           <ApplicationForm />
         ) : (
@@ -160,11 +159,11 @@ Signup.getInitialProps = async () => {
     } = await api.get('/config/subscriptions');
 
     return {
-      subscriptionPlans: subscriptions.value,
+      subscriptionsConfig: subscriptions.value,
     };
   } catch (err: unknown) {
     return {
-      subscriptionPlans: [],
+      subscriptionsConfig: [],
       error: parseMessageFromError(err),
     };
   }

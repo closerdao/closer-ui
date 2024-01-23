@@ -38,16 +38,16 @@ import {
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
-  subscriptionPlans: SubscriptionPlan[];
+  subscriptionsConfig: { enabled: boolean; plans: SubscriptionPlan[] };
   error?: string;
 }
 
 const SubscriptionsSummaryPage: NextPage<Props> = ({
-  subscriptionPlans,
+  subscriptionsConfig,
   error,
 }) => {
   const { enabledConfigs, PLATFORM_NAME } = useConfig();
-  subscriptionPlans = prepareSubscriptions(subscriptionPlans);
+  const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
 
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
@@ -209,11 +209,11 @@ SubscriptionsSummaryPage.getInitialProps = async () => {
     } = await api.get('/config/subscriptions');
 
     return {
-      subscriptionPlans: results.value,
+      subscriptionsConfig: results.value,
     };
   } catch (err: unknown) {
     return {
-      subscriptionPlans: [],
+      subscriptionsConfig: { enabled: false, plans: [] },
       error: parseMessageFromError(err),
     };
   }
