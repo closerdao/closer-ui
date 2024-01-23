@@ -149,11 +149,11 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
       <div className="w-full flex items-center flex-col gap-12 mt-6">
         <section className="w-full flex flex-col gap-4 sm:gap-0 sm:flex-row justify-center max-w-3xl">
           <div className="w-full sm:w-2/3 h-[288px] sm:rounded-l-md overflow-hidden">
-            <YoutubeEmbed embedId={fundraisingConfig.videoId.value} />
+            <YoutubeEmbed embedId={fundraisingConfig.videoId} />
           </div>
           <div className="flex flex-col gap-6 bg-accent-light w-full sm:w-1/3 sm:rounded-r-md p-5 text-center justify-center">
             <LinkButton
-              href={fundraisingConfig.wandererUrl.value}
+              href={fundraisingConfig.wandererUrl}
               className="font-bold text-xl p-1"
             >
               Subscribe
@@ -241,7 +241,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               </li>
             </ul>
             <LinkButton
-              href={fundraisingConfig.wandererUrl.value}
+              href={fundraisingConfig.wandererUrl}
               className="w-[255px] text-[13px] sm:text-[16px] sm:w-[320px]"
               onClick={() =>
                 event('click', {
@@ -265,7 +265,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               </li>
             </ul>
             <LinkButton
-              href={fundraisingConfig.pioneerUrl.value}
+              href={fundraisingConfig.pioneerUrl}
               className="w-[255px] text-[13px] sm:text-[16px] sm:w-[320px]"
               onClick={() =>
                 event('click', {
@@ -297,7 +297,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               </li>
             </ul>
             <LinkButton
-              href={fundraisingConfig.oneMonthSharedUrl.value}
+              href={fundraisingConfig.oneMonthSharedUrl}
               className="w-[240px]"
               onClick={() =>
                 event('click', {
@@ -328,7 +328,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               </li>
             </ul>
             <LinkButton
-              href={fundraisingConfig.oneMonthPrivateUrl.value}
+              href={fundraisingConfig.oneMonthPrivateUrl}
               className="w-[240px]"
               onClick={() =>
                 event('click', {
@@ -369,7 +369,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             </p>
             <LinkButton
               href={
-                fundraisingConfig.buy10TdfUrl.value ||
+                fundraisingConfig.buy10TdfUrl ||
                 '/token/checkout?tokens=10'
               }
               className="w-[240px]"
