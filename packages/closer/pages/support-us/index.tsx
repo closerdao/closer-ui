@@ -350,7 +350,9 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               raise your voice on important topics.
             </p>
             <LinkButton
-              href={fundraisingConfig.buy5TdfUrl || '/token/checkout?tokens=5'}
+              href={ 
+                fundraisingConfig.buy5TdfUrl || '/token/checkout?tokens=5'
+              }
               className="w-[240px]"
             >
               ~€1250

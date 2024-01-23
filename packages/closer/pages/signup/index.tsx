@@ -71,6 +71,7 @@ const Signup = ({ subscriptionsConfig }: Props) => {
         <title>{__('signup_title', APP_NAME)}</title>
       </Head>
       <main className="main-content mt-12 px-4 max-w-4xl mx-auto">
+        
         {process.env.NEXT_PUBLIC_REGISTRATION_MODE === 'curated' ? (
           <ApplicationForm />
         ) : (

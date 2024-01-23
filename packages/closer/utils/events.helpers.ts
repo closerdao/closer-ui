@@ -1,5 +1,4 @@
-
-import {  Listing } from '../types';
+import { Listing } from '../types';
 
 const isHighSeason = (seasons: any, startDate: any) => {
   const date = new Date(startDate);
@@ -63,12 +62,26 @@ const getMinMaxFiatPrice = (
   return { min, max };
 };
 
+function calculateDurationDiscount(duration: number, settings: any) {
+  let discount;
+  if (duration >= 28) {
+    discount = settings.discountsMonthly.value;
+  } else if (duration >= 7) {
+    discount = settings.discountsWeekly.value;
+  } else {
+    discount = settings.discountsDaily.value;
+  }
+  return discount;
+}
+
 export const getAccommodationPriceRange = (
   settings: any,
   listings: Listing[],
   duration: number,
   start: any,
 ) => {
+  const durationDiscount = calculateDurationDiscount(duration, settings);
+
   const listingsAvailableForEvents = listings.filter(
     (listing: Listing) =>
       listing?.availableFor?.includes('events') ||
@@ -89,5 +102,8 @@ export const getAccommodationPriceRange = (
         min: minMaxValues.min * settings.seasonsHighModifier * duration,
         max: minMaxValues.max * settings.seasonsHighModifier * duration,
       }
-    : { min: minMaxValues.min * duration, max: minMaxValues.max * duration };
+    : {
+        min: minMaxValues.min * duration,
+        max: minMaxValues.max * duration * (1 - durationDiscount),
+      };
 };

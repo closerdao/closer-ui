@@ -57,7 +57,6 @@ const ListingPage: NextPage<Props> = ({
   descriptionText,
 }) => {
   const config = useConfig();
-
   const { LOCATION_LAT, LOCATION_LON, PLATFORM_LEGAL_ADDRESS } = config || {};
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
