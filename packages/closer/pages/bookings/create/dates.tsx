@@ -117,10 +117,6 @@ const DatesSelector: NextPage<Props> = ({
   }, [user]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      redirectToSignup();
-    }
-
     if (eventId) {
       setBlockedDateRanges((ranges) => [
         ...ranges,
