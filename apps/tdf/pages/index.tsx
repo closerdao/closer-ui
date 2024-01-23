@@ -55,7 +55,7 @@ const HomePage = () => {
             <p className="mb-4">This is saying no to the extractive mentality of the past, and embracing a lovership with planet earth.</p>
             <p className="mb-4">Technology is increasingly making obsolete the notion that we should have a society that distributes it’s value based on productivity. As AI and AGI rise, some see doom and loss of jobs. We see a future where humans are focused on building things out of love rather than out of necessity. We see a future where machines will be doing the bulk of manual labor and humans will choose to surround themselves by nature.</p>
             <p className="mb-4"> We see a future where <b>play</b> becomes our primary way of being.</p>
-            <p className="mb-8">Join us on this experiment, opening Feb 9.</p>
+            <p className="mb-8">Join us on this experiment, opening Feb 1st and running until end of April.</p>
           </div>
           <div className="flex justify-start flex-col md:flex-row align-center mt-12 text-center">
             <Link
