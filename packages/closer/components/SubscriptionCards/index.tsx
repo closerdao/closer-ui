@@ -7,7 +7,6 @@ import { SubscriptionPlan } from '../../types/subscriptions';
 import {
   __,
   getCurrencySymbol,
-  getSubscriptionVariantPrice,
 } from '../../utils/helpers';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
@@ -32,7 +31,7 @@ const SubscriptionCards = ({
 }: SubscriptionCardsProps) => {
   const { isAuthenticated } = useAuth();
 
-  const paidSubscriptionPlans = plans.filter((plan) => plan.price !== 0);
+  const paidSubscriptionPlans = plans.filter((plan) => plan.priceId !== 'free');
   const filteredPlans = isAuthenticated ? paidSubscriptionPlans : plans;
 
   const getSubscriptionInfoText = (plan: SubscriptionPlan) => {
@@ -66,7 +65,7 @@ const SubscriptionCards = ({
               <Card
                 key={plan.title}
                 className={`w-full pb-8 mb-6 ${
-                  !plan.available && plan.price && 'bg-accent-light'
+                  !plan.available && 'bg-accent-light'
                 }`}
               >
                 <div className="flex items-center gap-4 flex-col md:flex-row text-sm">
@@ -94,7 +93,7 @@ const SubscriptionCards = ({
                         } package +`}
                     </Heading>
                     <ul className="mb-4">
-                      {plan.perks.map((perk) => {
+                      {plan.perks.split(',').map((perk) => {
                         return (
                           <li
                             key={perk}
@@ -114,7 +113,7 @@ const SubscriptionCards = ({
                       })}
                     </ul>
                     <div className="text-accent">
-                      {plan.note && <span>{plan.note}</span>}
+                      {plan?.note && <span>{plan?.note}</span>}
                     </div>
                   </div>
                   <div className="w-[290px] text-center flex flex-wrap justify-center">
@@ -126,29 +125,7 @@ const SubscriptionCards = ({
                     ) : (
                       <>
                         <div className="w-full text-center text-2xl font-bold my-8">
-                          {plan.variants ? (
-                            <div className="flex justify-center gap-4">
-                              {plan.variants.map((variant) => {
-                                return (
-                                  <div key={variant.title}>
-                                    <div className="text-accent">
-                                      🥕 {variant.monthlyCredits}
-                                    </div>
-                                    <div>
-                                      {getCurrencySymbol(currency)}
-                                      {getSubscriptionVariantPrice(
-                                        variant.monthlyCredits,
-                                        plan,
-                                      )}
-                                    </div>
-                                    <p className="text-sm font-normal">
-                                      {__('subscriptions_summary_per_month')}
-                                    </p>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          ) : plan.price === 0 ? (
+                        {plan.priceId === 'free' ? (
                             __('subscriptions_free')
                           ) : (
                             <div>

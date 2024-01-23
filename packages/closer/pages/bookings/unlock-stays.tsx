@@ -16,12 +16,15 @@ import { SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __, getCurrencySymbol } from '../../utils/helpers';
+import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
-  subscriptionPlans: SubscriptionPlan[];
+  subscriptionsConfig: { enabled: boolean; plans: SubscriptionPlan[] };
 }
 
-const UnlockStaysPage: NextPage<Props> = ({ subscriptionPlans }) => {
+const UnlockStaysPage: NextPage<Props> = ({ subscriptionsConfig }) => {
+  const { enabledConfigs } = useConfig();
+  const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
   const config = useConfig();
   const { STAY_BOOKING_ALLOWED_PLANS, MIN_INSTANT_BOOKING_ALLOWED_PLAN } =
     config || {};
@@ -49,7 +52,10 @@ const UnlockStaysPage: NextPage<Props> = ({ subscriptionPlans }) => {
     router.push('/subscriptions');
   };
 
-  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
+    (enabledConfigs && !enabledConfigs.includes('booking'))
+  ) {
     return <PageNotFound />;
   }
 
@@ -88,7 +94,7 @@ const UnlockStaysPage: NextPage<Props> = ({ subscriptionPlans }) => {
               </div>
 
               <ul className="mb-4">
-                {allowedSubscriptionPlan?.perks.map((perk) => {
+                {allowedSubscriptionPlan?.perks.split(',').map((perk) => {
                   return (
                     <li
                       key={perk}
@@ -129,11 +135,11 @@ UnlockStaysPage.getInitialProps = async () => {
     } = await api.get('/config/subscriptions');
 
     return {
-      subscriptionPlans: results.value.plans,
+      subscriptionsConfig: results.value,
     };
   } catch (err: unknown) {
     return {
-      subscriptionPlans: [],
+      subscriptionsConfig: { enabled: false, plans: [] },
       error: parseMessageFromError(err),
     };
   }

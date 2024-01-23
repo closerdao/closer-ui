@@ -4,14 +4,14 @@ import { renderWithProviders } from '@/test/utils';
 import { screen } from '@testing-library/react';
 
 import { listings } from '../../mocks/listings';
-import { subscriptions } from '../../mocks/subscriptions';
+import { subscriptionsConfig } from '../../mocks/subscriptions';
 
 describe('Subscriptions', () => {
   it('should have a proper title', () => {
     renderWithProviders(
       <SubscriptionsPage
         listings={listings}
-        subscriptionPlans={subscriptions.plans}
+        subscriptionsConfig={subscriptionsConfig}
       />,
     );
 
@@ -26,7 +26,7 @@ describe('Subscriptions', () => {
     renderWithProviders(
       <SubscriptionsPage
         listings={listings}
-        subscriptionPlans={subscriptions.plans}
+        subscriptionsConfig={subscriptionsConfig}
       />,
     );
 

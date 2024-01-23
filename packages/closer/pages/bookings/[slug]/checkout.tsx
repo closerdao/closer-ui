@@ -25,8 +25,8 @@ import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { WalletState } from '../../../contexts/wallet';
+import { useConfig } from '../../../hooks/useConfig';
 import { BaseBookingParams, Booking, Event, Listing } from '../../../types';
-import { BookingSettings } from '../../../types/api';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, priceFormat } from '../../../utils/helpers';
@@ -34,12 +34,12 @@ import { __, priceFormat } from '../../../utils/helpers';
 interface Props extends BaseBookingParams {
   listing: Listing;
   booking: Booking;
-  settings: BookingSettings;
   error?: string;
   event?: Event;
 }
 
-const Checkout = ({ booking, listing, settings, error, event }: Props) => {
+const Checkout = ({ booking, listing, error, event }: Props) => {
+  const { enabledConfigs } = useConfig();
   const {
     utilityFiat,
     rentalToken,
@@ -69,7 +69,6 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
       try {
         const creditsBalance = (await api.get('/carrots/balance')).data
           .results as number;
-        console.log('creditsBalance=', creditsBalance);
         const hasEnoughCredits = Boolean(
           rentalToken?.val &&
             creditsBalance &&
@@ -109,9 +108,7 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
       setPaymentError(parseMessageFromError(error));
     }
 
-    router.push(
-      `/bookings/${booking._id}`,
-    );
+    router.push(`/bookings/${booking._id}`);
   };
 
   const applyCredits = async () => {
@@ -140,7 +137,10 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
     return <PageNotAllowed />;
   }
 
-  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
+    (enabledConfigs && !enabledConfigs.includes('booking'))
+  ) {
     return <PageNotFound />;
   }
 
@@ -240,25 +240,29 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
           <CheckoutTotal total={updatedTotal} />
 
           {booking.total.val > 0 ? (
-            <CheckoutPayment
-              bookingId={booking._id}
-              buttonDisabled={
-                useTokens &&
-                (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)
-              }
-              useTokens={useTokens}
-              useCredits={useCredits}
-              totalToPayInFiat={updatedTotal}
-              dailyTokenValue={dailyRentalToken?.val || 0}
-              startDate={start}
-              totalNights={duration}
-              user={user}
-              settings={settings}
-              eventId={event?._id}
-            />
+            enabledConfigs &&
+            enabledConfigs.includes('payment') && (
+              <CheckoutPayment
+                bookingId={booking._id}
+                buttonDisabled={
+                  useTokens &&
+                  (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)
+                }
+                useTokens={useTokens}
+                useCredits={useCredits}
+                totalToPayInFiat={updatedTotal}
+                dailyTokenValue={dailyRentalToken?.val || 0}
+                startDate={start}
+                totalNights={duration}
+                user={user}
+                eventId={event?._id}
+              />
+            )
           ) : (
             <Button className="booking-btn" onClick={handleFreeBooking}>
-              {user?.roles.includes('member') ? __('buttons_confirm_booking') : __('buttons_booking_request')}
+              {user?.roles.includes('member')
+                ? __('buttons_confirm_booking')
+                : __('buttons_booking_request')}
             </Button>
           )}
 
@@ -285,18 +289,7 @@ Checkout.getInitialProps = async ({
       },
     });
 
-    const [
-      {
-        data: { results: settings },
-      },
-      optionalEvent,
-      optionalListing,
-    ] = await Promise.all([
-      api.get('/config/booking', {
-        headers: req?.cookies?.access_token && {
-          Authorization: `Bearer ${req?.cookies?.access_token}`,
-        },
-      }),
+    const [optionalEvent, optionalListing] = await Promise.all([
       booking.eventId &&
         api.get(`/event/${booking.eventId}`, {
           headers: req?.cookies?.access_token && {
@@ -313,14 +306,13 @@ Checkout.getInitialProps = async ({
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
 
-    return { booking, listing, settings, event, error: null };
+    return { booking, listing, event, error: null };
   } catch (err) {
     console.log(err);
     return {
       error: parseMessageFromError(err),
       booking: null,
       listing: null,
-      settings: null,
     };
   }
 };

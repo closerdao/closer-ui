@@ -14,6 +14,7 @@ import { ParsedUrlQuery } from 'querystring';
 
 import PageNotFound from '../../404';
 import { BOOKING_STEPS } from '../../../constants';
+import { useConfig } from '../../../hooks/useConfig';
 import { BaseBookingParams, Booking, Event } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
@@ -26,6 +27,7 @@ interface Props extends BaseBookingParams {
 }
 
 const ConfirmationStep = ({ error, booking, event }: Props) => {
+  const { enabledConfigs } = useConfig();
   const router = useRouter();
   const { status, _id, volunteerId, eventId } = booking || {};
 
@@ -63,7 +65,10 @@ const ConfirmationStep = ({ error, booking, event }: Props) => {
     return <PageError error={error} />;
   }
 
-  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
+    (enabledConfigs && !enabledConfigs.includes('booking'))
+  ) {
     return <PageNotFound />;
   }
 

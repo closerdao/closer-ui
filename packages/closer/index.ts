@@ -84,7 +84,6 @@ export { default as SettingsPage } from './pages/settings';
 export { default as CreditsPage } from './pages/settings/credits';
 export { default as ReferralsPage } from './pages/settings/referrals';
 export { default as SignUpPage } from './pages/signup';
-export { default as SubscriptionPlanPage } from './pages/subscriptions/[slug]';
 export { default as SubscriptionsCheckoutPage } from './pages/subscriptions/checkout';
 export { default as SubscriptionsPage } from './pages/subscriptions/index';
 export { default as SubscriptionSuccessPage } from './pages/subscriptions/success';
@@ -113,6 +112,7 @@ export { default as LessonPage } from './pages/learn/[slug]/';
 export { default as EditLessonPage } from './pages/learn/[slug]/edit';
 export { default as StayPage } from './pages/stay/';
 export { default as SupportUsPage } from './pages/support-us';
+export { default as ConfigPage } from './pages/admin/config';
 
 // Types
 export * from './types/';

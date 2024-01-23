@@ -26,15 +26,16 @@ import { CURRENCIES, DEFAULT_CURRENCY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
 import { useOutsideClick } from '../../../hooks/useOutsideClick';
-import { BookingSettings, CloserCurrencies, Listing } from '../../../types';
+import { CloserCurrencies, Listing } from '../../../types';
 import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import {
   __,
+  getDiscountRate,
   getMaxBookingHorizon,
   sendAnalyticsEvent,
 } from '../../../utils/helpers';
-import { priceFormat, getBookingRate } from '../../../utils/helpers';
+import { getBookingRate, priceFormat } from '../../../utils/helpers';
 import {
   formatDate,
   getBlockedDateRanges,
@@ -45,7 +46,7 @@ const MAX_DAYS_TO_CHECK_AVAILABILITY = 60;
 interface Props {
   listing: Listing | null;
   error?: string;
-  settings: BookingSettings | null;
+  settings: any | null;
   descriptionText?: string | null;
 }
 
@@ -56,7 +57,8 @@ const ListingPage: NextPage<Props> = ({
   descriptionText,
 }) => {
   const config = useConfig();
-  const { LOCATION_COORDINATES, PLATFORM_LEGAL_ADDRESS } = config || {};
+
+  const { LOCATION_LAT, LOCATION_LON, PLATFORM_LEGAL_ADDRESS } = config || {};
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const isMember = user && user.roles.includes('member');
@@ -90,12 +92,25 @@ const ListingPage: NextPage<Props> = ({
   const [doesNeedPickup, setDoesNeedPickup] = useState(false);
   const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
   const [isTeamBooking, setIsTeamBooking] = useState(false);
-  const durationRateDays = durationInDays >= 28 ? 30 : durationInDays >= 7 ? 7 : 1;
+  const durationRateDays =
+    durationInDays >= 28 ? 30 : durationInDays >= 7 ? 7 : 1;
   const durationName = getBookingRate(durationInDays);
-  const discountRate = settings ? (1 - settings.discounts[durationName]) : 0;
-  const accomodationTotal = listing ? listing.fiatPrice?.val * (listing.private ? 1 : adults) * durationInDays * discountRate : 0;
-  const nightlyTotal = listing ? listing.fiatPrice?.val * (listing.private ? 1 : adults) * discountRate : 0;
-  const utilityTotal = settings ? settings.utilityFiat?.val * adults * durationInDays : 0;
+
+  const discountRate = settings
+    ? 1 - getDiscountRate(durationName, settings)
+    : 0;
+  const accomodationTotal = listing
+    ? listing.fiatPrice?.val *
+      (listing.private ? 1 : adults) *
+      durationInDays *
+      discountRate
+    : 0;
+  const nightlyTotal = listing
+    ? listing.fiatPrice?.val * (listing.private ? 1 : adults) * discountRate
+    : 0;
+  const utilityTotal = settings
+    ? settings.utilityFiatVal * adults * durationInDays
+    : 0;
 
   const [apiError, setApiError] = useState(null);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
@@ -115,7 +130,9 @@ const ListingPage: NextPage<Props> = ({
 
   const isTokenPaymentSelected =
     savedUseTokens === 'true' || currency === CURRENCIES[1];
-  const isTeamMember = user?.roles.some(roles => ['space-host', 'steward', 'land-manager', 'team'].includes(roles));
+  const isTeamMember = user?.roles.some((roles) =>
+    ['space-host', 'steward', 'land-manager', 'team'].includes(roles),
+  );
 
   const getAvailability = async (
     startDate: Date | string | null,
@@ -179,17 +196,16 @@ const ListingPage: NextPage<Props> = ({
       const { availability } = await getAvailability(
         dayjs().startOf('day').toDate(),
         dayjs().add(maxHorizon, 'days').endOf('day').toDate(),
-        listing?._id
+        listing?._id,
       );
       if (availability) {
-        const dates = availability.map((day: any) => (
-          !day.available && day.day
-        ))
+        const dates = availability
+          .map((day: any) => !day.available && day.day)
           .filter((d: string) => d)
           .map((d: string) => new Date(d));
         setUnavailableDates(dates);
       }
-      })();
+    })();
   }, []);
 
   useEffect(() => {
@@ -217,7 +233,7 @@ const ListingPage: NextPage<Props> = ({
     const { results: isListingAvailable } = await getAvailability(
       availableStart,
       availableEnd,
-      listing?._id
+      listing?._id,
     );
 
     if (!isListingAvailable && !savedStartDate && !savedEndDate) {
@@ -348,12 +364,18 @@ const ListingPage: NextPage<Props> = ({
                     <Heading level={3} className="text-md font-normal">
                       {PLATFORM_LEGAL_ADDRESS}
                     </Heading>
-                    {LOCATION_COORDINATES && <GoogleMaps height={400} location={LOCATION_COORDINATES} /> }
+                    {LOCATION_LAT && LOCATION_LON && (
+                      <GoogleMaps
+                        height={400}
+                        locationLat={LOCATION_LAT}
+                        locationLon={LOCATION_LON}
+                      />
+                    )}
                   </div>
                 </div>
 
-                <div className="w-full sm:w-auto fixed left-0 bottom-0 right-0 sm:sticky">
-                  <Card className="min-w-[250px] bg-white flex-row sm:flex-col items-center border border-gray-100 pb-8">
+                <div className="min-w-[220px] w-full sm:w-auto fixed left-0 bottom-0 right-0 sm:sticky">
+                  <Card className="bg-white flex-row sm:flex-col items-center border border-gray-100 pb-8">
                     <div className="w-1/2 sm:w-full flex flex-col gap-2">
                       {isWeb3BookingEnabled && (
                         <CurrencySwitcher
@@ -367,22 +389,29 @@ const ListingPage: NextPage<Props> = ({
                       <div className="block sm:hidden">
                         {currency === CURRENCIES[1] ? (
                           <div className=" font-bold text-md">
-                            {listing?.tokenPrice && priceFormat(
-                              listing.tokenPrice?.val,
-                              listing.tokenPrice?.cur,
-                            )}{' '}
+                            {listing?.tokenPrice &&
+                              priceFormat(
+                                listing.tokenPrice?.val,
+                                listing.tokenPrice?.cur,
+                              )}{' '}
                             +{' '}
-                            {settings?.utilityFiat && priceFormat(
-                              utilityTotal,
-                              settings.utilityFiat?.cur,
-                            )}
+                            {settings?.utilityFiat &&
+                              priceFormat(
+                                utilityTotal,
+                                settings.utilityFiatCur,
+                              )}
                           </div>
                         ) : (
                           <div>
-                            <b className="text-lg">{priceFormat(
-                              nightlyTotal * durationRateDays,
-                              settings?.utilityFiat?.cur,
-                              )}</b> <span className="opacity-70">{ __(`booking_rate_${ durationName }`) }</span>
+                            <b className="text-lg">
+                              {priceFormat(
+                                nightlyTotal * durationRateDays,
+                                settings?.utilityFiat?.cur,
+                              )}
+                            </b>{' '}
+                            <span className="opacity-70">
+                              {__(`booking_rate_${durationName}`)}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -423,8 +452,8 @@ const ListingPage: NextPage<Props> = ({
                               ).toLowerCase()}
                         </Button>
                         {showGuestsDropdown && (
-                          <div className="">
-                            {/* <Card className="border border-gray-100 sm:w-auto z-10 sm:left-auto bottom-[175px] sm:bottom-auto sm:top-auto bg-white shadow-md rounded-md p-3"> */}
+                          <div className="static sm:relative">
+                            <Card className="border border-gray-100 sm:w-auto absolute z-10 left-2 right-2 sm:left-auto bottom-[175px] sm:bottom-auto sm:top-auto bg-white shadow-md rounded-md p-3">
                               <BookingGuests
                                 shouldHideTitle={true}
                                 adults={adults}
@@ -458,22 +487,24 @@ const ListingPage: NextPage<Props> = ({
                                   checked={doesNeedPickup}
                                 />
                               </div>
-                              { isTeamMember && <div className="my-0 flex flex-row justify-between flex-wrap">
-                                <label
-                                  htmlFor="separateBeds"
-                                  className="text-sm"
-                                >
-                                  Team booking?
-                                </label>
-                                <Switch
-                                  disabled={false}
-                                  name="team-booking"
-                                  label=""
-                                  onChange={setIsTeamBooking}
-                                  checked={isTeamBooking}
-                                />
-                              </div> }
-                            {/* </Card> */}
+                              {isTeamMember && (
+                                <div className="my-0 flex flex-row justify-between flex-wrap">
+                                  <label
+                                    htmlFor="separateBeds"
+                                    className="text-sm"
+                                  >
+                                    Team booking?
+                                  </label>
+                                  <Switch
+                                    disabled={false}
+                                    name="team-booking"
+                                    label=""
+                                    onChange={setIsTeamBooking}
+                                    checked={isTeamBooking}
+                                  />
+                                </div>
+                              )}
+                            </Card>
                           </div>
                         )}
                       </div>
@@ -514,7 +545,9 @@ const ListingPage: NextPage<Props> = ({
                             <p className="text-left">
                               <span className="font-bold">
                                 {priceFormat(
-                                  listing.fiatPrice.val * durationRateDays * discountRate,
+                                  listing.fiatPrice.val *
+                                    durationRateDays *
+                                    discountRate,
                                   listing.fiatPrice.cur,
                                 )}{' '}
                               </span>
@@ -555,20 +588,21 @@ const ListingPage: NextPage<Props> = ({
                             </p>
                             <p>
                               {currency === CURRENCIES[1]
-                                ? priceFormat(listing.tokenPrice?.val, listing.tokenPrice?.cur)
+                                ? priceFormat(
+                                    listing.tokenPrice?.val,
+                                    listing.tokenPrice?.cur,
+                                  )
                                 : priceFormat(
-                                  accomodationTotal,
-                                  listing.fiatPrice?.cur,
-                                )}
+                                    accomodationTotal,
+                                    listing.fiatPrice?.cur,
+                                  )}
                             </p>
                           </div>
                           <div className="flex justify-between items-center mt-3">
                             <p>{__('bookings_summary_step_utility_total')}</p>
                             <p>
                               {priceFormat(
-                                isTeamBooking ?
-                                0 :
-                                utilityTotal,
+                                isTeamBooking ? 0 : utilityTotal,
                                 settings?.utilityFiat?.cur,
                               )}
                             </p>
@@ -582,20 +616,24 @@ const ListingPage: NextPage<Props> = ({
                               {currency === CURRENCIES[1] ? (
                                 <div>
                                   {priceFormat(
-                                    listing.tokenPrice && listing.tokenPrice?.val,
+                                    listing.tokenPrice &&
+                                      listing.tokenPrice?.val,
                                     listing.tokenPrice?.cur,
                                   )}{' '}
                                   +{' '}
-                                  {settings && priceFormat(
-                                    isTeamBooking ? 0 : utilityTotal,
-                                    settings.utilityFiat?.cur,
-                                  )}
+                                  {settings &&
+                                    priceFormat(
+                                      isTeamBooking ? 0 : utilityTotal,
+                                      settings.utilityFiatCur,
+                                    )}
                                 </div>
                               ) : (
                                 priceFormat(
                                   settings &&
-                                  listing &&
-                                  (isTeamBooking ? 0 : utilityTotal + accomodationTotal),
+                                    listing &&
+                                    (isTeamBooking
+                                      ? 0
+                                      : utilityTotal + accomodationTotal),
                                   listing.fiatPrice?.cur,
                                 )
                               )}

@@ -20,6 +20,7 @@ import { STATUS_COLOR } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
+import { useConfig } from '../../../hooks/useConfig';
 import { Booking, Event, Listing, VolunteerOpportunity } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
@@ -44,7 +45,7 @@ const BookingPage = ({
   error,
   bookingCreatedBy,
 }: Props) => {
-  console.log('booking=', booking);
+  const { enabledConfigs } = useConfig();
   const { platform }: any = usePlatform();
   const { isAuthenticated, user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
@@ -100,6 +101,7 @@ const BookingPage = ({
   if (
     !booking ||
     process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
+    (enabledConfigs && !enabledConfigs.includes('booking')) ||
     (user?._id !== booking.createdBy && !isSpaceHost)
   ) {
     return <PageNotFound />;
@@ -210,8 +212,6 @@ BookingPage.getInitialProps = async ({
     const {
       data: { results: booking },
     } = await api.get(`/booking/${query.slug}`);
-
-    console.log('booking=', booking);
 
     const [
       optionalEvent,

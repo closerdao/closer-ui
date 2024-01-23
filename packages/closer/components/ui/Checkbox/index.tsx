@@ -6,6 +6,7 @@ interface CheckboxProps {
   onChange: (value: any) => void;
   children?: React.ReactNode;
   id?: string;
+  isEnabled?: boolean;
 }
 const Checkbox = ({
   className,
@@ -13,10 +14,12 @@ const Checkbox = ({
   onChange,
   children,
   id,
+  isEnabled = true
 }: CheckboxProps) => {
   return (
-    <div className={`flex items-top gap-3 mb-2 ${className}`}>
+    <div className={`flex items-top gap-1.5 mb-2 ${className}`}>
       <input
+        disabled={!isEnabled}
         id={id}
         type="checkbox"
         className="accent-primary w-4 h-4 mt-1"

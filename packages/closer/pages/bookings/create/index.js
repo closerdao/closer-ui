@@ -5,9 +5,11 @@ import { useEffect } from 'react';
 import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
+import { useConfig } from '../../../hooks/useConfig';
 import '../../../utils/helpers';
 
 const NewBooking = () => {
+  const { enabledConfigs } = useConfig();
   const router = useRouter();
   const { isAuthenticated } = useAuth();
 
@@ -17,7 +19,10 @@ const NewBooking = () => {
     }
   }, [isAuthenticated]);
 
-  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
+    (enabledConfigs && !enabledConfigs.includes('booking'))
+  ) {
     return <PageNotFound />;
   }
 

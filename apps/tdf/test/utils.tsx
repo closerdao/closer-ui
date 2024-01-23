@@ -11,7 +11,7 @@ import {
   blockchainConfig,
 } from 'closer';
 
-import config from '../config';
+import config from '@/__tests__/mocks/config';
 import { getLibrary } from '../pages/_app';
 
 export const renderWithProviders = (ui: React.ReactElement, options = {}) => {

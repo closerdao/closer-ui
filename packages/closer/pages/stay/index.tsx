@@ -15,16 +15,29 @@ import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
 interface Props {
-  settings: BookingSettings;
+  settings: any;
 }
 
 const StayPage = ({ settings }: Props) => {
   const config = useConfig();
+  const discounts = {
+    daily: settings.discountsDaily,
+    weekly: settings.discountsWeekly,
+    monthly: settings.discountsMonthly,
+  };
   const { PLATFORM_NAME } = config || {};
   const { platform }: any = usePlatform();
   const { user } = useAuth();
-  const isTeamMember = user?.roles.some(roles => ['space-host', 'steward', 'land-manager', 'team'].includes(roles));
-  const listingFilter = { where: { availableFor: { $in: ['guests', isTeamMember ? 'team' : null].filter(e => e) } } };
+  const isTeamMember = user?.roles.some((roles) =>
+    ['space-host', 'steward', 'land-manager', 'team'].includes(roles),
+  );
+  const listingFilter = {
+    where: {
+      availableFor: {
+        $in: ['guests', isTeamMember ? 'team' : null].filter((e) => e),
+      },
+    },
+  };
 
   const loadData = async () => {
     await Promise.all([platform.listing.get(listingFilter)]);
@@ -65,7 +78,7 @@ const StayPage = ({ settings }: Props) => {
               listings.map((listing: any) => {
                 return (
                   <ListingListPreview
-                    discounts={settings.discounts}
+                    discounts={discounts} 
                     isAdminPage={false}
                     key={listing.get('_id')}
                     listing={listing}

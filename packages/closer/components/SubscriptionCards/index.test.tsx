@@ -13,7 +13,7 @@ describe('SubscriptionCards', () => {
     render(
       <SubscriptionCards
         currency="EUR"
-        plans={subscriptions.plans}
+        plans={subscriptions}
         clickHandler={handleNext}
       />,
     );
@@ -26,7 +26,7 @@ describe('SubscriptionCards', () => {
     render(
       <SubscriptionCards
         currency="EUR"
-        plans={subscriptions.plans}
+        plans={subscriptions}
         clickHandler={handleNext}
       />,
     );

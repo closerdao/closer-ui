@@ -1,13 +1,8 @@
 import Head from 'next/head';
 
 import { Heading, useConfig } from 'closer';
-import { SubscriptionPlan } from 'closer/types/subscriptions';
-import api from 'closer/utils/api';
 
-interface Props {
-  subscriptionPlans: SubscriptionPlan[];
-}
-const HomePage = ({ subscriptionPlans }: Props) => {
+const HomePage = () => {
   const { PLATFORM_NAME } = useConfig() || {};
   return (
     <div>
@@ -407,7 +402,8 @@ const HomePage = ({ subscriptionPlans }: Props) => {
                     ) : (
                       <div className="w-full text-left ">
                         <ul className="mb-4 w-full">
-                          {plan.perks.map((perk) => {
+                          {plan.perks.split(',').map((perk) 
+                            => {
                             return (
                               <li
                                 key={perk}
@@ -527,23 +523,6 @@ const HomePage = ({ subscriptionPlans }: Props) => {
       </div>
     </div>
   );
-};
-
-HomePage.getInitialProps = async () => {
-  try {
-    const {
-      data: { results: subscriptions },
-    } = await api.get('/config/subscriptions');
-
-    return {
-      subscriptionPlans: subscriptions.value.plans,
-    };
-  } catch (err) {
-    return {
-      subscriptionPlans: [],
-      error: err,
-    };
-  }
 };
 
 export default HomePage;

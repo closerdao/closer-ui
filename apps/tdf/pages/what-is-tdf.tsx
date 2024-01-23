@@ -342,8 +342,8 @@ const HomePage = () => {
                   Transforming our soils into Terra Preta with Biochar
                 </Heading>
                 <p>
-                  Applying the biochar we produce to the orchard&apos;s soil is a
-                  game-changer. This practice will improve soil fertility,
+                  Applying the biochar we produce to the orchard&apos;s soil is
+                  a game-changer. This practice will improve soil fertility,
                   increase water retention, and stimulate microbial activity,
                   leading to healthier trees and better crop yields - all while
                   capturing carbon from the atmosphere and producing excess
@@ -377,12 +377,11 @@ const HomePage = () => {
             <p className="text-xl sm:text-2xl md:text-3xl">
               With options to build around 12 town homes (on 4.000m2 urban
               lands) as well as a tiny house park, we have many opportunities
-              for expansion. See our <Link
-                href="/roadmap"
-                className="text-primary"
-              >
+              for expansion. See our{' '}
+              <Link href="/roadmap" className="text-primary">
                 roadmap
-              </Link>.
+              </Link>
+              .
             </p>
             <img
               src="/images/maps/built-area.png"

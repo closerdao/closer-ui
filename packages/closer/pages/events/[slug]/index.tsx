@@ -21,11 +21,16 @@ import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
-import { BookingSettings, Event, Listing } from '../../../types';
+import { Event, Listing } from '../../../types';
 import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { getAccommodationPriceRange } from '../../../utils/events.helpers';
-import { prependHttp, priceFormat } from '../../../utils/helpers';
+import {
+  getBookingRate,
+  getDiscountRate,
+  prependHttp,
+  priceFormat,
+} from '../../../utils/helpers';
 import { __ } from '../../../utils/helpers';
 
 interface Props {
@@ -33,7 +38,7 @@ interface Props {
   eventCreator: User;
   error?: string;
   descriptionText?: string;
-  settings: BookingSettings;
+  settings: any;
   listings: Listing[];
 }
 
@@ -48,7 +53,7 @@ const EventPage = ({
   const { platform }: any = usePlatform();
   const { user, isAuthenticated } = useAuth();
 
-  const dailyUtilityFee = settings.utilityFiat.val;
+  const dailyUtilityFee = settings.utilityFiatVal;
 
   const [photo, setPhoto] = useState(event && event.photo);
   const [password, setPassword] = useState('');
@@ -78,13 +83,12 @@ const EventPage = ({
   const dateFormat = isThisYear ? 'MMM D' : 'YYYY MMMM';
 
   const durationInDays = dayjs(end).diff(dayjs(start), 'day');
-  const durationRateDays = durationInDays >= 28 ? 30 : durationInDays > 7 ? 7 : 1;
-  const durationName = durationInDays >= 28 ?
-    'monthly' :
-    durationInDays > 7 ?
-      'weekly' :
-      'daily';
-  const discountRate = settings ? (1 - settings.discounts[durationName]) : 0;
+  const durationName = getBookingRate(durationInDays);
+
+  const discountRate = settings
+    ? 1 - getDiscountRate(durationName, settings)
+    : 0;
+
   const { min: minAccommodationPrice, max: maxAccommodationPrice } =
     getAccommodationPriceRange(settings, listings, durationInDays, start);
 
@@ -305,32 +309,32 @@ const EventPage = ({
 
                     {((event.partners && event.partners.length > 0) ||
                       (isAuthenticated && user?._id === event.createdBy)) && (
-                        <section className="mb-6">
-                          <div className="flex flex-row flex-wrap justify-center items-center">
-                            {event.partners &&
-                              event.partners.map(
-                                (partner: any) =>
-                                  partner.photoUrl && (
-                                    <a
-                                      href={partner.url || '#'}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      key={partner.name}
-                                      className="mr-3"
-                                    >
-                                      <Photo
-                                        id={partner.photo}
-                                        photoUrl={partner.photoUrl}
-                                        className="w-32 h-16"
-                                        title={partner.name}
-                                        rounded={true}
-                                      />
-                                    </a>
-                                  ),
-                              )}
-                          </div>
-                        </section>
-                      )}
+                      <section className="mb-6">
+                        <div className="flex flex-row flex-wrap justify-center items-center">
+                          {event.partners &&
+                            event.partners.map(
+                              (partner: any) =>
+                                partner.photoUrl && (
+                                  <a
+                                    href={partner.url || '#'}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    key={partner.name}
+                                    className="mr-3"
+                                  >
+                                    <Photo
+                                      id={partner.photo}
+                                      photoUrl={partner.photoUrl}
+                                      className="w-32 h-16"
+                                      title={partner.name}
+                                      rounded={true}
+                                    />
+                                  </a>
+                                ),
+                            )}
+                        </div>
+                      </section>
+                    )}
 
                     {attendees && attendees.length > 0 && (
                       <div>
@@ -377,16 +381,20 @@ const EventPage = ({
                                 </p>
                               </div>
                             </div>
-                          ))
-                        }
+                          ))}
                         {durationInDays > 0 && (
                           <>
                             <Information>{__('events_disclaimer')}</Information>
                             <div className="text-sm">
                               {__('events_accommodation')}{' '}
                               <strong>
-                                {priceFormat(minAccommodationPrice * discountRate)} -{' '}
-                                {priceFormat(maxAccommodationPrice * discountRate)}
+                                {priceFormat(
+                                  minAccommodationPrice * discountRate,
+                                )}{' '}
+                                -{' '}
+                                {priceFormat(
+                                  maxAccommodationPrice * discountRate,
+                                )}
                               </strong>
                             </div>
                             <div className="text-sm">
@@ -408,31 +416,28 @@ const EventPage = ({
                             >
                               {__('events_buy_ticket_button')}
                             </Link>
-                          ) : (event.paid || durationInDays > 0) ? (
+                          ) : event.paid || durationInDays > 0 ? (
                             <>
-                              {myTickets &&
+                              {myTickets && (
                                 <div>
-                                  <Heading level={4}>
-                                    Tickets
-                                  </Heading>
+                                  <Heading level={4}>Tickets</Heading>
                                   <ul className="space-y-2 divide-y mb-3">
-                                    { myTickets.map((ticket: any) => (
-                                      <li
-                                        key={ticket.get('_id')}
-                                      >
+                                    {myTickets.map((ticket: any) => (
+                                      <li key={ticket.get('_id')}>
                                         <Link
                                           href={`/tickets/${ticket.get('_id')}`}
                                           className="text-primary"
                                         >
-                                          { ticket.get('name') } x { ticket.get('quantity') || 1 }
+                                          {ticket.get('name')} x{' '}
+                                          {ticket.get('quantity') || 1}
                                         </Link>
                                       </li>
-                                    )) }
+                                    ))}
                                   </ul>
                                 </div>
-                              }
-                              {
-                                end && end.isAfter(dayjs()) &&
+                              )}
+                              {end &&
+                                end.isAfter(dayjs()) &&
                                 (event.stripePub ||
                                   process.env.NEXT_PUBLIC_STRIPE_PUB_KEY) && (
                                   <LinkButton
@@ -445,10 +450,9 @@ const EventPage = ({
                                     }`}
                                     className=""
                                   >
-                                    {__('events_buy_ticket_button') }
+                                    {__('events_buy_ticket_button')}
                                   </LinkButton>
-                                )
-                              }
+                                )}
                             </>
                           ) : (
                             <>
@@ -456,7 +460,8 @@ const EventPage = ({
                               start.isBefore(dayjs().subtract(15, 'minutes')) &&
                               end &&
                               end.isAfter(dayjs()) &&
-                                event.virtual && event.location ? (
+                              event.virtual &&
+                              event.location ? (
                                 <a
                                   className="btn-primary mr-2"
                                   href={event.location}
@@ -508,22 +513,24 @@ const EventPage = ({
                                 >
                                   Cancel RSVP
                                 </a>
-                              ) : end &&
+                              ) : ( 
+                                end &&
                                 user &&
                                 event.virtual &&
                                 end.isAfter(dayjs()) && (
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    attendEvent(
-                                      event._id,
-                                      !attendees?.includes(user._id),
-                                    );
-                                  }}
-                                  className="btn-primary mr-2"
-                                >
-                                  Attend
-                                </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      attendEvent(
+                                        event._id,
+                                        !attendees?.includes(user._id),
+                                      );
+                                    }}
+                                    className="btn-primary mr-2"
+                                  >
+                                    Attend
+                                  </button>
+                                )
                               )}
                             </>
                           )}
