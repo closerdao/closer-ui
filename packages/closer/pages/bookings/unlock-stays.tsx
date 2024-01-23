@@ -19,12 +19,12 @@ import { __, getCurrencySymbol } from '../../utils/helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
-  subscriptionPlans: SubscriptionPlan[];
+  subscriptionsConfig: { enabled: boolean; plans: SubscriptionPlan[] };
 }
 
-const UnlockStaysPage: NextPage<Props> = ({ subscriptionPlans }) => {
+const UnlockStaysPage: NextPage<Props> = ({ subscriptionsConfig }) => {
   const { enabledConfigs } = useConfig();
-  subscriptionPlans = prepareSubscriptions(subscriptionPlans);
+  const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
   const config = useConfig();
   const { STAY_BOOKING_ALLOWED_PLANS, MIN_INSTANT_BOOKING_ALLOWED_PLAN } =
     config || {};
@@ -135,11 +135,11 @@ UnlockStaysPage.getInitialProps = async () => {
     } = await api.get('/config/subscriptions');
 
     return {
-      subscriptionPlans: results.value,
+      subscriptionsConfig: results.value,
     };
   } catch (err: unknown) {
     return {
-      subscriptionPlans: [],
+      subscriptionsConfig: { enabled: false, plans: [] },
       error: parseMessageFromError(err),
     };
   }

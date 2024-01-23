@@ -10,7 +10,9 @@ export const prepareSubscriptions = (subscriptionsConfig: {
   enabled: boolean;
   plans: SubscriptionPlan[];
 }): SubscriptionPlan[] => {
-  const formattedPlans: SubscriptionPlan[] = subscriptionsConfig?.plans;
-
-  return formattedPlans;
+  if (subscriptionsConfig) {
+    const formattedPlans: SubscriptionPlan[] = subscriptionsConfig.plans;
+    return formattedPlans;
+  }
+  return [];
 };
