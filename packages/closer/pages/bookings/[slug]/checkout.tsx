@@ -234,7 +234,12 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
             </HeadingRow>
             <div className="flex justify-between items-center mt-3">
               <p> {__('bookings_summary_step_utility_total')}</p>
-              <p className="font-bold">{priceFormat(utilityFiat)}</p>
+              <p className="font-bold">
+                {booking.foodOption === 'no_food' ?
+                  'NOT INCLUDED' :
+                  priceFormat(utilityFiat)
+                }
+              </p>
             </div>
             <p className="text-right text-xs">
               {__('bookings_summary_step_utility_description')}

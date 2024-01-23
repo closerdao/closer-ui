@@ -27,20 +27,23 @@ const appDictionaries = {
   foz,
 };
 
-let appDictionary = {};
-
 let language = Object.assign({}, base, en);
 const ONE_HOUR = 60 * 60 * 1000;
 
-export const __ = (key, paramValue) => {
-  if (paramValue) {
-    if (paramValue in appDictionaries) {
-      appDictionary = appDictionaries[paramValue];
-    }
-    return appDictionary[key]?.replace('%s', paramValue) || '';
+export const __ = (key, paramValue, app) => {
+  let val = language[key] || `__${key}_missing__`;
+
+  if (app && app in appDictionaries && appDictionaries[app][key]) {
+    val = appDictionaries[app][key];
+  } else if (paramValue && paramValue in appDictionaries && appDictionaries[paramValue][key]) {
+    val = appDictionaries[paramValue][key];
   }
 
-  return language[key] || `__${key}_missing__`;
+  if (typeof paramValue !== 'undefined') {
+    return val.replace('%s', paramValue);
+  }
+
+  return val;
 };
 
 export const switchLanguage = (lang) =>
