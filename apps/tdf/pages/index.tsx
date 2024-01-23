@@ -2,9 +2,8 @@ import Head from 'next/head';
 import Link from 'next/link';
 
 import { useEffect, useState } from 'react';
-import { isMobile } from 'react-device-detect';
 
-import { Heading, YoutubeEmbed } from 'closer';
+import { Heading } from 'closer';
 import { useAuth } from 'closer/contexts/auth';
 import { event } from 'nextjs-google-analytics';
 
@@ -38,75 +37,39 @@ const HomePage = () => {
           key="canonical"
         />
       </Head>
-      <section className="absolute overflow-hidden left-0 h-full min-w-[100vw] bg-accent-light pb-12 -mt-6 mb-12 md:mb-[100vh]">
-        <div className="h-[100vh]">
-          {isMobile ? (
-            <video
-              loop={true}
-              muted={true}
-              autoPlay={true}
-              playsInline={true}
-              className="w-full h-full object-cover"
+      <section>
+        <div className="max-w-6xl mx-auto w-full px-4 md:h-full py-32 text-xl md:text-2xl">
+          <div className="max-w-prose">
+            <Heading
+              className="text-3xl sm:text-4xl md:text-5xl mb-6"
+              data-testid="page-title"
+              display
+              level={1}
             >
-              <source
-                src="https://cdn.oasa.co/video/tdf-360-mute.mp4"
-                type="video/mp4"
-              />
-            </video>
-          ) : (
-            <YoutubeEmbed isBackgroundVideo={true} embedId="VkoqvPcaRpk" />
-          )}
-        </div>
-        <div className="absolute left-0 top-0 z-10 bg-opacity-50 bg-black w-full h-full flex justify-center">
-          <div className="w-full h-auto overflow-scroll flex justify-start flex-col items-center">
-            <div className="max-w-6xl w-full px-4 md:h-full py-32 md:py-64">
-              {/* <Heading
-                className="text-center text-white text-3xl sm:text-4xl md:text-5xl"
-                data-testid="page-title"
-                display
-                level={1}
-              >
-                Traditional Dream Factory is a regenerative village. A playground for the future. A place to learn, grow and share. A place to live in harmony with nature and each other. A place to dream. A place to be. A place to become. A place to belong. A place to call home.
-              </Heading> */}
-              <Heading
-                className="text-center text-white text-3xl font-light sm:text-4xl md:text-5xl"
-                data-testid="page-title"
-                display
-                level={1}
-              >
-                <b className="font-black">Traditional Dream Factory</b> is a
-                regenerative village blending together{' '}
-                <b className="font-black">technology, nature & community</b>. Be
-                a part of our journey to a place you can call{' '}
-                <b className="font-black">home</b>.
-              </Heading>
-              <div className="flex justify-center flex-col md:flex-row align-center mt-12 text-center">
-                <Link
-                  href={ctaButton.link}
-                  className="bg-accent text-white rounded-full py-2.5 px-8 text-xl"
-                  onClick={() =>
-                    event('click', {
-                      category: 'HomePage',
-                      label: ctaButton.text,
-                    })
-                  }
-                >
-                  {ctaButton.text.toUpperCase()}
-                </Link>
-                <Link
-                  href="/what-is-tdf"
-                  className="bg-transparent text-white px-8 py-2.5 uppercase"
-                  onClick={() =>
-                    event('click', {
-                      category: 'HomePage',
-                      label: 'Learn more',
-                    })
-                  }
-                >
-                  Learn more
-                </Link>
-              </div>
-            </div>
+              TDF is a collective of doers & dreamers, prototyping a regenerative way of life.
+            </Heading>
+            <p className="mb-4">TDF was founded on by a group of burner friends as a prototype for creating a regenerative way of life.</p>
+            <p className="mb-4">After being 3 years on the ground, in 2024 we are trying a new experiment:What if our village was completely free to access?</p>
+            <p className="mb-4">In the spirit of co-creation and gifting economy, you are invited to be a part of creating the new paradigm. One where we are restoring local ecosystems, and using our time for play.</p>
+            <p className="mb-4">This is a re-imagination of what human purpose can be. We need to become a keystone species that’s enabling more life to flourish on this planet.</p>
+            <p className="mb-4">This is saying no to the extractive mentality of the past, and embracing a lovership with planet earth.</p>
+            <p className="mb-4">Technology is increasingly making obsolete the notion that we should have a society that distributes it’s value based on productivity. As AI and AGI rise, some see doom and loss of jobs. We see a future where humans are focused on building things out of love rather than out of necessity. We see a future where machines will be doing the bulk of manual labor and humans will choose to surround themselves by nature.</p>
+            <p className="mb-4"> We see a future where <b>play</b> becomes our primary way of being.</p>
+            <p className="mb-8">Join us on this experiment, opening Feb 1st and running until end of April.</p>
+          </div>
+          <div className="flex justify-start flex-col md:flex-row align-center mt-12 text-center">
+            <Link
+              href={ctaButton.link}
+              className="bg-accent text-white rounded-full py-2.5 px-8 text-2xl"
+              onClick={() =>
+                event('click', {
+                  category: 'HomePage',
+                  label: 'Play',
+                })
+              }
+            >
+              I want to play!
+            </Link>
           </div>
         </div>
       </section>

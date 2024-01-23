@@ -88,7 +88,7 @@ const UnlockStaysPage: NextPage<Props> = ({ subscriptionPlans }) => {
               </div>
 
               <ul className="mb-4">
-                {allowedSubscriptionPlan?.perks.map((perk) => {
+                {allowedSubscriptionPlan?.perks?.map((perk) => {
                   return (
                     <li
                       key={perk}

@@ -373,7 +373,7 @@ const HomePage = ({ subscriptionPlans }: Props) => {
                     ) : (
                       <div className="w-full text-left ">
                         <ul className="mb-4 w-full">
-                          {plan.perks.map((perk) => {
+                            {plan.perks && plan.perks.map((perk) => {
                             return (
                               <li
                                 key={perk}

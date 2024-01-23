@@ -4,13 +4,11 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import { useAuth } from '../contexts/auth';
-import { __ } from '../utils/helpers';
 import GuestMenu from './GuestMenu';
 import Logo from './Logo';
 import MemberMenu from './MemberMenu';
 import Menu from './MenuContainer';
 import ProfilePhoto from './ProfilePhoto';
-import { Button } from './ui';
 
 const Navigation = () => {
   const [navOpen, setNavOpen] = useState(false);
@@ -41,13 +39,13 @@ const Navigation = () => {
       <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
         <Logo />
         <div className="flex gap-3 w-auto justify-center items-center ">
-          <Button
+          {/* <Button
             onClick={() => router.push('/stay')}
             size="small"
             type="primary"
           >
             {__('navigation_stay') }
-          </Button>
+          </Button> */}
           {/* {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && (
             <Link href="/token" className="uppercase">
               {__('navigation_buy_token')}

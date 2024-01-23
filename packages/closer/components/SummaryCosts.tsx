@@ -12,12 +12,14 @@ interface Props {
   eventDefaultCost?: number;
   accomodationDefaultCost?: number;
   volunteerId?: string;
+  foodOption?: string;
   isNotPaid?: boolean;
 }
 
 const SummaryCosts = ({
   utilityFiat,
   accomodationCost,
+  foodOption,
   useTokens,
   totalToken,
   totalFiat,
@@ -61,7 +63,10 @@ const SummaryCosts = ({
       <div className="flex justify-between items-center mt-3">
         <p> {__('bookings_summary_step_utility_total')}</p>
         <p className="font-bold">
-          {priceFormat(utilityFiat)}
+          {foodOption === 'no_food' ?
+            'NOT INCLUDED':
+            priceFormat(utilityFiat)
+          }
           {isNotPaid && (
             <span className="text-failure"> {__('booking_card_unpaid')}</span>
           )}

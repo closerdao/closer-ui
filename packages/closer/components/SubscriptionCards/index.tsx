@@ -94,7 +94,7 @@ const SubscriptionCards = ({
                         } package +`}
                     </Heading>
                     <ul className="mb-4">
-                      {plan.perks.map((perk) => {
+                      {plan.perks && plan.perks.map((perk) => {
                         return (
                           <li
                             key={perk}
