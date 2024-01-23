@@ -13,12 +13,14 @@ import { Button, Card, Heading, Tag, YoutubeEmbed } from 'closer';
 import { SubscriptionPlan } from 'closer/types/subscriptions';
 import api from 'closer/utils/api';
 import { __ } from 'closer/utils/helpers';
+import { prepareSubscriptions } from 'closer/utils/subscriptions.helpers';
 import { event } from 'nextjs-google-analytics';
 
 interface Props {
-  subscriptionPlans: SubscriptionPlan[];
+  subscriptionsConfig: { enabled: boolean; plans: SubscriptionPlan[] };
 }
-const HomePage = ({ subscriptionPlans }: Props) => {
+const HomePage = ({ subscriptionsConfig }: Props) => {
+  const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
   return (
     <div>
       <Head>
@@ -308,11 +310,9 @@ const HomePage = ({ subscriptionPlans }: Props) => {
           <div className="text-center mb-20 w-full md:max-w-6xl">
             <div className="w-full flex items-center flex-col">
               <Heading level={2} className="text-2xl font-bold">
-                {
-                  `Meet your new home, way of life, and tribe. 
+                {`Meet your new home, way of life, and tribe. 
                   Join a unique blend of solarpunks, web3 aficionados, holistic healers, permaculture pioneers, tree enthusiasts, tech wizards, and regenerative innovators. 
-                  Together, we're reshaping communal living.`
-                }
+                  Together, we're reshaping communal living.`}
               </Heading>
             </div>
             <PhotoGallery className="mt-8" />
@@ -373,7 +373,7 @@ const HomePage = ({ subscriptionPlans }: Props) => {
                     ) : (
                       <div className="w-full text-left ">
                         <ul className="mb-4 w-full">
-                          {plan.perks.map((perk) => {
+                          {plan.perks.split(',').map((perk) => {
                             return (
                               <li
                                 key={perk}
@@ -487,11 +487,11 @@ HomePage.getInitialProps = async () => {
     } = await api.get('/config/subscriptions');
 
     return {
-      subscriptionPlans: subscriptions.value.plans,
+      subscriptionsConfig: subscriptions.value.plans,
     };
   } catch (err) {
     return {
-      subscriptionPlans: [],
+      subscriptionsConfig: { enabled: false, plans: [] },
       error: err,
     };
   }

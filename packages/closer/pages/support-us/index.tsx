@@ -24,23 +24,26 @@ import { event } from 'nextjs-google-analytics';
 
 import PageNotFound from '../404';
 import { usePlatform } from '../../contexts/platform';
+import { useConfig } from '../../hooks/useConfig';
 import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
 
 interface Props {
   fundraisingConfig: {
-    videoId: { label: string; value: string };
-    wandererUrl: { label: string; value: string };
-    pioneerUrl: { label: string; value: string };
-    oneMonthSharedUrl: { label: string; value: string };
-    oneMonthPrivateUrl: { label: string; value: string };
-    buy5TdfUrl: { label: string; value: string };
-    buy10TdfUrl: { label: string; value: string };
-    hostEventUrl: { label: string; value: string };
+    videoId: string;
+    wandererUrl: string;
+    pioneerUrl: string;
+    oneMonthSharedUrl: string;
+    oneMonthPrivateUrl: string;
+    buy5TdfUrl: string;
+    buy10TdfUrl: string;
+    hostEventUrl: string;
+    enabled: boolean;
   };
 }
 
 const SupportUsPage = ({ fundraisingConfig }: Props) => {
+  const { enabledConfigs } = useConfig();
   const { platform }: any = usePlatform();
   const wandererFilter = {
     where: { 'subscription.plan': 'wanderer' },
@@ -77,7 +80,10 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
     }
   };
 
-  if (process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US !== 'true' ||
+    !enabledConfigs?.includes('support-us')
+  ) {
     return <PageNotFound />;
   }
 
@@ -344,8 +350,8 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               raise your voice on important topics.
             </p>
             <LinkButton
-              href={
-                fundraisingConfig.buy5TdfUrl.value || '/token/checkout?tokens=5'
+              href={ 
+                fundraisingConfig.buy5TdfUrl || '/token/checkout?tokens=5'
               }
               className="w-[240px]"
             >
@@ -398,7 +404,7 @@ SupportUsPage.getInitialProps = async () => {
     } = await api.get('/config/fundraiser');
 
     return {
-      fundraisingConfig: fundraisingConfig?.value,
+      fundraisingConfig: fundraisingConfig.value,
     };
   } catch (err) {
     return {

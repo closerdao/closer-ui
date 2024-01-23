@@ -11,6 +11,7 @@ import { ParsedUrlQuery } from 'querystring';
 import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
+import { useConfig } from '../../../hooks/useConfig';
 import { BaseBookingParams, Booking } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
@@ -22,6 +23,7 @@ interface Props extends BaseBookingParams {
 }
 
 const BookingCancelPage = ({ booking, error }: Props) => {
+  const { enabledConfigs } = useConfig();
   const router = useRouter();
   const bookingId = router.query.slug;
   const bookingPrice = booking?.total || {
@@ -49,10 +51,10 @@ const BookingCancelPage = ({ booking, error }: Props) => {
         } = await api.get('/config/booking');
 
         const policy = {
-          lastday: loadPolicy.value.cancellationPolicyLastday.value,
-          lastweek: loadPolicy.value.cancellationPolicyLastweek.value,
-          lastmonth: loadPolicy.value.cancellationPolicyLastmonth.value,
-          default: loadPolicy.value.cancellationPolicyDefault.value,
+          lastday: loadPolicy.value.cancellationPolicyLastday,
+          lastweek: loadPolicy.value.cancellationPolicyLastweek,
+          lastmonth: loadPolicy.value.cancellationPolicyLastmonth,
+          default: loadPolicy.value.cancellationPolicyDefault,
         };
 
         setPolicy(policy);
@@ -67,7 +69,12 @@ const BookingCancelPage = ({ booking, error }: Props) => {
     }
   }, [user]);
 
-  if (!booking || error || process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+  if (
+    !booking ||
+    error ||
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
+    (enabledConfigs && !enabledConfigs.includes('booking'))
+  ) {
     return <PageNotFound />;
   }
 

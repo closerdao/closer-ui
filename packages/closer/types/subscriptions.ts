@@ -20,11 +20,12 @@ export interface SubscriptionPlan {
   tier: number;
   monthlyCredits?: number;
   price: number;
-  available?: boolean;
-  perks: string[];
+  available: boolean;
+  tiersAvailable: boolean;
+  perks: string;
   billingPeriod: string;
-  tiers?: string | Tier[];
-  variants?: SubscriptionVariant[];
+  tiers?: string ;
+  variants?: SubscriptionVariant;
   note?: string;
 }
 
@@ -46,6 +47,7 @@ export interface SelectedPlan {
   title: string;
   monthlyCredits: number;
   price: number;
+  tiersAvailable: boolean;
   variants?: SubscriptionVariant[];
   tiers?: Tier[];
 }

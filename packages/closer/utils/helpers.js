@@ -320,16 +320,6 @@ export const getCurrencySymbol = (currency) => {
   return `${symbol[currency]}`;
 };
 
-export const getSubscriptionVariantPrice = (credits, subscriptionPlan) => {
-  if (subscriptionPlan.tiers) {
-    const priceTier = subscriptionPlan.tiers.find((tier) => {
-      return tier.minAmount <= credits && tier.maxAmount >= credits;
-    });
-    return priceTier?.unitPrice && priceTier?.unitPrice * credits;
-  }
-  return subscriptionPlan.price;
-};
-
 export const getNextMonthName = () => {
   const currentDate = dayjs();
   const nextMonth = currentDate.add(1, 'month');
@@ -426,13 +416,13 @@ export const getMaxBookingHorizon = (settings, isMember) => {
   if (settings) {
     if (isMember) {
       return [
-        settings.memberMaxBookingHorizon.value,
-        settings.memberMaxDuration.value,
+        settings.memberMaxBookingHorizon,
+        settings.memberMaxDuration,
       ];
     }
     return [
-      settings.memberMaxBookingHorizon.value,
-      settings.guestMaxDuration.value,
+      settings.memberMaxBookingHorizon,
+      settings.guestMaxDuration,
     ];
   }
   return [0, 0];
@@ -452,13 +442,13 @@ export const getBookingRate = (durationInDays) =>
 export const getDiscountRate = (durationName, settings) => {
   switch (durationName) {
     case 'monthly':
-      return settings.discountsMonthly.value;
+      return settings.discountsMonthly;
     case 'weekly':
-      return settings.discountsWeekly.value;
+      return settings.discountsWeekly;
     case 'daily':
-      return settings.discountsDaily.value;
+      return settings.discountsDaily;
     default:
-      return settings.discountsDaily.value;
+      return settings.discountsDaily;
   }
 }; 
 
@@ -477,18 +467,12 @@ export const calculateSubscriptionPrice = (plan, monthlyCredits) => {
     return 0;
   }
 
-  if (!monthlyCredits || !plan.tiers) {
+  if (!plan.tiersAvailable) {
     return plan.price;
   }
 
-  if (plan.tiers) {
-    const tier = plan.tiers.find(
-      (t) => monthlyCredits >= t.minAmount && monthlyCredits <= t.maxAmount,
-    );
-
-    if (tier) {
-      return tier.unitPrice * monthlyCredits;
-    }
+  if (plan.tiersAvailable) {
+    return plan.price * monthlyCredits;
   }
 
   throw new Error(

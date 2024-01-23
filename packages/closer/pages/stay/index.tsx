@@ -21,9 +21,9 @@ interface Props {
 const StayPage = ({ settings }: Props) => {
   const config = useConfig();
   const discounts = {
-    daily: settings.discountsDaily.value,
-    weekly: settings.discountsWeekly.value,
-    monthly: settings.discountsMonthly.value,
+    daily: settings.discountsDaily,
+    weekly: settings.discountsWeekly,
+    monthly: settings.discountsMonthly,
   };
   const { PLATFORM_NAME } = config || {};
   const { platform }: any = usePlatform();

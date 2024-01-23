@@ -25,6 +25,7 @@ import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { WalletState } from '../../../contexts/wallet';
+import { useConfig } from '../../../hooks/useConfig';
 import { BaseBookingParams, Booking, Event, Listing } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
@@ -38,6 +39,7 @@ interface Props extends BaseBookingParams {
 }
 
 const Checkout = ({ booking, listing, error, event }: Props) => {
+  const { enabledConfigs } = useConfig();
   const {
     utilityFiat,
     rentalToken,
@@ -106,9 +108,7 @@ const Checkout = ({ booking, listing, error, event }: Props) => {
       setPaymentError(parseMessageFromError(error));
     }
 
-    router.push(
-      `/bookings/${booking._id}`,
-    );
+    router.push(`/bookings/${booking._id}`);
   };
 
   const applyCredits = async () => {
@@ -137,7 +137,10 @@ const Checkout = ({ booking, listing, error, event }: Props) => {
     return <PageNotAllowed />;
   }
 
-  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
+    (enabledConfigs && !enabledConfigs.includes('booking'))
+  ) {
     return <PageNotFound />;
   }
 
@@ -237,24 +240,29 @@ const Checkout = ({ booking, listing, error, event }: Props) => {
           <CheckoutTotal total={updatedTotal} />
 
           {booking.total.val > 0 ? (
-            <CheckoutPayment
-              bookingId={booking._id}
-              buttonDisabled={
-                useTokens &&
-                (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)
-              }
-              useTokens={useTokens}
-              useCredits={useCredits}
-              totalToPayInFiat={updatedTotal}
-              dailyTokenValue={dailyRentalToken?.val || 0}
-              startDate={start}
-              totalNights={duration}
-              user={user}
-              eventId={event?._id}
-            />
+            enabledConfigs &&
+            enabledConfigs.includes('payment') && (
+              <CheckoutPayment
+                bookingId={booking._id}
+                buttonDisabled={
+                  useTokens &&
+                  (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)
+                }
+                useTokens={useTokens}
+                useCredits={useCredits}
+                totalToPayInFiat={updatedTotal}
+                dailyTokenValue={dailyRentalToken?.val || 0}
+                startDate={start}
+                totalNights={duration}
+                user={user}
+                eventId={event?._id}
+              />
+            )
           ) : (
             <Button className="booking-btn" onClick={handleFreeBooking}>
-              {user?.roles.includes('member') ? __('buttons_confirm_booking') : __('buttons_booking_request')}
+              {user?.roles.includes('member')
+                ? __('buttons_confirm_booking')
+                : __('buttons_booking_request')}
             </Button>
           )}
 
@@ -281,12 +289,7 @@ Checkout.getInitialProps = async ({
       },
     });
 
-    const [
-  
-      optionalEvent,
-      optionalListing,
-    ] = await Promise.all([
-
+    const [optionalEvent, optionalListing] = await Promise.all([
       booking.eventId &&
         api.get(`/event/${booking.eventId}`, {
           headers: req?.cookies?.access_token && {

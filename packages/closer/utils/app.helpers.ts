@@ -12,7 +12,7 @@ export function prepareGeneralConfig(
   Object.entries(inputObj).forEach(([key, value]) => {
     const words = key.split(/(?=[A-Z])/).map(word => word.toUpperCase());
     const upperCaseKey = words.join('_');
-    result[upperCaseKey] = String(value.value);
+    result[upperCaseKey] = String(value);
   });
 
   return result;

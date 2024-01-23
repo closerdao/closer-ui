@@ -12,6 +12,7 @@ import PageNotFound from '../../404';
 import { blockchainConfig } from '../../../config_blockchain';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import { useConfig } from '../../../hooks/useConfig';
 import { BaseBookingParams, Listing } from '../../../types';
 import api from '../../../utils/api';
 import { getBookingType } from '../../../utils/booking.helpers';
@@ -40,6 +41,7 @@ const AccomodationSelector = ({
   doesNeedPickup,
   doesNeedSeparateBeds,
 }: Props) => {
+  const { enabledConfigs } = useConfig();
   const router = useRouter();
   const { isAuthenticated } = useAuth();
 
@@ -76,7 +78,10 @@ const AccomodationSelector = ({
     }
   };
 
-  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
+    (enabledConfigs && !enabledConfigs.includes('booking'))
+  ) {
     return <PageNotFound />;
   }
   if (error) {

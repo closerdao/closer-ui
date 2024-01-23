@@ -17,7 +17,6 @@ import { ParsedUrlQuery } from 'querystring';
 
 import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
-import { User } from '../../../contexts/auth/types';
 import { Lesson } from '../../../types/lesson';
 import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
@@ -29,24 +28,22 @@ const MIN_SUBSCRIPTION_PLAN = 'Wanderer';
 
 interface Props {
   lesson: Lesson;
-  lessonCreator: User;
   error?: string;
-  subscriptions: any[];
+  subscriptionsConfig: { enabled: boolean; plans: SubscriptionPlan[] };
 }
 
-const LessonPage = ({ lesson, lessonCreator, subscriptions, error }: Props) => {
-  subscriptions = prepareSubscriptions(subscriptions);
+const LessonPage = ({ lesson, subscriptionsConfig, error }: Props) => {
+  const subscriptions = prepareSubscriptions(subscriptionsConfig);
   const { asPath } = useRouter();
   const { user, refetchUser } = useAuth();
   const [hasRefetchedUser, setHasRefetchedUser] = useState(false);
 
-  const subscriptionPriceId = subscriptions?.find(
-    (subscription: SubscriptionPlan) => {
+  const subscriptionPriceId =
+    subscriptions?.find((subscription: SubscriptionPlan) => {
       return (
         subscription.title === MIN_SUBSCRIPTION_PLAN && subscription.priceId
       );
-    },
-  ).priceId;
+    })?.priceId;
 
   const getAccessUrl = `/subscriptions/checkout?priceId=${subscriptionPriceId}&source=${asPath}`;
 
@@ -241,29 +238,20 @@ LessonPage.getInitialProps = async ({
         data: { results: lesson },
       },
     ] = await Promise.all([
-      await api.get('/config/subscriptions'),
-      await api.get(`/lesson/${query.slug}`, {
+      api.get('/config/subscriptions'),
+      api.get(`/lesson/${query.slug}`, {
         headers: req?.cookies?.access_token && {
           Authorization: `Bearer ${req?.cookies?.access_token}`,
         },
       }),
     ]);
 
-    const lessonCreatorId = lesson.createdBy;
-    const {
-      data: { results: lessonCreator },
-    } = await api.get(`/user/${lessonCreatorId}`, {
-      headers: req?.cookies?.access_token && {
-        Authorization: `Bearer ${req?.cookies?.access_token}`,
-      },
-    });
-
-    return { subscriptions: subscriptions.value, lesson, lessonCreator };
+    return { subscriptionsConfig: subscriptions.value, lesson, error: null };
   } catch (err: unknown) {
     return {
+      subscriptionsConfig: { enabled: false, plans: [] },
       error: parseMessageFromError(err),
       lesson: null,
-      lessonCreator: null,
     };
   }
 };

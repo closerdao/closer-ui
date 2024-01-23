@@ -25,6 +25,7 @@ import {
 } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
+import { useConfig } from '../../../hooks/useConfig';
 import { Event, TicketOption } from '../../../types';
 import { VolunteerOpportunity } from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
@@ -49,16 +50,17 @@ const DatesSelector: NextPage<Props> = ({
   futureEvents,
   event,
 }) => {
+  const { enabledConfigs } = useConfig();
   const router = useRouter();
 
   const conditions = {
     member: {
-      maxDuration: settings?.memberMaxDuration.value,
-      maxBookingHorizon: settings?.memberMaxBookingHorizon.value,
+      maxDuration: settings?.memberMaxDuration,
+      maxBookingHorizon: settings?.memberMaxBookingHorizon,
     },
     guest: {
-      maxDuration: settings?.guestMaxDuration.value,
-      maxBookingHorizon: settings?.guestMaxBookingHorizon.value,
+      maxDuration: settings?.guestMaxDuration,
+      maxBookingHorizon: settings?.guestMaxBookingHorizon,
     },
   };
   const { user, isAuthenticated } = useAuth();
@@ -245,7 +247,10 @@ const DatesSelector: NextPage<Props> = ({
     return <PageError error={error} />;
   }
 
-  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
+    (enabledConfigs && !enabledConfigs.includes('booking'))
+  ) {
     return <PageNotFound />;
   }
 
@@ -318,6 +323,9 @@ const DatesSelector: NextPage<Props> = ({
             <div className="my-10 flex flex-row justify-between flex-wrap">
               <label htmlFor="separateBeds" className="text-md">
                 {__('bookings_pickup')}
+                <span className="w-full text-xs ml-2">
+                  ({__('bookings_pickup_disclaimer')})
+                </span>
               </label>
               <Switch
                 disabled={false}
@@ -326,9 +334,6 @@ const DatesSelector: NextPage<Props> = ({
                 onChange={setDoesNeedPickup}
                 checked={doesNeedPickup}
               />
-              <div className="w-full text-xs">
-                {__('bookings_pickup_disclaimer')}
-              </div>
             </div>
           </div>
 

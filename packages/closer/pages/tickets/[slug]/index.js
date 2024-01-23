@@ -15,7 +15,6 @@ const Ticket = ({ ticket, event, error }) => {
   if (!ticket) {
     return <PageNotFound error={error} />;
   }
-  console.log('Ticket page config', config);
 
   return (
     <>

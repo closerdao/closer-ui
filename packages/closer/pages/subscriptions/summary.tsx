@@ -25,8 +25,7 @@ import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import {
   SelectedPlan,
-  SubscriptionPlan,
-  Tier,
+  SubscriptionPlan, // Tier,
 } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
@@ -39,15 +38,16 @@ import {
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
-  subscriptionPlans: SubscriptionPlan[];
+  subscriptionsConfig: { enabled: boolean; plans: SubscriptionPlan[] };
   error?: string;
 }
 
 const SubscriptionsSummaryPage: NextPage<Props> = ({
-  subscriptionPlans,
+  subscriptionsConfig,
   error,
 }) => {
-  subscriptionPlans = prepareSubscriptions(subscriptionPlans);
+  const { enabledConfigs, PLATFORM_NAME } = useConfig();
+  const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
 
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
@@ -62,8 +62,6 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
     defaultMonthlyCredits,
   );
 
-  const { PLATFORM_NAME } = useConfig() || {};
-
   useEffect(() => {
     if (user?.subscription && user.subscription.priceId) {
       router.push('/subscriptions');
@@ -76,13 +74,13 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
         (plan: SubscriptionPlan) => plan.priceId === priceId,
       );
 
-      setMonthlyCreditsSelected(selectedSubscription?.tiers ? 1 : 0);
+      setMonthlyCreditsSelected(selectedSubscription?.monthlyCredits ? 1 : 0);
 
       setSelectedPlan({
         title: selectedSubscription?.title as string,
-        monthlyCredits: selectedSubscription?.tiers ? 1 : 0,
+        monthlyCredits: selectedSubscription?.monthlyCredits ? 1 : 0,
         price: selectedSubscription?.price as number,
-        tiers: selectedSubscription?.tiers as Tier[],
+        tiersAvailable: selectedSubscription?.tiersAvailable as boolean,
       });
     }
   }, [priceId, monthlyCredits]);
@@ -117,7 +115,10 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
     return <PageError error={error} />;
   }
 
-  if (process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true' ||
+    (enabledConfigs && !enabledConfigs.includes('subscriptions'))
+  ) {
     return <Page404 error="" />;
   }
 
@@ -154,7 +155,7 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
                 rowKey={__('subscriptions_summary_tier')}
                 value={selectedPlan?.title}
               />
-              {selectedPlan?.tiers && (
+              {selectedPlan?.tiersAvailable && (
                 <div className="flex space-between items-center mt-9">
                   <p className="flex-1">
                     {__('subscriptions_summary_stays_per_month')}
@@ -208,11 +209,11 @@ SubscriptionsSummaryPage.getInitialProps = async () => {
     } = await api.get('/config/subscriptions');
 
     return {
-      subscriptionPlans: results.value,
+      subscriptionsConfig: results.value,
     };
   } catch (err: unknown) {
     return {
-      subscriptionPlans: [],
+      subscriptionsConfig: { enabled: false, plans: [] },
       error: parseMessageFromError(err),
     };
   }

@@ -108,7 +108,7 @@ const ListingPage: NextPage<Props> = ({
     ? listing.fiatPrice?.val * (listing.private ? 1 : adults) * discountRate
     : 0;
   const utilityTotal = settings
-    ? settings.utilityFiatVal.value * adults * durationInDays
+    ? settings.utilityFiatVal * adults * durationInDays
     : 0;
 
   const [apiError, setApiError] = useState(null);
@@ -397,7 +397,7 @@ const ListingPage: NextPage<Props> = ({
                             {settings?.utilityFiat &&
                               priceFormat(
                                 utilityTotal,
-                                settings.utilityFiatCur.value,
+                                settings.utilityFiatCur,
                               )}
                           </div>
                         ) : (
@@ -473,7 +473,10 @@ const ListingPage: NextPage<Props> = ({
                                   htmlFor="separateBeds"
                                   className="text-sm"
                                 >
-                                  {__('bookings_pickup')}
+                                {__('bookings_pickup')}
+                                <span className="w-full text-xs ml-2">
+                                  ({__('bookings_pickup_disclaimer')})
+                                </span>
                                 </label>
                                 <Switch
                                   disabled={false}
@@ -482,9 +485,6 @@ const ListingPage: NextPage<Props> = ({
                                   onChange={setDoesNeedPickup}
                                   checked={doesNeedPickup}
                                 />
-                                <div className="w-full text-xs">
-                                  {__('bookings_pickup_disclaimer')}
-                                </div>
                               </div>
                               {isTeamMember && (
                                 <div className="my-0 flex flex-row justify-between flex-wrap">
@@ -623,7 +623,7 @@ const ListingPage: NextPage<Props> = ({
                                   {settings &&
                                     priceFormat(
                                       isTeamBooking ? 0 : utilityTotal,
-                                      settings.utilityFiatCur.value,
+                                      settings.utilityFiatCur,
                                     )}
                                 </div>
                               ) : (

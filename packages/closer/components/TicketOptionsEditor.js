@@ -110,7 +110,6 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
             <PriceEditor
               value={{ cur: option.currency, val: option.price }}
               onChange={(price) => {
-                console.log(index);
                 updateOption(index, {
                   ...option,
                   price: price.val,

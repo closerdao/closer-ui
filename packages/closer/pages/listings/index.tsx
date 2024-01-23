@@ -18,9 +18,9 @@ interface Props {
 
 const Listings = ({ settings }: Props) => {
   const discounts = {
-    daily: settings.discountsDaily.value,
-    weekly: settings.discountsWeekly.value,
-    monthly: settings.discountsMonthly.value,
+    daily: settings.discountsDaily,
+    weekly: settings.discountsWeekly,
+    monthly: settings.discountsMonthly,
   };
 
   const { platform }: any = usePlatform();
