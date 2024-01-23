@@ -11,7 +11,7 @@ describe.skip('Subscriptions', () => {
     renderWithProviders(
       <SubscriptionsPage
         listings={listings}
-        subscriptionPlans={subscriptions}
+        subscriptionPlans={subscriptions.plans}
       />,
     );
 
@@ -26,7 +26,7 @@ describe.skip('Subscriptions', () => {
     renderWithProviders(
       <SubscriptionsPage
         listings={listings}
-        subscriptionPlans={subscriptions}
+        subscriptionPlans={subscriptions.plans}
       />,
     );
 

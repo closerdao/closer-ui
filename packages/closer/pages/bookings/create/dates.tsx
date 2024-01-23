@@ -327,6 +327,9 @@ const DatesSelector: NextPage<Props> = ({
             <div className="my-10 flex flex-row justify-between flex-wrap">
               <label htmlFor="separateBeds" className="text-md">
                 {__('bookings_pickup')}
+                <span className="w-full text-xs ml-2">
+                  ({__('bookings_pickup_disclaimer')})
+                </span>
               </label>
               <Switch
                 disabled={false}
@@ -335,9 +338,6 @@ const DatesSelector: NextPage<Props> = ({
                 onChange={setDoesNeedPickup}
                 checked={doesNeedPickup}
               />
-              <div className="w-full text-xs">
-                {__('bookings_pickup_disclaimer')}
-              </div>
             </div>
           </div>
 

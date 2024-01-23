@@ -427,7 +427,7 @@ const ListingPage: NextPage<Props> = ({
                             end,
                             maxHorizon,
                             maxDuration,
-                            unavailableDates,
+                            unavailableDates
                           )}
                         />
                       </div>
@@ -474,7 +474,10 @@ const ListingPage: NextPage<Props> = ({
                                   htmlFor="separateBeds"
                                   className="text-sm"
                                 >
-                                  {__('bookings_pickup')}
+                                {__('bookings_pickup')}
+                                <span className="w-full text-xs ml-2">
+                                  ({__('bookings_pickup_disclaimer')})
+                                </span>
                                 </label>
                                 <Switch
                                   disabled={false}
@@ -483,9 +486,6 @@ const ListingPage: NextPage<Props> = ({
                                   onChange={setDoesNeedPickup}
                                   checked={doesNeedPickup}
                                 />
-                                <div className="w-full text-xs">
-                                  {__('bookings_pickup_disclaimer')}
-                                </div>
                               </div>
                               {isTeamMember && (
                                 <div className="my-0 flex flex-row justify-between flex-wrap">
