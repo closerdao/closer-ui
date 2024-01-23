@@ -13,7 +13,7 @@ const Reviews = ({ reviews }: Props) => {
   const [selectedReview, setSelectedReview] = useState(1);
   return (
     <div className="p-6 pb-24 ">
-      {reviews.map((review, i) => {
+      {reviews && reviews.map((review, i) => {
         return (
           <div
             key={review.name}
@@ -68,7 +68,7 @@ const Reviews = ({ reviews }: Props) => {
       })}
       <div className="flex items-center h-4 justify-center">
         <div className="flex items-center space-between w-1/3 ">
-          {reviews.map((review, i) => (
+          {reviews && reviews.map((review, i) => (
             <div
               onClick={() => setSelectedReview(i + 1)}
               key={review.name}

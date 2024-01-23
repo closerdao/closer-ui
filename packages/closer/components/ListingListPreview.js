@@ -12,7 +12,7 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
   const { user } = useAuth();
 
   return (
-    <div className="flex flex-col gap-5 justify-between mb-8">
+    <div className="flex flex-col gap-5 justify-between mb-8 shadow rounded-xl p-4">
       <div className="flex flex-col gap-5">
         {listing.get('photos') && listing.get('photos').count() > 0 && (
           <Slider
@@ -45,13 +45,13 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
       </div>
 
       <div className="flex flex-col gap-7">
-        {listing.get('fiatPrice') && (
+        {listing.get('fiatPrice') && listing.getIn(['fiatPrice', 'val']) > 0 ? (
           <div>
             <p className="text-left">
               <span className="font-bold">
                 {priceFormat(
-                  listing.get('fiatPrice').toJS().val,
-                  listing.get('fiatPrice').toJS().cur,
+                  listing.getIn(['fiatPrice', 'val']),
+                  listing.get(['fiatPrice', 'cur']),
                 )}{' '}
               </span>
               {__('listing_preview_per_daily')}
@@ -59,10 +59,10 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
             <p className="text-left">
               <span className="">
                 {priceFormat(
-                  listing.get('fiatPrice').toJS().val *
+                  listing.getIn(['fiatPrice', 'val']) *
                     (1 - discounts.weekly) *
                     7,
-                  listing.get('fiatPrice').toJS().cur,
+                  listing.get(['fiatPrice', 'cur']),
                 )}{' '}
               </span>
               {__('listing_preview_per_weekly')}
@@ -70,13 +70,21 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
             <p className="text-left">
               <span className="">
                 {priceFormat(
-                  listing.get('fiatPrice').toJS().val *
+                  listing.getIn(['fiatPrice', 'val']) *
                     (1 - discounts.monthly) *
                     30,
-                  listing.get('fiatPrice').toJS().cur,
+                  listing.get(['fiatPrice', 'cur']),
                 )}{' '}
               </span>
               {__('listing_preview_per_monthly')}
+            </p>
+          </div>
+        ) : (
+          <div>
+            <p className="text-left">
+              <b className="font-bold">
+                  {__('listing_free')}
+              </b>
             </p>
           </div>
         )}

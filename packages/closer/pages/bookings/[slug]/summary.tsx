@@ -157,6 +157,7 @@ const Summary = ({ booking, listing, event, error }: Props) => {
             totalToken={rentalToken}
             totalFiat={total}
             eventCost={eventFiat}
+            foodOption={booking.foodOption}
             eventDefaultCost={
               booking.ticketOption?.price
                 ? booking.ticketOption.price * booking.adults

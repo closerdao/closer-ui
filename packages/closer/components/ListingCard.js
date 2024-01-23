@@ -68,16 +68,16 @@ const ListingCard = ({
         </div>
       )}
       <ul className="list-disc px-4 flex-1">
-        <li
+        {firstPHtml  && <li
           dangerouslySetInnerHTML={{
             __html: firstPHtml,
           }}
-        />
+        /> }
 
         <li>
           {listing.private
-            ? __('listing_preview_private')
-            : __('listing_preview_beds', listing.beds)}
+            ? __('listing_preview_private', listing.beds - 1)
+            : __('listing_preview_beds', listing.beds - 1)}
         </li>
       </ul>
       <div className="my-8">
@@ -97,6 +97,7 @@ const ListingCard = ({
       )}
       <Button
         onClick={handleBooking}
+        type="secondary"
         isEnabled={available !== false && !(listing.private && adults > listing.beds)}
       >
         {available !== false

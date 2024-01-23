@@ -62,10 +62,7 @@ const MyApp = ({
   return (
     <>
       <Head>
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0,user-scalable=0"
-        />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
       </Head>
 
       <Script
@@ -148,6 +145,8 @@ const MyApp = ({
 MyApp.getInitialProps = async (context: AppContext) => {
   const ctx = await App.getInitialProps(context);
   const allConfigs = await api.get('/config');
+
+  console.log('allConfigs', allConfigs);
 
   const configGeneral = allConfigs.data.results.find(
     (config: any) => config.slug === 'general',

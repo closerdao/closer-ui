@@ -11,7 +11,6 @@ import Logo from './Logo';
 import MemberMenu from './MemberMenu';
 import Menu from './MenuContainer';
 import ProfilePhoto from './ProfilePhoto';
-import { Button } from './ui';
 
 const Navigation = () => {
   const { enabledConfigs } = useConfig();

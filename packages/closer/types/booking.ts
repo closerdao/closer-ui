@@ -45,6 +45,7 @@ export type Listing = {
 };
 
 export type Booking = {
+  foodOption: string;
   status: string;
   listing: string;
   start: string;

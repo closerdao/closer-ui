@@ -35,8 +35,31 @@ const HomePage = () => {
                 >
                   Join us in developing a pioneering regenerative village in Portugal.
                 </Heading>
-                <p>We are raising €1.5M to kickstart the development of a village restoring the soils, improving the water cycle, growing food - and creating modern living and working spaces for 120 thriving humans.</p>
-                <p>After 3 years on the ground building community, hosting events, growing back forest, and building relationships to the locals, our masterplan is now approved by the local municipality and we are ready to start the construction phase.</p>
+                <p className="mb-4">We are raising €2M to kickstart the development of a village restoring the soils, improving the water cycle, growing food - and creating modern living and working spaces for 100+ thriving humans. This initial funding enables us to:</p>
+
+                <ul>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    secure the real estate (25ha of land with approved construction plans)
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    develop the first phase of the co-living
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    build 2 lakes and achieve water sovereignty
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    leverage EU funding
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    acquire 10 tiny houses
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    establish a cash flow positive hospitality and farming business
+                  </li>
+                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                    expand our impact and issue ecosystem credits
+                  </li>
+                </ul>
                 <ul className="mt-8 flex flex-col space-y-4">
                   <li className="flex flex-col flex-start space-y-4 md:space-y-0 md:space-x-4 md:flex-row justify-start">
                     <Link
