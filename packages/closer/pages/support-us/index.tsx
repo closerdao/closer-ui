@@ -369,7 +369,8 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             </p>
             <LinkButton
               href={
-                fundraisingConfig.buy10TdfUrl || '/token/checkout?tokens=10'
+                fundraisingConfig.buy10TdfUrl ||
+                '/token/checkout?tokens=10'
               }
               className="w-[240px]"
             >

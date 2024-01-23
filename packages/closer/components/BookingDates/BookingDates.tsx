@@ -87,7 +87,7 @@ const BookingDates: FC<Props> = ({
             savedEndDate={savedEndDate}
             eventStartDate={eventStartDate}
             eventEndDate={eventEndDate}
-            defaultMonth={new Date()}
+            defaultMonth={eventStartDate ? new Date(eventStartDate) : new Date()}
           />
         </div>
       </div>
