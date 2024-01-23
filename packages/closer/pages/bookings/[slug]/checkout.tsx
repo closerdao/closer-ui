@@ -262,7 +262,6 @@ const Checkout = ({ booking, listing, error, event }: Props) => {
               startDate={start}
               totalNights={duration}
               user={user}
-              settings={settings}
               eventId={event?._id}
             />
           ) : (
