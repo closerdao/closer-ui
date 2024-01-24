@@ -4,13 +4,15 @@ import Link from 'next/link';
 
 import React, { useState } from 'react';
 
+import RichTextEditor from '../../../components/RichTextEditor';
+import { Button } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
 import PageNotFound from '../../404';
+import { HOME_PAGE_CATEGORY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import api, { cdn } from '../../../utils/api';
-
-import RichTextEditor from '../../../components/RichTextEditor';
+import { __ } from '../../../utils/helpers';
 
 const Article = ({ article, error }) => {
   const { user, isAuthenticated } = useAuth();
@@ -78,18 +80,25 @@ const Article = ({ article, error }) => {
             </div>
           )}
           <div className="mb-4">
-            <div>
+            <div className="flex gap-2">
               <Link href="/blog">◀️ Blog</Link>
+              {article.category === HOME_PAGE_CATEGORY && (
+                <Link href="/">◀️ {__('blog_home_button')}</Link>
+              )}
             </div>
             <Heading>{article.title}</Heading>
             <Heading level={2} className="opacity-50 mb-4">
               {article.category}
             </Heading>
-            {isAuthenticated && user._id === article.createdBy && (
+            {isAuthenticated && user?.roles.includes('admin') && (
               <div>
-                <button onClick={() => persist()} className="btn-primary">
+                <Button
+                  onClick={() => persist()}
+                  type="primary"
+                  isFullWidth={false}
+                >
                   Save
-                </button>
+                </Button>
               </div>
             )}
           </div>

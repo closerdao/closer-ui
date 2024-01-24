@@ -1055,6 +1055,9 @@
   "config_true": "True",
   "config_false": "False",
 
+  "edit_homepage_button": "Edit homepage",
+  "blog_home_button": "Homepage",
+
 
   "generic_edit_button": "Edit"
 }
