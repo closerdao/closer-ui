@@ -94,6 +94,10 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
     router.push(`/bookings/${booking._id}/summary`);
   };
 
+  if (booking.status === 'paid') {
+    router.push(`/bookings/${booking._id}/summary`);
+  }
+
   const handleFreeBooking = async () => {
     try {
       await api.post('/bookings/payment', {
@@ -266,7 +270,11 @@ const Checkout = ({ booking, listing, settings, error, event }: Props) => {
             />
           ) : (
             <Button className="booking-btn" onClick={handleFreeBooking}>
-              {user?.roles.includes('member') ? __('buttons_confirm_booking') : __('buttons_booking_request')}
+              {
+                user?.roles.includes('member') || booking.status === 'confirmed' ?
+                  __('buttons_confirm_booking') : 
+                  __('buttons_booking_request')
+              }
             </Button>
           )}
 

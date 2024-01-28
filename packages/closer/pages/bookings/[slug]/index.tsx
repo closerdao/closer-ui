@@ -44,7 +44,6 @@ const BookingPage = ({
   error,
   bookingCreatedBy,
 }: Props) => {
-  console.log('booking=', booking);
   const { platform }: any = usePlatform();
   const { isAuthenticated, user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
