@@ -1,28 +1,10 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import { useEffect, useState } from 'react';
-
 import { Heading } from 'closer';
-import { useAuth } from 'closer/contexts/auth';
 import { event } from 'nextjs-google-analytics';
 
 const HomePage = () => {
-  const { user, isAuthenticated } = useAuth();
-  const [ctaButton, setCtaButton] = useState({
-    text: 'join the dream',
-    link: '/signup',
-  });
-
-  useEffect(() => {
-    if (isAuthenticated && !user?.subscription?.plan) {
-      setCtaButton({ text: 'subscribe', link: '/subscriptions' });
-    }
-    if (user && user?.subscription?.plan) {
-      setCtaButton({ text: 'book a stay', link: '/stay' });
-    }
-  }, [user, isAuthenticated]);
-
   return (
     <div>
       <Head>
@@ -59,7 +41,7 @@ const HomePage = () => {
           </div>
           <div className="flex justify-start flex-col md:flex-row align-center mt-12 text-center">
             <Link
-              href={ctaButton.link}
+              href="/stay"
               className="bg-accent text-white rounded-full py-2.5 px-8 text-2xl"
               onClick={() =>
                 event('click', {

@@ -96,14 +96,6 @@ const DatesSelector: NextPage<Props> = ({
   }
 
   useEffect(() => {
-    if (user) {
-      if (!canBookStays(user) && !eventId && !volunteerId) {
-        router.push('/bookings/unlock-stays');
-      }
-    }
-  }, [user]);
-
-  useEffect(() => {
     if (!isAuthenticated) {
       redirectToSignup();
     }
