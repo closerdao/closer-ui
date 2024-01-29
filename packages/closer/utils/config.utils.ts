@@ -50,10 +50,15 @@ export const prepareConfigs = (
       const isArray = Array.isArray(defaultConfigData);
       if (isArray) {
         const defaultNestedConfig = categoryDefaultConfig.value[key].default[0];
-        const configArray = categoryMyConfig[key];
+        const configArray = categoryMyConfig && categoryMyConfig[key];
 
         const output: any[] = [];
-        configArray.forEach((myConfigElement: any) => {
+
+        if (!configArray) {
+          const plan = { ...defaultNestedConfig };
+          output.push(plan);
+        }
+        configArray?.forEach((myConfigElement: any) => {
           const plan = { ...defaultNestedConfig };
           Object.entries(defaultNestedConfig).forEach(([nestedKey]) => {
             if (myConfigElement.hasOwnProperty(nestedKey)) {

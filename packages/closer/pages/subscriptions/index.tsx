@@ -34,7 +34,6 @@ const SubscriptionsPage: NextPage<Props> = ({
   listings,
   error,
 }) => {
-
   const { enabledConfigs, PLATFORM_NAME } = useConfig();
   const { isAuthenticated, isLoading, user } = useAuth();
 

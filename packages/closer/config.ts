@@ -54,8 +54,6 @@ export const closerConfig = {
   SOURCE_TOKEN: 'CEUR',
 };
 
-
-
 export const configDescription = [
   /* in closer repo
     These are all the configs that exist within the platform
@@ -163,6 +161,14 @@ export const configDescription = [
         type: 'number',
         default: 1,
       },
+      bookingPageTitle: {
+        type: 'text',
+        default: '',
+      },
+      bookingPageDescription: {
+        type: 'text',
+        default: '',
+      },
     },
   },
   {
@@ -173,8 +179,8 @@ export const configDescription = [
         default: false,
       },
       plans: {
-        type: 
-          [{
+        type: [
+          {
             slug: 'text',
             title: 'text',
             emoji: 'text',
@@ -187,21 +193,47 @@ export const configDescription = [
             billingPeriod: 'text',
             available: 'boolean',
             tiersAvailable: 'boolean',
-          }],
-        default: [{
-          slug: '',
-          title: '',
-          emoji: '',
-          description: '',
-          priceId: '',
-          tier: 0,
-          monthlyCredits: 0,
-          price: 0,
-          perks: '',
-          billingPeriod: '',
-          available: true,
-          tiersAvailable: false
-        }],
+          },
+        ],
+        default: [
+          {
+            slug: '',
+            title: '',
+            emoji: '',
+            description: '',
+            priceId: '',
+            tier: 0,
+            monthlyCredits: 0,
+            price: 0,
+            perks: '',
+            billingPeriod: '',
+            available: true,
+            tiersAvailable: false,
+          },
+        ],
+      },
+    },
+  },
+  {
+    slug: 'booking-rules',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      plans: {
+        type: [
+          {
+            title: 'text',
+            description: 'text',
+          },
+        ],
+        default: [
+          {
+            title: '',
+            description: '',
+          },
+        ],
       },
     },
   },
@@ -335,7 +367,9 @@ export const configDescription = [
         default: '',
       },
     },
+    
   },
+
   // {
   //   slug: 'learningHub',
   //   value: {

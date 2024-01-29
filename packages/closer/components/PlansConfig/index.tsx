@@ -11,7 +11,7 @@ interface Props {
     index?: null | number,
   ) => void;
   handleAddElement: () => void;
-  handleDeleteElement:  (index: number) => void;
+  handleDeleteElement: (index: number) => void;
   plansKey: string;
 }
 
@@ -22,7 +22,6 @@ const PlansConfig = ({
   handleDeleteElement,
   plansKey,
 }: Props) => {
-
   return (
     <div className="flex flex-col gap-4">
       {Array.isArray(currentValue) &&
@@ -65,7 +64,9 @@ const PlansConfig = ({
                       <input
                         className="bg-neutral rounded-md p-1"
                         name={innerKey}
-                        onChange={(event) => handleChange(event, plansKey, index)}
+                        onChange={(event) =>
+                          handleChange(event, plansKey, index)
+                        }
                         type="text"
                         value={String(currentValue[index][innerKey])}
                       />

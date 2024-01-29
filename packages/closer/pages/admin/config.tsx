@@ -31,8 +31,7 @@ const ConfigPage = () => {
   const { platform }: any = usePlatform();
   const myConfigs = platform.config.find();
   const filter = {};
-  const allConfigCategories =
-    myConfigs && myConfigs.toJS().map((config: any) => config.slug);
+  const allConfigCategories = configDescription.map((config: any) => config.slug);
   const { user } = useAuth();
 
   const [selectedConfig, setSelectedConfig] = useState('general');
@@ -107,6 +106,9 @@ const ConfigPage = () => {
     );
 
     try {
+     console.log('configCategoryToSave=',configCategoryToSave)
+     console.log('updatedConfig?.value=',updatedConfig?.value)
+
       setIsLoading(true);
       setHasConfigUpdated(false);
       const res = await api.patch(`/config/${configCategoryToSave}`, {

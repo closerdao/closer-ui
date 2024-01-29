@@ -64,8 +64,16 @@ export type BookingSettings = {
 export interface Config {
   slug: string;
   value: {
-    [key: string]: 
-       string | number | boolean | string[];
-
+    [key: string]: string | number | boolean | string[];
   };
+}
+
+export type BookingRule = {
+  title: string;
+  description: string;
+};
+
+export interface BookingRulesConfig {
+  enabled: boolean;
+  plans: BookingRule[];
 }
