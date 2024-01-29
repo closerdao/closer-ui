@@ -107,7 +107,7 @@ const DatesSelector: NextPage<Props> = ({
     });
     return dateRanges;
   }
-
+ 
   useEffect(() => {
     if (user) {
       if (!canBookStays(user) && !eventId && !volunteerId) {

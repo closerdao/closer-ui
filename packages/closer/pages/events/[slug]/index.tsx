@@ -9,11 +9,10 @@ import EventDescription from '../../../components/EventDescription';
 import EventPhoto from '../../../components/EventPhoto';
 import Photo from '../../../components/Photo';
 import UploadPhoto from '../../../components/UploadPhoto/UploadPhoto';
-import {
+import { 
   Button,
   Card,
   ErrorMessage,
-  Information,
   LinkButton,
 } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
@@ -31,9 +30,7 @@ import { Event, Listing } from '../../../types';
 import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { getAccommodationPriceRange } from '../../../utils/events.helpers';
-import {
-  getBookingRate,
-  getDiscountRate,
+import { 
   prependHttp,
   priceFormat,
 } from '../../../utils/helpers';
@@ -66,6 +63,7 @@ const EventPage = ({
   const [attendees, setAttendees] = useState(event && (event.attendees || []));
   const [isShowingEvent, setIsShowingEvent] = useState(true);
   const [passwordError, setPasswordError] = useState<null | string>(null);
+  const [foodOption] = useState(event.foodOption || 'no_food');
 
   const canEditEvent = user
     ? user?._id === event?.createdBy || user?.roles.includes('admin')
@@ -92,12 +90,13 @@ const EventPage = ({
   const dateFormat = isThisYear ? 'MMM D' : 'YYYY MMMM';
 
   const durationInDays = dayjs(end).diff(dayjs(start), 'day');
-  const durationName = getBookingRate(durationInDays);
-
-  const discountRate = settings
-    ? 1 - getDiscountRate(durationName, settings)
-    : 0;
-
+  // const durationRateDays = durationInDays >= 28 ? 30 : durationInDays > 7 ? 7 : 1;
+  const durationName = durationInDays >= 28 ?
+    'monthly' :
+    durationInDays > 7 ?
+      'weekly' :
+      'daily';
+  const discountRate = settings ? (1 - settings.discounts[durationName]) : 0;
   const { min: minAccommodationPrice, max: maxAccommodationPrice } =
     getAccommodationPriceRange(settings, listings, durationInDays, start);
 
@@ -479,7 +478,6 @@ const EventPage = ({
                           })}
                         {durationInDays > 0 && (
                           <>
-                            <Information>{__('events_disclaimer')}</Information>
                             <div className="text-sm">
                               {__('events_accommodation')}{' '}
                               <strong>
@@ -495,7 +493,7 @@ const EventPage = ({
                             <div className="text-sm">
                               {__('events_utility')}{' '}
                               <strong>
-                                {priceFormat(durationInDays * dailyUtilityFee)}
+                                  {foodOption === 'no_food' ? __('stay_food_not_included') : priceFormat(durationInDays * dailyUtilityFee)}
                               </strong>
                             </div>
                           </>

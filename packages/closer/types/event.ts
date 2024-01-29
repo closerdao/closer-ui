@@ -10,6 +10,7 @@ export type Event = {
   slug: string;
   description: string;
   participationGuideUrl: string;
+  foodOption: string; // no_food, chef, basic
   ticket: string;
   virtual?: boolean;
   paid: boolean;

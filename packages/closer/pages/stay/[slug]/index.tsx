@@ -91,8 +91,8 @@ const ListingPage: NextPage<Props> = ({
   const [doesNeedPickup, setDoesNeedPickup] = useState(false);
   const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
   const [isTeamBooking, setIsTeamBooking] = useState(false);
-  const durationRateDays =
-    durationInDays >= 28 ? 30 : durationInDays >= 7 ? 7 : 1;
+  const [foodOption, setFoodOption] = useState('no_food');
+  const durationRateDays = durationInDays >= 28 ? 30 : durationInDays >= 7 ? 7 : 1;
   const durationName = getBookingRate(durationInDays);
 
   const discountRate = settings
@@ -132,6 +132,8 @@ const ListingPage: NextPage<Props> = ({
   const isTeamMember = user?.roles.some((roles) =>
     ['space-host', 'steward', 'land-manager', 'team'].includes(roles),
   );
+
+  const fiatTotal = (isTeamBooking || foodOption === 'no_food' ? 0 : utilityTotal + accomodationTotal);
 
   const getAvailability = async (
     startDate: Date | string | null,
@@ -600,10 +602,17 @@ const ListingPage: NextPage<Props> = ({
                           <div className="flex justify-between items-center mt-3">
                             <p>{__('bookings_summary_step_utility_total')}</p>
                             <p>
-                              {priceFormat(
-                                isTeamBooking ? 0 : utilityTotal,
-                                settings?.utilityFiat?.cur,
-                              )}
+                              {foodOption === 'no_food' ?
+                                <b title={__('stay_food_not_included_tooltip')}>
+                                  {__('stay_food_not_included')}
+                                </b> :
+                                priceFormat(
+                                  isTeamBooking ?
+                                  0 :
+                                  utilityTotal,
+                                  settings?.utilityFiat?.cur,
+                                )
+                              }
                             </p>
                           </div>
                           <div className="flex justify-between items-center mt-3">
@@ -612,7 +621,7 @@ const ListingPage: NextPage<Props> = ({
                               {__('token_sale_checkout_vat')}):
                             </p>
                             <div className="font-bold text-right text-xl">
-                              {currency === CURRENCIES[1] ? (
+                              {currency === CURRENCIES[1] && fiatTotal > 0 ? (
                                 <div>
                                   {priceFormat(
                                     listing.tokenPrice &&
@@ -620,22 +629,22 @@ const ListingPage: NextPage<Props> = ({
                                     listing.tokenPrice?.cur,
                                   )}{' '}
                                   +{' '}
-                                  {settings &&
-                                    priceFormat(
-                                      isTeamBooking ? 0 : utilityTotal,
-                                      settings.utilityFiatCur,
-                                    )}
+                                  {settings && priceFormat(
+                                    isTeamBooking || foodOption === 'no_food' ? 0 : utilityTotal,
+                                    settings.utilityFiat?.cur,
+                                  )}
                                 </div>
                               ) : (
-                                priceFormat(
-                                  settings &&
+                              <span>
+                                { priceFormat(
+                                    settings &&
                                     listing &&
-                                    (isTeamBooking
-                                      ? 0
-                                      : utilityTotal + accomodationTotal),
-                                  listing.fiatPrice?.cur,
-                                )
-                              )}
+                                    fiatTotal,
+                                    listing.fiatPrice?.cur,
+                                  )
+                                }
+                              </span>
+                              ) }
                             </div>
                           </div>
                         </>
