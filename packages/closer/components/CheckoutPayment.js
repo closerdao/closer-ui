@@ -18,7 +18,9 @@ import Conditions from './Conditions';
 import { ErrorMessage } from './ui';
 import HeadingRow from './ui/HeadingRow';
 
-const stripe = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUB_KEY);
+const stripe = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUB_KEY, {
+  stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
+});
 
 const CheckoutPayment = ({
   bookingId,
