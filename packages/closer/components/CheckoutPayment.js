@@ -106,7 +106,6 @@ const CheckoutPayment = ({
       {error && <ErrorMessage error={error} />}
       <Elements stripe={stripe}>
         <CheckoutForm
-          stripe={stripe}
           type="booking"
           _id={bookingId}
           onSuccess={onSuccess}
