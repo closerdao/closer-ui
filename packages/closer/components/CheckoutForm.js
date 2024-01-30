@@ -1,9 +1,6 @@
 import { useState } from 'react';
 
-import {
-  CardElement, useElements
-  // , useStripe
-} from '@stripe/react-stripe-js';
+import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
@@ -52,10 +49,9 @@ const CheckoutForm = ({
   children: conditions,
   hasComplied,
   buttonDisabled,
-  useCredits,
-  stripe
+  useCredits
 }) => {
-  // const stripe = useStripe();
+  const stripe = useStripe();
   const elements = useElements();
   const [error, setError] = useState(null);
   const [submitDisabled, setSubmitDisabled] = useState(true);
