@@ -44,6 +44,7 @@ interface Props {
 
 const SupportUsPage = ({ fundraisingConfig }: Props) => {
   const { enabledConfigs } = useConfig();
+  console.log('enabledConfigs=',enabledConfigs);
   const { platform }: any = usePlatform();
   const wandererFilter = {
     where: { 'subscription.plan': 'wanderer' },
@@ -82,7 +83,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
 
   if (
     process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US !== 'true' ||
-    !enabledConfigs?.includes('support-us')
+    !enabledConfigs?.includes('fundraiser')
   ) {
     return <PageNotFound />;
   }
