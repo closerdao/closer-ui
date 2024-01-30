@@ -33,9 +33,8 @@ interface Props extends BaseBookingParams {
 }
 
 const Summary = ({ booking, listing, event, error }: Props) => {
+  const { STAY_BOOKING_ALLOWED_PLANS, enabledConfigs } = useConfig();
   const router = useRouter();
-  const config = useConfig();
-  const { STAY_BOOKING_ALLOWED_PLANS } = config || {};
   const { isAuthenticated, user } = useAuth();
   const [handleNextError, setHandleNextError] = useState<string | null>(null);
   const [hasComplied, setCompliance] = useState(false);
@@ -111,7 +110,10 @@ const Summary = ({ booking, listing, event, error }: Props) => {
     }
   };
 
-  if (process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
+    (enabledConfigs && !enabledConfigs.includes('booking'))
+  ) {
     return <PageNotFound />;
   }
 

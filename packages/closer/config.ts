@@ -29,22 +29,22 @@ export const closerConfig = {
   },
   // ACCOMODATION_COST: [
   //   {
-  //     name: 'Glamping',
+  //     slug: 'Glamping',
   //     price: 1,
   //     iconPath: '/images/token-sale/tent-icon.svg',
   //   },
   //   {
-  //     name: 'Van parking',
+  //     slug: 'Van parking',
   //     price: 0.5,
   //     iconPath: '/images/token-sale/car-icon.svg',
   //   },
   //   {
-  //     name: 'Outdoor Camping',
+  //     slug: 'Outdoor Camping',
   //     price: 0.5,
   //     iconPath: '/images/token-sale/tent-icon.svg',
   //   },
   //   {
-  //     name: 'Private suite',
+  //     slug: 'Private suite',
   //     description: '*coming 2023*',
   //     price: 3,
   //     iconPath: '/images/token-sale/suite-icon.svg',
@@ -53,3 +53,339 @@ export const closerConfig = {
   TOKEN_PRICE: 230.23,
   SOURCE_TOKEN: 'CEUR',
 };
+
+export const configDescription = [
+  /* in closer repo
+    These are all the configs that exist within the platform
+     */
+  {
+    slug: 'booking',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      utilityFiatVal: {
+        type: 'number',
+        default: 2,
+      },
+      utilityFiatCur: {
+        type: 'text',
+        default: 'EUR',
+      },
+      utilityDayFiatVal: {
+        type: 'number',
+        default: 3,
+      },
+      utilityTokenVal: {
+        type: 'number',
+        default: 0.01,
+      },
+      utilityTokenCur: {
+        type: 'text',
+        default: 'ETH',
+      },
+      checkinTime: {
+        type: 'number',
+        default: 14,
+      },
+      checkoutTime: {
+        type: 'number',
+        default: 11,
+      },
+      maxDuration: {
+        type: 'number',
+        default: 180,
+      },
+      minDuration: {
+        type: 'number',
+        default: 1,
+      },
+      volunteerCommitment: {
+        type: 'text',
+        default: '4h/day',
+      },
+      memberMaxDuration: {
+        type: 'number',
+        default: 180,
+      },
+      memberMaxBookingHorizon: {
+        type: 'number',
+        default: 365,
+      },
+      guestMaxDuration: {
+        type: 'number',
+        default: 31,
+      },
+      guestMaxBookingHorizon: {
+        type: 'number',
+        default: 90,
+      },
+      discountsDaily: {
+        type: 'number',
+        default: 0,
+      },
+      discountsWeekly: {
+        type: 'number',
+        default: 0.33,
+      },
+      discountsMonthly: {
+        type: 'number',
+        default: 0.66,
+      },
+      seasonsHighStart: {
+        type: 'text',
+        default: 'April',
+      },
+      seasonsHighEnd: {
+        type: 'text',
+        default: 'November',
+      },
+      seasonsHighModifier: {
+        type: 'number',
+        default: 1.3,
+      },
+      cancellationPolicyLastday: {
+        type: 'number',
+        default: 0.5,
+      },
+      cancellationPolicyLastweek: {
+        type: 'number',
+        default: 0.5,
+      },
+      cancellationPolicyLastmonth: {
+        type: 'number',
+        default: 0.75,
+      },
+      cancellationPolicyDefault: {
+        type: 'number',
+        default: 1,
+      },
+      bookingPageTitle: {
+        type: 'text',
+        default: '',
+      },
+      bookingPageDescription: {
+        type: 'text',
+        default: '',
+      },
+    },
+  },
+  {
+    slug: 'subscriptions',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      plans: {
+        type: [
+          {
+            slug: 'text',
+            title: 'text',
+            emoji: 'text',
+            description: 'text',
+            priceId: 'text',
+            tier: 'number',
+            monthlyCredits: 'number',
+            price: 'number',
+            perks: 'text',
+            billingPeriod: 'text',
+            available: 'boolean',
+            tiersAvailable: 'boolean',
+          },
+        ],
+        default: [
+          {
+            slug: '',
+            title: '',
+            emoji: '',
+            description: '',
+            priceId: '',
+            tier: 0,
+            monthlyCredits: 0,
+            price: 0,
+            perks: '',
+            billingPeriod: '',
+            available: true,
+            tiersAvailable: false,
+          },
+        ],
+      },
+    },
+  },
+  {
+    slug: 'booking-rules',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      plans: {
+        type: [
+          {
+            title: 'text',
+            description: 'text',
+          },
+        ],
+        default: [
+          {
+            title: '',
+            description: '',
+          },
+        ],
+      },
+    },
+  },
+  {
+    slug: 'fundraiser',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      videoId: {
+        type: 'text',
+        default: 'btBqOboLdOg',
+      },
+      wandererUrl: {
+        type: 'text',
+        default:
+          '/subscriptions/checkout?priceId=price_1N1YLVE9CDXOM807XtNAwiBW',
+      },
+      pioneerUrl: {
+        type: 'text',
+        default:
+          '/subscriptions/checkout?priceId=price_1O7ddSE9CDXOM807UGJZ5TEP',
+      },
+      oneMonthSharedUrl: {
+        type: 'text',
+        default: 'https://buy.stripe.com/9AQcPH10w8rh0485ko',
+      },
+      oneMonthPrivateUrl: {
+        type: 'text',
+        default: 'https://buy.stripe.com/eVa7vneRm8rh048aEH',
+      },
+      buy5TdfUrl: {
+        type: 'text',
+        default: '/token/checkout?tokens=5',
+      },
+      buy10TdfUrl: {
+        type: 'text',
+        default: '/token/checkout?tokens=10',
+      },
+      hostEventUrl: {
+        type: 'text',
+        default: 'mailto: space@traditionaldreamfactory.com',
+      },
+    },
+  },
+  {
+    slug: 'general',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: true,
+      },
+      appName: {
+        type: 'text',
+        default: 'tdf',
+      },
+      platformName: {
+        type: 'text',
+        default: 'Traditional Dream Factory',
+      },
+      semanticUrl: {
+        type: 'text',
+        default: 'traditionaldreamfactory.com',
+      },
+      platformLegalAddress: {
+        type: 'text',
+        default:
+          'Fábrica de Sonhos Tradicional, 7540-011, Abela, Santiago do Cacém, Portugal',
+      },
+      teamEmail: {
+        type: 'text',
+        default: 'traditionaldreamfactory@gmail.com',
+      },
+      instagramUrl: {
+        type: 'text',
+        default: 'https://instagram.com/traditionaldreamfactory',
+      },
+      facebookUrl: {
+        type: 'text',
+        default: 'https://www.facebook.com/oasaliving',
+      },
+      twitterUrl: {
+        type: 'text',
+        default: 'https://twitter.com/traditionaldreamfactory',
+      },
+      locationLat: {
+        type: 'text',
+        default: '38.003164469592555',
+      },
+      locationLon: {
+        type: 'text',
+        default: '-8.55915483117878',
+      },
+      visitorsGuide: {
+        type: 'text',
+        default:
+          'https://docs.google.com/document/d/198vWYEQCC1lELQa8f76Jcw3l3UDiPcBKt04PGFKnUvg/edit',
+      },
+      facebookPixelId: {
+        type: 'text',
+        default: '761004479106346',
+      },
+      faqsGoogleSheetId: {
+        type: 'text',
+        default: '1dlaVEfLwHAbXCwoiDGzUd3w8d7YYnGl5dbPDINKmRUg',
+      },
+    },
+  },
+  {
+    slug: 'payment',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: true,
+      },
+      cardPayment: {
+        type: 'boolean',
+        default: true,
+      },
+      cryptoPayment: {
+        type: 'boolean',
+        default: true,
+      },
+      polygonWalletAddress: {
+        type: 'text',
+        default: '',
+      },
+      ethereumWalletAddress: {
+        type: 'text',
+        default: '',
+      },
+    },
+    
+  },
+
+  // {
+  //   slug: 'learningHub',
+  //   value: {
+  //     enabled: {
+  //       type: Boolean,
+  //       default: true,
+  //     },
+  //     visibility: {
+  //       type: 'enum',
+  //       options: ['public', 'subscription', 'role:member'],
+  //       default: 'subscription',
+  //     },
+  //     accessibleBySubscriptionId: {
+  //       type: ''text'',
+  //       default: false,
+  //     },
+  //   },
+  // },
+];

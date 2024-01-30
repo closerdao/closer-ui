@@ -1,4 +1,6 @@
-export const listings = [
+import { CloserCurrencies, Listing } from 'closer';
+
+export const listings: Listing[] = [
   {
     name: 'Van parking space',
     category: 'van',
@@ -7,11 +9,11 @@ export const listings = [
     description:
       'Park your van on the TDF lands. Outdoor showers, compost toilets, sauna and more available.',
     fiatPrice: {
-      cur: 'EUR',
+      cur: CloserCurrencies.EUR,
       val: 30,
     },
     tokenPrice: {
-      cur: 'TDF',
+      cur: CloserCurrencies.TDF,
       val: 0.5,
     },
     rooms: 1,
@@ -37,11 +39,11 @@ export const listings = [
     slug: 'glamping-tent',
     description: '5m glamping tent setup with bed & rugs.',
     fiatPrice: {
-      cur: 'EUR',
+      cur: CloserCurrencies.EUR,
       val: 40,
     },
     tokenPrice: {
-      cur: 'TDF',
+      cur:  CloserCurrencies.TDF,
       val: 1,
     },
     rooms: 1,
@@ -58,24 +60,25 @@ export const listings = [
   },
   {
     name: 'Camping',
-    photo: '62601df205335a0ce2883bb0',
+    // photo: '62601df205335a0ce2883bb0',
     photos: [],
     slug: 'camping',
     description: 'Pitch your tent under the beautiful oak trees.',
     fiatPrice: {
-      cur: 'EUR',
+      cur: CloserCurrencies.EUR,
       val: 30,
     },
     tokenPrice: {
-      cur: 'TDF',
+      cur:  CloserCurrencies.TDF,
       val: 0.5,
     },
     rooms: 1,
     beds: 1,
     quantity: 10,
     private: false,
-    kitchen: false,
-    bathroom: false,
+    // kitchen: false,
+    // bathroom: false,
+    category: 'glamping',
     visibleBy: [],
     createdBy: '5fa172c1a9a84f3ebcf16262',
     updated: '2023-03-14T23:47:45.761Z',
@@ -91,18 +94,19 @@ export const listings = [
     description: '',
     fiatPrice: {
       val: 70,
-      cur: 'EUR',
+      cur: CloserCurrencies.EUR,
     },
     tokenPrice: {
       val: 2,
-      cur: 'TDF',
+      cur:  CloserCurrencies.TDF,
     },
     rooms: 1,
     beds: 2,
     quantity: 2,
     private: true,
-    kitchen: false,
-    bathroom: false,
+    // kitchen: false,
+    // bathroom: false,
+    category: 'glamping',
     visibleBy: [],
     createdBy: '5dffdf4d9d2f1035a1e8ada1',
     updated: '2023-05-30T10:08:26.724Z',

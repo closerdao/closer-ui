@@ -35,8 +35,6 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
 
   const doesHaveVolunteerTerms = !volunteerTerms.every((item) => item === '');
 
-  console.log('volunteerTerms=', volunteerTerms);
-
   return (
     <div className="flex justify-center">
       <Head>

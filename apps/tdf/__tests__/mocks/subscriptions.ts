@@ -1,64 +1,68 @@
-export const subscriptions = {
-  config: {
-    currency: 'EUR',
-    symbol: '€',
-  },
+import { SubscriptionPlan } from 'closer/types/subscriptions';
+
+export const subscriptionsConfig: {
+  enabled: boolean;
+  plans: SubscriptionPlan[];
+} = {
+  enabled: true,
   plans: [
     {
+      slug: 'explorer',
       title: 'Explorer',
       emoji: '🕵🏽‍♀️',
-      description: 'Optional subscription plan description',
+      description: 'DIP YOUR TOE BEFORE BUCKLING UP FOR THE ADVENTURE',
       priceId: 'free',
       tier: 1,
       monthlyCredits: 0,
       price: 0,
-      perks: [
-        ' ✔ Access to Events',
-        ' ✔ Access to Volunteering',
-        ' ✔ Weekly newsletter',
-      ],
+      perks: 'Events, Volunteer',
       billingPeriod: 'month',
+      available: true,
+      tiersAvailable: false,
     },
     {
+      slug: 'wanderer',
       title: 'Wanderer',
       emoji: '👩🏽‍🌾',
-      description: 'Unlock yor stay passes and join our physical community',
-      priceId: 'price_1MqtoHGtt5D0VKR2Has7KE5X',
+      description: 'Stay in the loop and see if TDF is for you',
+      priceId: 'price_1N1YLVE9CDXOM807XtNAwiBW',
       tier: 2,
-      monthlyCredits: 3,
+      monthlyCredits: 0,
       price: 10,
-      perks: [
-        ' ✔ Access to Events',
-        ' ✔ Access to Volunteering',
-        '✔ Weekly newsletter',
-        '🌟 Free E-Book',
-        '🌟 Discord Community Access',
-        '🌟 10% Discount on accommodation',
-      ],
+      perks:
+        'Co-living access, Community calls, Discord Access, Learning Hub, E-book: “HOW TO BUILD A REGENERATIVE VILLAGE”',
       billingPeriod: 'month',
+      available: true,
+      tiersAvailable: false,
     },
-
     {
+      slug: 'pioneer',
       title: 'Pioneer',
       emoji: '👨🏽‍🚀',
-      description: 'Collect carrots and turn them into stay and event credits',
-      priceId: 'price_1Mqtp0Gtt5D0VKR297NwmzIy',
+      description: 'BE THE LOOP. CONTINUOUSLY SUPPORT AND COME TO TDF',
+      priceId: 'price_1ODOI1E9CDXOM807s4nGf4zz',
       tier: 3,
-      monthlyCredits: 20,
+      monthlyCredits: 1,
       price: 30,
-      perks: [
-        ' ✔ Access to Events',
-        '✔ Access to Volunteering',
-        ' ✔ Weekly newsletter',
-        ' ✔ Free E-Book',
-        ' ✔ Discord Community Access',
-        '✔ Impact Reports',
-        '🌟 Access To Stays',
-        '🌟 20% Discount on accommodation',
-      ],
-      billingPeriod: 'month',
+      perks: 'Get 25% discount on stays by pre-paying every month',
+      billingPeriod: 'monthly',
+      available: true,
+      tiersAvailable: true,
+    },
+    {
+      slug: 'sheep',
+      title: 'Sheep',
+      emoji: '',
+      description:
+        'BE THE DREAM. MAKE TDF ONE OF YOUR HOMES. GET YOUR $TDF AND MAKE SURE TO GET YOUR MEMBERSHEEP',
+      priceId: '',
+      tier: 4,
+      monthlyCredits: 0,
+      price: 0,
+      perks: '',
+      billingPeriod: '',
+      available: false,
+      tiersAvailable: false,
     },
   ],
 };
-
-export default subscriptions;

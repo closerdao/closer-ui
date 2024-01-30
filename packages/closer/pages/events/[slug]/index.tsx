@@ -9,7 +9,12 @@ import EventDescription from '../../../components/EventDescription';
 import EventPhoto from '../../../components/EventPhoto';
 import Photo from '../../../components/Photo';
 import UploadPhoto from '../../../components/UploadPhoto/UploadPhoto';
-import { Card, LinkButton } from '../../../components/ui';
+import { 
+  Button,
+  Card,
+  ErrorMessage,
+  LinkButton,
+} from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
@@ -21,11 +26,14 @@ import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
-import { BookingSettings, Event, Listing } from '../../../types';
+import { Event, Listing } from '../../../types';
 import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { getAccommodationPriceRange } from '../../../utils/events.helpers';
-import { prependHttp, priceFormat } from '../../../utils/helpers';
+import { 
+  prependHttp,
+  priceFormat,
+} from '../../../utils/helpers';
 import { __ } from '../../../utils/helpers';
 
 interface Props {
@@ -33,7 +41,7 @@ interface Props {
   eventCreator: User;
   error?: string;
   descriptionText?: string;
-  settings: BookingSettings;
+  settings: any;
   listings: Listing[];
 }
 
@@ -48,11 +56,13 @@ const EventPage = ({
   const { platform }: any = usePlatform();
   const { user, isAuthenticated } = useAuth();
 
-  const dailyUtilityFee = settings.utilityFiat.val;
+  const dailyUtilityFee = settings.utilityFiatVal;
 
   const [photo, setPhoto] = useState(event && event.photo);
   const [password, setPassword] = useState('');
   const [attendees, setAttendees] = useState(event && (event.attendees || []));
+  const [isShowingEvent, setIsShowingEvent] = useState(true);
+  const [passwordError, setPasswordError] = useState<null | string>(null);
   const [foodOption] = useState(event.foodOption || 'no_food');
 
   const canEditEvent = user
@@ -72,6 +82,7 @@ const EventPage = ({
       status: 'approved',
     },
   };
+
   const start = event && event.start && dayjs(event.start);
   const end = event && event.end && dayjs(event.end);
   const duration = end && end.diff(start, 'hour', true);
@@ -90,10 +101,29 @@ const EventPage = ({
     getAccommodationPriceRange(settings, listings, durationInDays, start);
 
   const myTickets = platform.ticket.find(myTicketFilter);
+
   const ticketsCount = event?.ticketOptions
     ? (platform.ticket.findCount(allTicketFilter) || event?.attendees?.length) -
       event?.attendees?.length
     : event?.attendees && event.attendees.length;
+
+  const ticketsFilter = { where: { event: event && event._id } };
+  const filteredTickets = platform.ticket.find(ticketsFilter);
+
+  const soldTickets =
+    filteredTickets &&
+    filteredTickets.map((ticket: any) => ticket.toJS()).toArray();
+
+  useEffect(() => {
+    const eventPassword = localStorage.getItem('eventPassword') as string;
+    if (eventPassword) {
+      setPassword(eventPassword);
+    }
+
+    if (event.password) {
+      setIsShowingEvent(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (event) {
@@ -102,6 +132,8 @@ const EventPage = ({
   }, [event, user]);
 
   const loadData = async () => {
+    await platform.ticket.get(ticketsFilter);
+
     if (event?.attendees && event.attendees.length > 0) {
       const params = { where: { _id: { $in: event.attendees } } };
       await Promise.all([
@@ -126,6 +158,23 @@ const EventPage = ({
     } catch (err) {
       alert(`Could not RSVP: ${err}`);
     }
+  };
+
+  const getDaysTo = (date: any) => {
+    if (date && date.isAfter(dayjs())) {
+      return date.diff(dayjs(), 'day');
+    } else {
+      return 0;
+    }
+  };
+
+  const showEvent = () => {
+    if (password !== event.password) {
+      setPasswordError(__('incorrect_event_password_error'));
+      return;
+    }
+    localStorage.setItem('eventPassword', password as string);
+    setIsShowingEvent(true);
   };
 
   if (!event) {
@@ -159,15 +208,22 @@ const EventPage = ({
         />
       </Head>
 
-      {event.password && event.password !== password ? (
-        <div className="flex flex-col justify-center items-center">
-          <div className="w-34">
+      {isShowingEvent === false ||
+      (event.password && event.password !== password) ? (
+        <div className="flex flex-col justify-center items-center my-20 ">
+          <div className="w-34 flex flex-col gap-4">
             <Heading>This event is password protected</Heading>
             <input
               onChange={(e) => setPassword(e.target.value)}
               placeholder="password"
               type="password"
+              value={password}
             />
+
+            <Button onClick={showEvent}>Show event</Button>
+
+            {passwordError && <ErrorMessage error={passwordError} />}
+
             {isAuthenticated &&
               (user?._id === event.createdBy ||
                 user?.roles.includes('admin')) && (
@@ -306,32 +362,32 @@ const EventPage = ({
 
                     {((event.partners && event.partners.length > 0) ||
                       (isAuthenticated && user?._id === event.createdBy)) && (
-                        <section className="mb-6">
-                          <div className="flex flex-row flex-wrap justify-center items-center">
-                            {event.partners &&
-                              event.partners.map(
-                                (partner: any) =>
-                                  partner.photoUrl && (
-                                    <a
-                                      href={partner.url || '#'}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      key={partner.name}
-                                      className="mr-3"
-                                    >
-                                      <Photo
-                                        id={partner.photo}
-                                        photoUrl={partner.photoUrl}
-                                        className="w-32 h-16"
-                                        title={partner.name}
-                                        rounded={true}
-                                      />
-                                    </a>
-                                  ),
-                              )}
-                          </div>
-                        </section>
-                      )}
+                      <section className="mb-6">
+                        <div className="flex flex-row flex-wrap justify-center items-center">
+                          {event.partners &&
+                            event.partners.map(
+                              (partner: any) =>
+                                partner.photoUrl && (
+                                  <a
+                                    href={partner.url || '#'}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    key={partner.name}
+                                    className="mr-3"
+                                  >
+                                    <Photo
+                                      id={partner.photo}
+                                      photoUrl={partner.photoUrl}
+                                      className="w-32 h-16"
+                                      title={partner.name}
+                                      rounded={true}
+                                    />
+                                  </a>
+                                ),
+                            )}
+                        </div>
+                      </section>
+                    )}
 
                     {attendees && attendees.length > 0 && (
                       <div>
@@ -349,44 +405,89 @@ const EventPage = ({
                     {end && !end.isBefore(dayjs()) && (
                       <Card className="bg-white border border-gray-100">
                         {event.paid &&
-                          event.ticketOptions.map((ticket: any) => (
-                            <div
-                              key={ticket.name}
-                              className="hidden sm:flex flex-col gap-1"
-                            >
-                              <div className="flex flex-col bg-accent-light rounded-md p-2 items-center ">
-                                <p className="text-lg text-center">
-                                  {ticket.name}
-                                </p>
-                                <p className="text-md font-bold">
-                                  {priceFormat(ticket.price)}
-                                </p>
-                                <p>
-                                  {!ticket.limit ? (
-                                    <span className="text-xs text-error">
-                                      {__('event_tickets_sold')}
-                                    </span>
-                                  ) : ticket.limit > 10 ? (
-                                    <span className="text-xs text-success">
-                                      {__('event_tickets_available')}
-                                    </span>
-                                  ) : (
-                                    <span className="text-xs text-pending">
-                                      {__('event_tickets_last')}
-                                    </span>
-                                  )}
-                                </p>
+                          event.ticketOptions.map((ticketOption: any) => {
+                            const availableTickets =
+                              soldTickets &&
+                              ticketOption.limit -
+                                soldTickets.filter(
+                                  (ticket: any) =>
+                                    ticket.option.name === ticketOption.name,
+                                ).length;
+                            const areTicketsAvailable =
+                              availableTickets > 9 || ticketOption.limit === 0;
+                            const areTicketsEnding =
+                              availableTickets > 1 &&
+                              availableTickets < 10 &&
+                              ticketOption.limit !== 0;
+                            const areTicketsSoldOut =
+                              availableTickets === 0 &&
+                              ticketOption.limit !== 0;
+                            return (
+                              <div
+                                key={ticketOption.name}
+                                className="hidden sm:flex flex-col gap-1"
+                              >
+                                <div className="flex flex-col bg-accent-light rounded-md p-2 items-center ">
+                                  <p className="text-lg text-center">
+                                    {ticketOption.name}
+                                  </p>
+                                  <p className="text-md font-bold">
+                                    {priceFormat(ticketOption.price)}
+                                  </p>
+                                  <p>
+                                    {areTicketsSoldOut && (
+                                      <span className="text-xs text-error">
+                                        {__('event_tickets_sold')}
+                                      </span>
+                                    )}
+
+                                    {areTicketsAvailable && (
+                                      <>
+                                        <span className="text-xs text-success">
+                                          {__('event_tickets_available')}{' '}
+                                          {getDaysTo(end)}{' '}
+                                          {__('event_tickets_available_days')}
+                                        </span>
+                                      </>
+                                    )}
+
+                                    {areTicketsEnding && (
+                                      <span className="text-xs text-pending">
+                                        {__('event_tickets_last')}
+                                      </span>
+                                    )}
+
+                                    {/* {availableTickets === 0 &&
+                                    ticket.limit !== 0 ? (
+                                      <span className="text-xs text-error">
+                                        {__('event_tickets_sold')}
+                                      </span>
+                                    ) : ticket.limit === 0 ? (
+                                      <span className="text-xs text-success">
+                                        {__('event_tickets_available')}
+                                      </span>
+                                    ) : (
+                                      <span className="text-xs text-pending">
+                                        {__('event_tickets_last')}
+                                      </span>
+                                    )} */}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          ))
-                        }
+                            );
+                          })}
                         {durationInDays > 0 && (
                           <>
                             <div className="text-sm">
                               {__('events_accommodation')}{' '}
                               <strong>
-                                {priceFormat(minAccommodationPrice * discountRate)} -{' '}
-                                {priceFormat(maxAccommodationPrice * discountRate)}
+                                {priceFormat(
+                                  minAccommodationPrice * discountRate,
+                                )}{' '}
+                                -{' '}
+                                {priceFormat(
+                                  maxAccommodationPrice * discountRate,
+                                )}
                               </strong>
                             </div>
                             <div className="text-sm">
@@ -408,31 +509,28 @@ const EventPage = ({
                             >
                               {__('events_buy_ticket_button')}
                             </Link>
-                          ) : (event.paid || durationInDays > 0) ? (
+                          ) : event.paid || durationInDays > 0 ? (
                             <>
-                              {myTickets &&
+                              {myTickets && (
                                 <div>
-                                  <Heading level={4}>
-                                    Tickets
-                                  </Heading>
+                                  <Heading level={4}>Tickets</Heading>
                                   <ul className="space-y-2 divide-y mb-3">
-                                    { myTickets.map((ticket: any) => (
-                                      <li
-                                        key={ticket.get('_id')}
-                                      >
+                                    {myTickets.map((ticket: any) => (
+                                      <li key={ticket.get('_id')}>
                                         <Link
                                           href={`/tickets/${ticket.get('_id')}`}
                                           className="text-primary"
                                         >
-                                          { ticket.get('name') } x { ticket.get('quantity') || 1 }
+                                          {ticket.get('name')} x{' '}
+                                          {ticket.get('quantity') || 1}
                                         </Link>
                                       </li>
-                                    )) }
+                                    ))}
                                   </ul>
                                 </div>
-                              }
-                              {
-                                end && end.isAfter(dayjs()) &&
+                              )}
+                              {end &&
+                                end.isAfter(dayjs()) &&
                                 (event.stripePub ||
                                   process.env.NEXT_PUBLIC_STRIPE_PUB_KEY) && (
                                   <LinkButton
@@ -445,10 +543,9 @@ const EventPage = ({
                                     }`}
                                     className=""
                                   >
-                                    {__('events_buy_ticket_button') }
+                                    {__('events_buy_ticket_button')}
                                   </LinkButton>
-                                )
-                              }
+                                )}
                             </>
                           ) : (
                             <>
@@ -456,7 +553,8 @@ const EventPage = ({
                               start.isBefore(dayjs().subtract(15, 'minutes')) &&
                               end &&
                               end.isAfter(dayjs()) &&
-                                event.virtual && event.location ? (
+                              event.virtual &&
+                              event.location ? (
                                 <a
                                   className="btn-primary mr-2"
                                   href={event.location}
@@ -508,22 +606,24 @@ const EventPage = ({
                                 >
                                   Cancel RSVP
                                 </a>
-                              ) : end &&
+                              ) : ( 
+                                end &&
                                 user &&
                                 event.virtual &&
                                 end.isAfter(dayjs()) && (
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    attendEvent(
-                                      event._id,
-                                      !attendees?.includes(user._id),
-                                    );
-                                  }}
-                                  className="btn-primary mr-2"
-                                >
-                                  Attend
-                                </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      attendEvent(
+                                        event._id,
+                                        !attendees?.includes(user._id),
+                                      );
+                                    }}
+                                    className="btn-primary mr-2"
+                                  >
+                                    Attend
+                                  </button>
+                                )
                               )}
                             </>
                           )}

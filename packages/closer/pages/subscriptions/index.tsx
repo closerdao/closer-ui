@@ -21,32 +21,31 @@ import { SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
+import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
-  subscriptionPlans: SubscriptionPlan[];
+  subscriptionsConfig: { enabled: boolean; plans: SubscriptionPlan[] };
   listings: Listing[];
   error?: string;
 }
 
 const SubscriptionsPage: NextPage<Props> = ({
-  subscriptionPlans,
+  subscriptionsConfig,
   listings,
   error,
 }) => {
+  const { enabledConfigs, PLATFORM_NAME } = useConfig();
   const { isAuthenticated, isLoading, user } = useAuth();
 
   const router = useRouter();
 
-  const { PLATFORM_NAME } = useConfig() || {};
-
-  const plans: SubscriptionPlan[] = subscriptionPlans;
+  const plans: any[] = prepareSubscriptions(subscriptionsConfig);
 
   const [userActivePlan, setUserActivePlan] = useState<SubscriptionPlan>();
 
   useEffect(() => {
-    const selectedSubscription = subscriptionPlans.find(
-      (plan: SubscriptionPlan) =>
-        plan.priceId === (user?.subscription?.priceId || 'free'),
+    const selectedSubscription = plans.find(
+      (plan: any) => plan.priceId === (user?.subscription?.priceId || 'free'),
     );
     setUserActivePlan(selectedSubscription);
   }, [user]);
@@ -88,7 +87,10 @@ const SubscriptionsPage: NextPage<Props> = ({
     return null;
   }
 
-  if (process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true') {
+  if (
+    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true' ||
+    (enabledConfigs && !enabledConfigs.includes('subscriptions'))
+  ) {
     return (
       <>
         <Head>
@@ -387,12 +389,12 @@ SubscriptionsPage.getInitialProps = async () => {
     ]);
 
     return {
-      subscriptionPlans: subscriptions.value.plans,
+      subscriptionsConfig: subscriptions.value,
       listings: listings,
     };
   } catch (err: unknown) {
     return {
-      subscriptionPlans: [],
+      subscriptionsConfig: { enabled: false, plans: [] },
       listings: [],
       error: parseMessageFromError(err),
     };

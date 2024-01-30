@@ -13,8 +13,6 @@ export const getYoutubeIdFromURL = (url: string) => {
     return match[2];
   }
 
-  console.log('The supplied URL is not a valid youtube URL');
-
   return '';
 };
 
