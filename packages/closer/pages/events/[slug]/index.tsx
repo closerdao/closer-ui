@@ -50,10 +50,11 @@ const EventPage = ({
   listings,
   settings,
 }: Props) => {
+  console.log('event=',event);
   const { platform }: any = usePlatform();
   const { user, isAuthenticated } = useAuth();
 
-  const dailyUtilityFee = settings.utilityFiatVal;
+  const dailyUtilityFee = settings?.utilityFiatVal;
 
   const [photo, setPhoto] = useState(event && event.photo);
   const [password, setPassword] = useState('');
@@ -676,6 +677,8 @@ EventPage.getInitialProps = async ({
         Authorization: `Bearer ${req?.cookies?.access_token}`,
       },
     });
+
+
 
     return {
       event: event.data.results,

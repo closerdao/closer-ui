@@ -50,6 +50,7 @@ const getMinMaxFiatPrice = (
 ): { min: number; max: number } => {
   let min = listings[0]?.fiatPrice.val || 0;
   let max = listings[0]?.fiatPrice.val || 0;
+
   for (const obj of listings) {
     const val = obj.fiatPrice.val;
     if (val < min) {
@@ -65,11 +66,11 @@ const getMinMaxFiatPrice = (
 function calculateDurationDiscount(duration: number, settings: any) {
   let discount;
   if (duration >= 28) {
-    discount = settings.discountsMonthly.value;
+    discount = settings.discountsMonthly;
   } else if (duration >= 7) {
-    discount = settings.discountsWeekly.value;
+    discount = settings.discountsWeekly;
   } else {
-    discount = settings.discountsDaily.value;
+    discount = settings.discountsDaily;
   }
   return discount;
 }
@@ -95,7 +96,7 @@ export const getAccommodationPriceRange = (
       end: settings.seasonsHighEnd,
       modifier: settings.seasonsHighModifier,
     },
-  }
+  };
 
   return isHighSeason(seasons, start)
     ? {
