@@ -8,10 +8,10 @@ interface Tier {
 
 export const prepareSubscriptions = (subscriptionsConfig: {
   enabled: boolean;
-  plans: SubscriptionPlan[];
+  entries: SubscriptionPlan[];
 }): SubscriptionPlan[] => {
   if (subscriptionsConfig) {
-    const formattedPlans: SubscriptionPlan[] = subscriptionsConfig.plans;
+    const formattedPlans: SubscriptionPlan[] = subscriptionsConfig.entries;
     return formattedPlans;
   }
   return [];

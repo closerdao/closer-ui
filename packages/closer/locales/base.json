@@ -1070,13 +1070,14 @@
   "config_label_bookingPageDescription": "Booking page description",
   "config_features_heading": "Platform features",
   "generic_delete_button": "Delete",
-  "config_add_plan_button": "Add entry",
+  "config_add_entry_button": "Add entry",
   "config_true": "True",
   "config_false": "False",
   "booking_rules_heading": "Booking rules",
 
   "edit_homepage_button": "Edit homepage",
   "blog_home_button": "Homepage",
+  "generic_save_button": "Save",
 
 
   "generic_edit_button": "Edit"

@@ -10,6 +10,7 @@ import Reviews from '../../components/Reviews';
 import UpcomingEventsIntro from '../../components/UpcomingEventsIntro';
 import Heading from '../../components/ui/Heading';
 
+import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
@@ -19,17 +20,17 @@ import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
 interface Props {
-  settings: any;
+  bookingSettings: any;
   bookingRules: BookingRulesConfig;
 }
 
-const StayPage = ({ settings, bookingRules }: Props) => {
+const StayPage = ({ bookingSettings, bookingRules }: Props) => {
   const { APP_NAME } = useConfig();
   const config = useConfig();
   const discounts = {
-    daily: settings.discountsDaily,
-    weekly: settings.discountsWeekly,
-    monthly: settings.discountsMonthly,
+    daily: bookingSettings?.discountsDaily,
+    weekly: bookingSettings?.discountsWeekly,
+    monthly: bookingSettings?.discountsMonthly,
   };
   const { PLATFORM_NAME, TEAM_EMAIL } = config || {};
   const { platform }: any = usePlatform();
@@ -70,6 +71,10 @@ const StayPage = ({ settings, bookingRules }: Props) => {
     );
   });
 
+  if (!bookingSettings) {
+    return <PageNotFound error="Booking is disabled" />;
+  }
+
   return (
     <>
       <Head>
@@ -82,7 +87,7 @@ const StayPage = ({ settings, bookingRules }: Props) => {
       <section className="max-w-6xl mx-auto mb-16">
         <div className="mb-6 max-w-prose">
           <Heading level={1} className="text-4xl pb-2 mt-8">
-          {__('stay_title', APP_NAME)} {PLATFORM_NAME}
+            {__('stay_title', APP_NAME)} {PLATFORM_NAME}
           </Heading>
           <p>{__('stay_description', APP_NAME)}</p>
         </div>
@@ -95,7 +100,7 @@ const StayPage = ({ settings, bookingRules }: Props) => {
         </section>
       )}
 
-      <BookingRules rules={bookingRules.plans} />
+      {bookingRules.enabled && <BookingRules rules={bookingRules?.entries} />}
 
       <section className="max-w-6xl mx-auto mb-16">
         <Hosts hosts={hosts} email={TEAM_EMAIL} />
@@ -139,7 +144,7 @@ const StayPage = ({ settings, bookingRules }: Props) => {
 
 StayPage.getInitialProps = async () => {
   try {
-    const [settingsResponse, bookingRulesResponse] = await Promise.all([
+    const [bookingResponse, bookingRulesResponse] = await Promise.all([
       api.get('/config/booking').catch((err) => {
         console.error('Error fetching booking config:', err);
         return null;
@@ -150,11 +155,11 @@ StayPage.getInitialProps = async () => {
       }),
     ]);
 
-    const settings = settingsResponse?.data?.results?.value;
+    const bookingSettings = bookingResponse?.data?.results?.value;
     const bookingRules = bookingRulesResponse?.data?.results?.value;
 
     return {
-      settings,
+      bookingSettings,
       bookingRules,
     };
   } catch (err) {

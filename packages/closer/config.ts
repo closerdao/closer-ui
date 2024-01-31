@@ -161,14 +161,6 @@ export const configDescription = [
         type: 'number',
         default: 1,
       },
-      bookingPageTitle: {
-        type: 'text',
-        default: '',
-      },
-      bookingPageDescription: {
-        type: 'text',
-        default: '',
-      },
     },
   },
   {
@@ -178,7 +170,7 @@ export const configDescription = [
         type: 'boolean',
         default: false,
       },
-      plans: {
+      entries: {
         type: [
           {
             slug: 'text',
@@ -221,7 +213,7 @@ export const configDescription = [
         type: 'boolean',
         default: false,
       },
-      plans: {
+      entries: {
         type: [
           {
             title: 'text',
@@ -348,7 +340,7 @@ export const configDescription = [
     value: {
       enabled: {
         type: 'boolean',
-        default: true,
+        default: false,
       },
       cardPayment: {
         type: 'boolean',

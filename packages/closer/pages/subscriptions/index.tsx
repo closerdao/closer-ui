@@ -24,7 +24,7 @@ import { __ } from '../../utils/helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
-  subscriptionsConfig: { enabled: boolean; plans: SubscriptionPlan[] };
+  subscriptionsConfig: { enabled: boolean; entries: SubscriptionPlan[] };
   listings: Listing[];
   error?: string;
 }
@@ -387,6 +387,7 @@ SubscriptionsPage.getInitialProps = async () => {
       api.get('/config/subscriptions'),
       api.get('/listing'),
     ]);
+    console.log('subscriptions.value=',subscriptions.value);
 
     return {
       subscriptionsConfig: subscriptions.value,
@@ -394,7 +395,7 @@ SubscriptionsPage.getInitialProps = async () => {
     };
   } catch (err: unknown) {
     return {
-      subscriptionsConfig: { enabled: false, plans: [] },
+      subscriptionsConfig: { enabled: false, entries: [] },
       listings: [],
       error: parseMessageFromError(err),
     };

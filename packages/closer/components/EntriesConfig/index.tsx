@@ -12,15 +12,15 @@ interface Props {
   ) => void;
   handleAddElement: () => void;
   handleDeleteElement: (index: number) => void;
-  plansKey: string;
+  entriesKey: string;
 }
 
-const PlansConfig = ({
+const EntriesConfig = ({
   currentValue,
   handleChange,
   handleAddElement,
   handleDeleteElement,
-  plansKey,
+  entriesKey,
 }: Props) => {
   return (
     <div className="flex flex-col gap-4">
@@ -28,7 +28,7 @@ const PlansConfig = ({
         currentValue.map((element: any, index: number) => {
           return (
             <Card key={index}>
-              {Object.entries(element).map(([innerKey], i: number) => {
+              {Object.entries(element).map(([innerKey]) => {
                 return (
                   <div key={`${innerKey}2`} className="flex flex-col gap-1">
                     <label>{__(`config_label_${innerKey}`)}:</label>
@@ -42,7 +42,7 @@ const PlansConfig = ({
                             value="true"
                             checked={currentValue[index][innerKey] === true}
                             onChange={(event) =>
-                              handleChange(event, plansKey, index)
+                              handleChange(event, entriesKey, index)
                             }
                           />
                           {__('config_true')}
@@ -54,7 +54,7 @@ const PlansConfig = ({
                             value="false"
                             checked={currentValue[index][innerKey] === false}
                             onChange={(event) =>
-                              handleChange(event, plansKey, index)
+                              handleChange(event, entriesKey, index)
                             }
                           />
                           {__('config_false')}
@@ -65,7 +65,7 @@ const PlansConfig = ({
                         className="bg-neutral rounded-md p-1"
                         name={innerKey}
                         onChange={(event) =>
-                          handleChange(event, plansKey, index)
+                          handleChange(event, entriesKey, index)
                         }
                         type="text"
                         value={String(currentValue[index][innerKey])}
@@ -87,10 +87,10 @@ const PlansConfig = ({
           );
         })}
       <Button onClick={handleAddElement} type="secondary">
-        {__('config_add_plan_button')}
+        {__('config_add_entry_button')}
       </Button>
     </div>
   );
 };
 
-export default PlansConfig;
+export default EntriesConfig;

@@ -24,6 +24,7 @@ import {
   api,
   blockchainConfig,
 } from 'closer';
+import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import 'closer/public/styles.css';
 import { prepareGeneralConfig } from 'closer/utils/app.helpers';
@@ -33,7 +34,6 @@ import appConfig from '../config';
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
-  enabledConfigs: string[];
 }
 
 export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
@@ -45,9 +45,12 @@ const MyApp = ({
   Component,
   pageProps,
   configGeneral,
-  enabledConfigs,
-}: AppOwnProps) => {
-  const config = prepareGeneralConfig(configGeneral);
+}: 
+AppOwnProps) => {
+
+  const defaultGeneralConfig = configDescription.find(config => config.slug === 'general')?.value;
+
+  const config = configGeneral ? prepareGeneralConfig(configGeneral) : prepareGeneralConfig(defaultGeneralConfig);
   const { FACEBOOK_PIXEL_ID } = config || {};
   const router = useRouter();
   const { query } = router;
@@ -62,7 +65,10 @@ const MyApp = ({
   return (
     <>
       <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+        />
       </Head>
 
       <Script
@@ -98,7 +104,6 @@ const MyApp = ({
           ...config,
           ...blockchainConfig,
           ...appConfig,
-          enabledConfigs,
         }}
       >
         <ErrorBoundary>
@@ -144,21 +149,20 @@ const MyApp = ({
 // TODO in the future: either migrate to App directory or do SSR data fetching on each page that uses general configs
 MyApp.getInitialProps = async (context: AppContext) => {
   const ctx = await App.getInitialProps(context);
-  const allConfigs = await api.get('/config');
 
-  const configGeneral = allConfigs.data.results.find(
-    (config: any) => config.slug === 'general',
-  ).value;
-
-  const enabledConfigs = allConfigs.data.results
-    .filter((config: any) => config.value.enabled)
-    .map((config: any) => config.slug);
-
-  return {
-    ...ctx,
-    configGeneral,
-    enabledConfigs,
-  };
+  try {
+    const response = await api.get('/config/general');
+    return {
+      ...ctx,
+      configGeneral: response.data.results.value,
+    };
+  } catch (error) {
+    console.log('error=', error);
+    return {
+      ...ctx,
+      configGeneral: null,
+    };
+  }
 };
 
 export default MyApp;

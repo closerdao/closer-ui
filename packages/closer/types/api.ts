@@ -75,5 +75,5 @@ export type BookingRule = {
 
 export interface BookingRulesConfig {
   enabled: boolean;
-  plans: BookingRule[];
+  entries: BookingRule[];
 }
