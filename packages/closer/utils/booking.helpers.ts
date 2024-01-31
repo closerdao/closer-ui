@@ -38,3 +38,18 @@ export const getBookingType = (
   }
   return '🏡 Stay';
 };
+
+export const getFiatTotal = (
+  isTeamBooking: boolean,
+  foodOption: string,
+  utilityTotal: number,
+  accomodationTotal: number,
+) => {
+  if (isTeamBooking) {
+    return 0;
+  }
+  if (foodOption === 'no_food') {
+    return accomodationTotal;
+  }
+  return utilityTotal + accomodationTotal;
+};

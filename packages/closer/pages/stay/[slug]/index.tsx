@@ -28,6 +28,7 @@ import { useConfig } from '../../../hooks/useConfig';
 import { useOutsideClick } from '../../../hooks/useOutsideClick';
 import { CloserCurrencies, Listing } from '../../../types';
 import api, { cdn } from '../../../utils/api';
+import { getFiatTotal } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import {
   __,
@@ -92,7 +93,8 @@ const ListingPage: NextPage<Props> = ({
   const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
   const [isTeamBooking, setIsTeamBooking] = useState(false);
   const [foodOption, setFoodOption] = useState('no_food');
-  const durationRateDays = durationInDays >= 28 ? 30 : durationInDays >= 7 ? 7 : 1;
+  const durationRateDays =
+    durationInDays >= 28 ? 30 : durationInDays >= 7 ? 7 : 1;
   const durationName = getBookingRate(durationInDays);
 
   const discountRate = settings
@@ -133,7 +135,12 @@ const ListingPage: NextPage<Props> = ({
     ['space-host', 'steward', 'land-manager', 'team'].includes(roles),
   );
 
-  const fiatTotal = (isTeamBooking || foodOption === 'no_food' ? 0 : utilityTotal + accomodationTotal);
+  const fiatTotal = getFiatTotal(
+    isTeamBooking,
+    foodOption,
+    utilityTotal,
+    accomodationTotal,
+  );
 
   const getAvailability = async (
     startDate: Date | string | null,
@@ -428,7 +435,7 @@ const ListingPage: NextPage<Props> = ({
                             end,
                             maxHorizon,
                             maxDuration,
-                            unavailableDates
+                            unavailableDates,
                           )}
                         />
                       </div>
@@ -475,10 +482,10 @@ const ListingPage: NextPage<Props> = ({
                                   htmlFor="separateBeds"
                                   className="text-sm"
                                 >
-                                {__('bookings_pickup')}
-                                <span className="w-full text-xs ml-2">
-                                  ({__('bookings_pickup_disclaimer')})
-                                </span>
+                                  {__('bookings_pickup')}
+                                  <span className="w-full text-xs ml-2">
+                                    ({__('bookings_pickup_disclaimer')})
+                                  </span>
                                 </label>
                                 <Switch
                                   disabled={false}
@@ -602,17 +609,16 @@ const ListingPage: NextPage<Props> = ({
                           <div className="flex justify-between items-center mt-3">
                             <p>{__('bookings_summary_step_utility_total')}</p>
                             <p>
-                              {foodOption === 'no_food' ?
+                              {foodOption === 'no_food' ? (
                                 <b title={__('stay_food_not_included_tooltip')}>
                                   {__('stay_food_not_included')}
-                                </b> :
+                                </b>
+                              ) : (
                                 priceFormat(
-                                  isTeamBooking ?
-                                  0 :
-                                  utilityTotal,
+                                  isTeamBooking ? 0 : utilityTotal,
                                   settings?.utilityFiat?.cur,
                                 )
-                              }
+                              )}
                             </p>
                           </div>
                           <div className="flex justify-between items-center mt-3">
@@ -629,22 +635,22 @@ const ListingPage: NextPage<Props> = ({
                                     listing.tokenPrice?.cur,
                                   )}{' '}
                                   +{' '}
-                                  {settings && priceFormat(
-                                    isTeamBooking || foodOption === 'no_food' ? 0 : utilityTotal,
-                                    settings.utilityFiat?.cur,
-                                  )}
+                                  {settings &&
+                                    priceFormat(
+                                      isTeamBooking || foodOption === 'no_food'
+                                        ? 0
+                                        : utilityTotal,
+                                      settings.utilityFiat?.cur,
+                                    )}
                                 </div>
                               ) : (
-                              <span>
-                                { priceFormat(
-                                    settings &&
-                                    listing &&
-                                    fiatTotal,
+                                <span>
+                                  {priceFormat(
+                                    settings && listing && fiatTotal,
                                     listing.fiatPrice?.cur,
-                                  )
-                                }
-                              </span>
-                              ) }
+                                  )}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </>
