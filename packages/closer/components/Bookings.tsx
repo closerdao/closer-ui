@@ -1,4 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { CSVLink } from 'react-csv';
+import dayjs from 'dayjs';
 
 import { BOOKINGS_PER_PAGE, MAX_BOOKINGS_TO_FETCH } from '../constants';
 import { usePlatform } from '../contexts/platform';
@@ -109,12 +111,50 @@ const Bookings = ({ filter, page, setPage, isPagination }: Props) => {
           </div>
         ) : (
           <div className="columns mt-8">
-            <Heading level={2} className="border-b pb-4">
-              {allBookings ? allBookings.size : 0}{' '}
-              {bookings && bookings.count() === 1
-                ? __('booking_requests_result')
-                : __('booking_requests_results')}
-            </Heading>
+            <div className="flex flex-start items-center border-b pb-4">
+              <Heading level={2} className="mr-4">
+                {allBookings ? allBookings.size : 0}{' '}
+                {bookings && bookings.count() === 1
+                  ? __('booking_requests_result')
+                  : __('booking_requests_results')}
+              </Heading>
+              { bookings  && <CSVLink
+                className="underline  text-accent"
+                data={ bookings.map((booking: any) => {
+                  const user = platform.user.findOne(booking.get('createdBy'));
+                  const listing = platform.listing.findOne(
+                    booking.get('listing'),
+                  );
+                  const bookingEvent = platform.event.findOne(
+                    booking.get('eventId'),
+                  );
+
+                  return ({
+                    id: booking.get('_id'),
+                    name: user?.get('screenname'),
+                    listing: listing?.get('name'),
+                    event: bookingEvent?.get('name'),
+                    volunteer: booking.get('volunteerId'),
+                    arrival: booking.get('start'),
+                    pickup: booking.get('doesNeedPickup'),
+                    total: booking.getIn(['total', 'val']),
+                  });
+                }).toJS() }
+                headers={[
+                  { label: 'ID', key: 'id' },
+                  { label: 'Name', key: 'name' },
+                  { label: 'Listing', key: 'listing' },
+                  { label: 'Event', key: 'event' },
+                  { label: 'Volunteer', key: 'volunteer' },
+                  { label: 'Arrival', key: 'arrival' },
+                  { label: 'Pickup', key: 'pickup' },
+                  { label: 'Total', key: 'total' },
+                ]}
+                  filename={`bookings-${dayjs().format('YYYY-MM-DD.HH:mm')}.csv`}
+              >
+                {__('generic_export_csv')}
+              </CSVLink> }
+            </div>
             <div className="bookings-list mt-8 flex flex-wrap gap-4">
               {!bookings || bookings.count() === 0 ? (
                 <p className="mt-4">{__('no_bookings')}</p>
