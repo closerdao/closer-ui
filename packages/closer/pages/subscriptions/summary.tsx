@@ -23,6 +23,7 @@ import {
 } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import { GeneralConfig } from '../../types';
 import {
   SelectedPlan,
   SubscriptionPlan, // Tier,
@@ -38,22 +39,32 @@ import {
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
-  subscriptionsConfig: { enabled: boolean; plans: SubscriptionPlan[] };
+  subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
+  generalConfig: GeneralConfig | null;
   error?: string;
 }
 
 const SubscriptionsSummaryPage: NextPage<Props> = ({
   subscriptionsConfig,
+  generalConfig,
   error,
 }) => {
-  const { enabledConfigs, PLATFORM_NAME } = useConfig();
-  const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
-
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
+  const defaultConfig = useConfig();
   const { priceId, monthlyCredits } = router.query;
 
+  const areSubscriptionsEnabled =
+    subscriptionsConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
+
+  const PLATFORM_NAME =
+    generalConfig?.platformName || defaultConfig.platformName;
+
+  const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
+
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
+
   const defaultMonthlyCredits = Math.min(
     parseFloat(monthlyCredits as string) || selectedPlan?.monthlyCredits || 0,
     MAX_CREDITS_PER_MONTH,
@@ -115,10 +126,7 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
     return <PageError error={error} />;
   }
 
-  if (
-    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true' ||
-    (enabledConfigs && !enabledConfigs.includes('subscriptions'))
-  ) {
+  if (!areSubscriptionsEnabled) {
     return <Page404 error="" />;
   }
 
@@ -204,16 +212,26 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
 
 SubscriptionsSummaryPage.getInitialProps = async () => {
   try {
-    const {
-      data: { results },
-    } = await api.get('/config/subscriptions');
+    const [subscriptionsRes, generalRes] = await Promise.all([
+      api.get('/config/subscriptions').catch(() => {
+        return null;
+      }),
+      api.get('/config/general').catch(() => {
+        return null;
+      }),
+    ]);
+
+    const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
+    const generalConfig = generalRes?.data?.results?.value;
 
     return {
-      subscriptionsConfig: results.value,
+      subscriptionsConfig,
+      generalConfig,
     };
   } catch (err: unknown) {
     return {
-      subscriptionsConfig: { enabled: false, plans: [] },
+      subscriptionsConfig: { enabled: false, elements: [] },
+      generalConfig: null,
       error: parseMessageFromError(err),
     };
   }

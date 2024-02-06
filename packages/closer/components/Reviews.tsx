@@ -8,6 +8,7 @@ import { __ } from '../utils/helpers';
 import Heading from './ui/Heading';
 
 const Reviews = () => {
+  // TODO: move reviews to config
   const { reviewsList } = useConfig();
   const [activeReviews, setReviewsList] = useState<Review[]>([]);
 

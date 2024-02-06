@@ -12,15 +12,15 @@ interface Props {
   ) => void;
   handleAddElement: () => void;
   handleDeleteElement: (index: number) => void;
-  entriesKey: string;
+  elementsKey: string;
 }
 
-const EntriesConfig = ({
+const ArrayConfig = ({
   currentValue,
   handleChange,
   handleAddElement,
   handleDeleteElement,
-  entriesKey,
+  elementsKey,
 }: Props) => {
   return (
     <div className="flex flex-col gap-4">
@@ -42,7 +42,7 @@ const EntriesConfig = ({
                             value="true"
                             checked={currentValue[index][innerKey] === true}
                             onChange={(event) =>
-                              handleChange(event, entriesKey, index)
+                              handleChange(event, elementsKey, index)
                             }
                           />
                           {__('config_true')}
@@ -54,7 +54,7 @@ const EntriesConfig = ({
                             value="false"
                             checked={currentValue[index][innerKey] === false}
                             onChange={(event) =>
-                              handleChange(event, entriesKey, index)
+                              handleChange(event, elementsKey, index)
                             }
                           />
                           {__('config_false')}
@@ -65,7 +65,7 @@ const EntriesConfig = ({
                         className="bg-neutral rounded-md p-1"
                         name={innerKey}
                         onChange={(event) =>
-                          handleChange(event, entriesKey, index)
+                          handleChange(event, elementsKey, index)
                         }
                         type="text"
                         value={String(currentValue[index][innerKey])}
@@ -93,4 +93,4 @@ const EntriesConfig = ({
   );
 };
 
-export default EntriesConfig;
+export default ArrayConfig;

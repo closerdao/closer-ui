@@ -7,28 +7,28 @@
   }
   .btn-primary,
   .btn-primary[type='submit'] {
-    @apply text-base cursor-pointer inline-block py-2 px-4 rounded-full text-white border-0 border-primary bg-primary focus:outline-none disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed uppercase;
+    @apply text-base cursor-pointer inline-block py-2 px-4 rounded-full text-white border-0 border-accent bg-accent focus:outline-none disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed uppercase;
   }
   .btn-primary-light,
   .btn-primary-light[type='submit'] {
-    @apply text-base cursor-pointer inline-block py-2 px-4 rounded-full text-primary border-0 border-primary bg-primary-light focus:outline-none disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed uppercase;
+    @apply text-base cursor-pointer inline-block py-2 px-4 rounded-full text-accent border-0 border-accent bg-accent-light focus:outline-none disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed uppercase;
   }
   .btn-primary-large {
     @apply: btn-primary md:text-4xl;
   }
   .btn-light {
-    @apply: bg-primary-light;
+    @apply: bg-accent-light;
   }
   .btn-small,
   .btn-small[type='submit'] {
-    @apply btn py-0 px-2 text-sm hover:bg-primary text-primary hover:text-white bg-transparent border-2 border-primary disabled:hover:bg-transparent disabled:border-gray-400 disabled:text-gray-400;
+    @apply btn py-0 px-2 text-sm hover:bg-accent text-accent hover:text-white bg-transparent border-2 border-accent disabled:hover:bg-transparent disabled:border-gray-400 disabled:text-gray-400;
   }
   .btn-secondary,
   .btn-secondary[type='submit'] {
     @apply btn hover:bg-secondary text-secondary hover:text-white bg-transparent border-2 border-secondary disabled:hover:bg-transparent disabled:border-gray-400 disabled:text-gray-400;
   }
   .btn-primary.active {
-    @apply bg-primary text-white hover:bg-transparent hover:text-primary;
+    @apply bg-accent text-white hover:bg-transparent hover:text-accent;
   }
   .form-field {
     @apply mb-4;
@@ -43,7 +43,7 @@
     @apply border-white;
   }
   input:checked + .toggle-bg {
-    @apply bg-primary border-primary;
+    @apply bg-accent border-accent;
   }
 
   input,
@@ -55,7 +55,7 @@
 
   textarea,
   .textarea {
-    @apply p-2 text-foreground block border-0 border-b-2 border-transparent focus:outline-none focus:border-primary;
+    @apply p-2 text-foreground block border-0 border-b-2 border-transparent focus:outline-none focus:border-accent;
   }
 
   input[type='email'],
@@ -64,11 +64,11 @@
   input[type='phone'],
   input[type='number'],
   input[type='date'] {
-    @apply p-2 text-foreground block border-0 border-b-2 border-transparent ring-transparent focus:outline-none focus:border-primary;
+    @apply p-2 text-foreground block border-0 border-b-2 border-transparent ring-transparent focus:outline-none focus:border-accent;
   }
 
   select {
-    @apply text-base border-gray-200 border-2 rounded-lg ring-transparent appearance-none focus:border-primary outline-none max-w-full;
+    @apply text-base border-gray-200 border-2 rounded-lg ring-transparent appearance-none focus:border-accent outline-none max-w-full;
   }
 
   .switch .label {

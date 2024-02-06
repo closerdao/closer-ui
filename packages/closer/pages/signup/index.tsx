@@ -21,7 +21,7 @@ import { __ } from '../../utils/helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
-  subscriptionsConfig: { enabled: boolean; plans: SubscriptionPlan[] };
+  subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
 }
 
 const Signup = ({ subscriptionsConfig }: Props) => {
@@ -33,9 +33,9 @@ const Signup = ({ subscriptionsConfig }: Props) => {
 
   const [error, setError] = useState(false);
 
-  const defaultSubscriptionPlan = subscriptionPlans && subscriptionPlans.find(
-    (plan: SubscriptionPlan) => plan.priceId === 'free',
-  );
+  const defaultSubscriptionPlan =
+    subscriptionPlans &&
+    subscriptionPlans.find((plan: SubscriptionPlan) => plan.priceId === 'free');
 
   const router = useRouter();
   const { referral } = router.query || {};
@@ -71,7 +71,6 @@ const Signup = ({ subscriptionsConfig }: Props) => {
         <title>{__('signup_title', APP_NAME)}</title>
       </Head>
       <main className="main-content mt-12 px-4 max-w-4xl mx-auto">
-        
         {process.env.NEXT_PUBLIC_REGISTRATION_MODE === 'curated' ? (
           <ApplicationForm />
         ) : (

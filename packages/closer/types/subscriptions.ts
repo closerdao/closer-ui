@@ -24,7 +24,7 @@ export interface SubscriptionPlan {
   tiersAvailable: boolean;
   perks: string;
   billingPeriod: string;
-  tiers?: string ;
+  tiers?: string;
   variants?: SubscriptionVariant;
   note?: string;
 }
@@ -40,7 +40,7 @@ export interface Subscriptions {
     currency: string;
     symbol: string;
   };
-  plans: SubscriptionPlan[];
+  elements: SubscriptionPlan[];
 }
 
 export interface SelectedPlan {

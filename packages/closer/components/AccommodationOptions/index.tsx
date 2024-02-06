@@ -17,7 +17,7 @@ interface Props {
 }
 
 const AccommodationOptions = ({ listings }: Props) => {
-  const { PLATFORM_NAME } = useConfig() || {};
+  const { PLATFORM_NAME } = useConfig();
 
   return (
     <div className="flex flex-col sm:flex-row gap-[2%] flex-wrap">

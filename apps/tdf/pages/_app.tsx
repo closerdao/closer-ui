@@ -1,10 +1,10 @@
-import App, { AppContext, AppProps } from 'next/app';
+import { AppProps } from 'next/app';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Script from 'next/script';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import CookieConsent from 'react-cookie-consent';
 
 import { ErrorBoundary, Layout } from '@/components';
@@ -18,6 +18,7 @@ import { Web3ReactProvider } from '@web3-react/core';
 import {
   AuthProvider,
   ConfigProvider,
+  GeneralConfig,
   PlatformProvider,
   WalletProvider,
   __,
@@ -41,26 +42,42 @@ export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
   return library;
 }
 
-const MyApp = ({
-  Component,
-  pageProps,
-  configGeneral,
-}: 
-AppOwnProps) => {
+const MyApp = ({ Component, pageProps }: AppOwnProps) => {
+  const defaultGeneralConfig = configDescription.find(
+    (config) => config.slug === 'general',
+  )?.value;
 
-  const defaultGeneralConfig = configDescription.find(config => config.slug === 'general')?.value;
-
-  const config = configGeneral ? prepareGeneralConfig(configGeneral) : prepareGeneralConfig(defaultGeneralConfig);
-  const { FACEBOOK_PIXEL_ID } = config || {};
   const router = useRouter();
   const { query } = router;
   const referral = query.referral;
+
+  const [generalConfig, setGeneralConfig] = useState<GeneralConfig | null>(
+    null,
+  );
+  const config = generalConfig
+    ? prepareGeneralConfig(generalConfig)
+    : prepareGeneralConfig(defaultGeneralConfig);
+  const { FACEBOOK_PIXEL_ID } = config || {};
 
   useEffect(() => {
     if (referral) {
       localStorage.setItem(REFERRAL_ID_LOCAL_STORAGE_KEY, referral as string);
     }
   }, [referral]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const generalConfigRes = await api.get('config/general').catch(() => {
+          return;
+        });
+        setGeneralConfig(generalConfigRes?.data.results.value);
+      } catch (err) {
+        setGeneralConfig(null);
+        return;
+      }
+    })();
+  }, []);
 
   return (
     <>
@@ -89,6 +106,8 @@ AppOwnProps) => {
   `,
         }}
       />
+
+      {/* TDF specific chatbot widget */}
       <Script
         id="gptconfig"
         dangerouslySetInnerHTML={{
@@ -121,6 +140,8 @@ AppOwnProps) => {
           </AuthProvider>
         </ErrorBoundary>
       </ConfigProvider>
+
+      {/* TODO: create cookie consent page with property-specific parameters #357  */}
       <CookieConsent
         buttonText={__('cookie_consent_button')}
         expires={365}
@@ -134,6 +155,7 @@ AppOwnProps) => {
           border: '1px solid #FE4FB7',
         }}
       >
+
         <div className="text-black text-sm">
           {__('cookie_consent_text')}{' '}
           <Link className="underline" href="/pdf/TDF-Cookies.pdf">
@@ -143,26 +165,6 @@ AppOwnProps) => {
       </CookieConsent>
     </>
   );
-};
-
-// This disables ASO everywhere https://nextjs.org/docs/pages/building-your-application/rendering/automatic-static-optimization
-// TODO in the future: either migrate to App directory or do SSR data fetching on each page that uses general configs
-MyApp.getInitialProps = async (context: AppContext) => {
-  const ctx = await App.getInitialProps(context);
-
-  try {
-    const response = await api.get('/config/general');
-    return {
-      ...ctx,
-      configGeneral: response.data.results.value,
-    };
-  } catch (error) {
-    console.log('error=', error);
-    return {
-      ...ctx,
-      configGeneral: null,
-    };
-  }
 };
 
 export default MyApp;

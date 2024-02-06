@@ -1,18 +1,10 @@
 import { SubscriptionPlan } from '../types/subscriptions';
 
-interface Tier {
-  unitPrice: number;
-  minAmount: number;
-  maxAmount: number;
-}
-
 export const prepareSubscriptions = (subscriptionsConfig: {
   enabled: boolean;
-  entries: SubscriptionPlan[];
+  elements: SubscriptionPlan[];
 }): SubscriptionPlan[] => {
-  if (subscriptionsConfig) {
-    const formattedPlans: SubscriptionPlan[] = subscriptionsConfig.entries;
-    return formattedPlans;
-  }
-  return [];
+  if (!subscriptionsConfig) return [];
+  const formattedElements: SubscriptionPlan[] = subscriptionsConfig.elements;
+  return formattedElements;
 };

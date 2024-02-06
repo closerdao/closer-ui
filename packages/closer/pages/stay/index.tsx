@@ -14,17 +14,18 @@ import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
-import { BookingRulesConfig } from '../../types';
+import { BookingRulesConfig, GeneralConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
 interface Props {
   bookingSettings: any;
-  bookingRules: BookingRulesConfig;
+  bookingRules: BookingRulesConfig | null;
+  generalConfig: GeneralConfig | null;
 }
 
-const StayPage = ({ bookingSettings, bookingRules }: Props) => {
+const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
   const { APP_NAME } = useConfig();
   const config = useConfig();
   const discounts = {
@@ -32,7 +33,10 @@ const StayPage = ({ bookingSettings, bookingRules }: Props) => {
     weekly: bookingSettings?.discountsWeekly,
     monthly: bookingSettings?.discountsMonthly,
   };
-  const { PLATFORM_NAME, TEAM_EMAIL } = config || {};
+  const defaultConfig = useConfig();
+  const PLATFORM_NAME =
+    generalConfig?.platformName || defaultConfig.platformName;
+  const { TEAM_EMAIL } = config || {};
   const { platform }: any = usePlatform();
   const { user } = useAuth();
   const isTeamMember = user?.roles.some((roles) =>
@@ -63,6 +67,7 @@ const StayPage = ({ bookingSettings, bookingRules }: Props) => {
   }, [isTeamMember]);
 
   const listings = platform.listing.find(listingFilter);
+
   const hosts = platform.user.find(hostsFilter);
   const guestListings = listings?.filter((listing: any) => {
     return (
@@ -94,13 +99,13 @@ const StayPage = ({ bookingSettings, bookingRules }: Props) => {
       </section>
 
       {/* TODO: make gallery configurable for each village */}
-      {APP_NAME.toLowerCase() !== 'tdf' && (
+      {APP_NAME?.toLowerCase() !== 'tdf' && (
         <section className="max-w-6xl mx-auto mb-16">
           <PhotoGallery />
         </section>
       )}
 
-      {bookingRules.enabled && <BookingRules rules={bookingRules?.entries} />}
+      {bookingRules?.enabled && <BookingRules rules={bookingRules?.elements} />}
 
       <section className="max-w-6xl mx-auto mb-16">
         <Hosts hosts={hosts} email={TEAM_EMAIL} />
@@ -144,16 +149,21 @@ const StayPage = ({ bookingSettings, bookingRules }: Props) => {
 
 StayPage.getInitialProps = async () => {
   try {
-    const [bookingResponse, bookingRulesResponse] = await Promise.all([
-      api.get('/config/booking').catch((err) => {
-        console.error('Error fetching booking config:', err);
-        return null;
-      }),
-      api.get('/config/booking-rules').catch((err) => {
-        console.error('Error fetching booking rules:', err);
-        return null;
-      }),
-    ]);
+    const [bookingResponse, bookingRulesResponse, generalRes] =
+      await Promise.all([
+        api.get('/config/booking').catch((err) => {
+          console.error('Error fetching booking config:', err);
+          return null;
+        }),
+        api.get('/config/booking-rules').catch((err) => {
+          console.error('Error fetching booking rules:', err);
+          return null;
+        }),
+        api.get('/config/general').catch(() => {
+          return null;
+        }),
+      ]);
+    const generalConfig = generalRes?.data?.results?.value;
 
     const bookingSettings = bookingResponse?.data?.results?.value;
     const bookingRules = bookingRulesResponse?.data?.results?.value;
@@ -161,10 +171,14 @@ StayPage.getInitialProps = async () => {
     return {
       bookingSettings,
       bookingRules,
+      generalConfig,
     };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
+      bookingSettings: null,
+      bookingRules: null,
+      generalConfig: null,
     };
   }
 };

@@ -20,20 +20,32 @@ import PageNotFound from '../../404';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
-import { BaseBookingParams, Booking, Event, Listing } from '../../../types';
+import {
+  BaseBookingParams,
+  Booking,
+  BookingConfig,
+  CloserCurrencies,
+  Event,
+  Listing,
+} from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
 
 interface Props extends BaseBookingParams {
-  listing: Listing;
-  booking: Booking;
+  listing: Listing | null;
+  booking: Booking | null;
   error?: string;
   event?: Event;
+  bookingConfig: BookingConfig | null;
 }
 
-const Summary = ({ booking, listing, event, error }: Props) => {
-  const { STAY_BOOKING_ALLOWED_PLANS, enabledConfigs } = useConfig();
+const Summary = ({ booking, listing, event, error, bookingConfig }: Props) => {
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+
+  const { STAY_BOOKING_ALLOWED_PLANS } = useConfig();
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
   const [handleNextError, setHandleNextError] = useState<string | null>(null);
@@ -61,7 +73,7 @@ const Summary = ({ booking, listing, event, error }: Props) => {
   } = booking || {};
   useEffect(() => {
     if (booking?.status === 'pending' || booking?.status === 'paid') {
-      router.push(`/bookings/${booking._id}`);
+      router.push(`/bookings/${booking?._id}`);
     }
   }, [booking?.status]);
 
@@ -76,17 +88,17 @@ const Summary = ({ booking, listing, event, error }: Props) => {
 
   const handleNext = async () => {
     setHandleNextError(null);
-    if (booking.status === 'confirmed') {
-      return router.push(`/bookings/${booking._id}/checkout`);
+    if (booking?.status === 'confirmed') {
+      return router.push(`/bookings/${booking?._id}/checkout`);
     }
     try {
-      const res = await api.post(`/bookings/${booking._id}/complete`, {});
+      const res = await api.post(`/bookings/${booking?._id}/complete`, {});
       const status = res.data.results.status;
 
       if (status === 'confirmed') {
-        router.push(`/bookings/${booking._id}/checkout`);
+        router.push(`/bookings/${booking?._id}/checkout`);
       } else if (status === 'pending') {
-        router.push(`/bookings/${booking._id}/confirmation`);
+        router.push(`/bookings/${booking?._id}/confirmation`);
       } else {
         console.log(`Could not redirect: ${status}`);
       }
@@ -106,14 +118,11 @@ const Summary = ({ booking, listing, event, error }: Props) => {
         )}&adults=${adults}&useTokens=${useTokens}`,
       );
     } else {
-      router.push(`/bookings/${booking._id}/questions?goBack=true`);
+      router.push(`/bookings/${booking?._id}/questions?goBack=true`);
     }
   };
 
-  if (
-    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
-    (enabledConfigs && !enabledConfigs.includes('booking'))
-  ) {
+  if (!isBookingEnabled) {
     return <PageNotFound />;
   }
 
@@ -138,32 +147,35 @@ const Summary = ({ booking, listing, event, error }: Props) => {
         <div className="mt-16 flex flex-col gap-16">
           <SummaryDates
             isDayTicket={booking?.isDayTicket}
-            totalGuests={adults}
+            totalGuests={adults || 0}
             kids={children}
             infants={infants}
             pets={pets}
-            startDate={start}
-            endDate={end}
-            listingName={listing?.name}
-            listingUrl={listing?.slug}
+            startDate={start || ''}
+            endDate={end || ''}
+            listingName={listing?.name || ''}
+            listingUrl={listing?.slug || ''}
             volunteerId={volunteerId}
             eventName={event?.name}
             ticketOption={ticketOption?.name}
           />
           <SummaryCosts
             utilityFiat={utilityFiat}
-            useTokens={useTokens}
+            useTokens={useTokens || false}
             accomodationCost={useTokens ? rentalToken : rentalFiat}
-            totalToken={rentalToken}
-            totalFiat={total}
+            totalToken={rentalToken || { val: 0, cur: CloserCurrencies.EUR }}
+            totalFiat={total || { val: 0, cur: CloserCurrencies.EUR }}
             eventCost={eventFiat}
-            foodOption={booking.foodOption}
+            foodOption={booking?.foodOption}
             eventDefaultCost={
-              booking.ticketOption?.price
-                ? booking.ticketOption.price * booking.adults
+              booking?.ticketOption?.price
+                ? booking?.ticketOption.price * booking?.adults
                 : undefined
             }
-            accomodationDefaultCost={listing?.fiatPrice?.val * booking.adults}
+            accomodationDefaultCost={
+              (listing && listing?.fiatPrice?.val * booking?.adults) ||
+              undefined
+            }
             volunteerId={volunteerId}
           />
 
@@ -205,22 +217,32 @@ Summary.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
-    const {
-      data: { results: booking },
-    } = await api.get(`/booking/${query.slug}`, {
-      headers: req?.cookies?.access_token && {
-        Authorization: `Bearer ${req?.cookies?.access_token}`,
-      },
-    });
+    const [bookingRes, bookingConfigRes] = await Promise.all([
+      api
+        .get(`/booking/${query.slug}`, {
+          headers: req?.cookies?.access_token && {
+            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          },
+        })
+        .catch(() => {
+          return null;
+        }),
+      api.get('/config/booking').catch(() => {
+        return null;
+      }),
+    ]);
+    const booking = bookingRes?.data?.results;
+    const bookingConfig = bookingConfigRes?.data?.results?.value;
+
     const [optionalEvent, optionalListing] = await Promise.all([
-      booking.eventId &&
-        api.get(`/event/${booking.eventId}`, {
+      booking?.eventId &&
+        api.get(`/event/${booking?.eventId}`, {
           headers: req?.cookies?.access_token && {
             Authorization: `Bearer ${req?.cookies?.access_token}`,
           },
         }),
-      booking.listing &&
-        api.get(`/listing/${booking.listing}`, {
+      booking?.listing &&
+        api.get(`/listing/${booking?.listing}`, {
           headers: req?.cookies?.access_token && {
             Authorization: `Bearer ${req?.cookies?.access_token}`,
           },
@@ -229,13 +251,14 @@ Summary.getInitialProps = async ({
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
 
-    return { booking, listing, event, error: null };
+    return { booking, listing, event, error: null, bookingConfig };
   } catch (err) {
     console.log('Error', err);
     return {
       error: parseMessageFromError(err),
       booking: null,
       listing: null,
+      bookingConfig: null,
     };
   }
 };

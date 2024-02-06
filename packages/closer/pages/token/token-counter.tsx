@@ -11,12 +11,21 @@ import { TOKEN_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { WalletState } from '../../contexts/wallet';
 import { useConfig } from '../../hooks/useConfig';
+import { GeneralConfig } from '../../types';
+import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
 const DEFAULT_TOKENS = 10;
 
-const TokenCounterPage = () => {
-  const { PLATFORM_NAME } = useConfig() || {};
+interface Props {
+  generalConfig: GeneralConfig | null;
+}
+
+const TokenCounterPage = ({ generalConfig }: Props) => {
+  const defaultConfig = useConfig();
+  const PLATFORM_NAME =
+    generalConfig?.platformName || defaultConfig.platformName;
   const router = useRouter();
   const { nationality, tokens } = router.query;
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -103,6 +112,24 @@ const TokenCounterPage = () => {
       </div>
     </>
   );
+};
+
+TokenCounterPage.getInitialProps = async () => {
+  try {
+    const generalRes = await api.get('/config/general').catch(() => {
+      return null;
+    });
+    const generalConfig = generalRes?.data?.results?.value;
+
+    return {
+      generalConfig,
+    };
+  } catch (err: unknown) {
+    return {
+      generalConfig: null,
+      error: parseMessageFromError(err),
+    };
+  }
 };
 
 export default TokenCounterPage;

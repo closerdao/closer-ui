@@ -9,19 +9,17 @@ const TimeCountdown = ({ date, onComplete }) => {
     return (
       <div className="flex gap-4 md:gap-10">
         <div className="flex flex-col items-center w-24">
-          <p className="font-black text-4xl md:text-6xl text-primary">{days}</p>
+          <p className="font-black text-4xl md:text-6xl text-accent">{days}</p>
           <p className="text-2xl leading-8 font-bold">{__('countdown_days')}</p>
         </div>
         <div className="flex flex-col items-center w-24">
-          <p className="font-black text-4xl md:text-6xl text-primary">
-            {hours}
-          </p>
+          <p className="font-black text-4xl md:text-6xl text-accent">{hours}</p>
           <p className="text-2xl leading-8 font-bold">
             {__('countdown_hours')}
           </p>
         </div>
         <div className="flex flex-col items-center w-24">
-          <p className="font-black text-4xl md:text-6xl text-primary">
+          <p className="font-black text-4xl md:text-6xl text-accent">
             {minutes}
           </p>
           <p className="text-2xl leading-8 font-bold">
@@ -29,7 +27,7 @@ const TimeCountdown = ({ date, onComplete }) => {
           </p>
         </div>
         <div className="flex flex-col items-center w-24">
-          <p className="font-black text-4xl md:text-6xl text-primary">
+          <p className="font-black text-4xl md:text-6xl text-accent">
             {seconds}
           </p>
           <p className="text-2xl leading-8 font-bold">

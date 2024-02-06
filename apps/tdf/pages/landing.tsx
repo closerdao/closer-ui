@@ -17,7 +17,7 @@ import { prepareSubscriptions } from 'closer/utils/subscriptions.helpers';
 import { event } from 'nextjs-google-analytics';
 
 interface Props {
-  subscriptionsConfig: { enabled: boolean; plans: SubscriptionPlan[] };
+  subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
 }
 const HomePage = ({ subscriptionsConfig }: Props) => {
   const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
@@ -491,7 +491,7 @@ HomePage.getInitialProps = async () => {
     };
   } catch (err) {
     return {
-      subscriptionsConfig: { enabled: false, plans: [] },
+      subscriptionsConfig: { enabled: false, elements: [] },
       error: err,
     };
   }

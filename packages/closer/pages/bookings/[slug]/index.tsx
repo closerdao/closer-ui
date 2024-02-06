@@ -20,8 +20,13 @@ import { STATUS_COLOR } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
-import { useConfig } from '../../../hooks/useConfig';
-import { Booking, Event, Listing, VolunteerOpportunity } from '../../../types';
+import {
+  Booking,
+  BookingConfig,
+  Event,
+  Listing,
+  VolunteerOpportunity,
+} from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
@@ -35,6 +40,7 @@ interface Props {
   event: Event;
   volunteer: VolunteerOpportunity;
   bookingCreatedBy: User;
+  bookingConfig: BookingConfig | null;
 }
 
 const BookingPage = ({
@@ -44,8 +50,12 @@ const BookingPage = ({
   volunteer,
   error,
   bookingCreatedBy,
+  bookingConfig,
 }: Props) => {
-  const { enabledConfigs } = useConfig();
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+
   const { platform }: any = usePlatform();
   const { isAuthenticated, user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
@@ -100,8 +110,7 @@ const BookingPage = ({
 
   if (
     !booking ||
-    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
-    (enabledConfigs && !enabledConfigs.includes('booking')) ||
+    !isBookingEnabled ||
     (user?._id !== booking.createdBy && !isSpaceHost)
   ) {
     return <PageNotFound />;
@@ -209,35 +218,44 @@ BookingPage.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
-    const {
-      data: { results: booking },
-    } = await api.get(`/booking/${query.slug}`);
-
-    const [
-      optionalEvent,
-      optionalListing,
-      optionalVolunteer,
-      // optionalCreatedBy,
-    ] = await Promise.all([
-      booking.eventId &&
-        api.get(`/event/${booking.eventId}`, {
+    const [bookingRes, bookingConfigRes] = await Promise.all([
+      api
+        .get(`/booking/${query.slug}`, {
           headers: req?.cookies?.access_token && {
             Authorization: `Bearer ${req?.cookies?.access_token}`,
           },
+        })
+        .catch(() => {
+          return null;
         }),
-      booking.listing &&
-        api.get(`/listing/${booking.listing}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
-          },
-        }),
-      booking.volunteerId &&
-        api.get(`/volunteer/${booking.volunteerId}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
-          },
-        }),
+      api.get('/config/booking').catch(() => {
+        return null;
+      }),
     ]);
+    const booking = bookingRes?.data?.results;
+    const bookingConfig = bookingConfigRes?.data?.results?.value;
+
+    const [optionalEvent, optionalListing, optionalVolunteer] =
+      await Promise.all([
+        booking.eventId &&
+          api.get(`/event/${booking.eventId}`, {
+            headers: req?.cookies?.access_token && {
+              Authorization: `Bearer ${req?.cookies?.access_token}`,
+            },
+          }),
+        booking.listing &&
+          api.get(`/listing/${booking.listing}`, {
+            headers: req?.cookies?.access_token && {
+              Authorization: `Bearer ${req?.cookies?.access_token}`,
+            },
+          }),
+        booking.volunteerId &&
+          api.get(`/volunteer/${booking.volunteerId}`, {
+            headers: req?.cookies?.access_token && {
+              Authorization: `Bearer ${req?.cookies?.access_token}`,
+            },
+          }),
+      ]);
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
     const volunteer = optionalVolunteer?.data?.results;
@@ -261,6 +279,7 @@ BookingPage.getInitialProps = async ({
       volunteer,
       error: null,
       bookingCreatedBy,
+      bookingConfig,
     };
   } catch (err: any) {
     console.log('Error', err.message);
@@ -272,6 +291,7 @@ BookingPage.getInitialProps = async ({
       event: null,
       volunteer: null,
       createdBy: null,
+      bookingConfig: null,
     };
   }
 };

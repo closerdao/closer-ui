@@ -8,11 +8,19 @@ import Heading from '../../components/ui/Heading';
 
 import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
-import { useConfig } from '../../hooks/useConfig';
+import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
-const AllBookingsRequestsPage = () => {
-  const { enabledConfigs } = useConfig();
+interface Props {
+  bookingConfig: any;
+}
+
+const AllBookingsRequestsPage = ({ bookingConfig }: Props) => {
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+
   const { user } = useAuth();
 
   const defaultWhere = {
@@ -28,10 +36,7 @@ const AllBookingsRequestsPage = () => {
     return <PageNotFound error="User may not access" />;
   }
 
-  if (
-    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
-    (enabledConfigs && !enabledConfigs.includes('booking'))
-  ) {
+  if (!isBookingEnabled) {
     return <PageNotFound />;
   }
 
@@ -58,6 +63,24 @@ const AllBookingsRequestsPage = () => {
       </div>
     </>
   );
+};
+
+AllBookingsRequestsPage.getInitialProps = async () => {
+  try {
+    const bookingRes = await api.get('/config/booking').catch(() => {
+      return null;
+    });
+    const bookingConfig = bookingRes?.data?.results?.value;
+
+    return {
+      bookingConfig,
+    };
+  } catch (err: unknown) {
+    return {
+      bookingConfig: null,
+      error: parseMessageFromError(err),
+    };
+  }
 };
 
 export default AllBookingsRequestsPage;

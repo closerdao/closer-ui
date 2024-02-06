@@ -193,6 +193,7 @@
   "checkout_pay": "Pay",
   "checkout_processing_payment": "Processing payment...",
   "checkout_processing_token_payment": "Staking tokens...",
+  "checkout_payment_disabled_error": "Payment is disabled. Please contact support.",
   "currency_switch_EUR_title": "€ Euro",
   "currency_switch_TDF_title": "$ TDF",
   "discounts_code": "Code",
@@ -956,6 +957,7 @@
   "platform_configs": "⚙️ Platform settings",
   "booking_configs": "Booking",
   "general_configs": "General",
+  "config_updated": "Config updated!",
 
   "config_label_utilityFiatVal": "Utility price (per night)",
   "config_label_utilityFiatCur": "Utility currency",

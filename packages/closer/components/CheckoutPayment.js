@@ -32,8 +32,7 @@ const CheckoutPayment = ({
   user,
   eventId,
 }) => {
-  const { VISITORS_GUIDE } = useConfig() || {};
-
+  const { VISITORS_GUIDE } = useConfig();
   if (!process.env.NEXT_PUBLIC_STRIPE_PUB_KEY) {
     throw new Error('stripe key is undefined');
   }

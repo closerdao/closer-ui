@@ -11,23 +11,26 @@ import { ParsedUrlQuery } from 'querystring';
 import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
-import { useConfig } from '../../../hooks/useConfig';
-import { BaseBookingParams, Booking } from '../../../types';
+import { BaseBookingParams, Booking, BookingConfig } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, calculateRefundTotal } from '../../../utils/helpers';
 
 interface Props extends BaseBookingParams {
-  booking: Booking;
+  booking: Booking | null;
+  bookingConfig: BookingConfig | null;
   error?: string;
 }
 
-const BookingCancelPage = ({ booking, error }: Props) => {
-  const { enabledConfigs } = useConfig();
+const BookingCancelPage = ({ booking, bookingConfig, error }: Props) => {
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+
   const router = useRouter();
   const bookingId = router.query.slug;
   const bookingPrice = booking?.total || {
-    val: booking?.utilityFiat?.val + booking?.rentalFiat?.val,
+    val: booking && booking?.utilityFiat?.val + booking?.rentalFiat?.val,
     cur: booking?.rentalFiat?.cur,
   };
   const { isAuthenticated, user } = useAuth();
@@ -36,10 +39,10 @@ const BookingCancelPage = ({ booking, error }: Props) => {
   const [isPolicyLoading, setPolicyLoading] = useState(false);
   const [isCancelCompleted, setCancelCompleted] = useState(false);
   const refundTotal = calculateRefundTotal({
-    bookingStatus: booking.status,
+    bookingStatus: booking?.status,
     initialValue: bookingPrice.val,
     policy,
-    startDate: booking.start,
+    startDate: booking?.start,
   });
 
   useEffect(() => {
@@ -69,12 +72,7 @@ const BookingCancelPage = ({ booking, error }: Props) => {
     }
   }, [user]);
 
-  if (
-    !booking ||
-    error ||
-    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
-    (enabledConfigs && !enabledConfigs.includes('booking'))
-  ) {
+  if (!booking || error || !isBookingEnabled) {
     return <PageNotFound />;
   }
 
@@ -111,12 +109,23 @@ BookingCancelPage.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
-    const {
-      data: { results: booking },
-    } = await api.get(`/booking/${query.slug}`);
-    return { booking };
+    const [bookingRes, bookingConfigRes] = await Promise.all([
+      api.get(`/booking/${query.slug}`).catch((err) => {
+        console.error('Error fetching booking config:', err);
+        return null;
+      }),
+      api.get('/config/booking').catch(() => {
+        return null;
+      }),
+    ]);
+    const booking = bookingRes?.data?.results;
+    const bookingConfig = bookingConfigRes?.data?.results?.value;
+
+    return { booking, bookingConfig };
   } catch (err) {
     return {
+      booking: null,
+      generalConfig: null,
       error: parseMessageFromError(err),
     };
   }

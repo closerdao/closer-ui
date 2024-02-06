@@ -188,11 +188,11 @@ const MemberMenu = () => {
         const areSubscriptionsEnabled =
           subscriptionsRes &&
           subscriptionsRes?.data.results.value.enabled &&
-          process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+          process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
         const isBookingEnabled =
           bookingRes &&
           bookingRes?.data.results.value.enabled &&
-          process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
+          process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
         const updatedLinks = getLinks(
           isBookingEnabled,

@@ -2,7 +2,7 @@ import Head from 'next/head';
 
 import { ChangeEvent, useEffect, useState } from 'react';
 
-import EntriesConfig from '../../components/EntriesConfig';
+import ArrayConfig from '../../components/ArrayConfig';
 import {
   Button,
   Card,
@@ -16,6 +16,7 @@ import PageNotFound from '../404';
 import { configDescription } from '../../config';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
+import { useConfig } from '../../hooks/useConfig';
 import { Config } from '../../types';
 import api from '../../utils/api';
 import {
@@ -29,14 +30,14 @@ import { capitalizeFirstLetter } from '../../utils/learn.helpers';
 
 const ConfigPage = () => {
   const { platform }: any = usePlatform();
-  const myConfigs = platform.config.find();
-  console.log('---------------------');
-  console.log('myConfigs=', myConfigs && myConfigs.toJS());
-  const filter = {};
-  const allConfigCategories = configDescription.map(
-    (config: any) => config.slug,
-  );
+  const { platformAllowedConfigs } = useConfig() || {};
   const { user } = useAuth();
+
+  const myConfigs = platform.config.find();
+  const filter = {};
+  const allConfigCategories = configDescription
+    .map((config: any) => config.slug)
+    .filter((config: any) => platformAllowedConfigs.includes(config));
 
   const [selectedConfig, setSelectedConfig] = useState('general');
   const [updatedConfigs, setUpdatedConfigs] = useState<Config[]>([]);
@@ -187,16 +188,16 @@ const ConfigPage = () => {
     const defaultConfig = configDescription as any;
     const defaultPlan = defaultConfig.find(
       (config: any) => config.slug === selectedConfig,
-    ).value.entries.default;
+    ).value.elements.default;
 
     const newConfigs = [
       ...updatedConfigs.map((config) => {
         if (config.slug === selectedConfig) {
-          const entries: any = config.value.entries;
-          const newEntries = [...entries, ...defaultPlan];
+          const elements: any = config.value.elements;
+          const newElements = [...elements, ...defaultPlan];
           return {
             ...config,
-            value: { ...config.value, entries: newEntries },
+            value: { ...config.value, elements: newElements },
           };
         }
         return config;
@@ -209,13 +210,13 @@ const ConfigPage = () => {
     const newConfigs = [
       ...updatedConfigs.map((config) => {
         if (config.slug === selectedConfig) {
-          const entries: any = config.value.entries;
-          const updatedEntries = entries.filter(
-            (plan: any, idx: number) => idx !== index,
+          const elements: any = config.value.elements;
+          const updatedElements = elements.filter(
+            (_: any, idx: number) => idx !== index,
           );
           return {
             ...config,
-            value: { ...config.value, entries: updatedEntries },
+            value: { ...config.value, elements: updatedElements },
           };
         }
         return config;
@@ -331,14 +332,14 @@ const ConfigPage = () => {
                                     <div>
                                       {isArray && (
                                         <div>
-                                          <EntriesConfig
+                                          <ArrayConfig
                                             currentValue={currentValue}
                                             handleChange={handleChange}
                                             handleAddElement={handleAddElement}
                                             handleDeleteElement={
                                               handleDeleteElement
                                             }
-                                            entriesKey={key}
+                                            elementsKey={key}
                                           />
                                         </div>
                                       )}
@@ -370,7 +371,9 @@ const ConfigPage = () => {
               >
                 {__('generic_save_button')}
               </Button>
-              {hasConfigUpdated && <Information>Config updated!</Information>}
+              {hasConfigUpdated && (
+                <Information>{__('config_updated')}</Information>
+              )}
             </Card>
           </div>
         )}

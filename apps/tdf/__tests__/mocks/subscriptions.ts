@@ -2,10 +2,10 @@ import { SubscriptionPlan } from 'closer/types/subscriptions';
 
 export const subscriptionsConfig: {
   enabled: boolean;
-  plans: SubscriptionPlan[];
+  elements: SubscriptionPlan[];
 } = {
   enabled: true,
-  plans: [
+  elements: [
     {
       slug: 'explorer',
       title: 'Explorer',

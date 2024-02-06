@@ -4,10 +4,7 @@ import dayjs from 'dayjs';
 
 import { useAuth } from '../../contexts/auth';
 import { SubscriptionPlan } from '../../types/subscriptions';
-import {
-  __,
-  getCurrencySymbol,
-} from '../../utils/helpers';
+import { __, getCurrencySymbol } from '../../utils/helpers';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Heading from '../ui/Heading';
@@ -58,115 +55,110 @@ const SubscriptionCards = ({
 
   return (
     <>
-      <div className="pt-16 flex gap-2 w-full flex-col">
-        {filteredPlans &&
-          filteredPlans.map((plan, i) => (
-            <>
-              <Card
-                key={plan.title}
-                className={`w-full pb-8 mb-6 ${
-                  !plan.available && 'bg-accent-light'
-                }`}
-              >
-                <div className="flex items-center gap-4 flex-col md:flex-row text-sm">
-                  <Image
-                    alt={plan.slug || ''}
-                    src={`/images/subscriptions/${plan.slug}.png`}
-                    width={200}
-                    height={320}
-                  />
-                  <div className="w-[90%] md:w-[60%]">
-                    <Heading level={2} className="border-b-0 mb-6">
-                      {plan.title}
-                    </Heading>
-                    <Heading level={4} className="mb-4 text-sm uppercase">
-                      {plan.description}
-                    </Heading>
-                    <Heading
-                      level={4}
-                      className="mb-4 text-sm uppercase text-accent"
-                    >
-                      {plan.price !== 0 &&
-                        plan.available &&
-                        `everything on the ${
-                          isAuthenticated ? plans[i].title : plans[i - 1].title
-                        } package +`}
-                    </Heading>
-                    <ul className="mb-4">
-                      {plan.perks.split(',').map((perk) => {
-                        return (
-                          <li
-                            key={perk}
-                            className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5"
-                          >
-                            <span className="block">
-                              {perk.includes('<') ? (
-                                <span
-                                  dangerouslySetInnerHTML={{ __html: perk }}
-                                />
-                              ) : (
-                                perk
-                              )}
-                            </span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                    <div className="text-accent">
-                      {plan?.note && <span>{plan?.note}</span>}
-                    </div>
-                  </div>
-                  <div className="w-[290px] text-center flex flex-wrap justify-center">
-                    {plan.available === false ? (
-                      <Heading level={3} className="uppercase">
-                        <span className="block">🤩</span>
-                        {__('generic_coming_soon')}
-                      </Heading>
-                    ) : (
-                      <>
-                        <div className="w-full text-center text-2xl font-bold my-8">
-                        {plan.priceId === 'free' ? (
-                            __('subscriptions_free')
+      {filteredPlans &&
+        filteredPlans.map((plan, i) => (
+          <Card
+            key={plan.title}
+            className={`w-full pb-8 mb-6 ${
+              !plan.available && 'bg-accent-light'
+            }`}
+          >
+            <div className="flex items-center gap-4 flex-col md:flex-row text-sm">
+              <Image
+                alt={plan.slug || ''}
+                src={`/images/subscriptions/${plan.slug}.png`}
+                width={200}
+                height={320}
+              />
+              <div className="w-[90%] md:w-[60%]">
+                <Heading level={2} className="border-b-0 mb-6">
+                  {plan.title}
+                </Heading>
+                <Heading level={4} className="mb-4 text-sm uppercase">
+                  {plan.description}
+                </Heading>
+                <Heading
+                  level={4}
+                  className="mb-4 text-sm uppercase text-accent"
+                >
+                  {plan.price !== 0 &&
+                    plan.available &&
+                    `everything on the ${
+                      isAuthenticated ? plans[i].title : plans[i - 1].title
+                    } package +`}
+                </Heading>
+
+                <ul className="mb-4">
+                  {plan.perks.split(',').map((perk) => {
+                    return (
+                      <li
+                        key={perk}
+                        className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5"
+                      >
+                        <span className="block">
+                          {perk.includes('<') ? (
+                            <span dangerouslySetInnerHTML={{ __html: perk }} />
                           ) : (
-                            <div>
-                              <div>
-                                {getCurrencySymbol(currency)}
-                                {plan.price}
-                              </div>
-                              <p className="text-sm font-normal">
-                                {__('subscriptions_summary_per_month')}
-                              </p>
-                            </div>
+                            perk
                           )}
-                        </div>{' '}
-                        <Button
-                          isEnabled={true}
-                          onClick={() =>
-                            clickHandler(
-                              plan.priceId,
-                              !!plan.variants,
-                              plan.slug as string,
-                            )
-                          }
-                          isFullWidth={false}
-                          infoText={getSubscriptionInfoText(plan)}
-                          className={`${plan.price === 0 ? 'mb-7' : ''}`}
-                          size="small"
-                        >
-                          {plan.price === 0
-                            ? __('subscriptions_create_account_button')
-                            : userActivePlan?.price !== 0
-                            ? __('subscriptions_manage_button')
-                            : __('subscriptions_subscribe_button')}
-                        </Button>
-                      </>
-                    )}
-                  </div>
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <div className="text-accent">
+                  {plan?.note && <span>{plan?.note}</span>}
                 </div>
-              </Card>
-            </>
-          ))}
-      </div>
+              </div>
+              <div className="w-[290px] text-center flex flex-wrap justify-center">
+                {plan.available === false ? (
+                  <Heading level={3} className="uppercase">
+                    <span className="block">🤩</span>
+                    {__('generic_coming_soon')}
+                  </Heading>
+                ) : (
+                  <>
+                    <div className="w-full text-center text-2xl font-bold my-8">
+                      {plan.priceId === 'free' ? (
+                        __('subscriptions_free')
+                      ) : (
+                        <div>
+                          <div>
+                            {getCurrencySymbol(currency)}
+                            {plan.price}
+                          </div>
+                          <p className="text-sm font-normal">
+                            {__('subscriptions_summary_per_month')}
+                          </p>
+                        </div>
+                      )}
+                    </div>{' '}
+                    <Button
+                      isEnabled={true}
+                      onClick={() =>
+                        clickHandler(
+                          plan.priceId,
+                          !!plan.variants,
+                          plan.slug as string,
+                        )
+                      }
+                      isFullWidth={false}
+                      infoText={getSubscriptionInfoText(plan)}
+                      className={`${plan.price === 0 ? 'mb-7' : ''}`}
+                      size="small"
+                    >
+                      {plan.price === 0
+                        ? __('subscriptions_create_account_button')
+                        : userActivePlan?.price !== 0
+                        ? __('subscriptions_manage_button')
+                        : __('subscriptions_subscribe_button')}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </Card>
+        ))}
     </>
   );
 };

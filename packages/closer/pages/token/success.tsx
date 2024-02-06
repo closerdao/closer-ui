@@ -12,10 +12,19 @@ import { TOKEN_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { WalletState } from '../../contexts/wallet';
 import { useConfig } from '../../hooks/useConfig';
+import { GeneralConfig } from '../../types';
+import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
-const TokenSaleSuccessPage = () => {
-  const { PLATFORM_NAME } = useConfig() || {};
+interface Props {
+  generalConfig: GeneralConfig | null;
+}
+
+const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
+  const defaultConfig = useConfig();
+  const PLATFORM_NAME =
+    generalConfig?.platformName || defaultConfig.platformName;
   const router = useRouter();
   const { amountOfTokensPurchased, transactionId } = router.query;
   const { isAuthenticated, isLoading } = useAuth();
@@ -84,6 +93,24 @@ const TokenSaleSuccessPage = () => {
       </div>
     </>
   );
+};
+
+TokenSaleSuccessPage.getInitialProps = async () => {
+  try {
+    const generalRes = await api.get('/config/general').catch(() => {
+      return null;
+    });
+    const generalConfig = generalRes?.data?.results?.value;
+
+    return {
+      generalConfig,
+    };
+  } catch (err: unknown) {
+    return {
+      generalConfig: null,
+      error: parseMessageFromError(err),
+    };
+  }
 };
 
 export default TokenSaleSuccessPage;

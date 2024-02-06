@@ -27,29 +27,7 @@ export const closerConfig = {
       create: 'member',
     },
   },
-  // ACCOMODATION_COST: [
-  //   {
-  //     slug: 'Glamping',
-  //     price: 1,
-  //     iconPath: '/images/token-sale/tent-icon.svg',
-  //   },
-  //   {
-  //     slug: 'Van parking',
-  //     price: 0.5,
-  //     iconPath: '/images/token-sale/car-icon.svg',
-  //   },
-  //   {
-  //     slug: 'Outdoor Camping',
-  //     price: 0.5,
-  //     iconPath: '/images/token-sale/tent-icon.svg',
-  //   },
-  //   {
-  //     slug: 'Private suite',
-  //     description: '*coming 2023*',
-  //     price: 3,
-  //     iconPath: '/images/token-sale/suite-icon.svg',
-  //   },
-  // ],
+
   TOKEN_PRICE: 230.23,
   SOURCE_TOKEN: 'CEUR',
 };
@@ -170,7 +148,7 @@ export const configDescription = [
         type: 'boolean',
         default: false,
       },
-      entries: {
+      elements: {
         type: [
           {
             slug: 'text',
@@ -213,7 +191,7 @@ export const configDescription = [
         type: 'boolean',
         default: false,
       },
-      entries: {
+      elements: {
         type: [
           {
             title: 'text',

@@ -520,7 +520,7 @@ const EventPage = ({
                                       <li key={ticket.get('_id')}>
                                         <Link
                                           href={`/tickets/${ticket.get('_id')}`}
-                                          className="text-primary"
+                                          className="text-accent"
                                         >
                                           {ticket.get('name')} x{' '}
                                           {ticket.get('quantity') || 1}

@@ -11,6 +11,7 @@ import { __ } from '../utils/helpers';
 import Newsletter from './Newsletter';
 
 const Footer: FC = () => {
+  // TODO: switch to per-page config fetching if we ever need this page
   const config = useConfig();
   const {
     DISCORD_URL,
@@ -31,7 +32,7 @@ const Footer: FC = () => {
                   target="_blank"
                   rel="noreferrer nofollow"
                   title="Follow us on Instagram"
-                  className="text-2xl mr-2 rounded-full hover:text-gray-100 hover:bg-primary p-2 text-primary dark:text-background bg-transparent duration-300 hover:scale-110"
+                  className="text-2xl mr-2 rounded-full hover:text-gray-100 hover:bg-accent p-2 text-accent dark:text-background bg-transparent duration-300 hover:scale-110"
                 >
                   <SiInstagram />
                 </a>
@@ -42,7 +43,7 @@ const Footer: FC = () => {
                   target="_blank"
                   rel="noreferrer nofollow"
                   title="Follow us on Facebook"
-                  className="text-2xl mr-2 rounded-full hover:text-gray-100 hover:bg-primary p-2 text-primary dark:text-background bg-transparent duration-300 hover:scale-110"
+                  className="text-2xl mr-2 rounded-full hover:text-gray-100 hover:bg-accent p-2 text-accent dark:text-background bg-transparent duration-300 hover:scale-110"
                 >
                   <RiFacebookFill />
                 </a>
@@ -53,7 +54,7 @@ const Footer: FC = () => {
                   target="_blank"
                   rel="noreferrer nofollow"
                   title="Follow us on Twitter"
-                  className="text-2xl mr-2 rounded-full hover:text-gray-100 hover:bg-primary p-2 text-primary dark:text-background bg-transparent duration-300 hover:scale-110"
+                  className="text-2xl mr-2 rounded-full hover:text-gray-100 hover:bg-accent p-2 text-accent dark:text-background bg-transparent duration-300 hover:scale-110"
                 >
                   <SiTwitter />
                 </a>
@@ -64,7 +65,7 @@ const Footer: FC = () => {
                   target="_blank"
                   rel="noreferrer nofollow"
                   title="Join Discord server"
-                  className="text-2xl mr-2 rounded-full hover:text-gray-100 hover:bg-primary p-2 text-primary dark:text-background bg-transparent duration-300 hover:scale-110"
+                  className="text-2xl mr-2 rounded-full hover:text-gray-100 hover:bg-accent p-2 text-accent dark:text-background bg-transparent duration-300 hover:scale-110"
                 >
                   <SiDiscord />
                 </a>
@@ -75,7 +76,7 @@ const Footer: FC = () => {
                   target="_blank"
                   rel="noreferrer nofollow"
                   title="Join Telegram Group"
-                  className="text-2xl mr-2 rounded-full hover:text-gray-100 hover:bg-primary p-2 text-primary dark:text-background bg-transparent duration-300 hover:scale-110"
+                  className="text-2xl mr-2 rounded-full hover:text-gray-100 hover:bg-accent p-2 text-accent dark:text-background bg-transparent duration-300 hover:scale-110"
                 >
                   <FaTelegram />
                 </a>

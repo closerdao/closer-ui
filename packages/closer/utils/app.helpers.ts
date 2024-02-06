@@ -4,6 +4,7 @@ interface InputObject {
     value: string | number;
   };
 }
+
 export function prepareGeneralConfig(
   inputObj: InputObject | any,
 ): Record<string, string> | null {

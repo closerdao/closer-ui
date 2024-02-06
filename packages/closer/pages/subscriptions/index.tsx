@@ -13,10 +13,10 @@ import { Button, Heading } from '../../components/ui/';
 
 import { NextPage } from 'next';
 
+import { Page404, useConfig } from '../..';
 import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
-import { useConfig } from '../../hooks/useConfig';
-import { Listing } from '../../types';
+import { GeneralConfig, Listing } from '../../types';
 import { SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
@@ -24,27 +24,35 @@ import { __ } from '../../utils/helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
-  subscriptionsConfig: { enabled: boolean; entries: SubscriptionPlan[] };
+  subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
+  generalConfig: GeneralConfig | null;
   listings: Listing[];
   error?: string;
 }
 
 const SubscriptionsPage: NextPage<Props> = ({
   subscriptionsConfig,
+  generalConfig,
   listings,
   error,
 }) => {
-  const { enabledConfigs, PLATFORM_NAME } = useConfig();
   const { isAuthenticated, isLoading, user } = useAuth();
+  const defaultConfig = useConfig();
+  const PLATFORM_NAME =
+    generalConfig?.platformName || defaultConfig.platformName;
 
   const router = useRouter();
+
+  const areSubscriptionsEnabled =
+    subscriptionsConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
 
   const plans: any[] = prepareSubscriptions(subscriptionsConfig);
 
   const [userActivePlan, setUserActivePlan] = useState<SubscriptionPlan>();
 
   useEffect(() => {
-    const selectedSubscription = plans.find(
+    const selectedSubscription = plans?.find(
       (plan: any) => plan.priceId === (user?.subscription?.priceId || 'free'),
     );
     setUserActivePlan(selectedSubscription);
@@ -87,32 +95,8 @@ const SubscriptionsPage: NextPage<Props> = ({
     return null;
   }
 
-  if (
-    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true' ||
-    (enabledConfigs && !enabledConfigs.includes('subscriptions'))
-  ) {
-    return (
-      <>
-        <Head>
-          <title>{`${__(
-            'settings_your_subscription_title',
-          )} - ${PLATFORM_NAME}`}</title>
-          <link
-            rel="canonical"
-            href="https://www.traditionaldreamfactory.com/subscriptions"
-            key="canonical"
-          />
-        </Head>
-
-        <div className="max-w-6xl mx-auto">
-          <Heading level={1} className="mb-14">
-            ♻️ {__('pricing_and_product_heading_1')}
-          </Heading>
-
-          <Heading level={2}>Coming soon!</Heading>
-        </div>
-      </>
-    );
+  if (!areSubscriptionsEnabled) {
+    return <Page404 error="" />;
   }
 
   return (
@@ -376,26 +360,31 @@ const SubscriptionsPage: NextPage<Props> = ({
 
 SubscriptionsPage.getInitialProps = async () => {
   try {
-    const [
-      {
-        data: { results: subscriptions },
-      },
-      {
-        data: { results: listings },
-      },
-    ] = await Promise.all([
-      api.get('/config/subscriptions'),
-      api.get('/listing'),
+    const [subscriptionsRes, generalRes, listingRes] = await Promise.all([
+      api.get('/config/subscriptions').catch(() => {
+        return null;
+      }),
+      api.get('/config/general').catch(() => {
+        return null;
+      }),
+      api.get('/listing').catch(() => {
+        return null;
+      }),
     ]);
-    console.log('subscriptions.value=',subscriptions.value);
+
+    const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
+    const generalConfig = generalRes?.data?.results?.value;
+    const listings = listingRes?.data.results;
 
     return {
-      subscriptionsConfig: subscriptions.value,
-      listings: listings,
+      subscriptionsConfig,
+      generalConfig,
+      listings,
     };
   } catch (err: unknown) {
     return {
-      subscriptionsConfig: { enabled: false, entries: [] },
+      subscriptionsConfig: { enabled: false, elements: [] },
+      generalConfig: null,
       listings: [],
       error: parseMessageFromError(err),
     };

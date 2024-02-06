@@ -4,16 +4,25 @@ import Link from 'next/link';
 import EventsList from '../../components/EventsList';
 import Heading from '../../components/ui/Heading';
 
-import { NextPage } from 'next';
-
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import { GeneralConfig } from '../../types';
+import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
 const now = new Date();
 
-const Events: NextPage = () => {
-  const { PERMISSIONS, PLATFORM_NAME } = useConfig() || {};
+interface Props {
+  generalConfig: GeneralConfig | null;
+}
+
+const Events = ({ generalConfig }: Props) => {
+  const { PERMISSIONS } = useConfig() || {};
+  const defaultConfig = useConfig();
+  const PLATFORM_NAME =
+    generalConfig?.platformName || defaultConfig.platformName;
+
   const { user } = useAuth();
 
   return (
@@ -70,6 +79,24 @@ const Events: NextPage = () => {
       </div>
     </>
   );
+};
+
+Events.getInitialProps = async () => {
+  try {
+    const generalRes = await api.get('/config/general').catch(() => {
+      return null;
+    });
+    const generalConfig = generalRes?.data?.results?.value;
+
+    return {
+      generalConfig,
+    };
+  } catch (err: unknown) {
+    return {
+      generalConfig: null,
+      error: parseMessageFromError(err),
+    };
+  }
 };
 
 export default Events;
