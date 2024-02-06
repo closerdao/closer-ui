@@ -37,7 +37,7 @@ const ConfigPage = () => {
   const filter = {};
   const allConfigCategories = configDescription
     .map((config: any) => config.slug)
-    .filter((config: any) => platformAllowedConfigs.includes(config));
+    .filter((config: any) => platformAllowedConfigs?.includes(config));
 
   const [selectedConfig, setSelectedConfig] = useState('general');
   const [updatedConfigs, setUpdatedConfigs] = useState<Config[]>([]);
@@ -73,9 +73,9 @@ const ConfigPage = () => {
 
   const handleToggleConfig = (configCategory: string) => {
     let shouldEnable = false;
-    if (enabledConfigs && enabledConfigs.includes(configCategory)) {
+    if (enabledConfigs && enabledConfigs?.includes(configCategory)) {
       setEnabledConfigs(
-        enabledConfigs.filter((item: string) => item !== configCategory),
+        enabledConfigs?.filter((item: string) => item !== configCategory),
       );
       setSelectedConfig('general');
       shouldEnable = false;
@@ -225,7 +225,7 @@ const ConfigPage = () => {
     setUpdatedConfigs(newConfigs);
   };
 
-  if (!user || !user.roles.includes('admin')) {
+  if (!user || !user.roles?.includes('admin')) {
     return <PageNotFound error="User may not access" />;
   }
 
@@ -248,7 +248,8 @@ const ConfigPage = () => {
                       isEnabled={true}
                       id={currentConfig}
                       isChecked={
-                        enabledConfigs && enabledConfigs.includes(currentConfig)
+                        enabledConfigs &&
+                        enabledConfigs?.includes(currentConfig)
                       }
                       onChange={() => handleToggleConfig(currentConfig)}
                       className="mb-4"
