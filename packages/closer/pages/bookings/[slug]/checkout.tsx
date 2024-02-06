@@ -263,12 +263,6 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
           </div>
           <CheckoutTotal total={updatedTotal} />
 
-          {
-               ( (useTokens &&
-                  (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)) ||
-                true).toString()
-              }
-
           {updatedTotal && updatedTotal.val > 0 ? (
             <CheckoutPayment
               bookingId={booking?._id || ''}

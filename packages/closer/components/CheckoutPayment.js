@@ -18,7 +18,7 @@ import Conditions from './Conditions';
 import { ErrorMessage } from './ui';
 import HeadingRow from './ui/HeadingRow';
 
-const stripe = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUB_KEY);
+const stripe = loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY);
 
 const CheckoutPayment = ({
   bookingId,
@@ -103,6 +103,7 @@ const CheckoutPayment = ({
       </HeadingRow>
 
       {error && <ErrorMessage error={error} />}
+      {process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY}
       <Elements stripe={stripe}>
         <CheckoutForm
           type="booking"
