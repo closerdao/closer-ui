@@ -99,7 +99,7 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
       </section>
 
       {/* TODO: make gallery configurable for each village */}
-      {APP_NAME?.toLowerCase() !== 'tdf' && (
+      {APP_NAME?.toLowerCase() === 'tdf' && (
         <section className="max-w-6xl mx-auto mb-16">
           <PhotoGallery />
         </section>
