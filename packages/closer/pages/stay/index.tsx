@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 
 import React, { useEffect } from 'react';
 
@@ -96,6 +97,15 @@ const StayPage = ({ settings, bookingRules }: Props) => {
       )}
 
       <BookingRules rules={bookingRules.plans} />
+
+      <section className="max-w-6xl mx-auto mb-16">
+        <Link
+          href="/bookings/create/dates"
+          className="btn btn-primary text-xl px-8 py-3"
+        >
+          {__('buttons_apply_to_stay')}
+        </Link>
+      </section>
 
       <section className="max-w-6xl mx-auto mb-16">
         <Hosts hosts={hosts} email={TEAM_EMAIL} />
