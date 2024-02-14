@@ -35,23 +35,20 @@ const HomePage = () => {
                 >
                   Join us in developing a pioneering regenerative village in Portugal.
                 </Heading>
-                <p className="mb-4">We are raising €2M to kickstart the development of a village restoring the soils, improving the water cycle, growing food - and creating modern living and working spaces for 100+ thriving humans. This initial funding enables us to:</p>
+                <p className="mb-4">We are raising €800k to kickstart the development of a village restoring the soils, improving the water cycle, growing food - and creating modern living and working spaces for 100+ thriving humans. This initial funding enables us to:</p>
 
                 <ul>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     secure the real estate (25ha of land with approved construction plans)
                   </li>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    develop the first phase of the co-living
+                    develop the co-living (14 suites)
                   </li>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     build 2 lakes and achieve water sovereignty
                   </li>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     leverage EU funding
-                  </li>
-                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    acquire 10 tiny houses
                   </li>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     establish a cash flow positive hospitality and farming business
