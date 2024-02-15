@@ -670,62 +670,100 @@ const PublicTokenSalePage = ({ listings }: Props) => {
             <div className="max-w-[800px]">
               <div className="grid grid-cols-[37px_240px] sm:grid-cols-[37px_370px]">
                 <div className="w-7 h-7 bg-accent-alt rounded-full"></div>
-                <Heading level={4} className="text-accent">
-                  APRIL 2021
-                </Heading>
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent-alt w-[4px] h-auto"></div>
-                </div>
-                <div className="pb-12 uppercase">
-                  <p>
-                    <strong>Keys To The Chicken Farm. </strong>
-                  </p>
-                  <p>We move in to the ‘áviário’</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-[37px_240px] sm:grid-cols-[37px_370px]">
-                <div className="w-7 h-7 bg-accent-alt rounded-full"></div>
                 <Heading level={4} className="uppercase text-accent">
-                  <span className="font-normal">2021-2022 Phase 1 -</span>
+                  <span className="font-normal">2021</span>
                 </Heading>
                 <div className="w-7 flex justify-center">
                   <div className="bg-accent-alt w-[4px] h-auto"></div>
                 </div>
                 <div className="pb-12">
-                  <Heading level={4} className="uppercase text-accent">
-                    Completed
-                  </Heading>
+                  <p className="uppercase font-bold">
+                    Keys to the farm & basic infrastructure
+                  </p>
+                  <ul className=" my-4 list-none">
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Operational event venue (up to 100 guests)
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      10 glamping accommodations
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      2000 trees reforestation
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      7kw solar energy system
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Workshop
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Industrial kitchen
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div className="grid grid-cols-[37px_240px] sm:grid-cols-[37px_370px]">
+                <div className="w-7 h-7 bg-accent-alt rounded-full"></div>
+                <Heading level={4} className="uppercase text-accent">
+                  <span className="font-normal">2022</span>
+                </Heading>
+                <div className="w-7 flex justify-center">
+                  <div className="bg-accent-alt w-[4px] h-auto"></div>
+                </div>
+                <div className="pb-12">
                   <p className="uppercase font-bold">Operational CO-LIVING</p>
                   <ul className=" my-4 list-none">
                     <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Operational Event Venue (up to 100 guests)
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      10 Glamping Accommodations
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Food Forest V1
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Reforestation V1
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Grey Water Treatment (Halophyte Filter) V1
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Solar Energy
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Functional Workshop and Makerspaces
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Industrial Kitchen
+                      1000 trees food forest
                     </li>
                     <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                       Sauna
                     </li>
                     <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Co-Working Space and Starlink
+                      Co-working
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      DAO prototype
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Architectural plans
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div className="grid grid-cols-[37px_240px] sm:grid-cols-[37px_370px]">
+                <div className="w-7 h-7 bg-accent-alt rounded-full"></div>
+                <Heading level={4} className="uppercase text-accent">
+                  <span className="font-normal">2023</span>
+                </Heading>
+                <div className="w-7 flex justify-center">
+                  <div className="bg-accent-alt w-[4px] h-auto"></div>
+                </div>
+                <div className="pb-12">
+                  <p className="uppercase font-bold">
+                    Platform & token launch, plans approved.
+                  </p>
+                  <ul className=" my-4 list-none">
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Starlink
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      14 glamping accommodations, 8 volunteer beds
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Market garden
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Grey water treatment (helophyte filter)
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Booking platform & token
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Engineering plans
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      Biochar production
                     </li>
                   </ul>
                 </div>
@@ -737,7 +775,7 @@ const PublicTokenSalePage = ({ listings }: Props) => {
                 <div className="text-accent-alt"></div>
                 <div className="w-7 h-7 bg-accent-alt-light border-4 border-accent-alt rounded-full"></div>
                 <Heading level={4} className="uppercase text-accent">
-                  <span className="font-normal">2023 - 2024 Phase 2 -</span>
+                  <span className="font-normal">2024</span>
                 </Heading>
                 <div className="w-7 flex justify-center">
                   <div className="bg-accent-alt-light w-[4px] h-auto"></div>
@@ -745,41 +783,29 @@ const PublicTokenSalePage = ({ listings }: Props) => {
                 <div className="pb-12">
                   <Heading level={4} className="uppercase text-accent">
                     FUNDRAISING
+                    <Link href="/dataroom" className="ml-4 text-xs italic underline text-primary">
+                      (learn more)
+                    </Link>
                   </Heading>
-                  <p className="uppercase font-bold">LAND, CO-LIVING & WATER</p>
                   <p className="uppercase font-bold mt-6">We are here</p>
-                  {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE && (
-                    <Button
-                      onClick={() => router.push('/token')}
-                      className="my-6"
-                      size="small"
-                    >
-                      Help us fund phase 2
-                    </Button>
-                  )}
                   <ul>
                     <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Co-Living Building Renovation (roof, windows, insulation,
-                      flooring, energy and heating systems)
+                      Co-living construction: 14 suites
                     </li>
                     <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      6 Suites with Private Bath
+                      Natural pool
                     </li>
                     <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Natural Pool
+                      Exercice option to buy on the 25ha of land
                     </li>
                     <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Water Systems V2 (Co-Living Building & Land Water Capture)
+                      Build 2 lakes
                     </li>
                     <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Pay Off Loan & Transfer Chicken Farm Property into Enseada
-                      Sonhadora (local SPV owned by OASA){' '}
+                      Start a tiny-house development
                     </li>
                     <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Kitchen V2
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Team Operations & Salaries
+                      Pay off loan & transfer property into the company
                     </li>
                   </ul>
                 </div>
@@ -790,71 +816,31 @@ const PublicTokenSalePage = ({ listings }: Props) => {
                 </div>
                 <div className="text-accent-alt"></div>
                 <div className="w-7 h-7 bg-accent-alt-light rounded-full"></div>
-                <Heading
-                  level={4}
-                  className="font-normal uppercase text-accent"
-                >
-                  2024-2025 Phase 3
+                <Heading level={4} className="font-normal uppercase text-accent">
+                  2025
                 </Heading>
                 <div className="w-7 flex justify-center">
                   <div className="bg-accent-alt-light w-[4px] h-auto"></div>
                 </div>
                 <div className="pb-12">
-                  <p className="font-bold uppercase mb-6">
-                    Dream Spaces & Expansion
-                  </p>
                   <ul>
                     <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      8 Suites added to Co-Living
+                      Makerspace
                     </li>
                     <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Workshop Building Renovation
+                      Restaurant
                     </li>
                     <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Co-Working Garden
+                      Mushroom farm
                     </li>
                     <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Farm to Table Restaurant + Cafe + Industrial Kitchen
+                      10 000 fruit trees orchard
                     </li>
                     <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Purchase Land (currently rent contract with option to buy,
-                      25he)
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              <div className="grid grid-cols-[37px_270px]">
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent-alt-light w-[4px] h-[40px]"></div>
-                </div>
-                <div className="text-accent-alt"></div>
-                <div className="w-7 h-7 bg-accent-alt-light rounded-full"></div>
-                <Heading
-                  level={4}
-                  className="font-normal uppercase text-accent"
-                >
-                  2025 Phase 4
-                </Heading>
-                <div className="w-7 flex justify-center">
-                  <div className="bg-accent-alt-light w-[4px] h-auto"></div>
-                </div>
-                <div className="pb-12">
-                  <p className="font-bold uppercase mb-6">Finishing Touches</p>
-                  <ul>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      4 Studios
+                      Rewilding zone
                     </li>
                     <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Family House
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Green Roof
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Greenhouse (made out of old warehouses windows)
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Spa
+                      Biomorphic coworking garden
                     </li>
                   </ul>
                 </div>
@@ -879,14 +865,25 @@ const PublicTokenSalePage = ({ listings }: Props) => {
                     <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                       $TDF UNSTAKED
                     </li>
+                  </ul>
+                </div>
+              </div>
+              <div className="grid grid-cols-[37px_270px]">
+                <div className="w-7 flex justify-center">
+                  <div className="bg-accent-alt-light w-[4px] h-[40px]"></div>
+                </div>
+                <div className="text-accent-alt"></div>
+                <div className="w-7 h-7 bg-accent-alt-light rounded-full"></div>
+                <Heading level={4} className="font-normal uppercase text-accent">
+                  2026
+                </Heading>
+                <div className="w-7 flex justify-center">
+                  <div className="bg-accent-alt-light w-[4px] h-auto"></div>
+                </div>
+                <div className="pb-12">
+                  <ul>
                     <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      TDF V2 Dream Session: Co-housing and Permanent Living?
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      4000m2 of permits to build
-                    </li>
-                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                      Governance Structure V2: Post Roadmap Era
+                      Co-housing expansion plans
                     </li>
                   </ul>
                 </div>
