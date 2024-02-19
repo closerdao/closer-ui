@@ -1072,7 +1072,7 @@
   "config_features_heading": "Platform features",
   "generic_delete_button": "Delete",
   "generic_export_csv": "Export CSV",
-  "config_add_plan_button": "Add entry",
+  "config_add_entry_button": "Add entry",
   "config_true": "True",
   "config_false": "False",
   "booking_rules_heading": "Booking rules",
