@@ -68,7 +68,7 @@ const getLinks = (
     {
       label: 'Volunteer',
       url: '/volunteer',
-      enabled: true,
+      enabled: process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true',
     },
     {
       label: 'Booking requests',
