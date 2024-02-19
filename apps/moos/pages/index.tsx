@@ -1,6 +1,6 @@
 import Head from 'next/head';
 
-import { Card, LinkButton } from 'closer/components/ui';
+import { Card, Heading, LinkButton } from 'closer/components/ui';
 
 import { GeneralConfig, __, api, useAuth, useConfig } from 'closer';
 import { HOME_PAGE_CATEGORY } from 'closer/constants';
@@ -38,11 +38,14 @@ const HomePage = ({ article, generalConfig }: Props) => {
               </LinkButton>
             </Card>
           )}
-
-          <section
-            className="rich-text article limit-width padding-right"
-            dangerouslySetInnerHTML={{ __html: article.html }}
-          />
+          {article ? (
+            <section
+              className="rich-text article limit-width padding-right"
+              dangerouslySetInnerHTML={{ __html: article?.html }}
+            />
+          ) : (
+            <Heading level={1}>{__('generic_coming_soon')}</Heading>
+          )}
         </div>
       </div>
     </div>
