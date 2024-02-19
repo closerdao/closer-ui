@@ -19,7 +19,7 @@ export const Footer: FC = () => {
         </p>
         <div className="social mt-4 flex flex-row justify-center">
           <a
-            href="https://t.me/"
+            href="https://t.me/+SzOLgVC53mhaim_l"
             target="_blank"
             className="mr-2 p-2 transition ease-linear duration-1200 hover:scale-125"
             rel="noreferrer"

@@ -29,6 +29,9 @@ interface Props {
 const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
   const { APP_NAME } = useConfig();
   const config = useConfig();
+
+  const appName = APP_NAME.toLowerCase();
+
   const discounts = {
     daily: bookingSettings?.discountsDaily,
     weekly: bookingSettings?.discountsWeekly,
@@ -93,9 +96,9 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
       <section className="max-w-6xl mx-auto mb-16">
         <div className="mb-6 max-w-prose">
           <Heading level={1} className="text-4xl pb-2 mt-8">
-            {__('stay_title', APP_NAME)} {PLATFORM_NAME}
+            {__('stay_title', appName)} {PLATFORM_NAME}
           </Heading>
-          <p>{__('stay_description', APP_NAME)}</p>
+          <p>{__('stay_description', appName)}</p>
         </div>
       </section>
 
@@ -118,23 +121,14 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
       </section>
 
       <section className="max-w-6xl mx-auto mb-16">
-        <Link
-          href="/bookings/create/dates"
-          className="btn btn-primary text-xl px-8 py-3"
-        >
-          {__('buttons_apply_to_stay')}
-        </Link>
-      </section>
-
-      <section className="max-w-6xl mx-auto mb-16">
         <Hosts hosts={hosts} email={TEAM_EMAIL} />
 
         <div className="mb-6">
           <Heading level={2} className="text-2xl mb-2 max-w-prose">
-            {__('stay_chose_accommodation', APP_NAME)}
+            {__('stay_chose_accommodation', appName)}
           </Heading>
           <p className="mb-8 max-w-prose">
-            {__('stay_chose_accommodation_description', APP_NAME)}
+            {__('stay_chose_accommodation_description', appName)}
           </p>
           {listings && listings.count() > 0 && (
             <div className="grid md:grid-cols-4 gap-x-12 md:gap-x-5 gap-y-16">
@@ -154,7 +148,9 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
             guestListings?.count() === 0 &&
             __('listing_no_listings_found')}
         </div>
-        <Reviews />
+
+        {/* TODO some time: move reviews to configs */}
+        {APP_NAME?.toLowerCase() === 'tdf' && <Reviews />}
       </section>
 
       <section className="max-w-6xl mx-auto mb-12">
