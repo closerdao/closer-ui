@@ -24,7 +24,6 @@ import {
   DEFAULT_CURRENCY,
 } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
-import { User } from '../../../contexts/auth/types';
 import { Event, TicketOption } from '../../../types';
 import { BookingConfig, VolunteerOpportunity } from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
@@ -52,10 +51,6 @@ const DatesSelector = ({
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
-  
-  
-  console.log('isBookingEnabled=',isBookingEnabled);
-  console.log('bookingConfig=',bookingConfig);
 
   const router = useRouter();
 
@@ -80,12 +75,6 @@ const DatesSelector = ({
   } = router.query || {};
 
   const [blockedDateRanges, setBlockedDateRanges] = useState<any[]>([]);
-  const canBookStays = (user: User) => {
-    if (!user.roles.includes('member')) {
-      return false;
-    }
-    return true;
-  };
 
   const memoizedBlockedDateRanges = useMemo(() => {
     return getBlockedDateRanges();
@@ -109,14 +98,6 @@ const DatesSelector = ({
     });
     return dateRanges;
   }
-
-  useEffect(() => {
-    if (user) {
-      if (!canBookStays(user) && !eventId && !volunteerId) {
-        router.push('/bookings/unlock-stays');
-      }
-    }
-  }, [user]);
 
   useEffect(() => {
     if (eventId) {
