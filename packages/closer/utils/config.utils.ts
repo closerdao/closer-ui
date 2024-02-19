@@ -20,6 +20,9 @@ export const getEnabledConfigs = (configs: any, allConfigs: string[]) => {
 };
 
 export const getPreparedInputValue = (value: string) => {
+  if (value === '') {
+    return ''
+  }
   if (value === 'true') {
     return true;
   }

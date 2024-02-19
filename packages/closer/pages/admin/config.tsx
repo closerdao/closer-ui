@@ -136,7 +136,7 @@ const ConfigPage = () => {
         setHasConfigUpdated(true);
         setTimeout(() => {
           setHasConfigUpdated(false);
-        }, 2000);
+        }, 3000);
       }
     } catch (error) {
     } finally {

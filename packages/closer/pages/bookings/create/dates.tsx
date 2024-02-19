@@ -52,6 +52,10 @@ const DatesSelector = ({
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+  
+  
+  console.log('isBookingEnabled=',isBookingEnabled);
+  console.log('bookingConfig=',bookingConfig);
 
   const router = useRouter();
 
@@ -377,7 +381,7 @@ DatesSelector.getInitialProps = async ({
       ]);
 
       return {
-        settings: settings as any,
+        bookingConfig: settings as any,
         ticketOptions: ticketsAvailable.data.ticketOptions,
         event: event.data.results,
       };
@@ -385,7 +389,7 @@ DatesSelector.getInitialProps = async ({
     if (volunteerId) {
       const volunteer = await api.get(`/volunteer/${volunteerId}`);
       return {
-        settings: settings as any,
+        bookingConfig: settings as any,
         volunteer: volunteer.data.results,
       };
     }

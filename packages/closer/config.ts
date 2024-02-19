@@ -326,7 +326,7 @@ export const configDescription = [
       },
       cryptoPayment: {
         type: 'boolean',
-        default: true,
+        default: false,
       },
       polygonWalletAddress: {
         type: 'text',

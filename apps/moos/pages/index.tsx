@@ -29,13 +29,23 @@ const HomePage = ({ article, generalConfig }: Props) => {
           {/* <Heading level={1}>Welcome to Moos!</Heading> */}
           {isAuthenticated && user?.roles.includes('admin') && (
             <Card className="block">
-              <LinkButton
-                type="inline"
-                isFullWidth={false}
-                href={`/blog/edit/${article.slug}`}
-              >
-                {__('edit_homepage_button')}
-              </LinkButton>
+              {article ? (
+                <LinkButton
+                  type="inline"
+                  isFullWidth={false}
+                  href={`/blog/edit/${article?.slug}`}
+                >
+                  {__('edit_homepage_button')}
+                </LinkButton>
+              ) : (
+                <LinkButton
+                  type="inline"
+                  isFullWidth={false}
+                  href={'/blog/create'}
+                >
+                  {__('edit_homepage_button')}
+                </LinkButton>
+              )}
             </Card>
           )}
           {article ? (
