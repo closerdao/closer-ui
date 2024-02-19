@@ -28,12 +28,12 @@ const AccomodationPriceInfo = () => {
                     <p className="text-xl md:text-2xl leading-8">
                       {accomodation.name}
                     </p>
-                    <p className="text-base text-primary">
+                    <p className="text-base text-accent">
                       {accomodation.description}
                     </p>
                   </div>
                 </div>
-                <p className="text-primary text-xl md:text-2xl leading-8 whitespace-nowrap">
+                <p className="text-accent text-xl md:text-2xl leading-8 whitespace-nowrap">
                   {`${__('token_sale_token_symbol')} ${String(
                     accomodation.price,
                   )}`}

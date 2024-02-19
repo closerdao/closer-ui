@@ -8,7 +8,13 @@ import { loadStripe } from '@stripe/stripe-js';
 
 import PageError from '../../components/PageError';
 import SubscriptionCheckoutForm from '../../components/SubscriptionCheckoutForm';
-import { BackButton, Heading, ProgressBar, Row } from '../../components/ui/';
+import {
+  BackButton,
+  ErrorMessage,
+  Heading,
+  ProgressBar,
+  Row,
+} from '../../components/ui/';
 
 import { NextPage } from 'next';
 
@@ -20,6 +26,7 @@ import {
 } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import { GeneralConfig, PaymentConfig } from '../../types';
 import {
   SelectedPlan,
   SubscriptionPlan, // Tier,
@@ -39,15 +46,23 @@ const stripePromise = loadStripe(
 );
 
 interface Props {
-  subscriptionsConfig: { enabled: boolean; plans: SubscriptionPlan[] };
+  subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
+  paymentConfig: PaymentConfig | null;
+  generalConfig: GeneralConfig | null;
   error?: string;
 }
 
 const SubscriptionsCheckoutPage: NextPage<Props> = ({
   subscriptionsConfig,
+  paymentConfig,
+  generalConfig,
   error,
 }) => {
-  const { enabledConfigs } = useConfig();
+  const isPaymentEnabled = paymentConfig?.enabled || false;
+  const areSubscriptionsEnabled =
+    subscriptionsConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
+
   const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
@@ -58,7 +73,9 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
     parseFloat(monthlyCredits as string) || selectedPlan?.monthlyCredits || 0,
     MAX_CREDITS_PER_MONTH,
   );
-  const { PLATFORM_NAME } = useConfig() || {};
+  const defaultConfig = useConfig();
+  const PLATFORM_NAME =
+    generalConfig?.platformName || defaultConfig.platformName;
 
   useEffect(() => {
     if (user?.subscription && user.subscription.priceId) {
@@ -97,10 +114,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
     return <PageError error={error} />;
   }
 
-  if (
-    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true' ||
-    (enabledConfigs && !enabledConfigs.includes('subscriptions'))
-  ) {
+  if (!areSubscriptionsEnabled) {
     return <Page404 error="" />;
   }
 
@@ -133,26 +147,6 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
               {__('subscriptions_title')}
             </Heading>
 
-            {/* {selectedPlan?.tiers && monthlyCreditsSelected && (
-              <Row
-                className="mb-4"
-                rowKey={` ${selectedPlan?.title} ${
-                  Number(monthlyCreditsSelected)
-                    ? `- ${Number(monthlyCreditsSelected)}
-                      ${__('subscriptions_credits_included')}`
-                    : ''
-                }  `}
-                value={`${
-                  selectedPlan && priceFormat(total, DEFAULT_CURRENCY)
-                }`}
-                additionalInfo={`${__(
-                  'bookings_checkout_step_total_description',
-                )} ${getVatInfo({
-                  val: total,
-                  cur: DEFAULT_CURRENCY,
-                })} ${__('subscriptions_summary_per_month')}`}
-              />
-            )} */}
             {
               <Row
                 className="mb-4"
@@ -181,7 +175,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
               {__('subscriptions_checkout_payment_subtitle')}
             </Heading>
             <div className="mb-10">
-              {enabledConfigs && enabledConfigs.includes('payment') && (
+              {isPaymentEnabled ? (
                 <Elements stripe={stripePromise}>
                   <SubscriptionCheckoutForm
                     userEmail={user?.email}
@@ -190,6 +184,8 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
                     source={source as string}
                   />
                 </Elements>
+              ) : (
+                <ErrorMessage error={__('checkout_payment_disabled_error')} />
               )}
             </div>
           </div>
@@ -201,16 +197,31 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
 
 SubscriptionsCheckoutPage.getInitialProps = async () => {
   try {
-    const {
-      data: { results },
-    } = await api.get('/config/subscriptions');
+    const [subscriptionsRes, paymentRes, generalRes] = await Promise.all([
+      api.get('/config/subscriptions').catch(() => {
+        return null;
+      }),
+      api.get('/config/payment').catch(() => {
+        return null;
+      }),
+      api.get('/config/general').catch(() => {
+        return null;
+      }),
+    ]);
 
+    const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
+    const paymentConfig = paymentRes?.data?.results?.value;
+    const generalConfig = generalRes?.data?.results?.value;
     return {
-      subscriptionsConfig: results.value,
+      subscriptionsConfig,
+      paymentConfig,
+      generalConfig,
     };
   } catch (err: unknown) {
     return {
-      subscriptionsConfig: { enabled: false, plans: [] },
+      subscriptionsConfig: { enabled: false, elements: [] },
+      paymentConfig: null,
+      generalConfig: null,
       error: parseMessageFromError(err),
     };
   }

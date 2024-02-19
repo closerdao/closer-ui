@@ -4,6 +4,8 @@ import { renderWithProviders } from '@/test/utils';
 import { screen } from '@testing-library/react';
 
 import listingsMock from './listings.json';
+import { bookingConfig } from '@/__tests__/mocks/bookingConfig';
+import { CloserCurrencies } from 'closer';
 
 describe('Select accomodation type page', () => {
   it('should render and have a proper No available accomodation message in case empty array with listings is returned from the server', async () => {
@@ -14,12 +16,12 @@ describe('Select accomodation type page', () => {
       kids: '0',
       infants: '0',
       pets: '0',
-      currency: 'EUR',
+      currency: CloserCurrencies.EUR,
       useTokens: false,
       listings: [],
     };
 
-    renderWithProviders(<AccomodationSelector {...props} />);
+    renderWithProviders(<AccomodationSelector bookingConfig={bookingConfig} {...props} />);
 
     const title = screen.getByRole('heading', {
       name: /Accommodation/i,
@@ -39,15 +41,15 @@ describe('Select accomodation type page', () => {
       kids: '1',
       infants: '1',
       pets: '1',
-      currency: 'EUR',
+      currency: CloserCurrencies.EUR,
       useTokens: false,
       listings: listingsMock,
     };
-    renderWithProviders(<AccomodationSelector {...props} />);
+    renderWithProviders(<AccomodationSelector bookingConfig={bookingConfig} {...props} />);
 
     const cards = screen.getAllByRole('heading', { level: 4 });
-    expect(cards).toHaveLength(2);
-    const cardTitle = screen.getByRole('heading', { name: /magical cave/i });
+    expect(cards).toHaveLength(6);
+    const cardTitle = screen.getByRole('heading', { name: /Camping/i });
     const button1 = screen.getAllByRole('button', {
       name: /log in to book/i,
     })[0];

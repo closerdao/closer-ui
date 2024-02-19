@@ -4,19 +4,33 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import { useAuth } from '../contexts/auth';
-import { useConfig } from '../hooks/useConfig';
+import api from '../utils/api';
 import { __ } from '../utils/helpers';
 import GuestMenu from './GuestMenu';
 import Logo from './Logo';
 import MemberMenu from './MemberMenu';
 import Menu from './MenuContainer';
 import ProfilePhoto from './ProfilePhoto';
- 
 import { Button } from './ui';
 
 const Navigation = () => {
-  const { enabledConfigs } = useConfig();
   const [navOpen, setNavOpen] = useState(false);
+  const [isBookingEnabled, setIsBookingEnabled] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const bookingConfigRes = await api.get('config/booking').catch(() => {
+          return
+        });
+        if (bookingConfigRes?.data.results.value.enabled) {
+          setIsBookingEnabled(true);
+        }
+      } catch (err) {
+        return;
+      }
+    })();
+  }, []);
 
   const toggleNav = () => {
     setNavOpen((isOpen) => !isOpen);
@@ -44,7 +58,7 @@ const Navigation = () => {
       <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
         <Logo />
         <div className="flex gap-3 w-auto justify-center items-center ">
-          {enabledConfigs && enabledConfigs.includes('booking') && (
+          {isBookingEnabled && (
             <Button
               onClick={() => router.push('/stay')}
               size="small"

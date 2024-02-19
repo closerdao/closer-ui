@@ -25,7 +25,7 @@ const WhiteListConditions = ({ referredByUser }) => {
           className="mt-8 text-3xl md:text-4xl leading-snug md:items-center flex flex-col md:flex-row"
         >
           <span>{__('token_sale_invite_page_invited_by')}</span>
-          <div className="w-fit bg-primary-light flex items-center ml-2 gap-2 px-4 py-2">
+          <div className="w-fit bg-accent-light flex items-center ml-2 gap-2 px-4 py-2">
             <ProfilePhoto user={referredByUser} size="sm" />
             <span>{' ' + referredByUser?.screenname}</span>
           </div>
@@ -39,7 +39,7 @@ const WhiteListConditions = ({ referredByUser }) => {
           <Link
             href={`/signup?back=${router.asPath}`}
             passHref
-            className="text-primary underline cursor-pointer"
+            className="text-accent underline cursor-pointer"
           >
             {__('signup_form_create')}
           </Link>
@@ -47,7 +47,7 @@ const WhiteListConditions = ({ referredByUser }) => {
           <Link
             href={`/login?back=${router.asPath}`}
             passHref
-            className="text-primary underline cursor-pointer"
+            className="text-accent underline cursor-pointer"
           >
             {__('navigation_sign_in')}
           </Link>
@@ -62,14 +62,14 @@ const WhiteListConditions = ({ referredByUser }) => {
         <li className="mt-4 text-xl md:text-2xl leading-snug">
           {isWalletConnected && !isCorrectNetwork ? (
             <button
-              className="text-primary underline cursor-pointer inline ml-4"
+              className="text-accent underline cursor-pointer inline ml-4"
               onClick={switchNetwork}
             >
               {__('wallet_switch_network')}
             </button>
           ) : (
             <button
-              className="text-primary underline cursor-pointer inline"
+              className="text-accent underline cursor-pointer inline"
               onClick={connectWallet}
             >
               {__('wallet_not_connected_button')}

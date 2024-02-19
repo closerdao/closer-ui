@@ -6,13 +6,13 @@ import { useEffect, useState } from 'react';
 import PageError from '../../components/PageError';
 import { BackButton, Button, Heading, ProgressBar } from '../../components/ui/';
 
-import { NextPage } from 'next';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
 import Page404 from '../404';
 import { DEFAULT_CURRENCY, SUBSCRIPTION_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import { GeneralConfig } from '../../types';
 import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
@@ -20,15 +20,24 @@ import { __ } from '../../utils/helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
-  subscriptionsConfig: { enabled: boolean; plans: SubscriptionPlan[] };
+  subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
+  generalConfig: GeneralConfig | null;
+
   error?: string;
 }
-
-const SubscriptionSuccessPage: NextPage<Props> = ({
+const SubscriptionSuccessPage = ({
   subscriptionsConfig,
+  generalConfig,
   error,
-}) => {
-  const { enabledConfigs, PLATFORM_NAME } = useConfig();
+}: Props) => {
+  const defaultConfig = useConfig();
+  const PLATFORM_NAME =
+    generalConfig?.platformName || defaultConfig.platformName;
+
+  const areSubscriptionsEnabled =
+    subscriptionsConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
+
   const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
 
   const { isAuthenticated, isLoading } = useAuth();
@@ -78,10 +87,7 @@ const SubscriptionSuccessPage: NextPage<Props> = ({
     return <PageError error={error} />;
   }
 
-  if (
-    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS !== 'true' ||
-    (enabledConfigs && !enabledConfigs.includes('subscriptions'))
-  ) {
+  if (!areSubscriptionsEnabled) {
     return <Page404 error="" />;
   }
 
@@ -136,16 +142,26 @@ const SubscriptionSuccessPage: NextPage<Props> = ({
 
 SubscriptionSuccessPage.getInitialProps = async () => {
   try {
-    const {
-      data: { results },
-    } = await api.get('/config/subscriptions');
+    const [subscriptionsRes, generalRes] = await Promise.all([
+      api.get('/config/subscriptions').catch(() => {
+        return null;
+      }),
+      api.get('/config/general').catch(() => {
+        return null;
+      }),
+    ]);
+
+    const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
+    const generalConfig = generalRes?.data?.results?.value;
 
     return {
-      subscriptionsConfig: results.value,
+      subscriptionsConfig,
+      generalConfig,
     };
   } catch (err: unknown) {
     return {
-      subscriptionsConfig: { enabled: false, plans: [] },
+      subscriptionsConfig: { enabled: false, elements: [] },
+      generalConfig: null,
       error: parseMessageFromError(err),
     };
   }

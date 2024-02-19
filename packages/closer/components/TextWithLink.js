@@ -10,7 +10,7 @@ const TextWithLink = ({ text, word, link }) => {
         href={link}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-primary"
+        className="text-accent"
       >
         {word}
       </a>

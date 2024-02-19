@@ -5,13 +5,16 @@ import Tabs from '../../components/Tabs';
 
 import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
-import { useConfig } from '../../hooks/useConfig';
 import { __ } from '../../utils/helpers';
+import { parseMessageFromError } from '../../utils/common';
+import api from '../../utils/api';
 
 const bookingsToShowLimit = 50;
 
-const BookingsDirectory = () => {
-  const { enabledConfigs } = useConfig();
+const BookingsDirectory = ({ bookingConfig }) => {
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
   const { user } = useAuth();
 
   const filters = {
@@ -43,10 +46,7 @@ const BookingsDirectory = () => {
     },
   };
 
-  if (
-    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
-    (enabledConfigs && !enabledConfigs.includes('booking'))
-  ) {
+  if (!isBookingEnabled) {
     return <PageNotFound />;
   }
 
@@ -77,6 +77,24 @@ const BookingsDirectory = () => {
       </div>
     </>
   );
+};
+
+BookingsDirectory.getInitialProps = async () => {
+  try {
+    const bookingRes = await api.get('/config/booking').catch(() => {
+      return null;
+    });
+    const bookingConfig = bookingRes?.data?.results?.value;
+
+    return {
+      bookingConfig,
+    };
+  } catch (err) {
+    return {
+      bookingConfig: null,
+      error: parseMessageFromError(err),
+    };
+  }
 };
 
 export default BookingsDirectory;

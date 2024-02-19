@@ -4,12 +4,21 @@ import Faqs from 'closer/components/Faqs';
 import Resources from 'closer/components/Resources';
 import { Heading } from 'closer/components/ui';
 
+import { GeneralConfig, api } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import { useFaqs } from 'closer/hooks/useFaqs';
+import { parseMessageFromError } from 'closer/utils/common';
 import { __ } from 'closer/utils/helpers';
 
-const ResourcesPage = () => {
-  const { PLATFORM_NAME, APP_NAME, FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
+interface Props {
+  generalConfig: GeneralConfig | null;
+}
+
+const ResourcesPage = ({ generalConfig }: Props) => {
+  const defaultConfig = useConfig();
+  const PLATFORM_NAME =
+    generalConfig?.platformName || defaultConfig.platformName;
+  const { APP_NAME, FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
   const { faqs, error } = useFaqs(FAQS_GOOGLE_SHEET_ID);
 
   return (
@@ -71,6 +80,24 @@ const ResourcesPage = () => {
       </main>
     </div>
   );
+};
+
+ResourcesPage.getInitialProps = async () => {
+  try {
+    const generalRes = await api.get('/config/general').catch(() => {
+      return null;
+    });
+    const generalConfig = generalRes?.data?.results?.value;
+
+    return {
+      generalConfig,
+    };
+  } catch (err: unknown) {
+    return {
+      generalConfig: null,
+      error: parseMessageFromError(err),
+    };
+  }
 };
 
 export default ResourcesPage;

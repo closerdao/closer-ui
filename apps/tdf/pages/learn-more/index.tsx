@@ -20,7 +20,7 @@ import { event } from 'nextjs-google-analytics';
 const loadTime = new Date();
 
 interface Props {
-  subscriptionsConfig: { enabled: boolean; plans: SubscriptionPlan[] };
+  subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
 }
 const LearnMorePage = ({ subscriptionsConfig }: Props) => {
   const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
@@ -999,7 +999,7 @@ LearnMorePage.getInitialProps = async () => {
     };
   } catch (err) {
     return {
-      subscriptionsConfig: { enabled: false, plans: [] },
+      subscriptionsConfig: { enabled: false, elements: [] },
       error: err,
     };
   }

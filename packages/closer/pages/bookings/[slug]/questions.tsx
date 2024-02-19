@@ -16,8 +16,12 @@ import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
-import { useConfig } from '../../../hooks/useConfig';
-import { BaseBookingParams, Booking, Question } from '../../../types';
+import {
+  BaseBookingParams,
+  Booking,
+  BookingConfig,
+  Question,
+} from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
@@ -32,15 +36,25 @@ const prepareQuestions = (eventQuestions: any) => {
 
 interface Props extends BaseBookingParams {
   eventQuestions: Question[];
-  booking: Booking;
+  booking: Booking | null;
+  bookingConfig: BookingConfig | null;
   error?: string;
 }
 
-const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
-  const { enabledConfigs } = useConfig();
+const Questionnaire = ({
+  eventQuestions,
+  booking,
+  error,
+  bookingConfig,
+}: Props) => {
   const router = useRouter();
   const { goBack } = router.query;
   const { isAuthenticated } = useAuth();
+
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+
   const questions: Question[] = prepareQuestions(eventQuestions);
 
   const hasRequiredQuestions = questions?.some((question) => question.required);
@@ -72,18 +86,18 @@ const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
         resetBooking();
         return;
       }
-      router.push(`/bookings/${booking._id}/summary`);
+      router.push(`/bookings/${booking?._id}/summary`);
     }
   }, []);
 
   const handleSubmit = async () => {
     try {
-      await api.patch(`/booking/${booking._id}`, {
+      await api.patch(`/booking/${booking?._id}`, {
         fields: answers,
       });
       //TODO when we have user profile page updated: update user preferences
       // PATCH /user/:id {preferences}
-      router.push(`/bookings/${booking._id}/summary`);
+      router.push(`/bookings/${booking?._id}/summary`);
     } catch (err) {
       console.log(err); // TO DO handle error
     }
@@ -100,7 +114,7 @@ const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
   };
 
   const resetBooking = () => {
-    if (booking.eventId) {
+    if (booking?.eventId) {
       router.push(
         `/bookings/create/dates?eventId=${booking.eventId}&start=${dayjs(
           booking.start,
@@ -108,7 +122,7 @@ const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
       );
       return;
     }
-    if (booking.volunteerId) {
+    if (booking?.volunteerId) {
       router.push(
         `/bookings/create/dates?volunteerId=${
           booking.volunteerId
@@ -119,29 +133,28 @@ const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
       return;
     }
     router.push(
-      `/bookings/create/dates?start=${dayjs(booking.start).format(
+      `/bookings/create/dates?start=${dayjs(booking?.start).format(
         'YYYY-MM-DD',
-      )}&end=${dayjs(booking.end).format('YYYY-MM-DD')}`,
+      )}&end=${dayjs(booking?.end).format('YYYY-MM-DD')}`,
     );
   };
 
   const getAnswer = (
-    answers: { [key: string]: string }[],
+    answers: { [key: string]: string }[] | undefined,
     questionName: string,
   ) => {
+    if (!answers) {
+      return '';
+    }
     const savedAnswer = answers?.find(
       (answer) => Object.keys(answer)[0] === questionName,
     );
     if (savedAnswer) {
       return savedAnswer[questionName];
     }
-    return '';
   };
 
-  if (
-    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
-    (enabledConfigs && !enabledConfigs.includes('booking'))
-  ) {
+  if (!isBookingEnabled) {
     return <PageNotFound />;
   }
 
@@ -172,7 +185,7 @@ const Questionnaire = ({ eventQuestions, booking, error }: Props) => {
               question={question}
               key={question.name}
               handleAnswer={handleAnswer}
-              savedAnswer={getAnswer(booking?.fields, question.name)}
+              savedAnswer={getAnswer(booking?.fields, question.name) || ''}
             />
           ))}
 
@@ -191,15 +204,25 @@ Questionnaire.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
-    const {
-      data: { results: booking },
-    } = await api.get(`/booking/${query.slug}`);
+    const [bookingRes, bookingConfigRes] = await Promise.all([
+      api.get(`/booking/${query.slug}`).catch((err) => {
+        console.error('Error fetching booking config:', err);
+        return null;
+      }),
+      api.get('/config/booking').catch(() => {
+        return null;
+      }),
+    ]);
+    const booking = bookingRes?.data?.results;
+    const bookingConfig = bookingConfigRes?.data?.results?.value;
+
     const optionalEvent =
       booking.eventId && (await api.get(`/event/${booking.eventId}`));
     const event = optionalEvent?.data?.results;
 
     return {
       booking,
+      bookingConfig,
       eventQuestions: event?.fields,
       error: null,
     };
@@ -207,6 +230,7 @@ Questionnaire.getInitialProps = async ({
     return {
       error: parseMessageFromError(err),
       booking: null,
+      bookingConfig: null,
       questions: null,
     };
   }

@@ -29,11 +29,11 @@ const WhiteListed = ({ referredUsers }) => {
       <div className="flex flex-col-reverse md:flex-row gap-4 mt-2 md:mt-8">
         <button
           onClick={copyCode}
-          className="bg-primary text-white uppercase font-bold w-full md:w-fit text-2xl md:text-4xl py-3 px-12 rounded-full whitespace-nowrap"
+          className="bg-accent text-white uppercase font-bold w-full md:w-fit text-2xl md:text-4xl py-3 px-12 rounded-full whitespace-nowrap"
         >
           {__('token_sale_invite_buttons_copy_code')}
         </button>
-        <div className="bg-primary-light text-primary upercase text-base md:text-2xl py-3 px-4 md:px-10 md:whitespace-nowrap rounded-full">
+        <div className="bg-accent-light text-accent upercase text-base md:text-2xl py-3 px-4 md:px-10 md:whitespace-nowrap rounded-full">
           {referralLink}
         </div>
       </div>
@@ -47,8 +47,8 @@ const WhiteListed = ({ referredUsers }) => {
             className="flex flex-col gap-5 justify-center items-center"
             key={user._id}
           >
-            <div className="bg-primary-light w-20 h-20 rounded-full relative">
-              <div className="w-12 h-12 bg-primary absolute rounded-full left-4 top-4" />
+            <div className="bg-accent-light w-20 h-20 rounded-full relative">
+              <div className="w-12 h-12 bg-accent absolute rounded-full left-4 top-4" />
             </div>
             <p className="font-medium text-2xl uppercase">
               {user.screenname.slice(0, 3)}

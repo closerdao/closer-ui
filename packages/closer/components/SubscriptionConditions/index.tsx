@@ -53,7 +53,7 @@ const SubscriptionConditions = ({
         {__('subscriptions_checkout_comply_with')}{' '}
         <Link
           href="/legal/terms"
-          className="text-primary underline"
+          className="text-accent underline"
           target="_blank"
         >
           {__('subscriptions_checkout_subscription_terms')}

@@ -24,27 +24,19 @@ import { event } from 'nextjs-google-analytics';
 
 import PageNotFound from '../404';
 import { usePlatform } from '../../contexts/platform';
-import { useConfig } from '../../hooks/useConfig';
+import { FundraisingConfig } from '../../types';
 import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
 
 interface Props {
-  fundraisingConfig: {
-    videoId: string;
-    wandererUrl: string;
-    pioneerUrl: string;
-    oneMonthSharedUrl: string;
-    oneMonthPrivateUrl: string;
-    buy5TdfUrl: string;
-    buy10TdfUrl: string;
-    hostEventUrl: string;
-    enabled: boolean;
-  };
+  fundraisingConfig: FundraisingConfig;
 }
 
 const SupportUsPage = ({ fundraisingConfig }: Props) => {
-  const { enabledConfigs } = useConfig();
-  console.log('enabledConfigs=',enabledConfigs);
+  const isFundraiserEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US !== 'true' &&
+    fundraisingConfig?.enabled;
+
   const { platform }: any = usePlatform();
   const wandererFilter = {
     where: { 'subscription.plan': 'wanderer' },
@@ -81,10 +73,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
     }
   };
 
-  if (
-    process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US !== 'true' ||
-    !enabledConfigs?.includes('fundraiser')
-  ) {
+  if (!isFundraiserEnabled) {
     return <PageNotFound />;
   }
 
@@ -351,9 +340,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               raise your voice on important topics.
             </p>
             <LinkButton
-              href={ 
-                fundraisingConfig.buy5TdfUrl || '/token/checkout?tokens=5'
-              }
+              href={fundraisingConfig.buy5TdfUrl || '/token/checkout?tokens=5'}
               className="w-[240px]"
             >
               ~€1250
@@ -370,8 +357,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             </p>
             <LinkButton
               href={
-                fundraisingConfig.buy10TdfUrl ||
-                '/token/checkout?tokens=10'
+                fundraisingConfig.buy10TdfUrl || '/token/checkout?tokens=10'
               }
               className="w-[240px]"
             >

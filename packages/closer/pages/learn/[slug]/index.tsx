@@ -29,7 +29,7 @@ const MIN_SUBSCRIPTION_PLAN = 'Wanderer';
 interface Props {
   lesson: Lesson;
   error?: string;
-  subscriptionsConfig: { enabled: boolean; plans: SubscriptionPlan[] };
+  subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
 }
 
 const LessonPage = ({ lesson, subscriptionsConfig, error }: Props) => {
@@ -38,12 +38,13 @@ const LessonPage = ({ lesson, subscriptionsConfig, error }: Props) => {
   const { user, refetchUser } = useAuth();
   const [hasRefetchedUser, setHasRefetchedUser] = useState(false);
 
-  const subscriptionPriceId =
-    subscriptions?.find((subscription: SubscriptionPlan) => {
+  const subscriptionPriceId = subscriptions?.find(
+    (subscription: SubscriptionPlan) => {
       return (
         subscription.title === MIN_SUBSCRIPTION_PLAN && subscription.priceId
       );
-    })?.priceId;
+    },
+  )?.priceId;
 
   const getAccessUrl = `/subscriptions/checkout?priceId=${subscriptionPriceId}&source=${asPath}`;
 
@@ -249,7 +250,7 @@ LessonPage.getInitialProps = async ({
     return { subscriptionsConfig: subscriptions.value, lesson, error: null };
   } catch (err: unknown) {
     return {
-      subscriptionsConfig: { enabled: false, plans: [] },
+      subscriptionsConfig: { enabled: false, elements: [] },
       error: parseMessageFromError(err),
       lesson: null,
     };
