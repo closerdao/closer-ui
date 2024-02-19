@@ -193,6 +193,7 @@
   "checkout_pay": "Pay",
   "checkout_processing_payment": "Processing payment...",
   "checkout_processing_token_payment": "Staking tokens...",
+  "checkout_payment_disabled_error": "Payment is disabled. Please contact support.",
   "currency_switch_EUR_title": "€ Euro",
   "currency_switch_TDF_title": "$ TDF",
   "discounts_code": "Code",
@@ -710,9 +711,8 @@
   "volunteers_page_intro_text": "Experience community living by getting your hands dirty! Be an active part of the community during your stay at TDF and help maintain the space, contribute your skills or bring something completely new and fresh. Choose an option below that resonates with you.",
   "volunteers_page_terms_1": "Accommodation costs covered",
   "volunteers_page_terms_2": "Pay only Food Cost",
-  "volunteers_page_terms_3": "Food included",
-  "volunteers_page_terms_4": "~ 4 Hours of work per day",
-  "volunteers_page_terms_5": "Unlock the possibility to become a member after 14 days",
+  "volunteers_page_terms_3": "~ 4 Hours of work per day",
+  "volunteers_page_terms_4": "Unlock the possibility to become a member after 14 days",
   "volunteers_page_more_info": "We are excited to have you visit us soon.",
   "volunteers_page_empty": "There are no volunteer opportunities at the moment.",
   "button_edit_opportunity": "Edit opportunity",
@@ -956,6 +956,7 @@
   "platform_configs": "⚙️ Platform settings",
   "booking_configs": "Booking",
   "general_configs": "General",
+  "config_updated": "Config updated!",
 
   "config_label_utilityFiatVal": "Utility price (per night)",
   "config_label_utilityFiatCur": "Utility currency",
@@ -1070,6 +1071,7 @@
   "config_label_bookingPageDescription": "Booking page description",
   "config_features_heading": "Platform features",
   "generic_delete_button": "Delete",
+  "generic_export_csv": "Export CSV",
   "config_add_plan_button": "Add entry",
   "config_true": "True",
   "config_false": "False",
@@ -1077,6 +1079,7 @@
 
   "edit_homepage_button": "Edit homepage",
   "blog_home_button": "Homepage",
+  "generic_save_button": "Save",
 
 
   "generic_edit_button": "Edit"

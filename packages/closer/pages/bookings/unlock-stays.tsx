@@ -6,8 +6,6 @@ import { useEffect } from 'react';
 import { Button, Card } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
-import { NextPage } from 'next';
-
 import PageNotFound from '../404';
 import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
@@ -19,11 +17,15 @@ import { __, getCurrencySymbol } from '../../utils/helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
-  subscriptionsConfig: { enabled: boolean; plans: SubscriptionPlan[] };
+  subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
+  bookingConfig: any;
 }
 
-const UnlockStaysPage: NextPage<Props> = ({ subscriptionsConfig }) => {
-  const { enabledConfigs } = useConfig();
+const UnlockStaysPage = ({ subscriptionsConfig, bookingConfig }: Props) => {
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+
   const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
   const config = useConfig();
   const { STAY_BOOKING_ALLOWED_PLANS, MIN_INSTANT_BOOKING_ALLOWED_PLAN } =
@@ -52,10 +54,7 @@ const UnlockStaysPage: NextPage<Props> = ({ subscriptionsConfig }) => {
     router.push('/subscriptions');
   };
 
-  if (
-    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
-    (enabledConfigs && !enabledConfigs.includes('booking'))
-  ) {
+  if (!isBookingEnabled) {
     return <PageNotFound />;
   }
 
@@ -130,16 +129,26 @@ const UnlockStaysPage: NextPage<Props> = ({ subscriptionsConfig }) => {
 
 UnlockStaysPage.getInitialProps = async () => {
   try {
-    const {
-      data: { results },
-    } = await api.get('/config/subscriptions');
+    const [subscriptionsRes, bookingRes] = await Promise.all([
+      api.get('/config/subscriptions').catch(() => {
+        return null;
+      }),
+      api.get('/config/booking').catch(() => {
+        return null;
+      }),
+    ]);
+
+    const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
+    const bookingConfig = bookingRes?.data?.results?.value;
 
     return {
-      subscriptionsConfig: results.value,
+      subscriptionsConfig,
+      bookingConfig,
     };
   } catch (err: unknown) {
     return {
-      subscriptionsConfig: { enabled: false, plans: [] },
+      subscriptionsConfig: { enabled: false, elements: [] },
+      bookingConfig: null,
       error: parseMessageFromError(err),
     };
   }

@@ -5,6 +5,8 @@ import { initAnalytics, trackPageView } from './Analytics';
 
 const Layout: FC<PropsWithChildren> = ({ children }) => {
   const [isInitialized, setIsInitialized] = useState(false);
+  // TODO: switch to per-page config fetching if we ever need this page
+
   const { GA_ANALYTICS } = useConfig() || {};
 
   useEffect(() => {

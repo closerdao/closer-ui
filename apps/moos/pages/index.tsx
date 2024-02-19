@@ -2,19 +2,22 @@ import Head from 'next/head';
 
 import { Card, LinkButton } from 'closer/components/ui';
 
-import { __, api, useAuth, useConfig } from 'closer';
+import { GeneralConfig, __, api, useAuth, useConfig } from 'closer';
 import { HOME_PAGE_CATEGORY } from 'closer/constants';
 import { formatSearch } from 'closer/utils/api';
 
 interface Props {
   article: any;
+  generalConfig: GeneralConfig | null;
 }
 
-const HomePage = ({ article }: Props) => {
-  const { PLATFORM_NAME } = useConfig() || {};
+const HomePage = ({ article, generalConfig }: Props) => {
+  const defaultConfig = useConfig();
+  const PLATFORM_NAME =
+    generalConfig?.platformName || defaultConfig.platformName;
+
   const { user, isAuthenticated } = useAuth();
 
-  console.log('article=', article);
   return (
     <div>
       <Head>
@@ -49,14 +52,25 @@ const HomePage = ({ article }: Props) => {
 HomePage.getInitialProps = async () => {
   try {
     const search = formatSearch({ category: { $eq: HOME_PAGE_CATEGORY } });
-    const res = await api.get(`/article?where=${search}`);
-    console.log('res=', res.data);
+    const [articleRes, generalRes] = await Promise.all([
+      api.get(`/article?where=${search}`).catch(() => {
+        return null;
+      }),
+      api.get('/config/general').catch(() => {
+        return null;
+      }),
+    ]);
 
+    const article = articleRes?.data?.results[0];
+    const generalConfig = generalRes?.data?.results?.value;
     return {
-      article: res.data?.results[0],
+      article,
+      generalConfig,
     };
   } catch (err: unknown) {
     return {
+      article: null,
+      generalConfig: null,
       error: err,
     };
   }

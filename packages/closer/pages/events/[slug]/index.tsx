@@ -50,10 +50,11 @@ const EventPage = ({
   listings,
   settings,
 }: Props) => {
+  console.log('event=',event);
   const { platform }: any = usePlatform();
   const { user, isAuthenticated } = useAuth();
 
-  const dailyUtilityFee = settings.utilityFiatVal;
+  const dailyUtilityFee = settings?.utilityFiatVal;
 
   const [photo, setPhoto] = useState(event && event.photo);
   const [password, setPassword] = useState('');
@@ -520,7 +521,7 @@ const EventPage = ({
                                       <li key={ticket.get('_id')}>
                                         <Link
                                           href={`/tickets/${ticket.get('_id')}`}
-                                          className="text-primary"
+                                          className="text-accent"
                                         >
                                           {ticket.get('name')} x{' '}
                                           {ticket.get('quantity') || 1}
@@ -676,6 +677,8 @@ EventPage.getInitialProps = async ({
         Authorization: `Bearer ${req?.cookies?.access_token}`,
       },
     });
+
+
 
     return {
       event: event.data.results,

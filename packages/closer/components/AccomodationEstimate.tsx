@@ -30,7 +30,7 @@ const AccomodationEstimate: FC<Props> = ({
         min={1}
         max={52}
         step={1}
-        className="inline w-16 m-0 mx-2 text-2xl bg-primary-light rounded-full px-4 !text-primary !border-none"
+        className="inline w-16 m-0 mx-2 text-2xl bg-accent-light rounded-full px-4 !text-accent !border-none"
       />
       <span className="text-2xl leading-8 w-full md:w-auto">
         {__('token_sale_page_stay_weeks')}
@@ -38,7 +38,7 @@ const AccomodationEstimate: FC<Props> = ({
       <select
         value={selectedAccomodation}
         onChange={(e) => selectAccomodation(e.target.value)}
-        className="flex-1 h-12 mx-2 mt-4 md:mt-0 py-1 px-4 rounded-full text-2xl bg-primary-light text-primary !border-none"
+        className="flex-1 h-12 mx-2 mt-4 md:mt-0 py-1 px-4 rounded-full text-2xl bg-accent-light text-accent !border-none"
       >
         {ACCOMODATION_COST.map((accomodation: { name: string }) => (
           <option key={accomodation.name} value={accomodation.name}>

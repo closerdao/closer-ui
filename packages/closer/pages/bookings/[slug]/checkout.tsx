@@ -25,21 +25,31 @@ import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { WalletState } from '../../../contexts/wallet';
-import { useConfig } from '../../../hooks/useConfig';
-import { BaseBookingParams, Booking, Event, Listing } from '../../../types';
+import {
+  BaseBookingParams,
+  Booking,
+  BookingConfig,
+  CloserCurrencies,
+  Event,
+  Listing,
+} from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, priceFormat } from '../../../utils/helpers';
 
 interface Props extends BaseBookingParams {
-  listing: Listing;
-  booking: Booking;
+  listing: Listing | null;
+  booking: Booking | null;
   error?: string;
-  event?: Event;
+  event?: Event | null;
+  bookingConfig: BookingConfig | null;
 }
 
-const Checkout = ({ booking, listing, error, event }: Props) => {
-  const { enabledConfigs } = useConfig();
+const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+
   const {
     utilityFiat,
     rentalToken,
@@ -68,7 +78,8 @@ const Checkout = ({ booking, listing, error, event }: Props) => {
   useEffect(() => {
     (async () => {
       try {
-        const creditsBalance = (await api.get('/carrots/balance')).data.results as number;
+        const creditsBalance = (await api.get('/carrots/balance')).data
+          .results as number;
         const hasEnoughCredits = Boolean(
           rentalToken?.val &&
             creditsBalance &&
@@ -91,11 +102,11 @@ const Checkout = ({ booking, listing, error, event }: Props) => {
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const goBack = () => {
-    router.push(`/bookings/${booking._id}/summary`);
+    router.push(`/bookings/${booking?._id}/summary`);
   };
 
-  if (booking.status === 'paid') {
-    router.push(`/bookings/${booking._id}/summary`);
+  if (booking?.status === 'paid') {
+    router.push(`/bookings/${booking?._id}/summary`);
   }
 
   const handleFreeBooking = async () => {
@@ -104,7 +115,7 @@ const Checkout = ({ booking, listing, error, event }: Props) => {
         type: 'booking',
         ticketOption,
         total,
-        _id: booking._id,
+        _id: booking?._id,
         email: user?.email,
         name: user?.screenname,
       });
@@ -112,20 +123,20 @@ const Checkout = ({ booking, listing, error, event }: Props) => {
       setPaymentError(parseMessageFromError(error));
     }
 
-    router.push(`/bookings/${booking._id}`);
+    router.push(`/bookings/${booking?._id}`);
   };
 
   const applyCredits = async () => {
     try {
       setCreditsError(null);
-      const res = await api.post(`/bookings/${booking._id}/update-payment`, {
+      const res = await api.post(`/bookings/${booking?._id}/update-payment`, {
         useCredits: true,
       });
-      
+
       setUpdatedTotal(res.data.results.total);
       setUpdatedRentalFiat(res.data.results.rentalFiat);
 
-      await api.post(`/bookings/${booking._id}/credit-payment`, {});
+      await api.post(`/bookings/${booking?._id}/credit-payment`, {});
 
       setHasAppliedCredits(true);
     } catch (error) {
@@ -137,18 +148,15 @@ const Checkout = ({ booking, listing, error, event }: Props) => {
 
   const switchToEUR = async () => {
     // TODO - this should not be possible - should enable a custom endpoint to change the booking type
-    await platform.booking.patch(booking._id, { useTokens: false });
-    router.push(`/bookings/${booking._id}/checkout`);
+    await platform.booking.patch(booking?._id, { useTokens: false });
+    router.push(`/bookings/${booking?._id}/checkout`);
   };
 
   if (!isAuthenticated) {
     return <PageNotAllowed />;
   }
 
-  if (
-    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
-    (enabledConfigs && !enabledConfigs.includes('booking'))
-  ) {
+  if (!isBookingEnabled) {
     return <PageNotFound />;
   }
 
@@ -176,7 +184,7 @@ const Checkout = ({ booking, listing, error, event }: Props) => {
                 <div className="mb-16 mt-4">
                   <Row
                     rowKey={ticketOption?.name}
-                    value={`${priceFormat(eventFiat.val, eventFiat.cur)}`}
+                    value={`${priceFormat(eventFiat?.val, eventFiat?.cur)}`}
                   />
                 </div>
               </div>
@@ -200,12 +208,16 @@ const Checkout = ({ booking, listing, error, event }: Props) => {
 
             {process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' &&
             canApplyCredits &&
-              !useTokens ? (
+            !useTokens ? (
               <RedeemCredits
                 rentalFiat={rentalFiat}
-                rentalToken={rentalToken || { val: 0, cur: 'TDF' }}
+                rentalToken={
+                  rentalToken || { val: 0, cur: CloserCurrencies.TDF }
+                }
                 applyCredits={applyCredits}
-                hasAppliedCredits={hasAppliedCredits || status === 'credits-paid'}
+                hasAppliedCredits={
+                  hasAppliedCredits || status === 'credits-paid'
+                }
                 creditsError={creditsError}
                 className="my-12"
               />
@@ -240,10 +252,9 @@ const Checkout = ({ booking, listing, error, event }: Props) => {
             <div className="flex justify-between items-center mt-3">
               <p> {__('bookings_summary_step_utility_total')}</p>
               <p className="font-bold">
-                {booking.foodOption === 'no_food' ?
-                  'NOT INCLUDED' :
-                  priceFormat(utilityFiat)
-                }
+                {booking?.foodOption === 'no_food'
+                  ? 'NOT INCLUDED'
+                  : priceFormat(utilityFiat)}
               </p>
             </div>
             <p className="text-right text-xs">
@@ -252,29 +263,28 @@ const Checkout = ({ booking, listing, error, event }: Props) => {
           </div>
           <CheckoutTotal total={updatedTotal} />
 
-          {updatedTotal.val > 0 ? (
+          {updatedTotal && updatedTotal.val > 0 ? (
             <CheckoutPayment
-              bookingId={booking._id}
+              bookingId={booking?._id || ''}
               buttonDisabled={
-                useTokens &&
-                (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)
+                (useTokens &&
+                  (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)) ||
+                false
               }
-              useTokens={useTokens}
+              useTokens={useTokens || false}
               useCredits={useCredits}
               totalToPayInFiat={updatedTotal}
               dailyTokenValue={dailyRentalToken?.val || 0}
               startDate={start}
-              totalNights={duration}
+              totalNights={duration || 0}
               user={user}
               eventId={event?._id}
             />
           ) : (
             <Button className="booking-btn" onClick={handleFreeBooking}>
-              {
-                user?.roles.includes('member') || booking.status === 'confirmed' ?
-                  __('buttons_confirm_booking') : 
-                  __('buttons_booking_request')
-              }
+              {user?.roles.includes('member') || booking?.status === 'confirmed'
+                ? __('buttons_confirm_booking')
+                : __('buttons_booking_request')}
             </Button>
           )}
 
@@ -293,13 +303,22 @@ Checkout.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
-    const {
-      data: { results: booking },
-    } = await api.get(`/booking/${query.slug}`, {
-      headers: req?.cookies?.access_token && {
-        Authorization: `Bearer ${req?.cookies?.access_token}`,
-      },
-    });
+    const [bookingRes, bookingConfigRes] = await Promise.all([
+      api
+        .get(`/booking/${query.slug}`, {
+          headers: req?.cookies?.access_token && {
+            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          },
+        })
+        .catch(() => {
+          return null;
+        }),
+      api.get('/config/booking').catch(() => {
+        return null;
+      }),
+    ]);
+    const booking = bookingRes?.data?.results;
+    const bookingConfig = bookingConfigRes?.data?.results?.value;
 
     const [optionalEvent, optionalListing] = await Promise.all([
       booking.eventId &&
@@ -318,12 +337,13 @@ Checkout.getInitialProps = async ({
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
 
-    return { booking, listing, event, error: null };
+    return { booking, listing, event, error: null, bookingConfig };
   } catch (err) {
     console.log(err);
     return {
       error: parseMessageFromError(err),
       booking: null,
+      bookingConfig: null,
       listing: null,
     };
   }

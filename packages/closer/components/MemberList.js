@@ -79,7 +79,7 @@ const MemberList = ({ list, preview, channel, filter, title, limit }) => {
                         : user.get('about')}
                     </p>
                   )}
-                  <div className="pt-2 text-primary">
+                  <div className="pt-2 text-accent">
                     {__('member_list_see_profile')}
                   </div>
                 </div>

@@ -36,31 +36,24 @@ const BookingDates: FC<Props> = ({
   eventStartDate,
   eventEndDate,
 }) => {
-  const { member, guest } = conditions || {};
-
-  if (!member || !guest) {
-    console.error(
-      'Cannot render BookingDates: missing conditions for member or guest',
-      conditions,
-    );
-    return null;
-  }
-
   const renderConditionsDescription = () => {
     if (isMember) {
       return (
         __(
           'bookings_dates_step_member_book_horizon',
-          member.maxBookingHorizon,
+          conditions?.memberMaxBookingHorizon,
         ) +
         ', ' +
-        __('bookings_dates_step_book_duration', member.maxDuration)
+        __('bookings_dates_step_book_duration', conditions?.memberMaxDuration)
       );
     } else {
       return (
-        __('bookings_dates_step_guest_book_horizon', guest.maxBookingHorizon) +
+        __(
+          'bookings_dates_step_guest_book_horizon',
+          conditions?.guestMaxBookingHorizon,
+        ) +
         ', ' +
-        __('bookings_dates_step_book_duration', guest.maxDuration)
+        __('bookings_dates_step_book_duration', conditions?.guestMaxDuration)
       );
     }
   };
@@ -79,15 +72,17 @@ const BookingDates: FC<Props> = ({
             setEndDate={setEndDate}
             maxDuration={
               isMember
-                ? conditions?.member.maxDuration
-                : conditions?.guest.maxDuration
+                ? conditions?.memberMaxDuration
+                : conditions?.guestMaxDuration
             }
             blockedDateRanges={blockedDateRanges}
             savedStartDate={savedStartDate}
             savedEndDate={savedEndDate}
             eventStartDate={eventStartDate}
             eventEndDate={eventEndDate}
-            defaultMonth={eventStartDate ? new Date(eventStartDate) : new Date()}
+            defaultMonth={
+              eventStartDate ? new Date(eventStartDate) : new Date()
+            }
           />
         </div>
       </div>

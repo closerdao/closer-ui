@@ -14,20 +14,27 @@ import { ParsedUrlQuery } from 'querystring';
 
 import PageNotFound from '../../404';
 import { BOOKING_STEPS } from '../../../constants';
-import { useConfig } from '../../../hooks/useConfig';
-import { BaseBookingParams, Booking, Event } from '../../../types';
+import {
+  BaseBookingParams,
+  Booking,
+  BookingConfig,
+  Event,
+} from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { __ } from '../../../utils/helpers';
 
 interface Props extends BaseBookingParams {
-  booking: Booking;
+  booking: Booking | null;
   error?: string;
-  event: Event;
+  event: Event | null;
+  bookingConfig: BookingConfig | null;
 }
 
-const ConfirmationStep = ({ error, booking, event }: Props) => {
-  const { enabledConfigs } = useConfig();
+const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
   const router = useRouter();
   const { status, _id, volunteerId, eventId } = booking || {};
 
@@ -65,10 +72,7 @@ const ConfirmationStep = ({ error, booking, event }: Props) => {
     return <PageError error={error} />;
   }
 
-  if (
-    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
-    (enabledConfigs && !enabledConfigs.includes('booking'))
-  ) {
+  if (!isBookingEnabled) {
     return <PageNotFound />;
   }
 
@@ -86,7 +90,7 @@ const ConfirmationStep = ({ error, booking, event }: Props) => {
         </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
         <div className="mt-16 flex flex-col gap-16 flex-nowrap">
-          <BookingResult booking={booking} eventName={event?.name} />
+          <BookingResult booking={booking} eventName={event?.name || ''} />
 
           <Button onClick={() => viewBooking(_id)}>
             {eventId
@@ -107,20 +111,29 @@ ConfirmationStep.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
-    const {
-      data: { results: booking },
-    } = await api.get(`/booking/${query.slug}`);
+    const [bookingRes, bookingConfigRes] = await Promise.all([
+      api.get(`/booking/${query.slug}`).catch((err) => {
+        console.error('Error fetching booking config:', err);
+        return null;
+      }),
+      api.get('/config/booking').catch(() => {
+        return null;
+      }),
+    ]);
+    const booking = bookingRes?.data?.results;
+    const bookingConfig = bookingConfigRes?.data?.results?.value;
 
     const optionalEvent =
       booking.eventId && (await api.get(`/event/${booking.eventId}`));
     const event = optionalEvent?.data?.results;
 
-    return { booking, event, error: null };
+    return { booking, event, error: null, bookingConfig };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
       booking: null,
-      listing: null,
+      bookingConfig: null,
+      event: null,
     };
   }
 };

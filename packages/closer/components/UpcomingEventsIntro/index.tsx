@@ -21,7 +21,7 @@ const UpcomingEventsIntro = () => {
           {__('events_upcoming_intro', APP_NAME)}
         </p>
         <p className="mb-6 text-sm md:text-base">
-          <Link href="/events" className="underline text-primary">See all events</Link>
+          <Link href="/events" className="underline text-accent">See all events</Link>
         </p>
       </div>
       <div className="flex-grow">

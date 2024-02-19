@@ -8,7 +8,7 @@ const styleMap = {
   base: 'inline-block py-4 px-4 text-sm font-medium text-center rounded-t-lg',
   normal:
     'text-gray-500 border-b-2 border-transparent hover:text-gray-600 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300',
-  active: 'text-primary border-b-2 border-primary active',
+  active: 'text-accent border-b-2 border-accent active',
   disabled: 'text-gray-400 cursor-not-allowed dark:text-gray-500',
 };
 
@@ -49,7 +49,9 @@ const Tabs = ({ tabs, onChange, initialCurrentTab }) => {
       </div>
       <div className="tab-content mt-4 mb-8 py-4">
         {tabs && tabs[currentTab] && tabs[currentTab].content}
-        {tabs[currentTab].datePicker && tabs[currentTab].title === 'general' && tabs[currentTab].datePicker}
+        {tabs[currentTab].datePicker &&
+          tabs[currentTab].title === 'general' &&
+          tabs[currentTab].datePicker}
       </div>
     </>
   );

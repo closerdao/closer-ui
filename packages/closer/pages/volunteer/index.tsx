@@ -19,7 +19,7 @@ interface Props {
   opportunities: VolunteerOpportunity[];
 }
 const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
-  const { APP_NAME } = useConfig() || {};
+  const { APP_NAME, SEMANTIC_URL } = useConfig() || {};
   const opportunitiesByCategory = getOpportunitiesByCategory(opportunities);
 
   const { user } = useAuth();
@@ -29,8 +29,7 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
     __('volunteers_page_terms_1', APP_NAME),
     __('volunteers_page_terms_2', APP_NAME),
     __('volunteers_page_terms_3', APP_NAME),
-    __('volunteers_page_terms_4', APP_NAME),
-    __('volunteers_page_terms_5', APP_NAME),
+    __('volunteers_page_terms_4', APP_NAME)
   ];
 
   const doesHaveVolunteerTerms = !volunteerTerms.every((item) => item === '');
@@ -41,7 +40,7 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
         <title>{__('volunteers_page_title')}</title>
         <link
           rel="canonical"
-          href="https://www.traditionaldreamfactory.com/volunteer"
+          href={`https://${SEMANTIC_URL}/volunteer`}
           key="canonical"
         />
       </Head>

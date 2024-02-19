@@ -2,7 +2,7 @@ import Head from 'next/head';
 
 import { ChangeEvent, useEffect, useState } from 'react';
 
-import PlansConfig from '../../components/PlansConfig';
+import ArrayConfig from '../../components/ArrayConfig';
 import {
   Button,
   Card,
@@ -16,6 +16,7 @@ import PageNotFound from '../404';
 import { configDescription } from '../../config';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
+import { useConfig } from '../../hooks/useConfig';
 import { Config } from '../../types';
 import api from '../../utils/api';
 import {
@@ -29,10 +30,14 @@ import { capitalizeFirstLetter } from '../../utils/learn.helpers';
 
 const ConfigPage = () => {
   const { platform }: any = usePlatform();
+  const { platformAllowedConfigs } = useConfig() || {};
+  const { user } = useAuth();
+
   const myConfigs = platform.config.find();
   const filter = {};
-  const allConfigCategories = configDescription.map((config: any) => config.slug);
-  const { user } = useAuth();
+  const allConfigCategories = configDescription
+    .map((config: any) => config.slug)
+    .filter((config: any) => platformAllowedConfigs?.includes(config));
 
   const [selectedConfig, setSelectedConfig] = useState('general');
   const [updatedConfigs, setUpdatedConfigs] = useState<Config[]>([]);
@@ -50,6 +55,7 @@ const ConfigPage = () => {
         myConfigs.toJS(),
         configDescription,
       );
+
       setUpdatedConfigs(preparedConfigs);
       setEnabledConfigs(
         getEnabledConfigs(preparedConfigs, allConfigCategories),
@@ -67,13 +73,14 @@ const ConfigPage = () => {
 
   const handleToggleConfig = (configCategory: string) => {
     let shouldEnable = false;
-    if (enabledConfigs && enabledConfigs.includes(configCategory)) {
+    if (enabledConfigs && enabledConfigs?.includes(configCategory)) {
       setEnabledConfigs(
-        enabledConfigs.filter((item: string) => item !== configCategory),
+        enabledConfigs?.filter((item: string) => item !== configCategory),
       );
       setSelectedConfig('general');
       shouldEnable = false;
     } else {
+      setSelectedConfig(configCategory);
       setEnabledConfigs([...enabledConfigs, configCategory]);
       shouldEnable = true;
     }
@@ -106,16 +113,25 @@ const ConfigPage = () => {
     );
 
     try {
-     console.log('configCategoryToSave=',configCategoryToSave)
-     console.log('updatedConfig?.value=',updatedConfig?.value)
+      const configExists = myConfigs
+        .toJS()
+        .some((config: any) => config.slug === configCategoryToSave);
+
+      let res;
+      if (configExists) {
+        res = await api.patch(`/config/${configCategoryToSave}`, {
+          slug: configCategoryToSave,
+          value: updatedConfig?.value,
+        });
+      } else {
+        res = await api.post('/config', {
+          slug: configCategoryToSave,
+          value: updatedConfig?.value,
+        });
+      }
 
       setIsLoading(true);
       setHasConfigUpdated(false);
-      const res = await api.patch(`/config/${configCategoryToSave}`, {
-        slug: configCategoryToSave,
-        value: updatedConfig?.value,
-      });
-
       if (res.status === 200) {
         setHasConfigUpdated(true);
         setTimeout(() => {
@@ -172,16 +188,16 @@ const ConfigPage = () => {
     const defaultConfig = configDescription as any;
     const defaultPlan = defaultConfig.find(
       (config: any) => config.slug === selectedConfig,
-    ).value.plans.default;
+    ).value.elements.default;
 
     const newConfigs = [
       ...updatedConfigs.map((config) => {
         if (config.slug === selectedConfig) {
-          const plans: any = config.value.plans;
-          const newPlans = [...plans, ...defaultPlan];
+          const elements: any = config.value.elements;
+          const newElements = [...elements, ...defaultPlan];
           return {
             ...config,
-            value: { ...config.value, plans: newPlans },
+            value: { ...config.value, elements: newElements },
           };
         }
         return config;
@@ -194,13 +210,13 @@ const ConfigPage = () => {
     const newConfigs = [
       ...updatedConfigs.map((config) => {
         if (config.slug === selectedConfig) {
-          const plans: any = config.value.plans;
-          const updatedPlans = plans.filter(
-            (plan: any, idx: number) => idx !== index,
+          const elements: any = config.value.elements;
+          const updatedElements = elements.filter(
+            (_: any, idx: number) => idx !== index,
           );
           return {
             ...config,
-            value: { ...config.value, plans: updatedPlans },
+            value: { ...config.value, elements: updatedElements },
           };
         }
         return config;
@@ -209,7 +225,7 @@ const ConfigPage = () => {
     setUpdatedConfigs(newConfigs);
   };
 
-  if (!user || !user.roles.includes('admin')) {
+  if (!user || !user.roles?.includes('admin')) {
     return <PageNotFound error="User may not access" />;
   }
 
@@ -229,10 +245,11 @@ const ConfigPage = () => {
                 return (
                   <div key={currentConfig}>
                     <Checkbox
-                      isEnabled={currentConfig !== 'general'}
+                      isEnabled={true}
                       id={currentConfig}
                       isChecked={
-                        enabledConfigs && enabledConfigs.includes(currentConfig)
+                        enabledConfigs &&
+                        enabledConfigs?.includes(currentConfig)
                       }
                       onChange={() => handleToggleConfig(currentConfig)}
                       className="mb-4"
@@ -245,109 +262,122 @@ const ConfigPage = () => {
           </div>
         </Card>
 
-        <Switcher
-          options={enabledConfigs}
-          selectedOption={selectedConfig}
-          setSelectedOption={setSelectedConfig}
-        />
+        {enabledConfigs.length > 0 && (
+          <div className="flex flex-col gap-10">
+            <Switcher
+              options={enabledConfigs}
+              selectedOption={selectedConfig}
+              setSelectedOption={setSelectedConfig}
+            />
+            <Card className="flex flex-col gap-10">
+              {updatedConfigs &&
+                updatedConfigs.map((config: Config) => {
+                  if (selectedConfig === config.slug && config.value.enabled) {
+                    return (
+                      <div
+                        key={`${config.slug}`}
+                        className="flex flex-col gap-4"
+                      >
+                        <Heading level={2}>
+                          {capitalizeFirstLetter(config.slug)}
+                        </Heading>
 
-        <Card className="flex flex-col gap-10">
-          {myConfigs &&
-            updatedConfigs.map((config: Config) => {
-              if (selectedConfig === config.slug) {
-                return (
-                  <div key={`${config.slug}`} className="flex flex-col gap-4">
-                    <Heading level={2}>
-                      {capitalizeFirstLetter(config.slug)}
-                    </Heading>
+                        {Object.entries(config.value).map(([key, value]) => {
+                          const currentValue:
+                            | string
+                            | number
+                            | boolean
+                            | any[] =
+                            updatedConfigs.find(
+                              (config) => config.slug === selectedConfig,
+                            )?.value[key] ?? [];
 
-                    {Object.entries(config.value).map(([key, value]) => {
-                      const currentValue: string | number | boolean | any[] =
-                        updatedConfigs.find(
-                          (config) => config.slug === selectedConfig,
-                        )?.value[key] ?? [];
+                          const description = configDescription?.find(
+                            (c) => c.slug === config.slug,
+                          )?.value as Record<string, any>;
+                          const inputType = description?.[key]?.type;
+                          const isArray = Array.isArray(inputType);
 
-                      const description = configDescription?.find(
-                        (c) => c.slug === config.slug,
-                      )?.value as Record<string, any>;
-                      const inputType = description?.[key]?.type;
-                      const isArray = Array.isArray(inputType);
+                          return (
+                            <>
+                              {key !== 'enabled' && (
+                                <div key={key} className="flex flex-col gap-1">
+                                  {!isArray && (
+                                    <label>{__(`config_label_${key}`)}:</label>
+                                  )}
 
-                      return (
-                        <>
-                          {key !== 'enabled' && (
-                            <div key={key} className="flex flex-col gap-1">
-                              {!isArray && (
-                                <label>{__(`config_label_${key}`)}:</label>
-                              )}
-
-                              {typeof value === 'boolean' ? (
-                                <div className="flex gap-3">
-                                  <label className="flex gap-1 items-center">
-                                    <input
-                                      type="radio"
-                                      name={key}
-                                      value="true"
-                                      checked={currentValue === true}
-                                      onChange={handleChange}
-                                    />
-                                    {__('config_true')}
-                                  </label>
-                                  <label className="flex gap-1 items-center">
-                                    <input
-                                      type="radio"
-                                      name={key}
-                                      value="false"
-                                      checked={currentValue === false}
-                                      onChange={handleChange}
-                                    />
-                                    {__('config_false')}
-                                  </label>
-                                </div>
-                              ) : (
-                                <div>
-                                  {isArray && (
+                                  {typeof value === 'boolean' ? (
+                                    <div className="flex gap-3">
+                                      <label className="flex gap-1 items-center">
+                                        <input
+                                          type="radio"
+                                          name={key}
+                                          value="true"
+                                          checked={currentValue === true}
+                                          onChange={handleChange}
+                                        />
+                                        {__('config_true')}
+                                      </label>
+                                      <label className="flex gap-1 items-center">
+                                        <input
+                                          type="radio"
+                                          name={key}
+                                          value="false"
+                                          checked={currentValue === false}
+                                          onChange={handleChange}
+                                        />
+                                        {__('config_false')}
+                                      </label>
+                                    </div>
+                                  ) : (
                                     <div>
-                                      <PlansConfig
-                                        currentValue={currentValue}
-                                        handleChange={handleChange}
-                                        handleAddElement={handleAddElement}
-                                        handleDeleteElement={
-                                          handleDeleteElement
-                                        }
-                                        plansKey={key}
-                                      />
+                                      {isArray && (
+                                        <div>
+                                          <ArrayConfig
+                                            currentValue={currentValue}
+                                            handleChange={handleChange}
+                                            handleAddElement={handleAddElement}
+                                            handleDeleteElement={
+                                              handleDeleteElement
+                                            }
+                                            elementsKey={key}
+                                          />
+                                        </div>
+                                      )}
+                                      {!isArray && (
+                                        <input
+                                          className="bg-neutral rounded-md p-1"
+                                          name={key}
+                                          onChange={handleChange}
+                                          type="text"
+                                          value={String(currentValue)}
+                                        />
+                                      )}
                                     </div>
                                   )}
-                                  {!isArray && (
-                                    <input
-                                      className="bg-neutral rounded-md p-1"
-                                      name={key}
-                                      onChange={handleChange}
-                                      type="text"
-                                      value={String(currentValue)}
-                                    />
-                                  )}
                                 </div>
                               )}
-                            </div>
-                          )}
-                        </>
-                      );
-                    })}
-                  </div>
-                );
-              }
-            })}
-          <Button
-            onClick={handleSaveConfig}
-            isLoading={isLoading}
-            isEnabled={!isLoading}
-          >
-            Save
-          </Button>
-          {hasConfigUpdated && <Information>Config updated!</Information>}
-        </Card>
+                            </>
+                          );
+                        })}
+                      </div>
+                    );
+                  }
+                })}
+
+              <Button
+                onClick={handleSaveConfig}
+                isLoading={isLoading}
+                isEnabled={!isLoading}
+              >
+                {__('generic_save_button')}
+              </Button>
+              {hasConfigUpdated && (
+                <Information>{__('config_updated')}</Information>
+              )}
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );

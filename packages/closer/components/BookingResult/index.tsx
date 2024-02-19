@@ -2,15 +2,16 @@ import { Booking } from '../../types';
 import { __ } from '../../utils/helpers';
 
 interface Props {
-  booking: Booking;
+  booking: Booking | null;
   eventName: string;
   className?: string;
 }
 
-const index = ({
-  booking: { status, volunteerId, eventId, _id },
-  eventName,
-}: Props) => {
+const index = ({ booking, eventName }: Props) => {
+  const { status, volunteerId, eventId, _id } = booking || {};
+
+  if (!booking) return null;
+
   return (
     <div className="flex flex-col gap-16 flex-nowrap">
       {status === 'paid' && !volunteerId && !eventId && (

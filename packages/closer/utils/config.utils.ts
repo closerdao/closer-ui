@@ -55,19 +55,19 @@ export const prepareConfigs = (
         const output: any[] = [];
 
         if (!configArray) {
-          const plan = { ...defaultNestedConfig };
-          output.push(plan);
+          const entry = { ...defaultNestedConfig };
+          output.push(entry);
         }
         configArray?.forEach((myConfigElement: any) => {
-          const plan = { ...defaultNestedConfig };
+          const entry = { ...defaultNestedConfig };
           Object.entries(defaultNestedConfig).forEach(([nestedKey]) => {
             if (myConfigElement.hasOwnProperty(nestedKey)) {
-              plan[nestedKey] = myConfigElement[nestedKey];
+              entry[nestedKey] = myConfigElement[nestedKey];
             } else {
-              plan[nestedKey] = defaultNestedConfig[nestedKey];
+              entry[nestedKey] = defaultNestedConfig[nestedKey];
             }
           });
-          output.push(plan);
+          output.push(entry);
         });
 
         configOutput = {

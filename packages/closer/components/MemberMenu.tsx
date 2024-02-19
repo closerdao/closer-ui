@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 
 import { useAuth } from '../contexts/auth';
-import { useConfig } from '../hooks/useConfig';
 import { NavigationLink } from '../types/nav';
+import api from '../utils/api';
 import { __ } from '../utils/helpers';
-// import { links } from '../utils/navigation';
 import Profile from './Profile';
 import ReportABug from './ReportABug';
 import Wallet from './Wallet';
@@ -51,18 +50,10 @@ const filterLinks = (links: any[], option: string, roles: string[]) => {
   }
 };
 
-const MemberMenu = () => {
-  const { enabledConfigs } = useConfig();
-
-  const areSubscriptionsEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true' &&
-    enabledConfigs &&
-    enabledConfigs.includes('subscriptions');
-  const isBookingEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true' &&
-    enabledConfigs &&
-    enabledConfigs.includes('booking');
-
+const getLinks = (
+  isBookingEnabled: boolean,
+  areSubscriptionsEnabled: boolean,
+) => {
   const links = [
     {
       label: 'Subscriptions',
@@ -170,11 +161,53 @@ const MemberMenu = () => {
       roles: ['admin'],
     },
   ];
+  return links;
+};
 
+const MemberMenu = () => {
   const { user, logout } = useAuth();
   const [navOptions, setNavOptions] = useState(['guest']);
   const [selectedSwitcherOption, setSelectedSwitcherOption] = useState('Guest');
   const [filteredLinks, setFilteredLinks] = useState<NavigationLink[]>();
+  const [links, setLinks] = useState<any[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [bookingRes, subscriptionsRes] = await Promise.all([
+          api.get('config/booking').catch((err) => {
+            console.error('Error fetching booking config:', err);
+            return null;
+          }),
+          api.get('config/subscriptions').catch((err) => {
+            console.error('Error fetching subscriptions config:', err);
+            return null;
+          }),
+        ]);
+
+        const areSubscriptionsEnabled =
+          subscriptionsRes &&
+          subscriptionsRes?.data.results.value.enabled &&
+          process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
+        const isBookingEnabled =
+          bookingRes &&
+          bookingRes?.data.results.value.enabled &&
+          process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+
+        const updatedLinks = getLinks(
+          isBookingEnabled,
+          areSubscriptionsEnabled,
+        );
+
+        setLinks(updatedLinks);
+        setFilteredLinks(
+          filterLinks(updatedLinks, selectedSwitcherOption, user?.roles || []),
+        );
+      } catch (err) {
+        console.log('error');
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -210,7 +243,6 @@ const MemberMenu = () => {
     <nav className="flex flex-col gap-4 ">
       <Profile isDemo={false} />
       {isWalletEnabled && <Wallet />}
-
       {navOptions.length > 1 && (
         <div className="mb-8 mt-4">
           <Switcher
@@ -220,18 +252,15 @@ const MemberMenu = () => {
           />
         </div>
       )}
-
       {filteredLinks &&
         filteredLinks.map((link: NavigationLink) => (
           <NavLink key={link.url} href={link.url} target={link.target}>
             {link.label}
           </NavLink>
         ))}
-
       <NavLink isButton={true} onClick={logout}>
         {__('navigation_sign_out')}
       </NavLink>
-
       <ReportABug />
     </nav>
   );

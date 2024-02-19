@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 
 import React, { useEffect } from 'react';
 
@@ -10,28 +11,33 @@ import Reviews from '../../components/Reviews';
 import UpcomingEventsIntro from '../../components/UpcomingEventsIntro';
 import Heading from '../../components/ui/Heading';
 
+import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
-import { BookingRulesConfig } from '../../types';
+import { BookingRulesConfig, GeneralConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
 interface Props {
-  settings: any;
-  bookingRules: BookingRulesConfig;
+  bookingSettings: any;
+  bookingRules: BookingRulesConfig | null;
+  generalConfig: GeneralConfig | null;
 }
 
-const StayPage = ({ settings, bookingRules }: Props) => {
+const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
   const { APP_NAME } = useConfig();
   const config = useConfig();
   const discounts = {
-    daily: settings.discountsDaily,
-    weekly: settings.discountsWeekly,
-    monthly: settings.discountsMonthly,
+    daily: bookingSettings?.discountsDaily,
+    weekly: bookingSettings?.discountsWeekly,
+    monthly: bookingSettings?.discountsMonthly,
   };
-  const { PLATFORM_NAME, TEAM_EMAIL } = config || {};
+  const defaultConfig = useConfig();
+  const PLATFORM_NAME =
+    generalConfig?.platformName || defaultConfig.platformName;
+  const { TEAM_EMAIL } = config || {};
   const { platform }: any = usePlatform();
   const { user } = useAuth();
   const isTeamMember = user?.roles.some((roles) =>
@@ -62,6 +68,7 @@ const StayPage = ({ settings, bookingRules }: Props) => {
   }, [isTeamMember]);
 
   const listings = platform.listing.find(listingFilter);
+
   const hosts = platform.user.find(hostsFilter);
   const guestListings = listings?.filter((listing: any) => {
     return (
@@ -69,6 +76,10 @@ const StayPage = ({ settings, bookingRules }: Props) => {
       listing.get('availableFor') !== 'volunteer'
     );
   });
+
+  if (!bookingSettings) {
+    return <PageNotFound error="Booking is disabled" />;
+  }
 
   return (
     <>
@@ -82,20 +93,29 @@ const StayPage = ({ settings, bookingRules }: Props) => {
       <section className="max-w-6xl mx-auto mb-16">
         <div className="mb-6 max-w-prose">
           <Heading level={1} className="text-4xl pb-2 mt-8">
-          {__('stay_title', APP_NAME)} {PLATFORM_NAME}
+            {__('stay_title', APP_NAME)} {PLATFORM_NAME}
           </Heading>
           <p>{__('stay_description', APP_NAME)}</p>
         </div>
       </section>
 
       {/* TODO: make gallery configurable for each village */}
-      {APP_NAME.toLowerCase() !== 'tdf' && (
+      {APP_NAME?.toLowerCase() === 'tdf' && (
         <section className="max-w-6xl mx-auto mb-16">
           <PhotoGallery />
         </section>
       )}
 
-      <BookingRules rules={bookingRules.plans} />
+      {bookingRules?.enabled && <BookingRules rules={bookingRules?.elements} />}
+
+      <section className="max-w-6xl mx-auto mb-16">
+        <Link
+          href="/bookings/create/dates"
+          className="btn btn-primary text-xl px-8 py-3"
+        >
+          {__('buttons_apply_to_stay')}
+        </Link>
+      </section>
 
       <section className="max-w-6xl mx-auto mb-16">
         <Hosts hosts={hosts} email={TEAM_EMAIL} />
@@ -139,27 +159,36 @@ const StayPage = ({ settings, bookingRules }: Props) => {
 
 StayPage.getInitialProps = async () => {
   try {
-    const [settingsResponse, bookingRulesResponse] = await Promise.all([
-      api.get('/config/booking').catch((err) => {
-        console.error('Error fetching booking config:', err);
-        return null;
-      }),
-      api.get('/config/booking-rules').catch((err) => {
-        console.error('Error fetching booking rules:', err);
-        return null;
-      }),
-    ]);
+    const [bookingResponse, bookingRulesResponse, generalRes] =
+      await Promise.all([
+        api.get('/config/booking').catch((err) => {
+          console.error('Error fetching booking config:', err);
+          return null;
+        }),
+        api.get('/config/booking-rules').catch((err) => {
+          console.error('Error fetching booking rules:', err);
+          return null;
+        }),
+        api.get('/config/general').catch(() => {
+          return null;
+        }),
+      ]);
+    const generalConfig = generalRes?.data?.results?.value;
 
-    const settings = settingsResponse?.data?.results?.value;
+    const bookingSettings = bookingResponse?.data?.results?.value;
     const bookingRules = bookingRulesResponse?.data?.results?.value;
 
     return {
-      settings,
+      bookingSettings,
       bookingRules,
+      generalConfig,
     };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
+      bookingSettings: null,
+      bookingRules: null,
+      generalConfig: null,
     };
   }
 };

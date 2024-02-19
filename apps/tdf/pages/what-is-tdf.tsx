@@ -378,7 +378,7 @@ const HomePage = () => {
               With options to build around 12 town homes (on 4.000m2 urban
               lands) as well as a tiny house park, we have many opportunities
               for expansion. See our{' '}
-              <Link href="/roadmap" className="text-primary">
+              <Link href="/roadmap" className="text-accent">
                 roadmap
               </Link>
               .
@@ -404,7 +404,7 @@ const HomePage = () => {
           <p className="w-6xl md:mb-4 text-xl sm:text-2xl md:text-3xl text-center mt-20">
             <Link
               href="mailto:play@traditionaldreamfactory.com?subject=investment"
-              className="text-primary"
+              className="text-accent"
             >
               Inquire about investment opportunities
             </Link>
