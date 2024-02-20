@@ -166,9 +166,9 @@ const Login = () => {
               {__('log_in_redirect_message')}{' '}
               <strong>
                 {typeof back === 'string' &&
-                  back.substring(back[0] === '/' ? 1 : 0)}
-              </strong>{' '}
-              {__('log_in_redirect_message_page')}
+                  back.substring(back[0] === '/' ? 1 : 0).substring(0, 40)}
+              </strong>
+              {back.length > 40 && '...'} {__('log_in_redirect_message_page')}
             </p>
           )}
 
@@ -226,7 +226,7 @@ const Login = () => {
           </Card>
           <div className="text-center text-sm">
             {__('login_no_account')}{' '}
-            <Link className="text-accent underline font-bold" href="/signup">
+            <Link className="text-accent underline font-bold" href={`/signup${back ? `?back=${encodeURIComponent(back as string)}` : ''}`}>
               {__('signup_form_create')}
             </Link>
             <Link
