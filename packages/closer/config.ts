@@ -259,7 +259,12 @@ export const configDescription = [
       },
       timeZone: {
         type: 'select',
-        enum: ['Europe/Lisbon', 'Europe/London'],
+        enum: [
+          'UTC', 'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
+          'America/Anchorage', 'America/Honolulu', 'Asia/Kolkata', 'Asia/Shanghai', 'Asia/Tokyo',
+          'Asia/Dubai', 'Asia/Bangkok', 'Europe/London', 'Europe/Berlin', 'Europe/Paris', 'Europe/Moscow',
+          'Australia/Sydney', 'Australia/Perth', 'Africa/Cairo', 'Africa/Johannesburg'
+        ],
         default: 'Europe/Lisbon'
       },
       appName: {

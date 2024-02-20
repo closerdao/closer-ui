@@ -145,7 +145,7 @@ const ConfigPage = () => {
   };
 
   const handleChange = (
-    event: ChangeEvent<HTMLInputElement>,
+    event: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
     key = '',
     index: null | number = null,
   ) => {
@@ -297,6 +297,8 @@ const ConfigPage = () => {
                           )?.value as Record<string, any>;
                           const inputType = description?.[key]?.type;
                           const isArray = Array.isArray(inputType);
+                          const isSelect = inputType === 'select';
+                          const selectOptions = description?.[key]?.enum;
 
                           return (
                             <>
@@ -344,7 +346,7 @@ const ConfigPage = () => {
                                           />
                                         </div>
                                       )}
-                                      {!isArray && (
+                                      {!isArray && !isSelect && (
                                         <input
                                           className="bg-neutral rounded-md p-1"
                                           name={key}
@@ -352,6 +354,27 @@ const ConfigPage = () => {
                                           type="text"
                                           value={String(currentValue)}
                                         />
+                                      )}
+                                      {isSelect && (
+                                        <select
+                                          className="px-2 py-1"
+                                          value={String(currentValue)}
+                                          onChange={handleChange}
+                                          name={key}
+                                        >
+                                          {selectOptions.map(
+                                            (option: string) => {
+                                              return (
+                                                <option
+                                                  value={option}
+                                                  key={option}
+                                                >
+                                                  {option}
+                                                </option>
+                                              );
+                                            },
+                                          )}
+                                        </select>
                                       )}
                                     </div>
                                   )}
