@@ -43,7 +43,17 @@ const AccomodationSelector = ({
 }: Props) => {
   const { enabledConfigs } = useConfig();
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const isTeamMember = user?.roles.some((roles) =>
+    ['space-host', 'steward', 'land-manager', 'team'].includes(roles),
+  );
+  const filteredListings = listings.filter((listing: Listing) => {
+    return (
+      (listing?.availableFor?.includes('guests') ||
+        (isTeamMember && listing?.availableFor?.includes('team'))) ??
+      false
+    );
+  });
 
   const bookingType = getBookingType(eventId, volunteerId);
 
@@ -125,7 +135,7 @@ const AccomodationSelector = ({
           backToDates={backToDates}
         />
 
-        {listings.length === 0 && (
+        {filteredListings.length === 0 && (
           <div className="mt-16">
             <h2 className="text-2xl font-bold">
               {__('bookings_accomodation_no_results_title')}
@@ -136,7 +146,7 @@ const AccomodationSelector = ({
           </div>
         )}
         <div className="flex flex-col gap-4 mt-16 md:grid md:grid-cols-2 md:items-start">
-          {listings.map((listing) => (
+          {filteredListings.map((listing) => (
             <ListingCard
               key={listing._id}
               listing={listing}
