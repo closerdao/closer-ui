@@ -19,6 +19,7 @@ const ResourcesPage = ({ generalConfig }: Props) => {
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
   const { APP_NAME, FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
+  const appName = APP_NAME.toLowerCase();
   const { faqs, error } = useFaqs(FAQS_GOOGLE_SHEET_ID);
 
   return (
@@ -36,10 +37,10 @@ const ResourcesPage = ({ generalConfig }: Props) => {
               level={1}
               className="w-[300px] sm:w-[350px] font-extrabold mb-6 uppercase text-center text-2xl sm:text-5xl"
             >
-              {__('resources_heading', APP_NAME)}
+              {__('resources_heading', appName)}
             </Heading>
             <p className="mb-4 max-w-[630px]">
-              {__('resources_subheading', APP_NAME)}
+              {__('resources_subheading', appName)}
             </p>
           </div>
         </div>
@@ -51,32 +52,35 @@ const ResourcesPage = ({ generalConfig }: Props) => {
                 level={2}
                 className="mb-4 uppercase w-full font-extrabold text-5xl max-w-[600px]"
               >
-                {__('resources_faq_heading', APP_NAME)}
+                {__('resources_faq_heading', appName)}
               </Heading>
               <p className="mb-4 w-full">
-                {__('resources_faq_subheading', APP_NAME)}
+                {__('resources_faq_subheading', appName)}
               </p>
             </div>
             <Faqs faqs={faqs} error={error} />
           </div>
         </section>
 
-        <section className="mb-12 max-w-6xl mx-auto pb-20">
-          <div className="text-center  flex flex-wrap justify-center mb-20">
-            <Heading
-              level={2}
-              className="mb-4 uppercase w-full font-extrabold text-5xl max-w-[700px] bg-[url(/images/resources/tea-cup.png)] bg-no-repeat pt-[250px] bg-top"
-            >
-              {__('resources_resources_heading', APP_NAME)}
-            </Heading>
-            <p className="mb-4 w-full">
-              {__('resources_resources_subheading', APP_NAME)}
-            </p>
-          </div>
-          <Resources />
-        </section>
+        {appName === 'tdf' && (
+          <section className="mb-12 max-w-6xl mx-auto pb-20">
+            <div className="text-center  flex flex-wrap justify-center mb-20">
+              <Heading
+                level={2}
+                className="mb-4 uppercase w-full font-extrabold text-5xl max-w-[700px] bg-[url(/images/resources/tea-cup.png)] bg-no-repeat pt-[250px] bg-top"
+              >
+                {__('resources_resources_heading', appName)}
+              </Heading>
+              <p className="mb-4 w-full">
+                {__('resources_resources_subheading', appName)}
+              </p>
+            </div>
 
-        {/* <Ama id="ama" /> */}
+            <Resources />
+          </section>
+        )}
+
+
       </main>
     </div>
   );

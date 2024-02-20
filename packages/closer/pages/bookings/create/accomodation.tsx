@@ -127,7 +127,7 @@ const AccomodationSelector = ({
           backToDates={backToDates}
         />
 
-        {listings.length === 0 && (
+        {listings?.length === 0 && (
           <div className="mt-16">
             <h2 className="text-2xl font-bold">
               {__('bookings_accomodation_no_results_title')}
@@ -138,7 +138,7 @@ const AccomodationSelector = ({
           </div>
         )}
         <div className="flex flex-col gap-4 mt-16 md:grid md:grid-cols-2 md:items-start">
-          {listings.map((listing) => (
+          {listings?.map((listing) => (
             <ListingCard
               key={listing._id}
               listing={listing}
