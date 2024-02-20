@@ -48,7 +48,6 @@ const BookingsRequests = () => {
         <Heading level={1}>{__('booking_requests_title')}</Heading>
 
         <Bookings
-          isPagination={false}
           filter={filter}
           setPage={setPage}
           page={page}

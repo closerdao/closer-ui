@@ -66,7 +66,7 @@ const BookingRequestButtons = ({
               </Button>
             </Link>
           )}
-          {user && isBookingCancelable && (
+          {user && isBookingCancelable && user._id === createdBy && (
             <Link passHref href={`/bookings/${_id}/cancel`}>
               <Button type="secondary" className="  uppercase">
                 ⭕ {__('booking_cancel_button')}
@@ -74,7 +74,7 @@ const BookingRequestButtons = ({
             </Link>
           )}
 
-          {status === 'paid' && (
+          {user && status === 'paid' && user._id === createdBy && (
             <Link passHref href={`/bookings/${_id}/cancel`}>
               <Button type="secondary">⭕ {__('booking_cancel_button')}</Button>
             </Link>

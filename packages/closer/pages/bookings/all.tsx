@@ -53,7 +53,6 @@ const AllBookingsRequestsPage = () => {
           filter={filter}
           setPage={setPage}
           page={page}
-          isPagination={true}
         />
       </div>
     </>

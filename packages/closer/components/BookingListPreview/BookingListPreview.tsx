@@ -17,6 +17,7 @@ interface Props {
   eventName: string;
   volunteerName: string;
   link: string | null;
+  isAdmin?: boolean;
 }
 
 const BookingListPreview = ({
@@ -26,6 +27,7 @@ const BookingListPreview = ({
   eventName,
   volunteerName,
   link,
+  isAdmin,
 }: Props) => {
   const {
     _id,
@@ -45,11 +47,15 @@ const BookingListPreview = ({
     eventFiat,
     doesNeedPickup,
     doesNeedSeparateBeds,
+    duration,
   } = bookingMapItem.toJS();
   const router = useRouter();
 
   const { platform }: any = usePlatform();
+  const flagPickup =
+    doesNeedPickup && start > new Date(Date.now() - 12 * 60 * 60 * 1000);
   const startFormatted = dayjs(start).format('DD/MM/YYYY');
+
   const endFormatted = dayjs(end).format('DD/MM/YYYY');
   const createdFormatted = dayjs(created).format('DD/MM/YYYY - HH:mm:A');
   const isNotPaid = status !== 'paid';
@@ -66,6 +72,12 @@ const BookingListPreview = ({
   return (
     <div className="gap-2 sm:max-w-[330px] min-w-[220px] max-w-full w-full sm:w-1/3 bg-white rounded-lg p-4 shadow-xl flex-1  flex flex-col ">
       <div>
+        {flagPickup && (
+          <div className=" bg-failure rounded-md p-1 text-white text-center justify-center">
+            Pickup Needed
+          </div>
+        )}
+
         <p className="card-feature text-center">{createdFormatted}</p>
 
         <Link
@@ -77,11 +89,13 @@ const BookingListPreview = ({
         <p
           className={` mt-2 capitalize opacity-100 text-base p-1 text-white text-center rounded-md  bg-${STATUS_COLOR[status]}`}
         >
-          {status}
+          {status === 'confirmed'
+            ? __('booking_status_confirmed_title')
+            : status}
         </p>
       </div>
 
-      <UserInfoButton userInfo={userInfo} createdBy={createdBy} />
+      <UserInfoButton size="md" userInfo={userInfo} createdBy={createdBy} />
 
       {link ? (
         <Link
@@ -100,34 +114,45 @@ const BookingListPreview = ({
         </p>
       )}
 
-      <div>
-        <p className="card-feature">{__('booking_card_guests')}</p>
-        <p>{adults}</p>
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <p className="card-feature">{__('booking_card_guests')}</p>
+          <p>{adults}</p>
+        </div>
+        <div className="flex-1">
+          <p className="card-feature">{__('booking_card_nights')}</p>
+          <p>{duration}</p>
+        </div>
       </div>
 
-      {!router.pathname.includes('requests') && (
+      {!router.pathname.includes('requests') && !isAdmin && (
         <div>
           <p className="card-feature">{__('booking_card_message')}</p>
           <p>{getStatusText(status, updated)}</p>
         </div>
       )}
 
-      <div>
-        <p className="card-feature">{__('booking_card_checkin')}</p>
-        <p>{startFormatted}</p>
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <p className="card-feature">{__('booking_card_checkin')}</p>
+          <p>{startFormatted}</p>
+        </div>
+        <div className="flex-1">
+          <p className="card-feature">{__('booking_card_checkout')}</p>
+          <p>{endFormatted}</p>
+        </div>
       </div>
-      <div>
-        <p className="card-feature">{__('booking_card_checkout')}</p>
-        <p>{endFormatted}</p>
-      </div>
-      <div>
-        <p className="card-feature">{__('booking_card_nights')}</p>
-        <p>{dayjs(end).diff(dayjs(start), 'day')}</p>
-      </div>
+
       <div>
         <p className="card-feature">{__('booking_card_type')}</p>
         <p>{listingName}</p>
       </div>
+
+      <div>
+        <p className="card-feature">{__('booking_card_diet')}</p>
+        <p>{userInfo?.diet || '-'}</p>
+      </div>
+
       <div>
         <p className="card-feature">
           {__('booking_card_payment_accomodation')}
