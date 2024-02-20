@@ -116,6 +116,7 @@ const ListingPage: NextPage<Props> = ({
   const [apiError, setApiError] = useState(null);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [isListingAvailable, setIsListingAvailable] = useState(true);
+  const [isGuestLimit, setIsGuestLimit] = useState(false);
 
   const [currency, setCurrency] = useState<CloserCurrencies>(
     savedUseTokens === 'true' ? CURRENCIES[1] : DEFAULT_CURRENCY,
@@ -160,6 +161,8 @@ const ListingPage: NextPage<Props> = ({
         pets,
         useTokens: isTokenPaymentSelected,
       });
+
+      setIsGuestLimit(availability[0].reason === 'Guest limit');
 
       return { results, availability };
     } catch (error) {
@@ -461,7 +464,7 @@ const ListingPage: NextPage<Props> = ({
                         </Button>
                         {showGuestsDropdown && (
                           <div className="">
-                            <Card className="border border-gray-100 sm:w-auto z-10 sm:left-auto bottom-[175px] sm:bottom-auto sm:top-auto bg-white shadow-md rounded-md p-3">
+                            <Card className="absolute border border-gray-100 sm:w-auto z-10 sm:left-auto bottom-[175px] sm:bottom-auto sm:top-auto bg-white shadow-md rounded-md p-3">
                               <BookingGuests
                                 shouldHideTitle={true}
                                 adults={adults}
@@ -476,11 +479,12 @@ const ListingPage: NextPage<Props> = ({
                                 setDoesNeedSeparateBeds={
                                   setDoesNeedSeparateBeds
                                 }
+                                isPrivate={listing?.private}
                               />
-                              <div className="my-0 flex flex-row justify-between flex-wrap">
+                              <div className="my-0 flex flex-row justify-between items-start ">
                                 <label
                                   htmlFor="separateBeds"
-                                  className="text-sm"
+                                  className="text-sm w-3/4"
                                 >
                                   {__('bookings_pickup')}
                                   <span className="w-full text-xs ml-2">
@@ -579,7 +583,9 @@ const ListingPage: NextPage<Props> = ({
                       </div>
                       {!isListingAvailable && (
                         <div className="block sm:hidden text-xs">
-                          {__('listing_not_available')}
+                          {isGuestLimit
+                            ? __('listing_not_available_guest_limit')
+                            : __('listing_not_available')}
                         </div>
                       )}
                     </div>
@@ -655,7 +661,11 @@ const ListingPage: NextPage<Props> = ({
                           </div>
                         </>
                       ) : (
-                        <Information>{__('listing_not_available')}</Information>
+                        <Information>
+                          {isGuestLimit
+                            ? __('listing_not_available_guest_limit')
+                            : __('listing_not_available')}
+                        </Information>
                       )}
                     </div>
                   </Card>

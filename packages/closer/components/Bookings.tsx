@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { CSVLink } from 'react-csv';
+
 import dayjs from 'dayjs';
 
 import { BOOKINGS_PER_PAGE, MAX_BOOKINGS_TO_FETCH } from '../constants';
@@ -13,12 +14,15 @@ interface Props {
   filter: any;
   page: number;
   setPage: Dispatch<SetStateAction<number>>;
-  isPagination?: boolean;
 }
-const Bookings = ({ filter, page, setPage, isPagination }: Props) => {
+
+const MAX_USERS_TO_FETCH = 2000;
+
+const Bookings = ({ filter, page, setPage }: Props) => {
   const { platform }: any = usePlatform();
 
   const bookings = platform.booking.find(filter);
+  const allUsers = platform.user.find({ limit: MAX_USERS_TO_FETCH });
 
   const eventsFilter = bookings && {
     where: {
@@ -41,13 +45,7 @@ const Bookings = ({ filter, page, setPage, isPagination }: Props) => {
       },
     },
   };
-  const userFilter = bookings && {
-    where: {
-      _id: {
-        $in: bookings.map((booking: any) => booking.get('createdBy')),
-      },
-    },
-  };
+
   const error = bookings && bookings.get('error');
 
   const allBookings = platform.booking.find({
@@ -70,7 +68,7 @@ const Bookings = ({ filter, page, setPage, isPagination }: Props) => {
           platform.event.get(eventsFilter),
           platform.volunteer.get(volunteerFilter),
           platform.listing.get(listingFilter),
-          platform.user.get(userFilter),
+          platform.user.get({ limit: MAX_USERS_TO_FETCH }),
         ]);
       }
     } catch (err) {
@@ -91,19 +89,6 @@ const Bookings = ({ filter, page, setPage, isPagination }: Props) => {
 
   return (
     <div>
-      {isPagination && (
-        <div className="my-10">
-          <Pagination
-            loadPage={(page: number) => {
-              setPage(page);
-            }}
-            page={page}
-            limit={BOOKINGS_PER_PAGE}
-            total={allBookings && allBookings.size}
-          />
-        </div>
-      )}
-
       <section className=" min-h-[100vh]">
         {loading ? (
           <div className="my-16 flex items-center gap-2">
@@ -118,44 +103,53 @@ const Bookings = ({ filter, page, setPage, isPagination }: Props) => {
                   ? __('booking_requests_result')
                   : __('booking_requests_results')}
               </Heading>
-              { bookings  && <CSVLink
-                className="underline  text-accent"
-                data={ bookings.map((booking: any) => {
-                  const user = platform.user.findOne(booking.get('createdBy'));
-                  const listing = platform.listing.findOne(
-                    booking.get('listing'),
-                  );
-                  const bookingEvent = platform.event.findOne(
-                    booking.get('eventId'),
-                  );
 
-                  return ({
-                    id: booking.get('_id'),
-                    name: user?.get('screenname'),
-                    listing: listing?.get('name'),
-                    event: bookingEvent?.get('name'),
-                    guests: booking.get('adults'),
-                    volunteer: booking.get('volunteerId'),
-                    arrival: booking.get('start'),
-                    pickup: booking.get('doesNeedPickup'),
-                    total: booking.getIn(['total', 'val']),
-                  });
-                }).toJS() }
-                headers={[
-                  { label: 'ID', key: 'id' },
-                  { label: 'Name', key: 'name' },
-                  { label: 'Listing', key: 'listing' },
-                  { label: 'Event', key: 'event' },
-                  { label: 'Guests', key: 'guests' },
-                  { label: 'Volunteer', key: 'volunteer' },
-                  { label: 'Arrival', key: 'arrival' },
-                  { label: 'Pickup', key: 'pickup' },
-                  { label: 'Total', key: 'total' },
-                ]}
-                  filename={`bookings-${dayjs().format('YYYY-MM-DD.HH:mm')}.csv`}
-              >
-                {__('generic_export_csv')}
-              </CSVLink> }
+              {bookings && (
+                <CSVLink
+                  className="underline  text-accent"
+                  data={bookings
+                    .map((booking: any) => {
+                      const user = platform.user.findOne(
+                        booking.get('createdBy'),
+                      );
+                      const listing = platform.listing.findOne(
+                        booking.get('listing'),
+                      );
+                      const bookingEvent = platform.event.findOne(
+                        booking.get('eventId'),
+                      );
+
+                      return {
+                        id: booking.get('_id'),
+                        name: user?.get('screenname'),
+                        listing: listing?.get('name'),
+                        event: bookingEvent?.get('name'),
+                        guests: booking.get('adults'),
+                        volunteer: booking.get('volunteerId'),
+                        arrival: booking.get('start'),
+                        pickup: booking.get('doesNeedPickup'),
+                        total: booking.getIn(['total', 'val']),
+                      };
+                    })
+                    .toJS()}
+                  headers={[
+                    { label: 'ID', key: 'id' },
+                    { label: 'Name', key: 'name' },
+                    { label: 'Listing', key: 'listing' },
+                    { label: 'Event', key: 'event' },
+                    { label: 'Guests', key: 'guests' },
+                    { label: 'Volunteer', key: 'volunteer' },
+                    { label: 'Arrival', key: 'arrival' },
+                    { label: 'Pickup', key: 'pickup' },
+                    { label: 'Total', key: 'total' },
+                  ]}
+                  filename={`bookings-${dayjs().format(
+                    'YYYY-MM-DD.HH:mm',
+                  )}.csv`}
+                >
+                  {__('generic_export_csv')}
+                </CSVLink>
+              )}
             </div>
             <div className="bookings-list mt-8 flex flex-wrap gap-4">
               {!bookings || bookings.count() === 0 ? (
@@ -168,7 +162,15 @@ const Bookings = ({ filter, page, setPage, isPagination }: Props) => {
                   const listingName = listing
                     ? listing.get('name')
                     : __('no_listing_type');
-                  const user = platform.user.findOne(booking.get('createdBy'));
+
+                  const user =
+                    allUsers &&
+                    allUsers
+                      .toJS()
+                      .find(
+                        (user: any) => user._id === booking.get('createdBy'),
+                      );
+
                   const currentEvent = platform.event.findOne(
                     booking.get('eventId'),
                   );
@@ -178,22 +180,26 @@ const Bookings = ({ filter, page, setPage, isPagination }: Props) => {
                   );
                   let link;
                   if (currentEvent) {
-                    link = currentEvent && `/events/${currentEvent.slug}`;
+                    link =
+                      currentEvent && `/events/${currentEvent.get('slug')}`;
                   }
                   if (currentVolunteer) {
                     link =
-                      currentVolunteer && `/volunteer/${currentVolunteer.slug}`;
+                      currentVolunteer &&
+                      `/volunteer/${currentVolunteer.get('slug')}`;
                   }
 
                   return (
                     <BookingListPreview
+                      isAdmin={true}
                       key={booking.get('_id')}
                       booking={platform.booking.findOne(booking.get('_id'))}
                       listingName={listingName}
                       userInfo={
                         user && {
-                          name: user.get('screenname'),
-                          photo: user.get('photo'),
+                          name: user.screenname,
+                          photo: user.photo,
+                          diet: user.preferences?.diet,
                         }
                       }
                       eventName={currentEvent && currentEvent.get('name')}
@@ -209,18 +215,17 @@ const Bookings = ({ filter, page, setPage, isPagination }: Props) => {
           </div>
         )}
       </section>
-      {isPagination && (
-        <div className="my-10">
-          <Pagination
-            loadPage={(page: number) => {
-              setPage(page);
-            }}
-            page={page}
-            limit={BOOKINGS_PER_PAGE}
-            total={allBookings && allBookings.size}
-          />
-        </div>
-      )}
+
+      <div className="my-10">
+        <Pagination
+          loadPage={(page: number) => {
+            setPage(page);
+          }}
+          page={page}
+          limit={BOOKINGS_PER_PAGE}
+          total={allBookings && allBookings.size}
+        />
+      </div>
     </div>
   );
 };

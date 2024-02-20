@@ -10,23 +10,24 @@ import { cdn } from '../../utils/api';
 interface Props {
   userInfo: { name: string; photo: string } | null;
   createdBy: string;
+  size?: 'sm' | 'md' | 'lg';
 }
 
-const UserInfoButton = ({ userInfo, createdBy }: Props) => {
+const UserInfoButton = ({ userInfo, createdBy, size }: Props) => {
   return (
     <>
       <Link passHref href={`/members/${createdBy}`}>
-        <div className="bg-neutral rounded-md py-1.5 text-center flex items-center gap-2 hover:bg-accent hover:text-white justify-center">
+        <div className="p-2 bg-neutral rounded-md py-1.5 text-center flex items-center gap-2 hover:bg-accent hover:text-white justify-center">
           {userInfo?.photo ? (
             <Image
               src={`${cdn}${userInfo.photo}-profile-lg.jpg`}
               alt={userInfo?.name || ''}
-              width={30}
-              height={30}
+              width={size === 'md' ? 80 : 30}
+              height={size === 'md' ? 80 : 30}
               className="rounded-full"
             />
           ) : (
-            <FaUser className="text-success w-[3opx] h-[30px] " />
+            <FaUser size={size === 'md' ? 80 : 30} className=" text-success " />
           )}
           {userInfo?.name || ''}
         </div>

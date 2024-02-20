@@ -257,6 +257,11 @@ export const configDescription = [
         type: 'boolean',
         default: true,
       },
+      timeZone: {
+        type: 'select',
+        enum: ['Europe/Lisbon', 'Europe/London'],
+        default: 'Europe/Lisbon'
+      },
       appName: {
         type: 'text',
         default: 'tdf',

@@ -58,7 +58,6 @@ const AllBookingsRequestsPage = ({ bookingConfig }: Props) => {
           filter={filter}
           setPage={setPage}
           page={page}
-          isPagination={true}
         />
       </div>
     </>
