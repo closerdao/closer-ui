@@ -1,6 +1,7 @@
 [
   {
     "name": "Magical Cave",
+    "availableFor": "guests",
     "category": "any",
     "photos": ["62615d64d3c9ec4a501009b2", "62615de5d3c9ec4a501009b3"],
     "slug": "magical-cave",
@@ -29,6 +30,7 @@
   },
   {
     "name": "Shared Glamping",
+    "availableFor": "guests",
     "category": "any",
     "photos": ["637cff4dd9e19f150acf011f"],
     "slug": "spacious-chalet",
