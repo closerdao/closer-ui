@@ -116,7 +116,9 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
           href="/bookings/create/dates"
           className="btn btn-primary text-xl px-8 py-3"
         >
-          {__('buttons_apply_to_stay')}
+          {user?.roles.includes('member') ? 
+            __('buttons_book_now') :
+            __('buttons_apply_to_stay') }
         </Link>
       </section>
 
