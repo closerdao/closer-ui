@@ -34,7 +34,7 @@ interface Props {
 
 const SupportUsPage = ({ fundraisingConfig }: Props) => {
   const isFundraiserEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US !== 'true' &&
+    process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true' &&
     fundraisingConfig?.enabled;
 
   const { platform }: any = usePlatform();
