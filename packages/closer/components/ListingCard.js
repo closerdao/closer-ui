@@ -42,8 +42,7 @@ const ListingCard = ({
 
   const handleBooking = () => {
     if (!isAuthenticated) {
-      router.push(`/login?back=${router.asPath}`);
-      // TODO fix back link
+      router.push(`/login?back=${encodeURIComponent(router.asPath)}`);
     }
     bookListing(listing._id);
   };

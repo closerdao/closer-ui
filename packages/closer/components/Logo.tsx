@@ -6,9 +6,11 @@ import { useConfig } from '../hooks/useConfig';
 
 const Logo: FC = () => {
   const config = useConfig();
-  const { LOGO_HEADER, PLATFORM_NAME } = config || {};
+  const { LOGO_HEADER, PLATFORM_NAME } = config;
 
-  return (
+  console.log('config=', config);
+
+  return PLATFORM_NAME !== '[object Object]' ? (
     <Link href="/" className="block">
       {LOGO_HEADER ? (
         <img src={LOGO_HEADER} alt={PLATFORM_NAME} className="h-12" />
@@ -18,6 +20,8 @@ const Logo: FC = () => {
         </div>
       )}
     </Link>
+  ) : (
+    <div></div>
   );
 };
 

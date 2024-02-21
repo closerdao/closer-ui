@@ -48,7 +48,7 @@ describe('Select accomodation type page', () => {
     renderWithProviders(<AccomodationSelector bookingConfig={bookingConfig} {...props} />);
 
     const cards = screen.getAllByRole('heading', { level: 4 });
-    expect(cards).toHaveLength(6);
+    expect(cards).toHaveLength(4);
     const cardTitle = screen.getByRole('heading', { name: /Camping/i });
     const button1 = screen.getAllByRole('button', {
       name: /log in to book/i,

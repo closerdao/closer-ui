@@ -50,7 +50,7 @@ const EventPage = ({
   listings,
   settings,
 }: Props) => {
-  console.log('event=',event);
+  console.log('event=', event);
   const { platform }: any = usePlatform();
   const { user, isAuthenticated } = useAuth();
 
@@ -401,7 +401,7 @@ const EventPage = ({
                   </div>
                   <div className="h-auto fixed z-10 bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px]">
                     {end && !end.isBefore(dayjs()) && (
-                      <Card className="bg-white border border-gray-100">
+                      <Card className="bg-white border border-gray-100 gap-1 sm:gap-4">
                         {event.paid &&
                           event.ticketOptions.map((ticketOption: any) => {
                             const availableTickets =
@@ -423,37 +423,37 @@ const EventPage = ({
                             return (
                               <div
                                 key={ticketOption.name}
-                                className="hidden sm:flex flex-col gap-1"
+                                className="flex flex-col gap-1"
                               >
-                                <div className="flex flex-col bg-accent-light rounded-md p-2 items-center ">
-                                  <p className="text-lg text-center">
+                                <div className="gap-2 sm:gap-0 flex-row flex sm:flex-col bg-accent-light rounded-md px-2 p-0 sm:p-2 items-center ">
+                                  <p className="text-md text-center">
                                     {ticketOption.name}
                                   </p>
                                   <p className="text-md font-bold">
                                     {priceFormat(ticketOption.price)}
                                   </p>
                                   <p>
-                                    {areTicketsSoldOut && (
-                                      <span className="text-xs text-error">
-                                        {__('event_tickets_sold')}
-                                      </span>
-                                    )}
-
-                                    {areTicketsAvailable && (
-                                      <>
-                                        <span className="text-xs text-success">
-                                          {__('event_tickets_available')}{' '}
-                                          {getDaysTo(end)}{' '}
-                                          {__('event_tickets_available_days')}
+                                    <div className="hidden sm:flex">
+                                      {areTicketsSoldOut && (
+                                        <span className="text-xs text-error">
+                                          {__('event_tickets_sold')}
                                         </span>
-                                      </>
-                                    )}
-
-                                    {areTicketsEnding && (
-                                      <span className="text-xs text-pending">
-                                        {__('event_tickets_last')}
-                                      </span>
-                                    )}
+                                      )}
+                                      {areTicketsAvailable && (
+                                        <>
+                                          <span className="text-xs text-success">
+                                            {__('event_tickets_available')}{' '}
+                                            {getDaysTo(end)}{' '}
+                                            {__('event_tickets_available_days')}
+                                          </span>
+                                        </>
+                                      )}
+                                      {areTicketsEnding && (
+                                        <span className="text-xs text-pending">
+                                          {__('event_tickets_last')}
+                                        </span>
+                                      )}
+                                    </div>
 
                                     {/* {availableTickets === 0 &&
                                     ticket.limit !== 0 ? (
@@ -677,8 +677,6 @@ EventPage.getInitialProps = async ({
         Authorization: `Bearer ${req?.cookies?.access_token}`,
       },
     });
-
-
 
     return {
       event: event.data.results,
