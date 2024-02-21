@@ -90,7 +90,7 @@ const Signup = ({ subscriptionsConfig }: Props) => {
                       {defaultSubscriptionPlan?.description}
                     </Heading>
                     <ul className="mb-4">
-                      {defaultSubscriptionPlan?.perks.split(',').map((perk) => {
+                      {defaultSubscriptionPlan?.perks?.split(',').map((perk) => {
                         return (
                           <li
                             key={perk}
