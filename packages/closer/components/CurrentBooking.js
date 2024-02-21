@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 
+import { BOOKINGS_PER_PAGE } from '../constants';
 import { usePlatform } from '../contexts/platform';
 import { __ } from '../utils/helpers';
-import UserBookingPreview from './UserBookingPreview';
+import BookingListPreview from './BookingListPreview/BookingListPreview';
+import Pagination from './Pagination';
 import { Heading, Spinner } from './ui';
 
 const MAX_USERS_TO_FETCH = 2000;
@@ -10,6 +12,10 @@ const MAX_USERS_TO_FETCH = 2000;
 const CurrentBooking = ({ leftAfter, arriveBefore }) => {
   const { platform } = usePlatform();
 
+  const [loading, setLoading] = useState(false);
+  const [isHerePage, setIsHerePage] = useState(1);
+  const [willArrivePage, setWillArrivePage] = useState(1);
+  const [justLeftPage, setJustLeftPage] = useState(1);
   const filter = {
     where: {
       status: { $in: ['paid', 'checked-in', 'checked-out'] },
@@ -17,60 +23,80 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
       end: { $gte: leftAfter },
     },
   };
-  
-  const [loading, setLoading] = useState(false);
 
   const bookings = platform.booking.find(filter);
+  const eventsFilter = bookings && {
+    where: {
+      _id: {
+        $in: bookings.map((booking) => booking.get('eventId')),
+      },
+    },
+  };
+  const volunteerFilter = bookings && {
+    where: {
+      _id: {
+        $in: bookings.map((booking) => booking.get('volunteerId')),
+      },
+    },
+  };
+
   const listings = platform.listing.find();
   const allUsers = platform.user.find({ limit: MAX_USERS_TO_FETCH });
-
   const error = bookings && bookings.get('error');
 
-  const booked = bookings ? bookings.map(b => {
-    const adults = b.get('adults') ?? 0;
-    const children = b.get('children') ?? 0;
-    const infants = b.get('infants') ?? 0;
-    const start = Date.parse(b.get('start'));
-    const end =  Date.parse(b.get('end'));
-    const doesNeedPickup = b.get('doesNeedPickup') ?? false;
-    const status =  b.get('status') ?? 'unknown';
+  const booked = bookings
+    ? bookings.map((b) => {
+        const adults = b.get('adults') ?? 0;
+        const children = b.get('children') ?? 0;
+        const infants = b.get('infants') ?? 0;
+        const start = Date.parse(b.get('start'));
+        const end = Date.parse(b.get('end'));
+        const doesNeedPickup = b.get('doesNeedPickup') ?? false;
+        const status = b.get('status') ?? 'unknown';
+        const eventId = b.get('eventId');
+        const volunteerId = b.get('volunteerId');
 
-    const listingId = b.get('listing');
-    const listingName = listings?.find(
-      (listing) => listing.get('_id') === listingId,
-    )?.get('name') || __('no_listing_type');
+        const listingId = b.get('listing');
+        const listingName =
+          listings
+            ?.find((listing) => listing.get('_id') === listingId)
+            ?.get('name') || __('no_listing_type');
 
-    const userId = b.get('createdBy');
-    const user =
-      allUsers && allUsers.toJS().find((user) => user._id === userId);
+        const userId = b.get('createdBy');
+        const user =
+          allUsers && allUsers.toJS().find((user) => user._id === userId);
 
-    const userInfo = user && {
-      name: user.screenname,
-      photo: user.photo,
-      preferences: user.preferences,
-    };
+        const userInfo = user && {
+          name: user.screenname,
+          photo: user.photo,
+          preferences: user.preferences,
+        };
 
-    return {
-      _id: b.get('_id'),
-      start,
-      end,
-      adults,
-      children,
-      infants,
-      listingName,
-      userInfo,
-      userId,
-      doesNeedPickup,
-      status,
-    }
-  }) : [];
-  
+        return {
+          _id: b.get('_id'),
+          start,
+          end,
+          adults,
+          children,
+          infants,
+          listingName,
+          userInfo,
+          userId,
+          doesNeedPickup,
+          status,
+          eventId,
+          volunteerId,
+        };
+      })
+    : [];
 
   // FIXME: pull this out?
   const current = new Date();
-  const justLeft = booked ? booked.filter(b => (b.end < current)) : [];
-  const isHere = booked ? booked.filter(b => (b.end >= current) && (b.start <= current)) : [];
-  const willArrive = booked ? booked.filter(b => (b.start > current)) : [];
+  const justLeft = booked ? booked.filter((b) => b.end < current) : [];
+  const isHere = booked
+    ? booked.filter((b) => b.end >= current && b.start <= current)
+    : [];
+  const willArrive = booked ? booked.filter((b) => b.start > current) : [];
 
   const loadData = async () => {
     try {
@@ -80,8 +106,9 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
         platform.booking.get(filter),
         platform.listing.get(),
         platform.user.get({ limit: MAX_USERS_TO_FETCH }),
+        platform.event.get(eventsFilter),
+        platform.volunteer.get(volunteerFilter),
       ]);
-
     } catch (err) {
       console.log('Error loading data...');
       console.log(err);
@@ -113,15 +140,52 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
             {!isHere.size ? (
               <p className="mt-4">{__('no_bookings')}</p>
             ) : (
-              isHere.map((b) => {
-                return (
-                  <UserBookingPreview
-                    key={b._id}
-                    booking={b}
-                  />
-                );
-              })
+              isHere
+                .slice(
+                  (isHerePage - 1) * BOOKINGS_PER_PAGE,
+                  isHerePage * BOOKINGS_PER_PAGE,
+                )
+                .map((b) => {
+                  const currentEvent = platform.event.findOne(b.eventId);
+                  const currentVolunteer = platform.volunteer.findOne(
+                    b.volunteerId,
+                  );
+                  let link;
+                  if (currentEvent) {
+                    link =
+                      currentEvent && `/events/${currentEvent.get('slug')}`;
+                  }
+                  if (currentVolunteer) {
+                    link =
+                      currentVolunteer &&
+                      `/volunteer/${currentVolunteer.get('slug')}`;
+                  }
+                  return (
+                    <BookingListPreview
+                      key={b._id}
+                      isAdmin={true}
+                      booking={platform.booking.findOne(b._id)}
+                      listingName={b.listingName}
+                      userInfo={b.userInfo}
+                      eventName={currentEvent && currentEvent.get('name')}
+                      volunteerName={
+                        currentVolunteer && currentVolunteer.get('name')
+                      }
+                      link={link}
+                    />
+                  );
+                })
             )}
+          </div>
+          <div className="my-10">
+            <Pagination
+              loadPage={(isHerePage) => {
+                setIsHerePage(isHerePage);
+              }}
+              page={isHerePage}
+              limit={BOOKINGS_PER_PAGE}
+              total={isHere.size}
+            />
           </div>
           <Heading level={2} className="border-b pb-4 pt-8">
             {willArrive.size} {__('current_bookings_will_arrive')}
@@ -130,16 +194,53 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
             {!willArrive.size ? (
               <p className="mt-4">{__('no_bookings')}</p>
             ) : (
-              willArrive.map((b) => {
-
-                return (
-                  <UserBookingPreview
-                    key={b._id}
-                    booking={b}
-                  />
-                );
-              })
+              willArrive
+                .slice(
+                  (willArrivePage - 1) * BOOKINGS_PER_PAGE,
+                  willArrivePage * BOOKINGS_PER_PAGE,
+                )
+                .map((b) => {
+                  const currentEvent = platform.event.findOne(b.eventId);
+                  const currentVolunteer = platform.volunteer.findOne(
+                    b.volunteerId,
+                  );
+                  let link;
+                  if (currentEvent) {
+                    link =
+                      currentEvent && `/events/${currentEvent.get('slug')}`;
+                  }
+                  if (currentVolunteer) {
+                    link =
+                      currentVolunteer &&
+                      `/volunteer/${currentVolunteer.get('slug')}`;
+                  }
+                  return (
+                    <BookingListPreview
+                      key={b._id}
+                      isAdmin={true}
+                      booking={platform.booking.findOne(b._id)}
+                      listingName={b.listingName}
+                      userInfo={b.userInfo}
+                      eventName={currentEvent && currentEvent.get('name')}
+                      volunteerName={
+                        currentVolunteer && currentVolunteer.get('name')
+                      }
+                      link={link}
+                    />
+                  );
+                })
             )}
+          </div>
+
+          <div className="my-10">
+            <Pagination
+              loadPage={(willArrivePage) => {
+                setWillArrivePage(willArrivePage);
+              }}
+              page={willArrivePage}
+              limit={BOOKINGS_PER_PAGE}
+              total={willArrive.size}
+            />
           </div>
           <Heading level={2} className="border-b pb-4 pt-8">
             {justLeft.size} {__('current_bookings_just_left')}
@@ -148,16 +249,52 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
             {!justLeft.size ? (
               <p className="mt-4">{__('no_bookings')}</p>
             ) : (
-              justLeft.map((b) => {
-
-                return (
-                  <UserBookingPreview
-                    key={b._id}
-                    booking={b}
-                  />
-                );
-              })
+              justLeft
+                .slice(
+                  (justLeftPage - 1) * BOOKINGS_PER_PAGE,
+                  justLeftPage * BOOKINGS_PER_PAGE,
+                )
+                .map((b) => {
+                  const currentEvent = platform.event.findOne(b.eventId);
+                  const currentVolunteer = platform.volunteer.findOne(
+                    b.volunteerId,
+                  );
+                  let link;
+                  if (currentEvent) {
+                    link =
+                      currentEvent && `/events/${currentEvent.get('slug')}`;
+                  }
+                  if (currentVolunteer) {
+                    link =
+                      currentVolunteer &&
+                      `/volunteer/${currentVolunteer.get('slug')}`;
+                  }
+                  return (
+                    <BookingListPreview
+                      key={b._id}
+                      isAdmin={true}
+                      booking={platform.booking.findOne(b._id)}
+                      listingName={b.listingName}
+                      userInfo={b.userInfo}
+                      eventName={currentEvent && currentEvent.get('name')}
+                      volunteerName={
+                        currentVolunteer && currentVolunteer.get('name')
+                      }
+                      link={link}
+                    />
+                  );
+                })
             )}
+          </div>
+          <div className="my-10">
+            <Pagination
+              loadPage={(justLeftPage) => {
+                setJustLeftPage(justLeftPage);
+              }}
+              page={justLeftPage}
+              limit={BOOKINGS_PER_PAGE}
+              total={justLeft.size}
+            />
           </div>
         </div>
       )}

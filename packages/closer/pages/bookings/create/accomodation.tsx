@@ -6,14 +6,14 @@ import ListingCard from '../../../components/ListingCard';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
+import process from 'process';
 import { ParsedUrlQuery } from 'querystring';
 
 import PageNotFound from '../../404';
 import { blockchainConfig } from '../../../config_blockchain';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
-import { useConfig } from '../../../hooks/useConfig';
-import { BaseBookingParams, Listing } from '../../../types';
+import { BaseBookingParams, BookingConfig, Listing } from '../../../types';
 import api from '../../../utils/api';
 import { getBookingType } from '../../../utils/booking.helpers';
 import { __ } from '../../../utils/helpers';
@@ -21,6 +21,7 @@ import { __ } from '../../../utils/helpers';
 interface Props extends BaseBookingParams {
   listings: Listing[];
   error?: string;
+  bookingConfig: BookingConfig | null;
 }
 
 const AccomodationSelector = ({
@@ -40,8 +41,12 @@ const AccomodationSelector = ({
   discountCode,
   doesNeedPickup,
   doesNeedSeparateBeds,
+  bookingConfig,
 }: Props) => {
-  const { enabledConfigs } = useConfig();
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
   const isTeamMember = user?.roles.some((roles) =>
@@ -88,10 +93,7 @@ const AccomodationSelector = ({
     }
   };
 
-  if (
-    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
-    (enabledConfigs && !enabledConfigs.includes('booking'))
-  ) {
+  if (!isBookingEnabled) {
     return <PageNotFound />;
   }
   if (error) {
@@ -187,23 +189,33 @@ AccomodationSelector.getInitialProps = async ({
     const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
     const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
 
-    const {
-      data: { results },
-    } = await api.post('/bookings/availability', {
-      start,
-      end,
-      adults,
-      children: kids,
-      infants,
-      pets,
-      useTokens,
-      discountCode,
-      ...(eventId && { eventId, ticketOption }),
-      ...(volunteerId && { volunteerId }),
-    });
+    const [availabilityRes, bookingConfigRes] = await Promise.all([
+      api
+        .post('/bookings/availability', {
+          start,
+          end,
+          adults,
+          children: kids,
+          infants,
+          pets,
+          useTokens,
+          discountCode,
+          ...(eventId && { eventId, ticketOption }),
+          ...(volunteerId && { volunteerId }),
+        })
+        .catch((err) => {
+          console.error('Error fetching booking config:', err);
+          return null;
+        }),
+      api.get('/config/booking').catch(() => {
+        return null;
+      }),
+    ]);
+    const availability = availabilityRes?.data?.results;
+    const bookingConfig = bookingConfigRes?.data?.results?.value;
 
     return {
-      listings: results,
+      listings: availability,
       start,
       end,
       adults,
@@ -218,11 +230,13 @@ AccomodationSelector.getInitialProps = async ({
       discountCode,
       doesNeedPickup,
       doesNeedSeparateBeds,
+      bookingConfig,
     };
   } catch (err: any) {
     console.log(err);
     return {
       error: err.response?.data?.error || err.message,
+      bookingConfig: null,
     };
   }
 };

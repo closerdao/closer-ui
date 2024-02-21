@@ -17,7 +17,7 @@ import { Button, Card, Heading } from '../../components/ui';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
-import { Listing } from '../../types';
+import { GeneralConfig, Listing } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
@@ -27,10 +27,13 @@ const DEFAULT_TOKENS = 10;
 
 interface Props {
   listings: Listing[];
+  generalConfig: GeneralConfig | null;
 }
 
-const PublicTokenSalePage = ({ listings }: Props) => {
-  const { PLATFORM_NAME } = useConfig() || {};
+const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
+  const defaultConfig = useConfig();
+  const PLATFORM_NAME =
+    generalConfig?.platformName || defaultConfig.platformName;
   const { getTokensAvailableForPurchase } = useBuyTokens();
   const { isWalletReady } = useContext(WalletState);
   const router = useRouter();
@@ -898,15 +901,25 @@ const PublicTokenSalePage = ({ listings }: Props) => {
 
 PublicTokenSalePage.getInitialProps = async () => {
   try {
-    const {
-      data: { results: listings },
-    } = await api.get('/listing');
+    const [listingRes, generalRes] = await Promise.all([
+      api.get('/listing').catch(() => {
+        return null;
+      }),
+      api.get('/config/general').catch(() => {
+        return null;
+      }),
+    ]);
+
+    const listings = listingRes?.data.results;
+    const generalConfig = generalRes?.data?.results?.value;
     return {
-      listings: listings,
+      listings,
+      generalConfig,
     };
   } catch (err: unknown) {
     return {
       listings: [],
+      generalConfig: null,
       error: parseMessageFromError(err),
     };
   }

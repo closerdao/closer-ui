@@ -15,6 +15,7 @@ interface Props {
   doesNeedSeparateBeds?: boolean;
   setDoesNeedSeparateBeds?: (value: boolean) => void;
   shouldHideTitle?: boolean;
+  isPrivate?: boolean
 }
 
 const BookingGuests = ({
@@ -29,6 +30,7 @@ const BookingGuests = ({
   doesNeedSeparateBeds,
   setDoesNeedSeparateBeds,
   shouldHideTitle,
+  isPrivate=false
 }: Props) => {
   return (
     <div>
@@ -56,8 +58,8 @@ const BookingGuests = ({
           <p className="flex-1">{__('bookings_dates_step_guests_pets')}</p>
           <Counter value={pets} setFn={setPets} minValue={0} />
         </div>
-        {adults > 1 && (
-          <div className="my-6 flex flex-row justify-between items-center">
+        {adults > 1 && isPrivate && (
+          <div className="mt-6 flex flex-row justify-between items-start">
             <label
               htmlFor="separateBeds"
               className={`${shouldHideTitle ? 'text-sm' : 'text-md'}  `}

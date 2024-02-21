@@ -1,10 +1,10 @@
-import App, { AppContext, AppProps } from 'next/app';
+import { AppProps } from 'next/app';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Script from 'next/script';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import CookieConsent from 'react-cookie-consent';
 
 import { ErrorBoundary, Layout } from '@/components';
@@ -18,12 +18,14 @@ import { Web3ReactProvider } from '@web3-react/core';
 import {
   AuthProvider,
   ConfigProvider,
+  GeneralConfig,
   PlatformProvider,
   WalletProvider,
   __,
   api,
   blockchainConfig,
 } from 'closer';
+import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import 'closer/public/styles.css';
 import { prepareGeneralConfig } from 'closer/utils/app.helpers';
@@ -33,7 +35,6 @@ import appConfig from '../config';
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
-  enabledConfigs: string[];
 }
 
 export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
@@ -41,17 +42,22 @@ export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
   return library;
 }
 
-const MyApp = ({
-  Component,
-  pageProps,
-  configGeneral,
-  enabledConfigs,
-}: AppOwnProps) => {
-  const config = prepareGeneralConfig(configGeneral);
-  const { FACEBOOK_PIXEL_ID } = config || {};
+const MyApp = ({ Component, pageProps }: AppOwnProps) => {
+  const defaultGeneralConfig = configDescription.find(
+    (config) => config.slug === 'general',
+  )?.value;
+
   const router = useRouter();
   const { query } = router;
   const referral = query.referral;
+
+  const [generalConfig, setGeneralConfig] = useState<GeneralConfig | null>(
+    null,
+  );
+  const config = generalConfig
+    ? prepareGeneralConfig(generalConfig)
+    : prepareGeneralConfig(defaultGeneralConfig);
+  const { FACEBOOK_PIXEL_ID } = config || {};
 
   useEffect(() => {
     if (referral) {
@@ -59,10 +65,27 @@ const MyApp = ({
     }
   }, [referral]);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const generalConfigRes = await api.get('config/general').catch(() => {
+          return;
+        });
+        setGeneralConfig(generalConfigRes?.data.results.value);
+      } catch (err) {
+        setGeneralConfig(null);
+        return;
+      }
+    })();
+  }, []);
+
   return (
     <>
       <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+        />
       </Head>
 
       <Script
@@ -83,6 +106,8 @@ const MyApp = ({
   `,
         }}
       />
+
+      {/* TDF specific chatbot widget */}
       <Script
         id="gptconfig"
         dangerouslySetInnerHTML={{
@@ -98,7 +123,6 @@ const MyApp = ({
           ...config,
           ...blockchainConfig,
           ...appConfig,
-          enabledConfigs,
         }}
       >
         <ErrorBoundary>
@@ -116,6 +140,8 @@ const MyApp = ({
           </AuthProvider>
         </ErrorBoundary>
       </ConfigProvider>
+
+      {/* TODO: create cookie consent page with property-specific parameters #357  */}
       <CookieConsent
         buttonText={__('cookie_consent_button')}
         expires={365}
@@ -129,6 +155,7 @@ const MyApp = ({
           border: '1px solid #FE4FB7',
         }}
       >
+
         <div className="text-black text-sm">
           {__('cookie_consent_text')}{' '}
           <Link className="underline" href="/pdf/TDF-Cookies.pdf">
@@ -138,27 +165,6 @@ const MyApp = ({
       </CookieConsent>
     </>
   );
-};
-
-// This disables ASO everywhere https://nextjs.org/docs/pages/building-your-application/rendering/automatic-static-optimization
-// TODO in the future: either migrate to App directory or do SSR data fetching on each page that uses general configs
-MyApp.getInitialProps = async (context: AppContext) => {
-  const ctx = await App.getInitialProps(context);
-  const allConfigs = await api.get('/config');
-
-  const configGeneral = allConfigs.data.results.find(
-    (config: any) => config.slug === 'general',
-  ).value;
-
-  const enabledConfigs = allConfigs.data.results
-    .filter((config: any) => config.value.enabled)
-    .map((config: any) => config.slug);
-
-  return {
-    ...ctx,
-    configGeneral,
-    enabledConfigs,
-  };
 };
 
 export default MyApp;

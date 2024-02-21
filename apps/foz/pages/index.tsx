@@ -1,9 +1,17 @@
 import Head from 'next/head';
 
-import { Heading, useConfig } from 'closer';
+import { GeneralConfig, Heading, api, useConfig } from 'closer';
+import { parseMessageFromError } from 'closer/utils/common';
 
-const HomePage = () => {
-  const { PLATFORM_NAME } = useConfig() || {};
+interface Props {
+  generalConfig: GeneralConfig | null;
+}
+
+const HomePage = ({ generalConfig }: Props) => {
+  const defaultConfig = useConfig();
+  const PLATFORM_NAME =
+    generalConfig?.platformName || defaultConfig.platformName;
+
   return (
     <div>
       <Head>
@@ -523,6 +531,24 @@ const HomePage = () => {
       </div>
     </div>
   );
+};
+
+HomePage.getInitialProps = async () => {
+  try {
+    const generalRes = await api.get('/config/general').catch(() => {
+      return null;
+    });
+    const generalConfig = generalRes?.data?.results?.value;
+
+    return {
+      generalConfig,
+    };
+  } catch (err: unknown) {
+    return {
+      generalConfig: null,
+      error: parseMessageFromError(err),
+    };
+  }
 };
 
 export default HomePage;

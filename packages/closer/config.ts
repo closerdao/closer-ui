@@ -27,29 +27,7 @@ export const closerConfig = {
       create: 'member',
     },
   },
-  // ACCOMODATION_COST: [
-  //   {
-  //     slug: 'Glamping',
-  //     price: 1,
-  //     iconPath: '/images/token-sale/tent-icon.svg',
-  //   },
-  //   {
-  //     slug: 'Van parking',
-  //     price: 0.5,
-  //     iconPath: '/images/token-sale/car-icon.svg',
-  //   },
-  //   {
-  //     slug: 'Outdoor Camping',
-  //     price: 0.5,
-  //     iconPath: '/images/token-sale/tent-icon.svg',
-  //   },
-  //   {
-  //     slug: 'Private suite',
-  //     description: '*coming 2023*',
-  //     price: 3,
-  //     iconPath: '/images/token-sale/suite-icon.svg',
-  //   },
-  // ],
+
   TOKEN_PRICE: 230.23,
   SOURCE_TOKEN: 'CEUR',
 };
@@ -161,14 +139,6 @@ export const configDescription = [
         type: 'number',
         default: 1,
       },
-      bookingPageTitle: {
-        type: 'text',
-        default: '',
-      },
-      bookingPageDescription: {
-        type: 'text',
-        default: '',
-      },
     },
   },
   {
@@ -178,7 +148,7 @@ export const configDescription = [
         type: 'boolean',
         default: false,
       },
-      plans: {
+      elements: {
         type: [
           {
             slug: 'text',
@@ -221,7 +191,7 @@ export const configDescription = [
         type: 'boolean',
         default: false,
       },
-      plans: {
+      elements: {
         type: [
           {
             title: 'text',
@@ -287,6 +257,16 @@ export const configDescription = [
         type: 'boolean',
         default: true,
       },
+      timeZone: {
+        type: 'select',
+        enum: [
+          'UTC', 'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
+          'America/Anchorage', 'America/Honolulu', 'Asia/Kolkata', 'Asia/Shanghai', 'Asia/Tokyo',
+          'Asia/Dubai', 'Asia/Bangkok', 'Europe/London', 'Europe/Lisbon', 'Europe/Berlin', 'Europe/Paris', 'Europe/Moscow',
+          'Australia/Sydney', 'Australia/Perth', 'Africa/Cairo', 'Africa/Johannesburg'
+        ],
+        default: 'Europe/Lisbon'
+      },
       appName: {
         type: 'text',
         default: 'tdf',
@@ -348,7 +328,7 @@ export const configDescription = [
     value: {
       enabled: {
         type: 'boolean',
-        default: true,
+        default: false,
       },
       cardPayment: {
         type: 'boolean',
@@ -356,7 +336,7 @@ export const configDescription = [
       },
       cryptoPayment: {
         type: 'boolean',
-        default: true,
+        default: false,
       },
       polygonWalletAddress: {
         type: 'text',

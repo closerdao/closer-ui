@@ -15,12 +15,13 @@ const Create = () => {
   const { isAuthenticated } = useAuth();
   const [html, setHtml] = useState('');
   const [title, setTitle] = useState('');
+  const [category, setCategory] = useState('');
   const onChange = (value) => {
     setHtml(value);
   };
 
   const persist = async () => {
-    const res = await api.post('/article', { title, html });
+    const res = await api.post('/article', { title, category,  html });
     router.push(decodeURIComponent(`/blog/${res.data.results.slug}`));
   };
 
@@ -50,6 +51,13 @@ const Create = () => {
             placeholder="Article Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+          />
+          <input
+            type="text"
+            className="mb-2"
+            placeholder="Article Category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
           />
           {isAuthenticated && (
             <div>

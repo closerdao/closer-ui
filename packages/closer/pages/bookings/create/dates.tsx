@@ -15,7 +15,7 @@ import HeadingRow from '../../../components/ui/HeadingRow';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import dayjs from 'dayjs';
-import { NextPage } from 'next';
+import { ParsedUrlQuery } from 'querystring';
 
 import PageNotFound from '../../404';
 import {
@@ -24,10 +24,8 @@ import {
   DEFAULT_CURRENCY,
 } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
-import { User } from '../../../contexts/auth/types';
-import { useConfig } from '../../../hooks/useConfig';
 import { Event, TicketOption } from '../../../types';
-import { VolunteerOpportunity } from '../../../types/api';
+import { BookingConfig, VolunteerOpportunity } from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
@@ -35,33 +33,32 @@ import { __, getMaxBookingHorizon } from '../../../utils/helpers';
 
 interface Props {
   error?: string;
-  settings?: any;
   ticketOptions?: TicketOption[];
   volunteer?: VolunteerOpportunity;
   futureEvents?: Event[];
   event?: Event;
+  bookingConfig: BookingConfig | null;
 }
 
-const DatesSelector: NextPage<Props> = ({
+const DatesSelector = ({
   error,
-  settings,
+  bookingConfig,
   ticketOptions,
   volunteer,
   futureEvents,
   event,
-}) => {
-  const { enabledConfigs } = useConfig();
+}: Props) => {
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+
   const router = useRouter();
 
   const conditions = {
-    member: {
-      maxDuration: settings?.memberMaxDuration,
-      maxBookingHorizon: settings?.memberMaxBookingHorizon,
-    },
-    guest: {
-      maxDuration: settings?.guestMaxDuration,
-      maxBookingHorizon: settings?.guestMaxBookingHorizon,
-    },
+    memberMaxDuration: bookingConfig?.memberMaxDuration,
+    memberMaxBookingHorizon: bookingConfig?.memberMaxBookingHorizon,
+    guestMaxDuration: bookingConfig?.guestMaxDuration,
+    guestMaxBookingHorizon: bookingConfig?.guestMaxBookingHorizon,
   };
   const { user, isAuthenticated } = useAuth();
   const isMember = user?.roles.includes('member');
@@ -78,12 +75,6 @@ const DatesSelector: NextPage<Props> = ({
   } = router.query || {};
 
   const [blockedDateRanges, setBlockedDateRanges] = useState<any[]>([]);
-  const canBookStays = (user: User) => {
-    if (!user.roles.includes('member')) {
-      return false;
-    }
-    return true;
-  };
 
   const memoizedBlockedDateRanges = useMemo(() => {
     return getBlockedDateRanges();
@@ -102,19 +93,11 @@ const DatesSelector: NextPage<Props> = ({
     dateRanges.push({ before: new Date() });
     dateRanges.push({
       after: new Date().setDate(
-        new Date().getDate() + getMaxBookingHorizon(settings, isMember)[0],
+        new Date().getDate() + getMaxBookingHorizon(bookingConfig, isMember)[0],
       ),
     });
     return dateRanges;
   }
- 
-  useEffect(() => {
-    if (user) {
-      if (!canBookStays(user) && !eventId && !volunteerId) {
-        router.push('/bookings/unlock-stays');
-      }
-    }
-  }, [user]);
 
   useEffect(() => {
     if (eventId) {
@@ -247,10 +230,7 @@ const DatesSelector: NextPage<Props> = ({
     return <PageError error={error} />;
   }
 
-  if (
-    process.env.NEXT_PUBLIC_FEATURE_BOOKING !== 'true' ||
-    (enabledConfigs && !enabledConfigs.includes('booking'))
-  ) {
+  if (!isBookingEnabled) {
     return <PageNotFound />;
   }
 
@@ -361,7 +341,11 @@ const DatesSelector: NextPage<Props> = ({
   );
 };
 
-DatesSelector.getInitialProps = async ({ query }) => {
+DatesSelector.getInitialProps = async ({
+  query,
+}: {
+  query: ParsedUrlQuery;
+}) => {
   try {
     const { eventId, volunteerId } = query;
 
@@ -370,6 +354,7 @@ DatesSelector.getInitialProps = async ({ query }) => {
         results: { value: settings },
       },
     } = await api.get('/config/booking');
+
     if (eventId) {
       const [ticketsAvailable, event] = await Promise.all([
         api.get(`/bookings/event/${eventId}/availability`),
@@ -377,7 +362,7 @@ DatesSelector.getInitialProps = async ({ query }) => {
       ]);
 
       return {
-        settings: settings as any,
+        bookingConfig: settings as any,
         ticketOptions: ticketsAvailable.data.ticketOptions,
         event: event.data.results,
       };
@@ -385,7 +370,7 @@ DatesSelector.getInitialProps = async ({ query }) => {
     if (volunteerId) {
       const volunteer = await api.get(`/volunteer/${volunteerId}`);
       return {
-        settings: settings as any,
+        bookingConfig: settings as any,
         volunteer: volunteer.data.results,
       };
     }
@@ -399,16 +384,17 @@ DatesSelector.getInitialProps = async ({ query }) => {
       );
 
       return {
-        settings: settings as any,
+        bookingConfig: settings,
         futureEvents: res.data.results,
       };
     }
     return {
-      settings: settings as any,
+      bookingConfig: settings,
     };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
+      bookingConfig: null,
     };
   }
 };

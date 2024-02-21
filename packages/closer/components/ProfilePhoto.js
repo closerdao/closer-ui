@@ -4,15 +4,13 @@ import { cdn } from '../utils/api';
 
 const ProfilePhoto = ({ user, size, stack }) => {
   const placeholder = '/images/profile-placeholder.png';
-  const url = user?.photo
-    ? `${cdn}${user.photo}-profile-sm.jpg`
-    : placeholder;
+  const url = user?.photo ? `${cdn}${user.photo}-profile-sm.jpg` : placeholder;
 
   return (
     <span
       className={`${
         stack ? 'border-white border-2 ' : ''
-      }w-${size} h-${size} inline-flex justify-center items-center text-center rounded-full overflow-hidden bg-primary`}
+      }w-${size} h-${size} inline-flex justify-center items-center text-center rounded-full overflow-hidden bg-accent`}
       title={user?.screenname}
     >
       {user?.photo ? (

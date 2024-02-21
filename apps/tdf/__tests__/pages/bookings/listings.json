@@ -1,60 +1,203 @@
 [
   {
-    "name": "Magical Cave",
-    "availableFor": "guests",
-    "category": "any",
-    "photos": ["62615d64d3c9ec4a501009b2", "62615de5d3c9ec4a501009b3"],
-    "slug": "magical-cave",
-    "description": "Cavernous residence in the metaverse.",
-    "fiatPrice": { "cur": "EUR", "val": 10 },
-    "tokenPrice": { "cur": "TDF", "val": 20 },
-    "rooms": 1,
-    "beds": 10,
-    "quantity": 1,
-    "private": true,
-    "kitchen": true,
-    "bathroom": true,
-    "visibleBy": [],
-    "createdBy": "5dffdf4d9d2f1035a1e8ada1",
-    "updated": "2022-11-22T16:07:07.472Z",
-    "created": "2022-03-12T04:23:17.571Z",
-    "attributes": [],
-    "managedBy": [],
-    "_id": "622c20352162bf4fa42049e0",
-    "utilityFiat": { "val": 20, "cur": "EUR" },
-    "rentalFiat": { "val": 20, "cur": "EUR" },
-    "rentalToken": { "val": 40, "cur": "TDF" },
-    "dailyUtilityFiat": { "val": 10, "cur": "EUR" },
-    "dailyRentalToken": { "val": 20, "cur": "TDF" },
-    "available": true
+      "availableFor": [
+          "team"
+      ],
+      "photos": [],
+      "private": true,
+      "kitchen": false,
+      "created": "2023-11-06T08:47:38.838Z",
+      "visibleBy": [],
+      "quantity": 2,
+      "name": "House room",
+      "slug": "house-room",
+      "bathroom": false,
+      "tokenPrice": {
+          "cur": "EUR",
+          "val": 0
+      },
+      "beds": 3,
+      "fiatPrice": {
+          "cur": "EUR",
+          "val": 0
+      },
+      "managedBy": [],
+      "attributes": [],
+      "rooms": 1,
+      "_id": "6548a82aef77a82306a960f4",
+      "updated": "2024-01-30T11:25:19.649Z",
+      "description": "<p>House room description</p>",
+      "createdBy": "641adda2f72ea12f5e9ab851"
   },
   {
-    "name": "Shared Glamping",
-    "availableFor": "guests",
-    "category": "any",
-    "photos": ["637cff4dd9e19f150acf011f"],
-    "slug": "spacious-chalet",
-    "description": "A beautiful tipi tent, shared with beautiful people. May smell a lil bit like stinky feet sometimes, but it is ok. ",
-    "fiatPrice": { "val": 10, "cur": "EUR" },
-    "tokenPrice": { "val": 2, "cur": "TDF" },
-    "rooms": 4,
-    "beds": 4,
-    "quantity": 6,
-    "private": false,
-    "kitchen": false,
-    "bathroom": false,
-    "visibleBy": [],
-    "createdBy": "62051afe5a1196707c282b43",
-    "updated": "2022-11-22T16:57:02.230Z",
-    "created": "2022-05-02T15:50:25.821Z",
-    "attributes": [],
-    "managedBy": [],
-    "_id": "626ffdc1a5f89d727b39b579",
-    "utilityFiat": { "val": 20, "cur": "EUR" },
-    "rentalFiat": { "val": 20, "cur": "EUR" },
-    "rentalToken": { "val": 4, "cur": "TDF" },
-    "dailyUtilityFiat": { "val": 10, "cur": "EUR" },
-    "dailyRentalToken": { "val": 2, "cur": "TDF" },
-    "available": true
+      "availableFor": [
+          "team"
+      ],
+      "photos": [],
+      "private": true,
+      "kitchen": false,
+      "created": "2023-11-06T08:47:09.149Z",
+      "visibleBy": [],
+      "quantity": 3,
+      "name": "Small private glamping",
+      "slug": "small-private-glamping",
+      "bathroom": false,
+      "tokenPrice": {
+          "cur": "EUR",
+          "val": 0
+      },
+      "beds": 3,
+      "fiatPrice": {
+          "cur": "EUR",
+          "val": 20
+      },
+      "managedBy": [],
+      "attributes": [],
+      "rooms": 1,
+      "_id": "6548a80def77a82306a960e8",
+      "updated": "2023-11-13T14:22:47.482Z",
+      "description": "",
+      "createdBy": "641adda2f72ea12f5e9ab851"
+  },
+  {
+      "availableFor": [
+          "guests",
+          "team"
+      ],
+      "photos": [
+          "650851dadaa4cb124d086a65",
+          "650851e8daa4cb124d086a6a"
+      ],
+      "private": false,
+      "kitchen": false,
+      "created": "2022-06-27T09:20:15.709Z",
+      "visibleBy": [],
+      "quantity": 10,
+      "name": "Glamping (private)",
+      "slug": "glamping-private",
+      "bathroom": false,
+      "tokenPrice": {
+          "cur": "TDF",
+          "val": 3
+      },
+      "beds": 3,
+      "fiatPrice": {
+          "cur": "EUR",
+          "val": 60
+      },
+      "managedBy": [],
+      "attributes": [],
+      "rooms": 1,
+      "_id": "62b9764f3917ba376c57d1c1",
+      "updated": "2023-11-13T14:25:50.507Z",
+      "description": "<p>Get cosy in a glamping tent for you, and two or three more folks. It’s spacious and comfortable, don’t worry - they are 5m in diameter. There’s a lamp to give you light, and a plug for your electronics. Usually the tent will be inside our warehouse.</p>",
+      "createdBy": "5dffdf4d9d2f1035a1e8ada1"
+  },
+  {
+      "availableFor": [
+          "all",
+          "guests",
+          "volunteer",
+          "team",
+          "events"
+      ],
+      "photos": [],
+      "private": true,
+      "kitchen": false,
+      "created": "2022-04-20T14:48:27.376Z",
+      "visibleBy": [],
+      "quantity": 10,
+      "name": "Camping",
+      "slug": "camping",
+      "bathroom": false,
+      "tokenPrice": {
+          "cur": "TDF",
+          "val": 0.5
+      },
+      "beds": 5,
+      "photo": "62601df205335a0ce2883bb0",
+      "fiatPrice": {
+          "cur": "EUR",
+          "val": 25
+      },
+      "managedBy": [],
+      "attributes": [],
+      "rooms": 1,
+      "_id": "62601d3b05335a0ce2883bac",
+      "updated": "2023-11-13T14:23:10.245Z",
+      "description": "<p>Pitch your tent under the beautiful oak trees. test</p>",
+      "createdBy": "5fa172c1a9a84f3ebcf16262"
+  },
+  {
+      "availableFor": [
+          "all-but-volunteer",
+          "guests",
+          "team",
+          "events"
+      ],
+      "photos": [
+          "652d82138bd63d0f5f2808bb",
+          "653fe56c435e8581e8bbaa7d"
+      ],
+      "private": false,
+      "kitchen": false,
+      "created": "2021-05-13T18:42:50.086Z",
+      "visibleBy": [],
+      "quantity": 9,
+      "name": "Glamping Tent (shared)",
+      "slug": "glamping-tent",
+      "bathroom": false,
+      "tokenPrice": {
+          "cur": "TDF",
+          "val": 1
+      },
+      "beds": 5,
+      "fiatPrice": {
+          "cur": "EUR",
+          "val": 30
+      },
+      "managedBy": [],
+      "attributes": [],
+      "rooms": 1,
+      "_id": "609d732aa460e712c32a1c4c",
+      "updated": "2023-11-13T14:26:32.153Z",
+      "description": "<p>5m glamping tent setup with bed &amp; rugs.</p>",
+      "category": "glamping tent",
+      "createdBy": "5dffdf4d9d2f1035a1e8ada1"
+  },
+  {
+      "availableFor": [
+          "all",
+          "guests",
+          "volunteer",
+          "team",
+          "events"
+      ],
+      "photos": [],
+      "private": true,
+      "kitchen": false,
+      "created": "2021-05-13T18:42:01.928Z",
+      "visibleBy": [],
+      "quantity": 10,
+      "name": "Van parking space",
+      "slug": "van-parking-space",
+      "bathroom": false,
+      "tokenPrice": {
+          "cur": "TDF",
+          "val": 1
+      },
+      "beds": 5,
+      "fiatPrice": {
+          "cur": "EUR",
+          "val": 30
+      },
+      "managedBy": [],
+      "attributes": [],
+      "rooms": 1,
+      "_id": "609d72f9a460e712c32a1c4b",
+      "updated": "2023-11-13T14:23:36.476Z",
+      "description": "<p>Bring your auto-home to TDF. We have spaces in the land that are flat, with shade and with electricity. Perfect for your home on the road. Test.</p><p><br></p><p><strong>AMENITIES</strong></p><p><br></p><h3><strong>🍽️ Food</strong></h3><ul><li>Farm to table experience</li><li>Breakfast is self serve, lunch and dinner are cocreated</li><li>Food is included in your utitity fee</li></ul><p><br></p><h3><strong>💦 Sauna</strong></h3><p>We have a wood fired sauna available</p><p><br></p><h3><strong>💻 Work</strong></h3><p>Starlink Wifi Coworking space</p><p><br></p><h3><strong>🛁 Bathroom</strong></h3><ul><li>Compost toilets on the land</li><li>Outdoor showers (hot + cold)</li></ul><p><br></p><h3><strong>🌳 Nature</strong></h3><p>You will be surrounded by a 5ha playground with over 3k trees planted</p>",
+      "category": "van",
+      "createdBy": "5dffdf4d9d2f1035a1e8ada1"
   }
 ]

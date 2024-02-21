@@ -10,23 +10,29 @@ import Pagination from '../../../../components/Pagination';
 import { ErrorMessage, Spinner } from '../../../../components/ui';
 import Heading from '../../../../components/ui/Heading';
 
-import { NextPage } from 'next';
-
 import { useAuth } from '../../../../contexts/auth';
 import { usePlatform } from '../../../../contexts/platform';
 import { useConfig } from '../../../../hooks/useConfig';
+import { GeneralConfig } from '../../../../types';
 import { Lesson } from '../../../../types/lesson';
+import api from '../../../../utils/api';
 import { parseMessageFromError } from '../../../../utils/common';
 import { __ } from '../../../../utils/helpers';
 import { capitalizeFirstLetter } from '../../../../utils/learn.helpers';
 
 const LESSONS_PER_PAGE = 10;
 
-const LearnCategoryPage: NextPage = () => {
+interface Props {
+  generalConfig: GeneralConfig | null;
+}
+
+const LearnCategoryPage = ({ generalConfig }: Props) => {
   const router = useRouter();
   const category = router.query.slug;
 
-  const { PLATFORM_NAME } = useConfig() || {};
+  const defaultConfig = useConfig();
+  const PLATFORM_NAME =
+    generalConfig?.platformName || defaultConfig.platformName;
   const { user } = useAuth();
   const { platform }: any = usePlatform();
 
@@ -155,6 +161,24 @@ const LearnCategoryPage: NextPage = () => {
       </main>
     </>
   );
+};
+
+LearnCategoryPage.getInitialProps = async () => {
+  try {
+    const generalRes = await api.get('/config/general').catch(() => {
+      return null;
+    });
+    const generalConfig = generalRes?.data?.results?.value;
+
+    return {
+      generalConfig,
+    };
+  } catch (err: unknown) {
+    return {
+      generalConfig: null,
+      error: parseMessageFromError(err),
+    };
+  }
 };
 
 export default LearnCategoryPage;

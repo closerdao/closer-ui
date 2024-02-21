@@ -12,6 +12,7 @@ import base from '../locales/base';
 import en from '../locales/en';
 import foz from '../locales/foz';
 import tdf from '../locales/tdf';
+import moos from '../locales/moos';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(relativeTime);
@@ -25,6 +26,7 @@ const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
 const appDictionaries = {
   tdf,
   foz,
+  moos
 };
 
 let language = Object.assign({}, base, en);

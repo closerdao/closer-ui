@@ -8,10 +8,13 @@ import Heading from '../../components/ui/Heading';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import api from '../../utils/api';
+import { formatSearch } from '../../utils/api';
 import { __ } from '../../utils/helpers';
 
-const Search = ({ error, articles }) => {
-  const { PLATFORM_NAME } = useConfig();
+const Search = ({ error, articles, generalConfig }) => {
+  const defaultConfig = useConfig();
+  const PLATFORM_NAME =
+    generalConfig?.platformName || defaultConfig.platformName;
   const { isAuthenticated } = useAuth();
   return (
     <>
@@ -57,19 +60,26 @@ const Search = ({ error, articles }) => {
 };
 
 Search.getInitialProps = async () => {
+  const search = formatSearch({ category: { $ne: 'home page' } });
   try {
-    const [tags, articles] = await Promise.all([
+    const [tags, articles, generalRes] = await Promise.all([
       api.get('/distinct/article/tags?limit=20'),
-      api.get('/article?limit=100&sort_by=-created'),
+      api.get(`/article?limit=100&sort_by=-created&where=${search}`),
+      api.get('/config/general').catch(() => {
+        return null;
+      }),
     ]);
+    const generalConfig = generalRes?.data?.results?.value;
 
     return {
       tags: tags.data?.results.slice(0, 30),
       articles: articles.data?.results,
+      generalConfig,
     };
   } catch (error) {
     return {
       error: error.message,
+      generalConfig: null,
     };
   }
 };

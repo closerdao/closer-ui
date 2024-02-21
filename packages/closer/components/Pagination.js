@@ -42,7 +42,7 @@ const Pagination = ({ loadPage, queryParam, total, page, limit, maxPages }) => {
                   href={{ query: { [queryParam]: toPage } }}
                   key={`page-${toPage}`}
                   className={`p-1 mr-2 ${
-                    page === toPage ? 'bg-primary text-white' : 'bg-gray-100'
+                    page === toPage ? 'bg-accent text-white' : 'bg-gray-100'
                   }`}
                   onClick={(e) => {
                     e.preventDefault();

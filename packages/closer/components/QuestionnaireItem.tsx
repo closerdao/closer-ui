@@ -38,7 +38,7 @@ const QuestionnaireItem = ({
         className=" pb-1 capitalize font-normal text-base text-black"
       >
         {name}
-        {required && <span className="text-primary ml-1">*</span>}
+        {required && <span className="text-accent ml-1">*</span>}
       </label>
       {type === 'text' && (
         <>
@@ -55,7 +55,7 @@ const QuestionnaireItem = ({
       )}
       {type === 'select' && options && (
         <select
-          className="rounded-md border-none bg-neutral-dark px-4 py-2 block w-full appearance-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent invalid:border-primary"
+          className="rounded-md border-none bg-neutral-dark px-4 py-2 block w-full appearance-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent invalid:border-accent"
           value={answer || ''}
           onChange={onChange}
           required={required}

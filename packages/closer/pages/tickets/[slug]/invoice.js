@@ -9,8 +9,13 @@ import { useConfig } from '../../../hooks/useConfig';
 import api from '../../../utils/api';
 import { __, priceFormat } from '../../../utils/helpers';
 
-const Ticket = ({ ticket, event, error }) => {
-  const { PLATFORM_LEGAL_ADDRESS, PLATFORM_NAME } = useConfig();
+const Ticket = ({ ticket, event, error, generalConfig }) => {
+  const { PLATFORM_LEGAL_ADDRESS } = useConfig();
+
+  const defaultConfig = useConfig();
+  const PLATFORM_NAME =
+    generalConfig?.platformName || defaultConfig.platformName;
+
   if (!ticket) {
     return <PageNotFound error={error} />;
   }
@@ -57,15 +62,25 @@ Ticket.getInitialProps = async ({ query }) => {
     const {
       data: { results: ticket },
     } = await api.get(`/ticket/${query.slug}`);
-    const {
-      data: { results: event },
-    } = await api.get(`/event/${ticket.event}`);
-    return { ticket, event };
-  } catch (err) {
-    console.warn('Error loading ticket', err);
+    const [eventRes, generalRes] = await Promise.all([
+      api.get(`/event/${ticket.event}`),
+      api.get('/config/general').catch(() => {
+        return null;
+      }),
+    ]);
+    const generalConfig = generalRes?.data?.results?.value;
 
     return {
-      error: err.message,
+      ticket,
+      event: eventRes.data?.results,
+      generalConfig,
+    };
+  } catch (error) {
+    return {
+      ticket: null,
+      event: null,
+      error: error.message,
+      generalConfig: null,
     };
   }
 };

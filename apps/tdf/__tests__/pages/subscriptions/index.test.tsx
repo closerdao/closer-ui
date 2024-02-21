@@ -1,3 +1,4 @@
+import { generalConfig } from '@/__tests__/mocks/generalConfig';
 import SubscriptionsPage from '@/pages/subscriptions';
 import { renderWithProviders } from '@/test/utils';
 
@@ -12,6 +13,7 @@ describe('Subscriptions', () => {
       <SubscriptionsPage
         listings={listings}
         subscriptionsConfig={subscriptionsConfig}
+        generalConfig={generalConfig}
       />,
     );
 
@@ -27,6 +29,7 @@ describe('Subscriptions', () => {
       <SubscriptionsPage
         listings={listings}
         subscriptionsConfig={subscriptionsConfig}
+        generalConfig={generalConfig}
       />,
     );
 

@@ -241,6 +241,8 @@ export const SALES_CONFIG = {
 };
 
 export const MAX_BOOKINGS_TO_FETCH = 2000;
-export const BOOKINGS_PER_PAGE = 50;
+export const BOOKINGS_PER_PAGE = 36;
 
 export const MAX_CREDITS_PER_MONTH = 90;
+
+export const HOME_PAGE_CATEGORY = 'home page';
