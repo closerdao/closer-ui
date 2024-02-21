@@ -52,12 +52,17 @@ const AccomodationSelector = ({
   const isTeamMember = user?.roles.some((roles) =>
     ['space-host', 'steward', 'land-manager', 'team'].includes(roles),
   );
+
   const filteredListings = listings.filter((listing: Listing) => {
-    return (
-      (listing?.availableFor?.includes('guests') ||
-        (isTeamMember && listing?.availableFor?.includes('team'))) ??
-      false
-    );
+    if (isTeamMember) {
+      return listing.availableFor?.includes('team');
+    } else if (volunteerId) {
+      return listing.availableFor?.includes('volunteer');
+    } else if (eventId) {
+      return listing.availableFor?.includes('events');
+    } else {
+      return listing.availableFor?.includes('guests');
+    }
   });
 
   const bookingType = getBookingType(eventId, volunteerId);
