@@ -55,7 +55,7 @@ const HomePage = () => {
           key="canonical"
         />
       </Head>
-      <section className="md:absolute overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-light mb-8 md:mb-[100vh]">
+      <section className="md:absolute md:-top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-light mb-8 md:mb-[100vh]">
         <div className="md:h-[100vh]">
           {isMobile ? (
             <video
