@@ -389,7 +389,7 @@ const HomePage = () => {
           </div>
         </section>
 
-        <section className="py-20 my-12 bg-black text-white">
+        <section className="py-20 my-12 bg-black text-white -mx-4">
           <div className="text-center mb-20">
             <div className="w-full flex items-center flex-col">
               <div className="max-w-prose">
@@ -418,7 +418,7 @@ const HomePage = () => {
               </p>
             </div>
             <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-center align-center">
-              <div className="p-4 border-2 border-primary rounded-md md:w-[30%]">
+              <div className="p-4 border-2 border-primary rounded-xl md:w-[30%]">
                 <div className="flex justify-between flex-col h-full">
                   <div>
                     <Heading level={4} className="text-center">
@@ -450,7 +450,7 @@ const HomePage = () => {
                   </div>
                 </div>
               </div>
-              <div className="p-4 border-2 border-primary rounded-md md:md:w-[30%]">
+              <div className="p-4 border-2 border-primary rounded-xl md:w-[30%]">
                 <div className="flex justify-between flex-col h-full">
                   <div>
                     <Heading level={4} className="text-center">
@@ -479,7 +479,7 @@ const HomePage = () => {
                   </div>
                 </div>
               </div>
-              <div className="p-4 border-2 border-primary rounded-md md:w-[30%]">
+              <div className="p-4 border-2 border-primary rounded-xl md:w-[30%]">
                 <div className="flex justify-between flex-col h-full">
                   <div>
                     <Heading level={4} className="text-center">
