@@ -389,14 +389,14 @@ const HomePage = () => {
           </div>
         </section>
 
-        <section className="flex items-center flex-col py-12 ">
-          <div className="text-center mb-20 w-full md:max-w-6xl">
+        <section className="py-12">
+          <div className="text-center mb-20">
             <div className="w-full flex items-center flex-col">
-              <Heading level={2} className="text-2xl font-bold">
+              <p className="text-2xl max-w-prose">
                 {`Meet your new home, way of life, and tribe. 
                   Join a unique blend of solarpunks, web3 aficionados, holistic healers, permaculture pioneers, tree enthusiasts, tech wizards, and regenerative innovators. 
                   Together, we're reshaping communal living.`}
-              </Heading>
+              </p>
             </div>
             <PhotoGallery className="mt-8" />
           </div>
@@ -411,9 +411,12 @@ const HomePage = () => {
               <p>
                 While the village is in development we offer multiple ways to come and visit. Whether you are looking for a short stay, a longer term residency, or a work exchange - we have something for you.
               </p>
+              <p>
+                Once we get to know each other, and if there is mutual interest - you&apos;ll be invited to become a full member of the village. Members are returning residents who co-own the village together and can participate in the decision making process, and can apply for work opportunities.
+              </p>
             </div>
             <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-center align-center">
-              <div className="p-2 border-2 border-primary rounded-md md:w-[30%]">
+              <div className="p-4 border-2 border-primary rounded-md md:w-[30%]">
                 <div className="flex justify-between flex-col h-full">
                   <div>
                     <Heading level={4} className="text-center">
@@ -445,7 +448,7 @@ const HomePage = () => {
                   </div>
                 </div>
               </div>
-              <div className="p-2 border-2 border-primary rounded-md md:md:w-[30%]">
+              <div className="p-4 border-2 border-primary rounded-md md:md:w-[30%]">
                 <div className="flex justify-between flex-col h-full">
                   <div>
                     <Heading level={4} className="text-center">
@@ -474,7 +477,7 @@ const HomePage = () => {
                   </div>
                 </div>
               </div>
-              <div className="p-2 border-2 border-primary rounded-md md:w-[30%]">
+              <div className="p-4 border-2 border-primary rounded-md md:w-[30%]">
                 <div className="flex justify-between flex-col h-full">
                   <div>
                     <Heading level={4} className="text-center">
@@ -510,8 +513,8 @@ const HomePage = () => {
           </div>
         </section>
 
-        <section className="flex justify-center my-20 -mx-4 p-4 py-12 bg-accent-alt-light">
-          <div className="max-w-6xl flex flex-wrap">
+        <section className="flex justify-center my-20 -mx-4 p-4 py-12 bg-black text-white">
+          <div className="max-w-prose flex flex-wrap">
             <Heading className="text-center md:text-left mb-6 uppercase text-2xl font-black">
               Not just a co-living - become part of a movement conserving & regenerating land
             </Heading>
