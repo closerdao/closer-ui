@@ -389,7 +389,7 @@ const HomePage = () => {
           </div>
         </section>
 
-        <section className="py-20 my-12">
+        <section className="py-20 my-12 bg-black text-white">
           <div className="text-center mb-20">
             <div className="w-full flex items-center flex-col">
               <div className="max-w-prose">
