@@ -16,7 +16,7 @@ const HomePage = () => {
     <Link
       href="/stay"
       type="submit"
-      className="bg-accent text-white rounded-full py-2.5 px-8 text-xl"
+      className="bg-accent text-white rounded-full py-2.5 px-8 text-xl uppercase"
       onClick={() =>
         event('click', {
           category: 'HomePage',
@@ -30,7 +30,7 @@ const HomePage = () => {
     <Link
       href="/signup"
       type="submit"
-      className="bg-accent text-white rounded-full py-2.5 px-8 text-xl"
+      className="bg-accent text-white rounded-full py-2.5 px-8 text-xl uppercase"
       onClick={() =>
         event('click', {
           category: 'HomePage',
@@ -56,8 +56,8 @@ const HomePage = () => {
           key="canonical"
         />
       </Head>
-      <section className="absolute overflow-hidden left-0 h-[100vh] min-h-[100vh] min-w-[100vw] bg-accent-light pb-12 -mt-6 mb-12 md:mb-[100vh]">
-        <div className="h-[100vh]">
+      <section className="md:absolute overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-light mb-8 md:mb-[100vh]">
+        <div className="md:h-[100vh]">
           {isMobile ? (
             <video
               loop={true}
@@ -75,11 +75,11 @@ const HomePage = () => {
             <YoutubeEmbed isBackgroundVideo={true} embedId="VkoqvPcaRpk" />
           )}
         </div>
-        <div className="absolute left-0 top-0 w-full h-full bg-white/60 flex justify-center ">
+        <div className="md:absolute md:left-0 md:top-0 md:w-full md:h-full md:bg-white/60 flex justify-center ">
           <div className="w-full flex justify-center flex-col items-center">
             <div className=" max-w-4xl p-6 rounded-xl p-12">
               <Heading
-                className="mb-6 md:mb-4 text-4xl sm:text-4xl md:text-6xl"
+                className="mb-4 text-2xl md:text-4xl md:text-6xl"
                 data-testid="page-title"
                 display
                 level={1}
@@ -87,7 +87,7 @@ const HomePage = () => {
                 Ready to explore life in a regenerative village?
               </Heading>
               <div className="my-4">
-                <p className="text-xl md:text-2xl max-w-3xl font-bold">
+                <p className="text-xl md:text-2xl max-w-3xl">
                   We are building a climate resilient neighborhood of the future in Portugal - and you are invited to be a part of it.
                 </p>
               </div>
@@ -99,7 +99,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      <div className="relative top-[105vh]">
+      <div className="relative md:top-[105vh]">
         <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2">
           <div className="md:max-w-xl">
             <Heading
@@ -162,9 +162,9 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    Veggie farm{' '}
+                    Market garden{' '}
                     <small className="text-sm font-light">
-                      (for 30+ people)
+                      (producing vegetables for 30+ people)
                     </small>
                   </Heading>
                 </li>
@@ -176,19 +176,6 @@ const HomePage = () => {
                   />
                   <Heading display level={4} className="md:text-sm">
                     Mushroom farm{' '}
-                    <Tag className="m-1" color="primary">
-                      Coming soon
-                    </Tag>
-                  </Heading>
-                </li>
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/cafe.png"
-                    alt="TDF Cafe"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    Farm to table restaurant{' '}
                     <Tag className="m-1" color="primary">
                       Coming soon
                     </Tag>
@@ -223,11 +210,7 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    Wellness area
-                    <small className="text-sm font-light">
-                      {' '}
-                      (natural pool, sauna(s), yoga studio, massage parlor)
-                    </small>{' '}
+                    Natural pool
                     <Tag className="m-1" color="primary">
                       Coming soon
                     </Tag>
@@ -245,15 +228,12 @@ const HomePage = () => {
                 </li>
                 <li className="flex justify-start items-center">
                   <img
-                    src="/images/icons/foodforest.png"
-                    alt="Greenhouse"
+                    src="/images/icons/cafe.png"
+                    alt="TDF Cafe"
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    Indoors forest and tropical greenhouse{' '}
-                    <Tag className="m-1" color="primary">
-                      Coming soon
-                    </Tag>
+                    Coffee shop
                   </Heading>
                 </li>
                 <li className="flex justify-start items-center">
@@ -263,14 +243,7 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    Makerspace
-                    <small className="text-sm font-light">
-                      {' '}
-                      (Lab, Atelier, Artist Studio, Workshop, Music Studio)
-                    </small>{' '}
-                    <Tag className="m-1" color="primary">
-                      Coming soon
-                    </Tag>
+                    Makerspace & workshop
                   </Heading>
                 </li>
               </ul>
@@ -304,7 +277,7 @@ const HomePage = () => {
         </section>
 
 
-        <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2">
+        <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2 space-x-4">
           <div>
             <div className="md:pl-4 mt-5">
               <img src="/images/maps/co-living.png" alt="TDF Orchard Map" />
@@ -321,25 +294,30 @@ const HomePage = () => {
               <ul className="space-y-6">
                 <li className="">
                   <Heading className="uppercase bold" level={3}>
-                    Shared Suites (10 beds total):
+                    Building 14 suites
                   </Heading>
                   <p>
-                    Design: These suites are designed for shared living, offering
-                    a bed per resident in a communal setting. Features: Ideal for
-                    those who enjoy social living, these suites come with common
-                    areas for interaction and collaboration.
+                    Each suite has over 20m2 of living space - giving ample space for resident to have a desk, private bathroom, a luxurious queen sized bed.
+                    We are tailoring the interior to fit the needs of digital nomads, young families, yogies, and other conscious individuals.
                   </p>
                 </li>
                 <li className="">
                   <Heading className="uppercase bold" level={3}>
-                    Private Suites (9 units):
+                    Bioclimatic buildings
                   </Heading>
                   <p>
-                    Privacy and Comfort: These suites offer private space for
-                    individuals or couples, balancing community engagement with
-                    personal privacy. Amenities: Equipped with essential
-                    amenities, these suites provide a comfortable and
-                    self-contained living experience.
+                    The building is designed to be energy efficient, with passive solar design, natural ventilation, 
+                    and a solar roof - making it a comfortable place to live year round while producing it&apos;s own energy.
+                  </p>
+                </li>
+                <li className="">
+                  <Heading className="uppercase bold" level={3}>
+                    Mixed use co-living & hospitality
+                  </Heading>
+                  <p>
+                    The property is ideal for hosting large events (up to 100 people), and we are planning to use 
+                    it for retreats, workshops, and other events for 3 months out of the year while running our own 
+                    co-living community for 9 months out of the year.
                   </p>
                 </li>
               </ul>
@@ -347,41 +325,25 @@ const HomePage = () => {
           </div>
         </section>
 
-        <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2">
+        <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2 space-x-4">
           <div className="md:max-w-xl">
             <Heading className="text-center md:text-left mb-6 uppercase text-2xl font-black">
               Agroforestry and land developments
             </Heading>
-            <div className="md:flex md:flex-cols-2 md:space-x-2">
+            <p>
+              With over 3000 trees already planted on the land, and a plan to create a 
+              productive agroforestry system with over 10 000 fruit trees (including almonds, olives, citrus, berries etc) over the next 
+              few years, TDF is committed to creating a regenerative landscape that hydrates the land, sequesters carbon, and nourrishes
+              our village and the local community.
+            </p>
+            <div className="md:flex md:flex-cols-2 mt-6">
               <ul className="space-y-6">
-                <li className="">
-                  Orchard Development and Tree Selection: TDF plans to cultivate a
-                  diverse range of fruit trees, with a focus on almonds and
-                  olives, chosen for their market value, suitability to the
-                  climate, and ecological benefits. These trees are ideal for
-                  long-term agricultural projects due to their resilience and
-                  minimal water needs.
-                </li>
-
-                <li className="">
-                  <Heading className="uppercase bold" level={3}>
-                    Productive orchard with 10k fruit trees
-                  </Heading>
-                  <p>
-                    The orchard will be strategically laid out to ensure maximum
-                    sun exposure, wind protection, and efficient land utilization.
-                    The spacing between trees will be optimized for health and
-                    productivity, and to facilitate maintenance and harvesting
-                    activities.
-                  </p>
-                </li>
-
                 <li className="">
                   <Heading className="uppercase bold" level={3}>
                     Creating a water retention landscape
                   </Heading>
                   <p>
-                    A series of swales will lead runoff waters to our 2 planned
+                    Our swales collect runoff waters from the landscape and will be storing it in our 2 planned
                     lakes. This will ensure a steady water supply year round.
                   </p>
                 </li>
@@ -392,7 +354,7 @@ const HomePage = () => {
                   </Heading>
                   <p>
                     TDF is committed to organic farming, avoiding synthetic
-                    fertilizers and pesticides. Organic practices will be employed
+                    fertilizers and pesticides. Organic practices are employed
                     to maintain a balanced ecosystem, focusing on natural pest
                     control and the use of compost for soil nutrition.
                   </p>
@@ -403,25 +365,11 @@ const HomePage = () => {
                     Biochar Production
                   </Heading>
                   <p>
-                    Using syntropic methods, the agroforest landscape is set to
-                    produce excess biomass from pruning and other organic waste.
-                    This biomass will be processed into biochar, a carbon-rich
-                    material that significantly enhances soil quality - and which
-                    we can export as an agricultural product.
-                  </p>
-                </li>
-
-                <li className="">
-                  <Heading className="uppercase bold" level={3}>
-                    Transforming our soils into Terra Preta with Biochar
-                  </Heading>
-                  <p>
-                    Applying the biochar we produce to the orchard&apos;s soil is
-                    a game-changer. This practice will improve soil fertility,
-                    increase water retention, and stimulate microbial activity,
+                    Using syntropic methods, our agroforestry landscape is set to
+                    produce excess biomass we can process into biochar. 
+                    Biochar improves soil fertility, increase water retention and stimulates microbial activity,
                     leading to healthier trees and better crop yields - all while
-                    capturing carbon from the atmosphere and producing excess
-                    energy.
+                    capturing carbon from the atmosphere and producing excess energy in the process.
                   </p>
                 </li>
 
@@ -455,18 +403,114 @@ const HomePage = () => {
           </div>
         </section>
 
-        <section className="text-center flex justify-center flex-wrap mb-12">
-          <div className="max-w-[720px]">
-            <Heading
-              className="text-2xl mb-6 max-w-3xl text-center mt-8 italic"
-              level={2}
-            >
-              TDF is a model for a regenerative economy. We are looking for 300
-              forward-thinking doer-dreamers to co-create a habitat where nature
-              thrives. No fleeting promises here, just a space designed for
-              regenerative living and deep connection.
-            </Heading>
-            {CTA}
+        <section className="mb-12">
+          <div>
+            <div className="max-w-prose mb-6 mx-auto">
+              <Heading
+                className="text-2xl"
+                level={2}
+              >
+                How to play
+              </Heading>
+              <p>
+                While the village is in development we offer multiple ways to come and visit. Whether you are looking for a short stay, a longer term residency, or a work exchange - we have something for you.
+              </p>
+            </div>
+            <div className="flex space-x-4 justify-center align-center">
+              <div className="p-2 border-2 border-primary rounded-md w-[25%]">
+                <div className="flex justify-between flex-col h-full">
+                  <div>
+                    <Heading level={4} className="text-center">
+                      Guest
+                    </Heading>
+                    <p className="my-2 italic">Come and enjoy the nature - work from our co-working space, connect with out community and enjoy our facilities.</p>
+                    <ul>
+                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                        Private or shared glamping or van
+                      </li>
+                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                        Work on your own projects
+                      </li>
+                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                        Get discounted rates if you book for a week or more
+                      </li>
+                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                        1 day minimum stay
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="mt-4 mb-4 flex justify-center align-center">
+                    <Link
+                      href="/stay"
+                      className="uppercase btn-primary"
+                    >
+                      Book a stay
+                    </Link>
+                  </div>
+                </div>
+              </div>
+              <div className="p-2 border-2 border-primary rounded-md md:w-[25%]">
+                <div className="flex justify-between flex-col h-full">
+                  <div>
+                    <Heading level={4} className="text-center">
+                      Volunteer
+                    </Heading>
+                    <p className="my-2 italic">Learn about permaculture, bioconstruction & cooking while doing a work exchange.</p>
+                    <ul>
+                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                        Work 4h/day
+                      </li>
+                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                        Free accomodation (dorm, shared glamper, or camping)
+                      </li>
+                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                        1 week minimum stay
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="mt-4 mb-4 flex justify-center align-center">
+                    <Link
+                      href="/volunteer"
+                      className="uppercase btn-primary"
+                    >
+                      See opportunities
+                    </Link>
+                  </div>
+                </div>
+              </div>
+              <div className="p-2 border-2 border-primary rounded-md w-[25%]">
+                <div className="flex justify-between flex-col h-full">
+                  <div>
+                    <Heading level={4} className="text-center">
+                      Resident
+                    </Heading>
+                    <p className="my-2 italic">Apply for a 1+ month residency and leave a mark on our village - maybe you are an expert carpenter - or maybe you want to practice a new craft. Make a proposal for what you&apos;d like to build and we will have a conversation.</p>
+                    <ul>
+                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                        Work ~6h/day (project based)
+                      </li>
+                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                        Free accomodation
+                      </li>
+                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                        Free food
+                      </li>
+                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                        1 month minimum stay
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="mt-4 mb-4 flex justify-center align-center">
+                    <Link
+                      href="mailto:space@traditionaldreamfactory.com?subject=Residency%20Application"
+                      className="uppercase btn-primary"
+                    >
+                      Apply
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
