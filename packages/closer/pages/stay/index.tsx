@@ -6,7 +6,6 @@ import React, { useEffect } from 'react';
 import BookingRules from '../../components/BookingRules';
 import Hosts from '../../components/Hosts';
 import ListingListPreview from '../../components/ListingListPreview';
-import PhotoGallery from '../../components/PhotoGallery';
 import Reviews from '../../components/Reviews';
 import UpcomingEventsIntro from '../../components/UpcomingEventsIntro';
 import Heading from '../../components/ui/Heading';
@@ -101,13 +100,6 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
           <p>{__('stay_description', appName)}</p>
         </div>
       </section>
-
-      {/* TODO: make gallery configurable for each village */}
-      {APP_NAME?.toLowerCase() === 'tdf' && (
-        <section className="max-w-6xl mx-auto mb-16">
-          <PhotoGallery />
-        </section>
-      )}
 
       {bookingRules?.enabled && <BookingRules rules={bookingRules?.elements} />}
 
