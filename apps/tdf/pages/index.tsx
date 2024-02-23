@@ -1,13 +1,12 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import router from 'next/router';
 
 import { isMobile } from 'react-device-detect';
 
 import PhotoGallery from 'closer/components/PhotoGallery';
 import UpcomingEventsIntro from 'closer/components/UpcomingEventsIntro';
 
-import { Button, Heading, Tag, YoutubeEmbed, useAuth } from 'closer';
+import { Heading, Tag, YoutubeEmbed, useAuth } from 'closer';
 import api from 'closer/utils/api';
 import { event } from 'nextjs-google-analytics';
 const HomePage = () => {
@@ -405,19 +404,16 @@ const HomePage = () => {
 
         <section className="mb-12">
           <div>
-            <div className="max-w-prose mb-6 mx-auto">
-              <Heading
-                className="text-2xl"
-                level={2}
-              >
+            <div className="max-w-prose mb-12 mx-auto">
+              <Heading level={2} className="text-center md:text-left mb-4 uppercase text-2xl font-black">
                 How to play
               </Heading>
               <p>
                 While the village is in development we offer multiple ways to come and visit. Whether you are looking for a short stay, a longer term residency, or a work exchange - we have something for you.
               </p>
             </div>
-            <div className="flex space-x-4 justify-center align-center">
-              <div className="p-2 border-2 border-primary rounded-md w-[25%]">
+            <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-center align-center">
+              <div className="p-2 border-2 border-primary rounded-md md:w-[30%]">
                 <div className="flex justify-between flex-col h-full">
                   <div>
                     <Heading level={4} className="text-center">
@@ -449,7 +445,7 @@ const HomePage = () => {
                   </div>
                 </div>
               </div>
-              <div className="p-2 border-2 border-primary rounded-md md:w-[25%]">
+              <div className="p-2 border-2 border-primary rounded-md md:md:w-[30%]">
                 <div className="flex justify-between flex-col h-full">
                   <div>
                     <Heading level={4} className="text-center">
@@ -478,7 +474,7 @@ const HomePage = () => {
                   </div>
                 </div>
               </div>
-              <div className="p-2 border-2 border-primary rounded-md w-[25%]">
+              <div className="p-2 border-2 border-primary rounded-md md:w-[30%]">
                 <div className="flex justify-between flex-col h-full">
                   <div>
                     <Heading level={4} className="text-center">
@@ -514,9 +510,12 @@ const HomePage = () => {
           </div>
         </section>
 
-        <section className="flex justify-center mb-[120px] py-16 bg-accent-alt-light">
+        <section className="flex justify-center my-20 -mx-4 p-4 py-12 bg-accent-alt-light">
           <div className="max-w-6xl flex flex-wrap">
-            <Heading level={3} className="mb-8">
+            <Heading className="text-center md:text-left mb-6 uppercase text-2xl font-black">
+              Not just a co-living - become part of a movement conserving & regenerating land
+            </Heading>
+            <p className="mb-8">
               TDF is part of the OASA network - transforming ownership into
               stewardship. The TDF project is bound by the{' '}
               <Link
@@ -530,17 +529,8 @@ const HomePage = () => {
               mission to conserve 100.000 ha of land globally - and TDF is its
               first prototype in utilising real estate as a vehicle for
               ecological restoration.
-            </Heading>
-            <Button
-              size="small"
-              isFullWidth={false}
-              onClick={() => {
-                router.push('https://oasa.earth/');
-              }}
-              type="secondary"
-            >
-              Learn more about OASA
-            </Button>
+            </p>
+            <Link href="https://oasa.earth/" target="_blank" className="underline">Learn more</Link>
           </div>
         </section>
 
