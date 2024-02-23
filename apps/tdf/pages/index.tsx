@@ -282,7 +282,7 @@ const HomePage = () => {
               <img src="/images/maps/co-living.png" alt="TDF Orchard Map" />
             </div>
           </div>
-          <div className="md:max-w-xl">
+          <div className="max-w-prose">
             <Heading className="text-center md:text-left mb-6 uppercase text-2xl font-black flex">
               Co-living Development{' '}
               <span className="justify-center align-center -mt-1 ml-4">
@@ -325,7 +325,7 @@ const HomePage = () => {
         </section>
 
         <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2 space-x-4">
-          <div className="md:max-w-xl">
+          <div className="max-w-prose">
             <Heading className="text-center md:text-left mb-6 uppercase text-2xl font-black">
               Agroforestry and land developments
             </Heading>
@@ -389,14 +389,16 @@ const HomePage = () => {
           </div>
         </section>
 
-        <section className="py-12">
+        <section className="py-20 my-12">
           <div className="text-center mb-20">
             <div className="w-full flex items-center flex-col">
-              <p className="text-2xl max-w-prose">
-                {`Meet your new home, way of life, and tribe. 
-                  Join a unique blend of solarpunks, web3 aficionados, holistic healers, permaculture pioneers, tree enthusiasts, tech wizards, and regenerative innovators. 
-                  Together, we're reshaping communal living.`}
-              </p>
+              <div className="max-w-prose">
+                <p className="text-2xl max-w-prose">
+                  {`Meet your new home, way of life, and tribe. 
+                    Join a unique collective of creatives, digital nomads, solarpunks, web3 aficionados, permaculturists & entrepreneurs. 
+                    Together, we're reshaping communal living.`}
+                </p>
+              </div>
             </div>
             <PhotoGallery className="mt-8" />
           </div>
