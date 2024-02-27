@@ -50,7 +50,6 @@ const EventPage = ({
   listings,
   settings,
 }: Props) => {
-  console.log('event=', event);
   const { platform }: any = usePlatform();
   const { user, isAuthenticated } = useAuth();
 
@@ -61,7 +60,7 @@ const EventPage = ({
   const [attendees, setAttendees] = useState(event && (event.attendees || []));
   const [isShowingEvent, setIsShowingEvent] = useState(true);
   const [passwordError, setPasswordError] = useState<null | string>(null);
-  const [foodOption] = useState(event.foodOption || 'no_food');
+  const [foodOption] = useState(event?.foodOption || 'no_food');
 
   const canEditEvent = user
     ? user?._id === event?.createdBy || user?.roles.includes('admin')
@@ -69,7 +68,7 @@ const EventPage = ({
 
   const myTicketFilter = event && {
     where: {
-      event: event._id,
+      event: event?._id,
       status: 'approved',
       email: user && user.email,
     },
@@ -118,7 +117,7 @@ const EventPage = ({
       setPassword(eventPassword);
     }
 
-    if (event.password) {
+    if (event?.password) {
       setIsShowingEvent(false);
     }
   }, []);
@@ -432,7 +431,7 @@ const EventPage = ({
                                   <p className="text-md font-bold">
                                     {priceFormat(ticketOption.price)}
                                   </p>
-                                  <p>
+                                  <div>
                                     <div className="hidden sm:flex">
                                       {areTicketsSoldOut && (
                                         <span className="text-xs text-error">
@@ -469,7 +468,7 @@ const EventPage = ({
                                         {__('event_tickets_last')}
                                       </span>
                                     )} */}
-                                  </p>
+                                  </div>
                                 </div>
                               </div>
                             );
@@ -653,11 +652,16 @@ EventPage.getInitialProps = async ({
   const { convert } = require('html-to-text');
   try {
     const [event, listings, settings] = await Promise.all([
-      api.get(`/event/${query.slug}`, {
-        headers: req?.cookies?.access_token && {
-          Authorization: `Bearer ${req?.cookies?.access_token}`,
-        },
-      }),
+      api
+        .get(`/event/${query.slug}`, {
+          headers: req?.cookies?.access_token && {
+            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          },
+        })
+        .catch((err) => {
+          console.error('Error fetching event:', err);
+          return null;
+        }),
       api.get('/listing'),
       api.get('/config/booking'),
     ]);
@@ -665,21 +669,31 @@ EventPage.getInitialProps = async ({
     const options = {
       baseElements: { selectors: ['p', 'h2', 'span'] },
     };
-    const descriptionText = convert(event.data.results.description, options)
-      .trim()
-      .slice(0, 100);
 
-    const eventCreatorId = event.data.results.createdBy;
-    const {
-      data: { results: eventCreator },
-    } = await api.get(`/user/${eventCreatorId}`, {
-      headers: req?.cookies?.access_token && {
-        Authorization: `Bearer ${req?.cookies?.access_token}`,
-      },
-    });
+    let eventCreator;
+    let descriptionText;
+    if (event) {
+      descriptionText = convert(event?.data.results.description, options)
+        .trim()
+        .slice(0, 100);
+
+      const eventCreatorId = event?.data.results.createdBy;
+
+      const {
+        data: { results: eventCreatorData },
+      } = await api.get(`/user/${eventCreatorId}`, {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        },
+      });
+      eventCreator = eventCreatorData;
+      descriptionText = convert(event?.data.results.description, options)
+        .trim()
+        .slice(0, 100);
+    }
 
     return {
-      event: event.data.results,
+      event: event?.data.results,
       eventCreator,
       descriptionText,
       listings: listings.data.results,
