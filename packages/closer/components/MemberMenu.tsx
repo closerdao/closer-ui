@@ -98,6 +98,12 @@ const MemberMenu = () => {
       roles: ['space-host'],
     },
     {
+      label: 'Booking calendar',
+      url: '/bookings/calendar',
+      enabled: isBookingEnabled,
+      roles: ['space-host'],
+    },
+    {
       label: 'Edit listings',
       url: '/listings',
       enabled: isBookingEnabled,
