@@ -16,6 +16,7 @@ import HeadingRow from '../../../components/ui/HeadingRow';
 import ProgressBar from '../../../components/ui/ProgressBar';
 import Row from '../../../components/ui/Row';
 
+import dayjs from 'dayjs';
 import { NextApiRequest } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
@@ -25,6 +26,7 @@ import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { WalletState } from '../../../contexts/wallet';
+import { useBookingSmartContract } from '../../../hooks/useBookingSmartContract';
 import {
   BaseBookingParams,
   Booking,
@@ -64,16 +66,47 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
     ticketOption,
     eventPrice,
     total,
+    _id,
+    eventId,
   } = booking || {};
 
   const { balanceAvailable } = useContext(WalletState);
   const { user, isAuthenticated } = useAuth();
+
+  const bookingYear = dayjs(start).year();
+  const bookingStartDayOfYear = dayjs(start).dayOfYear();
+  const bookingNights = Array.from({ length: duration || 0 }, (_, i) => [
+    bookingYear,
+    bookingStartDayOfYear + i,
+  ]);
+  const { stakeTokens, isStaking, checkContract } = useBookingSmartContract({
+    bookingNights,
+  });
   const router = useRouter();
-  const [canApplyCredits, setCanApplyCredits] = useState(false);
 
   const isNotEnoughBalance = rentalToken?.val
     ? balanceAvailable < rentalToken.val
     : false;
+
+  const listingName = listing?.name;
+
+  const [canApplyCredits, setCanApplyCredits] = useState(false);
+  const [hasAgreedToWalletDisclaimer, setWalletDisclaimer] = useState(false);
+  const [updatedRentalFiat, setUpdatedRentalFiat] = useState(rentalFiat);
+  const [updatedTotal, setUpdatedTotal] = useState(total);
+  const [hasAppliedCredits, setHasAppliedCredits] = useState(false);
+  const [creditsError, setCreditsError] = useState(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [processing, setProcessing] = useState(false);
+
+  const isStripeBooking = updatedTotal && updatedTotal.val > 0;
+  const isFreeBooking = updatedTotal && updatedTotal.val === 0 && !useTokens;
+  const isTokenOnlyBooking =
+    useTokens &&
+    rentalToken &&
+    rentalToken.val > 0 &&
+    updatedTotal &&
+    updatedTotal.val === 0;
 
   useEffect(() => {
     (async () => {
@@ -92,14 +125,12 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
     })();
   }, []);
 
-  const listingName = listing?.name;
-
-  const [hasAgreedToWalletDisclaimer, setWalletDisclaimer] = useState(false);
-  const [updatedRentalFiat, setUpdatedRentalFiat] = useState(rentalFiat);
-  const [updatedTotal, setUpdatedTotal] = useState(total);
-  const [hasAppliedCredits, setHasAppliedCredits] = useState(false);
-  const [creditsError, setCreditsError] = useState(null);
-  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const renderButtonText = () => {
+    if (isStaking) {
+      return __('checkout_processing_token_payment');
+    }
+    return __('checkout_pay');
+  };
 
   const goBack = () => {
     router.push(`/bookings/${booking?._id}/summary`);
@@ -122,8 +153,55 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
     } catch (error) {
       setPaymentError(parseMessageFromError(error));
     }
-
     router.push(`/bookings/${booking?._id}`);
+  };
+
+  const onSuccess = () => {
+    router.push(
+      `/bookings/${_id}/confirmation${eventId ? `?eventId=${eventId}` : ''}`,
+    );
+  };
+
+  const payTokens = async () => {
+    const { success: stakingSuccess, error: stakingError }: any =
+      await stakeTokens(dailyRentalToken?.val || 0);
+    const { success: isBookingMatchContract, error: nightsRejected }: any =
+      await checkContract();
+
+    const error = stakingError || nightsRejected;
+    if (error) {
+      return { error, success: null };
+    }
+
+    if (stakingSuccess?.transactionId && isBookingMatchContract) {
+      await api.post(`/bookings/${_id}/token-payment`, {
+        transactionId: stakingSuccess.transactionId,
+      });
+      return { success: true, error: null };
+    }
+  };
+
+  const handleTokenOnlyBooking = async () => {
+    setProcessing(true);
+    setPaymentError(null);
+    const tokenStakingResult = await payTokens();
+    const { error } = tokenStakingResult || {};
+    if (error) {
+      setProcessing(false);
+      setPaymentError('Token payment failed.');
+      console.error(error);
+      return;
+    }
+
+    try {
+      await api.post('/bookings/payment', {
+        isTokenOnlyBooking: true,
+        _id,
+      });
+      onSuccess();
+    } catch (error) {
+      console.log('error=', error);
+    }
   };
 
   const applyCredits = async () => {
@@ -260,10 +338,15 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
             <p className="text-right text-xs">
               {__('bookings_summary_step_utility_description')}
             </p>
-          </div>
-          <CheckoutTotal total={updatedTotal} />
+        </div>
 
-          {updatedTotal && updatedTotal.val > 0 ? (
+          <CheckoutTotal
+            total={updatedTotal}
+            useTokens={useTokens || false}
+            rentalToken={rentalToken}
+          />
+
+          {isStripeBooking && (
             <CheckoutPayment
               bookingId={booking?._id || ''}
               buttonDisabled={
@@ -280,14 +363,23 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
               user={user}
               eventId={event?._id}
             />
-          ) : (
+          )}
+          {isFreeBooking && (
             <Button className="booking-btn" onClick={handleFreeBooking}>
               {user?.roles.includes('member') || booking?.status === 'confirmed'
                 ? __('buttons_confirm_booking')
                 : __('buttons_booking_request')}
             </Button>
           )}
-
+          {isTokenOnlyBooking && (
+            <Button
+              isEnabled={!processing && !isStaking}
+              className="booking-btn"
+              onClick={handleTokenOnlyBooking}
+            >
+              {renderButtonText()}
+            </Button>
+          )}
           {paymentError && <ErrorMessage error={paymentError} />}
         </div>
       </div>

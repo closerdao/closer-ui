@@ -8,8 +8,6 @@ const Logo: FC = () => {
   const config = useConfig();
   const { LOGO_HEADER, PLATFORM_NAME } = config;
 
-  console.log('config=', config);
-
   return PLATFORM_NAME !== '[object Object]' ? (
     <Link href="/" className="block">
       {LOGO_HEADER ? (
