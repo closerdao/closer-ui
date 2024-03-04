@@ -20,7 +20,7 @@ import { usePlatform } from '../../contexts/platform';
 import api, { cdn } from '../../utils/api';
 import { __ } from '../../utils/helpers';
 
-const MemberPage = ({ member }) => {
+const MemberPage = ({ member, loadError }) => {
   const { user } = useAuth();
   const router = useRouter();
   const [introMessage, setMessage] = useState('');
@@ -111,6 +111,10 @@ const MemberPage = ({ member }) => {
       setSendErrors(error);
     }
   };
+
+  if (loadError) {
+    return <PageNotFound error={loadError} />;
+  }
 
   if (!member) {
     return <PageNotFound error={error} />;
