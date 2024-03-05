@@ -8,28 +8,25 @@ import Timeline, {
   TimelineHeaders,
 } from 'react-calendar-timeline';
 
-import { Spinner } from '../../components/ui';
+import { ErrorMessage, Spinner } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
 import dayjs from 'dayjs';
-import timezone from 'dayjs/plugin/timezone';
-import utc from 'dayjs/plugin/utc';
 
 import PageNotFound from '../404';
-import { MAX_USERS_TO_FETCH } from '../../constants';
+import { MAX_BOOKINGS_TO_FETCH, MAX_USERS_TO_FETCH } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
+import { useDebounce } from '../../hooks/useDebounce';
 import {
   formatListings,
   generateBookingItems,
   getBookingsWithUserAndListing,
   getFilterAccommodationUnits,
 } from '../../utils/booking.helpers';
+import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
 
 const loadTime = Date.now();
 
@@ -41,25 +38,38 @@ const BookingsCalendarPage = () => {
   const defaultTimeStart = dayjs().startOf('day').toDate();
   const defaultTimeEnd = dayjs().startOf('day').add(14, 'day').toDate();
   const dayAsMs = 24 * 60 * 60 * 1000;
-  const monthAgo = new Date(loadTime - 30 * dayAsMs);
   const sixHours = 6 * 60 * 60 * 1000;
   const oneMonth = 30 * dayAsMs;
+  const defaultAccommodationUnits = [{ title: __('bookings_no_bookings') }];
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const [lastNonEmptyUnits, setLastNonEmptyUnits] = useState(
+    defaultAccommodationUnits,
+  );
+  const [lastNonEmptyBookingItems, setLastNonEmptyBookingItems] = useState([]);
+
+  const [visibleRange, setVisibleRange] = useState<{
+    start: Date;
+    end: Date;
+  }>({
+    start: new Date(loadTime),
+    end: defaultTimeEnd,
+  });
+
+  const debouncedVisibleRange = useDebounce(visibleRange, 500);
 
   const filter = {
     where: {
       status: { $in: ['paid', 'checked-in', 'checked-out'] },
-      end: { $gte: monthAgo },
+      $and: [
+        { start: { $lte: new Date(debouncedVisibleRange.end) } },
+        { end: { $gte: new Date(debouncedVisibleRange.start) } },
+      ],
     },
+    limit: MAX_BOOKINGS_TO_FETCH,
   };
-
-  const [loading, setLoading] = useState(false);
-  const [visibleRange, setVisibleRange] = useState<{
-    start: dayjs.Dayjs;
-    end: dayjs.Dayjs;
-  }>({
-    start: dayjs(),
-    end: dayjs(),
-  });
 
   const bookings = platform.booking.find(filter);
   const listings = platform.listing.find();
@@ -96,18 +106,40 @@ const BookingsCalendarPage = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [debouncedVisibleRange]);
+
+  useEffect(() => {
+    if (filteredAccommodationUnits && filteredAccommodationUnits.length > 0) {
+      if (
+        JSON.stringify(filteredAccommodationUnits) !==
+        JSON.stringify(lastNonEmptyUnits)
+      ) {
+        setLastNonEmptyUnits(filteredAccommodationUnits);
+      }
+    }
+  }, [filteredAccommodationUnits, lastNonEmptyUnits]);
+
+  useEffect(() => {
+    if (bookingItems && bookingItems.length > 0) {
+      if (
+        JSON.stringify(bookingItems) !==
+        JSON.stringify(lastNonEmptyBookingItems)
+      ) {
+        setLastNonEmptyBookingItems(bookingItems);
+      }
+    }
+  }, [bookingItems, lastNonEmptyBookingItems]);
 
   const handleSelectedRangeChange = (
     visibleTimeStart: number,
     visibleTimeEnd: number,
     updateScrollCanvas: (start: number, end: number) => void,
   ) => {
-    // TODO: update filter based on visibleTimeStart and visibleTimeEnd. This requires compound queries support
     setVisibleRange({
-      start: dayjs(visibleTimeStart),
-      end: dayjs(visibleTimeEnd),
+      start: new Date(visibleTimeStart),
+      end: new Date(visibleTimeEnd),
     });
+
     updateScrollCanvas(visibleTimeStart, visibleTimeEnd);
   };
 
@@ -123,8 +155,9 @@ const BookingsCalendarPage = () => {
         platform.listing.get(),
         platform.user.get({ limit: MAX_USERS_TO_FETCH }),
       ]);
-    } catch (err) {
+    } catch (err: any) {
       console.log('Error loading data...', err);
+      setError(err);
     } finally {
       setLoading(false);
     }
@@ -149,44 +182,53 @@ const BookingsCalendarPage = () => {
 
       <main className="flex flex-col gap-4">
         <Heading level={1}>{__('booking_calendar')}</Heading>
-        {loading ? (
-          <Spinner />
-        ) : (
-          <div className="">
-            <Timeline
-              sidebarWidth={220}
-              groups={filteredAccommodationUnits || []}
-              items={bookingItems || []}
-              defaultTimeStart={defaultTimeStart}
-              defaultTimeEnd={defaultTimeEnd}
-              onItemSelect={handleBookingClick}
-              onTimeChange={handleSelectedRangeChange}
-              minZoom={sixHours}
-              maxZoom={oneMonth}
-            >
-              <TimelineHeaders className="sticky">
-                <SidebarHeader>
-                  {({ getRootProps }) => {
-                    return <div {...getRootProps()}>Listing/bed</div>;
-                  }}
-                </SidebarHeader>
-                <DateHeader unit="primaryHeader" />
-                <DateHeader height={44} />
-              </TimelineHeaders>
 
-              <CustomMarker date={Math.floor(new Date().getTime() / 1000)}>
-                {({ styles }) => {
-                  const customStyles = {
-                    ...styles,
-                    backgroundColor: 'deeppink',
-                    width: '3px',
-                  };
-                  return <div style={customStyles} />;
+        <div className="min-h-[600px]">
+          <Timeline
+            sidebarWidth={220}
+            groups={(lastNonEmptyUnits || defaultAccommodationUnits).map(
+              (unit, index) => ({
+                id: index.toString(),
+                ...unit,
+              }),
+            )}
+            items={lastNonEmptyBookingItems || []}
+            defaultTimeStart={defaultTimeStart}
+            defaultTimeEnd={defaultTimeEnd}
+            onItemSelect={handleBookingClick}
+            onTimeChange={handleSelectedRangeChange}
+            minZoom={sixHours}
+            maxZoom={oneMonth}
+            className="relative "
+          >
+            <TimelineHeaders className="sticky">
+              {loading && (
+                <div className="px-4 w-[200px] flex gap-2 items-center absolute h-[30px] bottom-[-30px] left-0   bg-white z-10">
+                  <Spinner /> Updating...
+                </div>
+              )}
+              <SidebarHeader>
+                {({ getRootProps }) => {
+                  return <div {...getRootProps()}>Listing/bed</div>;
                 }}
-              </CustomMarker>
-            </Timeline>
-          </div>
-        )}
+              </SidebarHeader>
+              <DateHeader unit="primaryHeader" />
+              <DateHeader height={44} />
+            </TimelineHeaders>
+
+            <CustomMarker date={Math.floor(new Date().getTime() / 1000)}>
+              {({ styles }) => {
+                const customStyles = {
+                  ...styles,
+                  backgroundColor: 'deeppink',
+                  width: '3px',
+                };
+                return <div style={customStyles} />;
+              }}
+            </CustomMarker>
+          </Timeline>
+          {error && <ErrorMessage error={parseMessageFromError(error)} />}
+        </div>
       </main>
     </>
   );

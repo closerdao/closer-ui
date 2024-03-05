@@ -108,8 +108,8 @@ export const getBookingsWithUserAndListing = (
     const localStart = convertTimeToPropertyTimezone(start);
     const doesNeedPickup = b.get('doesNeedPickup') ?? false;
     const status = b.get('status') ?? 'unknown';
-    const fiatPriceVal = b.get('rentalFiat').get('val') ?? 0;
-    const fiatPriceCur = b.get('rentalFiat').get('cur') ?? 0;
+    const fiatPriceVal = b.get('rentalFiat')?.get('val') ?? 0;
+    const fiatPriceCur = b.get('rentalFiat')?.get('cur') ?? 0;
 
     const listingId = b.get('listing');
     const listingName =
