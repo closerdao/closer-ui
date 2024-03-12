@@ -208,6 +208,29 @@ export const configDescription = [
     },
   },
   {
+    slug: 'volunteering',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      elements: {
+        type: [
+          {
+            title: 'text',
+            description: 'text',
+          },
+        ],
+        default: [
+          {
+            title: '',
+            description: '',
+          },
+        ],
+      },
+    },
+  },
+  {
     slug: 'fundraiser',
     value: {
       enabled: {

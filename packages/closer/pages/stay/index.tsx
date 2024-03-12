@@ -6,7 +6,6 @@ import React, { useEffect } from 'react';
 import BookingRules from '../../components/BookingRules';
 import Hosts from '../../components/Hosts';
 import ListingListPreview from '../../components/ListingListPreview';
-import PhotoGallery from '../../components/PhotoGallery';
 import Reviews from '../../components/Reviews';
 import UpcomingEventsIntro from '../../components/UpcomingEventsIntro';
 import Heading from '../../components/ui/Heading';
@@ -102,22 +101,25 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
         </div>
       </section>
 
-      {/* TODO: make gallery configurable for each village */}
-      {APP_NAME?.toLowerCase() === 'tdf' && (
-        <section className="max-w-6xl mx-auto mb-16">
-          <PhotoGallery />
-        </section>
-      )}
-
       {bookingRules?.enabled && <BookingRules rules={bookingRules?.elements} />}
 
-      <section className="max-w-6xl mx-auto mb-16">
+      <section className="max-w-6xl mx-auto mb-16 flex align-center">
         <Link
           href="/bookings/create/dates"
           className="btn btn-primary text-xl px-8 py-3"
         >
-          {__('buttons_apply_to_stay')}
+          {user?.roles.includes('member') ? 
+            __('buttons_book_now') :
+            __('buttons_apply_to_stay') }
         </Link>
+        { process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING &&
+          <Link
+            href="/volunteer"
+            className="text-xl px-8 py-3 text-primary italic underline"
+          >
+            { __('buttons_volunteer')}
+          </Link>
+          }
       </section>
 
       <section className="max-w-6xl mx-auto mb-16">

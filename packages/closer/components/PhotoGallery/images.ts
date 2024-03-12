@@ -119,10 +119,4 @@ export const images: CustomImage[] = [
     width: 263,
     height: 350,
   },
-  {
-    src: `${process.env.NEXT_PUBLIC_CDN_URL}gallery/full-size/tdf-25.jpg`,
-    original: `${process.env.NEXT_PUBLIC_CDN_URL}gallery/full-size/tdf-25.jpg`,
-    width: 263,
-    height: 350,
-  },
 ];

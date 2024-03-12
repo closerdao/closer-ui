@@ -3,6 +3,7 @@ const config = {
   platformAllowedConfigs: [
     'booking',
     'general',
+    'volunteering',
     'subscriptions',
     'booking-rules',
     'fundraiser',
