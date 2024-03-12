@@ -91,3 +91,31 @@ export type Booking = {
 export interface StatusColor {
   [key: string]: string;
 }
+
+export interface BookingWithUserAndListing {
+  _id: string;
+  start: number | Date;
+  end: number | Date;
+  adults: number;
+  userInfo: {
+    name: string;
+    photo: string;
+  };
+  listingId: string;
+  fiatPriceVal: number;
+  fiatPriceCur: CloserCurrencies;
+}
+
+export interface AccommodationUnit {
+  id: number;
+  title: string;
+  listingId: string;
+}
+
+export interface BookingItem {
+  id: string;
+  group: number;
+  title: string;
+  start_time: Date;
+  end_time: Date;
+}

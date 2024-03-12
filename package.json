@@ -28,5 +28,10 @@
   },
   "engines": {
     "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "@types/react-calendar-timeline": "^0.28.6",
+    "interactjs": "^1.10.26",
+    "react-calendar-timeline": "^0.28.0"
   }
 }

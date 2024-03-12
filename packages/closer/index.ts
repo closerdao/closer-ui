@@ -60,6 +60,7 @@ export { default as BookingsPage } from './pages/bookings/index';
 export { default as CurrentBookingsPage } from './pages/bookings/current';
 export { default as BookingsRequestsPage } from './pages/bookings/requests';
 export { default as AllBookingsRequestsPage } from './pages/bookings/all';
+export { default as BookingsCalendarPage } from './pages/bookings/calendar';
 export { default as ChannelPage } from './pages/channel/[channel]';
 export { default as CreateChannelPage } from './pages/channel/create';
 export { default as CommunityPage } from './pages/community';
