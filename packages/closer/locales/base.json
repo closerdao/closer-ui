@@ -41,7 +41,7 @@
   "booking_cancelation_policy_member": "Members can cancel their bookings at no cost, up to 7 days before check in. If you cancel within less than 7 days, you'll receive a 50% refund.",
   "booking_volunteering_details": "You will be supporting the efforts of the stewards on the ground by providing 3-4h of work each day.",
   "booking_cancelation_policy": "In case the booking is declined for any reason you will receive a full refund. If you decide to cancel, you will receive a 90% refund up to 30 days prior and 50% refund up to 7 days before the booking.",
-  "booking_cancel_button": "Cancel",
+  "booking_cancel_button": "Cancel booking",
   "booking_confirm_button": "Approve",
   "booking_reject_button": "Reject",
   "booking_contact_button": "Contact",
@@ -81,6 +81,7 @@
   "bookings_dates_step_member_book_horizon": "Members can book up to %s days in advance",
   "bookings_dates_step_total": "Total Nights",
   "bookings_dates_step_payment_title": "Payment Method",
+  "bookings_dates_enter_date": "Enter date",
   "bookings_questionnaire_step_title": "About you",
   "bookings_questionnaire_step_subtitle": "Fill out the questions below",
   "bookings_checkout_step_title": "Checkout",
@@ -123,6 +124,8 @@
   "bookings_confirmation_step_you_are_coming": "You are coming to",
   "bookings_select_dates_button": "Select dates",
   "bookings_select_stay_dates": "Select stay dates",
+  "bookings_updated_price": "Updated",
+  "bookings_edit_stay_dates": "Edit stay dates",
   "bookings_date_range_error": "Please select stay dates",
   "bookings_incomplete_dates_error": "Please select checkout date",
   "bookings_does_prefer_single_beds": "I prefer single beds",
@@ -366,6 +369,9 @@
   "booking_card_payment_event": "Event Cost",
   "booking_card_pickup_needed": "Pickup needed",
   "booking_card_separate_beds_needed": "Single beds needed",
+  "booking_card_edit_booking": "Edit booking",
+  "booking_card_save_booking": "Save booking",
+  "booking_card_booking_updated": "Booking updated",
   "booking_rate_daily": "Night",
   "booking_rate_weekly": "Week",
   "booking_rate_monthly": "Month",
@@ -930,7 +936,6 @@
   "manage_users_preparing_data": "Preparing data...",
   "manage_users_lear_filters_button": "Clear filters",
 
-
   "resources_faqs_error": "Error fetching FAQs",
 
   "learn_heading": "TDF Learning Hub",
@@ -1087,7 +1092,5 @@
   "blog_home_button": "Homepage",
   "generic_save_button": "Save",
 
-
   "generic_edit_button": "Edit"
 }
-

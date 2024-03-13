@@ -14,6 +14,11 @@ interface Props {
   volunteerId?: string;
   foodOption?: string;
   isNotPaid?: boolean;
+  updatedAccomodationTotal?: Price<CloserCurrencies>;
+  isEditMode?: boolean;
+  updatedUtilityTotal?: Price<CloserCurrencies>;
+  updatedFiatTotal?: Price<CloserCurrencies>;
+  updatedEventTotal?: Price<CloserCurrencies>;
 }
 
 const SummaryCosts = ({
@@ -26,6 +31,11 @@ const SummaryCosts = ({
   eventCost,
   eventDefaultCost,
   isNotPaid,
+  updatedAccomodationTotal,
+  isEditMode,
+  updatedUtilityTotal,
+  updatedFiatTotal,
+  updatedEventTotal,
 }: Props) => {
   return (
     <div>
@@ -37,70 +47,113 @@ const SummaryCosts = ({
       {eventCost ? (
         <div className="flex justify-between items-center mt-3">
           <p>{__('bookings_checkout_event_cost')}</p>
-          <p className="font-bold">
-            {eventCost?.val !== 0 && eventDefaultCost !== eventCost?.val && (
-              <span className="line-through">
-                {priceFormat(eventDefaultCost)}
-              </span>
-            )}{' '}
-            {priceFormat(eventCost)}
-          </p>
+          <div className="flex items-center gap-2">
+            {isEditMode && updatedEventTotal?.val !== eventDefaultCost && (
+              <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
+                {__('bookings_updated_price')}: {priceFormat(updatedEventTotal)}
+              </div>
+            )}
+            <p className="font-bold">
+              {eventCost?.val !== 0 && eventDefaultCost !== eventCost?.val && (
+                <span className="line-through">
+                  {priceFormat(eventDefaultCost)}
+                </span>
+              )}{' '}
+              {priceFormat(eventCost)}
+            </p>
+          </div>
         </div>
       ) : null}
 
       <div className="flex justify-between items-center mt-3">
         <p>{__('bookings_summary_step_dates_accomodation_type')}</p>
-        <p className="font-bold">
-          {priceFormat(accomodationCost)}
-          {isNotPaid && (
-            <span className="text-failure"> {__('booking_card_unpaid')}</span>
-          )}
-        </p>
+        <div className="flex items-center gap-2">
+          {isEditMode &&
+            updatedAccomodationTotal?.val !== accomodationCost?.val && (
+              <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
+                {__('bookings_updated_price')}:{' '}
+                {priceFormat(updatedAccomodationTotal)}
+              </div>
+            )}
+
+          <p className="font-bold">
+            {priceFormat(accomodationCost)}
+            {isNotPaid && (
+              <span className="text-failure"> {__('booking_card_unpaid')}</span>
+            )}
+          </p>
+        </div>
       </div>
       <p className="text-right text-xs">
         {__('bookings_summary_step_accomodation_type_description')}
       </p>
       <div className="flex justify-between items-center mt-3">
         <p> {__('bookings_summary_step_utility_total')}</p>
-        <p className="font-bold">
-          {foodOption === 'no_food' ?
-            'NOT INCLUDED':
-            priceFormat(utilityFiat)
-          }
-          {isNotPaid && (
-            <span className="text-failure"> {__('booking_card_unpaid')}</span>
+        <div className="flex items-center gap-2">
+          {isEditMode && updatedUtilityTotal?.val !== utilityFiat?.val && (
+            <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
+              {__('bookings_updated_price')}: {priceFormat(updatedUtilityTotal)}
+            </div>
           )}
-        </p>
+          <p className="font-bold">
+            {foodOption === 'no_food'
+              ? 'NOT INCLUDED'
+              : priceFormat(utilityFiat)}
+            {isNotPaid && (
+              <span className="text-failure"> {__('booking_card_unpaid')}</span>
+            )}
+          </p>
+        </div>
       </div>
       <p className="text-right text-xs">
         {__('bookings_summary_step_utility_description')}
       </p>
       <div className="flex justify-between items-center mt-3">
         <p>{__('bookings_total')}</p>
-        <p className="font-bold">
-          {useTokens ? (
-            <>
-              <span>{priceFormat(totalToken)}</span> +{' '}
-              <span>{priceFormat(totalFiat)}</span>
-              {isNotPaid && (
-                <span className="text-failure">
-                  {' '}
-                  {__('booking_card_unpaid')}
+        <div className="flex items-center gap-2">
+          {isEditMode &&
+            (updatedFiatTotal?.val !== totalFiat?.val ||
+              updatedAccomodationTotal?.val !== accomodationCost?.val) && (
+              <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
+                {__('bookings_updated_price')}:{' '}
+                <span>
+                  {useTokens ? (
+                    <div>
+                      {priceFormat(updatedAccomodationTotal)} +{' '}
+                      {priceFormat(updatedFiatTotal)}
+                    </div>
+                  ) : (
+                    priceFormat(updatedFiatTotal)
+                  )}
                 </span>
-              )}
-            </>
-          ) : (
-            <>
-              {priceFormat(totalFiat)}
-              {isNotPaid && (
-                <span className="text-failure">
-                  {' '}
-                  {__('booking_card_unpaid')}
-                </span>
-              )}
-            </>
-          )}
-        </p>
+              </div>
+            )}
+          <div className="font-bold">
+            {useTokens ? (
+              <>
+                <span>{priceFormat(totalToken)}</span> +{' '}
+                <span>{priceFormat(totalFiat)}</span>
+                {isNotPaid && (
+                  <span className="text-failure">
+                    {' '}
+                    {__('booking_card_unpaid')}
+                  </span>
+                )}
+              </>
+            ) : (
+              <div>
+                {' '}
+                {priceFormat(totalFiat)}
+                {isNotPaid && (
+                  <span className="text-failure">
+                    {' '}
+                    {__('booking_card_unpaid')}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
       <p className="text-right text-xs">
         {__('bookings_checkout_step_total_description')} {getVatInfo(totalFiat)}

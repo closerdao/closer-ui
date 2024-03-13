@@ -5,7 +5,9 @@ import {
   AccommodationUnit,
   BookingItem,
   BookingWithUserAndListing,
+  CloserCurrencies,
   Listing,
+  Price,
 } from '../types';
 import { __, priceFormat } from './helpers';
 
@@ -51,14 +53,90 @@ export const getFiatTotal = (
   foodOption: string,
   utilityTotal: number,
   accomodationTotal: number,
+  eventTotal?: number,
+  useTokens?: boolean,
 ) => {
   if (isTeamBooking) {
     return 0;
   }
+  const accommodationFiatTotal = useTokens ? 0 : accomodationTotal;
   if (foodOption === 'no_food') {
-    return accomodationTotal;
+    return accommodationFiatTotal + (eventTotal || 0);
   }
-  return utilityTotal + accomodationTotal;
+  return utilityTotal + accommodationFiatTotal + (eventTotal || 0);
+};
+
+export const getUtilityTotal = ({
+  foodOption,
+  utilityFiatVal,
+  isPrivate,
+  updatedAdults,
+  updatedDurationInDays,
+  discountRate,
+}: {
+  foodOption: string;
+  utilityFiatVal: number | undefined;
+  isPrivate: boolean;
+  updatedAdults: number;
+  updatedDurationInDays: number;
+  discountRate: number;
+}) => {
+  if (foodOption === 'no_food') {
+    return 0;
+  }
+  if (!utilityFiatVal) {
+    return 0;
+  }
+  const multiplier = isPrivate ? 1 : updatedAdults;
+  const total =
+    utilityFiatVal * multiplier * updatedDurationInDays * discountRate;
+  return total;
+};
+
+export const getAccommodationTotal = (
+  listing: Listing | undefined,
+  useTokens: boolean,
+  adults: number,
+  durationInDays: number,
+  discountRate: number,
+) => {
+  if (!listing) return 0;
+  const price = useTokens ? listing.tokenPrice?.val : listing.fiatPrice?.val;
+  const multiplier = listing.private ? 1 : adults;
+  const total = +(price * multiplier * durationInDays * discountRate).toFixed(
+    2,
+  );
+  return total;
+};
+
+export const getPaymentDelta = (
+  total: number,
+  updatedFiatTotal: number,
+  useToken: boolean,
+  rentalToken: Price<CloserCurrencies>,
+  updatedAccomodationTotal: number,
+  rentalFiatCur: CloserCurrencies,
+) => {
+  if (useToken) {
+    return {
+      token: {
+        val:
+          Number((updatedAccomodationTotal - rentalToken?.val).toFixed(2)) || 0,
+        cur: rentalToken?.cur,
+      },
+      fiat: {
+        val: Number((updatedFiatTotal - total).toFixed(2)) || 0,
+        cur: rentalFiatCur,
+      },
+    };
+  }
+  return {
+    token: { val: 0, cur: rentalToken?.cur },
+    fiat: {
+      val: Number((updatedFiatTotal - total).toFixed(2)) || 0,
+      cur: rentalFiatCur,
+    },
+  };
 };
 
 export const formatListings = (listings: Listing[]) => {
