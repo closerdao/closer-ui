@@ -7,6 +7,7 @@ import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
 import UserInfoButton from '../../../components/UserInfoButton';
+import { Button, Information } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
 import dayjs from 'dayjs';
@@ -28,8 +29,14 @@ import {
   VolunteerOpportunity,
 } from '../../../types';
 import api from '../../../utils/api';
+import {
+  getAccommodationTotal,
+  getFiatTotal,
+  getPaymentDelta,
+  getUtilityTotal,
+} from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { __ } from '../../../utils/helpers';
+import { __, getBookingRate, getDiscountRate } from '../../../utils/helpers';
 
 dayjs.extend(LocalizedFormat);
 
@@ -41,6 +48,7 @@ interface Props {
   volunteer: VolunteerOpportunity;
   bookingCreatedBy: User;
   bookingConfig: BookingConfig | null;
+  listings: Listing[];
 }
 
 const BookingPage = ({
@@ -51,6 +59,7 @@ const BookingPage = ({
   error,
   bookingCreatedBy,
   bookingConfig,
+  listings,
 }: Props) => {
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -59,12 +68,6 @@ const BookingPage = ({
   const { platform }: any = usePlatform();
   const { isAuthenticated, user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
-  const userInfo = bookingCreatedBy && {
-    name: bookingCreatedBy.screenname,
-    photo: bookingCreatedBy.photo,
-  };
-
-  const [status, setStatus] = useState(booking?.status);
 
   const {
     utilityFiat,
@@ -86,7 +89,128 @@ const BookingPage = ({
     createdBy,
     _id,
     created,
+    isTeamBooking,
+    eventPrice,
   } = booking || {};
+
+  const userInfo = bookingCreatedBy && {
+    name: bookingCreatedBy.screenname,
+    photo: bookingCreatedBy.photo,
+  };
+
+  const [status, setStatus] = useState(booking?.status);
+  const [updatedAdults, setUpdatedAdults] = useState(adults);
+  const [updatedChildren, setUpdatedChildren] = useState(children);
+  const [updatedInfants, setUpdatedInfants] = useState(infants);
+  const [updatedPets, setUpdatedPets] = useState(pets);
+  const [updatedStartDate, setUpdatedStartDate] = useState<
+    string | Date | null
+  >(bookingStart);
+  const [updatedEndDate, setUpdatedEndDate] = useState<string | Date | null>(
+    bookingEnd,
+  );
+  const [updatedListingId, setUpdatedListingId] = useState(listing?._id);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasUpdated, setHasUpdated] = useState(false);
+
+  const setters = {
+    setUpdatedAdults,
+    setUpdatedChildren,
+    setUpdatedInfants,
+    setUpdatedPets,
+    setUpdatedEndDate,
+    setUpdatedStartDate,
+    setUpdatedListingId,
+  };
+  const isNotPaid = status !== 'paid';
+
+  const updatedDurationInDays = Math.ceil(
+    dayjs(updatedEndDate).diff(dayjs(updatedStartDate), 'hour') / 24,
+  );
+
+  const updatedListing = listings?.find(
+    (listing) => listing._id === updatedListingId,
+  );
+  const updatedMaxBeds = updatedListing?.beds || 1;
+
+  const updatedDurationName = getBookingRate(updatedDurationInDays);
+  const updatedDiscountRate = bookingConfig
+    ? 1 - getDiscountRate(updatedDurationName, bookingConfig)
+    : 0;
+
+  const updatedAccomodationTotal = getAccommodationTotal(
+    updatedListing,
+    useTokens,
+    updatedAdults,
+    updatedDurationInDays,
+    updatedDiscountRate,
+  );
+
+  const foodOption = 'no_food';
+
+  const updatedUtilityTotal = getUtilityTotal({
+    foodOption,
+    utilityFiatVal: bookingConfig?.utilityFiatVal,
+    isPrivate: listing?.private,
+    updatedAdults,
+    updatedDurationInDays,
+    discountRate: updatedDiscountRate,
+  });
+
+  const updatedEventTotal = (eventPrice?.val || 0) * updatedAdults || 0;
+
+  const updatedFiatTotal = getFiatTotal(
+    Boolean(isTeamBooking),
+    foodOption,
+    updatedUtilityTotal,
+    updatedAccomodationTotal,
+    updatedEventTotal,
+    useTokens,
+  );
+
+  const paymentDelta = isNotPaid
+    ? null
+    : getPaymentDelta(
+        total?.val,
+        updatedFiatTotal,
+        useTokens,
+        rentalToken,
+        updatedAccomodationTotal,
+        rentalFiat?.cur,
+      );
+
+  const updatedBooking = {
+    ...booking,
+    start: updatedStartDate,
+    end: updatedEndDate,
+    duration: updatedDurationInDays,
+    adults: updatedAdults,
+    children: updatedChildren,
+    pets: updatedPets,
+    infants: updatedInfants,
+    utilityFiat: { val: updatedUtilityTotal, cur: rentalFiat?.cur },
+    rentalFiat: useTokens
+      ? rentalFiat
+      : { val: updatedAccomodationTotal, cur: rentalFiat?.cur },
+    rentalToken: useTokens
+      ? { val: updatedAccomodationTotal, cur: rentalToken?.cur }
+      : booking?.rentalToken,
+    ...(eventFiat
+      ? {
+          eventFiat: {
+            val: updatedEventTotal,
+            cur: eventFiat?.cur,
+            _id: eventFiat?._id,
+          },
+        }
+      : null),
+    listing: updatedListingId,
+    total: { val: updatedFiatTotal, cur: rentalFiat?.cur },
+    paymentDelta: paymentDelta ? paymentDelta : null,
+  };
+
+  const hasUpdatedBooking =
+    JSON.stringify(booking) !== JSON.stringify(updatedBooking);
 
   const refetchStatus = async () => {
     const {
@@ -97,7 +221,6 @@ const BookingPage = ({
   };
 
   const createdFormatted = dayjs(created).format('DD/MM/YYYY - HH:mm:A');
-  const isNotPaid = status !== 'paid';
 
   const confirmBooking = async () => {
     await platform.bookings.confirm(_id);
@@ -106,6 +229,25 @@ const BookingPage = ({
   const rejectBooking = async () => {
     await platform.bookings.reject(_id);
     await refetchStatus();
+  };
+
+  const handleSaveBooking = async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.patch(`/booking/${_id}`, updatedBooking);
+      setHasUpdated(false);
+      if (res.status === 200) {
+        setHasUpdated(true);
+        setTimeout(() => {
+          setHasUpdated(false);
+          window.location.reload();
+        }, 3000);
+      }
+    } catch (error) {
+      console.log('error====', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (
@@ -134,7 +276,7 @@ const BookingPage = ({
         />
         <meta property="og:type" content="booking" />
       </Head>
-      <main className="main-content max-w-prose booking flex flex-col gap-4">
+      <main className="main-content max-w-prose booking flex flex-col gap-8">
         <Heading className="mb-4">
           {__(`bookings_title_${booking.status}`)}
         </Heading>
@@ -160,12 +302,12 @@ const BookingPage = ({
         <section className="flex flex-col gap-12">
           <SummaryDates
             isDayTicket={booking?.isDayTicket}
-            totalGuests={adults}
-            kids={children}
-            infants={infants}
-            pets={pets}
-            startDate={bookingStart}
-            endDate={bookingEnd}
+            totalGuests={isSpaceHost ? updatedAdults : adults}
+            kids={isSpaceHost ? updatedChildren : children}
+            infants={isSpaceHost ? updatedInfants : infants}
+            pets={isSpaceHost ? updatedPets : pets}
+            startDate={isSpaceHost ? updatedStartDate : bookingStart}
+            endDate={isSpaceHost ? updatedEndDate : bookingEnd}
             listingName={listing?.name}
             listingUrl={listing?.slug}
             volunteerId={volunteerId}
@@ -174,6 +316,11 @@ const BookingPage = ({
             ticketOption={ticketOption?.name}
             doesNeedPickup={doesNeedPickup}
             doesNeedSeparateBeds={doesNeedSeparateBeds}
+            isEditMode={isSpaceHost}
+            setters={setters}
+            updatedListingId={updatedListingId}
+            listings={listings}
+            updatedMaxBeds={updatedMaxBeds}
           />
           <SummaryCosts
             utilityFiat={utilityFiat}
@@ -188,9 +335,39 @@ const BookingPage = ({
             accomodationDefaultCost={listing?.fiatPrice?.val * adults}
             volunteerId={volunteerId}
             isNotPaid={isNotPaid}
+            updatedAccomodationTotal={{
+              val: updatedAccomodationTotal,
+              cur: useTokens ? rentalToken.cur : rentalFiat?.cur,
+            }}
+            isEditMode={isSpaceHost}
+            updatedUtilityTotal={{
+              val: updatedUtilityTotal,
+              cur: utilityFiat?.cur,
+            }}
+            updatedFiatTotal={{
+              val: updatedFiatTotal,
+              cur: rentalFiat?.cur,
+            }}
+            updatedEventTotal={{
+              val: updatedEventTotal,
+              cur: eventFiat?.cur,
+            }}
           />
         </section>
+
         <section>
+          <div className="flex flex-col gap-4">
+            <Button
+              isLoading={isLoading}
+              onClick={handleSaveBooking}
+              isEnabled={hasUpdatedBooking && !isLoading}
+            >
+              {__('booking_card_save_booking')}
+            </Button>
+            {hasUpdated && (
+              <Information>{__('booking_card_booking_updated')}</Information>
+            )}
+          </div>
           <BookingRequestButtons
             _id={_id}
             status={status}
@@ -218,7 +395,7 @@ BookingPage.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
-    const [bookingRes, bookingConfigRes] = await Promise.all([
+    const [bookingRes, bookingConfigRes, listingRes] = await Promise.all([
       api
         .get(`/booking/${query.slug}`, {
           headers: req?.cookies?.access_token && {
@@ -231,9 +408,13 @@ BookingPage.getInitialProps = async ({
       api.get('/config/booking').catch(() => {
         return null;
       }),
+      api.get('/listing').catch(() => {
+        return null;
+      }),
     ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
+    const listings = listingRes?.data?.results;
 
     const [optionalEvent, optionalListing, optionalVolunteer] =
       await Promise.all([
@@ -264,11 +445,11 @@ BookingPage.getInitialProps = async ({
     try {
       const optionalCreatedBy =
         booking.createdBy &&
-        api.get(`/user/${booking.createdBy}`, {
+        (await api.get(`/user/${booking.createdBy}`, {
           headers: req?.cookies?.access_token && {
             Authorization: `Bearer ${req?.cookies?.access_token}`,
           },
-        });
+        }));
       bookingCreatedBy = optionalCreatedBy?.data?.results;
     } catch (error) {}
 
@@ -280,6 +461,7 @@ BookingPage.getInitialProps = async ({
       error: null,
       bookingCreatedBy,
       bookingConfig,
+      listings,
     };
   } catch (err: any) {
     console.log('Error', err.message);
@@ -292,6 +474,7 @@ BookingPage.getInitialProps = async ({
       volunteer: null,
       createdBy: null,
       bookingConfig: null,
+      listings: null,
     };
   }
 };

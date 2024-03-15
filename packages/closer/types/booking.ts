@@ -83,9 +83,10 @@ export type Booking = {
     CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH
   >;
   isDayTicket: boolean;
-  eventFiat: Price<CloserCurrencies.EUR>;
+  eventFiat: { val: 0; cur: CloserCurrencies.EUR; _id: string };
   doesNeedSeparateBeds?: boolean;
   doesNeedPickup?: boolean;
+  isTeamBooking?: boolean;
 };
 
 export interface StatusColor {

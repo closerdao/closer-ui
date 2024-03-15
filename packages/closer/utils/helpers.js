@@ -11,8 +11,8 @@ import { REFUND_PERIODS } from '../constants';
 import base from '../locales/base';
 import en from '../locales/en';
 import foz from '../locales/foz';
-import tdf from '../locales/tdf';
 import moos from '../locales/moos';
+import tdf from '../locales/tdf';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(relativeTime);
@@ -26,7 +26,7 @@ const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
 const appDictionaries = {
   tdf,
   foz,
-  moos
+  moos,
 };
 
 let language = Object.assign({}, base, en);
@@ -37,7 +37,11 @@ export const __ = (key, paramValue, app) => {
 
   if (app && app in appDictionaries && appDictionaries[app][key]) {
     val = appDictionaries[app][key];
-  } else if (paramValue && paramValue in appDictionaries && appDictionaries[paramValue][key]) {
+  } else if (
+    paramValue &&
+    paramValue in appDictionaries &&
+    appDictionaries[paramValue][key]
+  ) {
     val = appDictionaries[paramValue][key];
   }
 
@@ -420,15 +424,9 @@ export const sendAnalyticsEvent = (action, category, label) => {
 export const getMaxBookingHorizon = (settings, isMember) => {
   if (settings) {
     if (isMember) {
-      return [
-        settings.memberMaxBookingHorizon,
-        settings.memberMaxDuration,
-      ];
+      return [settings.memberMaxBookingHorizon, settings.memberMaxDuration];
     }
-    return [
-      settings.memberMaxBookingHorizon,
-      settings.guestMaxDuration,
-    ];
+    return [settings.memberMaxBookingHorizon, settings.guestMaxDuration];
   }
   return [0, 0];
 };
@@ -455,7 +453,7 @@ export const getDiscountRate = (durationName, settings) => {
     default:
       return settings.discountsDaily;
   }
-}; 
+};
 
 export const doAllKeysHaveValues = (obj, keys) => {
   if (!obj) return false;
