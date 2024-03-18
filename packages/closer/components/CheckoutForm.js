@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 
+import { useBookingSmartContract } from '../hooks/useBookingSmartContract';
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
 import { ErrorMessage } from './ui';
@@ -49,10 +50,16 @@ const CheckoutForm = ({
   children: conditions,
   hasComplied,
   buttonDisabled,
-  useCredits
+  useCredits,
+  dailyTokenValue,
+  bookingNights,
 }) => {
   const stripe = useStripe();
   const elements = useElements();
+  const { stakeTokens, checkContract } = useBookingSmartContract({
+    bookingNights,
+  });
+
   const [error, setError] = useState(null);
   const [submitDisabled, setSubmitDisabled] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -68,15 +75,21 @@ const CheckoutForm = ({
       } catch (error) {
         setError(error);
         console.error(error);
-      } 
+      }
     }
 
     if (prePayInTokens) {
-      const res = await prePayInTokens();
+      const res = await prePayInTokens(
+        _id,
+        dailyTokenValue,
+        stakeTokens,
+        checkContract,
+      );
+
       const { error } = res || {};
       if (error) {
         setProcessing(false);
-        setError('Token payment failed.');
+        setError(error);
         console.error(error);
         return;
       }
@@ -159,7 +172,7 @@ const CheckoutForm = ({
           }
         } catch (err) {
           setError(err);
-        } 
+        }
       }
 
       // 3d secure NOT required for this payment
@@ -227,7 +240,7 @@ const CheckoutForm = ({
         <Button
           type="submit"
           isEnabled={
-           !submitDisabled && hasComplied && !processing && !buttonDisabled
+            !submitDisabled && hasComplied && !processing && !buttonDisabled
           }
           isSpinnerVisible={processing || isProcessingTokenPayment}
         >
