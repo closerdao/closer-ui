@@ -11,13 +11,13 @@ import PropTypes from 'prop-types';
 import { useBookingSmartContract } from '../hooks/useBookingSmartContract';
 import { useConfig } from '../hooks/useConfig';
 import api from '../utils/api';
+import { payTokens } from '../utils/booking.helpers';
 import { parseMessageFromError } from '../utils/common';
 import { __ } from '../utils/helpers';
 import CheckoutForm from './CheckoutForm';
 import Conditions from './Conditions';
 import { ErrorMessage } from './ui';
 import HeadingRow from './ui/HeadingRow';
-
 
 const stripe = loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY);
 
@@ -50,7 +50,7 @@ const CheckoutPayment = ({
     bookingYear,
     bookingStartDayOfYear + i,
   ]);
-  const { stakeTokens, isStaking, checkContract } = useBookingSmartContract({
+  const { isStaking } = useBookingSmartContract({
     bookingNights,
   });
 
@@ -66,26 +66,6 @@ const CheckoutPayment = ({
         eventId ? `?eventId=${eventId}` : ''
       }`,
     );
-  };
-
-  const payTokens = async () => {
-    const { success: stakingSuccess, error: stakingError } = await stakeTokens(
-      dailyTokenValue,
-    );
-    const { success: isBookingMatchContract, error: nightsRejected } =
-      await checkContract();
-
-    const error = stakingError || nightsRejected;
-    if (error) {
-      return { error, success: null };
-    }
-
-    if (stakingSuccess?.transactionId && isBookingMatchContract) {
-      await api.post(`/bookings/${bookingId}/token-payment`, {
-        transactionId: stakingSuccess.transactionId,
-      });
-      return { success: true, error: null };
-    }
   };
 
   const payWithCredits = async () => {
@@ -123,6 +103,8 @@ const CheckoutPayment = ({
           total={totalToPayInFiat.val}
           currency={totalToPayInFiat.cur}
           hasComplied={hasComplied}
+          dailyTokenValue={dailyTokenValue}
+          bookingNights={bookingNights}
         >
           <Conditions setComply={onComply} visitorsGuide={VISITORS_GUIDE} />
         </CheckoutForm>
