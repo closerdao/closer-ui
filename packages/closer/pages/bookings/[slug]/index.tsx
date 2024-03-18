@@ -144,6 +144,7 @@ const BookingPage = ({
     updatedAdults,
     updatedDurationInDays,
     updatedDiscountRate,
+    volunteerId
   );
 
   const foodOption = 'no_food';

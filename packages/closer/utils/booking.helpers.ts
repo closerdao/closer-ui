@@ -99,8 +99,10 @@ export const getAccommodationTotal = (
   adults: number,
   durationInDays: number,
   discountRate: number,
+  volunteerId: string | undefined,
 ) => {
   if (!listing) return 0;
+  if(volunteerId) return 0;
   const price = useTokens ? listing.tokenPrice?.val : listing.fiatPrice?.val;
   const multiplier = listing.private ? 1 : adults;
   const total = +(price * multiplier * durationInDays * discountRate).toFixed(
