@@ -14,7 +14,7 @@ const MembersPage = () => {
         <title>{__('members_title')}</title>
       </Head>
       <div className="main-content fullheight">
-        <MemberList />
+        <MemberList filter={{ roles: 'member' }} />
       </div>
     </>
   );
