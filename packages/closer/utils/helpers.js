@@ -35,14 +35,18 @@ const ONE_HOUR = 60 * 60 * 1000;
 export const __ = (key, paramValue, app) => {
   let val = language[key] || `__${key}_missing__`;
 
-  if (app && app in appDictionaries && appDictionaries[app][key]) {
-    val = appDictionaries[app][key];
+  if (
+    app &&
+    String(app).toLowerCase() in appDictionaries &&
+    appDictionaries[app.toLowerCase()][key]
+  ) {
+    val = appDictionaries[app.toLowerCase()][key];
   } else if (
     paramValue &&
-    paramValue in appDictionaries &&
-    appDictionaries[paramValue][key]
+    String(paramValue).toLowerCase() in appDictionaries &&
+    appDictionaries[String(paramValue).toLowerCase()][key]
   ) {
-    val = appDictionaries[paramValue][key];
+    val = appDictionaries[String(paramValue).toLowerCase()][key];
   }
 
   if (typeof paramValue !== 'undefined') {

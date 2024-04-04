@@ -23,12 +23,12 @@ const Resources = () => {
   }, [platform]);
 
   return (
-    <ul className="flex flex-wrap text-center divide-x">
+    <ul className="flex flex-wrap text-center divide-x-0 sm:divide sm:divide-x justify-center">
       {platform.resource.find(RESOURCES_KEY) &&
         platform.resource.find(RESOURCES_KEY).map((resource) => (
           <li
             key={resource.get('_id')}
-            className="w-1/2 md:w-1/3 lg:w-1/4 mb-4 p-4 flex flex-col justify-between"
+            className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 mb-4 p-4 flex flex-col justify-between"
           >
             <Heading display level={4} className="mb-4">
               {resource.get('title')}

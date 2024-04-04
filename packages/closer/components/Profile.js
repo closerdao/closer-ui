@@ -86,7 +86,7 @@ const Profile = ({ isDemo }) => {
           </div> */}
         </div>
         <div className="flex space-between justify-center w-full">
-          {isCreditsEnabled && <CreditsBalance isDemo={isDemo} />}
+          {isCreditsEnabled && <CreditsBalance className='text-lg' isDemo={isDemo} />}
         </div>
       </div>
     </div>

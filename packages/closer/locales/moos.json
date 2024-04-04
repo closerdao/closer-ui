@@ -1,22 +1,78 @@
 {
   "events_upcoming_heading": "JOIN US FOR UPCOMING EVENTS",
-  "events_upcoming_intro": "Moos upcoming events intro",
-  "signup_title": "Sign up",
-  "resources_heading": "Resourceful by nature",
-  "resources_subheading": "Resources page intro text",
-  "volunteers_page_intro_text": "Intro text for volunteers page",
+  "events_upcoming_intro": "Moos upcoming events",
+  "signup_title": "Join the MOOS vybes",
+  "resources_heading": "Resources",
+  "resources_subheading": "Read all about our dream: the mission, vision and how we got here, with our digital papers",
+  "volunteers_page_intro_text": "Hey there! Interested in volunteering at MOOS? We're always looking for support for our various events. If you're keen to get involved as a volunteer, please join our Telegram group through the link below and be a part of something amazing!",
+  "volunteers_page_terms_1": "",
+  "volunteers_page_terms_2": "",
+  "volunteers_page_terms_3": "",
+  "volunteers_page_terms_4": "",
+  "volunteers_page_more_info": "More information coming soon.",
+
+
   "resources_resources_heading": "Put the kettle on and get to know us a little better",
   "resources_resources_subheading": "Read all about our dream: the mission, vision and how we got here, with our digital papers",
 
   "resources_faq_heading": "Frequently asked questions",
   "resources_faq_subheading": "Got a question? We’re an open source.",
-  
+
   "stay_title": "Book a stay at",
   "stay_description": "Want to stay for just a few nights? Want to host your work? Want to co-curate a one month residency?",
   "stay_meet_your_hosts": "Meet your hosts",
   "stay_meet_your_hosts_description": "Come and stay in our regenerative village under development. Get a chance to learn about permaculture, bio-construction, web3 - or just come and relax surrounded by beautiful nature. We don't have 5 star facilities just yet, but you get to experience the magic of this place during its early years, and we guarantee you'll meet some inspiring humans you'll become friends with.",
   "stay_chose_accommodation": "Chose your accommodation",
-  "stay_chose_accommodation_description": "We have 20 rooms across two buildings and our chef can pair the experience with breakfast, lunch or dinner."
+  "stay_chose_accommodation_description": "We have 20 rooms across two buildings and our chef can pair the experience with breakfast, lunch or dinner.",
+
+  "navigation_stay": "Book space",
+  "navigation_member_login": "Member login",
+
+  "signup_form_get_credits": "Get ✨ <b>1 VYBE</b> for signing up.",
+
+  "carrots_heading": "Vybes",
+  "carrots_balance": "✨",
+  "carrots_subheading_what": "What do Vybes do?",
+  "carrots_what_1": "Spend Vybes to get discounted accommodation cost.",
+  "carrots_what_2": "✨ 1 = 1x night off accommodation fee for events or stays.",
+  "carrots_what_2.5": "✨ 2 = 1x four-hour slot for events",
+  "carrots_what_3": "As volunteer you get your accommodation fee off anyway.",
+  "carrots_what_4": "But be warned...Vybes only stay fresh for so long, they do expire after 1 year! So make sure to use them!",
+  "carrots_heading_redeem": "Redeem Your Vybes",
+  "carrots_carrots_to_redeem": "Vibes to redeem",
+  "carrots_carrots_to_redeem_singular": "Vybe to redeem",
+  "carrots_how_to_use_1": "Whenever you book an event or stay and have enough Vybes to cover the whole accommodation price, you will find this widget on the checkout page. Simply apply discount and that's it!",
+  "carrots_how_to_use_2": "10 Vybes - 10 nights - 100% off",
+  "carrots_how_to_use_3": "10 Vybes - 5 nights - 100% off",
+  "carrots_how_to_use_4": "10 Vybes - 14 nights - cannot be used",
+  "carrots_additional_guidelines_heading": "Additional guidelines",
+  "carrots_additional_guidelines_1": "Validity: Vybes are valid for one year (12 months) from purchase.",
+  "carrots_additional_guidelines_2": "Redemption: Redeem Vybes on our booking platform for MOOS resources. New resources are added regularly.",
+  "carrots_additional_guidelines_3": "Transferability: Currently, Vybes cannot be transferred. We’re developing a VYBES Bazaar for future sharing and transfers.",
+  "carrots_additional_guidelines_4": "Exclusivity: Vybes are available to selected insider members of MOOS.",
+  "carrots_additional_guidelines_5": "Booking Policy: Vybes operate on a first-booked, first-served basis.",
+  "carrots_additional_guidelines_6": "Digital Nature: VYBES are not on blockchain or a crypto token, with potential future exploration into digital tokenization.",
+  "carrots_additional_guidelines_7": "Value: Each VYBE approximates to a day and night of play at MOOS. We hope you take play as seriously as we do. ",
+  "carrots_additional_guidelines_8": "Referrals: stay tuned for referral benefits and the upcoming VYBES Bazaar for expanded sharing options within the MOOS community.",
+  "carrots_additional_guidelines_9": "Keep an eye out for future developments as we enhance the VYBES experience, including potential blockchain integration.",
+
+  "referrals_subheading": "Invite your friends and earn ✨ Vybes",
+  "referrals_description_text_1": "Invite your friends to join Moos using your unique referral link below and both get rewarded!",
+  "referrals_description_text_2": "You will receive ✨ 1 per friend and they will receive ✨ 2.",
+  "referrals_description_text_3": "You  are restricted to a maximum of ✨ 6 per month - which will be refreshed on the 1st of every month.",
+  "referrals_credits_link": "Find out more about ✨ Vybes.",
+  "bookings_checkout_step_visitors_guide": "Moos Consent Form",
+
+
+  "signup_intro_1": "MOOS is a home where my story and your story becomes our story.",
+  "signup_intro_2": "Did you know that we run on vybes? ",
+  "signup_intro_3": "Vybes are community frequencies that open the portals to serendipity. We don’t rent spaces at MOOS. We gift experiences.",
+  "signup_intro_4": "Join us. "
+
+
+
+
+
 
 
 }

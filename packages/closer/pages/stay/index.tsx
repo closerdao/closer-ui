@@ -115,7 +115,7 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
         { process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING &&
           <Link
             href="/volunteer"
-            className="text-xl px-8 py-3 text-primary italic underline"
+            className="text-xl px-8 py-3 text-accent italic underline"
           >
             { __('buttons_volunteer')}
           </Link>

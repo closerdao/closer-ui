@@ -25,6 +25,11 @@ export { default as Spinner } from './components/ui/Spinner';
 export { default as YoutubeEmbed } from './components/YoutubeEmbed';
 export { default as Resources } from './components/Resources';
 export { default as Prompts } from './components/Prompts';
+export { default as Modal } from './components/Modal';
+export { default as UploadPhoto } from './components/UploadPhoto/UploadPhoto';
+export { default as LinkButton } from './components/ui/LinkButton';
+export { default as IconPlay } from './components/ui/IconPlay';
+
 // Config
 export * from './config_blockchain';
 export * from './contexts/auth';
@@ -112,8 +117,8 @@ export { default as CreateLessonPage } from './pages/learn/create';
 export { default as LessonPage } from './pages/learn/[slug]/';
 export { default as EditLessonPage } from './pages/learn/[slug]/edit';
 export { default as StayPage } from './pages/stay/';
-export { default as SupportUsPage } from './pages/support-us';
 export { default as ConfigPage } from './pages/admin/config';
+export { default as CreditCheckoutPage } from './pages/credits/checkout';
 
 // Types
 export * from './types/';

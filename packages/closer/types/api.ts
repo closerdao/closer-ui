@@ -137,4 +137,7 @@ export type FundraisingConfig = {
   buy10TdfUrl: string;
   hostEventUrl: string;
   enabled: boolean;
+  creditPrice30Credits: number;
+  creditPrice90Credits: number;
+  creditPrice180Credits: number;
 };

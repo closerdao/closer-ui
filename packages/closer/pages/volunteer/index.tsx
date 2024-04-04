@@ -4,6 +4,7 @@ import Link from 'next/link';
 import React from 'react';
 
 import EventPreview from '../../components/EventPreview';
+import { LinkButton } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
 import { NextPage } from 'next';
@@ -29,10 +30,13 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
     __('volunteers_page_terms_1', APP_NAME),
     __('volunteers_page_terms_2', APP_NAME),
     __('volunteers_page_terms_3', APP_NAME),
-    __('volunteers_page_terms_4', APP_NAME)
+    __('volunteers_page_terms_4', APP_NAME),
   ];
 
-  const doesHaveVolunteerTerms = !volunteerTerms.every((item) => item === '');
+  const doesHaveVolunteerTerms =
+    !volunteerTerms.every((item) => item === '') &&
+    APP_NAME &&
+    APP_NAME.toLowerCase() === 'tdf';
 
   return (
     <div className="flex justify-center">
@@ -57,7 +61,7 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
 
         <section className=" flex flex-col gap-6">
           <div className="bg-accent-light rounded-md p-6">
-            <p>{__('volunteers_page_intro_text', APP_NAME)}</p>
+            <p>{APP_NAME && __('volunteers_page_intro_text', APP_NAME)}</p>
             {doesHaveVolunteerTerms && (
               <ul>
                 {volunteerTerms.map((term: string) => (
@@ -71,6 +75,11 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
               </ul>
             )}
           </div>
+          {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
+            <LinkButton className="w-[300px]" href="https://t.me/+EYSkTvSomodkMWUx">
+              Join Telegram group
+            </LinkButton>
+          )}
           <div
             dangerouslySetInnerHTML={{
               __html: __('volunteers_page_more_info', APP_NAME),
@@ -79,7 +88,9 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
         </section>
 
         <div>
-          {opportunities?.length === 0 ? (
+          {opportunities?.length === 0 &&
+          APP_NAME &&
+          APP_NAME.toLowerCase() === 'tdf' ? (
             <p>{__('volunteers_page_empty')}</p>
           ) : (
             <section className="flex flex-col gap-8">

@@ -68,20 +68,54 @@ const Signup = ({ subscriptionsConfig }: Props) => {
   return (
     <>
       <Head>
-        <title>{__('signup_title', APP_NAME)}</title>
+        <title>{APP_NAME && __('signup_title', APP_NAME)}</title>
       </Head>
       <main className="main-content mt-12 px-4 max-w-4xl mx-auto">
         {process.env.NEXT_PUBLIC_REGISTRATION_MODE === 'curated' ? (
           <ApplicationForm />
         ) : (
-          <div className="flex flex-col md:flex-row gap-6 md:mt-[200px] mt-0">
+          <div
+            className={`${
+              APP_NAME && APP_NAME.toLowerCase() === 'tdf'
+                ? 'md:mt-[200px]'
+                : ' md:mt-[60px]'
+            } flex flex-col md:flex-row gap-6 mt-0`}
+          >
             <div className="flex flex-col gap-10 w-full md:w-1/2">
               <Heading
                 level={1}
-                className="uppercase text-5xl sm:text-6xl font-extrabold"
+                className="uppercase text-5xl sm:text-5xl font-extrabold"
               >
-                {__('signup_title', APP_NAME)}
+                {APP_NAME && __('signup_title', APP_NAME)}
               </Heading>
+
+              {/* TODO: discuss free creidt distribution to new users */}
+              {/* {APP_NAME &&
+                APP_NAME.toLowerCase() === 'moos' &&
+                process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' && (
+                  <div>
+                    <span
+                      dangerouslySetInnerHTML={{
+                        __html: __('signup_form_get_credits', APP_NAME),
+                      }}
+                    />{' '}
+                    <Link
+                      href="/settings/credits"
+                      className="font-bold text-accent underline"
+                    >
+                      {__('signup_form_credit_learn_more')}
+                    </Link>
+                  </div>
+                )} */}
+
+              {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
+                <div className="flex flex-col gap-4">
+                  <p> {APP_NAME && __('signup_intro_1', APP_NAME)}</p>
+                  <p> {APP_NAME && __('signup_intro_2', APP_NAME)}</p>
+                  <p> {APP_NAME && __('signup_intro_3', APP_NAME)}</p>
+                  <p> {APP_NAME && __('signup_intro_4', APP_NAME)}</p>
+                </div>
+              )}
 
               <div>
                 {process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true' && (
@@ -90,30 +124,30 @@ const Signup = ({ subscriptionsConfig }: Props) => {
                       {defaultSubscriptionPlan?.description}
                     </Heading>
                     <ul className="mb-4">
-                      {defaultSubscriptionPlan?.perks?.split(',').map((perk) => {
-                        return (
-                          <li
-                            key={perk}
-                            className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5"
-                          >
-                            <span className="block">
-                              {perk.includes('<') ? (
-                                <span
-                                  dangerouslySetInnerHTML={{ __html: perk }}
-                                />
-                              ) : (
-                                perk
-                              )}
-                            </span>
-                          </li>
-                        );
-                      })}
+                      {defaultSubscriptionPlan?.perks
+                        ?.split(',')
+                        .map((perk) => {
+                          return (
+                            <li
+                              key={perk}
+                              className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5"
+                            >
+                              <span className="block">
+                                {perk.includes('<') ? (
+                                  <span
+                                    dangerouslySetInnerHTML={{ __html: perk }}
+                                  />
+                                ) : (
+                                  perk
+                                )}
+                              </span>
+                            </li>
+                          );
+                        })}
                     </ul>
                   </>
                 )}
-
                 {error && <ErrorMessage error={error} />}
-
                 {referrer && (
                   <div>
                     <div className="flex items-center gap-4 ">
@@ -143,7 +177,7 @@ const Signup = ({ subscriptionsConfig }: Props) => {
               </div>
             </div>
             <div className="w-full md:w-1/2">
-              <SignupForm />
+              <SignupForm app={APP_NAME} />
             </div>
           </div>
         )}
