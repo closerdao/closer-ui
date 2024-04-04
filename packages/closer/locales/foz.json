@@ -38,6 +38,9 @@
   "carrots_how_to_use_2": "10 carrots - 10 nights - 100% off",
   "carrots_how_to_use_3": "10 carrots - 5 nights - 100% off",
   "carrots_how_to_use_4": "10 carrots - 14 nights - cannot be used",
+  "carrots_success_message": "carrots redeemed successfully! Accommodation cost updated.",
+  "carrots_success_message_singular": "carrot redeemed successfully! Accommodation cost updated.",
+  "carrots_error_message": "Carrots payment failed, please, try again.",
   
   "referrals_subheading": "Invite your friends and earn 🥕 carrots",
   "referrals_description_text_1": "Invite your friends to join TDF using your unique referral link below and both get rewarded!",
