@@ -18,7 +18,6 @@ import { Web3ReactProvider } from '@web3-react/core';
 import {
   AuthProvider,
   ConfigProvider,
-  GeneralConfig,
   PlatformProvider,
   WalletProvider,
   __,
@@ -41,22 +40,25 @@ export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
   const library = new Web3Provider(provider);
   return library;
 }
+const prepareDefaultConfig = () => {
+  const general = configDescription.find(
+    (config) => config.slug === 'general',
+  )?.value ?? {};
+  const transformedObject = Object.entries(general).reduce((acc, [key, value]) => {
+    return { ...acc, [key]: '' };
+  }, {});
+  return transformedObject;
+}
 
 const MyApp = ({ Component, pageProps }: AppOwnProps) => {
-  const defaultGeneralConfig = configDescription.find(
-    (config) => config.slug === 'general',
-  )?.value;
+  const defaultGeneralConfig = prepareDefaultConfig()
 
   const router = useRouter();
   const { query } = router;
   const referral = query.referral;
 
-  const [generalConfig, setGeneralConfig] = useState<GeneralConfig | null>(
-    null,
-  );
-  const config = generalConfig
-    ? prepareGeneralConfig(generalConfig)
-    : prepareGeneralConfig(defaultGeneralConfig);
+  const [config, setConfig] = useState<any>(prepareGeneralConfig(defaultGeneralConfig));
+
   const { FACEBOOK_PIXEL_ID } = config || {};
 
   useEffect(() => {
@@ -71,9 +73,9 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         const generalConfigRes = await api.get('config/general').catch(() => {
           return;
         });
-        setGeneralConfig(generalConfigRes?.data.results.value);
+        setConfig(prepareGeneralConfig(generalConfigRes?.data.results.value))
       } catch (err) {
-        setGeneralConfig(null);
+        console.error(err);
         return;
       }
     })();
@@ -94,7 +96,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         dangerouslySetInnerHTML={{
           __html: `
   !function(f,b,e,v,n,t,s)
-  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  {if(f.fbq)return;n=f.fbq=function(){n.cconfigMethod?
   n.callMethod.apply(n,arguments):n.queue.push(arguments)};
   if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
   n.queue=[];t=b.createElement(e);t.async=!0;
@@ -138,15 +140,15 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         buttonStyle={{
           borderRadius: '20px',
           padding: '5px 15px 5px 15px',
-          color: '#FE4FB7',
+          color: '#000',
           background: '#ffffff',
           fontSize: '13px',
-          border: '1px solid #FE4FB7',
+          border: '1px solid #000',
         }}
       >
         <div className="text-black text-sm">
           {__('cookie_consent_text')}{' '}
-          <Link className="underline" href="/pdf/TDF-Cookies.pdf">
+          <Link className="underline" href="/pdf/cookie-policy.pdf">
             {__('cookie_consent_text_link')}
           </Link>
         </div>

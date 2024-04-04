@@ -14,7 +14,11 @@ import { __, isInputValid } from '../utils/helpers';
 import { Button, Card, Checkbox, ErrorMessage, Input } from './ui';
 import Heading from './ui/Heading';
 
-const SignupForm = () => {
+interface Props {
+  app: string | undefined;
+}
+
+const SignupForm = ({ app }: Props) => {
   const router = useRouter();
   const { back, source, start, end, adults, useTokens, eventId, volunteerId } =
     router.query || {};
@@ -47,7 +51,7 @@ const SignupForm = () => {
     } else if (back) {
       return `/?back=${back}`;
     } else {
-      return '/'
+      return '/';
     }
   };
 
@@ -94,9 +98,7 @@ const SignupForm = () => {
       );
       return;
     }
-    router.push(
-      back ? `${decodeURIComponent(back as string)}` : '/settings',
-    );
+    router.push(back ? `${decodeURIComponent(back as string)}` : '/settings');
   };
 
   useEffect(() => {
@@ -116,16 +118,18 @@ const SignupForm = () => {
     !isInputValid(application.email, 'email');
 
   return (
-    <Card className="pb-8 relative mt-[200px] md:mt-0">
-      <div className="absolute top-[-202px] h-[200px] overflow-hidden w-[90%]">
-        <Image
-          className="mx-auto"
-          alt="e"
-          src="/images/subscriptions/explorer.png"
-          width={200}
-          height={354}
-        />{' '}
-      </div>
+    <Card className={`${app && app.toLowerCase() === 'tdf' ? 'mt-[200px]':'mt-0'} pb-8 relative  md:mt-0`}>
+      {app && app.toLowerCase() === 'tdf' && (
+        <div className="absolute top-[-202px] h-[200px] overflow-hidden w-[90%]">
+          <Image
+            className="mx-auto"
+            alt="e"
+            src="/images/subscriptions/explorer.png"
+            width={200}
+            height={354}
+          />{' '}
+        </div>
+      )}
       {submitted && !error ? (
         <>
           <Heading level={2} className="my-4">

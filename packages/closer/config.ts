@@ -237,6 +237,19 @@ export const configDescription = [
         type: 'boolean',
         default: false,
       },
+      creditPrice30Credits: {
+        type: 'number',
+        default: '50',
+      },
+      creditPrice90Credits: {
+        type: 'number',
+        default: '30',
+      },
+      creditPrice180Credits: {
+        type: 'number',
+        default: '20',
+      },
+
       videoId: {
         type: 'text',
         default: 'btBqOboLdOg',

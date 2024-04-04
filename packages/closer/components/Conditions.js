@@ -7,8 +7,10 @@ import { __ } from '../utils/helpers';
 import Checkbox from './Checkbox';
 import Modal from './Modal';
 import Heading from './ui/Heading';
+import { useConfig } from '../hooks/useConfig';
 
 const Conditions = ({ setComply, visitorsGuide }) => {
+  const { APP_NAME } = useConfig() || {};
   const { user } = useAuth();
   const isMember = user?.roles.includes('member');
 
@@ -54,7 +56,7 @@ const Conditions = ({ setComply, visitorsGuide }) => {
             target="_blank"
             rel="noreferrer noopener"
           >
-            {__('bookings_checkout_step_visitors_guide')}
+            {APP_NAME && __('bookings_checkout_step_visitors_guide', APP_NAME)}
           </a>
         </p>
       </Checkbox>
