@@ -1,6 +1,6 @@
 interface RowProps {
   rowKey: string | undefined;
-  value: string | number | undefined;
+  value: string | number | undefined | string[];
   additionalInfo?: string;
   className?: string;
 }

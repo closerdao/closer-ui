@@ -29,11 +29,17 @@ export const CURRENCIES_WITH_LABELS = [
     label: 'Euros',
     symbol: '€',
   },
-  {
-    value: blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol,
-    label: `$${blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol}`,
-    symbol: `$${blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol}`,
-  },
+  process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true'
+    ? {
+        value: blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol,
+        label: `${blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol}`,
+        symbol: `$${blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol}`,
+      }
+    : {
+        value: 'credits',
+        label: 'credits',
+        symbol: 'credits',
+      },
 ];
 
 export const SUBSCRIPTION_STEPS = [

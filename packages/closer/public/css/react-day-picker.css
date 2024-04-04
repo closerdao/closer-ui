@@ -15,5 +15,5 @@
 }
 
 .rdp-button:not(.rdp-day_disabled):hover {
-  @apply !bg-accent-dark;
+  @apply !bg-accent;
 }
