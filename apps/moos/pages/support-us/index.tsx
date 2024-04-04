@@ -162,7 +162,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
 
               <div className="pl-2">
                 <LinkButton
-                  href='/credits/checkout?amount=30'
+                  href="/credits/checkout?amount=30"
                   className="w-[200px] text-md sm:w-[150px]"
                 >
                   Invest
@@ -191,7 +191,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
 
               <div className="pl-2">
                 <LinkButton
-                  href='/credits/checkout?amount=90'
+                  href="/credits/checkout?amount=90"
                   className="w-[200px] text-md sm:w-[150px]"
                 >
                   Invest
@@ -220,7 +220,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
 
               <div className="pl-2">
                 <LinkButton
-                  href='/credits/checkout?amount=180'
+                  href="/credits/checkout?amount=180"
                   className="w-[200px] text-md sm:w-[150px]"
                 >
                   Invest
