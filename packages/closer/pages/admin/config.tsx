@@ -3,13 +3,8 @@ import Head from 'next/head';
 import { ChangeEvent, useEffect, useState } from 'react';
 
 import ArrayConfig from '../../components/ArrayConfig';
-import {
-  Button,
-  Card,
-  Checkbox,
-  Heading,
-  Information,
-} from '../../components/ui';
+import PlatformFeatureSelector from '../../components/PlatformConfig/PlatformFeatureSelector';
+import { Button, Card, Heading, Information } from '../../components/ui';
 import Switcher from '../../components/ui/Switcher';
 
 import PageNotFound from '../404';
@@ -18,7 +13,9 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { Config } from '../../types';
+import { ConfigType } from '../../types/config';
 import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
 import {
   getEnabledConfigs,
   getPreparedInputValue,
@@ -28,15 +25,23 @@ import {
 import { __ } from '../../utils/helpers';
 import { capitalizeFirstLetter } from '../../utils/learn.helpers';
 
-const ConfigPage = () => {
+interface Props {
+  defaultEmailsConfig: ConfigType;
+  error: null | string;
+}
+
+const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
   const { platform }: any = usePlatform();
   const { platformAllowedConfigs } = useConfig() || {};
   const { user } = useAuth();
 
   const myConfigs = platform.config.find();
+
   const filter = {};
-  const allConfigCategories = configDescription
-    .map((config: any) => config.slug)
+  const mergedConfigDescription = configDescription.concat(defaultEmailsConfig);
+
+  const allConfigCategories = mergedConfigDescription
+    .map((config: any) => config?.slug)
     .filter((config: any) => platformAllowedConfigs?.includes(config));
 
   const [selectedConfig, setSelectedConfig] = useState('general');
@@ -44,6 +49,7 @@ const ConfigPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasConfigUpdated, setHasConfigUpdated] = useState(false);
   const [enabledConfigs, setEnabledConfigs] = useState<string[]>([]);
+  const [isGeneralConfigEnabled, setIsGeneralConfigEnabled] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -53,13 +59,22 @@ const ConfigPage = () => {
     if (myConfigs) {
       const preparedConfigs = prepareConfigs(
         myConfigs.toJS(),
-        configDescription,
+        mergedConfigDescription,
       );
 
-      setUpdatedConfigs(preparedConfigs);
-      setEnabledConfigs(
-        getEnabledConfigs(preparedConfigs, allConfigCategories),
+      const enabledConfigs = getEnabledConfigs(
+        preparedConfigs,
+        allConfigCategories,
       );
+
+      if (enabledConfigs.includes('general')) {
+        setIsGeneralConfigEnabled(true);
+      } else {
+        setIsGeneralConfigEnabled(false);
+      }
+
+      setUpdatedConfigs(preparedConfigs);
+      setEnabledConfigs(enabledConfigs);
     }
   }, [myConfigs]);
 
@@ -69,6 +84,30 @@ const ConfigPage = () => {
     } catch (err) {
       console.log('Load error', err);
     }
+  };
+
+  const saveInitialConfig = async () => {
+    const initialConfigCategories = ['general', 'emails'];
+    const newConfigs: Config[] = [
+      ...updatedConfigs.map((config) => {
+        if (initialConfigCategories.includes(config.slug)) {
+          return {
+            ...config,
+            value: { ...config.value, enabled: true },
+          };
+        }
+        return config;
+      }),
+    ];
+    setUpdatedConfigs(newConfigs);
+    await Promise.all(
+      initialConfigCategories.map((configCategory) =>
+        handleSaveConfig(newConfigs, configCategory),
+      ),
+    );
+    await loadData();
+    setEnabledConfigs([...enabledConfigs, ...initialConfigCategories]);
+    setIsGeneralConfigEnabled(true);
   };
 
   const handleToggleConfig = (configCategory: string) => {
@@ -113,6 +152,7 @@ const ConfigPage = () => {
     );
 
     try {
+      setIsLoading(true);
       const configExists = myConfigs
         .toJS()
         .some((config: any) => config.slug === configCategoryToSave);
@@ -130,7 +170,6 @@ const ConfigPage = () => {
         });
       }
 
-      setIsLoading(true);
       setHasConfigUpdated(false);
       if (res.status === 200) {
         setHasConfigUpdated(true);
@@ -145,7 +184,12 @@ const ConfigPage = () => {
   };
 
   const handleChange = (
-    event: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    event: ChangeEvent<
+      | HTMLInputElement
+      | HTMLSelectElement
+      | HTMLTextAreaElement
+      | HTMLSelectElement
+    >,
     key = '',
     index: null | number = null,
   ) => {
@@ -184,8 +228,37 @@ const ConfigPage = () => {
     setUpdatedConfigs(newConfigs);
   };
 
+  const resetToDefault = (name: string) => {
+    const newConfigs = [
+      ...updatedConfigs.map((config) => {
+        if (config.slug === selectedConfig) {
+          const defaultConfig = mergedConfigDescription.find(
+            (config: any) => config.slug === selectedConfig,
+          );
+          const defaultValue = defaultConfig?.value?.elements?.default.find(
+            (element: any) => element.name === name,
+          );
+          const elements: any = config.value.elements;
+
+          const updatedElements = elements.map((element: any) => {
+            if (element.name === name) {
+              return defaultValue;
+            }
+            return element;
+          });
+          return {
+            ...config,
+            value: { ...config.value, elements: updatedElements },
+          };
+        }
+        return config;
+      }),
+    ];
+    setUpdatedConfigs(newConfigs);
+  };
+
   const handleAddElement = () => {
-    const defaultConfig = configDescription as any;
+    const defaultConfig = mergedConfigDescription as any;
     const defaultPlan = defaultConfig.find(
       (config: any) => config.slug === selectedConfig,
     ).value.elements.default;
@@ -237,38 +310,92 @@ const ConfigPage = () => {
       <div className="max-w-3xl mx-auto flex flex-col gap-10">
         <Heading level={1}>{__('platform_configs')}</Heading>
 
-        <Card>
-          <Heading level={4}>{__('config_features_heading')}</Heading>
-          <div className="flex flex-col md:flex-row gap-4">
-            {allConfigCategories &&
-              allConfigCategories.map((currentConfig: any) => {
+        {allConfigCategories.length > 1 && isGeneralConfigEnabled && (
+          <PlatformFeatureSelector
+            enabledConfigs={enabledConfigs}
+            allConfigCategories={allConfigCategories}
+            handleToggleConfig={handleToggleConfig}
+          />
+        )}
+
+        {!isGeneralConfigEnabled && (
+          <Card className="flex flex-col gap-4">
+            <Heading level={4}>
+              {__('platform_configs_initial_settings')}
+            </Heading>
+
+            {(updatedConfigs.find((config) => config.slug === 'general')
+              ?.value ??
+              []) &&
+              Object.entries(
+                updatedConfigs.find((config) => config.slug === 'general')
+                  ?.value ?? {},
+              ).map(([key, value]) => {
+                const currentValue: string | number | boolean | any[] =
+                  updatedConfigs.find(
+                    (config) => config.slug === selectedConfig,
+                  )?.value[key] ?? [];
+                const description = mergedConfigDescription?.find(
+                  (c) => c.slug === 'general',
+                )?.value as Record<string, any>;
+                const inputType = description?.[key]?.type;
+                const isSelect = inputType === 'select';
+                const selectOptions = description?.[key]?.enum;
+
+                if (key === 'enabled') return null;
                 return (
-                  <div key={currentConfig}>
-                    <Checkbox
-                      isEnabled={true}
-                      id={currentConfig}
-                      isChecked={
-                        enabledConfigs &&
-                        enabledConfigs?.includes(currentConfig)
-                      }
-                      onChange={() => handleToggleConfig(currentConfig)}
-                      className="mb-4"
-                    >
-                      {capitalizeFirstLetter(currentConfig)}
-                    </Checkbox>
+                  <div key={key} className="flex flex-col gap-1">
+                    <label>{__(`config_label_${key}`)}:</label>
+                    {!isSelect && (
+                      <input
+                        className="bg-neutral rounded-md p-1"
+                        name={key}
+                        onChange={handleChange}
+                        type="text"
+                        value={String(currentValue)}
+                      />
+                    )}
+                    {isSelect && (
+                      <select
+                        className="px-2 py-1"
+                        value={String(currentValue)}
+                        onChange={handleChange}
+                        name={key}
+                      >
+                        {selectOptions.map((option: string) => {
+                          return (
+                            <option value={option} key={option}>
+                              {option}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    )}
                   </div>
                 );
               })}
-          </div>
-        </Card>
 
-        {enabledConfigs.length > 0 && (
+            <Button
+              onClick={saveInitialConfig}
+              isLoading={isLoading}
+              isEnabled={!isLoading}
+            >
+              {__('generic_save_button')}
+            </Button>
+            {hasConfigUpdated && (
+              <Information>{__('config_updated')}</Information>
+            )}
+          </Card>
+        )}
+
+        {enabledConfigs.length > 0 && isGeneralConfigEnabled && (
           <div className="flex flex-col gap-10">
             <Switcher
               options={enabledConfigs}
               selectedOption={selectedConfig}
               setSelectedOption={setSelectedConfig}
             />
+
             <Card className="flex flex-col gap-10">
               {updatedConfigs &&
                 updatedConfigs.map((config: Config) => {
@@ -292,7 +419,7 @@ const ConfigPage = () => {
                               (config) => config.slug === selectedConfig,
                             )?.value[key] ?? [];
 
-                          const description = configDescription?.find(
+                          const description = mergedConfigDescription?.find(
                             (c) => c.slug === config.slug,
                           )?.value as Record<string, any>;
                           const inputType = description?.[key]?.type;
@@ -343,6 +470,9 @@ const ConfigPage = () => {
                                               handleDeleteElement
                                             }
                                             elementsKey={key}
+                                            description={description}
+                                            slug={config.slug}
+                                            resetToDefault={resetToDefault}
                                           />
                                         </div>
                                       )}
@@ -355,6 +485,7 @@ const ConfigPage = () => {
                                           value={String(currentValue)}
                                         />
                                       )}
+
                                       {isSelect && (
                                         <select
                                           className="px-2 py-1"
@@ -404,6 +535,25 @@ const ConfigPage = () => {
       </div>
     </div>
   );
+};
+
+ConfigPage.getInitialProps = async () => {
+  try {
+    const defaultEmailsConfigRes = await api.get('/emails').catch(() => {
+      return null;
+    });
+    const defaultEmailsConfig = defaultEmailsConfigRes?.data?.results;
+
+    return {
+      defaultEmailsConfig,
+      error: null,
+    };
+  } catch (err: unknown) {
+    return {
+      defaultEmailsConfig: null,
+      error: parseMessageFromError(err),
+    };
+  }
 };
 
 export default ConfigPage;

@@ -21,7 +21,7 @@ export const getEnabledConfigs = (configs: any, allConfigs: string[]) => {
 
 export const getPreparedInputValue = (value: string) => {
   if (value === '') {
-    return ''
+    return '';
   }
   if (value === 'true') {
     return true;
@@ -42,25 +42,47 @@ export const prepareConfigs = (
   const configsOutput = [];
 
   for (const categoryDefaultConfig of configDescriptions) {
-    const categoryName = categoryDefaultConfig.slug;
+    const categoryName = categoryDefaultConfig?.slug;
     let configOutput = {} as Record<string, any>;
     const categoryMyConfig: any = myConfigs.find(
       (config) => config.slug === categoryName,
     )?.value;
 
-    for (const key in categoryDefaultConfig.value) {
+    for (const key in categoryDefaultConfig?.value) {
       const defaultConfigData = categoryDefaultConfig.value[key].type;
       const isArray = Array.isArray(defaultConfigData);
       if (isArray) {
-        const defaultNestedConfig = categoryDefaultConfig.value[key].default[0];
-        const configArray = categoryMyConfig && categoryMyConfig[key];
+        let defaultNestedConfig = categoryDefaultConfig.value[key].default[0];
 
+        const configArray = categoryMyConfig && categoryMyConfig[key];
         const output: any[] = [];
 
-        if (!configArray) {
-          const entry = { ...defaultNestedConfig };
-          output.push(entry);
+        if (categoryName === 'emails') {
+          // if new template is added to defaults, show it in the UI
+          const defaultNestedArrayConfig =
+            categoryDefaultConfig.value[key].default;
+
+          defaultNestedArrayConfig.forEach((element: any, index: number) => {
+            defaultNestedConfig =
+              categoryDefaultConfig.value[key].default[index];
+            const doesIncludeTemplate = configArray?.some(
+              (config: any) => config.name === element.name,
+            );
+            // check if there are elements that exist in db array but not in default array
+            if (!doesIncludeTemplate) {
+              configArray?.push(element);
+            }
+          });
         }
+
+        if (!configArray) {
+          if (categoryName === 'emails') {
+            output.push(...categoryDefaultConfig.value[key].default);
+          } else {
+            output.push(defaultNestedConfig);
+          }
+        }
+
         configArray?.forEach((myConfigElement: any) => {
           const entry = { ...defaultNestedConfig };
           Object.entries(defaultNestedConfig).forEach(([nestedKey]) => {
@@ -78,15 +100,19 @@ export const prepareConfigs = (
           [key]: output,
         };
       } else {
-        configOutput[key] =
-          categoryMyConfig?.[key] !== undefined
-            ? categoryMyConfig?.[key]
-            : categoryDefaultConfig.value[key].default;
+        if (!categoryMyConfig && key === 'enabled') {
+          configOutput[key] = false;
+        } else {
+          configOutput[key] =
+            categoryMyConfig?.[key] !== undefined
+              ? categoryMyConfig?.[key]
+              : categoryDefaultConfig.value[key].default;
+        }
       }
     }
 
     configsOutput.push({
-      slug: categoryDefaultConfig.slug,
+      slug: categoryDefaultConfig?.slug,
       value: configOutput,
     });
   }
@@ -99,8 +125,8 @@ export const getUpdatedArray = (
   name: string,
   inputValue: string | number | boolean,
 ) => {
-  if (typeof inputValue === 'boolean') {
-    name = name.substring(0, name.length - 1);
+  if (typeof inputValue === 'boolean' && index) {
+    name = name.substring(0, name.length - index?.toString().length);
   }
   const updatedArray = value.map((item: any[], idx: number) =>
     idx === index ? { ...item, [name as string]: inputValue } : item,

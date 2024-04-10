@@ -1,5 +1,5 @@
 const config = {
-  platformAllowedConfigs: ['booking', 'general', 'booking-rules', 'payment'],
+  platformAllowedConfigs: ['booking', 'general', 'booking-rules', 'payment','fundraiser', 'emails'],
   PORT: 14444,
   EXPOSE_STORE: true,
   CACHE_DURATION: 300000, // 5min

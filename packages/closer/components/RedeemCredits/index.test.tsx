@@ -3,6 +3,13 @@ import { render, screen } from '@testing-library/react';
 import RedeemCredits from '.';
 import { CloserCurrencies } from '../../types';
 
+jest.mock('../../hooks/useConfig', () => ({ // Replace with the actual path to useConfig
+  useConfig: jest.fn().mockReturnValue({
+    APP_NAME: 'TDF',
+  }),
+}));
+
+
 describe('RedeemCredits', () => {
   it('should have correct heading in demo mode', () => {
     render(<RedeemCredits isDemo={true} />);

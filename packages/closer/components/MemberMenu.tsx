@@ -151,6 +151,11 @@ const getLinks = (
       enabled: true,
     },
     {
+      label: 'Support us',
+      url: '/support-us',
+      enabled: process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true',
+    },
+    {
       label: 'Learning hub',
       url: '/learn/category/all',
       enabled: process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true',

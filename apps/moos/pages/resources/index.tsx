@@ -30,8 +30,8 @@ const ResourcesPage = ({ generalConfig }: Props) => {
           APP_NAME,
         )} - ${PLATFORM_NAME}`}</title>
       </Head>
-      <main className="pt-16 pb-24 md:flex-row flex-wrap">
-        <div className="flex justify-center bg-cover bg-[center_top_6rem] sm:bg-[center_top_4rem] bg-no-repeat bg-[url(/images/resources/resources-hero.png)] h-[650px]">
+      <main className="pt-16 pb-24 flex flex-col gap-12">
+        <section className="flex justify-center ">
           <div className="flex flex-col items-center">
             <Heading
               level={1}
@@ -42,8 +42,9 @@ const ResourcesPage = ({ generalConfig }: Props) => {
             <p className="mb-4 max-w-[630px]">
               {__('resources_subheading', appName)}
             </p>
+            <Resources />
           </div>
-        </div>
+        </section>
 
         <section className="flex items-center flex-col py-24">
           <div className="w-full">

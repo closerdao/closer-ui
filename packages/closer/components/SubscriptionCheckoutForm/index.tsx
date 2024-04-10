@@ -38,6 +38,9 @@ function SubscriptionCheckoutForm({
     if (event.error) {
       setError(event.error);
       setIsSubmitEnabled(false);
+    } else if (!event.complete) {
+      setError('Please enter your card number.');
+      setIsSubmitEnabled(false);
     } else {
       setError('');
       setIsSubmitEnabled(true);

@@ -3,10 +3,12 @@ const config = {
   platformAllowedConfigs: [
     'booking',
     'general',
+    'volunteering',
     'subscriptions',
     'booking-rules',
     'fundraiser',
     'payment',
+    'emails',
   ],
   PORT: 14444,
   EXPOSE_STORE: true,

@@ -8,12 +8,13 @@ import DateTimePicker from '../DateTimePicker';
 import { Button } from '../ui';
 
 interface Props {
-  setStartDate: Dispatch<SetStateAction<string | Date | null>>;
-  setEndDate: Dispatch<SetStateAction<string | Date | null>>;
+  setStartDate: Dispatch<SetStateAction<string | Date | null>> | undefined;
+  setEndDate: Dispatch<SetStateAction<string | Date | null>> | undefined;
   end: string | Date | null;
   start: string | Date | null;
   isSmallScreen?: boolean;
   blockedDateRanges?: any[];
+  isEditMode?: boolean;
 }
 
 const ListingDateSelector = ({
@@ -23,10 +24,18 @@ const ListingDateSelector = ({
   start,
   isSmallScreen,
   blockedDateRanges,
+  isEditMode,
 }: Props) => {
   const stayDatesDropdownRef = useOutsideClick(handleClickOutsideDropdown);
 
   const [showStayDatesDropdown, setShowStayDatesDropdown] = useState(false);
+
+  const getDefaultMonth = () => {
+    if (!start) {
+      return new Date();
+    }
+    return isEditMode ? new Date(start) : new Date();
+  };
 
   function handleClickOutsideDropdown() {
     setShowStayDatesDropdown(false);
@@ -36,11 +45,19 @@ const ListingDateSelector = ({
     <>
       <div ref={stayDatesDropdownRef} className="static sm:relative flex-1">
         <label className="my-2 hidden sm:block">
-          {__('bookings_select_stay_dates')}
+          {isEditMode ? (
+            <strong>{__('bookings_edit_stay_dates')}</strong>
+          ) : (
+            __('bookings_select_stay_dates')
+          )}
         </label>
         <Button
           onClick={() => setShowStayDatesDropdown(!showStayDatesDropdown)}
-          className="min-h-[20px] font-bold sm:font-normal underline sm:no-underline text-black border-0 sm:border-2 border-black normal-case w-auto sm:w-full py-1 px-0 sm:px-3 sm:p-3 sm:py-2 text-sm bg-white"
+          className={`${
+            isEditMode
+              ? 'py-2 px-5 w-full border-2'
+              : 'py-1 px-0 w-auto border-0'
+          } min-h-[20px] font-bold sm:font-normal underline sm:no-underline text-black  sm:border-2 border-black normal-case  sm:w-full  sm:px-3 sm:p-3 sm:py-2 text-sm bg-white`}
         >
           {!start && !end && __('bookings_select_dates_button')}
           {start && (
@@ -61,13 +78,17 @@ const ListingDateSelector = ({
           )}
         </Button>
         {showStayDatesDropdown && (
-          <div className="border border-gray-100 sm:w-auto absolute z-10 left-2 right-2 sm:left-auto bottom-[175px] sm:bottom-auto sm:top-auto bg-white shadow-md rounded-md p-3">
+          <div
+            className={`${
+              isEditMode ? '' : 'bottom-[175px]'
+            } border border-gray-100 sm:w-auto absolute z-10 left-2 right-2 sm:left-auto  sm:bottom-auto sm:top-auto bg-white shadow-md rounded-md p-3`}
+          >
             <DateTimePicker
               setStartDate={setStartDate as any}
               setEndDate={setEndDate as any}
               savedStartDate={start}
               savedEndDate={end}
-              defaultMonth={new Date()}
+              defaultMonth={getDefaultMonth()}
               blockedDateRanges={blockedDateRanges}
             />
           </div>

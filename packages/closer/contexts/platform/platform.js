@@ -26,7 +26,7 @@ export const models = [
   'stay',
   'user',
   'volunteer',
-  'lesson'
+  'lesson',
 ];
 
 const filterToKey = (filter) => JSON.stringify(filter) || '__';
@@ -533,8 +533,7 @@ export const PlatformProvider = ({ children }) => {
         return action;
       }),
 
-    findBalance: (filterKey) =>
-      state.getIn(['balance', filterKey, 'data']),
+    findBalance: (filterKey) => state.getIn(['balance', filterKey, 'data']),
   };
 
   return (
