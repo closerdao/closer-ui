@@ -38,7 +38,7 @@ const CreditsPage: FC = () => {
             className="p-4 text-xl text-center font-normal w-full"
           >
             {' '}
-            {__('carrots_subheading', APP_NAME)}
+            {APP_NAME && __('carrots_subheading', APP_NAME)}
           </Heading>
         </div>
 
@@ -54,13 +54,17 @@ const CreditsPage: FC = () => {
           </div>
         </Card>
 
-        <Heading level={3}>
-          {APP_NAME && APP_NAME.toLowerCase() === 'moos' && __('carrots_subheading_what_are', APP_NAME)}
-        </Heading>
+        {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
+          <Heading level={3}>
+            {__('carrots_subheading_what_are', APP_NAME)}
+          </Heading>
+        )}
 
-        <div>
-          <p className="mb-4">{APP_NAME && APP_NAME.toLowerCase() === 'moos' && __('carrots_what_are_1', APP_NAME)}</p>
-        </div>
+        {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
+          <div>
+            <p className="mb-4">{__('carrots_what_are_1', APP_NAME)}</p>
+          </div>
+        )}
 
         <Heading level={3}>
           {APP_NAME && __('carrots_subheading_what', APP_NAME)}
@@ -69,17 +73,18 @@ const CreditsPage: FC = () => {
         <div>
           <p className="mb-4">{APP_NAME && __('carrots_what_1', APP_NAME)}</p>
           <p className="mb-4">{APP_NAME && __('carrots_what_2', APP_NAME)}</p>
-          <p className="mb-4">
-            {APP_NAME &&
-              APP_NAME.toLowerCase() === 'moos' &&
-              __('carrots_what_2.5', APP_NAME)}
-          </p>
+          {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
+            <p className="mb-4">{__('carrots_what_2.5', APP_NAME)}</p>
+          )}
           <p className="mb-4">{APP_NAME && __('carrots_what_3', APP_NAME)}</p>
           <p className="mb-4">{APP_NAME && __('carrots_what_4', APP_NAME)}</p>
-          <p className="mb-4">{APP_NAME &&
-              APP_NAME.toLowerCase() === 'moos'&& __('carrots_what_5', APP_NAME)}</p>
-          <p className="mb-4">{APP_NAME &&
-              APP_NAME.toLowerCase() === 'moos'&& __('carrots_what_6', APP_NAME)}</p>
+
+          {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
+            <>
+              <p className="mb-4">{__('carrots_what_5', APP_NAME)}</p>
+              <p className="mb-4">{__('carrots_what_6', APP_NAME)}</p>
+            </>
+          )}
         </div>
 
         <Heading level={3}>{__('carrots_subheading_where')}</Heading>
@@ -89,7 +94,7 @@ const CreditsPage: FC = () => {
           <Profile isDemo={true} />
         </div>
 
-        {APP_NAME &&  (
+        {APP_NAME && (
           <>
             <Heading level={3}>{__('carrots_subheading_how_to_use')}</Heading>
 
@@ -102,10 +107,9 @@ const CreditsPage: FC = () => {
           </>
         )}
 
-
         <RedeemCredits isDemo={true} />
 
-        {APP_NAME && APP_NAME.toLowerCase() !== 'moos' && (
+        {/* {APP_NAME && APP_NAME.toLowerCase() !== 'moos' && (
           <>
             <Heading level={3}>{__('carrots_subheading_how_to_earn')}</Heading>
 
@@ -116,25 +120,46 @@ const CreditsPage: FC = () => {
               <p className="mb-4">{__('carrots_how_to_earn_4')}</p>
             </div>
           </>
-        )}
-      {APP_NAME && APP_NAME.toLowerCase() ==='moos' &&(
+        )} */}
+        {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
           <>
-            <Heading level={3}>{__('carrots_additional_guidelines_heading', APP_NAME)}</Heading>
+            <Heading level={3}>
+              {__('carrots_additional_guidelines_heading', APP_NAME)}
+            </Heading>
 
             <div>
-              <p className="mb-4">{__('carrots_additional_guidelines_1', APP_NAME)}</p>
-              <p className="mb-4">{__('carrots_additional_guidelines_2', APP_NAME)}</p>
-              <p className="mb-4">{__('carrots_additional_guidelines_3', APP_NAME)}</p>
-              <p className="mb-4">{__('carrots_additional_guidelines_4', APP_NAME)}</p>
-              <p className="mb-4">{__('carrots_additional_guidelines_5', APP_NAME)}</p>
-              <p className="mb-4">{__('carrots_additional_guidelines_6', APP_NAME)}</p>
-              <p className="mb-4">{__('carrots_additional_guidelines_7', APP_NAME)}</p>
-              <p className="mb-4">{__('carrots_additional_guidelines_8', APP_NAME)}</p>
-              <p className="mb-4">{APP_NAME && APP_NAME.toLowerCase() !== 'moos' && __('carrots_additional_guidelines_9', APP_NAME)}</p>
+              <p className="mb-4">
+                {__('carrots_additional_guidelines_1', APP_NAME)}
+              </p>
+              <p className="mb-4">
+                {__('carrots_additional_guidelines_2', APP_NAME)}
+              </p>
+              <p className="mb-4">
+                {__('carrots_additional_guidelines_3', APP_NAME)}
+              </p>
+              <p className="mb-4">
+                {__('carrots_additional_guidelines_4', APP_NAME)}
+              </p>
+              <p className="mb-4">
+                {__('carrots_additional_guidelines_5', APP_NAME)}
+              </p>
+              <p className="mb-4">
+                {__('carrots_additional_guidelines_6', APP_NAME)}
+              </p>
+              <p className="mb-4">
+                {__('carrots_additional_guidelines_7', APP_NAME)}
+              </p>
+              <p className="mb-4">
+                {__('carrots_additional_guidelines_8', APP_NAME)}
+              </p>
+              <p className="mb-4">
+                {APP_NAME &&
+                  APP_NAME.toLowerCase() !== 'moos' &&
+                  __('carrots_additional_guidelines_9', APP_NAME)}
+              </p>
             </div>
           </>
         )}
-
       </div>
     </>
   );
