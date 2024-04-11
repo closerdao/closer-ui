@@ -13,7 +13,7 @@ interface Props {
 }
 
 const Hosts = ({ hosts, email }: Props) => {
-  const { APP_NAME } = useConfig();
+  const { APP_NAME, VISITORS_GUIDE } = useConfig();
   return (
     <div className="mb-16">
       <div className="max-w-prose">
@@ -23,6 +23,20 @@ const Hosts = ({ hosts, email }: Props) => {
         <p className="mb-8">
           {__('stay_meet_your_hosts_description', APP_NAME)}
         </p>
+
+        {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
+          <p className="mb-8">
+            <a
+              className="text-accent underline font-bold"
+              href={VISITORS_GUIDE}
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              {APP_NAME &&
+                __('bookings_checkout_step_visitors_guide', APP_NAME)}
+            </a>
+          </p>
+        )}
       </div>
       {hosts && hosts.count() > 0 && (
         <div className="grid md:grid-cols-3 gap-x-4 gap-y-4">

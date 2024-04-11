@@ -70,7 +70,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
   return (
     <>
       <Head>
-        <title>{__('support_us_heading')}</title>
+        <title>Support the MOOS</title>
         <meta name="description" content="" />
         <meta property="og:type" content="event" />
       </Head>

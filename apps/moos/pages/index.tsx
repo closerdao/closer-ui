@@ -36,7 +36,6 @@ const HomePage = ({ generalConfig }: Props) => {
             >
               On the border of Berlin’s historic Treptower Park, something
               beautiful is growing...
-         
             </Heading>
           </div>
           <div className="flex flex-col sm:flex-row justify-end gap-4">
@@ -72,6 +71,20 @@ const HomePage = ({ generalConfig }: Props) => {
             <div className="flex flex-col sm:flex-row gap-8">
               <div className="flex-1 flex flex-col gap-4">
                 <p>
+                  Right across from Treptower Park, MOOS — &rsquo;Moss&rsquo; in
+                  English—serves as a watering hole where the creativity and
+                  communal spirit of Berlin converge. It`s a welcoming space for
+                  diverse paths to meet, encouraging an innovative,
+                  interdisciplinary and interconnected community right in the
+                  city`s core.
+                </p>
+                <p>
+                  The Y Berlin, a new community design lab embedded within MOOS,
+                  tends to the blend of technology and community, reflecting
+                  MOOS’ aim to cultivate spaces that foster connections deeper
+                  than mere cohabitation.
+                </p>
+                {/* <p>
                   Located in the heart of Berlin, next to Treptower Park.
                   Hosting a regenerative community design lab, building local
                   solutions for urban challenges.{' '}
@@ -95,10 +108,15 @@ const HomePage = ({ generalConfig }: Props) => {
                   Vybes are community frequencies that open the portals to
                   serendipity. We don’t rent spaces at MOOS. We gift
                   experiences.{' '}
-                </p>
+                </p> */}
               </div>
               <div className="flex-1 flex flex-col gap-4">
-                <p>
+              
+                <p>With the introduction of <Link
+                    href="/settings/credits"
+                    className="text-accent font-bold"
+                  >Vybes</Link>, seeded by the Y Berlin, we aim to fertilize community engagement with experiences and connections valued over transactions. Vybes encourages every member, new or old, to contribute their unique super power. Forget about normal transactions; at MOOS, it`s all about what you feel called to bring to the table—ideas, workshops, you name it. Vybes let you dive into everything MOOS has to offer and really be an active part of a resilient and growing community space.</p>
+                {/* <p>
                   Vybes can be used to create or gift experiences. Since 2012,
                   MOOS has hosted a mycelial network of experience designers.
                   Through vybes, you can organize an event at MOOS: a unique
@@ -111,7 +129,7 @@ const HomePage = ({ generalConfig }: Props) => {
                   alongside your stay: complete with facilitation, event
                   management, and multi-sensory experiences including catering &
                   dining 🍛.
-                </p>
+                </p> */}
               </div>
             </div>
 
@@ -119,7 +137,10 @@ const HomePage = ({ generalConfig }: Props) => {
               <p className="flex-1">
                 Learn more about our experience design + residency programs in
                 our Menu{' '}
-                <Link href="/pdf/moos-menu.pdf" className="text-accent font-bold">
+                <Link
+                  href="/pdf/moos-menu.pdf"
+                  className="text-accent font-bold"
+                >
                   here
                 </Link>
               </p>
