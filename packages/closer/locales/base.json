@@ -178,9 +178,7 @@
   "carrots_how_to_harvest_2": "We might be nice sometimes, so keep your eyes peeled...",
   "carrots_how_to_harvest_3": "*coming soon* Rewards for completing actions",
   "carrots_how_to_harvest_4": "*coming soon* Stay Packages",
-  "carrots_success_message": "carrots redeemed successfully! Accommodation cost updated.",
-  "carrots_success_message_singular": "carrot redeemed successfully! Accommodation cost updated.",
-  "carrots_error_message": "Carrots payment failed, please, try again.",
+
 
   "unlock_stays_heading": "Stays",
   "unlock_stays_subheading": "Become a wanderer to unlock stay bookings",

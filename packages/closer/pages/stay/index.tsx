@@ -101,7 +101,7 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
         </div>
       </section>
 
-      {bookingRules?.enabled && <BookingRules rules={bookingRules?.elements} />}
+      {bookingRules?.enabled && bookingRules?.elements[0].title && <BookingRules rules={bookingRules?.elements} />}
 
       <section className="max-w-6xl mx-auto mb-16 flex align-center">
         <Link

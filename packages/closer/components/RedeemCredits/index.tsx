@@ -74,8 +74,8 @@ const RedeemCredits = ({
           <div className="text-system-success font-bold">
             🥕 {rentalToken?.val as number}{' '}
             {(rentalToken?.val as number) === 1
-              ? __('carrots_success_message_singular')
-              : __('carrots_success_message')}
+              ? __(APP_NAME && 'carrots_success_message_singular', APP_NAME)
+              : __(APP_NAME && 'carrots_success_message', APP_NAME)}
           </div>
         )}
         {creditsError && <ErrorMessage error={creditsError} />}
