@@ -107,7 +107,7 @@ export const getAccommodationTotal = (
   volunteerId: string | undefined,
 ) => {
   if (!listing) return 0;
-  if(volunteerId) return 0;
+  if (volunteerId) return 0;
   const price = useTokens ? listing.tokenPrice?.val : listing.fiatPrice?.val;
   const multiplier = listing.private ? 1 : adults;
   const total = +(price * multiplier * durationInDays * discountRate).toFixed(
@@ -125,10 +125,12 @@ export const getPaymentDelta = (
   rentalFiatCur: CloserCurrencies,
 ) => {
   if (useToken) {
+    const delta = Number((updatedAccomodationTotal - rentalToken?.val).toFixed(2))
+    if (!delta) return null;
     return {
       token: {
         val:
-          Number((updatedAccomodationTotal - rentalToken?.val).toFixed(2)) || 0,
+          delta || 0,
         cur: rentalToken?.cur,
       },
       fiat: {
@@ -137,10 +139,12 @@ export const getPaymentDelta = (
       },
     };
   }
+  const delta = Number((updatedFiatTotal - total).toFixed(2))
+  if (!delta) return null;
   return {
     token: { val: 0, cur: rentalToken?.cur },
     fiat: {
-      val: Number((updatedFiatTotal - total).toFixed(2)) || 0,
+      val: delta || 0,
       cur: rentalFiatCur,
     },
   };
