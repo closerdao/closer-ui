@@ -207,7 +207,9 @@ const SummaryDates = ({
           <div className="flex justify-between items-start my-3">
             <p> {__('bookings_stay_duration')}</p>
             <p className="font-bold">
-              {dayjs(endDate).diff(dayjs(startDate), 'day') || '-'}
+              {dayjs(endDate)
+                .startOf('day')
+                .diff(dayjs(startDate).startOf('day'), 'day') || '-'}
             </p>
           </div>
         </>

@@ -29,11 +29,17 @@ export const CURRENCIES_WITH_LABELS = [
     label: 'Euros',
     symbol: '€',
   },
-  {
-    value: blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol,
-    label: `$${blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol}`,
-    symbol: `$${blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol}`,
-  },
+  process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true'
+    ? {
+        value: blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol,
+        label: `${blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol}`,
+        symbol: `$${blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol}`,
+      }
+    : {
+        value: 'credits',
+        label: 'credits',
+        symbol: 'credits',
+      },
 ];
 
 export const SUBSCRIPTION_STEPS = [
@@ -239,6 +245,10 @@ export const SALES_CONFIG = {
   MAX_WALLET_BALANCE: 1500,
   MAX_TOKENS_PER_TRANSACTION: 100,
 };
+
+// Token booking errors
+export const BOOKING_EXISTS_ERROR = 'execution reverted: BookingFacet: Booking already exists'
+export const USER_REJECTED_TRANSACTION_ERROR = 'user rejected transaction'
 
 export const MAX_BOOKINGS_TO_FETCH = 2000;
 export const BOOKINGS_PER_PAGE = 36;

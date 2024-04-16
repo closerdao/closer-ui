@@ -413,7 +413,7 @@ const models = {
     },
     {
       name: 'tokenPrice',
-      label: 'Tokens to lock',
+      label: 'Rental price (credits or tokens)',
       type: 'currency',
       placeholder: '10.00',
       required: true,

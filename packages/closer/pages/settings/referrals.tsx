@@ -24,6 +24,7 @@ const lastDayOfCurrentMonth = dayjs(
 ).format('YYYY-MM-DD');
 
 const ReferralsPage = () => {
+  const { APP_NAME } = useConfig();
   const config = useConfig();
   const { SEMANTIC_URL } = config || {};
   const { isAuthenticated, user } = useAuth();
@@ -120,7 +121,7 @@ const ReferralsPage = () => {
             level={2}
             className="p-4 text-xl text-center font-normal w-full"
           >
-            {__('referrals_subheading')}
+            {APP_NAME && __('referrals_subheading', APP_NAME)}
           </Heading>
         </div>
 
@@ -128,15 +129,15 @@ const ReferralsPage = () => {
           {__('referrals_description_heading')}
         </Heading>
         <div>
-          <p className="mb-4">{__('referrals_description_text_1')}</p>
-          <p className="mb-4">{__('referrals_description_text_2')}</p>
-          <p className="mb-4">{__('referrals_description_text_3')}</p>
+          <p className="mb-4">{APP_NAME && __('referrals_description_text_1', APP_NAME)}</p>
+          <p className="mb-4">{APP_NAME && __('referrals_description_text_2', APP_NAME)}</p>
+          <p className="mb-4">{APP_NAME && __('referrals_description_text_3',APP_NAME)}</p>
           <p className="mb-4 text-accent font-bold">
-            <Link href="/settings/credits">{__('referrals_credits_link')}</Link>
+            <Link href="/settings/credits">{APP_NAME && __('referrals_credits_link',APP_NAME)}</Link>
           </p>
         </div>
         <Heading level={3} hasBorder={true}>
-          {__('referrals_your_link_heading')}
+          {APP_NAME && __('referrals_your_link_heading')}
         </Heading>
 
         <Card className="bg-accent-light mb-10">
@@ -161,7 +162,7 @@ const ReferralsPage = () => {
         <Heading level={3} hasBorder={true}>
           {__('referrals_monthly_progress_heading')}
         </Heading>
-        <Progress icon="🥕" progress={creditsErnedThisMonth ?? 0} total={6} />
+        <Progress icon={APP_NAME && __('carrots_balance', APP_NAME)} progress={creditsErnedThisMonth ?? 0} total={6} />
         <Row
           rowKey={__('referrals_next_refresh')}
           value={`${getNextMonthName()} 1`}
@@ -176,7 +177,7 @@ const ReferralsPage = () => {
         />
         <Row
           rowKey={__('referrals_earned')}
-          value={`🥕 ${
+          value={`${APP_NAME && __('carrots_balance', APP_NAME)} ${
             creditsEarnedFromReferrals === undefined
               ? ''
               : creditsEarnedFromReferrals

@@ -25,6 +25,11 @@ const GuestMenu = () => {
         <NavLink href="/volunteer">{__('navigation_volunteer')}</NavLink>
         <NavLink href="/resources">{__('navigation_resources')}</NavLink>
 
+        {process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true' && (
+          <NavLink href="/support-us">
+            {__('support_us_navigation')}
+          </NavLink>
+        )}
         {process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true' && (
           <NavLink href="/learn/category/all">
             {__('navigation_online_courses')}

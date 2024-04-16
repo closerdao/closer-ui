@@ -18,7 +18,6 @@ import { Web3ReactProvider } from '@web3-react/core';
 import {
   AuthProvider,
   ConfigProvider,
-  GeneralConfig,
   PlatformProvider,
   WalletProvider,
   __,
@@ -42,21 +41,25 @@ export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
   return library;
 }
 
-const MyApp = ({ Component, pageProps }: AppOwnProps) => {
-  const defaultGeneralConfig = configDescription.find(
+const prepareDefaultConfig = () => {
+  const general = configDescription.find(
     (config) => config.slug === 'general',
-  )?.value;
+  )?.value ?? {};
+  const transformedObject = Object.entries(general).reduce((acc, [key, value]) => {
+    return { ...acc, [key]: '' };
+  }, {});
+  return transformedObject;
+}
+
+const MyApp = ({ Component, pageProps }: AppOwnProps) => {
+  const defaultGeneralConfig = prepareDefaultConfig()
 
   const router = useRouter();
   const { query } = router;
   const referral = query.referral;
 
-  const [generalConfig, setGeneralConfig] = useState<GeneralConfig | null>(
-    null,
-  );
-  const config = generalConfig
-    ? prepareGeneralConfig(generalConfig)
-    : prepareGeneralConfig(defaultGeneralConfig);
+  const [config, setConfig] = useState<any>(prepareGeneralConfig(defaultGeneralConfig));
+
   const { FACEBOOK_PIXEL_ID } = config || {};
 
   useEffect(() => {
@@ -71,9 +74,9 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         const generalConfigRes = await api.get('config/general').catch(() => {
           return;
         });
-        setGeneralConfig(generalConfigRes?.data.results.value);
+        setConfig(prepareGeneralConfig(generalConfigRes?.data.results.value))
       } catch (err) {
-        setGeneralConfig(null);
+        console.error(err);
         return;
       }
     })();

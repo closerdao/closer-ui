@@ -1,5 +1,9 @@
 import dayjs from 'dayjs';
 
+import {
+  BOOKING_EXISTS_ERROR,
+  USER_REJECTED_TRANSACTION_ERROR,
+} from '../constants';
 import { User } from '../contexts/auth/types';
 import {
   AccommodationUnit,
@@ -9,6 +13,7 @@ import {
   Listing,
   Price,
 } from '../types';
+import api from './api';
 import { __, priceFormat } from './helpers';
 
 export const getStatusText = (status: string, updated: string | Date) => {
@@ -55,11 +60,13 @@ export const getFiatTotal = (
   accomodationTotal: number,
   eventTotal?: number,
   useTokens?: boolean,
+  useCredits?: boolean,
 ) => {
   if (isTeamBooking) {
     return 0;
   }
-  const accommodationFiatTotal = useTokens ? 0 : accomodationTotal;
+  const accommodationFiatTotal =
+    useTokens || useCredits ? 0 : accomodationTotal;
   if (foodOption === 'no_food') {
     return accommodationFiatTotal + (eventTotal || 0);
   }
@@ -96,14 +103,17 @@ export const getUtilityTotal = ({
 export const getAccommodationTotal = (
   listing: Listing | undefined,
   useTokens: boolean,
+  useCredits: boolean,
   adults: number,
   durationInDays: number,
   discountRate: number,
   volunteerId: string | undefined,
 ) => {
   if (!listing) return 0;
-  if(volunteerId) return 0;
-  const price = useTokens ? listing.tokenPrice?.val : listing.fiatPrice?.val;
+  if (volunteerId) return 0;
+
+  const price =
+    useTokens || useCredits ? listing.tokenPrice?.val : listing.fiatPrice?.val;
   const multiplier = listing.private ? 1 : adults;
   const total = +(price * multiplier * durationInDays * discountRate).toFixed(
     2,
@@ -114,16 +124,24 @@ export const getAccommodationTotal = (
 export const getPaymentDelta = (
   total: number,
   updatedFiatTotal: number,
-  useToken: boolean,
+  useTokens: boolean,
+  useCredits: boolean,
   rentalToken: Price<CloserCurrencies>,
   updatedAccomodationTotal: number,
   rentalFiatCur: CloserCurrencies,
 ) => {
-  if (useToken) {
+  if (useTokens || useCredits) {
+    const delta = Number(
+      (updatedAccomodationTotal - rentalToken?.val).toFixed(2),
+    );
+    if (!delta) return null;
     return {
+      credits: {
+        val: useCredits ? delta : 0,
+        cur: 'credits',
+      },
       token: {
-        val:
-          Number((updatedAccomodationTotal - rentalToken?.val).toFixed(2)) || 0,
+        val: useTokens ? delta : 0,
         cur: rentalToken?.cur,
       },
       fiat: {
@@ -132,10 +150,12 @@ export const getPaymentDelta = (
       },
     };
   }
+  const delta = Number((updatedFiatTotal - total).toFixed(2));
+  if (!delta) return null;
   return {
     token: { val: 0, cur: rentalToken?.cur },
     fiat: {
-      val: Number((updatedFiatTotal - total).toFixed(2)) || 0,
+      val: delta || 0,
       cur: rentalFiatCur,
     },
   };
@@ -285,4 +305,87 @@ export const getFilterAccommodationUnits = (
     return groupsWithBookings.includes(unit.id);
   });
   return updatedUnits;
+};
+
+export const payTokens = async (
+  bookingId: string | undefined,
+  dailyRentalTokenVal: number | undefined,
+  stakeTokens: (dailyValue: number) => Promise<
+    | {
+        error: null;
+        success: {
+          transactionId: string;
+        };
+      }
+    | {
+        error: unknown;
+        success: null;
+      }
+    | undefined
+  >,
+
+  checkContract: () => Promise<
+    | {
+        success: boolean;
+        error: null;
+      }
+    | {
+        success: boolean;
+        error: string;
+      }
+    | undefined
+  >,
+) => {
+  if (!dailyRentalTokenVal)
+    return { error: 'No daily rental token value provided', success: null };
+  if (!bookingId) return { error: 'No bookingId provided', success: null };
+
+  const { success: stakingSuccess, error: stakingError } = (await stakeTokens(
+    dailyRentalTokenVal,
+  )) as
+    | {
+        error: null;
+        success: {
+          transactionId: string;
+        };
+      }
+    | {
+        error: any;
+        success: null;
+      };
+
+  const { success: isBookingMatchContract, error: nightsRejected } =
+    (await checkContract()) as
+      | {
+          success: boolean;
+          error: null;
+        }
+      | {
+          success: boolean;
+          error: string;
+        };
+
+  const error = stakingError || nightsRejected;
+  console.log('stakingError=', stakingError);
+  console.log('nightsRejected=', nightsRejected);
+  console.log('error reason=', error?.reason);
+
+  if (error?.reason.trim() === USER_REJECTED_TRANSACTION_ERROR) {
+    console.log('User rejected transaction!!!!!');
+    return { error: 'User rejected transaction', success: null };
+  }
+  if (error?.reason.trim() === BOOKING_EXISTS_ERROR) {
+    return { error: 'Booking for these dates already exists', success: null };
+  }
+  if (error) {
+    console.log('TOKEN PAYMENT ERROR=', error);
+    return { error: 'Token payment failed.', success: null };
+  }
+
+  if (stakingSuccess?.transactionId && isBookingMatchContract) {
+    await api.post(`/bookings/${bookingId}/token-payment`, {
+      transactionId: stakingSuccess.transactionId,
+    });
+    return { success: true, error: null };
+  }
 };

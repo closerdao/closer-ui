@@ -8,7 +8,7 @@ import { GeneralConfig, api } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import { useFaqs } from 'closer/hooks/useFaqs';
 import { parseMessageFromError } from 'closer/utils/common';
-import { __ } from 'closer/utils/helpers';
+import { __ } from 'closer';
 
 interface Props {
   generalConfig: GeneralConfig | null;
