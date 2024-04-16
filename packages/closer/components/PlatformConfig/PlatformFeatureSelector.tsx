@@ -20,7 +20,7 @@ const PlatformFeatureSelector = ({
   return (
     <Card>
       <Heading level={4}>{__('config_features_heading')}</Heading>
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-row gap-x-4 flex-wrap">
         {allConfigCategories
           .filter((category) => !NON_EDITABLE_FEATURES.includes(category))
           .map((currentConfig: any) => {

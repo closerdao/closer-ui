@@ -403,4 +403,13 @@ export const configDescription: ConfigType[] = [
       },
     },
   },
+  {
+    slug: 'learningHub',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: true,
+      },
+    },
+  },
 ];
