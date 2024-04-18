@@ -33,14 +33,14 @@ const Switcher = ({
   return (
     <>
       {options && (
-        <div className="border border-gray-600 rounded-full w-full flex p-[2px]">
+        <div className="border border-gray-600 rounded-[19px] w-full flex gap-0 flex-wrap p-[2px]">
           {options?.map((option, i) => (
             <button
               disabled={isButtonDisabled(options, i)}
               onClick={() => {
                 setSelectedOption(option);
               }}
-              className={` rounded-full  flex-1 text-center py-1 ${
+              className={`whitespace-nowrap rounded-full px-3 flex-1 text-center py-1 ${
                 option !== selectedOption ? 'bg-white ' : 'bg-accent-light'
               }  ${
                 isButtonDisabled(options, i) &&

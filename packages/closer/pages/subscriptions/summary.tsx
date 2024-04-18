@@ -49,6 +49,7 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   generalConfig,
   error,
 }) => {
+
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const defaultConfig = useConfig();

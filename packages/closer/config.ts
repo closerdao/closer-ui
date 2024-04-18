@@ -1,3 +1,5 @@
+import { ConfigType } from './types/config';
+
 export const closerConfig = {
   PLATFORM_NAME: 'Closer',
   APP_NAME: 'closer',
@@ -32,7 +34,7 @@ export const closerConfig = {
   SOURCE_TOKEN: 'CEUR',
 };
 
-export const configDescription = [
+export const configDescription: ConfigType[] = [
   /* in closer repo
     These are all the configs that exist within the platform
      */
@@ -296,12 +298,29 @@ export const configDescription = [
       timeZone: {
         type: 'select',
         enum: [
-          'UTC', 'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
-          'America/Anchorage', 'America/Honolulu', 'Asia/Kolkata', 'Asia/Shanghai', 'Asia/Tokyo',
-          'Asia/Dubai', 'Asia/Bangkok', 'Europe/London', 'Europe/Lisbon', 'Europe/Berlin', 'Europe/Paris', 'Europe/Moscow',
-          'Australia/Sydney', 'Australia/Perth', 'Africa/Cairo', 'Africa/Johannesburg'
+          'UTC',
+          'America/New_York',
+          'America/Chicago',
+          'America/Denver',
+          'America/Los_Angeles',
+          'America/Anchorage',
+          'America/Honolulu',
+          'Asia/Kolkata',
+          'Asia/Shanghai',
+          'Asia/Tokyo',
+          'Asia/Dubai',
+          'Asia/Bangkok',
+          'Europe/London',
+          'Europe/Lisbon',
+          'Europe/Berlin',
+          'Europe/Paris',
+          'Europe/Moscow',
+          'Australia/Sydney',
+          'Australia/Perth',
+          'Africa/Cairo',
+          'Africa/Johannesburg',
         ],
-        default: 'Europe/Lisbon'
+        default: 'Europe/Lisbon',
       },
       appName: {
         type: 'text',
@@ -383,25 +402,14 @@ export const configDescription = [
         default: '',
       },
     },
-    
   },
-
-  // {
-  //   slug: 'learningHub',
-  //   value: {
-  //     enabled: {
-  //       type: Boolean,
-  //       default: true,
-  //     },
-  //     visibility: {
-  //       type: 'enum',
-  //       options: ['public', 'subscription', 'role:member'],
-  //       default: 'subscription',
-  //     },
-  //     accessibleBySubscriptionId: {
-  //       type: ''text'',
-  //       default: false,
-  //     },
-  //   },
-  // },
+  {
+    slug: 'learningHub',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: true,
+      },
+    },
+  },
 ];
