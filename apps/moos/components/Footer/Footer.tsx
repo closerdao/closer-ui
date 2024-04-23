@@ -91,7 +91,7 @@ export const Footer: FC = () => {
           </Link>
 
           <Link href="https://docs.google.com/document/d/1qpx3agcnyZuXORkFbYIkXHuV2R_EIL5o2s51EsnL_04" className="text-accent underline">
-            Privacy Pilicy
+            Privacy Policy
           </Link>
         </div>
       </div>
