@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
 import Hosts from 'closer/components/Hosts';
@@ -59,6 +59,9 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
     },
   };
 
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  
+
   const loadData = async () => {
     await Promise.all([
       platform.listing.get(listingFilter),
@@ -69,6 +72,10 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
   useEffect(() => {
     loadData();
   }, [isTeamMember]);
+
+  useEffect(() => {
+    setIsSmallScreen(isMobile)
+  }, [])
 
   const listings = platform.listing.find(listingFilter);
 
@@ -83,7 +90,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
       full programme
     </Link>
   ) : (
-    <div className="flex gap-4">
+    <div className="flex gap-4 flex-col sm:flex-row">
       <Link
         href="/stay"
         type="submit"
@@ -113,9 +120,9 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
           content="Traditional Dream Factory (TDF) is a regenerative playground in Abela, Portugal."
         />
       </Head>
-      <section className="md:absolute md:-top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-light mb-8 md:mb-[100vh]">
+      <section className="md:absolute md:-top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-alt mb-8 md:mb-[100vh]">
         <div className="md:h-[100vh]">
-          {isMobile ? (
+          {isSmallScreen ? (
             <video
               loop={true}
               muted={true}
@@ -289,7 +296,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
         </section>
 
         <section className="mb-12 max-w-4xl mx-auto md:pt-8 md:flex justify-center">
-          <div className="flex gap-8">
+          <div className="flex gap-4 flex-col sm:flex-row">
             <LinkButton href='/stay' className="lowercase">apply to stay</LinkButton>
             <LinkButton href='/volunteer' className="lowercase">join as a volunteer</LinkButton>
           </div>
@@ -299,8 +306,8 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
           <Hosts hosts={hosts} email={TEAM_EMAIL} />
         </section>
 
-        <section className="w-full  min-h-[600px] mx-auto py-10  md:flex justify-center bg-[url(/images/lios-bg.jpg)] bg-cover bg-center">
-          <div className="flex flex-col gap-4 max-w-4xl">
+        <section className="w-[100vw] -mx-4 min-h-[600px] py-10  md:flex justify-center bg-[url(/images/lios-bg.jpg)] bg-cover bg-center">
+          <div className="flex flex-col gap-4 max-w-4xl px-4">
             <Heading
               level={2}
               className="text-2xl mb-8 max-w-prose text-white "
@@ -309,7 +316,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
             </Heading>
             <div className="flex justify-center">
               {listings && listings.count() > 0 && (
-                <div className="grid md:grid-cols-3 gap-x-12 md:gap-x-5 gap-y-16">
+                <div className="grid md:grid-cols-3 gap-x-12 md:gap-x-5 gap-y-8">
                   {listings.map((listing: any, index: number) => {
                     if (index <= 2) {
                       return (
@@ -329,23 +336,23 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
           </div>
         </section>
 
-        <section className="min-h-[600px] mx-auto md:pt-20 md:pb-10 md:flex justify-center bg-[url(/images/lios-bg-2.jpg)] bg-cover bg-center">
-          <div className="flex flex-col gap-8 items-center">
+        <section className="min-h-[600px] w-[100vw] -mx-4 px-4  pt-20 pb-10 flex justify-center bg-[url(/images/lios-bg-2.jpg)] bg-cover bg-center">
+          <div className="flex flex-col gap-8 items-center ">
             <Heading
               level={2}
-              className="text-6xl"
+              className="text-6xl text-center"
             >
               HOW TO PLAY
             </Heading>
             <Heading
               level={3}
-              className="font-body mb-8 text-lg"
+              className="font-body mb-8 text-lg text-center"
             >
               DESERT ROLES & ARCHETYPES
           </Heading>
           
           <div className='max-w-4xl'>
-            <div className='flex gap-24 justify-between text-accent'>
+            <div className='flex-col md:flex-row flex gap-24 justify-between text-accent'>
               <div className='flex flex-col gap-12 items-center'>
                 <Heading
                   level={4}
@@ -387,13 +394,13 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
           </div>
         </section>
 
-        <section className="mb-12 min-h-[600px] mx-auto md:pt-20 md:pb-10 md:flex justify-center bg-neutral">
+        <section className="mb-12 min-h-[600px] w-[100vw] -mx-4 pt-12 pb-10 px-4 md:flex justify-center bg-neutral">
           <div className="flex flex-col gap-8 items-center">
           <Image src='/images/planetary-movement.png' alt='Lios planetary movement' width={380} height={342} />
 
             <Heading
               level={2}
-              className="text-2xl uppercase"
+              className="text-2xl uppercase text-center"
             >
               Desert Transformation lab
             </Heading>

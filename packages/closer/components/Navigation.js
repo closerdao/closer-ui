@@ -59,7 +59,7 @@ const Navigation = () => {
     <div className="NavContainer h-20 md:pt-0 top-0 left-0 right-0 fixed z-20 bg-background shadow">
       <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
         <Logo />
-        <div className="flex gap-3 w-auto justify-center items-center ">
+        <div className="flex gap-2 w-auto justify-center items-center ">
           {!isAuthenticated &&
             APP_NAME &&
             (APP_NAME.toLowerCase() === 'moos' ||

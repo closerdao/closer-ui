@@ -1,6 +1,6 @@
 {
   "extends": "tsconfig/nextjs.json",
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "pages/index.tsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "pages/index.tsx", "public/fonts/fonts.ts"],
   "exclude": ["node_modules"],
   "compilerOptions": {
     "baseUrl": ".",

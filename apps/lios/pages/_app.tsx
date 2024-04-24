@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import CookieConsent from 'react-cookie-consent';
 
 import { ErrorBoundary, Layout } from '@/components';
+import { hoover, cabinet, sincopa } from '@/public/fonts/fonts';
 
 import {
   ExternalProvider,
@@ -26,11 +27,11 @@ import {
 } from 'closer';
 import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
-import '../styles/index.css'
 import { prepareGeneralConfig } from 'closer/utils/app.helpers';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import appConfig from '../config';
+import '../styles/index.css';
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
@@ -41,23 +42,27 @@ export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
   return library;
 }
 const prepareDefaultConfig = () => {
-  const general = configDescription.find(
-    (config) => config.slug === 'general',
-  )?.value ?? {};
-  const transformedObject = Object.entries(general).reduce((acc, [key, value]) => {
-    return { ...acc, [key]: '' };
-  }, {});
+  const general =
+    configDescription.find((config) => config.slug === 'general')?.value ?? {};
+  const transformedObject = Object.entries(general).reduce(
+    (acc, [key, value]) => {
+      return { ...acc, [key]: '' };
+    },
+    {},
+  );
   return transformedObject;
-}
+};
 
 const MyApp = ({ Component, pageProps }: AppOwnProps) => {
-  const defaultGeneralConfig = prepareDefaultConfig()
+  const defaultGeneralConfig = prepareDefaultConfig();
 
   const router = useRouter();
   const { query } = router;
   const referral = query.referral;
 
-  const [config, setConfig] = useState<any>(prepareGeneralConfig(defaultGeneralConfig));
+  const [config, setConfig] = useState<any>(
+    prepareGeneralConfig(defaultGeneralConfig),
+  );
 
   const { FACEBOOK_PIXEL_ID } = config || {};
 
@@ -73,7 +78,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         const generalConfigRes = await api.get('config/general').catch(() => {
           return;
         });
-        setConfig(prepareGeneralConfig(generalConfigRes?.data.results.value))
+        setConfig(prepareGeneralConfig(generalConfigRes?.data.results.value));
       } catch (err) {
         console.error(err);
         return;
@@ -121,10 +126,12 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
             <PlatformProvider>
               <Web3ReactProvider getLibrary={getLibrary}>
                 <WalletProvider>
+                    <div className={`${hoover.variable} ${cabinet.variable} ${sincopa.variable} font-sans`}>
                   <Layout>
                     <GoogleAnalytics trackPageViews />
-                    <Component {...pageProps} config={config} />
+                      <Component {...pageProps} config={config} />
                   </Layout>
+                    </div>
                 </WalletProvider>
               </Web3ReactProvider>
             </PlatformProvider>
