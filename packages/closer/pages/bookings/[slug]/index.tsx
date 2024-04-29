@@ -123,7 +123,7 @@ const BookingPage = ({
     setUpdatedStartDate,
     setUpdatedListingId,
   };
-  const isNotPaid = status !== 'paid';
+  const isNotPaid = status !== 'paid' && status !== 'credits-paid' && status !== 'tokens-staked';
 
   const updatedDurationInDays = Math.ceil(
     dayjs(updatedEndDate).diff(dayjs(updatedStartDate), 'hour') / 24,
@@ -215,7 +215,10 @@ const BookingPage = ({
     total: { val: updatedFiatTotal, cur: rentalFiat?.cur },
     paymentDelta: paymentDelta ? paymentDelta : null,
   };
-  booking.paymentDelta = null;
+  
+  if (booking?.paymentDelta) {
+    booking.paymentDelta = null;
+  }
 
   const hasUpdatedBooking =
     JSON.stringify(booking) !== JSON.stringify(updatedBooking);
