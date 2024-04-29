@@ -6,11 +6,12 @@ import { ErrorMessage } from '../ui';
 interface Props {
   faqs: null | FormattedFaqs[];
   error: string | null;
+  isExpanded?: boolean;
 }
 
-const Faqs = ({ faqs, error }: Props) => {
+const Faqs = ({ faqs, error, isExpanded }: Props) => {
   return (
-    <div>
+    <div className='w-full'>
       {error && <ErrorMessage error={error} />}
 
       {faqs &&
@@ -24,7 +25,7 @@ const Faqs = ({ faqs, error }: Props) => {
               key={category[0]}
               className="border-b border-accent-light text-sm"
             >
-              <details className="group py-2 ">
+              <details className="group py-2 " {...(isExpanded ? { open: true } : {})}>
                 <summary className="flex cursor-pointer items-center justify-between py-1 hover:text-c-blue ">
                   <p className="uppercase font-bold text-lg my-2">
                     {category[0]}
@@ -51,7 +52,7 @@ const Faqs = ({ faqs, error }: Props) => {
                       return (
                         <div
                           key={questionAndAnswer.q}
-                          className="shadow rounded-md border-t border-gray-50 mb-3"
+                          className="shadow rounded-md border-t border-gray-50 mb-3 overflow-hidden"
                         >
                           <details className="group/level2">
                             <summary className="flex cursor-pointer items-center justify-between py-1 hover:text-c-blue pr-3">

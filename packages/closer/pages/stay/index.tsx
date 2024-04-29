@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 import BookingRules from '../../components/BookingRules';
 import Hosts from '../../components/Hosts';
@@ -94,44 +94,53 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
 
       <section className="max-w-6xl mx-auto mb-16">
         <div className="mb-6 max-w-prose">
-          <Heading level={1} className="text-4xl pb-2 mt-8">
-            {__('stay_title', appName)} {PLATFORM_NAME}
+          <Heading level={1} className="text-4xl pb-2 mt-8 mb-4">
+            {__('stay_title', appName)} {APP_NAME !== 'lios' && PLATFORM_NAME}
           </Heading>
-          <p>{__('stay_description', appName)}</p>
+          {!__('stay_description', appName).includes('_missing') && (
+            <p>{__('stay_description', appName)}</p>
+          )}
         </div>
       </section>
 
-      {bookingRules?.enabled && <BookingRules rules={bookingRules?.elements} />}
+      {bookingRules?.enabled && bookingRules?.elements.length > 1 && (
+        <BookingRules rules={bookingRules?.elements} />
+      )}
 
       <section className="max-w-6xl mx-auto mb-16 flex align-center">
         <Link
           href="/bookings/create/dates"
           className="btn btn-primary text-xl px-8 py-3"
         >
-          {user?.roles.includes('member') ? 
-            __('buttons_book_now') :
-            __('buttons_apply_to_stay') }
+          {user?.roles.includes('member')
+            ? __('buttons_book_now')
+            : __('buttons_apply_to_stay')}
         </Link>
-        { process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING &&
+        {process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING && (
           <Link
             href="/volunteer"
             className="text-xl px-8 py-3 text-accent italic underline"
           >
-            { __('buttons_volunteer')}
+            {__('buttons_volunteer')}
           </Link>
-          }
+        )}
       </section>
 
       <section className="max-w-6xl mx-auto mb-16">
         <Hosts hosts={hosts} email={TEAM_EMAIL} />
 
         <div className="mb-6">
-          <Heading level={2} className="text-2xl mb-2 max-w-prose">
+          <Heading level={2} className="text-2xl mb-8 max-w-prose">
             {__('stay_chose_accommodation', appName)}
           </Heading>
-          <p className="mb-8 max-w-prose">
-            {__('stay_chose_accommodation_description', appName)}
-          </p>
+          {!__('stay_chose_accommodation_description', appName).includes(
+            '_missing',
+          ) && (
+            <p className="mb-8 max-w-prose">
+              {__('stay_chose_accommodation_description', appName)}
+            </p>
+          )}
+
           {listings && listings.count() > 0 && (
             <div className="grid md:grid-cols-4 gap-x-12 md:gap-x-5 gap-y-16">
               {listings.map((listing: any) => {

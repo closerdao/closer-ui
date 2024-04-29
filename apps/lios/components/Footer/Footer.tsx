@@ -15,7 +15,14 @@ export const Footer: FC = () => {
         </p>
 
         <p>
-          <Link href="/pdf/TDF-PP.pdf">Privacy policy</Link>
+          <Link href="https://drive.google.com/file/d/16vgG93MNQDcicHCHA7x0vWi9yo1up51j/view">
+            Privacy policy
+          </Link>
+        </p>
+        <p>
+          <Link href="https://drive.google.com/file/d/1S8h-U5r_Ss6cvEfzN74pddz067MZl68J/view">
+            Terms & Conditions
+          </Link>
         </p>
         <div className="social mt-4 flex flex-row justify-center">
           <a
