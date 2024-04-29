@@ -123,28 +123,30 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
           content="Traditional Dream Factory (TDF) is a regenerative playground in Abela, Portugal."
         />
       </Head>
-      <section className="w-[100vw] md:mx-0 -mx-4 md:absolute md:-top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-alt mb-8 md:mb-[100vh]">
+      <section className="w-[100vw] md:mx-0 -mx-4 absolute md:-top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-alt mb-8 md:mb-[100vh]">
         <div className="md:h-[100vh]">
           {isSmallScreen ? (
-            <video
-              loop={true}
-              muted={true}
-              autoPlay={true}
-              playsInline={true}
-              className="w-full h-full object-cover"
-            >
-              <source
-                src="https://cdn.oasa.co/video/lios-small.mp4"
-                type="video/mp4"
-              />
-            </video>
+            <div className='h-[calc(100vh-30px)]'>
+              <video
+                loop={true}
+                muted={true}
+                autoPlay={true}
+                playsInline={true}
+                className="w-full h-full object-cover"
+              >
+                <source
+                  src="https://cdn.oasa.co/video/lios-small.mp4"
+                  type="video/mp4"
+                />
+              </video>
+            </div>
           ) : (
             <YoutubeEmbed isBackgroundVideo={true} embedId="8XrtA7R1aew" />
           )}
         </div>
-        <div className="md:absolute md:left-0 md:top-0 md:w-full md:h-full md:bg-black/20 flex justify-center ">
+        <div className="absolute left-0 top-0 w-full h-full bg-black/20 flex justify-center ">
           <div className="w-full flex justify-center flex-col items-center ">
-            <div className=" max-w-4xl p-6 rounded-xl flex flex-col items-center gap-10">
+            <div className=" max-w-4xl p-6 rounded-xl flex flex-col items-center gap-2 md:gap-10">
               <Image
                 className="drop-shadow-sm"
                 src="/images/sygnet.png"
@@ -167,7 +169,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
         </div>
       </section>
 
-      <div className="relative md:top-[105vh]">
+      <div className="relative top-[105vh]">
         <section className="mb-12 max-w-3xl mx-auto md:pt-12 md:flex ">
           <div className="text-accent">
             <Heading
@@ -370,7 +372,6 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                     Transformation Lab and guide others through this wild
                     faculty.
                   </p>
-                  <LinkButton className="w-[150px]">Apply</LinkButton>
                 </div>
                 <div className="flex flex-col gap-12 items-center">
                   <Heading level={4} className="text-lg uppercase">
