@@ -3,9 +3,10 @@ import Link from 'next/link';
 import { FC } from 'react';
 
 import { useConfig } from 'closer';
+import { RiFacebookFill } from '@react-icons/all-files/ri/RiFacebookFill';
 
 export const Footer: FC = () => {
-  const { INSTAGRAM_URL, TWITTER_URL } = useConfig() || {};
+  const { INSTAGRAM_URL, FACEBOOK_URL } = useConfig() || {};
 
   return (
     <footer className="w-full mt-16 mx-auto text-center max-w-prose">
@@ -26,7 +27,7 @@ export const Footer: FC = () => {
         </p>
         <div className="social mt-4 flex flex-row justify-center">
           <a
-            href="https://t.me/"
+            href="https://t.me/+zQ5J9ud7qZo5Njdk"
             target="_blank"
             className="mr-2 p-2 transition ease-linear duration-1200 hover:scale-125"
             rel="noreferrer"
@@ -71,27 +72,17 @@ export const Footer: FC = () => {
               <line x1="16.5" y1="7.5" x2="16.5" y2="7.501" />
             </svg>
           </a>
-          <a
-            href={TWITTER_URL}
-            target="_blank"
-            className="mr-2 p-2 transition ease-linear duration-1200 hover:scale-125"
-            rel="noreferrer"
-          >
-            <svg
-              className="h-8 w-8 text-accent"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              strokeWidth="2"
-              stroke="currentColor"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          {FACEBOOK_URL && (
+            <a
+              href={FACEBOOK_URL}
+              target="_blank"
+              rel="noreferrer nofollow"
+              title="Follow us on Facebook"
+              className="text-2xl mr-2 rounded-full p-2 text-accent bg-transparent duration-300 hover:scale-110"
             >
-              {' '}
-              <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z" />
-            </svg>
-          </a>
+              <RiFacebookFill />
+            </a>
+          )}
         </div>
       </div>
     </footer>

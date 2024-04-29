@@ -1,7 +1,7 @@
 const config = {
-  platformAllowedConfigs: ['booking', 'general', 'booking-rules', 'payment', 'emails'],
+  platformAllowedConfigs: ['booking', 'general', 'booking-rules', 'payment', 'emails', 'volunteering'],
   PORT: 14444,
-  APP_NAME: 'lios', // enabled for local testing
+  // APP_NAME: 'lios', // enabled for local testing
   // PLATFORM_NAME: 'Foz',
   // PLATFORM_LEGAL_ADDRESS: 'Foz da Cova full address',
   // DEFAULT_TITLE: 'Foz',
@@ -13,7 +13,7 @@ const config = {
   // INSTAGRAM_URL: 'https://www.instagram.com/explore/tags/fozdacova/',
   // FACEBOOK_URL: 'https://www.facebook.com/',
   // TWITTER_URL: 'https://twitter.com/',
-  LOGO_HEADER: 'images/lios-dtl-logo.png',
+  LOGO_HEADER: '/images/lios-dtl-logo.png',
   // LOGO_FOOTER: '/images/logo.svg',
   // LOCATION_COORDINATES: { lat: 40.112851842555756, lng: -8.015835544223801 },
   // LOCATION_LAT: 40.112851842555756,

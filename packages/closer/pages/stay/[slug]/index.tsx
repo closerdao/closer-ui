@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import BookingGuests from '../../../components/BookingGuests';
 import CurrencySwitcher from '../../../components/CurrencySwitcher';
@@ -32,11 +32,12 @@ import { getFiatTotal } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import {
   __,
+  getBookingRate,
   getDiscountRate,
   getMaxBookingHorizon,
+  priceFormat,
   sendAnalyticsEvent,
 } from '../../../utils/helpers';
-import { getBookingRate, priceFormat } from '../../../utils/helpers';
 import {
   formatDate,
   getBlockedDateRanges,
@@ -58,7 +59,8 @@ const ListingPage: NextPage<Props> = ({
   descriptionText,
 }) => {
   const config = useConfig();
-  const { LOCATION_LAT, LOCATION_LON, PLATFORM_LEGAL_ADDRESS } = config || {};
+  const { LOCATION_LAT, LOCATION_LON, PLATFORM_LEGAL_ADDRESS, APP_NAME } =
+    config || {};
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const isMember = user && user.roles.includes('member');
@@ -481,24 +483,27 @@ const ListingPage: NextPage<Props> = ({
                                 }
                                 isPrivate={listing?.private}
                               />
-                              <div className="my-0 flex flex-row justify-between items-start ">
-                                <label
-                                  htmlFor="separateBeds"
-                                  className="text-sm w-3/4"
-                                >
-                                  {__('bookings_pickup')}
-                                  <span className="w-full text-xs ml-2">
-                                    ({__('bookings_pickup_disclaimer')})
-                                  </span>
-                                </label>
-                                <Switch
-                                  disabled={false}
-                                  name="pickup"
-                                  label=""
-                                  onChange={setDoesNeedPickup}
-                                  checked={doesNeedPickup}
-                                />
-                              </div>
+                              {APP_NAME === 'tdf' && (
+                                <div className="my-0 flex flex-row justify-between items-start ">
+                                  <label
+                                    htmlFor="separateBeds"
+                                    className="text-sm w-3/4"
+                                  >
+                                    {__('bookings_pickup')}
+                                    <span className="w-full text-xs ml-2">
+                                      ({__('bookings_pickup_disclaimer')})
+                                    </span>
+                                  </label>
+                                  <Switch
+                                    disabled={false}
+                                    name="pickup"
+                                    label=""
+                                    onChange={setDoesNeedPickup}
+                                    checked={doesNeedPickup}
+                                  />
+                                </div>
+                              )}
+
                               {isTeamMember && (
                                 <div className="my-0 flex flex-row justify-between flex-wrap">
                                   <label
