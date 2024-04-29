@@ -6,3 +6,7 @@
     @apply text-xs opacity-50 leading-5;
   }
 }
+
+.custom-summary::-webkit-details-marker {
+  display: none;
+}

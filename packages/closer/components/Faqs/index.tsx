@@ -26,7 +26,7 @@ const Faqs = ({ faqs, error, isExpanded }: Props) => {
               className="border-b border-accent-light text-sm"
             >
               <details className="appearance-none group py-2 " {...(isExpanded ? { open: true } : {})}>
-                <summary className="flex cursor-pointer items-center justify-between py-1 hover:text-c-blue ">
+                <summary className="custom-summary flex cursor-pointer items-center justify-between py-1 hover:text-c-blue ">
                   <p className="uppercase font-bold text-lg my-2">
                     {category[0]}
                   </p>
@@ -55,7 +55,7 @@ const Faqs = ({ faqs, error, isExpanded }: Props) => {
                           className="shadow rounded-md border-t border-gray-50 mb-3 overflow-hidden"
                         >
                           <details className="appearance-none group/level2">
-                            <summary className="flex cursor-pointer items-center justify-between py-1 hover:text-c-blue pr-3">
+                            <summary className="custom-summary  flex cursor-pointer items-center justify-between py-1 hover:text-c-blue pr-3">
                               <p className="font-bold px-4 py-3">
                                 {questionAndAnswer.q}
                               </p>
