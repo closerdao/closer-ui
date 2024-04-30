@@ -357,18 +357,21 @@ const BookingPage = ({
         </section>
 
         <section>
-          <div className="flex flex-col gap-4">
-            <Button
-              isLoading={isLoading}
-              onClick={handleSaveBooking}
-              isEnabled={hasUpdatedBooking && !isLoading}
-            >
-              {__('booking_card_save_booking')}
-            </Button>
-            {hasUpdated && (
-              <Information>{__('booking_card_booking_updated')}</Information>
-            )}
-          </div>
+          {isSpaceHost && (
+            <div className="flex flex-col gap-4">
+              <Button
+                isLoading={isLoading}
+                onClick={handleSaveBooking}
+                isEnabled={hasUpdatedBooking && !isLoading}
+              >
+                {__('booking_card_save_booking')}
+              </Button>
+              {hasUpdated && (
+                <Information>{__('booking_card_booking_updated')}</Information>
+              )}
+            </div>
+          )}
+
           <BookingRequestButtons
             _id={_id}
             status={status}

@@ -87,7 +87,6 @@
   "bookings_checkout_step_title": "Checkout",
   "bookings_checkout_step_accomodation": "Accommodation",
   "bookings_checkout_step_comply_with": "I comply with the ",
-  
   "bookings_checkout_step_cancellation_policy": "Cancellation Policy",
   "bookings_checkout_step_utility_title": "Food Cost",
   "bookings_checkout_step_utility_daily": "Daily Food",
@@ -159,15 +158,12 @@
   "cancel_booking_fiat_description": "FIAT",
   "cancel_booking_token_description": "$TDF",
 
-
-
   "carrots_subheading": "Cover your accommodation fee during events and stays",
   "carrots_your_balance": "Your balance",
   "carrots_subheading_where": "Where to find Them?",
   "carrots_subheading_how_to_use": "How to use them?",
   "carrots_subheading_how_to_harvest": "How to Harvest them",
   "carrots_where_1": "In your profile screen.",
-
 
   "carrots_get_discount": "Get a discount on your accommodation",
 
@@ -489,7 +485,6 @@
   "stay_what_to_expect_5": "Chose from a range of accommodations that fit your needs",
   "stay_what_to_expect_6": "Participate in daily farm to table meals with our community, led by our kitchen team",
   "stay_meet_your_hosts": "Meet your hosts",
-  "stay_meet_your_hosts_description": "We are a group of friends who came together to create a space where we can live in harmony with nature and each other. We are passionate about regenerative living, and we are excited to share our journey with you. Do you have any question for us?",
   "stay_chose_accommodation": "Chose your accommodation",
   "stay_chose_accommodation_description": "From bringing your own van to staying in a shared dorm, we have a range of options to fit your needs. We recommend staying for 1 month to get the full experience of our community, but you can also come just for an event.",
   "stay_meet_your_hosts_link": "Send us a message",
@@ -948,9 +943,11 @@
   "log_in_redirect_message": "Please log in to access ",
   "log_in_redirect_message_page": "page",
   "platform_configs": "⚙️ Platform settings",
+  "platform_configs_initial_settings": "General Settings",
   "booking_configs": "Booking",
   "general_configs": "General",
   "config_updated": "Config updated!",
+  "config_reset_to_default": "Reset template to default",
 
   "config_label_utilityFiatVal": "Utility price (per night)",
   "config_label_utilityFiatCur": "Utility currency",
@@ -1064,6 +1061,19 @@
   "config_label_bookingPageTitle": "Booking page title",
   "config_label_bookingPageDescription": "Booking page description",
   "config_label_timeZone": "Timezone",
+
+  "config_label_name": "Template name",
+  "config_label_subject": "Subject",
+  "config_label_body": "Email body",
+  "config_label_ctaLink": "CTA Button link",
+  "config_label_ctaText": "CTA Button text",
+  "config_label_list": "List of items (comma delimited)",
+  "config_label_footerCopy": "Footer copy (to be added to default footer text)",
+  "config_label_triggerModel": "Sending trigger model",
+  "config_label_triggerAction": "Sending trigger action",
+  "config_label_triggerDelay": "Sending trigger delay in days",
+  "config_label_emailEnabled": "Email enabled",
+
   "config_label_creditPrice30Credits": "Price per credit (30 credits package)",
   "config_label_creditPrice90Credits": "Price per credit (90 credits package)",
   "config_label_creditPrice180Credits": "Price per credit (180 credits package)",
@@ -1074,6 +1084,26 @@
   "config_true": "True",
   "config_false": "False",
   "booking_rules_heading": "Booking rules",
+
+  "config_email_booking_paid_guest": "Booking paid - send to guest",
+  "config_email_booking_paid_spaceHost": "Booking paid - send to space hosts",
+  "config_email_booking_cancelled_guest": "Booking cancelled - send to guest",
+  "config_email_booking_cancelled_spaceHost": "Booking cancelled - send to space hosts",
+  "config_email_booking_request_guest": "Booking request - send to guest",
+  "config_email_booking_request_spaceHost": "Booking request - send to space hosts",
+  "config_email_booking_requestApproved_guest": "Booking approved - send to guest",
+  "config_email_booking_requestRejected_guest": "Booking rejected - send to guest",
+  "config_email_user_created_user": "New user created - send to user",
+  "config_email_user_emailUpdated_user": "Email updated - send to user",
+  "config_email_user_passwordReset_user": "Password reset - send to user",
+  "config_email_user_invite_invitee": "User invited - send to invitee",
+  "config_email_user_subscriptionCreated_user": "Subscription created - send to user",
+  "config_email_user_subscriptionUpdated_user": "Subscription updated - send to user",
+  "config_email_user_subscriptionCancelled_user": "Subscription cancelled - send to user",
+  "config_email_user_subscriptionCancelled_spaceHost": "Subscription cancelled - send to space hosts",
+  "config_email_user_subscriptionPaused_user": "Subscription paused - send to user",
+  "config_email_user_subscriptionResumed_user": "Subscription resumed - send to user",
+  "config_email_user_subscriptionPaymentFailed_user": "Subscription payment failed - send to user",
 
   "edit_homepage_button": "Edit History page",
   "blog_home_button": "Homepage",

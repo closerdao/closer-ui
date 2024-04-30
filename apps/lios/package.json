@@ -1,0 +1,48 @@
+{
+  "name": "lios",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "dotenv -e .env next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch"
+  },
+  "dependencies": {
+    "@mdx-js/loader": "^2.3.0",
+    "@mdx-js/react": "^2.3.0",
+    "@next/mdx": "^13.3.1",
+    "@sentry/nextjs": "^7.40.0",
+    "@tailwindcss/forms": "^0.4.0",
+    "@tailwindcss/line-clamp": "^0.4.4",
+    "closer": "*",
+    "gray-matter": "^4.0.3",
+    "next": "^13.1.1",
+    "nextjs-google-analytics": "^2.3.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-ga": "^3.3.1",
+    "react-gtm-module": "^2.0.11",
+    "ui": "*"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.0.0",
+    "@types/node": "^17.0.12",
+    "@types/react": "^18.0.22",
+    "@types/react-dom": "^18.0.7",
+    "autoprefixer": "10.4.5",
+    "config": "*",
+    "eslint-config-custom": "*",
+    "jest": "^29.5.0",
+    "jest-environment-jsdom": "^29.5.0",
+    "postcss": "^8.4.5",
+    "tailwindcss": "^3.0.7",
+    "tsconfig": "*",
+    "typescript": "^4.5.3"
+  },
+  "msw": {
+    "workerDirectory": "public"
+  }
+}

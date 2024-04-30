@@ -33,7 +33,7 @@ const buttonStyles = cva(
         inline:
           '!w-auto !inline border-accent text-md pl-4 pr-5 py-1.5 bg-accent text-white',
         empty: '', // remove empty prop after all buttons are refactored
-        default: 'py-2 h-12 ',
+        default: 'py-2 h-12',
       },
 
       isEnabled: {
@@ -82,6 +82,7 @@ const LinkButton = ({
         ${twMerge(
           buttonStyles({ type, color, isFullWidth, size, isEnabled }),
           className,
+          'font-accent'
         )}
         `}
         onClick={onClick}

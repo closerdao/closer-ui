@@ -22,7 +22,7 @@ const NavLink = ({ href, children, target, isButton, onClick }: Props) => {
       ) : (
         <Link
           target={target}
-          className="text-center w-full rounded-full border-2 border-accent bg-white uppercase font-bold text-accent text-xl py-1 px-4 hover:text-white hover:bg-accent"
+          className="font-accent text-center w-full rounded-full border-2 border-accent bg-white uppercase font-bold text-accent text-xl py-1 px-4 hover:text-white hover:bg-accent"
           href={href || ''}
         >
           {children}
