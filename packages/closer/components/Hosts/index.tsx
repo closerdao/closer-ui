@@ -17,24 +17,14 @@ const Hosts = ({ hosts, email }: Props) => {
   return (
     <div className="mb-16">
       <div className="max-w-prose">
-        <Heading level={2} className="text-2xl pb-2 mt-8">
+        <Heading level={2} className="text-2xl pb-2 my-8">
           {__('stay_meet_your_hosts', APP_NAME)}
         </Heading>
-        <p className="mb-8">
-          {__('stay_meet_your_hosts_description', APP_NAME)}
-        </p>
-
-        {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
+        {!__('stay_meet_your_hosts_description', APP_NAME).includes(
+          'missing',
+        ) && (
           <p className="mb-8">
-            <a
-              className="text-accent underline font-bold"
-              href={VISITORS_GUIDE}
-              target="_blank"
-              rel="noreferrer noopener"
-            >
-              {APP_NAME &&
-                __('bookings_checkout_step_visitors_guide', APP_NAME)}
-            </a>
+            {__('stay_meet_your_hosts_description', APP_NAME)}
           </p>
         )}
       </div>
@@ -45,7 +35,7 @@ const Hosts = ({ hosts, email }: Props) => {
           })}
         </div>
       )}
-      <Link href={`mailto:${email}`} className="btn my-4">
+      <Link href={`mailto:${email}`} className="btn my-8">
         {__('stay_meet_your_hosts_link')}
       </Link>
     </div>

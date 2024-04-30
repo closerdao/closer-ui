@@ -12,7 +12,7 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
   const { user } = useAuth();
 
   return (
-    <div className="flex flex-col gap-5 justify-between mb-8 shadow rounded-xl p-4">
+    <div className="flex flex-col gap-5 justify-between mb-8 shadow  bg-white rounded-xl p-4">
       <div className="flex flex-col gap-5">
         {listing.get('photos') && listing.get('photos').count() > 0 && (
           <Slider
@@ -92,7 +92,7 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
         {!isAdminPage && (
           <Link
             href={`/stay/${listing.get('slug')}`}
-            className="rounded-full flex py-2 uppercase text-accent bg-white border-2 justify-center border-accent"
+            className="font-accent rounded-full flex py-2 uppercase text-accent bg-white border-2 justify-center border-accent"
           >
             {__('listing_preview_book')}
           </Link>

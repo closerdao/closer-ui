@@ -10,6 +10,7 @@ import Pagination from '../../../../components/Pagination';
 import { ErrorMessage, Spinner } from '../../../../components/ui';
 import Heading from '../../../../components/ui/Heading';
 
+import PageNotFound from '../../../404';
 import { useAuth } from '../../../../contexts/auth';
 import { usePlatform } from '../../../../contexts/platform';
 import { useConfig } from '../../../../hooks/useConfig';
@@ -24,11 +25,14 @@ const LESSONS_PER_PAGE = 10;
 
 interface Props {
   generalConfig: GeneralConfig | null;
+  learningHubConfig: { enabled: boolean; value?: any } | null;
 }
 
-const LearnCategoryPage = ({ generalConfig }: Props) => {
+const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
   const router = useRouter();
   const category = router.query.slug;
+
+  const isLearningHubEnabled = learningHubConfig && learningHubConfig?.enabled;
 
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
@@ -91,6 +95,10 @@ const LearnCategoryPage = ({ generalConfig }: Props) => {
   useEffect(() => {
     setPage(1);
   }, [category]);
+
+  if (!isLearningHubEnabled) {
+    return <PageNotFound />;
+  }
 
   return (
     <>
@@ -165,17 +173,25 @@ const LearnCategoryPage = ({ generalConfig }: Props) => {
 
 LearnCategoryPage.getInitialProps = async () => {
   try {
-    const generalRes = await api.get('/config/general').catch(() => {
-      return null;
-    });
-    const generalConfig = generalRes?.data?.results?.value;
+    const [generalRes, learningHubRes] = await Promise.all([
+      api.get('/config/general').catch(() => {
+        return null;
+      }),
+      api.get('/config/learningHub').catch(() => {
+        return null;
+      }),
+    ]);
+    const generalConfig = generalRes?.data?.results?.value || null;
+    const learningHubConfig = learningHubRes?.data?.results?.value || null;
 
     return {
       generalConfig,
+      learningHubConfig,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
+      learningHubConfig: null,
       error: parseMessageFromError(err),
     };
   }

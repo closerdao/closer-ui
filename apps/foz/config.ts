@@ -1,5 +1,5 @@
 const config = {
-  platformAllowedConfigs: ['booking', 'general', 'booking-rules', 'payment'],
+  platformAllowedConfigs: ['booking', 'general', 'booking-rules', 'payment', 'emails'],
   PORT: 14444,
   // APP_NAME: 'foz',
   // PLATFORM_NAME: 'Foz',
