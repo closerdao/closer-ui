@@ -36,6 +36,7 @@ import {
   Listing,
 } from '../../../types';
 import api from '../../../utils/api';
+import { payTokens } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, priceFormat } from '../../../utils/helpers';
 
@@ -165,34 +166,21 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
     );
   };
 
-  const payTokens = async () => {
-    const { success: stakingSuccess, error: stakingError }: any =
-      await stakeTokens(dailyRentalToken?.val || 0);
-    const { success: isBookingMatchContract, error: nightsRejected }: any =
-      await checkContract();
-
-    const error = stakingError || nightsRejected;
-    if (error) {
-      return { error, success: null };
-    }
-
-    if (stakingSuccess?.transactionId && isBookingMatchContract) {
-      await api.post(`/bookings/${_id}/token-payment`, {
-        transactionId: stakingSuccess.transactionId,
-      });
-      return { success: true, error: null };
-    }
-  };
-
   const handleTokenOnlyBooking = async () => {
     setProcessing(true);
     setPaymentError(null);
-    const tokenStakingResult = await payTokens();
+    const tokenStakingResult = await payTokens(
+      _id,
+      dailyRentalToken?.val,
+      stakeTokens,
+      checkContract,
+    );
+
     const { error } = tokenStakingResult || {};
     if (error) {
       setProcessing(false);
-      setPaymentError('Token payment failed.');
-      console.error(error);
+      setPaymentError(error);
+      console.log('error=', error);
       return;
     }
 
@@ -376,7 +364,9 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
           )}
           {isTokenOnlyBooking && (
             <Button
-              isEnabled={!processing && !isStaking}
+              isEnabled={
+                !processing && !isStaking && hasAgreedToWalletDisclaimer
+              }
               className="booking-btn"
               onClick={handleTokenOnlyBooking}
             >

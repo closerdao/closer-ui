@@ -33,22 +33,16 @@ interface Props {
 }
 
 const SupportUsPage = ({ fundraisingConfig }: Props) => {
-  console.log('fundraisingConfig===', fundraisingConfig);
-  console.log('process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US ===', process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US );
   const isFundraiserEnabled =
     process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true' &&
     fundraisingConfig?.enabled;
 
   const { platform }: any = usePlatform();
-  const wandererFilter = {
-    where: { 'subscription.plan': 'wanderer' },
-  };
-  const pioneerFilter = {
-    where: { 'subscription.plan': 'pioneer' },
+  const subscriberFilter = {
+    where: { 'subscription.validUntil': { $exists: true }  }
   };
 
-  const wandererCount = platform.user.findCount(wandererFilter) || 0;
-  const pioneerCount = platform.user.findCount(pioneerFilter) || 0;
+  const subscriberCount = platform.user.findCount(subscriberFilter) || 0;
 
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
 
@@ -67,8 +61,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
   const loadData = async () => {
     try {
       await Promise.all([
-        platform.user.getCount(wandererFilter),
-        platform.user.getCount(pioneerFilter),
+        platform.user.getCount(subscriberFilter),
       ]);
     } catch (err) {
     } finally {
@@ -155,14 +148,14 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               <div
                 style={{
                   width: `${
-                    (Math.min(wandererCount + pioneerCount * 3, 300) / 300) *
+                    (Math.min(subscriberCount , 300) / 300) *
                     100
                   }%`,
                 }}
                 className="bg-accent h-[18px] rounded-full"
               ></div>
             </div>
-            <strong>{wandererCount + pioneerCount * 3} of 300</strong>
+            <strong>{subscriberCount} of 300</strong>
           </div>
         </section>
         <section className=" w-full flex flex-col gap-6 justify-center max-w-3xl">

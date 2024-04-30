@@ -1,5 +1,9 @@
 import dayjs from 'dayjs';
 
+import {
+  BOOKING_EXISTS_ERROR,
+  USER_REJECTED_TRANSACTION_ERROR,
+} from '../constants';
 import { User } from '../contexts/auth/types';
 import {
   AccommodationUnit,
@@ -9,6 +13,7 @@ import {
   Listing,
   Price,
 } from '../types';
+import api from './api';
 import { __, priceFormat } from './helpers';
 
 export const getStatusText = (status: string, updated: string | Date) => {
@@ -289,4 +294,87 @@ export const getFilterAccommodationUnits = (
     return groupsWithBookings.includes(unit.id);
   });
   return updatedUnits;
+};
+
+export const payTokens = async (
+  bookingId: string | undefined,
+  dailyRentalTokenVal: number | undefined,
+  stakeTokens: (dailyValue: number) => Promise<
+    | {
+        error: null;
+        success: {
+          transactionId: string;
+        };
+      }
+    | {
+        error: unknown;
+        success: null;
+      }
+    | undefined
+  >,
+
+  checkContract: () => Promise<
+    | {
+        success: boolean;
+        error: null;
+      }
+    | {
+        success: boolean;
+        error: string;
+      }
+    | undefined
+  >,
+) => {
+  if (!dailyRentalTokenVal)
+    return { error: 'No daily rental token value provided', success: null };
+  if (!bookingId) return { error: 'No bookingId provided', success: null };
+
+  const { success: stakingSuccess, error: stakingError } = (await stakeTokens(
+    dailyRentalTokenVal,
+  )) as
+    | {
+        error: null;
+        success: {
+          transactionId: string;
+        };
+      }
+    | {
+        error: any;
+        success: null;
+      };
+
+  const { success: isBookingMatchContract, error: nightsRejected } =
+    (await checkContract()) as
+      | {
+          success: boolean;
+          error: null;
+        }
+      | {
+          success: boolean;
+          error: string;
+        };
+
+  const error = stakingError || nightsRejected;
+  console.log('stakingError=', stakingError);
+  console.log('nightsRejected=', nightsRejected);
+  console.log('error reason=', error?.reason);
+
+  if (error?.reason.trim() === USER_REJECTED_TRANSACTION_ERROR) {
+    console.log('User rejected transaction!!!!!');
+    return { error: 'User rejected transaction', success: null };
+  }
+  if (error?.reason.trim() === BOOKING_EXISTS_ERROR) {
+    return { error: 'Booking for these dates already exists', success: null };
+  }
+  if (error) {
+    console.log('TOKEN PAYMENT ERROR=', error);
+    return { error: 'Token payment failed.', success: null };
+  }
+
+  if (stakingSuccess?.transactionId && isBookingMatchContract) {
+    await api.post(`/bookings/${bookingId}/token-payment`, {
+      transactionId: stakingSuccess.transactionId,
+    });
+    return { success: true, error: null };
+  }
 };

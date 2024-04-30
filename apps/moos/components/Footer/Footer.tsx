@@ -87,11 +87,11 @@ export const Footer: FC = () => {
         </div>
         <div className="flex gap-6">
           <Link href="https://docs.google.com/document/d/1qpx3agcnyZuXORkFbYIkXHuV2R_EIL5o2s51EsnL_04" className="text-accent underline">
-            Impressum
+            Terms & Conditions
           </Link>
 
           <Link href="https://docs.google.com/document/d/1qpx3agcnyZuXORkFbYIkXHuV2R_EIL5o2s51EsnL_04" className="text-accent underline">
-            Datenschutzerklärung
+            Privacy Policy
           </Link>
         </div>
       </div>

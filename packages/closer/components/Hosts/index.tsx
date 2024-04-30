@@ -13,7 +13,7 @@ interface Props {
 }
 
 const Hosts = ({ hosts, email }: Props) => {
-  const { APP_NAME } = useConfig();
+  const { APP_NAME, VISITORS_GUIDE } = useConfig();
   return (
     <div className="mb-16">
       <div className="max-w-prose">
