@@ -30,12 +30,21 @@ interface Props {
   lesson: Lesson;
   error?: string;
   subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
+  learningHubConfig: { enabled: boolean; value?: any } | null;
 }
 
-const LessonPage = ({ lesson, subscriptionsConfig, error }: Props) => {
+const LessonPage = ({
+  lesson,
+  subscriptionsConfig,
+  error,
+  learningHubConfig,
+}: Props) => {
   const subscriptions = prepareSubscriptions(subscriptionsConfig);
   const { asPath } = useRouter();
   const { user, refetchUser } = useAuth();
+
+  const isLearningHubEnabled = learningHubConfig && learningHubConfig?.enabled;
+
   const [hasRefetchedUser, setHasRefetchedUser] = useState(false);
 
   const subscriptionPriceId = subscriptions?.find(
@@ -77,6 +86,10 @@ const LessonPage = ({ lesson, subscriptionsConfig, error }: Props) => {
 
   if (!lesson) {
     return <PageNotFound error={error} />;
+  }
+
+  if (!isLearningHubEnabled) {
+    return <PageNotFound />;
   }
 
   return (
@@ -238,6 +251,7 @@ LessonPage.getInitialProps = async ({
       {
         data: { results: lesson },
       },
+      learningHubRes,
     ] = await Promise.all([
       api.get('/config/subscriptions'),
       api.get(`/lesson/${query.slug}`, {
@@ -245,12 +259,22 @@ LessonPage.getInitialProps = async ({
           Authorization: `Bearer ${req?.cookies?.access_token}`,
         },
       }),
+      api.get('/config/learningHub').catch(() => {
+        return null;
+      }),
     ]);
+    const learningHubConfig = learningHubRes?.data?.results?.value || null;
 
-    return { subscriptionsConfig: subscriptions.value, lesson, error: null };
+    return {
+      subscriptionsConfig: subscriptions.value,
+      lesson,
+      error: null,
+      learningHubConfig,
+    };
   } catch (err: unknown) {
     return {
       subscriptionsConfig: { enabled: false, elements: [] },
+      learningHubConfig: null,
       error: parseMessageFromError(err),
       lesson: null,
     };

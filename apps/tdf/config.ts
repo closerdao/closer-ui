@@ -8,6 +8,8 @@ const config = {
     'booking-rules',
     'fundraiser',
     'payment',
+    'emails',
+    'learningHub'
   ],
   PORT: 14444,
   EXPOSE_STORE: true,

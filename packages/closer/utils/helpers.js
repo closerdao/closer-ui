@@ -13,6 +13,7 @@ import en from '../locales/en';
 import foz from '../locales/foz';
 import moos from '../locales/moos';
 import tdf from '../locales/tdf';
+import lios from '../locales/lios';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(relativeTime);
@@ -27,6 +28,7 @@ const appDictionaries = {
   tdf,
   foz,
   moos,
+  lios
 };
 
 let language = Object.assign({}, base, en);
