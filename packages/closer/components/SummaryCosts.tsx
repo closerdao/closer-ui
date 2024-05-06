@@ -1,3 +1,4 @@
+import { useConfig } from '../hooks/useConfig';
 import { CloserCurrencies, Price } from '../types';
 import { __, getVatInfo, priceFormat } from '../utils/helpers';
 import HeadingRow from './ui/HeadingRow';
@@ -6,6 +7,7 @@ interface Props {
   utilityFiat?: Price<CloserCurrencies>;
   accomodationCost?: Price<CloserCurrencies>;
   useTokens: boolean;
+  useCredits: boolean;
   totalToken: Price<CloserCurrencies>;
   totalFiat: Price<CloserCurrencies>;
   eventCost?: Price<CloserCurrencies>;
@@ -26,6 +28,7 @@ const SummaryCosts = ({
   accomodationCost,
   foodOption,
   useTokens,
+  useCredits,
   totalToken,
   totalFiat,
   eventCost,
@@ -37,6 +40,8 @@ const SummaryCosts = ({
   updatedFiatTotal,
   updatedEventTotal,
 }: Props) => {
+  const { APP_NAME } = useConfig();
+
   return (
     <div>
       <HeadingRow>
@@ -72,12 +77,28 @@ const SummaryCosts = ({
             updatedAccomodationTotal?.val !== accomodationCost?.val && (
               <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
                 {__('bookings_updated_price')}:{' '}
-                {priceFormat(updatedAccomodationTotal)}
+                {useCredits &&
+                  priceFormat({
+                    val: updatedAccomodationTotal?.val,
+                    cur: 'credits',
+                    app: APP_NAME,
+                  })}
+                {useTokens && priceFormat(updatedAccomodationTotal)}
+                {!useTokens &&
+                  !useCredits &&
+                  priceFormat(updatedAccomodationTotal)}
               </div>
             )}
 
           <p className="font-bold">
-            {priceFormat(accomodationCost)}
+            {useCredits &&
+              priceFormat({
+                val: totalToken.val,
+                cur: 'credits',
+                app: APP_NAME,
+              })}
+            {useTokens && priceFormat(totalToken)}
+            {!useCredits && !useTokens && priceFormat(accomodationCost)}
             {isNotPaid && (
               <span className="text-failure"> {__('booking_card_unpaid')}</span>
             )}
@@ -117,19 +138,28 @@ const SummaryCosts = ({
               <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
                 {__('bookings_updated_price')}:{' '}
                 <span>
-                  {useTokens ? (
+                  {useTokens && (
                     <div>
                       {priceFormat(updatedAccomodationTotal)} +{' '}
                       {priceFormat(updatedFiatTotal)}
                     </div>
-                  ) : (
-                    priceFormat(updatedFiatTotal)
                   )}
+                  {useCredits && (
+                    <div>
+                      {priceFormat({
+                        val: updatedAccomodationTotal?.val,
+                        cur: 'credits',
+                        app: APP_NAME,
+                      })}{' '}
+                      + <span>{priceFormat(totalFiat)}</span>
+                    </div>
+                  )}
+                  {!useTokens && !useCredits && priceFormat(updatedFiatTotal)}
                 </span>
               </div>
             )}
           <div className="font-bold">
-            {useTokens ? (
+            {useTokens && (
               <>
                 <span>{priceFormat(totalToken)}</span> +{' '}
                 <span>{priceFormat(totalFiat)}</span>
@@ -140,7 +170,27 @@ const SummaryCosts = ({
                   </span>
                 )}
               </>
-            ) : (
+            )}
+            {useCredits && (
+              <>
+                <span>
+                  {priceFormat({
+                    val: totalToken.val,
+                    cur: 'credits',
+                    app: APP_NAME,
+                  })}
+                </span>{' '}
+                + <span>{priceFormat(totalFiat)}</span>
+                {isNotPaid && (
+                  <span className="text-failure">
+                    {' '}
+                    {__('booking_card_unpaid')}
+                  </span>
+                )}
+              </>
+            )}
+
+            {!useTokens && !useCredits && (
               <div>
                 {' '}
                 {priceFormat(totalFiat)}

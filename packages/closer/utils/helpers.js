@@ -120,7 +120,10 @@ export const getTimeDetails = (eventTime) => {
 };
 
 export const priceFormat = (price, currency = 'EUR') => {
-  if (typeof price === 'number') {
+  if (price?.cur && price.cur === 'credits') {
+    return `${price.val} ${__('carrots_balance', price.app)} ${__('carrots_heading', price.app)}`
+  }
+  else if (typeof price === 'number') {
     return parseFloat(price).toLocaleString('en-US', {
       style: 'currency',
       currency,

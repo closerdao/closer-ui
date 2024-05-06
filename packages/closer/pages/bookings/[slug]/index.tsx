@@ -74,6 +74,7 @@ const BookingPage = ({
     rentalToken,
     rentalFiat,
     useTokens,
+    useCredits,
     children,
     pets,
     infants,
@@ -122,7 +123,7 @@ const BookingPage = ({
     setUpdatedStartDate,
     setUpdatedListingId,
   };
-  const isNotPaid = status !== 'paid';
+  const isNotPaid = status !== 'paid' && status !== 'credits-paid' && status !== 'tokens-staked';
 
   const updatedDurationInDays = Math.ceil(
     dayjs(updatedEndDate).diff(dayjs(updatedStartDate), 'hour') / 24,
@@ -141,6 +142,7 @@ const BookingPage = ({
   const updatedAccomodationTotal = getAccommodationTotal(
     updatedListing,
     useTokens,
+    useCredits,
     updatedAdults,
     updatedDurationInDays,
     updatedDiscountRate,
@@ -167,6 +169,7 @@ const BookingPage = ({
     updatedAccomodationTotal,
     updatedEventTotal,
     useTokens,
+    useCredits,
   );
 
   const paymentDelta = isNotPaid
@@ -175,6 +178,7 @@ const BookingPage = ({
         total?.val,
         updatedFiatTotal,
         useTokens,
+        useCredits,
         rentalToken,
         updatedAccomodationTotal,
         rentalFiat?.cur,
@@ -190,12 +194,14 @@ const BookingPage = ({
     pets: updatedPets,
     infants: updatedInfants,
     utilityFiat: { val: updatedUtilityTotal, cur: rentalFiat?.cur },
-    rentalFiat: useTokens
-      ? rentalFiat
-      : { val: updatedAccomodationTotal, cur: rentalFiat?.cur },
-    rentalToken: useTokens
-      ? { val: updatedAccomodationTotal, cur: rentalToken?.cur }
-      : booking?.rentalToken,
+    rentalFiat:
+      useTokens || useCredits
+        ? rentalFiat
+        : { val: updatedAccomodationTotal, cur: rentalFiat?.cur },
+    rentalToken:
+      useTokens || useCredits
+        ? { val: updatedAccomodationTotal, cur: rentalToken?.cur }
+        : booking?.rentalToken,
     ...(eventFiat
       ? {
           eventFiat: {
@@ -209,6 +215,10 @@ const BookingPage = ({
     total: { val: updatedFiatTotal, cur: rentalFiat?.cur },
     paymentDelta: paymentDelta ? paymentDelta : null,
   };
+  
+  if (booking?.paymentDelta) {
+    booking.paymentDelta = null;
+  }
 
   const hasUpdatedBooking =
     JSON.stringify(booking) !== JSON.stringify(updatedBooking);
@@ -326,7 +336,10 @@ const BookingPage = ({
           <SummaryCosts
             utilityFiat={utilityFiat}
             useTokens={useTokens}
-            accomodationCost={useTokens ? rentalToken : rentalFiat}
+            useCredits={useCredits}
+            accomodationCost={
+              useTokens || useCredits ? rentalToken : rentalFiat
+            }
             totalToken={rentalToken}
             totalFiat={total}
             eventCost={eventFiat}
