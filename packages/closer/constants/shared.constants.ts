@@ -247,8 +247,9 @@ export const SALES_CONFIG = {
 };
 
 // Token booking errors
-export const BOOKING_EXISTS_ERROR = 'execution reverted: BookingFacet: Booking already exists'
-export const USER_REJECTED_TRANSACTION_ERROR = 'user rejected transaction'
+export const BOOKING_EXISTS_ERROR =
+  'execution reverted: BookingFacet: Booking already exists';
+export const USER_REJECTED_TRANSACTION_ERROR = 'user rejected transaction';
 
 export const MAX_BOOKINGS_TO_FETCH = 2000;
 export const BOOKINGS_PER_PAGE = 36;
@@ -258,3 +259,5 @@ export const MAX_CREDITS_PER_MONTH = 90;
 export const HOME_PAGE_CATEGORY = 'home page';
 
 export const MAX_USERS_TO_FETCH = 2000;
+
+export const MAX_LISTINGS_TO_FETCH = 100;

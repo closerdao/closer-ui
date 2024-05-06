@@ -14,7 +14,11 @@ import Heading from '../../components/ui/Heading';
 import dayjs from 'dayjs';
 
 import PageNotFound from '../404';
-import { MAX_BOOKINGS_TO_FETCH, MAX_USERS_TO_FETCH } from '../../constants';
+import {
+  MAX_BOOKINGS_TO_FETCH,
+  MAX_LISTINGS_TO_FETCH,
+  MAX_USERS_TO_FETCH,
+} from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
@@ -72,7 +76,10 @@ const BookingsCalendarPage = () => {
   };
 
   const bookings = platform.booking.find(filter);
-  const listings = platform.listing.find();
+  const listings = platform.listing.find({
+    where: {},
+    limit: MAX_LISTINGS_TO_FETCH,
+  });
   const allUsers = platform.user.find({ limit: MAX_USERS_TO_FETCH });
   const formattedListings = listings && formatListings(listings.toJS());
 
@@ -152,7 +159,7 @@ const BookingsCalendarPage = () => {
       setLoading(true);
       await Promise.all([
         platform.booking.get(filter),
-        platform.listing.get(),
+        platform.listing.get({ where: {}, limit: MAX_LISTINGS_TO_FETCH }),
         platform.user.get({ limit: MAX_USERS_TO_FETCH }),
       ]);
     } catch (err: any) {
