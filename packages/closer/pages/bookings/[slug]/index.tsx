@@ -7,7 +7,7 @@ import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
 import UserInfoButton from '../../../components/UserInfoButton';
-import { Button, Information } from '../../../components/ui';
+import { Button, Card, Information } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
 import dayjs from 'dayjs';
@@ -289,6 +289,12 @@ const BookingPage = ({
               {__('bookings_id')} <b>{booking._id}</b>
             </p>
           </div>
+          {booking?.adminBookingReason && (
+            <Card className="bg-accent text-white my-4 font-bold">
+              {booking?.adminBookingReason}
+            </Card>
+          )}
+
           <p
             className={`bg-${STATUS_COLOR[status]}  mt-2 
             capitalize opacity-100 text-base p-1 text-white text-center rounded-md`}

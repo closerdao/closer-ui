@@ -58,7 +58,7 @@ export const TOKEN_SALE_STEPS = [
   'success',
 ];
 
-export const DEFAULT_CURRENCY = CURRENCIES[0]; // EUR
+export const DEFAULT_CURRENCY = CloserCurrencies.EUR; // EUR
 export const REFERRAL_ID_LOCAL_STORAGE_KEY = 'referredByUserId';
 
 export const BOOKING_STATUS_OPTIONS = [

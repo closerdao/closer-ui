@@ -87,6 +87,8 @@ export type Booking = {
   doesNeedSeparateBeds?: boolean;
   doesNeedPickup?: boolean;
   isTeamBooking?: boolean;
+  roomNumber?: number;
+  adminBookingReason?: string;
 };
 
 export interface StatusColor {
