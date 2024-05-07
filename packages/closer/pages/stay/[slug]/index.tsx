@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import BookingGuests from '../../../components/BookingGuests';
 import CurrencySwitcher from '../../../components/CurrencySwitcher';
@@ -32,11 +32,12 @@ import { getFiatTotal } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import {
   __,
+  getBookingRate,
   getDiscountRate,
   getMaxBookingHorizon,
+  priceFormat,
   sendAnalyticsEvent,
 } from '../../../utils/helpers';
-import { getBookingRate, priceFormat } from '../../../utils/helpers';
 import {
   formatDate,
   getBlockedDateRanges,

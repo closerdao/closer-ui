@@ -8,6 +8,7 @@ import Timeline, {
   TimelineHeaders,
 } from 'react-calendar-timeline';
 
+import SpaceHostBooking from '../../components/SpaceHostBooking';
 import { ErrorMessage, Spinner } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
@@ -27,6 +28,7 @@ import {
 } from '../../utils/booking.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
+import { Listing } from '../../types';
 
 const loadTime = Date.now();
 
@@ -75,6 +77,10 @@ const BookingsCalendarPage = () => {
   const listings = platform.listing.find();
   const allUsers = platform.user.find({ limit: MAX_USERS_TO_FETCH });
   const formattedListings = listings && formatListings(listings.toJS());
+  const listingOptions = listings?.toJS().map((listing: Listing) => ({
+    value: listing._id,
+    label: listing.name,
+  }));
 
   const bookingsWithUserAndListing = getBookingsWithUserAndListing(
     bookings,
@@ -182,6 +188,10 @@ const BookingsCalendarPage = () => {
 
       <main className="flex flex-col gap-4">
         <Heading level={1}>{__('booking_calendar')}</Heading>
+
+        <section className="mt-10">
+          <SpaceHostBooking listingOptions={listings && listingOptions} />
+        </section>
 
         <div className="min-h-[600px]">
           <Timeline

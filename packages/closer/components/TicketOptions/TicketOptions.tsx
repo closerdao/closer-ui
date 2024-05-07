@@ -33,7 +33,7 @@ const Ticket = ({
 }: {
   name: string;
   price?: number;
-  currency?: string;
+  currency?: CloserCurrencies;
   disclaimer?: string;
   available: number;
   selectTicketOption: (ticket: object) => void;
