@@ -23,7 +23,7 @@ const SpaceHostBooking = ({ listingOptions }: Props) => {
   const [end, setEndDate] = useState<string | null | Date>(null);
   const [adults, setAdults] = useState<number>(1);
   const [listingId, setListingId] = useState('');
-  const [isListingAvailable, setIsListingAvailable] = useState(true);
+  const [isListingAvailable, setIsListingAvailable] = useState(false);
   const [calendarError, setCalendarError] = useState<string | null>(null);
   const [adminBookingReason, setAdminBookingReason] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -31,9 +31,9 @@ const SpaceHostBooking = ({ listingOptions }: Props) => {
 
   useEffect(() => {
     setCalendarError(null);
-
     const isCalendarSelectionValid =
       end && formatDate(start) !== formatDate(end) && listingId;
+    
     if (!end) {
       setCalendarError(__('bookings_incomplete_dates_error'));
     }
