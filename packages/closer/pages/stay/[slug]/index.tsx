@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import BookingGuests from '../../../components/BookingGuests';
 import CurrencySwitcher from '../../../components/CurrencySwitcher';
@@ -26,17 +26,28 @@ import { CURRENCIES, DEFAULT_CURRENCY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
 import { useOutsideClick } from '../../../hooks/useOutsideClick';
-import { CloserCurrencies, Listing } from '../../../types';
+import {
+  BookingSettings,
+  CloserCurrencies,
+  GeneralConfig,
+  Listing,
+} from '../../../types';
 import api, { cdn } from '../../../utils/api';
-import { getFiatTotal } from '../../../utils/booking.helpers';
+import {
+  getFiatTotal,
+  getLocalTimeAvailability,
+  getTimeOnly,
+  getTimeOptions,
+} from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import {
   __,
+  getBookingRate,
   getDiscountRate,
   getMaxBookingHorizon,
+  priceFormat,
   sendAnalyticsEvent,
 } from '../../../utils/helpers';
-import { getBookingRate, priceFormat } from '../../../utils/helpers';
 import {
   formatDate,
   getBlockedDateRanges,
@@ -47,13 +58,15 @@ const MAX_DAYS_TO_CHECK_AVAILABILITY = 60;
 interface Props {
   listing: Listing | null;
   error?: string;
-  settings: any | null;
+  settings: BookingSettings | null;
   descriptionText?: string | null;
+  generalSettings: GeneralConfig | null;
 }
 
 const ListingPage: NextPage<Props> = ({
   listing,
   settings,
+  generalSettings,
   error,
   descriptionText,
 }) => {
@@ -74,6 +87,14 @@ const ListingPage: NextPage<Props> = ({
   const guestsDropdownRef = useOutsideClick(
     handleClickOutsideDepartureDropdown,
   );
+  const timeZone = generalSettings?.timeZone;
+  const { workingHoursStart, workingHoursEnd } = listing || {};
+
+  const timeOptions = getTimeOptions(
+    workingHoursStart,
+    workingHoursEnd,
+    timeZone,
+  );
 
   const [maxHorizon, maxDuration] = getMaxBookingHorizon(settings, isMember);
 
@@ -85,6 +106,7 @@ const ListingPage: NextPage<Props> = ({
     (savedEndDate as string) || null,
   );
   const durationInDays = dayjs(end).diff(dayjs(start), 'day') || 30;
+  const durationInHours = dayjs(end).diff(dayjs(start), 'hour') || 1;
   const [adults, setAdults] = useState<number>(Number(savedAdults) || 1);
   const [kids, setKids] = useState<number>(Number(savedKids) || 0);
   const [infants, setInfants] = useState<number>(Number(savedInfants) || 0);
@@ -93,6 +115,14 @@ const ListingPage: NextPage<Props> = ({
   const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
   const [isTeamBooking, setIsTeamBooking] = useState(false);
   const [foodOption, setFoodOption] = useState('no_food');
+  const [hourAvailability, setHourAvailability] = useState<
+    { hour: string; isAvailable: boolean }[] | []
+  >([]);
+
+  const isTimeSet =
+    timeOptions?.includes(String(getTimeOnly(start))) &&
+    timeOptions?.includes(String(getTimeOnly(end)));
+
   const durationRateDays =
     durationInDays >= 28 ? 30 : durationInDays >= 7 ? 7 : 1;
   const durationName = getBookingRate(durationInDays);
@@ -100,12 +130,21 @@ const ListingPage: NextPage<Props> = ({
   const discountRate = settings
     ? 1 - getDiscountRate(durationName, settings)
     : 0;
-  const accomodationTotal = listing
-    ? listing.fiatPrice?.val *
-      (listing.private ? 1 : adults) *
-      durationInDays *
-      discountRate
-    : 0;
+
+  const isHourlyBooking = listing?.priceDuration === 'hour';
+
+  let accomodationTotal: number | undefined | false = 0;
+  if (isHourlyBooking) {
+    accomodationTotal =
+      isTimeSet && (listing?.fiatHourlyPrice?.val || 1) * durationInHours;
+  } else {
+    accomodationTotal = listing
+      ? listing.fiatPrice?.val *
+        (listing.private ? 1 : adults) *
+        durationInDays *
+        discountRate
+      : 0;
+  }
   const nightlyTotal = listing
     ? listing.fiatPrice?.val * (listing.private ? 1 : adults) * discountRate
     : 0;
@@ -125,6 +164,14 @@ const ListingPage: NextPage<Props> = ({
   const [calendarError, setCalendarError] = useState<string | null>(null);
   const [unavailableDates, setUnavailableDates] = useState<any[]>([]);
 
+  const isBookingAvailable = Boolean(
+    start &&
+      end &&
+      isListingAvailable &&
+      !calendarError &&
+      (isHourlyBooking ? isTimeSet : true),
+  );
+
   const isWeb3BookingEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
 
@@ -140,7 +187,7 @@ const ListingPage: NextPage<Props> = ({
     isTeamBooking,
     foodOption,
     utilityTotal,
-    accomodationTotal,
+    accomodationTotal || 0,
   );
 
   const getAvailability = async (
@@ -152,8 +199,8 @@ const ListingPage: NextPage<Props> = ({
       const {
         data: { results, availability },
       } = await api.post('/bookings/listing/availability', {
-        start: formatDate(startDate),
-        end: formatDate(endDate),
+        start: isHourlyBooking ? startDate : formatDate(startDate),
+        end: isHourlyBooking ? endDate : formatDate(endDate),
         listing: listingId,
         adults,
         children: kids,
@@ -185,17 +232,26 @@ const ListingPage: NextPage<Props> = ({
   useEffect(() => {
     setCalendarError(null);
 
-    const isCalendarSelectionValid =
-      end && formatDate(start) !== formatDate(end);
+    const isCalendarSelectionValid = isHourlyBooking
+      ? start && end
+      : end && formatDate(start) !== formatDate(end);
+
     if (!end) {
       setCalendarError(__('bookings_incomplete_dates_error'));
     }
-    if (formatDate(start) === formatDate(end)) {
+    if (formatDate(start) === formatDate(end) && !isHourlyBooking) {
       setCalendarError(__('bookings_date_range_error'));
     }
+
     if (isCalendarSelectionValid) {
       (async function updatePrices() {
-        const { results } = await getAvailability(start, end, listing?._id);
+        const { results, availability } = await getAvailability(
+          start,
+          end,
+          listing?._id,
+        );
+        setHourAvailability(getLocalTimeAvailability(availability, timeZone));
+
         setIsListingAvailable(results);
       })();
     }
@@ -235,6 +291,11 @@ const ListingPage: NextPage<Props> = ({
   }, []);
 
   const handleDefaultBookingDates = async () => {
+    if (listing?.priceDuration !== 'night') {
+      setStartDate(new Date());
+      setEndDate(new Date());
+      return;
+    }
     const availableStart = new Date();
     const availableEnd = new Date(
       new Date(new Date()).setDate(
@@ -254,7 +315,7 @@ const ListingPage: NextPage<Props> = ({
   };
 
   const getUrlParams = () => {
-    const dateFormat = 'YYYY-MM-DD';
+    const dateFormat = 'YYYY-MM-DD HH:mm';
     const params = {
       start: dayjs(start as string).format(dateFormat),
       end: dayjs(end as string).format(dateFormat),
@@ -289,8 +350,10 @@ const ListingPage: NextPage<Props> = ({
         data: { results: newBooking },
       } = await api.post('/bookings/request', {
         useTokens: currency === CURRENCIES[1],
-        start: formatDate(start),
-        end: formatDate(end),
+        // start: formatDate(start),
+        // end: formatDate(end),
+        start: start,
+        end: end,
         adults,
         infants,
         pets,
@@ -300,6 +363,7 @@ const ListingPage: NextPage<Props> = ({
         doesNeedPickup: doesNeedPickup.toString(),
         isTeamBooking: isTeamBooking.toString(),
         doesNeedSeparateBeds: doesNeedSeparateBeds.toString(),
+        isHourlyBooking,
       });
       sendAnalyticsEvent('Click', 'ListingPage', 'Book');
       redirectToSummary(newBooking._id);
@@ -355,7 +419,7 @@ const ListingPage: NextPage<Props> = ({
 
           <div>
             <section className="flex justify-left">
-              <div className="max-w-4xl w-full flex flex-col md:flex-row place-items-start justify-between">
+              <div className="max-w-4xl w-full flex flex-col sm:flex-row place-items-start justify-between">
                 <div className="p-2 sm:pr-8 flex flex-col w-full">
                   <div className="flex flex-col gap-6">
                     <section className="w-full md:min-w-[450px]">
@@ -406,7 +470,7 @@ const ListingPage: NextPage<Props> = ({
                                 listing.tokenPrice?.cur,
                               )}{' '}
                             +{' '}
-                            {settings?.utilityFiat &&
+                            {settings?.utilityFiatVal &&
                               priceFormat(
                                 utilityTotal,
                                 settings.utilityFiatCur,
@@ -417,7 +481,7 @@ const ListingPage: NextPage<Props> = ({
                             <b className="text-lg">
                               {priceFormat(
                                 nightlyTotal * durationRateDays,
-                                settings?.utilityFiat?.cur,
+                                settings?.utilityFiatCur,
                               )}
                             </b>{' '}
                             <span className="opacity-70">
@@ -428,6 +492,7 @@ const ListingPage: NextPage<Props> = ({
                       </div>
                       <div>
                         <ListingDateSelector
+                          priceDuration={listing?.priceDuration || 'night'}
                           setStartDate={setStartDate}
                           setEndDate={setEndDate}
                           end={end}
@@ -440,86 +505,90 @@ const ListingPage: NextPage<Props> = ({
                             maxDuration,
                             unavailableDates,
                           )}
+                          timeOptions={timeOptions}
+                          hourAvailability={hourAvailability}
                         />
                       </div>
 
-                      <div ref={guestsDropdownRef}>
-                        <label className="my-2 hidden sm:block">
-                          {__('bookings_dates_step_guests_title')}
-                        </label>
-                        <Button
-                          onClick={() =>
-                            setShowGuestsDropdown(!showGuestsDropdown)
-                          }
-                          className="font-bold sm:font-normal underline sm:no-underline text-black border-0 sm:border-2 border-black normal-case w-auto sm:w-full py-1 px-0 sm:px-3 sm:p-3 sm:py-2 text-sm bg-white"
-                        >
-                          {adults}{' '}
-                          {adults > 1
-                            ? __(
-                                'bookings_dates_step_guests_title',
-                              ).toLowerCase()
-                            : __(
-                                'bookings_dates_step_guest_title',
-                              ).toLowerCase()}
-                        </Button>
-                        {showGuestsDropdown && (
-                          <div className="">
-                            <Card className="absolute border border-gray-100 sm:w-auto z-10 sm:left-auto bottom-[175px] sm:bottom-auto sm:top-auto bg-white shadow-md rounded-md p-3">
-                              <BookingGuests
-                                shouldHideTitle={true}
-                                adults={adults}
-                                kids={kids}
-                                infants={infants}
-                                pets={pets}
-                                setAdults={setAdults}
-                                setKids={setKids}
-                                setInfants={setInfants}
-                                setPets={setPets}
-                                doesNeedSeparateBeds={doesNeedSeparateBeds}
-                                setDoesNeedSeparateBeds={
-                                  setDoesNeedSeparateBeds
-                                }
-                                isPrivate={listing?.private}
-                              />
-                              <div className="my-0 flex flex-row justify-between items-start ">
-                                <label
-                                  htmlFor="separateBeds"
-                                  className="text-sm w-3/4"
-                                >
-                                  {__('bookings_pickup')}
-                                  <span className="w-full text-xs ml-2">
-                                    ({__('bookings_pickup_disclaimer')})
-                                  </span>
-                                </label>
-                                <Switch
-                                  disabled={false}
-                                  name="pickup"
-                                  label=""
-                                  onChange={setDoesNeedPickup}
-                                  checked={doesNeedPickup}
+                      {!isHourlyBooking && (
+                        <div ref={guestsDropdownRef}>
+                          <label className="my-2 hidden sm:block">
+                            {__('bookings_dates_step_guests_title')}
+                          </label>
+                          <Button
+                            onClick={() =>
+                              setShowGuestsDropdown(!showGuestsDropdown)
+                            }
+                            className="font-bold sm:font-normal underline sm:no-underline text-black border-0 sm:border-2 border-black normal-case w-auto sm:w-full py-1 px-0 sm:px-3 sm:p-3 sm:py-2 text-sm bg-white"
+                          >
+                            {adults}{' '}
+                            {adults > 1
+                              ? __(
+                                  'bookings_dates_step_guests_title',
+                                ).toLowerCase()
+                              : __(
+                                  'bookings_dates_step_guest_title',
+                                ).toLowerCase()}
+                          </Button>
+                          {showGuestsDropdown && (
+                            <div className="">
+                              <Card className="absolute border border-gray-100 sm:w-auto z-10 sm:left-auto bottom-[175px] sm:bottom-auto sm:top-auto bg-white shadow-md rounded-md p-3">
+                                <BookingGuests
+                                  shouldHideTitle={true}
+                                  adults={adults}
+                                  kids={kids}
+                                  infants={infants}
+                                  pets={pets}
+                                  setAdults={setAdults}
+                                  setKids={setKids}
+                                  setInfants={setInfants}
+                                  setPets={setPets}
+                                  doesNeedSeparateBeds={doesNeedSeparateBeds}
+                                  setDoesNeedSeparateBeds={
+                                    setDoesNeedSeparateBeds
+                                  }
+                                  isPrivate={listing?.private}
                                 />
-                              </div>
-                              {isTeamMember && (
-                                <div className="my-0 flex flex-row justify-between flex-wrap">
+                                <div className="my-0 flex flex-row justify-between items-start ">
                                   <label
                                     htmlFor="separateBeds"
-                                    className="text-sm"
+                                    className="text-sm w-3/4"
                                   >
-                                    Team booking?
+                                    {__('bookings_pickup')}
+                                    <span className="w-full text-xs ml-2">
+                                      ({__('bookings_pickup_disclaimer')})
+                                    </span>
                                   </label>
                                   <Switch
                                     disabled={false}
-                                    name="team-booking"
+                                    name="pickup"
                                     label=""
-                                    onChange={setIsTeamBooking}
-                                    checked={isTeamBooking}
+                                    onChange={setDoesNeedPickup}
+                                    checked={doesNeedPickup}
                                   />
                                 </div>
-                              )}
-                            </Card>
-                          </div>
-                        )}
-                      </div>
+                                {isTeamMember && (
+                                  <div className="my-0 flex flex-row justify-between flex-wrap">
+                                    <label
+                                      htmlFor="separateBeds"
+                                      className="text-sm"
+                                    >
+                                      Team booking?
+                                    </label>
+                                    <Switch
+                                      disabled={false}
+                                      name="team-booking"
+                                      label=""
+                                      onChange={setIsTeamBooking}
+                                      checked={isTeamBooking}
+                                    />
+                                  </div>
+                                )}
+                              </Card>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex flex-col w-1/2 sm:w-full">
@@ -541,7 +610,13 @@ const ListingPage: NextPage<Props> = ({
                       </div>
                       <div className="flex flex-col gap-2">
                         <div className="hidden sm:block">
-                          {listing.quantity} {__('listing_listings_available')}
+                          {listing.quantity === 1
+                            ? `${listing.quantity} ${__(
+                                'listing_listings_available_singular',
+                              )}`
+                            : `${listing.quantity} ${__(
+                                'listing_listings_available',
+                              )}`}
                         </div>
                         {isWeb3BookingEnabled && (
                           <CurrencySwitcher
@@ -551,8 +626,21 @@ const ListingPage: NextPage<Props> = ({
                             currencies={CURRENCIES}
                           />
                         )}
+                        {!isSmallScreen && isHourlyBooking && (
+                          <div>
+                            <p className="text-left">
+                              <span className="font-bold">
+                                {priceFormat(
+                                  listing?.fiatHourlyPrice?.val || 0,
+                                  listing.fiatPrice.cur,
+                                )}{' '}
+                              </span>
+                              {__('listing_preview_per_hourly')}
+                            </p>
+                          </div>
+                        )}
 
-                        {!isSmallScreen && (
+                        {!isSmallScreen && !isHourlyBooking && (
                           <div>
                             <p className="text-left">
                               <span className="font-bold">
@@ -570,12 +658,7 @@ const ListingPage: NextPage<Props> = ({
 
                         <Button
                           onClick={bookListing}
-                          isEnabled={Boolean(
-                            start &&
-                              end &&
-                              isListingAvailable &&
-                              !calendarError,
-                          )}
+                          isEnabled={isBookingAvailable}
                           className=" text-lg btn-primary text-center h-[32px] sm:h-auto sm:mt-4"
                         >
                           {__('listings_slug_link')}
@@ -589,9 +672,44 @@ const ListingPage: NextPage<Props> = ({
                         </div>
                       )}
                     </div>
+                    {isHourlyBooking && accomodationTotal && (
+                      <div className="w-full flex justify-between items-center mt-3">
+                        <p>
+                          {__('bookings_checkout_step_total_title')} (
+                          {__('token_sale_checkout_vat')}):
+                        </p>
+                        <div className="font-bold text-right text-xl">
+                          {currency === CURRENCIES[1] && fiatTotal > 0 ? (
+                            <div>
+                              {priceFormat(
+                                listing.tokenPrice && listing.tokenPrice?.val,
+                                listing.tokenPrice?.cur,
+                              )}{' '}
+                              +{' '}
+                              {settings &&
+                                priceFormat(
+                                  isTeamBooking || foodOption === 'no_food'
+                                    ? 0
+                                    : utilityTotal,
+                                  settings.utilityFiatCur,
+                                )}
+                            </div>
+                          ) : (
+                            <span>
+                              {priceFormat(
+                                settings && listing && fiatTotal,
+                                listing.fiatPrice?.cur,
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     <div className="hidden sm:block w-full">
-                      {isListingAvailable && !calendarError ? (
+                      {isListingAvailable &&
+                      !calendarError &&
+                      !isHourlyBooking ? (
                         <>
                           {' '}
                           <div className="flex justify-between items-center mt-3">
@@ -622,7 +740,7 @@ const ListingPage: NextPage<Props> = ({
                               ) : (
                                 priceFormat(
                                   isTeamBooking ? 0 : utilityTotal,
-                                  settings?.utilityFiat?.cur,
+                                  settings?.utilityFiatCur,
                                 )
                               )}
                             </p>
@@ -646,7 +764,7 @@ const ListingPage: NextPage<Props> = ({
                                       isTeamBooking || foodOption === 'no_food'
                                         ? 0
                                         : utilityTotal,
-                                      settings.utilityFiat?.cur,
+                                      settings.utilityFiatCur,
                                     )}
                                 </div>
                               ) : (
@@ -661,11 +779,13 @@ const ListingPage: NextPage<Props> = ({
                           </div>
                         </>
                       ) : (
-                        <Information>
-                          {isGuestLimit
-                            ? __('listing_not_available_guest_limit')
-                            : __('listing_not_available')}
-                        </Information>
+                        !isListingAvailable && (
+                          <Information>
+                            {isGuestLimit
+                              ? __('listing_not_available_guest_limit')
+                              : __('listing_not_available')}
+                          </Information>
+                        )
                       )}
                     </div>
                   </Card>
@@ -682,21 +802,32 @@ const ListingPage: NextPage<Props> = ({
 ListingPage.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
   const { convert } = require('html-to-text');
   try {
-    const [listing, settings] = await Promise.all([
-      await api.get(`/listing/${query.slug}`),
-      await api.get('/config/booking'),
+    const [listing, settings, generalSettings] = await Promise.all([
+      api.get(`/listing/${query.slug}`).catch((err) => {
+        console.error('Error fetching booking config:', err);
+        return null;
+      }),
+      api.get('/config/booking').catch((err) => {
+        console.error('Error fetching booking config:', err);
+        return null;
+      }),
+      api.get('/config/general').catch((err) => {
+        console.error('Error fetching booking config:', err);
+        return null;
+      }),
     ]);
 
     const options = {
       baseElements: { selectors: ['p', 'h2', 'span'] },
     };
-    const descriptionText = convert(listing.data.results.description, options)
+    const descriptionText = convert(listing?.data.results.description, options)
       .trim()
       .slice(0, 100);
 
     return {
-      listing: listing.data.results,
-      settings: settings.data.results.value,
+      listing: listing?.data.results,
+      settings: settings?.data.results.value,
+      generalSettings: generalSettings?.data.results.value,
       descriptionText,
     };
   } catch (err: unknown) {
@@ -704,6 +835,7 @@ ListingPage.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
       error: parseMessageFromError(err),
       listing: null,
       settings: null,
+      generalSettings: null,
       descriptionText: null,
     };
   }

@@ -71,6 +71,7 @@ const Summary = ({ booking, listing, event, error, bookingConfig }: Props) => {
     eventFiat,
     total,
   } = booking || {};
+
   useEffect(() => {
     if (booking?.status === 'pending' || booking?.status === 'paid') {
       router.push(`/bookings/${booking?._id}`);
@@ -158,10 +159,12 @@ const Summary = ({ booking, listing, event, error, bookingConfig }: Props) => {
             volunteerId={volunteerId}
             eventName={event?.name}
             ticketOption={ticketOption?.name}
+            priceDuration={listing?.priceDuration}
           />
           <SummaryCosts
             utilityFiat={utilityFiat}
             useTokens={useTokens || false}
+            useCredits={booking?.useCredits || false}
             accomodationCost={useTokens ? rentalToken : rentalFiat}
             totalToken={rentalToken || { val: 0, cur: CloserCurrencies.EUR }}
             totalFiat={total || { val: 0, cur: CloserCurrencies.EUR }}
@@ -177,6 +180,7 @@ const Summary = ({ booking, listing, event, error, bookingConfig }: Props) => {
               undefined
             }
             volunteerId={volunteerId}
+            priceDuration={listing?.priceDuration}
           />
 
           {volunteerId ? (

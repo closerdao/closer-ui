@@ -25,11 +25,13 @@ import {
   Booking,
   BookingConfig,
   Event,
+  GeneralConfig,
   Listing,
   VolunteerOpportunity,
 } from '../../../types';
 import api from '../../../utils/api';
 import {
+  dateToPropertyTimeZone,
   getAccommodationTotal,
   getFiatTotal,
   getPaymentDelta,
@@ -49,6 +51,7 @@ interface Props {
   bookingCreatedBy: User;
   bookingConfig: BookingConfig | null;
   listings: Listing[];
+  generalConfig: GeneralConfig;
 }
 
 const BookingPage = ({
@@ -60,7 +63,10 @@ const BookingPage = ({
   bookingCreatedBy,
   bookingConfig,
   listings,
+  generalConfig,
 }: Props) => {
+  const { timeZone } = generalConfig;
+
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -68,12 +74,16 @@ const BookingPage = ({
   const { platform }: any = usePlatform();
   const { isAuthenticated, user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
+  const isEditMode = true;
+
+  const isHourlyBooking = listing?.priceDuration !== 'night';
 
   const {
     utilityFiat,
     rentalToken,
     rentalFiat,
     useTokens,
+    useCredits,
     children,
     pets,
     infants,
@@ -105,9 +115,10 @@ const BookingPage = ({
   const [updatedPets, setUpdatedPets] = useState(pets);
   const [updatedStartDate, setUpdatedStartDate] = useState<
     string | Date | null
-  >(bookingStart);
+  >(timeZone && dateToPropertyTimeZone(timeZone, bookingStart));
+
   const [updatedEndDate, setUpdatedEndDate] = useState<string | Date | null>(
-    bookingEnd,
+    timeZone && dateToPropertyTimeZone(timeZone, bookingEnd),
   );
   const [updatedListingId, setUpdatedListingId] = useState(listing?._id);
   const [isLoading, setIsLoading] = useState(false);
@@ -122,18 +133,29 @@ const BookingPage = ({
     setUpdatedStartDate,
     setUpdatedListingId,
   };
-  const isNotPaid = status !== 'paid';
+  const isNotPaid =
+    status !== 'paid' &&
+    status !== 'credits-paid' &&
+    status !== 'tokens-staked';
 
-  const updatedDurationInDays = Math.ceil(
+  let updatedDuration = 0;
+
+  updatedDuration = Math.ceil(
     dayjs(updatedEndDate).diff(dayjs(updatedStartDate), 'hour') / 24,
   );
+  if (isHourlyBooking) {
+    updatedDuration = dayjs(updatedEndDate).diff(
+      dayjs(updatedStartDate),
+      'hour',
+    );
+  }
 
   const updatedListing = listings?.find(
     (listing) => listing._id === updatedListingId,
   );
   const updatedMaxBeds = updatedListing?.beds || 1;
 
-  const updatedDurationName = getBookingRate(updatedDurationInDays);
+  const updatedDurationName = getBookingRate(updatedDuration);
   const updatedDiscountRate = bookingConfig
     ? 1 - getDiscountRate(updatedDurationName, bookingConfig)
     : 0;
@@ -141,8 +163,9 @@ const BookingPage = ({
   const updatedAccomodationTotal = getAccommodationTotal(
     updatedListing,
     useTokens,
+    useCredits,
     updatedAdults,
-    updatedDurationInDays,
+    updatedDuration,
     updatedDiscountRate,
     volunteerId,
   );
@@ -154,7 +177,7 @@ const BookingPage = ({
     utilityFiatVal: bookingConfig?.utilityFiatVal,
     isPrivate: listing?.private,
     updatedAdults,
-    updatedDurationInDays,
+    updatedDuration,
     discountRate: updatedDiscountRate,
   });
 
@@ -167,6 +190,7 @@ const BookingPage = ({
     updatedAccomodationTotal,
     updatedEventTotal,
     useTokens,
+    useCredits,
   );
 
   const paymentDelta = isNotPaid
@@ -175,6 +199,7 @@ const BookingPage = ({
         total?.val,
         updatedFiatTotal,
         useTokens,
+        useCredits,
         rentalToken,
         updatedAccomodationTotal,
         rentalFiat?.cur,
@@ -184,18 +209,20 @@ const BookingPage = ({
     ...booking,
     start: updatedStartDate,
     end: updatedEndDate,
-    duration: updatedDurationInDays,
+    duration: updatedDuration,
     adults: updatedAdults,
     children: updatedChildren,
     pets: updatedPets,
     infants: updatedInfants,
     utilityFiat: { val: updatedUtilityTotal, cur: rentalFiat?.cur },
-    rentalFiat: useTokens
-      ? rentalFiat
-      : { val: updatedAccomodationTotal, cur: rentalFiat?.cur },
-    rentalToken: useTokens
-      ? { val: updatedAccomodationTotal, cur: rentalToken?.cur }
-      : booking?.rentalToken,
+    rentalFiat:
+      useTokens || useCredits
+        ? rentalFiat
+        : { val: updatedAccomodationTotal, cur: rentalFiat?.cur },
+    rentalToken:
+      useTokens || useCredits
+        ? { val: updatedAccomodationTotal, cur: rentalToken?.cur }
+        : booking?.rentalToken,
     ...(eventFiat
       ? {
           eventFiat: {
@@ -209,6 +236,10 @@ const BookingPage = ({
     total: { val: updatedFiatTotal, cur: rentalFiat?.cur },
     paymentDelta: paymentDelta ? paymentDelta : null,
   };
+
+  if (booking?.paymentDelta) {
+    booking.paymentDelta = null;
+  }
 
   const hasUpdatedBooking =
     JSON.stringify(booking) !== JSON.stringify(updatedBooking);
@@ -245,7 +276,7 @@ const BookingPage = ({
         }, 3000);
       }
     } catch (error) {
-      console.log('error====', error);
+      console.log('error=', error);
     } finally {
       setIsLoading(false);
     }
@@ -317,16 +348,23 @@ const BookingPage = ({
             ticketOption={ticketOption?.name}
             doesNeedPickup={doesNeedPickup}
             doesNeedSeparateBeds={doesNeedSeparateBeds}
-            isEditMode={isSpaceHost}
+            isEditMode={isSpaceHost && isEditMode}
             setters={setters}
             updatedListingId={updatedListingId}
             listings={listings}
             updatedMaxBeds={updatedMaxBeds}
+            priceDuration={listing?.priceDuration}
+            workingHoursStart={listing?.workingHoursStart}
+            workingHoursEnd={listing?.workingHoursEnd}
+            listingId={listing?._id}
           />
           <SummaryCosts
             utilityFiat={utilityFiat}
             useTokens={useTokens}
-            accomodationCost={useTokens ? rentalToken : rentalFiat}
+            useCredits={useCredits}
+            accomodationCost={
+              useTokens || useCredits ? rentalToken : rentalFiat
+            }
             totalToken={rentalToken}
             totalFiat={total}
             eventCost={eventFiat}
@@ -353,22 +391,26 @@ const BookingPage = ({
               val: updatedEventTotal,
               cur: eventFiat?.cur,
             }}
+            priceDuration={listing?.priceDuration}
           />
         </section>
 
         <section>
-          <div className="flex flex-col gap-4">
-            <Button
-              isLoading={isLoading}
-              onClick={handleSaveBooking}
-              isEnabled={hasUpdatedBooking && !isLoading}
-            >
-              {__('booking_card_save_booking')}
-            </Button>
-            {hasUpdated && (
-              <Information>{__('booking_card_booking_updated')}</Information>
-            )}
-          </div>
+          {isSpaceHost && (
+            <div className="flex flex-col gap-4">
+              <Button
+                isLoading={isLoading}
+                onClick={handleSaveBooking}
+                isEnabled={hasUpdatedBooking && !isLoading}
+              >
+                {__('booking_card_save_booking')}
+              </Button>
+              {hasUpdated && (
+                <Information>{__('booking_card_booking_updated')}</Information>
+              )}
+            </div>
+          )}
+
           <BookingRequestButtons
             _id={_id}
             status={status}
@@ -396,25 +438,31 @@ BookingPage.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
-    const [bookingRes, bookingConfigRes, listingRes] = await Promise.all([
-      api
-        .get(`/booking/${query.slug}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
-          },
-        })
-        .catch(() => {
+    const [bookingRes, bookingConfigRes, listingRes, generalConfigRes] =
+      await Promise.all([
+        api
+          .get(`/booking/${query.slug}`, {
+            headers: req?.cookies?.access_token && {
+              Authorization: `Bearer ${req?.cookies?.access_token}`,
+            },
+          })
+          .catch(() => {
+            return null;
+          }),
+        api.get('/config/booking').catch(() => {
           return null;
         }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-      api.get('/listing').catch(() => {
-        return null;
-      }),
-    ]);
+        api.get('/listing').catch(() => {
+          return null;
+        }),
+        api.get('/config/general').catch(() => {
+          return null;
+        }),
+      ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
+    const generalConfig = generalConfigRes?.data?.results?.value;
+
     const listings = listingRes?.data?.results;
 
     const [optionalEvent, optionalListing, optionalVolunteer] =
@@ -462,6 +510,7 @@ BookingPage.getInitialProps = async ({
       error: null,
       bookingCreatedBy,
       bookingConfig,
+      generalConfig,
       listings,
     };
   } catch (err: any) {
@@ -475,6 +524,7 @@ BookingPage.getInitialProps = async ({
       volunteer: null,
       createdBy: null,
       bookingConfig: null,
+      generalConfig: null,
       listings: null,
     };
   }

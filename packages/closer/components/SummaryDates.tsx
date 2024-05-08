@@ -1,11 +1,19 @@
 import Link from 'next/link';
 
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
 import dayjs from 'dayjs';
 
+import { useConfig } from '../hooks/useConfig';
 import { Listing } from '../types';
+import api from '../utils/api';
+import {
+  dateToPropertyTimeZone,
+  getLocalTimeAvailability,
+  getTimeOptions,
+} from '../utils/booking.helpers';
 import { __ } from '../utils/helpers';
+import { formatDate } from '../utils/listings.helpers';
 import Counter from './Counter';
 import ListingDateSelector from './ListingDateSelector';
 import HeadingRow from './ui/HeadingRow';
@@ -41,6 +49,10 @@ interface SummaryDatesProps {
   updatedListingId?: string;
   listings?: Listing[];
   updatedMaxBeds?: number;
+  priceDuration?: string;
+  workingHoursStart?: number | undefined;
+  workingHoursEnd?: number | undefined;
+  listingId?: string | undefined;
 }
 
 const SummaryDates = ({
@@ -64,11 +76,81 @@ const SummaryDates = ({
   updatedListingId,
   listings,
   updatedMaxBeds,
+  priceDuration,
+  workingHoursStart,
+  workingHoursEnd,
+  listingId,
 }: SummaryDatesProps) => {
-  const listingOptions = listings?.map((listing) => ({
-    value: listing._id,
-    label: listing.name,
-  }));
+  const { TIME_ZONE } = useConfig() || {};
+
+  const isHourlyBooking = priceDuration === 'hour';
+
+  const timeOptions = getTimeOptions(
+    workingHoursStart,
+    workingHoursEnd,
+    TIME_ZONE,
+  );
+
+  let listingOptions: { value: string; label: string }[] | null =
+    listings?.map((listing) => ({ value: listing._id, label: listing.name })) ||
+    null;
+  
+    if (priceDuration === 'hour') {
+      listingOptions =
+        listings
+          ?.filter((listing) => listing.priceDuration === 'hour')
+          .map((listing) => ({ value: listing._id, label: listing.name })) ||
+        null;
+    }
+  
+
+  const durationInDays = dayjs(endDate)
+    .startOf('day')
+    .diff(dayjs(startDate).startOf('day'), 'day');
+
+  const [hourAvailability, setHourAvailability] = useState<
+    { hour: string; isAvailable: boolean }[] | []
+  >([]);
+
+  const getAvailability = async (
+    startDate: Date | string | null,
+    endDate: Date | string | null,
+    listingId?: string | null,
+  ) => {
+    try {
+      const {
+        data: { results, availability },
+      } = await api.post('/bookings/listing/availability', {
+        start: isHourlyBooking ? startDate : formatDate(startDate),
+        end: isHourlyBooking ? endDate : formatDate(endDate),
+        listing: listingId,
+        adults: totalGuests,
+        children: kids,
+        infants,
+        pets,
+        useTokens: false,
+      });
+
+      return { results, availability };
+    } catch (error) {
+      console.log('Error', error);
+      return { results: null, availability: null };
+    }
+  };
+
+  useEffect(() => {
+    if (!isEditMode || !listingId) return;
+    (async function updatePrices() {
+      const { availability } = await getAvailability(
+        startDate,
+        endDate,
+        listingId,
+      );
+
+      setHourAvailability(getLocalTimeAvailability(availability, TIME_ZONE));
+    })();
+  }, [startDate, endDate]);
+
   return (
     <div>
       {eventName ? (
@@ -79,7 +161,11 @@ const SummaryDates = ({
       ) : (
         <HeadingRow>
           <span className="mr-4">🏡</span>
-          <span>{__('bookings_summary_step_dates_title')}</span>
+          <span>
+            {isHourlyBooking
+              ? __('bookings_summary_step_dates_title_hourly')
+              : __('bookings_dates_step_guests_title')}
+          </span>
         </HeadingRow>
       )}
       {eventName && (
@@ -102,80 +188,93 @@ const SummaryDates = ({
           </p>
         </div>
       )}
-      <div className="flex justify-between items-center my-3">
-        <p>{__('bookings_summary_step_dates_number_of_guests')}</p>
-        <div className="font-bold">
-          {isEditMode ? (
-            <div className="bg-accent-light p-2 w-[115px] flex justify-end rounded-md">
-              <Counter
-                value={totalGuests}
-                setFn={setters?.setUpdatedAdults}
-                minValue={1}
-                maxValue={updatedMaxBeds}
-              />
+
+      {!isHourlyBooking && (
+        <>
+          <div className="flex justify-between items-center my-3">
+            <p>{__('bookings_summary_step_dates_number_of_guests')}</p>
+            <div className="font-bold">
+              {isEditMode ? (
+                <div className="bg-accent-light p-2 w-[115px] flex justify-end rounded-md">
+                  <Counter
+                    value={totalGuests}
+                    setFn={setters?.setUpdatedAdults}
+                    minValue={1}
+                    maxValue={updatedMaxBeds}
+                  />
+                </div>
+              ) : (
+                totalGuests
+              )}
             </div>
-          ) : (
-            totalGuests
-          )}
-        </div>
-      </div>
-      <div className="flex justify-between items-center my-3">
-        <p>{__('bookings_dates_step_guests_children')}</p>
-        <div className="font-bold">
-          {isEditMode ? (
-            <div className="bg-accent-light p-2 w-[115px] flex justify-end rounded-md">
-              <Counter
-                value={kids}
-                setFn={setters?.setUpdatedChildren}
-                minValue={0}
-              />
+          </div>
+          <div className="flex justify-between items-center my-3">
+            <p>{__('bookings_dates_step_guests_children')}</p>
+            <div className="font-bold">
+              {isEditMode ? (
+                <div className="bg-accent-light p-2 w-[115px] flex justify-end rounded-md">
+                  <Counter
+                    value={kids}
+                    setFn={setters?.setUpdatedChildren}
+                    minValue={0}
+                  />
+                </div>
+              ) : (
+                kids
+              )}
             </div>
-          ) : (
-            kids
-          )}
-        </div>
-      </div>
-      <div className="flex justify-between items-center my-3">
-        <p>{__('bookings_dates_step_guests_infants')}</p>
-        <div className="font-bold">
-          {isEditMode ? (
-            <div className="bg-accent-light p-2 w-[115px] flex justify-end rounded-md">
-              <Counter
-                value={infants}
-                setFn={setters?.setUpdatedInfants}
-                minValue={0}
-              />
+          </div>
+          <div className="flex justify-between items-center my-3">
+            <p>{__('bookings_dates_step_guests_infants')}</p>
+            <div className="font-bold">
+              {isEditMode ? (
+                <div className="bg-accent-light p-2 w-[115px] flex justify-end rounded-md">
+                  <Counter
+                    value={infants}
+                    setFn={setters?.setUpdatedInfants}
+                    minValue={0}
+                  />
+                </div>
+              ) : (
+                infants
+              )}
             </div>
-          ) : (
-            infants
-          )}
-        </div>
-      </div>
-      <div className="flex justify-between items-center my-3 ">
-        <p>{__('bookings_dates_step_guests_pets')}</p>
-        <div className="font-bold">
-          {isEditMode ? (
-            <div className="bg-accent-light p-2 w-[115px] flex justify-end rounded-md">
-              <Counter
-                value={pets}
-                setFn={setters?.setUpdatedPets}
-                minValue={0}
-              />
+          </div>
+          <div className="flex justify-between items-center my-3 ">
+            <p>{__('bookings_dates_step_guests_pets')}</p>
+            <div className="font-bold">
+              {isEditMode ? (
+                <div className="bg-accent-light p-2 w-[115px] flex justify-end rounded-md">
+                  <Counter
+                    value={pets}
+                    setFn={setters?.setUpdatedPets}
+                    minValue={0}
+                  />
+                </div>
+              ) : (
+                pets
+              )}
             </div>
-          ) : (
-            pets
-          )}
-        </div>
-      </div>
+          </div>
+        </>
+      )}
+
       <div className="flex justify-between items-start my-3">
         <p>
           {' '}
           {isDayTicket ? __('listings_book_day') : __('listings_book_check_in')}
         </p>
         <p className="font-bold">
-          {startDate
+          {startDate &&
+            TIME_ZONE &&
+            isHourlyBooking &&
+            !isEditMode &&
+            dateToPropertyTimeZone(TIME_ZONE, startDate)}
+          {startDate && !isHourlyBooking
             ? dayjs(startDate).format('DD / MM / YY')
-            : __('bookings_dates_enter_date')}
+            : null}
+
+          {startDate && TIME_ZONE && isHourlyBooking && isEditMode && startDate}
         </p>
       </div>
       {!isDayTicket && (
@@ -183,9 +282,17 @@ const SummaryDates = ({
           <div className="flex justify-between items-start my-3">
             <p> {__('listings_book_check_out')}</p>
             <p className="font-bold">
-              {endDate
+              {endDate &&
+                TIME_ZONE &&
+                isHourlyBooking &&
+                !isEditMode &&
+                dateToPropertyTimeZone(TIME_ZONE, endDate)}
+
+              {startDate && !isHourlyBooking
                 ? dayjs(endDate).format('DD / MM / YY')
-                : __('bookings_dates_enter_date')}
+                : null}
+
+              {endDate && TIME_ZONE && isHourlyBooking && isEditMode && endDate}
             </p>
           </div>
           <div>
@@ -199,19 +306,20 @@ const SummaryDates = ({
                   isSmallScreen={false}
                   blockedDateRanges={[]}
                   isEditMode={true}
+                  priceDuration={priceDuration || 'night'}
+                  timeOptions={timeOptions}
+                  hourAvailability={hourAvailability}
                 />
               </div>
             )}
           </div>
 
-          <div className="flex justify-between items-start my-3">
-            <p> {__('bookings_stay_duration')}</p>
-            <p className="font-bold">
-              {dayjs(endDate)
-                .startOf('day')
-                .diff(dayjs(startDate).startOf('day'), 'day') || '-'}
-            </p>
-          </div>
+          {!isHourlyBooking && (
+            <div className="flex justify-between items-start my-3">
+              <p> {__('bookings_stay_duration')}</p>
+              <p className="font-bold">{durationInDays || '-'}</p>
+            </div>
+          )}
         </>
       )}
 
@@ -244,28 +352,32 @@ const SummaryDates = ({
         </div>
       )}
 
-      {volunteerId && (
-        <div className="flex justify-between items-start mt-3">
-          <p>{__('bookings_summary_step_dates_commitment')}</p>
-          <p className="font-bold uppercase">
-            {__('bookings_summary_step_dates_default_commitment')}
-          </p>
-        </div>
-      )}
-      {doesNeedPickup !== undefined && (
-        <div className="flex justify-between mt-3 gap-20 items-start	">
-          <p>{__('bookings_pickup')}</p>
-          <p className="font-bold uppercase text-right">
-            {doesNeedPickup ? __('generic_yes') : __('generic_no')}
-          </p>
-        </div>
-      )}
-      {doesNeedSeparateBeds !== undefined && (
-        <div className="flex justify-between mt-3 gap-20 items-start	">
-          <p>{__('booking_card_separate_beds_needed')}</p>
-          <p className="font-bold uppercase text-right">
-            {doesNeedSeparateBeds ? __('generic_yes') : __('generic_no')}
-          </p>
+      {!isHourlyBooking && (
+        <div>
+          {volunteerId && (
+            <div className="flex justify-between items-start mt-3">
+              <p>{__('bookings_summary_step_dates_commitment')}</p>
+              <p className="font-bold uppercase">
+                {__('bookings_summary_step_dates_default_commitment')}
+              </p>
+            </div>
+          )}
+          {doesNeedPickup !== undefined && (
+            <div className="flex justify-between mt-3 gap-20 items-start	">
+              <p>{__('bookings_pickup')}</p>
+              <p className="font-bold uppercase text-right">
+                {doesNeedPickup ? __('generic_yes') : __('generic_no')}
+              </p>
+            </div>
+          )}
+          {doesNeedSeparateBeds !== undefined && (
+            <div className="flex justify-between mt-3 gap-20 items-start	">
+              <p>{__('booking_card_separate_beds_needed')}</p>
+              <p className="font-bold uppercase text-right">
+                {doesNeedSeparateBeds ? __('generic_yes') : __('generic_no')}
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>

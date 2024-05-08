@@ -141,7 +141,6 @@ const AccomodationSelector = ({
           savedCurrency={currency}
           backToDates={backToDates}
         />
-
         {filteredListings.length === 0 && (
           <div className="mt-16">
             <h2 className="text-2xl font-bold">
@@ -152,18 +151,23 @@ const AccomodationSelector = ({
             </p>
           </div>
         )}
+        {start}/{end}
         <div className="flex flex-col gap-4 mt-16 md:grid md:grid-cols-2 md:items-start">
-          {filteredListings.map((listing) => (
-            <ListingCard
-              key={listing._id}
-              listing={listing}
-              bookListing={bookListing}
-              useTokens={useTokens}
-              bookingType={bookingType}
-              isAuthenticated={isAuthenticated}
-              adults={Number(adults)}
-            />
-          ))}
+          {filteredListings.map((listing) => {
+            return (
+              listing.priceDuration === 'night' && (
+                <ListingCard
+                  key={listing._id}
+                  listing={listing}
+                  bookListing={bookListing}
+                  useTokens={useTokens}
+                  bookingType={bookingType}
+                  isAuthenticated={isAuthenticated}
+                  adults={Number(adults)}
+                />
+              )
+            );
+          })}
         </div>
       </div>
     </>

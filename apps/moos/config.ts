@@ -1,9 +1,9 @@
 const config = {
-  platformAllowedConfigs: ['booking', 'general', 'booking-rules', 'payment','fundraiser'],
+  platformAllowedConfigs: ['booking', 'general', 'booking-rules', 'payment','fundraiser', 'emails'],
   PORT: 14444,
   EXPOSE_STORE: true,
   CACHE_DURATION: 300000, // 5min
-  LOGO_HEADER: '',
+  LOGO_HEADER: '/images/logo.png',
   LOGO_FOOTER: '/images/logo.svg',
   PERMISSIONS: {
     event: {

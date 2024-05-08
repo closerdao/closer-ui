@@ -1,5 +1,11 @@
 import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
 
+import {
+  BOOKING_EXISTS_ERROR,
+  USER_REJECTED_TRANSACTION_ERROR,
+} from '../constants';
 import { User } from '../contexts/auth/types';
 import {
   AccommodationUnit,
@@ -9,7 +15,11 @@ import {
   Listing,
   Price,
 } from '../types';
+import api from './api';
 import { __, priceFormat } from './helpers';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export const getStatusText = (status: string, updated: string | Date) => {
   if (status === 'cancelled') {
@@ -55,11 +65,13 @@ export const getFiatTotal = (
   accomodationTotal: number,
   eventTotal?: number,
   useTokens?: boolean,
+  useCredits?: boolean,
 ) => {
   if (isTeamBooking) {
     return 0;
   }
-  const accommodationFiatTotal = useTokens ? 0 : accomodationTotal;
+  const accommodationFiatTotal =
+    useTokens || useCredits ? 0 : accomodationTotal;
   if (foodOption === 'no_food') {
     return accommodationFiatTotal + (eventTotal || 0);
   }
@@ -71,14 +83,14 @@ export const getUtilityTotal = ({
   utilityFiatVal,
   isPrivate,
   updatedAdults,
-  updatedDurationInDays,
+  updatedDuration,
   discountRate,
 }: {
   foodOption: string;
   utilityFiatVal: number | undefined;
   isPrivate: boolean;
   updatedAdults: number;
-  updatedDurationInDays: number;
+  updatedDuration: number;
   discountRate: number;
 }) => {
   if (foodOption === 'no_food') {
@@ -88,44 +100,65 @@ export const getUtilityTotal = ({
     return 0;
   }
   const multiplier = isPrivate ? 1 : updatedAdults;
-  const total =
-    utilityFiatVal * multiplier * updatedDurationInDays * discountRate;
+  const total = utilityFiatVal * multiplier * updatedDuration * discountRate;
   return total;
 };
 
 export const getAccommodationTotal = (
   listing: Listing | undefined,
   useTokens: boolean,
+  useCredits: boolean,
   adults: number,
-  durationInDays: number,
+  durationInDaysOrHours: number,
   discountRate: number,
   volunteerId: string | undefined,
 ) => {
   if (!listing) return 0;
   if (volunteerId) return 0;
-  const price = useTokens ? listing.tokenPrice?.val : listing.fiatPrice?.val;
+
+  let price: number | undefined =
+    useTokens || useCredits ? listing.tokenPrice?.val : listing.fiatPrice?.val;
+  if (listing.priceDuration === 'hour') {
+    price =
+      useTokens || useCredits
+        ? listing.tokenHourlyPrice?.val
+        : listing.fiatHourlyPrice?.val;
+    discountRate = 1;
+  }
+
   const multiplier = listing.private ? 1 : adults;
-  const total = +(price * multiplier * durationInDays * discountRate).toFixed(
-    2,
-  );
+
+  const total = +(
+    (price || 0) *
+    multiplier *
+    durationInDaysOrHours *
+    discountRate
+  ).toFixed(2);
+
   return total;
 };
 
 export const getPaymentDelta = (
   total: number,
   updatedFiatTotal: number,
-  useToken: boolean,
+  useTokens: boolean,
+  useCredits: boolean,
   rentalToken: Price<CloserCurrencies>,
   updatedAccomodationTotal: number,
   rentalFiatCur: CloserCurrencies,
 ) => {
-  if (useToken) {
-    const delta = Number((updatedAccomodationTotal - rentalToken?.val).toFixed(2))
+  if (useTokens || useCredits) {
+    const delta = Number(
+      (updatedAccomodationTotal - rentalToken?.val).toFixed(2),
+    );
     if (!delta) return null;
     return {
+      credits: {
+        val: useCredits ? delta : 0,
+        cur: 'credits',
+      },
       token: {
-        val:
-          delta || 0,
+        val: useTokens ? delta : 0,
         cur: rentalToken?.cur,
       },
       fiat: {
@@ -134,7 +167,7 @@ export const getPaymentDelta = (
       },
     };
   }
-  const delta = Number((updatedFiatTotal - total).toFixed(2))
+  const delta = Number((updatedFiatTotal - total).toFixed(2));
   if (!delta) return null;
   return {
     token: { val: 0, cur: rentalToken?.cur },
@@ -169,7 +202,12 @@ export const formatListings = (listings: Listing[]) => {
   return formattedListings;
 };
 
-export const convertTimeToPropertyTimezone = (date: Date | string | number) => {
+export const convertTimeToPropertyTimezone = (
+  date: Date | string | number | null,
+) => {
+  if (!date) {
+    return null;
+  }
   const localDate = new Date(date);
   localDate.setHours(localDate.getUTCHours());
   localDate.setMinutes(localDate.getUTCMinutes());
@@ -289,4 +327,146 @@ export const getFilterAccommodationUnits = (
     return groupsWithBookings.includes(unit.id);
   });
   return updatedUnits;
+};
+
+export const getDateOnly = (date: Date | undefined | null | string) => {
+  if (!date) return null;
+  return dayjs(date).format('YYYY-MM-DD');
+};
+
+export const getTimeOnly = (date: Date | undefined | null | string) => {
+  if (!date) return null;
+  return dayjs(date).format('HH:mm');
+};
+
+export const getDateStringWithoutTimezone = (
+  dateOnly: string | undefined,
+  time: string | null,
+) => {
+  if (!dateOnly || !time) return null;
+  return dayjs(`${dateOnly} ${time}`).format('YYYY-MM-DD HH:mm');
+};
+
+export const getTimeOptions = (
+  workingHoursStart: number | undefined,
+  workingHoursEnd: number | undefined,
+  timeZone: string | undefined,
+) => {
+  if (!workingHoursStart || !workingHoursEnd || !timeZone) {
+    return null;
+  }
+  return Array.from(
+    { length: workingHoursEnd - workingHoursStart + 1 },
+    (_, hour) =>
+      dayjs()
+        .tz(timeZone)
+        .hour(hour + workingHoursStart)
+        .minute(0)
+        .format('HH:00'),
+  );
+};
+
+export const getLocalTimeAvailability = (
+  availability: { hour: string; isAvailable: boolean }[],
+  timeZone: string | undefined,
+) => {
+  const DEFAULT_TIMEZONE = 'UTC';
+
+  return availability?.map((time) => {
+    const localTime = dayjs
+      .utc(`1970-01-01T${time.hour}:00Z`)
+      .tz(timeZone || DEFAULT_TIMEZONE)
+      .format('HH:mm');
+
+    return { hour: localTime, isAvailable: time.isAvailable };
+  });
+};
+
+export const dateToPropertyTimeZone = (
+  timeZone: string,
+  date: string | Date,
+) => {
+  return dayjs.utc(date).tz(timeZone).format('YYYY-MM-DD HH:mm');
+};
+export const payTokens = async (
+  bookingId: string | undefined,
+  dailyRentalTokenVal: number | undefined,
+  stakeTokens: (dailyValue: number) => Promise<
+    | {
+        error: null;
+        success: {
+          transactionId: string;
+        };
+      }
+    | {
+        error: unknown;
+        success: null;
+      }
+    | undefined
+  >,
+
+  checkContract: () => Promise<
+    | {
+        success: boolean;
+        error: null;
+      }
+    | {
+        success: boolean;
+        error: string;
+      }
+    | undefined
+  >,
+) => {
+  if (!dailyRentalTokenVal)
+    return { error: 'No daily rental token value provided', success: null };
+  if (!bookingId) return { error: 'No bookingId provided', success: null };
+
+  const { success: stakingSuccess, error: stakingError } = (await stakeTokens(
+    dailyRentalTokenVal,
+  )) as
+    | {
+        error: null;
+        success: {
+          transactionId: string;
+        };
+      }
+    | {
+        error: any;
+        success: null;
+      };
+
+  const { success: isBookingMatchContract, error: nightsRejected } =
+    (await checkContract()) as
+      | {
+          success: boolean;
+          error: null;
+        }
+      | {
+          success: boolean;
+          error: string;
+        };
+
+  const error = stakingError || nightsRejected;
+  console.log('stakingError=', stakingError);
+  console.log('nightsRejected=', nightsRejected);
+  console.log('error reason=', error?.reason);
+
+  if (error?.reason.trim() === USER_REJECTED_TRANSACTION_ERROR) {
+    console.log('User rejected transaction!!!!!');
+    return { error: 'User rejected transaction', success: null };
+  }
+  if (error?.reason.trim() === BOOKING_EXISTS_ERROR) {
+    return { error: 'Booking for these dates already exists', success: null };
+  }
+  if (error) {
+    console.log('TOKEN PAYMENT ERROR=', error);
+    return { error: 'Token payment failed.', success: null };
+  }
+
+  if (stakingSuccess?.transactionId && isBookingMatchContract) {
+    await api.post(`/bookings/${bookingId}/token-payment`, {
+      transactionId: stakingSuccess.transactionId,
+    });
+    return { success: true, error: null };
+  }
 };

@@ -246,6 +246,10 @@ export const SALES_CONFIG = {
   MAX_TOKENS_PER_TRANSACTION: 100,
 };
 
+// Token booking errors
+export const BOOKING_EXISTS_ERROR = 'execution reverted: BookingFacet: Booking already exists'
+export const USER_REJECTED_TRANSACTION_ERROR = 'user rejected transaction'
+
 export const MAX_BOOKINGS_TO_FETCH = 2000;
 export const BOOKINGS_PER_PAGE = 36;
 

@@ -70,7 +70,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
   return (
     <>
       <Head>
-        <title>{__('support_us_heading')}</title>
+        <title>Support the MOOS</title>
         <meta name="description" content="" />
         <meta property="og:type" content="event" />
       </Head>
@@ -162,7 +162,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
 
               <div className="pl-2">
                 <LinkButton
-                  href='/credits/checkout?amount=30'
+                  href="/credits/checkout?amount=30"
                   className="w-[200px] text-md sm:w-[150px]"
                 >
                   Invest
@@ -191,7 +191,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
 
               <div className="pl-2">
                 <LinkButton
-                  href='/credits/checkout?amount=90'
+                  href="/credits/checkout?amount=90"
                   className="w-[200px] text-md sm:w-[150px]"
                 >
                   Invest
@@ -220,7 +220,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
 
               <div className="pl-2">
                 <LinkButton
-                  href='/credits/checkout?amount=180'
+                  href="/credits/checkout?amount=180"
                   className="w-[200px] text-md sm:w-[150px]"
                 >
                   Invest

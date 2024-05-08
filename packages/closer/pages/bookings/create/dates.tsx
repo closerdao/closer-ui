@@ -74,6 +74,8 @@ const DatesSelector = ({
     volunteerId,
   } = router.query || {};
 
+  const isHourlyBooking = savedStartDate === savedEndDate;
+
   const [blockedDateRanges, setBlockedDateRanges] = useState<any[]>([]);
 
   const memoizedBlockedDateRanges = useMemo(() => {
@@ -204,6 +206,7 @@ const DatesSelector = ({
           children: kids,
           doesNeedPickup,
           doesNeedSeparateBeds,
+          isHourlyBooking,
         });
         router.push(`/bookings/${newBooking._id}/questions`);
       } else {

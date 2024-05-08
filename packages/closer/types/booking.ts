@@ -42,6 +42,11 @@ export type Listing = {
   managedBy: string[];
   _id: string;
   availableFor?: string[];
+  priceDuration?: string;
+  workingHoursStart?: number;
+  workingHoursEnd?: number;
+  fiatHourlyPrice?: Price<CloserCurrencies.EUR>;
+  tokenHourlyPrice?: Price<CloserCurrencies.TDF>;
 };
 
 export type Booking = {
@@ -87,6 +92,11 @@ export type Booking = {
   doesNeedSeparateBeds?: boolean;
   doesNeedPickup?: boolean;
   isTeamBooking?: boolean;
+  paymentDelta?: {
+    token: CloserCurrencies.TDF;
+    fiat: CloserCurrencies.EUR;
+    credits: { val: number; cur: string };
+  } | null;
 };
 
 export interface StatusColor {

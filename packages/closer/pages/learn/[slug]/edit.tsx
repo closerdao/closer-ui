@@ -9,6 +9,7 @@ import { FaArrowLeft } from '@react-icons/all-files/fa/FaArrowLeft';
 import { NextApiRequest } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
+import PageNotFound from '../../404';
 import models from '../../../models';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
@@ -17,9 +18,10 @@ import { __ } from '../../../utils/helpers';
 interface Props {
   lesson: any;
   error?: string;
+  learningHubConfig: { enabled: boolean; value?: any } | null;
 }
 
-const EditLessonPage = ({ lesson, error }: Props) => {
+const EditLessonPage = ({ lesson, error, learningHubConfig }: Props) => {
   const router = useRouter();
   const onUpdate = async (
     name: string,
@@ -31,6 +33,13 @@ const EditLessonPage = ({ lesson, error }: Props) => {
       await api.post(`/moderator/lesson/${lesson._id}/add`, option);
     }
   };
+
+  const isLearningHubEnabled = learningHubConfig && learningHubConfig?.enabled;
+
+  if (!isLearningHubEnabled) {
+    return <PageNotFound />;
+  }
+
   if (!lesson) {
     return <Heading>{__('events_slug_edit_error')}</Heading>;
   }
@@ -83,18 +92,30 @@ EditLessonPage.getInitialProps = async ({
     if (!query.slug) {
       throw new Error('No event');
     }
-    const {
-      data: { results: lesson },
-    } = await api.get(`/lesson/${query.slug}`, {
-      headers: req?.cookies?.access_token && {
-        Authorization: `Bearer ${req?.cookies?.access_token}`,
-      },
-    });
 
-    return { lesson };
+    const [
+      {
+        data: { results: lesson },
+      },
+      learningHubRes,
+    ] = await Promise.all([
+      api.get(`/lesson/${query.slug}`, {
+        headers: req?.cookies?.access_token && {
+          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        },
+      }),
+      api.get('/config/learningHub').catch(() => {
+        return null;
+      }),
+    ]);
+
+    const learningHubConfig = learningHubRes?.data?.results?.value || null;
+
+    return { lesson, learningHubConfig };
   } catch (err) {
     console.log(err);
     return {
+      learningHubConfig: null,
       error: parseMessageFromError(err),
     };
   }

@@ -13,6 +13,7 @@ import en from '../locales/en';
 import foz from '../locales/foz';
 import moos from '../locales/moos';
 import tdf from '../locales/tdf';
+import lios from '../locales/lios';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(relativeTime);
@@ -27,6 +28,7 @@ const appDictionaries = {
   tdf,
   foz,
   moos,
+  lios
 };
 
 let language = Object.assign({}, base, en);
@@ -118,7 +120,10 @@ export const getTimeDetails = (eventTime) => {
 };
 
 export const priceFormat = (price, currency = 'EUR') => {
-  if (typeof price === 'number') {
+  if (price?.cur && price.cur === 'credits') {
+    return `${price.val} ${__('carrots_balance', price.app)} ${__('carrots_heading', price.app)}`
+  }
+  else if (typeof price === 'number') {
     return parseFloat(price).toLocaleString('en-US', {
       style: 'currency',
       currency,
