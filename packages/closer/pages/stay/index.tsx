@@ -51,6 +51,8 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
         $in: ['guests', isTeamMember ? 'team' : null].filter((e) => e),
       },
     },
+    ...(APP_NAME === 'lios' ? { sort_by: 'created' } : {}),
+
   };
   const hostsFilter = {
     where: {
