@@ -61,7 +61,7 @@ const BookingListPreview = ({
 
   const endFormatted = dayjs(end).format('DD/MM/YYYY');
   const createdFormatted = dayjs(created).format('DD/MM/YYYY - HH:mm:A');
-  const isNotPaid = status !== 'paid';
+  const isNotPaid = status !== 'paid' && status !== 'tokens-staked' && status !== 'credits-paid';
 
   const bookingType = getBookingType(eventId, volunteerId);
 
