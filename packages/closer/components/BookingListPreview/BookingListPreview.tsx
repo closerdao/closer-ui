@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 
 import { STATUS_COLOR } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
+import { useConfig } from '../../hooks/useConfig';
 import { getBookingType, getStatusText } from '../../utils/booking.helpers';
 import { __, priceFormat } from '../../utils/helpers';
 import BookingRequestButtons from '../BookingRequestButtons';
@@ -30,6 +31,7 @@ const BookingListPreview = ({
   link,
   isAdmin,
 }: Props) => {
+  const { APP_NAME } = useConfig();
   const {
     _id,
     start,
@@ -38,6 +40,7 @@ const BookingListPreview = ({
     created,
     createdBy,
     useTokens,
+    useCredits,
     updated,
     adults,
     rentalToken,
@@ -166,7 +169,15 @@ const BookingListPreview = ({
           {__('booking_card_payment_accomodation')}
         </p>
         <p>
-          {useTokens ? priceFormat(rentalToken) : priceFormat(rentalFiat)}{' '}
+          {useTokens && priceFormat(rentalToken)}
+          {useCredits &&
+            priceFormat({
+              val: rentalToken.val,
+              cur: 'credits',
+              app: APP_NAME,
+            })}
+          {!useCredits && !useTokens && priceFormat(rentalFiat)}
+
           {isNotPaid && (
             <span className="text-failure">{__('booking_card_unpaid')}</span>
           )}

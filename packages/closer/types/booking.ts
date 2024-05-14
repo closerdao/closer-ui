@@ -87,6 +87,11 @@ export type Booking = {
   doesNeedSeparateBeds?: boolean;
   doesNeedPickup?: boolean;
   isTeamBooking?: boolean;
+  paymentDelta?: {
+    token: CloserCurrencies.TDF;
+    fiat: CloserCurrencies.EUR;
+    credits: { val: number; cur: string };
+  } | null;
   roomNumber?: number;
   adminBookingReason?: string;
 };

@@ -120,6 +120,9 @@ export const getTimeDetails = (eventTime) => {
 };
 
 export const priceFormat = (price, currency = DEFAULT_CURRENCY) => {
+  if (price?.cur && price.cur === 'credits') {
+    return `${price.val} ${__('carrots_balance', price.app)} ${__('carrots_heading', price.app)}`
+  }
   if (!currency) {
     currency = DEFAULT_CURRENCY;
   }

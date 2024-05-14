@@ -26,6 +26,7 @@ const CheckoutPayment = ({
   buttonDisabled,
   useTokens,
   useCredits,
+  rentalToken,
   totalToPayInFiat,
   dailyTokenValue,
   startDate,
@@ -70,7 +71,10 @@ const CheckoutPayment = ({
 
   const payWithCredits = async () => {
     try {
-      const res = await api.post(`/bookings/${bookingId}/credit-payment`, {});
+      const res =    await api.post(`/bookings/${bookingId}/credit-payment`, {
+        startDate,
+        creditsAmount: rentalToken?.val,
+      });
       return res;
     } catch (error) {
       setError(parseMessageFromError(error));

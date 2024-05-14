@@ -60,11 +60,13 @@ export const getFiatTotal = (
   accomodationTotal: number,
   eventTotal?: number,
   useTokens?: boolean,
+  useCredits?: boolean,
 ) => {
   if (isTeamBooking) {
     return 0;
   }
-  const accommodationFiatTotal = useTokens ? 0 : accomodationTotal;
+  const accommodationFiatTotal =
+    useTokens || useCredits ? 0 : accomodationTotal;
   if (foodOption === 'no_food') {
     return accommodationFiatTotal + (eventTotal || 0);
   }
@@ -101,6 +103,7 @@ export const getUtilityTotal = ({
 export const getAccommodationTotal = (
   listing: Listing | undefined,
   useTokens: boolean,
+  useCredits: boolean,
   adults: number,
   durationInDays: number,
   discountRate: number,
@@ -108,7 +111,9 @@ export const getAccommodationTotal = (
 ) => {
   if (!listing) return 0;
   if (volunteerId) return 0;
-  const price = useTokens ? listing.tokenPrice?.val : listing.fiatPrice?.val;
+
+  const price =
+    useTokens || useCredits ? listing.tokenPrice?.val : listing.fiatPrice?.val;
   const multiplier = listing.private ? 1 : adults;
   const total = +(price * multiplier * durationInDays * discountRate).toFixed(
     2,
@@ -119,18 +124,24 @@ export const getAccommodationTotal = (
 export const getPaymentDelta = (
   total: number,
   updatedFiatTotal: number,
-  useToken: boolean,
+  useTokens: boolean,
+  useCredits: boolean,
   rentalToken: Price<CloserCurrencies>,
   updatedAccomodationTotal: number,
   rentalFiatCur: CloserCurrencies,
 ) => {
-  if (useToken) {
-    const delta = Number((updatedAccomodationTotal - rentalToken?.val).toFixed(2))
+  if (useTokens || useCredits) {
+    const delta = Number(
+      (updatedAccomodationTotal - rentalToken?.val).toFixed(2),
+    );
     if (!delta) return null;
     return {
+      credits: {
+        val: useCredits ? delta : 0,
+        cur: 'credits',
+      },
       token: {
-        val:
-          delta || 0,
+        val: useTokens ? delta : 0,
         cur: rentalToken?.cur,
       },
       fiat: {
@@ -139,7 +150,7 @@ export const getPaymentDelta = (
       },
     };
   }
-  const delta = Number((updatedFiatTotal - total).toFixed(2))
+  const delta = Number((updatedFiatTotal - total).toFixed(2));
   if (!delta) return null;
   return {
     token: { val: 0, cur: rentalToken?.cur },
