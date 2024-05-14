@@ -20,6 +20,8 @@ import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
+const ADMIN_EMAIL = 'vashnev@gmail.com';
+
 interface Props {
   bookingSettings: any;
   bookingRules: BookingRulesConfig | null;
@@ -57,6 +59,7 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
   const hostsFilter = {
     where: {
       roles: { $in: ['space-host', 'steward', 'team'].filter((e) => e) },
+      email: { $ne: ADMIN_EMAIL }
     },
   };
 
@@ -97,9 +100,16 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
       <section className="max-w-6xl mx-auto mb-16">
         <div className="mb-6 max-w-prose">
           <Heading level={1} className="text-4xl pb-2 mt-8">
-            {APP_NAME && `${__('stay_title', APP_NAME)} ${PLATFORM_NAME}`}
+            {APP_NAME &&
+              `${__('stay_title', APP_NAME)} 
+            
+            ${APP_NAME && APP_NAME === 'tdf' ? PLATFORM_NAME : ''}`}
           </Heading>
-          <p>{APP_NAME && __('stay_description', APP_NAME)}</p>
+          <p>
+            {APP_NAME &&
+              !__('stay_description', APP_NAME).includes('missing') &&
+              __('stay_description', APP_NAME)}
+          </p>
         </div>
       </section>
 
@@ -134,7 +144,11 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
             {APP_NAME && __('stay_chose_accommodation', APP_NAME)}
           </Heading>
           <p className="mb-8 max-w-prose">
-            {APP_NAME && __('stay_chose_accommodation_description', APP_NAME)}
+            {APP_NAME &&
+              !__('stay_chose_accommodation_description', APP_NAME).includes(
+                'missing',
+              ) &&
+              __('stay_chose_accommodation_description', APP_NAME)}
           </p>
           {listings && listings.count() > 0 && (
             <div className="grid md:grid-cols-4 gap-x-12 md:gap-x-5 gap-y-16">

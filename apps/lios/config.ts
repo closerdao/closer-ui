@@ -1,7 +1,7 @@
 const config = {
   platformAllowedConfigs: ['booking', 'general', 'booking-rules', 'payment', 'emails', 'volunteering'],
   PORT: 14444,
-  // APP_NAME: 'lios', // enabled for local testing
+  APP_NAME: 'lios', 
   // PLATFORM_NAME: 'Foz',
   // PLATFORM_LEGAL_ADDRESS: 'Foz da Cova full address',
   // DEFAULT_TITLE: 'Foz',
