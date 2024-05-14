@@ -123,10 +123,10 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
           content="Traditional Dream Factory (TDF) is a regenerative playground in Abela, Portugal."
         />
       </Head>
-      <section className="w-[100vw] -mx-4 absolute -top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-alt mb-8 md:mb-[100vh]">
+      <section className="w-[100vw] md:w-[calc(100vw+16px)] -mx-4 absolute -top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-alt mb-8 md:mb-[100vh]">
         <div className="md:h-[100vh]">
           {isSmallScreen ? (
-            <div className='h-[calc(100vh-30px)]'>
+            <div className="h-[calc(100vh)]">
               <video
                 loop={true}
                 muted={true}
@@ -372,6 +372,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                     Transformation Lab and guide others through this wild
                     faculty.
                   </p>
+                  <p className="font-accent uppercase">Applications closed</p>
                 </div>
                 <div className="flex flex-col gap-12 items-center">
                   <Heading level={4} className="text-lg uppercase">
@@ -447,6 +448,17 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
         <section className="min-h-[600px] h-[700px] overflow-scroll w-[100vw] -mx-4 px-4  pt-12 pb-20 flex justify-center bg-[url(/images/lios-faq.jpg)] bg-cover bg-center">
           <div className="flex flex-col gap-8 items-center w-full sm:w-[600px] ">
             <Faqs faqs={faqs} error={error} isExpanded />
+          </div>
+        </section>
+
+        <section className=" w-[100vw] -mx-4 px-4  pt-12 pb-20 flex justify-center">
+          <div className="flex flex-col gap-8 items-center w-full sm:w-[600px] ">
+          <Link
+            className="font-accent uppercase text-accent"
+            href="https://lios.io/deserttransformation"
+          >
+            DESERT TRANSFORMATION LAB Website
+          </Link>
           </div>
         </section>
 
