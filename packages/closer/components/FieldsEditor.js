@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ObjectId } from 'bson';
 
 import { __ } from '../utils/helpers';
 
@@ -31,7 +32,7 @@ const FieldsEditor = ({ value, onChange }) => {
     e.preventDefault();
     updateOptions(
       options.concat({
-        id: Math.random(),
+        id: new ObjectId().toString(),
         name: '',
         fieldType: 'text',
         options: [],

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-
+import { ObjectId } from 'bson';
 import { CURRENCIES_WITH_LABELS } from '../constants';
 import { __ } from '../utils/helpers';
 import PriceEditor from './PriceEditor';
@@ -19,7 +19,7 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
     e.preventDefault();
     updateOptions(
       options.concat({
-        id: Math.random(),
+        id: new ObjectId().toString(),
         name: '',
         icon: null,
         price: 0,
