@@ -1,9 +1,11 @@
 const config = {
+  // protect APP_NAME from being changed by admin - temporary hotfix, until configs validation is implemented
+  APP_NAME: 'moos',
   platformAllowedConfigs: ['booking', 'general', 'booking-rules', 'payment','fundraiser', 'emails'],
   PORT: 14444,
   EXPOSE_STORE: true,
   CACHE_DURATION: 300000, // 5min
-  LOGO_HEADER: '',
+  LOGO_HEADER: '/images/logo.png',
   LOGO_FOOTER: '/images/logo.svg',
   PERMISSIONS: {
     event: {

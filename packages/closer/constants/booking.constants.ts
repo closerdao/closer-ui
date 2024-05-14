@@ -5,8 +5,10 @@ export const STATUS_COLOR: StatusColor = {
   rejected: 'failure',
   open: 'pending',
   pending: 'pending',
-  confirmed: 'success',
+  confirmed: 'pending',
   paid: 'success',
+  'credits-paid': 'success',
+  'tokens-staked': 'success',
   'checked-in': 'success',
   'checked-out': 'success',
 };

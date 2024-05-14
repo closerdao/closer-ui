@@ -11,6 +11,7 @@ import UpcomingEventsIntro from '../../components/UpcomingEventsIntro';
 import Heading from '../../components/ui/Heading';
 
 import PageNotFound from '../404';
+import { MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
@@ -28,8 +29,6 @@ interface Props {
 const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
   const { APP_NAME } = useConfig();
   const config = useConfig();
-
-  const appName = APP_NAME.toLowerCase();
 
   const discounts = {
     daily: bookingSettings?.discountsDaily,
@@ -53,6 +52,7 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
     },
     ...(APP_NAME === 'lios' ? { sort_by: 'created' } : {}),
 
+    limit: MAX_LISTINGS_TO_FETCH,
   };
   const hostsFilter = {
     where: {
@@ -96,16 +96,14 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
 
       <section className="max-w-6xl mx-auto mb-16">
         <div className="mb-6 max-w-prose">
-          <Heading level={1} className="text-4xl pb-2 mt-8 mb-4">
-            {__('stay_title', appName)} {APP_NAME !== 'lios' && PLATFORM_NAME}
+          <Heading level={1} className="text-4xl pb-2 mt-8">
+            {APP_NAME && `${__('stay_title', APP_NAME)} ${PLATFORM_NAME}`}
           </Heading>
-          {!__('stay_description', appName).includes('_missing') && (
-            <p>{__('stay_description', appName)}</p>
-          )}
+          <p>{APP_NAME && __('stay_description', APP_NAME)}</p>
         </div>
       </section>
 
-      {bookingRules?.enabled && bookingRules?.elements.length > 1 && (
+      {bookingRules?.enabled && bookingRules?.elements[0].title && (
         <BookingRules rules={bookingRules?.elements} />
       )}
 
@@ -132,17 +130,12 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
         <Hosts hosts={hosts} email={TEAM_EMAIL} />
 
         <div className="mb-6">
-          <Heading level={2} className="text-2xl mb-8 max-w-prose">
-            {__('stay_chose_accommodation', appName)}
+          <Heading level={2} className="text-2xl mb-2 max-w-prose">
+            {APP_NAME && __('stay_chose_accommodation', APP_NAME)}
           </Heading>
-          {!__('stay_chose_accommodation_description', appName).includes(
-            '_missing',
-          ) && (
-            <p className="mb-8 max-w-prose">
-              {__('stay_chose_accommodation_description', appName)}
-            </p>
-          )}
-
+          <p className="mb-8 max-w-prose">
+            {APP_NAME && __('stay_chose_accommodation_description', APP_NAME)}
+          </p>
           {listings && listings.count() > 0 && (
             <div className="grid md:grid-cols-4 gap-x-12 md:gap-x-5 gap-y-16">
               {listings.map((listing: any) => {

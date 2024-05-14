@@ -11,7 +11,7 @@ export const Footer: FC = () => {
     <footer className="w-full mt-16 flex justify-center bg-neutral pl-4 sm:pl-20 p-20">
       <div className="w-full max-w-6xl flex justify-between flex-col gap-6 sm:flex-row ">
         <div className="flex gap-6 items-center">
-          <p className="uppercase font-bold">Moos space</p>
+          <p className="uppercase font-bold">The Y Berlin @ MOOS</p>
 
           <div className="flex flex-row justify-center gap-6">
             <a
@@ -85,13 +85,20 @@ export const Footer: FC = () => {
             )}
           </div>
         </div>
+
         <div className="flex gap-6">
-          <Link href="https://docs.google.com/document/d/1qpx3agcnyZuXORkFbYIkXHuV2R_EIL5o2s51EsnL_04" className="text-accent underline">
-            Impressum
+          <Link
+            href="https://docs.google.com/document/d/1qpx3agcnyZuXORkFbYIkXHuV2R_EIL5o2s51EsnL_04"
+            className="text-accent underline"
+          >
+            Terms & Conditions
           </Link>
 
-          <Link href="https://docs.google.com/document/d/1qpx3agcnyZuXORkFbYIkXHuV2R_EIL5o2s51EsnL_04" className="text-accent underline">
-            Datenschutzerklärung
+          <Link
+            href="https://docs.google.com/document/d/1qpx3agcnyZuXORkFbYIkXHuV2R_EIL5o2s51EsnL_04"
+            className="text-accent underline"
+          >
+            Privacy Policy
           </Link>
         </div>
       </div>

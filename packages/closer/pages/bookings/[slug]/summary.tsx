@@ -163,6 +163,7 @@ const Summary = ({ booking, listing, event, error, bookingConfig }: Props) => {
           <SummaryCosts
             utilityFiat={utilityFiat}
             useTokens={useTokens || false}
+            useCredits={booking?.useCredits || false}
             accomodationCost={useTokens ? rentalToken : rentalFiat}
             totalToken={rentalToken || { val: 0, cur: CloserCurrencies.EUR }}
             totalFiat={total || { val: 0, cur: CloserCurrencies.EUR }}

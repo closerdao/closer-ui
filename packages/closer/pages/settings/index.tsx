@@ -14,6 +14,7 @@ import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { type User } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
+import { useConfig } from '../../hooks/useConfig';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 
@@ -36,6 +37,8 @@ const SKILLS_EXAMPLES = [
 ];
 
 const SettingsPage: FC = () => {
+  const { APP_NAME } = useConfig();
+
   const { user: initialUser, isAuthenticated, refetchUser } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(initialUser);
@@ -284,14 +287,18 @@ const SettingsPage: FC = () => {
           value={user?.preferences?.diet}
           isInstantSave={true}
         />
-        <Select
-          label="Shared Accommodation Preference"
-          value={user?.preferences?.sharedAccomodation}
-          options={SHARED_ACCOMODATION_PREFERENCES}
-          className="mt-8"
-          onChange={saveUserData('sharedAccomodation')}
-          isRequired
-        />
+
+        {APP_NAME && APP_NAME.toLowerCase() !== 'moos' && (
+          <Select
+            label="Shared Accommodation Preference"
+            value={user?.preferences?.sharedAccomodation}
+            options={SHARED_ACCOMODATION_PREFERENCES}
+            className="mt-8"
+            onChange={saveUserData('sharedAccomodation')}
+            isRequired
+          />
+        )}
+
         <Input
           label="What is your superpower?"
           placeholder="I am really good at ..."

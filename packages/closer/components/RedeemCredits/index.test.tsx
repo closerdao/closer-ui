@@ -3,12 +3,12 @@ import { render, screen } from '@testing-library/react';
 import RedeemCredits from '.';
 import { CloserCurrencies } from '../../types';
 
-jest.mock('../../hooks/useConfig', () => ({ // Replace with the actual path to useConfig
+jest.mock('../../hooks/useConfig', () => ({
+  // Replace with the actual path to useConfig
   useConfig: jest.fn().mockReturnValue({
     APP_NAME: 'TDF',
   }),
 }));
-
 
 describe('RedeemCredits', () => {
   it('should have correct heading in demo mode', () => {
@@ -40,7 +40,7 @@ describe('RedeemCredits', () => {
       />,
     );
     const message = screen.getByText(
-      /carrots redeemed successfully! Accommodation cost updated./i,
+      /carrots will be redeemed! Accommodation cost updated./i,
     );
     expect(message).toBeInTheDocument();
   });

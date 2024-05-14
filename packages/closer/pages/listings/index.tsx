@@ -1,11 +1,12 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 import ListingListPreview from '../../components/ListingListPreview';
 import Heading from '../../components/ui/Heading';
 
+import { MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import api from '../../utils/api';
@@ -30,15 +31,21 @@ const Listings = ({ settings }: Props) => {
     user?.roles.includes('steward') ||
     user?.roles.includes('land-manager');
 
+  const listingFilter = {
+    where: {},
+    limit: MAX_LISTINGS_TO_FETCH,
+  };
+
   const loadData = async () => {
-    await Promise.all([platform.listing.get()]);
+    await Promise.all([platform.listing.get(listingFilter)]);
   };
 
   useEffect(() => {
     loadData();
   }, []);
 
-  const listings = platform.listing.find();
+  const listings = platform.listing.find(listingFilter);
+
   const guestListings = listings?.filter((listing: any) => {
     return (
       listing.get('availableFor') !== 'team' &&

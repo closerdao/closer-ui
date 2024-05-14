@@ -36,6 +36,7 @@ import {
   Listing,
 } from '../../../types';
 import api from '../../../utils/api';
+import { payTokens } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, priceFormat } from '../../../utils/helpers';
 
@@ -101,6 +102,7 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
   const [creditsError, setCreditsError] = useState(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [useCreditsUpdated, setUseCreditsUpdated] = useState(useCredits);
 
   const isStripeBooking = updatedTotal && updatedTotal.val > 0;
   const isFreeBooking = updatedTotal && updatedTotal.val === 0 && !useTokens;
@@ -112,21 +114,22 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
     updatedTotal.val === 0;
 
   useEffect(() => {
-    (async () => {
-      try {
-        const creditsBalance = (await api.get('/carrots/balance')).data
-          .results as number;
-        const hasEnoughCredits = Boolean(
-          rentalToken?.val &&
-            creditsBalance &&
-            creditsBalance >= (rentalToken?.val as number),
-        );
-        setCanApplyCredits(hasEnoughCredits);
-      } catch (error) {
-        setCanApplyCredits(false);
-      }
-    })();
-  }, []);
+    if (user) {
+      (async () => {
+        try {
+          const areCreditsAvailable = (
+            await api.post('/carrots/availability', {
+              startDate: start,
+              creditsAmount: rentalToken?.val,
+            })
+          ).data.results;
+          setCanApplyCredits(areCreditsAvailable);
+        } catch (error) {
+          setCanApplyCredits(false);
+        }
+      })();
+    }
+  }, [user]);
 
   const renderButtonText = () => {
     if (isStaking) {
@@ -145,6 +148,13 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
 
   const handleFreeBooking = async () => {
     try {
+      setProcessing(true);
+      if (useCreditsUpdated) {
+        await api.post(`/bookings/${booking?._id}/credit-payment`, {
+          startDate: start,
+          creditsAmount: rentalToken?.val,
+        });
+      }
       await api.post('/bookings/payment', {
         type: 'booking',
         ticketOption,
@@ -155,6 +165,8 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
       });
     } catch (error) {
       setPaymentError(parseMessageFromError(error));
+    } finally {
+      setProcessing(false);
     }
     router.push(`/bookings/${booking?._id}`);
   };
@@ -165,34 +177,21 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
     );
   };
 
-  const payTokens = async () => {
-    const { success: stakingSuccess, error: stakingError }: any =
-      await stakeTokens(dailyRentalToken?.val || 0);
-    const { success: isBookingMatchContract, error: nightsRejected }: any =
-      await checkContract();
-
-    const error = stakingError || nightsRejected;
-    if (error) {
-      return { error, success: null };
-    }
-
-    if (stakingSuccess?.transactionId && isBookingMatchContract) {
-      await api.post(`/bookings/${_id}/token-payment`, {
-        transactionId: stakingSuccess.transactionId,
-      });
-      return { success: true, error: null };
-    }
-  };
-
   const handleTokenOnlyBooking = async () => {
     setProcessing(true);
     setPaymentError(null);
-    const tokenStakingResult = await payTokens();
+    const tokenStakingResult = await payTokens(
+      _id,
+      dailyRentalToken?.val,
+      stakeTokens,
+      checkContract,
+    );
+
     const { error } = tokenStakingResult || {};
     if (error) {
       setProcessing(false);
-      setPaymentError('Token payment failed.');
-      console.error(error);
+      setPaymentError(error);
+      console.log('error=', error);
       return;
     }
 
@@ -213,12 +212,10 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
       const res = await api.post(`/bookings/${booking?._id}/update-payment`, {
         useCredits: true,
       });
+      setUseCreditsUpdated(true);
 
       setUpdatedTotal(res.data.results.total);
       setUpdatedRentalFiat(res.data.results.rentalFiat);
-
-      await api.post(`/bookings/${booking?._id}/credit-payment`, {});
-
       setHasAppliedCredits(true);
     } catch (error) {
       setCreditsError(parseMessageFromError(error));
@@ -291,6 +288,7 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
             canApplyCredits &&
             !useTokens ? (
               <RedeemCredits
+                useCredits={useCreditsUpdated}
                 rentalFiat={rentalFiat}
                 rentalToken={
                   rentalToken || { val: 0, cur: CloserCurrencies.TDF }
@@ -358,17 +356,18 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
                 false
               }
               useTokens={useTokens || false}
-              useCredits={useCredits}
+              useCredits={useCreditsUpdated}
               totalToPayInFiat={updatedTotal}
               dailyTokenValue={dailyRentalToken?.val || 0}
               startDate={start}
+              rentalToken={rentalToken}
               totalNights={duration || 0}
               user={user}
               eventId={event?._id}
             />
           )}
           {isFreeBooking && (
-            <Button className="booking-btn" onClick={handleFreeBooking}>
+            <Button isEnabled={!processing} className="booking-btn" onClick={handleFreeBooking}>
               {user?.roles.includes('member') || booking?.status === 'confirmed'
                 ? __('buttons_confirm_booking')
                 : __('buttons_booking_request')}
@@ -376,7 +375,9 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
           )}
           {isTokenOnlyBooking && (
             <Button
-              isEnabled={!processing && !isStaking}
+              isEnabled={
+                !processing && !isStaking && hasAgreedToWalletDisclaimer
+              }
               className="booking-btn"
               onClick={handleTokenOnlyBooking}
             >
