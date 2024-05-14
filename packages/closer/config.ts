@@ -216,20 +216,20 @@ export const configDescription: ConfigType[] = [
         type: 'boolean',
         default: false,
       },
-      elements: {
-        type: [
-          {
-            title: 'text',
-            description: 'text',
-          },
-        ],
-        default: [
-          {
-            title: '',
-            description: '',
-          },
-        ],
-      },
+      // elements: {
+      //   type: [
+      //     {
+      //       title: 'text',
+      //       description: 'text',
+      //     },
+      //   ],
+      //   default: [
+      //     {
+      //       title: '',
+      //       description: '',
+      //     },
+      //   ],
+      // },
     },
   },
   {
