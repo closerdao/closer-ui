@@ -146,16 +146,16 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
         </div>
         <div className="absolute left-0 top-0 w-full h-full bg-black/20 flex justify-center ">
           <div className="w-full flex justify-center flex-col items-center ">
-            <div className=" max-w-4xl p-6 rounded-xl flex flex-col items-center gap-2 md:gap-10">
+            <div className=" md:w-full md:max-w-6xl p-6 md:p-4 flex flex-col items-center gap-2 md:gap-10">
               <Image
                 className="drop-shadow-sm"
                 src="/images/sygnet.png"
-                width={300}
-                height={300}
+                width={350}
+                height={350}
                 alt="Lios labs"
               />
               <Heading
-                className="mb-4 text-2xl md:text-4xl normal-case font-accent-alt text-white drop-shadow-md"
+                className=" pl-8 !leading-[65px] mb-4 text-2xl md:text-[60px] normal-case font-accent-alt text-white drop-shadow-md"
                 data-testid="page-title"
                 display
                 level={1}
@@ -171,26 +171,26 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
 
       <div className="relative top-[105vh]">
         <section className="mb-12 max-w-3xl mx-auto md:pt-12 md:flex ">
-          <div className="text-accent">
+          <div className="text-accent-alt">
             <Heading
               level={2}
               display
-              className="text-center mb-6 md:text-3xl normal-case"
+              className="text-center mb-6 md:text-[45px] normal-case"
             >
               Join the wild faculty of transformation
             </Heading>
-            <p className="text-center mb-6">
+            <p className="mb-6">
               Come and stay in our desert village and let your imagination roam
               freely. Get a chance to learn about local ecosystems, regenerative
               cultures, transition design, and practice agency in a playful way.
             </p>{' '}
-            <p className="text-center mb-6">
+            <p className="mb-6">
               You’ll have the opportunity to immerse in communal experiences
               while surrounded by the unique ecosystem of Błędowska Desert. We
               encourage you to be open to adventurous conditions and let them
               transform you, to embrace the raw beauty and complexity of Nature.
             </p>
-            <p className="text-center mb-6">
+            <p className="mb-6">
               We guarantee you’ll meet some inspiring creatures you’ll become
               friends with. You will have a chance to join workshops and
               experiments merging art, ecology, system thinking and science. If
@@ -205,7 +205,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
             <Heading
               level={2}
               display
-              className="text-center mb-6 md:text-2xl normal-case"
+              className="text-left mb-6 md:text-2xl normal-case"
             >
               Before the wild adventure begins... please read our Desert Values:
             </Heading>
