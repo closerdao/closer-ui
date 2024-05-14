@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import BookingGuests from '../../../components/BookingGuests';
 import CurrencySwitcher from '../../../components/CurrencySwitcher';
@@ -22,7 +22,11 @@ import { NextPage } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
 import PageNotFound from '../../404';
-import { CURRENCIES, DEFAULT_CURRENCY } from '../../../constants';
+import {
+  CURRENCIES,
+  DEFAULT_AVAILABILITY_RANGE_TO_CHECK,
+  DEFAULT_CURRENCY,
+} from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
 import { useOutsideClick } from '../../../hooks/useOutsideClick';
@@ -32,11 +36,12 @@ import { getFiatTotal } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import {
   __,
+  getBookingRate,
   getDiscountRate,
   getMaxBookingHorizon,
+  priceFormat,
   sendAnalyticsEvent,
 } from '../../../utils/helpers';
-import { getBookingRate, priceFormat } from '../../../utils/helpers';
 import {
   formatDate,
   getBlockedDateRanges,
@@ -58,7 +63,8 @@ const ListingPage: NextPage<Props> = ({
   descriptionText,
 }) => {
   const config = useConfig();
-  const { LOCATION_LAT, LOCATION_LON, PLATFORM_LEGAL_ADDRESS } = config || {};
+  const { APP_NAME, LOCATION_LAT, LOCATION_LON, PLATFORM_LEGAL_ADDRESS } =
+    config || {};
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const isMember = user && user.roles.includes('member');
@@ -93,6 +99,7 @@ const ListingPage: NextPage<Props> = ({
   const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
   const [isTeamBooking, setIsTeamBooking] = useState(false);
   const [foodOption, setFoodOption] = useState('no_food');
+  const [bookingError, setBookingError] = useState<null | string>(null);
   const durationRateDays =
     durationInDays >= 28 ? 30 : durationInDays >= 7 ? 7 : 1;
   const durationName = getBookingRate(durationInDays);
@@ -164,10 +171,13 @@ const ListingPage: NextPage<Props> = ({
 
       setIsGuestLimit(availability[0].reason === 'Guest limit');
 
-      return { results, availability };
-    } catch (error) {
-      console.log('Error', error);
-      return { results: null, availability: null };
+      return { results, availability, error: null };
+    } catch (error: any) {
+      return {
+        results: null,
+        availability: null,
+        error: error.response.data.error || 'Unknown error',
+      };
     }
   };
 
@@ -195,8 +205,14 @@ const ListingPage: NextPage<Props> = ({
     }
     if (isCalendarSelectionValid) {
       (async function updatePrices() {
-        const { results } = await getAvailability(start, end, listing?._id);
+        setBookingError(null);
+        const { results, error } = await getAvailability(
+          start,
+          end,
+          listing?._id,
+        );
         setIsListingAvailable(results);
+        setBookingError(error);
       })();
     }
   }, [adults, start, end]);
@@ -206,7 +222,10 @@ const ListingPage: NextPage<Props> = ({
     (async function loadAvailability() {
       const { availability } = await getAvailability(
         dayjs().startOf('day').toDate(),
-        dayjs().add(maxHorizon, 'days').endOf('day').toDate(),
+        dayjs()
+          .add(DEFAULT_AVAILABILITY_RANGE_TO_CHECK, 'days')
+          .endOf('day')
+          .toDate(),
         listing?._id,
       );
       if (availability) {
@@ -481,24 +500,27 @@ const ListingPage: NextPage<Props> = ({
                                 }
                                 isPrivate={listing?.private}
                               />
-                              <div className="my-0 flex flex-row justify-between items-start ">
-                                <label
-                                  htmlFor="separateBeds"
-                                  className="text-sm w-3/4"
-                                >
-                                  {__('bookings_pickup')}
-                                  <span className="w-full text-xs ml-2">
-                                    ({__('bookings_pickup_disclaimer')})
-                                  </span>
-                                </label>
-                                <Switch
-                                  disabled={false}
-                                  name="pickup"
-                                  label=""
-                                  onChange={setDoesNeedPickup}
-                                  checked={doesNeedPickup}
-                                />
-                              </div>
+
+                              {APP_NAME && APP_NAME === 'tdf' && (
+                                <div className="my-0 flex flex-row justify-between items-start ">
+                                  <label
+                                    htmlFor="separateBeds"
+                                    className="text-sm w-3/4"
+                                  >
+                                    {__('bookings_pickup')}
+                                    <span className="w-full text-xs ml-2">
+                                      ({__('bookings_pickup_disclaimer')})
+                                    </span>
+                                  </label>
+                                  <Switch
+                                    disabled={false}
+                                    name="pickup"
+                                    label=""
+                                    onChange={setDoesNeedPickup}
+                                    checked={doesNeedPickup}
+                                  />
+                                </div>
+                              )}
                               {isTeamMember && (
                                 <div className="my-0 flex flex-row justify-between flex-wrap">
                                   <label
@@ -585,7 +607,7 @@ const ListingPage: NextPage<Props> = ({
                         <div className="block sm:hidden text-xs">
                           {isGuestLimit
                             ? __('listing_not_available_guest_limit')
-                            : __('listing_not_available')}
+                            : bookingError || __('listing_not_available')}
                         </div>
                       )}
                     </div>
@@ -664,7 +686,7 @@ const ListingPage: NextPage<Props> = ({
                         <Information>
                           {isGuestLimit
                             ? __('listing_not_available_guest_limit')
-                            : __('listing_not_available')}
+                            : bookingError || __('listing_not_available')}
                         </Information>
                       )}
                     </div>

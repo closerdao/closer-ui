@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 import BookingRules from '../../components/BookingRules';
 import Hosts from '../../components/Hosts';
@@ -11,6 +11,7 @@ import UpcomingEventsIntro from '../../components/UpcomingEventsIntro';
 import Heading from '../../components/ui/Heading';
 
 import PageNotFound from '../404';
+import { MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
@@ -49,6 +50,7 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
         $in: ['guests', isTeamMember ? 'team' : null].filter((e) => e),
       },
     },
+    limit: MAX_LISTINGS_TO_FETCH,
   };
   const hostsFilter = {
     where: {

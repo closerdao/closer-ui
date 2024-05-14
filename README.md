@@ -1,10 +1,11 @@
-Welcome to [traditionaldreamfactory.com](https://traditionaldreamfactory.com/)!
+Welcome to [Closer](https://closer.earth/)!
 
-This repository is created with a monorepo pattern and is built with a Turborepo - https://turbo.build/repo. The `apps` directory contains `tdf` app that is deployed to [traditionaldreamfactory.com](traditionaldreamfactory.com), and the `packages` directory that contains Closer package, which is deployed to [dev.closer.earth](dev.closer.earth).
+This repository is created with a monorepo pattern and is built with a Turborepo - https://turbo.build/repo. The `apps` directory contains a few property apps that are deployed to [traditionaldreamfactory.com](traditionaldreamfactory.com) and other domains, and the `packages` directory that contains Closer package, which contains reusable components and logic.
 
 ### Apps:
 
 - `tdf`: TDF Next.js application
+...
 
 ### Packages:
 
@@ -14,7 +15,7 @@ This repository is created with a monorepo pattern and is built with a Turborepo
 
 ### Run locally
 
-Please, first find two files with the name.env.sample, clone them in the same directory (one in tdf, one in closer) and rename to .env. Then, fill in the values for the variables (ask in the chat for secrets)
+Please, first find two files with the name.env.sample, clone them in the same directory (one in each app's directory, one in Closer) and rename to .env. Then, fill in the values for the variables (ask in the chat for secrets).
 
 From root folder:
 
@@ -24,16 +25,20 @@ From root folder:
 yarn
 ```
 
-#### Run both apps
+#### Run one of the apps
+
+CD to app's directory (e.g. apps/tdf), then
 
 ```
 yarn dev
 ```
 
-#### Run only one app
+#### Test
+
+CD to app's directory (e.g. apps/tdf or packages/closer), then
 
 ```
-yarn run dev --scope='<tdf | closer>'
+yarn test
 ```
 
 ### Build
@@ -46,11 +51,24 @@ yarn run build
 
 To build a specific app or package, run the following command from the root:
 
+CD to app's directory (e.g. apps/tdf), then
+
 ```
-yarn run build --scope='<tdf | closer>'
+yarn build
 ```
 
-TDF build depends on Closer build and turborepo is smart enough to build Closer first.
+### Installing packages 
+
+Install packages in a respective app directory. Packages shared between apps should go to /packages/closer. CD into app directory, then
+
+```
+yarn -W add [package name]
+```
+Same for removing packages: 
+
+```
+yarn -W remove [package name]
+```
 
 ### Remote Caching
 

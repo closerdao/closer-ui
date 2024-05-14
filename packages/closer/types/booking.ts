@@ -92,6 +92,8 @@ export type Booking = {
     fiat: CloserCurrencies.EUR;
     credits: { val: number; cur: string };
   } | null;
+  roomNumber?: number;
+  adminBookingReason?: string;
 };
 
 export interface StatusColor {

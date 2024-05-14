@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingStepsInfo from '../../../components/BookingStepsInfo';
 import ListingCard from '../../../components/ListingCard';
+import { ErrorMessage } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
@@ -22,6 +23,7 @@ interface Props extends BaseBookingParams {
   listings: Listing[];
   error?: string;
   bookingConfig: BookingConfig | null;
+  bookingError?: string | null;
 }
 
 const AccomodationSelector = ({
@@ -42,7 +44,9 @@ const AccomodationSelector = ({
   doesNeedPickup,
   doesNeedSeparateBeds,
   bookingConfig,
+  bookingError,
 }: Props) => {
+  console.log('listings=', listings);
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -53,17 +57,19 @@ const AccomodationSelector = ({
     ['space-host', 'steward', 'land-manager', 'team'].includes(roles),
   );
 
-  const filteredListings = listings.filter((listing: Listing) => {
-    if (isTeamMember) {
-      return listing.availableFor?.includes('team');
-    } else if (volunteerId) {
-      return listing.availableFor?.includes('volunteer');
-    } else if (eventId) {
-      return listing.availableFor?.includes('events');
-    } else {
-      return listing.availableFor?.includes('guests');
-    }
-  });
+  const filteredListings =
+    listings &&
+    listings?.filter((listing: Listing) => {
+      if (isTeamMember) {
+        return listing.availableFor?.includes('team');
+      } else if (volunteerId) {
+        return listing.availableFor?.includes('volunteer');
+      } else if (eventId) {
+        return listing.availableFor?.includes('events');
+      } else {
+        return listing.availableFor?.includes('guests');
+      }
+    });
 
   const bookingType = getBookingType(eventId, volunteerId);
 
@@ -142,7 +148,13 @@ const AccomodationSelector = ({
           backToDates={backToDates}
         />
 
-        {filteredListings.length === 0 && (
+        {bookingError && (
+          <section className="my-12">
+            <ErrorMessage error={bookingError} />
+          </section>
+        )}
+
+        {filteredListings?.length === 0 && (
           <div className="mt-16">
             <h2 className="text-2xl font-bold">
               {__('bookings_accomodation_no_results_title')}
@@ -153,17 +165,18 @@ const AccomodationSelector = ({
           </div>
         )}
         <div className="flex flex-col gap-4 mt-16 md:grid md:grid-cols-2 md:items-start">
-          {filteredListings.map((listing) => (
-            <ListingCard
-              key={listing._id}
-              listing={listing}
-              bookListing={bookListing}
-              useTokens={useTokens}
-              bookingType={bookingType}
-              isAuthenticated={isAuthenticated}
-              adults={Number(adults)}
-            />
-          ))}
+          {filteredListings &&
+            filteredListings?.map((listing) => (
+              <ListingCard
+                key={listing._id}
+                listing={listing}
+                bookListing={bookListing}
+                useTokens={useTokens}
+                bookingType={bookingType}
+                isAuthenticated={isAuthenticated}
+                adults={Number(adults)}
+              />
+            ))}
         </div>
       </div>
     </>
@@ -208,15 +221,21 @@ AccomodationSelector.getInitialProps = async ({
           ...(eventId && { eventId, ticketOption }),
           ...(volunteerId && { volunteerId }),
         })
-        .catch((err) => {
-          console.error('Error fetching booking config:', err);
-          return null;
+        .catch((err: any) => {
+          console.error(
+            'Error fetching availability data:',
+            err.response.data.error,
+          );
+          return { error: err.response.data.error || 'Unknown error' };
         }),
       api.get('/config/booking').catch(() => {
         return null;
       }),
     ]);
-    const availability = availabilityRes?.data?.results;
+    const bookingError = (availabilityRes as any)?.error || null;
+    const availability = (availabilityRes as any)?.data?.results;
+
+    console.log('availability===',availability);
     const bookingConfig = bookingConfigRes?.data?.results?.value;
 
     return {
@@ -236,6 +255,7 @@ AccomodationSelector.getInitialProps = async ({
       doesNeedPickup,
       doesNeedSeparateBeds,
       bookingConfig,
+      bookingError,
     };
   } catch (err: any) {
     console.log(err);

@@ -10,6 +10,7 @@ import { getBookingType, getStatusText } from '../../utils/booking.helpers';
 import { __, priceFormat } from '../../utils/helpers';
 import BookingRequestButtons from '../BookingRequestButtons';
 import UserInfoButton from '../UserInfoButton';
+import { Card } from '../ui';
 
 interface Props {
   booking: any;
@@ -51,6 +52,7 @@ const BookingListPreview = ({
     doesNeedPickup,
     doesNeedSeparateBeds,
     duration,
+    adminBookingReason,
   } = bookingMapItem.toJS();
   const router = useRouter();
 
@@ -89,6 +91,12 @@ const BookingListPreview = ({
         >
           #{_id}
         </Link>
+
+        {adminBookingReason && (
+          <Card className="bg-accent text-white py-1 text-center text-xs mt-1.5">
+            {adminBookingReason}
+          </Card>
+        )}
         <p
           className={` mt-2 capitalize opacity-100 text-base p-1 text-white text-center rounded-md  bg-${STATUS_COLOR[status]}`}
         >
