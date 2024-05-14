@@ -20,6 +20,8 @@ import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
+const ADMIN_EMAIL = 'vashnev@gmail.com';
+
 interface Props {
   bookingSettings: any;
   bookingRules: BookingRulesConfig | null;
@@ -55,6 +57,7 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
   const hostsFilter = {
     where: {
       roles: { $in: ['space-host', 'steward', 'team'].filter((e) => e) },
+      email: { $ne: ADMIN_EMAIL }
     },
   };
 
