@@ -21,6 +21,9 @@ import { __, priceFormat } from './helpers';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 export const getStatusText = (status: string, updated: string | Date) => {
   if (status === 'cancelled') {
     return __('booking_status_cancelled', dayjs(updated).format('DD/MM/YYYY'));
@@ -202,32 +205,59 @@ export const formatListings = (listings: Listing[]) => {
   return formattedListings;
 };
 
-export const convertTimeToPropertyTimezone = (
+export const convertTimeToTimelineFormat = (
   date: Date | string | number | null,
+  timeZone: string | undefined,
+  browserTimezone: string | undefined,
 ) => {
-  if (!date) {
+  if (!date || !timeZone) {
     return null;
   }
-  const localDate = new Date(date);
-  localDate.setHours(localDate.getUTCHours());
-  localDate.setMinutes(localDate.getUTCMinutes());
-  return localDate;
+  const utcDate = dayjs.utc(date);
+  const localDate = utcDate.tz(timeZone);
+  const browserDate = localDate.clone().tz(browserTimezone);
+
+  const offsetFromTimeZoneToBrowser =
+    browserDate.utcOffset() - localDate.utcOffset();
+  const adjustedDate = browserDate.subtract(
+    offsetFromTimeZoneToBrowser,
+    'minute',
+  );
+
+  return adjustedDate.toDate();
 };
 
-export const getBookingsWithUserAndListing = (
-  bookings: any,
-  listings: any,
-  allUsers: any,
-) => {
+export const getBookingsWithUserAndListing = ({
+  bookings,
+  listings,
+  allUsers,
+  TIME_ZONE,
+  browserTimezone,
+}: {
+  bookings: any;
+  listings: any;
+  allUsers: any;
+  TIME_ZONE: string;
+  browserTimezone: string;
+}) => {
   if (!bookings) return [];
   return bookings.map((b: any) => {
     const adults = b.get('adults') ?? 0;
     const children = b.get('children') ?? 0;
     const infants = b.get('infants') ?? 0;
-    const start = new Date(b.get('start'));
-    const end = new Date(b.get('end'));
-    const localEnd = convertTimeToPropertyTimezone(end);
-    const localStart = convertTimeToPropertyTimezone(start);
+    const start = b.get('start');
+    const end = b.get('end');
+    const localEnd = convertTimeToTimelineFormat(
+      end,
+      TIME_ZONE,
+      browserTimezone,
+    );
+
+    const localStart = convertTimeToTimelineFormat(
+      start,
+      TIME_ZONE,
+      browserTimezone,
+    );
     const doesNeedPickup = b.get('doesNeedPickup') ?? false;
     const status = b.get('status') ?? 'unknown';
     const fiatPriceVal = b.get('rentalFiat')?.get('val') ?? 0;

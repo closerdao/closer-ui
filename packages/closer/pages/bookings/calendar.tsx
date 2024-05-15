@@ -31,7 +31,7 @@ import { __ } from '../../utils/helpers';
 const loadTime = Date.now();
 
 const BookingsCalendarPage = () => {
-  const { enabledConfigs } = useConfig();
+  const { enabledConfigs, TIME_ZONE } = useConfig();
   const { user } = useAuth();
   const { platform }: any = usePlatform();
 
@@ -58,6 +58,8 @@ const BookingsCalendarPage = () => {
     end: defaultTimeEnd,
   });
 
+  const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
   const debouncedVisibleRange = useDebounce(visibleRange, 500);
 
   const filter = {
@@ -76,11 +78,13 @@ const BookingsCalendarPage = () => {
   const allUsers = platform.user.find({ limit: MAX_USERS_TO_FETCH });
   const formattedListings = listings && formatListings(listings.toJS());
 
-  const bookingsWithUserAndListing = getBookingsWithUserAndListing(
+  const bookingsWithUserAndListing = getBookingsWithUserAndListing({
     bookings,
     listings,
     allUsers,
-  );
+    TIME_ZONE,
+    browserTimezone,
+  });
 
   const accommodationUnits =
     formattedListings &&
