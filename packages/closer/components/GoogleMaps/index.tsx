@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { GoogleMap, useLoadScript } from '@react-google-maps/api';
+import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api';
 
 interface Props {
   locationLat: number;
@@ -42,7 +42,15 @@ const GoogleMaps = ({ locationLat, locationLon, height = 450 }: Props) => {
         zoom={14}
         center={mapCenter}
         mapContainerStyle={{ width: '100%', height: `${height}px` }}
-      />
+      >
+        <Marker
+          position={mapCenter}
+          icon={{
+            url: '/images/pin.png',
+            scaledSize: new window.google.maps.Size(46, 46),
+          }}
+        />
+      </GoogleMap>
     </div>
   );
 };
