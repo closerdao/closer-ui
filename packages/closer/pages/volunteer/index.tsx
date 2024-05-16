@@ -1,8 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import React from 'react';
-
 import EventPreview from '../../components/EventPreview';
 import { LinkButton } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
@@ -31,12 +29,14 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
     __('volunteers_page_terms_2', APP_NAME),
     __('volunteers_page_terms_3', APP_NAME),
     __('volunteers_page_terms_4', APP_NAME),
+    __('volunteers_page_terms_5', APP_NAME),
+    __('volunteers_page_terms_6', APP_NAME),
   ];
 
   const doesHaveVolunteerTerms =
     !volunteerTerms.every((item) => item === '') &&
     APP_NAME &&
-    APP_NAME.toLowerCase() === 'tdf';
+    (APP_NAME.toLowerCase() === 'tdf' || APP_NAME.toLowerCase() === 'lios');
 
   return (
     <div className="flex justify-center">
@@ -60,31 +60,40 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
         </section>
 
         <section className=" flex flex-col gap-6">
-          <div className="bg-accent-light rounded-md p-6">
+          <div className="bg-accent-light rounded-md p-6 flex flex-col gap-6">
             <p>{APP_NAME && __('volunteers_page_intro_text', APP_NAME)}</p>
             {doesHaveVolunteerTerms && (
               <ul>
-                {volunteerTerms.map((term: string) => (
-                  <li
-                    key={term}
-                    className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5"
-                  >
-                    {term}
-                  </li>
-                ))}
+                {volunteerTerms.map((term: string) => {
+                  if (!term.includes('_missing')) {
+                    return (
+                      <li
+                        key={term}
+                        className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5"
+                      >
+                        {term}
+                      </li>
+                    );
+                  }
+                })}
               </ul>
             )}
           </div>
           {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
-            <LinkButton className="w-[300px]" href="https://t.me/+EYSkTvSomodkMWUx">
+            <LinkButton
+              className="w-[300px]"
+              href="https://t.me/+EYSkTvSomodkMWUx"
+            >
               Join Telegram group
             </LinkButton>
           )}
-          <div
-            dangerouslySetInnerHTML={{
-              __html: __('volunteers_page_more_info', APP_NAME),
-            }}
-          />
+          {!__('volunteers_page_more_info', APP_NAME).includes('_missing') && (
+            <div
+              dangerouslySetInnerHTML={{
+                __html: __('volunteers_page_more_info', APP_NAME),
+              }}
+            />
+          )}
         </section>
 
         <div>

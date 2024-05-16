@@ -1,5 +1,6 @@
 import ReactGA from 'react-ga';
 
+import { ObjectId } from 'bson';
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
 import duration from 'dayjs/plugin/duration';
@@ -121,7 +122,10 @@ export const getTimeDetails = (eventTime) => {
 
 export const priceFormat = (price, currency = DEFAULT_CURRENCY) => {
   if (price?.cur && price.cur === 'credits') {
-    return `${price.val} ${__('carrots_balance', price.app)} ${__('carrots_heading', price.app)}`
+    return `${price.val} ${__('carrots_balance', price.app)} ${__(
+      'carrots_heading',
+      price.app,
+    )}`;
   }
   if (!currency) {
     currency = DEFAULT_CURRENCY;
@@ -198,7 +202,7 @@ export const getSample = (field) => {
     case 'ticketOptions':
       return [
         {
-          id: Math.random(),
+          id: new ObjectId().toString(),
           name: '',
           icon: null,
           price: 0,
@@ -212,7 +216,7 @@ export const getSample = (field) => {
     case 'discounts':
       return [
         {
-          id: Math.random(),
+          id: new ObjectId().toString(),
           name: '',
           code: '',
           percent: '',
