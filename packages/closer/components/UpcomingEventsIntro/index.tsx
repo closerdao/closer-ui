@@ -1,10 +1,9 @@
-import React from 'react';
+import Link from 'next/link';
 
 import { useConfig } from '../../hooks/useConfig';
 import { __ } from '../../utils/helpers';
 import EventsList from '../EventsList';
 import { Heading } from '../ui';
-import Link from 'next/link';
 
 const loadTime = new Date();
 
@@ -19,11 +18,17 @@ const UpcomingEventsIntro = () => {
         <Heading display level={2} className="mb-6 text-3xl">
           {__('events_upcoming_heading', appName)}
         </Heading>
+
+        {!__('events_upcoming_intro').includes('_missing') && (
+          <p className="mb-6 text-sm md:text-base">
+            {__('events_upcoming_intro', appName)}
+          </p>
+        )}
+
         <p className="mb-6 text-sm md:text-base">
-          {__('events_upcoming_intro', appName)}
-        </p>
-        <p className="mb-6 text-sm md:text-base">
-          <Link href="/events" className="underline text-accent">See all events</Link>
+          <Link href="/events" className="underline text-accent">
+            See all events
+          </Link>
         </p>
       </div>
       <div className="flex-grow">
