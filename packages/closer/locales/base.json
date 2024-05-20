@@ -380,6 +380,7 @@
   "bookings_title_cancelled": "Your booking was cancelled.",
   "bookings_title_checked-in": "You checked in.",
   "bookings_title_checked-out": "You checked out.",
+  "bookings_title_rejected": "Your booking has been rejected",
   "bookings_title": "My bookings",
   "bookings_title_user": "User's bookings",
   "paid_bookings_title": "Guest bookings",

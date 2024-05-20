@@ -449,8 +449,6 @@ BookingPage.getInitialProps = async ({
     const bookingConfig = bookingConfigRes?.data?.results?.value;
     const listings = listingRes?.data?.results;
 
-    console.log('listings====', listings.length);
-
     const [optionalEvent, optionalListing, optionalVolunteer] =
       await Promise.all([
         booking.eventId &&

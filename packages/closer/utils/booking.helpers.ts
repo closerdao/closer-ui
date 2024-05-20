@@ -100,6 +100,7 @@ export const getUtilityTotal = ({
   return total;
 };
 
+// a better idea is recalculate booking price on backend, so that price calculation logic is in one place
 export const getAccommodationTotal = (
   listing: Listing | undefined,
   useTokens: boolean,
