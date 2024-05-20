@@ -17,7 +17,7 @@ import { ParsedUrlQuery } from 'querystring';
 
 import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
-import { STATUS_COLOR } from '../../../constants';
+import { MAX_LISTINGS_TO_FETCH, STATUS_COLOR } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
@@ -61,6 +61,7 @@ const BookingPage = ({
   bookingConfig,
   listings,
 }: Props) => {
+  console.log('booking=', booking);
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -123,7 +124,10 @@ const BookingPage = ({
     setUpdatedStartDate,
     setUpdatedListingId,
   };
-  const isNotPaid = status !== 'paid' && status !== 'credits-paid' && status !== 'tokens-staked';
+  const isNotPaid =
+    status !== 'paid' &&
+    status !== 'credits-paid' &&
+    status !== 'tokens-staked';
 
   const updatedDurationInDays = Math.ceil(
     dayjs(updatedEndDate).diff(dayjs(updatedStartDate), 'hour') / 24,
@@ -215,7 +219,7 @@ const BookingPage = ({
     total: { val: updatedFiatTotal, cur: rentalFiat?.cur },
     paymentDelta: paymentDelta ? paymentDelta : null,
   };
-  
+
   if (booking?.paymentDelta) {
     booking.paymentDelta = null;
   }
@@ -431,13 +435,21 @@ BookingPage.getInitialProps = async ({
       api.get('/config/booking').catch(() => {
         return null;
       }),
-      api.get('/listing').catch(() => {
-        return null;
-      }),
+      api
+        .get('/listing', {
+          params: {
+            limit: MAX_LISTINGS_TO_FETCH,
+          },
+        })
+        .catch(() => {
+          return null;
+        }),
     ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
     const listings = listingRes?.data?.results;
+
+    console.log('listings====', listings.length);
 
     const [optionalEvent, optionalListing, optionalVolunteer] =
       await Promise.all([

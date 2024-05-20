@@ -115,9 +115,14 @@ export const getAccommodationTotal = (
   const price =
     useTokens || useCredits ? listing.tokenPrice?.val : listing.fiatPrice?.val;
   const multiplier = listing.private ? 1 : adults;
-  const total = +(price * multiplier * durationInDays * discountRate).toFixed(
-    2,
-  );
+
+  let total;
+  if (useTokens || useCredits) {
+    total = +(price * multiplier * durationInDays).toFixed(2);
+  } else {
+    total = +(price * multiplier * durationInDays * discountRate).toFixed(2);
+  }
+
   return total;
 };
 

@@ -18,6 +18,7 @@ import { NextApiRequest } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
 import PageNotFound from '../../404';
+import { MAX_LISTINGS_TO_FETCH } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
@@ -26,12 +27,12 @@ import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { getAccommodationPriceRange } from '../../../utils/events.helpers';
 import {
+  __,
   getBookingRate,
   getDiscountRate,
   prependHttp,
   priceFormat,
 } from '../../../utils/helpers';
-import { __ } from '../../../utils/helpers';
 
 interface Props {
   event: Event;
@@ -662,7 +663,11 @@ EventPage.getInitialProps = async ({
           console.error('Error fetching event:', err);
           return null;
         }),
-      api.get('/listing'),
+      api.get('/listing', {
+        params: {
+          limit: MAX_LISTINGS_TO_FETCH,
+        },
+      }),
       api.get('/config/booking'),
     ]);
 

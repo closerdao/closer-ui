@@ -13,6 +13,7 @@ import TokenCounterSimple from '../../components/TokenCounterSimple';
 import YoutubeEmbed from '../../components/YoutubeEmbed';
 import { Button, Card, Heading } from '../../components/ui';
 
+import { MAX_LISTINGS_TO_FETCH } from '../../constants';
 // import { INVESTMENT_COMPARISON } from '../../constants';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
@@ -786,7 +787,10 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 <div className="pb-12">
                   <Heading level={4} className="uppercase text-accent">
                     FUNDRAISING
-                    <Link href="/dataroom" className="ml-4 text-xs italic underline text-primary">
+                    <Link
+                      href="/dataroom"
+                      className="ml-4 text-xs italic underline text-primary"
+                    >
                       (learn more)
                     </Link>
                   </Heading>
@@ -819,7 +823,10 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 </div>
                 <div className="text-accent-alt"></div>
                 <div className="w-7 h-7 bg-accent-alt-light rounded-full"></div>
-                <Heading level={4} className="font-normal uppercase text-accent">
+                <Heading
+                  level={4}
+                  className="font-normal uppercase text-accent"
+                >
                   2025
                 </Heading>
                 <div className="w-7 flex justify-center">
@@ -877,7 +884,10 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 </div>
                 <div className="text-accent-alt"></div>
                 <div className="w-7 h-7 bg-accent-alt-light rounded-full"></div>
-                <Heading level={4} className="font-normal uppercase text-accent">
+                <Heading
+                  level={4}
+                  className="font-normal uppercase text-accent"
+                >
                   2026
                 </Heading>
                 <div className="w-7 flex justify-center">
@@ -902,9 +912,15 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 PublicTokenSalePage.getInitialProps = async () => {
   try {
     const [listingRes, generalRes] = await Promise.all([
-      api.get('/listing').catch(() => {
-        return null;
-      }),
+      api
+        .get('/listing', {
+          params: {
+            limit: MAX_LISTINGS_TO_FETCH,
+          },
+        })
+        .catch(() => {
+          return null;
+        }),
       api.get('/config/general').catch(() => {
         return null;
       }),
