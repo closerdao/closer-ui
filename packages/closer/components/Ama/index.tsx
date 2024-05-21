@@ -14,11 +14,11 @@ const Ama = ({ id }: Props) => {
     <section id={id} className="flex items-center flex-col py-24 ">
       <div className="max-w-6xl ">
         <div className="text-center mb-8">
-          <Heading level={2} className="mb-4 text-5xl font-bold">
+          <Heading level={2} className="mb-4 text-3xl font-extrabold md:font-bold md:text-5xl uppercase md:normal-case">
             {__('token_sale_ama_heading')}
           </Heading>
           <div className="w-full flex justify-center">
-            <Heading level={3} className="mb-4 text-lg font-bold max-w-[600px]">
+            <Heading level={3} className="mb-4 text-lg max-w-[600px]">
               {__('token_sale_ama_subheading')}
             </Heading>
           </div>

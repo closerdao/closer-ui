@@ -13,7 +13,6 @@ import YoutubeEmbed from '../../components/YoutubeEmbed';
 import { Button, Card, Heading } from '../../components/ui';
 
 import { MAX_LISTINGS_TO_FETCH } from '../../constants';
-// import { INVESTMENT_COMPARISON } from '../../constants';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
@@ -45,9 +44,6 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
   const [tokensAvailable, setTokensAvailable] = useState<number | null>(null);
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
-  // const [selectedInvestmentIndex, setSelectedInvestmentIndex] = useState(0);
-
-  // const selectedInvestment = INVESTMENT_COMPARISON[selectedInvestmentIndex];
 
   useEffect(() => {
     if (isWalletReady) {
@@ -89,7 +85,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
         </Head>
 
         <div className="max-w-6xl mx-auto">
-          <Heading level={1} className="mb-14">
+          <Heading level={1}>
             {__('token_sale_public_sale_heading')}
           </Heading>
 
@@ -117,26 +113,23 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
       <main className="pt-4 pb-24 md:flex-row flex-wrap">
         <section className="mb-10">
-          <div className='rounded-lg h-[500px] md:h-[700px] flex items-center flex-col bg-center bg-[#333333] bg-cover bg-no-repeat text-white bg-[url("/images/token-sale/token-sale-hero.webp")]'>
-            {/* <h1 className="drop-shadow-[1px_2px_2px_rgba(254,79,183,1)] px-4 mb-2 sm:mb-8 mt-[20px] sm:mt-[70px] md:mt-[190px] max-w-[700px] text-center font-extrabold text-5xl md:text-6xl uppercase">
-              {__('token_sale_public_sale_announcement')}
-            </h1> */}
+          <div className='rounded-lg h-[600px] md:h-[700px] flex  items-end md:items-center flex-col bg-center bg-[#333333] bg-cover bg-no-repeat text-white bg-[url("/images/token-sale/token-sale-hero.webp")]'>
             <Heading
               level={1}
-              className="text-3xl md:text-5xl px-4 drop-shadow-lg mb-2 md:mb-8 text-center max-w-[700px] mt-1 md:mt-[100px] md:bg-[url('/images/token-sale/token-illy.png')] bg-no-repeat pt-[20px] md:pt-[130px] bg-top"
+              className="text-right  text-2xl md:text-5xl px-4 drop-shadow-lg mb-2 md:mb-8 md:text-center max-w-[700px] mt-1 md:mt-[100px] md:bg-[url('/images/token-sale/token-illy.png')] bg-no-repeat pt-[20px] md:pt-[130px] bg-top"
             >
               {__('token_sale_public_sale_subheading')}
             </Heading>
             <Heading
               level={2}
-              className="px-4 text-md text-center max-w-[700px] font-normal mb-4"
+              className="text-right md:text-center px-4 text-lg md:text-md max-w-[700px] font-normal mb-4"
             >
               Secure your perpetual access to the first web3 powered
               regenerative co-living village in Portugal
             </Heading>
 
             {isWalletReady ? (
-              <div>
+              <div className='p-4'>
                 <TokenCounterSimple
                   tokensToBuy={tokensToBuy}
                   setTokensToBuy={setTokensToBuy}
@@ -145,19 +138,17 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 <Button
                   className="!w-60 font-bold mb-3 md:mb-8 relative"
                   onClick={handleNext}
-                  size="small"
                 >
                   {__('token_sale_public_sale_buy_token')}
                 </Button>
               </div>
             ) : (
               <div>
-                <Button
-                  onClick={() => {
-                    router.push('https://calendly.com/samueldelesque');
-                  }}
+                 <Button
+                  className="!w-60 font-bold mb-3 md:mb-8 relative"
+                  onClick={handleNext}
                 >
-                  {__('token_sale_public_sale_button_book_a_call')}
+                  {__('token_sale_public_sale_buy_token')}
                 </Button>
               </div>
             )}
@@ -256,7 +247,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
             <div className="w-full flex items-center flex-col">
               <Heading
                 level={2}
-                className="text-center mt-12 max-w-[620px] mb-6 text-5xl"
+                className="text-center mt-12 max-w-[620px] mb-6 text-3xl font-extrabold md:font-bold md:text-5xl uppercase md:normal-case"
               >
                 {__('token_sale_tdf_intro_title')}
               </Heading>
@@ -281,7 +272,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
             <div className="w-full flex items-center flex-col">
               <Heading
                 level={2}
-                className="text-center mt-12 max-w-[620px] mb-6 text-5xl"
+                className="text-center mt-12 max-w-[620px] mb-6 text-3xl font-extrabold md:font-bold md:text-5xl uppercase md:normal-case"
               >
                 $TDF Private Sale
               </Heading>
@@ -550,7 +541,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
           <div className="w-full flex items-center flex-col">
             <Heading
               level={2}
-              className="text-center mt-12 max-w-[620px] mb-6 text-3xl md:text-5xl"
+              className="text-center mt-12 max-w-[620px] mb-6 text-3xl font-extrabold md:font-bold md:text-5xl uppercase md:normal-case"
             >
               $TDF unlocks Access to Accommodation at TDF
             </Heading>
@@ -846,7 +837,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 alt={__('token_sale_tdf_heading')}
               />
               <div className="w-full md:w-4/5 flex flex-col gap-7 max-w-[430px] ">
-                <Heading level={2} className="text-5xl">
+                <Heading level={2} className="text-3xl font-extrabold md:font-bold md:text-5xl uppercase md:normal-case">
                   {__('token_sale_dive_deeper_heading')}
                 </Heading>
                 <div className="flex gap-8">
