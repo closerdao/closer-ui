@@ -99,9 +99,9 @@ const PeekIntoFuture = () => {
               </Heading>
             </div>
           </div>
-          <div className="w-full md:w-1/3 bg-bottom flex flex-col gap-4 justify-center items-center bg-accent-light min-h-[280px] rounded-md bg-cover p-6">
+          <div className="w-full md:w-1/3 bg-bottom flex flex-col gap-4 justify-center items-center  min-h-[280px] rounded-md bg-cover p-6">
             <p className="text-center">{__('token_sale_peek_design_1')}</p>
-            <p className="text-center">{__('token_sale_peek_design_2')}</p>
+            <p className="text-center text-sm">{__('token_sale_peek_design_2')}</p>
           </div>
         </div>
 
@@ -114,7 +114,7 @@ const PeekIntoFuture = () => {
           </div>
         </div>
 
-        <div className="flex gap-2 justify-center items-center flex-col md:flex-row">
+        {/* <div className="flex gap-2 justify-center items-center flex-col md:flex-row">
           <div className="w-full md:w-1/3 bg-bottom flex flex-col gap-4 justify-center items-center bg-accent-light min-h-[280px] rounded-md bg-cover p-6">
             <Heading level={3} className="text-center text-2xl">
               {__('token_sale_food_heading')}
@@ -127,7 +127,7 @@ const PeekIntoFuture = () => {
           >
             <div className=" p-6 hover:scale-[103%] duration-300 min-h-[280px] min-w-full bg-bottom bg-[url(/images/token-sale/map.png)] bg-cover"></div>
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   );
