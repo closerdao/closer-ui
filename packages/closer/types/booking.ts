@@ -94,6 +94,7 @@ export type Booking = {
   } | null;
   roomNumber?: number;
   adminBookingReason?: string;
+  roomOrBedNumbers?: number[];
 };
 
 export interface StatusColor {
@@ -112,6 +113,7 @@ export interface BookingWithUserAndListing {
   listingId: string;
   fiatPriceVal: number;
   fiatPriceCur: CloserCurrencies;
+  roomOrBedNumbers?: number[];
 }
 
 export interface AccommodationUnit {
@@ -126,4 +128,5 @@ export interface BookingItem {
   title: string;
   start_time: Date;
   end_time: Date;
+  roomOrBedNumbers?: number[];
 }

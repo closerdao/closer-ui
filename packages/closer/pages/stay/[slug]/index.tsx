@@ -233,7 +233,7 @@ const ListingPage: NextPage<Props> = ({
           .map((day: any) => !day.available && day.day)
           .filter((d: string) => d)
           .map((d: string) => new Date(d));
-        setUnavailableDates(dates);
+        // setUnavailableDates(dates);
       }
     })();
   }, []);

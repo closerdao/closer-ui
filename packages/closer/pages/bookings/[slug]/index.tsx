@@ -123,7 +123,10 @@ const BookingPage = ({
     setUpdatedStartDate,
     setUpdatedListingId,
   };
-  const isNotPaid = status !== 'paid' && status !== 'credits-paid' && status !== 'tokens-staked';
+  const isNotPaid =
+    status !== 'paid' &&
+    status !== 'credits-paid' &&
+    status !== 'tokens-staked';
 
   const updatedDurationInDays = Math.ceil(
     dayjs(updatedEndDate).diff(dayjs(updatedStartDate), 'hour') / 24,
@@ -215,7 +218,6 @@ const BookingPage = ({
     total: { val: updatedFiatTotal, cur: rentalFiat?.cur },
     paymentDelta: paymentDelta ? paymentDelta : null,
   };
-  
   if (booking?.paymentDelta) {
     booking.paymentDelta = null;
   }
@@ -315,6 +317,22 @@ const BookingPage = ({
             <UserInfoButton userInfo={userInfo} createdBy={createdBy} />
           )}
         </section>
+
+        {isSpaceHost &&
+          booking.roomOrBedNumbers &&
+          booking.roomOrBedNumbers.length > 0 && (
+            <section className="rounded-md p-4 bg-accent-light">
+              {
+                <p className="font-bold">
+                  {listing.private
+                    ? __('booking_card_room_number')
+                    : __('booking_card_bed_numbers')}{' '}
+                  {booking.roomOrBedNumbers &&
+                    booking.roomOrBedNumbers.toString()}
+                </p>
+              }
+            </section>
+          )}
 
         <section className="flex flex-col gap-12">
           <SummaryDates
