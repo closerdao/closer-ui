@@ -233,7 +233,9 @@ const ListingPage: NextPage<Props> = ({
           .map((day: any) => !day.available && day.day)
           .filter((d: string) => d)
           .map((d: string) => new Date(d));
-        setUnavailableDates(dates);
+
+        // TODO: correctly grey out dates based on availability, also do it when start date is selected
+        // setUnavailableDates(dates);
       }
     })();
   }, []);
