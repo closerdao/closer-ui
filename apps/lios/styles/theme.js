@@ -39,13 +39,10 @@ const tdfTheme = {
       line: '#a3a3a3',
     },
     fontFamily: {
-      sans: ['Barlow', ...defaultTheme.fontFamily.sans],
-      'body': ['Cabinet', ...defaultTheme.fontFamily.sans],
-      'accent': ['Hoover', ...defaultTheme.fontFamily.sans],
-      'accent-alt': ['Sincopa', ...defaultTheme.fontFamily.sans]
-
-
-      
+      sans: ['var(--font-cabinet)'],
+      body: ['Cabinet', ...defaultTheme.fontFamily.sans],
+      accent: ['var(--font-hoover)', ...defaultTheme.fontFamily.sans],
+      'accent-alt': ['var(--font-sincopa)', ...defaultTheme.fontFamily.sans],
     },
   },
   plugins: [],

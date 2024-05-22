@@ -6,9 +6,9 @@ const EventPhoto = ({ event, user, photo, cdn, isAuthenticated, setPhoto }) => (
     {event && event.recording && isAuthenticated ? (
       <Youtube id={event.recording} />
     ) : photo ? (
-      <div className='h-[400px] w-full bg-accent-light'>
+      <div className='h-[400px] w-full bg-accent-light rounded-lg overflow-hidden'>
         <img
-          className="object-cover h-full w-full rounded-lg"
+          className="object-cover h-full w-full "
           src={`${cdn}${photo}-max-lg.jpg`}
           alt={event && event.name}
         />
