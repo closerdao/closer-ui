@@ -584,7 +584,7 @@ const ListingPage: NextPage<Props> = ({
                           />
                         )}
 
-                        {!isSmallScreen && (
+                        {!isSmallScreen && APP_NAME && APP_NAME !== 'lios' && (
                           <div>
                             <p className="text-left">
                               <span className="font-bold">
@@ -644,7 +644,7 @@ const ListingPage: NextPage<Props> = ({
                                   )}
                             </p>
                           </div>
-                          <div className="flex justify-between items-center mt-3">
+                          {APP_NAME && APP_NAME !== 'lios' && <div className="flex justify-between items-center mt-3">
                             <p>{__('bookings_summary_step_utility_total')}</p>
                             <p>
                               {foodOption === 'no_food' ? (
@@ -658,7 +658,7 @@ const ListingPage: NextPage<Props> = ({
                                 )
                               )}
                             </p>
-                          </div>
+                          </div>}
                           <div className="flex justify-between items-center mt-3">
                             <p>
                               {__('bookings_checkout_step_total_title')} (

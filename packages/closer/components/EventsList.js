@@ -9,6 +9,7 @@ import EventPreview from './EventPreview';
 import Pagination from './Pagination';
 
 dayjs.extend(advancedFormat);
+const now = new Date();
 
 const EventsList = ({
   center,
@@ -31,6 +32,12 @@ const EventsList = ({
   );
   const events = platform.event.find(eventsFilter);
   const totalEvents = platform.event.findCount(eventsFilter);
+
+
+  console.log('events=', events?.toJS());
+  if (where && where.end && where.end.$gt && where.end.$gt > now) {
+
+  }
 
   const loadData = async () => {
     try {
