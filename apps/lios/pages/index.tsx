@@ -14,6 +14,7 @@ import {
   GeneralConfig,
   Heading,
   LinkButton,
+  YoutubeEmbed,
   __,
   api,
   useAuth,
@@ -138,7 +139,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
         />
       </Head>
       <section className="w-[100vw] md:w-[calc(100vw+16px)] -mx-4 absolute -top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-alt mb-8 md:mb-[100vh] 1-100">
-        <div className="md:h-[100vh]">
+        <div className="md:h-[100vh] ">
           {isSmallScreen && (
             <div className="h-[calc(100vh)]">
               <div
@@ -169,9 +170,9 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
               </video>
             </div>
           )}
-          {/* {!isSmallScreen && (
+          {!isSmallScreen && (
             <YoutubeEmbed isBackgroundVideo={true} embedId="8XrtA7R1aew" />
-          )} */}
+          )}
         </div>
         <div className="absolute left-0 top-0 w-full h-full bg-black/20 flex justify-center z-1000">
           <div className="w-full flex justify-center flex-col items-center ">

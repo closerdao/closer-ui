@@ -32,6 +32,10 @@ const EventsList = ({
   const events = platform.event.find(eventsFilter);
   const totalEvents = platform.event.findCount(eventsFilter);
 
+
+  console.log('events=',events?.toJS());
+  console.log('where=',where);
+
   const loadData = async () => {
     try {
       await platform.event.get(eventsFilter);
