@@ -15,7 +15,7 @@ import { MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
-import { BookingRulesConfig, GeneralConfig } from '../../types';
+import { BookingRulesConfig, GeneralConfig, VolunteerOpportunity } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
@@ -26,9 +26,10 @@ interface Props {
   bookingSettings: any;
   bookingRules: BookingRulesConfig | null;
   generalConfig: GeneralConfig | null;
+  opportunities: VolunteerOpportunity[] | null;
 }
 
-const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
+const StayPage = ({ bookingSettings, bookingRules, generalConfig, opportunities }: Props) => {
   const { APP_NAME } = useConfig();
   const config = useConfig();
 
@@ -126,7 +127,7 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
             ? __('buttons_book_now')
             : __('buttons_apply_to_stay')}
         </Link>
-        {process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING && (
+        {process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING && opportunities && opportunities?.length > 0 && (
           <Link
             href="/volunteer"
             className="text-xl px-8 py-3 text-accent italic underline"
@@ -184,7 +185,7 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
 
 StayPage.getInitialProps = async () => {
   try {
-    const [bookingResponse, bookingRulesResponse, generalRes] =
+    const [bookingResponse, bookingRulesResponse, generalRes, volunteerRes] =
       await Promise.all([
         api.get('/config/booking').catch((err) => {
           console.error('Error fetching booking config:', err);
@@ -197,16 +198,21 @@ StayPage.getInitialProps = async () => {
         api.get('/config/general').catch(() => {
           return null;
         }),
+        api.get('/volunteer').catch(() => {
+          return null;
+        }),
       ]);
     const generalConfig = generalRes?.data?.results?.value;
 
     const bookingSettings = bookingResponse?.data?.results?.value;
     const bookingRules = bookingRulesResponse?.data?.results?.value;
-
+    const opportunities = volunteerRes?.data?.results
+    
     return {
       bookingSettings,
       bookingRules,
       generalConfig,
+      opportunities
     };
   } catch (err) {
     return {
@@ -214,6 +220,7 @@ StayPage.getInitialProps = async () => {
       bookingSettings: null,
       bookingRules: null,
       generalConfig: null,
+      opportunities: null
     };
   }
 };
