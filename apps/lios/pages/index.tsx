@@ -123,7 +123,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
           content="Traditional Dream Factory (TDF) is a regenerative playground in Abela, Portugal."
         />
       </Head>
-      <section className="w-[100vw] md:w-[calc(100vw+16px)] -mx-4 absolute -top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-alt mb-8 md:mb-[100vh]">
+      <section className="w-[100vw] md:w-[calc(100vw+16px)] -mx-4 absolute -top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-alt mb-8 md:mb-[100vh] 1-100">
         <div className="md:h-[100vh]">
           {isSmallScreen ? (
             <div className="h-[calc(100vh)]">
@@ -144,7 +144,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
             <YoutubeEmbed isBackgroundVideo={true} embedId="8XrtA7R1aew" />
           )}
         </div>
-        <div className="absolute left-0 top-0 w-full h-full bg-black/20 flex justify-center ">
+        <div className="absolute left-0 top-0 w-full h-full bg-black/20 flex justify-center z-1000">
           <div className="w-full flex justify-center flex-col items-center ">
             <div className=" md:w-full md:max-w-6xl p-6 md:p-4 flex flex-col items-center gap-2 md:gap-10">
               <Image
