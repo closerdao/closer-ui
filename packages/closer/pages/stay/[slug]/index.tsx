@@ -511,7 +511,7 @@ const ListingPage: NextPage<Props> = ({
                                 isPrivate={listing?.private}
                               />
 
-                              {APP_NAME && APP_NAME === 'tdf' && (
+                              {settings?.pickUpEnabled === true && (
                                 <div className="my-0 flex flex-row justify-between items-start ">
                                   <label
                                     htmlFor="separateBeds"
