@@ -26,6 +26,7 @@ import {
   BookingConfig,
   Event,
   Listing,
+  PaymentConfig,
   VolunteerOpportunity,
 } from '../../../types';
 import api from '../../../utils/api';
@@ -49,6 +50,7 @@ interface Props {
   bookingCreatedBy: User;
   bookingConfig: BookingConfig | null;
   listings: Listing[];
+  paymentConfig: PaymentConfig | null;
 }
 
 const BookingPage = ({
@@ -60,8 +62,8 @@ const BookingPage = ({
   bookingCreatedBy,
   bookingConfig,
   listings,
+  paymentConfig
 }: Props) => {
-  console.log('booking=', booking);
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -99,6 +101,10 @@ const BookingPage = ({
     name: bookingCreatedBy.screenname,
     photo: bookingCreatedBy.photo,
   };
+
+  const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
+  const vatRateFromConfig = Number(paymentConfig?.vatRate);
+  const vatRate = vatRateFromConfig || defaultVatRate;
 
   const [status, setStatus] = useState(booking?.status);
   const [updatedAdults, setUpdatedAdults] = useState(adults);
@@ -376,6 +382,7 @@ const BookingPage = ({
               val: updatedEventTotal,
               cur: eventFiat?.cur,
             }}
+            vatRate={vatRate}
           />
         </section>
 
@@ -422,7 +429,7 @@ BookingPage.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
-    const [bookingRes, bookingConfigRes, listingRes] = await Promise.all([
+    const [bookingRes, bookingConfigRes, listingRes, paymentConfigRes] = await Promise.all([
       api
         .get(`/booking/${query.slug}`, {
           headers: req?.cookies?.access_token && {
@@ -444,10 +451,14 @@ BookingPage.getInitialProps = async ({
         .catch(() => {
           return null;
         }),
+        api.get('/config/payment').catch(() => {
+          return null;
+        }),
     ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
     const listings = listingRes?.data?.results;
+    const paymentConfig = paymentConfigRes?.data?.results?.value;
 
     const [optionalEvent, optionalListing, optionalVolunteer] =
       await Promise.all([
@@ -495,6 +506,7 @@ BookingPage.getInitialProps = async ({
       bookingCreatedBy,
       bookingConfig,
       listings,
+      paymentConfig,
     };
   } catch (err: any) {
     console.log('Error', err.message);
@@ -508,6 +520,7 @@ BookingPage.getInitialProps = async ({
       createdBy: null,
       bookingConfig: null,
       listings: null,
+      paymentConfig: null,
     };
   }
 };

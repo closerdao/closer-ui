@@ -48,6 +48,10 @@ const CreditsCheckoutPage: NextPage<Props> = ({
 
   const { amount } = router.query;
 
+  const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
+  const vatRateFromConfig = Number(paymentConfig?.vatRate);
+  const vatRate = vatRateFromConfig || defaultVatRate;
+
   const getTotal = () => {
     if (!fundraisingConfig) {
       return 0;
@@ -126,7 +130,7 @@ const CreditsCheckoutPage: NextPage<Props> = ({
                 )} ${getVatInfo({
                   val: total,
                   cur: DEFAULT_CURRENCY,
-                })}`}
+                }, vatRate)}`}
               />
             }
           </div>

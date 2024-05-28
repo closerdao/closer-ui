@@ -34,6 +34,7 @@ import {
   CloserCurrencies,
   Event,
   Listing,
+  PaymentConfig,
 } from '../../../types';
 import api from '../../../utils/api';
 import { payTokens } from '../../../utils/booking.helpers';
@@ -46,9 +47,10 @@ interface Props extends BaseBookingParams {
   error?: string;
   event?: Event | null;
   bookingConfig: BookingConfig | null;
+  paymentConfig: PaymentConfig | null;
 }
 
-const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
+const Checkout = ({ booking, listing, error, event, bookingConfig, paymentConfig }: Props) => {
 
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -91,6 +93,9 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
     : false;
 
   const listingName = listing?.name;
+  const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
+  const vatRateFromConfig = Number(paymentConfig?.vatRate);
+  const vatRate = vatRateFromConfig || defaultVatRate;
 
   const [canApplyCredits, setCanApplyCredits] = useState(false);
   const [hasAgreedToWalletDisclaimer, setWalletDisclaimer] = useState(false);
@@ -345,6 +350,7 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
             total={updatedTotal}
             useTokens={useTokens || false}
             rentalToken={rentalToken}
+            vatRate={vatRate}
           />
 
           {isStripeBooking && (
@@ -399,7 +405,7 @@ Checkout.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
-    const [bookingRes, bookingConfigRes] = await Promise.all([
+    const [bookingRes, bookingConfigRes, paymentConfigRes] = await Promise.all([
       api
         .get(`/booking/${query.slug}`, {
           headers: req?.cookies?.access_token && {
@@ -412,9 +418,13 @@ Checkout.getInitialProps = async ({
       api.get('/config/booking').catch(() => {
         return null;
       }),
+      api.get('/config/payment').catch(() => {
+        return null;
+      }),
     ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
+    const paymentConfig = paymentConfigRes?.data?.results?.value;
 
     const [optionalEvent, optionalListing] = await Promise.all([
       booking.eventId &&
@@ -433,7 +443,7 @@ Checkout.getInitialProps = async ({
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
 
-    return { booking, listing, event, error: null, bookingConfig };
+    return { booking, listing, event, error: null, bookingConfig, paymentConfig };
   } catch (err) {
     console.log(err);
     return {
@@ -441,6 +451,7 @@ Checkout.getInitialProps = async ({
       booking: null,
       bookingConfig: null,
       listing: null,
+      paymentConfig: null,
     };
   }
 };
