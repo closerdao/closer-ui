@@ -129,6 +129,10 @@ export type PaymentConfig = {
   vatRate: number;
 };
 
+export type VolunteerConfig = {
+  enabled: boolean;
+};
+
 export type FundraisingConfig = {
   videoId: string;
   wandererUrl: string;
