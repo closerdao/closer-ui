@@ -58,7 +58,7 @@ const RedeemCredits = ({
                 </div>
               </div>
 
-              {APP_NAME && APP_NAME === 'tdf' && (
+              {APP_NAME && (
                 <>
                   <div className="w-1/10">
                     <Heading level={4}>=</Heading>
