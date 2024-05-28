@@ -83,32 +83,29 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             </Heading>
             <p>
               <strong>The Y Berlin</strong> is the first of our collectives
-              fundraising to support enriching residencies and epic events at
-              Moos.
+              fundraising to support cutting-edge residencies and next-level events at
+              MOOS.
             </p>
             <p>
-              With these subscription packages you can continuously support us
-              and receive digital vouchers called{' '}
+              With the packages below you can join the Y
+              and receive {' '}
               <Link
                 className="text-accent font-bold no-underline"
                 href="/settings/credits"
               >
                 Vybes
               </Link>{' '}
-              that can be used at any time in the following 12 months. You can
-              then use your{' '}
+              that can be exchanged for many of the resources at MOOS. This includes accommodation, event space, catering, and
+              {' '}
               <Link
                 className="text-accent font-bold no-underline"
-                href="/settings/credits"
+                href="/pdf/moos-menu.pdf"
               >
-                Vybes
-              </Link>{' '}
-              to cover your <strong>Accommodation Fee</strong> or{' '}
-              <strong>Event Fee</strong> at MOOS.
+                more.
+              </Link>{' '} We are currently offering the first 2500 Vybes at a discounted price of €40 per Vybe (worth €50).
             </p>
             <p>
-              Experience living or running an event at MOOS, with no specific
-              dates or long-term commitment required.
+              Live or host at MOOS with the unique benefit of flexibility. Secure your spot now - choose your vybe later.
             </p>
           </div>
           <div>

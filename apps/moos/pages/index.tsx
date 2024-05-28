@@ -72,18 +72,22 @@ const HomePage = ({ generalConfig }: Props) => {
               <div className="flex-1 flex flex-col gap-4">
                 <p>
                   Right across from Treptower Park, MOOS — &rsquo;Moss&rsquo; in
-                  English—serves as a watering hole where the creativity and
-                  communal spirit of Berlin converge. It`s a welcoming space for
-                  diverse paths to meet, encouraging an innovative,
+                  English—is a watering hole where the creativity and
+                  communal spirit of Berlin converge. A welcoming space for
+                  diverse paths to meet, that supports an innovative,
                   interdisciplinary and interconnected community right in the
-                  city`s core.
+                  city`s heart.
                 </p>
                 <p>
+                <b>The Y Berlin</b> is a new community design lab within MOOS supporting the blend of technology and community. Our aim is to curate spaces that foster connections deeper
+                  than mere cohabitation.
+                </p>
+                {/* <p>
                   The Y Berlin, a new community design lab embedded within MOOS,
                   tends to the blend of technology and community, reflecting
                   MOOS’ aim to cultivate spaces that foster connections deeper
                   than mere cohabitation.
-                </p>
+                </p> */}
                 {/* <p>
                   Located in the heart of Berlin, next to Treptower Park.
                   Hosting a regenerative community design lab, building local
@@ -111,11 +115,23 @@ const HomePage = ({ generalConfig }: Props) => {
                 </p> */}
               </div>
               <div className="flex-1 flex flex-col gap-4">
-              
-                <p>With the introduction of <Link
+
+              <p>Now, for the first time, we are opening the doors of our community playground for co-creation. We are offering limited <Link
                     href="/settings/credits"
                     className="text-accent font-bold"
-                  >Vybes</Link>, seeded by the Y Berlin, we aim to fertilize community engagement with experiences and connections valued over transactions. Vybes encourages every member, new or old, to contribute their unique super power. Forget about normal transactions; at MOOS, it`s all about what you feel called to bring to the table—ideas, workshops, you name it. Vybes let you dive into everything MOOS has to offer and really be an active part of a resilient and growing community space.</p>
+                  >Vybe Vouchers</Link> to individuals and organizations who are interested in partnering with us and benefiting from special early mover advantages.</p>
+                  <p>
+                  Become a Vybe Creator today and help mold the future of community tech in Berlin.
+                </p>
+                <p><Link
+                    href="/support-us"
+                    className="text-accent font-bold "
+                  >Join the Vybes</Link></p>
+                
+                {/* <p>With the introduction of <Link
+                    href="/settings/credits"
+                    className="text-accent font-bold"
+                  >Vybes</Link>, seeded by the Y Berlin, we aim to fertilize community engagement with experiences and connections valued over transactions. Vybes encourages every member, new or old, to contribute their unique super power. Forget about normal transactions; at MOOS, it`s all about what you feel called to bring to the table—ideas, workshops, you name it. Vybes let you dive into everything MOOS has to offer and really be an active part of a resilient and growing community space.</p> */}
                 {/* <p>
                   Vybes can be used to create or gift experiences. Since 2012,
                   MOOS has hosted a mycelial network of experience designers.
@@ -135,7 +151,7 @@ const HomePage = ({ generalConfig }: Props) => {
 
             <div className="flex  gap-4 bg-accent-light rounded-md p-4">
               <p className="flex-1">
-                Learn more about our experience design + residency programs in
+                Explore our experience design + residency programs in
                 our Menu{' '}
                 <Link
                   href="/pdf/moos-menu.pdf"
