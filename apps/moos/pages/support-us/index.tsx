@@ -225,6 +225,35 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               </div>
             </div>
           </Card>
+          <Card className="flex-col sm:flex-row justify-between">
+            <div className="flex items-center justify-center flex-col">
+              <Heading level={3} className="uppercase">
+                Vybe flex
+              </Heading>
+              <p className="text-gray-600 text-sm">
+                €{fundraisingConfig.creditPrice180Credits} per Vybe
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 items-center">
+              <div className="text-accent flex items-center justify-center flex-col rounded-full w-[70px] h-[70px] shadow-[0_0_10px_rgba(107,82,244,0.7)]">
+                <div className="font-bold text-xl h-[25px]">1/∞</div>
+                <div className="text-xs uppercase">Vybes</div>
+              </div>
+
+              <div className="h-full p-6 sm:border-r sm:border-l font-bold text-lg">
+                €xxxx
+              </div>
+
+              <div className="pl-2">
+                <LinkButton
+                  href="mailto:hello.moosgarden@gmail.com"
+                  className="w-[200px] text-md sm:w-[150px]"
+                >
+                  Contact
+                </LinkButton>
+              </div>
+            </div>
+          </Card>
         </section>
         <section className=" w-full flex flex-col gap-6 justify-center max-w-xl">
           <Heading
