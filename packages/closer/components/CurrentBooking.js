@@ -73,6 +73,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
           name: user.screenname,
           photo: user.photo,
           preferences: user.preferences,
+          email: user.email,
         };
 
         return {

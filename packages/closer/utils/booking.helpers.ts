@@ -231,6 +231,8 @@ export const getBookingsWithUserAndListing = (
       name: user.screenname,
     };
 
+    const adminBookingReason = b.get('adminBookingReason') || null;
+
     return {
       _id: b.get('_id'),
       start: localStart,
@@ -246,9 +248,23 @@ export const getBookingsWithUserAndListing = (
       listingId,
       fiatPriceVal,
       fiatPriceCur,
+      adminBookingReason,
     };
   });
 };
+
+const getBookingTitleForCalendar = (booking: BookingWithUserAndListing) => {
+  const userName = booking.userInfo?.name || '';
+  const additionalGuests = booking.adults > 1 ? ` + ${booking.adults - 1}` : '';
+  const formattedPrice = booking.fiatPriceVal && booking.fiatPriceCur
+    ? priceFormat(booking.fiatPriceVal, booking.fiatPriceCur)
+    : '';
+  if (booking?.adminBookingReason) {
+    return `${booking.adminBookingReason} by ${userName}`;
+  }
+
+  return `${userName}${additionalGuests} ${formattedPrice}`;
+}
 
 export const generateBookingItems = (
   bookingsWithUserAndListing: BookingWithUserAndListing[],
@@ -283,13 +299,7 @@ export const generateBookingItems = (
       bookingItems.push({
         id: booking._id,
         group: assignedUnitId,
-        title: `${booking.userInfo ? booking?.userInfo?.name : ''} ${
-          booking.adults > 1 ? ' + ' + (booking.adults - 1) : ''
-        }  ${
-          booking.fiatPriceVal && booking.fiatPriceCur
-            ? priceFormat(booking.fiatPriceVal, booking.fiatPriceCur)
-            : ''
-        }`,
+        title: getBookingTitleForCalendar(booking),
         start_time: dayjs(booking.start).toDate(),
         end_time: dayjs(booking.end).toDate(),
       });

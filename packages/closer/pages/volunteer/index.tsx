@@ -7,17 +7,26 @@ import Heading from '../../components/ui/Heading';
 
 import { NextPage } from 'next';
 
+import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
-import { OpportunityByCategory, type VolunteerOpportunity } from '../../types';
+import {
+  OpportunityByCategory,
+  VolunteerConfig,
+  type VolunteerOpportunity,
+} from '../../types';
 import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
 import { getOpportunitiesByCategory } from '../../utils/volunteer.helpers';
 
 interface Props {
   opportunities: VolunteerOpportunity[];
+  volunteerConfig: VolunteerConfig | null;
 }
-const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
+const VolunteerOpportunitiesPage: NextPage<Props> = ({
+  opportunities,
+  volunteerConfig,
+}) => {
   const { APP_NAME, SEMANTIC_URL } = useConfig() || {};
   const opportunitiesByCategory = getOpportunitiesByCategory(opportunities);
 
@@ -37,6 +46,14 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
     !volunteerTerms.every((item) => item === '') &&
     APP_NAME &&
     (APP_NAME.toLowerCase() === 'tdf' || APP_NAME.toLowerCase() === 'lios');
+
+  const isVolunteeringEnabled =
+    volunteerConfig?.enabled === true &&
+    process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
+
+  if (!isVolunteeringEnabled) {
+    return <PageNotFound />;
+  }
 
   return (
     <div className="flex justify-center">
@@ -138,16 +155,27 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
 
 VolunteerOpportunitiesPage.getInitialProps = async () => {
   try {
-    const {
-      data: { results },
-    } = await api.get('/volunteer');
+    const [opportunitiesRes, volunteerConfigRes] = await Promise.all([
+      api.get('/volunteer').catch(() => {
+        return null;
+      }),
+      api.get('/config/volunteering').catch(() => {
+        return null;
+      }),
+    ]);
+
+    const opportunities = opportunitiesRes?.data?.results || null;
+    const volunteerConfig = volunteerConfigRes?.data?.results?.value || null;
+
     return {
-      opportunities: results,
+      opportunities,
+      volunteerConfig,
     };
   } catch (error) {
     console.error(error);
     return {
       opportunities: [],
+      volunteerConfig: null,
     };
   }
 };
