@@ -21,6 +21,7 @@ import { MAX_LISTINGS_TO_FETCH, STATUS_COLOR } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
+import { useConfig } from '../../../hooks/useConfig';
 import {
   Booking,
   BookingConfig,
@@ -31,6 +32,8 @@ import {
 } from '../../../types';
 import api from '../../../utils/api';
 import {
+  formatCheckinDate,
+  formatCheckoutDate,
   getAccommodationTotal,
   getFiatTotal,
   getPaymentDelta,
@@ -38,6 +41,7 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, getBookingRate, getDiscountRate } from '../../../utils/helpers';
+import { formatDate } from '../../../utils/listings.helpers';
 
 dayjs.extend(LocalizedFormat);
 
@@ -62,7 +66,7 @@ const BookingPage = ({
   bookingCreatedBy,
   bookingConfig,
   listings,
-  paymentConfig
+  paymentConfig,
 }: Props) => {
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -71,6 +75,7 @@ const BookingPage = ({
   const { platform }: any = usePlatform();
   const { isAuthenticated, user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
+  const { TIME_ZONE } = useConfig();
 
   const {
     utilityFiat,
@@ -96,6 +101,13 @@ const BookingPage = ({
     isTeamBooking,
     eventPrice,
   } = booking || {};
+
+  console.log('booking=', booking);
+  // start = "2024-06-21T13:00:00.000Z"
+  // end = "2024-06-22T10:00:00.000Z"
+
+  // "2024-06-22T10:00:00.000Z"
+  // "2024-06-22T19:00:00.000Z"
 
   const userInfo = bookingCreatedBy && {
     name: bookingCreatedBy.screenname,
@@ -196,8 +208,16 @@ const BookingPage = ({
 
   const updatedBooking = {
     ...booking,
-    start: updatedStartDate,
-    end: updatedEndDate,
+    start: formatCheckinDate(
+      formatDate(updatedStartDate),
+      TIME_ZONE,
+      bookingConfig?.checkinTime,
+    ),
+    end: formatCheckoutDate(
+      formatDate(updatedEndDate),
+      TIME_ZONE,
+      bookingConfig?.checkoutTime,
+    ),
     duration: updatedDurationInDays,
     adults: updatedAdults,
     children: updatedChildren,
@@ -429,32 +449,33 @@ BookingPage.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
-    const [bookingRes, bookingConfigRes, listingRes, paymentConfigRes] = await Promise.all([
-      api
-        .get(`/booking/${query.slug}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
-          },
-        })
-        .catch(() => {
+    const [bookingRes, bookingConfigRes, listingRes, paymentConfigRes] =
+      await Promise.all([
+        api
+          .get(`/booking/${query.slug}`, {
+            headers: req?.cookies?.access_token && {
+              Authorization: `Bearer ${req?.cookies?.access_token}`,
+            },
+          })
+          .catch(() => {
+            return null;
+          }),
+        api.get('/config/booking').catch(() => {
           return null;
         }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-      api
-        .get('/listing', {
-          params: {
-            limit: MAX_LISTINGS_TO_FETCH,
-          },
-        })
-        .catch(() => {
-          return null;
-        }),
+        api
+          .get('/listing', {
+            params: {
+              limit: MAX_LISTINGS_TO_FETCH,
+            },
+          })
+          .catch(() => {
+            return null;
+          }),
         api.get('/config/payment').catch(() => {
           return null;
         }),
-    ]);
+      ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
     const listings = listingRes?.data?.results;
