@@ -49,9 +49,6 @@ interface Props extends BaseBookingParams {
 }
 
 const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
-  const testIt = async () => {
-    await api.post('/bookings/payment', {});
-  };
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';

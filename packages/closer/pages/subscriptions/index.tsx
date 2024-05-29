@@ -53,12 +53,16 @@ const SubscriptionsPage: NextPage<Props> = ({
 
   useEffect(() => {
     const selectedSubscription = plans?.find(
-      (plan: any) => plan.priceId === (user?.subscription?.priceId || 'free'),
+      (plan: any) =>
+        plan.priceId === (user?.subscription?.priceId || 'free'),
     );
     setUserActivePlan(selectedSubscription);
   }, [user]);
 
   const handleNext = (priceId: string, hasVariants: boolean, slug: string) => {
+    if (priceId?.includes(',')) { 
+      priceId = (priceId as string).split(',')[0];
+    }
     if (!isAuthenticated) {
       // User has no account - must start with creating one.
       router.push(

@@ -83,7 +83,7 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   useEffect(() => {
     if (priceId && subscriptionPlans) {
       const selectedSubscription = subscriptionPlans.find(
-        (plan: SubscriptionPlan) => plan.priceId === priceId,
+        (plan: SubscriptionPlan) => plan.priceId.includes(priceId as string),
       );
 
       setMonthlyCreditsSelected(selectedSubscription?.monthlyCredits ? 1 : 0);
