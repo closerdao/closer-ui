@@ -49,7 +49,6 @@ interface Props extends BaseBookingParams {
 }
 
 const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
-
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -122,7 +121,6 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
             })
           ).data.results;
 
-          console.log('areCreditsAvailable===',areCreditsAvailable);
           setCanApplyCredits(areCreditsAvailable);
         } catch (error) {
           setCanApplyCredits(false);
@@ -130,6 +128,14 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
       })();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (booking?.status === 'paid') {
+      if (router) {
+        router.push(`/bookings/${booking?._id}`);
+      }
+    }
+  }, [router])
 
   const renderButtonText = () => {
     if (isStaking) {
@@ -141,10 +147,6 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
   const goBack = () => {
     router.push(`/bookings/${booking?._id}/summary`);
   };
-
-  if (booking?.status === 'paid') {
-    router.push(`/bookings/${booking?._id}/summary`);
-  }
 
   const handleFreeBooking = async () => {
     try {
@@ -367,7 +369,11 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
             />
           )}
           {isFreeBooking && (
-            <Button isEnabled={!processing} className="booking-btn" onClick={handleFreeBooking}>
+            <Button
+              isEnabled={!processing}
+              className="booking-btn"
+              onClick={handleFreeBooking}
+            >
               {user?.roles.includes('member') || booking?.status === 'confirmed'
                 ? __('buttons_confirm_booking')
                 : __('buttons_booking_request')}
