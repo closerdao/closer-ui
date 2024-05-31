@@ -70,7 +70,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
   return (
     <>
       <Head>
-        <title>Support the MOOS</title>
+        <title>Join the Vybes</title>
         <meta name="description" content="" />
         <meta property="og:type" content="event" />
       </Head>
@@ -79,7 +79,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
         <section className=" w-full flex flex-col sm:flex-row gap-10 justify-center max-w-3xl">
           <div className="flex flex-col gap-4">
             <Heading level={1} className="uppercase text-4xl  font-extrabold">
-              Support the MOOS
+              Join the Vybes
             </Heading>
             <p>
               <strong>The Y Berlin</strong> is the first of our collectives
@@ -162,7 +162,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
                   href="/credits/checkout?amount=30"
                   className="w-[200px] text-md sm:w-[150px]"
                 >
-                  Invest
+                  Join
                 </LinkButton>
               </div>
             </div>
@@ -191,7 +191,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
                   href="/credits/checkout?amount=90"
                   className="w-[200px] text-md sm:w-[150px]"
                 >
-                  Invest
+                  Join
                 </LinkButton>
               </div>
             </div>
@@ -220,7 +220,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
                   href="/credits/checkout?amount=180"
                   className="w-[200px] text-md sm:w-[150px]"
                 >
-                  Invest
+                  Join
                 </LinkButton>
               </div>
             </div>
