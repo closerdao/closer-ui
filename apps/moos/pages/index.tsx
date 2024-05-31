@@ -65,7 +65,7 @@ const HomePage = ({ generalConfig }: Props) => {
               className="text-accent text-2xl font-normal text-center"
               level={2}
             >
-              MOOS is a community of communities.
+              MOOS is a community of communities
             </Heading>
 
             <div className="flex flex-col sm:flex-row gap-8">
@@ -116,12 +116,9 @@ const HomePage = ({ generalConfig }: Props) => {
               </div>
               <div className="flex-1 flex flex-col gap-4">
 
-              <p>Now, for the first time, we are opening the doors of our community playground for co-creation. We are offering limited <Link
-                    href="/settings/credits"
-                    className="text-accent font-bold"
-                  >Vybe Vouchers</Link> to individuals and organizations who are interested in partnering with us and benefiting from special early mover advantages.</p>
+              <p>Now, for the first time, we are opening the doors of our community playground for co-creation. We are offering limited <i>Vybe Vouchers</i> to individuals and organizations who are interested in partnering with us and benefiting from special early mover advantages.</p>
                   <p>
-                  Become a Vybe Creator today and help mold the future of community tech in Berlin.
+                  Become a <i>Vybe Creator</i> today and help mold the future of community tech in Berlin.
                 </p>
                 <p><Link
                     href="/support-us"
@@ -152,12 +149,12 @@ const HomePage = ({ generalConfig }: Props) => {
             <div className="flex  gap-4 bg-accent-light rounded-md p-4">
               <p className="flex-1">
                 Explore our experience design + residency programs in
-                our Menu{' '}
+                our {' '}
                 <Link
                   href="/pdf/moos-menu.pdf"
                   className="text-accent font-bold"
                 >
-                  here
+                  menu
                 </Link>
               </p>
               <p className="flex-1">
