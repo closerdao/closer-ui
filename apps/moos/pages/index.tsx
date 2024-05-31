@@ -9,6 +9,11 @@ import { HOME_PAGE_CATEGORY } from 'closer/constants';
 import { useFaqs } from 'closer/hooks/useFaqs';
 import { formatSearch } from 'closer/utils/api';
 
+import { useRef, useState } from 'react';
+
+import {YoutubeEmbed} from 'closer';
+
+
 interface Props {
   generalConfig: GeneralConfig | null;
 }
@@ -21,43 +26,69 @@ const HomePage = ({ generalConfig }: Props) => {
   const { faqs, error } = useFaqs(FAQS_GOOGLE_SHEET_ID);
   const { isAuthenticated } = useAuth();
 
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
   return (
     <div>
       <Head>
         <title>{`Welcome to ${PLATFORM_NAME}!`}</title>
         <meta name="description" content="Welcome Moos!" />
       </Head>
-      <div className="flex w-[100vw] justify-center bg-bottom bg-cover bg-[url('/images/Moos-Halle.jpg')] h-[600px] -ml-4 -mt-6">
-        <div className="max-w-6xl w-full px-6 py-12 gap-4 flex flex-col  flex-grow ">
-          <div className="w-full flex justify-end flex-grow-1 h-full">
-            <Heading
-              className="h-full text-white uppercase text-4xl  sm:text-5xl font-extrabold w-[700px] text-right flex items-center"
-              level={1}
-            >
-              On the border of Berlin’s historic Treptower Park, something
-              beautiful is growing...
-            </Heading>
+      <section className="w-[100vw] md:w-[calc(100vw+16px)] -mx-4 absolute -top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-alt mb-8 md:mb-[100vh]">
+        <div className="md:h-[100vh]">
+            {isSmallScreen ? (
+              <div className="h-[calc(100vh)]">
+                <video
+                  loop={true}
+                  muted={true}
+                  autoPlay={true}
+                  playsInline={true}
+                  className="w-full h-full object-cover"
+                >
+                  <source
+                    src="https://www.youtube.com/watch?v=zvC9c-hI6Fw&t=37s&ab_channel=RegensUnite"
+                    type="video/mp4"
+                  />
+                </video>
+              </div>
+            ) : (
+              <YoutubeEmbed isBackgroundVideo={true} embedId="zvC9c-hI6Fw" />
+            )}
           </div>
-          <div className="flex flex-col sm:flex-row justify-end gap-4">
-            {!isAuthenticated && (
+        <div className="md:absolute md:left-0 md:top-0 md:w-full md:h-full md:bg-white/60 flex justify-center ">
+          <div className="max-w-6xl w-full px-6 py-12 gap-4 flex flex-col  flex-grow ">
+            <div className="w-full flex justify-end flex-grow-1 h-full">
+              <Heading
+                className="h-full text-black uppercase text-4xl  sm:text-5xl font-extrabold w-[700px] text-right flex items-center"
+                level={1}
+              >
+                On the border of Berlin’s historic Treptower Park, something
+                beautiful is growing...
+              </Heading>
+            </div>
+            <div className="flex flex-col sm:flex-row justify-end gap-4">
+              {!isAuthenticated && (
+                <Link
+                  href="/signup"
+                  type="submit"
+                  className="bg-accent text-white text-center rounded-full py-2.5 px-8 text-md tracking-wide uppercase"
+                >
+                  JOIN THE DREAM
+                </Link>
+              )}
               <Link
-                href="/signup"
+                href="/pdf/moos-menu.pdf"
                 type="submit"
                 className="bg-accent text-white text-center rounded-full py-2.5 px-8 text-md tracking-wide uppercase"
               >
-                JOIN THE DREAM
+                Download Our Menu
               </Link>
-            )}
-            <Link
-              href="/pdf/moos-menu.pdf"
-              type="submit"
-              className="bg-accent-light text-accent text-center rounded-full py-2.5 px-8 text-md tracking-wide uppercase"
-            >
-              Download Our Menu
-            </Link>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
       <div className="flex w-full justify-center ">
         <div className="max-w-6xl w-full pt-20 flex flex-col gap-20 items-center">
           <section className="max-w-2xl flex flex-col gap-12 ">
