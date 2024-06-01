@@ -2,16 +2,15 @@ import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import CreditsBalance from 'closer/components/CreditsBalance';
 import { Card, Heading, LinkButton } from 'closer/components/ui';
 
 import { useConfig } from 'closer';
-import { usePlatform } from 'closer/contexts/platform';
 import { FundraisingConfig } from 'closer/types';
 import api from 'closer/utils/api';
-import { __ } from 'closer/utils/helpers';
+import { __, priceFormat } from 'closer/utils/helpers';
 
 import PageNotFound from '../404';
 
@@ -27,40 +26,26 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
     process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true' &&
     fundraisingConfig?.enabled;
 
-  const { platform }: any = usePlatform();
-  const wandererFilter = {
-    where: { 'subscription.plan': 'wanderer' },
-  };
-  const pioneerFilter = {
-    where: { 'subscription.plan': 'pioneer' },
-  };
+  const [creditsAmount, setCreditsAmount] = useState<number | string>(1);
 
-  const wandererCount = platform.user.findCount(wandererFilter) || 0;
-  const pioneerCount = platform.user.findCount(pioneerFilter) || 0;
+  const isValidAmount = typeof creditsAmount === 'number' && creditsAmount > 0;
 
-  const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const openModal = () => {
-    setIsInfoModalOpened(true);
-  };
-
-  const closeModal = () => {
-    setIsInfoModalOpened(false);
-  };
-
-  const loadData = async () => {
-    try {
-      await Promise.all([
-        platform.user.getCount(wandererFilter),
-        platform.user.getCount(pioneerFilter),
-      ]);
-    } catch (err) {
-    } finally {
+  const getTotal = (amount: number | string) => {
+    const numericAmount = parseInt(amount as unknown as string);
+    if (!fundraisingConfig) {
+      return 0;
     }
+
+    if (numericAmount < 90) {
+      return numericAmount * fundraisingConfig.creditPrice30Credits;
+    }
+    if (numericAmount >= 90 && numericAmount < 180) {
+      return numericAmount * fundraisingConfig.creditPrice90Credits;
+    }
+    if (numericAmount >= 180) {
+      return numericAmount * fundraisingConfig.creditPrice180Credits;
+    }
+    return 0;
   };
 
   if (!isFundraiserEnabled) {
@@ -83,29 +68,31 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             </Heading>
             <p>
               <strong>The Y Berlin</strong> is the first of our collectives
-              fundraising to support cutting-edge residencies and next-level events at
-              MOOS.
+              fundraising to support cutting-edge residencies and next-level
+              events at MOOS.
             </p>
             <p>
-              With the packages below you can join the Y
-              and receive {' '}
+              With the packages below you can join the Y and receive{' '}
               <Link
                 className="text-accent font-bold no-underline"
                 href="/settings/credits"
               >
                 Vybes
               </Link>{' '}
-              that can be exchanged for many of the resources at MOOS. This includes accommodation, event space, catering, and
-              {' '}
+              that can be exchanged for many of the resources at MOOS. This
+              includes accommodation, event space, catering, and{' '}
               <Link
                 className="text-accent font-bold no-underline"
                 href="/pdf/moos-menu.pdf"
               >
                 more.
-              </Link>{' '} We are currently offering the first 2500 Vybes at a discounted price of €40 per Vybe (worth €50).
+              </Link>{' '}
+              We are currently offering the first 2500 Vybes at a discounted
+              price of €40 per Vybe (worth €50).
             </p>
             <p>
-              Live or host at MOOS with the unique benefit of flexibility. Secure your spot now - choose your vybe later.
+              Live or host at MOOS with the unique benefit of flexibility.
+              Secure your spot now - choose your vybe later.
             </p>
           </div>
           <div>
@@ -226,30 +213,66 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             </div>
           </Card>
           <Card className="flex-col sm:flex-row justify-between">
-            <div className="flex items-center justify-center flex-col">
+            <div className="flex items-start justify-center flex-col">
               <Heading level={3} className="uppercase">
-                Vybe flex
+                Vybe flex — 1/∞ vybes
               </Heading>
               <p className="text-gray-600 text-sm">
-                €{fundraisingConfig.creditPrice180Credits} per Vybe
+                {fundraisingConfig.creditPrice180Credits !==
+                fundraisingConfig.creditPrice30Credits ? (
+                  <>
+                    {' '}
+                    €{fundraisingConfig.creditPrice180Credits}- €
+                    {fundraisingConfig.creditPrice30Credits}
+                  </>
+                ) : (
+                  <> €{fundraisingConfig.creditPrice180Credits}</>
+                )}{' '}
+                per Vybe
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 items-center">
-              <div className="text-accent flex items-center justify-center flex-col rounded-full w-[70px] h-[70px] shadow-[0_0_10px_rgba(107,82,244,0.7)]">
-                <div className="font-bold text-xl h-[25px]">1/∞</div>
-                <div className="text-xs uppercase">Vybes</div>
-              </div>
-
-              <div className="h-full p-6 sm:border-r sm:border-l font-bold text-lg">
-                €xxxx
+              <div className="h-full p-6 sm:border-r sm:border-l font-bold text-lg flex items-center  whitespace-nowrap gap-2">
+                <div>Enter amount:</div>{' '}
+                <input
+                  value={creditsAmount}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === '') {
+                      setCreditsAmount('');
+                    } else if (typeof Number(value) === 'number' && Number(value) < 0) {
+                      setCreditsAmount(1);
+                    }
+                    else if (Number(value) === 0) {
+                      setCreditsAmount(1);
+                    }
+                    else {
+                      const numericValue = parseInt(value);
+                      if (!isNaN(numericValue)) {
+                        setCreditsAmount(numericValue);
+                      }
+                    }
+                  }}
+                  type="number"
+                  className="w-[60px] bg-neutral rounded-lg"
+                />
+                <div>= {priceFormat(getTotal(creditsAmount))}</div>
               </div>
 
               <div className="pl-2">
                 <LinkButton
-                  href="mailto:hello.moosgarden@gmail.com"
-                  className="w-[200px] text-md sm:w-[150px]"
+                  href={`${
+                    isValidAmount
+                      ? `/credits/checkout?amount=${creditsAmount}`
+                      : '#'
+                  }`}
+                  className={`${
+                    isValidAmount
+                      ? ''
+                      : 'bg-neutral border-neutral text-gray-400'
+                  } w-[200px] text-md sm:w-[150px]`}
                 >
-                  Contact
+                  Invest
                 </LinkButton>
               </div>
             </div>
