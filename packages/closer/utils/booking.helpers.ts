@@ -1,4 +1,6 @@
 import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
 
 import {
   BOOKING_EXISTS_ERROR,
@@ -15,6 +17,9 @@ import {
 } from '../types';
 import api from './api';
 import { __, priceFormat } from './helpers';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export const getStatusText = (status: string, updated: string | Date) => {
   if (status === 'cancelled') {
@@ -231,6 +236,8 @@ export const getBookingsWithUserAndListing = (
       name: user.screenname,
     };
 
+    const adminBookingReason = b.get('adminBookingReason') || null;
+
     return {
       _id: b.get('_id'),
       start: localStart,
@@ -246,8 +253,23 @@ export const getBookingsWithUserAndListing = (
       listingId,
       fiatPriceVal,
       fiatPriceCur,
+      adminBookingReason,
     };
   });
+};
+
+const getBookingTitleForCalendar = (booking: BookingWithUserAndListing) => {
+  const userName = booking.userInfo?.name || '';
+  const additionalGuests = booking.adults > 1 ? ` + ${booking.adults - 1}` : '';
+  const formattedPrice =
+    booking.fiatPriceVal && booking.fiatPriceCur
+      ? priceFormat(booking.fiatPriceVal, booking.fiatPriceCur)
+      : '';
+  if (booking?.adminBookingReason) {
+    return `${booking.adminBookingReason} by ${userName}`;
+  }
+
+  return `${userName}${additionalGuests} ${formattedPrice}`;
 };
 
 export const generateBookingItems = (
@@ -283,13 +305,7 @@ export const generateBookingItems = (
       bookingItems.push({
         id: booking._id,
         group: assignedUnitId,
-        title: `${booking.userInfo ? booking?.userInfo?.name : ''} ${
-          booking.adults > 1 ? ' + ' + (booking.adults - 1) : ''
-        }  ${
-          booking.fiatPriceVal && booking.fiatPriceCur
-            ? priceFormat(booking.fiatPriceVal, booking.fiatPriceCur)
-            : ''
-        }`,
+        title: getBookingTitleForCalendar(booking),
         start_time: dayjs(booking.start).toDate(),
         end_time: dayjs(booking.end).toDate(),
       });
@@ -394,4 +410,32 @@ export const payTokens = async (
     });
     return { success: true, error: null };
   }
+};
+
+export const formatCheckinDate = (
+  date: Date | string | null,
+  TIME_ZONE: string,
+  checkinTime: number | undefined,
+) => {
+  const localDate = dayjs.tz(date, TIME_ZONE);
+  const localTime = localDate
+    .hour(Number(checkinTime) || 16)
+    .minute(0)
+    .second(0)
+    .millisecond(0);
+  return localTime;
+};
+
+export const formatCheckoutDate = (
+  date: Date | string | null,
+  TIME_ZONE: string,
+  checkoutTime: number | undefined,
+) => {
+  const localDate = dayjs.tz(date, TIME_ZONE);
+  const localTime = localDate
+    .hour(Number(checkoutTime) || 11)
+    .minute(0)
+    .second(0)
+    .millisecond(0);
+  return localTime;
 };

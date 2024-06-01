@@ -141,6 +141,10 @@ export const configDescription: ConfigType[] = [
         type: 'number',
         default: 1,
       },
+      pickUpEnabled: {
+        type: 'boolean',
+        default: false,
+      },
     },
   },
   {
@@ -400,6 +404,10 @@ export const configDescription: ConfigType[] = [
       ethereumWalletAddress: {
         type: 'text',
         default: '',
+      },
+      vatRate: {
+        type: 'number',
+        default: 0.23,
       },
     },
   },

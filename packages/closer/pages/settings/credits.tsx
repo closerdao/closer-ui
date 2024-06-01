@@ -63,6 +63,7 @@ const CreditsPage: FC = () => {
         {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
           <div>
             <p className="mb-4">{__('carrots_what_are_1', APP_NAME)}</p>
+            <p className="mb-4">{__('carrots_what_are_2', APP_NAME)}</p>
           </div>
         )}
 
@@ -103,6 +104,9 @@ const CreditsPage: FC = () => {
               <p className="mb-4">{__('carrots_how_to_use_2', APP_NAME)}</p>
               <p className="mb-4">{__('carrots_how_to_use_3', APP_NAME)}</p>
               <p className="mb-4">{__('carrots_how_to_use_4', APP_NAME)}</p>
+              {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
+                <p className="mb-4">{__('carrots_how_to_use_5', APP_NAME)}</p>
+              )}
             </div>
           </>
         )}
@@ -150,8 +154,9 @@ const CreditsPage: FC = () => {
                 {__('carrots_additional_guidelines_7', APP_NAME)}
               </p>
               <p className="mb-4">
-                {__('carrots_additional_guidelines_8', APP_NAME)}
-              </p>
+                {APP_NAME &&
+                    APP_NAME.toLowerCase() !== 'moos' &&
+                    __('carrots_additional_guidelines_8', APP_NAME)}              </p>
               <p className="mb-4">
                 {APP_NAME &&
                   APP_NAME.toLowerCase() !== 'moos' &&

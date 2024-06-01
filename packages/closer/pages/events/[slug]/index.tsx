@@ -22,6 +22,7 @@ import { MAX_LISTINGS_TO_FETCH } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
+import { useConfig } from '../../../hooks/useConfig';
 import { Event, Listing } from '../../../types';
 import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
@@ -53,7 +54,7 @@ const EventPage = ({
 }: Props) => {
   const { platform }: any = usePlatform();
   const { user, isAuthenticated } = useAuth();
-
+  const { APP_NAME } = useConfig() || {};
   const dailyUtilityFee = settings?.utilityFiatVal;
 
   const [photo, setPhoto] = useState(event && event.photo);
@@ -287,7 +288,7 @@ const EventPage = ({
             <div className="max-w-4xl w-full ">
               <div className="w-full py-2">
                 <div className="w-full flex flex-col sm:flex-row gap-4 sm:gap-8">
-                  <div className="flex gap-1 items-center min-w-[120px]">
+                  <div className="flex gap-1 items-center min-w-[140px]">
                     <Image
                       alt="calendar icon"
                       src="/images/icons/calendar-icon.svg"
@@ -474,7 +475,7 @@ const EventPage = ({
                               </div>
                             );
                           })}
-                        {durationInDays > 0 && (
+                        {durationInDays > 0 &&  APP_NAME && APP_NAME !== 'lios' && (
                           <>
                             <div className="text-sm">
                               {__('events_accommodation')}{' '}

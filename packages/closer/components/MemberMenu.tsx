@@ -53,6 +53,7 @@ const filterLinks = (links: any[], option: string, roles: string[]) => {
 const getLinks = (
   isBookingEnabled: boolean,
   areSubscriptionsEnabled: boolean,
+  isVolunteeringEnabled: boolean,
 ) => {
   const links = [
     {
@@ -68,7 +69,7 @@ const getLinks = (
     {
       label: 'Volunteer',
       url: '/volunteer',
-      enabled: process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true',
+      enabled: isVolunteeringEnabled,
     },
     {
       label: 'Booking requests',
@@ -185,13 +186,17 @@ const MemberMenu = () => {
   useEffect(() => {
     (async () => {
       try {
-        const [bookingRes, subscriptionsRes] = await Promise.all([
+        const [bookingRes, subscriptionsRes, volunteerRes] = await Promise.all([
           api.get('config/booking').catch((err) => {
             console.error('Error fetching booking config:', err);
             return null;
           }),
           api.get('config/subscriptions').catch((err) => {
             console.error('Error fetching subscriptions config:', err);
+            return null;
+          }),
+          api.get('config/volunteering').catch((err) => {
+            console.error('Error fetching booking config:', err);
             return null;
           }),
         ]);
@@ -205,9 +210,14 @@ const MemberMenu = () => {
           bookingRes?.data.results.value.enabled &&
           process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
+        const isVolunteeringEnabled =
+          volunteerRes?.data.results.value.enabled === true &&
+          process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
+
         const updatedLinks = getLinks(
           isBookingEnabled,
           areSubscriptionsEnabled,
+          isVolunteeringEnabled,
         );
 
         setLinks(updatedLinks);

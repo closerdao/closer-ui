@@ -107,8 +107,14 @@ const ListingPage: NextPage<Props> = ({
   const discountRate = settings
     ? 1 - getDiscountRate(durationName, settings)
     : 0;
-  const accomodationTotal = listing
+  const accommodationFiatTotal = listing
     ? listing.fiatPrice?.val *
+      (listing.private ? 1 : adults) *
+      durationInDays *
+      discountRate
+    : 0;
+  const accommodationTokenTotal = listing
+    ? listing.tokenPrice?.val *
       (listing.private ? 1 : adults) *
       durationInDays *
       discountRate
@@ -147,7 +153,7 @@ const ListingPage: NextPage<Props> = ({
     isTeamBooking,
     foodOption,
     utilityTotal,
-    accomodationTotal,
+    accommodationFiatTotal,
   );
 
   const getAvailability = async (
@@ -511,7 +517,7 @@ const ListingPage: NextPage<Props> = ({
                                 isPrivate={listing?.private}
                               />
 
-                              {APP_NAME && APP_NAME === 'tdf' && (
+                              {settings?.pickUpEnabled === true && (
                                 <div className="my-0 flex flex-row justify-between items-start ">
                                   <label
                                     htmlFor="separateBeds"
@@ -584,7 +590,7 @@ const ListingPage: NextPage<Props> = ({
                           />
                         )}
 
-                        {!isSmallScreen && (
+                        {!isSmallScreen && APP_NAME && APP_NAME !== 'lios' && (
                           <div>
                             <p className="text-left">
                               <span className="font-bold">
@@ -635,16 +641,16 @@ const ListingPage: NextPage<Props> = ({
                             <p>
                               {currency === CURRENCIES[1]
                                 ? priceFormat(
-                                    listing.tokenPrice?.val,
+                                    accommodationTokenTotal,
                                     listing.tokenPrice?.cur,
                                   )
                                 : priceFormat(
-                                    accomodationTotal,
+                                    accommodationFiatTotal,
                                     listing.fiatPrice?.cur,
                                   )}
                             </p>
                           </div>
-                          <div className="flex justify-between items-center mt-3">
+                          {APP_NAME && APP_NAME !== 'lios' && <div className="flex justify-between items-center mt-3">
                             <p>{__('bookings_summary_step_utility_total')}</p>
                             <p>
                               {foodOption === 'no_food' ? (
@@ -658,7 +664,7 @@ const ListingPage: NextPage<Props> = ({
                                 )
                               )}
                             </p>
-                          </div>
+                          </div>}
                           <div className="flex justify-between items-center mt-3">
                             <p>
                               {__('bookings_checkout_step_total_title')} (

@@ -112,6 +112,7 @@ export interface BookingWithUserAndListing {
   listingId: string;
   fiatPriceVal: number;
   fiatPriceCur: CloserCurrencies;
+  adminBookingReason?: string;
 }
 
 export interface AccommodationUnit {
