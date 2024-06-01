@@ -2,11 +2,7 @@ import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 
-<<<<<<< HEAD
 import { useEffect, useRef, useState } from 'react';
-=======
-import { useEffect, useState } from 'react';
->>>>>>> origin
 import { isMobile } from 'react-device-detect';
 
 import Faqs from 'closer/components/Faqs';
@@ -71,8 +67,6 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [isAutoplaying, setIsAutoplaying] = useState(false);
 
-  const [isSmallScreen, setIsSmallScreen] = useState(false);
-
   const loadData = async () => {
     await Promise.all([
       platform.listing.get(listingFilter),
@@ -86,7 +80,6 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
 
   useEffect(() => {
     setIsSmallScreen(isMobile);
-<<<<<<< HEAD
 
     if (videoRef.current) {
       videoRef.current
@@ -101,9 +94,6 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
         });
     }
   }, [videoRef.current]);
-=======
-  }, []);
->>>>>>> origin
 
   const listings = platform.listing.find(listingFilter);
 
@@ -148,7 +138,6 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
           content="Desert Transformation Lab is an experimental school of ecological imagination in Błędowska Desert, Poland."
         />
       </Head>
-<<<<<<< HEAD
       <section className="w-[100vw] md:w-[calc(100vw+16px)] -mx-4 absolute -top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-alt mb-8 md:mb-[100vh] 1-100">
         <div className="md:h-[100vh] ">
           {isSmallScreen && (
@@ -166,24 +155,13 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
               </div>
               <video
                 ref={videoRef}
-=======
-      <section className="w-[100vw] md:w-[calc(100vw+16px)] -mx-4 absolute -top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-alt mb-8 md:mb-[100vh]">
-        <div className="md:h-[100vh]">
-          {isSmallScreen ? (
-            <div className="h-[calc(100vh)]">
-              <video
->>>>>>> origin
                 loop={true}
                 muted={true}
                 autoPlay={true}
                 playsInline={true}
-<<<<<<< HEAD
                 className={`w-full h-full object-cover ${
                   isAutoplaying ? 'visible' : 'hidden'
                 } `}
-=======
-                className="w-full h-full object-cover"
->>>>>>> origin
               >
                 <source
                   src="https://cdn.oasa.co/video/lios-small.mp4"
@@ -191,20 +169,12 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                 />
               </video>
             </div>
-<<<<<<< HEAD
           )}
           {!isSmallScreen && (
             <YoutubeEmbed isBackgroundVideo={true} embedId="8XrtA7R1aew" />
           )}
         </div>
         <div className="absolute left-0 top-0 w-full h-full bg-black/20 flex justify-center z-1000">
-=======
-          ) : (
-            <YoutubeEmbed isBackgroundVideo={true} embedId="8XrtA7R1aew" />
-          )}
-        </div>
-        <div className="absolute left-0 top-0 w-full h-full bg-black/20 flex justify-center ">
->>>>>>> origin
           <div className="w-full flex justify-center flex-col items-center ">
             <div className=" md:w-full md:max-w-6xl p-6 md:p-4 flex flex-col items-center gap-2 md:gap-10">
               <Image
@@ -513,21 +483,12 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
 
         <section className=" w-[100vw] -mx-4 px-4  pt-12 pb-20 flex justify-center">
           <div className="flex flex-col gap-8 items-center w-full sm:w-[600px] ">
-<<<<<<< HEAD
             <Link
               className="font-accent uppercase text-accent"
               href="https://lios.io/deserttransformation"
             >
               DESERT TRANSFORMATION LAB Website
             </Link>
-=======
-          <Link
-            className="font-accent uppercase text-accent"
-            href="https://lios.io/deserttransformation"
-          >
-            DESERT TRANSFORMATION LAB Website
-          </Link>
->>>>>>> origin
           </div>
         </section>
 
