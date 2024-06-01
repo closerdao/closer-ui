@@ -55,7 +55,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
   return (
     <>
       <Head>
-        <title>Support the MOOS</title>
+        <title>Join the Vybes</title>
         <meta name="description" content="" />
         <meta property="og:type" content="event" />
       </Head>
@@ -64,7 +64,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
         <section className=" w-full flex flex-col sm:flex-row gap-10 justify-center max-w-3xl">
           <div className="flex flex-col gap-4">
             <Heading level={1} className="uppercase text-4xl  font-extrabold">
-              Support the MOOS
+              Join the Vybes
             </Heading>
             <p>
               <strong>The Y Berlin</strong> is the first of our collectives
@@ -91,8 +91,8 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               price of €40 per Vybe (worth €50).
             </p>
             <p>
-              Live or host at MOOS with the unique benefit of flexibility.
-              Secure your spot now - choose your vybe later.
+              Stay or host at MOOS with unique flexibility. Secure your spot now
+              - choose your vybe later.
             </p>
           </div>
           <div>
@@ -149,7 +149,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
                   href="/credits/checkout?amount=30"
                   className="w-[200px] text-md sm:w-[150px]"
                 >
-                  Invest
+                  Join
                 </LinkButton>
               </div>
             </div>
@@ -178,7 +178,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
                   href="/credits/checkout?amount=90"
                   className="w-[200px] text-md sm:w-[150px]"
                 >
-                  Invest
+                  Join
                 </LinkButton>
               </div>
             </div>
@@ -207,11 +207,12 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
                   href="/credits/checkout?amount=180"
                   className="w-[200px] text-md sm:w-[150px]"
                 >
-                  Invest
+                  Join
                 </LinkButton>
               </div>
             </div>
           </Card>
+
           <Card className="flex-col sm:flex-row justify-between">
             <div className="flex items-start justify-center flex-col">
               <Heading level={3} className="uppercase">
@@ -240,13 +241,14 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
                     const value = e.target.value;
                     if (value === '') {
                       setCreditsAmount('');
-                    } else if (typeof Number(value) === 'number' && Number(value) < 0) {
+                    } else if (
+                      typeof Number(value) === 'number' &&
+                      Number(value) < 0
+                    ) {
                       setCreditsAmount(1);
-                    }
-                    else if (Number(value) === 0) {
+                    } else if (Number(value) === 0) {
                       setCreditsAmount(1);
-                    }
-                    else {
+                    } else {
                       const numericValue = parseInt(value);
                       if (!isNaN(numericValue)) {
                         setCreditsAmount(numericValue);
@@ -287,13 +289,13 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
           </Heading>
 
           <p>
+            Vybes are the digital voucher system of The Y Berlin - more info{' '}
             <Link
               className="text-accent font-bold no-underline"
               href="/settings/credits"
             >
-              Vybes
+              here.
             </Link>{' '}
-            are the digital voucher system of The Y Berlin
           </p>
 
           <Card className="flex-row justify-between">
