@@ -21,6 +21,7 @@ interface Props {
   updatedUtilityTotal?: Price<CloserCurrencies>;
   updatedFiatTotal?: Price<CloserCurrencies>;
   updatedEventTotal?: Price<CloserCurrencies>;
+  vatRate?: number;
 }
 
 const SummaryCosts = ({
@@ -39,6 +40,7 @@ const SummaryCosts = ({
   updatedUtilityTotal,
   updatedFiatTotal,
   updatedEventTotal,
+  vatRate,
 }: Props) => {
   const { APP_NAME } = useConfig();
 
@@ -206,7 +208,7 @@ const SummaryCosts = ({
         </div>
       </div>
       <p className="text-right text-xs">
-        {__('bookings_checkout_step_total_description')} {getVatInfo(totalFiat)}
+        {__('bookings_checkout_step_total_description')} {getVatInfo(totalFiat, vatRate)}
       </p>
     </div>
   );
