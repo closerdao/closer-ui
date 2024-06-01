@@ -274,11 +274,12 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
                       : 'bg-neutral border-neutral text-gray-400'
                   } w-[200px] text-md sm:w-[150px]`}
                 >
-                  Invest
+                  Join
                 </LinkButton>
               </div>
             </div>
           </Card>
+     
         </section>
         <section className=" w-full flex flex-col gap-6 justify-center max-w-xl">
           <Heading
