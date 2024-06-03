@@ -68,7 +68,7 @@ const RedeemCredits = ({
                       {APP_NAME && APP_NAME.toLowerCase() !== 'moos' && (
                         isDemo ? priceFormat(50) : priceFormat(rentalFiat)
                       )}
-                      {isDemo ? priceFormat(5) : priceFormat(rentalFiat)}
+                      {APP_NAME && APP_NAME.toLowerCase() === 'moos' && isDemo ? priceFormat(5) : priceFormat(rentalFiat)}
                     </Heading>
                     <div className="text-xs">
                       {__('carrots_off_accommodation')}
