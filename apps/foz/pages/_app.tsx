@@ -26,7 +26,7 @@ import {
 } from 'closer';
 import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
-import 'closer/public/styles.css';
+import '../styles/index.css'
 import { prepareGeneralConfig } from 'closer/utils/app.helpers';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 

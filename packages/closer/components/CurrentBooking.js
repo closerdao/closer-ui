@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { BOOKINGS_PER_PAGE } from '../constants';
+import { BOOKINGS_PER_PAGE, MAX_LISTINGS_TO_FETCH } from '../constants';
 import { usePlatform } from '../contexts/platform';
 import { __ } from '../utils/helpers';
 import BookingListPreview from './BookingListPreview/BookingListPreview';
@@ -40,7 +40,10 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
     },
   };
 
-  const listings = platform.listing.find();
+  const listings = platform.listing.find({
+    where: {},
+    limit: MAX_LISTINGS_TO_FETCH,
+  });
   const allUsers = platform.user.find({ limit: MAX_USERS_TO_FETCH });
   const error = bookings && bookings.get('error');
 
@@ -70,6 +73,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
           name: user.screenname,
           photo: user.photo,
           preferences: user.preferences,
+          email: user.email,
         };
 
         return {
@@ -104,7 +108,10 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
 
       await Promise.all([
         platform.booking.get(filter),
-        platform.listing.get(),
+        platform.listing.get({
+          where: {},
+          limit: MAX_LISTINGS_TO_FETCH,
+        }),
         platform.user.get({ limit: MAX_USERS_TO_FETCH }),
         platform.event.get(eventsFilter),
         platform.volunteer.get(volunteerFilter),

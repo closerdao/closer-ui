@@ -8,6 +8,7 @@ import CurrencySwitch from '../../../components/CurrencySwitch';
 import PageError from '../../../components/PageError';
 import Switch from '../../../components/Switch';
 import TicketOptions from '../../../components/TicketOptions';
+import { ErrorMessage } from '../../../components/ui';
 import BackButton from '../../../components/ui/BackButton';
 import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
@@ -136,11 +137,22 @@ const DatesSelector = ({
   const [discountCode, setDiscountCode] = useState('');
   const [doesNeedPickup, setDoesNeedPickup] = useState(false);
   const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
+  const [bookingError, setBookingError] = useState(null);
 
   useEffect(() => {
-    setStartDate(savedStartDate as string);
-    setEndDate(savedEndDate as string);
-  }, [savedStartDate, savedEndDate]);
+    setBookingError(null);
+    if (start && end) {
+      const startDate = dayjs(start).startOf('day');
+      const endDate = dayjs(end).startOf('day');
+      const diffInDays = endDate.diff(startDate, 'day');
+
+      if (bookingConfig && diffInDays < bookingConfig?.minDuration) {
+        setBookingError(
+          __('bookings_dates_min_duration_error', bookingConfig?.minDuration),
+        );
+      }
+    }
+  }, [start, end]);
 
   const getUrlParams = () => {
     const dateFormat = 'YYYY-MM-DD';
@@ -270,17 +282,20 @@ const DatesSelector = ({
             />
           )}
           {selectedTicketOption?.isDayTicket !== true && (
-            <BookingDates
-              conditions={conditions}
-              setStartDate={setStartDate}
-              setEndDate={setEndDate}
-              isMember={isMember}
-              blockedDateRanges={blockedDateRanges}
-              savedStartDate={savedStartDate as string}
-              savedEndDate={savedEndDate as string}
-              eventStartDate={event?.start ? event?.start : volunteer?.start}
-              eventEndDate={event?.end ? event?.end : volunteer?.end}
-            />
+            <>
+              <BookingDates
+                conditions={conditions}
+                setStartDate={setStartDate}
+                setEndDate={setEndDate}
+                isMember={isMember}
+                blockedDateRanges={blockedDateRanges}
+                savedStartDate={savedStartDate as string}
+                savedEndDate={savedEndDate as string}
+                eventStartDate={event?.start ? event?.start : volunteer?.start}
+                eventEndDate={event?.end ? event?.end : volunteer?.end}
+              />
+              {bookingError && <ErrorMessage error={bookingError} />}
+            </>
           )}
           <BookingGuests
             adults={adults}
@@ -295,27 +310,29 @@ const DatesSelector = ({
             setDoesNeedSeparateBeds={setDoesNeedSeparateBeds}
           />
 
-          <div>
-            <HeadingRow>
-              <span className="mr-2">➕</span>
-              <span>{__('bookings_heading_extras')}</span>
-            </HeadingRow>
-            <div className="my-10 flex flex-row justify-between flex-wrap">
-              <label htmlFor="separateBeds" className="text-md">
-                {__('bookings_pickup')}
-                <span className="w-full text-xs ml-2">
-                  ({__('bookings_pickup_disclaimer')})
-                </span>
-              </label>
-              <Switch
-                disabled={false}
-                name="pickup"
-                label=""
-                onChange={setDoesNeedPickup}
-                checked={doesNeedPickup}
-              />
+          {bookingConfig?.pickUpEnabled && bookingConfig?.pickUpEnabled === true && (
+            <div>
+              <HeadingRow>
+                <span className="mr-2">➕</span>
+                <span>{__('bookings_heading_extras')}</span>
+              </HeadingRow>
+              <div className="my-10 flex flex-row justify-between flex-wrap">
+                <label htmlFor="separateBeds" className="text-md">
+                  {__('bookings_pickup')}
+                  <span className="w-full text-xs ml-2">
+                    ({__('bookings_pickup_disclaimer')})
+                  </span>
+                </label>
+                <Switch
+                  disabled={false}
+                  name="pickup"
+                  label=""
+                  onChange={setDoesNeedPickup}
+                  checked={doesNeedPickup}
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {handleNextError && (
             <div className="error-box">{handleNextError}</div>
@@ -329,7 +346,7 @@ const DatesSelector = ({
                   start &&
                   end) ||
                 (volunteerId && start && end) ||
-                (!eventId && !volunteerId && start && end)
+                (!eventId && !volunteerId && start && end && !bookingError)
               )
             }
           >

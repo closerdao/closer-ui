@@ -5,10 +5,12 @@ import dayjs from 'dayjs';
 
 import { STATUS_COLOR } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
+import { useConfig } from '../../hooks/useConfig';
 import { getBookingType, getStatusText } from '../../utils/booking.helpers';
 import { __, priceFormat } from '../../utils/helpers';
 import BookingRequestButtons from '../BookingRequestButtons';
 import UserInfoButton from '../UserInfoButton';
+import { Card, LinkButton } from '../ui';
 
 interface Props {
   booking: any;
@@ -29,6 +31,7 @@ const BookingListPreview = ({
   link,
   isAdmin,
 }: Props) => {
+  const { APP_NAME } = useConfig();
   const {
     _id,
     start,
@@ -37,6 +40,7 @@ const BookingListPreview = ({
     created,
     createdBy,
     useTokens,
+    useCredits,
     updated,
     adults,
     rentalToken,
@@ -48,6 +52,7 @@ const BookingListPreview = ({
     doesNeedPickup,
     doesNeedSeparateBeds,
     duration,
+    adminBookingReason,
   } = bookingMapItem.toJS();
   const router = useRouter();
 
@@ -58,7 +63,10 @@ const BookingListPreview = ({
 
   const endFormatted = dayjs(end).format('DD/MM/YYYY');
   const createdFormatted = dayjs(created).format('DD/MM/YYYY - HH:mm:A');
-  const isNotPaid = status !== 'paid';
+  const isNotPaid =
+    status !== 'paid' &&
+    status !== 'tokens-staked' &&
+    status !== 'credits-paid';
 
   const bookingType = getBookingType(eventId, volunteerId);
 
@@ -86,6 +94,12 @@ const BookingListPreview = ({
         >
           #{_id}
         </Link>
+
+        {adminBookingReason && (
+          <Card className="bg-accent text-white py-1 text-center text-xs mt-1.5">
+            {adminBookingReason}
+          </Card>
+        )}
         <p
           className={` mt-2 capitalize opacity-100 text-base p-1 text-white text-center rounded-md  bg-${STATUS_COLOR[status]}`}
         >
@@ -158,7 +172,15 @@ const BookingListPreview = ({
           {__('booking_card_payment_accomodation')}
         </p>
         <p>
-          {useTokens ? priceFormat(rentalToken) : priceFormat(rentalFiat)}{' '}
+          {useTokens && priceFormat(rentalToken)}
+          {useCredits &&
+            priceFormat({
+              val: rentalToken.val,
+              cur: 'credits',
+              app: APP_NAME,
+            })}
+          {!useCredits && !useTokens && priceFormat(rentalFiat)}
+
           {isNotPaid && (
             <span className="text-failure">{__('booking_card_unpaid')}</span>
           )}
@@ -198,6 +220,16 @@ const BookingListPreview = ({
           </p>
           <p>✅</p>
         </div>
+      )}
+
+      {userInfo?.email && (
+        <LinkButton
+          className="mt-6"
+          type="secondary"
+          href={`mailto:${userInfo.email}`}
+        >
+          {__('booking_card_email_user')}
+        </LinkButton>
       )}
 
       <BookingRequestButtons

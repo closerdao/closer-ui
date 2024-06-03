@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 import BookingRules from '../../components/BookingRules';
 import Hosts from '../../components/Hosts';
@@ -11,21 +11,37 @@ import UpcomingEventsIntro from '../../components/UpcomingEventsIntro';
 import Heading from '../../components/ui/Heading';
 
 import PageNotFound from '../404';
+import { MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
-import { BookingRulesConfig, GeneralConfig } from '../../types';
+import {
+  BookingRulesConfig,
+  GeneralConfig,
+  VolunteerConfig,
+  VolunteerOpportunity,
+} from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
+
+const ADMIN_EMAIL = 'vashnev@gmail.com';
 
 interface Props {
   bookingSettings: any;
   bookingRules: BookingRulesConfig | null;
   generalConfig: GeneralConfig | null;
+  opportunities: VolunteerOpportunity[] | null;
+  volunteerConfig: VolunteerConfig;
 }
 
-const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
+const StayPage = ({
+  bookingSettings,
+  bookingRules,
+  generalConfig,
+  opportunities,
+  volunteerConfig,
+}: Props) => {
   const { APP_NAME } = useConfig();
   const config = useConfig();
 
@@ -49,10 +65,14 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
         $in: ['guests', isTeamMember ? 'team' : null].filter((e) => e),
       },
     },
+    ...(APP_NAME === 'lios' ? { sort_by: 'created' } : {}),
+
+    limit: MAX_LISTINGS_TO_FETCH,
   };
   const hostsFilter = {
     where: {
       roles: { $in: ['space-host', 'steward', 'team'].filter((e) => e) },
+      email: { $ne: ADMIN_EMAIL },
     },
   };
 
@@ -93,9 +113,16 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
       <section className="max-w-6xl mx-auto mb-16">
         <div className="mb-6 max-w-prose">
           <Heading level={1} className="text-4xl pb-2 mt-8">
-            {APP_NAME && `${__('stay_title', APP_NAME)} ${PLATFORM_NAME}`}
+            {APP_NAME &&
+              `${__('stay_title', APP_NAME)} 
+            
+            ${APP_NAME && APP_NAME === 'tdf' ? PLATFORM_NAME : ''}`}
           </Heading>
-          <p>{APP_NAME && __('stay_description', APP_NAME)}</p>
+          <p>
+            {APP_NAME &&
+              !__('stay_description', APP_NAME).includes('missing') &&
+              __('stay_description', APP_NAME)}
+          </p>
         </div>
       </section>
 
@@ -112,14 +139,17 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
             ? __('buttons_book_now')
             : __('buttons_apply_to_stay')}
         </Link>
-        {process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING && (
-          <Link
-            href="/volunteer"
-            className="text-xl px-8 py-3 text-accent italic underline"
-          >
-            {__('buttons_volunteer')}
-          </Link>
-        )}
+        {process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING &&
+          opportunities &&
+          opportunities?.length > 0 &&
+          volunteerConfig.enabled === true && (
+            <Link
+              href="/volunteer"
+              className="text-xl px-8 py-3 text-accent italic underline"
+            >
+              {__('buttons_volunteer')}
+            </Link>
+          )}
       </section>
 
       <section className="max-w-6xl mx-auto mb-16">
@@ -130,7 +160,11 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
             {APP_NAME && __('stay_chose_accommodation', APP_NAME)}
           </Heading>
           <p className="mb-8 max-w-prose">
-            {APP_NAME && __('stay_chose_accommodation_description', APP_NAME)}
+            {APP_NAME &&
+              !__('stay_chose_accommodation_description', APP_NAME).includes(
+                'missing',
+              ) &&
+              __('stay_chose_accommodation_description', APP_NAME)}
           </p>
           {listings && listings.count() > 0 && (
             <div className="grid md:grid-cols-4 gap-x-12 md:gap-x-5 gap-y-16">
@@ -166,29 +200,44 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
 
 StayPage.getInitialProps = async () => {
   try {
-    const [bookingResponse, bookingRulesResponse, generalRes] =
-      await Promise.all([
-        api.get('/config/booking').catch((err) => {
-          console.error('Error fetching booking config:', err);
-          return null;
-        }),
-        api.get('/config/booking-rules').catch((err) => {
-          console.error('Error fetching booking rules:', err);
-          return null;
-        }),
-        api.get('/config/general').catch(() => {
-          return null;
-        }),
-      ]);
+    const [
+      bookingResponse,
+      bookingRulesResponse,
+      generalRes,
+      volunteerRes,
+      volunteerConfigRes,
+    ] = await Promise.all([
+      api.get('/config/booking').catch((err) => {
+        console.error('Error fetching booking config:', err);
+        return null;
+      }),
+      api.get('/config/booking-rules').catch((err) => {
+        console.error('Error fetching booking rules:', err);
+        return null;
+      }),
+      api.get('/config/general').catch(() => {
+        return null;
+      }),
+      api.get('/volunteer').catch(() => {
+        return null;
+      }),
+      api.get('/config/volunteering').catch(() => {
+        return null;
+      }),
+    ]);
     const generalConfig = generalRes?.data?.results?.value;
 
     const bookingSettings = bookingResponse?.data?.results?.value;
     const bookingRules = bookingRulesResponse?.data?.results?.value;
+    const opportunities = volunteerRes?.data?.results;
+    const volunteerConfig = volunteerConfigRes?.data?.results?.value;
 
     return {
       bookingSettings,
       bookingRules,
       generalConfig,
+      opportunities,
+      volunteerConfig,
     };
   } catch (err) {
     return {
@@ -196,6 +245,8 @@ StayPage.getInitialProps = async () => {
       bookingSettings: null,
       bookingRules: null,
       generalConfig: null,
+      opportunities: null,
+      volunteerConfig: null,
     };
   }
 };

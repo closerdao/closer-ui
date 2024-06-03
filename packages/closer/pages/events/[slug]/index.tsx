@@ -18,20 +18,22 @@ import { NextApiRequest } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
 import PageNotFound from '../../404';
+import { MAX_LISTINGS_TO_FETCH } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
+import { useConfig } from '../../../hooks/useConfig';
 import { Event, Listing } from '../../../types';
 import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { getAccommodationPriceRange } from '../../../utils/events.helpers';
 import {
+  __,
   getBookingRate,
   getDiscountRate,
   prependHttp,
   priceFormat,
 } from '../../../utils/helpers';
-import { __ } from '../../../utils/helpers';
 
 interface Props {
   event: Event;
@@ -52,7 +54,7 @@ const EventPage = ({
 }: Props) => {
   const { platform }: any = usePlatform();
   const { user, isAuthenticated } = useAuth();
-
+  const { APP_NAME } = useConfig() || {};
   const dailyUtilityFee = settings?.utilityFiatVal;
 
   const [photo, setPhoto] = useState(event && event.photo);
@@ -286,7 +288,7 @@ const EventPage = ({
             <div className="max-w-4xl w-full ">
               <div className="w-full py-2">
                 <div className="w-full flex flex-col sm:flex-row gap-4 sm:gap-8">
-                  <div className="flex gap-1 items-center min-w-[120px]">
+                  <div className="flex gap-1 items-center min-w-[140px]">
                     <Image
                       alt="calendar icon"
                       src="/images/icons/calendar-icon.svg"
@@ -473,7 +475,7 @@ const EventPage = ({
                               </div>
                             );
                           })}
-                        {durationInDays > 0 && (
+                        {durationInDays > 0 &&  APP_NAME && APP_NAME !== 'lios' && (
                           <>
                             <div className="text-sm">
                               {__('events_accommodation')}{' '}
@@ -662,7 +664,11 @@ EventPage.getInitialProps = async ({
           console.error('Error fetching event:', err);
           return null;
         }),
-      api.get('/listing'),
+      api.get('/listing', {
+        params: {
+          limit: MAX_LISTINGS_TO_FETCH,
+        },
+      }),
       api.get('/config/booking'),
     ]);
 

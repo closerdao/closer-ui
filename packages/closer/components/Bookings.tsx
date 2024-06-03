@@ -49,7 +49,7 @@ const Bookings = ({ filter, page, setPage }: Props) => {
   const error = bookings && bookings.get('error');
 
   const allBookings = platform.booking.find({
-    where: filter.where,
+    where: filter?.where,
     limit: MAX_BOOKINGS_TO_FETCH,
   });
 
@@ -89,7 +89,7 @@ const Bookings = ({ filter, page, setPage }: Props) => {
 
   return (
     <div>
-      <section className=" min-h-[100vh]">
+      <section>
         {loading ? (
           <div className="my-16 flex items-center gap-2">
             <Spinner /> {__('generic_loading')}
@@ -200,6 +200,7 @@ const Bookings = ({ filter, page, setPage }: Props) => {
                           name: user.screenname,
                           photo: user.photo,
                           diet: user.preferences?.diet,
+                          email: user.email,
                         }
                       }
                       eventName={currentEvent && currentEvent.get('name')}

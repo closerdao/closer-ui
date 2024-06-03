@@ -7,7 +7,7 @@ import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
 import UserInfoButton from '../../../components/UserInfoButton';
-import { Button, Information } from '../../../components/ui';
+import { Button, Card, Information } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
 import dayjs from 'dayjs';
@@ -17,19 +17,23 @@ import { ParsedUrlQuery } from 'querystring';
 
 import PageNotAllowed from '../../401';
 import PageNotFound from '../../404';
-import { STATUS_COLOR } from '../../../constants';
+import { MAX_LISTINGS_TO_FETCH, STATUS_COLOR } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
+import { useConfig } from '../../../hooks/useConfig';
 import {
   Booking,
   BookingConfig,
   Event,
   Listing,
+  PaymentConfig,
   VolunteerOpportunity,
 } from '../../../types';
 import api from '../../../utils/api';
 import {
+  formatCheckinDate,
+  formatCheckoutDate,
   getAccommodationTotal,
   getFiatTotal,
   getPaymentDelta,
@@ -37,6 +41,7 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, getBookingRate, getDiscountRate } from '../../../utils/helpers';
+import { formatDate } from '../../../utils/listings.helpers';
 
 dayjs.extend(LocalizedFormat);
 
@@ -49,6 +54,7 @@ interface Props {
   bookingCreatedBy: User;
   bookingConfig: BookingConfig | null;
   listings: Listing[];
+  paymentConfig: PaymentConfig | null;
 }
 
 const BookingPage = ({
@@ -60,6 +66,7 @@ const BookingPage = ({
   bookingCreatedBy,
   bookingConfig,
   listings,
+  paymentConfig,
 }: Props) => {
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -68,12 +75,14 @@ const BookingPage = ({
   const { platform }: any = usePlatform();
   const { isAuthenticated, user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
+  const { TIME_ZONE } = useConfig();
 
   const {
     utilityFiat,
     rentalToken,
     rentalFiat,
     useTokens,
+    useCredits,
     children,
     pets,
     infants,
@@ -93,10 +102,21 @@ const BookingPage = ({
     eventPrice,
   } = booking || {};
 
+  console.log('booking=', booking);
+  // start = "2024-06-21T13:00:00.000Z"
+  // end = "2024-06-22T10:00:00.000Z"
+
+  // "2024-06-22T10:00:00.000Z"
+  // "2024-06-22T19:00:00.000Z"
+
   const userInfo = bookingCreatedBy && {
     name: bookingCreatedBy.screenname,
     photo: bookingCreatedBy.photo,
   };
+
+  const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
+  const vatRateFromConfig = Number(paymentConfig?.vatRate);
+  const vatRate = vatRateFromConfig || defaultVatRate;
 
   const [status, setStatus] = useState(booking?.status);
   const [updatedAdults, setUpdatedAdults] = useState(adults);
@@ -122,7 +142,10 @@ const BookingPage = ({
     setUpdatedStartDate,
     setUpdatedListingId,
   };
-  const isNotPaid = status !== 'paid';
+  const isNotPaid =
+    status !== 'paid' &&
+    status !== 'credits-paid' &&
+    status !== 'tokens-staked';
 
   const updatedDurationInDays = Math.ceil(
     dayjs(updatedEndDate).diff(dayjs(updatedStartDate), 'hour') / 24,
@@ -141,10 +164,11 @@ const BookingPage = ({
   const updatedAccomodationTotal = getAccommodationTotal(
     updatedListing,
     useTokens,
+    useCredits,
     updatedAdults,
     updatedDurationInDays,
     updatedDiscountRate,
-    volunteerId
+    volunteerId,
   );
 
   const foodOption = 'no_food';
@@ -167,6 +191,7 @@ const BookingPage = ({
     updatedAccomodationTotal,
     updatedEventTotal,
     useTokens,
+    useCredits,
   );
 
   const paymentDelta = isNotPaid
@@ -175,6 +200,7 @@ const BookingPage = ({
         total?.val,
         updatedFiatTotal,
         useTokens,
+        useCredits,
         rentalToken,
         updatedAccomodationTotal,
         rentalFiat?.cur,
@@ -182,20 +208,30 @@ const BookingPage = ({
 
   const updatedBooking = {
     ...booking,
-    start: updatedStartDate,
-    end: updatedEndDate,
+    start: formatCheckinDate(
+      formatDate(updatedStartDate),
+      TIME_ZONE,
+      bookingConfig?.checkinTime,
+    ),
+    end: formatCheckoutDate(
+      formatDate(updatedEndDate),
+      TIME_ZONE,
+      bookingConfig?.checkoutTime,
+    ),
     duration: updatedDurationInDays,
     adults: updatedAdults,
     children: updatedChildren,
     pets: updatedPets,
     infants: updatedInfants,
     utilityFiat: { val: updatedUtilityTotal, cur: rentalFiat?.cur },
-    rentalFiat: useTokens
-      ? rentalFiat
-      : { val: updatedAccomodationTotal, cur: rentalFiat?.cur },
-    rentalToken: useTokens
-      ? { val: updatedAccomodationTotal, cur: rentalToken?.cur }
-      : booking?.rentalToken,
+    rentalFiat:
+      useTokens || useCredits
+        ? rentalFiat
+        : { val: updatedAccomodationTotal, cur: rentalFiat?.cur },
+    rentalToken:
+      useTokens || useCredits
+        ? { val: updatedAccomodationTotal, cur: rentalToken?.cur }
+        : booking?.rentalToken,
     ...(eventFiat
       ? {
           eventFiat: {
@@ -209,6 +245,10 @@ const BookingPage = ({
     total: { val: updatedFiatTotal, cur: rentalFiat?.cur },
     paymentDelta: paymentDelta ? paymentDelta : null,
   };
+
+  if (booking?.paymentDelta) {
+    booking.paymentDelta = null;
+  }
 
   const hasUpdatedBooking =
     JSON.stringify(booking) !== JSON.stringify(updatedBooking);
@@ -289,6 +329,12 @@ const BookingPage = ({
               {__('bookings_id')} <b>{booking._id}</b>
             </p>
           </div>
+          {booking?.adminBookingReason && (
+            <Card className="bg-accent text-white my-4 font-bold">
+              {booking?.adminBookingReason}
+            </Card>
+          )}
+
           <p
             className={`bg-${STATUS_COLOR[status]}  mt-2 
             capitalize opacity-100 text-base p-1 text-white text-center rounded-md`}
@@ -326,7 +372,10 @@ const BookingPage = ({
           <SummaryCosts
             utilityFiat={utilityFiat}
             useTokens={useTokens}
-            accomodationCost={useTokens ? rentalToken : rentalFiat}
+            useCredits={useCredits}
+            accomodationCost={
+              useTokens || useCredits ? rentalToken : rentalFiat
+            }
             totalToken={rentalToken}
             totalFiat={total}
             eventCost={eventFiat}
@@ -353,22 +402,26 @@ const BookingPage = ({
               val: updatedEventTotal,
               cur: eventFiat?.cur,
             }}
+            vatRate={vatRate}
           />
         </section>
 
         <section>
-          <div className="flex flex-col gap-4">
-            <Button
-              isLoading={isLoading}
-              onClick={handleSaveBooking}
-              isEnabled={hasUpdatedBooking && !isLoading}
-            >
-              {__('booking_card_save_booking')}
-            </Button>
-            {hasUpdated && (
-              <Information>{__('booking_card_booking_updated')}</Information>
-            )}
-          </div>
+          {isSpaceHost && (
+            <div className="flex flex-col gap-4">
+              <Button
+                isLoading={isLoading}
+                onClick={handleSaveBooking}
+                isEnabled={hasUpdatedBooking && !isLoading}
+              >
+                {__('booking_card_save_booking')}
+              </Button>
+              {hasUpdated && (
+                <Information>{__('booking_card_booking_updated')}</Information>
+              )}
+            </div>
+          )}
+
           <BookingRequestButtons
             _id={_id}
             status={status}
@@ -396,26 +449,37 @@ BookingPage.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
-    const [bookingRes, bookingConfigRes, listingRes] = await Promise.all([
-      api
-        .get(`/booking/${query.slug}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
-          },
-        })
-        .catch(() => {
+    const [bookingRes, bookingConfigRes, listingRes, paymentConfigRes] =
+      await Promise.all([
+        api
+          .get(`/booking/${query.slug}`, {
+            headers: req?.cookies?.access_token && {
+              Authorization: `Bearer ${req?.cookies?.access_token}`,
+            },
+          })
+          .catch(() => {
+            return null;
+          }),
+        api.get('/config/booking').catch(() => {
           return null;
         }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-      api.get('/listing').catch(() => {
-        return null;
-      }),
-    ]);
+        api
+          .get('/listing', {
+            params: {
+              limit: MAX_LISTINGS_TO_FETCH,
+            },
+          })
+          .catch(() => {
+            return null;
+          }),
+        api.get('/config/payment').catch(() => {
+          return null;
+        }),
+      ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
     const listings = listingRes?.data?.results;
+    const paymentConfig = paymentConfigRes?.data?.results?.value;
 
     const [optionalEvent, optionalListing, optionalVolunteer] =
       await Promise.all([
@@ -463,6 +527,7 @@ BookingPage.getInitialProps = async ({
       bookingCreatedBy,
       bookingConfig,
       listings,
+      paymentConfig,
     };
   } catch (err: any) {
     console.log('Error', err.message);
@@ -476,6 +541,7 @@ BookingPage.getInitialProps = async ({
       createdBy: null,
       bookingConfig: null,
       listings: null,
+      paymentConfig: null,
     };
   }
 };

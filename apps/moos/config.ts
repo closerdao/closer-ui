@@ -1,5 +1,7 @@
 const config = {
-  platformAllowedConfigs: ['booking', 'general', 'booking-rules', 'payment','fundraiser'],
+  // protect APP_NAME from being changed by admin - temporary hotfix, until configs validation is implemented
+  APP_NAME: 'moos',
+  platformAllowedConfigs: ['booking', 'general', 'booking-rules', 'payment','fundraiser', 'emails', 'volunteering'],
   PORT: 14444,
   EXPOSE_STORE: true,
   CACHE_DURATION: 300000, // 5min

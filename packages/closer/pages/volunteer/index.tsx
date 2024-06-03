@@ -1,25 +1,32 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import React from 'react';
-
 import EventPreview from '../../components/EventPreview';
 import { LinkButton } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
 import { NextPage } from 'next';
 
+import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
-import { OpportunityByCategory, type VolunteerOpportunity } from '../../types';
+import {
+  OpportunityByCategory,
+  VolunteerConfig,
+  type VolunteerOpportunity,
+} from '../../types';
 import api from '../../utils/api';
 import { __ } from '../../utils/helpers';
 import { getOpportunitiesByCategory } from '../../utils/volunteer.helpers';
 
 interface Props {
   opportunities: VolunteerOpportunity[];
+  volunteerConfig: VolunteerConfig | null;
 }
-const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
+const VolunteerOpportunitiesPage: NextPage<Props> = ({
+  opportunities,
+  volunteerConfig,
+}) => {
   const { APP_NAME, SEMANTIC_URL } = useConfig() || {};
   const opportunitiesByCategory = getOpportunitiesByCategory(opportunities);
 
@@ -31,12 +38,22 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
     __('volunteers_page_terms_2', APP_NAME),
     __('volunteers_page_terms_3', APP_NAME),
     __('volunteers_page_terms_4', APP_NAME),
+    __('volunteers_page_terms_5', APP_NAME),
+    __('volunteers_page_terms_6', APP_NAME),
   ];
 
   const doesHaveVolunteerTerms =
     !volunteerTerms.every((item) => item === '') &&
     APP_NAME &&
-    APP_NAME.toLowerCase() === 'tdf';
+    (APP_NAME.toLowerCase() === 'tdf' || APP_NAME.toLowerCase() === 'lios');
+
+  const isVolunteeringEnabled =
+    volunteerConfig?.enabled === true &&
+    process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
+
+  if (!isVolunteeringEnabled) {
+    return <PageNotFound />;
+  }
 
   return (
     <div className="flex justify-center">
@@ -60,31 +77,40 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
         </section>
 
         <section className=" flex flex-col gap-6">
-          <div className="bg-accent-light rounded-md p-6">
+          <div className="bg-accent-light rounded-md p-6 flex flex-col gap-6">
             <p>{APP_NAME && __('volunteers_page_intro_text', APP_NAME)}</p>
             {doesHaveVolunteerTerms && (
               <ul>
-                {volunteerTerms.map((term: string) => (
-                  <li
-                    key={term}
-                    className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5"
-                  >
-                    {term}
-                  </li>
-                ))}
+                {volunteerTerms.map((term: string) => {
+                  if (!term.includes('_missing')) {
+                    return (
+                      <li
+                        key={term}
+                        className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5"
+                      >
+                        {term}
+                      </li>
+                    );
+                  }
+                })}
               </ul>
             )}
           </div>
           {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
-            <LinkButton className="w-[300px]" href="https://t.me/+EYSkTvSomodkMWUx">
+            <LinkButton
+              className="w-[300px]"
+              href="https://t.me/+EYSkTvSomodkMWUx"
+            >
               Join Telegram group
             </LinkButton>
           )}
-          <div
-            dangerouslySetInnerHTML={{
-              __html: __('volunteers_page_more_info', APP_NAME),
-            }}
-          />
+          {!__('volunteers_page_more_info', APP_NAME).includes('_missing') && (
+            <div
+              dangerouslySetInnerHTML={{
+                __html: __('volunteers_page_more_info', APP_NAME),
+              }}
+            />
+          )}
         </section>
 
         <div>
@@ -129,16 +155,27 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
 
 VolunteerOpportunitiesPage.getInitialProps = async () => {
   try {
-    const {
-      data: { results },
-    } = await api.get('/volunteer');
+    const [opportunitiesRes, volunteerConfigRes] = await Promise.all([
+      api.get('/volunteer').catch(() => {
+        return null;
+      }),
+      api.get('/config/volunteering').catch(() => {
+        return null;
+      }),
+    ]);
+
+    const opportunities = opportunitiesRes?.data?.results || null;
+    const volunteerConfig = volunteerConfigRes?.data?.results?.value || null;
+
     return {
-      opportunities: results,
+      opportunities,
+      volunteerConfig,
     };
   } catch (error) {
     console.error(error);
     return {
       opportunities: [],
+      volunteerConfig: null,
     };
   }
 };

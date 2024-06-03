@@ -1,42 +1,42 @@
 import Image from 'next/image';
 
 import { useState } from 'react';
-import Lightbox from 'react-image-lightbox';
 
 import { __ } from '../../utils/helpers';
+import Modal from '../Modal';
 import { Heading } from '../ui';
 import { slides } from './slides';
 
 const PeekIntoFuture = () => {
   const [photoIndex, setPhotoIndex] = useState(0);
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-
-  const currentImage = slides[photoIndex];
-  const nextIndex = (photoIndex + 1) % slides.length;
-  const nextImage = slides[nextIndex] || currentImage;
-  const prevIndex = (photoIndex + slides.length - 1) % slides.length;
-  const prevImage = slides[prevIndex] || currentImage;
-
-  const handleMovePrev = () => setPhotoIndex(prevIndex);
-  const handleMoveNext = () => setPhotoIndex(nextIndex);
+  const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
 
   const handleShowPhoto = (index: number) => {
-    setIsLightboxOpen(true);
+    setIsInfoModalOpened(true);
     setPhotoIndex(index);
   };
 
+  const closeModal = () => {
+    setIsInfoModalOpened(false);
+  };
+
   return (
-    <section className="flex items-center flex-col mb-32">
-      {isLightboxOpen && (
-        <Lightbox
-          mainSrc={slides[photoIndex]}
-          nextSrc={nextImage}
-          prevSrc={prevImage}
-          onCloseRequest={() => setIsLightboxOpen(!isLightboxOpen)}
-          onMovePrevRequest={handleMovePrev}
-          onMoveNextRequest={handleMoveNext}
-        />
+    <section className="flex items-center flex-col mb-32 relative">
+      {isInfoModalOpened && (
+        <Modal
+          closeModal={closeModal}
+          className="flex items-center justify-center bg-green-200  md:h-[calc(100vh-100px)] md:w-[calc(100vw-100px)]"
+        >
+          <Image
+            className="object-cover h-full w-full md:w-auto md:h-full"
+            src={slides[photoIndex]}
+            width={800}
+            height={400}
+            alt=""
+          />
+        </Modal>
       )}
+
       <div className="w-full flex flex-col  gap-2">
         <div className="flex gap-2 justify-center items-center flex-col md:flex-row">
           <div className="flex flex-col justify-center items-center w-full md:w-1/3 min-h-[240px]">
@@ -99,9 +99,11 @@ const PeekIntoFuture = () => {
               </Heading>
             </div>
           </div>
-          <div className="w-full md:w-1/3 bg-bottom flex flex-col gap-4 justify-center items-center bg-accent-light min-h-[280px] rounded-md bg-cover p-6">
+          <div className="w-full md:w-1/3 bg-bottom flex flex-col gap-4 justify-center items-center  min-h-[280px] rounded-md bg-cover p-6">
             <p className="text-center">{__('token_sale_peek_design_1')}</p>
-            <p className="text-center">{__('token_sale_peek_design_2')}</p>
+            <p className="text-center text-sm">
+              {__('token_sale_peek_design_2')}
+            </p>
           </div>
         </div>
 
@@ -114,7 +116,7 @@ const PeekIntoFuture = () => {
           </div>
         </div>
 
-        <div className="flex gap-2 justify-center items-center flex-col md:flex-row">
+        {/* <div className="flex gap-2 justify-center items-center flex-col md:flex-row">
           <div className="w-full md:w-1/3 bg-bottom flex flex-col gap-4 justify-center items-center bg-accent-light min-h-[280px] rounded-md bg-cover p-6">
             <Heading level={3} className="text-center text-2xl">
               {__('token_sale_food_heading')}
@@ -127,7 +129,7 @@ const PeekIntoFuture = () => {
           >
             <div className=" p-6 hover:scale-[103%] duration-300 min-h-[280px] min-w-full bg-bottom bg-[url(/images/token-sale/map.png)] bg-cover"></div>
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   );

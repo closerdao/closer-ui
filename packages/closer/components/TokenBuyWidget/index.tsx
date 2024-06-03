@@ -7,7 +7,7 @@ import React, {
   useState,
 } from 'react';
 
-import { SALES_CONFIG } from '../../constants';
+import { MAX_LISTINGS_TO_FETCH, SALES_CONFIG } from '../../constants';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
@@ -72,7 +72,11 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
 
   useEffect(() => {
     (async () => {
-      const res = await api.get('/listing');
+      const res = await api.get('/listing', {
+        params: {
+          limit: MAX_LISTINGS_TO_FETCH,
+        },
+      });
       const labels = res.data.results.map((option: any) => {
         return { label: option.name, value: option.name };
       });

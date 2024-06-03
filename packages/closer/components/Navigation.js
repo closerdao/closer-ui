@@ -59,10 +59,11 @@ const Navigation = () => {
     <div className="NavContainer h-20 md:pt-0 top-0 left-0 right-0 fixed z-20 bg-background shadow">
       <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
         <Logo />
-        <div className="flex gap-3 w-auto justify-center items-center ">
+        <div className="flex gap-2 w-auto justify-center items-center ">
           {!isAuthenticated &&
             APP_NAME &&
-            APP_NAME.toLowerCase() === 'moos' && (
+            (APP_NAME.toLowerCase() === 'moos' ||
+              APP_NAME.toLowerCase() === 'lios') && (
               <Button
                 onClick={() => router.push('/login')}
                 size="small"
@@ -71,18 +72,10 @@ const Navigation = () => {
                 {APP_NAME && __('navigation_member_login', APP_NAME)}
               </Button>
             )}
-          {isAuthenticated && APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
-            <Button
-              onClick={() => router.push('/stay')}
-              size="small"
-              type="primary"
-            >
-              {APP_NAME && __('navigation_stay', APP_NAME)}
-            </Button>
-          )}
-          {isBookingEnabled &&
+          {isAuthenticated &&
             APP_NAME &&
-            APP_NAME.toLowerCase() !== 'moos' && (
+            (APP_NAME.toLowerCase() === 'moos' ||
+              APP_NAME.toLowerCase() === 'lios') && (
               <Button
                 onClick={() => router.push('/stay')}
                 size="small"
@@ -91,6 +84,16 @@ const Navigation = () => {
                 {APP_NAME && __('navigation_stay', APP_NAME)}
               </Button>
             )}
+
+          {isBookingEnabled && APP_NAME && APP_NAME.toLowerCase() === 'tdf' && (
+            <Button
+              onClick={() => router.push('/stay')}
+              size="small"
+              type="primary"
+            >
+              {APP_NAME && __('navigation_stay', APP_NAME)}
+            </Button>
+          )}
 
           {/* {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && (
             <Link href="/token" className="uppercase">

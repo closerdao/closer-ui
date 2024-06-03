@@ -1,4 +1,6 @@
 import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
 
 import {
   BOOKING_EXISTS_ERROR,
@@ -15,6 +17,9 @@ import {
 } from '../types';
 import api from './api';
 import { __, priceFormat } from './helpers';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export const getStatusText = (status: string, updated: string | Date) => {
   if (status === 'cancelled') {
@@ -60,11 +65,13 @@ export const getFiatTotal = (
   accomodationTotal: number,
   eventTotal?: number,
   useTokens?: boolean,
+  useCredits?: boolean,
 ) => {
   if (isTeamBooking) {
     return 0;
   }
-  const accommodationFiatTotal = useTokens ? 0 : accomodationTotal;
+  const accommodationFiatTotal =
+    useTokens || useCredits ? 0 : accomodationTotal;
   if (foodOption === 'no_food') {
     return accommodationFiatTotal + (eventTotal || 0);
   }
@@ -98,37 +105,54 @@ export const getUtilityTotal = ({
   return total;
 };
 
+// a better idea is recalculate booking price on backend, so that price calculation logic is in one place
 export const getAccommodationTotal = (
   listing: Listing | undefined,
   useTokens: boolean,
+  useCredits: boolean,
   adults: number,
   durationInDays: number,
   discountRate: number,
   volunteerId: string | undefined,
 ) => {
   if (!listing) return 0;
-  if(volunteerId) return 0;
-  const price = useTokens ? listing.tokenPrice?.val : listing.fiatPrice?.val;
+  if (volunteerId) return 0;
+
+  const price =
+    useTokens || useCredits ? listing.tokenPrice?.val : listing.fiatPrice?.val;
   const multiplier = listing.private ? 1 : adults;
-  const total = +(price * multiplier * durationInDays * discountRate).toFixed(
-    2,
-  );
+
+  let total;
+  if (useTokens || useCredits) {
+    total = +(price * multiplier * durationInDays).toFixed(2);
+  } else {
+    total = +(price * multiplier * durationInDays * discountRate).toFixed(2);
+  }
+
   return total;
 };
 
 export const getPaymentDelta = (
   total: number,
   updatedFiatTotal: number,
-  useToken: boolean,
+  useTokens: boolean,
+  useCredits: boolean,
   rentalToken: Price<CloserCurrencies>,
   updatedAccomodationTotal: number,
   rentalFiatCur: CloserCurrencies,
 ) => {
-  if (useToken) {
+  if (useTokens || useCredits) {
+    const delta = Number(
+      (updatedAccomodationTotal - rentalToken?.val).toFixed(2),
+    );
+    if (!delta) return null;
     return {
+      credits: {
+        val: useCredits ? delta : 0,
+        cur: 'credits',
+      },
       token: {
-        val:
-          Number((updatedAccomodationTotal - rentalToken?.val).toFixed(2)) || 0,
+        val: useTokens ? delta : 0,
         cur: rentalToken?.cur,
       },
       fiat: {
@@ -137,10 +161,12 @@ export const getPaymentDelta = (
       },
     };
   }
+  const delta = Number((updatedFiatTotal - total).toFixed(2));
+  if (!delta) return null;
   return {
     token: { val: 0, cur: rentalToken?.cur },
     fiat: {
-      val: Number((updatedFiatTotal - total).toFixed(2)) || 0,
+      val: delta || 0,
       cur: rentalFiatCur,
     },
   };
@@ -210,6 +236,8 @@ export const getBookingsWithUserAndListing = (
       name: user.screenname,
     };
 
+    const adminBookingReason = b.get('adminBookingReason') || null;
+
     return {
       _id: b.get('_id'),
       start: localStart,
@@ -225,8 +253,23 @@ export const getBookingsWithUserAndListing = (
       listingId,
       fiatPriceVal,
       fiatPriceCur,
+      adminBookingReason,
     };
   });
+};
+
+const getBookingTitleForCalendar = (booking: BookingWithUserAndListing) => {
+  const userName = booking.userInfo?.name || '';
+  const additionalGuests = booking.adults > 1 ? ` + ${booking.adults - 1}` : '';
+  const formattedPrice =
+    booking.fiatPriceVal && booking.fiatPriceCur
+      ? priceFormat(booking.fiatPriceVal, booking.fiatPriceCur)
+      : '';
+  if (booking?.adminBookingReason) {
+    return `${booking.adminBookingReason} by ${userName}`;
+  }
+
+  return `${userName}${additionalGuests} ${formattedPrice}`;
 };
 
 export const generateBookingItems = (
@@ -262,13 +305,7 @@ export const generateBookingItems = (
       bookingItems.push({
         id: booking._id,
         group: assignedUnitId,
-        title: `${booking.userInfo ? booking?.userInfo?.name : ''} ${
-          booking.adults > 1 ? ' + ' + (booking.adults - 1) : ''
-        }  ${
-          booking.fiatPriceVal && booking.fiatPriceCur
-            ? priceFormat(booking.fiatPriceVal, booking.fiatPriceCur)
-            : ''
-        }`,
+        title: getBookingTitleForCalendar(booking),
         start_time: dayjs(booking.start).toDate(),
         end_time: dayjs(booking.end).toDate(),
       });
@@ -373,4 +410,32 @@ export const payTokens = async (
     });
     return { success: true, error: null };
   }
+};
+
+export const formatCheckinDate = (
+  date: Date | string | null,
+  TIME_ZONE: string,
+  checkinTime: number | undefined,
+) => {
+  const localDate = dayjs.tz(date, TIME_ZONE);
+  const localTime = localDate
+    .hour(Number(checkinTime) || 16)
+    .minute(0)
+    .second(0)
+    .millisecond(0);
+  return localTime;
+};
+
+export const formatCheckoutDate = (
+  date: Date | string | null,
+  TIME_ZONE: string,
+  checkoutTime: number | undefined,
+) => {
+  const localDate = dayjs.tz(date, TIME_ZONE);
+  const localTime = localDate
+    .hour(Number(checkoutTime) || 11)
+    .minute(0)
+    .second(0)
+    .millisecond(0);
+  return localTime;
 };
