@@ -85,6 +85,7 @@ export const getUtilityTotal = ({
   updatedAdults,
   updatedDurationInDays,
   discountRate,
+  isTeamBooking,
 }: {
   foodOption: string;
   utilityFiatVal: number | undefined;
@@ -92,11 +93,9 @@ export const getUtilityTotal = ({
   updatedAdults: number;
   updatedDurationInDays: number;
   discountRate: number;
+  isTeamBooking: boolean | undefined
 }) => {
-  if (foodOption === 'no_food') {
-    return 0;
-  }
-  if (!utilityFiatVal) {
+  if (foodOption === 'no_food' || isTeamBooking || !utilityFiatVal) {
     return 0;
   }
   const multiplier = isPrivate ? 1 : updatedAdults;
@@ -114,9 +113,9 @@ export const getAccommodationTotal = (
   durationInDays: number,
   discountRate: number,
   volunteerId: string | undefined,
+  isTeamBooking: boolean | undefined,
 ) => {
-  if (!listing) return 0;
-  if (volunteerId) return 0;
+  if (!listing || volunteerId || isTeamBooking) return 0;
 
   const price =
     useTokens || useCredits ? listing.tokenPrice?.val : listing.fiatPrice?.val;

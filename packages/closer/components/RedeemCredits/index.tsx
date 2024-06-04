@@ -33,7 +33,9 @@ const RedeemCredits = ({
         </Heading>
       )}
       <Card className="text-center gap-4">
-        {(!hasAppliedCredits && !useCredits && (rentalFiat?.val || rentalToken?.val)) ||
+        {(!hasAppliedCredits &&
+          !useCredits &&
+          (rentalFiat?.val || rentalToken?.val)) ||
         isDemo ? (
           <>
             <Heading level={2}>
@@ -58,24 +60,25 @@ const RedeemCredits = ({
                 </div>
               </div>
 
-              
-                <>
-                  <div className="w-1/10">
-                    <Heading level={4}>=</Heading>
+              <>
+                <div className="w-1/10">
+                  <Heading level={4}>=</Heading>
+                </div>
+                <div className="w-2/5">
+                  <Heading level={4}>
+                    {isDemo
+                      ? priceFormat(
+                          APP_NAME && APP_NAME.toLowerCase() !== 'moos'
+                            ? '50'
+                            : '5',
+                        )
+                      : priceFormat(rentalFiat)}
+                  </Heading>
+                  <div className="text-xs">
+                    {__('carrots_off_accommodation')}
                   </div>
-                  <div className="w-2/5">
-                    <Heading level={4}>
-                      {APP_NAME && APP_NAME.toLowerCase() !== 'moos' && (
-                        isDemo ? priceFormat(50) : priceFormat(rentalFiat)
-                      )}
-                      {APP_NAME && APP_NAME.toLowerCase() === 'moos' && isDemo ? priceFormat(5) : priceFormat(rentalFiat)}
-                    </Heading>
-                    <div className="text-xs">
-                      {__('carrots_off_accommodation')}
-                    </div>
-                  </div>
-                </>
-            
+                </div>
+              </>
             </div>
 
             {!isDemo && (

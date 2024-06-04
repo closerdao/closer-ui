@@ -102,13 +102,6 @@ const BookingPage = ({
     eventPrice,
   } = booking || {};
 
-  console.log('booking=', booking);
-  // start = "2024-06-21T13:00:00.000Z"
-  // end = "2024-06-22T10:00:00.000Z"
-
-  // "2024-06-22T10:00:00.000Z"
-  // "2024-06-22T19:00:00.000Z"
-
   const userInfo = bookingCreatedBy && {
     name: bookingCreatedBy.screenname,
     photo: bookingCreatedBy.photo,
@@ -169,6 +162,7 @@ const BookingPage = ({
     updatedDurationInDays,
     updatedDiscountRate,
     volunteerId,
+    isTeamBooking,
   );
 
   const foodOption = 'no_food';
@@ -180,6 +174,7 @@ const BookingPage = ({
     updatedAdults,
     updatedDurationInDays,
     discountRate: updatedDiscountRate,
+    isTeamBooking,
   });
 
   const updatedEventTotal = (eventPrice?.val || 0) * updatedAdults || 0;

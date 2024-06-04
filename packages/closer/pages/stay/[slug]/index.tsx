@@ -645,26 +645,30 @@ const ListingPage: NextPage<Props> = ({
                                     listing.tokenPrice?.cur,
                                   )
                                 : priceFormat(
-                                    accommodationFiatTotal,
+                                    isTeamBooking ? 0 : accommodationFiatTotal,
                                     listing.fiatPrice?.cur,
                                   )}
                             </p>
                           </div>
-                          {APP_NAME && APP_NAME !== 'lios' && <div className="flex justify-between items-center mt-3">
-                            <p>{__('bookings_summary_step_utility_total')}</p>
-                            <p>
-                              {foodOption === 'no_food' ? (
-                                <b title={__('stay_food_not_included_tooltip')}>
-                                  {__('stay_food_not_included')}
-                                </b>
-                              ) : (
-                                priceFormat(
-                                  isTeamBooking ? 0 : utilityTotal,
-                                  settings?.utilityFiat?.cur,
-                                )
-                              )}
-                            </p>
-                          </div>}
+                          {APP_NAME && APP_NAME !== 'lios' && (
+                            <div className="flex justify-between items-center mt-3">
+                              <p>{__('bookings_summary_step_utility_total')}</p>
+                              <p>
+                                {foodOption === 'no_food' ? (
+                                  <b
+                                    title={__('stay_food_not_included_tooltip')}
+                                  >
+                                    {__('stay_food_not_included')}
+                                  </b>
+                                ) : (
+                                  priceFormat(
+                                    isTeamBooking ? 0 : utilityTotal,
+                                    settings?.utilityFiat?.cur,
+                                  )
+                                )}
+                              </p>
+                            </div>
+                          )}
                           <div className="flex justify-between items-center mt-3">
                             <p>
                               {__('bookings_checkout_step_total_title')} (

@@ -23,7 +23,6 @@ const GuestMenu = () => {
           process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
         setIsVolunteeringEnabled(isVolunteeringEnabled);
 
-        console.log('isVolunteeringEnabled=', isVolunteeringEnabled);
       } catch (err) {
         console.log('error');
       }
