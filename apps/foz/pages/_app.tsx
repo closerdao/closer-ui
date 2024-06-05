@@ -26,11 +26,12 @@ import {
 } from 'closer';
 import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
-import '../styles/index.css'
 import { prepareGeneralConfig } from 'closer/utils/app.helpers';
+import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import appConfig from '../config';
+import '../styles/index.css';
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
@@ -40,24 +41,29 @@ export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
   const library = new Web3Provider(provider);
   return library;
 }
+
 const prepareDefaultConfig = () => {
-  const general = configDescription.find(
-    (config) => config.slug === 'general',
-  )?.value ?? {};
-  const transformedObject = Object.entries(general).reduce((acc, [key, value]) => {
-    return { ...acc, [key]: '' };
-  }, {});
+  const general =
+    configDescription.find((config) => config.slug === 'general')?.value ?? {};
+  const transformedObject = Object.entries(general).reduce(
+    (acc, [key, value]) => {
+      return { ...acc, [key]: '' };
+    },
+    {},
+  );
   return transformedObject;
-}
+};
 
 const MyApp = ({ Component, pageProps }: AppOwnProps) => {
-  const defaultGeneralConfig = prepareDefaultConfig()
+  const defaultGeneralConfig = prepareDefaultConfig();
 
   const router = useRouter();
   const { query } = router;
   const referral = query.referral;
 
-  const [config, setConfig] = useState<any>(prepareGeneralConfig(defaultGeneralConfig));
+  const [config, setConfig] = useState<any>(
+    prepareGeneralConfig(defaultGeneralConfig),
+  );
 
   const { FACEBOOK_PIXEL_ID } = config || {};
 
@@ -73,7 +79,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         const generalConfigRes = await api.get('config/general').catch(() => {
           return;
         });
-        setConfig(prepareGeneralConfig(generalConfigRes?.data.results.value))
+        setConfig(prepareGeneralConfig(generalConfigRes?.data.results.value));
       } catch (err) {
         console.error(err);
         return;
@@ -96,7 +102,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         dangerouslySetInnerHTML={{
           __html: `
   !function(f,b,e,v,n,t,s)
-  {if(f.fbq)return;n=f.fbq=function(){n.cconfigMethod?
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
   n.callMethod.apply(n,arguments):n.queue.push(arguments)};
   if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
   n.queue=[];t=b.createElement(e);t.async=!0;
@@ -121,10 +127,16 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
             <PlatformProvider>
               <Web3ReactProvider getLibrary={getLibrary}>
                 <WalletProvider>
-                  <Layout>
-                    <GoogleAnalytics trackPageViews />
-                    <Component {...pageProps} config={config} />
-                  </Layout>
+                  <NextIntlClientProvider
+                    locale={router.locale}
+                    messages={pageProps.messages}
+                    timeZone={config.timeZone}
+                  >
+                    <Layout>
+                      <GoogleAnalytics trackPageViews />
+                      <Component {...pageProps} config={config} />
+                    </Layout>
+                  </NextIntlClientProvider>
                 </WalletProvider>
               </Web3ReactProvider>
             </PlatformProvider>

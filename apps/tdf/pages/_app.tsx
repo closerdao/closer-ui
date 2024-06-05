@@ -26,11 +26,13 @@ import {
 } from 'closer';
 import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
-import '../styles/index.css'
 import { prepareGeneralConfig } from 'closer/utils/app.helpers';
+// import { LocaleProvider } from '@/context/LocaleContext';
+import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import appConfig from '../config';
+import '../styles/index.css';
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
@@ -42,23 +44,27 @@ export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
 }
 
 const prepareDefaultConfig = () => {
-  const general = configDescription.find(
-    (config) => config.slug === 'general',
-  )?.value ?? {};
-  const transformedObject = Object.entries(general).reduce((acc, [key, value]) => {
-    return { ...acc, [key]: '' };
-  }, {});
+  const general =
+    configDescription.find((config) => config.slug === 'general')?.value ?? {};
+  const transformedObject = Object.entries(general).reduce(
+    (acc, [key, value]) => {
+      return { ...acc, [key]: '' };
+    },
+    {},
+  );
   return transformedObject;
-}
+};
 
 const MyApp = ({ Component, pageProps }: AppOwnProps) => {
-  const defaultGeneralConfig = prepareDefaultConfig()
+  const defaultGeneralConfig = prepareDefaultConfig();
 
   const router = useRouter();
   const { query } = router;
   const referral = query.referral;
 
-  const [config, setConfig] = useState<any>(prepareGeneralConfig(defaultGeneralConfig));
+  const [config, setConfig] = useState<any>(
+    prepareGeneralConfig(defaultGeneralConfig),
+  );
 
   const { FACEBOOK_PIXEL_ID } = config || {};
 
@@ -74,7 +80,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         const generalConfigRes = await api.get('config/general').catch(() => {
           return;
         });
-        setConfig(prepareGeneralConfig(generalConfigRes?.data.results.value))
+        setConfig(prepareGeneralConfig(generalConfigRes?.data.results.value));
       } catch (err) {
         console.error(err);
         return;
@@ -133,10 +139,16 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
             <PlatformProvider>
               <Web3ReactProvider getLibrary={getLibrary}>
                 <WalletProvider>
-                  <Layout>
-                    <GoogleAnalytics trackPageViews />
-                    <Component {...pageProps} config={config} />
-                  </Layout>
+                  <NextIntlClientProvider
+                    locale={router.locale}
+                    messages={pageProps.messages}
+                    timeZone={config.timeZone}
+                  >
+                    <Layout>
+                      <GoogleAnalytics trackPageViews />
+                      <Component {...pageProps} config={config} />
+                    </Layout>
+                  </NextIntlClientProvider>
                 </WalletProvider>
               </Web3ReactProvider>
             </PlatformProvider>
@@ -158,7 +170,6 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
           border: '1px solid #FE4FB7',
         }}
       >
-
         <div className="text-black text-sm">
           {__('cookie_consent_text')}{' '}
           <Link className="underline" href="/pdf/TDF-Cookies.pdf">
