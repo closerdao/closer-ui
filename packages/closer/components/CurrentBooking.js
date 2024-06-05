@@ -22,6 +22,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
       start: { $lte: arriveBefore },
       end: { $gte: leftAfter },
     },
+    limit: MAX_USERS_TO_FETCH
   };
 
   const bookings = platform.booking.find(filter);
