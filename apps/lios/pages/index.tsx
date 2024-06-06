@@ -342,9 +342,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
             <LinkButton href="/stay" className="lowercase">
               apply to stay
             </LinkButton>
-            <LinkButton href="/volunteer" className="lowercase">
-              join as a volunteer
-            </LinkButton>
+            
           </div>
         </section>
 
@@ -426,9 +424,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                     the area of your choosing and become a part of the
                     transformation.
                   </p>
-                  <LinkButton href="/volunteer" className="w-[150px]">
-                    Apply
-                  </LinkButton>
+                  <p className="font-accent uppercase">Applications closed</p>
                 </div>
               </div>
 
