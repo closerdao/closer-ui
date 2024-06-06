@@ -74,7 +74,7 @@ const CreditsPage: FC = () => {
           <p className="mb-4">{APP_NAME && __('carrots_what_1', APP_NAME)}</p>
           <p className="mb-4">{APP_NAME && __('carrots_what_2', APP_NAME)}</p>
           {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
-            <p className="mb-4">{__('carrots_what_2.5', APP_NAME)}</p>
+            <p className="mb-4">{__('carrots_what_2_5', APP_NAME)}</p>
           )}
           <p className="mb-4">{APP_NAME && __('carrots_what_3', APP_NAME)}</p>
           <p className="mb-4">{APP_NAME && __('carrots_what_4', APP_NAME)}</p>

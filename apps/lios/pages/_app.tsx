@@ -8,7 +8,6 @@ import { useEffect, useState } from 'react';
 import CookieConsent from 'react-cookie-consent';
 
 import { ErrorBoundary, Layout } from '@/components';
-import { hoover, cabinet, sincopa } from '@/public/fonts/fonts';
 
 import {
   ExternalProvider,
@@ -28,6 +27,7 @@ import {
 import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import { prepareGeneralConfig } from 'closer/utils/app.helpers';
+import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import appConfig from '../config';
@@ -41,6 +41,7 @@ export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
   const library = new Web3Provider(provider);
   return library;
 }
+
 const prepareDefaultConfig = () => {
   const general =
     configDescription.find((config) => config.slug === 'general')?.value ?? {};
@@ -101,7 +102,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         dangerouslySetInnerHTML={{
           __html: `
   !function(f,b,e,v,n,t,s)
-  {if(f.fbq)return;n=f.fbq=function(){n.cconfigMethod?
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
   n.callMethod.apply(n,arguments):n.queue.push(arguments)};
   if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
   n.queue=[];t=b.createElement(e);t.async=!0;
@@ -126,12 +127,16 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
             <PlatformProvider>
               <Web3ReactProvider getLibrary={getLibrary}>
                 <WalletProvider>
-                    <div className={`${hoover.variable} ${cabinet.variable} ${sincopa.variable} font-sans`}>
-                  <Layout>
-                    <GoogleAnalytics trackPageViews />
+                  <NextIntlClientProvider
+                    locale={router.locale}
+                    messages={pageProps.messages}
+                    timeZone={config.timeZone}
+                  >
+                    <Layout>
+                      <GoogleAnalytics trackPageViews />
                       <Component {...pageProps} config={config} />
-                  </Layout>
-                    </div>
+                    </Layout>
+                  </NextIntlClientProvider>
                 </WalletProvider>
               </Web3ReactProvider>
             </PlatformProvider>

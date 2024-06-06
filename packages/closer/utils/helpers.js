@@ -9,8 +9,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 
 import { blockchainConfig } from '../config_blockchain';
 import { DEFAULT_CURRENCY, REFUND_PERIODS } from '../constants';
-import base from '../locales/base';
-import en from '../locales/en';
+import base from '../locales/base-en';
 import foz from '../locales/foz';
 import lios from '../locales/lios';
 import moos from '../locales/moos';
@@ -32,7 +31,7 @@ const appDictionaries = {
   lios,
 };
 
-let language = Object.assign({}, base, en);
+let language = Object.assign({}, base);
 const ONE_HOUR = 60 * 60 * 1000;
 
 export const __ = (key, paramValue, app) => {
