@@ -15,7 +15,6 @@ import {
   Heading,
   LinkButton,
   YoutubeEmbed,
-  __,
   api,
   useAuth,
   useConfig,
@@ -23,6 +22,10 @@ import {
 } from 'closer';
 import { useFaqs } from 'closer/hooks/useFaqs';
 import { parseMessageFromError } from 'closer/utils/common';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+import {useRouter} from 'next/router';
 
 interface Props {
   generalConfig: GeneralConfig | null;
@@ -30,12 +33,13 @@ interface Props {
 }
 
 const HomePage = ({ generalConfig, bookingSettings }: Props) => {
+  const t = useTranslations();
+  const router = useRouter();
   const { isAuthenticated } = useAuth();
 
-  const { APP_NAME, FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
+  const { FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
 
   const { faqs, error } = useFaqs(FAQS_GOOGLE_SHEET_ID);
-  const appName = APP_NAME && APP_NAME.toLowerCase();
 
   const config = useConfig();
   const discounts = {
@@ -179,6 +183,8 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
             >
               Join the wild faculty of transformation
             </Heading>
+
+            {router.locale}
             <p className="mb-6">
               Come and stay in our desert village and let your imagination roam
               freely. Get a chance to learn about local ecosystems, regenerative
@@ -328,7 +334,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
               level={2}
               className="text-2xl mb-8 max-w-prose text-white "
             >
-              {__('stay_chose_accommodation', appName)}
+              {t('stay_chose_accommodation')}
             </Heading>
             <div className="flex justify-center">
               {listings && listings.count() > 0 && (
@@ -347,7 +353,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                   })}
                 </div>
               )}
-              {listings?.count() === 0 && __('listing_no_listings_found')}
+              {listings?.count() === 0 && t('listing_no_listings_found')}
             </div>
           </div>
         </section>
@@ -453,12 +459,12 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
 
         <section className=" w-[100vw] -mx-4 px-4  pt-12 pb-20 flex justify-center">
           <div className="flex flex-col gap-8 items-center w-full sm:w-[600px] ">
-          <Link
-            className="font-accent uppercase text-accent"
-            href="https://lios.io/deserttransformation"
-          >
-            DESERT TRANSFORMATION LAB Website
-          </Link>
+            <Link
+              className="font-accent uppercase text-accent"
+              href="https://lios.io/deserttransformation"
+            >
+              DESERT TRANSFORMATION LAB Website
+            </Link>
           </div>
         </section>
 
@@ -469,8 +475,12 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
   );
 };
 
-HomePage.getInitialProps = async () => {
+HomePage.getInitialProps = async (context: NextPageContext) => {
   try {
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
     const [bookingResponse, generalRes] = await Promise.all([
       api.get('/config/booking').catch((err) => {
         console.error('Error fetching booking config:', err);
@@ -487,12 +497,15 @@ HomePage.getInitialProps = async () => {
     return {
       generalConfig,
       bookingSettings,
+      messages,
+      error: messages ? 'Error loading texts' : null,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       bookingSettings: null,
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

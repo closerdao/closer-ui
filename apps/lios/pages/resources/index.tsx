@@ -84,7 +84,6 @@ const ResourcesPage = ({ generalConfig }: Props) => {
 
 ResourcesPage.getInitialProps = async (context: NextPageContext) => {
 
-  console.log('context?.locale=',context?.locale);
   try {
     const messages = await loadLocaleData(
       context?.locale, process.env.NEXT_PUBLIC_APP_NAME
