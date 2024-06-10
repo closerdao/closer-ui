@@ -360,7 +360,8 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
             </div>
             <p>
               Zadbaj o swoje granice i potrzeby, szanuj granice i potrzeby
-              innych osób. Jeśli to nie jest pełne "tak", to jest to "nie".
+              innych osób. Jeśli to nie jest pełne &quot;tak&quot;, to jest to
+              &quot;nie&quot;.
             </p>
 
             <Heading level={4} display className="mt-6 md:text-xl normal-case ">
