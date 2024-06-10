@@ -41,7 +41,6 @@ interface Props extends BaseBookingParams {
 }
 
 const Summary = ({ booking, listing, event, error, bookingConfig }: Props) => {
-  console.log('bookingConfig', bookingConfig);
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
