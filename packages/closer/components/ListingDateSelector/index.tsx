@@ -16,7 +16,7 @@ interface Props {
   isSmallScreen?: boolean;
   blockedDateRanges?: any[];
   isEditMode?: boolean;
-  priceDuration: string;
+  priceDuration?: string;
   timeOptions?: string[] | null;
   hourAvailability?: { hour: string; isAvailable: boolean }[] | [];
 }
