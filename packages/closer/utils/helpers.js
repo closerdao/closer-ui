@@ -12,7 +12,6 @@ import { DEFAULT_CURRENCY, REFUND_PERIODS } from '../constants';
 import base from '../locales/base';
 import en from '../locales/en';
 import foz from '../locales/foz';
-import lios from '../locales/lios';
 import moos from '../locales/moos';
 import tdf from '../locales/tdf';
 import lios from '../locales/lios';
