@@ -25,11 +25,13 @@ import {
   Booking,
   BookingConfig,
   Event,
+  GeneralConfig,
   Listing,
   VolunteerOpportunity,
 } from '../../../types';
 import api from '../../../utils/api';
 import {
+  dateToPropertyTimeZone,
   getAccommodationTotal,
   getFiatTotal,
   getPaymentDelta,
@@ -49,6 +51,7 @@ interface Props {
   bookingCreatedBy: User;
   bookingConfig: BookingConfig | null;
   listings: Listing[];
+  generalConfig: GeneralConfig;
 }
 
 const BookingPage = ({
@@ -60,7 +63,10 @@ const BookingPage = ({
   bookingCreatedBy,
   bookingConfig,
   listings,
+  generalConfig,
 }: Props) => {
+  const { timeZone } = generalConfig;
+
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -68,6 +74,9 @@ const BookingPage = ({
   const { platform }: any = usePlatform();
   const { isAuthenticated, user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
+  const isEditMode = true;
+
+  const isHourlyBooking = listing?.priceDuration !== 'night';
 
   const {
     utilityFiat,
@@ -106,9 +115,10 @@ const BookingPage = ({
   const [updatedPets, setUpdatedPets] = useState(pets);
   const [updatedStartDate, setUpdatedStartDate] = useState<
     string | Date | null
-  >(bookingStart);
+  >(timeZone && dateToPropertyTimeZone(timeZone, bookingStart));
+
   const [updatedEndDate, setUpdatedEndDate] = useState<string | Date | null>(
-    bookingEnd,
+    timeZone && dateToPropertyTimeZone(timeZone, bookingEnd),
   );
   const [updatedListingId, setUpdatedListingId] = useState(listing?._id);
   const [isLoading, setIsLoading] = useState(false);
@@ -123,18 +133,29 @@ const BookingPage = ({
     setUpdatedStartDate,
     setUpdatedListingId,
   };
-  const isNotPaid = status !== 'paid' && status !== 'credits-paid' && status !== 'tokens-staked';
+  const isNotPaid =
+    status !== 'paid' &&
+    status !== 'credits-paid' &&
+    status !== 'tokens-staked';
 
-  const updatedDurationInDays = Math.ceil(
+  let updatedDuration = 0;
+
+  updatedDuration = Math.ceil(
     dayjs(updatedEndDate).diff(dayjs(updatedStartDate), 'hour') / 24,
   );
+  if (isHourlyBooking) {
+    updatedDuration = dayjs(updatedEndDate).diff(
+      dayjs(updatedStartDate),
+      'hour',
+    );
+  }
 
   const updatedListing = listings?.find(
     (listing) => listing._id === updatedListingId,
   );
   const updatedMaxBeds = updatedListing?.beds || 1;
 
-  const updatedDurationName = getBookingRate(updatedDurationInDays);
+  const updatedDurationName = getBookingRate(updatedDuration);
   const updatedDiscountRate = bookingConfig
     ? 1 - getDiscountRate(updatedDurationName, bookingConfig)
     : 0;
@@ -144,7 +165,7 @@ const BookingPage = ({
     useTokens,
     useCredits,
     updatedAdults,
-    updatedDurationInDays,
+    updatedDuration,
     updatedDiscountRate,
     volunteerId,
   );
@@ -156,7 +177,7 @@ const BookingPage = ({
     utilityFiatVal: bookingConfig?.utilityFiatVal,
     isPrivate: listing?.private,
     updatedAdults,
-    updatedDurationInDays,
+    updatedDuration,
     discountRate: updatedDiscountRate,
   });
 
@@ -188,7 +209,7 @@ const BookingPage = ({
     ...booking,
     start: updatedStartDate,
     end: updatedEndDate,
-    duration: updatedDurationInDays,
+    duration: updatedDuration,
     adults: updatedAdults,
     children: updatedChildren,
     pets: updatedPets,
@@ -215,7 +236,10 @@ const BookingPage = ({
     total: { val: updatedFiatTotal, cur: rentalFiat?.cur },
     paymentDelta: paymentDelta ? paymentDelta : null,
   };
-  
+  if (booking?.paymentDelta) {
+    booking.paymentDelta = null;
+  }
+
   if (booking?.paymentDelta) {
     booking.paymentDelta = null;
   }
@@ -255,7 +279,7 @@ const BookingPage = ({
         }, 3000);
       }
     } catch (error) {
-      console.log('error====', error);
+      console.log('error=', error);
     } finally {
       setIsLoading(false);
     }
@@ -316,6 +340,22 @@ const BookingPage = ({
           )}
         </section>
 
+        {isSpaceHost &&
+          booking.roomOrBedNumbers &&
+          booking.roomOrBedNumbers.length > 0 && (
+            <section className="rounded-md p-4 bg-accent-light">
+              {
+                <p className="font-bold">
+                  {listing.private
+                    ? __('booking_card_room_number')
+                    : __('booking_card_bed_numbers')}{' '}
+                  {booking.roomOrBedNumbers &&
+                    booking.roomOrBedNumbers.toString()}
+                </p>
+              }
+            </section>
+          )}
+
         <section className="flex flex-col gap-12">
           <SummaryDates
             isDayTicket={booking?.isDayTicket}
@@ -333,11 +373,15 @@ const BookingPage = ({
             ticketOption={ticketOption?.name}
             doesNeedPickup={doesNeedPickup}
             doesNeedSeparateBeds={doesNeedSeparateBeds}
-            isEditMode={isSpaceHost}
+            isEditMode={isSpaceHost && isEditMode}
             setters={setters}
             updatedListingId={updatedListingId}
             listings={listings}
             updatedMaxBeds={updatedMaxBeds}
+            priceDuration={listing?.priceDuration}
+            workingHoursStart={listing?.workingHoursStart}
+            workingHoursEnd={listing?.workingHoursEnd}
+            listingId={listing?._id}
           />
           <SummaryCosts
             utilityFiat={utilityFiat}
@@ -372,6 +416,7 @@ const BookingPage = ({
               val: updatedEventTotal,
               cur: eventFiat?.cur,
             }}
+            priceDuration={listing?.priceDuration}
           />
         </section>
 
@@ -418,25 +463,31 @@ BookingPage.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
-    const [bookingRes, bookingConfigRes, listingRes] = await Promise.all([
-      api
-        .get(`/booking/${query.slug}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
-          },
-        })
-        .catch(() => {
+    const [bookingRes, bookingConfigRes, listingRes, generalConfigRes] =
+      await Promise.all([
+        api
+          .get(`/booking/${query.slug}`, {
+            headers: req?.cookies?.access_token && {
+              Authorization: `Bearer ${req?.cookies?.access_token}`,
+            },
+          })
+          .catch(() => {
+            return null;
+          }),
+        api.get('/config/booking').catch(() => {
           return null;
         }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-      api.get('/listing').catch(() => {
-        return null;
-      }),
-    ]);
+        api.get('/listing').catch(() => {
+          return null;
+        }),
+        api.get('/config/general').catch(() => {
+          return null;
+        }),
+      ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
+    const generalConfig = generalConfigRes?.data?.results?.value;
+
     const listings = listingRes?.data?.results;
 
     const [optionalEvent, optionalListing, optionalVolunteer] =
@@ -484,6 +535,7 @@ BookingPage.getInitialProps = async ({
       error: null,
       bookingCreatedBy,
       bookingConfig,
+      generalConfig,
       listings,
     };
   } catch (err: any) {
@@ -497,6 +549,7 @@ BookingPage.getInitialProps = async ({
       volunteer: null,
       createdBy: null,
       bookingConfig: null,
+      generalConfig: null,
       listings: null,
     };
   }

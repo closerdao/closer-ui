@@ -42,6 +42,11 @@ export type Listing = {
   managedBy: string[];
   _id: string;
   availableFor?: string[];
+  priceDuration?: string;
+  workingHoursStart?: number;
+  workingHoursEnd?: number;
+  fiatHourlyPrice?: Price<CloserCurrencies.EUR>;
+  tokenHourlyPrice?: Price<CloserCurrencies.TDF>;
 };
 
 export type Booking = {
@@ -94,6 +99,7 @@ export type Booking = {
   } | null;
   roomNumber?: number;
   adminBookingReason?: string;
+  roomOrBedNumbers?: number[];
 };
 
 export interface StatusColor {
@@ -112,6 +118,7 @@ export interface BookingWithUserAndListing {
   listingId: string;
   fiatPriceVal: number;
   fiatPriceCur: CloserCurrencies;
+  roomOrBedNumbers?: number[];
 }
 
 export interface AccommodationUnit {
@@ -126,4 +133,5 @@ export interface BookingItem {
   title: string;
   start_time: Date;
   end_time: Date;
+  roomOrBedNumbers?: number[];
 }

@@ -405,7 +405,15 @@ const models = {
     },
     {
       name: 'fiatPrice',
-      label: 'Rental price (fiat)',
+      label: 'Rental price per night (fiat)',
+      type: 'currency',
+      placeholder: '10.00',
+      required: true,
+      tab: 'prices',
+    },
+    {
+      name: 'fiatHourlyPrice',
+      label: 'Hourly rental price (fiat)',
       type: 'currency',
       placeholder: '10.00',
       required: true,
@@ -413,7 +421,15 @@ const models = {
     },
     {
       name: 'tokenPrice',
-      label: 'Rental price (credits or tokens)',
+      label: 'Rental price per night (credits or tokens)',
+      type: 'currency',
+      placeholder: '10.00',
+      required: true,
+      tab: 'prices',
+    },
+    {
+      name: 'tokenHourlyPrice',
+      label: 'Hourly Rental price (credits or tokens)',
       type: 'currency',
       placeholder: '10.00',
       required: true,
@@ -436,6 +452,32 @@ const models = {
       type: 'multi-select',
       options: ['guests', 'volunteer', 'team', 'events'],
     },
+    {
+      name: 'priceDuration',
+      label: 'Booking duration unit',
+      default: 'public',
+      type: 'select',
+      options: [
+        { label: 'Night', value: 'night' },
+        { label: 'Hour', value: 'hour' },
+        // { label: 'Half a day', value: 'half-day' },
+      ],
+    },
+    {
+      name: 'workingHoursStart',
+      label: 'Start of working hours',
+      type: 'number',
+      placeholder: '10',
+      required: false,
+    },
+    {
+      name: 'workingHoursEnd',
+      label: 'End of working hours',
+      type: 'number',
+      placeholder: '20',
+      required: false,
+    },
+
   ],
   booking: [
     { name: 'start', label: 'Start date', type: 'date' },

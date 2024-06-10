@@ -164,6 +164,7 @@ const AccomodationSelector = ({
             </p>
           </div>
         )}
+        {start}/{end}
         <div className="flex flex-col gap-4 mt-16 md:grid md:grid-cols-2 md:items-start">
           {filteredListings &&
             filteredListings?.map((listing) => (

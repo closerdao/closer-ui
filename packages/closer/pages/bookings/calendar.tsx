@@ -37,7 +37,7 @@ import { Listing } from '../../types';
 const loadTime = Date.now();
 
 const BookingsCalendarPage = () => {
-  const { enabledConfigs } = useConfig();
+  const { enabledConfigs, TIME_ZONE } = useConfig();
   const { user } = useAuth();
   const { platform }: any = usePlatform();
 
@@ -64,6 +64,8 @@ const BookingsCalendarPage = () => {
     end: defaultTimeEnd,
   });
 
+  const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
   const debouncedVisibleRange = useDebounce(visibleRange, 500);
 
   const filter = {
@@ -89,11 +91,13 @@ const BookingsCalendarPage = () => {
     label: listing.name,
   }));
 
-  const bookingsWithUserAndListing = getBookingsWithUserAndListing(
+  const bookingsWithUserAndListing = getBookingsWithUserAndListing({
     bookings,
     listings,
     allUsers,
-  );
+    TIME_ZONE,
+    browserTimezone,
+  });
 
   const accommodationUnits =
     formattedListings &&
@@ -157,6 +161,10 @@ const BookingsCalendarPage = () => {
   };
 
   const handleBookingClick = (itemId: string) => {
+    // react-calendar-timeline library uses itemId's for keys. We add index to itemId to have a unique key, and have to remove it here.
+    if (itemId.length > 24) {
+      itemId = itemId.substring(0, 24);
+    }
     window.open(`/bookings/${itemId}`, '_blank');
   };
 
