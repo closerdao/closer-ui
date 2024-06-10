@@ -139,8 +139,7 @@ const SummaryCosts = ({
                       {priceFormat(updatedAccomodationTotal)} +{' '}
                       {priceFormat(updatedFiatTotal)}
                     </div>
-                  )}
-
+                  )} 
                   {useCredits && (
                     <div>
                       {priceFormat({

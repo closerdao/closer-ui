@@ -1,5 +1,6 @@
 import ReactGA from 'react-ga';
 
+import { ObjectId } from 'bson';
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
 import duration from 'dayjs/plugin/duration';
@@ -7,10 +8,11 @@ import localizedFormat from 'dayjs/plugin/localizedFormat';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
 import { blockchainConfig } from '../config_blockchain';
-import { REFUND_PERIODS } from '../constants';
+import { DEFAULT_CURRENCY, REFUND_PERIODS } from '../constants';
 import base from '../locales/base';
 import en from '../locales/en';
 import foz from '../locales/foz';
+import lios from '../locales/lios';
 import moos from '../locales/moos';
 import tdf from '../locales/tdf';
 import lios from '../locales/lios';
@@ -28,7 +30,7 @@ const appDictionaries = {
   tdf,
   foz,
   moos,
-  lios
+  lios,
 };
 
 let language = Object.assign({}, base, en);
@@ -119,11 +121,17 @@ export const getTimeDetails = (eventTime) => {
   };
 };
 
-export const priceFormat = (price, currency = 'EUR') => {
+export const priceFormat = (price, currency = DEFAULT_CURRENCY) => {
   if (price?.cur && price.cur === 'credits') {
-    return `${price.val} ${__('carrots_balance', price.app)} ${__('carrots_heading', price.app)}`
+    return `${price.val} ${__('carrots_balance', price.app)} ${__(
+      'carrots_heading',
+      price.app,
+    )}`;
   }
-  else if (typeof price === 'number') {
+  if (!currency) {
+    currency = DEFAULT_CURRENCY;
+  }
+  if (typeof price === 'number') {
     return parseFloat(price).toLocaleString('en-US', {
       style: 'currency',
       currency,
@@ -195,7 +203,7 @@ export const getSample = (field) => {
     case 'ticketOptions':
       return [
         {
-          id: Math.random(),
+          id: new ObjectId().toString(),
           name: '',
           icon: null,
           price: 0,
@@ -209,7 +217,7 @@ export const getSample = (field) => {
     case 'discounts':
       return [
         {
-          id: Math.random(),
+          id: new ObjectId().toString(),
           name: '',
           code: '',
           percent: '',

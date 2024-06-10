@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import { ObjectId } from 'bson';
+
 import { __ } from '../utils/helpers';
 
 const DiscountsEditor = ({ value, onChange }) => {
@@ -16,7 +18,7 @@ const DiscountsEditor = ({ value, onChange }) => {
     e.preventDefault();
     updateOptions(
       options.concat({
-        id: Math.random(),
+        id: new ObjectId().toString(),
         name: '',
         code: '',
         percent: '',

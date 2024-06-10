@@ -29,6 +29,12 @@ const nextConfig = {
       },
     ],
   },
+  webpack: (config) => {
+    config.experiments = { 
+      topLevelAwait: true 
+    };
+    return config;
+  },
 };
 
 // Merge MDX config with Next.js config

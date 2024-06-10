@@ -122,7 +122,6 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
               creditsAmount: rentalToken?.val,
             })
           ).data.results;
-
           setCanApplyCredits(areCreditsAvailable);
         } catch (error) {
           setCanApplyCredits(false);
