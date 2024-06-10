@@ -277,6 +277,8 @@ export const getBookingsWithUserAndListing = ({
       name: user.screenname,
     };
 
+    const roomOrBedNumbers = b.get('roomOrBedNumbers').toJS() ?? undefined;
+
     return {
       _id: b.get('_id'),
       start: localStart,
@@ -292,6 +294,7 @@ export const getBookingsWithUserAndListing = ({
       listingId,
       fiatPriceVal,
       fiatPriceCur,
+      roomOrBedNumbers,
     };
   });
 };
@@ -308,6 +311,8 @@ export const generateBookingItems = (
       (unit) => unit.listingId === booking.listingId,
     );
     let assignedUnitId: number | undefined;
+
+    const roomOrBedNumbers = booking.roomOrBedNumbers || 1;
 
     for (const unit of matchedUnits) {
       if (
@@ -326,19 +331,63 @@ export const generateBookingItems = (
     }
 
     if (assignedUnitId !== undefined) {
-      bookingItems.push({
-        id: booking._id,
-        group: assignedUnitId,
-        title: `${booking.userInfo ? booking?.userInfo?.name : ''} ${
-          booking.adults > 1 ? ' + ' + (booking.adults - 1) : ''
-        }  ${
-          booking.fiatPriceVal && booking.fiatPriceCur
-            ? priceFormat(booking.fiatPriceVal, booking.fiatPriceCur)
-            : ''
-        }`,
-        start_time: dayjs(booking.start).toDate(),
-        end_time: dayjs(booking.end).toDate(),
-      });
+      if (!booking.roomOrBedNumbers || booking.roomOrBedNumbers.length === 0) { 
+        bookingItems.push({
+          id: booking._id,
+          group: assignedUnitId,
+          title: `${booking.userInfo ? booking?.userInfo?.name : ''} ${
+            booking.adults > 1 ? ' + ' + (booking.adults - 1) : ''
+          }  ${
+            booking.fiatPriceVal && booking.fiatPriceCur
+              ? priceFormat(booking.fiatPriceVal, booking.fiatPriceCur)
+              : ''
+          }`,
+          start_time: dayjs(booking.start).toDate(),
+          end_time: dayjs(booking.end).toDate(),
+        });
+  
+      }
+
+      if (Array.isArray(roomOrBedNumbers) && roomOrBedNumbers?.length > 1) {
+        // multiple beds in shared accommodation
+        roomOrBedNumbers.forEach((roomOrBedNumber, index) => {
+          bookingItems.push({
+            id: booking._id + index,
+            group: matchedUnits[0].id + roomOrBedNumber - 1,
+            title: `${booking.userInfo ? booking?.userInfo?.name : ''} ${
+              booking.adults > 1 ? ' + ' + (booking.adults - 1) : ''
+            }  ${
+              booking.fiatPriceVal && booking.fiatPriceCur
+                ? priceFormat(booking.fiatPriceVal, booking.fiatPriceCur)
+                : ''
+            }`,
+            start_time: dayjs(booking.start).toDate(),
+            end_time: dayjs(booking.end).toDate(),
+            roomOrBedNumbers: booking.roomOrBedNumbers,
+          });
+        });
+      }
+      if (Array.isArray(roomOrBedNumbers) && roomOrBedNumbers?.length === 1) {
+        // private accommodation unit or single bed in shared accommodation
+        bookingItems.push({
+          id: booking._id,
+          // group: assignedUnitId,
+          group: booking.roomOrBedNumbers ?
+            matchedUnits[0].id +
+            (Array.isArray(roomOrBedNumbers) ? roomOrBedNumbers[0] : 1) -
+            1 : assignedUnitId,
+          title: `${booking.userInfo ? booking?.userInfo?.name : ''} ${
+            booking.adults > 1 ? ' + ' + (booking.adults - 1) : ''
+          }  ${
+            booking.fiatPriceVal && booking.fiatPriceCur
+              ? priceFormat(booking.fiatPriceVal, booking.fiatPriceCur)
+              : ''
+          }`,
+          start_time: dayjs(booking.start).toDate(),
+          end_time: dayjs(booking.end).toDate(),
+          roomOrBedNumbers: booking.roomOrBedNumbers,
+        });
+      }
     }
   });
 

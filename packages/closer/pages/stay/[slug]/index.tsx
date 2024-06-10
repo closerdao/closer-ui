@@ -215,6 +215,8 @@ const ListingPage: NextPage<Props> = ({
         useTokens: isTokenPaymentSelected,
       });
 
+      console.log('availability=', availability);
+
       setIsGuestLimit(availability[0].reason === 'Guest limit');
 
       return { results, availability, error: null };
@@ -281,9 +283,19 @@ const ListingPage: NextPage<Props> = ({
       );
       if (availability) {
         const dates = availability
-          .map((day: any) => !day.available && day.day)
-          .filter((d: string) => d)
-          .map((d: string) => new Date(d));
+          .map(
+            (day: any) =>
+              !day.available && { day: day.day, reason: day.reason },
+          )
+          .filter((d: { day: string; reason: string }) => {
+            return (
+              d.day &&
+              !['Fully booked', 'Guest limit'].includes(d.reason) &&
+              d.day
+            );
+          })
+          .map((d: { day: string; reason: string }) => new Date(d.day));
+
         setUnavailableDates(dates);
       }
     })();

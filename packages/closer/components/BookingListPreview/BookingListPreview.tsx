@@ -20,6 +20,7 @@ interface Props {
   volunteerName: string;
   link: string | null;
   isAdmin?: boolean;
+  isPrivate?: boolean;
 }
 
 const BookingListPreview = ({
@@ -30,6 +31,7 @@ const BookingListPreview = ({
   volunteerName,
   link,
   isAdmin,
+  isPrivate,
 }: Props) => {
   const { APP_NAME } = useConfig();
   const {
@@ -53,6 +55,7 @@ const BookingListPreview = ({
     doesNeedSeparateBeds,
     duration,
     adminBookingReason,
+    roomOrBedNumbers,
   } = bookingMapItem.toJS();
   const router = useRouter();
 
@@ -156,7 +159,7 @@ const BookingListPreview = ({
 
       <div>
         <p className="card-feature">{__('booking_card_type')}</p>
-        <p>{listingName}</p>
+        <p>{listingName} {!isPrivate && __('booking_card_beds')} {roomOrBedNumbers.toString()}</p>
       </div>
 
       <div>

@@ -161,6 +161,10 @@ const BookingsCalendarPage = () => {
   };
 
   const handleBookingClick = (itemId: string) => {
+    // react-calendar-timeline library uses itemId's for keys. We add index to itemId to have a unique key, and have to remove it here.
+    if (itemId.length > 24) {
+      itemId = itemId.substring(0, 24);
+    }
     window.open(`/bookings/${itemId}`, '_blank');
   };
 
