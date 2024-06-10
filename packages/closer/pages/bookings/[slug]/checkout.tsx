@@ -49,9 +49,8 @@ interface Props extends BaseBookingParams {
 }
 
 const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
-  const testIt = async () => {
-    await api.post('/bookings/payment', {});
-  };
+
+  const isHourlyBooking = listing?.priceDuration === 'hour';
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -211,6 +210,7 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
       setCreditsError(null);
       const res = await api.post(`/bookings/${booking?._id}/update-payment`, {
         useCredits: true,
+        isHourlyBooking
       });
       setUseCreditsUpdated(true);
 
@@ -270,7 +270,11 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
 
             <HeadingRow>
               <span className="mr-2">🏡</span>
-              <span>{__('bookings_checkout_step_accomodation')}</span>
+              <span>
+                {isHourlyBooking
+                  ? __('bookings_checkout_step_accomodation')
+                  : __('bookings_checkout_step_hourly')}
+              </span>
             </HeadingRow>
             <div className="flex justify-between items-center mt-3">
               <p>{listingName}</p>
@@ -281,7 +285,7 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
               )}
             </div>
             <p className="text-right text-xs">
-              {__('bookings_checkout_step_accomodation_description')}
+              {isHourlyBooking ? __('bookings_checkout_step_accomodation_description_hourly') : __('bookings_checkout_step_accomodation_description')}
             </p>
 
             {process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' &&
@@ -323,23 +327,28 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
                 </div>
               )}
           </div>
-          <div>
-            <HeadingRow>
-              <span className="mr-2">🛠</span>
-              <span>{__('bookings_checkout_step_utility_title')}</span>
-            </HeadingRow>
-            <div className="flex justify-between items-center mt-3">
-              <p> {__('bookings_summary_step_utility_total')}</p>
-              <p className="font-bold">
-                {booking?.foodOption === 'no_food'
-                  ? 'NOT INCLUDED'
-                  : priceFormat(utilityFiat)}
+          {!isHourlyBooking && ( 
+            <div>
+              <HeadingRow>
+                <span className="mr-2">🛠</span>
+                <span>{__('bookings_checkout_step_utility_title')}</span>
+              </HeadingRow>
+              <div className="flex justify-between items-center mt-3">
+                <p> {__('bookings_summary_step_utility_total')}</p>
+                <p className="font-bold">
+                  {booking?.foodOption === 'no_food'
+                    ? 'NOT INCLUDED'
+                    : priceFormat(utilityFiat)}
+                </p>
+              </div>
+              <p className="text-right text-xs">
+                {__('bookings_summary_step_utility_description')}
               </p>
+             
             </div>
-            <p className="text-right text-xs">
-              {__('bookings_summary_step_utility_description')}
-            </p>
-          </div>
+          )}
+           
+         
 
           <CheckoutTotal
             total={updatedTotal}
@@ -386,7 +395,7 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
           )}
           {paymentError && <ErrorMessage error={paymentError} />}
         </div>
-      </div>
+        </div>
     </>
   );
 };

@@ -10,6 +10,7 @@ import Slider from './Slider';
 
 const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
   const { user } = useAuth();
+  const isHourlyBooking = !!(listing.get('priceDuration') === 'hour');
 
   return (
     <div className="flex flex-col gap-5 justify-between mb-8 shadow  bg-white rounded-xl p-4">
@@ -45,7 +46,19 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
       </div>
 
       <div className="flex flex-col gap-7">
-        {listing.get('fiatPrice') && listing.getIn(['fiatPrice', 'val']) > 0 ? (
+        {isHourlyBooking &&  <div>
+            <p className="text-left">
+              <span className="font-bold">
+                {priceFormat(
+                  listing.getIn(['fiatHourlyPrice', 'val']),
+                  listing.get(['fiatHourlyPrice', 'cur']),
+                )}{' '}
+            </span>
+              {__('listing_preview_per_hourly')}
+          </p>
+        </div>}
+        
+        {!isHourlyBooking && listing.get('fiatPrice') && listing.getIn(['fiatPrice', 'val']) > 0 && (
           <div>
             <p className="text-left">
               <span className="font-bold">
@@ -60,8 +73,8 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
               <span className="">
                 {priceFormat(
                   listing.getIn(['fiatPrice', 'val']) *
-                    (1 - discounts.weekly) *
-                    7,
+                  (1 - discounts.weekly) *
+                  7,
                   listing.get(['fiatPrice', 'cur']),
                 )}{' '}
               </span>
@@ -71,15 +84,16 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
               <span className="">
                 {priceFormat(
                   listing.getIn(['fiatPrice', 'val']) *
-                    (1 - discounts.monthly) *
-                    30,
+                  (1 - discounts.monthly) *
+                  30,
                   listing.get(['fiatPrice', 'cur']),
                 )}{' '}
               </span>
               {__('listing_preview_per_monthly')}
             </p>
           </div>
-        ) : (
+        )}
+          {!isHourlyBooking && listing.get('fiatPrice') && listing.getIn(['fiatPrice', 'val']) === 0 &&
           <div>
             <p className="text-left">
               <b className="font-bold">
@@ -87,7 +101,7 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
               </b>
             </p>
           </div>
-        )}
+        }
 
         {!isAdminPage && (
           <Link

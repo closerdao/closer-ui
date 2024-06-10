@@ -1,4 +1,6 @@
 import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
 
 import {
   BOOKING_EXISTS_ERROR,
@@ -15,6 +17,12 @@ import {
 } from '../types';
 import api from './api';
 import { __, priceFormat } from './helpers';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export const getStatusText = (status: string, updated: string | Date) => {
   if (status === 'cancelled') {
@@ -78,14 +86,14 @@ export const getUtilityTotal = ({
   utilityFiatVal,
   isPrivate,
   updatedAdults,
-  updatedDurationInDays,
+  updatedDuration,
   discountRate,
 }: {
   foodOption: string;
   utilityFiatVal: number | undefined;
   isPrivate: boolean;
   updatedAdults: number;
-  updatedDurationInDays: number;
+  updatedDuration: number;
   discountRate: number;
 }) => {
   if (foodOption === 'no_food') {
@@ -95,8 +103,7 @@ export const getUtilityTotal = ({
     return 0;
   }
   const multiplier = isPrivate ? 1 : updatedAdults;
-  const total =
-    utilityFiatVal * multiplier * updatedDurationInDays * discountRate;
+  const total = utilityFiatVal * multiplier * updatedDuration * discountRate;
   return total;
 };
 
@@ -105,19 +112,32 @@ export const getAccommodationTotal = (
   useTokens: boolean,
   useCredits: boolean,
   adults: number,
-  durationInDays: number,
+  durationInDaysOrHours: number,
   discountRate: number,
   volunteerId: string | undefined,
 ) => {
   if (!listing) return 0;
   if (volunteerId) return 0;
 
-  const price =
+  let price: number | undefined =
     useTokens || useCredits ? listing.tokenPrice?.val : listing.fiatPrice?.val;
+  if (listing.priceDuration === 'hour') {
+    price =
+      useTokens || useCredits
+        ? listing.tokenHourlyPrice?.val
+        : listing.fiatHourlyPrice?.val;
+    discountRate = 1;
+  }
+
   const multiplier = listing.private ? 1 : adults;
-  const total = +(price * multiplier * durationInDays * discountRate).toFixed(
-    2,
-  );
+
+  const total = +(
+    (price || 0) *
+    multiplier *
+    durationInDaysOrHours *
+    discountRate
+  ).toFixed(2);
+
   return total;
 };
 
@@ -185,27 +205,59 @@ export const formatListings = (listings: Listing[]) => {
   return formattedListings;
 };
 
-export const convertTimeToPropertyTimezone = (date: Date | string | number) => {
-  const localDate = new Date(date);
-  localDate.setHours(localDate.getUTCHours());
-  localDate.setMinutes(localDate.getUTCMinutes());
-  return localDate;
+export const convertTimeToTimelineFormat = (
+  date: Date | string | number | null,
+  timeZone: string | undefined,
+  browserTimezone: string | undefined,
+) => {
+  if (!date || !timeZone) {
+    return null;
+  }
+  const utcDate = dayjs.utc(date);
+  const localDate = utcDate.tz(timeZone);
+  const browserDate = localDate.clone().tz(browserTimezone);
+
+  const offsetFromTimeZoneToBrowser =
+    browserDate.utcOffset() - localDate.utcOffset();
+  const adjustedDate = browserDate.subtract(
+    offsetFromTimeZoneToBrowser,
+    'minute',
+  );
+
+  return adjustedDate.toDate();
 };
 
-export const getBookingsWithUserAndListing = (
-  bookings: any,
-  listings: any,
-  allUsers: any,
-) => {
+export const getBookingsWithUserAndListing = ({
+  bookings,
+  listings,
+  allUsers,
+  TIME_ZONE,
+  browserTimezone,
+}: {
+  bookings: any;
+  listings: any;
+  allUsers: any;
+  TIME_ZONE: string;
+  browserTimezone: string;
+}) => {
   if (!bookings) return [];
   return bookings.map((b: any) => {
     const adults = b.get('adults') ?? 0;
     const children = b.get('children') ?? 0;
     const infants = b.get('infants') ?? 0;
-    const start = new Date(b.get('start'));
-    const end = new Date(b.get('end'));
-    const localEnd = convertTimeToPropertyTimezone(end);
-    const localStart = convertTimeToPropertyTimezone(start);
+    const start = b.get('start');
+    const end = b.get('end');
+    const localEnd = convertTimeToTimelineFormat(
+      end,
+      TIME_ZONE,
+      browserTimezone,
+    );
+
+    const localStart = convertTimeToTimelineFormat(
+      start,
+      TIME_ZONE,
+      browserTimezone,
+    );
     const doesNeedPickup = b.get('doesNeedPickup') ?? false;
     const status = b.get('status') ?? 'unknown';
     const fiatPriceVal = b.get('rentalFiat')?.get('val') ?? 0;
@@ -307,6 +359,65 @@ export const getFilterAccommodationUnits = (
   return updatedUnits;
 };
 
+export const getDateOnly = (date: Date | undefined | null | string) => {
+  if (!date) return null;
+  return dayjs(date).format('YYYY-MM-DD');
+};
+
+export const getTimeOnly = (date: Date | undefined | null | string) => {
+  if (!date) return null;
+  return dayjs(date).format('HH:mm');
+};
+
+export const getDateStringWithoutTimezone = (
+  dateOnly: string | undefined,
+  time: string | null,
+) => {
+  if (!dateOnly || !time) return null;
+  return dayjs(`${dateOnly} ${time}`).format('YYYY-MM-DD HH:mm');
+};
+
+export const getTimeOptions = (
+  workingHoursStart: number | undefined,
+  workingHoursEnd: number | undefined,
+  timeZone: string | undefined,
+) => {
+  if (!workingHoursStart || !workingHoursEnd || !timeZone) {
+    return null;
+  }
+  return Array.from(
+    { length: workingHoursEnd - workingHoursStart + 1 },
+    (_, hour) =>
+      dayjs()
+        .tz(timeZone)
+        .hour(hour + workingHoursStart)
+        .minute(0)
+        .format('HH:00'),
+  );
+};
+
+export const getLocalTimeAvailability = (
+  availability: { hour: string; isAvailable: boolean }[],
+  timeZone: string | undefined,
+) => {
+  const DEFAULT_TIMEZONE = 'UTC';
+
+  return availability?.map((time) => {
+    const localTime = dayjs
+      .utc(`1970-01-01T${time.hour}:00Z`)
+      .tz(timeZone || DEFAULT_TIMEZONE)
+      .format('HH:mm');
+
+    return { hour: localTime, isAvailable: time.isAvailable };
+  });
+};
+
+export const dateToPropertyTimeZone = (
+  timeZone: string,
+  date: string | Date,
+) => {
+  return dayjs.utc(date).tz(timeZone).format('YYYY-MM-DD HH:mm');
+};
 export const payTokens = async (
   bookingId: string | undefined,
   dailyRentalTokenVal: number | undefined,

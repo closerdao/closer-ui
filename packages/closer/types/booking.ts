@@ -42,6 +42,11 @@ export type Listing = {
   managedBy: string[];
   _id: string;
   availableFor?: string[];
+  priceDuration?: string;
+  workingHoursStart?: number;
+  workingHoursEnd?: number;
+  fiatHourlyPrice?: Price<CloserCurrencies.EUR>;
+  tokenHourlyPrice?: Price<CloserCurrencies.TDF>;
 };
 
 export type Booking = {
