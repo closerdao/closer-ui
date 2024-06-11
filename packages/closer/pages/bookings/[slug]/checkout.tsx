@@ -27,6 +27,7 @@ import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { WalletState } from '../../../contexts/wallet';
 import { useBookingSmartContract } from '../../../hooks/useBookingSmartContract';
+import { useConfig } from '../../../hooks/useConfig';
 import {
   BaseBookingParams,
   Booking,
@@ -50,8 +51,15 @@ interface Props extends BaseBookingParams {
   paymentConfig: PaymentConfig | null;
 }
 
-const Checkout = ({ booking, listing, error, event, bookingConfig, paymentConfig }: Props) => {
-
+const Checkout = ({
+  booking,
+  listing,
+  error,
+  event,
+  bookingConfig,
+  paymentConfig,
+}: Props) => {
+  const { APP_NAME } = useConfig();
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -141,7 +149,7 @@ const Checkout = ({ booking, listing, error, event, bookingConfig, paymentConfig
         router.push(`/bookings/${booking?._id}`);
       }
     }
-  }, [router])
+  }, [router]);
 
   const renderButtonText = () => {
     if (isStaking) {
@@ -331,23 +339,26 @@ const Checkout = ({ booking, listing, error, event, bookingConfig, paymentConfig
                 </div>
               )}
           </div>
-          <div>
-            <HeadingRow>
-              <span className="mr-2">🛠</span>
-              <span>{__('bookings_checkout_step_utility_title')}</span>
-            </HeadingRow>
-            <div className="flex justify-between items-center mt-3">
-              <p> {__('bookings_summary_step_utility_total')}</p>
-              <p className="font-bold">
-                {booking?.foodOption === 'no_food'
-                  ? 'NOT INCLUDED'
-                  : priceFormat(utilityFiat)}
+
+          {APP_NAME && APP_NAME !== 'lios' && (
+            <div>
+              <HeadingRow>
+                <span className="mr-2">🛠</span>
+                <span>{__('bookings_checkout_step_utility_title')}</span>
+              </HeadingRow>
+              <div className="flex justify-between items-center mt-3">
+                <p> {__('bookings_summary_step_utility_total')}</p>
+                <p className="font-bold">
+                  {booking?.foodOption === 'no_food'
+                    ? 'NOT INCLUDED'
+                    : priceFormat(utilityFiat)}
+                </p>
+              </div>
+              <p className="text-right text-xs">
+                {__('bookings_summary_step_utility_description')}
               </p>
             </div>
-            <p className="text-right text-xs">
-              {__('bookings_summary_step_utility_description')}
-            </p>
-          </div>
+          )}
 
           <CheckoutTotal
             total={updatedTotal}
@@ -450,7 +461,14 @@ Checkout.getInitialProps = async ({
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
 
-    return { booking, listing, event, error: null, bookingConfig, paymentConfig };
+    return {
+      booking,
+      listing,
+      event,
+      error: null,
+      bookingConfig,
+      paymentConfig,
+    };
   } catch (err) {
     console.log(err);
     return {

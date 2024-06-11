@@ -110,27 +110,37 @@ const SummaryCosts = ({
       <p className="text-right text-xs">
         {__('bookings_summary_step_accomodation_type_description')}
       </p>
-      <div className="flex justify-between items-center mt-3">
-        <p> {__('bookings_summary_step_utility_total')}</p>
-        <div className="flex items-center gap-2">
-          {isEditMode && updatedUtilityTotal?.val !== utilityFiat?.val && (
-            <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
-              {__('bookings_updated_price')}: {priceFormat(updatedUtilityTotal)}
+
+      {APP_NAME && APP_NAME !== 'lios' && (
+        <div>
+          <div className="flex justify-between items-center mt-3 border">
+            <p> {__('bookings_summary_step_utility_total')}</p>
+            <div className="flex items-center gap-2">
+              {isEditMode && updatedUtilityTotal?.val !== utilityFiat?.val && (
+                <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
+                  {__('bookings_updated_price')}:{' '}
+                  {priceFormat(updatedUtilityTotal)}
+                </div>
+              )}
+              <p className="font-bold">
+                {foodOption === 'no_food'
+                  ? 'NOT INCLUDED'
+                  : priceFormat(utilityFiat)}
+                {isNotPaid && (
+                  <span className="text-failure">
+                    {' '}
+                    {__('booking_card_unpaid')}
+                  </span>
+                )}
+              </p>
             </div>
-          )}
-          <p className="font-bold">
-            {foodOption === 'no_food'
-              ? 'NOT INCLUDED'
-              : priceFormat(utilityFiat)}
-            {isNotPaid && (
-              <span className="text-failure"> {__('booking_card_unpaid')}</span>
-            )}
+          </div>
+          <p className="text-right text-xs">
+            {__('bookings_summary_step_utility_description')}
           </p>
         </div>
-      </div>
-      <p className="text-right text-xs">
-        {__('bookings_summary_step_utility_description')}
-      </p>
+      )}
+
       <div className="flex justify-between items-center mt-3">
         <p>{__('bookings_total')}</p>
         <div className="flex items-center gap-2">
@@ -208,7 +218,8 @@ const SummaryCosts = ({
         </div>
       </div>
       <p className="text-right text-xs">
-        {__('bookings_checkout_step_total_description')} {getVatInfo(totalFiat, vatRate)}
+        {__('bookings_checkout_step_total_description')}{' '}
+        {getVatInfo(totalFiat, vatRate)}
       </p>
     </div>
   );
