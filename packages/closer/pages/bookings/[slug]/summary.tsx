@@ -27,6 +27,7 @@ import {
   CloserCurrencies,
   Event,
   Listing,
+  PaymentConfig,
 } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
@@ -38,9 +39,11 @@ interface Props extends BaseBookingParams {
   error?: string;
   event?: Event;
   bookingConfig: BookingConfig | null;
+  paymentConfig: PaymentConfig | null;
 }
 
-const Summary = ({ booking, listing, event, error, bookingConfig }: Props) => {
+const Summary = ({ booking, listing, event, error, bookingConfig, paymentConfig }: Props) => {
+
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -48,11 +51,16 @@ const Summary = ({ booking, listing, event, error, bookingConfig }: Props) => {
   const { STAY_BOOKING_ALLOWED_PLANS } = useConfig();
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
+  const { VISITORS_GUIDE } = useConfig() || {};
+
+  const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
+  const vatRateFromConfig = Number(paymentConfig?.vatRate);
+  const vatRate = vatRateFromConfig || defaultVatRate;
+
   const [handleNextError, setHandleNextError] = useState<string | null>(null);
   const [hasComplied, setCompliance] = useState(false);
   const [isMember, setIsMember] = useState(false);
   const onComply = (isComplete: boolean) => setCompliance(isComplete);
-  const { VISITORS_GUIDE } = useConfig() || {};
 
   const {
     utilityFiat,
@@ -181,6 +189,7 @@ const Summary = ({ booking, listing, event, error, bookingConfig }: Props) => {
             }
             volunteerId={volunteerId}
             priceDuration={listing?.priceDuration}
+            vatRate={vatRate}
           />
 
           {volunteerId ? (
@@ -221,7 +230,7 @@ Summary.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
-    const [bookingRes, bookingConfigRes] = await Promise.all([
+    const [bookingRes, bookingConfigRes, paymentConfigRes] = await Promise.all([
       api
         .get(`/booking/${query.slug}`, {
           headers: req?.cookies?.access_token && {
@@ -234,9 +243,13 @@ Summary.getInitialProps = async ({
       api.get('/config/booking').catch(() => {
         return null;
       }),
+      api.get('/config/payment').catch(() => {
+        return null;
+      }),
     ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
+    const paymentConfig = paymentConfigRes?.data?.results?.value;
 
     const [optionalEvent, optionalListing] = await Promise.all([
       booking?.eventId &&
@@ -255,7 +268,7 @@ Summary.getInitialProps = async ({
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
 
-    return { booking, listing, event, error: null, bookingConfig };
+    return { booking, listing, event, error: null, bookingConfig, paymentConfig };
   } catch (err) {
     console.log('Error', err);
     return {
@@ -263,6 +276,7 @@ Summary.getInitialProps = async ({
       booking: null,
       listing: null,
       bookingConfig: null,
+      paymentConfig: null,
     };
   }
 };

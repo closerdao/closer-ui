@@ -22,6 +22,7 @@ interface Props {
   updatedFiatTotal?: Price<CloserCurrencies>;
   updatedEventTotal?: Price<CloserCurrencies>;
   priceDuration?: string;
+  vatRate?: number;
 }
 
 const SummaryCosts = ({
@@ -41,6 +42,7 @@ const SummaryCosts = ({
   updatedFiatTotal,
   updatedEventTotal,
   priceDuration,
+  vatRate,
 }: Props) => {
   const { APP_NAME } = useConfig();
 
@@ -84,15 +86,29 @@ const SummaryCosts = ({
                     {priceFormat(updatedAccomodationTotal)}
                   </div>
                 )}
-              <p className="font-bold">
-                {priceFormat(accomodationCost)}
+              <div className="font-bold">
+                <>
+                  {useTokens && <>{priceFormat(accomodationCost)}</>}
+                  {useCredits && (
+                    <>
+                      {priceFormat({
+                        val: accomodationCost?.val,
+                        cur: 'credits',
+                        app: APP_NAME,
+                      })}{' '}
+                      + <span>{priceFormat(totalFiat)}</span>
+                    </>
+                  )}
+                </>
+                {!useTokens && !useCredits && priceFormat(accomodationCost)}
+
                 {isNotPaid && (
                   <span className="text-failure">
                     {' '}
                     {__('booking_card_unpaid')}
                   </span>
                 )}
-              </p>
+              </div>
             </div>
           </div>
           <p className="text-right text-xs">
@@ -133,43 +149,45 @@ const SummaryCosts = ({
               updatedAccomodationTotal?.val !== accomodationCost?.val) && (
               <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
                 {__('bookings_updated_price')}:{' '}
-                {priceDuration === 'night' && <div>
-                  {useTokens && (
-                    <div>
-                      {priceFormat(updatedAccomodationTotal)} +{' '}
-                      {priceFormat(updatedFiatTotal)}
-                    </div>
-                  )} 
-                  {useCredits && (
-                    <div>
-                      {priceFormat({
-                        val: updatedAccomodationTotal?.val,
-                        cur: 'credits',
-                        app: APP_NAME,
-                      })}{' '}
-                      + <span>{priceFormat(totalFiat)}</span>
-                    </div>
-                  )}
-                  {!useTokens && !useCredits && priceFormat(updatedFiatTotal)}
-              </div>}
-              {priceDuration === 'hour' && <div>
-                  {useTokens && (
-                    <div>
-                      {priceFormat(updatedAccomodationTotal)}
-                    </div>
-                  )}
+                {priceDuration === 'night' && (
+                  <div>
+                    {useTokens && (
+                      <div>
+                        {priceFormat(updatedAccomodationTotal)} +{' '}
+                        {priceFormat(updatedFiatTotal)}
+                      </div>
+                    )}
+                    {useCredits && (
+                      <div>
+                        {priceFormat({
+                          val: updatedAccomodationTotal?.val,
+                          cur: 'credits',
+                          app: APP_NAME,
+                        })}{' '}
+                        + <span>{priceFormat(totalFiat)}</span>
+                      </div>
+                    )}
+                    {!useTokens && !useCredits && priceFormat(updatedFiatTotal)}
+                  </div>
+                )}
+                {priceDuration === 'hour' && (
+                  <div>
+                    {useTokens && (
+                      <div>{priceFormat(updatedAccomodationTotal)}</div>
+                    )}
 
-                  {useCredits && (
-                    <div>
-                      {priceFormat({
-                        val: updatedAccomodationTotal?.val,
-                        cur: 'credits',
-                        app: APP_NAME,
-                      })}
-                    </div>
-                  )}
-                  {!useTokens && !useCredits && priceFormat(updatedFiatTotal)}
-                </div>}
+                    {useCredits && (
+                      <div>
+                        {priceFormat({
+                          val: updatedAccomodationTotal?.val,
+                          cur: 'credits',
+                          app: APP_NAME,
+                        })}
+                      </div>
+                    )}
+                    {!useTokens && !useCredits && priceFormat(updatedFiatTotal)}
+                  </div>
+                )}
               </div>
             )}
           {priceDuration === 'night' && (
@@ -256,7 +274,8 @@ const SummaryCosts = ({
         </div>
       </div>
       <p className="text-right text-xs">
-        {__('bookings_checkout_step_total_description')} {getVatInfo(totalFiat)}
+        {__('bookings_checkout_step_total_description')}{' '}
+        {getVatInfo(totalFiat, vatRate)}
       </p>
     </div>
   );

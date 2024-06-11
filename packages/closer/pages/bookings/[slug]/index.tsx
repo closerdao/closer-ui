@@ -21,12 +21,14 @@ import { STATUS_COLOR } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
+import { useConfig } from '../../../hooks/useConfig';
 import {
   Booking,
   BookingConfig,
   Event,
   GeneralConfig,
   Listing,
+  PaymentConfig,
   VolunteerOpportunity,
 } from '../../../types';
 import api from '../../../utils/api';
@@ -52,6 +54,7 @@ interface Props {
   bookingConfig: BookingConfig | null;
   listings: Listing[];
   generalConfig: GeneralConfig;
+  paymentConfig: PaymentConfig | null;
 }
 
 const BookingPage = ({
@@ -64,8 +67,12 @@ const BookingPage = ({
   bookingConfig,
   listings,
   generalConfig,
+  paymentConfig,
 }: Props) => {
+
   const { timeZone } = generalConfig;
+
+  console.log('booking=', booking);
 
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -77,6 +84,7 @@ const BookingPage = ({
   const isEditMode = true;
 
   const isHourlyBooking = listing?.priceDuration !== 'night';
+  const { TIME_ZONE } = useConfig();
 
   const {
     utilityFiat,
@@ -107,6 +115,10 @@ const BookingPage = ({
     name: bookingCreatedBy.screenname,
     photo: bookingCreatedBy.photo,
   };
+
+  const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
+  const vatRateFromConfig = Number(paymentConfig?.vatRate);
+  const vatRate = vatRateFromConfig || defaultVatRate;
 
   const [status, setStatus] = useState(booking?.status);
   const [updatedAdults, setUpdatedAdults] = useState(adults);
@@ -168,6 +180,7 @@ const BookingPage = ({
     updatedDuration,
     updatedDiscountRate,
     volunteerId,
+    isTeamBooking,
   );
 
   const foodOption = 'no_food';
@@ -179,6 +192,7 @@ const BookingPage = ({
     updatedAdults,
     updatedDuration,
     discountRate: updatedDiscountRate,
+    isTeamBooking,
   });
 
   const updatedEventTotal = (eventPrice?.val || 0) * updatedAdults || 0;
@@ -417,6 +431,7 @@ const BookingPage = ({
               cur: eventFiat?.cur,
             }}
             priceDuration={listing?.priceDuration}
+            vatRate={vatRate}
           />
         </section>
 
@@ -463,7 +478,7 @@ BookingPage.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
-    const [bookingRes, bookingConfigRes, listingRes, generalConfigRes] =
+    const [bookingRes, bookingConfigRes, listingRes, generalConfigRes, paymentConfigRes] =
       await Promise.all([
         api
           .get(`/booking/${query.slug}`, {
@@ -483,12 +498,16 @@ BookingPage.getInitialProps = async ({
         api.get('/config/general').catch(() => {
           return null;
         }),
+        api.get('/config/payment').catch(() => {
+          return null;
+        }),
       ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
     const generalConfig = generalConfigRes?.data?.results?.value;
 
     const listings = listingRes?.data?.results;
+    const paymentConfig = paymentConfigRes?.data?.results?.value;
 
     const [optionalEvent, optionalListing, optionalVolunteer] =
       await Promise.all([
@@ -537,6 +556,7 @@ BookingPage.getInitialProps = async ({
       bookingConfig,
       generalConfig,
       listings,
+      paymentConfig,
     };
   } catch (err: any) {
     console.log('Error', err.message);
@@ -551,6 +571,7 @@ BookingPage.getInitialProps = async ({
       bookingConfig: null,
       generalConfig: null,
       listings: null,
+      paymentConfig: null,
     };
   }
 };

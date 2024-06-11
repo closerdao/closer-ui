@@ -23,7 +23,7 @@ import {
 } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
-import { GeneralConfig } from '../../types';
+import { GeneralConfig, PaymentConfig } from '../../types';
 import {
   SelectedPlan,
   SubscriptionPlan, // Tier,
@@ -42,18 +42,22 @@ interface Props {
   subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
   generalConfig: GeneralConfig | null;
   error?: string;
+  paymentConfig: PaymentConfig | null;
 }
 
 const SubscriptionsSummaryPage: NextPage<Props> = ({
   subscriptionsConfig,
   generalConfig,
   error,
+  paymentConfig,
 }) => {
-
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const defaultConfig = useConfig();
   const { priceId, monthlyCredits } = router.query;
+  const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
+  const vatRateFromConfig = Number(paymentConfig?.vatRate);
+  const vatRate = vatRateFromConfig || defaultVatRate;
 
   const areSubscriptionsEnabled =
     subscriptionsConfig?.enabled &&
@@ -198,7 +202,7 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
                 )} ${getVatInfo({
                   val: total,
                   cur: DEFAULT_CURRENCY,
-                })} ${__('subscriptions_summary_per_month')}`}
+                }, vatRate)} ${__('subscriptions_summary_per_month')}`}
               />
             </div>
             <Button className="mt-3" onClick={handleCheckout}>
@@ -213,27 +217,33 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
 
 SubscriptionsSummaryPage.getInitialProps = async () => {
   try {
-    const [subscriptionsRes, generalRes] = await Promise.all([
+    const [subscriptionsRes, generalRes, paymentRes] = await Promise.all([
       api.get('/config/subscriptions').catch(() => {
         return null;
       }),
       api.get('/config/general').catch(() => {
         return null;
       }),
+      api.get('/config/payment').catch(() => {
+        return null;
+      }),
     ]);
 
     const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
     const generalConfig = generalRes?.data?.results?.value;
+    const paymentConfig = paymentRes?.data?.results?.value;
 
     return {
       subscriptionsConfig,
       generalConfig,
+      paymentConfig,
     };
   } catch (err: unknown) {
     return {
       subscriptionsConfig: { enabled: false, elements: [] },
       generalConfig: null,
       error: parseMessageFromError(err),
+      paymentConfig: null,
     };
   }
 };

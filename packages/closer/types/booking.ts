@@ -119,6 +119,7 @@ export interface BookingWithUserAndListing {
   fiatPriceVal: number;
   fiatPriceCur: CloserCurrencies;
   roomOrBedNumbers?: number[];
+  adminBookingReason?: string;
 }
 
 export interface AccommodationUnit {

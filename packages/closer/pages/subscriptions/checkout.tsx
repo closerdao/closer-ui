@@ -70,6 +70,10 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId, monthlyCredits, source } = router.query;
+  const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
+  const vatRateFromConfig = Number(paymentConfig?.vatRate);
+  const vatRate = vatRateFromConfig || defaultVatRate;
+  
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
 
   const monthlyCreditsSelected = Math.min(
@@ -167,7 +171,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
                 )} ${getVatInfo({
                   val: total,
                   cur: DEFAULT_CURRENCY,
-                })} ${__('subscriptions_summary_per_month')}`}
+                }, vatRate)} ${__('subscriptions_summary_per_month')}`}
               />
             }
           </div>

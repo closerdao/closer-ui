@@ -88,6 +88,7 @@ export const getUtilityTotal = ({
   updatedAdults,
   updatedDuration,
   discountRate,
+  isTeamBooking,
 }: {
   foodOption: string;
   utilityFiatVal: number | undefined;
@@ -95,11 +96,9 @@ export const getUtilityTotal = ({
   updatedAdults: number;
   updatedDuration: number;
   discountRate: number;
+  isTeamBooking: boolean | undefined
 }) => {
-  if (foodOption === 'no_food') {
-    return 0;
-  }
-  if (!utilityFiatVal) {
+  if (foodOption === 'no_food' || isTeamBooking || !utilityFiatVal) {
     return 0;
   }
   const multiplier = isPrivate ? 1 : updatedAdults;
@@ -107,6 +106,7 @@ export const getUtilityTotal = ({
   return total;
 };
 
+// a better idea is recalculate booking price on backend, so that price calculation logic is in one place
 export const getAccommodationTotal = (
   listing: Listing | undefined,
   useTokens: boolean,
@@ -115,9 +115,9 @@ export const getAccommodationTotal = (
   durationInDaysOrHours: number,
   discountRate: number,
   volunteerId: string | undefined,
+  isTeamBooking: boolean | undefined,
 ) => {
-  if (!listing) return 0;
-  if (volunteerId) return 0;
+  if (!listing || volunteerId || isTeamBooking) return 0;
 
   let price: number | undefined =
     useTokens || useCredits ? listing.tokenPrice?.val : listing.fiatPrice?.val;
@@ -278,6 +278,7 @@ export const getBookingsWithUserAndListing = ({
     };
 
     const roomOrBedNumbers = b.get('roomOrBedNumbers').toJS() ?? undefined;
+    const adminBookingReason = b.get('adminBookingReason') || null; 
 
     return {
       _id: b.get('_id'),
@@ -295,8 +296,23 @@ export const getBookingsWithUserAndListing = ({
       fiatPriceVal,
       fiatPriceCur,
       roomOrBedNumbers,
+      adminBookingReason,
     };
   });
+};
+
+const getBookingTitleForCalendar = (booking: BookingWithUserAndListing) => {
+  const userName = booking.userInfo?.name || '';
+  const additionalGuests = booking.adults > 1 ? ` + ${booking.adults - 1}` : '';
+  const formattedPrice =
+    booking.fiatPriceVal && booking.fiatPriceCur
+      ? priceFormat(booking.fiatPriceVal, booking.fiatPriceCur)
+      : '';
+  if (booking?.adminBookingReason) {
+    return `${booking.adminBookingReason} by ${userName}`;
+  }
+
+  return `${userName}${additionalGuests} ${formattedPrice}`;
 };
 
 export const generateBookingItems = (
@@ -376,16 +392,10 @@ export const generateBookingItems = (
             matchedUnits[0].id +
             (Array.isArray(roomOrBedNumbers) ? roomOrBedNumbers[0] : 1) -
             1 : assignedUnitId,
-          title: `${booking.userInfo ? booking?.userInfo?.name : ''} ${
-            booking.adults > 1 ? ' + ' + (booking.adults - 1) : ''
-          }  ${
-            booking.fiatPriceVal && booking.fiatPriceCur
-              ? priceFormat(booking.fiatPriceVal, booking.fiatPriceCur)
-              : ''
-          }`,
           start_time: dayjs(booking.start).toDate(),
           end_time: dayjs(booking.end).toDate(),
           roomOrBedNumbers: booking.roomOrBedNumbers,
+          title: getBookingTitleForCalendar(booking),
         });
       }
     }
@@ -548,4 +558,32 @@ export const payTokens = async (
     });
     return { success: true, error: null };
   }
+};
+
+export const formatCheckinDate = (
+  date: Date | string | null,
+  TIME_ZONE: string,
+  checkinTime: number | undefined,
+) => {
+  const localDate = dayjs.tz(date, TIME_ZONE);
+  const localTime = localDate
+    .hour(Number(checkinTime) || 16)
+    .minute(0)
+    .second(0)
+    .millisecond(0);
+  return localTime;
+};
+
+export const formatCheckoutDate = (
+  date: Date | string | null,
+  TIME_ZONE: string,
+  checkoutTime: number | undefined,
+) => {
+  const localDate = dayjs.tz(date, TIME_ZONE);
+  const localTime = localDate
+    .hour(Number(checkoutTime) || 11)
+    .minute(0)
+    .second(0)
+    .millisecond(0);
+  return localTime;
 };

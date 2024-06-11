@@ -14,7 +14,7 @@ import { Button, Heading } from '../../components/ui/';
 import { NextPage } from 'next';
 
 import { Page404, useConfig } from '../..';
-import { DEFAULT_CURRENCY } from '../../constants';
+import { DEFAULT_CURRENCY, MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { GeneralConfig, Listing } from '../../types';
 import { SubscriptionPlan } from '../../types/subscriptions';
@@ -371,8 +371,10 @@ SubscriptionsPage.getInitialProps = async () => {
       api.get('/config/general').catch(() => {
         return null;
       }),
-      api.get('/listing').catch(() => {
-        return null;
+      api.get('/listing', {
+        params: {
+          limit: MAX_LISTINGS_TO_FETCH,
+        },
       }),
     ]);
 

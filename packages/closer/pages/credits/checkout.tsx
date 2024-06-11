@@ -19,7 +19,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { FundraisingConfig, GeneralConfig, PaymentConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __, getVatInfo, priceFormat } from '../../utils/helpers';
+import { __, priceFormat } from '../../utils/helpers';
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY as string,
@@ -38,7 +38,6 @@ const CreditsCheckoutPage: NextPage<Props> = ({
   generalConfig,
   apiError,
 }) => {
-  const CREDIT_PACKAGES = ['30', '90', '180'];
   const { APP_NAME } = useConfig();
   const router = useRouter();
 
@@ -52,16 +51,19 @@ const CreditsCheckoutPage: NextPage<Props> = ({
     if (!fundraisingConfig) {
       return 0;
     }
-    switch (amount) {
-      case '30':
-        return 30 * fundraisingConfig?.creditPrice30Credits;
-      case '90':
-        return 90 * fundraisingConfig?.creditPrice90Credits;
-      case '180':
-        return 180 * fundraisingConfig?.creditPrice180Credits;
-      default:
-        return 0;
+
+    const numericAmount = parseInt(amount as string);
+
+    if (numericAmount < 90) {
+      return numericAmount * fundraisingConfig.creditPrice30Credits;
     }
+    if (numericAmount >= 90 && numericAmount < 180) {
+      return numericAmount * fundraisingConfig.creditPrice90Credits;
+    }
+    if (numericAmount >= 180) {
+      return numericAmount * fundraisingConfig.creditPrice180Credits;
+    }
+    return 0;
   };
 
   const total = getTotal();
@@ -87,9 +89,9 @@ const CreditsCheckoutPage: NextPage<Props> = ({
     return <PageNotFound />;
   }
 
-  if (!CREDIT_PACKAGES.includes(amount as string)) {
-    return <PageError error="No package available" />;
-  }
+  // if (!CREDIT_PACKAGES.includes(amount as string)) {
+  //   return <PageError error="No package available" />;
+  // }
   if (apiError) {
     return <PageError error={apiError} />;
   }
@@ -121,12 +123,6 @@ const CreditsCheckoutPage: NextPage<Props> = ({
                 className="mb-4"
                 rowKey={String(amount)}
                 value={total ? priceFormat(total, DEFAULT_CURRENCY) : '0'}
-                additionalInfo={`${__(
-                  'bookings_checkout_step_total_description',
-                )} ${getVatInfo({
-                  val: total,
-                  cur: DEFAULT_CURRENCY,
-                })}`}
               />
             }
           </div>

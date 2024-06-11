@@ -18,7 +18,7 @@ const HomePage = ({ generalConfig }: Props) => {
         <title>{`Welcome to ${PLATFORM_NAME}!`}</title>
         <meta
           name="description"
-          content="Traditional Dream Factory (TDF) is a regenerative playground in Abela, Portugal."
+          content="Foz is a regenerative playground in Portugal."
         />
       </Head>
       <section className="flex justify-center w-full">

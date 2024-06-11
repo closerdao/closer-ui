@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
 import Faqs from 'closer/components/Faqs';
@@ -62,8 +62,10 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
       roles: { $in: ['space-host', 'steward', 'team'].filter((e) => e) },
     },
   };
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [isAutoplaying, setIsAutoplaying] = useState(false);
 
   const loadData = async () => {
     await Promise.all([
@@ -78,7 +80,20 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
 
   useEffect(() => {
     setIsSmallScreen(isMobile);
-  }, []);
+
+    if (videoRef.current) {
+      videoRef.current
+        .play()
+        .then(() => {
+          console.log('can autoplay');
+          setIsAutoplaying(true);
+        })
+        .catch(() => {
+          console.log('cant autoplay');
+          setIsAutoplaying(false);
+        });
+    }
+  }, [videoRef.current]);
 
   const listings = platform.listing.find(listingFilter);
 
@@ -120,19 +135,33 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
         <title>{`Welcome to ${PLATFORM_NAME}!`}</title>
         <meta
           name="description"
-          content="Traditional Dream Factory (TDF) is a regenerative playground in Abela, Portugal."
+          content="Desert Transformation Lab is an experimental school of ecological imagination in Błędowska Desert, Poland."
         />
       </Head>
-      <section className="w-[100vw] md:w-[calc(100vw+16px)] -mx-4 absolute -top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-alt mb-8 md:mb-[100vh]">
-        <div className="md:h-[100vh]">
-          {isSmallScreen ? (
+      <section className="w-[100vw] md:w-[calc(100vw+16px)] -mx-4 absolute -top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-alt mb-8 md:mb-[100vh] 1-100">
+        <div className="md:h-[100vh] ">
+          {isSmallScreen && (
             <div className="h-[calc(100vh)]">
+              <div
+                className={`h-full ${!isAutoplaying ? 'visible' : 'hidden'} `}
+              >
+                <Image
+                  className="w-full h-full object-cover"
+                  src="/images/lios-fallback.jpg"
+                  width={731}
+                  height={786}
+                  alt="Lios labs"
+                />
+              </div>
               <video
+                ref={videoRef}
                 loop={true}
                 muted={true}
                 autoPlay={true}
                 playsInline={true}
-                className="w-full h-full object-cover"
+                className={`w-full h-full object-cover ${
+                  isAutoplaying ? 'visible' : 'hidden'
+                } `}
               >
                 <source
                   src="https://cdn.oasa.co/video/lios-small.mp4"
@@ -140,11 +169,12 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                 />
               </video>
             </div>
-          ) : (
+          )}
+          {!isSmallScreen && (
             <YoutubeEmbed isBackgroundVideo={true} embedId="8XrtA7R1aew" />
           )}
         </div>
-        <div className="absolute left-0 top-0 w-full h-full bg-black/20 flex justify-center ">
+        <div className="absolute left-0 top-0 w-full h-full bg-black/20 flex justify-center z-1000">
           <div className="w-full flex justify-center flex-col items-center ">
             <div className=" md:w-full md:max-w-6xl p-6 md:p-4 flex flex-col items-center gap-2 md:gap-10">
               <Image
@@ -175,9 +205,11 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
             <Heading
               level={2}
               display
-              className="text-center mb-6 md:text-[45px] normal-case"
+              className="text-center mb-6 md:text-[45px] normal-case leading-[50px]"
             >
-              Join the wild faculty of transformation
+              Join the wild faculty of transformation <br />
+              <br />
+              Dołącz do dzikiego fakultetu transformacji!
             </Heading>
             <p className="mb-6">
               Come and stay in our desert village and let your imagination roam
@@ -197,6 +229,30 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
               this invitation sounds like something for you, there are plenty of
               ways to get involved. Follow the dusty trail.
             </p>
+            <div className="flex justify-center mb-4 mt-2">
+              <div className="border-t w-[120px] border-accent-alt"></div>
+            </div>
+            <p className="mb-6">
+              Przyjedź i zatrzymaj się w naszej pustynnej wiosce. Pozwól swojej
+              wyobraźni swobodnie wędrować. Skorzystaj z okazji, aby w ciekawy i
+              zabawny sposób poznać lokalne ekosystemy, praktyki kulturotwórcze
+              i regeneratywne, a także praktykować sprawczość.
+            </p>{' '}
+            <p className="mb-6">
+              Będzie to okazja do zanurzenia się we wspólnych doświadczeniach w
+              otoczeniu unikalnego ekosystemu Pustyni Błędowskiej. Zachęcamy Cię
+              do otwarcia się na warunki pełne przygód i pozwolenie im, aby Cię
+              przemieniły i pokazały surowe piękno oraz złożoność otaczającej
+              przyrody.
+            </p>
+            <p className="mb-6">
+              Gwarantujemy, że spotkasz inspirujące stworzenia, z którymi się
+              zaprzyjaźnisz. Będzie to sposobność do wzięcia udziału w
+              warsztatach i eksperymentach łączących sztukę, ekologię, myślenie
+              systemowe i naukę. Jeśli to zaproszenie brzmi jak coś dla Ciebie,
+              istnieje wiele sposobów, aby się zaangażować. Podążaj piaszczystym
+              szlakiem.
+            </p>
           </div>
         </section>
 
@@ -207,7 +263,10 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
               display
               className="text-left mb-6 md:text-2xl normal-case"
             >
-              Before the wild adventure begins... please read our Desert Values:
+              Before the wild adventure begins... please read our Desert Values
+              /<br />
+              Zanim rozpocznie się dzika przygoda, przeczytaj proszę nasze
+              Pustynne Wartości
             </Heading>
             <p>
               Desert Transformation Lab is shaped by shared ethics: equity of
@@ -215,9 +274,19 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
               non-violence, community, and sustainability. What does it mean in
               practice?
             </p>
+            <div className="flex justify-center mb-4 mt-2">
+              <div className="border-t w-[120px] border-accent-alt"></div>
+            </div>
+            <p>
+              Pustynne Laboratorium Transformacji kształtuje się poprzez wspólne
+              wartości: równość wszystkich istot, świadomość, ekologia, troska,
+              różnorodność, całość, niestosowanie przemocy, społeczność i
+              zrównoważony rozwój. Co to oznacza w praktyce?
+            </p>
 
             <Heading level={4} display className="mt-6 md:text-xl normal-case ">
-              Active Participation
+              Active Participation / <br />
+              Aktywna partycypacja
             </Heading>
             <p>
               We know that transformative change can occur only through deeply
@@ -234,9 +303,29 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
               </Link>
               .
             </p>
+            <div className="flex justify-center mb-4 mt-2">
+              <div className="border-t w-[120px] border-accent-alt"></div>
+            </div>
+            <p>
+              Wierzymy, że transformacyjne zmiany mogą nastąpić tylko poprzez
+              głębokie zaangażowanie - na poziomie indywidualnym, kolektywnym i
+              społecznym. Zachęcamy do uczenia się poprzez działanie. Każda
+              osoba jest zaproszona do pracy na rzecz wspólnego dobra, naszej
+              planety i zamieszkujących ją istot. Wszystkie osoby uczestniczące
+              biorą udział w codziennych zajęciach wioski i proszone są o
+              przestrzeganie{' '}
+              <Link
+                className="text-accent no-underline"
+                href="https://drive.google.com/file/d/1W7wgWGboRayeAJZcTP9P9OrQgbhj4NkT/view?usp=drive_link"
+              >
+                Pustynnych Wartości
+              </Link>
+              .
+            </p>
 
             <Heading level={4} display className="mt-6 md:text-xl normal-case ">
-              Sustainability
+              Sustainability / <br />
+              Ekologia & Zrównoważony Rozwój
             </Heading>
             <p>
               Sustainability lies at the core of Desert Transformation Lab and
@@ -246,35 +335,74 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
               We are a regenerative playground. Come and leave a mark that
               future generations will appreciate.
             </p>
+            <div className="flex justify-center mb-4 mt-2">
+              <div className="border-t w-[120px] border-accent-alt"></div>
+            </div>
+            <p>
+              Praktyki ekologiczne leżą u podstaw Laboratorium Pustynnej
+              Transformacji i włączamy je w naszą codzienność. Pobyt na Pustyni
+              jest idealnym ekosystemem do rozwijania nowych nawyków i ponownego
+              przemyślenia ich wpływu na środowisko naturalne. Stwórzmy
+              pozytywny ślad: Jesteśmy regeneratywnym placem zabaw. Przyjedź i
+              zostaw po sobie coś, co docenią przyszłe pokolenia.
+            </p>
 
             <Heading level={4} display className="mt-6 md:text-xl normal-case ">
-              Consent
+              Consent / <br />
+              Zgoda
             </Heading>
             <p>
               Bring awareness to your boundaries & needs, respect those of
               others. If it’s not a full yes, then it’s a no.
             </p>
+            <div className="flex justify-center mb-4 mt-2">
+              <div className="border-t w-[120px] border-accent-alt"></div>
+            </div>
+            <p> 
+              Zadbaj o swoje granice i potrzeby, szanuj granice i potrzeby
+              innych osób. Jeśli to nie jest pełne &quot;tak&quot;, to jest to &quot;nie&quot;.
+            </p>
 
             <Heading level={4} display className="mt-6 md:text-xl normal-case ">
-              Radical Self-Reliance
+              Radical Self-Reliance /<br />
+              Radykalna Samowystarczalność
             </Heading>
             <p>
               When you come to the Desert Transformation Lab, you are
               responsible for your own survival, safety, comfort, and well-being
               of yourself and the village.
             </p>
+            <div className="flex justify-center mb-4 mt-2">
+              <div className="border-t w-[120px] border-accent-alt"></div>
+            </div>
+            <p>
+              Kiedy przyjedziesz do Laboratorium Pustynnego Wyobraźni, weź
+              odpowiedzialność za siebie, swoje bezpieczeństwo, komfort oraz
+              dobrobyt własny i wioski. Jeśli widzisz, że coś jest do zrobienia
+              to znaczy, że jest to Twoje zadanie.
+            </p>
 
             <Heading level={4} display className="mt-6 md:text-xl normal-case ">
-              Gift Economy
+              Gift Economy / <br />
+              Ekonomia Daru
             </Heading>
             <p>
               What is your deepest gift that you can share with the community?
               How we can collectively practice non-capitalistic forms of
               exchange that are based on mutual care?
             </p>
+            <div className="flex justify-center mb-4 mt-2">
+              <div className="border-t w-[120px] border-accent-alt"></div>
+            </div>
+            <p>
+              Jaki jest Twój najgłębszy dar, którym chcesz podzielić się z
+              społecznością? Jak możemy wspólnie praktykować formy wymiany
+              oparte na wzajemnej trosce, a nie na modelach kapitalistycznych?
+            </p>
 
             <Heading level={4} display className="mt-6 md:text-xl normal-case ">
-              Decommodification
+              Decommodification / <br />
+              Dekomercjalizacja
             </Heading>
             <p>
               To preserve the spirit of gifting, our community seeks to create
@@ -283,9 +411,19 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
               protect our culture from such exploitation. We resist the
               substitution of consumption for participatory experience.
             </p>
+            <div className="flex justify-center mb-4 mt-2">
+              <div className="border-t w-[120px] border-accent-alt"></div>
+            </div>
+            <p>
+              Aby zachować ducha dawania, nasza społeczność stara się tworzyć
+              środowiska społeczne, które są pozbawione komercyjnych partnerstw,
+              transakcji lub reklam. Chcemy chronić naszą kulturę przed taką
+              eksploatacją. Wesprzyj nas w tym dążeniu!
+            </p>
 
             <Heading level={4} display className="mt-6 md:text-xl normal-case ">
-              Communal Effort
+              Communal Effort / <br />
+              Kolektywny Wysiłek
             </Heading>
             <p>
               Our community values creative cooperation and collaboration. We
@@ -293,9 +431,19 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
               spaces, works of art, and methods of communication that support
               such interaction.
             </p>
+            <div className="flex justify-center mb-4 mt-2">
+              <div className="border-t w-[120px] border-accent-alt"></div>
+            </div>
+            <p>
+              Nasza społeczność ceni twórczą współpracę i kolaborację. Staramy
+              się wytwarzać, promować i chronić sieci społeczne, przestrzenie
+              publiczne, dzieła sztuki oraz metody komunikacji, które wspierają
+              takie interakcje.
+            </p>
 
             <Heading level={4} display className="mt-6 md:text-xl normal-case ">
-              Ecological Awareness
+              Ecological Awareness / <br />
+              Świadomość Ekologiczna
             </Heading>
             <p>
               Desert Transformation Lab is nested in Eagle’s Nest Landscape
@@ -304,6 +452,17 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
               meet our neighbours, human and more than human, and please be
               respectful and aware that their needs may be different from yours.
             </p>
+            <div className="flex justify-center mb-4 mt-2">
+              <div className="border-t w-[120px] border-accent-alt"></div>
+            </div>
+            <p>
+              Pustynne Laboratorium Transformacji jest osadzone w Parku
+              Krajobrazowym Orlich Gniazd, w obrębie wydm Pustyni Błędowskiej,
+              ekosystemie będącym częścią programu ochrony Natura 2000.
+              Zapraszamy Cię do spotkania się z naszymi sąsiadami, ludźmi i
+              innymi istotami, prosimy jednak o szacunek i świadomość, że ich
+              potrzeby mogą się różnić od Twoich.
+            </p>
           </div>
         </section>
 
@@ -311,9 +470,6 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
           <div className="flex gap-4 flex-col sm:flex-row">
             <LinkButton href="/stay" className="lowercase">
               apply to stay
-            </LinkButton>
-            <LinkButton href="/volunteer" className="lowercase">
-              join as a volunteer
             </LinkButton>
           </div>
         </section>
@@ -396,9 +552,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                     the area of your choosing and become a part of the
                     transformation.
                   </p>
-                  <LinkButton href="/volunteer" className="w-[150px]">
-                    Apply
-                  </LinkButton>
+                  <p className="font-accent uppercase">Applications closed</p>
                 </div>
               </div>
 
@@ -453,12 +607,12 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
 
         <section className=" w-[100vw] -mx-4 px-4  pt-12 pb-20 flex justify-center">
           <div className="flex flex-col gap-8 items-center w-full sm:w-[600px] ">
-          <Link
-            className="font-accent uppercase text-accent"
-            href="https://lios.io/deserttransformation"
-          >
-            DESERT TRANSFORMATION LAB Website
-          </Link>
+            <Link
+              className="font-accent uppercase text-accent"
+              href="https://lios.io/deserttransformation"
+            >
+              DESERT TRANSFORMATION LAB Website
+            </Link>
           </div>
         </section>
 

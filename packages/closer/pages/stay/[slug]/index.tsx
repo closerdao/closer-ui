@@ -21,7 +21,6 @@ import dayjs from 'dayjs';
 import { NextPage } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
-import PageNotFound from '../../404';
 import {
   CURRENCIES,
   DEFAULT_AVAILABILITY_RANGE_TO_CHECK,
@@ -56,6 +55,7 @@ import {
   formatDate,
   getBlockedDateRanges,
 } from '../../../utils/listings.helpers';
+import PageNotFound from '../../404';
 
 const MAX_DAYS_TO_CHECK_AVAILABILITY = 60;
 
@@ -75,7 +75,7 @@ const ListingPage: NextPage<Props> = ({
   descriptionText,
 }) => {
   const config = useConfig();
-  const { APP_NAME, LOCATION_LAT, LOCATION_LON, PLATFORM_LEGAL_ADDRESS } =
+  const { LOCATION_LAT, LOCATION_LON, PLATFORM_LEGAL_ADDRESS } =
     config || {};
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
@@ -151,6 +151,18 @@ const ListingPage: NextPage<Props> = ({
         discountRate
       : 0;
   }
+  const accommodationFiatTotal = listing
+    ? listing.fiatPrice?.val *
+      (listing.private ? 1 : adults) *
+      durationInDays *
+      discountRate
+    : 0;
+  const accommodationTokenTotal = listing
+    ? listing.tokenPrice?.val *
+      (listing.private ? 1 : adults) *
+      durationInDays *
+      discountRate
+    : 0;
   const nightlyTotal = listing
     ? listing.fiatPrice?.val * (listing.private ? 1 : adults) * discountRate
     : 0;
@@ -193,7 +205,7 @@ const ListingPage: NextPage<Props> = ({
     isTeamBooking,
     foodOption,
     utilityTotal,
-    accomodationTotal || 0,
+    accommodationFiatTotal,
   );
 
   const getAvailability = async (
@@ -371,15 +383,14 @@ const ListingPage: NextPage<Props> = ({
       redirectToSignup();
     }
     setApiError(null);
+
     try {
       const {
         data: { results: newBooking },
       } = await api.post('/bookings/request', {
         useTokens: currency === CURRENCIES[1],
-        // start: formatDate(start),
-        // end: formatDate(end),
-        start: start,
-        end: end,
+        start: isHourlyBooking ? start : formatDate(start),
+        end: isHourlyBooking ? end : formatDate(end),
         adults,
         infants,
         pets,
@@ -698,6 +709,7 @@ const ListingPage: NextPage<Props> = ({
                         </div>
                       )}
                     </div>
+
                     {isHourlyBooking && accomodationTotal && (
                       <div className="w-full flex justify-between items-center mt-3">
                         <p>
@@ -721,9 +733,9 @@ const ListingPage: NextPage<Props> = ({
                                 )}
                             </div>
                           ) : (
-                            <span>
+                              <span>
                               {priceFormat(
-                                settings && listing && fiatTotal,
+                                settings && listing && accomodationTotal,
                                 listing.fiatPrice?.cur,
                               )}
                             </span>
@@ -747,11 +759,11 @@ const ListingPage: NextPage<Props> = ({
                             <p>
                               {currency === CURRENCIES[1]
                                 ? priceFormat(
-                                    listing.tokenPrice?.val,
+                                    accommodationTokenTotal,
                                     listing.tokenPrice?.cur,
                                   )
                                 : priceFormat(
-                                    accomodationTotal,
+                                    isTeamBooking ? 0 : accommodationFiatTotal,
                                     listing.fiatPrice?.cur,
                                   )}
                             </p>

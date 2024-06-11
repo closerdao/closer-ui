@@ -8,9 +8,10 @@ interface Props {
   total: Price<CloserCurrencies> | undefined;
   useTokens: boolean;
   rentalToken: Price<CloserCurrencies> | undefined;
+  vatRate: number;
 }
 
-const CheckoutTotal = ({ total, useTokens, rentalToken }: Props) => {
+const CheckoutTotal = ({ total, useTokens, rentalToken, vatRate }: Props) => {
   return (
     <div>
       <HeadingRow>
@@ -27,7 +28,7 @@ const CheckoutTotal = ({ total, useTokens, rentalToken }: Props) => {
         </p>
       </div>
       <p className="text-right text-xs">
-        {__('bookings_checkout_step_total_description')} {getVatInfo(total)}
+        {__('bookings_checkout_step_total_description')} {getVatInfo(total, vatRate)}
       </p>
     </div>
   );

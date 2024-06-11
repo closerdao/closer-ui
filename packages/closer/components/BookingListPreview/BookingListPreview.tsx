@@ -10,7 +10,7 @@ import { getBookingType, getStatusText } from '../../utils/booking.helpers';
 import { __, priceFormat } from '../../utils/helpers';
 import BookingRequestButtons from '../BookingRequestButtons';
 import UserInfoButton from '../UserInfoButton';
-import { Card } from '../ui';
+import { Card, LinkButton } from '../ui';
 
 interface Props {
   booking: any;
@@ -66,7 +66,10 @@ const BookingListPreview = ({
 
   const endFormatted = dayjs(end).format('DD/MM/YYYY');
   const createdFormatted = dayjs(created).format('DD/MM/YYYY - HH:mm:A');
-  const isNotPaid = status !== 'paid' && status !== 'tokens-staked' && status !== 'credits-paid';
+  const isNotPaid =
+    status !== 'paid' &&
+    status !== 'tokens-staked' &&
+    status !== 'credits-paid';
 
   const bookingType = getBookingType(eventId, volunteerId);
 
@@ -220,6 +223,16 @@ const BookingListPreview = ({
           </p>
           <p>✅</p>
         </div>
+      )}
+
+      {userInfo?.email && (
+        <LinkButton
+          className="mt-6"
+          type="secondary"
+          href={`mailto:${userInfo.email}`}
+        >
+          {__('booking_card_email_user')}
+        </LinkButton>
       )}
 
       <BookingRequestButtons

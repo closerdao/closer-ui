@@ -119,6 +119,7 @@ export type BookingConfig = {
   volunteerCommitment: string;
   cancellationPolicyLastweek: number;
   utilityFiatVal: number;
+  pickUpEnabled: boolean;
 };
 
 export type PaymentConfig = {
@@ -127,6 +128,11 @@ export type PaymentConfig = {
   cryptoPayment: string;
   ethereumWalletAddress: string;
   polygonWalletAddress: string;
+  vatRate: number;
+};
+
+export type VolunteerConfig = {
+  enabled: boolean;
 };
 
 export type FundraisingConfig = {

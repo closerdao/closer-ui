@@ -201,6 +201,7 @@ const Bookings = ({ filter, page, setPage }: Props) => {
                           name: user.screenname,
                           photo: user.photo,
                           diet: user.preferences?.diet,
+                          email: user.email,
                         }
                       }
                       eventName={currentEvent && currentEvent.get('name')}

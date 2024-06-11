@@ -325,13 +325,13 @@ export const getAccommodationCost = (
   }
 };
 
-export const getVatInfo = (total) => {
-  if (process.env.NEXT_PUBLIC_VAT_RATE) {
+export const getVatInfo = (total, vatRate) => {
+  if (vatRate) {
     return `${priceFormat(
-      total?.val * Number(process.env.NEXT_PUBLIC_VAT_RATE),
+      total?.val * Number(vatRate),
       total?.cur,
     )}
-    (${Number(process.env.NEXT_PUBLIC_VAT_RATE) * 100}%)`;
+    (${Number(vatRate) * 100}%)`;
   }
   return '';
 };

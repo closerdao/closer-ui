@@ -10,12 +10,12 @@
 
   "resources_faq_heading": "Frequently asked questions",
   "resources_faq_subheading": "Got a question? We’re an open source.",
-  
+
   "stay_title": "Experience regenerative living at ",
   "stay_description": "Come and stay in our regenerative village under development. Get a chance to learn about permaculture, bio-construction, web3 - or just come and relax surrounded by beautiful nature. We don't have 5 star facilities just yet, but you get to experience the magic of this place during its early years, and we guarantee you'll meet some inspiring humans you'll become friends with.",
   "stay_meet_your_hosts": "Meet your hosts",
   "stay_meet_your_hosts_description": "Come and stay in our regenerative village under development. Get a chance to learn about permaculture, bio-construction, web3 - or just come and relax surrounded by beautiful nature. We don't have 5 star facilities just yet, but you get to experience the magic of this place during its early years, and we guarantee you'll meet some inspiring humans you'll become friends with.",
-  "stay_chose_accommodation": "Chose your accommodation",
+  "stay_chose_accommodation": "Choose your accommodation",
   "stay_chose_accommodation_description": "From bringing your own van to staying in a shared dorm, we have a range of options to fit your needs. We recommend staying for 1 month to get the full experience of our community, but you can also come just for an event.",
 
   "navigation_stay": "Book a stay",
@@ -33,7 +33,7 @@
   "carrots_what_4": "But be warned... carrots only stay fresh for so long, they do expire after 1 year! So make sure to use them!",
   "carrots_heading_redeem": "Redeem Your Carrots",
   "carrots_carrots_to_redeem": "Carrots to redeem",
-  "carrots_carrots_to_redeem_singular": "Carrot to redeem",  
+  "carrots_carrots_to_redeem_singular": "Carrot to redeem",
   "carrots_how_to_use_1": "Whenever you book an event or stay and have enough carrots to cover the whole accomodation price, you will find this widget on the checkout page. Simply apply discount and that's it!",
   "carrots_how_to_use_2": "10 carrots - 10 nights - 100% off",
   "carrots_how_to_use_3": "10 carrots - 5 nights - 100% off",
@@ -41,15 +41,11 @@
   "carrots_success_message": "carrots will be redeemed! Accommodation cost updated.",
   "carrots_success_message_singular": "carrot will be redeemed! Accommodation cost updated.",
   "carrots_error_message": "Carrots payment failed, please, try again.",
-  
+
   "referrals_subheading": "Invite your friends and earn 🥕 carrots",
   "referrals_description_text_1": "Invite your friends to join TDF using your unique referral link below and both get rewarded!",
   "referrals_description_text_2": "You will receive 🥕 1 per friend and they will receive 🥕 2.",
   "referrals_description_text_3": "You  are restricted to a maximum of 🥕 6 per month - which will be refreshed on the 1st of every month.",
   "referrals_credits_link": "Find out more about 🥕 carrots.",
   "bookings_checkout_step_visitors_guide": "Visitors Guide"
-
- 
-
-
 }
