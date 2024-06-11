@@ -15,13 +15,10 @@ import LocalizedFormat from 'dayjs/plugin/localizedFormat';
 import { NextApiRequest } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
-import PageNotAllowed from '../../401';
-import PageNotFound from '../../404';
 import { STATUS_COLOR } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
-import { useConfig } from '../../../hooks/useConfig';
 import {
   Booking,
   BookingConfig,
@@ -41,6 +38,8 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, getBookingRate, getDiscountRate } from '../../../utils/helpers';
+import PageNotAllowed from '../../401';
+import PageNotFound from '../../404';
 
 dayjs.extend(LocalizedFormat);
 
@@ -69,10 +68,8 @@ const BookingPage = ({
   generalConfig,
   paymentConfig,
 }: Props) => {
-
+console.log('booking=', booking);
   const { timeZone } = generalConfig;
-
-  console.log('booking=', booking);
 
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -84,7 +81,6 @@ const BookingPage = ({
   const isEditMode = true;
 
   const isHourlyBooking = listing?.priceDuration !== 'night';
-  const { TIME_ZONE } = useConfig();
 
   const {
     utilityFiat,

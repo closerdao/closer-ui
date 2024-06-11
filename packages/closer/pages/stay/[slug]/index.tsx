@@ -227,7 +227,6 @@ const ListingPage: NextPage<Props> = ({
         useTokens: isTokenPaymentSelected,
       });
 
-      console.log('availability=', availability);
 
       setIsGuestLimit(availability[0].reason === 'Guest limit');
 

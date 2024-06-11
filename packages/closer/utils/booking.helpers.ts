@@ -351,13 +351,7 @@ export const generateBookingItems = (
         bookingItems.push({
           id: booking._id,
           group: assignedUnitId,
-          title: `${booking.userInfo ? booking?.userInfo?.name : ''} ${
-            booking.adults > 1 ? ' + ' + (booking.adults - 1) : ''
-          }  ${
-            booking.fiatPriceVal && booking.fiatPriceCur
-              ? priceFormat(booking.fiatPriceVal, booking.fiatPriceCur)
-              : ''
-          }`,
+          title: getBookingTitleForCalendar(booking),
           start_time: dayjs(booking.start).toDate(),
           end_time: dayjs(booking.end).toDate(),
         });
@@ -370,13 +364,7 @@ export const generateBookingItems = (
           bookingItems.push({
             id: booking._id + index,
             group: matchedUnits[0].id + roomOrBedNumber - 1,
-            title: `${booking.userInfo ? booking?.userInfo?.name : ''} ${
-              booking.adults > 1 ? ' + ' + (booking.adults - 1) : ''
-            }  ${
-              booking.fiatPriceVal && booking.fiatPriceCur
-                ? priceFormat(booking.fiatPriceVal, booking.fiatPriceCur)
-                : ''
-            }`,
+            title: getBookingTitleForCalendar(booking),
             start_time: dayjs(booking.start).toDate(),
             end_time: dayjs(booking.end).toDate(),
             roomOrBedNumbers: booking.roomOrBedNumbers,
