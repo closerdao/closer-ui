@@ -67,8 +67,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               Join the Vybes
             </Heading>
             <p>
-              <strong>The Y Berlin</strong> is the first of our collectives
-              fundraising to support cutting-edge residencies and next-level
+              <strong>The Y Berlin</strong> is fundraising to support cutting-edge residencies and next-level
               events at MOOS.
             </p>
             <p>
@@ -87,8 +86,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               >
                 more.
               </Link>{' '}
-              We are currently offering the first 2500 Vybes at a discounted
-              price of €40 per Vybe (worth €50).
+              We are currently offering the first 25,000 Vybes at a discounted price of €4 per Vybe (worth €5).
             </p>
             <p>
               Stay or host at MOOS with unique flexibility. Secure your spot now
