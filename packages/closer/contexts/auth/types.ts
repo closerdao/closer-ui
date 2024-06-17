@@ -54,6 +54,13 @@ export type User = {
     monthlyCredits: number;
     stripeCustomerEmail: string;
   };
+  presence?: number;
+  tokensBought?: number;
+  volunteeringPresence?: number;
+  isVoter?: boolean;
+  socialShare?: boolean;
+  referrals?: number;
+  actions?: any;
 };
 
 export type AuthenticationContext = {
