@@ -55,7 +55,7 @@ const AirdropPage = () => {
             <div className="w-full flex items-center flex-col">
               <Heading
                 level={2}
-                className="font-bold sm:font-extrabold normal-case sm:uppercase text-center mt-12 max-w-[620px] mb-10 text-lg  sm:text-xl"
+                className="font-bold sm:font-extrabold  normal-case text-center mt-12 max-w-[620px] mb-10 text-lg  sm:text-xl"
               >
                 In the spirit of gifting and Web3 at TDF
                 <p className="text-accent text-2xl sm:text-5xl">
@@ -501,7 +501,7 @@ const AirdropPage = () => {
             <div className="w-full flex items-center flex-col">
               <Heading
                 level={2}
-                className="font-bold sm:font-extrabold normal-case sm:uppercase text-center mt-12 max-w-[620px] mb-10 text-lg  sm:text-xl"
+                className="font-bold sm:font-extrabold normal-case text-center mt-12 max-w-[620px] mb-10 text-lg  sm:text-xl"
               >
                 <p className="text-accent text-2xl sm:text-5xl">
                   Making the Airdrop accessible 
