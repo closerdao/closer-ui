@@ -10,6 +10,7 @@ import { useAuth } from 'closer';
 
 const AirdropPage = () => {
   const { user } = useAuth();
+  const qualifiers = user && user.stats['airdrop_20230621-20240621'];
 
   return (
     <>
@@ -188,7 +189,7 @@ const AirdropPage = () => {
                   <li>
                     <div className="flex gap-4">
                       <div className="min-w-10">
-                        {user && user.presence ? (
+                        {user && qualifiers.presence ? (
                           <BulletChecked />
                         ) : (
                           <BulletUnChecked />
@@ -207,12 +208,22 @@ const AirdropPage = () => {
                           Number of nights spent - as in confirmed bookings
                           through the platform
                         </p>
+                        {user && !qualifiers.presence && (
+                          <LinkButton
+                            className=" font-bold mt-8 px-8"
+                            type="secondary"
+                            isFullWidth={false}
+                            href="/stay"
+                          >
+                            Book a stay
+                          </LinkButton>
+                        )}
                       </div>
                     </div>
                   </li>
                   <li>
                     <div className="flex gap-4">
-                      {user && user.tokensBought ? (
+                      {user && qualifiers.tokensBought ? (
                         <BulletChecked />
                       ) : (
                         <BulletUnChecked />
@@ -227,12 +238,23 @@ const AirdropPage = () => {
                           <span className="text-accent">10%</span>
                         </Heading>
                         <p className="text-sm">Through the sale contract</p>
+
+                        {user && !qualifiers.tokensBought && (
+                          <LinkButton
+                            className=" font-bold mt-8 px-8"
+                            type="secondary"
+                            isFullWidth={false}
+                            href="/token"
+                          >
+                            Buy 1 or more $TDF
+                          </LinkButton>
+                        )}
                       </div>
                     </div>
                   </li>
                   <li>
                     <div className="flex gap-4">
-                      {user && user.isVoter ? (
+                      {user && qualifiers.isVoter ? (
                         <BulletChecked />
                       ) : (
                         <BulletUnChecked />
@@ -243,7 +265,7 @@ const AirdropPage = () => {
                           level={3}
                           className=" text-md uppercase font-bold -mt-0.5"
                         >
-                          Votes on Snapshot,{' '}
+                          Participated in governance on Snapshot,{' '}
                           <span className="text-accent">10%</span>
                         </Heading>
                       </div>
@@ -253,7 +275,7 @@ const AirdropPage = () => {
                   <li>
                     <div className="flex gap-4">
                       <div className="min-w-10">
-                        {user && user.volunteeringPresence ? (
+                        {user && qualifiers.volunteeringPresence ? (
                           <BulletChecked />
                         ) : (
                           <BulletUnChecked />
@@ -265,12 +287,22 @@ const AirdropPage = () => {
                           level={3}
                           className=" text-md uppercase font-bold -mt-0.5"
                         >
-                          Volunteers, <span className="text-accent">10%</span>
+                          Volunteering, <span className="text-accent">10%</span>
                         </Heading>
                         <p className="text-sm">
-                          That stayed over 15 days and didn&apos;t get
-                          compensated in tokens
+                          Staying at TDF and contributing work (min 2 weeks).
                         </p>
+
+                        {user && !qualifiers.volunteeringPresence && (
+                          <LinkButton
+                            className=" font-bold mt-8 px-8"
+                            type="secondary"
+                            isFullWidth={false}
+                            href="/volunteer"
+                          >
+                            Apply to volunteer
+                          </LinkButton>
+                        )}
                       </div>
                     </div>
                   </li>
@@ -278,7 +310,7 @@ const AirdropPage = () => {
                   <li>
                     <div className="flex gap-4">
                       <div className="min-w-10">
-                        {user && user.socialShare ? (
+                        {user && qualifiers.socialShare ? (
                           <BulletChecked />
                         ) : (
                           <BulletUnChecked />
@@ -294,7 +326,7 @@ const AirdropPage = () => {
                           <span className="text-accent">10%</span>
                         </Heading>
                         <p className="text-sm">
-                          Must submit social proof to claim
+                          Must submit a proof through <Link href="https://forms.gle/kLKKZw9km7a5oKHj8" target="_blank">this form</Link>.
                         </p>
                       </div>
                     </div>
@@ -303,7 +335,7 @@ const AirdropPage = () => {
                   <li>
                     <div className="flex gap-4">
                       <div className="min-w-10">
-                        {user && user.referrals ? (
+                        {user && qualifiers.referrals ? (
                           <BulletChecked />
                         ) : (
                           <BulletUnChecked />
@@ -325,7 +357,7 @@ const AirdropPage = () => {
                   <li>
                     <div className="flex gap-4">
                       <div className="min-w-10">
-                        {user && user.actions['event-attendee'] ? (
+                        {user && qualifiers.tickets ? (
                           <BulletChecked />
                         ) : (
                           <BulletUnChecked />
@@ -340,6 +372,28 @@ const AirdropPage = () => {
                           Event participation,{' '}
                           <span className="text-accent">10%</span>
                         </Heading>
+                      </div>
+                    </div>
+                  </li>
+                  <li>
+                    <div className="flex gap-4">
+                      <div className="min-w-10">
+                        {user && qualifiers.nominations ? (
+                          <BulletChecked />
+                        ) : (
+                          <BulletUnChecked />
+                        )}
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <Heading
+                          level={3}
+                          className=" text-md uppercase font-bold -mt-0.5"
+                        >
+                          Nominations,{' '}
+                          <span className="text-accent">10%</span>
+                        </Heading>
+                        <p className="text-sm">Nominate folks you think contributed to TDF <Link href="https://forms.gle/EKTwgYgULnNcF6DH7" target="_blank">here</Link></p>
                       </div>
                     </div>
                   </li>
@@ -379,7 +433,7 @@ const AirdropPage = () => {
                     width={40}
                     height={40}
                   />
-                  111 $TDF TOKENS 111 $CELO TOKENS
+                  555 $CELO TOKENS
                 </p>
                 <p className="flex items-center gap-4">
                   <Image
@@ -389,7 +443,7 @@ const AirdropPage = () => {
                     height={40}
                   />
                   <span>
-                    111 Carrots{' '}
+                    555 Carrots{' '}
                     <span className="font-normal">(expire after 1 year)</span>
                   </span>
                 </p>
@@ -511,11 +565,11 @@ const AirdropPage = () => {
               <div className="max-w-[550px] text-sm flex flex-col gap-4 mb-20">
                 <p>
                   Follow this{' '}
-                  <Link className="text-accent" href="">
-                    step-by-step-video guide
+                  <Link className="text-accent" href="https://drive.google.com/file/d/1LMl8pvDqpxFFz6RtvVgyMBlTO_zWWOFZ/view">
+                    step-by-step guide
                   </Link>
                   , or hop into our{' '}
-                  <Link className="text-accent" href="">
+                  <Link className="text-accent" href="https://t.me/+bW0K8E7ZGVE4ZjBh">
                     Web3 support group
                   </Link>{' '}
                   to set up a Web3 wallet and connect to the TDF platform.
