@@ -433,7 +433,7 @@ Checkout.getInitialProps = async ({
           return null;
         }),
       api.get('/config/booking').catch(() => {
-        return null;
+      return null;
       }),
       api.get('/config/payment').catch(() => {
         return null;

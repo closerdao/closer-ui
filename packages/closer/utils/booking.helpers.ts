@@ -457,7 +457,6 @@ export const getLocalTimeAvailability = (
       .utc(`1970-01-01T${time.hour}:00Z`)
       .tz(timeZone || DEFAULT_TIMEZONE)
       .format('HH:mm');
-      console.log(`Converting ${time.hour} to ${localTime} for timeZone: ${timeZone || DEFAULT_TIMEZONE}`); // Debugging log
 
     return { hour: localTime, isAvailable: time.isAvailable };
   });
