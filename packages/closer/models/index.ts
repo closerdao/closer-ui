@@ -416,7 +416,7 @@ const models = {
       label: 'Hourly rental price (fiat)',
       type: 'currency',
       placeholder: '10.00',
-      required: true,
+      required: false,
       tab: 'prices',
     },
     {
@@ -432,7 +432,7 @@ const models = {
       label: 'Hourly Rental price (credits or tokens)',
       type: 'currency',
       placeholder: '10.00',
-      required: true,
+      required: false,
       tab: 'prices',
     },
     {
