@@ -1,4 +1,5 @@
 export type User = {
+  stats: any;
   screenname: string;
   timezone: string;
   slug: string;
