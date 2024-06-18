@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useAuth } from '../contexts/auth';
 import { User } from '../contexts/auth/types';
@@ -15,7 +15,12 @@ import { LinkButton } from './ui';
 import IconPlay from './ui/IconPlay';
 
 const FUNDRASING_VIDEO_ID = 'VkoqvPcaRpk';
-const PROMPTS = ['AddPhotoPrompt', 'FundraiserPrompt', 'PreferencesPrompt'];
+const PROMPTS = [
+  'AddPhotoPrompt',
+  'FundraiserPrompt',
+  'PreferencesPrompt',
+  'AirdropPrompt',
+];
 
 const REQUIRED_PREFERENCES = [
   'sharedAccomodation',
@@ -157,6 +162,31 @@ const PreferencesPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
   );
 };
 
+const AirdropPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
+  return (
+    <>
+      <div className=" flex gap-3 justify-between w-full">
+        <div className="flex justify-start sm:items-center gap-2">
+          <span>We are doing an airdrop!</span>
+        </div>
+        <div className="flex items-end justify-end sm:items-center gap-2 flex-col-reverse sm:flex-row">
+          <LinkButton
+            size="small"
+            className="max-h-[34px] p-0 px-4"
+            href="/airdrop"
+          >
+            Learn more
+          </LinkButton>
+          <PromptCloseButton
+            closePrompt={closePrompt}
+            promptName="AirdropPrompt"
+          />
+        </div>
+      </div>
+    </>
+  );
+};
+
 const getClosedPrompts = () => {
   return PROMPTS.filter((promptName) => {
     if (typeof window !== 'undefined') {
@@ -182,6 +212,14 @@ const getPromptToShow = (user: User | null, isAuthenticated: boolean) => {
   );
   const closedPrompts = getClosedPrompts();
 
+  if (
+    (!isAuthenticated && !closedPrompts.includes('AirdropPrompt')) ||
+    (isAuthenticated &&
+      daysUserCreated > 3 &&
+      !closedPrompts.includes('AirdropPrompt'))
+  ) {
+    return 'AirdropPrompt';
+  }
   if (
     isAuthenticated &&
     !user?.photo &&
@@ -238,6 +276,9 @@ const Prompts = () => {
         )}
         {promptTosShow === 'PreferencesPrompt' && (
           <PreferencesPrompt closePrompt={closePrompt} />
+        )}
+        {promptTosShow === 'AirdropPrompt' && (
+          <AirdropPrompt closePrompt={closePrompt} />
         )}
       </div>
     </div>
