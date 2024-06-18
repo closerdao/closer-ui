@@ -121,16 +121,6 @@ const AirdropPage = () => {
               </Heading>
               <div className="max-w-[550px] text-sm flex flex-col gap-4 mb-20">
                 <p>
-                  With over 1.200 platform users also on-chain qualifies us for
-                  various regenerative Web3 grants.
-                </p>
-                <p>
-                  For example, we will qualify for considerable Optimism grants
-                  (the super-blockchain that the $TDF blockchain CELO is now
-                  part of) once 420 unique wallets have bought or booked a stay
-                  with $TDF (currently 87).
-                </p>
-                <p>
                   We want to provide a playful way for people to to learn and
                   experiment with how to use this new, decentralised tech for
                   regeneration. 🌱
@@ -189,7 +179,7 @@ const AirdropPage = () => {
                   <li>
                     <div className="flex gap-4">
                       <div className="min-w-10">
-                        {user && qualifiers.presence ? (
+                        {qualifiers && qualifiers.presence > 0 ? (
                           <BulletChecked />
                         ) : (
                           <BulletUnChecked />
@@ -208,7 +198,7 @@ const AirdropPage = () => {
                           Number of nights spent - as in confirmed bookings
                           through the platform
                         </p>
-                        {user && !qualifiers.presence && (
+                        {qualifiers && !qualifiers.presence && (
                           <LinkButton
                             className=" font-bold mt-8 px-8"
                             type="secondary"
@@ -223,7 +213,7 @@ const AirdropPage = () => {
                   </li>
                   <li>
                     <div className="flex gap-4">
-                      {user && qualifiers.tokensBought ? (
+                      {qualifiers && qualifiers.tokensBought ? (
                         <BulletChecked />
                       ) : (
                         <BulletUnChecked />
@@ -239,7 +229,7 @@ const AirdropPage = () => {
                         </Heading>
                         <p className="text-sm">Through the sale contract</p>
 
-                        {user && !qualifiers.tokensBought && (
+                        {qualifiers && !qualifiers.tokensBought && (
                           <LinkButton
                             className=" font-bold mt-8 px-8"
                             type="secondary"
@@ -254,7 +244,7 @@ const AirdropPage = () => {
                   </li>
                   <li>
                     <div className="flex gap-4">
-                      {user && qualifiers.isVoter ? (
+                      {qualifiers && qualifiers.isVoter ? (
                         <BulletChecked />
                       ) : (
                         <BulletUnChecked />
@@ -275,7 +265,7 @@ const AirdropPage = () => {
                   <li>
                     <div className="flex gap-4">
                       <div className="min-w-10">
-                        {user && qualifiers.volunteeringPresence ? (
+                        {qualifiers && qualifiers.volunteeringPresence ? (
                           <BulletChecked />
                         ) : (
                           <BulletUnChecked />
@@ -293,7 +283,7 @@ const AirdropPage = () => {
                           Staying at TDF and contributing work (min 2 weeks).
                         </p>
 
-                        {user && !qualifiers.volunteeringPresence && (
+                        {qualifiers && !qualifiers.volunteeringPresence && (
                           <LinkButton
                             className=" font-bold mt-8 px-8"
                             type="secondary"
@@ -310,7 +300,7 @@ const AirdropPage = () => {
                   <li>
                     <div className="flex gap-4">
                       <div className="min-w-10">
-                        {user && qualifiers.socialShare ? (
+                        {qualifiers && qualifiers.socialShare ? (
                           <BulletChecked />
                         ) : (
                           <BulletUnChecked />
@@ -335,7 +325,7 @@ const AirdropPage = () => {
                   <li>
                     <div className="flex gap-4">
                       <div className="min-w-10">
-                        {user && qualifiers.referrals ? (
+                        {qualifiers && qualifiers.referrals ? (
                           <BulletChecked />
                         ) : (
                           <BulletUnChecked />
@@ -357,7 +347,7 @@ const AirdropPage = () => {
                   <li>
                     <div className="flex gap-4">
                       <div className="min-w-10">
-                        {user && qualifiers.tickets ? (
+                        {qualifiers && qualifiers.tickets ? (
                           <BulletChecked />
                         ) : (
                           <BulletUnChecked />
@@ -378,7 +368,7 @@ const AirdropPage = () => {
                   <li>
                     <div className="flex gap-4">
                       <div className="min-w-10">
-                        {user && qualifiers.nominations ? (
+                        {qualifiers && qualifiers.nominations ? (
                           <BulletChecked />
                         ) : (
                           <BulletUnChecked />
