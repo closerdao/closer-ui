@@ -275,6 +275,8 @@ const ListingPage: NextPage<Props> = ({
         );
         setHourAvailability(getLocalTimeAvailability(availability, timeZone));
 
+        console.log('getLocalTimeAvailability(availability, timeZone)=', getLocalTimeAvailability(availability, timeZone));
+
         setIsListingAvailable(results);
         setBookingError(error);
       })();
@@ -527,6 +529,8 @@ const ListingPage: NextPage<Props> = ({
                         )}
                       </div>
                       <div>
+                        {start?.toString()  }
+                        <div>{ end?.toString() }</div>
                         <ListingDateSelector
                           priceDuration={listing?.priceDuration || 'night'}
                           setStartDate={setStartDate}
