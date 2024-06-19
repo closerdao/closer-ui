@@ -166,17 +166,22 @@ const AirdropPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
   return (
     <>
       <div className=" flex gap-3 justify-between w-full">
-        <div className="flex justify-start sm:items-center gap-2">
-          <span>We are doing an airdrop!</span>
-        </div>
-        <div className="flex items-end justify-end sm:items-center gap-2 flex-col-reverse sm:flex-row">
+        <div className="flex justify-start flex-col sm:flex-row sm:items-center gap-2">
+          <span>
+            We are doing an airdrop! A way to send gifts for past visits,
+            volunteering, governance participation, and wallet interactions with
+            the $TDF token.
+          </span>
           <LinkButton
             size="small"
-            className="max-h-[34px] p-0 px-4"
+            className="max-h-[34px] p-0 px-4 w-[200px]"
             href="/airdrop"
           >
-            Learn more
+            see how you qualify{' '}
           </LinkButton>
+        </div>
+        <div className="flex items-end justify-end sm:items-center gap-2 flex-col-reverse sm:flex-row">
+      
           <PromptCloseButton
             closePrompt={closePrompt}
             promptName="AirdropPrompt"

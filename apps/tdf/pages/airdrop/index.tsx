@@ -22,11 +22,11 @@ const AirdropPage = () => {
 
       <main className="pt-4 pb-24 md:flex-row flex-wrap max-w-6xl mx-auto">
         <section className="mb-10">
-          <div className='rounded-lg h-[calc(100vh-190px)]  flex justify-center items-center flex-col bg-center bg-accent bg-cover bg-no-repeat text-white bg-[url("/images/airdrop-hero.jpg")]'>
+          <div className='rounded-lg min-h-[300px] h-[calc(100vh-190px)]  flex justify-center items-center flex-col bg-center bg-accent bg-cover bg-no-repeat text-white bg-[url("/images/airdrop-hero.jpg")]'>
             <div className="flex flex-col items-center">
               <Heading
                 level={1}
-                className=" font-extrabold normal-case sm:uppercase text-3xl md:text-7xl px-4 drop-shadow-lg mb-2 md:mb-4 md:text-center max-w-[700px]"
+                className=" font-extrabold normal-case sm:uppercase text-4xl md:text-7xl px-4 drop-shadow-lg mb-2 md:mb-4 md:text-center max-w-[700px]"
               >
                 $TDF Airdrop
               </Heading>
@@ -39,7 +39,7 @@ const AirdropPage = () => {
 
               {user && !user.walletAddress && (
                 <LinkButton
-                  className=" font-bold mt-8 px-8"
+                  className=" font-bold mt-8 sm:px-8 px-3 text-md sm:text-lg"
                   type="primary"
                   isFullWidth={false}
                   href={`/members/${user.slug}`}
