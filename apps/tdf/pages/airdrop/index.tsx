@@ -10,7 +10,7 @@ import { useAuth } from 'closer';
 
 const AirdropPage = () => {
   const { user } = useAuth();
-  const qualifiers = user && user.stats.airdrop_20230621_20240621;
+  const qualifiers = user && user.stats && user.stats.airdrop_20230621_20240621;
 
   return (
     <>
