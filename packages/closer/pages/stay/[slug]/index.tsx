@@ -529,8 +529,6 @@ const ListingPage: NextPage<Props> = ({
                         )}
                       </div>
                       <div>
-                        {start?.toString()  }
-                        <div>{ end?.toString() }</div>
                         <ListingDateSelector
                           priceDuration={listing?.priceDuration || 'night'}
                           setStartDate={setStartDate}
