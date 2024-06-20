@@ -116,16 +116,15 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
           <div className='rounded-lg h-[600px] md:h-[700px] flex  items-end md:items-center flex-col bg-center bg-[#333333] bg-cover bg-no-repeat text-white bg-[url("/images/token-sale/token-sale-hero.webp")]'>
             <Heading
               level={1}
-              className="text-right  text-2xl md:text-5xl px-4 drop-shadow-lg mb-2 md:mb-8 md:text-center max-w-[700px] mt-1 md:mt-[100px] md:bg-[url('/images/token-sale/token-illy.png')] bg-no-repeat pt-[20px] md:pt-[130px] bg-top"
+              className="text-right font-bold text-2xl md:text-5xl px-4 drop-shadow-lg mb-2 md:mb-8 md:text-center max-w-[700px] mt-1 md:mt-[100px] md:bg-[url('/images/token-sale/token-illy.png')] bg-no-repeat pt-[20px] md:pt-[130px] bg-top"
             >
-              {__('token_sale_public_sale_subheading')}
+              Gain access to a thriving, regenerative village.
             </Heading>
             <Heading
               level={2}
-              className="text-right md:text-center px-4 text-lg md:text-md max-w-[700px] font-normal mb-4"
+              className="text-right md:text-center px-4 text-lg md:text-md max-w-[500px] font-normal mb-4"
             >
-              Secure your perpetual access to the first web3 powered
-              regenerative co-living village in Portugal
+              The $TDF token is the key to your home.
             </Heading>
 
             {isWalletReady ? (
@@ -160,88 +159,6 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
             )}
           </div>
         </section>
-
-        {/* photo gallery */}
-        {/* <section className="flex items-center flex-col py-24">
-          <div className="text-center mb-20 w-full">
-            <div className="w-full flex items-center flex-col">
-              <Heading
-                level={2}
-                className="mb-4 text-5xl font-bold max-w-[600px]"
-              >
-                {__('token_sale_meet_your_home_heading')}
-              </Heading>
-              <Heading level={3} className="text-md max-w-[600px]">
-                {__('token_sale_meet_your_home_subheading')}
-              </Heading>
-            </div>
-
-            <PhotoGallery className="mt-12" />
-          </div>
-        </section> */}
-
-        {/* <section className="flex items-center flex-col mb-32">
-          <div className="w-full flex flex-col  gap-20">
-            <div className="w-full flex items-center flex-col">
-              <Heading level={2} className="text-center max-w-[420px] mb-6 text-4xl">
-                {__('token_sale_tdf_intro_title')}
-              </Heading>
-              <p className="text-center max-w-[640px] text-lg">
-                {__('token_sale_tdf_subtitle')}
-              </p>
-            </div>
-            <div className="flex gap-10 justify-center items-center flex-col md:flex-row">
-              <Image
-                className="w-full md:w-1/2 max-w-[430px]"
-                src="/images/token-sale/tdf-token.png"
-                width={430}
-                height={465}
-                alt={__('token_sale_tdf_heading')}
-              />
-              <div className="w-full md:w-1/2 flex flex-col gap-7 max-w-[430px] ">
-                <ul className="flex flex-col gap-5 ">
-                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    <Heading level={5} className=" font-bold uppercase">
-                      {__('token_sale_tdf_token_1')}
-                    </Heading>
-                    <div>{__('token_sale_tdf_token_1_sub')}</div>
-                  </li>
-                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    <Heading level={5} className=" font-bold uppercase">
-                      {__('token_sale_tdf_token_2')}
-                    </Heading>
-                    <div>{__('token_sale_tdf_token_2_sub')}</div>
-                  </li>
-                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    <Heading level={5} className=" font-bold uppercase">
-                      {__('token_sale_tdf_token_3')}
-                    </Heading>
-                    <div>{__('token_sale_tdf_token_3_sub')}</div>
-                  </li>
-                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    <Heading level={5} className=" font-bold uppercase">
-                      {__('token_sale_tdf_token_4')}
-                    </Heading>
-                    <div>{__('token_sale_tdf_token_4_sub')}</div>
-                  </li>
-                  <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    <Heading level={5} className=" font-bold uppercase">
-                      {__('token_sale_tdf_token_5')}
-                    </Heading>
-                    <div>{__('token_sale_tdf_token_5_sub')}</div>
-                  </li>
-                </ul>
-                <Button
-                  isFullWidth={false}
-                  type="secondary"
-                  onClick={handleShowVideo}
-                >
-                  {__('token_sale_tdf_watch_video_button')}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </section> */}
         <section className="flex items-center flex-col mb-32">
           <div className="w-full flex flex-col  gap-20">
             <div className="w-full flex items-center flex-col">
@@ -274,11 +191,11 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 level={2}
                 className="text-center mt-12 max-w-[620px] mb-6 text-3xl font-extrabold md:font-bold md:text-5xl uppercase md:normal-case"
               >
-                $TDF Private Sale
+                $TDF Sale
               </Heading>
               <p className="text-center max-w-[660px] text-lg">
-                To raise the $3.5M+ needed to finish building our regenerative
-                village, we are selling 18600 tokens that will give the owners
+                To fund the development of our regenerative
+                village, we are selling tokens that give the owners
                 of those tokens a lifetime´s access to TDF.
               </p>
             </div>
@@ -347,19 +264,6 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 >
                   UNLOCK ACCESS
                 </Button>
-                <div className="text-sm flex flex-col gap-4">
-                  <p>Example:</p>
-                  <p>
-                    Fox was invited to participate in $TDF’s private sale. She
-                    can get her $TDF at lower prices, as the token price
-                    increases for every token sold and she’s in first hundred
-                    purchasers. She’s not sure of how her life is going to roll
-                    in the next few years, but she decides to buy 30 $TDF - she
-                    can support the project construction for now, and if later
-                    she decides not to spend time there, she can sell her tokens
-                    after the go-live event.{' '}
-                  </p>
-                </div>
               </div>
             </div>
           </div>
@@ -574,6 +478,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
                             {(listing.name.toLowerCase().includes('private') ||
                               listing.name.toLowerCase().includes('camping') ||
+                              listing.name.toLowerCase().includes('glamping') ||
                               listing.name
                                 .toLowerCase()
                                 .includes('shared')) && (
@@ -679,13 +584,9 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
               <div className="text-sm ">
                 charged separately - supplies, insurance, accounting, energy,
-                water, sewage, internet, food, maintenance.
+                water, sewage, internet, food (not grown on site), maintenance.
               </div>
-              <Heading level={3} className="my-6">
-                ~10€ / day initial projection{' '}
-              </Heading>
 
-              <div className="text-sm ">likely to grow due to inflation </div>
             </div>
           </div>
 
@@ -704,13 +605,11 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 </p>
 
                 <p>
-                  Token holders must go through a Membersheep onboarding process
-                  in order to stay more than 14 days. Once verified as member,
-                  they get access to “instant book”. Non-members can submit
-                  booking requests.
+                  Bookings must be approved by Space Host.
+                  Citizen get access to “instant book” (no approval).
                 </p>
 
-                <p>$TDF tokens also give governance rights in the TDF DAO. </p>
+                <p>$TDF tokens also give governance rights in the TDF DAO.</p>
               </div>
               <Image
                 className="w-full md:w-1/2 max-w-[430px] w-2/3"
@@ -858,45 +757,6 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                         {__('token_sale_pink_paper')}
                       </Link>
                     </li>
-                    <li>
-                      <Link
-                        className="text-accent underline font-bold"
-                        href="https://oasa.earth/"
-                      >
-                        {__('token_sale_oasa_website')}
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        className="text-accent underline font-bold"
-                        href="/legal/terms"
-                      >
-                        {__('token_sale_terms')}
-                      </Link>
-                    </li>
-                  </ul>
-                  <ul className="flex flex-col gap-5 ">
-                    <li>
-                      <Link
-                        className="text-accent underline font-bold"
-                        href="/pdf/private-sale.pdf"
-                      >
-                        {__('token_sale_doc')}
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        className="text-accent underline font-bold"
-                        href="https://drive.google.com/file/d/1oQX49SQ5T_8c9_SuHQbGw9dNKM8jVLrq/view"
-                      >
-                        {__('token_sale_interior_design_report')}
-                      </Link>
-                    </li>
-                    {/* <li>
-                      <Link className="text-accent underline font-bold" href="">
-                        {__('token_sale_smart_design_report')}
-                      </Link>
-                    </li> */}
                   </ul>
                 </div>
               </div>
@@ -1223,6 +1083,7 @@ PublicTokenSalePage.getInitialProps = async () => {
       api
         .get('/listing', {
           params: {
+            where: encodeURIComponent(JSON.stringify({ availableFor: 'events' })),
             limit: MAX_LISTINGS_TO_FETCH,
           },
         })
