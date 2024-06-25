@@ -9,12 +9,14 @@ import Button from '../../components/ui/Button';
 import Switcher from '../../components/ui/Switcher';
 
 import dayjs from 'dayjs';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
 
 const loginOptions =
   process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true'
@@ -22,6 +24,7 @@ const loginOptions =
     : null;
 
 const Login = () => {
+  const t = useTranslations();
   const { injected } = useContext(WalletState);
   const { signMessage } = useContext(WalletDispatch);
 
@@ -150,7 +153,7 @@ const Login = () => {
   return (
     <>
       <Head>
-        <title>{__('login_title')}</title>
+        <title>{t('login_title')}</title>
       </Head>
       <main className="flex flex-col items-center">
         <section className="min-w-prose w-[280px] sm:w-96 flex flex-col gap-8 py-20">
@@ -158,17 +161,17 @@ const Login = () => {
             level={1}
             className="uppercase text-5xl sm:text-6xl font-extrabold"
           >
-            {__('login_title')}
+            {t('login_title')}
           </Heading>
 
           {back && (
             <p>
-              {__('log_in_redirect_message')}{' '}
+              {t('log_in_redirect_message')}{' '}
               <strong>
                 {typeof back === 'string' &&
                   back.substring(back[0] === '/' ? 1 : 0).substring(0, 40)}
               </strong>
-              {back.length > 40 && '...'} {__('log_in_redirect_message_page')}
+              {back.length > 40 && '...'} {t('log_in_redirect_message_page')}
             </p>
           )}
 
@@ -184,13 +187,13 @@ const Login = () => {
             {!isLoginWithWallet ? (
               <form onSubmit={onSubmit} className="w-full flex flex-col gap-6">
                 <Input
-                  label={__('login_email')}
+                  label={t('login_email')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder=""
                 />
                 <Input
-                  label={__('login_password')}
+                  label={t('login_password')}
                   value={password}
                   type="password"
                   onChange={(e) => setPassword(e.target.value)}
@@ -205,7 +208,7 @@ const Login = () => {
                       isEnabled={!isWeb3Loading && !isLoading}
                       isLoading={isLoading}
                     >
-                      {__('login_submit')}
+                      {t('login_submit')}
                     </Button>
                   </div>
                 </div>
@@ -219,28 +222,49 @@ const Login = () => {
                   className="btn-primary"
                   onClick={walletConnectAndSignInFlow}
                 >
-                  {__('blockchain_sign_in_with_wallet')}
+                  {t('blockchain_sign_in_with_wallet')}
                 </Button>
               </div>
             )}
           </Card>
           <div className="text-center text-sm">
-            {__('login_no_account')}{' '}
-            <Link className="text-accent underline font-bold" href={`/signup${back ? `?back=${encodeURIComponent(back as string)}` : ''}`}>
-              {__('signup_form_create')}
+            {t('login_no_account')}{' '}
+            <Link
+              className="text-accent underline font-bold"
+              href={`/signup${
+                back ? `?back=${encodeURIComponent(back as string)}` : ''
+              }`}
+            >
+              {t('signup_form_create')}
             </Link>
             <Link
               href="/login/forgot-password"
               as="/login/forgot-password"
               className="block text-accent underline font-bold my-2"
             >
-              {__('login_link_forgotten_password')}
+              {t('login_link_forgotten_password')}
             </Link>
           </div>
         </section>
       </main>
     </>
   );
+};
+
+Login.getInitialProps = async (context: NextPageContext) => {
+  try {
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    return {
+      messages,
+    };
+  } catch (err: unknown) {
+    return {
+      messages: null,
+    };
+  }
 };
 
 export default Login;

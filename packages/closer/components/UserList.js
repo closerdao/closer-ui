@@ -1,9 +1,10 @@
 import Link from 'next/link';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+
+import { useTranslations } from 'next-intl';
 
 import api, { formatSearch } from '../utils/api';
-import { __ } from '../utils/helpers';
 import Autocomplete from './Autocomplete';
 import ProfilePhoto from './ProfilePhoto';
 
@@ -15,6 +16,8 @@ const UserList = ({
   canInviteUsers,
   seeAllLink,
 }) => {
+  const t = useTranslations();
+
   const [users, setUsers] = useState([]);
   const [error, setErrors] = useState(false);
 
@@ -54,39 +57,30 @@ const UserList = ({
   return (
     <section className="new-users card">
       <h3 className="card-title">
-        {titleLink ? (
-          <Link href={titleLink}>
-            {title}
-          </Link>
-        ) : (
-          title
-        )}
+        {titleLink ? <Link href={titleLink}>{title}</Link> : title}
       </h3>
       <div className="card-body">
-        { error && <div className="error">{ error }</div> }
+        {error && <div className="error">{error}</div>}
         <div className="user-list">
           {users && users.length > 0 ? (
             users.map((user) => (
-              (<Link
+              <Link
                 key={user._id}
                 as={`/members/${user.slug}`}
                 href="/members/[slug]"
-                className="user-preview">
-
+                className="user-preview"
+              >
                 <ProfilePhoto user={user} size="sm" />
                 <span className="ellipsis name">{user.screenname}</span>
-
-              </Link>)
+              </Link>
             ))
           ) : (
-            <p>{__('user_list_empty')}</p>
+            <p>{t('user_list_empty')}</p>
           )}
         </div>
         {seeAllLink && (
           <div className="see-all">
-            <Link href={seeAllLink}>
-              {__('user_list_all')}
-            </Link>
+            <Link href={seeAllLink}>{t('user_list_all')}</Link>
           </div>
         )}
       </div>

@@ -1,12 +1,14 @@
 import { useState } from 'react';
 
 import { TiDelete } from '@react-icons/all-files/ti/TiDelete';
+import { useTranslations } from 'next-intl';
 
-import { __ } from '../utils/helpers';
 import Photo from './Photo';
 import UploadPhoto from './UploadPhoto/UploadPhoto';
 
 const PhotosEditor = ({ value, onChange }) => {
+  const t = useTranslations();
+
   const hasMultiplePhotos = Array.isArray(value);
   const [photos, setPhotos] = useState(hasMultiplePhotos ? value : [value]);
 
@@ -33,7 +35,7 @@ const PhotosEditor = ({ value, onChange }) => {
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  if (confirm(__('photos_editor_confirm_delete'))) {
+                  if (confirm(t('photos_editor_confirm_delete'))) {
                     deletePhoto(photo);
                   }
                 }}
@@ -45,7 +47,7 @@ const PhotosEditor = ({ value, onChange }) => {
           ))
         ) : (
           <div className="w-full py-4">
-            <p className="italic">{__('photos_editor_no_photos')}</p>
+            <p className="italic">{t('photos_editor_no_photos')}</p>
           </div>
         )}
       </div>

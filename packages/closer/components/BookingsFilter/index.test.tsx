@@ -1,10 +1,13 @@
-import { render, screen } from '@testing-library/react';
+import React from 'react';
+
+import { screen } from '@testing-library/react';
+import { renderWithNextIntl } from '../../test/utils';
 
 import BookingsFilter from './index';
 
 describe('BookingsFilter', () => {
   it('should render the component and show proper controls', () => {
-    render(
+    renderWithNextIntl(
       <BookingsFilter
         setPage={jest.fn()}
         page={1}

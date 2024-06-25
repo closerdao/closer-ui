@@ -1,6 +1,7 @@
-import { useConfig } from '../hooks/useConfig';
+import { useTranslations } from 'next-intl';
+
 import { CloserCurrencies, Price } from '../types';
-import { __, getVatInfo, priceFormat } from '../utils/helpers';
+import { getVatInfo, priceFormat } from '../utils/helpers';
 import HeadingRow from './ui/HeadingRow';
 
 interface Props {
@@ -40,22 +41,22 @@ const SummaryCosts = ({
   updatedFiatTotal,
   updatedEventTotal,
 }: Props) => {
-  const { APP_NAME } = useConfig();
+  const t = useTranslations();
 
   return (
     <div>
       <HeadingRow>
         <span className="mr-4">💰</span>
-        <span>{__('bookings_summary_step_costs_title')}</span>
+        <span>{t('bookings_summary_step_costs_title')}</span>
       </HeadingRow>
 
       {eventCost ? (
         <div className="flex justify-between items-center mt-3">
-          <p>{__('bookings_checkout_event_cost')}</p>
+          <p>{t('bookings_checkout_event_cost')}</p>
           <div className="flex items-center gap-2">
             {isEditMode && updatedEventTotal?.val !== eventDefaultCost && (
               <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
-                {__('bookings_updated_price')}: {priceFormat(updatedEventTotal)}
+                {t('bookings_updated_price')}: {priceFormat(updatedEventTotal)}
               </div>
             )}
             <p className="font-bold">
@@ -71,17 +72,17 @@ const SummaryCosts = ({
       ) : null}
 
       <div className="flex justify-between items-center mt-3">
-        <p>{__('bookings_summary_step_dates_accomodation_type')}</p>
+        <p>{t('bookings_summary_step_dates_accomodation_type')}</p>
         <div className="flex items-center gap-2">
           {isEditMode &&
             updatedAccomodationTotal?.val !== accomodationCost?.val && (
               <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
-                {__('bookings_updated_price')}:{' '}
+                {t('bookings_updated_price')}:{' '}
                 {useCredits &&
                   priceFormat({
                     val: updatedAccomodationTotal?.val,
                     cur: 'credits',
-                    app: APP_NAME,
+                    creditSymbol: t('carrots_balance') + t('carrots_heading'),
                   })}
                 {useTokens && priceFormat(updatedAccomodationTotal)}
                 {!useTokens &&
@@ -95,25 +96,25 @@ const SummaryCosts = ({
               priceFormat({
                 val: totalToken.val,
                 cur: 'credits',
-                app: APP_NAME,
+                creditSymbol: t('carrots_balance') + t('carrots_heading'),
               })}
             {useTokens && priceFormat(totalToken)}
             {!useCredits && !useTokens && priceFormat(accomodationCost)}
             {isNotPaid && (
-              <span className="text-failure"> {__('booking_card_unpaid')}</span>
+              <span className="text-failure"> {t('booking_card_unpaid')}</span>
             )}
           </p>
         </div>
       </div>
       <p className="text-right text-xs">
-        {__('bookings_summary_step_accomodation_type_description')}
+        {t('bookings_summary_step_accomodation_type_description')}
       </p>
       <div className="flex justify-between items-center mt-3">
-        <p> {__('bookings_summary_step_utility_total')}</p>
+        <p> {t('bookings_summary_step_utility_total')}</p>
         <div className="flex items-center gap-2">
           {isEditMode && updatedUtilityTotal?.val !== utilityFiat?.val && (
             <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
-              {__('bookings_updated_price')}: {priceFormat(updatedUtilityTotal)}
+              {t('bookings_updated_price')}: {priceFormat(updatedUtilityTotal)}
             </div>
           )}
           <p className="font-bold">
@@ -121,22 +122,22 @@ const SummaryCosts = ({
               ? 'NOT INCLUDED'
               : priceFormat(utilityFiat)}
             {isNotPaid && (
-              <span className="text-failure"> {__('booking_card_unpaid')}</span>
+              <span className="text-failure"> {t('booking_card_unpaid')}</span>
             )}
           </p>
         </div>
       </div>
       <p className="text-right text-xs">
-        {__('bookings_summary_step_utility_description')}
+        {t('bookings_summary_step_utility_description')}
       </p>
       <div className="flex justify-between items-center mt-3">
-        <p>{__('bookings_total')}</p>
+        <p>{t('bookings_total')}</p>
         <div className="flex items-center gap-2">
           {isEditMode &&
             (updatedFiatTotal?.val !== totalFiat?.val ||
               updatedAccomodationTotal?.val !== accomodationCost?.val) && (
               <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
-                {__('bookings_updated_price')}:{' '}
+                {t('bookings_updated_price')}:{' '}
                 <span>
                   {useTokens && (
                     <div>
@@ -149,7 +150,8 @@ const SummaryCosts = ({
                       {priceFormat({
                         val: updatedAccomodationTotal?.val,
                         cur: 'credits',
-                        app: APP_NAME,
+                        creditSymbol:
+                          t('carrots_balance') + t('carrots_heading'),
                       })}{' '}
                       + <span>{priceFormat(totalFiat)}</span>
                     </div>
@@ -166,7 +168,7 @@ const SummaryCosts = ({
                 {isNotPaid && (
                   <span className="text-failure">
                     {' '}
-                    {__('booking_card_unpaid')}
+                    {t('booking_card_unpaid')}
                   </span>
                 )}
               </>
@@ -177,14 +179,14 @@ const SummaryCosts = ({
                   {priceFormat({
                     val: totalToken.val,
                     cur: 'credits',
-                    app: APP_NAME,
+                    creditSymbol: t('carrots_balance') + t('carrots_heading'),
                   })}
                 </span>{' '}
                 + <span>{priceFormat(totalFiat)}</span>
                 {isNotPaid && (
                   <span className="text-failure">
                     {' '}
-                    {__('booking_card_unpaid')}
+                    {t('booking_card_unpaid')}
                   </span>
                 )}
               </>
@@ -197,7 +199,7 @@ const SummaryCosts = ({
                 {isNotPaid && (
                   <span className="text-failure">
                     {' '}
-                    {__('booking_card_unpaid')}
+                    {t('booking_card_unpaid')}
                   </span>
                 )}
               </div>
@@ -206,7 +208,7 @@ const SummaryCosts = ({
         </div>
       </div>
       <p className="text-right text-xs">
-        {__('bookings_checkout_step_total_description')} {getVatInfo(totalFiat)}
+        {t('bookings_checkout_step_total_description')} {getVatInfo(totalFiat)}
       </p>
     </div>
   );

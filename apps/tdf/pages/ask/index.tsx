@@ -1,6 +1,7 @@
 import Head from 'next/head';
 
-import { NextPage } from 'next';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { NextPage, NextPageContext } from 'next';
 
 const AskPage: NextPage = () => {
   return (
@@ -16,6 +17,22 @@ const AskPage: NextPage = () => {
       ></iframe>
     </>
   );
+};
+
+AskPage.getInitialProps = async (context: NextPageContext) => {
+  try {
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    return {
+      messages,
+    };
+  } catch (err: unknown) {
+    return {
+      messages: null,
+    };
+  }
 };
 
 export default AskPage;

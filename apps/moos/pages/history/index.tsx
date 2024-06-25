@@ -2,9 +2,12 @@ import Head from 'next/head';
 
 import { Card, Heading, LinkButton } from 'closer/components/ui';
 
-import { GeneralConfig, __, api, useAuth, useConfig } from 'closer';
+import { GeneralConfig, api, useAuth, useConfig } from 'closer';
 import { HOME_PAGE_CATEGORY } from 'closer/constants';
 import { formatSearch } from 'closer/utils/api';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 interface Props {
   article: any;
@@ -12,6 +15,7 @@ interface Props {
 }
 
 const HistoryPage = ({ article, generalConfig }: Props) => {
+  const t = useTranslations();
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
@@ -33,20 +37,20 @@ const HistoryPage = ({ article, generalConfig }: Props) => {
                 {article ? (
                   <LinkButton
                     type="inline"
-                    className='w-[200px]'
+                    className="w-[200px]"
                     isFullWidth={false}
                     href={`/blog/edit/${article?.slug}`}
                   >
-                    {__('edit_homepage_button')}
+                    {t('edit_homepage_button')}
                   </LinkButton>
                 ) : (
                   <LinkButton
-                      type="inline"
-                      className='w-[200px]'
+                    type="inline"
+                    className="w-[200px]"
                     isFullWidth={false}
                     href={'/blog/create'}
                   >
-                    {__('edit_homepage_button')}
+                    {t('edit_homepage_button')}
                   </LinkButton>
                 )}
               </Card>
@@ -58,7 +62,7 @@ const HistoryPage = ({ article, generalConfig }: Props) => {
                 dangerouslySetInnerHTML={{ __html: article?.html }}
               />
             ) : (
-              <Heading level={1}>{__('generic_coming_soon')}</Heading>
+              <Heading level={1}>{t('generic_coming_soon')}</Heading>
             )}
           </div>
         </div>
@@ -67,16 +71,17 @@ const HistoryPage = ({ article, generalConfig }: Props) => {
   );
 };
 
-HistoryPage.getInitialProps = async () => {
+HistoryPage.getInitialProps = async (context: NextPageContext) => {
   try {
     const search = formatSearch({ category: { $eq: HOME_PAGE_CATEGORY } });
-    const [articleRes, generalRes] = await Promise.all([
+    const [articleRes, generalRes, messages] = await Promise.all([
       api.get(`/article?where=${search}`).catch(() => {
         return null;
       }),
       api.get('/config/general').catch(() => {
         return null;
       }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const article = articleRes?.data?.results[0];
@@ -84,12 +89,14 @@ HistoryPage.getInitialProps = async () => {
     return {
       article,
       generalConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {
       article: null,
       generalConfig: null,
       error: err,
+      messages: null,
     };
   }
 };

@@ -1,12 +1,12 @@
-import React, { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers';
 import UploadPhotoButton from './UploadPhotoButton';
 
 interface Props {
@@ -28,6 +28,8 @@ const UploadPhoto: FC<Props> = ({
   className,
   isPrompt = false,
 }) => {
+  const t = useTranslations();
+
   const { isAuthenticated, user, refetchUser } = useAuth();
   const [error, setErrors] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -157,10 +159,10 @@ const UploadPhoto: FC<Props> = ({
         {error && <p className="text-red-500 mt-2">{error}</p>}
         {loading && (
           <p className="absolute top-[40px]">
-            {__('upload_photo_loading_message')}
+            {t('upload_photo_loading_message')}
           </p>
         )}
-        {isDragActive && <p>{__('upload_photo_prompt_message')}</p>}
+        {isDragActive && <p>{t('upload_photo_prompt_message')}</p>}
       </div>
     </>
   );

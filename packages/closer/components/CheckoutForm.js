@@ -2,9 +2,10 @@ import { useState } from 'react';
 
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 
+import { useTranslations } from 'next-intl';
+
 import { useBookingSmartContract } from '../hooks/useBookingSmartContract';
 import api from '../utils/api';
-import { __ } from '../utils/helpers';
 import { ErrorMessage } from './ui';
 import Button from './ui/Button';
 
@@ -54,6 +55,8 @@ const CheckoutForm = ({
   dailyTokenValue,
   bookingNights,
 }) => {
+  const t = useTranslations();
+
   const stripe = useStripe();
   const elements = useElements();
   const { stakeTokens, checkContract } = useBookingSmartContract({
@@ -219,12 +222,12 @@ const CheckoutForm = ({
 
   const renderButtonText = () => {
     if (isProcessingTokenPayment) {
-      return __('checkout_processing_token_payment');
+      return t('checkout_processing_token_payment');
     }
     if (processing) {
-      return __('checkout_processing_payment');
+      return t('checkout_processing_payment');
     }
-    return buttonText || __('checkout_pay');
+    return buttonText || t('checkout_pay');
   };
 
   return (
@@ -249,7 +252,7 @@ const CheckoutForm = ({
       </div>
       {cancelUrl && (
         <a href={cancelUrl} className="mt-4 ml-2">
-          {__('generic_cancel')}
+          {t('generic_cancel')}
         </a>
       )}
     </form>

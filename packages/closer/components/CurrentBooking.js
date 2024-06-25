@@ -2,14 +2,16 @@ import { useEffect, useState } from 'react';
 
 import { BOOKINGS_PER_PAGE, MAX_LISTINGS_TO_FETCH } from '../constants';
 import { usePlatform } from '../contexts/platform';
-import { __ } from '../utils/helpers';
 import BookingListPreview from './BookingListPreview/BookingListPreview';
 import Pagination from './Pagination';
 import { Heading, Spinner } from './ui';
+import { useTranslations } from 'next-intl';
 
 const MAX_USERS_TO_FETCH = 2000;
 
 const CurrentBooking = ({ leftAfter, arriveBefore }) => {
+  const t = useTranslations();
+
   const { platform } = usePlatform();
 
   const [loading, setLoading] = useState(false);
@@ -63,7 +65,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
         const listingName =
           listings
             ?.find((listing) => listing.get('_id') === listingId)
-            ?.get('name') || __('no_listing_type');
+            ?.get('name') || t('no_listing_type');
 
         const userId = b.get('createdBy');
         const user =
@@ -135,16 +137,16 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
     <section className=" min-h-[100vh]">
       {loading ? (
         <div className="my-16 flex items-center gap-2">
-          <Spinner /> {__('generic_loading')}
+          <Spinner /> {t('generic_loading')}
         </div>
       ) : (
         <div className="columns mt-8">
           <Heading level={2} className="border-b pb-4">
-            {isHere.size} {__('current_bookings_people_here')}
+            {isHere.size} {t('current_bookings_people_here')}
           </Heading>
           <div className="bookings-list mt-8 flex flex-wrap gap-4">
             {!isHere.size ? (
-              <p className="mt-4">{__('no_bookings')}</p>
+              <p className="mt-4">{t('no_bookings')}</p>
             ) : (
               isHere
                 .slice(
@@ -194,11 +196,11 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
             />
           </div>
           <Heading level={2} className="border-b pb-4 pt-8">
-            {willArrive.size} {__('current_bookings_will_arrive')}
+            {willArrive.size} {t('current_bookings_will_arrive')}
           </Heading>
           <div className="bookings-list mt-8 flex flex-wrap gap-4">
             {!willArrive.size ? (
-              <p className="mt-4">{__('no_bookings')}</p>
+              <p className="mt-4">{t('no_bookings')}</p>
             ) : (
               willArrive
                 .slice(
@@ -249,11 +251,11 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
             />
           </div>
           <Heading level={2} className="border-b pb-4 pt-8">
-            {justLeft.size} {__('current_bookings_just_left')}
+            {justLeft.size} {t('current_bookings_just_left')}
           </Heading>
           <div className="bookings-list mt-8 flex flex-wrap gap-4">
             {!justLeft.size ? (
-              <p className="mt-4">{__('no_bookings')}</p>
+              <p className="mt-4">{t('no_bookings')}</p>
             ) : (
               justLeft
                 .slice(

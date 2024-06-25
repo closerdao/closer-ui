@@ -8,8 +8,13 @@ import UpcomingEventsIntro from 'closer/components/UpcomingEventsIntro';
 
 import { Heading, Tag, YoutubeEmbed, useAuth } from 'closer';
 import api from 'closer/utils/api';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { NextPageContext } from 'next';
 import { event } from 'nextjs-google-analytics';
+
+
 const HomePage = () => {
+
   const { isAuthenticated } = useAuth();
   const CTA = isAuthenticated ? (
     <Link
@@ -87,12 +92,11 @@ const HomePage = () => {
               </Heading>
               <div className="my-4">
                 <p className="text-xl md:text-2xl max-w-3xl">
-                  We are building a climate resilient neighborhood of the future in Portugal - and you are invited to be a part of it.
+                  We are building a climate resilient neighborhood of the future
+                  in Portugal - and you are invited to be a part of it.
                 </p>
               </div>
-              <div>
-                { CTA }
-              </div>
+              <div>{CTA}</div>
             </div>
           </div>
         </div>
@@ -109,7 +113,9 @@ const HomePage = () => {
               Traditional Dream Factory
             </Heading>
             <p className="text-center md:text-left mb-6">
-              Our current project is a 5 hectare regenerative playground in Abela, where we have a reforestation, food forest, glamping accomodations, industrial kitchen, cafe, sauna and more:
+              Our current project is a 5 hectare regenerative playground in
+              Abela, where we have a reforestation, food forest, glamping
+              accomodations, industrial kitchen, cafe, sauna and more:
             </p>
             <div className="md:flex md:flex-cols-2 md:space-x-6">
               <ul className="space-y-6 md:w-1/2">
@@ -275,7 +281,6 @@ const HomePage = () => {
           </div>
         </section>
 
-
         <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2 space-x-4">
           <div>
             <div className="md:pl-4 mt-5">
@@ -296,8 +301,11 @@ const HomePage = () => {
                     Building 14 suites
                   </Heading>
                   <p>
-                    Each suite has over 20m2 of living space - giving ample space for resident to have a desk, private bathroom, a luxurious queen sized bed.
-                    We are tailoring the interior to fit the needs of digital nomads, young families, yogies, and other conscious individuals.
+                    Each suite has over 20m2 of living space - giving ample
+                    space for resident to have a desk, private bathroom, a
+                    luxurious queen sized bed. We are tailoring the interior to
+                    fit the needs of digital nomads, young families, yogies, and
+                    other conscious individuals.
                   </p>
                 </li>
                 <li className="">
@@ -305,8 +313,10 @@ const HomePage = () => {
                     Bioclimatic buildings
                   </Heading>
                   <p>
-                    The building is designed to be energy efficient, with passive solar design, natural ventilation, 
-                    and a solar roof - making it a comfortable place to live year round while producing it&apos;s own energy.
+                    The building is designed to be energy efficient, with
+                    passive solar design, natural ventilation, and a solar roof
+                    - making it a comfortable place to live year round while
+                    producing it&apos;s own energy.
                   </p>
                 </li>
                 <li className="">
@@ -314,9 +324,11 @@ const HomePage = () => {
                     Mixed use co-living & hospitality
                   </Heading>
                   <p>
-                    The property is ideal for hosting large events (up to 100 people), and we are planning to use 
-                    it for retreats, workshops, and other events for 3 months out of the year while running our own 
-                    co-living community for 9 months out of the year.
+                    The property is ideal for hosting large events (up to 100
+                    people), and we are planning to use it for retreats,
+                    workshops, and other events for 3 months out of the year
+                    while running our own co-living community for 9 months out
+                    of the year.
                   </p>
                 </li>
               </ul>
@@ -330,10 +342,12 @@ const HomePage = () => {
               Agroforestry and land developments
             </Heading>
             <p>
-              With over 3000 trees already planted on the land, and a plan to create a 
-              productive agroforestry system with over 10 000 fruit trees (including almonds, olives, citrus, berries etc) over the next 
-              few years, TDF is committed to creating a regenerative landscape that hydrates the land, sequesters carbon, and nourrishes
-              our village and the local community.
+              With over 3000 trees already planted on the land, and a plan to
+              create a productive agroforestry system with over 10 000 fruit
+              trees (including almonds, olives, citrus, berries etc) over the
+              next few years, TDF is committed to creating a regenerative
+              landscape that hydrates the land, sequesters carbon, and
+              nourrishes our village and the local community.
             </p>
             <div className="md:flex md:flex-cols-2 mt-6">
               <ul className="space-y-6">
@@ -342,8 +356,9 @@ const HomePage = () => {
                     Creating a water retention landscape
                   </Heading>
                   <p>
-                    Our swales collect runoff waters from the landscape and will be storing it in our 2 planned
-                    lakes. This will ensure a steady water supply year round.
+                    Our swales collect runoff waters from the landscape and will
+                    be storing it in our 2 planned lakes. This will ensure a
+                    steady water supply year round.
                   </p>
                 </li>
 
@@ -364,17 +379,19 @@ const HomePage = () => {
                     Biochar Production
                   </Heading>
                   <p>
-                    Using syntropic methods, our agroforestry landscape is set to
-                    produce excess biomass we can process into biochar. 
-                    Biochar improves soil fertility, increase water retention and stimulates microbial activity,
-                    leading to healthier trees and better crop yields - all while
-                    capturing carbon from the atmosphere and producing excess energy in the process.
+                    Using syntropic methods, our agroforestry landscape is set
+                    to produce excess biomass we can process into biochar.
+                    Biochar improves soil fertility, increase water retention
+                    and stimulates microbial activity, leading to healthier
+                    trees and better crop yields - all while capturing carbon
+                    from the atmosphere and producing excess energy in the
+                    process.
                   </p>
                 </li>
 
                 <li className="italic mt-6">
-                  Scalability and Future Prospects: TDF envisions this orchard as
-                  a scalable model for regenerative and profitable farming,
+                  Scalability and Future Prospects: TDF envisions this orchard
+                  as a scalable model for regenerative and profitable farming,
                   demonstrating how environmental responsibility can align with
                   commercial success. The project could serve as blueprint for
                   future villages around the world.
@@ -407,14 +424,24 @@ const HomePage = () => {
         <section className="mb-12">
           <div>
             <div className="max-w-prose mb-12 mx-auto">
-              <Heading level={2} className="text-center md:text-left mb-4 uppercase text-2xl font-black">
+              <Heading
+                level={2}
+                className="text-center md:text-left mb-4 uppercase text-2xl font-black"
+              >
                 How to play
               </Heading>
               <p>
-                While the village is in development we offer multiple ways to come and visit. Whether you are looking for a short stay, a longer term residency, or a work exchange - we have something for you.
+                While the village is in development we offer multiple ways to
+                come and visit. Whether you are looking for a short stay, a
+                longer term residency, or a work exchange - we have something
+                for you.
               </p>
               <p>
-                Once we get to know each other, and if there is mutual interest - you&apos;ll be invited to become a full member of the village. Members are returning residents who co-own the village together and can participate in the decision making process, and can apply for work opportunities.
+                Once we get to know each other, and if there is mutual interest
+                - you&apos;ll be invited to become a full member of the village.
+                Members are returning residents who co-own the village together
+                and can participate in the decision making process, and can
+                apply for work opportunities.
               </p>
             </div>
             <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-center align-center">
@@ -424,7 +451,11 @@ const HomePage = () => {
                     <Heading level={4} className="text-center">
                       Guest
                     </Heading>
-                    <p className="my-2 italic">Come and enjoy the nature - work from our co-working space, connect with out community and enjoy our facilities.</p>
+                    <p className="my-2 italic">
+                      Come and enjoy the nature - work from our co-working
+                      space, connect with out community and enjoy our
+                      facilities.
+                    </p>
                     <ul>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                         Private or shared glamping or van
@@ -441,10 +472,7 @@ const HomePage = () => {
                     </ul>
                   </div>
                   <div className="mt-4 mb-4 flex justify-center align-center">
-                    <Link
-                      href="/stay"
-                      className="uppercase btn-primary"
-                    >
+                    <Link href="/stay" className="uppercase btn-primary">
                       Book a stay
                     </Link>
                   </div>
@@ -456,7 +484,10 @@ const HomePage = () => {
                     <Heading level={4} className="text-center">
                       Volunteer
                     </Heading>
-                    <p className="my-2 italic">Learn about permaculture, bioconstruction & cooking while doing a work exchange.</p>
+                    <p className="my-2 italic">
+                      Learn about permaculture, bioconstruction & cooking while
+                      doing a work exchange.
+                    </p>
                     <ul>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                         Work 4h/day
@@ -470,10 +501,7 @@ const HomePage = () => {
                     </ul>
                   </div>
                   <div className="mt-4 mb-4 flex justify-center align-center">
-                    <Link
-                      href="/volunteer"
-                      className="uppercase btn-primary"
-                    >
+                    <Link href="/volunteer" className="uppercase btn-primary">
                       See opportunities
                     </Link>
                   </div>
@@ -485,7 +513,12 @@ const HomePage = () => {
                     <Heading level={4} className="text-center">
                       Resident
                     </Heading>
-                    <p className="my-2 italic">Apply for a 1+ month residency and leave a mark on our village - maybe you are an expert carpenter - or maybe you want to practice a new craft. Make a proposal for what you&apos;d like to build and we will have a conversation.</p>
+                    <p className="my-2 italic">
+                      Apply for a 1+ month residency and leave a mark on our
+                      village - maybe you are an expert carpenter - or maybe you
+                      want to practice a new craft. Make a proposal for what
+                      you&apos;d like to build and we will have a conversation.
+                    </p>
                     <ul>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                         Work ~6h/day (project based)
@@ -518,7 +551,8 @@ const HomePage = () => {
         <section className="flex justify-center my-20 -mx-4 p-4 py-12 bg-black text-white">
           <div className="max-w-prose flex flex-wrap">
             <Heading className="text-center md:text-left mb-6 uppercase text-2xl font-black">
-              Not just a co-living - become part of a movement conserving & regenerating land
+              Not just a co-living - become part of a movement conserving &
+              regenerating land
             </Heading>
             <p className="mb-8">
               TDF is part of the OASA network - transforming ownership into
@@ -535,7 +569,13 @@ const HomePage = () => {
               first prototype in utilising real estate as a vehicle for
               ecological restoration.
             </p>
-            <Link href="https://oasa.earth/" target="_blank" className="underline">Learn more</Link>
+            <Link
+              href="https://oasa.earth/"
+              target="_blank"
+              className="underline"
+            >
+              Learn more
+            </Link>
           </div>
         </section>
 
@@ -548,19 +588,23 @@ const HomePage = () => {
   );
 };
 
-HomePage.getInitialProps = async () => {
+HomePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const {
-      data: { results: subscriptions },
-    } = await api.get('/config/subscriptions');
+    const [subsRes, messages] = await Promise.all([
+      api.get('/config/subscriptions').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
+    const subscriptionsConfig = subsRes?.data?.results?.value.plans;
 
     return {
-      subscriptionsConfig: subscriptions.value.plans,
+      subscriptionsConfig,
+      messages,
     };
   } catch (err) {
     return {
       subscriptionsConfig: { enabled: false, plans: [] },
       error: err,
+      messages: null,
     };
   }
 };

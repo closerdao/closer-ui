@@ -1,11 +1,11 @@
 import Link from 'next/link';
 
-import React from 'react';
+import { useTranslations } from 'next-intl';
 
 import { priceFormat } from '../utils/helpers';
-import { __ } from '../utils/helpers';
 
 const TicketListPreview = ({ ticket }) => {
+  const t = useTranslations();
   if (!ticket) {
     return null;
   }
@@ -14,22 +14,22 @@ const TicketListPreview = ({ ticket }) => {
     <div className="ticket-list-preview card">
       <div className="card-body">
         <p>
-          {__('ticket_list_id')} <b>{ticket.get('_id')}</b>
+          {t('ticket_list_id')} <b>{ticket.get('_id')}</b>
         </p>
         {ticket.get('name') && (
           <p>
-            {__('ticket_list_holder')} <b>{ticket.get('name')}</b>
+            {t('ticket_list_holder')} <b>{ticket.get('name')}</b>
           </p>
         )}
         {ticket.get('price') && (
           <p>
-            {__('ticket_list_total_cost')}{' '}
+            {t('ticket_list_total_cost')}{' '}
             <b>{priceFormat(ticket.get('price'))}</b>
           </p>
         )}
         {ticket.get('option') && (
           <p>
-            {__('ticket_list_type')} <b>{ticket.getIn(['option', 'name'])}</b>
+            {t('ticket_list_type')} <b>{ticket.getIn(['option', 'name'])}</b>
           </p>
         )}
         {ticket.get('fields') &&
@@ -41,10 +41,10 @@ const TicketListPreview = ({ ticket }) => {
       </div>
       <div className="card-footer gap-2 flex">
         <Link href={`/tickets/${ticket.get('_id')}`} className="btn">
-          {__('ticket_list_view_ticket')}
+          {t('ticket_list_view_ticket')}
         </Link>
         <Link href={`/bookings/${ticket.get('booking')}`} className="btn">
-          {__('ticket_list_view_booking')}
+          {t('ticket_list_view_booking')}
         </Link>
       </div>
     </div>

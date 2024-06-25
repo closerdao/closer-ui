@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import { useDebounce } from '../hooks/useDebounce';
 import { Question } from '../types';
-import { __ } from '../utils/helpers';
 import Input from './ui/Input';
 
 interface Props {
@@ -16,6 +17,7 @@ const QuestionnaireItem = ({
   savedAnswer,
   handleAnswer,
 }: Props) => {
+  const t = useTranslations();
   const [answer, setAnswer] = React.useState(savedAnswer || '');
   const debouncedAnswer = useDebounce(answer, 500);
 
@@ -45,7 +47,7 @@ const QuestionnaireItem = ({
           <Input
             id={name}
             type="text"
-            placeholder={__('generic_input_placeholder')}
+            placeholder={t('generic_input_placeholder')}
             className="" // TO DO how to resolve class clash with forms.css?
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
@@ -60,7 +62,7 @@ const QuestionnaireItem = ({
           onChange={onChange}
           required={required}
         >
-          <option value="">{__('generic_select_placeholder')}</option>
+          <option value="">{t('generic_select_placeholder')}</option>
           {options.map((option) => (
             <option key={option} value={option}>
               {option}

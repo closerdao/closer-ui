@@ -2,6 +2,8 @@ import Head from 'next/head';
 import Link from 'next/link';
 
 import { Heading } from 'closer';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { NextPageContext } from 'next';
 import { event } from 'nextjs-google-analytics';
 
 const HomePage = () => {
@@ -40,7 +42,12 @@ const HomePage = () => {
                   Join us in developing a pioneering regenerative village in
                   Portugal.
                 </Heading>
-                <p className="mb-4">We are raising €800k to kickstart the development of a village restoring the soils, improving the water cycle, growing food - and creating modern living and working spaces for 100+ thriving humans. This initial funding enables us to:</p>
+                <p className="mb-4">
+                  We are raising €800k to kickstart the development of a village
+                  restoring the soils, improving the water cycle, growing food -
+                  and creating modern living and working spaces for 100+
+                  thriving humans. This initial funding enables us to:
+                </p>
 
                 <ul>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
@@ -57,7 +64,8 @@ const HomePage = () => {
                     leverage EU funding
                   </li>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    establish a cash flow positive hospitality and farming business
+                    establish a cash flow positive hospitality and farming
+                    business
                   </li>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     expand our impact and issue ecosystem credits
@@ -117,6 +125,22 @@ const HomePage = () => {
       </section>
     </>
   );
+};
+
+HomePage.getInitialProps = async (context: NextPageContext) => {
+  try {
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    return {
+      messages,
+    };
+  } catch (err: unknown) {
+    return {
+      messages: null,
+    };
+  }
 };
 
 export default HomePage;

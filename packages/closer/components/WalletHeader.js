@@ -1,9 +1,12 @@
 import { useContext } from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import { WalletState } from '../contexts/wallet';
-import { __ } from '../utils/helpers';
 
 const WalletHeader = ({ isInsufficientBalance }) => {
+  const t = useTranslations();
+
   const {
     isWalletConnected,
     isCorrectNetwork,
@@ -13,18 +16,18 @@ const WalletHeader = ({ isInsufficientBalance }) => {
 
   const getTitle = () => {
     if (!isWalletConnected) {
-      return __('wallet_not_connected_title');
+      return t('wallet_not_connected_title');
     }
     if (!isCorrectNetwork) {
-      return __('wallet_incorrect_network');
+      return t('wallet_incorrect_network');
     }
     if (isInsufficientBalance) {
-      return __('wallet_booking_insufficient_balance');
+      return t('wallet_booking_insufficient_balance');
     }
     if (!hasSameConnectedAccount) {
-      return __('wallet_different_saved_address_title');
+      return t('wallet_different_saved_address_title');
     }
-    return __('wallet_connected_title');
+    return t('wallet_connected_title');
   };
 
   return (

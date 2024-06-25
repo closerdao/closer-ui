@@ -2,6 +2,8 @@ import Head from 'next/head';
 import Link from 'next/link';
 
 import { Heading } from 'closer';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { NextPageContext } from 'next';
 import { event } from 'nextjs-google-analytics';
 
 const HomePage = () => {
@@ -28,16 +30,49 @@ const HomePage = () => {
               display
               level={1}
             >
-              TDF is a collective of doers & dreamers, prototyping a regenerative way of life.
+              TDF is a collective of doers & dreamers, prototyping a
+              regenerative way of life.
             </Heading>
-            <p className="mb-4">TDF was founded on by a group of burner friends as a prototype for creating a regenerative way of life.</p>
-            <p className="mb-4">After being 3 years on the ground, in 2024 we are trying a new experiment:What if our village was completely free to access?</p>
-            <p className="mb-4">In the spirit of co-creation and gifting economy, you are invited to be a part of creating the new paradigm. One where we are restoring local ecosystems, and using our time for play.</p>
-            <p className="mb-4">This is a re-imagination of what human purpose can be. We need to become a keystone species that’s enabling more life to flourish on this planet.</p>
-            <p className="mb-4">This is saying no to the extractive mentality of the past, and embracing a lovership with planet earth.</p>
-            <p className="mb-4">Technology is increasingly making obsolete the notion that we should have a society that distributes it’s value based on productivity. As AI and AGI rise, some see doom and loss of jobs. We see a future where humans are focused on building things out of love rather than out of necessity. We see a future where machines will be doing the bulk of manual labor and humans will choose to surround themselves by nature.</p>
-            <p className="mb-4"> We see a future where <b>play</b> becomes our primary way of being.</p>
-            <p className="mb-8">Join us on this experiment, opening Feb 1st and running until end of April.</p>
+            <p className="mb-4">
+              TDF was founded on by a group of burner friends as a prototype for
+              creating a regenerative way of life.
+            </p>
+            <p className="mb-4">
+              After being 3 years on the ground, in 2024 we are trying a new
+              experiment:What if our village was completely free to access?
+            </p>
+            <p className="mb-4">
+              In the spirit of co-creation and gifting economy, you are invited
+              to be a part of creating the new paradigm. One where we are
+              restoring local ecosystems, and using our time for play.
+            </p>
+            <p className="mb-4">
+              This is a re-imagination of what human purpose can be. We need to
+              become a keystone species that’s enabling more life to flourish on
+              this planet.
+            </p>
+            <p className="mb-4">
+              This is saying no to the extractive mentality of the past, and
+              embracing a lovership with planet earth.
+            </p>
+            <p className="mb-4">
+              Technology is increasingly making obsolete the notion that we
+              should have a society that distributes it’s value based on
+              productivity. As AI and AGI rise, some see doom and loss of jobs.
+              We see a future where humans are focused on building things out of
+              love rather than out of necessity. We see a future where machines
+              will be doing the bulk of manual labor and humans will choose to
+              surround themselves by nature.
+            </p>
+            <p className="mb-4">
+              {' '}
+              We see a future where <b>play</b> becomes our primary way of
+              being.
+            </p>
+            <p className="mb-8">
+              Join us on this experiment, opening Feb 1st and running until end
+              of April.
+            </p>
           </div>
           <div className="flex justify-start flex-col md:flex-row align-center mt-12 text-center">
             <Link
@@ -57,6 +92,22 @@ const HomePage = () => {
       </section>
     </div>
   );
+};
+
+HomePage.getInitialProps = async (context: NextPageContext) => {
+  try {
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    return {
+      messages,
+    };
+  } catch (err: unknown) {
+    return {
+      messages: null,
+    };
+  }
 };
 
 export default HomePage;

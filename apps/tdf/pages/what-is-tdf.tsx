@@ -4,6 +4,8 @@ import Link from 'next/link';
 import PhotoGallery from 'closer/components/PhotoGallery';
 
 import { Button, Heading, Tag } from 'closer';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { NextPageContext } from 'next';
 
 const HomePage = () => {
   return (
@@ -413,6 +415,22 @@ const HomePage = () => {
       </section>
     </div>
   );
+};
+
+HomePage.getInitialProps = async (context: NextPageContext) => {
+  try {
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    return {
+      messages,
+    };
+  } catch (err: unknown) {
+    return {
+      messages: null,
+    };
+  }
 };
 
 export default HomePage;

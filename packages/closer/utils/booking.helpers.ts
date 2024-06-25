@@ -14,31 +14,7 @@ import {
   Price,
 } from '../types';
 import api from './api';
-import { __, priceFormat } from './helpers';
-
-export const getStatusText = (status: string, updated: string | Date) => {
-  if (status === 'cancelled') {
-    return __('booking_status_cancelled', dayjs(updated).format('DD/MM/YYYY'));
-  }
-
-  interface StatusText {
-    [key: string]: string;
-  }
-
-  const statusText: StatusText = {
-    rejected: __('booking_status_rejected'),
-    open: __('booking_status_open'),
-    pending: __('booking_status_pending'),
-
-    confirmed: __('booking_status_confirmed'),
-    paid: __('booking_status_paid'),
-
-    'checked-in': __('booking_status_checked_in'),
-    'checked-out': __('booking_status_checked_out'),
-  };
-
-  return statusText[status];
-};
+import { priceFormat } from './helpers';
 
 export const getBookingType = (
   eventId: string | undefined,
@@ -215,7 +191,7 @@ export const getBookingsWithUserAndListing = (
     const listingName =
       listings
         ?.find((listing: any) => listing.get('_id') === listingId)
-        ?.get('name') || __('no_listing_type');
+        ?.get('name') || 'None, day ticket';
 
     const userId = b.get('createdBy');
     const user =

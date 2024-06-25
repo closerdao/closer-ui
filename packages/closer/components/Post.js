@@ -1,10 +1,11 @@
 import Link from 'next/link';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+
+import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import api, { cdn, formatSearch } from '../utils/api';
-import { __ } from '../utils/helpers';
 import CreatePost from './CreatePost';
 import ProfilePhoto from './ProfilePhoto';
 import TimeSince from './TimeSince';
@@ -24,6 +25,8 @@ const Post = ({
   setUsersById,
   channelsById,
 }) => {
+  const t = useTranslations();
+
   const [posts, setPosts] = useState([]);
   const [repliesOpen, setRepliesOpen] = useState(false);
   const [error, setErrors] = useState(null);
@@ -97,7 +100,7 @@ const Post = ({
     return (
       <div className="post card">
         <div className="card-body">
-          <h3>{__('post_delete_message')}</h3>
+          <h3>{t('post_delete_message')}</h3>
         </div>
       </div>
     );
@@ -199,7 +202,7 @@ const Post = ({
                 setRepliesOpen(!repliesOpen);
               }}
             >
-              {localReplyCount} {__('post_replies')}
+              {localReplyCount} {t('post_replies')}
             </a>
             {createdBy === user._id && (
               <a
@@ -210,7 +213,7 @@ const Post = ({
                   deletePost();
                 }}
               >
-                {__('post_delete')}
+                {t('post_delete')}
               </a>
             )}
           </div>

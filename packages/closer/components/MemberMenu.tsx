@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 
+import { useTranslations } from 'next-intl';
+
+// import { useTranslations } from 'next-intl';
 import { useAuth } from '../contexts/auth';
 import { NavigationLink } from '../types/nav';
 import api from '../utils/api';
-import { __ } from '../utils/helpers';
 import Profile from './Profile';
 import ReportABug from './ReportABug';
 import Wallet from './Wallet';
@@ -176,6 +178,7 @@ const getLinks = (
 };
 
 const MemberMenu = () => {
+  const t = useTranslations();
   const { user, logout } = useAuth();
   const [navOptions, setNavOptions] = useState(['guest']);
   const [selectedSwitcherOption, setSelectedSwitcherOption] = useState('Guest');
@@ -270,7 +273,7 @@ const MemberMenu = () => {
           </NavLink>
         ))}
       <NavLink isButton={true} onClick={logout}>
-        {__('navigation_sign_out')}
+        {t('navigation_sign_out')}
       </NavLink>
       <ReportABug />
     </nav>

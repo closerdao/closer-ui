@@ -1,16 +1,17 @@
-import React, { FC } from 'react';
+import { FC } from 'react';
 
 import { FaTelegram } from '@react-icons/all-files/fa/FaTelegram';
 import { RiFacebookFill } from '@react-icons/all-files/ri/RiFacebookFill';
 import { SiDiscord } from '@react-icons/all-files/si/SiDiscord';
 import { SiInstagram } from '@react-icons/all-files/si/SiInstagram';
 import { SiTwitter } from '@react-icons/all-files/si/SiTwitter';
+import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../hooks/useConfig';
-import { __ } from '../utils/helpers';
 import Newsletter from './Newsletter';
 
 const Footer: FC = () => {
+  const t = useTranslations();
   // TODO: switch to per-page config fetching if we ever need this page
   const config = useConfig();
   const {
@@ -84,9 +85,9 @@ const Footer: FC = () => {
             </div>
             <div className="flex flex-col items-start mt-8 text-gray-500">
               <p className="text-xs">
-                {__('footer_phrase')}{' '}
+                {t('footer_phrase')}{' '}
                 <a href="https://closer.earth" className="underline">
-                  {__('footer_platform')}
+                  {t('footer_platform')}
                 </a>
               </p>
             </div>

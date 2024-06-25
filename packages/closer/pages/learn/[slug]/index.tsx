@@ -12,17 +12,17 @@ import Heading from '../../../components/ui/Heading';
 import IconLocked from '../../../components/ui/IconLocked';
 import IconPlay from '../../../components/ui/IconPlay';
 
-import { NextApiRequest } from 'next';
-import { ParsedUrlQuery } from 'querystring';
+import { NextApiRequest, NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
-import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import { Lesson } from '../../../types/lesson';
 import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { __ } from '../../../utils/helpers';
+import { loadLocaleData } from '../../../utils/locale.helpers';
 import { prepareSubscriptions } from '../../../utils/subscriptions.helpers';
+import PageNotFound from '../../not-found';
 
 const MIN_SUBSCRIPTION_PLAN = 'Wanderer';
 
@@ -39,6 +39,7 @@ const LessonPage = ({
   error,
   learningHubConfig,
 }: Props) => {
+  const t = useTranslations();
   const subscriptions = prepareSubscriptions(subscriptionsConfig);
   const { asPath } = useRouter();
   const { user, refetchUser } = useAuth();
@@ -106,7 +107,7 @@ const LessonPage = ({
             href="/learn/category/all"
             className="hover:text-accent w-full my-4"
           >
-            &lt; {__('learn_all_courses')}
+            &lt; {t('learn_all_courses')}
           </Link>
           <div className="w-full relative">
             <LessonVideo
@@ -129,7 +130,7 @@ const LessonPage = ({
                   href={lesson.slug && `/learn/${lesson.slug}/edit`}
                   className="bg-accent text-white rounded-full px-4 py-2 text-center uppercase text-sm"
                 >
-                  {__('learn_edit_lesson_hading')}
+                  {t('learn_edit_lesson_hading')}
                 </LinkButton>
               </div>
             )}
@@ -142,7 +143,7 @@ const LessonPage = ({
               <div className="w-full flex flex-col sm:flex-row gap-4 sm:gap-8">
                 <div className="flex items-center text-sm uppercase font-bold gap-1">
                   <div>
-                    {__('learn_lesson_category')}: {lesson.category}
+                    {t('learn_lesson_category')}: {lesson.category}
                   </div>
                 </div>
               </div>
@@ -168,7 +169,7 @@ const LessonPage = ({
               </div>
               <div className="h-auto static sm:sticky bottom-0 left-0  sm:top-[100px] w-full sm:w-[250px]">
                 <Card className="bg-white border border-gray-100 gap-6">
-                  <Heading level={2}>{__('learn_lessons_heading')}</Heading>
+                  <Heading level={2}>{t('learn_lessons_heading')}</Heading>
                   <div className="flex flex-col">
                     {lesson.previewVideo && (
                       <button
@@ -183,7 +184,7 @@ const LessonPage = ({
                         <div className="border-accent border rounded-full flex justify-center items-center w-[21px] h-[21px]">
                           <IconPlay />
                         </div>
-                        {__('learn_introduction_heading')}
+                        {t('learn_introduction_heading')}
                       </button>
                     )}
 
@@ -206,19 +207,19 @@ const LessonPage = ({
                             <IconLocked />
                           </div>
                         )}
-                        {__('learn_full_lesson_heading')}
+                        {t('learn_full_lesson_heading')}
                       </button>
                     )}
                   </div>
 
                   {!canViewLessons && lesson.fullVideo && (
                     <LinkButton href={getAccessUrl}>
-                      {__('learn_get_access_button')}
+                      {t('learn_get_access_button')}
                     </LinkButton>
                   )}
 
                   <Heading className="uppercase text-md" level={3}>
-                    {__('learn_tags_heading')}
+                    {t('learn_tags_heading')}
                   </Heading>
 
                   <div className="flex flex-wrap gap-2">
@@ -236,13 +237,8 @@ const LessonPage = ({
   );
 };
 
-LessonPage.getInitialProps = async ({
-  req,
-  query,
-}: {
-  req: NextApiRequest;
-  query: ParsedUrlQuery;
-}) => {
+LessonPage.getInitialProps = async (context: NextPageContext) => {
+  const { req, query } = context;
   try {
     const [
       {
@@ -252,16 +248,20 @@ LessonPage.getInitialProps = async ({
         data: { results: lesson },
       },
       learningHubRes,
+      messages,
     ] = await Promise.all([
       api.get('/config/subscriptions'),
       api.get(`/lesson/${query.slug}`, {
-        headers: req?.cookies?.access_token && {
-          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        headers: (req as NextApiRequest)?.cookies?.access_token && {
+          Authorization: `Bearer ${
+            (req as NextApiRequest)?.cookies?.access_token
+          }`,
         },
       }),
       api.get('/config/learningHub').catch(() => {
         return null;
       }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const learningHubConfig = learningHubRes?.data?.results?.value || null;
 
@@ -270,6 +270,7 @@ LessonPage.getInitialProps = async ({
       lesson,
       error: null,
       learningHubConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {
@@ -277,6 +278,7 @@ LessonPage.getInitialProps = async ({
       learningHubConfig: null,
       error: parseMessageFromError(err),
       lesson: null,
+      messages: null,
     };
   }
 };

@@ -9,8 +9,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 
 import { blockchainConfig } from '../config_blockchain';
 import { DEFAULT_CURRENCY, REFUND_PERIODS } from '../constants';
-import base from '../locales/base';
-import en from '../locales/en';
+import base from '../locales/base-en';
 import foz from '../locales/foz';
 import lios from '../locales/lios';
 import moos from '../locales/moos';
@@ -32,7 +31,7 @@ const appDictionaries = {
   lios,
 };
 
-let language = Object.assign({}, base, en);
+let language = Object.assign({}, base);
 const ONE_HOUR = 60 * 60 * 1000;
 
 export const __ = (key, paramValue, app) => {
@@ -122,10 +121,7 @@ export const getTimeDetails = (eventTime) => {
 
 export const priceFormat = (price, currency = DEFAULT_CURRENCY) => {
   if (price?.cur && price.cur === 'credits') {
-    return `${price.val} ${__('carrots_balance', price.app)} ${__(
-      'carrots_heading',
-      price.app,
-    )}`;
+    return `${price.val} ${price.creditSymbol}`;
   }
   if (!currency) {
     currency = DEFAULT_CURRENCY;

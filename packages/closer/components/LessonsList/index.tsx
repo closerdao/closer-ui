@@ -1,9 +1,7 @@
-import React from 'react';
-
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
+import { useTranslations } from 'next-intl';
 
-import { __ } from '../../utils/helpers';
 import LessonCard from '../LessonCard';
 
 dayjs.extend(advancedFormat);
@@ -13,6 +11,7 @@ interface Props {
 }
 
 const LessonsList = ({ lessons }: Props) => {
+  const t = useTranslations();
   return (
     <div className="flex flex-col gap-12">
       {lessons ? (
@@ -23,7 +22,7 @@ const LessonsList = ({ lessons }: Props) => {
         </div>
       ) : (
         <div className="w-full h-full text-center p-12">
-          <p className="italic">{__('learn_no_lessons_found')}</p>
+          <p className="italic">{t('learn_no_lessons_found')}</p>
         </div>
       )}
     </div>

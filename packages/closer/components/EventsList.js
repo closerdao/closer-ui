@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
+import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../contexts/platform';
-import { __ } from '../utils/helpers';
 import EventPreview from './EventPreview';
 import Pagination from './Pagination';
 
@@ -19,8 +19,9 @@ const EventsList = ({
   where,
   limit,
   showPagination,
-  cols
+  cols,
 }) => {
+  const t = useTranslations();
   const { platform } = usePlatform();
   const [error, setErrors] = useState(false);
   const [page, setPage] = useState(1);
@@ -49,26 +50,25 @@ const EventsList = ({
     <div className={card ? 'card' : ''}>
       {error && <p className="text-red-500">{error}</p>}
       {title && <h3 className={card ? 'card-title' : ''}>{title}</h3>}
-      { events && events.count() > 0 ?
+      {events && events.count() > 0 ? (
         <div
           className={`grid gap-8 md:grid-cols-${cols} md:justify-${
             center ? 'center' : 'start'
           } ${card ? 'event-body' : ''} ${isListView ? 'grid-cols-1' : ''} `}
         >
-          { events.map((event) => (
+          {events.map((event) => (
             <EventPreview
               key={event.get('_id')}
               isListView={isListView}
               event={event.toJSON()}
             />
           ))}
-        </div>:
-        (
-          <div className="w-full h-full text-center p-12">
-            <p className="italic">{__('events_list_no_events')}</p>
-          </div>
-        )
-      }
+        </div>
+      ) : (
+        <div className="w-full h-full text-center p-12">
+          <p className="italic">{t('events_list_no_events')}</p>
+        </div>
+      )}
       {showPagination && (
         <Pagination
           loadPage={(page) => {

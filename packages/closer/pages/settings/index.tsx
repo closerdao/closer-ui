@@ -1,6 +1,6 @@
 import Head from 'next/head';
 
-import { FC, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import UploadPhoto from '../../components/UploadPhoto/UploadPhoto';
 import { Button } from '../../components/ui';
@@ -10,13 +10,17 @@ import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select/Dropdown';
 import MultiSelect from '../../components/ui/Select/MultiSelect';
 
-import PageNotFound from '../404';
+import { NextPageContext } from 'next';
+import process from 'process';
+
 import { useAuth } from '../../contexts/auth';
 import { type User } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import { loadLocaleData } from '../../utils/locale.helpers';
+import PageNotFound from '../not-found';
 
 type UpdateUserFunction = (value: string | string[]) => Promise<void>;
 
@@ -36,7 +40,7 @@ const SKILLS_EXAMPLES = [
   'carpentry',
 ];
 
-const SettingsPage: FC = () => {
+const SettingsPage = () => {
   const { APP_NAME } = useConfig();
 
   const { user: initialUser, isAuthenticated, refetchUser } = useAuth();
@@ -364,6 +368,22 @@ const SettingsPage: FC = () => {
       </div>
     </>
   );
+};
+
+SettingsPage.getInitialProps = async (context: NextPageContext) => {
+  try {
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    return {
+      messages,
+    };
+  } catch (err: unknown) {
+    return {
+      messages: null,
+    };
+  }
 };
 
 export default SettingsPage;

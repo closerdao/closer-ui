@@ -1,16 +1,15 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import React from 'react';
-
 import PostList from '../../components/PostList';
 import UpcomingEvents from '../../components/UpcomingEvents';
 import UserList from '../../components/UserList';
 import Heading from '../../components/ui/Heading';
 
-import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
+import { loadLocaleData } from '../../utils/locale.helpers';
+import PageNotFound from '../not-found';
 
 const ChannelPage = ({ channel }) => {
   const { user, isAuthenticated } = useAuth();
@@ -74,19 +73,26 @@ const ChannelPage = ({ channel }) => {
   );
 };
 
-ChannelPage.getInitialProps = async ({ query }) => {
+ChannelPage.getInitialProps = async (context) => {
+  const { query } = context;
   try {
     if (!query.channel) {
       throw new Error('No channel');
     }
-    const {
-      data: { results: channel },
-    } = await api.get(`/channel/${query.channel}`);
+    const [channelResponse, messages] = await Promise.all([
+      api.get(`/channel/${query.channel}`),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
 
-    return { channel };
+    const channel = channelResponse.data.results;
+    return {
+      channel,
+      messages,
+    };
   } catch (err) {
     return {
       error: err.message,
+      messages: null,
     };
   }
 };

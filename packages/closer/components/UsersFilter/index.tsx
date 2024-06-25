@@ -6,6 +6,8 @@ import {
   useState,
 } from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import {
   SUBSCRIPTION_TIER_OPTIONS,
   USER_CREATED_OPTIONS,
@@ -14,7 +16,7 @@ import {
   USER_SORT_OPTIONS,
   USER_SORT_TITLE_OPTIONS,
 } from '../../constants';
-import { __, getCreatedPeriodFilter } from '../../utils/helpers';
+import { getCreatedPeriodFilter } from '../../utils/helpers';
 import { Button, Input } from '../ui';
 import Select from '../ui/Select/Dropdown';
 import Switcher from '../ui/Switcher';
@@ -37,6 +39,7 @@ interface Props {
 }
 
 const UsersFilter = ({ setWhere, setPage, page, sortBy, setSortBy }: Props) => {
+  const t = useTranslations();
   const [userRole, setUserRole] = useState('any');
   const [subscriptionTier, setSubscriptionTier] = useState('any');
   const [userCreated, setUserCreated] = useState('any');
@@ -144,7 +147,7 @@ const UsersFilter = ({ setWhere, setPage, page, sortBy, setSortBy }: Props) => {
     <section className="flex gap-2 flex-wrap">
       <div className="md:flex-1 flex-wrap md:flex-nowrap flex gap-2 flex-col md:flex-row w-full md:w-auto mb-4">
         <div className="flex-1 min-w-full md:min-w-[160px]">
-          <label className="block my-2">{__('manage_users_role')}</label>
+          <label className="block my-2">{t('manage_users_role')}</label>
           <Select
             className="rounded-full border-black "
             value={userRole}
@@ -154,7 +157,7 @@ const UsersFilter = ({ setWhere, setPage, page, sortBy, setSortBy }: Props) => {
           />
         </div>
         <div className="flex-1 min-w-full md:min-w-[160px]">
-          <label className="block my-2">{__('manage_users_tier')}</label>
+          <label className="block my-2">{t('manage_users_tier')}</label>
           <Select
             className="rounded-full border-black "
             value={subscriptionTier}
@@ -165,7 +168,7 @@ const UsersFilter = ({ setWhere, setPage, page, sortBy, setSortBy }: Props) => {
         </div>
         <div className="flex-1 min-w-full md:min-w-[160px]">
           <label className="block my-2">
-            {__('manage_users_member_status')}
+            {t('manage_users_member_status')}
           </label>
           <Select
             className="rounded-full border-black "
@@ -179,7 +182,7 @@ const UsersFilter = ({ setWhere, setPage, page, sortBy, setSortBy }: Props) => {
 
       <div className="md:flex-1 flex-wrap md:flex-nowrap flex gap-2 flex-col md:flex-row w-full md:w-auto mb-4">
         <div className="flex-1 min-w-full md:min-w-[160px]">
-          <label className="block my-2">{__('manage_users_created')}</label>
+          <label className="block my-2">{t('manage_users_created')}</label>
           <Select
             className="rounded-full border-black "
             value={userCreated}
@@ -189,28 +192,28 @@ const UsersFilter = ({ setWhere, setPage, page, sortBy, setSortBy }: Props) => {
           />
         </div>{' '}
         <div className="flex-1 min-w-[160px]">
-          <label className="block my-2">{__('manage_users_name')}</label>
+          <label className="block my-2">{t('manage_users_name')}</label>
           <Input
             value={userName}
             onChange={handleUserName as any}
             type="text"
-            placeholder={__('manage_users_name')}
+            placeholder={t('manage_users_name')}
             className="m-0 border-black border-2 rounded-full py-1.5 bg-white"
           />
         </div>
         <div className="flex-1 min-w-[160px]">
-          <label className="block my-2">{__('manage_users_email')}</label>
+          <label className="block my-2">{t('manage_users_email')}</label>
           <Input
             value={userEmail}
             onChange={handleUserEmail as any}
             type="text"
-            placeholder={__('manage_users_email')}
+            placeholder={t('manage_users_email')}
             className="m-0 border-black border-2 rounded-full py-1.5 bg-white"
           />
         </div>
       </div>
 
-      <div className="w-full"> {__('booking_requests_sort_by')}</div>
+      <div className="w-full"> {t('booking_requests_sort_by')}</div>
 
       <Switcher
         options={USER_SORT_OPTIONS}
@@ -225,7 +228,7 @@ const UsersFilter = ({ setWhere, setPage, page, sortBy, setSortBy }: Props) => {
         className="my-6"
         type="secondary"
       >
-        {__('manage_users_lear_filters_button')}
+        {t('manage_users_lear_filters_button')}
       </Button>
     </section>
   );

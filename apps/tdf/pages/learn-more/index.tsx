@@ -13,8 +13,10 @@ import Resources from 'closer/components/Resources';
 import { Button, Card, Heading, Tag, YoutubeEmbed } from 'closer';
 import { SubscriptionPlan } from 'closer/types/subscriptions';
 import api from 'closer/utils/api';
-import { __ } from 'closer/utils/helpers';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { prepareSubscriptions } from 'closer/utils/subscriptions.helpers';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 import { event } from 'nextjs-google-analytics';
 
 const loadTime = new Date();
@@ -23,6 +25,7 @@ interface Props {
   subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
 }
 const LearnMorePage = ({ subscriptionsConfig }: Props) => {
+  const t = useTranslations();
   const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
 
   return (
@@ -784,7 +787,7 @@ const LearnMorePage = ({ subscriptionsConfig }: Props) => {
                     {plan.available === false ? (
                       <Heading level={3} className="uppercase">
                         <span className="block">🤩</span>
-                        {__('generic_coming_soon')}
+                        {t('generic_coming_soon')}
                       </Heading>
                     ) : (
                       <div className="w-full text-left ">
@@ -988,19 +991,23 @@ const LearnMorePage = ({ subscriptionsConfig }: Props) => {
   );
 };
 
-LearnMorePage.getInitialProps = async () => {
+LearnMorePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const {
-      data: { results: subscriptions },
-    } = await api.get('/config/subscriptions');
+    const [subsRes, messages] = await Promise.all([
+      api.get('/config/subscriptions').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
+    const subscriptionsConfig = subsRes?.data?.results?.value.plans;
 
     return {
-      subscriptionsConfig: subscriptions.value,
+      subscriptionsConfig,
+      messages,
     };
   } catch (err) {
     return {
-      subscriptionsConfig: { enabled: false, elements: [] },
+      subscriptionsConfig: { enabled: false, plans: [] },
       error: err,
+      messages: null,
     };
   }
 };

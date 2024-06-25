@@ -3,17 +3,21 @@ import Head from 'next/head';
 import CreateVolunteerView from '../../../components/CreateVolunteerView';
 import Heading from '../../../components/ui/Heading';
 
-import { NextPage } from 'next';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 import { Page401 } from '../../..';
 import { useAuth } from '../../../contexts/auth';
 import { VolunteerOpportunity } from '../../../types';
 import api from '../../../utils/api';
-import { __ } from '../../../utils/helpers';
+import { loadLocaleData } from '../../../utils/locale.helpers';
 
-const EditVolunteerOportunity: NextPage<{
+interface Props {
   volunteer: VolunteerOpportunity;
-}> = ({ volunteer }) => {
+}
+
+const EditVolunteerOportunity = ({ volunteer }: Props) => {
+  const t = useTranslations();
   const { user } = useAuth();
   const hasStewardRole = user?.roles?.includes('steward');
 
@@ -21,11 +25,11 @@ const EditVolunteerOportunity: NextPage<{
   return (
     <>
       <Head>
-        <title>{__('volunteer_edit_page_title')}</title>
+        <title>{t('volunteer_edit_page_title')}</title>
       </Head>
       <div>
         <Heading level={2} className="mb-2">
-          {__('volunteer_edit_page_title')}
+          {t('volunteer_edit_page_title')}
         </Heading>
         <CreateVolunteerView isEditMode={true} data={volunteer} />
       </div>
@@ -33,19 +37,26 @@ const EditVolunteerOportunity: NextPage<{
   );
 };
 
-EditVolunteerOportunity.getInitialProps = async (context) => {
+EditVolunteerOportunity.getInitialProps = async (context: NextPageContext) => {
   try {
     const id = context.query.slug;
+    const [volunteerResponse, messages] = await Promise.all([
+      api.get(`/volunteer/${id}`),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
+
     const {
       data: { results: volunteer },
-    } = await api.get(`/volunteer/${id}`);
+    } = volunteerResponse;
     return {
       volunteer,
+      messages,
     };
   } catch (error) {
     console.error(error);
     return {
       volunteer: null,
+      messages: null,
     };
   }
 };

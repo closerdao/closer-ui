@@ -1,11 +1,13 @@
 import { useContext } from 'react';
 
+import { useTranslations } from 'next-intl';
 import PropTypes from 'prop-types';
 
 import { WalletState } from '../contexts/wallet';
-import { __ } from '../utils/helpers';
 
 const CurrencySwitch = ({ currencies, selectedCurrency, onSelect }) => {
+  const t = useTranslations();
+
   const { isWalletConnected } = useContext(WalletState);
   const activeClass =
     'flex-1 bg-black text-white rounded-3xl text-center uppercase text-xs h-full flex items-center justify-center';
@@ -31,11 +33,11 @@ const CurrencySwitch = ({ currencies, selectedCurrency, onSelect }) => {
             }
             title={
               !isWalletConnected && currency === 'TDF'
-                ? __('wallet_not_connected_button_title')
+                ? t('wallet_not_connected_button_title')
                 : undefined
             }
           >
-            {__(`currency_switch_${currency}_title`)}
+            {t(`currency_switch_${currency}_title`)}
           </button>
         );
       })}

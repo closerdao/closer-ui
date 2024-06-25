@@ -3,9 +3,9 @@ import Link from 'next/link';
 import { Dispatch, SetStateAction } from 'react';
 
 import dayjs from 'dayjs';
+import { useTranslations } from 'next-intl';
 
 import { Listing } from '../types';
-import { __ } from '../utils/helpers';
 import Counter from './Counter';
 import ListingDateSelector from './ListingDateSelector';
 import HeadingRow from './ui/HeadingRow';
@@ -65,6 +65,7 @@ const SummaryDates = ({
   listings,
   updatedMaxBeds,
 }: SummaryDatesProps) => {
+  const t = useTranslations();
   const listingOptions = listings?.map((listing) => ({
     value: listing._id,
     label: listing.name,
@@ -74,36 +75,36 @@ const SummaryDates = ({
       {eventName ? (
         <HeadingRow>
           <span className="mr-4">🏡</span>
-          <span>{__('bookings_summary_step_your_event')}</span>
+          <span>{t('bookings_summary_step_your_event')}</span>
         </HeadingRow>
       ) : (
         <HeadingRow>
           <span className="mr-4">🏡</span>
-          <span>{__('bookings_summary_step_dates_title')}</span>
+          <span>{t('bookings_summary_step_dates_title')}</span>
         </HeadingRow>
       )}
       {eventName && (
         <div className="flex justify-between mt-3 gap-20 items-start	">
-          <p>{__('bookings_summary_step_dates_event')}</p>
+          <p>{t('bookings_summary_step_dates_event')}</p>
           <p className="font-bold text-right">{eventName}</p>
         </div>
       )}
       {volunteerName && (
         <div className="flex justify-between mt-3 gap-20 items-start	">
-          <p>{__('bookings_summary_step_volunteer_opportunity')}</p>
+          <p>{t('bookings_summary_step_volunteer_opportunity')}</p>
           <p className="font-bold text-right">{volunteerName}</p>
         </div>
       )}
       {ticketOption && (
         <div className="flex justify-between items-start mt-3">
-          <p>{__('bookings_summary_step_dates_ticket_option')}</p>
+          <p>{t('bookings_summary_step_dates_ticket_option')}</p>
           <p className="font-bold uppercase">
             {ticketOption} X {totalGuests}
           </p>
         </div>
       )}
       <div className="flex justify-between items-center my-3">
-        <p>{__('bookings_summary_step_dates_number_of_guests')}</p>
+        <p>{t('bookings_summary_step_dates_number_of_guests')}</p>
         <div className="font-bold">
           {isEditMode ? (
             <div className="bg-accent-light p-2 w-[115px] flex justify-end rounded-md">
@@ -120,7 +121,7 @@ const SummaryDates = ({
         </div>
       </div>
       <div className="flex justify-between items-center my-3">
-        <p>{__('bookings_dates_step_guests_children')}</p>
+        <p>{t('bookings_dates_step_guests_children')}</p>
         <div className="font-bold">
           {isEditMode ? (
             <div className="bg-accent-light p-2 w-[115px] flex justify-end rounded-md">
@@ -136,7 +137,7 @@ const SummaryDates = ({
         </div>
       </div>
       <div className="flex justify-between items-center my-3">
-        <p>{__('bookings_dates_step_guests_infants')}</p>
+        <p>{t('bookings_dates_step_guests_infants')}</p>
         <div className="font-bold">
           {isEditMode ? (
             <div className="bg-accent-light p-2 w-[115px] flex justify-end rounded-md">
@@ -152,7 +153,7 @@ const SummaryDates = ({
         </div>
       </div>
       <div className="flex justify-between items-center my-3 ">
-        <p>{__('bookings_dates_step_guests_pets')}</p>
+        <p>{t('bookings_dates_step_guests_pets')}</p>
         <div className="font-bold">
           {isEditMode ? (
             <div className="bg-accent-light p-2 w-[115px] flex justify-end rounded-md">
@@ -170,22 +171,22 @@ const SummaryDates = ({
       <div className="flex justify-between items-start my-3">
         <p>
           {' '}
-          {isDayTicket ? __('listings_book_day') : __('listings_book_check_in')}
+          {isDayTicket ? t('listings_book_day') : t('listings_book_check_in')}
         </p>
         <p className="font-bold">
           {startDate
             ? dayjs(startDate).format('DD / MM / YY')
-            : __('bookings_dates_enter_date')}
+            : t('bookings_dates_enter_date')}
         </p>
       </div>
       {!isDayTicket && (
         <>
           <div className="flex justify-between items-start my-3">
-            <p> {__('listings_book_check_out')}</p>
+            <p> {t('listings_book_check_out')}</p>
             <p className="font-bold">
               {endDate
                 ? dayjs(endDate).format('DD / MM / YY')
-                : __('bookings_dates_enter_date')}
+                : t('bookings_dates_enter_date')}
             </p>
           </div>
           <div>
@@ -205,7 +206,7 @@ const SummaryDates = ({
           </div>
 
           <div className="flex justify-between items-start my-3">
-            <p> {__('bookings_stay_duration')}</p>
+            <p> {t('bookings_stay_duration')}</p>
             <p className="font-bold">
               {dayjs(endDate)
                 .startOf('day')
@@ -217,7 +218,7 @@ const SummaryDates = ({
 
       {listingName && (
         <div className="flex justify-between items-center mt-3">
-          <p>{__('bookings_summary_step_dates_accomodation_type')}</p>
+          <p>{t('bookings_summary_step_dates_accomodation_type')}</p>
 
           {isEditMode && setters?.setUpdatedListingId && listingOptions ? (
             <div className="bg-accent-light rounded-md p-2">
@@ -230,7 +231,7 @@ const SummaryDates = ({
                   setters.setUpdatedListingId(value)
                 }
                 isRequired
-                placeholder={__('manage_users_add_role_button')}
+                placeholder={t('manage_users_add_role_button')}
               />
             </div>
           ) : (
@@ -246,25 +247,25 @@ const SummaryDates = ({
 
       {volunteerId && (
         <div className="flex justify-between items-start mt-3">
-          <p>{__('bookings_summary_step_dates_commitment')}</p>
+          <p>{t('bookings_summary_step_dates_commitment')}</p>
           <p className="font-bold uppercase">
-            {__('bookings_summary_step_dates_default_commitment')}
+            {t('bookings_summary_step_dates_default_commitment')}
           </p>
         </div>
       )}
       {doesNeedPickup !== undefined && (
         <div className="flex justify-between mt-3 gap-20 items-start	">
-          <p>{__('bookings_pickup')}</p>
+          <p>{t('bookings_pickup')}</p>
           <p className="font-bold uppercase text-right">
-            {doesNeedPickup ? __('generic_yes') : __('generic_no')}
+            {doesNeedPickup ? t('generic_yes') : t('generic_no')}
           </p>
         </div>
       )}
       {doesNeedSeparateBeds !== undefined && (
         <div className="flex justify-between mt-3 gap-20 items-start	">
-          <p>{__('booking_card_separate_beds_needed')}</p>
+          <p>{t('booking_card_separate_beds_needed')}</p>
           <p className="font-bold uppercase text-right">
-            {doesNeedSeparateBeds ? __('generic_yes') : __('generic_no')}
+            {doesNeedSeparateBeds ? t('generic_yes') : t('generic_no')}
           </p>
         </div>
       )}

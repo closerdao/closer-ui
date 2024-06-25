@@ -13,9 +13,9 @@ import {
   Row,
 } from '../../components/ui/';
 
-import { NextPage } from 'next';
+import { NextPage, NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
-import Page404 from '../404';
 import {
   DEFAULT_CURRENCY,
   MAX_CREDITS_PER_MONTH,
@@ -31,12 +31,13 @@ import {
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import {
-  __,
   calculateSubscriptionPrice,
   getVatInfo,
   priceFormat,
 } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
+import PageNotFound from '../not-found';
 
 interface Props {
   subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
@@ -49,7 +50,7 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   generalConfig,
   error,
 }) => {
-
+  const t = useTranslations();
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const defaultConfig = useConfig();
@@ -128,7 +129,7 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   }
 
   if (!areSubscriptionsEnabled) {
-    return <Page404 error="" />;
+    return <PageNotFound error="" />;
   }
 
   const total = calculateSubscriptionPrice(
@@ -139,17 +140,17 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   return (
     <>
       <Head>
-        <title>{`${__('subscriptions_summary_title')} - ${__(
+        <title>{`${t('subscriptions_summary_title')} - ${t(
           'subscriptions_title',
         )} - ${PLATFORM_NAME}`}</title>
       </Head>
 
       <div className="w-full max-w-screen-sm mx-auto p-8">
-        <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
+        <BackButton handleClick={goBack}>{t('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-4">
           <span className="mr-2">📑</span>
-          <span>{__('subscriptions_summary_title')}</span>
+          <span>{t('subscriptions_summary_title')}</span>
         </Heading>
 
         <ProgressBar steps={SUBSCRIPTION_STEPS} />
@@ -157,17 +158,17 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
         <main className="pt-14 pb-24 md:flex-row flex-wrap">
           <div className="mb-14">
             <Heading level={2} className="border-b pb-2 mb-6 text-xl">
-              ♻️ {__('subscriptions_summary_your_subscription_subtitle')}
+              ♻️ {t('subscriptions_summary_your_subscription_subtitle')}
             </Heading>
             <div className="mb-10">
               <Row
-                rowKey={__('subscriptions_summary_tier')}
+                rowKey={t('subscriptions_summary_tier')}
                 value={selectedPlan?.title}
               />
               {selectedPlan?.tiersAvailable && (
                 <div className="flex space-between items-center mt-9">
                   <p className="flex-1">
-                    {__('subscriptions_summary_stays_per_month')}
+                    {t('subscriptions_summary_stays_per_month')}
                   </p>
                   <Counter
                     value={monthlyCreditsSelected}
@@ -181,28 +182,28 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
               )}
             </div>
             <Button className="mt-3" type="secondary" onClick={handleEditPlan}>
-              {__('subscriptions_summary_edit_button')}
+              {t('subscriptions_summary_edit_button')}
             </Button>
           </div>
 
           <div className="mb-14">
             <Heading level={2} className="border-b pb-2 mb-6 text-xl">
-              💰 {__('subscriptions_summary_costs_subtitle')}
+              💰 {t('subscriptions_summary_costs_subtitle')}
             </Heading>
             <div className="mb-10">
               <Row
-                rowKey={__('subscriptions_summary_subscription')}
+                rowKey={t('subscriptions_summary_subscription')}
                 value={`${priceFormat(total, DEFAULT_CURRENCY)}`}
-                additionalInfo={`${__(
+                additionalInfo={`${t(
                   'bookings_checkout_step_total_description',
                 )} ${getVatInfo({
                   val: total,
                   cur: DEFAULT_CURRENCY,
-                })} ${__('subscriptions_summary_per_month')}`}
+                })} ${t('subscriptions_summary_per_month')}`}
               />
             </div>
             <Button className="mt-3" onClick={handleCheckout}>
-              {__('subscriptions_summary_checkout_button')}
+              {t('subscriptions_summary_checkout_button')}
             </Button>
           </div>
         </main>
@@ -211,15 +212,16 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   );
 };
 
-SubscriptionsSummaryPage.getInitialProps = async () => {
+SubscriptionsSummaryPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [subscriptionsRes, generalRes] = await Promise.all([
+    const [subscriptionsRes, generalRes, messages] = await Promise.all([
       api.get('/config/subscriptions').catch(() => {
         return null;
       }),
       api.get('/config/general').catch(() => {
         return null;
       }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
@@ -228,12 +230,14 @@ SubscriptionsSummaryPage.getInitialProps = async () => {
     return {
       subscriptionsConfig,
       generalConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {
       subscriptionsConfig: { enabled: false, elements: [] },
       generalConfig: null,
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

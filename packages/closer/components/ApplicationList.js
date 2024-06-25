@@ -1,12 +1,15 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+
+import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../contexts/platform';
 import models from '../models';
-import { __ } from '../utils/helpers';
 import Pagination from './Pagination';
 import TimeSince from './TimeSince';
 
 const ApplicationList = ({ status, managedBy, limit }) => {
+  const t = useTranslations();
+
   const { platform } = usePlatform();
   const [page, setPage] = useState(1);
   const [error, setErrors] = useState(false);
@@ -89,7 +92,7 @@ const ApplicationList = ({ status, managedBy, limit }) => {
               {application.get('status') === 'conversation' && (
                 <div className="card-footer">
                   <i>
-                    {__('application_list_conversation')}{' '}
+                    {t('application_list_conversation')}{' '}
                     <b>{application.get('name')}</b>?
                   </i>
                 </div>
@@ -103,7 +106,7 @@ const ApplicationList = ({ status, managedBy, limit }) => {
                     }}
                     className="btn-primary mr-4"
                   >
-                    {__('application_list_start_conversation')}
+                    {t('application_list_start_conversation')}
                   </button>
                 ) : application.get('status') === 'conversation' ? (
                   <button
@@ -113,7 +116,7 @@ const ApplicationList = ({ status, managedBy, limit }) => {
                     }}
                     className="btn-primary mr-4"
                   >
-                    {__('application_list_approve')}
+                    {t('application_list_approve')}
                   </button>
                 ) : (
                   <span />
@@ -127,7 +130,7 @@ const ApplicationList = ({ status, managedBy, limit }) => {
                       updateApplication(application.get('_id'), 'open');
                     }}
                   >
-                    {__('application_list_reopen')}
+                    {t('application_list_reopen')}
                   </a>
                 )}
               </div>

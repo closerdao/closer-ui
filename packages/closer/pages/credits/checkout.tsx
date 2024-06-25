@@ -10,16 +10,18 @@ import CreditsCheckoutForm from '../../components/CreditsCheckoutForm';
 import PageError from '../../components/PageError';
 import { BackButton, ErrorMessage, Heading, Row } from '../../components/ui/';
 
-import { NextPage } from 'next';
+import { NextPage, NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
-import PageNotFound from '../404';
 import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import { FundraisingConfig, GeneralConfig, PaymentConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __, getVatInfo, priceFormat } from '../../utils/helpers';
+import { getVatInfo, priceFormat } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
+import PageNotFound from '../not-found';
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY as string,
@@ -38,8 +40,8 @@ const CreditsCheckoutPage: NextPage<Props> = ({
   generalConfig,
   apiError,
 }) => {
+  const t = useTranslations();
   const CREDIT_PACKAGES = ['30', '90', '180'];
-  const { APP_NAME } = useConfig();
   const router = useRouter();
 
   const isCreditPaymentEnabled =
@@ -97,23 +99,22 @@ const CreditsCheckoutPage: NextPage<Props> = ({
   return (
     <>
       <Head>
-        <title>{`${__('subscriptions_checkout_title')} - ${
-          APP_NAME && __('carrots_heading', APP_NAME)
-        } - ${PLATFORM_NAME}`}</title>
+        <title>{`${t('subscriptions_checkout_title')} - ${t(
+          'carrots_heading',
+        )} - ${PLATFORM_NAME}`}</title>
       </Head>
 
       <div className="w-full max-w-screen-sm mx-auto p-8">
-        <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
+        <BackButton handleClick={goBack}>{t('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-4">
-          💰 {__('subscriptions_checkout_title')}
+          💰 {t('subscriptions_checkout_title')}
         </Heading>
 
         <main className="pt-14 pb-24 md:flex-row flex-wrap">
           <div className="mb-10">
             <Heading level={2} className="border-b pb-2 mb-6 text-xl">
-              {APP_NAME && __('carrots_balance', APP_NAME)}{' '}
-              {APP_NAME && __('carrots_heading', APP_NAME)}
+              {t('carrots_balance')} {t('carrots_heading')}
             </Heading>
 
             {
@@ -121,7 +122,7 @@ const CreditsCheckoutPage: NextPage<Props> = ({
                 className="mb-4"
                 rowKey={String(amount)}
                 value={total ? priceFormat(total, DEFAULT_CURRENCY) : '0'}
-                additionalInfo={`${__(
+                additionalInfo={`${t(
                   'bookings_checkout_step_total_description',
                 )} ${getVatInfo({
                   val: total,
@@ -134,7 +135,7 @@ const CreditsCheckoutPage: NextPage<Props> = ({
           <div className="mb-14">
             <Heading level={2} className="border-b pb-2 mb-6 text-xl">
               <span className="mr-2">💲</span>
-              {__('subscriptions_checkout_payment_subtitle')}
+              {t('subscriptions_checkout_payment_subtitle')}
             </Heading>
             <div className="mb-10">
               {isPaymentEnabled ? (
@@ -145,7 +146,7 @@ const CreditsCheckoutPage: NextPage<Props> = ({
                   />
                 </Elements>
               ) : (
-                <ErrorMessage error={__('checkout_payment_disabled_error')} />
+                <ErrorMessage error={t('checkout_payment_disabled_error')} />
               )}
             </div>
           </div>
@@ -155,19 +156,22 @@ const CreditsCheckoutPage: NextPage<Props> = ({
   );
 };
 
-CreditsCheckoutPage.getInitialProps = async () => {
+CreditsCheckoutPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [fundraiserRes, paymentRes, generalRes] = await Promise.all([
-      api.get('/config/fundraiser').catch(() => {
-        return null;
-      }),
-      api.get('/config/payment').catch(() => {
-        return null;
-      }),
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-    ]);
+    const [fundraiserRes, paymentRes, generalRes, messages] = await Promise.all(
+      [
+        api.get('/config/fundraiser').catch(() => {
+          return null;
+        }),
+        api.get('/config/payment').catch(() => {
+          return null;
+        }),
+        api.get('/config/general').catch(() => {
+          return null;
+        }),
+        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      ],
+    );
 
     const fundraisingConfig = fundraiserRes?.data?.results?.value;
     const paymentConfig = paymentRes?.data?.results?.value;
@@ -176,6 +180,7 @@ CreditsCheckoutPage.getInitialProps = async () => {
       fundraisingConfig,
       paymentConfig,
       generalConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {
@@ -183,6 +188,7 @@ CreditsCheckoutPage.getInitialProps = async () => {
       paymentConfig: null,
       generalConfig: null,
       apiError: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

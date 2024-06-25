@@ -1,11 +1,12 @@
 import Link from 'next/link';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+
+import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import api, { cdn } from '../utils/api';
 import { getHashTags, getUrls } from '../utils/helpers';
-import { __ } from '../utils/helpers';
 import UploadPhoto from './UploadPhoto/UploadPhoto';
 
 const filterTags = (tags) => Array.from(new Set(tags));
@@ -18,6 +19,8 @@ const CreatePost = ({
   isReply,
   visibility,
 }) => {
+  const t = useTranslations();
+
   const { isAuthenticated } = useAuth();
   const [error, setErrors] = useState(null);
   const initialPost = {
@@ -93,7 +96,7 @@ const CreatePost = ({
     >
       {!isReply && (
         <div className="card-title">
-          <h3>{__('create_post_title')}</h3>
+          <h3>{t('create_post_title')}</h3>
         </div>
       )}
       {newPost.photo && (
@@ -134,7 +137,7 @@ const CreatePost = ({
               href="#"
               onClick={() => setNewPost({ ...newPost, attachment: null })}
             >
-              {__('create_post_remove')}
+              {t('create_post_remove')}
             </a>
             {newPost.attachment.image && newPost.attachment.image && (
               <a
@@ -211,7 +214,7 @@ const CreatePost = ({
                 className="btn-primary"
                 disabled={newPost.content.length === 0}
               >
-                {__('create_post_submit_button')}
+                {t('create_post_submit_button')}
               </button>
             </div>
           </div>

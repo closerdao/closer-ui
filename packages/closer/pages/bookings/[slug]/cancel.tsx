@@ -6,15 +6,17 @@ import { useEffect, useState } from 'react';
 import CancelBooking from '../../../components/CancelBooking';
 import CancelCompleted from '../../../components/CancelCompleted';
 
-import { ParsedUrlQuery } from 'querystring';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
-import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import { BaseBookingParams, Booking, BookingConfig } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { __, calculateRefundTotal } from '../../../utils/helpers';
+import { calculateRefundTotal } from '../../../utils/helpers';
+import { loadLocaleData } from '../../../utils/locale.helpers';
+import PageNotFound from '../../not-found';
 
 interface Props extends BaseBookingParams {
   booking: Booking | null;
@@ -23,6 +25,7 @@ interface Props extends BaseBookingParams {
 }
 
 const BookingCancelPage = ({ booking, bookingConfig, error }: Props) => {
+  const t = useTranslations();
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -83,8 +86,8 @@ const BookingCancelPage = ({ booking, bookingConfig, error }: Props) => {
   return (
     <>
       <Head>
-        <title>{`${bookingId} - ${__('cancel_booking_page_title')}`}</title>
-        <meta name="description" content={__('cancel_booking_page_title')} />
+        <title>{`${bookingId} - ${t('cancel_booking_page_title')}`}</title>
+        <meta name="description" content={t('cancel_booking_page_title')} />
         <meta property="og:type" content="booking" />
       </Head>
       {isCancelCompleted ? (
@@ -103,13 +106,10 @@ const BookingCancelPage = ({ booking, bookingConfig, error }: Props) => {
   );
 };
 
-BookingCancelPage.getInitialProps = async ({
-  query,
-}: {
-  query: ParsedUrlQuery;
-}) => {
+BookingCancelPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [bookingRes, bookingConfigRes] = await Promise.all([
+    const { query } = context;
+    const [bookingRes, bookingConfigRes, messages] = await Promise.all([
       api.get(`/booking/${query.slug}`).catch((err) => {
         console.error('Error fetching booking config:', err);
         return null;
@@ -117,16 +117,18 @@ BookingCancelPage.getInitialProps = async ({
       api.get('/config/booking').catch(() => {
         return null;
       }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
 
-    return { booking, bookingConfig };
+    return { booking, bookingConfig, messages };
   } catch (err) {
     return {
       booking: null,
       generalConfig: null,
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

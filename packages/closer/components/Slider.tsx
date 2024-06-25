@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 import { GrNext } from '@react-icons/all-files/gr/GrNext';
 import { GrPrevious } from '@react-icons/all-files/gr/GrPrevious';

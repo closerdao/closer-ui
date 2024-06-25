@@ -2,66 +2,27 @@ import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { useEffect, useState } from 'react';
-
 import CreditsBalance from 'closer/components/CreditsBalance';
 import { Card, Heading, LinkButton } from 'closer/components/ui';
 
-import { useConfig } from 'closer';
-import { usePlatform } from 'closer/contexts/platform';
+import { PageNotFound } from 'closer';
 import { FundraisingConfig } from 'closer/types';
 import api from 'closer/utils/api';
-import { __ } from 'closer/utils/helpers';
-
-import PageNotFound from '../404';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 interface Props {
   fundraisingConfig: FundraisingConfig;
 }
 
 const SupportUsPage = ({ fundraisingConfig }: Props) => {
-  const { APP_NAME } = useConfig();
+  const t = useTranslations();
   const isCreditsEnabled = process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true';
 
   const isFundraiserEnabled =
     process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true' &&
     fundraisingConfig?.enabled;
-
-  const { platform }: any = usePlatform();
-  const wandererFilter = {
-    where: { 'subscription.plan': 'wanderer' },
-  };
-  const pioneerFilter = {
-    where: { 'subscription.plan': 'pioneer' },
-  };
-
-  const wandererCount = platform.user.findCount(wandererFilter) || 0;
-  const pioneerCount = platform.user.findCount(pioneerFilter) || 0;
-
-  const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const openModal = () => {
-    setIsInfoModalOpened(true);
-  };
-
-  const closeModal = () => {
-    setIsInfoModalOpened(false);
-  };
-
-  const loadData = async () => {
-    try {
-      await Promise.all([
-        platform.user.getCount(wandererFilter),
-        platform.user.getCount(pioneerFilter),
-      ]);
-    } catch (err) {
-    } finally {
-    }
-  };
 
   if (!isFundraiserEnabled) {
     return <PageNotFound />;
@@ -255,18 +216,14 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               )}
             </div>
           </Card>
-          <Heading level={3}>
-            {APP_NAME && __('carrots_subheading_what', APP_NAME)}
-          </Heading>
+          <Heading level={3}>{t('carrots_subheading_what')}</Heading>
 
           <div>
-            <p className="mb-4">{APP_NAME && __('carrots_what_1', APP_NAME)}</p>
-            <p className="mb-4">{APP_NAME && __('carrots_what_2', APP_NAME)}</p>
-            <p className="mb-4">
-              {APP_NAME && __('carrots_what_2.5', APP_NAME)}
-            </p>
-            <p className="mb-4">{APP_NAME && __('carrots_what_3', APP_NAME)}</p>
-            <p className="mb-4">{APP_NAME && __('carrots_what_4', APP_NAME)}</p>
+            <p className="mb-4">{t('carrots_what_1')}</p>
+            <p className="mb-4">{t('carrots_what_2')}</p>
+            <p className="mb-4">{t('carrots_what_2_5')}</p>
+            <p className="mb-4">{t('carrots_what_3')}</p>
+            <p className="mb-4">{t('carrots_what_4')}</p>
           </div>
         </section>
       </div>
@@ -274,19 +231,24 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
   );
 };
 
-SupportUsPage.getInitialProps = async () => {
+SupportUsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const {
-      data: { results: fundraisingConfig },
-    } = await api.get('/config/fundraiser');
+    const [fundraisingConfigResponse, messages] = await Promise.all([
+      api.get('/config/fundraiser').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
+
+    const fundraisingConfig = fundraisingConfigResponse?.data.results.value;
 
     return {
-      fundraisingConfig: fundraisingConfig.value,
+      fundraisingConfig,
+      messages,
     };
   } catch (err) {
     return {
       fundraisingConfig: {},
       error: err,
+      messages: null,
     };
   }
 };

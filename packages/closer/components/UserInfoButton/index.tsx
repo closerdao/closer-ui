@@ -1,8 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import React from 'react';
-
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 
 import { cdn } from '../../utils/api';

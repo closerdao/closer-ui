@@ -12,11 +12,10 @@ import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import dayjs from 'dayjs';
-import { NextApiRequest } from 'next';
-import { ParsedUrlQuery } from 'querystring';
+import { NextApiRequest, NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
-import PageNotFound from '../../404';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
@@ -30,7 +29,8 @@ import {
 } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { __ } from '../../../utils/helpers';
+import { loadLocaleData } from '../../../utils/locale.helpers';
+import PageNotFound from '../../not-found';
 
 interface Props extends BaseBookingParams {
   listing: Listing | null;
@@ -41,7 +41,7 @@ interface Props extends BaseBookingParams {
 }
 
 const Summary = ({ booking, listing, event, error, bookingConfig }: Props) => {
-  console.log('bookingConfig', bookingConfig);
+  const t = useTranslations();
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -137,10 +137,10 @@ const Summary = ({ booking, listing, event, error, bookingConfig }: Props) => {
 
   return (
     <div className="w-full max-w-screen-sm mx-auto p-8">
-      <BookingBackButton onClick={goBack} name={__('buttons_back')} />
+      <BookingBackButton onClick={goBack} name={t('buttons_back')} />
       <Heading level={1} className="pb-4 mt-8">
         <span className="mr-4">📑</span>
-        <span>{__('bookings_summary_step_title')}</span>
+        <span>{t('bookings_summary_step_title')}</span>
       </Heading>
       {handleNextError && <div className="error-box">{handleNextError}</div>}
       <ProgressBar steps={BOOKING_STEPS} />
@@ -189,20 +189,20 @@ const Summary = ({ booking, listing, event, error, bookingConfig }: Props) => {
                 className="booking-btn"
                 onClick={handleNext}
               >
-                {__('apply_submit_button')}
+                {t('apply_submit_button')}
               </Button>
             </>
           ) : eventId ? (
             <Button className="booking-btn" onClick={handleNext}>
-              {__('buttons_checkout')}
+              {t('buttons_checkout')}
             </Button>
           ) : user && isMember ? (
             <Button className="booking-btn" onClick={handleNext}>
-              {__('buttons_checkout')}
+              {t('buttons_checkout')}
             </Button>
           ) : (
             <Button className="booking-btn" onClick={handleNext}>
-              {__('buttons_booking_request')}
+              {t('buttons_booking_request')}
             </Button>
           )}
         </div>
@@ -211,19 +211,17 @@ const Summary = ({ booking, listing, event, error, bookingConfig }: Props) => {
   );
 };
 
-Summary.getInitialProps = async ({
-  req,
-  query,
-}: {
-  req: NextApiRequest;
-  query: ParsedUrlQuery;
-}) => {
+Summary.getInitialProps = async (context: NextPageContext) => {
+  const { query, req } = context;
+
   try {
-    const [bookingRes, bookingConfigRes] = await Promise.all([
+    const [bookingRes, bookingConfigRes, messages] = await Promise.all([
       api
         .get(`/booking/${query.slug}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          headers: (req as NextApiRequest)?.cookies?.access_token && {
+            Authorization: `Bearer ${
+              (req as NextApiRequest)?.cookies?.access_token
+            }`,
           },
         })
         .catch(() => {
@@ -232,6 +230,7 @@ Summary.getInitialProps = async ({
       api.get('/config/booking').catch(() => {
         return null;
       }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
@@ -239,21 +238,25 @@ Summary.getInitialProps = async ({
     const [optionalEvent, optionalListing] = await Promise.all([
       booking?.eventId &&
         api.get(`/event/${booking?.eventId}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          headers: (req as NextApiRequest)?.cookies?.access_token && {
+            Authorization: `Bearer ${
+              (req as NextApiRequest)?.cookies?.access_token
+            }`,
           },
         }),
       booking?.listing &&
         api.get(`/listing/${booking?.listing}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          headers: (req as NextApiRequest)?.cookies?.access_token && {
+            Authorization: `Bearer ${
+              (req as NextApiRequest)?.cookies?.access_token
+            }`,
           },
         }),
     ]);
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
 
-    return { booking, listing, event, error: null, bookingConfig };
+    return { booking, listing, event, error: null, bookingConfig, messages };
   } catch (err) {
     console.log('Error', err);
     return {
@@ -261,6 +264,7 @@ Summary.getInitialProps = async ({
       booking: null,
       listing: null,
       bookingConfig: null,
+      messages: null
     };
   }
 };

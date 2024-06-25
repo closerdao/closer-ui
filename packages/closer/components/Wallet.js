@@ -1,11 +1,14 @@
 import { useContext } from 'react';
 
 import { WalletState } from '../contexts/wallet';
-import { __ } from '../utils/helpers';
 import WalletActions from './WalletActions';
 import WalletHeader from './WalletHeader';
+import { useTranslations } from 'next-intl';
+
 
 const Wallet = () => {
+  const t = useTranslations();
+
   const {
     balanceTotal,
     balanceAvailable,
@@ -23,19 +26,19 @@ const Wallet = () => {
       {isWalletReady && (
         <div className="flex flex-col gap-2 mt-4">
           <div className="flex justify-between items-center">
-            <p>{__('wallet_ceur')}</p>
+            <p>{t('wallet_ceur')}</p>
             <p className="font-bold">{balanceCeurAvailable.toFixed(2)}</p>
           </div>
           <div className="flex justify-between items-center">
-            <p>{__('wallet_tdf')}</p>
+            <p>{t('wallet_tdf')}</p>
             <p className="font-bold">{balanceTotal}</p>
           </div>
           <div className="flex justify-between items-center">
-            <p>{__('wallet_tdf_available')}</p>
+            <p>{t('wallet_tdf_available')}</p>
             <p className="font-bold">{balanceAvailable}</p>
           </div>
           <div className="flex justify-between items-center">
-            <p>{__('wallet_pop')}</p>
+            <p>{t('wallet_pop')}</p>
             <p className="font-bold">{proofOfPresence}</p>
           </div>
         </div>
@@ -43,7 +46,7 @@ const Wallet = () => {
       {isWalletConnected && isCorrectNetwork && !hasSameConnectedAccount && (
         <div className="flex flex-col gap-2 mt-4">
           <div className="flex justify-between items-center">
-            <p>{__('wallet_different_saved_address')}</p>
+            <p>{t('wallet_different_saved_address')}</p>
           </div>
         </div>
       )}

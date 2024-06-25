@@ -1,6 +1,7 @@
-import React, { ChangeEvent, useState } from 'react';
+import { ChangeEvent, useState } from 'react';
 
-import { __ } from '../../utils/helpers';
+import { useTranslations } from 'next-intl';
+
 import { Button, Card, Heading } from '../ui';
 
 interface Props {
@@ -30,6 +31,7 @@ const ArrayConfig = ({
   slug,
   resetToDefault,
 }: Props) => {
+  const t = useTranslations();
   const isEmailConfig = slug === 'emails';
   const [openCards, setOpenCards] = useState<boolean[]>([]);
 
@@ -67,7 +69,11 @@ const ArrayConfig = ({
                         className="flex justify-between items-center"
                       >
                         <Heading level={3}>
-                          {__(`config_email_${String(currentValue[index][innerKey])}`)}
+                          {t(
+                            `config_email_${String(
+                              currentValue[index][innerKey],
+                            )}`,
+                          )}
                         </Heading>
 
                         <svg
@@ -90,7 +96,7 @@ const ArrayConfig = ({
 
                     {!(isEmailConfig && innerKey === 'name') && (
                       <>
-                        <label>{__(`config_label_${innerKey}`)}:</label>
+                        <label>{t(`config_label_${innerKey}`)}:</label>
 
                         {inputType === 'boolean' && (
                           <div className="flex gap-3">
@@ -104,7 +110,7 @@ const ArrayConfig = ({
                                   handleChange(event, elementsKey, index)
                                 }
                               />
-                              {__('config_true')}
+                              {t('config_true')}
                             </label>
                             <label className="flex gap-1 items-center">
                               <input
@@ -118,7 +124,7 @@ const ArrayConfig = ({
                                   handleChange(event, elementsKey, index)
                                 }
                               />
-                              {__('config_false')}
+                              {t('config_false')}
                             </label>
                           </div>
                         )}
@@ -174,7 +180,7 @@ const ArrayConfig = ({
                   onClick={() => resetToDefault(currentValue[index].name)}
                   type="secondary"
                 >
-                  {__('config_reset_to_default')}
+                  {t('config_reset_to_default')}
                 </Button>
               )}
 
@@ -184,7 +190,7 @@ const ArrayConfig = ({
                   className="w-40"
                   type="secondary"
                 >
-                  {__('generic_delete_button')}
+                  {t('generic_delete_button')}
                 </Button>
               )}
             </Card>
@@ -193,7 +199,7 @@ const ArrayConfig = ({
 
       {slug !== 'emails' && (
         <Button onClick={handleAddElement} type="secondary">
-          {__('config_add_entry_button')}
+          {t('config_add_entry_button')}
         </Button>
       )}
     </div>

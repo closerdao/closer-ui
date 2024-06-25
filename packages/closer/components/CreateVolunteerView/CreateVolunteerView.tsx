@@ -2,9 +2,10 @@ import { useRouter } from 'next/router';
 
 import { FC } from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import models from '../../models';
 import { VolunteerOpportunity } from '../../types';
-import { __ } from '../../utils/helpers';
 import EditModel from '../EditModel';
 
 type EditProps = {
@@ -21,6 +22,7 @@ const CreateVolunteerView: FC<CreateProps | EditProps> = ({
   isEditMode,
   data,
 }) => {
+  const t = useTranslations();
   const router = useRouter();
   const redirectToVolunteerList = () => {
     router.push('/volunteer');
@@ -35,7 +37,7 @@ const CreateVolunteerView: FC<CreateProps | EditProps> = ({
         endpoint={'/volunteer'}
         onSave={redirectToVolunteerList}
         allowDelete
-        deleteButton={__('volunteer_edit_page_delete')}
+        deleteButton={t('volunteer_edit_page_delete')}
         onDelete={() => router.push('/volunteer')}
       />
     );

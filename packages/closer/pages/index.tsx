@@ -2,8 +2,11 @@ import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import React from 'react';
+
 import Heading from '../components/ui/Heading';
 
+import { NextPageContext } from 'next';
 import { event } from 'nextjs-google-analytics';
 
 import { useAuth } from '../contexts/auth';
@@ -11,6 +14,7 @@ import { useConfig } from '../hooks/useConfig';
 import { GeneralConfig } from '../types';
 import api from '../utils/api';
 import { parseMessageFromError } from '../utils/common';
+import { loadLocaleData } from '../utils/locale.helpers';
 
 interface Props {
   generalConfig: GeneralConfig | null;
@@ -61,20 +65,23 @@ const Index = ({ generalConfig }: Props) => {
   );
 };
 
-Index.getInitialProps = async () => {
+Index.getInitialProps = async (context: NextPageContext) => {
   try {
-    const generalRes = await api.get('/config/general').catch(() => {
-      return null;
-    });
-    const generalConfig = generalRes?.data?.results?.value;
+    const [generalRes, messages] = await Promise.all([
+      api.get('/config/general').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
 
+    const generalConfig = generalRes?.data?.results?.value;
     return {
       generalConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

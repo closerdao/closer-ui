@@ -10,10 +10,10 @@ import Button from '../../../components/ui/Button';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import dayjs from 'dayjs';
-import { ParsedUrlQuery } from 'querystring';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
-import PageNotFound from '../../404';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import {
@@ -24,7 +24,8 @@ import {
 } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { __ } from '../../../utils/helpers';
+import { loadLocaleData } from '../../../utils/locale.helpers';
+import PageNotFound from '../../not-found';
 
 const prepareQuestions = (eventQuestions: any) => {
   const preparedQuestions = eventQuestions?.map((question: any) => {
@@ -47,6 +48,7 @@ const Questionnaire = ({
   error,
   bookingConfig,
 }: Props) => {
+  const t = useTranslations();
   const router = useRouter();
   const { goBack } = router.query;
   const { isAuthenticated } = useAuth();
@@ -171,12 +173,12 @@ const Questionnaire = ({
       <div className="w-full max-w-screen-sm mx-auto p-8">
         <BookingBackButton
           onClick={resetBooking}
-          name={__('buttons_back_to_dates')}
+          name={t('buttons_back_to_dates')}
         />
 
         <Heading level={1} className="pb-4 mt-8">
           <span className="mr-4">📄</span>
-          <span>{__('bookings_questionnaire_step_title')}</span>
+          <span>{t('bookings_questionnaire_step_title')}</span>
         </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
         <div className="my-16 gap-16 mt-16">
@@ -190,7 +192,7 @@ const Questionnaire = ({
           ))}
 
           <Button onClick={handleSubmit} isEnabled={!isSubmitDisabled}>
-            {__('buttons_submit')}
+            {t('buttons_submit')}
           </Button>
         </div>
       </div>
@@ -198,13 +200,11 @@ const Questionnaire = ({
   );
 };
 
-Questionnaire.getInitialProps = async ({
-  query,
-}: {
-  query: ParsedUrlQuery;
-}) => {
+Questionnaire.getInitialProps = async (context: NextPageContext) => {
+  const { query } = context;
+
   try {
-    const [bookingRes, bookingConfigRes] = await Promise.all([
+    const [bookingRes, bookingConfigRes, messages] = await Promise.all([
       api.get(`/booking/${query.slug}`).catch((err) => {
         console.error('Error fetching booking config:', err);
         return null;
@@ -212,6 +212,7 @@ Questionnaire.getInitialProps = async ({
       api.get('/config/booking').catch(() => {
         return null;
       }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
@@ -225,6 +226,7 @@ Questionnaire.getInitialProps = async ({
       bookingConfig,
       eventQuestions: event?.fields,
       error: null,
+      messages,
     };
   } catch (err) {
     return {
@@ -232,6 +234,7 @@ Questionnaire.getInitialProps = async ({
       booking: null,
       bookingConfig: null,
       questions: null,
+      messages: null,
     };
   }
 };

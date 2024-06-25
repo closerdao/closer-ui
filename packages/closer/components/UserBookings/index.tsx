@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import { User } from '../../contexts/auth/types';
-import { __ } from '../../utils/helpers';
 import Bookings from '../Bookings';
 import Tabs from '../Tabs';
 
@@ -11,6 +12,7 @@ interface Props {
 }
 
 const UserBookingsComponent = ({ user, isSpaceHostView }: Props) => {
+  const t = useTranslations();
   const bookingsToShowLimit = 50;
 
   const [page, setPage] = useState(1);
@@ -50,8 +52,8 @@ const UserBookingsComponent = ({ user, isSpaceHostView }: Props) => {
         tabs={[
           {
             title: isSpaceHostView
-              ? __('bookings_title_user')
-              : __('bookings_title'),
+              ? t('bookings_title_user')
+              : t('bookings_title'),
             value: 'my-bookings',
             content: (
               <Bookings
@@ -62,7 +64,7 @@ const UserBookingsComponent = ({ user, isSpaceHostView }: Props) => {
             ),
           },
           {
-            title: __('past_bookings_title'),
+            title: t('past_bookings_title'),
             value: 'past-bookings',
             content: (
               <Bookings

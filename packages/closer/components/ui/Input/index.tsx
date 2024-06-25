@@ -8,9 +8,8 @@ import React, {
 } from 'react';
 
 import { VariantProps, cva } from 'class-variance-authority';
+import { useTranslations } from 'next-intl';
 import { twMerge } from 'tailwind-merge';
-
-import { __ } from '../../../utils/helpers';
 
 const inputStyles = cva('new-input px-4 py-3 rounded-lg', {
   variants: {
@@ -70,6 +69,8 @@ const Input = React.memo(
     hasSaved,
     setHasSaved,
   }: InputProps) => {
+    const t = useTranslations();
+
     const [localValue, setLocalValue] = useState(value || '');
     const [isEditing, setIsEditing] = useState(false);
     const [isValid, setIsValid] = useState(true);
@@ -195,7 +196,7 @@ const Input = React.memo(
 
           {isEditing && isInstantSave && isValidValue(localValue) && (
             <div className="text-disabled absolute right-2 top-[52px]">
-              {hasSaved && __('settings_saved')}
+              {hasSaved && t('settings_saved')}
             </div>
           )}
         </div>

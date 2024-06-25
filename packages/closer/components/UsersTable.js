@@ -1,15 +1,19 @@
-import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 
+import { useEffect, useMemo, useState } from 'react';
+
+import { useTranslations } from 'next-intl';
+
 import { usePlatform } from '../contexts/platform';
-import { __ } from '../utils/helpers';
 import Loading from './Loading';
 import Pagination from './Pagination';
 import ProfilePhoto from './ProfilePhoto';
 import Tag from './Tag';
 import TimeSince from './TimeSince';
 
-const UsersTable = ({ where, limit }) => {
+const UsersTable = ({ where = {}, limit }) => {
+  const t = useTranslations();
+
   const { platform } = usePlatform();
   const [page, setPage] = useState(1);
   const [addRole, setAddRole] = useState({});
@@ -50,22 +54,22 @@ const UsersTable = ({ where, limit }) => {
               <tr>
                 <th className="p-2 whitespace-nowrap">
                   <div className="font-semibold text-left">
-                    {__('users_table_name')}
+                    {t('users_table_name')}
                   </div>
                 </th>
                 <th className="p-2 whitespace-nowrap">
                   <div className="font-semibold text-left">
-                    {__('users_table_created')}
+                    {t('users_table_created')}
                   </div>
                 </th>
                 <th className="p-2 whitespace-nowrap">
                   <div className="font-semibold text-left">
-                    {__('users_table_roles')}
+                    {t('users_table_roles')}
                   </div>
                 </th>
                 <th className="p-2 whitespace-nowrap">
                   <div className="font-semibold text-left">
-                    {__('users_table_email')}
+                    {t('users_table_email')}
                   </div>
                 </th>
               </tr>
@@ -79,12 +83,12 @@ const UsersTable = ({ where, limit }) => {
                     <td className="p-2 whitespace-nowrap">
                       <span className="flex items-center">
                         <span className="w-10 h-10 flex-shrink-0 mr-2 sm:mr-3">
-                          <Link href={ `/members/${user.get('slug')}` }>
+                          <Link href={`/members/${user.get('slug')}`}>
                             <ProfilePhoto user={user.toJS()} size="sm" />
                           </Link>
                         </span>
                         <span className="font-medium text-gray-800 dark:text-gray-200">
-                          <Link href={ `/members/${user.get('slug')}` }>
+                          <Link href={`/members/${user.get('slug')}`}>
                             {user.get('screenname')}
                           </Link>
                         </span>
@@ -150,7 +154,7 @@ const UsersTable = ({ where, limit }) => {
                     </td>
                     <td>
                       <span className="font-medium text-gray-800 dark:text-gray-200">
-                        <Link href={ `mailto:${user.get('email')}` }>
+                        <Link href={`mailto:${user.get('email')}`}>
                           {user.get('email')}
                         </Link>
                       </span>
@@ -175,7 +179,7 @@ const UsersTable = ({ where, limit }) => {
         </div>
       ) : (
         <div className="p-8 text-center">
-          <i>{__('users_table_empty')}</i>
+          <i>{t('users_table_empty')}</i>
         </div>
       )}
     </div>

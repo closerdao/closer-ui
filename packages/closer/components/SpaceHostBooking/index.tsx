@@ -2,8 +2,9 @@ import { ChangeEvent, useEffect, useState } from 'react';
 
 import { Button, Information, Input, Spinner } from '../../components/ui';
 
+import { useTranslations } from 'next-intl';
+
 import api from '../../utils/api';
-import { __ } from '../../utils/helpers';
 import { formatDate } from '../../utils/listings.helpers';
 import Counter from '../Counter';
 import ListingDateSelector from '../ListingDateSelector';
@@ -18,6 +19,7 @@ interface Props {
 }
 
 const SpaceHostBooking = ({ listingOptions }: Props) => {
+  const t = useTranslations();
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
   const [start, setStartDate] = useState<string | null | Date>(null);
   const [end, setEndDate] = useState<string | null | Date>(null);
@@ -35,10 +37,10 @@ const SpaceHostBooking = ({ listingOptions }: Props) => {
     const isCalendarSelectionValid =
       end && formatDate(start) !== formatDate(end) && listingId;
     if (!end) {
-      setCalendarError(__('bookings_incomplete_dates_error'));
+      setCalendarError(t('bookings_incomplete_dates_error'));
     }
     if (formatDate(start) === formatDate(end)) {
-      setCalendarError(__('bookings_date_range_error'));
+      setCalendarError(t('bookings_date_range_error'));
     }
     if (isCalendarSelectionValid) {
       (async function updatePrices() {
@@ -101,7 +103,7 @@ const SpaceHostBooking = ({ listingOptions }: Props) => {
     <div>
       <div>
         <Button className="max-w-[320px]" onClick={openModal}>
-          {__('booking_calendar_spacehost_booking')}
+          {t('booking_calendar_spacehost_booking')}
         </Button>
         {isInfoModalOpened && (
           <Modal closeModal={closeModal}>
@@ -115,7 +117,7 @@ const SpaceHostBooking = ({ listingOptions }: Props) => {
               />
               <div className="flex space-between items-center">
                 <p className="flex-1">
-                  {__('bookings_dates_step_guests_adults')}
+                  {t('bookings_dates_step_guests_adults')}
                 </p>
                 <Counter value={adults} setFn={setAdults} minValue={1} />
               </div>
@@ -125,7 +127,7 @@ const SpaceHostBooking = ({ listingOptions }: Props) => {
                 options={listingOptions}
                 onChange={(value: string) => setListingId(value)}
                 isRequired
-                placeholder={__('listing_select')}
+                placeholder={t('listing_select')}
               />
 
               <div className="flex-1 min-w-[160px]">
@@ -135,7 +137,7 @@ const SpaceHostBooking = ({ listingOptions }: Props) => {
                     setAdminBookingReason(e.target.value)
                   }
                   type="text"
-                  placeholder={__('booking_calendar_spacehost_booking_reason')}
+                  placeholder={t('booking_calendar_spacehost_booking_reason')}
                   className="m-0 border-black border-2 rounded-full py-1.5 bg-white"
                 />
               </div>
@@ -152,11 +154,11 @@ const SpaceHostBooking = ({ listingOptions }: Props) => {
                 className="flex gap-2 text-lg btn-primary text-center h-[32px] sm:h-auto sm:mt-4"
               >
                 {isLoading && <Spinner />}
-                {__('listings_slug_link')}
+                {t('listings_slug_link')}
               </Button>
               {hasCreatedBooking && (
                 <Information>
-                  {__('booking_calendar_spacehost_booking_created')}
+                  {t('booking_calendar_spacehost_booking_created')}
                 </Information>
               )}
             </div>

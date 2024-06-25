@@ -1,11 +1,14 @@
 import { useState } from 'react';
+
 import { ObjectId } from 'bson';
+
 import { CURRENCIES_WITH_LABELS } from '../constants';
-import { __ } from '../utils/helpers';
 import PriceEditor from './PriceEditor';
 import Switch from './Switch';
+import { useTranslations } from 'next-intl';
 
 const TicketOptionsEditor = ({ value, onChange, required }) => {
+  const t = useTranslations();
   const [options, setOptions] = useState(value);
   const updateOptions = (update) => {
     setOptions(update);
@@ -43,7 +46,7 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
             className="mr-3 mb-4 card"
           >
             <div className="mb-3">
-              <label>{__('ticket_options_ticket_name')}</label>
+              <label>{t('ticket_options_ticket_name')}</label>
               <input
                 type="text"
                 value={option.name}
@@ -59,9 +62,9 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
               />
             </div>
             <div className="mb-3">
-              <label>{__('ticket_options_number_of_tickets')}</label>
+              <label>{t('ticket_options_number_of_tickets')}</label>
               <p className="italic text-gray-500 text-xs">
-                {__('ticket_options_promt_message')}
+                {t('ticket_options_promt_message')}
               </p>
               <input
                 type="Number"
@@ -81,7 +84,7 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
               />
             </div>
             <div className="mb-3">
-              <label>{__('ticket_options_ticket_details')}</label>
+              <label>{t('ticket_options_ticket_details')}</label>
               <textarea
                 value={option.disclaimer}
                 placeholder="This ticket provides you with..."
@@ -95,7 +98,7 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
               />
             </div>
             <div className="mb-3">
-              <label>{__('ticket_options_is_day_ticket')}</label>
+              <label>{t('ticket_options_is_day_ticket')}</label>
               <Switch
                 name={`isDayTicket.${index}`}
                 onChange={(checked) => {
@@ -124,14 +127,14 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
                 className="danger-link"
                 onClick={(e) => removeOption(e, index)}
               >
-                {__('ticket_options_remove')}
+                {t('ticket_options_remove')}
               </a>
             </div>
           </div>
         ))}
       <div className="flex justify-center items-center">
         <a href="#" className="btn" onClick={(e) => addOption(e)}>
-          {__('ticket_options_add_type')}
+          {t('ticket_options_add_type')}
         </a>
       </div>
     </div>

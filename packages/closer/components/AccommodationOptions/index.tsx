@@ -1,8 +1,10 @@
 import Image from 'next/image';
 
+import { useTranslations } from 'next-intl';
+
 import { useConfig } from '../../hooks/useConfig';
 import { Listing } from '../../types/booking';
-import { __, getCurrencySymbol } from '../../utils/helpers';
+import { getCurrencySymbol } from '../../utils/helpers';
 import { Card, Heading } from '../ui';
 
 const ACCOMMODATION_IMAGES = [
@@ -17,6 +19,7 @@ interface Props {
 }
 
 const AccommodationOptions = ({ listings }: Props) => {
+  const t = useTranslations();
   const { PLATFORM_NAME } = useConfig();
 
   return (
@@ -46,13 +49,13 @@ const AccommodationOptions = ({ listings }: Props) => {
                 </div>
                 <div className="text-sm">
                   <p className="mb-4">
-                    {__('pricing_and_product_glamping_text_1')}
+                    {t('pricing_and_product_glamping_text_1')}
                   </p>
                   <p className="mb-4">
-                    {__('pricing_and_product_glamping_text_2')}
+                    {t('pricing_and_product_glamping_text_2')}
                   </p>
                   <p className="mb-4 font-bold">
-                    {__('pricing_and_product_glamping_text_3')}
+                    {t('pricing_and_product_glamping_text_3')}
                   </p>
                 </div>
               </>
@@ -76,10 +79,10 @@ const AccommodationOptions = ({ listings }: Props) => {
                 </div>
                 <div className="text-sm">
                   <p className="mb-4">
-                    {__('pricing_and_product_glamping_shared_text_1')}
+                    {t('pricing_and_product_glamping_shared_text_1')}
                   </p>
                   <p className="mb-4 font-bold">
-                    {__('pricing_and_product_glamping_shared_text_2')}
+                    {t('pricing_and_product_glamping_shared_text_2')}
                   </p>
                 </div>
               </>
@@ -104,10 +107,10 @@ const AccommodationOptions = ({ listings }: Props) => {
                 </div>
                 <div className="text-sm">
                   <p className="mb-4">
-                    {__('pricing_and_product_camping_text_1')}
+                    {t('pricing_and_product_camping_text_1')}
                   </p>
                   <p className="mb-4 font-bold">
-                    {__('pricing_and_product_camping_text_2')}
+                    {t('pricing_and_product_camping_text_2')}
                   </p>
                 </div>
               </>
@@ -131,13 +134,13 @@ const AccommodationOptions = ({ listings }: Props) => {
                 </div>
                 <div className="text-sm">
                   <p className="mb-4">
-                    {__('pricing_and_product_van_parking_text_1')}
+                    {t('pricing_and_product_van_parking_text_1')}
                   </p>
                   <p className="mb-4 font-bold">
-                    {__('pricing_and_product_van_parking_text_2')}
+                    {t('pricing_and_product_van_parking_text_2')}
                   </p>
                   <p className="mb-4 font-bold">
-                    {__('pricing_and_product_van_parking_text_3')}
+                    {t('pricing_and_product_van_parking_text_3')}
                   </p>
                 </div>
               </>
@@ -148,7 +151,7 @@ const AccommodationOptions = ({ listings }: Props) => {
                 level={4}
                 className="uppercase text-center font-bold mb-4 text-sm"
               >
-                {__('pricing_and_product_cost_per_night')}
+                {t('pricing_and_product_cost_per_night')}
               </Heading>
               <div className="flex items-center">
                 <div className="text-xl font-bold px-2">
@@ -189,7 +192,7 @@ const AccommodationOptions = ({ listings }: Props) => {
                 </div>
               </div>
               <p className="text-sm font-bold uppercase my-3">
-                {__('pricing_and_product_utility_fee')}
+                {t('pricing_and_product_utility_fee')}
               </p>
             </div>
           </Card>

@@ -1,11 +1,12 @@
 import { useContext } from 'react';
+import { useTranslations } from 'next-intl';
+
 
 import dayjs from 'dayjs';
 import PropTypes from 'prop-types';
 
 import { useAuth } from '../contexts/auth';
 import { WalletState } from '../contexts/wallet';
-import { __ } from '../utils/helpers';
 import TokenSaleHeader from './TokenSaleHeader';
 import WhiteListConditions from './WhiteListConditions';
 import WhiteListed from './WhiteListed';
@@ -15,7 +16,9 @@ const TokenSaleMemberView = ({
   referredUsers,
   personalSaleDate,
 }) => {
-  const { user, isAuthenticated } = useAuth();
+  const t = useTranslations();
+
+  const { isAuthenticated } = useAuth();
   const { isWalletReady } = useContext(WalletState);
 
   const isWhiteListed = isAuthenticated && isWalletReady;
@@ -28,11 +31,11 @@ const TokenSaleMemberView = ({
             saleDate={personalSaleDate}
             title={
               isWhiteListed
-                ? __(
-                    'token_sale_invite_page_whitelisted_title',
-                    user?.screenname,
+                ? t(
+                    'token_sale_invite_page_whitelisted_title'
+                   
                   )
-                : __('token_sale_invite_page_title')
+                : t('token_sale_invite_page_title')
             }
           />
         </div>

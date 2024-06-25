@@ -1,10 +1,11 @@
 import { useState } from 'react';
 
 import { ObjectId } from 'bson';
-
-import { __ } from '../utils/helpers';
+import { useTranslations } from 'next-intl';
 
 const DiscountsEditor = ({ value, onChange }) => {
+  const t = useTranslations();
+
   const [options, setOptions] = useState(value);
   const updateOptions = (update) => {
     setOptions(update);
@@ -40,7 +41,7 @@ const DiscountsEditor = ({ value, onChange }) => {
             className="mr-3 mb-4 card"
           >
             <div className="mb-3">
-              <label>{__('discounts_code')}</label>
+              <label>{t('discounts_code')}</label>
               <input
                 type="text"
                 value={option.code}
@@ -55,7 +56,7 @@ const DiscountsEditor = ({ value, onChange }) => {
               />
             </div>
             <div className="mb-3">
-              <label>{__('discounts_ticket_name')}</label>
+              <label>{t('discounts_ticket_name')}</label>
               <p className="italic text-gray-500 text-xs">
                 If set, the discount code will only apply for specific ticket
               </p>
@@ -73,7 +74,7 @@ const DiscountsEditor = ({ value, onChange }) => {
               />
             </div>
             <div className="mb-3">
-              <label>{__('discounts_percent_discount')}</label>
+              <label>{t('discounts_percent_discount')}</label>
               <input
                 type="Number"
                 min="0"
@@ -92,7 +93,7 @@ const DiscountsEditor = ({ value, onChange }) => {
               />
             </div>
             <div className="mb-3">
-              <label>{__('discounts_nominal_discount')}</label>
+              <label>{t('discounts_nominal_discount')}</label>
               <input
                 type="Number"
                 min="0"
@@ -116,7 +117,7 @@ const DiscountsEditor = ({ value, onChange }) => {
                 className="danger-link"
                 onClick={(e) => removeOption(e, index)}
               >
-                {__('discounts_remove')}
+                {t('discounts_remove')}
               </a>
             </div>
           </div>

@@ -6,14 +6,14 @@ import EditModel from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
 
 import { FaArrowLeft } from '@react-icons/all-files/fa/FaArrowLeft';
-import { NextApiRequest } from 'next';
-import { ParsedUrlQuery } from 'querystring';
+import { NextApiRequest, NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
-import PageNotFound from '../../404';
 import models from '../../../models';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { __ } from '../../../utils/helpers';
+import { loadLocaleData } from '../../../utils/locale.helpers';
+import PageNotFound from '../../not-found';
 
 interface Props {
   lesson: any;
@@ -22,6 +22,7 @@ interface Props {
 }
 
 const EditLessonPage = ({ lesson, error, learningHubConfig }: Props) => {
+  const t = useTranslations();
   const router = useRouter();
   const onUpdate = async (
     name: string,
@@ -41,13 +42,13 @@ const EditLessonPage = ({ lesson, error, learningHubConfig }: Props) => {
   }
 
   if (!lesson) {
-    return <Heading>{__('events_slug_edit_error')}</Heading>;
+    return <Heading>{t('events_slug_edit_error')}</Heading>;
   }
 
   return (
     <>
       <Head>
-        <title>{`${__('learn_edit_heading')} ${lesson.name}`}</title>
+        <title>{`${t('learn_edit_heading')} ${lesson.name}`}</title>
       </Head>
       <div className="main-content">
         {error && <div className="error-box">{error}</div>}
@@ -55,14 +56,14 @@ const EditLessonPage = ({ lesson, error, learningHubConfig }: Props) => {
           href={`/learn/${lesson.slug}`}
           className="mr-2 italic flex flex-row items-center justify-start"
         >
-          <FaArrowLeft className="mr-1" /> {__('generic_back')}
+          <FaArrowLeft className="mr-1" /> {t('generic_back')}
         </Link>
         <Heading level={2} className="flex justify-start items-center">
-          {__('learn_edit_heading')} <i>{lesson.title}</i>
+          {t('learn_edit_heading')} <i>{lesson.title}</i>
         </Heading>
         {!process.env.NEXT_PUBLIC_STRIPE_PUB_KEY && (
           <div className="my-4 error-box italic">
-            {__('events_no_stripe_integration')}
+            {t('events_no_stripe_integration')}
           </div>
         )}
         <EditModel
@@ -81,13 +82,8 @@ const EditLessonPage = ({ lesson, error, learningHubConfig }: Props) => {
   );
 };
 
-EditLessonPage.getInitialProps = async ({
-  req,
-  query,
-}: {
-  req: NextApiRequest;
-  query: ParsedUrlQuery;
-}) => {
+EditLessonPage.getInitialProps = async (context: NextPageContext) => {
+  const { req, query } = context;
   try {
     if (!query.slug) {
       throw new Error('No event');
@@ -98,25 +94,30 @@ EditLessonPage.getInitialProps = async ({
         data: { results: lesson },
       },
       learningHubRes,
+      messages,
     ] = await Promise.all([
       api.get(`/lesson/${query.slug}`, {
-        headers: req?.cookies?.access_token && {
-          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        headers: (req as NextApiRequest)?.cookies?.access_token && {
+          Authorization: `Bearer ${
+            (req as NextApiRequest)?.cookies?.access_token
+          }`,
         },
       }),
       api.get('/config/learningHub').catch(() => {
         return null;
       }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const learningHubConfig = learningHubRes?.data?.results?.value || null;
 
-    return { lesson, learningHubConfig };
+    return { lesson, learningHubConfig, messages };
   } catch (err) {
     console.log(err);
     return {
       learningHubConfig: null,
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

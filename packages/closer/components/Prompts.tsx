@@ -95,9 +95,6 @@ const FundraiserPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
   const closeModal = () => {
     setIsInfoModalOpened(false);
   };
-  const openModal = () => {
-    setIsInfoModalOpened(true);
-  };
 
   return (
     <>

@@ -4,20 +4,24 @@ import Link from 'next/link';
 import Faqs from 'closer/components/Faqs';
 import { Heading } from 'closer/components/ui';
 
-import { GeneralConfig, Resources, __, api, useAuth, useConfig } from 'closer';
+import { GeneralConfig, Resources, api, useAuth, useConfig } from 'closer';
 import { HOME_PAGE_CATEGORY } from 'closer/constants';
 import { useFaqs } from 'closer/hooks/useFaqs';
 import { formatSearch } from 'closer/utils/api';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 interface Props {
   generalConfig: GeneralConfig | null;
 }
 
 const HomePage = ({ generalConfig }: Props) => {
+  const t = useTranslations();
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
-  const { APP_NAME, FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
+  const { FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
   const { faqs, error } = useFaqs(FAQS_GOOGLE_SHEET_ID);
   const { isAuthenticated } = useAuth();
 
@@ -111,11 +115,23 @@ const HomePage = ({ generalConfig }: Props) => {
                 </p> */}
               </div>
               <div className="flex-1 flex flex-col gap-4">
-              
-                <p>With the introduction of <Link
+                <p>
+                  With the introduction of{' '}
+                  <Link
                     href="/settings/credits"
                     className="text-accent font-bold"
-                  >Vybes</Link>, seeded by the Y Berlin, we aim to fertilize community engagement with experiences and connections valued over transactions. Vybes encourages every member, new or old, to contribute their unique super power. Forget about normal transactions; at MOOS, it`s all about what you feel called to bring to the table—ideas, workshops, you name it. Vybes let you dive into everything MOOS has to offer and really be an active part of a resilient and growing community space.</p>
+                  >
+                    Vybes
+                  </Link>
+                  , seeded by the Y Berlin, we aim to fertilize community
+                  engagement with experiences and connections valued over
+                  transactions. Vybes encourages every member, new or old, to
+                  contribute their unique super power. Forget about normal
+                  transactions; at MOOS, it`s all about what you feel called to
+                  bring to the table—ideas, workshops, you name it. Vybes let
+                  you dive into everything MOOS has to offer and really be an
+                  active part of a resilient and growing community space.
+                </p>
                 {/* <p>
                   Vybes can be used to create or gift experiences. Since 2012,
                   MOOS has hosted a mycelial network of experience designers.
@@ -159,10 +175,10 @@ const HomePage = ({ generalConfig }: Props) => {
                 level={2}
                 className="mb-4 uppercase w-full font-extrabold text-5xl max-w-[700px]"
               >
-                {APP_NAME && __('resources_resources_heading', APP_NAME)}
+                {t('resources_resources_heading')}
               </Heading>
               <p className="mb-4 w-full">
-                {APP_NAME && __('resources_resources_subheading', APP_NAME)}
+                {t('resources_resources_subheading')}
               </p>
             </div>
             <Resources />
@@ -175,11 +191,9 @@ const HomePage = ({ generalConfig }: Props) => {
                   level={2}
                   className="mb-4 uppercase w-full font-extrabold text-5xl max-w-[600px]"
                 >
-                  {APP_NAME && __('resources_faq_heading', APP_NAME)}
+                  {t('resources_faq_heading')}
                 </Heading>
-                <p className="mb-4 w-full">
-                  {APP_NAME && __('resources_faq_subheading', APP_NAME)}
-                </p>
+                <p className="mb-4 w-full">{t('resources_faq_subheading')}</p>
               </div>
               {faqs && <Faqs faqs={faqs} error={error} />}
             </div>
@@ -190,16 +204,17 @@ const HomePage = ({ generalConfig }: Props) => {
   );
 };
 
-HomePage.getInitialProps = async () => {
+HomePage.getInitialProps = async (context: NextPageContext) => {
   try {
     const search = formatSearch({ category: { $eq: HOME_PAGE_CATEGORY } });
-    const [articleRes, generalRes] = await Promise.all([
+    const [articleRes, generalRes, messages] = await Promise.all([
       api.get(`/article?where=${search}`).catch(() => {
         return null;
       }),
       api.get('/config/general').catch(() => {
         return null;
       }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const article = articleRes?.data?.results[0];
@@ -207,12 +222,14 @@ HomePage.getInitialProps = async () => {
     return {
       article,
       generalConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {
       article: null,
       generalConfig: null,
       error: err,
+      messages: null,
     };
   }
 };

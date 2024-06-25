@@ -10,6 +10,8 @@ import { Card, ErrorMessage } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
@@ -17,7 +19,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { SubscriptionPlan } from '../../types/subscriptions';
 import api, { cdn } from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 interface Props {
@@ -25,6 +27,7 @@ interface Props {
 }
 
 const Signup = ({ subscriptionsConfig }: Props) => {
+  const t = useTranslations();
   const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
   const config = useConfig();
   const { APP_NAME } = config || {};
@@ -68,7 +71,7 @@ const Signup = ({ subscriptionsConfig }: Props) => {
   return (
     <>
       <Head>
-        <title>{APP_NAME && __('signup_title', APP_NAME)}</title>
+        <title>{t('signup_title')}</title>
       </Head>
       <main className="main-content mt-12 px-4 max-w-4xl mx-auto">
         {process.env.NEXT_PUBLIC_REGISTRATION_MODE === 'curated' ? (
@@ -86,7 +89,7 @@ const Signup = ({ subscriptionsConfig }: Props) => {
                 level={1}
                 className="uppercase text-5xl sm:text-5xl font-extrabold"
               >
-                {APP_NAME && __('signup_title', APP_NAME)}
+                {t('signup_title')}
               </Heading>
 
               {/* TODO: discuss free creidt distribution to new users */}
@@ -96,24 +99,24 @@ const Signup = ({ subscriptionsConfig }: Props) => {
                   <div>
                     <span
                       dangerouslySetInnerHTML={{
-                        __html: __('signup_form_get_credits', APP_NAME),
+                        __html: t('signup_form_get_credits'),
                       }}
                     />{' '}
                     <Link
                       href="/settings/credits"
                       className="font-bold text-accent underline"
                     >
-                      {__('signup_form_credit_learn_more')}
+                      {t('signup_form_credit_learn_more')}
                     </Link>
                   </div>
                 )} */}
 
               {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
                 <div className="flex flex-col gap-4">
-                  <p> {APP_NAME && __('signup_intro_1', APP_NAME)}</p>
-                  <p> {APP_NAME && __('signup_intro_2', APP_NAME)}</p>
-                  <p> {APP_NAME && __('signup_intro_3', APP_NAME)}</p>
-                  <p> {APP_NAME && __('signup_intro_4', APP_NAME)}</p>
+                  <p> {t('signup_intro_1')}</p>
+                  <p> {t('signup_intro_2')}</p>
+                  <p> {t('signup_intro_3')}</p>
+                  <p> {t('signup_intro_4')}</p>
                 </div>
               )}
 
@@ -151,7 +154,7 @@ const Signup = ({ subscriptionsConfig }: Props) => {
                 {referrer && (
                   <div>
                     <div className="flex items-center gap-4 ">
-                      {__('signup_form_referrer')}{' '}
+                      {t('signup_form_referrer')}{' '}
                       <Card className="bg-accent-light py-2">
                         <div className="flex items-center gap-2">
                           {referrer ? (
@@ -186,19 +189,24 @@ const Signup = ({ subscriptionsConfig }: Props) => {
   );
 };
 
-Signup.getInitialProps = async () => {
+Signup.getInitialProps = async (context: NextPageContext) => {
   try {
-    const {
-      data: { results: subscriptions },
-    } = await api.get('/config/subscriptions');
+    const [subscriptionsResponse, messages] = await Promise.all([
+      api.get('/config/subscriptions').catch(() => {
+        return null
+       }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
 
     return {
-      subscriptionsConfig: subscriptions.value,
+      subscriptionsConfig: subscriptionsResponse?.data?.results?.value,
+      messages,
     };
   } catch (err: unknown) {
     return {
       subscriptionsConfig: [],
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

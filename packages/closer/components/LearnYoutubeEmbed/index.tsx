@@ -1,4 +1,5 @@
-import { __ } from '../../utils/helpers';
+import { useTranslations } from 'next-intl';
+
 import { Spinner } from '../ui';
 
 interface Props {
@@ -8,13 +9,14 @@ interface Props {
 }
 
 const LearnYoutubeEmbed = ({ embedId, onLoad, isVideoLoading }: Props) => {
+  const t = useTranslations();
   return (
     <>
       {isVideoLoading ? (
         <div className="gap-2 absolute top-0 left-0 w-full h-full flex justify-center items-center">
           <div className="bg-accent-light flex gap-2 items-center py-2 px-4 rounded-md">
             <Spinner />
-            {__('learn_loading_video')}
+            {t('learn_loading_video')}
           </div>
         </div>
       ) : (

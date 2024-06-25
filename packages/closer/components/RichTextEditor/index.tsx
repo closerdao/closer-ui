@@ -1,6 +1,6 @@
 import dynamic from 'next/dynamic';
 
-import React, { useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import 'react-quill/dist/quill.snow.css';
 
 import api from '../../utils/api';

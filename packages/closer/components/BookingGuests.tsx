@@ -1,4 +1,5 @@
-import { __ } from '../utils/helpers';
+import { useTranslations } from 'next-intl';
+
 import Counter from './Counter';
 import Switch from './Switch';
 import HeadingRow from './ui/HeadingRow';
@@ -15,7 +16,7 @@ interface Props {
   doesNeedSeparateBeds?: boolean;
   setDoesNeedSeparateBeds?: (value: boolean) => void;
   shouldHideTitle?: boolean;
-  isPrivate?: boolean
+  isPrivate?: boolean;
 }
 
 const BookingGuests = ({
@@ -30,32 +31,33 @@ const BookingGuests = ({
   doesNeedSeparateBeds,
   setDoesNeedSeparateBeds,
   shouldHideTitle,
-  isPrivate=false
+  isPrivate = false,
 }: Props) => {
+  const t = useTranslations();
   return (
     <div>
       {!shouldHideTitle && (
         <HeadingRow>
           <span className="mr-2">👨‍👩‍👦</span>
-          <span>{__('bookings_dates_step_guests_title')}</span>
+          <span>{t('bookings_dates_step_guests_title')}</span>
         </HeadingRow>
       )}
 
       <div className="mt-4 ">
         <div className="flex space-between items-center">
-          <p className="flex-1">{__('bookings_dates_step_guests_adults')}</p>
+          <p className="flex-1">{t('bookings_dates_step_guests_adults')}</p>
           <Counter value={adults} setFn={setAdults} minValue={1} />
         </div>
         <div className="flex space-between items-center mt-9">
-          <p className="flex-1">{__('bookings_dates_step_guests_children')}</p>
+          <p className="flex-1">{t('bookings_dates_step_guests_children')}</p>
           <Counter value={kids} setFn={setKids} minValue={0} />
         </div>
         <div className="flex space-between items-center mt-9">
-          <p className="flex-1">{__('bookings_dates_step_guests_infants')}</p>
+          <p className="flex-1">{t('bookings_dates_step_guests_infants')}</p>
           <Counter value={infants} setFn={setInfants} minValue={0} />
         </div>
         <div className="flex space-between items-center mt-9">
-          <p className="flex-1">{__('bookings_dates_step_guests_pets')}</p>
+          <p className="flex-1">{t('bookings_dates_step_guests_pets')}</p>
           <Counter value={pets} setFn={setPets} minValue={0} />
         </div>
         {adults > 1 && isPrivate && (
@@ -64,7 +66,7 @@ const BookingGuests = ({
               htmlFor="separateBeds"
               className={`${shouldHideTitle ? 'text-sm' : 'text-md'}  `}
             >
-              {__('bookings_does_prefer_single_beds')}
+              {t('bookings_does_prefer_single_beds')}
             </label>
             <Switch
               disabled={false}

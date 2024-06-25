@@ -7,12 +7,13 @@ import { CSVLink } from 'react-csv';
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { useTranslations } from 'next-intl';
 
 import { ACTIONS, USER_ROLE_OPTIONS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import api, { cdn } from '../../utils/api';
-import { __, prepareUserDataForCsvExport } from '../../utils/helpers';
+import { prepareUserDataForCsvExport } from '../../utils/helpers';
 import Counter from '../Counter';
 import Modal from '../Modal';
 import Pagination from '../Pagination';
@@ -40,6 +41,7 @@ interface Props {
 }
 
 const UsersList = ({ where, page, setPage, sortBy }: Props) => {
+  const t = useTranslations();
   const { platform }: any = usePlatform();
   const { user: currentUser } = useAuth();
 
@@ -263,7 +265,7 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
         <Modal closeModal={closeModal}>
           {action === 'Add role' && (
             <div className="flex flex-col gap-4">
-              <Heading level={4}>{__('manage_users_add_role')}</Heading>
+              <Heading level={4}>{t('manage_users_add_role')}</Heading>
               <div className="font-bold">
                 {selectedUsers
                   .map((user) => {
@@ -273,22 +275,22 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
               </div>
               <Select
                 className="rounded-full text-accent border-accent "
-                value={__('manage_users_add_role_button')}
+                value={t('manage_users_add_role_button')}
                 options={USER_ROLE_OPTIONS.slice(1)}
                 onChange={(value: string) => handleAddRole(value)}
                 isRequired
-                placeholder={__('manage_users_add_role_button')}
+                placeholder={t('manage_users_add_role_button')}
               />
               {success && (
                 <div className="text-success text-center">
-                  {__('manage_users_role_added')}
+                  {t('manage_users_role_added')}
                 </div>
               )}
             </div>
           )}
           {action === 'Remove role' && (
             <div className="flex flex-col gap-4">
-              <Heading level={4}>{__('manage_users_remove_role')}</Heading>
+              <Heading level={4}>{t('manage_users_remove_role')}</Heading>
               <div className="font-bold">
                 {selectedUsers
                   .map((user) => {
@@ -298,22 +300,22 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
               </div>
               <Select
                 className="rounded-full text-accent border-accent "
-                value={__('manage_users_remove_role')}
+                value={t('manage_users_remove_role')}
                 options={USER_ROLE_OPTIONS.slice(1)}
                 onChange={(value: string) => handleRemoveRole(value)}
                 isRequired
-                placeholder={__('manage_users_remove_role')}
+                placeholder={t('manage_users_remove_role')}
               />
               {success && (
                 <div className="text-success text-center">
-                  {__('manage_users_role_removed')}
+                  {t('manage_users_role_removed')}
                 </div>
               )}
             </div>
           )}
           {action === 'Send carrots' && (
             <div className="flex flex-col gap-6">
-              <Heading level={4}>{__('manage_users_send_credits')}</Heading>
+              <Heading level={4}>{t('manage_users_send_credits')}</Heading>
 
               <div className="font-bold">
                 {selectedUsers
@@ -326,10 +328,10 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
               <Input
                 onChange={(e: any) => setReasonToSendCredits(e.target.value)}
                 value={reasonToSendCredits}
-                placeholder={__('manage_users_reason_to_send_credits')}
+                placeholder={t('manage_users_reason_to_send_credits')}
               />
               <div className="flex space-between items-center">
-                <p className="flex-1">{__('manage_users_how_many_credits')}</p>
+                <p className="flex-1">{t('manage_users_how_many_credits')}</p>
                 <Counter
                   value={creditsToSend}
                   setFn={setCreditsToSend}
@@ -343,12 +345,12 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
                 onClick={handleSendCredits}
                 isEnabled={Boolean(!success && reasonToSendCredits)}
               >
-                {__('manage_users_send_credits_button')}
+                {t('manage_users_send_credits_button')}
               </Button>
 
               {success && (
                 <div className="text-success text-center">
-                  {__('manage_users_credits_sent')}
+                  {t('manage_users_credits_sent')}
                 </div>
               )}
             </div>
@@ -356,7 +358,7 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
 
           {action === 'Export selected (CSV)' && (
             <div className="flex flex-col gap-6">
-              <Heading level={4}>{__('manage_users_export')}</Heading>
+              <Heading level={4}>{t('manage_users_export')}</Heading>
 
               {csvData && (
                 <CSVLink
@@ -365,14 +367,14 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
                   headers={csvData.headers}
                   filename="data.csv"
                 >
-                  {__('manage_users_save_button')}
+                  {t('manage_users_save_button')}
                 </CSVLink>
               )}
             </div>
           )}
           {action === 'Export all' && (
             <div className="flex flex-col gap-6">
-              <Heading level={4}>{__('manage_users_export_all')}</Heading>
+              <Heading level={4}>{t('manage_users_export_all')}</Heading>
 
               {csvData ? (
                 <CSVLink
@@ -381,24 +383,24 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
                   headers={csvData.headers}
                   filename="data.csv"
                 >
-                  {__('manage_users_save_button')}
+                  {t('manage_users_save_button')}
                 </CSVLink>
               ) : (
-                <>{__('manage_users_preparing_data')}</>
+                <>{t('manage_users_preparing_data')}</>
               )}
             </div>
           )}
 
           {action === 'Copy emails' && (
-            <div className="font-bold">{__('manage_users_emails_copied')}</div>
+            <div className="font-bold">{t('manage_users_emails_copied')}</div>
           )}
 
           {action === 'Unlink wallet' && (
             <div className="flex flex-col gap-6">
-              <Heading level={4}>{__('admin_unlink_wallet')}</Heading>
+              <Heading level={4}>{t('admin_unlink_wallet')}</Heading>
               <div className="flex flex-col gap-6 my-4">
                 <Heading level={3}>
-                  {__('admin_unlink_wallet_disclaimer')}
+                  {t('admin_unlink_wallet_disclaimer')}
                 </Heading>
 
                 <div className="font-bold">
@@ -410,13 +412,13 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
                 </div>
 
                 <Button onClick={handleUnlinkUserWallet}>
-                  {__('admin_unlink_wallet_button')}
+                  {t('admin_unlink_wallet_button')}
                 </Button>
               </div>
               {error && <ErrorMessage error={error} />}
               {success && (
                 <div className="text-success text-center">
-                  {__('admin_unlink_wallet_success')}
+                  {t('admin_unlink_wallet_success')}
                 </div>
               )}
             </div>
@@ -426,15 +428,15 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
 
       {isLoading ? (
         <div className="my-16 flex items-center gap-2">
-          <Spinner /> {__('generic_loading')}
+          <Spinner /> {t('generic_loading')}
         </div>
       ) : (
         <>
           <Heading level={2} className="border-b pb-2">
             {totalUsers ? totalUsers.toString() : 0}{' '}
             {totalUsers === 1
-              ? __('manage_users_user')
-              : __('manage_users_users')}
+              ? t('manage_users_user')
+              : t('manage_users_users')}
           </Heading>
 
           <div className="flex gap-3 justify-between my-4 flex-col sm:flex-row">
@@ -448,23 +450,23 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
                 onChange={handleSelectAllUsers}
               />
               <label htmlFor="selectAll" className="uppercase font-bold ">
-                {__('manage_users_select_all')}
+                {t('manage_users_select_all')}
               </label>
             </div>
 
             <div className="w-[300px] flex gap-2 flex-col sm:flex-row">
               <div className="w-1/3 whitespace-nowrap font-bold  flex justify-start sm:justify-end items-center">
                 {selectedUsers.length && selectedUsers.length}{' '}
-                {__('manage_users_selected')}
+                {t('manage_users_selected')}
               </div>
               <div className="w-2/3">
                 <Select
                   className="rounded-full text-accent border-accent uppercase"
-                  value={__('manage_users_actions')}
+                  value={t('manage_users_actions')}
                   options={ACTIONS}
                   onChange={(action: string) => handleAction(action)}
                   isRequired
-                  placeholder={__('manage_users_actions')}
+                  placeholder={t('manage_users_actions')}
                   isDisabled={Boolean(!selectedUsers.length)}
                 />
               </div>
@@ -534,7 +536,7 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
                               height={17}
                               className="rounded-full"
                             />
-                            {__('manage_users_role_member')}
+                            {t('manage_users_role_member')}
                             <Button
                               onClick={() => handleRemoveRole('member', user)}
                               className="p-0 min-h-min bg-white border-none text-black"
@@ -590,7 +592,7 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
                               width={20}
                               height={20}
                             />
-                            {__('manage_users_subscription_explorer')}
+                            {t('manage_users_subscription_explorer')}
                           </div>
                         )}
                       </div>
@@ -644,13 +646,13 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
                       <div>
                         <Select
                           className="rounded-full text-accent border-accent"
-                          value={__('manage_users_add_role_button')}
+                          value={t('manage_users_add_role_button')}
                           options={USER_ROLE_OPTIONS.slice(1)}
                           onChange={(value: string) =>
                             handleAddRole(value, user)
                           }
                           isRequired
-                          placeholder={__('manage_users_add_role_button')}
+                          placeholder={t('manage_users_add_role_button')}
                         />
                       </div>
                     </div>
@@ -677,7 +679,7 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
           className="w-auto"
           type="secondary"
         >
-          {__('manage_users_save_all')}
+          {t('manage_users_save_all')}
         </Button>
       </div>
     </section>

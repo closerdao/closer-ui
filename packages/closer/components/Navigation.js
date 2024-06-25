@@ -3,10 +3,11 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import { useAuth } from '../contexts/auth';
 import { useConfig } from '../hooks/useConfig';
 import api from '../utils/api';
-import { __ } from '../utils/helpers';
 import GuestMenu from './GuestMenu';
 import Logo from './Logo';
 import MemberMenu from './MemberMenu';
@@ -15,6 +16,7 @@ import ProfilePhoto from './ProfilePhoto';
 import { Button } from './ui';
 
 const Navigation = () => {
+  const t = useTranslations();
   const { APP_NAME } = useConfig() || {};
   const { isAuthenticated, user } = useAuth();
 
@@ -45,6 +47,7 @@ const Navigation = () => {
   };
 
   const router = useRouter();
+
   useEffect(() => {
     router.events.on('routeChangeComplete', closeNav);
     router.events.on('routeChangeError', closeNav);
@@ -59,7 +62,33 @@ const Navigation = () => {
     <div className="NavContainer h-20 md:pt-0 top-0 left-0 right-0 fixed z-20 bg-background shadow">
       <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
         <Logo />
+
         <div className="flex gap-2 w-auto justify-center items-center ">
+          {router.locales?.length > 1 &&
+          process.env.NEXT_PUBLIC_FEATURE_LOCALE_SWITCH === 'true' ? (
+            <ul className="flex">
+              {router.locales.map((locale) => {
+                return (
+                  <li
+                    className="uppercase  border-r border-gray-200 last:border-r-0 px-1"
+                    key={locale}
+                  >
+                    <Link
+                      className={`${
+                        router.locale === locale
+                          ? 'text-gray-600 cursor-default'
+                          : 'text-accent'
+                      } font-accent`}
+                      href={router.locale === locale ? '#' : router.asPath}
+                      locale={locale}
+                    >
+                      {locale}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
           {!isAuthenticated &&
             APP_NAME &&
             (APP_NAME.toLowerCase() === 'moos' ||
@@ -68,8 +97,11 @@ const Navigation = () => {
                 onClick={() => router.push('/login')}
                 size="small"
                 type="primary"
+                className={`${
+                  router?.locales?.length > 1 ? 'hidden sm:block' : ''
+                }`}
               >
-                {APP_NAME && __('navigation_member_login', APP_NAME)}
+                {t('navigation_member_login')}
               </Button>
             )}
           {isAuthenticated &&
@@ -80,8 +112,11 @@ const Navigation = () => {
                 onClick={() => router.push('/stay')}
                 size="small"
                 type="primary"
+                className={`${
+                  router?.locales?.length > 1 ? 'hidden sm:block' : ''
+                }`}
               >
-                {APP_NAME && __('navigation_stay', APP_NAME)}
+                {t('navigation_stay')}
               </Button>
             )}
 
@@ -91,15 +126,9 @@ const Navigation = () => {
               size="small"
               type="primary"
             >
-              {APP_NAME && __('navigation_stay', APP_NAME)}
+              {t('navigation_stay')}
             </Button>
           )}
-
-          {/* {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && (
-            <Link href="/token" className="uppercase">
-              {__('navigation_buy_token')}
-            </Link>
-          )} */}
 
           {isAuthenticated && (
             <Link

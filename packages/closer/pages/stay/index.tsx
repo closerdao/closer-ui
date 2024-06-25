@@ -10,7 +10,9 @@ import Reviews from '../../components/Reviews';
 import UpcomingEventsIntro from '../../components/UpcomingEventsIntro';
 import Heading from '../../components/ui/Heading';
 
-import PageNotFound from '../404';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
 import { MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
@@ -18,7 +20,8 @@ import { useConfig } from '../../hooks/useConfig';
 import { BookingRulesConfig, GeneralConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
+import PageNotFound from '../not-found';
 
 const ADMIN_EMAIL = 'vashnev@gmail.com';
 
@@ -29,6 +32,7 @@ interface Props {
 }
 
 const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
+  const t = useTranslations();
   const { APP_NAME } = useConfig();
   const config = useConfig();
 
@@ -59,7 +63,7 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
   const hostsFilter = {
     where: {
       roles: { $in: ['space-host', 'steward', 'team'].filter((e) => e) },
-      email: { $ne: ADMIN_EMAIL }
+      email: { $ne: ADMIN_EMAIL },
     },
   };
 
@@ -91,7 +95,7 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
   return (
     <>
       <Head>
-        <title>{`${__('stay_title')} ${PLATFORM_NAME}`}</title>
+        <title>{`${t('stay_title')} ${PLATFORM_NAME}`}</title>
       </Head>
       {listings && listings.get('error') && (
         <div className="validation-error">{listings.get('error')}</div>
@@ -100,15 +104,14 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
       <section className="max-w-6xl mx-auto mb-16">
         <div className="mb-6 max-w-prose">
           <Heading level={1} className="text-4xl pb-2 mt-8">
-            {APP_NAME &&
-              `${__('stay_title', APP_NAME)} 
+            {`${t('stay_title')} 
             
             ${APP_NAME && APP_NAME === 'tdf' ? PLATFORM_NAME : ''}`}
           </Heading>
           <p>
             {APP_NAME &&
-              !__('stay_description', APP_NAME).includes('missing') &&
-              __('stay_description', APP_NAME)}
+              !t('stay_description').includes('missing') &&
+              t('stay_description')}
           </p>
         </div>
       </section>
@@ -123,15 +126,15 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
           className="btn btn-primary text-xl px-8 py-3"
         >
           {user?.roles.includes('member')
-            ? __('buttons_book_now')
-            : __('buttons_apply_to_stay')}
+            ? t('buttons_book_now')
+            : t('buttons_apply_to_stay')}
         </Link>
         {process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING && (
           <Link
             href="/volunteer"
             className="text-xl px-8 py-3 text-accent italic underline"
           >
-            {__('buttons_volunteer')}
+            {t('buttons_volunteer')}
           </Link>
         )}
       </section>
@@ -141,14 +144,12 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
 
         <div className="mb-6">
           <Heading level={2} className="text-2xl mb-2 max-w-prose">
-            {APP_NAME && __('stay_chose_accommodation', APP_NAME)}
+            {t('stay_chose_accommodation')}
           </Heading>
           <p className="mb-8 max-w-prose">
             {APP_NAME &&
-              !__('stay_chose_accommodation_description', APP_NAME).includes(
-                'missing',
-              ) &&
-              __('stay_chose_accommodation_description', APP_NAME)}
+              !t('stay_chose_accommodation_description').includes('missing') &&
+              t('stay_chose_accommodation_description')}
           </p>
           {listings && listings.count() > 0 && (
             <div className="grid md:grid-cols-4 gap-x-12 md:gap-x-5 gap-y-16">
@@ -166,7 +167,7 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
           )}
           {listings?.count() === 0 &&
             guestListings?.count() === 0 &&
-            __('listing_no_listings_found')}
+            t('listing_no_listings_found')}
         </div>
 
         {/* TODO some time: move reviews to configs */}
@@ -182,9 +183,9 @@ const StayPage = ({ bookingSettings, bookingRules, generalConfig }: Props) => {
   );
 };
 
-StayPage.getInitialProps = async () => {
+StayPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [bookingResponse, bookingRulesResponse, generalRes] =
+    const [bookingResponse, bookingRulesResponse, generalRes, messages] =
       await Promise.all([
         api.get('/config/booking').catch((err) => {
           console.error('Error fetching booking config:', err);
@@ -197,7 +198,9 @@ StayPage.getInitialProps = async () => {
         api.get('/config/general').catch(() => {
           return null;
         }),
+        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       ]);
+
     const generalConfig = generalRes?.data?.results?.value;
 
     const bookingSettings = bookingResponse?.data?.results?.value;
@@ -207,6 +210,7 @@ StayPage.getInitialProps = async () => {
       bookingSettings,
       bookingRules,
       generalConfig,
+      messages,
     };
   } catch (err) {
     return {
@@ -214,6 +218,7 @@ StayPage.getInitialProps = async () => {
       bookingSettings: null,
       bookingRules: null,
       generalConfig: null,
+      messages: null,
     };
   }
 };

@@ -12,11 +12,10 @@ import Heading from '../../../components/ui/Heading';
 
 import dayjs from 'dayjs';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
-import { NextApiRequest } from 'next';
-import { ParsedUrlQuery } from 'querystring';
+import { NextApiRequest, NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
-import PageNotFound from '../../404';
 import { STATUS_COLOR } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
@@ -36,7 +35,9 @@ import {
   getUtilityTotal,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { __, getBookingRate, getDiscountRate } from '../../../utils/helpers';
+import { getBookingRate, getDiscountRate } from '../../../utils/helpers';
+import { loadLocaleData } from '../../../utils/locale.helpers';
+import PageNotFound from '../../not-found';
 
 dayjs.extend(LocalizedFormat);
 
@@ -61,6 +62,7 @@ const BookingPage = ({
   bookingConfig,
   listings,
 }: Props) => {
+  const t = useTranslations();
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -123,7 +125,10 @@ const BookingPage = ({
     setUpdatedStartDate,
     setUpdatedListingId,
   };
-  const isNotPaid = status !== 'paid' && status !== 'credits-paid' && status !== 'tokens-staked';
+  const isNotPaid =
+    status !== 'paid' &&
+    status !== 'credits-paid' &&
+    status !== 'tokens-staked';
 
   const updatedDurationInDays = Math.ceil(
     dayjs(updatedEndDate).diff(dayjs(updatedStartDate), 'hour') / 24,
@@ -215,7 +220,7 @@ const BookingPage = ({
     total: { val: updatedFiatTotal, cur: rentalFiat?.cur },
     paymentDelta: paymentDelta ? paymentDelta : null,
   };
-  
+
   if (booking?.paymentDelta) {
     booking.paymentDelta = null;
   }
@@ -280,23 +285,23 @@ const BookingPage = ({
   return (
     <>
       <Head>
-        <title>{`${__('bookings_summary_step_dates_title')}`}</title>
+        <title>{`${t('bookings_summary_step_dates_title')}`}</title>
         <meta
           name="description"
-          content={`${__('bookings_summary_step_dates_title')}`}
+          content={`${t('bookings_summary_step_dates_title')}`}
         />
         <meta property="og:type" content="booking" />
       </Head>
       <main className="main-content max-w-prose booking flex flex-col gap-8">
         <Heading className="mb-4">
-          {__(`bookings_title_${booking.status}`)}
+          {t(`bookings_title_${booking.status}`)}
         </Heading>
 
         <section className="flex flex-col gap-2 mb-6">
           <div className="text-sm text-disabled">
             <p>{createdFormatted}</p>
             <p>
-              {__('bookings_id')} <b>{booking._id}</b>
+              {t('bookings_id')} <b>{booking._id}</b>
             </p>
           </div>
           {booking?.adminBookingReason && (
@@ -383,10 +388,10 @@ const BookingPage = ({
                 onClick={handleSaveBooking}
                 isEnabled={hasUpdatedBooking && !isLoading}
               >
-                {__('booking_card_save_booking')}
+                {t('booking_card_save_booking')}
               </Button>
               {hasUpdated && (
-                <Information>{__('booking_card_booking_updated')}</Information>
+                <Information>{t('booking_card_booking_updated')}</Information>
               )}
             </div>
           )}
@@ -403,38 +408,37 @@ const BookingPage = ({
         </section>
 
         {booking.status === 'confirmed' && (
-          <section className="mt-3">{__('bookings_confirmation')}</section>
+          <section className="mt-3">{t('bookings_confirmation')}</section>
         )}
       </main>
     </>
   );
 };
 
-BookingPage.getInitialProps = async ({
-  req,
-  query,
-}: {
-  req: NextApiRequest;
-  query: ParsedUrlQuery;
-}) => {
+BookingPage.getInitialProps = async (context: NextPageContext) => {
+  const { query, req } = context;
   try {
-    const [bookingRes, bookingConfigRes, listingRes] = await Promise.all([
-      api
-        .get(`/booking/${query.slug}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
-          },
-        })
-        .catch(() => {
+    const [bookingRes, bookingConfigRes, listingRes, messages] =
+      await Promise.all([
+        api
+          .get(`/booking/${query.slug}`, {
+            headers: (req as NextApiRequest)?.cookies?.access_token && {
+              Authorization: `Bearer ${
+                (req as NextApiRequest)?.cookies?.access_token
+              }`,
+            },
+          })
+          .catch(() => {
+            return null;
+          }),
+        api.get('/config/booking').catch(() => {
           return null;
         }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-      api.get('/listing').catch(() => {
-        return null;
-      }),
-    ]);
+        api.get('/listing').catch(() => {
+          return null;
+        }),
+        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
     const listings = listingRes?.data?.results;
@@ -443,20 +447,26 @@ BookingPage.getInitialProps = async ({
       await Promise.all([
         booking.eventId &&
           api.get(`/event/${booking.eventId}`, {
-            headers: req?.cookies?.access_token && {
-              Authorization: `Bearer ${req?.cookies?.access_token}`,
+            headers: (req as NextApiRequest)?.cookies?.access_token && {
+              Authorization: `Bearer ${
+                (req as NextApiRequest)?.cookies?.access_token
+              }`,
             },
           }),
         booking.listing &&
           api.get(`/listing/${booking.listing}`, {
-            headers: req?.cookies?.access_token && {
-              Authorization: `Bearer ${req?.cookies?.access_token}`,
+            headers: (req as NextApiRequest)?.cookies?.access_token && {
+              Authorization: `Bearer ${
+                (req as NextApiRequest)?.cookies?.access_token
+              }`,
             },
           }),
         booking.volunteerId &&
           api.get(`/volunteer/${booking.volunteerId}`, {
-            headers: req?.cookies?.access_token && {
-              Authorization: `Bearer ${req?.cookies?.access_token}`,
+            headers: (req as NextApiRequest)?.cookies?.access_token && {
+              Authorization: `Bearer ${
+                (req as NextApiRequest)?.cookies?.access_token
+              }`,
             },
           }),
       ]);
@@ -469,8 +479,10 @@ BookingPage.getInitialProps = async ({
       const optionalCreatedBy =
         booking.createdBy &&
         (await api.get(`/user/${booking.createdBy}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          headers: (req as NextApiRequest)?.cookies?.access_token && {
+            Authorization: `Bearer ${
+              (req as NextApiRequest)?.cookies?.access_token
+            }`,
           },
         }));
       bookingCreatedBy = optionalCreatedBy?.data?.results;
@@ -485,9 +497,9 @@ BookingPage.getInitialProps = async ({
       bookingCreatedBy,
       bookingConfig,
       listings,
+      messages,
     };
   } catch (err: any) {
-    console.log('Error', err.message);
 
     return {
       error: parseMessageFromError(err),
@@ -498,6 +510,7 @@ BookingPage.getInitialProps = async ({
       createdBy: null,
       bookingConfig: null,
       listings: null,
+      messages: null,
     };
   }
 };

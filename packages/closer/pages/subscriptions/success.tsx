@@ -6,9 +6,10 @@ import { useEffect, useState } from 'react';
 import PageError from '../../components/PageError';
 import { BackButton, Button, Heading, ProgressBar } from '../../components/ui/';
 
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
-import Page404 from '../404';
 import { DEFAULT_CURRENCY, SUBSCRIPTION_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
@@ -16,8 +17,9 @@ import { GeneralConfig } from '../../types';
 import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
+import PageNotFound from '../not-found';
 
 interface Props {
   subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
@@ -30,6 +32,7 @@ const SubscriptionSuccessPage = ({
   generalConfig,
   error,
 }: Props) => {
+  const t = useTranslations();
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
@@ -88,22 +91,22 @@ const SubscriptionSuccessPage = ({
   }
 
   if (!areSubscriptionsEnabled) {
-    return <Page404 error="" />;
+    return <PageNotFound error="" />;
   }
 
   return (
     <>
       <Head>
-        <title>{`${__('subscriptions_success_title')} - ${__(
+        <title>{`${t('subscriptions_success_title')} - ${t(
           'subscriptions_title',
         )} - ${PLATFORM_NAME}`}</title>
       </Head>
 
       <div className="w-full max-w-screen-sm mx-auto p-8">
-        <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
+        <BackButton handleClick={goBack}>{t('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-4">
-          🎊 {__('subscriptions_success_title')}
+          🎊 {t('subscriptions_success_title')}
         </Heading>
 
         <ProgressBar steps={SUBSCRIPTION_STEPS} />
@@ -111,27 +114,27 @@ const SubscriptionSuccessPage = ({
         <main className="pt-14 pb-24 md:flex-row flex-wrap">
           <div className="mb-14">
             <Heading level={3} className="mb-12 text-2xl">
-              {__('subscriptions_success_your')} {selectedPlan?.title}{' '}
-              {__('subscriptions_success_subscription_is_active')}
+              {t('subscriptions_success_your')} {selectedPlan?.title}{' '}
+              {t('subscriptions_success_subscription_is_active')}
             </Heading>
 
             <p className="mb-12">
-              {__('subscriptions_success_thank_you_message')}
+              {t('subscriptions_success_thank_you_message')}
             </p>
 
             <p className="uppercase font-bold mb-12">
-              {__('subscriptions_success_your_subscription_number')}{' '}
+              {t('subscriptions_success_your_subscription_number')}{' '}
               {subscriptionId}
             </p>
 
-            <p className="mb-12">{__('subscriptions_success_next_steps')}</p>
+            <p className="mb-12">{t('subscriptions_success_next_steps')}</p>
 
             <Button
               className="mt-3"
               type="primary"
               onClick={handleViewSubscription}
             >
-              {__('subscriptions_success_view_button')}
+              {t('subscriptions_success_view_button')}
             </Button>
           </div>
         </main>
@@ -140,15 +143,16 @@ const SubscriptionSuccessPage = ({
   );
 };
 
-SubscriptionSuccessPage.getInitialProps = async () => {
+SubscriptionSuccessPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [subscriptionsRes, generalRes] = await Promise.all([
+    const [subscriptionsRes, generalRes, messages] = await Promise.all([
       api.get('/config/subscriptions').catch(() => {
         return null;
       }),
       api.get('/config/general').catch(() => {
         return null;
       }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
@@ -157,12 +161,14 @@ SubscriptionSuccessPage.getInitialProps = async () => {
     return {
       subscriptionsConfig,
       generalConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {
       subscriptionsConfig: { enabled: false, elements: [] },
       generalConfig: null,
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

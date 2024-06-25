@@ -7,14 +7,16 @@ import { Heading } from 'closer/components/ui';
 import { GeneralConfig, api } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import { useFaqs } from 'closer/hooks/useFaqs';
-import { parseMessageFromError } from 'closer/utils/common';
-import { __ } from 'closer';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 interface Props {
   generalConfig: GeneralConfig | null;
 }
 
 const ResourcesPage = ({ generalConfig }: Props) => {
+  const t = useTranslations();
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
@@ -24,7 +26,7 @@ const ResourcesPage = ({ generalConfig }: Props) => {
   return (
     <div className="max-w-screen-lg mx-auto">
       <Head>
-        <title>{`${__(
+        <title>{`${t(
           'resources_heading',
           APP_NAME,
         )} - ${PLATFORM_NAME}`}</title>
@@ -36,11 +38,9 @@ const ResourcesPage = ({ generalConfig }: Props) => {
               level={1}
               className="w-[300px] sm:w-[350px] font-extrabold mb-6 uppercase text-center text-2xl sm:text-5xl"
             >
-              {__('resources_heading', APP_NAME)}
+              {t('resources_heading')}
             </Heading>
-            <p className="mb-4 max-w-[630px]">
-              {__('resources_subheading', APP_NAME)}
-            </p>
+            <p className="mb-4 max-w-[630px]">{t('resources_subheading')}</p>
           </div>
         </div>
 
@@ -51,11 +51,9 @@ const ResourcesPage = ({ generalConfig }: Props) => {
                 level={2}
                 className="mb-4 uppercase w-full font-extrabold text-5xl max-w-[600px]"
               >
-                {__('resources_faq_heading', APP_NAME)}
+                {t('resources_faq_heading')}
               </Heading>
-              <p className="mb-4 w-full">
-                {__('resources_faq_subheading', APP_NAME)}
-              </p>
+              <p className="mb-4 w-full">{t('resources_faq_subheading')}</p>
             </div>
             <Faqs faqs={faqs} error={error} />
           </div>
@@ -67,11 +65,9 @@ const ResourcesPage = ({ generalConfig }: Props) => {
               level={2}
               className="mb-4 uppercase w-full font-extrabold text-5xl max-w-[700px] bg-[url(/images/resources/tea-cup.png)] bg-no-repeat pt-[250px] bg-top"
             >
-              {__('resources_resources_heading', APP_NAME)}
+              {t('resources_resources_heading')}
             </Heading>
-            <p className="mb-4 w-full">
-              {__('resources_resources_subheading', APP_NAME)}
-            </p>
+            <p className="mb-4 w-full">{t('resources_resources_subheading')}</p>
           </div>
           <Resources />
         </section>
@@ -82,20 +78,25 @@ const ResourcesPage = ({ generalConfig }: Props) => {
   );
 };
 
-ResourcesPage.getInitialProps = async () => {
+ResourcesPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const generalRes = await api.get('/config/general').catch(() => {
-      return null;
-    });
-    const generalConfig = generalRes?.data?.results?.value;
+    const [generalRes, messages] = await Promise.all([
+      api.get('/config/general').catch(() => {
+        return null;
+      }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
 
+    const generalConfig = generalRes?.data?.results?.value;
     return {
       generalConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
-      error: parseMessageFromError(err),
+      error: err,
+      messages: null,
     };
   }
 };

@@ -1,15 +1,17 @@
 import { FC, MouseEventHandler } from 'react';
 
-import { __ } from '../utils/helpers';
+import { useTranslations } from 'next-intl';
 
 const BookingBackButton: FC<{
   name?: string;
   onClick?: MouseEventHandler<HTMLButtonElement>;
-}> = ({ name = __('buttons_go_back'), onClick }) => {
+}> = ({ name, onClick }) => {
+  const t = useTranslations();
+
   const goBack = () => {
     window.history.back();
   };
-  return <button onClick={onClick || goBack}>{name}</button>;
+  return <button onClick={onClick || goBack}>{name || t('buttons_go_back')}</button>;
 };
 
 export default BookingBackButton;

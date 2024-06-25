@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 
 import DateTimePicker from '.';
+import React from 'react';
 
 jest.mock('next/router', () => require('next-router-mock'));
 
