@@ -11,11 +11,19 @@ import {
 } from 'react';
 
 import { AxiosError } from 'axios';
+import {
+  GoogleAuthProvider,
+  getAuth,
+  signInWithPopup,
+  signOut,
+} from 'firebase/auth';
 import Cookies from 'js-cookie';
 
+import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
+import { auth } from './../../firebaseConfig';
 import { AuthenticationContext, User } from './types';
 
 export const AuthContext = createContext<AuthenticationContext | null>(null);
@@ -24,7 +32,11 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [error, setErrorState] = useState<string | null>(null);
-  const [isLoading, setLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  const [hasSignedUp, setHasSignedUp] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
   let errorTimeout: any;
 
   const setError = useCallback((msg: string | null) => {
@@ -45,24 +57,55 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
           setUser(user);
         }
       }
-      setLoading(false);
+      if (!token) {
+        logOutGoogle();
+      }
     } catch (err) {
       const message = parseMessageFromError(err);
-      setError(message);
+      logOutGoogle();
+      console.error('No auth cookie found:', message);
+    } finally {
+      setIsLoading(false);
     }
   }
   useEffect(() => {
     loadUserFromCookies();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async ({
+    email,
+    password,
+    isGoogle,
+    idToken,
+  }: {
+    email: string;
+    password?: string;
+    isGoogle?: boolean;
+    idToken?: string | undefined;
+  }) => {
     try {
-      const {
-        data: { access_token: token, results: user },
-      } = await api.post('/login', {
-        email,
-        password,
-      });
+      setIsLoading(true);
+
+      let token;
+      let user;
+      if (isGoogle && idToken) {
+        ({
+          data: { access_token: token, results: user },
+        } = await api.post('/login', {
+          email,
+          isGoogle,
+          idToken,
+        }));
+      }
+      if (!isGoogle) {
+        ({
+          data: { access_token: token, results: user },
+        } = await api.post('/login', {
+          email,
+          password,
+        }));
+      }
+
       if (token && user) {
         setAuthentification(user, token);
         setUser(user);
@@ -77,6 +120,8 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         (err as AxiosError).response?.data?.error || (err as Error).message,
       );
       console.error(err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -94,8 +139,9 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     }
   };
 
-  const signup = async (data: unknown): Promise<User | undefined> => {
+  const signup = async (data: any) => {
     try {
+      setHasSignedUp(false);
       const {
         data: { access_token: token, results: userData },
       } = await api.post('/signup', data);
@@ -104,12 +150,20 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         setUser(userData);
       }
       setError('');
-      return userData;
+
+      if (userData && userData._id) {
+        setHasSignedUp(true);
+        return { result: 'signup' };
+      } else {
+        console.log('Invalid response', userData);
+        return { result: null };
+      }
     } catch (err) {
       setError(
         (err as AxiosError).response?.data?.error || (err as Error).message,
       );
       console.error(err);
+      return { result: null };
     }
   };
 
@@ -153,10 +207,21 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logOutGoogle = async () => {
+    try {
+      const auth = getAuth();
+      await signOut(auth);
+    } catch (error) {
+      console.error('Error with Google sign out: ', error);
+    }
+  };
+
+  const logout = async () => {
     Cookies.remove('access_token');
     setUser(null);
     delete api.defaults.headers.Authorization;
+
+    await logOutGoogle();
     router.push('/');
   };
 
@@ -171,6 +236,58 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     } catch (err) {
       const message = parseMessageFromError(err);
       setError(message);
+    }
+  };
+
+  const authGoogle = async () => {
+    try {
+      setIsGoogleLoading(true);
+      setError('');
+      const provider = new GoogleAuthProvider();
+
+      const googleRes = await signInWithPopup(auth, provider);
+      const idToken = await googleRes.user.getIdToken();
+
+      const res = await api.post('/check-user-exists', {
+        email: googleRes.user.email,
+      });
+      const doesUserExist = res.data.doesUserExist;
+
+      if (doesUserExist) {
+        await login({
+          email: googleRes.user.email as string,
+          idToken,
+          isGoogle: true,
+        });
+        return { result: 'login' };
+      }
+      if (!doesUserExist) {
+        const referredBy = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
+        if (!googleRes.user.email) {
+          setError('Please enter a valid email.');
+          return { result: null };
+        }
+        try {
+          const signupRes = await signup({
+            isGoogle: true,
+            idToken,
+            email: googleRes.user.email,
+            screenname: googleRes.user.displayName,
+            ...(referredBy && { referredBy }),
+          });
+          return signupRes;
+        } catch (err: unknown) {
+          setError(parseMessageFromError(err));
+        } finally {
+          setIsLoading(false);
+        }
+      }
+      return { result: null };
+    } catch (error) {
+      console.error('Error signing in with Google', error);
+      return { result: null };
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
@@ -191,6 +308,9 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         setError,
         loadUserFromCookies,
         refetchUser,
+        hasSignedUp,
+        isGoogleLoading,
+        authGoogle,
       }}
     >
       {children}
