@@ -17,6 +17,7 @@ const GoogleButton = ({ onClick, isLoading }: Props) => {
           isEnabled={!isLoading}
     >
       <svg
+        aria-label="Google"
         width="22"
         height="22"
         viewBox="0 0 22 22"
