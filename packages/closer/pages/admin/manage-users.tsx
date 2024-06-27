@@ -27,7 +27,6 @@ const ManageUsersPage = () => {
       </Head>
       <div className="max-w-screen-lg mx-auto flex flex-col gap-10">
         <Heading level={1}>{__('manage_users_heading')}</Heading>
-
         <UsersFilter
           page={page}
           setPage={setPage}
