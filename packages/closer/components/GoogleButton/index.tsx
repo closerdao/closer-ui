@@ -1,6 +1,7 @@
 import Button from '../../components/ui/Button';
 
 import { Spinner } from '../ui';
+import { __ } from '../../utils/helpers';
 
 interface Props {
   onClick: () => void;
@@ -39,7 +40,8 @@ const GoogleButton = ({ onClick, isLoading }: Props) => {
           fill="#EA4335"
         />
       </svg>
-       Continue with Google {isLoading ? <Spinner /> : null}
+      { __('google_button')}{' '}
+        {isLoading ? <Spinner /> : null}
     </Button>
   );
 };

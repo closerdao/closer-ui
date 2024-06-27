@@ -528,6 +528,7 @@
   "login_set_password_registration_password": "Password",
   "login_set_password_registrarion_error": "No token provided.",
   "login_no_account": "Don’t have an account yet?",
+  "google_button": "Continue with Google",
   "members_slug_error": "Error :",
   "members_slug_contact": "Contact",
   "members_slug_send": "Send",
