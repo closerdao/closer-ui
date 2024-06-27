@@ -7,12 +7,22 @@ import { __ } from '../../utils/helpers';
 import UserPreview from '../UserPreview';
 import { Heading } from '../ui';
 
+
 interface Props {
   hosts: any;
   email: string;
 }
 
 const Hosts = ({ hosts, email }: Props) => {
+
+  // Move Agnes from Lios to the end of the space hosts list
+  const sortedHosts = hosts && hosts.sort((a: Record<string, any>, b: Record<string, any>) => {
+    if (a.get('slug').includes('agnese')) return 1;
+    if (b.get('slug').includes('agnese')) return -1;
+    return 0;
+  });
+
+  console.log('sortedHosts=',sortedHosts);
   const { APP_NAME, VISITORS_GUIDE } = useConfig();
   return (
     <div className="mb-16">
@@ -30,7 +40,7 @@ const Hosts = ({ hosts, email }: Props) => {
       </div>
       {hosts && hosts.count() > 0 && (
         <div className="grid md:grid-cols-3 gap-x-4 gap-y-4">
-          {hosts.map((host: any) => {
+          {(sortedHosts).map((host: any) => {
             return <UserPreview key={host.get('_id')} user={host} />;
           })}
         </div>

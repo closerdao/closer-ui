@@ -470,7 +470,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
         <section className="mb-12 max-w-4xl mx-auto md:pt-8 md:flex justify-center">
           <div className="flex gap-4 flex-col sm:flex-row">
             <LinkButton href="/stay" className="lowercase">
-              apply to stay
+              Participate / dołącz
             </LinkButton>
           </div>
         </section>
