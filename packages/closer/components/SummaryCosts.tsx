@@ -21,6 +21,7 @@ interface Props {
   updatedUtilityTotal?: Price<CloserCurrencies>;
   updatedFiatTotal?: Price<CloserCurrencies>;
   updatedEventTotal?: Price<CloserCurrencies>;
+  priceDuration?: string;
   vatRate?: number;
 }
 
@@ -40,6 +41,7 @@ const SummaryCosts = ({
   updatedUtilityTotal,
   updatedFiatTotal,
   updatedEventTotal,
+  priceDuration,
   vatRate,
 }: Props) => {
   const { APP_NAME } = useConfig();
@@ -72,48 +74,47 @@ const SummaryCosts = ({
         </div>
       ) : null}
 
-      <div className="flex justify-between items-center mt-3">
-        <p>{__('bookings_summary_step_dates_accomodation_type')}</p>
-        <div className="flex items-center gap-2">
-          {isEditMode &&
-            updatedAccomodationTotal?.val !== accomodationCost?.val && (
-              <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
-                {__('bookings_updated_price')}:{' '}
-                {useCredits &&
-                  priceFormat({
-                    val: updatedAccomodationTotal?.val,
-                    cur: 'credits',
-                    app: APP_NAME,
-                  })}
-                {useTokens && priceFormat(updatedAccomodationTotal)}
-                {!useTokens &&
-                  !useCredits &&
-                  priceFormat(updatedAccomodationTotal)}
+      {priceDuration === 'night' && (
+        <>
+          <div className="flex justify-between items-center mt-3">
+            <p>{__('bookings_summary_step_dates_accomodation_type')}</p>
+            <div className="flex items-center gap-2">
+              {isEditMode &&
+                updatedAccomodationTotal?.val !== accomodationCost?.val && (
+                  <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
+                    {__('bookings_updated_price')}:{' '}
+                    {priceFormat(updatedAccomodationTotal)}
+                  </div>
+                )}
+              <div className="font-bold">
+                <>
+                  {useTokens && <>{priceFormat(accomodationCost)}</>}
+                  {useCredits && (
+                    <>
+                      {priceFormat({
+                        val: accomodationCost?.val,
+                        cur: 'credits',
+                        app: APP_NAME,
+                      })}{' '}
+                      + <span>{priceFormat(totalFiat)}</span>
+                    </>
+                  )}
+                </>
+                {!useTokens && !useCredits && priceFormat(accomodationCost)}
+
+                {isNotPaid && (
+                  <span className="text-failure">
+                    {' '}
+                    {__('booking_card_unpaid')}
+                  </span>
+                )}
               </div>
-            )}
-
-          <p className="font-bold">
-            {useCredits &&
-              priceFormat({
-                val: totalToken.val,
-                cur: 'credits',
-                app: APP_NAME,
-              })}
-            {useTokens && priceFormat(totalToken)}
-            {!useCredits && !useTokens && priceFormat(accomodationCost)}
-            {isNotPaid && (
-              <span className="text-failure"> {__('booking_card_unpaid')}</span>
-            )}
+            </div>
+          </div>
+          <p className="text-right text-xs">
+            {__('bookings_summary_step_accomodation_type_description')}
           </p>
-        </div>
-      </div>
-      <p className="text-right text-xs">
-        {__('bookings_summary_step_accomodation_type_description')}
-      </p>
-
-      {APP_NAME && APP_NAME !== 'lios' && (
-        <div>
-          <div className="flex justify-between items-center mt-3 border">
+          <div className="flex justify-between items-center mt-3">
             <p> {__('bookings_summary_step_utility_total')}</p>
             <div className="flex items-center gap-2">
               {isEditMode && updatedUtilityTotal?.val !== utilityFiat?.val && (
@@ -138,9 +139,8 @@ const SummaryCosts = ({
           <p className="text-right text-xs">
             {__('bookings_summary_step_utility_description')}
           </p>
-        </div>
+        </>
       )}
-
       <div className="flex justify-between items-center mt-3">
         <p>{__('bookings_total')}</p>
         <div className="flex items-center gap-2">
@@ -149,72 +149,128 @@ const SummaryCosts = ({
               updatedAccomodationTotal?.val !== accomodationCost?.val) && (
               <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
                 {__('bookings_updated_price')}:{' '}
-                <span>
-                  {useTokens && (
-                    <div>
-                      {priceFormat(updatedAccomodationTotal)} +{' '}
-                      {priceFormat(updatedFiatTotal)}
-                    </div>
-                  )}
-                  {useCredits && (
-                    <div>
-                      {priceFormat({
-                        val: updatedAccomodationTotal?.val,
-                        cur: 'credits',
-                        app: APP_NAME,
-                      })}{' '}
-                      + <span>{priceFormat(totalFiat)}</span>
-                    </div>
-                  )}
-                  {!useTokens && !useCredits && priceFormat(updatedFiatTotal)}
-                </span>
-              </div>
-            )}
-          <div className="font-bold">
-            {useTokens && (
-              <>
-                <span>{priceFormat(totalToken)}</span> +{' '}
-                <span>{priceFormat(totalFiat)}</span>
-                {isNotPaid && (
-                  <span className="text-failure">
-                    {' '}
-                    {__('booking_card_unpaid')}
-                  </span>
+                {priceDuration === 'night' && (
+                  <div>
+                    {useTokens && (
+                      <div>
+                        {priceFormat(updatedAccomodationTotal)} +{' '}
+                        {priceFormat(updatedFiatTotal)}
+                      </div>
+                    )}
+                    {useCredits && (
+                      <div>
+                        {priceFormat({
+                          val: updatedAccomodationTotal?.val,
+                          cur: 'credits',
+                          app: APP_NAME,
+                        })}{' '}
+                        + <span>{priceFormat(totalFiat)}</span>
+                      </div>
+                    )}
+                    {!useTokens && !useCredits && priceFormat(updatedFiatTotal)}
+                  </div>
                 )}
-              </>
-            )}
-            {useCredits && (
-              <>
-                <span>
-                  {priceFormat({
-                    val: totalToken.val,
-                    cur: 'credits',
-                    app: APP_NAME,
-                  })}
-                </span>{' '}
-                + <span>{priceFormat(totalFiat)}</span>
-                {isNotPaid && (
-                  <span className="text-failure">
-                    {' '}
-                    {__('booking_card_unpaid')}
-                  </span>
-                )}
-              </>
-            )}
+                {priceDuration === 'hour' && (
+                  <div>
+                    {useTokens && (
+                      <div>{priceFormat(updatedAccomodationTotal)}</div>
+                    )}
 
-            {!useTokens && !useCredits && (
-              <div>
-                {' '}
-                {priceFormat(totalFiat)}
-                {isNotPaid && (
-                  <span className="text-failure">
-                    {' '}
-                    {__('booking_card_unpaid')}
-                  </span>
+                    {useCredits && (
+                      <div>
+                        {priceFormat({
+                          val: updatedAccomodationTotal?.val,
+                          cur: 'credits',
+                          app: APP_NAME,
+                        })}
+                      </div>
+                    )}
+                    {!useTokens && !useCredits && priceFormat(updatedFiatTotal)}
+                  </div>
                 )}
               </div>
             )}
-          </div>
+          {priceDuration === 'night' && (
+            <div className="font-bold">
+              {useTokens && (
+                <>
+                  <span>{priceFormat(totalToken)}</span> +{' '}
+                  <span>{priceFormat(totalFiat)}</span>
+                  {isNotPaid && (
+                    <span className="text-failure">
+                      {' '}
+                      {__('booking_card_unpaid')}
+                    </span>
+                  )}
+                </>
+              )}
+              {useCredits && (
+                <>
+                  <span>
+                    {priceFormat({
+                      val: totalToken.val,
+                      cur: 'credits',
+                      app: APP_NAME,
+                    })}
+                  </span>{' '}
+                  + <span>{priceFormat(totalFiat)}</span>
+                  {isNotPaid && (
+                    <span className="text-failure">
+                      {' '}
+                      {__('booking_card_unpaid')}
+                    </span>
+                  )}
+                </>
+              )}
+
+              {!useTokens && !useCredits && (
+                <div>
+                  {' '}
+                  {priceFormat(totalFiat)}
+                  {isNotPaid && (
+                    <span className="text-failure">
+                      {' '}
+                      {__('booking_card_unpaid')}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {priceDuration === 'hour' && (
+            <div className="font-bold">
+              {useTokens && (
+                <>
+                  <span>{priceFormat(totalToken)}</span>
+                </>
+              )}
+              {useCredits && (
+                <>
+                  <span>
+                    {priceFormat({
+                      val: totalToken.val,
+                      cur: 'credits',
+                      app: APP_NAME,
+                    })}
+                  </span>
+                </>
+              )}
+
+              {!useTokens && !useCredits && (
+                <div>
+                  {' '}
+                  {priceFormat(totalFiat)}
+                  {isNotPaid && (
+                    <span className="text-failure">
+                      {' '}
+                      {__('booking_card_unpaid')}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
       <p className="text-right text-xs">

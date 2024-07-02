@@ -122,7 +122,7 @@ const ArrayConfig = ({
                             </label>
                           </div>
                         )}
-                        {inputType === 'text' && (
+                        {inputType === 'text' || inputType === 'number' && (
                           <input
                             className="bg-neutral rounded-md p-1"
                             name={innerKey}

@@ -65,7 +65,10 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
           listings
             ?.find((listing) => listing.get('_id') === listingId)
             ?.get('name') || __('no_listing_type');
-
+        const isListingPrivate = listings
+        ?.find((listing) => listing.get('_id') === listingId)
+          ?.get('private') || true;
+      
         const userId = b.get('createdBy');
         const user =
           allUsers && allUsers.toJS().find((user) => user._id === userId);
@@ -91,6 +94,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
           status,
           eventId,
           volunteerId,
+          isListingPrivate,
         };
       })
     : [];
@@ -180,6 +184,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                         currentVolunteer && currentVolunteer.get('name')
                       }
                       link={link}
+                      isPrivate={b.isListingPrivate}
                     />
                   );
                 })
@@ -234,6 +239,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                         currentVolunteer && currentVolunteer.get('name')
                       }
                       link={link}
+                      isPrivate={b.isListingPrivate}
                     />
                   );
                 })
@@ -289,6 +295,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                         currentVolunteer && currentVolunteer.get('name')
                       }
                       link={link}
+                      isPrivate={b.isListingPrivate}
                     />
                   );
                 })

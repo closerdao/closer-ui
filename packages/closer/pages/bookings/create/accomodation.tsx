@@ -147,13 +147,11 @@ const AccomodationSelector = ({
           savedCurrency={currency}
           backToDates={backToDates}
         />
-
         {bookingError && (
           <section className="my-12">
             <ErrorMessage error={bookingError} />
           </section>
         )}
-
         {filteredListings?.length === 0 && (
           <div className="mt-16">
             <h2 className="text-2xl font-bold">
@@ -235,7 +233,6 @@ AccomodationSelector.getInitialProps = async ({
     const bookingError = (availabilityRes as any)?.error || null;
     const availability = (availabilityRes as any)?.data?.results;
 
-    console.log('availability===',availability);
     const bookingConfig = bookingConfigRes?.data?.results?.value;
 
     return {

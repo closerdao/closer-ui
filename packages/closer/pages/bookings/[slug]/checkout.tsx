@@ -27,8 +27,7 @@ import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { WalletState } from '../../../contexts/wallet';
 import { useBookingSmartContract } from '../../../hooks/useBookingSmartContract';
-import { useConfig } from '../../../hooks/useConfig';
-import {
+import { 
   BaseBookingParams,
   Booking,
   BookingConfig,
@@ -51,15 +50,8 @@ interface Props extends BaseBookingParams {
   paymentConfig: PaymentConfig | null;
 }
 
-const Checkout = ({
-  booking,
-  listing,
-  error,
-  event,
-  bookingConfig,
-  paymentConfig,
-}: Props) => {
-  const { APP_NAME } = useConfig();
+const Checkout = ({ booking, listing, error, event, bookingConfig, paymentConfig }: Props) => {
+  const isHourlyBooking = listing?.priceDuration === 'hour';
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -227,6 +219,7 @@ const Checkout = ({
       setCreditsError(null);
       const res = await api.post(`/bookings/${booking?._id}/update-payment`, {
         useCredits: true,
+        isHourlyBooking
       });
       setUseCreditsUpdated(true);
 
@@ -286,7 +279,11 @@ const Checkout = ({
 
             <HeadingRow>
               <span className="mr-2">🏡</span>
-              <span>{__('bookings_checkout_step_accomodation')}</span>
+              <span>
+                {isHourlyBooking
+                  ? __('bookings_checkout_step_accomodation')
+                  : __('bookings_checkout_step_hourly')}
+              </span>
             </HeadingRow>
             <div className="flex justify-between items-center mt-3">
               <p>{listingName}</p>
@@ -297,7 +294,7 @@ const Checkout = ({
               )}
             </div>
             <p className="text-right text-xs">
-              {__('bookings_checkout_step_accomodation_description')}
+              {isHourlyBooking ? __('bookings_checkout_step_accomodation_description_hourly') : __('bookings_checkout_step_accomodation_description')}
             </p>
 
             {process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' &&
@@ -339,8 +336,7 @@ const Checkout = ({
                 </div>
               )}
           </div>
-
-          {APP_NAME && APP_NAME !== 'lios' && (
+          {!isHourlyBooking && ( 
             <div>
               <HeadingRow>
                 <span className="mr-2">🛠</span>
@@ -357,8 +353,11 @@ const Checkout = ({
               <p className="text-right text-xs">
                 {__('bookings_summary_step_utility_description')}
               </p>
+             
             </div>
           )}
+           
+         
 
           <CheckoutTotal
             total={updatedTotal}
@@ -410,7 +409,7 @@ const Checkout = ({
           )}
           {paymentError && <ErrorMessage error={paymentError} />}
         </div>
-      </div>
+        </div>
     </>
   );
 };
@@ -434,7 +433,7 @@ Checkout.getInitialProps = async ({
           return null;
         }),
       api.get('/config/booking').catch(() => {
-        return null;
+      return null;
       }),
       api.get('/config/payment').catch(() => {
         return null;

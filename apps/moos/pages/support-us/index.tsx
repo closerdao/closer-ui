@@ -88,7 +88,8 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               >
                 more.
               </Link>{' '}
-              We are currently offering the first 25,000 Vybes at a discounted price of €4 per Vybe (worth €5).
+              We are currently offering the first 25,000 Vybes at a discounted
+              price of €4 per Vybe (worth €5).
             </p>
             <p>
               Stay or host at MOOS with unique flexibility. Secure your spot now

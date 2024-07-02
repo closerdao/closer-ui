@@ -1,5 +1,6 @@
 // App specific configs that are not directly editable by property admin in UI:
 const config = {
+  APP_NAME: 'tdf',
   platformAllowedConfigs: [
     'booking',
     'general',

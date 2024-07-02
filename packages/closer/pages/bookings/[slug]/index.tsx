@@ -15,25 +15,22 @@ import LocalizedFormat from 'dayjs/plugin/localizedFormat';
 import { NextApiRequest } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
-import PageNotAllowed from '../../401';
-import PageNotFound from '../../404';
-import { MAX_LISTINGS_TO_FETCH, STATUS_COLOR } from '../../../constants';
+import { STATUS_COLOR } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
-import { useConfig } from '../../../hooks/useConfig';
 import {
   Booking,
   BookingConfig,
   Event,
+  GeneralConfig,
   Listing,
   PaymentConfig,
   VolunteerOpportunity,
 } from '../../../types';
 import api from '../../../utils/api';
 import {
-  formatCheckinDate,
-  formatCheckoutDate,
+  dateToPropertyTimeZone,
   getAccommodationTotal,
   getFiatTotal,
   getPaymentDelta,
@@ -41,7 +38,8 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { __, getBookingRate, getDiscountRate } from '../../../utils/helpers';
-import { formatDate } from '../../../utils/listings.helpers';
+import PageNotAllowed from '../../401';
+import PageNotFound from '../../404';
 
 dayjs.extend(LocalizedFormat);
 
@@ -54,6 +52,7 @@ interface Props {
   bookingCreatedBy: User;
   bookingConfig: BookingConfig | null;
   listings: Listing[];
+  generalConfig: GeneralConfig;
   paymentConfig: PaymentConfig | null;
 }
 
@@ -66,8 +65,12 @@ const BookingPage = ({
   bookingCreatedBy,
   bookingConfig,
   listings,
+  generalConfig,
   paymentConfig,
 }: Props) => {
+console.log('booking=', booking);
+  const { timeZone } = generalConfig;
+
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -75,7 +78,9 @@ const BookingPage = ({
   const { platform }: any = usePlatform();
   const { isAuthenticated, user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
-  const { TIME_ZONE } = useConfig();
+  const isEditMode = true;
+
+  const isHourlyBooking = listing?.priceDuration !== 'night';
 
   const {
     utilityFiat,
@@ -118,9 +123,10 @@ const BookingPage = ({
   const [updatedPets, setUpdatedPets] = useState(pets);
   const [updatedStartDate, setUpdatedStartDate] = useState<
     string | Date | null
-  >(bookingStart);
+  >(timeZone && dateToPropertyTimeZone(timeZone, bookingStart));
+
   const [updatedEndDate, setUpdatedEndDate] = useState<string | Date | null>(
-    bookingEnd,
+    timeZone && dateToPropertyTimeZone(timeZone, bookingEnd),
   );
   const [updatedListingId, setUpdatedListingId] = useState(listing?._id);
   const [isLoading, setIsLoading] = useState(false);
@@ -140,16 +146,24 @@ const BookingPage = ({
     status !== 'credits-paid' &&
     status !== 'tokens-staked';
 
-  const updatedDurationInDays = Math.ceil(
+  let updatedDuration = 0;
+
+  updatedDuration = Math.ceil(
     dayjs(updatedEndDate).diff(dayjs(updatedStartDate), 'hour') / 24,
   );
+  if (isHourlyBooking) {
+    updatedDuration = dayjs(updatedEndDate).diff(
+      dayjs(updatedStartDate),
+      'hour',
+    );
+  }
 
   const updatedListing = listings?.find(
     (listing) => listing._id === updatedListingId,
   );
   const updatedMaxBeds = updatedListing?.beds || 1;
 
-  const updatedDurationName = getBookingRate(updatedDurationInDays);
+  const updatedDurationName = getBookingRate(updatedDuration);
   const updatedDiscountRate = bookingConfig
     ? 1 - getDiscountRate(updatedDurationName, bookingConfig)
     : 0;
@@ -159,7 +173,7 @@ const BookingPage = ({
     useTokens,
     useCredits,
     updatedAdults,
-    updatedDurationInDays,
+    updatedDuration,
     updatedDiscountRate,
     volunteerId,
     isTeamBooking,
@@ -172,7 +186,7 @@ const BookingPage = ({
     utilityFiatVal: bookingConfig?.utilityFiatVal,
     isPrivate: listing?.private,
     updatedAdults,
-    updatedDurationInDays,
+    updatedDuration,
     discountRate: updatedDiscountRate,
     isTeamBooking,
   });
@@ -203,17 +217,9 @@ const BookingPage = ({
 
   const updatedBooking = {
     ...booking,
-    start: formatCheckinDate(
-      formatDate(updatedStartDate),
-      TIME_ZONE,
-      bookingConfig?.checkinTime,
-    ),
-    end: formatCheckoutDate(
-      formatDate(updatedEndDate),
-      TIME_ZONE,
-      bookingConfig?.checkoutTime,
-    ),
-    duration: updatedDurationInDays,
+    start: updatedStartDate,
+    end: updatedEndDate,
+    duration: updatedDuration,
     adults: updatedAdults,
     children: updatedChildren,
     pets: updatedPets,
@@ -240,6 +246,9 @@ const BookingPage = ({
     total: { val: updatedFiatTotal, cur: rentalFiat?.cur },
     paymentDelta: paymentDelta ? paymentDelta : null,
   };
+  if (booking?.paymentDelta) {
+    booking.paymentDelta = null;
+  }
 
   if (booking?.paymentDelta) {
     booking.paymentDelta = null;
@@ -280,7 +289,7 @@ const BookingPage = ({
         }, 3000);
       }
     } catch (error) {
-      console.log('error====', error);
+      console.log('error=', error);
     } finally {
       setIsLoading(false);
     }
@@ -341,6 +350,22 @@ const BookingPage = ({
           )}
         </section>
 
+        {isSpaceHost &&
+          booking.roomOrBedNumbers &&
+          booking.roomOrBedNumbers.length > 0 && (
+            <section className="rounded-md p-4 bg-accent-light">
+              {
+                <p className="font-bold">
+                  {listing.private
+                    ? __('booking_card_room_number')
+                    : __('booking_card_bed_numbers')}{' '}
+                  {booking.roomOrBedNumbers &&
+                    booking.roomOrBedNumbers.toString()}
+                </p>
+              }
+            </section>
+          )}
+
         <section className="flex flex-col gap-12">
           <SummaryDates
             isDayTicket={booking?.isDayTicket}
@@ -358,11 +383,15 @@ const BookingPage = ({
             ticketOption={ticketOption?.name}
             doesNeedPickup={doesNeedPickup}
             doesNeedSeparateBeds={doesNeedSeparateBeds}
-            isEditMode={isSpaceHost}
+            isEditMode={isSpaceHost && isEditMode}
             setters={setters}
             updatedListingId={updatedListingId}
             listings={listings}
             updatedMaxBeds={updatedMaxBeds}
+            priceDuration={listing?.priceDuration}
+            workingHoursStart={listing?.workingHoursStart}
+            workingHoursEnd={listing?.workingHoursEnd}
+            listingId={listing?._id}
           />
           <SummaryCosts
             utilityFiat={utilityFiat}
@@ -397,6 +426,7 @@ const BookingPage = ({
               val: updatedEventTotal,
               cur: eventFiat?.cur,
             }}
+            priceDuration={listing?.priceDuration}
             vatRate={vatRate}
           />
         </section>
@@ -444,7 +474,7 @@ BookingPage.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
-    const [bookingRes, bookingConfigRes, listingRes, paymentConfigRes] =
+    const [bookingRes, bookingConfigRes, listingRes, generalConfigRes, paymentConfigRes] =
       await Promise.all([
         api
           .get(`/booking/${query.slug}`, {
@@ -458,21 +488,20 @@ BookingPage.getInitialProps = async ({
         api.get('/config/booking').catch(() => {
           return null;
         }),
-        api
-          .get('/listing', {
-            params: {
-              limit: MAX_LISTINGS_TO_FETCH,
-            },
-          })
-          .catch(() => {
-            return null;
-          }),
+        api.get('/listing').catch(() => {
+          return null;
+        }),
+        api.get('/config/general').catch(() => {
+          return null;
+        }),
         api.get('/config/payment').catch(() => {
           return null;
         }),
       ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
+    const generalConfig = generalConfigRes?.data?.results?.value;
+
     const listings = listingRes?.data?.results;
     const paymentConfig = paymentConfigRes?.data?.results?.value;
 
@@ -521,6 +550,7 @@ BookingPage.getInitialProps = async ({
       error: null,
       bookingCreatedBy,
       bookingConfig,
+      generalConfig,
       listings,
       paymentConfig,
     };
@@ -535,6 +565,7 @@ BookingPage.getInitialProps = async ({
       volunteer: null,
       createdBy: null,
       bookingConfig: null,
+      generalConfig: null,
       listings: null,
       paymentConfig: null,
     };

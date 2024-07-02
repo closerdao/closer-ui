@@ -2,11 +2,14 @@ import Link from 'next/link';
 
 import React from 'react';
 
-import dayjs from 'dayjs';
-
 import { useAuth } from '../../contexts/auth';
 import { __ } from '../../utils/helpers';
 import { Button } from '../ui';
+
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc);
 
 interface Props {
   _id: string;
@@ -33,6 +36,8 @@ const BookingRequestButtons = ({
     (status === 'open' || status === 'pending' || status === 'confirmed') &&
     dayjs().isBefore(dayjs(end));
 
+  const isSpaceHost = user?.roles.includes('space-host');
+  
   return (
     <div className="mt-4 flex flex-col gap-4">
       {/* Hide buttons if start date is in the past: */}
@@ -74,7 +79,7 @@ const BookingRequestButtons = ({
             </Link>
           )}
 
-          {user && status === 'paid' && user._id === createdBy && (
+          {user && (status === 'paid' || status === 'credits-paid' || status === 'tokens-staked') && (user._id === createdBy || isSpaceHost) && (
             <Link passHref href={`/bookings/${_id}/cancel`}>
               <Button type="secondary">⭕ {__('booking_cancel_button')}</Button>
             </Link>

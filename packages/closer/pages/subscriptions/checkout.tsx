@@ -42,7 +42,10 @@ import {
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 
 const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUB_KEY as string,
+  process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY as string,
+  {
+    stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT
+  }
 );
 
 interface Props {
@@ -96,7 +99,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
   useEffect(() => {
     if (priceId && subscriptionPlans) {
       const selectedSubscription = subscriptionPlans.find(
-        (plan: SubscriptionPlan) => plan.priceId === priceId,
+        (plan: SubscriptionPlan) => plan.priceId.includes(priceId as string),
       );
 
       setSelectedPlan({

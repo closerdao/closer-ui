@@ -157,7 +157,7 @@ const FormField = ({
             <select
               value={objectPath.get(data, name)}
               onChange={(e) => update(name, e.target.value)}
-              className={className}
+              className={`px-2 py-1 min-w-[180px] ${className}`}
             >
               {options.map((opt) => (
                 <option value={opt.value} key={opt.value}>
