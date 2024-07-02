@@ -21,6 +21,7 @@ import dayjs from 'dayjs';
 import { NextPage } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
+import PageNotFound from '../../404';
 import {
   CURRENCIES,
   DEFAULT_AVAILABILITY_RANGE_TO_CHECK,
@@ -55,7 +56,6 @@ import {
   formatDate,
   getBlockedDateRanges,
 } from '../../../utils/listings.helpers';
-import PageNotFound from '../../404';
 
 const MAX_DAYS_TO_CHECK_AVAILABILITY = 60;
 
@@ -75,8 +75,7 @@ const ListingPage: NextPage<Props> = ({
   descriptionText,
 }) => {
   const config = useConfig();
-  const { LOCATION_LAT, LOCATION_LON, PLATFORM_LEGAL_ADDRESS } =
-    config || {};
+  const { LOCATION_LAT, LOCATION_LON, PLATFORM_LEGAL_ADDRESS } = config || {};
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const isMember = user && user.roles.includes('member');
@@ -227,7 +226,6 @@ const ListingPage: NextPage<Props> = ({
         useTokens: isTokenPaymentSelected,
       });
 
-
       setIsGuestLimit(availability[0].reason === 'Guest limit');
 
       return { results, availability, error: null };
@@ -241,6 +239,8 @@ const ListingPage: NextPage<Props> = ({
   };
 
   useEffect(() => {
+
+    console.log('savedStartDate=', savedStartDate);
     if (savedStartDate) {
       setStartDate(savedStartDate as string);
     }
@@ -267,15 +267,13 @@ const ListingPage: NextPage<Props> = ({
 
     if (isCalendarSelectionValid) {
       (async function updatePrices() {
-        setBookingError(null); 
+        setBookingError(null);
         const { results, availability, error } = await getAvailability(
           start,
           end,
           listing?._id,
         );
         setHourAvailability(getLocalTimeAvailability(availability, timeZone));
-
-        console.log('getLocalTimeAvailability(availability, timeZone)=', getLocalTimeAvailability(availability, timeZone));
 
         setIsListingAvailable(results);
         setBookingError(error);
@@ -330,7 +328,7 @@ const ListingPage: NextPage<Props> = ({
   }, []);
 
   const handleDefaultBookingDates = async () => {
-    if (listing?.priceDuration !== 'night') {
+    if (listing?.priceDuration !== 'night' && !savedStartDate) {
       setStartDate(new Date());
       setEndDate(new Date());
       return;
@@ -365,6 +363,7 @@ const ListingPage: NextPage<Props> = ({
       useTokens: String(isTokenPaymentSelected),
     };
     const urlParams = new URLSearchParams(params);
+
     return urlParams;
   };
 
@@ -380,10 +379,11 @@ const ListingPage: NextPage<Props> = ({
   };
 
   const bookListing = async () => {
+    setApiError(null);
     if (!isAuthenticated) {
       redirectToSignup();
+      return;
     }
-    setApiError(null);
 
     try {
       const {
@@ -734,7 +734,7 @@ const ListingPage: NextPage<Props> = ({
                                 )}
                             </div>
                           ) : (
-                              <span>
+                            <span>
                               {priceFormat(
                                 settings && listing && accomodationTotal,
                                 listing.fiatPrice?.cur,
