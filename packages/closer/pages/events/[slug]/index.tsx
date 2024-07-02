@@ -296,7 +296,15 @@ const EventPage = ({
                       height={20}
                     />
                     <label className="text-sm uppercase font-bold flex gap-1">
-                      {start && dayjs(start).format(dateFormat)}
+                    
+                        {start && dayjs(start).format(dateFormat)}
+
+                        {end &&
+                        Number(duration) <= 24 &&
+                          ` ${dayjs(start).format('HH:mm')}`}{' '}
+                        
+
+
                       {end &&
                         Number(duration) > 24 &&
                         ` - ${dayjs(end).format(dateFormat)}`}
