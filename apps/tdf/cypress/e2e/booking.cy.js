@@ -16,10 +16,10 @@ const login = ({ isAdmin }) => {
   cy.wait(2000);
 };
 
-const getTomorrowDate = () => {
+const getDateInTwodays = () => {
   const today = new Date();
   const todayDate = today.getDate();
-  return todayDate + 1;
+  return todayDate + 2;
 };
 
 const getIframeBody = () => {
@@ -34,7 +34,7 @@ const selectDates = () => {
   cy.get('button')
     .contains(/select dates/i)
     .click();
-  const tomorrowDate = getTomorrowDate();
+  const tomorrowDate = getDateInTwodays();
   cy.contains('.rdp-day', tomorrowDate).click();
   cy.get('button')
     .contains(/book now/i)
@@ -44,14 +44,14 @@ const selectDates = () => {
 };
 
 const selectDatesSearchListings = () => {
-  const tomorrowDate = getTomorrowDate();
+  const tomorrowDate = getDateInTwodays();
   cy.contains('.rdp-day', tomorrowDate).click();
   cy.contains('.rdp-day', tomorrowDate + 1).click();
 };
 
 const selectDateAndTime = () => {
   cy.get('[data-testid="select-dates-button"]').click();
-  const tomorrowDate = getTomorrowDate();
+  const tomorrowDate = getDateInTwodays();
   cy.contains('.rdp-day', tomorrowDate + 1).click();
   cy.get('button')
     .contains(/12:00.*13:00/s)
@@ -67,9 +67,9 @@ const fillStripeForm = () => {
 };
 
 describe('Booking flow', () => {
-  it.skip('should have correct unauthenticated user booking flow', () => {
+  it('should have correct unauthenticated user booking flow', () => {
     cy.visit(`${Cypress.config('baseUrl')}/stay/${LISTING.slug}`);
-  selectDates()
+    selectDates();
     cy.get('button')
       .contains(/book now/i)
       .click();
@@ -82,7 +82,7 @@ describe('Booking flow', () => {
     cy.url().should('include', `/stay/${LISTING.slug}`);
   });
 
-  it.skip('should have correct authenticated user (cannot instant book) booking flow', () => {
+  it('should have correct authenticated user (cannot instant book) booking flow', () => {
     cy.visit(`${Cypress.config('baseUrl')}/login`);
     login({ isAdmin: false });
     cy.wait(2000);
@@ -90,7 +90,7 @@ describe('Booking flow', () => {
     cy.get('button')
       .contains(/select dates/i)
       .click();
-    const tomorrowDate = getTomorrowDate();
+    const tomorrowDate = getDateInTwodays();
     cy.contains('.rdp-day', tomorrowDate).click();
     cy.contains('.rdp-day', tomorrowDate + 1).click();
     cy.get('[data-testid="select-dates-button"]').click();
@@ -122,7 +122,7 @@ describe('Booking flow', () => {
 
     cy.get('input[type="checkbox"]').click({ multiple: true });
     cy.get('button').contains(/pay/i).click();
-    cy.wait(10000);
+    cy.wait(16000);
     cy.url().should('include', '/confirmation');
 
     cy.get('button')
@@ -162,6 +162,8 @@ describe('Booking flow', () => {
       .contains(/confirm booking/i)
       .click();
 
+    cy.wait(4000);
+
     cy.url().should('include', '/bookings');
 
     cy.get('button')
@@ -194,6 +196,7 @@ describe('Booking flow', () => {
       .contains('button', 'Select')
       .click();
 
+    cy.wait(2000);
     cy.url().should('include', '/summary');
   });
 
@@ -249,7 +252,7 @@ describe('Booking flow', () => {
 
     cy.get('input[type="checkbox"]').click({ multiple: true });
     cy.get('button').contains(/pay/i).click();
-    cy.wait(10000);
+    cy.wait(16000);
     cy.url().should('include', '/confirmation');
 
     cy.get('button')
