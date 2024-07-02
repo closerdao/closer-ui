@@ -240,7 +240,6 @@ const ListingPage: NextPage<Props> = ({
 
   useEffect(() => {
 
-    console.log('savedStartDate=', savedStartDate);
     if (savedStartDate) {
       setStartDate(savedStartDate as string);
     }
@@ -273,8 +272,9 @@ const ListingPage: NextPage<Props> = ({
           end,
           listing?._id,
         );
-        setHourAvailability(getLocalTimeAvailability(availability, timeZone));
-
+        if (availability) {
+          setHourAvailability(getLocalTimeAvailability(availability, timeZone));
+        }
         setIsListingAvailable(results);
         setBookingError(error);
       })();
@@ -379,13 +379,13 @@ const ListingPage: NextPage<Props> = ({
   };
 
   const bookListing = async () => {
-    setApiError(null);
     if (!isAuthenticated) {
       redirectToSignup();
       return;
     }
-
+    
     try {
+      setApiError(null);
       const {
         data: { results: newBooking },
       } = await api.post('/bookings/request', {
