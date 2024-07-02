@@ -6,7 +6,11 @@ import dayjs from 'dayjs';
 import { STATUS_COLOR } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
-import { getBookingType, getStatusText } from '../../utils/booking.helpers';
+import {
+  dateToPropertyTimeZone,
+  getBookingType,
+  getStatusText,
+} from '../../utils/booking.helpers';
 import { __, priceFormat } from '../../utils/helpers';
 import BookingRequestButtons from '../BookingRequestButtons';
 import UserInfoButton from '../UserInfoButton';
@@ -21,6 +25,7 @@ interface Props {
   link: string | null;
   isAdmin?: boolean;
   isPrivate?: boolean;
+  isHourly?: boolean;
 }
 
 const BookingListPreview = ({
@@ -32,8 +37,9 @@ const BookingListPreview = ({
   link,
   isAdmin,
   isPrivate,
+  isHourly,
 }: Props) => {
-  const { APP_NAME } = useConfig();
+  const { APP_NAME, TIME_ZONE } = useConfig();
   const {
     _id,
     start,
@@ -57,6 +63,7 @@ const BookingListPreview = ({
     adminBookingReason,
     roomOrBedNumbers,
   } = bookingMapItem.toJS();
+
   const router = useRouter();
 
   const { platform }: any = usePlatform();
@@ -138,7 +145,7 @@ const BookingListPreview = ({
         </div>
         <div className="flex-1">
           <p className="card-feature">{__('booking_card_nights')}</p>
-          <p>{duration}</p>
+          <p>{isHourly ? '-' : duration}</p>
         </div>
       </div>
 
@@ -152,17 +159,26 @@ const BookingListPreview = ({
       <div className="flex gap-4">
         <div className="flex-1">
           <p className="card-feature">{__('booking_card_checkin')}</p>
-          <p>{startFormatted}</p>
+          <p>
+            {isHourly
+              ? dateToPropertyTimeZone(TIME_ZONE, start)
+              : startFormatted}
+          </p>
         </div>
         <div className="flex-1">
           <p className="card-feature">{__('booking_card_checkout')}</p>
-          <p>{endFormatted}</p>
+          <p>{isHourly
+              ? dateToPropertyTimeZone(TIME_ZONE, end)
+              : endFormatted}</p>
         </div>
       </div>
 
       <div>
         <p className="card-feature">{__('booking_card_type')}</p>
-        <p>{listingName} {!isPrivate && __('booking_card_beds')} {roomOrBedNumbers.toString()}</p>
+        <p>
+          {listingName} {!isPrivate && __('booking_card_beds')}{' '}
+          {roomOrBedNumbers.toString()}
+        </p>
       </div>
 
       <div>

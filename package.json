@@ -13,7 +13,8 @@
     "lint-fix": "turbo run lint -- --fix",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "test": "turbo run test",
-    "test:watch": "turbo run test:watch"
+    "test:watch": "turbo run test:watch",
+    "cypress:open": "cypress open"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.5",
