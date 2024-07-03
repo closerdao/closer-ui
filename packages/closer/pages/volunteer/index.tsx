@@ -5,19 +5,30 @@ import EventPreview from '../../components/EventPreview';
 import { LinkButton } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
-import { NextPage } from 'next';
+import { NextPage, NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
+import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
-import { OpportunityByCategory, type VolunteerOpportunity } from '../../types';
+import {
+  OpportunityByCategory,
+  VolunteerConfig,
+  type VolunteerOpportunity,
+} from '../../types';
 import api from '../../utils/api';
-import { __ } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
 import { getOpportunitiesByCategory } from '../../utils/volunteer.helpers';
 
 interface Props {
   opportunities: VolunteerOpportunity[];
+  volunteerConfig: VolunteerConfig | null;
 }
-const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
+const VolunteerOpportunitiesPage: NextPage<Props> = ({
+  opportunities,
+  volunteerConfig,
+}) => {
+  const t = useTranslations();
   const { APP_NAME, SEMANTIC_URL } = useConfig() || {};
   const opportunitiesByCategory = getOpportunitiesByCategory(opportunities);
 
@@ -25,23 +36,33 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
   const hasStewardRole = user?.roles?.includes('steward');
 
   const volunteerTerms = [
-    __('volunteers_page_terms_1', APP_NAME),
-    __('volunteers_page_terms_2', APP_NAME),
-    __('volunteers_page_terms_3', APP_NAME),
-    __('volunteers_page_terms_4', APP_NAME),
-    __('volunteers_page_terms_5', APP_NAME),
-    __('volunteers_page_terms_6', APP_NAME),
+    'volunteers_page_terms_1',
+    'volunteers_page_terms_2',
+    'volunteers_page_terms_3',
+    'volunteers_page_terms_4',
+    'volunteers_page_terms_5',
+    'volunteers_page_terms_6',
   ];
 
   const doesHaveVolunteerTerms =
-    !volunteerTerms.every((item) => item === '') &&
+    !volunteerTerms.every((item) => t(item) === '') &&
     APP_NAME &&
     (APP_NAME.toLowerCase() === 'tdf' || APP_NAME.toLowerCase() === 'lios');
+
+  const isVolunteeringEnabled =
+    volunteerConfig?.enabled === true &&
+    process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
+  
+  console.log('isVolunteeringEnabled===',isVolunteeringEnabled);
+
+  if (!isVolunteeringEnabled) {
+    return <PageNotFound />;
+  }
 
   return (
     <div className="flex justify-center">
       <Head>
-        <title>{__('volunteers_page_title')}</title>
+        <title>{t('volunteers_page_title')}</title>
         <link
           rel="canonical"
           href={`https://${SEMANTIC_URL}/volunteer`}
@@ -51,7 +72,7 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
 
       <div className="flex flex-col gap-10 max-w-4xl">
         <section className="w-full flex justify-between  flex-col gap-6 sm:gap-2 sm:flex-row">
-          <Heading level={1}>{__('volunteers_page_title')}</Heading>
+          <Heading level={1}>{t('volunteers_page_title')}</Heading>
           {hasStewardRole && (
             <Link href="/volunteer/create">
               <div className="btn-primary">Create opportunity</div>
@@ -61,17 +82,17 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
 
         <section className=" flex flex-col gap-6">
           <div className="bg-accent-light rounded-md p-6 flex flex-col gap-6">
-            <p>{APP_NAME && __('volunteers_page_intro_text', APP_NAME)}</p>
+            <p>{t('volunteers_page_intro_text')}</p>
             {doesHaveVolunteerTerms && (
               <ul>
                 {volunteerTerms.map((term: string) => {
-                  if (!term.includes('_missing')) {
+                  if (term !== t(term)) {
                     return (
                       <li
                         key={term}
                         className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5"
                       >
-                        {term}
+                        {t(term)}
                       </li>
                     );
                   }
@@ -87,10 +108,11 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
               Join Telegram group
             </LinkButton>
           )}
-          {!__('volunteers_page_more_info', APP_NAME).includes('_missing') && (
+
+          {t('volunteers_page_more_info') !== 'volunteers_page_more_info' && (
             <div
               dangerouslySetInnerHTML={{
-                __html: __('volunteers_page_more_info', APP_NAME),
+                __html: t('volunteers_page_more_info'),
               }}
             />
           )}
@@ -100,7 +122,7 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
           {opportunities?.length === 0 &&
           APP_NAME &&
           APP_NAME.toLowerCase() === 'tdf' ? (
-            <p>{__('volunteers_page_empty')}</p>
+            <p>{t('volunteers_page_empty')}</p>
           ) : (
             <section className="flex flex-col gap-8">
               {opportunitiesByCategory?.map(
@@ -136,18 +158,35 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({ opportunities }) => {
   );
 };
 
-VolunteerOpportunitiesPage.getInitialProps = async () => {
+VolunteerOpportunitiesPage.getInitialProps = async (
+  context: NextPageContext,
+) => {
   try {
-    const {
-      data: { results },
-    } = await api.get('/volunteer');
+    const [opportunitiesRes, volunteerConfigRes, messages] = await Promise.all([
+      api.get('/volunteer').catch(() => {
+        return null;
+      }),
+      api.get('/config/volunteering').catch(() => {
+        return null;
+      }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+
+    ]);
+
+    const opportunities = opportunitiesRes?.data?.results || null;
+    const volunteerConfig = volunteerConfigRes?.data?.results?.value || null;
+
     return {
-      opportunities: results,
+      opportunities,
+      volunteerConfig,
+      messages
     };
   } catch (error) {
     console.error(error);
     return {
       opportunities: [],
+      volunteerConfig: null,
+      messages: null
     };
   }
 };

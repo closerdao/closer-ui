@@ -8,12 +8,15 @@ import { Card, Heading, Row } from '../../components/ui';
 import Progress from '../../components/ui/ProgressBar/Progress';
 
 import dayjs from 'dayjs';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
-import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import api, { formatSearch } from '../../utils/api';
-import { __, getNextMonthName } from '../../utils/helpers';
+import { getNextMonthName } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
+import PageNotFound from '../not-found';
 
 const today = new Date();
 const firstDayOfCurrentMonth = dayjs(
@@ -24,6 +27,7 @@ const lastDayOfCurrentMonth = dayjs(
 ).format('YYYY-MM-DD');
 
 const ReferralsPage = () => {
+  const t = useTranslations();
   const { APP_NAME } = useConfig();
   const config = useConfig();
   const { SEMANTIC_URL } = config || {};
@@ -109,35 +113,131 @@ const ReferralsPage = () => {
   return (
     <>
       <Head>
-        <title>{__('referrals_heading')}</title>
+        <title>{t('referrals_heading')}</title>
       </Head>
       <div className="max-w-screen-sm mx-auto md:p-8 h-full main-content w-full flex flex-col gap-14  min-h-screen py-2">
         <div className="bg-accent-light rounded-md p-6 flex flex-wrap content-center justify-center">
           <Heading level={1} className="flex justify-center flex-wrap">
             <div className="text-6xl w-full flex justify-center">🤙🏽</div>
-            {__('referrals_heading')}
+            {t('referrals_heading')}
           </Heading>
           <Heading
             level={2}
             className="p-4 text-xl text-center font-normal w-full"
           >
-            {APP_NAME && __('referrals_subheading', APP_NAME)}
+            {APP_NAME && t('referrals_subheading')}
           </Heading>
         </div>
 
+        {APP_NAME && APP_NAME !== 'moos' && ( 
+          <>
+            <Heading level={3} hasBorder={true}>
+              {t('referrals_description_heading')}
+            </Heading>
+            <div>
+              <p className="mb-4">
+                { t('referrals_description_text_1', )}
+              </p>
+              <p className="mb-4">
+                {  t('referrals_description_text_2', )}
+              </p>
+              <p className="mb-4">
+                {  t('referrals_description_text_3', )}
+              </p>
+              <p className="mb-4 text-accent font-bold">
+                <Link href="/settings/credits">
+                  {  t('referrals_credits_link', )}
+                </Link>
+              </p>
+            </div>
+          </>
+        )}
+
+        {APP_NAME && APP_NAME === 'moos' && (
+          <div>
+            <section>
+              <p className="mb-4">
+                To see what&apos;s possible when we activate our community, we
+                are opening our doors to new organizations to come and make
+                magic at MOOS. Know any teams or DAOs looking for a summer
+                gathering spot in central Berlin? Now is the moment to let them
+                know about MOOS.
+              </p>
+              <Heading level={3} hasBorder={true}>
+                How It Works:
+              </Heading>
+              <ol className="list-decimal pl-8 pb-8 md:pb-0">
+                <li>
+                  <b>Share Your Link:</b> Use your personalized referral link
+                  below to invite teams and DAOs to MOOS.
+                </li>
+                <li>
+                  <b>Automatic Association:</b> If your referral creates an
+                  account using your link, any Vybes they purchase will be
+                  automatically associated with your account.
+                </li>
+                <li>
+                  <b>Earn Rewards:</b> For every 10 Vybes your referrals buy,
+                  you earn 1 Vybe. It&apos;s as simple as that - a 10%
+                  commission.
+                </li>
+              </ol>
+            </section>
+            <section>
+              <Heading level={3} hasBorder={true}>
+                The Rewards:
+              </Heading>
+              <ul className="mb-4 list-disc pl-5">
+                <li>
+                  Example: If a friend buys 500 Vybes, you get 50 Vybes (worth
+                  250 Euros) as a reward. If a friend buys 1,000 Vybes, you get
+                  100 Vybes (worth 500 Euros) as a reward.
+                </li>
+                <li>
+                  Earn Vybes: Use your Vybes to book stays, attend events, or
+                  rent spaces. Each Vybe is worth 5 Euros.
+                </li>
+                <li>
+                  Vybes are valid for three years from the date of acquisition.
+                </li>
+              </ul>
+            </section>
+
+            <section>
+              <Heading level={3} hasBorder={true}>
+                Additional Referral Offer:
+              </Heading>
+              <p>
+                Simply by creating an account using your referral link, both you
+                and the account creator get a free Vybe, which can be used for
+                play/stay at MOOS.
+              </p>
+            </section>
+
+            <section>
+              <Heading level={3} hasBorder={true}>
+                Why Act Now:
+              </Heading>
+              <ul className="mb-4 list-disc pl-5">
+                <li>
+                  Vybe Launch Offer: For the first 100,000 Euros in Vybe
+                  purchases (20,000 Vybes), Ambassadors (you) earn 1 Vybe for
+                  every 10 Vybes purchased. This is a launch offer; we
+                  don&apos;t plan on providing a commission like this in the
+                  future.
+                </li>
+                <li>
+                  Support Innovation: Your referrals help support The Y Berlin
+                  and MOOS in leading community-driven solutions. Your support
+                  is crucial for our upcoming community tech lab.
+                </li>
+              </ul>
+            </section>
+          </div>
+        )}
+
         <Heading level={3} hasBorder={true}>
-          {__('referrals_description_heading')}
-        </Heading>
-        <div>
-          <p className="mb-4">{APP_NAME && __('referrals_description_text_1', APP_NAME)}</p>
-          <p className="mb-4">{APP_NAME && __('referrals_description_text_2', APP_NAME)}</p>
-          <p className="mb-4">{APP_NAME && __('referrals_description_text_3',APP_NAME)}</p>
-          <p className="mb-4 text-accent font-bold">
-            <Link href="/settings/credits">{APP_NAME && __('referrals_credits_link',APP_NAME)}</Link>
-          </p>
-        </div>
-        <Heading level={3} hasBorder={true}>
-          {APP_NAME && __('referrals_your_link_heading')}
+          {APP_NAME && t('referrals_your_link_heading')}
         </Heading>
 
         <Card className="bg-accent-light mb-10">
@@ -146,7 +246,7 @@ const ReferralsPage = () => {
               {referralLink}
             </div>
             <div className="w-1/5">
-              {copied ? __('referrals_link_copied') : ''}
+              {copied ? t('referrals_link_copied') : ''}
             </div>
 
             <button onClick={copyToClipboard}>
@@ -160,24 +260,28 @@ const ReferralsPage = () => {
           </div>
         </Card>
         <Heading level={3} hasBorder={true}>
-          {__('referrals_monthly_progress_heading')}
+          {t('referrals_monthly_progress_heading')}
         </Heading>
-        <Progress icon={APP_NAME && __('carrots_balance', APP_NAME)} progress={creditsErnedThisMonth ?? 0} total={6} />
+        <Progress
+          icon={APP_NAME && t('carrots_balance')}
+          progress={creditsErnedThisMonth ?? 0}
+          total={6}
+        />
         <Row
-          rowKey={__('referrals_next_refresh')}
+          rowKey={t('referrals_next_refresh')}
           value={`${getNextMonthName()} 1`}
         />
 
         <Heading level={3} hasBorder={true}>
-          {__('referrals_all_time_progress_heading')}
+          {t('referrals_all_time_progress_heading')}
         </Heading>
         <Row
-          rowKey={__('referrals_successfull_referrals')}
+          rowKey={t('referrals_successfull_referrals')}
           value={usersReferredByMe}
         />
         <Row
-          rowKey={__('referrals_earned')}
-          value={`${APP_NAME && __('carrots_balance', APP_NAME)} ${
+          rowKey={t('referrals_earned')}
+          value={`${APP_NAME && t('carrots_balance')} ${
             creditsEarnedFromReferrals === undefined
               ? ''
               : creditsEarnedFromReferrals
@@ -186,6 +290,22 @@ const ReferralsPage = () => {
       </div>
     </>
   );
+};
+
+ReferralsPage.getInitialProps = async (context: NextPageContext) => {
+  try {
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    return {
+      messages,
+    };
+  } catch (err: unknown) {
+    return {
+      messages: null,
+    };
+  }
 };
 
 export default ReferralsPage;

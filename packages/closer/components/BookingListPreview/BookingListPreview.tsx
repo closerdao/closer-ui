@@ -2,15 +2,19 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import dayjs from 'dayjs';
+import { useTranslations } from 'next-intl';
 
 import { STATUS_COLOR } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
-import { getBookingType, getStatusText } from '../../utils/booking.helpers';
-import { __, priceFormat } from '../../utils/helpers';
+import {
+  dateToPropertyTimeZone,
+  getBookingType,
+} from '../../utils/booking.helpers';
+import { priceFormat } from '../../utils/helpers';
 import BookingRequestButtons from '../BookingRequestButtons';
 import UserInfoButton from '../UserInfoButton';
-import { Card } from '../ui';
+import { Card, LinkButton } from '../ui';
 
 interface Props {
   booking: any;
@@ -20,6 +24,8 @@ interface Props {
   volunteerName: string;
   link: string | null;
   isAdmin?: boolean;
+  isPrivate?: boolean;
+  isHourly?: boolean;
 }
 
 const BookingListPreview = ({
@@ -30,8 +36,12 @@ const BookingListPreview = ({
   volunteerName,
   link,
   isAdmin,
+  isPrivate,
+  isHourly,
 }: Props) => {
-  const { APP_NAME } = useConfig();
+  const t = useTranslations();
+
+  const { APP_NAME, TIME_ZONE } = useConfig();
   const {
     _id,
     start,
@@ -53,7 +63,9 @@ const BookingListPreview = ({
     doesNeedSeparateBeds,
     duration,
     adminBookingReason,
+    roomOrBedNumbers,
   } = bookingMapItem.toJS();
+
   const router = useRouter();
 
   const { platform }: any = usePlatform();
@@ -63,7 +75,10 @@ const BookingListPreview = ({
 
   const endFormatted = dayjs(end).format('DD/MM/YYYY');
   const createdFormatted = dayjs(created).format('DD/MM/YYYY - HH:mm:A');
-  const isNotPaid = status !== 'paid' && status !== 'tokens-staked' && status !== 'credits-paid';
+  const isNotPaid =
+    status !== 'paid' &&
+    status !== 'tokens-staked' &&
+    status !== 'credits-paid';
 
   const bookingType = getBookingType(eventId, volunteerId);
 
@@ -72,6 +87,32 @@ const BookingListPreview = ({
   };
   const rejectBooking = async () => {
     await platform.bookings.reject(_id);
+  };
+
+  const getStatusText = (status: string, updated: string | Date) => {
+    if (status === 'cancelled') {
+      return t('booking_status_cancelled', {
+        var: dayjs(updated).format('DD/MM/YYYY'),
+      });
+    }
+
+    interface StatusText {
+      [key: string]: string;
+    }
+
+    const statusText: StatusText = {
+      rejected: t('booking_status_rejected'),
+      open: t('booking_status_open'),
+      pending: t('booking_status_pending'),
+
+      confirmed: t('booking_status_confirmed'),
+      paid: t('booking_status_paid'),
+
+      'checked-in': t('booking_status_checked_in'),
+      'checked-out': t('booking_status_checked_out'),
+    };
+
+    return statusText[status];
   };
 
   return (
@@ -101,7 +142,7 @@ const BookingListPreview = ({
           className={` mt-2 capitalize opacity-100 text-base p-1 text-white text-center rounded-md  bg-${STATUS_COLOR[status]}`}
         >
           {status === 'confirmed'
-            ? __('booking_status_confirmed_title')
+            ? t('booking_status_confirmed_title')
             : status}
         </p>
       </div>
@@ -127,78 +168,85 @@ const BookingListPreview = ({
 
       <div className="flex gap-4">
         <div className="flex-1">
-          <p className="card-feature">{__('booking_card_guests')}</p>
+          <p className="card-feature">{t('booking_card_guests')}</p>
           <p>{adults}</p>
         </div>
         <div className="flex-1">
-          <p className="card-feature">{__('booking_card_nights')}</p>
-          <p>{duration}</p>
+          <p className="card-feature">{t('booking_card_nights')}</p>
+          <p>{isHourly ? '-' : duration}</p>
         </div>
       </div>
 
       {!router.pathname.includes('requests') && !isAdmin && (
         <div>
-          <p className="card-feature">{__('booking_card_message')}</p>
+          <p className="card-feature">{t('booking_card_message')}</p>
           <p>{getStatusText(status, updated)}</p>
         </div>
       )}
 
       <div className="flex gap-4">
         <div className="flex-1">
-          <p className="card-feature">{__('booking_card_checkin')}</p>
-          <p>{startFormatted}</p>
+          <p className="card-feature">{t('booking_card_checkin')}</p>
+          <p>
+            {isHourly
+              ? dateToPropertyTimeZone(TIME_ZONE, start)
+              : startFormatted}
+          </p>
         </div>
         <div className="flex-1">
-          <p className="card-feature">{__('booking_card_checkout')}</p>
-          <p>{endFormatted}</p>
+          <p className="card-feature">{t('booking_card_checkout')}</p>
+          <p>
+            {isHourly ? dateToPropertyTimeZone(TIME_ZONE, end) : endFormatted}
+          </p>
         </div>
       </div>
 
       <div>
-        <p className="card-feature">{__('booking_card_type')}</p>
-        <p>{listingName}</p>
+        <p className="card-feature">{t('booking_card_type')}</p>
+        <p>
+          {listingName} {!isPrivate && t('booking_card_beds')}{' '}
+          {roomOrBedNumbers.toString()}
+        </p>
       </div>
 
       <div>
-        <p className="card-feature">{__('booking_card_diet')}</p>
+        <p className="card-feature">{t('booking_card_diet')}</p>
         <p>{userInfo?.diet || '-'}</p>
       </div>
 
       <div>
-        <p className="card-feature">
-          {__('booking_card_payment_accomodation')}
-        </p>
+        <p className="card-feature">{t('booking_card_payment_accomodation')}</p>
         <p>
           {useTokens && priceFormat(rentalToken)}
           {useCredits &&
             priceFormat({
               val: rentalToken.val,
               cur: 'credits',
-              app: APP_NAME,
+              creditSymbol: t('carrots_balance') + t('carrots_heading'),
             })}
           {!useCredits && !useTokens && priceFormat(rentalFiat)}
 
           {isNotPaid && (
-            <span className="text-failure">{__('booking_card_unpaid')}</span>
+            <span className="text-failure">{t('booking_card_unpaid')}</span>
           )}
         </p>
       </div>
       <div>
-        <p className="card-feature">{__('booking_card_payment_utility')}</p>
+        <p className="card-feature">{t('booking_card_payment_utility')}</p>
         <p>
           {priceFormat(utilityFiat)}{' '}
           {isNotPaid && (
-            <span className="text-failure">{__('booking_card_unpaid')}</span>
+            <span className="text-failure">{t('booking_card_unpaid')}</span>
           )}
         </p>
       </div>
       {eventFiat !== undefined && (
         <div>
-          <p className="card-feature">{__('booking_card_payment_event')}</p>
+          <p className="card-feature">{t('booking_card_payment_event')}</p>
           <p>
             {priceFormat(eventFiat)}{' '}
             {isNotPaid && (
-              <span className="text-failure">{__('booking_card_unpaid')}</span>
+              <span className="text-failure">{t('booking_card_unpaid')}</span>
             )}
           </p>
         </div>
@@ -206,17 +254,27 @@ const BookingListPreview = ({
 
       {doesNeedPickup && doesNeedPickup === true && (
         <div>
-          <p className="card-feature">{__('booking_card_pickup_needed')}</p>
+          <p className="card-feature">{t('booking_card_pickup_needed')}</p>
           <p>✅</p>
         </div>
       )}
       {doesNeedSeparateBeds && doesNeedSeparateBeds === true && (
         <div>
           <p className="card-feature">
-            {__('booking_card_separate_beds_needed')}
+            {t('booking_card_separate_beds_needed')}
           </p>
           <p>✅</p>
         </div>
+      )}
+
+      {userInfo?.email && (
+        <LinkButton
+          className="mt-6"
+          type="secondary"
+          href={`mailto:${userInfo.email}`}
+        >
+          {t('booking_card_email_user')}
+        </LinkButton>
       )}
 
       <BookingRequestButtons

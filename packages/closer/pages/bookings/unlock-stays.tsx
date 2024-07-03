@@ -6,15 +6,19 @@ import { useEffect } from 'react';
 import { Button, Card } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
-import PageNotFound from '../404';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
 import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import { SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __, getCurrencySymbol } from '../../utils/helpers';
+import { getCurrencySymbol } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
+import PageNotFound from '../not-found';
 
 interface Props {
   subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
@@ -22,6 +26,7 @@ interface Props {
 }
 
 const UnlockStaysPage = ({ subscriptionsConfig, bookingConfig }: Props) => {
+  const t = useTranslations();
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -54,25 +59,29 @@ const UnlockStaysPage = ({ subscriptionsConfig, bookingConfig }: Props) => {
     router.push('/subscriptions');
   };
 
-  if (!isBookingEnabled) {
+  if (
+    !isBookingEnabled ||
+    !subscriptionsConfig ||
+    !subscriptionsConfig.enabled
+  ) {
     return <PageNotFound />;
   }
 
   return (
     <>
       <Head>
-        <title>{__('carrots_heading')}</title>
+        <title>{t('carrots_heading')}</title>
       </Head>
       <div className="max-w-screen-sm mx-auto md:p-8 h-full main-content w-full flex flex-col gap-12  min-h-screen py-2">
         <div className="bg-accent-light rounded-md p-6 flex flex-wrap content-center justify-center">
           <Heading level={1} className="flex justify-center flex-wrap">
-            🔒 {__('unlock_stays_heading')}
+            🔒 {t('unlock_stays_heading')}
           </Heading>
           <Heading
             level={2}
             className="p-4 text-xl text-center font-normal w-full"
           >
-            {__('unlock_stays_subheading')}
+            {t('unlock_stays_subheading')}
           </Heading>
         </div>
 
@@ -88,7 +97,7 @@ const UnlockStaysPage = ({ subscriptionsConfig, bookingConfig }: Props) => {
                 {allowedSubscriptionPlan?.price}
 
                 <span className="pl-1 text-lg">
-                  {__('subscriptions_summary_per_month')}
+                  {t('subscriptions_summary_per_month')}
                 </span>
               </div>
 
@@ -118,7 +127,7 @@ const UnlockStaysPage = ({ subscriptionsConfig, bookingConfig }: Props) => {
               isFullWidth={true}
               size="medium"
             >
-              {__('subscriptions_subscribe_button')}
+              {t('subscriptions_subscribe_button')}
             </Button>
           </div>
         </Card>
@@ -127,15 +136,16 @@ const UnlockStaysPage = ({ subscriptionsConfig, bookingConfig }: Props) => {
   );
 };
 
-UnlockStaysPage.getInitialProps = async () => {
+UnlockStaysPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [subscriptionsRes, bookingRes] = await Promise.all([
+    const [subscriptionsRes, bookingRes, messages] = await Promise.all([
       api.get('/config/subscriptions').catch(() => {
         return null;
       }),
       api.get('/config/booking').catch(() => {
         return null;
       }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
@@ -144,12 +154,14 @@ UnlockStaysPage.getInitialProps = async () => {
     return {
       subscriptionsConfig,
       bookingConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {
       subscriptionsConfig: { enabled: false, elements: [] },
       bookingConfig: null,
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

@@ -5,10 +5,11 @@ import { DateRange, DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 
 import dayjs from 'dayjs';
+import { useTranslations } from 'next-intl';
 
-import { __ } from '../../utils/helpers';
-import { Button } from '../ui';
-import { ErrorMessage, Input } from '../ui';
+import { getDateOnly, getTimeOnly } from '../../utils/booking.helpers';
+import TimePicker from '../TimePicker';
+import { Button, ErrorMessage, Input } from '../ui';
 import { getDateTime, includesBlockedDateRange } from './dateTimePicker.utils';
 
 interface Props {
@@ -31,6 +32,9 @@ interface Props {
   eventEndDate?: string;
   defaultMonth?: Date;
   isAdmin?: boolean;
+  priceDuration?: string;
+  timeOptions?: string[] | null;
+  hourAvailability?: { hour: string; isAvailable: boolean }[] | [];
 }
 
 const DateTimePicker = ({
@@ -44,7 +48,11 @@ const DateTimePicker = ({
   eventEndDate,
   defaultMonth,
   isAdmin,
+  priceDuration = 'night',
+  timeOptions,
+  hourAvailability,
 }: Props) => {
+  const t = useTranslations();
   const router = useRouter();
   const { volunteerId } = router.query;
   const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -55,6 +63,12 @@ const DateTimePicker = ({
   const [endTime, setEndTime] = useState('12:00');
 
   const [isDateRangeSet, setIsDateRangeSet] = useState(false);
+
+  const startTimeOnly = getTimeOnly(savedStartDate);
+  const endTimeOnly = getTimeOnly(savedEndDate);
+  const isStartTimeSelected = startTimeOnly
+    ? timeOptions?.includes(startTimeOnly)
+    : false;
 
   useEffect(() => {
     const handleWindowResize = () => {
@@ -188,6 +202,26 @@ const DateTimePicker = ({
   };
 
   const updateDateRange = (range: DateRange | undefined) => {
+    if (priceDuration !== 'night') {
+      const fromDate = getDateOnly(range?.from);
+      const toDate = getDateOnly(range?.to);
+      if (
+        (range?.from && dateRange?.from && dateRange.from > range.from) ||
+        (range?.from && !range?.to)
+      ) {
+        setDateRange({ from: range.from, to: range.from });
+        setStartDate(`${fromDate}`);
+        setEndDate(`${fromDate}`);
+        return;
+      }
+      if (range?.from && dateRange?.from && range.to && range.to > range.from) {
+        setDateRange({ from: range.to, to: range.to });
+        setStartDate(`${toDate}`);
+        setEndDate(`${toDate}`);
+        return;
+      }
+    }
+
     if (!includesBlockedDateRange(range, blockedDateRanges)) {
       if (range?.from && dateRange?.from && dateRange.from > range.from) {
         setDateRange({ from: range.from, to: undefined });
@@ -270,36 +304,46 @@ const DateTimePicker = ({
     <div className="max-w-[550px]">
       <div data-testid="dates" className="w-full flex mb-8 justify-between">
         <div className="flex">
-          <div>
-            <div className="text-sm mb-2">
-              {isAdmin
-                ? __('events_event_start_date')
-                : __('listings_book_check_in')}
+          {priceDuration !== 'night' && startTime && savedStartDate && (
+            <div className="text-sm border rounded-md bg-neutral py-3 px-4 font-bold ">
+              {getDateOnly(savedStartDate)}
+              {isStartTimeSelected && ` - ${startTimeOnly} - ${endTimeOnly}`}
             </div>
-            <div className="text-sm border rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
-              {dateRange?.from
-                ? dayjs(dateRange?.from).format('ll')
-                : __('listings_book_select_date')}{' '}
-            </div>
-          </div>
-          <div>
-            <div className="text-sm mb-2">
-              {isAdmin
-                ? __('events_event_end_date')
-                : __('listings_book_check_out')}
-            </div>
-            <div className="text-sm border rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
-              {dateRange?.to
-                ? dayjs(dateRange?.to).format('ll')
-                : __('listings_book_select_date')}
-            </div>
-          </div>
+          )}
+          {priceDuration === 'night' && (
+            <>
+              <div>
+                <div className="text-sm mb-2">
+                  {isAdmin
+                    ? t('events_event_start_date')
+                    : t('listings_book_check_in')}
+                </div>
+                <div className="text-sm border rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
+                  {dateRange?.from
+                    ? dayjs(dateRange?.from).format('ll')
+                    : t('listings_book_select_date')}{' '}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm mb-2">
+                  {isAdmin
+                    ? t('events_event_end_date')
+                    : t('listings_book_check_out')}
+                </div>
+                <div className="text-sm border rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
+                  {dateRange?.to
+                    ? dayjs(dateRange?.to).format('ll')
+                    : t('listings_book_select_date')}
+                </div>
+              </div>
+            </>
+          )}
         </div>
         <Button
           className="hidden sm:block sm:font-normal h-[25px] w-[130px] underline sm:no-underline text-black border-0 sm:border-2 border-black normal-case py-0.5 px-0 sm:px-3 sm:p-3 sm:py-2 text-sm bg-white"
           onClick={handleClearDates}
         >
-          {__('generic_clear_selection')}
+          {t('generic_clear_selection')}
         </Button>
       </div>
 
@@ -320,7 +364,7 @@ const DateTimePicker = ({
             <div className="text-sm mb-2 flex">
               <div className="w-[136px] mr-2">
                 <Input
-                  label={__('events_event_start_time')}
+                  label={t('events_event_start_time')}
                   value={startTime}
                   isDisabled={!Boolean(dateRange?.from)}
                   type="time"
@@ -330,7 +374,7 @@ const DateTimePicker = ({
               </div>
               <div className="w-[136px]">
                 <Input
-                  label={__('events_event_end_time')}
+                  label={t('events_event_end_time')}
                   value={endTime}
                   isDisabled={!Boolean(dateRange?.to)}
                   type="time"
@@ -340,11 +384,23 @@ const DateTimePicker = ({
               </div>
             </div>
             <div className="text-sm mt-4">
-              {localTimezone} {__('events_time')}
+              {localTimezone} {t('events_time')}
             </div>
           </div>
         )}
       </div>
+      {priceDuration !== 'night' && (
+        <div className="py-2 border-t">
+          <TimePicker
+            startDate={savedStartDate}
+            endDate={savedEndDate}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+            timeOptions={timeOptions}
+            hourAvailability={hourAvailability}
+          />
+        </div>
+      )}
     </div>
   );
 };

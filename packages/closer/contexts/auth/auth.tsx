@@ -12,15 +12,17 @@ import {
 
 import { AxiosError } from 'axios';
 import Cookies from 'js-cookie';
+import { useTranslations } from 'next-intl';
 
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers';
 import { AuthenticationContext, User } from './types';
 
 export const AuthContext = createContext<AuthenticationContext | null>(null);
 
 export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
+  const t = useTranslations();
+
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [error, setErrorState] = useState<string | null>(null);
@@ -70,7 +72,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       }
     } catch (err) {
       if ((err as AxiosError).response?.status === 401) {
-        setError(__('auth_error_401_message'));
+        setError(t('auth_error_401_message'));
         return;
       }
       setError(

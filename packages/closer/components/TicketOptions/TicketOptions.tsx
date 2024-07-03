@@ -1,11 +1,13 @@
 import { Dispatch, FC, SetStateAction } from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import {
   CloserCurrencies,
   TicketOption,
   VolunteerOpportunity,
 } from '../../types';
-import { __, priceFormat } from '../../utils/helpers';
+import { priceFormat } from '../../utils/helpers';
 import DiscountCode from '../DiscountCode';
 import HeadingRow from '../ui/HeadingRow';
 
@@ -79,11 +81,12 @@ const TicketOptions: FC<Props> = ({
   setDiscountCode,
   eventId,
 }) => {
+  const t = useTranslations();
   return (
     <>
       <HeadingRow>
         <span className="mr-2">🎟</span>
-        <span>{__('bookings_dates_step_tickets_title')}</span>
+        <span>{t('bookings_dates_step_tickets_title')}</span>
       </HeadingRow>
       <div className="ticket-options my-4 flex flex-row flex-wrap">
         {volunteer ? (

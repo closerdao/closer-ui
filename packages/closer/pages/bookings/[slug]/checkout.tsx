@@ -17,11 +17,10 @@ import ProgressBar from '../../../components/ui/ProgressBar';
 import Row from '../../../components/ui/Row';
 
 import dayjs from 'dayjs';
-import { NextApiRequest } from 'next';
-import { ParsedUrlQuery } from 'querystring';
+import { NextApiRequest, NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
-import PageNotFound from '../../404';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
@@ -34,11 +33,14 @@ import {
   CloserCurrencies,
   Event,
   Listing,
+  PaymentConfig,
 } from '../../../types';
 import api from '../../../utils/api';
 import { payTokens } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { __, priceFormat } from '../../../utils/helpers';
+import { priceFormat } from '../../../utils/helpers';
+import { loadLocaleData } from '../../../utils/locale.helpers';
+import PageNotFound from '../../not-found';
 
 interface Props extends BaseBookingParams {
   listing: Listing | null;
@@ -46,12 +48,19 @@ interface Props extends BaseBookingParams {
   error?: string;
   event?: Event | null;
   bookingConfig: BookingConfig | null;
+  paymentConfig: PaymentConfig | null;
 }
 
-const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
-  const testIt = async () => {
-    await api.post('/bookings/payment', {});
-  };
+const Checkout = ({
+  booking,
+  listing,
+  error,
+  event,
+  bookingConfig,
+  paymentConfig,
+}: Props) => {
+  const t = useTranslations();
+  const isHourlyBooking = listing?.priceDuration === 'hour';
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -93,6 +102,9 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
     : false;
 
   const listingName = listing?.name;
+  const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
+  const vatRateFromConfig = Number(paymentConfig?.vatRate);
+  const vatRate = vatRateFromConfig || defaultVatRate;
 
   const [canApplyCredits, setCanApplyCredits] = useState(false);
   const [hasAgreedToWalletDisclaimer, setWalletDisclaimer] = useState(false);
@@ -123,6 +135,7 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
               creditsAmount: rentalToken?.val,
             })
           ).data.results;
+
           setCanApplyCredits(areCreditsAvailable);
         } catch (error) {
           setCanApplyCredits(false);
@@ -131,20 +144,24 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (booking?.status === 'paid') {
+      if (router) {
+        router.push(`/bookings/${booking?._id}`);
+      }
+    }
+  }, [router]);
+
   const renderButtonText = () => {
     if (isStaking) {
-      return __('checkout_processing_token_payment');
+      return t('checkout_processing_token_payment');
     }
-    return __('checkout_pay');
+    return t('checkout_pay');
   };
 
   const goBack = () => {
     router.push(`/bookings/${booking?._id}/summary`);
   };
-
-  if (booking?.status === 'paid') {
-    router.push(`/bookings/${booking?._id}/summary`);
-  }
 
   const handleFreeBooking = async () => {
     try {
@@ -211,6 +228,7 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
       setCreditsError(null);
       const res = await api.post(`/bookings/${booking?._id}/update-payment`, {
         useCredits: true,
+        isHourlyBooking,
       });
       setUseCreditsUpdated(true);
 
@@ -245,10 +263,10 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
   return (
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
-        <BookingBackButton onClick={goBack} name={__('buttons_back')} />
+        <BookingBackButton onClick={goBack} name={t('buttons_back')} />
         <Heading level={1} className="pb-4 mt-8">
           <span className="mr-1">💰</span>
-          <span>{__('bookings_checkout_step_title')}</span>
+          <span>{t('bookings_checkout_step_title')}</span>
         </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
         <div className="mt-16 flex flex-col gap-16">
@@ -257,7 +275,7 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
               <div>
                 <HeadingRow>
                   <span className="mr-2">🎉</span>
-                  <span>{__('bookings_checkout_ticket_cost')}</span>
+                  <span>{t('bookings_checkout_ticket_cost')}</span>
                 </HeadingRow>
                 <div className="mb-16 mt-4">
                   <Row
@@ -270,7 +288,11 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
 
             <HeadingRow>
               <span className="mr-2">🏡</span>
-              <span>{__('bookings_checkout_step_accomodation')}</span>
+              <span>
+                {isHourlyBooking
+                  ? t('bookings_checkout_step_accomodation')
+                  : t('bookings_checkout_step_hourly')}
+              </span>
             </HeadingRow>
             <div className="flex justify-between items-center mt-3">
               <p>{listingName}</p>
@@ -281,7 +303,9 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
               )}
             </div>
             <p className="text-right text-xs">
-              {__('bookings_checkout_step_accomodation_description')}
+              {isHourlyBooking
+                ? t('bookings_checkout_step_accomodation_description_hourly')
+                : t('bookings_checkout_step_accomodation_description')}
             </p>
 
             {process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' &&
@@ -318,33 +342,36 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
                     }
                     className="mt-8"
                   >
-                    {__('bookings_checkout_step_wallet_disclaimer')}
+                    {t('bookings_checkout_step_wallet_disclaimer')}
                   </Checkbox>
                 </div>
               )}
           </div>
-          <div>
-            <HeadingRow>
-              <span className="mr-2">🛠</span>
-              <span>{__('bookings_checkout_step_utility_title')}</span>
-            </HeadingRow>
-            <div className="flex justify-between items-center mt-3">
-              <p> {__('bookings_summary_step_utility_total')}</p>
-              <p className="font-bold">
-                {booking?.foodOption === 'no_food'
-                  ? 'NOT INCLUDED'
-                  : priceFormat(utilityFiat)}
+          {!isHourlyBooking && (
+            <div>
+              <HeadingRow>
+                <span className="mr-2">🛠</span>
+                <span>{t('bookings_checkout_step_utility_title')}</span>
+              </HeadingRow>
+              <div className="flex justify-between items-center mt-3">
+                <p> {t('bookings_summary_step_utility_total')}</p>
+                <p className="font-bold">
+                  {booking?.foodOption === 'no_food'
+                    ? 'NOT INCLUDED'
+                    : priceFormat(utilityFiat)}
+                </p>
+              </div>
+              <p className="text-right text-xs">
+                {t('bookings_summary_step_utility_description')}
               </p>
             </div>
-            <p className="text-right text-xs">
-              {__('bookings_summary_step_utility_description')}
-            </p>
-          </div>
+          )}
 
           <CheckoutTotal
             total={updatedTotal}
             useTokens={useTokens || false}
             rentalToken={rentalToken}
+            vatRate={vatRate}
           />
 
           {isStripeBooking && (
@@ -367,10 +394,14 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
             />
           )}
           {isFreeBooking && (
-            <Button isEnabled={!processing} className="booking-btn" onClick={handleFreeBooking}>
+            <Button
+              isEnabled={!processing}
+              className="booking-btn"
+              onClick={handleFreeBooking}
+            >
               {user?.roles.includes('member') || booking?.status === 'confirmed'
-                ? __('buttons_confirm_booking')
-                : __('buttons_booking_request')}
+                ? t('buttons_confirm_booking')
+                : t('buttons_booking_request')}
             </Button>
           )}
           {isTokenOnlyBooking && (
@@ -391,19 +422,16 @@ const Checkout = ({ booking, listing, error, event, bookingConfig }: Props) => {
   );
 };
 
-Checkout.getInitialProps = async ({
-  req,
-  query,
-}: {
-  req: NextApiRequest;
-  query: ParsedUrlQuery;
-}) => {
+Checkout.getInitialProps = async (context: NextPageContext) => {
+  const { query, req } = context;
   try {
-    const [bookingRes, bookingConfigRes] = await Promise.all([
+    const [bookingRes, bookingConfigRes, paymentConfigRes] = await Promise.all([
       api
         .get(`/booking/${query.slug}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          headers: (req as NextApiRequest)?.cookies?.access_token && {
+            Authorization: `Bearer ${
+              (req as NextApiRequest)?.cookies?.access_token
+            }`,
           },
         })
         .catch(() => {
@@ -412,28 +440,45 @@ Checkout.getInitialProps = async ({
       api.get('/config/booking').catch(() => {
         return null;
       }),
+      api.get('/config/payment').catch(() => {
+        return null;
+      }),
     ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
+    const paymentConfig = paymentConfigRes?.data?.results?.value;
 
-    const [optionalEvent, optionalListing] = await Promise.all([
+    const [optionalEvent, optionalListing, messages] = await Promise.all([
       booking.eventId &&
         api.get(`/event/${booking.eventId}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          headers: (req as NextApiRequest)?.cookies?.access_token && {
+            Authorization: `Bearer ${
+              (req as NextApiRequest)?.cookies?.access_token
+            }`,
           },
         }),
       booking.listing &&
         api.get(`/listing/${booking.listing}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          headers: (req as NextApiRequest)?.cookies?.access_token && {
+            Authorization: `Bearer ${
+              (req as NextApiRequest)?.cookies?.access_token
+            }`,
           },
         }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
 
-    return { booking, listing, event, error: null, bookingConfig };
+    return {
+      booking,
+      listing,
+      event,
+      error: null,
+      bookingConfig,
+      paymentConfig,
+      messages,
+    };
   } catch (err) {
     console.log(err);
     return {
@@ -441,6 +486,8 @@ Checkout.getInitialProps = async ({
       booking: null,
       bookingConfig: null,
       listing: null,
+      messages: null,
+      paymentConfig: null,
     };
   }
 };

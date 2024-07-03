@@ -1,4 +1,4 @@
-import { CloserCurrencies, Price } from './currency';
+import { CloserCurrencies } from './currency';
 
 export type BookingConditions = {
   memberMaxDuration: number | undefined;
@@ -32,29 +32,30 @@ export type Question = {
 };
 
 export type BookingSettings = {
-  utilityFiat: Price<CloserCurrencies.EUR>;
-  utilityDayFiat: Price<CloserCurrencies.EUR>;
-  utilityToken: Price<CloserCurrencies.ETH>;
-  checkinTime: number;
-  checkoutTime: number;
-  maxDuration: number;
-  minDuration: number;
-  volunteerCommitment: string;
-  conditions: BookingConditions;
-  discounts: {
-    daily: number;
-    weekly: number;
-    monthly: number;
-    highseason: number;
-  };
-  cancellationPolicy: {
-    lastday: 0.5;
-    lastweek: 0.5;
-    lastmonth: 0.75;
-    default: 1;
-  };
-  questions: Question[];
-  seasons: any;
+  utilityFiatVal: number,
+  utilityFiatCur: CloserCurrencies,
+  utilityDayFiatVal: number,
+  utilityTokenVal: number,
+  utilityTokenCur: CloserCurrencies,
+  checkinTime: number,
+  checkoutTime: number,
+  maxDuration: number,
+  minDuration: number,
+  volunteerCommitment: string,
+  memberMaxDuration: number,
+  memberMaxBookingHorizon: number,
+  guestMaxDuration: number,
+  guestMaxBookingHorizon: number,
+  discountsDaily: number,
+  discountsWeekly: number,
+  discountsMonthly: number,
+  seasonsHighStart: string,
+  seasonsHighEnd: string,
+  seasonsHighModifier: number,
+  cancellationPolicyLastday: number,
+  cancellationPolicyLastweek: number,
+  cancellationPolicyLastmonth: number,
+  cancellationPolicyDefault: number
 };
 
 export interface Config {
@@ -89,6 +90,7 @@ export type GeneralConfig = {
   visitorsGuide: string;
   facebookPixelId: string;
   faqsGoogleSheetId: string;
+  timeZone: string;
 };
 
 export type BookingConfig = {
@@ -117,6 +119,7 @@ export type BookingConfig = {
   volunteerCommitment: string;
   cancellationPolicyLastweek: number;
   utilityFiatVal: number;
+  pickUpEnabled: boolean;
 };
 
 export type PaymentConfig = {
@@ -125,6 +128,11 @@ export type PaymentConfig = {
   cryptoPayment: string;
   ethereumWalletAddress: string;
   polygonWalletAddress: string;
+  vatRate: number;
+};
+
+export type VolunteerConfig = {
+  enabled: boolean;
 };
 
 export type FundraisingConfig = {

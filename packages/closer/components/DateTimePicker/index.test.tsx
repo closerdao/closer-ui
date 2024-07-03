@@ -1,6 +1,7 @@
-import { render, screen, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 
 import DateTimePicker from '.';
+import { renderWithNextIntl } from '../../test/utils';
 
 jest.mock('next/router', () => require('next-router-mock'));
 
@@ -23,7 +24,7 @@ describe('DateTimePicker', () => {
       },
     ];
 
-    render(
+    renderWithNextIntl(
       <DateTimePicker
         setStartDate={jest.fn()}
         setEndDate={jest.fn()}
@@ -77,7 +78,7 @@ describe('DateTimePicker', () => {
       },
     ];
 
-    render(
+    renderWithNextIntl(
       <DateTimePicker
         setStartDate={jest.fn()}
         setEndDate={jest.fn()}

@@ -1,12 +1,14 @@
 import Link from 'next/link';
 
-import React from 'react';
-
-import dayjs from 'dayjs';
+import dayjs from 'dayjs'; 
+import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
-import { __ } from '../../utils/helpers';
 import { Button } from '../ui';
+ 
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc);
 
 interface Props {
   _id: string;
@@ -27,12 +29,15 @@ const BookingRequestButtons = ({
   confirmBooking,
   rejectBooking,
 }: Props) => {
+  const t = useTranslations();
   const { user } = useAuth();
   const isBookingCancelable =
     createdBy === user?._id &&
     (status === 'open' || status === 'pending' || status === 'confirmed') &&
     dayjs().isBefore(dayjs(end));
 
+  const isSpaceHost = user?.roles.includes('space-host');
+  
   return (
     <div className="mt-4 flex flex-col gap-4">
       {/* Hide buttons if start date is in the past: */}
@@ -41,42 +46,42 @@ const BookingRequestButtons = ({
           {status === 'checked-in' && (
             <Link passHref href="">
               <Button type="secondary">
-                {__('booking_card_join_chat_button')}
+                {t('booking_card_join_chat_button')}
               </Button>
             </Link>
           )}
           {status === 'checked-out' && (
             <Link passHref href="">
               <Button type="secondary">
-                {__('booking_card_feedback_button')}
+                {t('booking_card_feedback_button')}
               </Button>
             </Link>
           )}
           {status === 'open' && (
             <Link passHref href={`/bookings/${_id}/summary`}>
               <Button type="secondary">
-                💰 {__('booking_card_checkout_button')}
+                💰 {t('booking_card_checkout_button')}
               </Button>
             </Link>
           )}
           {status === 'confirmed' && user && user._id === createdBy && (
             <Link passHref href={`/bookings/${_id}/checkout`}>
               <Button type="secondary">
-                💰 {__('booking_card_checkout_button')}
+                💰 {t('booking_card_checkout_button')}
               </Button>
             </Link>
           )}
           {user && isBookingCancelable && user._id === createdBy && (
             <Link passHref href={`/bookings/${_id}/cancel`}>
               <Button type="secondary" className="  uppercase">
-                ⭕ {__('booking_cancel_button')}
+                ⭕ {t('booking_cancel_button')}
               </Button>
             </Link>
           )}
 
-          {user && status === 'paid' && user._id === createdBy && (
+          {user && (status === 'paid' || status === 'credits-paid' || status === 'tokens-staked') && (user._id === createdBy || isSpaceHost) && (
             <Link passHref href={`/bookings/${_id}/cancel`}>
-              <Button type="secondary">⭕ {__('booking_cancel_button')}</Button>
+              <Button type="secondary">⭕ {t('booking_cancel_button')}</Button>
             </Link>
           )}
         </>
@@ -86,12 +91,12 @@ const BookingRequestButtons = ({
         <>
           {status === 'pending' && (
             <Button type="secondary" onClick={confirmBooking}>
-              ✅ {__('booking_confirm_button')}
+              ✅ {t('booking_confirm_button')}
             </Button>
           )}
           {status === 'pending' && (
             <Button type="secondary" onClick={rejectBooking}>
-              ❌ {__('booking_reject_button')}
+              ❌ {t('booking_reject_button')}
             </Button>
           )}
         </>

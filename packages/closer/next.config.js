@@ -8,6 +8,7 @@ const withMDX = require('@next/mdx')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: false,
   presets: ['next/babel'],
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   images: {
@@ -18,9 +19,10 @@ const nextConfig = {
     ],
   },
   webpack: (config, { isServer }) => {
-    config.experiments = { 
-      topLevelAwait: true 
+    config.experiments = {
+      topLevelAwait: true,
     };
+
     return config;
   },
 };

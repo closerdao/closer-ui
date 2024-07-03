@@ -13,8 +13,9 @@ import { ErrorMessage, Spinner } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
 import dayjs from 'dayjs';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
-import PageNotFound from '../404';
 import {
   MAX_BOOKINGS_TO_FETCH,
   MAX_LISTINGS_TO_FETCH,
@@ -24,6 +25,7 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { useDebounce } from '../../hooks/useDebounce';
+import { Listing } from '../../types';
 import {
   formatListings,
   generateBookingItems,
@@ -31,13 +33,14 @@ import {
   getFilterAccommodationUnits,
 } from '../../utils/booking.helpers';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers';
-import { Listing } from '../../types';
+import { loadLocaleData } from '../../utils/locale.helpers';
+import PageNotFound from '../not-found';
 
 const loadTime = Date.now();
 
 const BookingsCalendarPage = () => {
-  const { enabledConfigs } = useConfig();
+  const t = useTranslations();
+  const { enabledConfigs, TIME_ZONE } = useConfig();
   const { user } = useAuth();
   const { platform }: any = usePlatform();
 
@@ -46,7 +49,7 @@ const BookingsCalendarPage = () => {
   const dayAsMs = 24 * 60 * 60 * 1000;
   const sixHours = 6 * 60 * 60 * 1000;
   const oneMonth = 30 * dayAsMs;
-  const defaultAccommodationUnits = [{ title: __('bookings_no_bookings') }];
+  const defaultAccommodationUnits = [{ title: t('bookings_no_bookings') }];
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -63,6 +66,8 @@ const BookingsCalendarPage = () => {
     start: new Date(loadTime),
     end: defaultTimeEnd,
   });
+
+  const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   const debouncedVisibleRange = useDebounce(visibleRange, 500);
 
@@ -89,11 +94,13 @@ const BookingsCalendarPage = () => {
     label: listing.name,
   }));
 
-  const bookingsWithUserAndListing = getBookingsWithUserAndListing(
+  const bookingsWithUserAndListing = getBookingsWithUserAndListing({
     bookings,
     listings,
     allUsers,
-  );
+    TIME_ZONE,
+    browserTimezone,
+  });
 
   const accommodationUnits =
     formattedListings &&
@@ -157,6 +164,10 @@ const BookingsCalendarPage = () => {
   };
 
   const handleBookingClick = (itemId: string) => {
+    // react-calendar-timeline library uses itemId's for keys. We add index to itemId to have a unique key, and have to remove it here.
+    if (itemId.length > 24) {
+      itemId = itemId.substring(0, 24);
+    }
     window.open(`/bookings/${itemId}`, '_blank');
   };
 
@@ -190,11 +201,11 @@ const BookingsCalendarPage = () => {
   return (
     <>
       <Head>
-        <title>{__('booking_calendar')}</title>
+        <title>{t('booking_calendar')}</title>
       </Head>
 
       <main className="flex flex-col gap-4">
-        <Heading level={1}>{__('booking_calendar')}</Heading>
+        <Heading level={1}>{t('booking_calendar')}</Heading>
 
         <section className="mt-10">
           <SpaceHostBooking listingOptions={listings && listingOptions} />
@@ -249,6 +260,22 @@ const BookingsCalendarPage = () => {
       </main>
     </>
   );
+};
+
+BookingsCalendarPage.getInitialProps = async (context: NextPageContext) => {
+  try {
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    return {
+      messages,
+    };
+  } catch (err: unknown) {
+    return {
+      messages: null,
+    };
+  }
 };
 
 export default BookingsCalendarPage;

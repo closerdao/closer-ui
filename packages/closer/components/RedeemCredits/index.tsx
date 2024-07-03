@@ -1,6 +1,8 @@
+import { useTranslations } from 'next-intl';
+
 import { useConfig } from '../../hooks/useConfig';
 import { CloserCurrencies, Price } from '../../types';
-import { __, priceFormat } from '../../utils/helpers';
+import { priceFormat } from '../../utils/helpers';
 import { Button, Card, ErrorMessage, Heading } from '../ui';
 
 interface Props {
@@ -24,6 +26,7 @@ const RedeemCredits = ({
   creditsError,
   isDemo,
 }: Props) => {
+  const t = useTranslations();
   const { APP_NAME } = useConfig();
   return (
     <div className={`${className ? className : ''}`}>
@@ -33,18 +36,19 @@ const RedeemCredits = ({
         </Heading>
       )}
       <Card className="text-center gap-4">
-        {(!hasAppliedCredits && !useCredits && (rentalFiat?.val || rentalToken?.val)) ||
+        {(!hasAppliedCredits &&
+          !useCredits &&
+          (rentalFiat?.val || rentalToken?.val)) ||
         isDemo ? (
           <>
             <Heading level={2}>
-              {APP_NAME && __('carrots_heading_redeem', APP_NAME)}{' '}
-              {isDemo && '[DEMO]'}
+              {t('carrots_heading_redeem')} {isDemo && '[DEMO]'}
             </Heading>
             <Heading level={2} className="text-6xl">
-              {APP_NAME && __('carrots_balance', APP_NAME)}
+              {t('carrots_balance')}
             </Heading>
 
-            <p className="mb-4">{__('carrots_get_discount')}</p>
+            <p className="mb-4">{t('carrots_get_discount')}</p>
             <div className="flex w-full justify-center items-center mb-6">
               <div className="w-2/5">
                 <Heading level={4}>
@@ -52,32 +56,35 @@ const RedeemCredits = ({
                 </Heading>
                 <div className="text-xs">
                   {(rentalToken?.val as number) === 1 || isDemo
-                    ? APP_NAME &&
-                      __('carrots_carrots_to_redeem_singular', APP_NAME)
-                    : APP_NAME && __('carrots_carrots_to_redeem', APP_NAME)}
+                    ? APP_NAME && t('carrots_carrots_to_redeem_singular')
+                    : t('carrots_carrots_to_redeem')}
                 </div>
               </div>
 
-              {APP_NAME && APP_NAME === 'tdf' && (
-                <>
-                  <div className="w-1/10">
-                    <Heading level={4}>=</Heading>
+              <>
+                <div className="w-1/10">
+                  <Heading level={4}>=</Heading>
+                </div>
+                <div className="w-2/5">
+                  <Heading level={4}>
+                    {isDemo
+                      ? priceFormat(
+                          APP_NAME && APP_NAME.toLowerCase() !== 'moos'
+                            ? '50'
+                            : '5',
+                        )
+                      : priceFormat(rentalFiat)}
+                  </Heading>
+                  <div className="text-xs">
+                    {t('carrots_off_accommodation')}
                   </div>
-                  <div className="w-2/5">
-                    <Heading level={4}>
-                      {isDemo ? priceFormat(50) : priceFormat(rentalFiat)}
-                    </Heading>
-                    <div className="text-xs">
-                      {__('carrots_off_accommodation')}
-                    </div>
-                  </div>
-                </>
-              )}
+                </div>
+              </>
             </div>
 
             {!isDemo && (
               <Button onClick={applyCredits}>
-                {__('carrots_button_apply_discount')}
+                {t('carrots_button_apply_discount')}
               </Button>
             )}
           </>
@@ -85,8 +92,8 @@ const RedeemCredits = ({
           <div className="text-system-success font-bold">
             🥕 {rentalToken?.val as number}{' '}
             {(rentalToken?.val as number) === 1
-              ? __(APP_NAME && 'carrots_success_message_singular', APP_NAME)
-              : __(APP_NAME && 'carrots_success_message', APP_NAME)}
+              ? t('carrots_success_message_singular')
+              : t('carrots_success_message')}
           </div>
         )}
         {creditsError && <ErrorMessage error={creditsError} />}

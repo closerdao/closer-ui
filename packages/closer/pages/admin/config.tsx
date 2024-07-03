@@ -7,7 +7,9 @@ import PlatformFeatureSelector from '../../components/PlatformConfig/PlatformFea
 import { Button, Card, Heading, Information } from '../../components/ui';
 import Switcher from '../../components/ui/Switcher';
 
-import PageNotFound from '../404';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
 import { configDescription } from '../../config';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
@@ -22,8 +24,9 @@ import {
   getUpdatedArray,
   prepareConfigs,
 } from '../../utils/config.utils';
-import { __ } from '../../utils/helpers';
 import { capitalizeFirstLetter } from '../../utils/learn.helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
+import PageNotFound from '../not-found';
 
 interface Props {
   defaultEmailsConfig: ConfigType;
@@ -31,6 +34,7 @@ interface Props {
 }
 
 const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
+  const t = useTranslations();
   const { platform }: any = usePlatform();
   const { platformAllowedConfigs } = useConfig() || {};
   const { user } = useAuth();
@@ -305,10 +309,10 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
   return (
     <div>
       <Head>
-        <title>{__('platform_configs')}</title>
+        <title>{t('platform_configs')}</title>
       </Head>
       <div className="max-w-3xl mx-auto flex flex-col gap-10">
-        <Heading level={1}>{__('platform_configs')}</Heading>
+        <Heading level={1}>{t('platform_configs')}</Heading>
 
         {allConfigCategories.length > 1 && isGeneralConfigEnabled && (
           <PlatformFeatureSelector
@@ -321,7 +325,7 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
         {!isGeneralConfigEnabled && (
           <Card className="flex flex-col gap-4">
             <Heading level={4}>
-              {__('platform_configs_initial_settings')}
+              {t('platform_configs_initial_settings')}
             </Heading>
 
             {(updatedConfigs.find((config) => config.slug === 'general')
@@ -345,7 +349,7 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
                 if (key === 'enabled') return null;
                 return (
                   <div key={key} className="flex flex-col gap-1">
-                    <label>{__(`config_label_${key}`)}:</label>
+                    <label>{t(`config_label_${key}`)}:</label>
                     {!isSelect && (
                       <input
                         className="bg-neutral rounded-md p-1"
@@ -380,10 +384,10 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
               isLoading={isLoading}
               isEnabled={!isLoading}
             >
-              {__('generic_save_button')}
+              {t('generic_save_button')}
             </Button>
             {hasConfigUpdated && (
-              <Information>{__('config_updated')}</Information>
+              <Information>{t('config_updated')}</Information>
             )}
           </Card>
         )}
@@ -432,7 +436,7 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
                               {key !== 'enabled' && (
                                 <div key={key} className="flex flex-col gap-1">
                                   {!isArray && (
-                                    <label>{__(`config_label_${key}`)}:</label>
+                                    <label>{t(`config_label_${key}`)}:</label>
                                   )}
 
                                   {typeof value === 'boolean' ? (
@@ -445,7 +449,7 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
                                           checked={currentValue === true}
                                           onChange={handleChange}
                                         />
-                                        {__('config_true')}
+                                        {t('config_true')}
                                       </label>
                                       <label className="flex gap-1 items-center">
                                         <input
@@ -455,7 +459,7 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
                                           checked={currentValue === false}
                                           onChange={handleChange}
                                         />
-                                        {__('config_false')}
+                                        {t('config_false')}
                                       </label>
                                     </div>
                                   ) : (
@@ -524,10 +528,10 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
                 isLoading={isLoading}
                 isEnabled={!isLoading}
               >
-                {__('generic_save_button')}
+                {t('generic_save_button')}
               </Button>
               {hasConfigUpdated && (
-                <Information>{__('config_updated')}</Information>
+                <Information>{t('config_updated')}</Information>
               )}
             </Card>
           </div>
@@ -537,21 +541,25 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
   );
 };
 
-ConfigPage.getInitialProps = async () => {
+ConfigPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const defaultEmailsConfigRes = await api.get('/emails').catch(() => {
-      return null;
-    });
-    const defaultEmailsConfig = defaultEmailsConfigRes?.data?.results;
+    const [emailsRes, messages] = await Promise.all([
+      api.get('/emails').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
+
+    const defaultEmailsConfig = emailsRes?.data?.results;
 
     return {
       defaultEmailsConfig,
       error: null,
+      messages,
     };
   } catch (err: unknown) {
     return {
       defaultEmailsConfig: null,
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

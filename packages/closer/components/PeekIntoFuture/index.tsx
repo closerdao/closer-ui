@@ -1,42 +1,44 @@
 import Image from 'next/image';
 
 import { useState } from 'react';
-import Lightbox from 'react-image-lightbox';
 
-import { __ } from '../../utils/helpers';
+import { useTranslations } from 'next-intl';
+
+import Modal from '../Modal';
 import { Heading } from '../ui';
 import { slides } from './slides';
 
 const PeekIntoFuture = () => {
+  const t = useTranslations();
   const [photoIndex, setPhotoIndex] = useState(0);
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-
-  const currentImage = slides[photoIndex];
-  const nextIndex = (photoIndex + 1) % slides.length;
-  const nextImage = slides[nextIndex] || currentImage;
-  const prevIndex = (photoIndex + slides.length - 1) % slides.length;
-  const prevImage = slides[prevIndex] || currentImage;
-
-  const handleMovePrev = () => setPhotoIndex(prevIndex);
-  const handleMoveNext = () => setPhotoIndex(nextIndex);
+  const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
 
   const handleShowPhoto = (index: number) => {
-    setIsLightboxOpen(true);
+    setIsInfoModalOpened(true);
     setPhotoIndex(index);
   };
 
+  const closeModal = () => {
+    setIsInfoModalOpened(false);
+  };
+
   return (
-    <section className="flex items-center flex-col mb-32">
-      {isLightboxOpen && (
-        <Lightbox
-          mainSrc={slides[photoIndex]}
-          nextSrc={nextImage}
-          prevSrc={prevImage}
-          onCloseRequest={() => setIsLightboxOpen(!isLightboxOpen)}
-          onMovePrevRequest={handleMovePrev}
-          onMoveNextRequest={handleMoveNext}
-        />
+    <section className="flex items-center flex-col mb-32 relative">
+      {isInfoModalOpened && (
+        <Modal
+          closeModal={closeModal}
+          className="flex items-center justify-center bg-green-200  md:h-[calc(100vh-100px)] md:w-[calc(100vw-100px)]"
+        >
+          <Image
+            className="object-cover h-full w-full md:w-auto md:h-full"
+            src={slides[photoIndex]}
+            width={800}
+            height={400}
+            alt=""
+          />
+        </Modal>
       )}
+
       <div className="w-full flex flex-col  gap-2">
         <div className="flex gap-2 justify-center items-center flex-col md:flex-row">
           <div className="flex flex-col justify-center items-center w-full md:w-1/3 min-h-[240px]">
@@ -45,10 +47,10 @@ const PeekIntoFuture = () => {
               src="/images/token-sale/crystal-ball.png"
               width={127}
               height={127}
-              alt={__('token_sale_peek_into_future')}
+              alt={t('token_sale_peek_into_future')}
             />
             <Heading level={2} className="">
-              {__('token_sale_peek_into_future')}
+              {t('token_sale_peek_into_future')}
             </Heading>
           </div>
           <div
@@ -57,7 +59,7 @@ const PeekIntoFuture = () => {
           >
             <div className=" p-6 hover:scale-[103%]  duration-300 h-[280px]  bg-bottom bg-[url(/images/token-sale/co-living.jpg)] bg-cover">
               <Heading level={3} className="text-white text-2xl">
-                {__('token_sale_peek_modern_coliving')}
+                {t('token_sale_peek_modern_coliving')}
               </Heading>
             </div>
           </div>
@@ -70,7 +72,7 @@ const PeekIntoFuture = () => {
           >
             <div className=" p-6 hover:scale-[103%]  duration-300 h-[280px]  bg-bottom bg-[url(/images/token-sale/co-working.jpg)] bg-cover">
               <Heading level={3} className="text-white text-2xl drop-shadow-lg">
-                {__('token_sale_peek_coworking')}
+                {t('token_sale_peek_coworking')}
               </Heading>
             </div>
           </div>
@@ -80,7 +82,7 @@ const PeekIntoFuture = () => {
           >
             <div className=" p-6 hover:scale-[103%]  duration-300 h-[280px]  bg-bottom bg-[url(/images/token-sale/greenhouse.jpg)] bg-cover">
               <Heading level={3} className="text-white text-2xl">
-                {__('token_sale_peek_greenhouse')}
+                {t('token_sale_peek_greenhouse')}
               </Heading>
             </div>
           </div>
@@ -93,15 +95,17 @@ const PeekIntoFuture = () => {
           >
             <div className=" p-6 hover:scale-[103%]  duration-300 h-[280px]  bg-bottom bg-[url(/images/token-sale/suites.jpg)] bg-cover">
               <Heading level={3} className="text-white text-2xl">
-                <div>{__('token_sale_peek_suites_1')}</div>
-                <div>{__('token_sale_peek_suites_2')}</div>
-                {__('token_sale_peek_suites_3')}
+                <div>{t('token_sale_peek_suites_1')}</div>
+                <div>{t('token_sale_peek_suites_2')}</div>
+                {t('token_sale_peek_suites_3')}
               </Heading>
             </div>
           </div>
-          <div className="w-full md:w-1/3 bg-bottom flex flex-col gap-4 justify-center items-center bg-accent-light min-h-[280px] rounded-md bg-cover p-6">
-            <p className="text-center">{__('token_sale_peek_design_1')}</p>
-            <p className="text-center">{__('token_sale_peek_design_2')}</p>
+          <div className="w-full md:w-1/3 bg-bottom flex flex-col gap-4 justify-center items-center  min-h-[280px] rounded-md bg-cover p-6">
+            <p className="text-center">{t('token_sale_peek_design_1')}</p>
+            <p className="text-center text-sm">
+              {t('token_sale_peek_design_2')}
+            </p>
           </div>
         </div>
 
@@ -114,12 +118,12 @@ const PeekIntoFuture = () => {
           </div>
         </div>
 
-        <div className="flex gap-2 justify-center items-center flex-col md:flex-row">
+        {/* <div className="flex gap-2 justify-center items-center flex-col md:flex-row">
           <div className="w-full md:w-1/3 bg-bottom flex flex-col gap-4 justify-center items-center bg-accent-light min-h-[280px] rounded-md bg-cover p-6">
             <Heading level={3} className="text-center text-2xl">
-              {__('token_sale_food_heading')}
+              {t('token_sale_food_heading')}
             </Heading>
-            <p className="text-center">{__('token_sale_food_text')}</p>
+            <p className="text-center">{t('token_sale_food_text')}</p>
           </div>
           <div
             onClick={() => handleShowPhoto(5)}
@@ -127,7 +131,7 @@ const PeekIntoFuture = () => {
           >
             <div className=" p-6 hover:scale-[103%] duration-300 min-h-[280px] min-w-full bg-bottom bg-[url(/images/token-sale/map.png)] bg-cover"></div>
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   );

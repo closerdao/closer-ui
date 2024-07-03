@@ -1,14 +1,13 @@
 import { AppProps } from 'next/app';
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Script from 'next/script';
 
 import { useEffect, useState } from 'react';
-import CookieConsent from 'react-cookie-consent';
 
 import { ErrorBoundary, Layout } from '@/components';
-import { hoover, cabinet, sincopa } from '@/public/fonts/fonts';
+
+import AcceptCookies from 'closer/components/AcceptCookies';
 
 import {
   ExternalProvider,
@@ -21,13 +20,13 @@ import {
   ConfigProvider,
   PlatformProvider,
   WalletProvider,
-  __,
   api,
   blockchainConfig,
 } from 'closer';
 import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import { prepareGeneralConfig } from 'closer/utils/app.helpers';
+import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import appConfig from '../config';
@@ -41,6 +40,7 @@ export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
   const library = new Web3Provider(provider);
   return library;
 }
+
 const prepareDefaultConfig = () => {
   const general =
     configDescription.find((config) => config.slug === 'general')?.value ?? {};
@@ -101,7 +101,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         dangerouslySetInnerHTML={{
           __html: `
   !function(f,b,e,v,n,t,s)
-  {if(f.fbq)return;n=f.fbq=function(){n.cconfigMethod?
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
   n.callMethod.apply(n,arguments):n.queue.push(arguments)};
   if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
   n.queue=[];t=b.createElement(e);t.async=!0;
@@ -122,44 +122,28 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         }}
       >
         <ErrorBoundary>
-          <AuthProvider>
-            <PlatformProvider>
-              <Web3ReactProvider getLibrary={getLibrary}>
-                <WalletProvider>
-                    <div className={`${hoover.variable} ${cabinet.variable} ${sincopa.variable} font-sans`}>
-                  <Layout>
-                    <GoogleAnalytics trackPageViews />
+          <NextIntlClientProvider
+            locale={router.locale || 'en'}
+            messages={pageProps.messages || {}}
+            timeZone={config.timeZone || appConfig.DEFAULT_TIMEZONE}
+          >
+            <AuthProvider>
+              <PlatformProvider>
+                <Web3ReactProvider getLibrary={getLibrary}>
+                  <WalletProvider>
+                    <Layout>
+                      <GoogleAnalytics trackPageViews />
                       <Component {...pageProps} config={config} />
-                  </Layout>
-                    </div>
-                </WalletProvider>
-              </Web3ReactProvider>
-            </PlatformProvider>
-          </AuthProvider>
+                    </Layout>
+                    {/* TODO: create cookie consent page with property-specific parameters #357  */}
+                    <AcceptCookies />
+                  </WalletProvider>
+                </Web3ReactProvider>
+              </PlatformProvider>
+            </AuthProvider>
+          </NextIntlClientProvider>
         </ErrorBoundary>
       </ConfigProvider>
-
-      {/* TODO: create cookie consent page with property-specific parameters #357  */}
-      <CookieConsent
-        buttonText={__('cookie_consent_button')}
-        expires={365}
-        style={{ background: '#ffffff', borderTop: '1px solid #F3F4F6' }}
-        buttonStyle={{
-          borderRadius: '20px',
-          padding: '5px 15px 5px 15px',
-          color: '#FE4FB7',
-          background: '#ffffff',
-          fontSize: '13px',
-          border: '1px solid #FE4FB7',
-        }}
-      >
-        <div className="text-black text-sm">
-          {__('cookie_consent_text')}{' '}
-          <Link className="underline" href="/pdf/TDF-Cookies.pdf">
-            {__('cookie_consent_text_link')}
-          </Link>
-        </div>
-      </CookieConsent>
     </>
   );
 };

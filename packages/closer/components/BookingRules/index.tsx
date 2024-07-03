@@ -1,8 +1,6 @@
-import React from 'react';
+import { useTranslations } from 'next-intl';
 
-import { useConfig } from '../../hooks/useConfig';
 import { BookingRule } from '../../types';
-import { __ } from '../../utils/helpers';
 import { Heading } from '../ui';
 
 interface Props {
@@ -10,14 +8,14 @@ interface Props {
 }
 
 const BookingRules = ({ rules }: Props) => {
-  const { APP_NAME } = useConfig();
+  const t = useTranslations();
   return (
     <section className="max-w-6xl mx-auto mb-16">
       <div className="mb-6">
         <Heading display className="mb-4">
-          {__('booking_rules_heading', APP_NAME).includes('__')
-            ? __('booking_rules_heading')
-            : __('booking_rules_heading', APP_NAME)}
+          {t('booking_rules_heading').includes('__')
+            ? t('booking_rules_heading')
+            : t('booking_rules_heading')}
         </Heading>
         <ul className="mb-4 max-w-prose">
           {rules?.map((rule) => (

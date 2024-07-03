@@ -1,23 +1,25 @@
 import Metatags from '../../../components/Metatags';
 import VolunteerEventView from '../../../components/VolunteerEventView';
 
-import { NextPage } from 'next';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
-import NotFoundPage from '../../404';
 import { VolunteerOpportunity } from '../../../types/api';
 import api from '../../../utils/api';
-import { __ } from '../../../utils/helpers';
+import { loadLocaleData } from '../../../utils/locale.helpers';
+import NotFoundPage from '../../not-found';
 
 interface Props {
   volunteer: VolunteerOpportunity;
   descriptionText?: string;
 }
 
-const VolunteerPage: NextPage<Props> = ({ volunteer, descriptionText }) => {
+const VolunteerPage = ({ volunteer, descriptionText }: Props) => {
+  const t = useTranslations();
   const { photo, name } = volunteer || {};
 
   if (!volunteer)
-    return <NotFoundPage error={__('volunteer_page_does_not_exist')} />;
+    return <NotFoundPage error={t('volunteer_page_does_not_exist')} />;
 
   return (
     <>
@@ -31,13 +33,16 @@ const VolunteerPage: NextPage<Props> = ({ volunteer, descriptionText }) => {
   );
 };
 
-VolunteerPage.getInitialProps = async (context) => {
+VolunteerPage.getInitialProps = async (context: NextPageContext) => {
   const { convert } = require('html-to-text');
   try {
     const id = context.query.slug;
-    const {
-      data: { results: volunteer },
-    } = await api.get(`/volunteer/${id}`);
+    const [volunteerResponse, messages] = await Promise.all([
+      api.get(`/volunteer/${id}`),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
+    const volunteer = volunteerResponse?.data?.results;
+
     const options = {
       baseElements: { selectors: ['p', 'h2', 'span'] },
     };
@@ -48,12 +53,14 @@ VolunteerPage.getInitialProps = async (context) => {
     return {
       volunteer,
       descriptionText,
+      messages,
     };
   } catch (error) {
     console.error(error);
     return {
       volunteer: null,
       descriptionText: null,
+      messages: null,
     };
   }
 };

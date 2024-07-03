@@ -4,14 +4,16 @@ import { useRouter } from 'next/router';
 import { useContext } from 'react';
 
 import PropTypes from 'prop-types';
+import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import { WalletDispatch, WalletState } from '../contexts/wallet';
-import { __ } from '../utils/helpers';
 import ProfilePhoto from './ProfilePhoto';
 import Heading from './ui/Heading';
 
 const WhiteListConditions = ({ referredByUser }) => {
+  const t = useTranslations();
+
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { connectWallet, switchNetwork } = useContext(WalletDispatch);
@@ -24,7 +26,7 @@ const WhiteListConditions = ({ referredByUser }) => {
           level={2}
           className="mt-8 text-3xl md:text-4xl leading-snug md:items-center flex flex-col md:flex-row"
         >
-          <span>{__('token_sale_invite_page_invited_by')}</span>
+          <span>{t('token_sale_invite_page_invited_by')}</span>
           <div className="w-fit bg-accent-light flex items-center ml-2 gap-2 px-4 py-2">
             <ProfilePhoto user={referredByUser} size="sm" />
             <span>{' ' + referredByUser?.screenname}</span>
@@ -32,7 +34,7 @@ const WhiteListConditions = ({ referredByUser }) => {
         </Heading>
       )}
       <h3 className="mt-4 text-4xl leading-snug">
-        {__('token_sale_invite_page_condition_title')}
+        {t('token_sale_invite_page_condition_title')}
       </h3>
       <ol className="list-decimal pl-8 pb-8 md:pb-0">
         <li className="mt-4 text-xl md:text-2xl leading-snug relative">
@@ -41,15 +43,15 @@ const WhiteListConditions = ({ referredByUser }) => {
             passHref
             className="text-accent underline cursor-pointer"
           >
-            {__('signup_form_create')}
+            {t('signup_form_create')}
           </Link>
-          <span className="mx-2">{__('or')}</span>
+          <span className="mx-2">{t('or')}</span>
           <Link
             href={`/login?back=${router.asPath}`}
             passHref
             className="text-accent underline cursor-pointer"
           >
-            {__('navigation_sign_in')}
+            {t('navigation_sign_in')}
           </Link>
           {isAuthenticated && (
             <img
@@ -65,14 +67,14 @@ const WhiteListConditions = ({ referredByUser }) => {
               className="text-accent underline cursor-pointer inline ml-4"
               onClick={switchNetwork}
             >
-              {__('wallet_switch_network')}
+              {t('wallet_switch_network')}
             </button>
           ) : (
             <button
               className="text-accent underline cursor-pointer inline"
               onClick={connectWallet}
             >
-              {__('wallet_not_connected_button')}
+              {t('wallet_not_connected_button')}
             </button>
           )}
           {isWalletReady && (
@@ -84,11 +86,11 @@ const WhiteListConditions = ({ referredByUser }) => {
           )}
         </li>
         <li className="mt-4 text-xl md:text-2xl leading-snug">
-          {__('token_sale_invite_page_nominate_friends')}
+          {t('token_sale_invite_page_nominate_friends')}
         </li>
       </ol>
-      <p>{__('token_sale_invite_page_process_description')}</p>
-      <p>{__('token_sale_invite_page_process_price')}</p>
+      <p>{t('token_sale_invite_page_process_description')}</p>
+      <p>{t('token_sale_invite_page_process_price')}</p>
     </>
   );
 };

@@ -11,17 +11,19 @@ import Reviews from '../../components/Reviews';
 import SubscriptionCards from '../../components/SubscriptionCards';
 import { Button, Heading } from '../../components/ui/';
 
-import { NextPage } from 'next';
+import { NextPage, NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
-import { Page404, useConfig } from '../..';
-import { DEFAULT_CURRENCY } from '../../constants';
+import { DEFAULT_CURRENCY, MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { useAuth } from '../../contexts/auth';
+import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig, Listing } from '../../types';
 import { SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
+import PageNotFound from '../not-found';
 
 interface Props {
   subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
@@ -36,6 +38,7 @@ const SubscriptionsPage: NextPage<Props> = ({
   listings,
   error,
 }) => {
+  const t = useTranslations();
   const { isAuthenticated, isLoading, user } = useAuth();
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
@@ -59,6 +62,9 @@ const SubscriptionsPage: NextPage<Props> = ({
   }, [user]);
 
   const handleNext = (priceId: string, hasVariants: boolean, slug: string) => {
+    if (priceId?.includes(',')) {
+      priceId = (priceId as string).split(',')[0];
+    }
     if (!isAuthenticated) {
       // User has no account - must start with creating one.
       router.push(
@@ -96,13 +102,13 @@ const SubscriptionsPage: NextPage<Props> = ({
   }
 
   if (!areSubscriptionsEnabled) {
-    return <Page404 error="" />;
+    return <PageNotFound error="" />;
   }
 
   return (
     <div className="max-w-screen-lg mx-auto">
       <Head>
-        <title>{`${__('subscriptions_title')} - ${PLATFORM_NAME}`}</title>
+        <title>{`${t('subscriptions_title')} - ${PLATFORM_NAME}`}</title>
       </Head>
       <main className="pt-16 pb-24 md:flex-row flex-wrap">
         <div className="flex justify-center">
@@ -112,21 +118,21 @@ const SubscriptionsPage: NextPage<Props> = ({
               className="font-extrabold mb-6 uppercase text-center"
             >
               <div className="text-2xl sm:text-5xl">
-                {__('pricing_and_product_heading_1')}
+                {t('pricing_and_product_heading_1')}
               </div>
               <div className="text-2xl sm:text-5xl">
-                {__('pricing_and_product_heading_2')}
+                {t('pricing_and_product_heading_2')}
               </div>
               <div className="text-5xl sm:text-7xl leading-12">
-                {__('pricing_and_product_heading_3')}
+                {t('pricing_and_product_heading_3')}
               </div>
             </Heading>
             <div className="flex justify-center flex-wrap ">
               <p className="mb-4 max-w-[630px]">
-                {__('pricing_and_product_intro_1')}
+                {t('pricing_and_product_intro_1')}
               </p>
               <p className="mb-4 font-bold uppercase max-w-[630px]">
-                {__('pricing_and_product_intro_2')}
+                {t('pricing_and_product_intro_2')}
               </p>
             </div>
           </div>
@@ -147,60 +153,60 @@ const SubscriptionsPage: NextPage<Props> = ({
                 level={2}
                 className="mb-4 uppercase pt-60 w-full font-bold text-6xl bg-[url(/images/illy-token.png)] bg-no-repeat bg-[center_top]"
               >
-                {__('pricing_and_product_heading_funding_your_stay')}
+                {t('pricing_and_product_heading_funding_your_stay')}
               </Heading>
               <p className="mb-4 w-full">
-                {__('pricing_and_product_subheading_accommodation')}
+                {t('pricing_and_product_subheading_accommodation')}
               </p>
               <div
                 className="mb-10"
                 dangerouslySetInnerHTML={{
-                  __html: __('pricing_and_product_funding_your_stay_intro'),
+                  __html: t('pricing_and_product_funding_your_stay_intro'),
                 }}
               />
               <div className="mb-10 w-full flex flex-wrap justify-center">
                 <span className="mb-4 bg-black text-white rounded-full py-1 px-4 uppercase mx-2">
-                  {__('pricing_and_product_cost_of_events')}
+                  {t('pricing_and_product_cost_of_events')}
                 </span>{' '}
                 =
                 <span className="mb-4 bg-accent-light text-accent rounded-full py-1 px-4 uppercase mx-2">
-                  {__('pricing_and_product_event_fee')}
+                  {t('pricing_and_product_event_fee')}
                 </span>{' '}
                 +
                 <span className="mb-4 bg-accent-light text-accent rounded-full py-1 px-4 uppercase mx-2">
-                  {__('pricing_and_product_utility_fee_2')}
+                  {t('pricing_and_product_utility_fee_2')}
                 </span>{' '}
                 +
                 <span className="mb-4 bg-accent-light text-accent rounded-full py-1 px-4 uppercase mx-2">
-                  {__('pricing_and_product_accommodation_fee')}
+                  {t('pricing_and_product_accommodation_fee')}
                 </span>
               </div>
               <div className="mb-10 w-full flex flex-wrap justify-center">
                 <span className="mb-4 bg-black text-white rounded-full py-1 px-4 uppercase mx-2">
-                  {__('pricing_and_product_cost_of_stays')}
+                  {t('pricing_and_product_cost_of_stays')}
                 </span>{' '}
                 =
                 <span className="mb-4 bg-accent-light text-accent rounded-full py-1 px-4 uppercase mx-2">
-                  {__('pricing_and_product_utility_fee_2')}
+                  {t('pricing_and_product_utility_fee_2')}
                 </span>{' '}
                 +
                 <span className="mb-4 bg-accent-light text-accent rounded-full py-1 px-4 uppercase mx-2">
-                  {__('pricing_and_product_accommodation_fee')}
+                  {t('pricing_and_product_accommodation_fee')}
                 </span>
               </div>
               <div className="mb-10 w-full flex flex-wrap justify-center">
                 <span className="mb-4 bg-black text-white rounded-full py-1 px-4 uppercase mx-2">
-                  {__('pricing_and_product_cost_of_volunteering')}
+                  {t('pricing_and_product_cost_of_volunteering')}
                 </span>{' '}
                 =
                 <span className="mb-4 bg-accent-light text-accent rounded-full py-1 px-4 uppercase mx-2">
-                  {__('pricing_and_product_utility_fee_2')}
+                  {t('pricing_and_product_utility_fee_2')}
                 </span>
               </div>
               <div
                 className="mb-10"
                 dangerouslySetInnerHTML={{
-                  __html: __('pricing_and_product_costs_info'),
+                  __html: t('pricing_and_product_costs_info'),
                 }}
               />
             </div>
@@ -209,13 +215,13 @@ const SubscriptionsPage: NextPage<Props> = ({
               <div className="flex flex-col justify-between w-[100%] sm:w-1/2 bg-[url(/images/subscriptions/funding-bg-1.jpg)] p-4 bg-cover">
                 <div>
                   <Heading level={2} className="uppercase text-4xl mb-6">
-                    {__('pricing_and_product_heading_carrots')}
+                    {t('pricing_and_product_heading_carrots')}
                   </Heading>
                   <p className="text-sm mb-4">
-                    {__('pricing_and_product_carrots_text_1')}
+                    {t('pricing_and_product_carrots_text_1')}
                   </p>
                   <p className="text-sm mb-10">
-                    {__('pricing_and_product_carrots_text_2')}
+                    {t('pricing_and_product_carrots_text_2')}
                   </p>
                 </div>
                 <div className="flex justify-end">
@@ -226,7 +232,7 @@ const SubscriptionsPage: NextPage<Props> = ({
                       router.push('/settings/credits');
                     }}
                   >
-                    {__('pricing_and_product_learn_more_button')}
+                    {t('pricing_and_product_learn_more_button')}
                   </Button>
                 </div>
               </div>
@@ -234,13 +240,13 @@ const SubscriptionsPage: NextPage<Props> = ({
               <div className="flex flex-col justify-between w-[100%] sm:w-1/2 bg-[url(/images/subscriptions/funding-bg-2.jpg)] p-4 bg-cover">
                 <div>
                   <Heading level={2} className="uppercase text-4xl mb-6">
-                    {__('pricing_and_product_heading_tdf')}
+                    {t('pricing_and_product_heading_tdf')}
                   </Heading>
                   <p className="text-sm mb-4">
-                    {__('pricing_and_product_tdf_text_1')}
+                    {t('pricing_and_product_tdf_text_1')}
                   </p>
                   <p className="text-sm mb-10">
-                    {__('pricing_and_product_tdf_text_2')}
+                    {t('pricing_and_product_tdf_text_2')}
                   </p>
                 </div>
                 <div className="flex justify-end">
@@ -252,7 +258,7 @@ const SubscriptionsPage: NextPage<Props> = ({
                         router.push('/settings/token');
                       }}
                     >
-                      {__('pricing_and_product_learn_more_button')}
+                      {t('pricing_and_product_learn_more_button')}
                     </Button>
                   )}
                 </div>
@@ -268,10 +274,10 @@ const SubscriptionsPage: NextPage<Props> = ({
                 level={2}
                 className="mb-4 uppercase w-full font-bold text-4xl sm:text-6xl"
               >
-                {__('pricing_and_product_heading_accommodation')}
+                {t('pricing_and_product_heading_accommodation')}
               </Heading>
               <p className="mb-4 w-full">
-                {__('pricing_and_product_subheading_accommodation')}
+                {t('pricing_and_product_subheading_accommodation')}
               </p>
             </div>
             <AccommodationOptions listings={listings} />
@@ -284,10 +290,10 @@ const SubscriptionsPage: NextPage<Props> = ({
               level={2}
               className="mb-4 uppercase w-full font-bold text-4xl sm:text-6xl"
             >
-              {__('pricing_and_product_heading_say_cheese')}
+              {t('pricing_and_product_heading_say_cheese')}
             </Heading>
             <p className="mb-4 w-full">
-              {__('pricing_and_product_subheading_say_cheese')}
+              {t('pricing_and_product_subheading_say_cheese')}
             </p>
           </div>
           <div className="flex justify-center sm:justify-between  flex-wrap ">
@@ -358,19 +364,27 @@ const SubscriptionsPage: NextPage<Props> = ({
   );
 };
 
-SubscriptionsPage.getInitialProps = async () => {
+SubscriptionsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [subscriptionsRes, generalRes, listingRes] = await Promise.all([
-      api.get('/config/subscriptions').catch(() => {
-        return null;
-      }),
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      api.get('/listing').catch(() => {
-        return null;
-      }),
-    ]);
+    const [subscriptionsRes, generalRes, listingRes, messages] =
+      await Promise.all([
+        api.get('/config/subscriptions').catch(() => {
+          return null;
+        }),
+        api.get('/config/general').catch(() => {
+          return null;
+        }),
+        api
+          .get('/listing', {
+            params: {
+              limit: MAX_LISTINGS_TO_FETCH,
+            },
+          })
+          .catch(() => {
+            return null;
+          }),
+        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      ]);
 
     const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
     const generalConfig = generalRes?.data?.results?.value;
@@ -380,6 +394,7 @@ SubscriptionsPage.getInitialProps = async () => {
       subscriptionsConfig,
       generalConfig,
       listings,
+      messages,
     };
   } catch (err: unknown) {
     return {
@@ -387,6 +402,7 @@ SubscriptionsPage.getInitialProps = async () => {
       generalConfig: null,
       listings: [],
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

@@ -1,29 +1,28 @@
 import Countdown from 'react-countdown';
 
 import PropTypes from 'prop-types';
-
-import { __ } from '../utils/helpers';
+import { useTranslations } from 'next-intl';
 
 const TimeCountdown = ({ date, onComplete }) => {
+  const t = useTranslations();
+
   const renderer = ({ days, hours, minutes, seconds }) => {
     return (
       <div className="flex gap-4 md:gap-10">
         <div className="flex flex-col items-center w-24">
           <p className="font-black text-4xl md:text-6xl text-accent">{days}</p>
-          <p className="text-2xl leading-8 font-bold">{__('countdown_days')}</p>
+          <p className="text-2xl leading-8 font-bold">{t('countdown_days')}</p>
         </div>
         <div className="flex flex-col items-center w-24">
           <p className="font-black text-4xl md:text-6xl text-accent">{hours}</p>
-          <p className="text-2xl leading-8 font-bold">
-            {__('countdown_hours')}
-          </p>
+          <p className="text-2xl leading-8 font-bold">{t('countdown_hours')}</p>
         </div>
         <div className="flex flex-col items-center w-24">
           <p className="font-black text-4xl md:text-6xl text-accent">
             {minutes}
           </p>
           <p className="text-2xl leading-8 font-bold">
-            {__('countdown_minutes')}
+            {t('countdown_minutes')}
           </p>
         </div>
         <div className="flex flex-col items-center w-24">
@@ -31,7 +30,7 @@ const TimeCountdown = ({ date, onComplete }) => {
             {seconds}
           </p>
           <p className="text-2xl leading-8 font-bold">
-            {__('countdown_seconds')}
+            {t('countdown_seconds')}
           </p>
         </div>
       </div>

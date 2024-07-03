@@ -16,9 +16,9 @@ import {
   Row,
 } from '../../components/ui/';
 
-import { NextPage } from 'next';
+import { NextPage, NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
-import Page404 from '../404';
 import {
   DEFAULT_CURRENCY,
   MAX_CREDITS_PER_MONTH,
@@ -34,15 +34,19 @@ import {
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import {
-  __,
   calculateSubscriptionPrice,
   getVatInfo,
   priceFormat,
 } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
+import PageNotFound from '../not-found';
 
 const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUB_KEY as string,
+  process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY as string,
+  {
+    stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT
+  }
 );
 
 interface Props {
@@ -58,6 +62,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
   generalConfig,
   error,
 }) => {
+  const t = useTranslations();
   const isPaymentEnabled = paymentConfig?.enabled || false;
   const areSubscriptionsEnabled =
     subscriptionsConfig?.enabled &&
@@ -67,6 +72,10 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId, monthlyCredits, source } = router.query;
+  const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
+  const vatRateFromConfig = Number(paymentConfig?.vatRate);
+  const vatRate = vatRateFromConfig || defaultVatRate;
+  
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
 
   const monthlyCreditsSelected = Math.min(
@@ -92,7 +101,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
   useEffect(() => {
     if (priceId && subscriptionPlans) {
       const selectedSubscription = subscriptionPlans.find(
-        (plan: SubscriptionPlan) => plan.priceId === priceId,
+        (plan: SubscriptionPlan) => plan.priceId.includes(priceId as string),
       );
 
       setSelectedPlan({
@@ -115,7 +124,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
   }
 
   if (!areSubscriptionsEnabled) {
-    return <Page404 error="" />;
+    return <PageNotFound error="" />;
   }
 
   const total = calculateSubscriptionPrice(
@@ -126,16 +135,16 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
   return (
     <>
       <Head>
-        <title>{`${__('subscriptions_checkout_title')} - ${__(
+        <title>{`${t('subscriptions_checkout_title')} - ${t(
           'subscriptions_title',
         )} - ${PLATFORM_NAME}`}</title>
       </Head>
 
       <div className="w-full max-w-screen-sm mx-auto p-8">
-        <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
+        <BackButton handleClick={goBack}>{t('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-4">
-          💰 {__('subscriptions_checkout_title')}
+          💰 {t('subscriptions_checkout_title')}
         </Heading>
 
         <ProgressBar steps={SUBSCRIPTION_STEPS} />
@@ -144,7 +153,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
           <div className="mb-10">
             <Heading level={2} className="border-b pb-2 mb-6 text-xl">
               <span className="mr-2">♻️</span>
-              {__('subscriptions_title')}
+              {t('subscriptions_title')}
             </Heading>
 
             {
@@ -153,18 +162,18 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
                 rowKey={` ${selectedPlan?.title} ${
                   Number(monthlyCreditsSelected)
                     ? `- ${Number(monthlyCreditsSelected)}
-                      ${__('subscriptions_credits_included')}`
+                      ${t('subscriptions_credits_included')}`
                     : ''
                 }  `}
                 value={`${
                   selectedPlan && priceFormat(total, DEFAULT_CURRENCY)
                 }`}
-                additionalInfo={`${__(
+                additionalInfo={`${t(
                   'bookings_checkout_step_total_description',
                 )} ${getVatInfo({
                   val: total,
                   cur: DEFAULT_CURRENCY,
-                })} ${__('subscriptions_summary_per_month')}`}
+                }, vatRate)} ${t('subscriptions_summary_per_month')}`}
               />
             }
           </div>
@@ -172,7 +181,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
           <div className="mb-14">
             <Heading level={2} className="border-b pb-2 mb-6 text-xl">
               <span className="mr-2">💲</span>
-              {__('subscriptions_checkout_payment_subtitle')}
+              {t('subscriptions_checkout_payment_subtitle')}
             </Heading>
             <div className="mb-10">
               {isPaymentEnabled ? (
@@ -185,7 +194,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
                   />
                 </Elements>
               ) : (
-                <ErrorMessage error={__('checkout_payment_disabled_error')} />
+                <ErrorMessage error={t('checkout_payment_disabled_error')} />
               )}
             </div>
           </div>
@@ -195,19 +204,23 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
   );
 };
 
-SubscriptionsCheckoutPage.getInitialProps = async () => {
+SubscriptionsCheckoutPage.getInitialProps = async (
+  context: NextPageContext,
+) => {
   try {
-    const [subscriptionsRes, paymentRes, generalRes] = await Promise.all([
-      api.get('/config/subscriptions').catch(() => {
-        return null;
-      }),
-      api.get('/config/payment').catch(() => {
-        return null;
-      }),
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-    ]);
+    const [subscriptionsRes, paymentRes, generalRes, messages] =
+      await Promise.all([
+        api.get('/config/subscriptions').catch(() => {
+          return null;
+        }),
+        api.get('/config/payment').catch(() => {
+          return null;
+        }),
+        api.get('/config/general').catch(() => {
+          return null;
+        }),
+        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      ]);
 
     const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
     const paymentConfig = paymentRes?.data?.results?.value;
@@ -216,6 +229,7 @@ SubscriptionsCheckoutPage.getInitialProps = async () => {
       subscriptionsConfig,
       paymentConfig,
       generalConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {
@@ -223,6 +237,7 @@ SubscriptionsCheckoutPage.getInitialProps = async () => {
       paymentConfig: null,
       generalConfig: null,
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

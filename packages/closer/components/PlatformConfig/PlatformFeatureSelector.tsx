@@ -1,6 +1,5 @@
-import React from 'react';
+import { useTranslations } from 'next-intl';
 
-import { __ } from '../../utils/helpers';
 import { capitalizeFirstLetter } from '../../utils/learn.helpers';
 import { Card, Checkbox, Heading } from '../ui';
 
@@ -17,9 +16,10 @@ const PlatformFeatureSelector = ({
   allConfigCategories,
   handleToggleConfig,
 }: Props) => {
+  const t = useTranslations();
   return (
     <Card>
-      <Heading level={4}>{__('config_features_heading')}</Heading>
+      <Heading level={4}>{t('config_features_heading')}</Heading>
       <div className="flex flex-row gap-x-4 flex-wrap">
         {allConfigCategories
           .filter((category) => !NON_EDITABLE_FEATURES.includes(category))

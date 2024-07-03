@@ -7,17 +7,18 @@ import { ErrorMessage } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 import process from 'process';
-import { ParsedUrlQuery } from 'querystring';
 
-import PageNotFound from '../../404';
 import { blockchainConfig } from '../../../config_blockchain';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { BaseBookingParams, BookingConfig, Listing } from '../../../types';
 import api from '../../../utils/api';
 import { getBookingType } from '../../../utils/booking.helpers';
-import { __ } from '../../../utils/helpers';
+import { loadLocaleData } from '../../../utils/locale.helpers';
+import PageNotFound from '../../not-found';
 
 interface Props extends BaseBookingParams {
   listings: Listing[];
@@ -46,7 +47,7 @@ const AccomodationSelector = ({
   bookingConfig,
   bookingError,
 }: Props) => {
-  console.log('listings=', listings);
+  const t = useTranslations();
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -134,10 +135,10 @@ const AccomodationSelector = ({
   return (
     <>
       <div className="max-w-screen-sm mx-auto md:first-letter:p-8">
-        <BookingBackButton onClick={backToDates} name={__('buttons_back')} />
+        <BookingBackButton onClick={backToDates} name={t('buttons_back')} />
         <Heading className="pb-4 mt-8">
           <span className="mr-2">🏡</span>
-          <span>{__('bookings_accomodation_step_title')}</span>
+          <span>{t('bookings_accomodation_step_title')}</span>
         </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
         <BookingStepsInfo
@@ -147,20 +148,18 @@ const AccomodationSelector = ({
           savedCurrency={currency}
           backToDates={backToDates}
         />
-
         {bookingError && (
           <section className="my-12">
             <ErrorMessage error={bookingError} />
           </section>
         )}
-
         {filteredListings?.length === 0 && (
           <div className="mt-16">
             <h2 className="text-2xl font-bold">
-              {__('bookings_accomodation_no_results_title')}
+              {t('bookings_accomodation_no_results_title')}
             </h2>
             <p className="mt-4 text-lg">
-              {__('bookings_accomodation_no_results_description')}
+              {t('bookings_accomodation_no_results_description')}
             </p>
           </div>
         )}
@@ -183,11 +182,9 @@ const AccomodationSelector = ({
   );
 };
 
-AccomodationSelector.getInitialProps = async ({
-  query,
-}: {
-  query: ParsedUrlQuery;
-}) => {
+AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
+  const { query } = context;
+
   try {
     const {
       start,
@@ -207,7 +204,7 @@ AccomodationSelector.getInitialProps = async ({
     const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
     const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
 
-    const [availabilityRes, bookingConfigRes] = await Promise.all([
+    const [availabilityRes, bookingConfigRes, messages] = await Promise.all([
       api
         .post('/bookings/availability', {
           start,
@@ -231,11 +228,11 @@ AccomodationSelector.getInitialProps = async ({
       api.get('/config/booking').catch(() => {
         return null;
       }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const bookingError = (availabilityRes as any)?.error || null;
     const availability = (availabilityRes as any)?.data?.results;
 
-    console.log('availability===',availability);
     const bookingConfig = bookingConfigRes?.data?.results?.value;
 
     return {
@@ -256,12 +253,14 @@ AccomodationSelector.getInitialProps = async ({
       doesNeedSeparateBeds,
       bookingConfig,
       bookingError,
+      messages,
     };
   } catch (err: any) {
     console.log(err);
     return {
       error: err.response?.data?.error || err.message,
       bookingConfig: null,
+      messages: null,
     };
   }
 };

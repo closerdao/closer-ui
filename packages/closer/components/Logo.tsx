@@ -6,7 +6,7 @@ import { useConfig } from '../hooks/useConfig';
 
 const Logo: FC = () => {
   const config = useConfig();
-  const { LOGO_HEADER, PLATFORM_NAME, APP_NAME } = config;
+  const { APP_NAME, LOGO_HEADER, PLATFORM_NAME } = config;
 
   return PLATFORM_NAME !== '[object Object]' ? (
     <Link href="/" className="block">
