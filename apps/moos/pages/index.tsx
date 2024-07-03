@@ -6,10 +6,16 @@ import { useEffect, useRef, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
 import Faqs from 'closer/components/Faqs';
-import YoutubeEmbed from 'closer/components/YoutubeEmbed';
 import { Heading } from 'closer/components/ui';
 
-import { GeneralConfig, Resources, api, useAuth, useConfig } from 'closer';
+import {
+  GeneralConfig,
+  Resources,
+  YoutubeEmbed,
+  api,
+  useAuth,
+  useConfig,
+} from 'closer';
 import { HOME_PAGE_CATEGORY } from 'closer/constants';
 import { useFaqs } from 'closer/hooks/useFaqs';
 import { formatSearch } from 'closer/utils/api';
@@ -70,7 +76,7 @@ const HomePage = ({ generalConfig }: Props) => {
                   src="/images/Moos-Halle.jpg"
                   width={731}
                   height={786}
-                  alt="Lios labs"
+                  alt="Moos Halle"
                 />
               </div>
               <video
@@ -140,17 +146,18 @@ const HomePage = ({ generalConfig }: Props) => {
             <div className="flex flex-col sm:flex-row gap-8">
               <div className="flex-1 flex flex-col gap-4">
                 <p>
-                  Right across from Treptower Park, MOOS — &rsquo;Moss&rsquo; in
-                  English—is a watering hole where the creativity and communal
-                  spirit of Berlin converge. A welcoming space for diverse paths
-                  to meet, that supports an innovative, interdisciplinary and
-                  interconnected community right in the city`s heart.
+                  Right across from Treptower Park, MOOS — &rsquo;Moss&rsquo;
+                  in English—is a watering hole where the creativity and
+                  communal spirit of Berlin converge. A welcoming space for
+                  diverse paths to meet, that supports an innovative,
+                  interdisciplinary and interconnected community right in the
+                  city`s heart.
                 </p>
                 <p>
-                  <b>The Y Berlin</b> is a new community design lab within MOOS
-                  supporting the blend of technology and community. Our aim is
-                  to curate spaces that foster connections deeper than mere
-                  cohabitation.
+                  <b>The Y Berlin</b> is a new community design lab within
+                  MOOS supporting the blend of technology and community. Our
+                  aim is to curate spaces that foster connections deeper than
+                  mere cohabitation.
                 </p>
                 {/* <p>
                 The Y Berlin, a new community design lab embedded within MOOS,
@@ -187,14 +194,14 @@ const HomePage = ({ generalConfig }: Props) => {
               <div className="flex-1 flex flex-col gap-4">
                 <p>
                   Now, for the first time, we are opening the doors of our
-                  community playground for co-creation. We are offering limited{' '}
-                  <i>Vybe Vouchers</i> to individuals and organizations who are
-                  interested in partnering with us and benefiting from special
-                  early mover advantages.
+                  community playground for co-creation. We are offering
+                  limited <i>Vybe Vouchers</i> to individuals and
+                  organizations who are interested in partnering with us and
+                  benefiting from special early mover advantages.
                 </p>
                 <p>
-                  Become a <i>Vybe Creator</i> today and help mold the future of
-                  community tech in Berlin.
+                  Become a <i>Vybe Creator</i> today and help mold the future
+                  of community tech in Berlin.
                 </p>
                 <p>
                   <Link href="/support-us" className="text-accent font-bold ">
@@ -270,7 +277,7 @@ const HomePage = ({ generalConfig }: Props) => {
               </div>
               {faqs && <Faqs faqs={faqs} error={error} />}
             </div>
-            {/* <section className="mb-[90vh]"></section> */}
+          {/* <section className="mb-[90vh]"></section> */}
           </section>
         </div>
       </div>

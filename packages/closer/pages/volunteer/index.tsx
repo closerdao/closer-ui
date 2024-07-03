@@ -52,8 +52,6 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({
   const isVolunteeringEnabled =
     volunteerConfig?.enabled === true &&
     process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
-  
-  console.log('isVolunteeringEnabled===',isVolunteeringEnabled);
 
   if (!isVolunteeringEnabled) {
     return <PageNotFound />;

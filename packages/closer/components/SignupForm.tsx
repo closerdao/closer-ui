@@ -202,10 +202,10 @@ const SignupForm = ({ app }: Props) => {
           </div>
           <div className="text-center text-sm">
             {t('signup_form_have_account')}{' '}
-            <Link
+              <Link
+                data-testid="login-link"
               className="text-accent underline font-bold"
                 href={`/login${signupQuery}`}
-                data-testid="login-link"
             >
               {t('login_title')}{' '}
             </Link>

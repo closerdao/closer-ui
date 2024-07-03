@@ -20,7 +20,6 @@ import dayjs from 'dayjs';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import PageNotAllowed from '../../401';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
@@ -40,6 +39,7 @@ import { payTokens } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
+import PageNotAllowed from '../../401';
 import PageNotFound from '../../not-found';
 
 interface Props extends BaseBookingParams {
@@ -364,6 +364,7 @@ const Checkout = ({
               <p className="text-right text-xs">
                 {t('bookings_summary_step_utility_description')}
               </p>
+             
             </div>
           )}
 
@@ -417,7 +418,7 @@ const Checkout = ({
           )}
           {paymentError && <ErrorMessage error={paymentError} />}
         </div>
-      </div>
+        </div>
     </>
   );
 };
@@ -438,6 +439,9 @@ Checkout.getInitialProps = async (context: NextPageContext) => {
           return null;
         }),
       api.get('/config/booking').catch(() => {
+      return null;
+      }),
+      api.get('/config/payment').catch(() => {
         return null;
       }),
       api.get('/config/payment').catch(() => {

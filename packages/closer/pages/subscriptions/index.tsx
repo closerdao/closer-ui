@@ -56,7 +56,8 @@ const SubscriptionsPage: NextPage<Props> = ({
 
   useEffect(() => {
     const selectedSubscription = plans?.find(
-      (plan: any) => plan.priceId === (user?.subscription?.priceId || 'free'),
+      (plan: any) =>
+        plan.priceId === (user?.subscription?.priceId || 'free'),
     );
     setUserActivePlan(selectedSubscription);
   }, [user]);

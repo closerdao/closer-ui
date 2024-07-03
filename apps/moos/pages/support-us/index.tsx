@@ -8,11 +8,11 @@ import CreditsBalance from 'closer/components/CreditsBalance';
 import { Card, Heading, LinkButton } from 'closer/components/ui';
 
 import { PageNotFound, priceFormat } from 'closer';
-import { FundraisingConfig } from 'closer/types';
 import api from 'closer/utils/api';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
+import { FundraisingConfig } from 'closer/types';
 
 const VYBE_PACKAGES = [84, 500, 2000];
 
@@ -286,6 +286,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               </div>
             </div>
           </Card>
+     
         </section>
         <section className=" w-full flex flex-col gap-6 justify-center max-w-xl">
           <Heading

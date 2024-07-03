@@ -1,12 +1,11 @@
 import Link from 'next/link';
 
-import dayjs from 'dayjs'; 
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { Button } from '../ui';
- 
-import utc from 'dayjs/plugin/utc';
 
 dayjs.extend(utc);
 
@@ -37,7 +36,7 @@ const BookingRequestButtons = ({
     dayjs().isBefore(dayjs(end));
 
   const isSpaceHost = user?.roles.includes('space-host');
-  
+
   return (
     <div className="mt-4 flex flex-col gap-4">
       {/* Hide buttons if start date is in the past: */}
@@ -79,11 +78,17 @@ const BookingRequestButtons = ({
             </Link>
           )}
 
-          {user && (status === 'paid' || status === 'credits-paid' || status === 'tokens-staked') && (user._id === createdBy || isSpaceHost) && (
-            <Link passHref href={`/bookings/${_id}/cancel`}>
-              <Button type="secondary">⭕ {t('booking_cancel_button')}</Button>
-            </Link>
-          )}
+          {user &&
+            (status === 'paid' ||
+              status === 'credits-paid' ||
+              status === 'tokens-staked') &&
+            (user._id === createdBy || isSpaceHost) && (
+              <Link passHref href={`/bookings/${_id}/cancel`}>
+                <Button type="secondary">
+                  ⭕ {t('booking_cancel_button')}
+                </Button>
+              </Link>
+            )}
         </>
       )}
 

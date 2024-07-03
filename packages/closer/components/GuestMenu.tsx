@@ -1,11 +1,34 @@
+import { useEffect, useState } from 'react';
+
 import { useTranslations } from 'next-intl';
 
+import api from '../utils/api';
 import ReportABug from './ReportABug';
 import QuestionMarkIcon from './icons/QuestionMarkIcon';
 import NavLink from './ui/NavLink';
 
 const GuestMenu = () => {
   const t = useTranslations();
+  const [isVolunteeringEnabled, setIsVolunteeringEnabled] = useState(false);
+  useEffect(() => {
+    (async () => {
+      try {
+        const [volunteerRes] = await Promise.all([
+          api.get('config/volunteering').catch((err) => {
+            console.error('Error fetching booking config:', err);
+            return null;
+          }),
+        ]);
+
+        const isVolunteeringEnabled =
+          volunteerRes?.data.results.value.enabled === true &&
+          process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
+        setIsVolunteeringEnabled(isVolunteeringEnabled);
+      } catch (err) {
+        console.log('error');
+      }
+    })();
+  }, []);
   return (
     <nav>
       <div className="px-4 pb-6 shadow-xl relative rounded-lg border-3 flex flex-col gap-3">
@@ -24,7 +47,10 @@ const GuestMenu = () => {
 
         <NavLink href="/events">{t('navigation_events')}</NavLink>
         <NavLink href="/stay">{t('navigation_stay')}</NavLink>
-        <NavLink href="/volunteer">{t('navigation_volunteer')}</NavLink>
+        {isVolunteeringEnabled && (
+          <NavLink href="/volunteer">{t('navigation_volunteer')}</NavLink>
+        )}
+
         <NavLink href="/resources">{t('navigation_resources')}</NavLink>
 
         {process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true' && (

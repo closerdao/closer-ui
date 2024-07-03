@@ -11,9 +11,9 @@ import { blockchainConfig } from '../config_blockchain';
 import { DEFAULT_CURRENCY, REFUND_PERIODS } from '../constants';
 import base from '../locales/base-en';
 import foz from '../locales/foz';
-import lios from '../locales/lios';
 import moos from '../locales/moos';
 import tdf from '../locales/tdf';
+import lios from '../locales/lios';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(relativeTime);
@@ -323,7 +323,10 @@ export const getAccommodationCost = (
 
 export const getVatInfo = (total, vatRate) => {
   if (vatRate) {
-    return `${priceFormat(total?.val * Number(vatRate), total?.cur)}
+    return `${priceFormat(
+      total?.val * Number(vatRate),
+      total?.cur,
+    )}
     (${Number(vatRate) * 100}%)`;
   }
   return '';

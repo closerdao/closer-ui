@@ -267,7 +267,7 @@ describe('Booking flow', () => {
     cy.get('button').contains(/yes/i).click();
   });
 
-  it.only('should have correct unauthenticated user (can instant book) hourly booking flow', () => {
+  it('should have correct unauthenticated user (can instant book) hourly booking flow', () => {
     cy.visit(`${Cypress.config('baseUrl')}/stay/${LISTING_HOURLY.slug}`);
 
     selectDateAndTime();
