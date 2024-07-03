@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { useAuth } from '../contexts/auth';
+import { useConfig } from '../hooks/useConfig';
 import { NavigationLink } from '../types/nav';
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
@@ -54,6 +55,7 @@ const getLinks = (
   isBookingEnabled: boolean,
   areSubscriptionsEnabled: boolean,
   isVolunteeringEnabled: boolean,
+  APP_NAME: string,
 ) => {
   const links = [
     {
@@ -102,7 +104,7 @@ const getLinks = (
       roles: ['space-host'],
     },
     {
-      label: 'Book a stay',
+      label: __('navigation_stay', APP_NAME),
       url: '/stay',
       enabled: isBookingEnabled,
     },
@@ -177,6 +179,7 @@ const getLinks = (
 };
 
 const MemberMenu = () => {
+  const { APP_NAME } = useConfig();
   const { user, logout } = useAuth();
   const [navOptions, setNavOptions] = useState(['guest']);
   const [selectedSwitcherOption, setSelectedSwitcherOption] = useState('Guest');
@@ -218,6 +221,7 @@ const MemberMenu = () => {
           isBookingEnabled,
           areSubscriptionsEnabled,
           isVolunteeringEnabled,
+          APP_NAME
         );
 
         setLinks(updatedLinks);

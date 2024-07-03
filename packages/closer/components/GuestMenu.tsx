@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+import { useConfig } from '../hooks/useConfig';
 import api from '../utils/api';
 import { __ } from '../utils/helpers';
 import ReportABug from './ReportABug';
@@ -7,6 +8,7 @@ import QuestionMarkIcon from './icons/QuestionMarkIcon';
 import NavLink from './ui/NavLink';
 
 const GuestMenu = () => {
+  const { APP_NAME } = useConfig();
   const [isVolunteeringEnabled, setIsVolunteeringEnabled] = useState(false);
   useEffect(() => {
     (async () => {
@@ -22,7 +24,6 @@ const GuestMenu = () => {
           volunteerRes?.data.results.value.enabled === true &&
           process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
         setIsVolunteeringEnabled(isVolunteeringEnabled);
-
       } catch (err) {
         console.log('error');
       }
@@ -45,7 +46,9 @@ const GuestMenu = () => {
         )}
 
         <NavLink href="/events">{__('navigation_events')}</NavLink>
-        <NavLink href="/stay">{__('navigation_stay')}</NavLink>
+        <NavLink href="/stay">
+          {APP_NAME && __('navigation_stay', APP_NAME)}
+        </NavLink>
         {isVolunteeringEnabled && (
           <NavLink href="/volunteer">{__('navigation_volunteer')}</NavLink>
         )}

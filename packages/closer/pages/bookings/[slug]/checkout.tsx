@@ -27,7 +27,7 @@ import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { WalletState } from '../../../contexts/wallet';
 import { useBookingSmartContract } from '../../../hooks/useBookingSmartContract';
-import {
+import { 
   BaseBookingParams,
   Booking,
   BookingConfig,
@@ -141,7 +141,7 @@ const Checkout = ({ booking, listing, error, event, bookingConfig, paymentConfig
         router.push(`/bookings/${booking?._id}`);
       }
     }
-  }, [router])
+  }, [router]);
 
   const renderButtonText = () => {
     if (isStaking) {
@@ -460,7 +460,14 @@ Checkout.getInitialProps = async ({
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
 
-    return { booking, listing, event, error: null, bookingConfig, paymentConfig };
+    return {
+      booking,
+      listing,
+      event,
+      error: null,
+      bookingConfig,
+      paymentConfig,
+    };
   } catch (err) {
     console.log(err);
     return {

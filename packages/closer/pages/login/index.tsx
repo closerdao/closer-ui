@@ -4,17 +4,15 @@ import { useRouter } from 'next/router';
 
 import { FormEvent, useContext, useEffect, useState } from 'react';
 
-import GoogleButton from '../../components/GoogleButton';
 import { Card, ErrorMessage, Heading, Input } from '../../components/ui';
 import Button from '../../components/ui/Button';
 import Switcher from '../../components/ui/Switcher';
 
-import { event as gaEvent } from 'nextjs-google-analytics';
+import dayjs from 'dayjs';
 
 import { useAuth } from '../../contexts/auth';
 import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import api from '../../utils/api';
-import { getRedirectUrl } from '../../utils/auth.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { __ } from '../../utils/helpers';
 
@@ -28,55 +26,67 @@ const Login = () => {
   const { signMessage } = useContext(WalletDispatch);
 
   const router = useRouter();
-  const {
-    isAuthenticated,
-    user,
-    login,
-    setAuthentification,
-    error,
-    isLoading,
-    hasSignedUp,
-    isGoogleLoading,
-    authGoogle,
-  } = useAuth();
   const { back, source, start, end, adults, useTokens, eventId, volunteerId } =
     router.query || {};
+
+  const redirect = (hasSubscription: boolean) => {
+    const dateFormat = 'YYYY-MM-DD';
+    if (!source && !back) {
+      redirectTo('/');
+      return;
+    }
+    if (!source && back && start && end && adults) {
+      redirectTo(
+        `${back}?start=${dayjs(start as string).format(dateFormat)}&end=${dayjs(
+          end as string,
+        ).format(dateFormat)}&adults=${adults}&useTokens=${useTokens}${
+          volunteerId ? `&volunteerId=${volunteerId}` : ''
+        }${eventId ? `&eventId=${eventId}` : ''}`,
+      );
+      return;
+    }
+    if (!source && back) {
+      redirectTo(`${back}`);
+      return;
+    }
+
+    if (hasSubscription && source) {
+      redirectTo(source as string);
+      return;
+    }
+    if (!hasSubscription && source !== 'undefined') {
+      const redirectUrl = back
+        ? `${decodeURIComponent(back as string).replace('back=', '')}&source=${(
+            source as string
+          ).replace('&source=', '')}`
+        : '/';
+      redirectTo(redirectUrl);
+      return;
+    }
+  };
 
   const redirectTo = (url: string) => {
     router.push(url);
   };
 
+  const { isAuthenticated, user, login, setAuthentification, error, setError } =
+    useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setLoading] = useState(false);
   const [isWeb3Loading, setWeb3Loading] = useState(false);
   const [isLoginWithWallet, setisLoginWithWallet] = useState(false);
   const [selectedSwitcherOption, setSelectedSwitcherOption] = useState('Email');
   const [web3Error, setWeb3Error] = useState(null);
 
-  if (isAuthenticated && !hasSignedUp) {
-      const redirectUrl = getRedirectUrl({
-        back,
-        source,
-        start,
-        end,
-        adults,
-        useTokens,
-        eventId,
-        volunteerId,
-        hasSubscription: Boolean(user && user?.subscription?.plan),
-      });
-      redirectTo(redirectUrl);
-  }
-
-  const redirectToSettings = () => {
-    if (source) {
-      router.push(
-        `${decodeURIComponent(back as string)}&source=${source}` || '/settings',
-      );
-      return;
+  if (isAuthenticated) {
+    if (user && user?.subscription?.plan) {
+      redirect(true);
+    } else {
+      redirect(false);
     }
-    router.push(back ? `${decodeURIComponent(back as string)}` : '/settings');
-  };
+  }
 
   useEffect(() => {
     if (selectedSwitcherOption === 'Wallet') {
@@ -85,12 +95,6 @@ const Login = () => {
       setisLoginWithWallet(false);
     }
   }, [selectedSwitcherOption]);
-
-  useEffect(() => {
-    if (isAuthenticated && hasSignedUp) {
-      redirectToSettings();
-    }
-  }, [isAuthenticated, hasSignedUp, back]);
 
   const signInWithWallet = async (walletAddress: string) => {
     setWeb3Error(null);
@@ -137,21 +141,10 @@ const Login = () => {
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    await login({ email, password });
-  };
-
-  const authUserWithGoogle = async () => {
-    const authRes = await authGoogle();
-    if (authRes.result === 'signup') {
-      gaEvent('sign_up', {
-        category: 'signing',
-        // label: 'success',
-      });
-    }
-    try {
-    } catch (error) {
-      console.error('Error signing in with Google', error);
-    }
+    setLoading(true);
+    setError('');
+    await login(email, password);
+    setLoading(false);
   };
 
   return (
@@ -187,43 +180,36 @@ const Login = () => {
             />
           )}
 
-          <Card className="w-full pb-12">
+          <Card className="w-full">
             {!isLoginWithWallet ? (
-              <div>
-                <form
-                  onSubmit={onSubmit}
-                  className="w-full flex flex-col gap-6"
-                >
-                  <Input
-                    label={__('login_email')}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder=""
-                  />
-                  <Input
-                    label={__('login_password')}
-                    value={password}
-                    type="password"
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder=""
-                  />
-                  {error && <ErrorMessage error={error} />}
-                  <div className="flex flex-col justify-between items-center gap-4 sm:flex-row">
-                    <div className="flex flex-col gap-4 w-full py-6">
-                      <Button
-                        isEnabled={!isWeb3Loading && !isLoading}
-                        isLoading={isLoading}
-                      >
-                        {__('login_submit')}
-                      </Button>
-                    </div>
-                  </div>
-                </form>
-                <GoogleButton
-                  isLoading={isGoogleLoading}
-                  onClick={authUserWithGoogle}
+              <form onSubmit={onSubmit} className="w-full flex flex-col gap-6">
+                <Input
+                  label={__('login_email')}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder=""
                 />
-              </div>
+                <Input
+                  label={__('login_password')}
+                  value={password}
+                  type="password"
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder=""
+                />
+
+                {error && <ErrorMessage error={error} />}
+
+                <div className="flex flex-col justify-between items-center gap-4 sm:flex-row">
+                  <div className="flex flex-col gap-4 w-full sm:flex-row py-6">
+                    <Button
+                      isEnabled={!isWeb3Loading && !isLoading}
+                      isLoading={isLoading}
+                    >
+                      {__('login_submit')}
+                    </Button>
+                  </div>
+                </div>
+              </form>
             ) : (
               <div>
                 {web3Error && <ErrorMessage error={web3Error} />}
@@ -240,12 +226,7 @@ const Login = () => {
           </Card>
           <div className="text-center text-sm">
             {__('login_no_account')}{' '}
-            <Link
-              className="text-accent underline font-bold"
-              href={`/signup${
-                back ? `?back=${encodeURIComponent(back as string)}` : ''
-              }`}
-            >
+            <Link className="text-accent underline font-bold" href={`/signup${back ? `?back=${encodeURIComponent(back as string)}` : ''}`}>
               {__('signup_form_create')}
             </Link>
             <Link

@@ -112,10 +112,12 @@ const StayPage = ({
 
       <section className="max-w-6xl mx-auto mb-16">
         <div className="mb-6 max-w-prose">
-          <Heading level={1} className="text-4xl pb-2 mt-8">
-            {APP_NAME &&
-              `${__('stay_title', APP_NAME)} 
-            
+          <Heading level={1} className={`${APP_NAME === 'lios' ? 'text-xl sm:text-2xl': 'text-4xl'}  pb-2 mt-8`}>
+            <p className='font-accent' dangerouslySetInnerHTML={{ __html: APP_NAME &&
+              __('stay_title', APP_NAME)
+            }} />
+                        
+            {`
             ${APP_NAME && APP_NAME === 'tdf' ? PLATFORM_NAME : ''}`}
           </Heading>
           <p>
@@ -137,7 +139,7 @@ const StayPage = ({
         >
           {user?.roles.includes('member')
             ? __('buttons_book_now')
-            : __('buttons_apply_to_stay')}
+            : APP_NAME && __('buttons_apply_to_stay', APP_NAME)}
         </Link>
         {process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING &&
           opportunities &&

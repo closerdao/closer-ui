@@ -10,7 +10,7 @@ const loadTime = new Date();
 const UpcomingEventsIntro = () => {
   const config = useConfig();
   const { APP_NAME } = config || {};
-  const appName = APP_NAME.toLowerCase();
+  const appName = (APP_NAME || '').toLowerCase();
 
   return (
     <section className="mb-20 max-w-6xl mx-auto md:pt-20 text-center md:text-left md:flex md:space-x-12">

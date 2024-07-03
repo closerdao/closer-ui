@@ -14,6 +14,8 @@ import { __, priceFormat } from 'closer/utils/helpers';
 
 import PageNotFound from '../404';
 
+const VYBE_PACKAGES = [84, 500, 2000]
+
 interface Props {
   fundraisingConfig: FundraisingConfig;
 }
@@ -67,8 +69,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               Join the Vybes
             </Heading>
             <p>
-              <strong>The Y Berlin</strong> is the first of our collectives
-              fundraising to support cutting-edge residencies and next-level
+              <strong>The Y Berlin</strong> is fundraising to support cutting-edge residencies and next-level
               events at MOOS.
             </p>
             <p>
@@ -87,7 +88,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               >
                 more.
               </Link>{' '}
-              We are currently offering the first 2500 Vybes at a discounted
+              We are currently offering the first 25,000 Vybes at a discounted
               price of €4 per Vybe (worth €5).
             </p>
             <p>
@@ -128,7 +129,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
           <Card className="flex-col sm:flex-row justify-between">
             <div className="flex items-center justify-center flex-col">
               <Heading level={3} className="uppercase">
-                Vybe 30
+                Vybe {VYBE_PACKAGES[0]}
               </Heading>
               <p className="text-gray-600 text-sm">
                 €{fundraisingConfig.creditPrice30Credits} per Vybe
@@ -136,17 +137,17 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             </div>
             <div className="flex flex-col sm:flex-row gap-4 items-center">
               <div className="text-accent flex items-center justify-center flex-col rounded-full w-[70px] h-[70px] shadow-[0_0_10px_rgba(107,82,244,0.7)]">
-                <div className="font-bold text-xl h-[25px]">30</div>
+                <div className="font-bold text-xl h-[25px]">{VYBE_PACKAGES[0]}</div>
                 <div className="text-xs uppercase">Vybes</div>
               </div>
 
               <div className="h-full p-6 sm:border-r sm:border-l font-bold text-lg">
-                €{fundraisingConfig.creditPrice30Credits * 30}
+                €{fundraisingConfig.creditPrice30Credits * VYBE_PACKAGES[0]}
               </div>
 
               <div className="pl-2">
                 <LinkButton
-                  href="/credits/checkout?amount=30"
+                  href={`/credits/checkout?amount=${VYBE_PACKAGES[0]}`}
                   className="w-[200px] text-md sm:w-[150px]"
                 >
                   Join
@@ -157,7 +158,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
           <Card className="flex-col sm:flex-row justify-between">
             <div className="flex items-center justify-center flex-col">
               <Heading level={3} className="uppercase">
-                Vybe 90
+                Vybe {VYBE_PACKAGES[1]}
               </Heading>
               <p className="text-gray-600 text-sm">
                 €{fundraisingConfig.creditPrice90Credits} per Vybe
@@ -165,17 +166,17 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             </div>
             <div className="flex flex-col sm:flex-row gap-4 items-center">
               <div className="text-accent flex items-center justify-center flex-col rounded-full w-[70px] h-[70px] shadow-[0_0_10px_rgba(107,82,244,0.7)]">
-                <div className="font-bold text-xl h-[25px]">90</div>
+                <div className="font-bold text-xl h-[25px]">{VYBE_PACKAGES[1]}</div>
                 <div className="text-xs uppercase">Vybes</div>
               </div>
 
               <div className="h-full p-6 sm:border-r sm:border-l font-bold text-lg">
-                €{fundraisingConfig.creditPrice90Credits * 90}
+                €{fundraisingConfig.creditPrice90Credits * VYBE_PACKAGES[1]}
               </div>
 
               <div className="pl-2">
                 <LinkButton
-                  href="/credits/checkout?amount=90"
+                  href={`/credits/checkout?amount=${VYBE_PACKAGES[1]}`}
                   className="w-[200px] text-md sm:w-[150px]"
                 >
                   Join
@@ -186,7 +187,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
           <Card className="flex-col sm:flex-row justify-between">
             <div className="flex items-center justify-center flex-col">
               <Heading level={3} className="uppercase">
-                Vybe 180
+                Vybe {VYBE_PACKAGES[2]}
               </Heading>
               <p className="text-gray-600 text-sm">
                 €{fundraisingConfig.creditPrice180Credits} per Vybe
@@ -194,17 +195,17 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             </div>
             <div className="flex flex-col sm:flex-row gap-4 items-center">
               <div className="text-accent flex items-center justify-center flex-col rounded-full w-[70px] h-[70px] shadow-[0_0_10px_rgba(107,82,244,0.7)]">
-                <div className="font-bold text-xl h-[25px]">180</div>
+                <div className="font-bold text-xl h-[25px]">{VYBE_PACKAGES[2]}</div>
                 <div className="text-xs uppercase">Vybes</div>
               </div>
 
               <div className="h-full p-6 sm:border-r sm:border-l font-bold text-lg">
-                €{fundraisingConfig.creditPrice180Credits * 180}
+                €{fundraisingConfig.creditPrice180Credits * VYBE_PACKAGES[2]}
               </div>
 
               <div className="pl-2">
                 <LinkButton
-                  href="/credits/checkout?amount=180"
+                  href={`/credits/checkout?amount=${VYBE_PACKAGES[2]}`}
                   className="w-[200px] text-md sm:w-[150px]"
                 >
                   Join

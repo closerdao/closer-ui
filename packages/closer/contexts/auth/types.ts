@@ -1,4 +1,5 @@
 export type User = {
+  stats: any;
   screenname: string;
   timezone: string;
   slug: string;
@@ -54,17 +55,24 @@ export type User = {
     monthlyCredits: number;
     stripeCustomerEmail: string;
   };
+  presence?: number;
+  tokensBought?: number;
+  volunteeringPresence?: number;
+  isVoter?: boolean;
+  socialShare?: boolean;
+  referrals?: number;
+  actions?: any;
 };
 
 export type AuthenticationContext = {
   isAuthenticated: boolean;
   user: User | null;
-  login: ({ email, password, isGoogle, idToken }: { email: string; password?: string; isGoogle?: boolean, idToken?: string | undefined}) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   setAuthentification: (user: User, token: string) => void;
   isLoading: boolean;
   logout: () => void;
   error: string | null;
-  signup: (data: unknown) => Promise<{result: string | null}>;
+  signup: (data: unknown) => Promise<User | undefined>;
   completeRegistration: (
     signup_token: string,
     data: unknown,
@@ -79,7 +87,4 @@ export type AuthenticationContext = {
   setError: (msg: string | null) => void;
   loadUserFromCookies: () => Promise<void>;
   refetchUser: () => Promise<void>;
-  hasSignedUp: boolean;
-  isGoogleLoading: boolean;
-  authGoogle: () => Promise<{result: string | null}>;
 };

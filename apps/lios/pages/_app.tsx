@@ -147,10 +147,10 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         buttonStyle={{
           borderRadius: '20px',
           padding: '5px 15px 5px 15px',
-          color: '#FE4FB7',
+          color: '#000',
           background: '#ffffff',
           fontSize: '13px',
-          border: '1px solid #FE4FB7',
+          border: '1px solid #000',
         }}
       >
         <div className="text-black text-sm">

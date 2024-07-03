@@ -65,6 +65,7 @@ const ListingDateSelector = ({
             ))}
         </label>
         <Button
+          dataTestid="select-dates-button"
           onClick={() => setShowStayDatesDropdown(!showStayDatesDropdown)}
           className={`${
             isEditMode
@@ -72,6 +73,12 @@ const ListingDateSelector = ({
               : 'py-1 px-0 w-auto border-0'
           } min-h-[20px] font-bold sm:font-normal underline sm:no-underline text-black  sm:border-2 border-black normal-case  sm:w-full  sm:px-3 sm:p-3 sm:py-2 text-sm bg-white`}
         >
+          {isHourlyBooking &&
+            !isStartTimeSet &&
+            !isEndTimeSet &&
+            !start &&
+            'Select date'}
+
           {isHourlyBooking && start && (
             <>
               {isSmallScreen
@@ -117,6 +124,7 @@ const ListingDateSelector = ({
               isEditMode ? '' : 'bottom-[175px]'
             } border border-gray-100 sm:w-auto absolute z-10 left-2 right-2 sm:left-auto  sm:bottom-auto sm:top-auto bg-white shadow-md rounded-md p-3`}
           >
+
             <DateTimePicker
               setStartDate={setStartDate as any}
               setEndDate={setEndDate as any}
