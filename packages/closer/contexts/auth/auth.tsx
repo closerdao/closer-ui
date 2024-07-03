@@ -23,7 +23,7 @@ export const AuthContext = createContext<AuthenticationContext | null>(null);
 export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [error, setErrorState] = useState<string | null>(null);
+  const [error, setErrorState] = useState<string | null>('');
   const [isLoading, setLoading] = useState<boolean>(true);
   let errorTimeout: any;
 
@@ -68,13 +68,13 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         setUser(user);
         setError('');
       }
-    } catch (err) {
-      if ((err as AxiosError).response?.status === 401) {
+    } catch (err: any) {
+      if ((err).response?.status === 401) {
         setError(__('auth_error_401_message'));
         return;
       }
       setError(
-        (err as AxiosError).response?.data?.error || (err as Error).message,
+        (err).response?.data?.error || (err as Error).message,
       );
       console.error(err);
     }
@@ -105,9 +105,9 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       }
       setError('');
       return userData;
-    } catch (err) {
+    } catch (err: any) {
       setError(
-        (err as AxiosError).response?.data?.error || (err as Error).message,
+        (err).response?.data?.error || (err as Error).message,
       );
       console.error(err);
     }
@@ -129,9 +129,9 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         if (onSuccess) onSuccess();
       }
       return userData;
-    } catch (err) {
+    } catch (err: any) {
       setError(
-        (err as AxiosError).response?.data?.error || (err as Error).message,
+        (err).response?.data?.error || (err as Error).message,
       );
     }
   };
@@ -146,9 +146,9 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         data: { status },
       } = await api.post('/set-password', { reset_token, password });
       onSuccess(status);
-    } catch (err) {
+    } catch (err: any) {
       setError(
-        (err as AxiosError).response?.data?.error || (err as Error).message,
+        (err).response?.data?.error || (err as Error).message,
       );
     }
   };
