@@ -10,7 +10,6 @@ import {
   useState,
 } from 'react';
 
-import { AxiosError } from 'axios';
 import Cookies from 'js-cookie';
 
 import api from '../../utils/api';

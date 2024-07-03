@@ -244,6 +244,9 @@ LessonPage.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
+    const headers = req?.cookies?.access_token ? {
+      Authorization: `Bearer ${req.cookies.access_token}`,
+    } : undefined;
     const [
       {
         data: { results: subscriptions },
@@ -255,9 +258,7 @@ LessonPage.getInitialProps = async ({
     ] = await Promise.all([
       api.get('/config/subscriptions'),
       api.get(`/lesson/${query.slug}`, {
-        headers: req?.cookies?.access_token && {
-          Authorization: `Bearer ${req?.cookies?.access_token}`,
-        },
+        headers
       }),
       api.get('/config/learningHub').catch(() => {
         return null;

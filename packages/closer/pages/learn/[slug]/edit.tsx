@@ -92,6 +92,9 @@ EditLessonPage.getInitialProps = async ({
     if (!query.slug) {
       throw new Error('No event');
     }
+    const headers = req?.cookies?.access_token ? {
+      Authorization: `Bearer ${req.cookies.access_token}`,
+    } : undefined;
 
     const [
       {
@@ -100,9 +103,7 @@ EditLessonPage.getInitialProps = async ({
       learningHubRes,
     ] = await Promise.all([
       api.get(`/lesson/${query.slug}`, {
-        headers: req?.cookies?.access_token && {
-          Authorization: `Bearer ${req?.cookies?.access_token}`,
-        },
+        headers
       }),
       api.get('/config/learningHub').catch(() => {
         return null;

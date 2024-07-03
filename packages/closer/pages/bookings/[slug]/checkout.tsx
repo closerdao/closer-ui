@@ -422,12 +422,13 @@ Checkout.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
+    const headers = req?.cookies?.access_token ? {
+      Authorization: `Bearer ${req.cookies.access_token}`,
+    } : undefined;
     const [bookingRes, bookingConfigRes, paymentConfigRes] = await Promise.all([
       api
         .get(`/booking/${query.slug}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
-          },
+          headers
         })
         .catch(() => {
           return null;
@@ -446,15 +447,11 @@ Checkout.getInitialProps = async ({
     const [optionalEvent, optionalListing] = await Promise.all([
       booking.eventId &&
         api.get(`/event/${booking.eventId}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
-          },
+          headers
         }),
       booking.listing &&
         api.get(`/listing/${booking.listing}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
-          },
+          headers
         }),
     ]);
     const event = optionalEvent?.data?.results;

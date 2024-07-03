@@ -42,8 +42,14 @@ interface Props extends BaseBookingParams {
   paymentConfig: PaymentConfig | null;
 }
 
-const Summary = ({ booking, listing, event, error, bookingConfig, paymentConfig }: Props) => {
-
+const Summary = ({
+  booking,
+  listing,
+  event,
+  error,
+  bookingConfig,
+  paymentConfig,
+}: Props) => {
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -230,12 +236,13 @@ Summary.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
+    const headers = req?.cookies?.access_token ? {
+      Authorization: `Bearer ${req.cookies.access_token}`,
+    } : undefined;
     const [bookingRes, bookingConfigRes, paymentConfigRes] = await Promise.all([
       api
         .get(`/booking/${query.slug}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
-          },
+          headers,
         })
         .catch(() => {
           return null;
@@ -254,21 +261,24 @@ Summary.getInitialProps = async ({
     const [optionalEvent, optionalListing] = await Promise.all([
       booking?.eventId &&
         api.get(`/event/${booking?.eventId}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
-          },
+          headers,
         }),
       booking?.listing &&
         api.get(`/listing/${booking?.listing}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
-          },
+          headers,
         }),
     ]);
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
 
-    return { booking, listing, event, error: null, bookingConfig, paymentConfig };
+    return {
+      booking,
+      listing,
+      event,
+      error: null,
+      bookingConfig,
+      paymentConfig,
+    };
   } catch (err) {
     console.log('Error', err);
     return {

@@ -474,13 +474,14 @@ BookingPage.getInitialProps = async ({
   query: ParsedUrlQuery;
 }) => {
   try {
+    const headers = req?.cookies?.access_token ? {
+      Authorization: `Bearer ${req.cookies.access_token}`,
+    } : undefined;
     const [bookingRes, bookingConfigRes, listingRes, generalConfigRes, paymentConfigRes] =
       await Promise.all([
         api
           .get(`/booking/${query.slug}`, {
-            headers: req?.cookies?.access_token && {
-              Authorization: `Bearer ${req?.cookies?.access_token}`,
-            },
+            headers
           })
           .catch(() => {
             return null;
@@ -509,21 +510,15 @@ BookingPage.getInitialProps = async ({
       await Promise.all([
         booking.eventId &&
           api.get(`/event/${booking.eventId}`, {
-            headers: req?.cookies?.access_token && {
-              Authorization: `Bearer ${req?.cookies?.access_token}`,
-            },
+            headers
           }),
         booking.listing &&
           api.get(`/listing/${booking.listing}`, {
-            headers: req?.cookies?.access_token && {
-              Authorization: `Bearer ${req?.cookies?.access_token}`,
-            },
+            headers
           }),
         booking.volunteerId &&
           api.get(`/volunteer/${booking.volunteerId}`, {
-            headers: req?.cookies?.access_token && {
-              Authorization: `Bearer ${req?.cookies?.access_token}`,
-            },
+            headers
           }),
       ]);
     const event = optionalEvent?.data?.results;
@@ -532,12 +527,14 @@ BookingPage.getInitialProps = async ({
 
     let bookingCreatedBy = null;
     try {
+      const headers = req?.cookies?.access_token ? {
+        Authorization: `Bearer ${req.cookies.access_token}`,
+      } : undefined;
+      
       const optionalCreatedBy =
         booking.createdBy &&
         (await api.get(`/user/${booking.createdBy}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
-          },
+          headers
         }));
       bookingCreatedBy = optionalCreatedBy?.data?.results;
     } catch (error) {}

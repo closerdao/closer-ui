@@ -61,15 +61,16 @@ const EditEvent = ({ event, error }) => {
 
 EditEvent.getInitialProps = async ({ req, query }) => {
   try {
+    const headers = req?.cookies?.access_token ? {
+      Authorization: `Bearer ${req.cookies.access_token}`,
+    } : undefined;
     if (!query.slug) {
       throw new Error('No event');
     }
     const {
       data: { results: event },
     } = await api.get(`/event/${query.slug}`, {
-      headers: req?.cookies?.access_token && {
-        Authorization: `Bearer ${req?.cookies?.access_token}`
-      }
+      headers
     });
 
     return { event };

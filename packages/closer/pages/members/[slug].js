@@ -565,13 +565,14 @@ const MemberPage = ({ member, loadError }) => {
 
 MemberPage.getInitialProps = async ({ req, query }) => {
   try {
+    const headers = req?.cookies?.access_token ? {
+      Authorization: `Bearer ${req.cookies.access_token}`,
+    } : undefined;
     const res = await api.get(
       `/user/${query.slug}`,
 
       {
-        headers: req?.cookies?.access_token && {
-          Authorization: `Bearer ${req?.cookies?.access_token}`,
-        },
+        headers
       },
     );
 

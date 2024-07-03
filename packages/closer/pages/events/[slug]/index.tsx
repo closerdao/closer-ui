@@ -296,15 +296,10 @@ const EventPage = ({
                       height={20}
                     />
                     <label className="text-sm uppercase font-bold flex gap-1">
-                    
-                        {start && dayjs(start).format(dateFormat)}
-
-                        {end &&
+                      {start && dayjs(start).format(dateFormat)}
+                      {end &&
                         Number(duration) <= 24 &&
-                          ` ${dayjs(start).format('HH:mm')}`}{' '}
-                        
-
-
+                        ` ${dayjs(start).format('HH:mm')}`}{' '}
                       {end &&
                         Number(duration) > 24 &&
                         ` - ${dayjs(end).format(dateFormat)}`}
@@ -483,32 +478,34 @@ const EventPage = ({
                               </div>
                             );
                           })}
-                        {durationInDays > 0 &&  APP_NAME && APP_NAME !== 'lios' && (
-                          <>
-                            <div className="text-sm">
-                              {__('events_accommodation')}{' '}
-                              <strong>
-                                {priceFormat(
-                                  minAccommodationPrice * discountRate,
-                                )}{' '}
-                                -{' '}
-                                {priceFormat(
-                                  maxAccommodationPrice * discountRate,
-                                )}
-                              </strong>
-                            </div>
-                            <div className="text-sm">
-                              {__('events_utility')}{' '}
-                              <strong>
-                                {foodOption === 'no_food'
-                                  ? __('stay_food_not_included')
-                                  : priceFormat(
-                                      durationInDays * dailyUtilityFee,
-                                    )}
-                              </strong>
-                            </div>
-                          </>
-                        )}
+                        {durationInDays > 0 &&
+                          APP_NAME &&
+                          APP_NAME !== 'lios' && (
+                            <>
+                              <div className="text-sm">
+                                {__('events_accommodation')}{' '}
+                                <strong>
+                                  {priceFormat(
+                                    minAccommodationPrice * discountRate,
+                                  )}{' '}
+                                  -{' '}
+                                  {priceFormat(
+                                    maxAccommodationPrice * discountRate,
+                                  )}
+                                </strong>
+                              </div>
+                              <div className="text-sm">
+                                {__('events_utility')}{' '}
+                                <strong>
+                                  {foodOption === 'no_food'
+                                    ? __('stay_food_not_included')
+                                    : priceFormat(
+                                        durationInDays * dailyUtilityFee,
+                                      )}
+                                </strong>
+                              </div>
+                            </>
+                          )}
                         <div className="mt-4">
                           {/* Event uses an external ticketing system */}
                           {event.ticket && start && start.isAfter(dayjs()) ? (
@@ -661,12 +658,13 @@ EventPage.getInitialProps = async ({
 }) => {
   const { convert } = require('html-to-text');
   try {
+    const headers = req?.cookies?.access_token ? {
+      Authorization: `Bearer ${req.cookies.access_token}`,
+    } : undefined;
     const [event, listings, settings] = await Promise.all([
       api
         .get(`/event/${query.slug}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
-          },
+          headers,
         })
         .catch((err) => {
           console.error('Error fetching event:', err);
@@ -692,13 +690,14 @@ EventPage.getInitialProps = async ({
         .slice(0, 100);
 
       const eventCreatorId = event?.data.results.createdBy;
+      const headers = req?.cookies?.access_token ? {
+        Authorization: `Bearer ${req.cookies.access_token}`,
+      } : undefined;
 
       const {
         data: { results: eventCreatorData },
       } = await api.get(`/user/${eventCreatorId}`, {
-        headers: req?.cookies?.access_token && {
-          Authorization: `Bearer ${req?.cookies?.access_token}`,
-        },
+        headers
       });
       eventCreator = eventCreatorData;
       descriptionText = convert(event?.data.results.description, options)
