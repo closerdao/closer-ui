@@ -125,7 +125,6 @@ const ListingDateSelector = ({
             } border border-gray-100 sm:w-auto absolute z-10 left-2 right-2 sm:left-auto  sm:bottom-auto sm:top-auto bg-white shadow-md rounded-md p-3`}
           >
 
-            start={start?.toString()}
             <DateTimePicker
               setStartDate={setStartDate as any}
               setEndDate={setEndDate as any}

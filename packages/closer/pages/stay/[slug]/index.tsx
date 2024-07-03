@@ -111,6 +111,9 @@ const ListingPage: NextPage<Props> = ({
   );
   const durationInDays = dayjs(end).diff(dayjs(start), 'day') || 30;
   const durationInHours = dayjs(end).diff(dayjs(start), 'hour') || 1;
+
+  const isDurationValid = durationInDays >= (settings?.minDuration || 1);
+
   const [adults, setAdults] = useState<number>(Number(savedAdults) || 1);
   const [kids, setKids] = useState<number>(Number(savedKids) || 0);
   const [infants, setInfants] = useState<number>(Number(savedInfants) || 0);
@@ -239,7 +242,6 @@ const ListingPage: NextPage<Props> = ({
   };
 
   useEffect(() => {
-
     if (savedStartDate) {
       setStartDate(savedStartDate as string);
     }
@@ -383,7 +385,7 @@ const ListingPage: NextPage<Props> = ({
       redirectToSignup();
       return;
     }
-    
+
     try {
       setApiError(null);
       const {
@@ -820,9 +822,17 @@ const ListingPage: NextPage<Props> = ({
                       ) : (
                         !isListingAvailable && (
                           <Information>
-                            {isGuestLimit
-                              ? __('listing_not_available_guest_limit')
-                              : __('listing_not_available')}
+                            {!isListingAvailable &&
+                              !isGuestLimit &&
+                              isDurationValid &&
+                              __('listing_not_available')}
+                            {!isDurationValid &&
+                              __(
+                                'bookings_dates_min_duration_error',
+                                settings?.minDuration,
+                              )}
+                            {isGuestLimit &&
+                              __('listing_not_available_guest_limit')}
                           </Information>
                         )
                       )}
