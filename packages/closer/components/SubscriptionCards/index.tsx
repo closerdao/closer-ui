@@ -1,10 +1,11 @@
 import Image from 'next/image';
 
 import dayjs from 'dayjs';
+import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { SubscriptionPlan } from '../../types/subscriptions';
-import { __, getCurrencySymbol } from '../../utils/helpers';
+import { getCurrencySymbol } from '../../utils/helpers';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Heading from '../ui/Heading';
@@ -26,6 +27,7 @@ const SubscriptionCards = ({
   currency,
   plans,
 }: SubscriptionCardsProps) => {
+  const t = useTranslations();
   const { isAuthenticated } = useAuth();
 
   const paidSubscriptionPlans = plans.filter((plan) => plan.priceId !== 'free');
@@ -35,7 +37,7 @@ const SubscriptionCards = ({
     if (userActivePlan?.title === plan.title && validUntil && !cancelledAt) {
       return (
         <>
-          {__('subscriptions_next_billing_date')}{' '}
+          {t('subscriptions_next_billing_date')}{' '}
           {dayjs(validUntil).format('LL')}
         </>
       );
@@ -44,11 +46,11 @@ const SubscriptionCards = ({
       if (cancelledAt > new Date()) {
         return (
           <>
-            {__('subscriptions_expires_at')} {dayjs(cancelledAt).format('LL')}
+            {t('subscriptions_expires_at')} {dayjs(cancelledAt).format('LL')}
           </>
         );
       } else {
-        return <>{__('subscriptions_cancelled')}</>;
+        return <>{t('subscriptions_cancelled')}</>;
       }
     }
   };
@@ -114,13 +116,13 @@ const SubscriptionCards = ({
                 {plan.available === false ? (
                   <Heading level={3} className="uppercase">
                     <span className="block">🤩</span>
-                    {__('generic_coming_soon')}
+                    {t('generic_coming_soon')}
                   </Heading>
                 ) : (
                   <>
                     <div className="w-full text-center text-2xl font-bold my-8">
                       {plan.priceId === 'free' ? (
-                        __('subscriptions_free')
+                        t('subscriptions_free')
                       ) : (
                         <div>
                           <div>
@@ -128,7 +130,7 @@ const SubscriptionCards = ({
                             {plan.price}
                           </div>
                           <p className="text-sm font-normal">
-                            {__('subscriptions_summary_per_month')}
+                            {t('subscriptions_summary_per_month')}
                           </p>
                         </div>
                       )}
@@ -148,10 +150,10 @@ const SubscriptionCards = ({
                       size="small"
                     >
                       {plan.price === 0
-                        ? __('subscriptions_create_account_button')
+                        ? t('subscriptions_create_account_button')
                         : userActivePlan?.price !== 0
-                        ? __('subscriptions_manage_button')
-                        : __('subscriptions_subscribe_button')}
+                        ? t('subscriptions_manage_button')
+                        : t('subscriptions_subscribe_button')}
                     </Button>
                   </>
                 )}

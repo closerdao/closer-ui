@@ -11,6 +11,7 @@ import { Button, ErrorMessage, Input } from '../../components/ui';
 import Select from '../../components/ui/Select/Dropdown';
 
 import dayjs from 'dayjs';
+import { useTranslations } from 'next-intl';
 
 import {
   BOOKINGS_PER_PAGE,
@@ -19,7 +20,6 @@ import {
 } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
 import { useOutsideClick } from '../../hooks/useOutsideClick';
-import { __ } from '../../utils/helpers';
 
 const loadTime = new Date();
 
@@ -31,6 +31,7 @@ interface Props {
 }
 
 const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
+  const t = useTranslations();
   const { platform }: any = usePlatform();
   const arrivalDropdownRef = useOutsideClick(handleClickOutsideArrivalDropdown);
   const departureDropdownRef = useOutsideClick(
@@ -248,7 +249,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
     <section className="flex gap-2 flex-wrap">
       <div className="md:flex-1 flex-wrap md:flex-nowrap flex gap-2 flex-col md:flex-row w-full md:w-auto mb-4">
         <div className="flex-1 min-w-full md:min-w-[160px]">
-          <label className="block my-2">{__('booking_card_status')}</label>
+          <label className="block my-2">{t('booking_card_status')}</label>
           <Select
             className="rounded-full border-black "
             value={bookingStatus}
@@ -258,7 +259,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
           />
         </div>
         <div className="flex-1 min-w-full sm:min-w-[160px]">
-          <label className="block my-2">{__('booking_requests_type')}</label>
+          <label className="block my-2">{t('booking_requests_type')}</label>
           <Select
             label=""
             value={bookingType}
@@ -270,7 +271,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
         </div>
         <div className="rounded-full flex-1 min-w-full sm:min-w-[160px]">
           <label className="block my-2">
-            {__('booking_requests_event_name')}
+            {t('booking_requests_event_name')}
           </label>
           <Select
             isDisabled={!Boolean(events && filterValues.type === 'event')}
@@ -298,19 +299,19 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
       <div className="md:flex-1 flex-wrap md:flex-nowrap flex gap-2 flex-col md:flex-row w-full md:w-auto mb-4">
         <div className="flex-1 min-w-[160px]">
           <label className="block my-2">
-            {__('booking_requests_booking_number')}
+            {t('booking_requests_booking_number')}
           </label>
           <Input
             value={bookingId}
             onChange={handleBookingId as any}
             type="text"
-            placeholder={__('booking_id_placeholder')}
+            placeholder={t('booking_id_placeholder')}
             className="m-0 border-black border-2 rounded-full py-1.5 bg-white"
           />
         </div>
         <div ref={arrivalDropdownRef} className="relative flex-1 min-w-[160px]">
           <label className="block my-2">
-            {__('booking_requests_arrival_date_range')}
+            {t('booking_requests_arrival_date_range')}
           </label>
           <Button
             onClick={() => setShowArrivalDropdown(!showArrivalDropdown)}
@@ -320,7 +321,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
           >
             {!arrivalFromDate &&
               !arrivalToDate &&
-              __('bookings_select_dates_button')}
+              t('bookings_select_dates_button')}
             {arrivalFromDate && (
               <>{dayjs(arrivalFromDate).format('DD/MM/YY')} - </>
             )}
@@ -341,7 +342,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
                 size="small"
                 onClick={handleClearArrivalDates}
               >
-                {__('booking_requests_clear_dates_button')}
+                {t('booking_requests_clear_dates_button')}
               </Button>
             </div>
           )}
@@ -351,7 +352,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
           className="relative flex-1 min-w-[160px]"
         >
           <label className="block my-2">
-            {__('booking_requests_departure_date_range')}
+            {t('booking_requests_departure_date_range')}
           </label>
           <Button
             onClick={() => setShowDepartureDropdown(!showDepartureDropdown)}
@@ -361,7 +362,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
           >
             {!departureFromDate &&
               !departureToDate &&
-              __('bookings_select_dates_button')}
+              t('bookings_select_dates_button')}
             {departureFromDate && (
               <>{dayjs(departureFromDate).format('DD/MM/YY')} - </>
             )}
@@ -382,13 +383,13 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
                 size="small"
                 onClick={handleClearDepartureDates}
               >
-                {__('booking_requests_clear_dates_button')}
+                {t('booking_requests_clear_dates_button')}
               </Button>
             </div>
           )}
         </div>
       </div>
-      <div className="w-full"> {__('booking_requests_sort_by')}</div>
+      <div className="w-full"> {t('booking_requests_sort_by')}</div>
 
       <Button
         isEnabled={filterValues.sortBy !== 'start'}
@@ -397,7 +398,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
         isFullWidth={false}
         size="small"
       >
-        {__('booking_requests_arrival_date')}
+        {t('booking_requests_arrival_date')}
       </Button>
       <Button
         isEnabled={filterValues.sortBy !== 'end'}
@@ -406,7 +407,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
         isFullWidth={false}
         size="small"
       >
-        {__('booking_requests_departure_date')}
+        {t('booking_requests_departure_date')}
       </Button>
       <Button
         isEnabled={filterValues.sortBy !== '-created'}
@@ -415,7 +416,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
         isFullWidth={false}
         size="small"
       >
-        {__('booking_requests_newest_first')}
+        {t('booking_requests_newest_first')}
       </Button>
     </section>
   );

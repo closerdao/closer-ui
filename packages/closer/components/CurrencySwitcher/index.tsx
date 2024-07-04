@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useContext } from 'react';
+import { Dispatch, SetStateAction, useContext } from 'react';
 
 import { WalletState } from '../../contexts/wallet';
 import { CloserCurrencies } from '../../types';

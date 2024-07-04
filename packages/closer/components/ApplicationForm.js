@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+
+import { useTranslations } from 'next-intl';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import api from '../utils/api';
-import { __ } from '../utils/helpers';
 import Heading from './ui/Heading';
 
 const ApplicationForm = () => {
+  const t = useTranslations();
+
   const [submitted, setSubmitted] = useState(false);
   const [application, setApplication] = useState({
     name: '',
@@ -40,12 +43,12 @@ const ApplicationForm = () => {
     <div>
       {submitted ? (
         <Heading level={2} className="my-4">
-          {__('apply_success')}
+          {t('apply_success')}
         </Heading>
       ) : (
         <form className="join mt-24 flex flex-col" onSubmit={submit}>
           <div className="w-full mb-4">
-            <label htmlFor="screenname">{__('apply_name')}</label>
+            <label htmlFor="screenname">{t('apply_name')}</label>
             <input
               id="screenname"
               type="text"
@@ -54,7 +57,7 @@ const ApplicationForm = () => {
             />
           </div>
           <div className="w-full mb-4">
-            <label htmlFor="phone">{__('apply_phone_number')}</label>
+            <label htmlFor="phone">{t('apply_phone_number')}</label>
             <input
               type="phone"
               required
@@ -65,7 +68,7 @@ const ApplicationForm = () => {
             />
           </div>
           <div className="w-full mb-4">
-            <label htmlFor="email">{__('apply_email')}</label>
+            <label htmlFor="email">{t('apply_email')}</label>
             <input
               type="email"
               id="email"
@@ -77,7 +80,7 @@ const ApplicationForm = () => {
           </div>
           <div className="w-full mb-4">
             <button id="signupbutton" className="btn-primary" type="submit">
-              {__('apply_submit_button')}
+              {t('apply_submit_button')}
             </button>
           </div>
         </form>

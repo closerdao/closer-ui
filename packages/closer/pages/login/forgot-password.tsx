@@ -5,10 +5,14 @@ import { FormEvent, useState } from 'react';
 import { Button, ErrorMessage, Input } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
 import api from '../../utils/api';
-import { __ } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
 
 const ForgotPasswordScreen = () => {
+  const t = useTranslations();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [isResetCompleted, setIsResetCompleted] = useState(false);
@@ -26,7 +30,7 @@ const ForgotPasswordScreen = () => {
   return (
     <>
       <Head>
-        <title>{__('login_forgot_password_title')}</title>
+        <title>{t('login_forgot_password_title')}</title>
       </Head>
 
       <main className="w-full flex justify-center py-20">
@@ -34,9 +38,9 @@ const ForgotPasswordScreen = () => {
           {isResetCompleted ? (
             <div>
               <Heading level={1} className="mb-4">
-                {__('login_forgot_password_subtitle')}
+                {t('login_forgot_password_subtitle')}
               </Heading>
-              <p>{__('login_forgot_password_cta', email)}</p>
+              <p>{t('login_forgot_password_cta')}</p>
             </div>
           ) : (
             <form
@@ -44,20 +48,36 @@ const ForgotPasswordScreen = () => {
               onSubmit={requestPasswordReset}
             >
               <Input
-                label={__('login_forgot_password_email')}
+                label={t('login_forgot_password_email')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
 
               {error && <ErrorMessage error={error} />}
 
-              <Button>{__('login_forgot_password_submit')}</Button>
+              <Button>{t('login_forgot_password_submit')}</Button>
             </form>
           )}
         </section>
       </main>
     </>
   );
+};
+
+ForgotPasswordScreen.getInitialProps = async (context: NextPageContext) => {
+  try {
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    return {
+      messages,
+    };
+  } catch (err: unknown) {
+    return {
+      messages: null,
+    };
+  }
 };
 
 export default ForgotPasswordScreen;

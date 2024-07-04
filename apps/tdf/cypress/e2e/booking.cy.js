@@ -31,9 +31,7 @@ const getIframeBody = () => {
 };
 
 const selectDates = () => {
-  cy.get('button')
-    .contains(/select dates/i)
-    .click();
+  cy.get('[data-testid="select-dates-button"]').click();
   const tomorrowDate = getDateInTwodays();
   cy.contains('.rdp-day', tomorrowDate).click();
   cy.get('button')

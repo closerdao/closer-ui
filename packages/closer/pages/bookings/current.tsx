@@ -3,17 +3,21 @@ import Head from 'next/head';
 import CurrentBooking from '../../components/CurrentBooking';
 import Heading from '../../components/ui/Heading';
 
-import PageNotFound from '../404';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
 import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
+import PageNotFound from '../not-found';
 
 interface Props {
   bookingConfig: any;
 }
 
 const CurrentBookings = ({ bookingConfig }: Props) => {
+  const t = useTranslations();
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -35,10 +39,10 @@ const CurrentBookings = ({ bookingConfig }: Props) => {
   return (
     <>
       <Head>
-        <title>{__('current_bookings_title')}</title>
+        <title>{t('current_bookings_title')}</title>
       </Head>
       <div className="max-w-screen-lg mx-auto flex flex-col gap-10">
-        <Heading level={1}>{__('current_bookings_title')}</Heading>
+        <Heading level={1}>{t('current_bookings_title')}</Heading>
 
         <CurrentBooking leftAfter={threeDaysAgo} arriveBefore={inSevenDays} />
       </div>
@@ -46,15 +50,17 @@ const CurrentBookings = ({ bookingConfig }: Props) => {
   );
 };
 
-CurrentBookings.getInitialProps = async () => {
+CurrentBookings.getInitialProps = async (context: NextPageContext) => {
   try {
-    const bookingRes = await api.get('/config/booking').catch(() => {
-      return null;
-    });
-    const bookingConfig = bookingRes?.data?.results?.value;
+    const [bookingRes, messages] = await Promise.all([
+      api.get('/config/booking').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
 
+    const bookingConfig = bookingRes?.data?.results?.value;
     return {
       bookingConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {

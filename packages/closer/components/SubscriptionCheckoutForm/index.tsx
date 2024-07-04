@@ -5,9 +5,10 @@ import { FormEvent, useState } from 'react';
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { StripeCardElementChangeEvent } from '@stripe/stripe-js';
 
+import { useTranslations } from 'next-intl';
+
 import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
-import { __ } from '../../utils/helpers';
 import SubscriptionConditions from '../SubscriptionConditions';
 import { Button, ErrorMessage } from '../ui/';
 
@@ -24,6 +25,7 @@ function SubscriptionCheckoutForm({
   monthlyCredits,
   source,
 }: SubscriptionCheckoutFormProps) {
+  const t = useTranslations();
   const [isSubmitEnabled, setIsSubmitEnabled] = useState(true);
   const [error, setError] = useState<any>();
   const [isLoading, setIsLoading] = useState(false);
@@ -163,7 +165,7 @@ function SubscriptionCheckoutForm({
         isEnabled={isSubmitEnabled && hasAcceptedConditions}
         isLoading={isLoading}
       >
-        {__('subscriptions_checkout_pay_button')}
+        {t('subscriptions_checkout_pay_button')}
       </Button>
     </form>
   );

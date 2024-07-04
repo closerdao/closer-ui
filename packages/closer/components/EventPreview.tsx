@@ -5,10 +5,10 @@ import { FC } from 'react';
 import { MdLocationOn } from '@react-icons/all-files/md/MdLocationOn';
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
+import { useTranslations } from 'next-intl';
 
 import { Event, VolunteerOpportunity } from '../types';
 import { cdn } from '../utils/api';
-import { __ } from '../utils/helpers';
 
 dayjs.extend(advancedFormat);
 
@@ -32,7 +32,8 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
   className,
   isVolunteerCard,
 }) => {
-  const { start, end, photo, description, name, slug } = event || {};
+  const t = useTranslations();
+  const { start, end, photo, name, slug } = event || {};
   const {
     visual = '',
     virtual = false,
@@ -67,7 +68,7 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
             {endDate &&
               duration <= 24 &&
               ` - ${dayjs(endDate).format('HH:mm')}`}{' '}
-            ({localTimezone} {__('events_time')})
+            ({localTimezone} {t('events_time')})
           </p>
         )}
         <div

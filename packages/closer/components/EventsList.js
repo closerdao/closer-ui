@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
+import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../contexts/platform';
-import { __ } from '../utils/helpers';
 import EventPreview from './EventPreview';
 import Pagination from './Pagination';
 
@@ -22,6 +22,7 @@ const EventsList = ({
   showPagination,
   cols,
 }) => {
+  const t = useTranslations();
   const { platform } = usePlatform();
   const [error, setErrors] = useState(false);
   const [page, setPage] = useState(1);
@@ -69,7 +70,7 @@ const EventsList = ({
         </div>
       ) : (
         <div className="w-full h-full text-center p-12">
-          <p className="italic">{__('events_list_no_events')}</p>
+          <p className="italic">{t('events_list_no_events')}</p>
         </div>
       )}
       {showPagination && (

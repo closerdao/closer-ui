@@ -16,9 +16,9 @@ import HeadingRow from '../../../components/ui/HeadingRow';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import dayjs from 'dayjs';
-import { ParsedUrlQuery } from 'querystring';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
-import PageNotFound from '../../404';
 import {
   BOOKING_STEPS,
   CURRENCIES,
@@ -30,7 +30,9 @@ import { BookingConfig, VolunteerOpportunity } from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { __, getMaxBookingHorizon } from '../../../utils/helpers';
+import { getMaxBookingHorizon } from '../../../utils/helpers';
+import { loadLocaleData } from '../../../utils/locale.helpers';
+import PageNotFound from '../../not-found';
 
 interface Props {
   error?: string;
@@ -39,6 +41,7 @@ interface Props {
   futureEvents?: Event[];
   event?: Event;
   bookingConfig: BookingConfig | null;
+  messages?: any;
 }
 
 const DatesSelector = ({
@@ -49,6 +52,7 @@ const DatesSelector = ({
   futureEvents,
   event,
 }: Props) => {
+  const t = useTranslations();
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -139,7 +143,7 @@ const DatesSelector = ({
   const [discountCode, setDiscountCode] = useState('');
   const [doesNeedPickup, setDoesNeedPickup] = useState(false);
   const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
-  const [bookingError, setBookingError] = useState(null);
+  const [bookingError, setBookingError] = useState<null | string>(null);
 
   useEffect(() => {
     setBookingError(null);
@@ -150,7 +154,9 @@ const DatesSelector = ({
 
       if (bookingConfig && diffInDays < bookingConfig?.minDuration) {
         setBookingError(
-          __('bookings_dates_min_duration_error', bookingConfig?.minDuration),
+          t('bookings_dates_min_duration_error', {
+            var: bookingConfig?.minDuration,
+          }),
         );
       }
     }
@@ -252,10 +258,10 @@ const DatesSelector = ({
   return (
     <>
       <div className="max-w-screen-sm mx-auto md:p-8 h-full">
-        <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
+        <BackButton handleClick={goBack}>{t('buttons_back')}</BackButton>
         <Heading className="pb-4 mt-8">
           <span className="mr-2">🏡</span>
-          <span>{__('bookings_summary_step_dates_title')}</span>
+          <span>{t('bookings_summary_step_dates_title')}</span>
         </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
 
@@ -264,7 +270,7 @@ const DatesSelector = ({
             <div>
               <HeadingRow>
                 <span className="mr-2">💰</span>
-                <span>{__('bookings_dates_step_payment_title')}</span>
+                <span>{t('bookings_dates_step_payment_title')}</span>
               </HeadingRow>
               <CurrencySwitch
                 selectedCurrency={currency}
@@ -313,29 +319,30 @@ const DatesSelector = ({
             setDoesNeedSeparateBeds={setDoesNeedSeparateBeds}
           />
 
-          {bookingConfig?.pickUpEnabled && bookingConfig?.pickUpEnabled === true && (
-            <div>
-              <HeadingRow>
-                <span className="mr-2">➕</span>
-                <span>{__('bookings_heading_extras')}</span>
-              </HeadingRow>
-              <div className="my-10 flex flex-row justify-between flex-wrap">
-                <label htmlFor="separateBeds" className="text-md">
-                  {__('bookings_pickup')}
-                  <span className="w-full text-xs ml-2">
-                    ({__('bookings_pickup_disclaimer')})
-                  </span>
-                </label>
-                <Switch
-                  disabled={false}
-                  name="pickup"
-                  label=""
-                  onChange={setDoesNeedPickup}
-                  checked={doesNeedPickup}
-                />
+          {bookingConfig?.pickUpEnabled &&
+            bookingConfig?.pickUpEnabled === true && (
+              <div>
+                <HeadingRow>
+                  <span className="mr-2">➕</span>
+                  <span>{t('bookings_heading_extras')}</span>
+                </HeadingRow>
+                <div className="my-10 flex flex-row justify-between flex-wrap">
+                  <label htmlFor="separateBeds" className="text-md">
+                    {t('bookings_pickup')}
+                    <span className="w-full text-xs ml-2">
+                      ({t('bookings_pickup_disclaimer')})
+                    </span>
+                  </label>
+                  <Switch
+                    disabled={false}
+                    name="pickup"
+                    label=""
+                    onChange={setDoesNeedPickup}
+                    checked={doesNeedPickup}
+                  />
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {handleNextError && (
             <div className="error-box">{handleNextError}</div>
@@ -353,7 +360,7 @@ const DatesSelector = ({
               )
             }
           >
-            {__('generic_search')}
+            {t('generic_search')}
           </Button>
         </div>
       </div>
@@ -361,60 +368,68 @@ const DatesSelector = ({
   );
 };
 
-DatesSelector.getInitialProps = async ({
-  query,
-}: {
-  query: ParsedUrlQuery;
-}) => {
+DatesSelector.getInitialProps = async (
+  context: NextPageContext,
+): Promise<Props> => {
   try {
+    const { query } = context;
     const { eventId, volunteerId } = query;
 
-    const {
-      data: {
-        results: { value: settings },
-      },
-    } = await api.get('/config/booking');
+    const [bookingConfigRes, messages] = await Promise.all([
+      api.get('/config/booking').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
+    const bookingConfig = bookingConfigRes?.data?.results?.value;
 
     if (eventId) {
       const [ticketsAvailable, event] = await Promise.all([
-        api.get(`/bookings/event/${eventId}/availability`),
-        api.get(`/event/${eventId}`),
+        api.get(`/bookings/event/${eventId}/availability`).catch(() => null),
+        api.get(`/event/${eventId}`).catch(() => null),
       ]);
 
       return {
-        bookingConfig: settings as any,
-        ticketOptions: ticketsAvailable.data.ticketOptions,
-        event: event.data.results,
+        bookingConfig,
+        ticketOptions: ticketsAvailable?.data?.ticketOptions,
+        event: event?.data?.results,
+        messages: null,
       };
     }
     if (volunteerId) {
-      const volunteer = await api.get(`/volunteer/${volunteerId}`);
+      const volunteer = await api
+        .get(`/volunteer/${volunteerId}`)
+        .catch(() => null);
       return {
-        bookingConfig: settings as any,
-        volunteer: volunteer.data.results,
+        bookingConfig,
+        volunteer: volunteer?.data?.results,
+        messages,
       };
     }
     if (!eventId && !volunteerId) {
-      const res = await api.get(
-        `/event?&where=${JSON.stringify({
-          end: {
-            $gt: new Date(),
-          },
-        })}`,
-      );
+      const res = await api
+        .get(
+          `/event?&where=${JSON.stringify({
+            end: {
+              $gt: new Date(),
+            },
+          })}`,
+        )
+        .catch(() => null);
 
       return {
-        bookingConfig: settings,
-        futureEvents: res.data.results,
+        bookingConfig,
+        futureEvents: res?.data?.results,
+        messages,
       };
     }
     return {
-      bookingConfig: settings,
+      bookingConfig,
+      messages,
     };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
       bookingConfig: null,
+      messages: null,
     };
   }
 };

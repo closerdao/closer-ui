@@ -9,10 +9,10 @@ import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
-import { ParsedUrlQuery } from 'querystring';
 
-import PageNotFound from '../../404';
 import { BOOKING_STEPS } from '../../../constants';
 import {
   BaseBookingParams,
@@ -22,7 +22,8 @@ import {
 } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { __ } from '../../../utils/helpers';
+import { loadLocaleData } from '../../../utils/locale.helpers';
+import PageNotFound from '../../not-found';
 
 interface Props extends BaseBookingParams {
   booking: Booking | null;
@@ -32,6 +33,7 @@ interface Props extends BaseBookingParams {
 }
 
 const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
+  const t = useTranslations();
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -86,7 +88,7 @@ const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
         <BookingBackButton onClick={goBack} />
         <Heading className="pb-4 mt-8">
           <span className="mr-2">🎊</span>
-          <span>{__('bookings_confirmation_step_success')}</span>
+          <span>{t('bookings_confirmation_step_success')}</span>
         </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
         <div className="mt-16 flex flex-col gap-16 flex-nowrap">
@@ -94,10 +96,10 @@ const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
 
           <Button onClick={() => viewBooking(_id)}>
             {eventId
-              ? __('ticket_list_view_ticket')
+              ? t('ticket_list_view_ticket')
               : volunteerId
-              ? __('bookings_confirmation_step_volunteer_application_button')
-              : __('bookings_confirmation_step_success_button')}
+              ? t('bookings_confirmation_step_volunteer_application_button')
+              : t('bookings_confirmation_step_success_button')}
           </Button>
         </div>
       </div>
@@ -105,13 +107,10 @@ const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
   );
 };
 
-ConfirmationStep.getInitialProps = async ({
-  query,
-}: {
-  query: ParsedUrlQuery;
-}) => {
+ConfirmationStep.getInitialProps = async (context: NextPageContext) => {
+  const { query } = context;
   try {
-    const [bookingRes, bookingConfigRes] = await Promise.all([
+    const [bookingRes, bookingConfigRes, messages] = await Promise.all([
       api.get(`/booking/${query.slug}`).catch((err) => {
         console.error('Error fetching booking config:', err);
         return null;
@@ -119,6 +118,7 @@ ConfirmationStep.getInitialProps = async ({
       api.get('/config/booking').catch(() => {
         return null;
       }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
@@ -127,13 +127,14 @@ ConfirmationStep.getInitialProps = async ({
       booking.eventId && (await api.get(`/event/${booking.eventId}`));
     const event = optionalEvent?.data?.results;
 
-    return { booking, event, error: null, bookingConfig };
+    return { booking, event, error: null, bookingConfig, messages };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
       booking: null,
       bookingConfig: null,
       event: null,
+      messages: null,
     };
   }
 };

@@ -1,11 +1,12 @@
 import { FC, useEffect, useState } from 'react';
 
+import { useTranslations } from 'next-intl';
 import objectPath from 'object-path';
 
 import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __, getSample } from '../../utils/helpers';
+import { getSample } from '../../utils/helpers';
 import { trackEvent } from '../Analytics';
 import DateTimePicker from '../DateTimePicker';
 import FormField from '../FormField';
@@ -61,6 +62,7 @@ const EditModel: FC<Props> = ({
   deleteButton,
   isPublic,
 }) => {
+  const t = useTranslations();
   const { isAuthenticated, user } = useAuth();
   const initialModel =
     initialData ||
@@ -211,7 +213,7 @@ const EditModel: FC<Props> = ({
   if (!isPublic && !isAuthenticated) {
     return (
       <div className="validation-error card">
-        {__('edit_model_auth_required')}
+        {t('edit_model_auth_required')}
       </div>
     );
   }
@@ -225,7 +227,7 @@ const EditModel: FC<Props> = ({
   ) {
     return (
       <div className="validation-error card">
-        {__('edit_model_permission_denied')}
+        {t('edit_model_permission_denied')}
       </div>
     );
   }
@@ -297,7 +299,7 @@ const EditModel: FC<Props> = ({
           <button type="submit" className="btn-primary">
             <div className="flex gap-2 items-center">
               {isLoading && <Spinner />}
-              {__('edit_model_save')}
+              {t('edit_model_save')}
             </div>
           </button>
           {allowDelete && (

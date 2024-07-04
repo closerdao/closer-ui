@@ -17,17 +17,15 @@ import ProgressBar from '../../../components/ui/ProgressBar';
 import Row from '../../../components/ui/Row';
 
 import dayjs from 'dayjs';
-import { NextApiRequest } from 'next';
-import { ParsedUrlQuery } from 'querystring';
+import { NextApiRequest, NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
-import PageNotAllowed from '../../401';
-import PageNotFound from '../../404';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { WalletState } from '../../../contexts/wallet';
 import { useBookingSmartContract } from '../../../hooks/useBookingSmartContract';
-import { 
+import {
   BaseBookingParams,
   Booking,
   BookingConfig,
@@ -39,7 +37,10 @@ import {
 import api from '../../../utils/api';
 import { payTokens } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { __, priceFormat } from '../../../utils/helpers';
+import { priceFormat } from '../../../utils/helpers';
+import { loadLocaleData } from '../../../utils/locale.helpers';
+import PageNotAllowed from '../../401';
+import PageNotFound from '../../not-found';
 
 interface Props extends BaseBookingParams {
   listing: Listing | null;
@@ -50,7 +51,15 @@ interface Props extends BaseBookingParams {
   paymentConfig: PaymentConfig | null;
 }
 
-const Checkout = ({ booking, listing, error, event, bookingConfig, paymentConfig }: Props) => {
+const Checkout = ({
+  booking,
+  listing,
+  error,
+  event,
+  bookingConfig,
+  paymentConfig,
+}: Props) => {
+  const t = useTranslations();
   const isHourlyBooking = listing?.priceDuration === 'hour';
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -145,9 +154,9 @@ const Checkout = ({ booking, listing, error, event, bookingConfig, paymentConfig
 
   const renderButtonText = () => {
     if (isStaking) {
-      return __('checkout_processing_token_payment');
+      return t('checkout_processing_token_payment');
     }
-    return __('checkout_pay');
+    return t('checkout_pay');
   };
 
   const goBack = () => {
@@ -219,7 +228,7 @@ const Checkout = ({ booking, listing, error, event, bookingConfig, paymentConfig
       setCreditsError(null);
       const res = await api.post(`/bookings/${booking?._id}/update-payment`, {
         useCredits: true,
-        isHourlyBooking
+        isHourlyBooking,
       });
       setUseCreditsUpdated(true);
 
@@ -254,10 +263,10 @@ const Checkout = ({ booking, listing, error, event, bookingConfig, paymentConfig
   return (
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
-        <BookingBackButton onClick={goBack} name={__('buttons_back')} />
+        <BookingBackButton onClick={goBack} name={t('buttons_back')} />
         <Heading level={1} className="pb-4 mt-8">
           <span className="mr-1">💰</span>
-          <span>{__('bookings_checkout_step_title')}</span>
+          <span>{t('bookings_checkout_step_title')}</span>
         </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
         <div className="mt-16 flex flex-col gap-16">
@@ -266,7 +275,7 @@ const Checkout = ({ booking, listing, error, event, bookingConfig, paymentConfig
               <div>
                 <HeadingRow>
                   <span className="mr-2">🎉</span>
-                  <span>{__('bookings_checkout_ticket_cost')}</span>
+                  <span>{t('bookings_checkout_ticket_cost')}</span>
                 </HeadingRow>
                 <div className="mb-16 mt-4">
                   <Row
@@ -281,8 +290,8 @@ const Checkout = ({ booking, listing, error, event, bookingConfig, paymentConfig
               <span className="mr-2">🏡</span>
               <span>
                 {isHourlyBooking
-                  ? __('bookings_checkout_step_accomodation')
-                  : __('bookings_checkout_step_hourly')}
+                  ? t('bookings_checkout_step_accomodation')
+                  : t('bookings_checkout_step_hourly')}
               </span>
             </HeadingRow>
             <div className="flex justify-between items-center mt-3">
@@ -294,7 +303,9 @@ const Checkout = ({ booking, listing, error, event, bookingConfig, paymentConfig
               )}
             </div>
             <p className="text-right text-xs">
-              {isHourlyBooking ? __('bookings_checkout_step_accomodation_description_hourly') : __('bookings_checkout_step_accomodation_description')}
+              {isHourlyBooking
+                ? t('bookings_checkout_step_accomodation_description_hourly')
+                : t('bookings_checkout_step_accomodation_description')}
             </p>
 
             {process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' &&
@@ -331,19 +342,19 @@ const Checkout = ({ booking, listing, error, event, bookingConfig, paymentConfig
                     }
                     className="mt-8"
                   >
-                    {__('bookings_checkout_step_wallet_disclaimer')}
+                    {t('bookings_checkout_step_wallet_disclaimer')}
                   </Checkbox>
                 </div>
               )}
           </div>
-          {!isHourlyBooking && ( 
+          {!isHourlyBooking && (
             <div>
               <HeadingRow>
                 <span className="mr-2">🛠</span>
-                <span>{__('bookings_checkout_step_utility_title')}</span>
+                <span>{t('bookings_checkout_step_utility_title')}</span>
               </HeadingRow>
               <div className="flex justify-between items-center mt-3">
-                <p> {__('bookings_summary_step_utility_total')}</p>
+                <p> {t('bookings_summary_step_utility_total')}</p>
                 <p className="font-bold">
                   {booking?.foodOption === 'no_food'
                     ? 'NOT INCLUDED'
@@ -351,13 +362,11 @@ const Checkout = ({ booking, listing, error, event, bookingConfig, paymentConfig
                 </p>
               </div>
               <p className="text-right text-xs">
-                {__('bookings_summary_step_utility_description')}
+                {t('bookings_summary_step_utility_description')}
               </p>
              
             </div>
           )}
-           
-         
 
           <CheckoutTotal
             total={updatedTotal}
@@ -392,8 +401,8 @@ const Checkout = ({ booking, listing, error, event, bookingConfig, paymentConfig
               onClick={handleFreeBooking}
             >
               {user?.roles.includes('member') || booking?.status === 'confirmed'
-                ? __('buttons_confirm_booking')
-                : __('buttons_booking_request')}
+                ? t('buttons_confirm_booking')
+                : t('buttons_booking_request')}
             </Button>
           )}
           {isTokenOnlyBooking && (
@@ -414,19 +423,16 @@ const Checkout = ({ booking, listing, error, event, bookingConfig, paymentConfig
   );
 };
 
-Checkout.getInitialProps = async ({
-  req,
-  query,
-}: {
-  req: NextApiRequest;
-  query: ParsedUrlQuery;
-}) => {
+Checkout.getInitialProps = async (context: NextPageContext) => {
+  const { query, req } = context;
   try {
     const [bookingRes, bookingConfigRes, paymentConfigRes] = await Promise.all([
       api
         .get(`/booking/${query.slug}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          headers: (req as NextApiRequest)?.cookies?.access_token && {
+            Authorization: `Bearer ${
+              (req as NextApiRequest)?.cookies?.access_token
+            }`,
           },
         })
         .catch(() => {
@@ -438,24 +444,32 @@ Checkout.getInitialProps = async ({
       api.get('/config/payment').catch(() => {
         return null;
       }),
+      api.get('/config/payment').catch(() => {
+        return null;
+      }),
     ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
     const paymentConfig = paymentConfigRes?.data?.results?.value;
 
-    const [optionalEvent, optionalListing] = await Promise.all([
+    const [optionalEvent, optionalListing, messages] = await Promise.all([
       booking.eventId &&
         api.get(`/event/${booking.eventId}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          headers: (req as NextApiRequest)?.cookies?.access_token && {
+            Authorization: `Bearer ${
+              (req as NextApiRequest)?.cookies?.access_token
+            }`,
           },
         }),
       booking.listing &&
         api.get(`/listing/${booking.listing}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          headers: (req as NextApiRequest)?.cookies?.access_token && {
+            Authorization: `Bearer ${
+              (req as NextApiRequest)?.cookies?.access_token
+            }`,
           },
         }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
@@ -467,6 +481,7 @@ Checkout.getInitialProps = async ({
       error: null,
       bookingConfig,
       paymentConfig,
+      messages,
     };
   } catch (err) {
     console.log(err);
@@ -475,6 +490,7 @@ Checkout.getInitialProps = async ({
       booking: null,
       bookingConfig: null,
       listing: null,
+      messages: null,
       paymentConfig: null,
     };
   }

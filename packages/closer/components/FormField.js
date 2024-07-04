@@ -1,9 +1,9 @@
 import { useState } from 'react';
 
+import { useTranslations } from 'next-intl';
 import objectPath from 'object-path';
 
 import { CURRENCIES_WITH_LABELS } from '../constants';
-import { __ } from '../utils/helpers';
 import Autocomplete from './Autocomplete';
 import Checkbox from './Checkbox';
 import DiscountsEditor from './DiscountsEditor';
@@ -30,8 +30,10 @@ const FormField = ({
   multi,
   min,
   max,
-  step
+  step,
 }) => {
+  const t = useTranslations();
+
   const [addTag, setAddTag] = useState('');
 
   const handleCheckboxChange = (optionValue) => {
@@ -131,7 +133,7 @@ const FormField = ({
                           );
                         }}
                       >
-                        {__('form_field_remove_currency')}
+                        {t('form_field_remove_currency')}
                       </a>
                     )}
                   </div>
@@ -149,7 +151,7 @@ const FormField = ({
                   );
                 }}
               >
-                {__('form_field_add_currency')}
+                {t('form_field_add_currency')}
               </a>
             </div>
           )}

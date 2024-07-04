@@ -1,7 +1,9 @@
 import { FC } from 'react';
+import React from 'react';
+
+import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../hooks/useConfig';
-import { __ } from '../utils/helpers';
 
 interface Props {
   weeksNumber: string;
@@ -16,12 +18,14 @@ const AccomodationEstimate: FC<Props> = ({
   selectedAccomodation,
   selectAccomodation,
 }) => {
+  const t = useTranslations();
+
   const config = useConfig();
   const { ACCOMODATION_COST } = config || {};
   return (
     <p className="flex flex-wrap self-center mt-8 md:mt-28 items-center gap-4 text-center md:text-left">
       <span className="text-2xl leading-8 w-1/2 md:w-fit">
-        {__('token_sale_page_I_want_stay')}
+        {t('token_sale_page_I_want_stay')}
       </span>
       <input
         type="number"
@@ -33,7 +37,7 @@ const AccomodationEstimate: FC<Props> = ({
         className="inline w-16 m-0 mx-2 text-2xl bg-accent-light rounded-full px-4 !text-accent !border-none"
       />
       <span className="text-2xl leading-8 w-full md:w-auto">
-        {__('token_sale_page_stay_weeks')}
+        {t('token_sale_page_stay_weeks')}
       </span>
       <select
         value={selectedAccomodation}
@@ -47,7 +51,7 @@ const AccomodationEstimate: FC<Props> = ({
         ))}
       </select>
       <span className="text-2xl leading-8 flex-auto mt-4 md:mt-0">
-        {__('token_sale_page_I_should_buy')}
+        {t('token_sale_page_I_should_buy')}
       </span>
     </p>
   );

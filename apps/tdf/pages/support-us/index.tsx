@@ -2,6 +2,7 @@ import Head from 'next/head';
 
 import { useEffect, useState } from 'react';
 import {
+  FacebookIcon,
   FacebookShareButton,
   LinkedinIcon,
   LinkedinShareButton,
@@ -14,32 +15,33 @@ import {
   WhatsappIcon,
   WhatsappShareButton,
 } from 'react-share';
-import { FacebookIcon } from 'react-share';
 
 import Modal from 'closer/components/Modal';
 import YoutubeEmbed from 'closer/components/YoutubeEmbed';
 import { Button, Card, Heading, LinkButton } from 'closer/components/ui';
 
-import { event } from 'nextjs-google-analytics';
-
-import PageNotFound from '../404';
+import { PageNotFound } from 'closer';
 import { usePlatform } from 'closer/contexts/platform';
 import { FundraisingConfig } from 'closer/types';
 import api from 'closer/utils/api';
-import { __ } from 'closer/utils/helpers';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+import { event } from 'nextjs-google-analytics';
 
 interface Props {
   fundraisingConfig: FundraisingConfig;
 }
 
 const SupportUsPage = ({ fundraisingConfig }: Props) => {
+  const t = useTranslations();
   const isFundraiserEnabled =
     process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true' &&
     fundraisingConfig?.enabled;
 
   const { platform }: any = usePlatform();
   const subscriberFilter = {
-    where: { 'subscription.validUntil': { $exists: true }  }
+    where: { 'subscription.validUntil': { $exists: true } },
   };
 
   const subscriberCount = platform.user.findCount(subscriberFilter) || 0;
@@ -60,9 +62,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
 
   const loadData = async () => {
     try {
-      await Promise.all([
-        platform.user.getCount(subscriberFilter),
-      ]);
+      await Promise.all([platform.user.getCount(subscriberFilter)]);
     } catch (err) {
     } finally {
     }
@@ -75,7 +75,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
   return (
     <>
       <Head>
-        <title>{__('support_us_heading')}</title>
+        <title>{t('support_us_heading')}</title>
         <meta name="description" content="" />
         <meta property="og:type" content="event" />
       </Head>
@@ -147,10 +147,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             <div className="w-full rounded-full bg-gray-200 overflow-hidden">
               <div
                 style={{
-                  width: `${
-                    (Math.min(subscriberCount , 300) / 300) *
-                    100
-                  }%`,
+                  width: `${(Math.min(subscriberCount, 300) / 300) * 100}%`,
                 }}
                 className="bg-accent h-[18px] rounded-full"
               ></div>
@@ -379,14 +376,17 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
   );
 };
 
-SupportUsPage.getInitialProps = async () => {
+SupportUsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const {
-      data: { results: fundraisingConfig },
-    } = await api.get('/config/fundraiser');
+    const [fundraiserRes, messages] = await Promise.all([
+      api.get('/config/fundraiser').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
+    const fundraisingConfig = fundraiserRes?.data?.results?.value;
 
     return {
-      fundraisingConfig: fundraisingConfig.value,
+      fundraisingConfig,
+      messages,
     };
   } catch (err) {
     return {

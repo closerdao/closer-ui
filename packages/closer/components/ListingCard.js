@@ -3,10 +3,10 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
+import { useTranslations } from 'next-intl';
 import PropTypes from 'prop-types';
 
 import { cdn } from '../utils/api';
-import { __ } from '../utils/helpers';
 import ListingPrice from './ListingPrice';
 import Button from './ui/Button';
 import Heading from './ui/Heading';
@@ -19,10 +19,11 @@ const ListingCard = ({
   isAuthenticated,
   adults,
 }) => {
+  const t = useTranslations();
   const router = useRouter();
   const { name, description, rentalFiat, rentalToken, utilityFiat, available } =
     listing;
-  
+
   const [firstPHtml, setFirstPHtml] = useState('');
 
   // const firstParagraphHTML = extractFirstParagraph(description);
@@ -67,16 +68,18 @@ const ListingCard = ({
         </div>
       )}
       <ul className="list-disc px-4 flex-1">
-        {firstPHtml  && <li
-          dangerouslySetInnerHTML={{
-            __html: firstPHtml,
-          }}
-        /> }
+        {firstPHtml && (
+          <li
+            dangerouslySetInnerHTML={{
+              __html: firstPHtml,
+            }}
+          />
+        )}
 
         <li>
           {listing.private
-            ? __('listing_preview_private', listing.beds - 1)
-            : __('listing_preview_beds', listing.beds - 1)}
+            ? t('listing_preview_private', { var: listing.beds - 1 })
+            : t('listing_preview_beds', { var: listing.beds - 1 })}
         </li>
       </ul>
       <div className="my-8">
@@ -91,19 +94,21 @@ const ListingCard = ({
 
       {adults > listing.beds && listing.private && (
         <div className="my-6 font-bold">
-          {name} {__('listing_preview_max_beds', listing.beds)}{' '}
+          {name} {t('listing_preview_max_beds', { var: listing.beds })}{' '}
         </div>
       )}
       <Button
         onClick={handleBooking}
         type="secondary"
-        isEnabled={available !== false && !(listing.private && adults > listing.beds)}
+        isEnabled={
+          available !== false && !(listing.private && adults > listing.beds)
+        }
       >
         {available !== false
           ? isAuthenticated
-            ? __('listing_preview_book')
-            : __('listing_preview_sign_in_to_book')
-          : __('listing_preview_not_available')}
+            ? t('listing_preview_book')
+            : t('listing_preview_sign_in_to_book')
+          : t('listing_preview_not_available')}
       </Button>
     </div>
   );

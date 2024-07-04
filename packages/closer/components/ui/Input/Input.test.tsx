@@ -1,21 +1,23 @@
-import { fireEvent, render } from '@testing-library/react';
+import { fireEvent } from '@testing-library/react';
 
 import Input from './';
+import { renderWithNextIntl } from '../../../test/utils';
+
 
 describe('Input', () => {
   test('renders without crashing', () => {
-    render(<Input />);
+    renderWithNextIntl(<Input />);
   });
 
   test('renders label when passed as prop', () => {
-    const { getByLabelText } = render(<Input label="Name" />);
+    const { getByLabelText } = renderWithNextIntl(<Input label="Name" />);
     const label = getByLabelText('Name');
     expect(label).toBeInTheDocument();
   });
 
   test('calls onBlur when user clicks outside the isInstantSave input', () => {
     const onBlur = jest.fn();
-    const { getByLabelText } = render(
+    const { getByLabelText } = renderWithNextIntl(
       <Input isInstantSave={true} label="Name" onBlur={onBlur} />,
     );
     const input = getByLabelText('Name');
@@ -25,7 +27,7 @@ describe('Input', () => {
 
   test('calls onChange when user presses enter on isInstantSave input', () => {
     const onChange = jest.fn();
-    const { getByLabelText } = render(
+    const { getByLabelText } = renderWithNextIntl(
       <Input label="Name" isInstantSave={true} onChange={onChange} />,
     );
     const input = getByLabelText('Name');
@@ -34,13 +36,13 @@ describe('Input', () => {
   });
 
   test('disables input when passed isDisabled as true', () => {
-    const { getByLabelText } = render(<Input label="Name" isDisabled={true} />);
+    const { getByLabelText } = renderWithNextIntl(<Input label="Name" isDisabled={true} />);
     const input = getByLabelText('Name') as HTMLInputElement;
     expect(input.disabled).toBe(true);
   });
 
   test('displays validation error when isInstantSave input is invalid', () => {
-    const { getByLabelText, getByText } = render(
+    const { getByLabelText, getByText } = renderWithNextIntl(
       <Input isInstantSave={true} label="Email" validation="email" />,
     );
     const input = getByLabelText('Email');
@@ -50,7 +52,7 @@ describe('Input', () => {
   });
 
   test('does not display validation error when input is valid', () => {
-    const { getByLabelText, queryByText } = render(
+    const { getByLabelText, queryByText } = renderWithNextIntl(
       <Input label="Email" validation="email" />,
     );
     const input = getByLabelText('Email');

@@ -1,6 +1,8 @@
+import { useTranslations } from 'next-intl';
+
 import { useConfig } from '../hooks/useConfig';
 import { CloserCurrencies, Price } from '../types';
-import { __, getVatInfo, priceFormat } from '../utils/helpers';
+import { getVatInfo, priceFormat } from '../utils/helpers';
 import HeadingRow from './ui/HeadingRow';
 
 interface Props {
@@ -44,22 +46,23 @@ const SummaryCosts = ({
   priceDuration,
   vatRate,
 }: Props) => {
+  const t = useTranslations();
   const { APP_NAME } = useConfig();
 
   return (
     <div>
       <HeadingRow>
         <span className="mr-4">💰</span>
-        <span>{__('bookings_summary_step_costs_title')}</span>
+        <span>{t('bookings_summary_step_costs_title')}</span>
       </HeadingRow>
 
       {eventCost ? (
         <div className="flex justify-between items-center mt-3">
-          <p>{__('bookings_checkout_event_cost')}</p>
+          <p>{t('bookings_checkout_event_cost')}</p>
           <div className="flex items-center gap-2">
             {isEditMode && updatedEventTotal?.val !== eventDefaultCost && (
               <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
-                {__('bookings_updated_price')}: {priceFormat(updatedEventTotal)}
+                {t('bookings_updated_price')}: {priceFormat(updatedEventTotal)}
               </div>
             )}
             <p className="font-bold">
@@ -77,12 +80,12 @@ const SummaryCosts = ({
       {priceDuration === 'night' && (
         <>
           <div className="flex justify-between items-center mt-3">
-            <p>{__('bookings_summary_step_dates_accomodation_type')}</p>
+            <p>{t('bookings_summary_step_dates_accomodation_type')}</p>
             <div className="flex items-center gap-2">
               {isEditMode &&
                 updatedAccomodationTotal?.val !== accomodationCost?.val && (
                   <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
-                    {__('bookings_updated_price')}:{' '}
+                    {t('bookings_updated_price')}:{' '}
                     {priceFormat(updatedAccomodationTotal)}
                   </div>
                 )}
@@ -105,21 +108,21 @@ const SummaryCosts = ({
                 {isNotPaid && (
                   <span className="text-failure">
                     {' '}
-                    {__('booking_card_unpaid')}
+                    {t('booking_card_unpaid')}
                   </span>
                 )}
               </div>
             </div>
           </div>
           <p className="text-right text-xs">
-            {__('bookings_summary_step_accomodation_type_description')}
+            {t('bookings_summary_step_accomodation_type_description')}
           </p>
           <div className="flex justify-between items-center mt-3">
-            <p> {__('bookings_summary_step_utility_total')}</p>
+            <p> {t('bookings_summary_step_utility_total')}</p>
             <div className="flex items-center gap-2">
               {isEditMode && updatedUtilityTotal?.val !== utilityFiat?.val && (
                 <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
-                  {__('bookings_updated_price')}:{' '}
+                  {t('bookings_updated_price')}:{' '}
                   {priceFormat(updatedUtilityTotal)}
                 </div>
               )}
@@ -130,25 +133,25 @@ const SummaryCosts = ({
                 {isNotPaid && (
                   <span className="text-failure">
                     {' '}
-                    {__('booking_card_unpaid')}
+                    {t('booking_card_unpaid')}
                   </span>
                 )}
               </p>
             </div>
           </div>
           <p className="text-right text-xs">
-            {__('bookings_summary_step_utility_description')}
+            {t('bookings_summary_step_utility_description')}
           </p>
         </>
       )}
       <div className="flex justify-between items-center mt-3">
-        <p>{__('bookings_total')}</p>
+        <p>{t('bookings_total')}</p>
         <div className="flex items-center gap-2">
           {isEditMode &&
             (updatedFiatTotal?.val !== totalFiat?.val ||
               updatedAccomodationTotal?.val !== accomodationCost?.val) && (
               <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
-                {__('bookings_updated_price')}:{' '}
+                {t('bookings_updated_price')}:{' '}
                 {priceDuration === 'night' && (
                   <div>
                     {useTokens && (
@@ -199,7 +202,7 @@ const SummaryCosts = ({
                   {isNotPaid && (
                     <span className="text-failure">
                       {' '}
-                      {__('booking_card_unpaid')}
+                      {t('booking_card_unpaid')}
                     </span>
                   )}
                 </>
@@ -217,7 +220,7 @@ const SummaryCosts = ({
                   {isNotPaid && (
                     <span className="text-failure">
                       {' '}
-                      {__('booking_card_unpaid')}
+                      {t('booking_card_unpaid')}
                     </span>
                   )}
                 </>
@@ -230,7 +233,7 @@ const SummaryCosts = ({
                   {isNotPaid && (
                     <span className="text-failure">
                       {' '}
-                      {__('booking_card_unpaid')}
+                      {t('booking_card_unpaid')}
                     </span>
                   )}
                 </div>
@@ -264,7 +267,7 @@ const SummaryCosts = ({
                   {isNotPaid && (
                     <span className="text-failure">
                       {' '}
-                      {__('booking_card_unpaid')}
+                      {t('booking_card_unpaid')}
                     </span>
                   )}
                 </div>
@@ -274,7 +277,7 @@ const SummaryCosts = ({
         </div>
       </div>
       <p className="text-right text-xs">
-        {__('bookings_checkout_step_total_description')}{' '}
+        {t('bookings_checkout_step_total_description')}{' '}
         {getVatInfo(totalFiat, vatRate)}
       </p>
     </div>

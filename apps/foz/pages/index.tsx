@@ -2,6 +2,8 @@ import Head from 'next/head';
 
 import { GeneralConfig, Heading, api, useConfig } from 'closer';
 import { parseMessageFromError } from 'closer/utils/common';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { NextPageContext } from 'next';
 
 interface Props {
   generalConfig: GeneralConfig | null;
@@ -337,10 +339,10 @@ const HomePage = ({ generalConfig }: Props) => {
                 level={2}
                 className="mb-4 text-5xl font-bold max-w-[600px]"
               >
-                {__('token_sale_meet_your_home_heading')}
+                {t('token_sale_meet_your_home_heading')}
               </Heading>
               <Heading level={3} className="text-md max-w-[600px]">
-                {__('token_sale_meet_your_home_subheading')}
+                {t('token_sale_meet_your_home_subheading')}
               </Heading>
             </div>
             <PhotoGallery className="mt-12" />
@@ -405,7 +407,7 @@ const HomePage = ({ generalConfig }: Props) => {
                     {plan.available === false ? (
                       <Heading level={3} className="uppercase">
                         <span className="block">🤩</span>
-                        {__('generic_coming_soon')}
+                        {t('generic_coming_soon')}
                       </Heading>
                     ) : (
                       <div className="w-full text-left ">
@@ -533,20 +535,25 @@ const HomePage = ({ generalConfig }: Props) => {
   );
 };
 
-HomePage.getInitialProps = async () => {
+HomePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const generalRes = await api.get('/config/general').catch(() => {
-      return null;
-    });
-    const generalConfig = generalRes?.data?.results?.value;
+    const [generalRes, messages] = await Promise.all([
+      api.get('/config/general').catch(() => {
+        return null;
+      }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
 
+    const generalConfig = generalRes?.data?.results?.value;
     return {
       generalConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

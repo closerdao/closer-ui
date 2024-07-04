@@ -1,14 +1,19 @@
+import React from 'react';
+
+import { useTranslations } from 'next-intl';
+
 import { useConfig } from '../hooks/useConfig';
-import { __ } from '../utils/helpers';
 
 const AccomodationPriceInfo = () => {
+  const t = useTranslations();
+
   const { ACCOMODATION_COST } = useConfig() || {};
 
   return (
     <>
       <div className="p-2 md:p-6 md:shadow-4xl rounded-lg mt-2 w-full">
         <p className="text-right text-base leading-8">
-          {__('token_sale_page_price_description')}
+          {t('token_sale_page_price_description')}
         </p>
         <div className="flex flex-col gap-4 mt-4">
           {ACCOMODATION_COST.map(
@@ -34,7 +39,7 @@ const AccomodationPriceInfo = () => {
                   </div>
                 </div>
                 <p className="text-accent text-xl md:text-2xl leading-8 whitespace-nowrap">
-                  {`${__('token_sale_token_symbol')} ${String(
+                  {`${t('token_sale_token_symbol')} ${String(
                     accomodation.price,
                   )}`}
                 </p>
@@ -44,7 +49,7 @@ const AccomodationPriceInfo = () => {
         </div>
       </div>
       <p className="text-base text-center md:text-right mt-4 ">
-        {__('token_sale_page_food_disclaimer')}
+        {t('token_sale_page_food_disclaimer')}
       </p>
     </>
   );

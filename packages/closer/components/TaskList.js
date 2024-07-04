@@ -1,12 +1,13 @@
 import Link from 'next/link';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import api, { formatSearch } from '../utils/api';
-import { __ } from '../utils/helpers';
 import TimeSince from './TimeSince';
+import { useTranslations } from 'next-intl';
 
-const TaskList = ({ channel, limit }) => {
+const TaskList = ({ channel = undefined, limit }) => {
+  const t = useTranslations();
   const [tasks, setTasks] = useState([]);
   const [error, setErrors] = useState(false);
 
@@ -61,7 +62,7 @@ const TaskList = ({ channel, limit }) => {
               </Link>
             ))
           ) : (
-            <p>{__('task_list_empty_message')}</p>
+            <p>{t('task_list_empty_message')}</p>
           )}
         </div>
       </div>

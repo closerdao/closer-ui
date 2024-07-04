@@ -1,10 +1,10 @@
 import { Dispatch, SetStateAction, useState } from 'react';
 
 import dayjs from 'dayjs';
+import { useTranslations } from 'next-intl';
 
 import { useOutsideClick } from '../../hooks/useOutsideClick';
 import { getTimeOnly } from '../../utils/booking.helpers';
-import { __ } from '../../utils/helpers';
 import DateTimePicker from '../DateTimePicker';
 import { Button } from '../ui';
 
@@ -33,6 +33,7 @@ const ListingDateSelector = ({
   timeOptions,
   hourAvailability,
 }: Props) => {
+  const t = useTranslations();
   const stayDatesDropdownRef = useOutsideClick(handleClickOutsideDropdown);
   const isHourlyBooking = priceDuration === 'hour';
   const isStartTimeSet = timeOptions?.includes(String(getTimeOnly(start)));
@@ -55,13 +56,13 @@ const ListingDateSelector = ({
     <>
       <div ref={stayDatesDropdownRef} className="static sm:relative flex-1">
         <label className="my-2 hidden sm:block">
-          {isHourlyBooking && __('bookings_select_date_and_time')}
+          {isHourlyBooking && t('bookings_select_date_and_time')}
 
           {!isHourlyBooking &&
             (isEditMode ? (
-              <strong>{__('bookings_edit_stay_dates')}</strong>
+              <strong>{t('bookings_edit_stay_dates')}</strong>
             ) : (
-              __('bookings_select_stay_dates')
+              t('bookings_select_stay_dates')
             ))}
         </label>
         <Button
@@ -98,7 +99,7 @@ const ListingDateSelector = ({
 
           {!isHourlyBooking && (
             <>
-              {!start && !end && __('bookings_select_dates_button')}
+              {!start && !end && t('bookings_select_dates_button')}
               {start && (
                 <>
                   {isSmallScreen

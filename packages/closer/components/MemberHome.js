@@ -1,19 +1,19 @@
 import Link from 'next/link';
 
-import React from 'react';
+import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
-import { __ } from '../utils/helpers';
 import MemberList from './MemberList';
 import PostList from './PostList';
 import UpcomingEvents from './UpcomingEvents';
 
 const MemberHome = () => {
+  const t = useTranslations();
   const { user, isLoading } = useAuth();
 
   if (isLoading || !user) {
     // Wait for user to be loaded in order to allow getting private data
-    return <div className="loading">{__('generic_loading')} </div>;
+    return <div className="loading">{t('generic_loading')} </div>;
   }
 
   return (
@@ -23,13 +23,13 @@ const MemberHome = () => {
           <div className="channel">
             <div className="channel-header mb-4">
               <h3>
-                {__('member_home_title')} {user?.screenname || 'you'}!
+                {t('member_home_title')} {user?.screenname || 'you'}!
               </h3>
             </div>
             <div className="channel-sub-header">
               {user.roles.includes('admin') && (
                 <Link href="/channel/create" as="/channel/create">
-                  {__('member_home_add_channel')}
+                  {t('member_home_add_channel')}
                 </Link>
               )}
             </div>
