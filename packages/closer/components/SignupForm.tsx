@@ -138,10 +138,6 @@ const SignupForm = ({ app }: Props) => {
         // label: 'success',
       });
     }
-    try {
-    } catch (error) {
-      console.error('Error signing in with Google', error);
-    }
   };
 
   return (
