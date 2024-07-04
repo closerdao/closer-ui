@@ -16,37 +16,10 @@ import {
   Price,
 } from '../types';
 import api from './api';
-import { __, priceFormat } from './helpers';
+import { priceFormat } from './helpers';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
-
-export const getStatusText = (status: string, updated: string | Date) => {
-  if (status === 'cancelled') {
-    return __('booking_status_cancelled', dayjs(updated).format('DD/MM/YYYY'));
-  }
-
-  interface StatusText {
-    [key: string]: string;
-  }
-
-  const statusText: StatusText = {
-    rejected: __('booking_status_rejected'),
-    open: __('booking_status_open'),
-    pending: __('booking_status_pending'),
-
-    confirmed: __('booking_status_confirmed'),
-    paid: __('booking_status_paid'),
-
-    'checked-in': __('booking_status_checked_in'),
-    'checked-out': __('booking_status_checked_out'),
-  };
-
-  return statusText[status];
-};
 
 export const getBookingType = (
   eventId: string | undefined,
@@ -96,7 +69,7 @@ export const getUtilityTotal = ({
   updatedAdults: number;
   updatedDuration: number;
   discountRate: number;
-  isTeamBooking: boolean | undefined
+  isTeamBooking: boolean | undefined;
 }) => {
   if (foodOption === 'no_food' || isTeamBooking || !utilityFiatVal) {
     return 0;
@@ -267,7 +240,7 @@ export const getBookingsWithUserAndListing = ({
     const listingName =
       listings
         ?.find((listing: any) => listing.get('_id') === listingId)
-        ?.get('name') || __('no_listing_type');
+        ?.get('name') || 'None, day ticket';
 
     const userId = b.get('createdBy');
     const user =
@@ -278,7 +251,7 @@ export const getBookingsWithUserAndListing = ({
     };
 
     const roomOrBedNumbers = b.get('roomOrBedNumbers').toJS() ?? undefined;
-    const adminBookingReason = b.get('adminBookingReason') || null; 
+    const adminBookingReason = b.get('adminBookingReason') || null;
 
     return {
       _id: b.get('_id'),
@@ -347,7 +320,7 @@ export const generateBookingItems = (
     }
 
     if (assignedUnitId !== undefined) {
-      if (!booking.roomOrBedNumbers || booking.roomOrBedNumbers.length === 0) { 
+      if (!booking.roomOrBedNumbers || booking.roomOrBedNumbers.length === 0) {
         bookingItems.push({
           id: booking._id,
           group: assignedUnitId,
@@ -355,7 +328,6 @@ export const generateBookingItems = (
           start_time: dayjs(booking.start).toDate(),
           end_time: dayjs(booking.end).toDate(),
         });
-  
       }
 
       if (Array.isArray(roomOrBedNumbers) && roomOrBedNumbers?.length > 1) {
@@ -376,10 +348,11 @@ export const generateBookingItems = (
         bookingItems.push({
           id: booking._id,
           // group: assignedUnitId,
-          group: booking.roomOrBedNumbers ?
-            matchedUnits[0].id +
-            (Array.isArray(roomOrBedNumbers) ? roomOrBedNumbers[0] : 1) -
-            1 : assignedUnitId,
+          group: booking.roomOrBedNumbers
+            ? matchedUnits[0].id +
+              (Array.isArray(roomOrBedNumbers) ? roomOrBedNumbers[0] : 1) -
+              1
+            : assignedUnitId,
           start_time: dayjs(booking.start).toDate(),
           end_time: dayjs(booking.end).toDate(),
           roomOrBedNumbers: booking.roomOrBedNumbers,

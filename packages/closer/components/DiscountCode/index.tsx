@@ -1,8 +1,10 @@
 import { Dispatch, SetStateAction, useState } from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import { TicketOption } from '../../types';
 import api from '../../utils/api';
-import { __, priceFormat } from '../../utils/helpers';
+import { priceFormat } from '../../utils/helpers';
 import { Button } from '../ui';
 import Input from '../ui/Input';
 
@@ -26,6 +28,7 @@ const DiscountCode = ({
   eventId,
   selectedTicketOption,
 }: Props) => {
+  const t = useTranslations();
   const [discountResult, setDiscountResult] = useState<DiscountResult>();
   const handleApplyDiscountCode = async () => {
     const res = await api.post('/bookings/validate-discount-code', {
@@ -40,13 +43,13 @@ const DiscountCode = ({
     <div>
       <div className="blcok sm:flex basis-20">
         <p className="mt-2 basis-1/2 sm:mb-0">
-          {__('bookings_dates_step_tickets_discount_code')}:
+          {t('bookings_dates_step_tickets_discount_code')}:
         </p>
         <Input
           type="text"
           value={discountCode}
           onChange={(e) => setDiscountCode(e.target.value)}
-          placeholder={__(
+          placeholder={t(
             'bookings_dates_step_tickets_discount_code_placeholder',
           )}
           className=""
@@ -56,16 +59,16 @@ const DiscountCode = ({
           onClick={handleApplyDiscountCode}
           isEnabled={!!(discountCode && selectedTicketOption)}
           className="mt-4 ml-0 sm:mt-0 sm:ml-4"
-          title={__('apply_submit_button_help')}
+          title={t('apply_submit_button_help')}
         >
-          {__('apply_submit_button')}
+          {t('apply_submit_button')}
         </Button>
       </div>
       <div>
         {discountResult && discountResult.status === 'success' && (
           <p className="rounded-md bg-green-100 px-4 py-2 mt-6">
-            {__('events_slug_checkout_discount_success')}.{' '}
-            {__('events_slug_checkout_discount_success_message')}
+            {t('events_slug_checkout_discount_success')}.{' '}
+            {t('events_slug_checkout_discount_success_message')}
             {discountResult.discountPercent !== 0 &&
               ` ${discountResult.discountPercent * 100}% `}
             {discountResult.discountType === 'val' &&
@@ -73,12 +76,12 @@ const DiscountCode = ({
                 discountResult.discountVal,
                 selectedTicketOption?.currency,
               )} `}
-            {__('events_slug_checkout_discount_success_message_part_2')}
+            {t('events_slug_checkout_discount_success_message_part_2')}
           </p>
         )}
         {discountResult && discountResult.status === 'fail' && (
           <p className="rounded-md bg-red-50 text-red-500 px-4 py-2 mt-6">
-            {__('listings_slug_checkout_discount_error')}
+            {t('listings_slug_checkout_discount_error')}
           </p>
         )}
       </div>

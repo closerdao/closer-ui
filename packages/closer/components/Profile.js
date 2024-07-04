@@ -4,14 +4,16 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import { cdn } from '../utils/api';
-import { __ } from '../utils/helpers.js';
 import CreditsBalance from './CreditsBalance';
 import { Button, Heading } from './ui';
 
 const Profile = ({ isDemo }) => {
+  const t = useTranslations();
+
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
 
@@ -55,7 +57,7 @@ const Profile = ({ isDemo }) => {
               type="secondary"
               className="!w-[80px] !text-accent ml-auto"
             >
-              {__('generic_edit_button')}
+              {t('generic_edit_button')}
             </Button>
           </div>
         </div>
@@ -67,7 +69,7 @@ const Profile = ({ isDemo }) => {
           <p>
             {user?.preferences?.superpower
               ? user?.preferences?.superpower
-              : __('navigation_member')}{' '}
+              : t('navigation_member')}{' '}
           </p>
           {/* <div className="mt-1 w-full">
             {user.roles && (
@@ -86,7 +88,9 @@ const Profile = ({ isDemo }) => {
           </div> */}
         </div>
         <div className="flex space-between justify-center w-full">
-          {isCreditsEnabled && <CreditsBalance className='text-lg' isDemo={isDemo} />}
+          {isCreditsEnabled && (
+            <CreditsBalance className="text-lg" isDemo={isDemo} />
+          )}
         </div>
       </div>
     </div>

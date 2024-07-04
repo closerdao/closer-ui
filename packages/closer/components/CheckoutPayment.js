@@ -6,6 +6,7 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
 import dayjs from 'dayjs';
+import { useTranslations } from 'next-intl';
 import PropTypes from 'prop-types';
 
 import { useBookingSmartContract } from '../hooks/useBookingSmartContract';
@@ -13,7 +14,6 @@ import { useConfig } from '../hooks/useConfig';
 import api from '../utils/api';
 import { payTokens } from '../utils/booking.helpers';
 import { parseMessageFromError } from '../utils/common';
-import { __ } from '../utils/helpers';
 import CheckoutForm from './CheckoutForm';
 import Conditions from './Conditions';
 import { ErrorMessage } from './ui';
@@ -34,6 +34,8 @@ const CheckoutPayment = ({
   user,
   eventId,
 }) => {
+  const t = useTranslations();
+
   const { VISITORS_GUIDE } = useConfig() || {};
 
   if (!process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) {
@@ -71,7 +73,7 @@ const CheckoutPayment = ({
 
   const payWithCredits = async () => {
     try {
-      const res =    await api.post(`/bookings/${bookingId}/credit-payment`, {
+      const res = await api.post(`/bookings/${bookingId}/credit-payment`, {
         startDate,
         creditsAmount: rentalToken?.val,
       });
@@ -85,7 +87,7 @@ const CheckoutPayment = ({
     <div>
       <HeadingRow>
         <span className="mr-2">💲</span>
-        <span>{__('bookings_checkout_step_payment_title')}</span>
+        <span>{t('bookings_checkout_step_payment_title')}</span>
       </HeadingRow>
 
       {error && <ErrorMessage error={error} />}
@@ -96,7 +98,7 @@ const CheckoutPayment = ({
           onSuccess={onSuccess}
           email={user.email}
           name={user.screenname}
-          buttonText={__('bookings_checkout_step_payment_button')}
+          buttonText={t('bookings_checkout_step_payment_button')}
           submitButtonClassName="booking-btn mt-8"
           cardElementClassName="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-4"
           buttonDisabled={buttonDisabled}

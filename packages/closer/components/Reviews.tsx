@@ -2,12 +2,14 @@ import Image from 'next/image';
 
 import { useEffect, useState } from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import { useConfig } from '../hooks/useConfig';
 import { Review } from '../types/review';
-import { __ } from '../utils/helpers';
 import Heading from './ui/Heading';
 
 const Reviews = () => {
+  const t = useTranslations();
   // TODO: move reviews to config
   const { reviewsList } = useConfig();
   const [activeReviews, setReviewsList] = useState<Review[]>([]);
@@ -25,7 +27,7 @@ const Reviews = () => {
           <Heading level={2} className="text-3xl mb-6 italic">
             <blockquote>
               <span className="text-6xl">&quot;</span>
-              {__('stay_reviews_title')}
+              {t('stay_reviews_title')}
             </blockquote>
           </Heading>
           <div className="grid md:grid-cols-1 gap-x-3 md:gap-x-3 gap-y-12">

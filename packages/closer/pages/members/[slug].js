@@ -14,15 +14,16 @@ import Heading from '../../components/ui/Heading';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 import { TiDelete } from '@react-icons/all-files/ti/TiDelete';
+import { useTranslations } from 'next-intl';
 
-import PageNotFound from '../404';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
-import api from '../../utils/api';
-import { cdn } from '../../utils/api';
-import { __ } from '../../utils/helpers';
+import api, { cdn } from '../../utils/api';
+import { loadLocaleData } from '../../utils/locale.helpers';
+import PageNotFound from '../not-found';
 
 const MemberPage = ({ member, loadError }) => {
+  const t = useTranslations();
   const { user: currentUser, isAuthenticated } = useAuth();
   const router = useRouter();
   const [introMessage, setMessage] = useState('');
@@ -134,7 +135,7 @@ const MemberPage = ({ member, loadError }) => {
                 <div className="border-0 rounded-lg shadow-lg relative flex flex-col space-x-5 w-full bg-background outline-none focus:outline-none p-10">
                   {sendError && (
                     <p className="validation-error">
-                      {__('members_slug_error')} {sendError}
+                      {t('members_slug_error')} {sendError}
                     </p>
                   )}
                   <form
@@ -144,7 +145,7 @@ const MemberPage = ({ member, loadError }) => {
                     }}
                   >
                     <label>
-                      {__('members_slug_contact')} {member.screenname}
+                      {t('members_slug_contact')} {member.screenname}
                     </label>
                     <textarea
                       placeholder="Type your message"
@@ -155,7 +156,7 @@ const MemberPage = ({ member, loadError }) => {
                       className="w-full h-32"
                     />
                     <button type="submit" className="btn-primary mt-8 mr-2">
-                      {__('members_slug_send')}
+                      {t('members_slug_send')}
                     </button>
                     <a
                       href="#"
@@ -164,7 +165,7 @@ const MemberPage = ({ member, loadError }) => {
                         setOpenIntro(false);
                       }}
                     >
-                      {__('members_slug_cancel')}
+                      {t('members_slug_cancel')}
                     </a>
                   </form>
                 </div>
@@ -217,7 +218,7 @@ const MemberPage = ({ member, loadError }) => {
                         }}
                         className="btn-primary"
                       >
-                        {__('members_slug_get_introduced')}
+                        {t('members_slug_get_introduced')}
                       </a>
                     </div>
                   )}
@@ -242,19 +243,19 @@ const MemberPage = ({ member, loadError }) => {
                         <Card className="my-6 bg-accent-light">
                           {member?.email && (
                             <p>
-                              {__('user_data_email')}{' '}
+                              {t('user_data_email')}{' '}
                               <span className="font-bold">{member.email}</span>
                             </p>
                           )}
                           {member?.phone && (
                             <p>
-                              {__('user_data_phone')}{' '}
+                              {t('user_data_phone')}{' '}
                               <span className="font-bold">{member.phone}</span>
                             </p>
                           )}
                           {member?.preferences?.sharedAccomodation && (
                             <p>
-                              {__('user_data_shared_accommodation')}{' '}
+                              {t('user_data_shared_accommodation')}{' '}
                               <span className="font-bold">
                                 {member.preferences.sharedAccomodation}
                               </span>
@@ -262,7 +263,7 @@ const MemberPage = ({ member, loadError }) => {
                           )}
                           {member?.preferences?.diet && (
                             <p>
-                              {__('user_data_diet')}{' '}
+                              {t('user_data_diet')}{' '}
                               <span className="font-bold">
                                 {member.preferences.diet}
                               </span>
@@ -270,7 +271,7 @@ const MemberPage = ({ member, loadError }) => {
                           )}
                           {member?.preferences?.skills && (
                             <p>
-                              {__('user_data_skills')}{' '}
+                              {t('user_data_skills')}{' '}
                               <span className="font-bold">
                                 {member.preferences.skills.map((skill, i) => {
                                   if (
@@ -286,7 +287,7 @@ const MemberPage = ({ member, loadError }) => {
                           )}
                           {member?.preferences?.superpower && (
                             <p>
-                              {__('user_data_superpower')}{' '}
+                              {t('user_data_superpower')}{' '}
                               <span className="font-bold">
                                 {member.preferences.superpower}
                               </span>
@@ -294,7 +295,7 @@ const MemberPage = ({ member, loadError }) => {
                           )}
                           {member?.preferences?.needs && (
                             <p>
-                              {__('user_data_needs')}{' '}
+                              {t('user_data_needs')}{' '}
                               <span className="font-bold">
                                 {member.preferences.needs}
                               </span>
@@ -302,7 +303,7 @@ const MemberPage = ({ member, loadError }) => {
                           )}
                           {member?.preferences?.dream && (
                             <p>
-                              {__('user_data_dream')}{' '}
+                              {t('user_data_dream')}{' '}
                               <span className="font-bold">
                                 {member.preferences.dream}
                               </span>
@@ -310,7 +311,7 @@ const MemberPage = ({ member, loadError }) => {
                           )}
                           {member?.preferences?.moreInfo && (
                             <p>
-                              {__('user_data_more_info')}{' '}
+                              {t('user_data_more_info')}{' '}
                               <span className="font-bold">
                                 {member.preferences.moreInfo}
                               </span>
@@ -318,7 +319,7 @@ const MemberPage = ({ member, loadError }) => {
                           )}
                           {member?.subscription?.plan && (
                             <p>
-                              {__('user_data_subscription')}{' '}
+                              {t('user_data_subscription')}{' '}
                               <span className="font-bold">
                                 {member.subscription.plan}
                               </span>
@@ -365,7 +366,7 @@ const MemberPage = ({ member, loadError }) => {
                           {about}
                           {!about && (
                             <span className="placeholder">
-                              {__('members_slug_about_prompt')}
+                              {t('members_slug_about_prompt')}
                             </span>
                           )}
                         </Linkify>
@@ -393,7 +394,7 @@ const MemberPage = ({ member, loadError }) => {
                           {!about && (
                             <span className="placeholder">
                               {member.screenname}{' '}
-                              {__('members_slug_about_empty')}
+                              {t('members_slug_about_empty')}
                             </span>
                           )}
                         </Linkify>
@@ -416,7 +417,7 @@ const MemberPage = ({ member, loadError }) => {
                 <div className="">
                   <div className="page-title flex justify-between">
                     <h3 className="mt-8 md:mt-3">
-                      {__('members_slug_my_events')}
+                      {t('members_slug_my_events')}
                     </h3>
                   </div>
 
@@ -432,7 +433,7 @@ const MemberPage = ({ member, loadError }) => {
                   <div className="mt-8">
                     <div>
                       <p className="font-semibold text-md mr-5">
-                        {__('members_slug_stay_social')}
+                        {t('members_slug_stay_social')}
                       </p>
                       {isAuthenticated && member._id === currentUser._id && (
                         <div className="flex flex-row items-center justify-start space-x-3 w-20">
@@ -485,11 +486,11 @@ const MemberPage = ({ member, loadError }) => {
                                   level={2}
                                   className="self-center text-lg font-normal mb-3"
                                 >
-                                  {__('members_slug_links_title')}
+                                  {t('members_slug_links_title')}
                                 </Heading>
                                 {error && (
                                   <p className="validation-error">
-                                    {__('members_slug_error')} {error}
+                                    {t('members_slug_error')} {error}
                                   </p>
                                 )}
                                 <form
@@ -498,7 +499,7 @@ const MemberPage = ({ member, loadError }) => {
                                 >
                                   <div>
                                     <label>
-                                      {__('members_slug_links_name')}
+                                      {t('members_slug_links_name')}
                                     </label>
                                     <input
                                       id="name"
@@ -512,9 +513,7 @@ const MemberPage = ({ member, loadError }) => {
                                     />
                                   </div>
                                   <div>
-                                    <label>
-                                      {__('members_slug_links_url')}
-                                    </label>
+                                    <label>{t('members_slug_links_url')}</label>
                                     <input
                                       id="url"
                                       type="text"
@@ -531,7 +530,7 @@ const MemberPage = ({ member, loadError }) => {
                                       type="submit"
                                       className="btn-primary w-24 mr-6"
                                     >
-                                      {__('members_slug_links_submit')}
+                                      {t('members_slug_links_submit')}
                                     </button>
                                     <a
                                       href="#"
@@ -540,7 +539,7 @@ const MemberPage = ({ member, loadError }) => {
                                         toggleShowForm(!showForm);
                                       }}
                                     >
-                                      {__('generic_cancel')}
+                                      {t('generic_cancel')}
                                     </a>
                                   </div>
                                 </form>
@@ -563,26 +562,28 @@ const MemberPage = ({ member, loadError }) => {
   );
 };
 
-MemberPage.getInitialProps = async ({ req, query }) => {
+MemberPage.getInitialProps = async (context) => {
+  const { req, query } = context
   try {
-    const res = await api.get(
-      `/user/${query.slug}`,
-
-      {
-        headers: req?.cookies?.access_token && {
-          Authorization: `Bearer ${req?.cookies?.access_token}`,
-        },
-      },
-    );
+    const [res, messages] = await Promise.all([
+      api.get(`/user/${query.slug}`, {
+        headers: req?.cookies?.access_token
+          ? { Authorization: `Bearer ${req?.cookies?.access_token}` }
+          : {},
+      }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
 
     return {
       member: res.data.results,
+      messages,
     };
   } catch (err) {
     console.log('Error', err.message);
 
     return {
       loadError: err.message,
+      messages: null,
     };
   }
 };

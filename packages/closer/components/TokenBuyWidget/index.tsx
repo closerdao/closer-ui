@@ -7,45 +7,19 @@ import React, {
   useState,
 } from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import { MAX_LISTINGS_TO_FETCH, SALES_CONFIG } from '../../constants';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
 import api from '../../utils/api';
 import { getCurrentUnitPrice, getTotalPrice } from '../../utils/bondingCurve';
-import { __ } from '../../utils/helpers';
 import { Information } from '../ui';
 import Select from '../ui/Select/Dropdown';
 import { Item } from '../ui/Select/types';
 
 const { MAX_TOKENS_PER_TRANSACTION, MAX_WALLET_BALANCE } = SALES_CONFIG;
-
-const FUTURE_ACCOMMODATION_TYPES = [
-  {
-    name: `${__('token_sale_public_sale_shared_suite')} (${__(
-      'generic_coming_soon',
-    )})`,
-    price: 1,
-  },
-  {
-    name: `${__('token_sale_public_sale_private_suite')} (${__(
-      'generic_coming_soon',
-    )})`,
-    price: 2,
-  },
-  {
-    name: `${__('token_sale_public_sale_studio')} (${__(
-      'generic_coming_soon',
-    )})`,
-    price: 3,
-  },
-  {
-    name: `${__('token_sale_public_sale_house')} (${__(
-      'generic_coming_soon',
-    )})`,
-    price: 5,
-  },
-];
 
 interface Props {
   tokensToBuy: number;
@@ -53,8 +27,36 @@ interface Props {
 }
 
 const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
+  const t = useTranslations();
   const { SOURCE_TOKEN } = useConfig() || {};
   const { getCurrentSupply, getUserTdfBalance } = useBuyTokens();
+  const FUTURE_ACCOMMODATION_TYPES = [
+    {
+      name: `${t('token_sale_public_sale_shared_suite')} (${t(
+        'generic_coming_soon',
+      )})`,
+      price: 1,
+    },
+    {
+      name: `${t('token_sale_public_sale_private_suite')} (${t(
+        'generic_coming_soon',
+      )})`,
+      price: 2,
+    },
+    {
+      name: `${t('token_sale_public_sale_studio')} (${t(
+        'generic_coming_soon',
+      )})`,
+      price: 3,
+    },
+    {
+      name: `${t('token_sale_public_sale_house')} (${t(
+        'generic_coming_soon',
+      )})`,
+      price: 5,
+    },
+  ];
+
   const [tokenPrice, setTokenPrice] = useState<number>(0);
   const [currentSupply, setCurrentSupply] = useState<number>(0);
   const [userTdfBalance, setUserTdfBalance] = useState<number>(0);
@@ -87,7 +89,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
         },
       );
 
-      const prices = res.data.results.map((option: any) => {
+      const prices = res?.data?.results?.map((option: any) => {
         return option.tokenPrice.val;
       });
 
@@ -102,8 +104,8 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
 
       setAccommodationOptions({ labels, prices });
       setSelectedAccommodation({
-        name: res.data.results[0].name,
-        price: res.data.results[0].tokenPrice.val,
+        name: res?.data?.results[0].name,
+        price: res?.data?.results[0].tokenPrice.val,
       });
     })();
   }, []);
@@ -230,7 +232,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
   return (
     <div className="flex flex-col gap-4 my-10">
       <p className="text-stone-500 text-md w-full  p-1">
-        1 {__('token_sale_token_symbol')} ≈ {tokenPrice} {SOURCE_TOKEN}
+        1 {t('token_sale_token_symbol')} ≈ {tokenPrice} {SOURCE_TOKEN}
       </p>
 
       <div className="flex gap-4 flex-wrap sm:flex-nowrap">
@@ -238,7 +240,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
           htmlFor="accommodationOptions"
           className="font-bold bg-accent-light  py-3.5 px-6 rounded-md text-xl"
         >
-          {__('token_sale_widget_stay')}
+          {t('token_sale_widget_stay')}
         </label>
 
         <div className="flex-1 min-w-[220px]">
@@ -259,7 +261,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
           htmlFor="daysToStay"
           className="  font-bold bg-accent-light py-3.5 px-6 rounded-md text-xl"
         >
-          {__('token_sale_widget_for')}
+          {t('token_sale_widget_for')}
         </label>
         <div className="flex-1">
           <input
@@ -270,14 +272,14 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
           />
         </div>
         <p className="  font-bold bg-accent-light   py-3.5 px-6 rounded-md text-xl">
-          {__('token_sale_widget_days')}
+          {t('token_sale_widget_days')}
         </p>
       </div>
 
       <div className="relative flex py-5 items-center">
         <div className="flex-grow border-t-2 border-neutral"></div>
         <span className="flex-shrink mx-4 uppercase">
-          {__('token_sale_i_should_buy')}
+          {t('token_sale_i_should_buy')}
         </span>
         <div className="flex-grow border-t-2 border-neutral"></div>
       </div>
@@ -287,7 +289,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
           htmlFor="tokensToBuy"
           className="font-bold bg-accent-light py-3.5 px-6 rounded-md text-xl"
         >
-          {__('token_sale_token_symbol')}
+          {t('token_sale_token_symbol')}
         </label>
         <div className="flex-1 relative">
           <input
@@ -297,7 +299,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
             onChange={handleTokensToBuyChange}
             className="h-14 px-4 pr-8 rounded-md text-xl bg-neutral text-black !border-none"
           />
-          <p className="absolute right-3 top-4"> {__('token_sale_receive')}</p>
+          <p className="absolute right-3 top-4"> {t('token_sale_receive')}</p>
         </div>
       </div>
 
@@ -306,7 +308,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
           htmlFor="tokensToSpend"
           className="font-bold bg-accent-light py-3.5 px-6 rounded-md text-xl"
         >
-          {__('token_sale_source_token')}
+          {t('token_sale_source_token')}
         </label>
         <div className="flex-1 relative">
           <input
@@ -316,16 +318,16 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
             onChange={handleTokensToSpendChange}
             className="h-14 px-4 pr-8 rounded-md text-xl bg-neutral text-black !border-none"
           />
-          <p className="absolute right-3 top-4"> {__('token_sale_pay')}</p>
+          <p className="absolute right-3 top-4"> {t('token_sale_pay')}</p>
         </div>
       </div>
 
       <div className="flex flex-col gap-4">
-        <Information>{__('token_sale_gas_fees_note')}</Information>
-        <Information>{__('token_sale_max_amount_note')}</Information>
-        <Information>{__('token_sale_price_disclaimer')}</Information>
+        <Information>{t('token_sale_gas_fees_note')}</Information>
+        <Information>{t('token_sale_max_amount_note')}</Information>
+        <Information>{t('token_sale_price_disclaimer')}</Information>
         <Information>
-          {__('token_sale_max_wallet_balance')}
+          {t('token_sale_max_wallet_balance')}
           {Math.max(MAX_WALLET_BALANCE - userTdfBalance, 0)}
         </Information>
       </div>

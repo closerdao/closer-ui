@@ -2,8 +2,8 @@ import Link from 'next/link';
 
 import { FC } from 'react';
 
-import { useConfig } from 'closer';
 import { RiFacebookFill } from '@react-icons/all-files/ri/RiFacebookFill';
+import { useConfig } from 'closer';
 
 export const Footer: FC = () => {
   const { INSTAGRAM_URL, FACEBOOK_URL } = useConfig() || {};

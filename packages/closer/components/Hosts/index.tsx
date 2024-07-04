@@ -1,9 +1,7 @@
 import Link from 'next/link';
 
-import React from 'react';
+import { useTranslations } from 'next-intl';
 
-import { useConfig } from '../../hooks/useConfig';
-import { __ } from '../../utils/helpers';
 import UserPreview from '../UserPreview';
 import { Heading } from '../ui';
 
@@ -14,6 +12,7 @@ interface Props {
 }
 
 const Hosts = ({ hosts, email }: Props) => {
+  const t = useTranslations(); 
 
   // Move Agnes from Lios to the end of the space hosts list
   const sortedHosts = hosts && hosts.sort((a: Record<string, any>, b: Record<string, any>) => {
@@ -22,20 +21,14 @@ const Hosts = ({ hosts, email }: Props) => {
     return 0;
   });
 
-  console.log('sortedHosts=',sortedHosts);
-  const { APP_NAME, VISITORS_GUIDE } = useConfig();
   return (
     <div className="mb-16">
       <div className="max-w-prose">
         <Heading level={2} className="text-2xl pb-2 my-8">
-          {__('stay_meet_your_hosts', APP_NAME)}
+          {t('stay_meet_your_hosts')}
         </Heading>
-        {!__('stay_meet_your_hosts_description', APP_NAME).includes(
-          'missing',
-        ) && (
-          <p className="mb-8">
-            {__('stay_meet_your_hosts_description', APP_NAME)}
-          </p>
+        {!t('stay_meet_your_hosts_description').includes('missing') && (
+          <p className="mb-8">{t('stay_meet_your_hosts_description')}</p>
         )}
       </div>
       {hosts && hosts.count() > 0 && (
@@ -46,7 +39,7 @@ const Hosts = ({ hosts, email }: Props) => {
         </div>
       )}
       <Link href={`mailto:${email}`} className="btn my-8">
-        {__('stay_meet_your_hosts_link')}
+        {t('stay_meet_your_hosts_link')}
       </Link>
     </div>
   );

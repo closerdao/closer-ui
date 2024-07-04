@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 import api, { formatSearch } from '../utils/api';
-import { __ } from '../utils/helpers';
+import { useTranslations } from 'next-intl';
 
 const Autocomplete = ({ endpoint, where, placeholder, value, onChange }) => {
+  const t = useTranslations();
+
   const [search, setSearch] = useState('');
   const [pastSearch, setPastSearch] = useState('');
   const [loading, setLoading] = useState(false);
@@ -61,7 +63,7 @@ const Autocomplete = ({ endpoint, where, placeholder, value, onChange }) => {
               setActive(false);
             }}
           >
-            {__('autocomplete_close')}
+            {t('autocomplete_close')}
           </a>
           {loading && <div className="loading">loading...</div>}
           {options && options.length > 0 ? (
@@ -107,7 +109,7 @@ const Autocomplete = ({ endpoint, where, placeholder, value, onChange }) => {
                 })}
             </div>
           ) : (
-            <p>{__('autocomplete_no_results')}</p>
+            <p>{t('autocomplete_no_results')}</p>
           )}
         </div>
       )}

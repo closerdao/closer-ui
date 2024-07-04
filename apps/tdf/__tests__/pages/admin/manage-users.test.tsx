@@ -25,6 +25,7 @@ describe('SettingsPage', () => {
   });
 
   it('should render user list page successfully if user has "admin" role ', async () => {
+
     renderWithProviders(
       <AuthContext.Provider value={{ user: adminUser as any }}>
         <ManageUsersPage />

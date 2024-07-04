@@ -12,6 +12,10 @@ import TokenCounterSimple from '../../components/TokenCounterSimple';
 import YoutubeEmbed from '../../components/YoutubeEmbed';
 import { Button, Card, Heading } from '../../components/ui';
 
+import { NextPageContext } from 'next';
+// import { INVESTMENT_COMPARISON } from '../../constants';
+import { useTranslations } from 'next-intl';
+
 import { MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
@@ -19,7 +23,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig, Listing } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
 
 const ACCOMMODATION_ICONS = ['van.png', 'camping.png', 'hotel.png'];
 const DEFAULT_TOKENS = 10;
@@ -30,6 +34,7 @@ interface Props {
 }
 
 const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
+  const t = useTranslations();
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
@@ -74,7 +79,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
     return (
       <>
         <Head>
-          <title>{`${__(
+          <title>{`${t(
             'token_sale_public_sale_heading',
           )} - ${PLATFORM_NAME}`}</title>
           <link
@@ -85,8 +90,8 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
         </Head>
 
         <div className="max-w-6xl mx-auto">
-          <Heading level={1}>
-            {__('token_sale_public_sale_heading')}
+          <Heading level={1} className="mb-14">
+            {t('token_sale_public_sale_heading')}
           </Heading>
 
           <Heading level={2}>Coming soon!</Heading>
@@ -98,7 +103,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
   return (
     <div className="max-w-6xl mx-auto">
       <Head>
-        <title>{`${__(
+        <title>{`${t(
           'token_sale_public_sale_announcement',
         )} - ${PLATFORM_NAME}`}</title>
       </Head>
@@ -113,7 +118,10 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
       <main className="pt-4 pb-24 md:flex-row flex-wrap">
         <section className="mb-10">
-          <div className='rounded-lg h-[600px] md:h-[700px] flex  items-end md:items-center flex-col bg-center bg-[#333333] bg-cover bg-no-repeat text-white bg-[url("/images/token-sale/token-sale-hero.webp")]'>
+          <div className='rounded-lg h-[500px] md:h-[700px] flex items-center flex-col bg-center bg-[#333333] bg-cover bg-no-repeat text-white bg-[url("/images/token-sale/token-sale-hero.webp")]'>
+            {/* <h1 className="drop-shadow-[1px_2px_2px_rgba(254,79,183,1)] px-4 mb-2 sm:mb-8 mt-[20px] sm:mt-[70px] md:mt-[190px] max-w-[700px] text-center font-extrabold text-5xl md:text-6xl uppercase">
+              {t('token_sale_public_sale_announcement')}
+            </h1> */}
             <Heading
               level={1}
               className="text-right font-bold text-2xl md:text-5xl px-4 drop-shadow-lg mb-2 md:mb-8 md:text-center max-w-[700px] mt-1 md:mt-[100px] md:bg-[url('/images/token-sale/token-illy.png')] bg-no-repeat pt-[20px] md:pt-[130px] bg-top"
@@ -128,7 +136,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
             </Heading>
 
             {isWalletReady ? (
-              <div className='p-4'>
+              <div className="p-4">
                 <TokenCounterSimple
                   tokensToBuy={tokensToBuy}
                   setTokensToBuy={setTokensToBuy}
@@ -138,23 +146,23 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                   className="!w-60 font-bold mb-3 md:mb-8 relative"
                   onClick={handleNext}
                 >
-                  {__('token_sale_public_sale_buy_token')}
+                  {t('token_sale_public_sale_buy_token')}
                 </Button>
               </div>
             ) : (
               <div>
-                 <Button
+                <Button
                   className="!w-60 font-bold mb-3 md:mb-8 relative"
                   onClick={handleNext}
                 >
-                  {__('token_sale_public_sale_buy_token')}
+                  {t('token_sale_public_sale_buy_token')}
                 </Button>
               </div>
             )}
 
             {tokensAvailable && (
               <h3 className="font-bold text-xl text-white pb-2 text-center w-60 px-6 rounded-full">
-                {tokensAvailable} {__('token_sale_public_sale_tokens_left')}
+                {tokensAvailable} {t('token_sale_public_sale_tokens_left')}
               </h3>
             )}
           </div>
@@ -166,10 +174,10 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 level={2}
                 className="text-center mt-12 max-w-[620px] mb-6 text-3xl font-extrabold md:font-bold md:text-5xl uppercase md:normal-case"
               >
-                {__('token_sale_tdf_intro_title')}
+                {t('token_sale_tdf_intro_title')}
               </Heading>
               {/* <p className="text-center max-w-[640px] text-lg">
-                {__('token_sale_tdf_subtitle')}
+                {t('token_sale_tdf_subtitle')}
               </p> */}
             </div>
             <div className="flex gap-10 justify-center items-center flex-col md:flex-row">
@@ -178,7 +186,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 src="/images/token-sale/tdf-token.png"
                 width={430}
                 height={465}
-                alt={__('token_sale_tdf_heading')}
+                alt={t('token_sale_public_sale_heading')}
               />
             </div>
           </div>
@@ -194,9 +202,9 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 $TDF Sale
               </Heading>
               <p className="text-center max-w-[660px] text-lg">
-                To fund the development of our regenerative
-                village, we are selling tokens that give the owners
-                of those tokens a lifetime´s access to TDF.
+                To fund the development of our regenerative village, we are
+                selling tokens that give the owners of those tokens a lifetime´s
+                access to TDF.
               </p>
             </div>
             <div className="flex gap-10 justify-center items-center flex-col md:flex-row">
@@ -207,9 +215,9 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 <ul className="flex flex-col gap-5 ">
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     <Heading level={5} className=" font-bold uppercase">
-                      {__('token_sale_tdf_token_4')}
+                      {t('token_sale_tdf_token_4')}
                     </Heading>
-                    <div>{__('token_sale_tdf_token_4_sub')}</div>
+                    <div>{t('token_sale_tdf_token_4_sub')}</div>
                   </li>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     <Heading level={5} className=" font-bold uppercase">
@@ -226,13 +234,13 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     <Heading level={5} className=" font-bold uppercase">
-                      {__('token_sale_tdf_token_3')}
+                      {t('token_sale_tdf_token_3')}
                     </Heading>
-                    <div>{__('token_sale_tdf_token_3_sub')}</div>
+                    <div>{t('token_sale_tdf_token_3_sub')}</div>
                   </li>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     <Heading level={5} className=" font-bold uppercase">
-                      {__('token_sale_tdf_token_5')}
+                      {t('token_sale_tdf_token_5')}
                     </Heading>
                     <div>
                       Tokens can be resold after the Go-Live event (see{' '}
@@ -248,7 +256,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                     <Heading level={5} className=" font-bold uppercase">
-                      {__('token_sale_tdf_token_2')}
+                      {t('token_sale_tdf_token_2')}
                     </Heading>
                     <div>
                       Contribute to building a new, nature based economy. The
@@ -275,24 +283,24 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
           <div className="w-full flex flex-col  gap-20">
             <div className="flex gap-10 justify-center items-center flex-col md:flex-row">
               <Heading level={2} className="text-4xl max-w-[640px]">
-                {__('token_sale_tdf_accommodation_heading')}
+                {t('token_sale_tdf_accommodation_heading')}
               </Heading>
               <Image
                 className="w-full md:w-1/2 max-w-[430px]"
                 src="/images/token-sale/accommodation.png"
                 width={577}
                 height={535}
-                alt={__('token_sale_tdf_accommodation_heading')}
+                alt={t('token_sale_tdf_accommodation_heading')}
               />
             </div>
             <div className="flex gap-10 justify-center items-start flex-col md:flex-row">
               <div className="flex flex-col w-full md:w-[460px]">
                 <Heading level={3} className="mb-6">
-                  {__('token_sale_public_sale_heading_accommodation_cost')}
+                  {t('token_sale_public_sale_heading_accommodation_cost')}
                 </Heading>
                 <Card className="mb-8 px-6 py-8 text-left flex flex-col gap-1 text-md">
                   <div className="text-right text-sm">
-                    {__('token_sale_public_sale_price_per_night')}
+                    {t('token_sale_public_sale_price_per_night')}
                   </div>
                   {listings &&
                     listings.map((listing: any) => {
@@ -328,7 +336,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                             </p>
                             <p className=" pt-1">{listing.name}</p>
                             <p className=" text-right text-accent pt-2">
-                              {__('token_sale_public_sale_token_symbol')}{' '}
+                              {t('token_sale_public_sale_token_symbol')}{' '}
                               {listing.tokenPrice.val}
                             </p>
                           </div>
@@ -346,13 +354,13 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                       />
                     </p>
                     <p className="pt-1">
-                      {__('token_sale_public_sale_shared_suite')}
+                      {t('token_sale_public_sale_shared_suite')}
                       <span className="block text-xs text-accent">
-                        {__('token_sale_public_sale_coming_2023')}
+                        {t('token_sale_public_sale_coming_2023')}
                       </span>
                     </p>
                     <p className="text-right text-accent pt-2">
-                      {__('token_sale_public_sale_token_symbol')} 1
+                      {t('token_sale_public_sale_token_symbol')} 1
                     </p>
                   </div>
                   <div className="grid grid-cols-[55px_auto_65px]">
@@ -365,13 +373,13 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                       />
                     </p>
                     <p className=" pt-1">
-                      {__('token_sale_public_sale_private_suite')}
+                      {t('token_sale_public_sale_private_suite')}
                       <span className="block text-xs text-accent">
-                        {__('token_sale_public_sale_coming_2023')}
+                        {t('token_sale_public_sale_coming_2023')}
                       </span>
                     </p>
                     <p className=" text-right text-accent pt-2">
-                      {__('token_sale_public_sale_token_symbol')} 2
+                      {t('token_sale_public_sale_token_symbol')} 2
                     </p>
                   </div>
                   <div className="grid grid-cols-[55px_auto_65px]">
@@ -384,13 +392,13 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                       />
                     </p>
                     <p className=" pt-1">
-                      {__('token_sale_public_sale_studio')}
+                      {t('token_sale_public_sale_studio')}
                       <span className="block text-xs text-accent">
-                        {__('token_sale_public_sale_coming_2024')}
+                        {t('token_sale_public_sale_coming_2024')}
                       </span>
                     </p>
                     <p className=" text-right text-accent pt-2">
-                      {__('token_sale_public_sale_token_symbol')} 3
+                      {t('token_sale_public_sale_token_symbol')} 3
                     </p>
                   </div>
                   <div className="grid grid-cols-[55px_auto_65px]">
@@ -403,39 +411,39 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                       />
                     </p>
                     <p className=" pt-1">
-                      {__('token_sale_public_sale_house')}
+                      {t('token_sale_public_sale_house')}
                       <span className="block text-xs text-accent">
-                        {__('token_sale_public_sale_coming_2024')}
+                        {t('token_sale_public_sale_coming_2024')}
                       </span>
                     </p>
                     <p className=" text-right text-accent pt-2">
-                      {__('token_sale_public_sale_token_symbol')} 5
+                      {t('token_sale_public_sale_token_symbol')} 5
                     </p>
                   </div>
                 </Card>
                 <div className="text-sm ">
-                  {__('token_sale_public_sale_prices_disclaimer')}
+                  {t('token_sale_public_sale_prices_disclaimer')}
                 </div>
               </div>
 
               <div className="bg-accent-light p-8">
                 <div className="text-2xl font-bold flex flex-col gap-6 mb-6">
                   <p>
-                    {__('token_sale_tdf_utility_1')}
+                    {t('token_sale_tdf_utility_1')}
                     <Link className="text-accent underline" href="/events">
-                      {__('token_sale_tdf_utility_2')}
+                      {t('token_sale_tdf_utility_2')}
                     </Link>{' '}
-                    {__('token_sale_tdf_utility_3')}{' '}
+                    {t('token_sale_tdf_utility_3')}{' '}
                     <Link className="text-accent underline" href="/listings">
-                      {__('token_sale_tdf_utility_4')}
+                      {t('token_sale_tdf_utility_4')}
                     </Link>
                   </p>
 
-                  <p>{__('token_sale_tdf_utility_5')}</p>
+                  <p>{t('token_sale_tdf_utility_5')}</p>
                 </div>
 
-                <p>{__('token_sale_tdf_utility_note_1')}</p>
-                <p>{__('token_sale_tdf_utility_note_2')}</p>
+                <p>{t('token_sale_tdf_utility_note_1')}</p>
+                <p>{t('token_sale_tdf_utility_note_2')}</p>
               </div>
             </div>
           </div>
@@ -455,11 +463,11 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
             </p>
             <div className="mt-20 flex flex-col w-full md:w-[460px]">
               <Heading level={3} className="mb-6">
-                {__('token_sale_public_sale_heading_accommodation_cost')}
+                {t('token_sale_public_sale_heading_accommodation_cost')}
               </Heading>
               <Card className="mb-8 px-6 py-8 text-left flex flex-col gap-1 text-md">
                 <div className="text-right text-sm">
-                  {__('token_sale_public_sale_price_per_night')}
+                  {t('token_sale_public_sale_price_per_night')}
                 </div>
                 {listings &&
                   listings.map((listing: any) => {
@@ -492,7 +500,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                           </p>
                           <p className=" pt-1">{listing.name}</p>
                           <p className=" text-right text-accent pt-2">
-                            {__('token_sale_public_sale_token_symbol')}{' '}
+                            {t('token_sale_public_sale_token_symbol')}{' '}
                             {listing.tokenPrice.val}
                           </p>
                         </div>
@@ -510,13 +518,13 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                     />
                   </p>
                   <p className="pt-1">
-                    {__('token_sale_public_sale_shared_suite')}
+                    {t('token_sale_public_sale_shared_suite')}
                     <span className="block text-xs text-accent">
-                      {__('token_sale_public_sale_coming_2023')}
+                      {t('token_sale_public_sale_coming_2023')}
                     </span>
                   </p>
                   <p className="text-right text-accent pt-2">
-                    {__('token_sale_public_sale_token_symbol')} 1
+                    {t('token_sale_public_sale_token_symbol')} 1
                   </p>
                 </div>
                 <div className="grid grid-cols-[55px_auto_65px]">
@@ -529,13 +537,13 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                     />
                   </p>
                   <p className=" pt-1">
-                    {__('token_sale_public_sale_private_suite')}
+                    {t('token_sale_public_sale_private_suite')}
                     <span className="block text-xs text-accent">
-                      {__('token_sale_public_sale_coming_2023')}
+                      {t('token_sale_public_sale_coming_2023')}
                     </span>
                   </p>
                   <p className=" text-right text-accent pt-2">
-                    {__('token_sale_public_sale_token_symbol')} 2
+                    {t('token_sale_public_sale_token_symbol')} 2
                   </p>
                 </div>
                 <div className="grid grid-cols-[55px_auto_65px]">
@@ -548,13 +556,13 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                     />
                   </p>
                   <p className=" pt-1">
-                    {__('token_sale_public_sale_studio')}
+                    {t('token_sale_public_sale_studio')}
                     <span className="block text-xs text-accent">
-                      {__('token_sale_public_sale_coming_2024')}
+                      {t('token_sale_public_sale_coming_2024')}
                     </span>
                   </p>
                   <p className=" text-right text-accent pt-2">
-                    {__('token_sale_public_sale_token_symbol')} 3
+                    {t('token_sale_public_sale_token_symbol')} 3
                   </p>
                 </div>
                 <div className="grid grid-cols-[55px_auto_65px]">
@@ -567,13 +575,13 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                     />
                   </p>
                   <p className=" pt-1">
-                    {__('token_sale_public_sale_house')}
+                    {t('token_sale_public_sale_house')}
                     <span className="block text-xs text-accent">
-                      {__('token_sale_public_sale_coming_2024')}
+                      {t('token_sale_public_sale_coming_2024')}
                     </span>
                   </p>
                   <p className=" text-right text-accent pt-2">
-                    {__('token_sale_public_sale_token_symbol')} 5
+                    {t('token_sale_public_sale_token_symbol')} 5
                   </p>
                 </div>
               </Card>
@@ -586,7 +594,6 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 charged separately - supplies, insurance, accounting, energy,
                 water, sewage, internet, food (not grown on site), maintenance.
               </div>
-
             </div>
           </div>
 
@@ -605,8 +612,8 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 </p>
 
                 <p>
-                  Bookings must be approved by Space Host.
-                  Citizen get access to “instant book” (no approval).
+                  Bookings must be approved by Space Host. Citizen get access to
+                  “instant book” (no approval).
                 </p>
 
                 <p>$TDF tokens also give governance rights in the TDF DAO.</p>
@@ -616,7 +623,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 src="/images/token-sale/accommodation.png"
                 width={577}
                 height={535}
-                alt={__('token_sale_tdf_accommodation_heading')}
+                alt={t('token_sale_tdf_accommodation_heading')}
               />
             </div>
           </div>
@@ -629,7 +636,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
           <div className="text-center w-full">
             <div className="w-full flex items-center flex-col gap-4">
               <Heading level={2} className="text-lg font-bold max-w-[600px]">
-                {__('token_sale_investment_heading')}
+                {t('token_sale_investment_heading')}
               </Heading>
 
               <div className="flex w-full justify-center gap-4 mb-6 flex-col sm:flex-row">
@@ -643,7 +650,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                         setSelectedInvestmentIndex((prevIndex) => prevIndex - 1)
                       }
                     >
-                      ← {__('token_sale_decrease_button')}
+                      ← {t('token_sale_decrease_button')}
                     </Button>
                   ) : null}
                 </div>
@@ -666,7 +673,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                         setSelectedInvestmentIndex((prevIndex) => prevIndex + 1)
                       }
                     >
-                      {__('token_sale_increase_button')} →
+                      {t('token_sale_increase_button')} →
                     </Button>
                   ) : null}
                 </div>
@@ -675,7 +682,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
               <div className="flex gap-1 sm:gap-10">
                 <div className="bg-white shadow-md rounded-md p-2 sm:p-6 text-left flex flex-col justify-between w-1/2">
                   <Heading level={3} className="text-md font-normal mb-10 h-16">
-                    {__('token_sale_renting_title')}
+                    {t('token_sale_renting_title')}
                   </Heading>
                   <Heading level={4} className="h-[120px]">
                     {selectedInvestment.renting.term[0]}
@@ -683,19 +690,19 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
                   <div>
                     <Heading level={5} className="uppercase font-bold mb-4">
-                      {__('token_sale_extra_costs')}
+                      {t('token_sale_extra_costs')}
                     </Heading>
                     <div>
                       <p>{selectedInvestment.renting.extraCosts[0]}</p>
                       <p>{selectedInvestment.renting.extraCosts[1]}</p>
                       <p>{selectedInvestment.renting.extraCosts[2]}</p>
-                      <p className="pt-4">{__('token_sale_asset_held')} €0</p>
+                      <p className="pt-4">{t('token_sale_asset_held')} €0</p>
                     </div>
                   </div>
                 </div>
                 <div className="bg-white shadow-md rounded-md p-2 sm:p-6 text-left w-1/2">
                   <Heading level={3} className="text-md font-normal mb-10 h-16">
-                    {__('token_sale_tdf_title')}
+                    {t('token_sale_tdf_title')}
                   </Heading>
 
                   <div className="h-[120px]">
@@ -708,7 +715,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                   </div>
 
                   <Heading level={5} className="uppercase font-bold mb-4">
-                    {__('token_sale_extra_costs')}
+                    {t('token_sale_extra_costs')}
                   </Heading>
 
                   <div>
@@ -716,7 +723,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                     <p>{selectedInvestment.tdf.extraCosts[1]}</p>
                     <p>{selectedInvestment.tdf.extraCosts[2]}</p>
                     <p className="pt-4">
-                      {__('token_sale_asset_held')} {selectedInvestment.amount}
+                      {t('token_sale_asset_held')} {selectedInvestment.amount}
                     </p>
                   </div>
                 </div>
@@ -733,11 +740,14 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 src="/images/token-sale/dive-deeper.png"
                 width={413}
                 height={548}
-                alt={__('token_sale_tdf_heading')}
+                alt={t('token_sale_public_sale_heading')}
               />
               <div className="w-full md:w-4/5 flex flex-col gap-7 max-w-[430px] ">
-                <Heading level={2} className="text-3xl font-extrabold md:font-bold md:text-5xl uppercase md:normal-case">
-                  {__('token_sale_dive_deeper_heading')}
+                <Heading
+                  level={2}
+                  className="text-3xl font-extrabold md:font-bold md:text-5xl uppercase md:normal-case"
+                >
+                  {t('token_sale_dive_deeper_heading')}
                 </Heading>
                 <div className="flex gap-8">
                   <ul className="flex flex-col gap-5 ">
@@ -746,7 +756,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                         className="text-accent underline font-bold"
                         href="https://oasa.earth/papers/OASA-Whitepaper-V1.2.pdf"
                       >
-                        {__('token_sale_white_paper')}
+                        {t('token_sale_white_paper')}
                       </Link>
                     </li>
                     <li>
@@ -754,7 +764,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                         className="text-accent underline font-bold"
                         href="https://docs.google.com/document/d/177JkHCy0AhplsaEEYpFHBsiI6d4uLk0TgURSKfBIewE/edit"
                       >
-                        {__('token_sale_pink_paper')}
+                        {t('token_sale_pink_paper')}
                       </Link>
                     </li>
                   </ul>
@@ -773,51 +783,51 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 level={2}
                 className="mb-4 text-5xl font-bold max-w-[500px] text-center"
               >
-                {__('token_sale_become_member_heading')}
+                {t('token_sale_become_member_heading')}
               </Heading>
               <div className="bg-accent-light text-left p-6 max-w-[500px]">
                 <ul className="font-bold text-lg ">
-                  <li>{__('token_sale_member_benefit_1')}</li>
-                  <li>{__('token_sale_member_benefit_2')}</li>
-                  <li>{__('token_sale_member_benefit_3')}</li>
+                  <li>{t('token_sale_member_benefit_1')}</li>
+                  <li>{t('token_sale_member_benefit_2')}</li>
+                  <li>{t('token_sale_member_benefit_3')}</li>
                 </ul>
               </div>
 
               <div className="max-w-[500px] flex flex-col gap-3">
                 <Heading level={5} className="text-accent">
-                  {__('token_sale_member_step')} 1
+                  {t('token_sale_member_step')} 1
                 </Heading>
                 <Heading level={5} className="font-bold">
-                  {__('token_sale_member_step_1')}
+                  {t('token_sale_member_step_1')}
                 </Heading>
-                <p>{__('token_sale_member_step_1_text')} </p>
+                <p>{t('token_sale_member_step_1_text')} </p>
               </div>
               <div className="max-w-[500px] flex flex-col gap-3">
                 <Heading level={5} className="text-accent">
-                  {__('token_sale_member_step')} 2
+                  {t('token_sale_member_step')} 2
                 </Heading>
                 <Heading level={5} className="font-bold">
-                  {__('token_sale_member_step_2')}
+                  {t('token_sale_member_step_2')}
                 </Heading>
-                <p>{__('token_sale_member_step_2_text')} </p>
+                <p>{t('token_sale_member_step_2_text')} </p>
               </div>
               <div className="max-w-[500px] flex flex-col gap-3">
                 <Heading level={5} className="text-accent">
-                  {__('token_sale_member_step')} 3
+                  {t('token_sale_member_step')} 3
                 </Heading>
                 <Heading level={5} className="font-bold">
-                  {__('token_sale_member_step_3')}
+                  {t('token_sale_member_step_3')}
                 </Heading>
-                <p>{__('token_sale_member_step_3_text')} </p>
+                <p>{t('token_sale_member_step_3_text')} </p>
               </div>
               <div className="max-w-[500px] w-full flex flex-col gap-3">
                 <Heading level={5} className="text-accent">
-                  {__('token_sale_member_step')} 4
+                  {t('token_sale_member_step')} 4
                 </Heading>
                 <Heading level={5} className="font-bold">
-                  {__('token_sale_member_step_4')}
+                  {t('token_sale_member_step_4')}
                 </Heading>
-                <p>{__('token_sale_member_step_4_text')} </p>
+                <p>{t('token_sale_member_step_4_text')} </p>
               </div>
             </div>
           </div>
@@ -1077,13 +1087,12 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
   );
 };
 
-PublicTokenSalePage.getInitialProps = async () => {
+PublicTokenSalePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [listingRes, generalRes] = await Promise.all([
+    const [listingRes, generalRes, messages] = await Promise.all([
       api
         .get('/listing', {
           params: {
-            where: encodeURIComponent(JSON.stringify({ availableFor: 'events' })),
             limit: MAX_LISTINGS_TO_FETCH,
           },
         })
@@ -1093,6 +1102,7 @@ PublicTokenSalePage.getInitialProps = async () => {
       api.get('/config/general').catch(() => {
         return null;
       }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const listings = listingRes?.data.results;
@@ -1100,12 +1110,14 @@ PublicTokenSalePage.getInitialProps = async () => {
     return {
       listings,
       generalConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {
       listings: [],
       generalConfig: null,
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

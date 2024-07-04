@@ -10,7 +10,9 @@ import Pagination from '../../../../components/Pagination';
 import { ErrorMessage, Spinner } from '../../../../components/ui';
 import Heading from '../../../../components/ui/Heading';
 
-import PageNotFound from '../../../404';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
 import { useAuth } from '../../../../contexts/auth';
 import { usePlatform } from '../../../../contexts/platform';
 import { useConfig } from '../../../../hooks/useConfig';
@@ -18,8 +20,9 @@ import { GeneralConfig } from '../../../../types';
 import { Lesson } from '../../../../types/lesson';
 import api from '../../../../utils/api';
 import { parseMessageFromError } from '../../../../utils/common';
-import { __ } from '../../../../utils/helpers';
 import { capitalizeFirstLetter } from '../../../../utils/learn.helpers';
+import { loadLocaleData } from '../../../../utils/locale.helpers';
+import PageNotFound from '../../../not-found';
 
 const LESSONS_PER_PAGE = 10;
 
@@ -29,6 +32,7 @@ interface Props {
 }
 
 const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
+  const t = useTranslations();
   const router = useRouter();
   const category = router.query.slug;
 
@@ -103,7 +107,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
   return (
     <>
       <Head>
-        <title>{`${__('learn_heading')} - ${PLATFORM_NAME}`}</title>
+        <title>{`${t('learn_heading')} - ${PLATFORM_NAME}`}</title>
       </Head>
       <main className="main-content w-full max-w-6xl">
         <header className="lg:flex lg:justify-between mb-14">
@@ -112,9 +116,9 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
               level={1}
               className="mt-10 mb-2 uppercase text-5xl font-extrabold"
             >
-              {__('learn_heading')}
+              {t('learn_heading')}
             </Heading>
-            <p className="max-w-4xl">{__('learn_subheading')}</p>
+            <p className="max-w-4xl">{t('learn_subheading')}</p>
           </div>
 
           <div className="action">
@@ -123,7 +127,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
                 href="/learn/create"
                 className="mt-10 btn-primary inline-block"
               >
-                {__('learn_create_lesson_hading')}
+                {t('learn_create_lesson_hading')}
               </Link>
             )}
           </div>
@@ -132,7 +136,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
         <div className="w-full flex-col sm:flex-row flex gap-4">
           <nav className="w-full sm:w-1/5 flex flex-col gap-4">
             <Heading level={2} className="mb-4 text-xl">
-              {__('learn_categories_heading')}
+              {t('learn_categories_heading')}
             </Heading>
 
             <LearnCategoriesNav
@@ -143,13 +147,13 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
 
           <section className="w-full sm:w-4/5 flex flex-col gap-8">
             <Heading level={2} className="text-xl">
-              {capitalizeFirstLetter(category as string)} {__('learn_courses')}
+              {capitalizeFirstLetter(category as string)} {t('learn_courses')}
             </Heading>
 
             {error && <ErrorMessage error={error} />}
             {isLoading && <Spinner />}
             {lessons && lessons.size === 0 && (
-              <Heading level={1}>{__('generic_coming_soon')}</Heading>
+              <Heading level={1}>{t('generic_coming_soon')}</Heading>
             )}
 
             <LessonsList lessons={lessons} />
@@ -171,15 +175,16 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
   );
 };
 
-LearnCategoryPage.getInitialProps = async () => {
+LearnCategoryPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalRes, learningHubRes] = await Promise.all([
+    const [generalRes, learningHubRes, messages] = await Promise.all([
       api.get('/config/general').catch(() => {
         return null;
       }),
       api.get('/config/learningHub').catch(() => {
         return null;
       }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const generalConfig = generalRes?.data?.results?.value || null;
     const learningHubConfig = learningHubRes?.data?.results?.value || null;
@@ -187,12 +192,14 @@ LearnCategoryPage.getInitialProps = async () => {
     return {
       generalConfig,
       learningHubConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       learningHubConfig: null,
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

@@ -6,11 +6,15 @@ import UsersFilter from '../../components/UsersFilter';
 import UsersList from '../../components/UsersList';
 import { Heading } from '../../components/ui';
 
-import PageNotFound from '../404';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
 import { useAuth } from '../../contexts/auth';
-import { __ } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
+import PageNotFound from '../not-found';
 
 const ManageUsersPage = () => {
+  const t = useTranslations();
   const { user } = useAuth();
   const [where, setWhere] = useState({});
   const [page, setPage] = useState(1);
@@ -23,10 +27,10 @@ const ManageUsersPage = () => {
   return (
     <div>
       <Head>
-        <title>{__('manage_users_heading')}</title>
+        <title>{t('manage_users_heading')}</title>
       </Head>
       <div className="max-w-screen-lg mx-auto flex flex-col gap-10">
-        <Heading level={1}>{__('manage_users_heading')}</Heading>
+        <Heading level={1}>{t('manage_users_heading')}</Heading>
         <UsersFilter
           page={page}
           setPage={setPage}
@@ -43,6 +47,22 @@ const ManageUsersPage = () => {
       </div>
     </div>
   );
+};
+
+ManageUsersPage.getInitialProps = async (context: NextPageContext) => {
+  try {
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    return {
+      messages,
+    };
+  } catch (err: unknown) {
+    return {
+      messages: null,
+    };
+  }
 };
 
 export default ManageUsersPage;

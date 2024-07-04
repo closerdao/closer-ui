@@ -5,12 +5,13 @@ import { useRouter } from 'next/router';
 import { FormEvent, useEffect, useState } from 'react';
 
 import dayjs from 'dayjs';
+import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import { useAuth } from '../contexts/auth';
 import { parseMessageFromError } from '../utils/common';
-import { __, isInputValid } from '../utils/helpers';
+import { isInputValid } from '../utils/helpers';
 import { Button, Card, Checkbox, ErrorMessage, Input } from './ui';
 import Heading from './ui/Heading';
 
@@ -19,6 +20,7 @@ interface Props {
 }
 
 const SignupForm = ({ app }: Props) => {
+  const t = useTranslations();
   const router = useRouter();
   const { back, source, start, end, adults, useTokens, eventId, volunteerId } =
     router.query || {};
@@ -118,7 +120,11 @@ const SignupForm = ({ app }: Props) => {
     !isInputValid(application.email, 'email');
 
   return (
-    <Card className={`${app && app.toLowerCase() === 'tdf' ? 'mt-[200px]':'mt-0'} pb-8 relative  md:mt-0`}>
+    <Card
+      className={`${
+        app && app.toLowerCase() === 'tdf' ? 'mt-[200px]' : 'mt-0'
+      } pb-8 relative  md:mt-0`}
+    >
       {app && app.toLowerCase() === 'tdf' && (
         <div className="absolute top-[-202px] h-[200px] overflow-hidden w-[90%]">
           <Image
@@ -133,9 +139,9 @@ const SignupForm = ({ app }: Props) => {
       {submitted && !error ? (
         <>
           <Heading level={2} className="my-4">
-            {__('signup_success')}
+            {t('signup_success')}
           </Heading>
-          <p>{__('signup_success_cta')}</p>
+          <p>{t('signup_success_cta')}</p>
         </>
       ) : (
         <form className=" flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -146,8 +152,8 @@ const SignupForm = ({ app }: Props) => {
           />
 
           <Input
-            label={__('signup_form_name')}
-            placeholder={__('signup_form_name_placeholder')}
+            label={t('signup_form_name')}
+            placeholder={t('signup_form_name_placeholder')}
             value={application.screenname}
             onChange={(e) =>
               updateApplication({
@@ -156,8 +162,8 @@ const SignupForm = ({ app }: Props) => {
             }
           />
           <Input
-            label={__('signup_form_email')}
-            placeholder={__('signup_form_email_placeholder')}
+            label={t('signup_form_email')}
+            placeholder={t('signup_form_email_placeholder')}
             value={application.email}
             onChange={(e) =>
               updateApplication({
@@ -167,8 +173,8 @@ const SignupForm = ({ app }: Props) => {
           />
           <Input
             type="password"
-            placeholder={__('signup_form_password_placeholder')}
-            label={__('signup_form_password')}
+            placeholder={t('signup_form_password_placeholder')}
+            label={t('signup_form_password')}
             value={application.password}
             onChange={(e) =>
               updateApplication({
@@ -182,7 +188,7 @@ const SignupForm = ({ app }: Props) => {
             isChecked={isEmailConsent}
             onChange={() => setIsEmailConsent(!isEmailConsent)}
           >
-            {__('signup_form_email_consent')}
+            {t('signup_form_email_consent')}
           </Checkbox>
 
           {error && <ErrorMessage error={error} />}
@@ -191,17 +197,17 @@ const SignupForm = ({ app }: Props) => {
               isEnabled={!isSignupDisabled && !isLoading && isEmailConsent}
               isLoading={isLoading}
             >
-              {__('signup_form_create')}
+              {t('signup_form_create')}
             </Button>
           </div>
           <div className="text-center text-sm">
-            {__('signup_form_have_account')}{' '}
+            {t('signup_form_have_account')}{' '}
               <Link
                 data-testid="login-link"
               className="text-accent underline font-bold"
-              href={`/login${signupQuery}`}
+                href={`/login${signupQuery}`}
             >
-              {__('login_title')}{' '}
+              {t('login_title')}{' '}
             </Link>
           </div>
         </form>

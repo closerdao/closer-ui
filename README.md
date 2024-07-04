@@ -41,6 +41,14 @@ CD to app's directory (e.g. apps/tdf or packages/closer), then
 yarn test
 ```
 
+#### E2E Cypress Test
+
+CD to TDF app's directory (apps/tdf), then
+
+```
+yarn run cypress open
+```
+
 ### Build
 
 To build all apps and packages, run the following command from the root:
