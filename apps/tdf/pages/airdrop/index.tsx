@@ -7,6 +7,8 @@ import BulletUnChecked from 'closer/components/icons/BulletUnChecked';
 import { Heading, LinkButton } from 'closer/components/ui';
 
 import { useAuth } from 'closer';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { NextPageContext } from 'next';
 
 const AirdropPage = () => {
   const { user } = useAuth();
@@ -316,7 +318,14 @@ const AirdropPage = () => {
                           <span className="text-accent">10%</span>
                         </Heading>
                         <p className="text-sm">
-                          Must submit a proof through <Link href="https://forms.gle/kLKKZw9km7a5oKHj8" target="_blank">this form</Link>.
+                          Must submit a proof through{' '}
+                          <Link
+                            href="https://forms.gle/kLKKZw9km7a5oKHj8"
+                            target="_blank"
+                          >
+                            this form
+                          </Link>
+                          .
                         </p>
                       </div>
                     </div>
@@ -380,10 +389,17 @@ const AirdropPage = () => {
                           level={3}
                           className=" text-md uppercase font-bold -mt-0.5"
                         >
-                          Nominations,{' '}
-                          <span className="text-accent">10%</span>
+                          Nominations, <span className="text-accent">10%</span>
                         </Heading>
-                        <p className="text-sm">Nominate folks you think contributed to TDF <Link href="https://forms.gle/EKTwgYgULnNcF6DH7" target="_blank">here</Link></p>
+                        <p className="text-sm">
+                          Nominate folks you think contributed to TDF{' '}
+                          <Link
+                            href="https://forms.gle/EKTwgYgULnNcF6DH7"
+                            target="_blank"
+                          >
+                            here
+                          </Link>
+                        </p>
                       </div>
                     </div>
                   </li>
@@ -555,11 +571,17 @@ const AirdropPage = () => {
               <div className="max-w-[550px] text-sm flex flex-col gap-4 mb-20">
                 <p>
                   Follow this{' '}
-                  <Link className="text-accent" href="https://drive.google.com/file/d/1LMl8pvDqpxFFz6RtvVgyMBlTO_zWWOFZ/view">
+                  <Link
+                    className="text-accent"
+                    href="https://drive.google.com/file/d/1LMl8pvDqpxFFz6RtvVgyMBlTO_zWWOFZ/view"
+                  >
                     step-by-step guide
                   </Link>
                   , or hop into our{' '}
-                  <Link className="text-accent" href="https://t.me/+bW0K8E7ZGVE4ZjBh">
+                  <Link
+                    className="text-accent"
+                    href="https://t.me/+bW0K8E7ZGVE4ZjBh"
+                  >
                     Web3 support group
                   </Link>{' '}
                   to set up a Web3 wallet and connect to the TDF platform.
@@ -576,6 +598,22 @@ const AirdropPage = () => {
       </main>
     </>
   );
+};
+
+AirdropPage.getInitialProps = async (context: NextPageContext) => {
+  try {
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    return {
+      messages,
+    };
+  } catch (err: unknown) {
+    return {
+      messages: null,
+    };
+  }
 };
 
 export default AirdropPage;

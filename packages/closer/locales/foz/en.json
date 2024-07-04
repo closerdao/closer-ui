@@ -4,7 +4,14 @@
   "signup_title": "Sign up",
   "resources_heading": "Resourceful by nature",
   "resources_subheading": "Resources page intro text",
-  "volunteers_page_intro_text": "Intro text for volunteers page",
+  "volunteers_page_intro_text": "Hey there! Interested in volunteering at MOOS? We're always looking for support for our various events. If you're keen to get involved as a volunteer, please join our Telegram group through the link below and be a part of something amazing!",
+  "volunteers_page_terms_1": "",
+  "volunteers_page_terms_2": "",
+  "volunteers_page_terms_3": "",
+  "volunteers_page_terms_4": "",
+  "volunteers_page_terms_5": "",
+  "volunteers_page_terms_6": "",
+  "volunteers_page_more_info": "More information coming soon.",
   "resources_resources_heading": "Put the kettle on and get to know us a little better",
   "resources_resources_subheading": "Read all about our dream: the mission, vision and how we got here, with our digital papers",
 
@@ -47,5 +54,7 @@
   "referrals_description_text_2": "You will receive 🥕 1 per friend and they will receive 🥕 2.",
   "referrals_description_text_3": "You  are restricted to a maximum of 🥕 6 per month - which will be refreshed on the 1st of every month.",
   "referrals_credits_link": "Find out more about 🥕 carrots.",
-  "bookings_checkout_step_visitors_guide": "Visitors Guide"
+  "bookings_checkout_step_visitors_guide": "Visitors Guide",
+
+  "buttons_apply_to_stay": "Apply to stay"
 }

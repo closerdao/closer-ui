@@ -118,7 +118,7 @@ const StayPage = ({
         <div className="mb-6 max-w-prose">
           <Heading level={1} className={`${APP_NAME === 'lios' ? 'text-xl sm:text-2xl': 'text-4xl'}  pb-2 mt-8`}>
             <p className='font-accent' dangerouslySetInnerHTML={{ __html: 
-              t('stay_title')
+              t.raw('stay_title')
             }} />
                         
             {`

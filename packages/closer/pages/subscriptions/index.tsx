@@ -56,8 +56,7 @@ const SubscriptionsPage: NextPage<Props> = ({
 
   useEffect(() => {
     const selectedSubscription = plans?.find(
-      (plan: any) =>
-        plan.priceId === (user?.subscription?.priceId || 'free'),
+      (plan: any) => plan.priceId === (user?.subscription?.priceId || 'free'),
     );
     setUserActivePlan(selectedSubscription);
   }, [user]);
@@ -162,7 +161,7 @@ const SubscriptionsPage: NextPage<Props> = ({
               <div
                 className="mb-10"
                 dangerouslySetInnerHTML={{
-                  __html: t('pricing_and_product_funding_your_stay_intro'),
+                  __html: t.raw('pricing_and_product_funding_your_stay_intro'),
                 }}
               />
               <div className="mb-10 w-full flex flex-wrap justify-center">
@@ -207,7 +206,7 @@ const SubscriptionsPage: NextPage<Props> = ({
               <div
                 className="mb-10"
                 dangerouslySetInnerHTML={{
-                  __html: t('pricing_and_product_costs_info'),
+                  __html: t.raw('pricing_and_product_costs_info'),
                 }}
               />
             </div>

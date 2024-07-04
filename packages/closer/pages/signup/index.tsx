@@ -99,7 +99,7 @@ const Signup = ({ subscriptionsConfig }: Props) => {
                   <div>
                     <span
                       dangerouslySetInnerHTML={{
-                        __html: t('signup_form_get_credits'),
+                        __html: t.raw('signup_form_get_credits'),
                       }}
                     />{' '}
                     <Link
@@ -193,8 +193,8 @@ Signup.getInitialProps = async (context: NextPageContext) => {
   try {
     const [subscriptionsResponse, messages] = await Promise.all([
       api.get('/config/subscriptions').catch(() => {
-        return null
-       }),
+        return null;
+      }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 

@@ -107,10 +107,10 @@ const VolunteerOpportunitiesPage: NextPage<Props> = ({
             </LinkButton>
           )}
 
-          {t('volunteers_page_more_info') !== 'volunteers_page_more_info' && (
+          {t.raw('volunteers_page_more_info') !== 'volunteers_page_more_info' && (
             <div
               dangerouslySetInnerHTML={{
-                __html: t('volunteers_page_more_info'),
+                __html: t.raw('volunteers_page_more_info'),
               }}
             />
           )}
@@ -168,7 +168,6 @@ VolunteerOpportunitiesPage.getInitialProps = async (
         return null;
       }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-
     ]);
 
     const opportunities = opportunitiesRes?.data?.results || null;
@@ -177,14 +176,14 @@ VolunteerOpportunitiesPage.getInitialProps = async (
     return {
       opportunities,
       volunteerConfig,
-      messages
+      messages,
     };
   } catch (error) {
     console.error(error);
     return {
       opportunities: [],
       volunteerConfig: null,
-      messages: null
+      messages: null,
     };
   }
 };
