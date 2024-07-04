@@ -1,7 +1,8 @@
 import Button from '../../components/ui/Button';
 
+import { useTranslations } from 'next-intl';
+
 import { Spinner } from '../ui';
-import { __ } from '../../utils/helpers';
 
 interface Props {
   onClick: () => void;
@@ -9,12 +10,13 @@ interface Props {
 }
 
 const GoogleButton = ({ onClick, isLoading }: Props) => {
+  const t = useTranslations();
   return (
     <Button
       className="gap-2 border-[#747775] text-[#1F1F1F] normal-case"
       type="secondary"
-          onClick={onClick}
-          isEnabled={!isLoading}
+      onClick={onClick}
+      isEnabled={!isLoading}
     >
       <svg
         aria-label="Google"
@@ -41,8 +43,7 @@ const GoogleButton = ({ onClick, isLoading }: Props) => {
           fill="#EA4335"
         />
       </svg>
-      { __('google_button')}{' '}
-        {isLoading ? <Spinner /> : null}
+      {t('google_button')} {isLoading ? <Spinner /> : null}
     </Button>
   );
 };
