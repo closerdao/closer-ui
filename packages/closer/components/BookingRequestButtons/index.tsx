@@ -79,7 +79,7 @@ const BookingRequestButtons = ({
             </Link>
           )}
 
-          {user && status === 'paid' && (user._id === createdBy || isSpaceHost) && (
+          {user && (status === 'paid' || status === 'credits-paid' || status === 'tokens-staked') && (user._id === createdBy || isSpaceHost) && (
             <Link passHref href={`/bookings/${_id}/cancel`}>
               <Button type="secondary">⭕ {__('booking_cancel_button')}</Button>
             </Link>

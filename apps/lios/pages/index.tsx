@@ -358,9 +358,10 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
             <div className="flex justify-center mb-4 mt-2">
               <div className="border-t w-[120px] border-accent-alt"></div>
             </div>
-            <p> 
+            <p>
               Zadbaj o swoje granice i potrzeby, szanuj granice i potrzeby
-              innych osób. Jeśli to nie jest pełne &quot;tak&quot;, to jest to &quot;nie&quot;.
+              innych osób. Jeśli to nie jest pełne &quot;tak&quot;, to jest to
+              &quot;nie&quot;.
             </p>
 
             <Heading level={4} display className="mt-6 md:text-xl normal-case ">
@@ -469,7 +470,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
         <section className="mb-12 max-w-4xl mx-auto md:pt-8 md:flex justify-center">
           <div className="flex gap-4 flex-col sm:flex-row">
             <LinkButton href="/stay" className="lowercase">
-              apply to stay
+              Participate / dołącz
             </LinkButton>
           </div>
         </section>

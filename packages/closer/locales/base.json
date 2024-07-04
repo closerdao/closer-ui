@@ -151,7 +151,7 @@
   "buttons_go_back": "< Back",
   "buttons_back_to_dates": "< Back to Dates",
   "buttons_edit_profile": "Edit Profile",
-  "buttons_apply_to_stay": "Apply to stay",
+
   "cancel_booking_page_title": "Cancellation",
   "cancel_booking_title": "Are You Sure?",
   "cancel_booking_completed_title": "Booking Canceled",
@@ -254,7 +254,6 @@
   "navigation_member": "Member",
   "navigation_volunteer": "Volunteer",
   "navigation_subscriptions": "Subscriptions",
-  "navigation_stay": "Book a stay",
   "navigation_buy_token": "Invest",
   "navigation_resources": "Resources",
   "navigation_online_courses": "Learning hub",
@@ -604,7 +603,7 @@
   "referrals_description_heading": "🏆 Description & Rewards",
 
   "referrals_influencer_link": "Are you an influencer?",
-  "referrals_your_link_heading": "Your Link",
+  "referrals_your_link_heading": "Your Personal Referral Link",
   "referrals_monthly_progress_heading": "🔰 Monthly Progress",
   "referrals_all_time_progress_heading": "🔰 All Time Progress",
   "referrals_next_refresh": "Next refresh",

@@ -21,6 +21,7 @@ import dayjs from 'dayjs';
 import { NextPage } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
+import PageNotFound from '../../404';
 import {
   CURRENCIES,
   DEFAULT_AVAILABILITY_RANGE_TO_CHECK,
@@ -55,7 +56,6 @@ import {
   formatDate,
   getBlockedDateRanges,
 } from '../../../utils/listings.helpers';
-import PageNotFound from '../../404';
 
 const MAX_DAYS_TO_CHECK_AVAILABILITY = 60;
 
@@ -75,8 +75,7 @@ const ListingPage: NextPage<Props> = ({
   descriptionText,
 }) => {
   const config = useConfig();
-  const { LOCATION_LAT, LOCATION_LON, PLATFORM_LEGAL_ADDRESS } =
-    config || {};
+  const { LOCATION_LAT, LOCATION_LON, PLATFORM_LEGAL_ADDRESS } = config || {};
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const isMember = user && user.roles.includes('member');
@@ -112,6 +111,9 @@ const ListingPage: NextPage<Props> = ({
   );
   const durationInDays = dayjs(end).diff(dayjs(start), 'day') || 30;
   const durationInHours = dayjs(end).diff(dayjs(start), 'hour') || 1;
+
+  const isDurationValid = durationInDays >= (settings?.minDuration || 1);
+
   const [adults, setAdults] = useState<number>(Number(savedAdults) || 1);
   const [kids, setKids] = useState<number>(Number(savedKids) || 0);
   const [infants, setInfants] = useState<number>(Number(savedInfants) || 0);
@@ -227,7 +229,6 @@ const ListingPage: NextPage<Props> = ({
         useTokens: isTokenPaymentSelected,
       });
 
-
       setIsGuestLimit(availability[0].reason === 'Guest limit');
 
       return { results, availability, error: null };
@@ -267,16 +268,15 @@ const ListingPage: NextPage<Props> = ({
 
     if (isCalendarSelectionValid) {
       (async function updatePrices() {
-        setBookingError(null); 
+        setBookingError(null);
         const { results, availability, error } = await getAvailability(
           start,
           end,
           listing?._id,
         );
-        setHourAvailability(getLocalTimeAvailability(availability, timeZone));
-
-        console.log('getLocalTimeAvailability(availability, timeZone)=', getLocalTimeAvailability(availability, timeZone));
-
+        if (availability) {
+          setHourAvailability(getLocalTimeAvailability(availability, timeZone));
+        }
         setIsListingAvailable(results);
         setBookingError(error);
       })();
@@ -330,7 +330,7 @@ const ListingPage: NextPage<Props> = ({
   }, []);
 
   const handleDefaultBookingDates = async () => {
-    if (listing?.priceDuration !== 'night') {
+    if (listing?.priceDuration !== 'night' && !savedStartDate) {
       setStartDate(new Date());
       setEndDate(new Date());
       return;
@@ -365,6 +365,7 @@ const ListingPage: NextPage<Props> = ({
       useTokens: String(isTokenPaymentSelected),
     };
     const urlParams = new URLSearchParams(params);
+
     return urlParams;
   };
 
@@ -382,10 +383,11 @@ const ListingPage: NextPage<Props> = ({
   const bookListing = async () => {
     if (!isAuthenticated) {
       redirectToSignup();
+      return;
     }
-    setApiError(null);
 
     try {
+      setApiError(null);
       const {
         data: { results: newBooking },
       } = await api.post('/bookings/request', {
@@ -734,7 +736,7 @@ const ListingPage: NextPage<Props> = ({
                                 )}
                             </div>
                           ) : (
-                              <span>
+                            <span>
                               {priceFormat(
                                 settings && listing && accomodationTotal,
                                 listing.fiatPrice?.cur,
@@ -820,9 +822,17 @@ const ListingPage: NextPage<Props> = ({
                       ) : (
                         !isListingAvailable && (
                           <Information>
-                            {isGuestLimit
-                              ? __('listing_not_available_guest_limit')
-                              : __('listing_not_available')}
+                            {!isListingAvailable &&
+                              !isGuestLimit &&
+                              isDurationValid &&
+                              __('listing_not_available')}
+                            {!isDurationValid &&
+                              __(
+                                'bookings_dates_min_duration_error',
+                                settings?.minDuration,
+                              )}
+                            {isGuestLimit &&
+                              __('listing_not_available_guest_limit')}
                           </Information>
                         )
                       )}
