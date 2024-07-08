@@ -64,7 +64,7 @@ const GuestMenu = () => {
 
           {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && (
             <NavLink href="/token">
-              {__('navigation_buy_token')}
+              {t('navigation_buy_token')}
             </NavLink>
         )}
         
