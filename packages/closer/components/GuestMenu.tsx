@@ -61,6 +61,13 @@ const GuestMenu = () => {
             {t('navigation_online_courses')}
           </NavLink>
         )}
+
+          {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && (
+            <NavLink href="/token">
+              {__('navigation_buy_token')}
+            </NavLink>
+        )}
+        
         {process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true' && (
           <NavLink href="/blog">{t('navigation_blog')}</NavLink>
         )}
