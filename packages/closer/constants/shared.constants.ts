@@ -263,3 +263,5 @@ export const MAX_USERS_TO_FETCH = 2000;
 export const MAX_LISTINGS_TO_FETCH = 100;
 
 export const DEFAULT_AVAILABILITY_RANGE_TO_CHECK = 120
+
+

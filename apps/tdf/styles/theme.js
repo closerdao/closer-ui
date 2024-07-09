@@ -5,7 +5,7 @@ const defaultTheme = require('tailwindcss/defaultTheme');
 const tdfTheme = {
   
   extend: {
-    ...closerTheme.extend,
+    ...closerTheme.extend, 
     colors: {
       ...closerTheme.extend.colors,
       'accent-core': '#FE4FB7',
@@ -25,7 +25,7 @@ const tdfTheme = {
       // system colors belong to closer
       // TODO: decide with Daneel about brand color system
       neutral: '#F8F3F5', //disabled button bg
-      // 'neutral-dark': '#EDE8EB' ,
+      'neutral-light': '#FDF9FB',
       'neutral-dark': '#F0F0F0',
       // these colors are not suppoerted anymore, please use those above
       'disabled': '#9C9C9C', //disabled button text and border
