@@ -21,7 +21,6 @@ import dayjs from 'dayjs';
 import { NextPage } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
-import PageNotFound from '../../404';
 import {
   CURRENCIES,
   DEFAULT_AVAILABILITY_RANGE_TO_CHECK,
@@ -56,6 +55,7 @@ import {
   formatDate,
   getBlockedDateRanges,
 } from '../../../utils/listings.helpers';
+import PageNotFound from '../../404';
 
 const MAX_DAYS_TO_CHECK_AVAILABILITY = 60;
 
@@ -539,11 +539,12 @@ const ListingPage: NextPage<Props> = ({
                           start={start}
                           isSmallScreen={isSmallScreen}
                           blockedDateRanges={getBlockedDateRanges(
-                            start,
+                            { start,
                             end,
                             maxHorizon,
                             maxDuration,
                             unavailableDates,
+                            isHourlyBooking }
                           )}
                           timeOptions={timeOptions}
                           hourAvailability={hourAvailability}
