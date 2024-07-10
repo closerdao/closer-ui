@@ -6,12 +6,14 @@ import {
   ResponsiveContainer,
   Tooltip,
   XAxis,
+  YAxis,
 } from 'recharts';
 
 import { CHART_COLORS } from './chartColors';
 
 interface Props {
   data: Record<string, string | number>[];
+  layout?: 'horizontal' | 'vertical';
 }
 
 interface CustomPayload {
@@ -36,7 +38,9 @@ const CustomTooltipContent = ({ payload, label }: any) => {
   );
 };
 
-const StackedBarChart = ({ data }: Props) => {
+
+
+const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
   const dataWithTotalValues = data.map((item) => ({
     ...item,
     total: Object.keys(item).reduce((sum, key) => {
@@ -51,37 +55,97 @@ const StackedBarChart = ({ data }: Props) => {
     <div className="w-full h-[400px] py-4">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
+          layout={layout || 'horizontal'}
           width={500}
           height={300}
           data={dataWithTotalValues}
-          margin={{
-            top: 20,
-            right: 30,
-            left: 20,
-            bottom: 5,
-          }}
+          margin={
+            layout === 'vertical'
+              ? {
+                  top: 20,
+                  right: 30,
+                  left: 120,
+                  bottom: 10,
+                }
+              : {
+                  top: 20,
+                  right: 10,
+                  left: 10,
+                  bottom: 10,
+                }
+          }
         >
-          <XAxis dataKey="name" axisLine={false} tickLine={false} />
+          {layout === 'horizontal' && (
+            <XAxis
+              type="category"
+              dataKey="name"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: 'black' }}
+            />
+          )}
+          {layout === 'vertical' && (
+            <>
+              <YAxis
+                type="category"
+                dataKey="name"
+                tickLine={false}
+            
+                tick={{ fill: 'black', width: 180 }}
+              />
+              <XAxis type="number"  axisLine={false}
+                tickLine={false}
+                tick={false}
+              />
+                
+                
+            </>
+          )}
 
           <Tooltip
             cursor={{ fill: 'transparent' }}
             content={<CustomTooltipContent />}
           />
           <Legend />
-          <Bar dataKey="Hospitality" stackId="a" fill={CHART_COLORS[0]} />
-          <Bar dataKey="Events" stackId="a" fill={CHART_COLORS[1]} />
-          <Bar dataKey="Spaces" stackId="a" fill={CHART_COLORS[2]} />
-          <Bar dataKey="Subscriptions" stackId="a" fill={CHART_COLORS[3]} />
-          <Bar dataKey="Tokens" stackId="a" fill={CHART_COLORS[4]}>
-            <LabelList
-              style={{ fill: 'black' }}
-              dataKey="total"
-              position="top"
-              formatter={(props: any) => {
-                return `${props}`;
-              }}
-            />
-          </Bar>
+          {layout === 'horizontal' && (
+            <>
+              <Bar dataKey="Hospitality" stackId="a" fill={CHART_COLORS[0]} />
+              <Bar dataKey="Events" stackId="a" fill={CHART_COLORS[1]} />
+              <Bar dataKey="Spaces" stackId="a" fill={CHART_COLORS[2]} />
+              <Bar dataKey="Subscriptions" stackId="a" fill={CHART_COLORS[3]} />
+              <Bar dataKey="Tokens" stackId="a" fill={CHART_COLORS[4]}>
+                <LabelList
+                  style={{ fill: 'black' }}
+                  dataKey="total"
+                  position="top"
+                  formatter={(props: any) => {
+                    return `${props}`;
+                  }}
+                />
+              </Bar>
+            </>
+          )}
+          {layout === 'vertical' && (
+            <>
+              <Bar dataKey="Platform" stackId="a" fill={CHART_COLORS[0]}>
+              <LabelList dataKey="Platform" position="insideLeft" style={{ fill: 'white' }} />
+
+              </Bar>
+
+              <Bar dataKey="External" stackId="a" fill={CHART_COLORS[1]}>
+              <LabelList dataKey="External" position="insideLeft" style={{ fill: 'white' }} />
+
+                <LabelList
+                  style={{ fill: 'black' }}
+                  dataKey="total"
+                  position={layout === 'vertical' ? 'right' : 'top'}
+                  formatter={(props: any) => {
+                    return `${props}`;
+                  }}
+                />
+              </Bar>
+            </>
+          )}
         </BarChart>
       </ResponsiveContainer>
     </div>

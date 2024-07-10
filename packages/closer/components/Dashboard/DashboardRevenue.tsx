@@ -6,6 +6,7 @@ import RevenueIcon from '../icons/RevenueIcon';
 import { Card, Heading } from '../ui';
 import LineChart from '../ui/Charts/LineChart';
 import StackedBarChart from '../ui/Charts/StackedBarChart';
+import TimeFrameSelector from './TimeFrameSelector';
 
 const DashboardRevenue = () => {
   const t = useTranslations();
@@ -68,28 +69,13 @@ const DashboardRevenue = () => {
     },
   ];
 
-
-
   return (
     <section className="bg-white rounded-md p-6 flex flex-col gap-6">
       <div className="flex justify-between">
         <Heading level={3} className="uppercase text-md flex gap-3">
           <RevenueIcon /> {t('dashboard_revenue_title')}
         </Heading>
-        <div className='flex gap-1'>
-          <button onClick={() => setTimeFrame('year')} className={`${timeFrame === 'year' ? 'bg-accent text-white' : 'bg-neutral text-black'} rounded-full  px-3 py-1 text-sm`}>
-            {t('dashboard_year')}
-          </button>
-          <button  onClick={() => setTimeFrame('month')} className={`${timeFrame === 'month' ? 'bg-accent text-white' : 'bg-neutral text-black'} rounded-full  px-3 py-1 text-sm`}>
-            {t('dashboard_month')}
-          </button>
-          <button  onClick={() => setTimeFrame('week')} className={`${timeFrame === 'week' ? 'bg-accent text-white' : 'bg-neutral text-black'} rounded-full  px-3 py-1 text-sm`}>
-            {t('dashboard_week')}
-          </button>
-          <button  onClick={() => setTimeFrame('today')} className={`${timeFrame === 'today' ? 'bg-accent text-white' : 'bg-neutral text-black'} rounded-full  px-3 py-1 text-sm`}>
-            {t('dashboard_today')}
-          </button>
-        </div>
+        <TimeFrameSelector timeFrame={timeFrame} setTimeFrame={setTimeFrame} />
       </div>
 
       <div className="grid grid-cols-3 gap-4">

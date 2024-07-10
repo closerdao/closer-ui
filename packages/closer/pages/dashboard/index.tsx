@@ -1,5 +1,8 @@
 import Head from 'next/head';
 
+import DashboardBookings from '../../components/Dashboard/DashboardBookings';
+import DashboardMetrics from '../../components/Dashboard/DashboardMetrics';
+import DashboardRevenue from '../../components/Dashboard/DashboardRevenue';
 import { Heading } from '../../components/ui';
 
 import { NextPageContext } from 'next';
@@ -13,8 +16,6 @@ import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
-import DashboardBookings from '../../components/Dashboard/DashboardBookings';
-import DashboardRevenue from '../../components/Dashboard/DashboardRevenue';
 
 interface Props {
   generalConfig: GeneralConfig;
@@ -48,8 +49,8 @@ const DashboardPage = ({ generalConfig }: Props) => {
           <DashboardBookings />
 
           <DashboardRevenue />
-
-
+          
+          <DashboardMetrics />
         </main>
       </div>
     </>
