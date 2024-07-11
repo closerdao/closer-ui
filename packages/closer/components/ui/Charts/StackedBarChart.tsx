@@ -38,8 +38,6 @@ const CustomTooltipContent = ({ payload, label }: any) => {
   );
 };
 
-
-
 const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
   const dataWithTotalValues = data.map((item) => ({
     ...item,
@@ -90,15 +88,14 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
                 type="category"
                 dataKey="name"
                 tickLine={false}
-            
                 tick={{ fill: 'black', width: 180 }}
               />
-              <XAxis type="number"  axisLine={false}
+              <XAxis
+                type="number"
+                axisLine={false}
                 tickLine={false}
                 tick={false}
               />
-                
-                
             </>
           )}
 
@@ -106,7 +103,9 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
             cursor={{ fill: 'transparent' }}
             content={<CustomTooltipContent />}
           />
-          <Legend />
+          <Legend
+            iconType="circle"
+          />
           {layout === 'horizontal' && (
             <>
               <Bar dataKey="Hospitality" stackId="a" fill={CHART_COLORS[0]} />
@@ -128,12 +127,19 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
           {layout === 'vertical' && (
             <>
               <Bar dataKey="Platform" stackId="a" fill={CHART_COLORS[0]}>
-              <LabelList dataKey="Platform" position="insideLeft" style={{ fill: 'white' }} />
-
+                <LabelList
+                  dataKey="Platform"
+                  position="insideLeft"
+                  style={{ fill: 'white' }}
+                />
               </Bar>
 
               <Bar dataKey="External" stackId="a" fill={CHART_COLORS[1]}>
-              <LabelList dataKey="External" position="insideLeft" style={{ fill: 'white' }} />
+                <LabelList
+                  dataKey="External"
+                  position="insideLeft"
+                  style={{ fill: 'white' }}
+                />
 
                 <LabelList
                   style={{ fill: 'black' }}

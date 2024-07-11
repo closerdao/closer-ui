@@ -34,9 +34,10 @@ interface Props {
 }
 
 const DonutChart = ({ data }: Props) => {
+
   return (
-    <div className="">
-      <PieChart width={320} height={220}>
+    <div>
+      <PieChart width={370} height={220}>
         <Pie
           data={data}
           cx={100}
@@ -48,10 +49,23 @@ const DonutChart = ({ data }: Props) => {
           dataKey="value"
         >
           {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+            <Cell
+              key={`cell-${index}`}
+              fill={CHART_COLORS[index % CHART_COLORS.length]}
+            />
           ))}
         </Pie>
-        <Legend align="right" verticalAlign="middle" layout="vertical" />
+        <Legend
+          payload={data.map((item: Record<string, unknown>, index: number) => ({
+            id: item.name as string,
+            type: 'circle',
+            value: item.name as string,
+            color: CHART_COLORS[index % CHART_COLORS.length],
+          }))}
+          align="right"
+          verticalAlign="middle"
+          layout="vertical"
+        />
       </PieChart>
     </div>
   );
