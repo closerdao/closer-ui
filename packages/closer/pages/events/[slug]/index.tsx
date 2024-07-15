@@ -14,10 +14,9 @@ import Heading from '../../../components/ui/Heading';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 import dayjs from 'dayjs';
-import { NextApiRequest } from 'next';
-import { ParsedUrlQuery } from 'querystring';
+import { NextApiRequest, NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
-import PageNotFound from '../../404';
 import { MAX_LISTINGS_TO_FETCH } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
@@ -28,12 +27,13 @@ import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { getAccommodationPriceRange } from '../../../utils/events.helpers';
 import {
-  __,
   getBookingRate,
   getDiscountRate,
   prependHttp,
   priceFormat,
 } from '../../../utils/helpers';
+import { loadLocaleData } from '../../../utils/locale.helpers';
+import PageNotFound from '../../not-found';
 
 interface Props {
   event: Event;
@@ -52,6 +52,7 @@ const EventPage = ({
   listings,
   settings,
 }: Props) => {
+  const t = useTranslations();
   const { platform }: any = usePlatform();
   const { user, isAuthenticated } = useAuth();
   const { APP_NAME } = useConfig() || {};
@@ -169,7 +170,7 @@ const EventPage = ({
 
   const showEvent = () => {
     if (password !== event.password) {
-      setPasswordError(__('incorrect_event_password_error'));
+      setPasswordError(t('incorrect_event_password_error'));
       return;
     }
     localStorage.setItem('eventPassword', password as string);
@@ -232,7 +233,7 @@ const EventPage = ({
                     href="/events/[slug]/edit"
                     className="btn-secondary text-xs mr-2"
                   >
-                    {__('events_slug_edit_link')}
+                    {t('events_slug_edit_link')}
                   </Link>
                 </div>
               )}
@@ -260,14 +261,14 @@ const EventPage = ({
                     size="small"
                     href={event.slug && `/events/${event.slug}/tickets`}
                   >
-                    {__('event_view_tickets_button')}
+                    {t('event_view_tickets_button')}
                   </LinkButton>
                   <LinkButton
                     size="small"
                     href={event.slug && `/events/${event.slug}/edit`}
                     className="bg-accent text-white rounded-full px-4 py-2 text-center uppercase text-sm"
                   >
-                    {__('event_edit_event_button')}
+                    {t('event_edit_event_button')}
                   </LinkButton>
 
                   {isAuthenticated && canEditEvent && (
@@ -306,6 +307,9 @@ const EventPage = ({
 
 
                       {end &&
+                        Number(duration) <= 24 &&
+                        ` ${dayjs(start).format('HH:mm')}`}{' '}
+                      {end &&
                         Number(duration) > 24 &&
                         ` - ${dayjs(end).format(dateFormat)}`}
                       {end &&
@@ -313,7 +317,7 @@ const EventPage = ({
                         ` - ${dayjs(end).format('HH:mm')}`}{' '}
                       {end && end.isBefore(dayjs()) && (
                         <p className="text-disabled">
-                          {__('event_event_ended')}
+                          {t('event_event_ended')}
                         </p>
                       )}
                     </label>
@@ -332,7 +336,7 @@ const EventPage = ({
                     </div>
                   )}
                   <div className="flex items-center text-sm uppercase font-bold gap-1">
-                    <p className="">{__('event_organiser')}</p>
+                    <p className="">{t('event_organiser')}</p>
 
                     {eventCreator.photo ? (
                       <Image
@@ -445,21 +449,21 @@ const EventPage = ({
                                     <div className="hidden sm:flex">
                                       {areTicketsSoldOut && (
                                         <span className="text-xs text-error">
-                                          {__('event_tickets_sold')}
+                                          {t('event_tickets_sold')}
                                         </span>
                                       )}
                                       {areTicketsAvailable && (
                                         <>
                                           <span className="text-xs text-success">
-                                            {__('event_tickets_available')}{' '}
+                                            {t('event_tickets_available')}{' '}
                                             {getDaysTo(end)}{' '}
-                                            {__('event_tickets_available_days')}
+                                            {t('event_tickets_available_days')}
                                           </span>
                                         </>
                                       )}
                                       {areTicketsEnding && (
                                         <span className="text-xs text-pending">
-                                          {__('event_tickets_last')}
+                                          {t('event_tickets_last')}
                                         </span>
                                       )}
                                     </div>
@@ -467,15 +471,15 @@ const EventPage = ({
                                     {/* {availableTickets === 0 &&
                                     ticket.limit !== 0 ? (
                                       <span className="text-xs text-error">
-                                        {__('event_tickets_sold')}
+                                        {t('event_tickets_sold')}
                                       </span>
                                     ) : ticket.limit === 0 ? (
                                       <span className="text-xs text-success">
-                                        {__('event_tickets_available')}
+                                        {t('event_tickets_available')}
                                       </span>
                                     ) : (
                                       <span className="text-xs text-pending">
-                                        {__('event_tickets_last')}
+                                        {t('event_tickets_last')}
                                       </span>
                                     )} */}
                                   </div>
@@ -483,32 +487,34 @@ const EventPage = ({
                               </div>
                             );
                           })}
-                        {durationInDays > 0 &&  APP_NAME && APP_NAME !== 'lios' && (
-                          <>
-                            <div className="text-sm">
-                              {__('events_accommodation')}{' '}
-                              <strong>
-                                {priceFormat(
-                                  minAccommodationPrice * discountRate,
-                                )}{' '}
-                                -{' '}
-                                {priceFormat(
-                                  maxAccommodationPrice * discountRate,
-                                )}
-                              </strong>
-                            </div>
-                            <div className="text-sm">
-                              {__('events_utility')}{' '}
-                              <strong>
-                                {foodOption === 'no_food'
-                                  ? __('stay_food_not_included')
-                                  : priceFormat(
-                                      durationInDays * dailyUtilityFee,
-                                    )}
-                              </strong>
-                            </div>
-                          </>
-                        )}
+                        {durationInDays > 0 &&
+                          APP_NAME &&
+                          APP_NAME !== 'lios' && (
+                            <>
+                              <div className="text-sm">
+                                {t('events_accommodation')}{' '}
+                                <strong>
+                                  {priceFormat(
+                                    minAccommodationPrice * discountRate,
+                                  )}{' '}
+                                  -{' '}
+                                  {priceFormat(
+                                    maxAccommodationPrice * discountRate,
+                                  )}
+                                </strong>
+                              </div>
+                              <div className="text-sm">
+                                {t('events_utility')}{' '}
+                                <strong>
+                                  {foodOption === 'no_food'
+                                    ? t('stay_food_not_included')
+                                    : priceFormat(
+                                        durationInDays * dailyUtilityFee,
+                                      )}
+                                </strong>
+                              </div>
+                            </>
+                          )}
                         <div className="mt-4">
                           {/* Event uses an external ticketing system */}
                           {event.ticket && start && start.isAfter(dayjs()) ? (
@@ -518,7 +524,7 @@ const EventPage = ({
                               target="_blank"
                               rel="noreferrer nofollow"
                             >
-                              {__('events_buy_ticket_button')}
+                              {t('events_buy_ticket_button')}
                             </Link>
                           ) : event.paid || durationInDays > 0 ? (
                             <>
@@ -554,7 +560,7 @@ const EventPage = ({
                                     }`}
                                     className=""
                                   >
-                                    {__('events_buy_ticket_button')}
+                                    {t('events_buy_ticket_button')}
                                   </LinkButton>
                                 )}
                             </>
@@ -652,32 +658,36 @@ const EventPage = ({
   );
 };
 
-EventPage.getInitialProps = async ({
-  req,
-  query,
-}: {
-  req: NextApiRequest;
-  query: ParsedUrlQuery;
-}) => {
+EventPage.getInitialProps = async (context: NextPageContext) => {
+  const { query, req } = context;
   const { convert } = require('html-to-text');
   try {
-    const [event, listings, settings] = await Promise.all([
+    const [event, listings, settings, messages] = await Promise.all([
       api
         .get(`/event/${query.slug}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          headers: (req as NextApiRequest)?.cookies?.access_token && {
+            Authorization: `Bearer ${
+              (req as NextApiRequest)?.cookies?.access_token
+            }`,
           },
         })
         .catch((err) => {
           console.error('Error fetching event:', err);
           return null;
         }),
-      api.get('/listing', {
-        params: {
-          limit: MAX_LISTINGS_TO_FETCH,
-        },
+      api
+        .get('/listing', {
+          params: {
+            limit: MAX_LISTINGS_TO_FETCH,
+          },
+        })
+        .catch(() => {
+          return null;
+        }),
+      api.get('/config/booking').catch(() => {
+        return null;
       }),
-      api.get('/config/booking'),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const options = {
@@ -696,8 +706,10 @@ EventPage.getInitialProps = async ({
       const {
         data: { results: eventCreatorData },
       } = await api.get(`/user/${eventCreatorId}`, {
-        headers: req?.cookies?.access_token && {
-          Authorization: `Bearer ${req?.cookies?.access_token}`,
+        headers: (req as NextApiRequest)?.cookies?.access_token && {
+          Authorization: `Bearer ${
+            (req as NextApiRequest)?.cookies?.access_token
+          }`,
         },
       });
       eventCreator = eventCreatorData;
@@ -710,13 +722,15 @@ EventPage.getInitialProps = async ({
       event: event?.data.results,
       eventCreator,
       descriptionText,
-      listings: listings.data.results,
-      settings: settings.data.results.value,
+      listings: listings?.data?.results,
+      settings: settings?.data?.results?.value,
+      messages,
     };
   } catch (err: unknown) {
     console.log('Error', err);
     return {
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

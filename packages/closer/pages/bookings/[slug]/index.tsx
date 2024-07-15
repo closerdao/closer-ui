@@ -12,10 +12,11 @@ import Heading from '../../../components/ui/Heading';
 
 import dayjs from 'dayjs';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
-import { NextApiRequest } from 'next';
-import { ParsedUrlQuery } from 'querystring';
+import { NextApiRequest, NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
-import { STATUS_COLOR } from '../../../constants';
+import PageNotAllowed from '../../401';
+import { MAX_LISTINGS_TO_FETCH, STATUS_COLOR } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
@@ -37,9 +38,9 @@ import {
   getUtilityTotal,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { __, getBookingRate, getDiscountRate } from '../../../utils/helpers';
-import PageNotAllowed from '../../401';
-import PageNotFound from '../../404';
+import { getBookingRate, getDiscountRate } from '../../../utils/helpers';
+import { loadLocaleData } from '../../../utils/locale.helpers';
+import PageNotFound from '../../not-found';
 
 dayjs.extend(LocalizedFormat);
 
@@ -68,7 +69,8 @@ const BookingPage = ({
   generalConfig,
   paymentConfig,
 }: Props) => {
-console.log('booking=', booking);
+  const t = useTranslations();
+
   const { timeZone } = generalConfig;
 
   const isBookingEnabled =
@@ -246,9 +248,6 @@ console.log('booking=', booking);
     total: { val: updatedFiatTotal, cur: rentalFiat?.cur },
     paymentDelta: paymentDelta ? paymentDelta : null,
   };
-  if (booking?.paymentDelta) {
-    booking.paymentDelta = null;
-  }
 
   if (booking?.paymentDelta) {
     booking.paymentDelta = null;
@@ -314,23 +313,23 @@ console.log('booking=', booking);
   return (
     <>
       <Head>
-        <title>{`${__('bookings_summary_step_dates_title')}`}</title>
+        <title>{`${t('bookings_summary_step_dates_title')}`}</title>
         <meta
           name="description"
-          content={`${__('bookings_summary_step_dates_title')}`}
+          content={`${t('bookings_summary_step_dates_title')}`}
         />
         <meta property="og:type" content="booking" />
       </Head>
       <main className="main-content max-w-prose booking flex flex-col gap-8">
         <Heading className="mb-4">
-          {__(`bookings_title_${booking.status}`)}
+          {t(`bookings_title_${booking.status}`)}
         </Heading>
 
         <section className="flex flex-col gap-2 mb-6">
           <div className="text-sm text-disabled">
             <p>{createdFormatted}</p>
             <p>
-              {__('bookings_id')} <b>{booking._id}</b>
+              {t('bookings_id')} <b>{booking._id}</b>
             </p>
           </div>
           {booking?.adminBookingReason && (
@@ -357,8 +356,8 @@ console.log('booking=', booking);
               {
                 <p className="font-bold">
                   {listing.private
-                    ? __('booking_card_room_number')
-                    : __('booking_card_bed_numbers')}{' '}
+                    ? t('booking_card_room_number')
+                    : t('booking_card_bed_numbers')}{' '}
                   {booking.roomOrBedNumbers &&
                     booking.roomOrBedNumbers.toString()}
                 </p>
@@ -439,10 +438,10 @@ console.log('booking=', booking);
                 onClick={handleSaveBooking}
                 isEnabled={hasUpdatedBooking && !isLoading}
               >
-                {__('booking_card_save_booking')}
+                {t('booking_card_save_booking')}
               </Button>
               {hasUpdated && (
-                <Information>{__('booking_card_booking_updated')}</Information>
+                <Information>{t('booking_card_booking_updated')}</Information>
               )}
             </div>
           )}
@@ -459,45 +458,55 @@ console.log('booking=', booking);
         </section>
 
         {booking.status === 'confirmed' && (
-          <section className="mt-3">{__('bookings_confirmation')}</section>
+          <section className="mt-3">{t('bookings_confirmation')}</section>
         )}
       </main>
     </>
   );
 };
 
-BookingPage.getInitialProps = async ({
-  req,
-  query,
-}: {
-  req: NextApiRequest;
-  query: ParsedUrlQuery;
-}) => {
+BookingPage.getInitialProps = async (context: NextPageContext) => {
+  const { query, req } = context;
   try {
-    const [bookingRes, bookingConfigRes, listingRes, generalConfigRes, paymentConfigRes] =
-      await Promise.all([
-        api
-          .get(`/booking/${query.slug}`, {
-            headers: req?.cookies?.access_token && {
-              Authorization: `Bearer ${req?.cookies?.access_token}`,
-            },
-          })
-          .catch(() => {
-            return null;
-          }),
-        api.get('/config/booking').catch(() => {
+    const [
+      bookingRes,
+      bookingConfigRes,
+      listingRes,
+      generalConfigRes,
+      paymentConfigRes,
+      messages,
+    ] = await Promise.all([
+      api
+        .get(`/booking/${query.slug}`, {
+          headers: (req as NextApiRequest)?.cookies?.access_token && {
+            Authorization: `Bearer ${
+              (req as NextApiRequest)?.cookies?.access_token
+            }`,
+          },
+        })
+        .catch(() => {
           return null;
         }),
-        api.get('/listing').catch(() => {
+      api.get('/config/booking').catch(() => {
+        return null;
+      }),
+      api
+        .get('/listing', {
+          params: {
+            limit: MAX_LISTINGS_TO_FETCH,
+          },
+        })
+        .catch(() => {
           return null;
         }),
-        api.get('/config/general').catch(() => {
-          return null;
-        }),
-        api.get('/config/payment').catch(() => {
-          return null;
-        }),
-      ]);
+      api.get('/config/general').catch(() => {
+        return null;
+      }),
+      api.get('/config/payment').catch(() => {
+        return null;
+      }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
     const generalConfig = generalConfigRes?.data?.results?.value;
@@ -509,20 +518,26 @@ BookingPage.getInitialProps = async ({
       await Promise.all([
         booking.eventId &&
           api.get(`/event/${booking.eventId}`, {
-            headers: req?.cookies?.access_token && {
-              Authorization: `Bearer ${req?.cookies?.access_token}`,
+            headers: (req as NextApiRequest)?.cookies?.access_token && {
+              Authorization: `Bearer ${
+                (req as NextApiRequest)?.cookies?.access_token
+              }`,
             },
           }),
         booking.listing &&
           api.get(`/listing/${booking.listing}`, {
-            headers: req?.cookies?.access_token && {
-              Authorization: `Bearer ${req?.cookies?.access_token}`,
+            headers: (req as NextApiRequest)?.cookies?.access_token && {
+              Authorization: `Bearer ${
+                (req as NextApiRequest)?.cookies?.access_token
+              }`,
             },
           }),
         booking.volunteerId &&
           api.get(`/volunteer/${booking.volunteerId}`, {
-            headers: req?.cookies?.access_token && {
-              Authorization: `Bearer ${req?.cookies?.access_token}`,
+            headers: (req as NextApiRequest)?.cookies?.access_token && {
+              Authorization: `Bearer ${
+                (req as NextApiRequest)?.cookies?.access_token
+              }`,
             },
           }),
       ]);
@@ -535,8 +550,10 @@ BookingPage.getInitialProps = async ({
       const optionalCreatedBy =
         booking.createdBy &&
         (await api.get(`/user/${booking.createdBy}`, {
-          headers: req?.cookies?.access_token && {
-            Authorization: `Bearer ${req?.cookies?.access_token}`,
+          headers: (req as NextApiRequest)?.cookies?.access_token && {
+            Authorization: `Bearer ${
+              (req as NextApiRequest)?.cookies?.access_token
+            }`,
           },
         }));
       bookingCreatedBy = optionalCreatedBy?.data?.results;
@@ -552,11 +569,10 @@ BookingPage.getInitialProps = async ({
       bookingConfig,
       generalConfig,
       listings,
+      messages,
       paymentConfig,
     };
   } catch (err: any) {
-    console.log('Error', err.message);
-
     return {
       error: parseMessageFromError(err),
       booking: null,
@@ -567,6 +583,7 @@ BookingPage.getInitialProps = async ({
       bookingConfig: null,
       generalConfig: null,
       listings: null,
+      messages: null,
       paymentConfig: null,
     };
   }

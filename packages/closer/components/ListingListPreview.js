@@ -1,14 +1,13 @@
 import Link from 'next/link';
 
-import React from 'react';
-
 import { useAuth } from '../contexts/auth';
 import { cdn } from '../utils/api';
 import { priceFormat } from '../utils/helpers';
-import { __ } from '../utils/helpers';
 import Slider from './Slider';
+import { useTranslations } from 'next-intl';
 
 const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
+  const t = useTranslations();
   const { user } = useAuth();
   const isHourlyBooking = !!(listing.get('priceDuration') === 'hour');
 
@@ -54,7 +53,7 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
                   listing.get(['fiatHourlyPrice', 'cur']),
                 )}{' '}
             </span>
-              {__('listing_preview_per_hourly')}
+              {t('listing_preview_per_hourly')}
           </p>
         </div>}
         
@@ -67,7 +66,7 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
                   listing.get(['fiatPrice', 'cur']),
                 )}{' '}
               </span>
-              {__('listing_preview_per_daily')}
+              {t('listing_preview_per_daily')}
             </p>
             <p className="text-left">
               <span className="">
@@ -78,7 +77,7 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
                   listing.get(['fiatPrice', 'cur']),
                 )}{' '}
               </span>
-              {__('listing_preview_per_weekly')}
+              {t('listing_preview_per_weekly')}
             </p>
             <p className="text-left">
               <span className="">
@@ -89,16 +88,14 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
                   listing.get(['fiatPrice', 'cur']),
                 )}{' '}
               </span>
-              {__('listing_preview_per_monthly')}
+              {t('listing_preview_per_monthly')}
             </p>
           </div>
         )}
           {!isHourlyBooking && listing.get('fiatPrice') && listing.getIn(['fiatPrice', 'val']) === 0 &&
           <div>
             <p className="text-left">
-              <b className="font-bold">
-                  {__('listing_free')}
-              </b>
+              <b className="font-bold">{t('listing_free')}</b>
             </p>
           </div>
         }
@@ -108,7 +105,7 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
             href={`/stay/${listing.get('slug')}`}
             className="font-accent rounded-full flex py-2 uppercase text-accent bg-white border-2 justify-center border-accent"
           >
-            {__('listing_preview_book')}
+            {t('listing_preview_book')}
           </Link>
         )}
 
@@ -120,7 +117,7 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
                 href={`/listings/${listing.get('slug')}/edit`}
                 className="btn mr-2"
               >
-                {__('listing_preview_edit')}
+                {t('listing_preview_edit')}
               </Link>
             )}
           </div>

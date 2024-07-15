@@ -5,9 +5,10 @@ import { useContext, useEffect } from 'react';
 
 import { BackButton, Heading, ProgressBar } from '../../components/ui';
 
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
-import PageNotFound from '../404';
 import { TOKEN_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { WalletState } from '../../contexts/wallet';
@@ -15,13 +16,15 @@ import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
+import PageNotFound from '../not-found';
 
 interface Props {
   generalConfig: GeneralConfig | null;
 }
 
 const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
+  const t = useTranslations();
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
@@ -55,17 +58,15 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
     <>
       <Head>
         <title>{`
-        ${__('token_sale_heading_checkout')} - 
-        ${__(
-          'token_sale_public_sale_announcement',
-        )} - ${PLATFORM_NAME}`}</title>
+        ${t('token_sale_heading_checkout')} - 
+        ${t('token_sale_public_sale_announcement')} - ${PLATFORM_NAME}`}</title>
       </Head>
 
       <div className="w-full max-w-screen-sm mx-auto py-8 px-4">
-        <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
+        <BackButton handleClick={goBack}>{t('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-4">
-          🎊 {__('token_sale_heading_success')}
+          🎊 {t('token_sale_heading_success')}
         </Heading>
 
         <ProgressBar steps={TOKEN_SALE_STEPS} />
@@ -73,7 +74,7 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
         <main className="pt-14 pb-24 flex flex-col gap-12">
           <div className="">
             <Heading level={3} hasBorder={false}>
-              {__('token_sale_success_message')}
+              {t('token_sale_success_message')}
             </Heading>
           </div>
 
@@ -81,12 +82,12 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
             <Heading
               level={2}
               className="text-accent text-center"
-            >{`${amountOfTokensPurchased} ${__(
+            >{`${amountOfTokensPurchased} ${t(
               'token_sale_token_symbol',
             )}`}</Heading>
           </div>
           <Heading level={4} className="uppercase">
-            {`${__('token_sale_success_purchase_number')}`}
+            {`${t('token_sale_success_purchase_number')}`}
             <p className="break-words">{transactionId}</p>
           </Heading>
         </main>
@@ -95,20 +96,24 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
   );
 };
 
-TokenSaleSuccessPage.getInitialProps = async () => {
+TokenSaleSuccessPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const generalRes = await api.get('/config/general').catch(() => {
-      return null;
-    });
+    const [generalRes, messages] = await Promise.all([
+      api.get('/config/general').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
+
     const generalConfig = generalRes?.data?.results?.value;
 
     return {
       generalConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

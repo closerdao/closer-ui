@@ -13,7 +13,9 @@ import {
   ProgressBar,
 } from '../../components/ui';
 
-import PageNotFound from '../404';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
 import { TOKEN_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { WalletState } from '../../contexts/wallet';
@@ -21,13 +23,15 @@ import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
+import PageNotFound from '../not-found';
 
 interface Props {
   generalConfig: GeneralConfig | null;
 }
 
 const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
+  const t = useTranslations();
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
@@ -65,90 +69,88 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
     <>
       <Head>
         <title>{`
-        ${__('token_sale_heading_before_you_begin')} - 
-        ${__(
-          'token_sale_public_sale_announcement',
-        )} - ${PLATFORM_NAME}`}</title>
+        ${t('token_sale_heading_before_you_begin')} - 
+        ${t('token_sale_public_sale_announcement')} - ${PLATFORM_NAME}`}</title>
       </Head>
 
       <div className="w-full max-w-screen-sm mx-auto py-8 px-4">
-        <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
+        <BackButton handleClick={goBack}>{t('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-4">
-          🏡 {__('token_sale_heading_before_you_begin')}
+          🏡 {t('token_sale_heading_before_you_begin')}
         </Heading>
 
         <ProgressBar steps={TOKEN_SALE_STEPS} />
 
         <main className="pt-14 pb-24 flex flex-col gap-4">
-          <p>{__('token_sale_before_you_begin_text_1')}</p>
-          <p>{__('token_sale_before_you_begin_text_2')}</p>
-          <p>{__('token_sale_before_you_begin_text_3')}</p>
+          <p>{t('token_sale_before_you_begin_text_1')}</p>
+          <p>{t('token_sale_before_you_begin_text_2')}</p>
+          <p>{t('token_sale_before_you_begin_text_3')}</p>
           <div>
             <Heading level={3} hasBorder={true}>
-              💰 {__('token_sale_before_you_begin_checklist_heading')}
+              💰 {t('token_sale_before_you_begin_checklist_heading')}
             </Heading>
             <ul>
               <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                {__('token_sale_before_you_begin_checklist_1')}
+                {t('token_sale_before_you_begin_checklist_1')}
               </li>
               <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                {__('token_sale_before_you_begin_checklist_2')}
+                {t('token_sale_before_you_begin_checklist_2')}
               </li>
               <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                {__('token_sale_before_you_begin_checklist_3')}
+                {t('token_sale_before_you_begin_checklist_3')}
               </li>
               <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                {__('token_sale_before_you_begin_checklist_4')}
+                {t('token_sale_before_you_begin_checklist_4')}
               </li>
             </ul>
           </div>
 
           <div>
             <Heading level={3} hasBorder={true}>
-              💰 {__('token_sale_before_you_begin_need_help_heading')}
+              💰 {t('token_sale_before_you_begin_need_help_heading')}
             </Heading>
             <ul>
               <li className="mb-1.5">
                 <Card className="mb-4">
                   <Link
                     className="text-accent font-bold underline"
-                    href={__('token_sale_complete_guide_link')}
+                    href={t('token_sale_complete_guide_link')}
                   >
-                    📄 {__('token_sale_complete_guide')}
+                    📄 {t('token_sale_complete_guide')}
                   </Link>
                 </Card>
               </li>
               <li className="mb-1.5">
                 <Link
                   className="text-accent font-bold underline"
-                  href={__('token_sale_before_you_begin_guide_1_link')}
+                  href={t('token_sale_before_you_begin_guide_1_link')}
                 >
-                  {__('token_sale_before_you_begin_guide_1')}
+                  {t('token_sale_before_you_begin_guide_1')}
                 </Link>
               </li>
               <li className="mb-1.5">
                 <Link
                   className="text-accent font-bold underline"
-                  href={__('token_sale_before_you_begin_guide_2_link')}
+                  href={t('token_sale_before_you_begin_guide_2_link')}
                 >
-                  {__('token_sale_before_you_begin_guide_2')}
+                  {t('token_sale_before_you_begin_guide_2')}
                 </Link>
               </li>
               <li className="mb-1.5">
                 <Link
                   className="text-accent font-bold underline"
-                  href={__('token_sale_before_you_begin_guide_3_link')}
+                  href={t('token_sale_before_you_begin_guide_3_link')}
                 >
-                  {__('token_sale_before_you_begin_guide_3')}
+                  {t('token_sale_before_you_begin_guide_3')}
                 </Link>
               </li>
               <li className="mb-1.5">
                 <Link
                   className="text-accent font-bold underline"
-                  href={__('token_sale_before_you_begin_guide_link_contact')}
+                  href={t('token_sale_before_you_begin_guide_link_contact')}
                 >
-                  {__('token_sale_before_you_begin_guide_4')}
+                  {t('token_sale_before_you_begin_guide_4')}
                 </Link>
               </li>
             </ul>
@@ -161,7 +163,7 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
           )}
 
           <Button onClick={handleNext} isEnabled={isWalletReady}>
-            {__('token_sale_button_continue')}
+            {t('token_sale_button_continue')}
           </Button>
         </main>
       </div>
@@ -169,20 +171,25 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
   );
 };
 
-TokenSaleBeforeYouBeginPage.getInitialProps = async () => {
+TokenSaleBeforeYouBeginPage.getInitialProps = async (
+  context: NextPageContext,
+) => {
   try {
-    const generalRes = await api.get('/config/general').catch(() => {
-      return null;
-    });
-    const generalConfig = generalRes?.data?.results?.value;
+    const [generalRes, messages] = await Promise.all([
+      api.get('/config/general').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
 
+    const generalConfig = generalRes?.data?.results?.value;
     return {
       generalConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

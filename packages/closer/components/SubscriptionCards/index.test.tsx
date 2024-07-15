@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 
 import SubscriptionCards from '.';
 import config from './mocks';
+import { renderWithNextIntl } from '../../test/utils';
 
 // TODO: set up renderWithProviders to test components that require context
 
@@ -10,7 +11,7 @@ describe('SubscriptionCards', () => {
   const subscriptions = config.SUBSCRIPTIONS;
 
   it.skip('should show cards for all subscription plans if user is not authenticated', () => {
-    render(
+    renderWithNextIntl(
       <SubscriptionCards
         currency="EUR"
         plans={subscriptions}
@@ -23,7 +24,7 @@ describe('SubscriptionCards', () => {
   });
 
   it.skip('should filter out free plan if user is authenticated', () => {
-    render(
+    renderWithNextIntl(
       <SubscriptionCards
         currency="EUR"
         plans={subscriptions}

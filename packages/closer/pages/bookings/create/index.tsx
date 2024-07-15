@@ -2,19 +2,24 @@ import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
 
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
 import PageNotAllowed from '../../401';
-import PageNotFound from '../../404';
 import { useAuth } from '../../../contexts/auth';
 import { BookingConfig } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import '../../../utils/helpers';
+import { loadLocaleData } from '../../../utils/locale.helpers';
+import PageNotFound from '../../not-found';
 
 interface Props {
   bookingConfig: BookingConfig | null;
 }
 
 const NewBooking = ({ bookingConfig }: Props) => {
+  const t = useTranslations();
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -39,19 +44,21 @@ const NewBooking = ({ bookingConfig }: Props) => {
   return null;
 };
 
-NewBooking.getInitialProps = async () => {
+NewBooking.getInitialProps = async (context: NextPageContext) => {
   try {
-    const bookingRes = await api.get('/config/booking').catch(() => {
-      return null;
-    });
+    const [bookingRes, messages] = await Promise.all([
+      api.get('/config/booking').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
     const bookingConfig = bookingRes?.data.results.value;
 
-    return { bookingConfig };
+    return { bookingConfig, messages };
   } catch (err) {
     console.log('Error', err);
     return {
       bookingConfig: null,
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

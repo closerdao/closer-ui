@@ -12,7 +12,6 @@ import {
   GeneralConfig,
   Resources,
   YoutubeEmbed,
-  __,
   api,
   useAuth,
   useConfig,
@@ -20,16 +19,20 @@ import {
 import { HOME_PAGE_CATEGORY } from 'closer/constants';
 import { useFaqs } from 'closer/hooks/useFaqs';
 import { formatSearch } from 'closer/utils/api';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 interface Props {
   generalConfig: GeneralConfig | null;
 }
 
 const HomePage = ({ generalConfig }: Props) => {
+  const t = useTranslations();
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
-  const { APP_NAME, FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
+  const { FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
   const { faqs, error } = useFaqs(FAQS_GOOGLE_SHEET_ID);
   const { isAuthenticated } = useAuth();
 
@@ -73,7 +76,7 @@ const HomePage = ({ generalConfig }: Props) => {
                   src="/images/Moos-Halle.jpg"
                   width={731}
                   height={786}
-                  alt="Lios labs"
+                  alt="Moos Halle"
                 />
               </div>
               <video
@@ -100,8 +103,7 @@ const HomePage = ({ generalConfig }: Props) => {
         <div className="absolute left-0 top-0 w-full h-full bg-white/30 flex justify-center z-1000">
           <div className="w-full flex justify-center flex-col items-center">
             <div className="md:w-full md:max-w-6xl p-6 md:p-4 flex flex-col items-end gap-2 md:gap-10">
-             <Heading
-
+              <Heading
                 className="h-full text-black uppercase text-3xl  sm:text-5xl font-extrabold w-full md:w-[700px] text-right flex items-center px-0 sm:px-6 pb-4"
                 level={1}
               >
@@ -109,25 +111,24 @@ const HomePage = ({ generalConfig }: Props) => {
                 beautiful is growing...
               </Heading>
               <div className="flex flex-col sm:flex-row justify-end gap-4 w-full px-0 sm:px-6">
-              {!isAuthenticated && (
+                {!isAuthenticated && (
+                  <Link
+                    href="/signup"
+                    type="submit"
+                    className="bg-accent text-white text-center rounded-full py-2.5 px-8 text-md tracking-wide uppercase"
+                  >
+                    JOIN THE DREAM
+                  </Link>
+                )}
                 <Link
-                  href="/signup"
+                  href="/pdf/moos-menu.pdf"
                   type="submit"
                   className="bg-accent text-white text-center rounded-full py-2.5 px-8 text-md tracking-wide uppercase"
                 >
-                  JOIN THE DREAM
+                  Download Our Menu
                 </Link>
-              )}
-              <Link
-                href="/pdf/moos-menu.pdf"
-                type="submit"
-                className="bg-accent text-white text-center rounded-full py-2.5 px-8 text-md tracking-wide uppercase"
-              >
-                Download Our Menu
-              </Link>
+              </div>
             </div>
-            </div>
-           
           </div>
         </div>
       </section>
@@ -254,10 +255,10 @@ const HomePage = ({ generalConfig }: Props) => {
                 level={2}
                 className="mb-4 uppercase w-full font-extrabold text-5xl max-w-[700px]"
               >
-                {APP_NAME && __('resources_resources_heading', APP_NAME)}
+                {t('resources_resources_heading')}
               </Heading>
               <p className="mb-4 w-full">
-                {APP_NAME && __('resources_resources_subheading', APP_NAME)}
+                {t('resources_resources_subheading')}
               </p>
             </div>
             <Resources />
@@ -270,11 +271,9 @@ const HomePage = ({ generalConfig }: Props) => {
                   level={2}
                   className="mb-4 uppercase w-full font-extrabold text-5xl max-w-[600px]"
                 >
-                  {APP_NAME && __('resources_faq_heading', APP_NAME)}
+                  {t('resources_faq_heading')}
                 </Heading>
-                <p className="mb-4 w-full">
-                  {APP_NAME && __('resources_faq_subheading', APP_NAME)}
-                </p>
+                <p className="mb-4 w-full">{t('resources_faq_subheading')}</p>
               </div>
               {faqs && <Faqs faqs={faqs} error={error} />}
             </div>
@@ -286,16 +285,17 @@ const HomePage = ({ generalConfig }: Props) => {
   );
 };
 
-HomePage.getInitialProps = async () => {
+HomePage.getInitialProps = async (context: NextPageContext) => {
   try {
     const search = formatSearch({ category: { $eq: HOME_PAGE_CATEGORY } });
-    const [articleRes, generalRes] = await Promise.all([
+    const [articleRes, generalRes, messages] = await Promise.all([
       api.get(`/article?where=${search}`).catch(() => {
         return null;
       }),
       api.get('/config/general').catch(() => {
         return null;
       }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const article = articleRes?.data?.results[0];
@@ -303,12 +303,14 @@ HomePage.getInitialProps = async () => {
     return {
       article,
       generalConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {
       article: null,
       generalConfig: null,
       error: err,
+      messages: null,
     };
   }
 };

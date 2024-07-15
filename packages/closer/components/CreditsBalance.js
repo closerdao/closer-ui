@@ -2,16 +2,17 @@ import Link from 'next/link';
 
 import { useEffect, useState } from 'react';
 
+import { useTranslations } from 'next-intl';
 import { twMerge } from 'tailwind-merge';
 
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
-import { useConfig } from '../hooks/useConfig';
-import { __ } from '../utils/helpers';
 
 const CreditsBalance = ({ isDemo, className = '' }) => {
+  const t = useTranslations();
+
   const { platform } = usePlatform();
-  const { APP_NAME } = useConfig() || {};
+
   const { isAuthenticated } = useAuth();
   const [error, setErrors] = useState(false);
   const creditsBalance = platform.carrots.findBalance('carrots');
@@ -39,8 +40,7 @@ const CreditsBalance = ({ isDemo, className = '' }) => {
         href="/settings/credits"
         className={`${twMerge('font-bold text-accent text-2xl', className)} `}
       >
-        {APP_NAME && __('carrots_balance', APP_NAME)}{' '}
-        {!isAuthenticated && '0.00'}
+        {t('carrots_balance')} {!isAuthenticated && '0.00'}
         {creditsBalance !== undefined &&
           isAuthenticated &&
           creditsBalance.toFixed(2)}

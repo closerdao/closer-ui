@@ -13,14 +13,18 @@ import {
   Tag,
   WalletState,
   YoutubeEmbed,
-  __,
   useAuth,
 } from 'closer';
 import { useBuyTokens } from 'closer/hooks/useBuyTokens';
 import api from 'closer/utils/api';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { NextPageContext } from 'next';
 import { event } from 'nextjs-google-analytics';
+import { useTranslations } from 'next-intl';
 
 const HomePage = () => {
+  const t = useTranslations();
+
   const { isAuthenticated } = useAuth();
   const { isWalletReady } = useContext(WalletState);
   const { getTokensAvailableForPurchase } = useBuyTokens();
@@ -459,7 +463,7 @@ const HomePage = () => {
             href="/token"
             size="small"
           >
-            {__('token_sale_public_sale_buy_token')}
+            {t('token_sale_public_sale_buy_token')}
           </LinkButton>
 
           {/* {isWalletReady ? (
@@ -474,7 +478,7 @@ const HomePage = () => {
                   onClick={handleNext}
                   size="small"
                 >
-                  {__('token_sale_public_sale_buy_token')}
+                  {t('token_sale_public_sale_buy_token')}
                 </Button>
               </div>
             ) : (
@@ -484,14 +488,14 @@ const HomePage = () => {
                     router.push('https://calendly.com/samueldelesque');
                   }}
                 >
-                  {__('token_sale_public_sale_button_book_a_call')}
+                  {t('token_sale_public_sale_button_book_a_call')}
                 </Button>
               </div>
             )} */}
 
           {tokensAvailable && (
             <h3 className="font-bold text-xl text-white pb-2 text-center w-60 px-6 rounded-full">
-              {tokensAvailable} {__('token_sale_public_sale_tokens_left')}
+              {tokensAvailable} {t('token_sale_public_sale_tokens_left')}
             </h3>
           )}
         </section>
@@ -663,19 +667,23 @@ const HomePage = () => {
   );
 };
 
-HomePage.getInitialProps = async () => {
+HomePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const {
-      data: { results: subscriptions },
-    } = await api.get('/config/subscriptions');
+    const [subsRes, messages] = await Promise.all([
+      api.get('/config/subscriptions').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
+    const subscriptionsConfig = subsRes?.data?.results?.value.plans;
 
     return {
-      subscriptionsConfig: subscriptions.value.plans,
+      subscriptionsConfig,
+      messages,
     };
   } catch (err) {
     return {
       subscriptionsConfig: { enabled: false, plans: [] },
       error: err,
+      messages: null,
     };
   }
 };

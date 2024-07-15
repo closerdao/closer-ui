@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 
 import RedeemCredits from '.';
 import { CloserCurrencies } from '../../types';
+import { renderWithNextIntl } from '../../test/utils';
 
 jest.mock('../../hooks/useConfig', () => ({
   // Replace with the actual path to useConfig
@@ -12,7 +13,7 @@ jest.mock('../../hooks/useConfig', () => ({
 
 describe('RedeemCredits', () => {
   it('should have correct heading in demo mode', () => {
-    render(<RedeemCredits isDemo={true} />);
+    renderWithNextIntl(<RedeemCredits isDemo={true} />);
     const heading = screen.getByRole('heading', {
       name: /redeem your carrots \[demo\]/i,
     });
@@ -20,7 +21,7 @@ describe('RedeemCredits', () => {
   });
 
   it('should have correct heading in live checkout mode', () => {
-    render(
+    renderWithNextIntl(
       <RedeemCredits
         rentalFiat={{ val: 30, cur: CloserCurrencies.EUR }}
         hasAppliedCredits={false}
@@ -33,7 +34,7 @@ describe('RedeemCredits', () => {
   });
 
   it('should have correct success message', () => {
-    render(
+    renderWithNextIntl(
       <RedeemCredits
         rentalFiat={{ val: 0, cur: CloserCurrencies.EUR }}
         hasAppliedCredits={true}
@@ -46,7 +47,7 @@ describe('RedeemCredits', () => {
   });
 
   it('should display error message if creditsError is passed', () => {
-    render(<RedeemCredits creditsError={'Some error'} />);
+    renderWithNextIntl(<RedeemCredits creditsError={'Some error'} />);
 
     const errorMessage = screen.getByText(/Some error/i);
     expect(errorMessage).toBeInTheDocument();

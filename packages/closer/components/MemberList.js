@@ -1,13 +1,23 @@
 import Link from 'next/link';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { usePlatform } from '../contexts/platform';
-import { __ } from '../utils/helpers';
 import Pagination from './Pagination';
 import ProfilePhoto from './ProfilePhoto';
+import { useTranslations } from 'next-intl';
 
-const MemberList = ({ list, preview, channel, filter, title, limit }) => {
+
+const MemberList = ({
+  list = undefined,
+  preview = undefined,
+  channel = undefined,
+  filter,
+  title = undefined,
+  limit = undefined,
+}) => {
+  const t = useTranslations();
+
   const { platform } = usePlatform();
   const [page, setPage] = useState(1);
   const [error, setErrors] = useState(false);
@@ -80,14 +90,14 @@ const MemberList = ({ list, preview, channel, filter, title, limit }) => {
                     </p>
                   )}
                   <div className="pt-2 text-accent">
-                    {__('member_list_see_profile')}
+                    {t('member_list_see_profile')}
                   </div>
                 </div>
               </div>
             </Link>
           ))
         ) : (
-          <p>{__('member_list_error_message')}</p>
+          <p>{t('member_list_error_message')}</p>
         )}
       </div>
 

@@ -1,22 +1,24 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import React from 'react';
-
 import EditModel from '../../components/EditModel';
 import Heading from '../../components/ui/Heading';
 
-import PageNotFound from '../404';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
 import models from '../../models';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
+import PageNotFound from '../not-found';
 
 interface Props {
   learningHubConfig: { enabled: boolean; value?: any } | null;
 }
 
 const CreateLessonPage = ({ learningHubConfig }: Props) => {
+  const t = useTranslations();
   const router = useRouter();
   const isLearningHubEnabled = learningHubConfig && learningHubConfig?.enabled;
 
@@ -27,11 +29,11 @@ const CreateLessonPage = ({ learningHubConfig }: Props) => {
   return (
     <>
       <Head>
-        <title>{__('learn_create_lesson')}</title>
+        <title>{t('learn_create_lesson')}</title>
       </Head>
       <div className="main-content intro">
         <Heading level={2} className="mb-2">
-          {__('learn_create_lesson')}
+          {t('learn_create_lesson')}
         </Heading>
         <EditModel
           endpoint={'/lesson'}
@@ -43,21 +45,23 @@ const CreateLessonPage = ({ learningHubConfig }: Props) => {
   );
 };
 
-CreateLessonPage.getInitialProps = async () => {
+CreateLessonPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const learningHubRes = await api.get('/config/learningHub').catch(() => {
-      return null;
-    });
+    const [learningHubRes, messages] = await Promise.all([
+      api.get('/config/learningHub').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
 
     const learningHubConfig = learningHubRes?.data?.results?.value || null;
-
     return {
       learningHubConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {
       learningHubConfig: null,
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

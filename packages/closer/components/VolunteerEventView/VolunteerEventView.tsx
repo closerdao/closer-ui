@@ -3,11 +3,11 @@ import Image from 'next/image';
 import { FC, useState } from 'react';
 
 import dayjs from 'dayjs';
+import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { VolunteerOpportunity } from '../../types';
 import { cdn } from '../../utils/api';
-import { __ } from '../../utils/helpers';
 import EventDescription from '../EventDescription';
 import EventPhoto from '../EventPhoto';
 import UploadPhoto from '../UploadPhoto/UploadPhoto';
@@ -19,6 +19,8 @@ interface Props {
 }
 
 const VolunteerEventView: FC<Props> = ({ volunteer }) => {
+  const t = useTranslations();
+
   const {
     name,
     description,
@@ -59,7 +61,7 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
                 size="small"
                 href={volunteer.slug && `/volunteer/${volunteer.slug}/edit`}
               >
-                {__('button_edit_opportunity')}
+                {t('button_edit_opportunity')}
               </LinkButton>
 
               <UploadPhoto
@@ -94,7 +96,7 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
                     ` - ${dayjs(end).format('HH:mm')}`}{' '}
                   {end && end.isBefore(dayjs()) && (
                     <p className="text-disabled">
-                      {__('volunteer_opportunity_ended')}
+                      {t('volunteer_opportunity_ended')}
                     </p>
                   )}
                 </label>
@@ -127,7 +129,7 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
                         'YYYY-MM-DD',
                       )}`}
                     >
-                      {__('apply_submit_button')}
+                      {t('apply_submit_button')}
                     </LinkButton>
                   </Card>
                 )}

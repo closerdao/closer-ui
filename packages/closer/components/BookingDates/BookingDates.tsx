@@ -1,7 +1,8 @@
 import { FC } from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import { BookingConditions } from '../../types';
-import { __ } from '../../utils/helpers';
 import DateTimePicker from '../DateTimePicker';
 import HeadingRow from '../ui/HeadingRow';
 
@@ -36,24 +37,30 @@ const BookingDates: FC<Props> = ({
   eventStartDate,
   eventEndDate,
 }) => {
+  const t = useTranslations();
   const renderConditionsDescription = () => {
     if (isMember) {
       return (
-        __(
+        t(
           'bookings_dates_step_member_book_horizon',
-          conditions?.memberMaxBookingHorizon,
+         { var: conditions?.memberMaxBookingHorizon }
+          
         ) +
         ', ' +
-        __('bookings_dates_step_book_duration', conditions?.memberMaxDuration)
+        t('bookings_dates_step_book_duration',
+          { var: conditions?.memberMaxDuration }
+          
+          )
       );
     } else {
       return (
-        __(
-          'bookings_dates_step_guest_book_horizon',
-          conditions?.guestMaxBookingHorizon,
+        t(
+          'bookings_dates_step_guest_book_horizon'
+          ,
+          { var: conditions?.guestMaxBookingHorizon },
         ) +
         ', ' +
-        __('bookings_dates_step_book_duration', conditions?.guestMaxDuration)
+        t('bookings_dates_step_book_duration', { var: conditions?.guestMaxDuration })
       );
     }
   };
@@ -62,7 +69,7 @@ const BookingDates: FC<Props> = ({
     <div>
       <HeadingRow>
         <span className="mr-2">📆</span>
-        <span>{__('bookings_dates_step_subtitle')}</span>
+        <span>{t('bookings_dates_step_subtitle')}</span>
       </HeadingRow>
       <p>{renderConditionsDescription()}</p>
       <div className="mt-8 flex justify-between items-center">

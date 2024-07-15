@@ -2,10 +2,10 @@ import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { CSVLink } from 'react-csv';
 
 import dayjs from 'dayjs';
+import { useTranslations } from 'next-intl';
 
 import { BOOKINGS_PER_PAGE, MAX_BOOKINGS_TO_FETCH } from '../constants';
 import { usePlatform } from '../contexts/platform';
-import { __ } from '../utils/helpers';
 import BookingListPreview from './BookingListPreview/BookingListPreview';
 import Pagination from './Pagination';
 import { Heading, Spinner } from './ui';
@@ -19,6 +19,7 @@ interface Props {
 const MAX_USERS_TO_FETCH = 2000;
 
 const Bookings = ({ filter, page, setPage }: Props) => {
+  const t = useTranslations();
   const { platform }: any = usePlatform();
 
   const bookings = platform.booking.find(filter);
@@ -92,7 +93,7 @@ const Bookings = ({ filter, page, setPage }: Props) => {
       <section>
         {loading ? (
           <div className="my-16 flex items-center gap-2">
-            <Spinner /> {__('generic_loading')}
+            <Spinner /> {t('generic_loading')}
           </div>
         ) : (
           <div className="columns mt-8">
@@ -100,8 +101,8 @@ const Bookings = ({ filter, page, setPage }: Props) => {
               <Heading level={2} className="mr-4">
                 {allBookings ? allBookings.size : 0}{' '}
                 {bookings && bookings.count() === 1
-                  ? __('booking_requests_result')
-                  : __('booking_requests_results')}
+                  ? t('booking_requests_result')
+                  : t('booking_requests_results')}
               </Heading>
 
               {bookings && (
@@ -147,13 +148,13 @@ const Bookings = ({ filter, page, setPage }: Props) => {
                     'YYYY-MM-DD.HH:mm',
                   )}.csv`}
                 >
-                  {__('generic_export_csv')}
+                  {t('generic_export_csv')}
                 </CSVLink>
               )}
             </div>
             <div className="bookings-list mt-8 flex flex-wrap gap-4">
               {!bookings || bookings.count() === 0 ? (
-                <p className="mt-4">{__('no_bookings')}</p>
+                <p className="mt-4">{t('no_bookings')}</p>
               ) : (
                 bookings.map((booking: any) => {
                   const listing = platform.listing.findOne(
@@ -161,7 +162,7 @@ const Bookings = ({ filter, page, setPage }: Props) => {
                   );
                   const listingName = listing
                     ? listing.get('name')
-                    : __('no_listing_type');
+                    : t('no_listing_type');
 
                   const user =
                     allUsers &&

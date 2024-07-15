@@ -1,7 +1,5 @@
 // write smoke test for /Users/vladislavsorokin/Webprojects/closerdao/traditionaldreamfactory.com/packages/closer/pages/settings/index.tsx
 // Path: apps/tdf/__tests__/pages/settings/index.tsx
-import React from 'react';
-
 import { renderWithAuth } from '@/test/utils';
 
 import { screen } from '@testing-library/react';
@@ -21,7 +19,7 @@ describe('SettingsPage', () => {
   });
 
   const fields = ['Name', 'Email'];
-  it.each(fields)('should render %s field', async (field) => {
+  it.each(fields)('should render {var} field', async (field) => {
     renderWithAuth(<SettingsPage />);
     expect(await screen.findByLabelText(field)).toBeInTheDocument();
   });

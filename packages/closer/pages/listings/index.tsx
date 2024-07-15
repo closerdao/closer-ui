@@ -6,22 +6,27 @@ import { useEffect } from 'react';
 import ListingListPreview from '../../components/ListingListPreview';
 import Heading from '../../components/ui/Heading';
 
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
 import { MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
+import { BookingConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
 
 interface Props {
-  settings: any;
+  bookingConfig: BookingConfig;
 }
 
-const Listings = ({ settings }: Props) => {
+const Listings = ({ bookingConfig }: Props) => {
+  const t = useTranslations();
   const discounts = {
-    daily: settings.discountsDaily,
-    weekly: settings.discountsWeekly,
-    monthly: settings.discountsMonthly,
+    daily: bookingConfig.discountsDaily,
+    weekly: bookingConfig.discountsWeekly,
+    monthly: bookingConfig.discountsMonthly,
   };
 
   const { platform }: any = usePlatform();
@@ -56,7 +61,7 @@ const Listings = ({ settings }: Props) => {
   return (
     <>
       <Head>
-        <title>{__('listings_edit_title')}</title>
+        <title>{t('listings_edit_title')}</title>
       </Head>
       {listings && listings.get('error') && (
         <div className="validation-error">{listings.get('error')}</div>
@@ -65,7 +70,7 @@ const Listings = ({ settings }: Props) => {
       <section className="text-center flex justify-center flex-wrap mb-12 ">
         <div className="md:max-w-5xl">
           <div className="mb-6 flex justify-between flex-col sm:flex-row gap-4">
-            <Heading>{__('listings_edit_title')}</Heading>
+            <Heading>{t('listings_edit_title')}</Heading>
             {(user?.roles.includes('admin') ||
               user?.roles.includes('space-host')) && (
               <div className="user-actions">
@@ -74,7 +79,7 @@ const Listings = ({ settings }: Props) => {
                   href="/listings/create"
                   className="btn-primary"
                 >
-                  {__('listings_create')}
+                  {t('listings_create')}
                 </Link>
               </div>
             )}
@@ -110,7 +115,7 @@ const Listings = ({ settings }: Props) => {
 
             {listings?.count() === 0 &&
               guestListings?.count() === 0 &&
-              __('listing_no_listings_found')}
+              t('listing_no_listings_found')}
           </div>
         </div>
       </section>
@@ -118,16 +123,17 @@ const Listings = ({ settings }: Props) => {
   );
 };
 
-Listings.getInitialProps = async () => {
+Listings.getInitialProps = async (context: NextPageContext) => {
   try {
-    const {
-      data: {
-        results: { value: settings },
-      },
-    } = await api.get('/config/booking');
+    const [bookingRes, messages] = await Promise.all([
+      api.get('/config/booking').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
 
+    const bookingConfig = bookingRes?.data?.results?.value;
     return {
-      settings: settings as any,
+      bookingConfig,
+      messages,
     };
   } catch (err) {
     return {

@@ -18,8 +18,8 @@ import {
 import Heading from '../../../components/ui/Heading';
 
 import dayjs from 'dayjs';
-import { NextPage } from 'next';
-import { ParsedUrlQuery } from 'querystring';
+import { NextPage, NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 import {
   CURRENCIES,
@@ -44,7 +44,6 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import {
-  __,
   getBookingRate,
   getDiscountRate,
   getMaxBookingHorizon,
@@ -55,7 +54,8 @@ import {
   formatDate,
   getBlockedDateRanges,
 } from '../../../utils/listings.helpers';
-import PageNotFound from '../../404';
+import { loadLocaleData } from '../../../utils/locale.helpers';
+import PageNotFound from '../../not-found';
 
 const MAX_DAYS_TO_CHECK_AVAILABILITY = 60;
 
@@ -74,6 +74,7 @@ const ListingPage: NextPage<Props> = ({
   error,
   descriptionText,
 }) => {
+  const t = useTranslations();
   const config = useConfig();
   const { LOCATION_LAT, LOCATION_LON, PLATFORM_LEGAL_ADDRESS } = config || {};
   const router = useRouter();
@@ -260,10 +261,10 @@ const ListingPage: NextPage<Props> = ({
       : end && formatDate(start) !== formatDate(end);
 
     if (!end) {
-      setCalendarError(__('bookings_incomplete_dates_error'));
+      setCalendarError(t('bookings_incomplete_dates_error'));
     }
     if (formatDate(start) === formatDate(end) && !isHourlyBooking) {
-      setCalendarError(__('bookings_date_range_error'));
+      setCalendarError(t('bookings_date_range_error'));
     }
 
     if (isCalendarSelectionValid) {
@@ -444,6 +445,7 @@ const ListingPage: NextPage<Props> = ({
         )}
       </Head>
       <main className="flex justify-center flex-wrap my-4 ">
+
         <div className="flex flex-col gap-8  max-w-4xl">
           <Heading level={1}>{listing.name}</Heading>
 
@@ -474,7 +476,7 @@ const ListingPage: NextPage<Props> = ({
 
                   <div className="my-8 flex flex-col gap-6">
                     <Heading level={2} className="text-lg uppercase mt-6">
-                      {__('listing_preview_location')}
+                      {t('listing_preview_location')}
                     </Heading>
                     <Heading level={3} className="text-md font-normal">
                       {PLATFORM_LEGAL_ADDRESS}
@@ -525,7 +527,7 @@ const ListingPage: NextPage<Props> = ({
                               )}
                             </b>{' '}
                             <span className="opacity-70">
-                              {__(`booking_rate_${durationName}`)}
+                              {t(`booking_rate_${durationName}`)}
                             </span>
                           </div>
                         )}
@@ -554,7 +556,7 @@ const ListingPage: NextPage<Props> = ({
                       {!isHourlyBooking && (
                         <div ref={guestsDropdownRef}>
                           <label className="my-2 hidden sm:block">
-                            {__('bookings_dates_step_guests_title')}
+                            {t('bookings_dates_step_guests_title')}
                           </label>
                           <Button
                             onClick={() =>
@@ -564,10 +566,10 @@ const ListingPage: NextPage<Props> = ({
                           >
                             {adults}{' '}
                             {adults > 1
-                              ? __(
+                              ? t(
                                   'bookings_dates_step_guests_title',
                                 ).toLowerCase()
-                              : __(
+                              : t(
                                   'bookings_dates_step_guest_title',
                                 ).toLowerCase()}
                           </Button>
@@ -595,9 +597,9 @@ const ListingPage: NextPage<Props> = ({
                                     htmlFor="separateBeds"
                                     className="text-sm w-3/4"
                                   >
-                                    {__('bookings_pickup')}
+                                    {t('bookings_pickup')}
                                     <span className="w-full text-xs ml-2">
-                                      ({__('bookings_pickup_disclaimer')})
+                                      ({t('bookings_pickup_disclaimer')})
                                     </span>
                                   </label>
                                   <Switch
@@ -643,7 +645,7 @@ const ListingPage: NextPage<Props> = ({
                           />
                         )}
                         {calendarError &&
-                          calendarError !== __('bookings_date_range_error') && (
+                          calendarError !== t('bookings_date_range_error') && (
                             <ErrorMessage
                               error={parseMessageFromError(calendarError)}
                             />
@@ -652,10 +654,10 @@ const ListingPage: NextPage<Props> = ({
                       <div className="flex flex-col gap-2">
                         <div className="hidden sm:block">
                           {listing.quantity === 1
-                            ? `${listing.quantity} ${__(
+                            ? `${listing.quantity} ${t(
                                 'listing_listings_available_singular',
                               )}`
-                            : `${listing.quantity} ${__(
+                            : `${listing.quantity} ${t(
                                 'listing_listings_available',
                               )}`}
                         </div>
@@ -676,7 +678,7 @@ const ListingPage: NextPage<Props> = ({
                                   listing.fiatPrice.cur,
                                 )}{' '}
                               </span>
-                              {__('listing_preview_per_hourly')}
+                              {t('listing_preview_per_hourly')}
                             </p>
                           </div>
                         )}
@@ -692,7 +694,7 @@ const ListingPage: NextPage<Props> = ({
                                   listing.fiatPrice.cur,
                                 )}{' '}
                               </span>
-                              {__(`listing_preview_per_${durationName}`)}
+                              {t(`listing_preview_per_${durationName}`)}
                             </p>
                           </div>
                         )}
@@ -702,14 +704,14 @@ const ListingPage: NextPage<Props> = ({
                           isEnabled={isBookingAvailable}
                           className=" text-lg btn-primary text-center h-[32px] sm:h-auto sm:mt-4"
                         >
-                          {__('listings_slug_link')}
+                          {t('listings_slug_link')}
                         </Button>
                       </div>
                       {!isListingAvailable && (
                         <div className="block sm:hidden text-xs">
                           {isGuestLimit
-                            ? __('listing_not_available_guest_limit')
-                            : bookingError || __('listing_not_available')}
+                            ? t('listing_not_available_guest_limit')
+                            : bookingError || t('listing_not_available')}
                         </div>
                       )}
                     </div>
@@ -717,8 +719,8 @@ const ListingPage: NextPage<Props> = ({
                     {isHourlyBooking && accomodationTotal && (
                       <div className="w-full flex justify-between items-center mt-3">
                         <p>
-                          {__('bookings_checkout_step_total_title')} (
-                          {__('token_sale_checkout_vat')}):
+                          {t('bookings_checkout_step_total_title')} (
+                          {t('token_sale_checkout_vat')}):
                         </p>
                         <div className="font-bold text-right text-xl">
                           {currency === CURRENCIES[1] && fiatTotal > 0 ? (
@@ -756,7 +758,7 @@ const ListingPage: NextPage<Props> = ({
                           {' '}
                           <div className="flex justify-between items-center mt-3">
                             <p>
-                              {__(
+                              {t(
                                 'bookings_summary_step_dates_accomodation_type',
                               )}
                             </p>
@@ -773,11 +775,11 @@ const ListingPage: NextPage<Props> = ({
                             </p>
                           </div>
                           <div className="flex justify-between items-center mt-3">
-                            <p>{__('bookings_summary_step_utility_total')}</p>
+                            <p>{t('bookings_summary_step_utility_total')}</p>
                             <p>
                               {foodOption === 'no_food' ? (
-                                <b title={__('stay_food_not_included_tooltip')}>
-                                  {__('stay_food_not_included')}
+                                <b title={t('stay_food_not_included_tooltip')}>
+                                  {t('stay_food_not_included')}
                                 </b>
                               ) : (
                                 priceFormat(
@@ -789,8 +791,8 @@ const ListingPage: NextPage<Props> = ({
                           </div>
                           <div className="flex justify-between items-center mt-3">
                             <p>
-                              {__('bookings_checkout_step_total_title')} (
-                              {__('token_sale_checkout_vat')}):
+                              {t('bookings_checkout_step_total_title')} (
+                              {t('token_sale_checkout_vat')}):
                             </p>
                             <div className="font-bold text-right text-xl">
                               {currency === CURRENCIES[1] && fiatTotal > 0 ? (
@@ -826,14 +828,14 @@ const ListingPage: NextPage<Props> = ({
                             {!isListingAvailable &&
                               !isGuestLimit &&
                               isDurationValid &&
-                              __('listing_not_available')}
+                              t('listing_not_available')}
                             {!isDurationValid &&
-                              __(
+                              t(
                                 'bookings_dates_min_duration_error',
-                                settings?.minDuration,
+                                { var: settings?.minDuration },
                               )}
                             {isGuestLimit &&
-                              __('listing_not_available_guest_limit')}
+                              t('listing_not_available_guest_limit')}
                           </Information>
                         )
                       )}
@@ -849,10 +851,11 @@ const ListingPage: NextPage<Props> = ({
   );
 };
 
-ListingPage.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
+ListingPage.getInitialProps = async (context: NextPageContext) => {
+  const { query } = context;
   const { convert } = require('html-to-text');
   try {
-    const [listing, settings, generalSettings] = await Promise.all([
+    const [listing, settings, generalSettings, messages] = await Promise.all([
       api.get(`/listing/${query.slug}`).catch((err) => {
         console.error('Error fetching booking config:', err);
         return null;
@@ -865,6 +868,8 @@ ListingPage.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
         console.error('Error fetching booking config:', err);
         return null;
       }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+
     ]);
 
     const options = {
@@ -879,6 +884,7 @@ ListingPage.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
       settings: settings?.data.results.value,
       generalSettings: generalSettings?.data.results.value,
       descriptionText,
+      messages,
     };
   } catch (err: unknown) {
     return {
@@ -887,6 +893,7 @@ ListingPage.getInitialProps = async ({ query }: { query: ParsedUrlQuery }) => {
       settings: null,
       generalSettings: null,
       descriptionText: null,
+      messages: null,
     };
   }
 };
