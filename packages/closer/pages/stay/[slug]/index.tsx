@@ -541,11 +541,12 @@ const ListingPage: NextPage<Props> = ({
                           start={start}
                           isSmallScreen={isSmallScreen}
                           blockedDateRanges={getBlockedDateRanges(
-                            start,
+                            { start,
                             end,
                             maxHorizon,
                             maxDuration,
                             unavailableDates,
+                            isHourlyBooking }
                           )}
                           timeOptions={timeOptions}
                           hourAvailability={hourAvailability}
