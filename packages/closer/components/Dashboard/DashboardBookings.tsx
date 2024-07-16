@@ -1,19 +1,35 @@
 import { useEffect, useState } from 'react';
 
-import ArrivingIcon from '../../components/icons/ArrivingIcon';
-import DepartingIcon from '../../components/icons/DepartingIcon';
 import { Card, Heading } from '../../components/ui';
 import DonutChart from '../../components/ui/Charts/DonutChart';
 
+import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
 import { useTranslations } from 'next-intl';
 
 import { MAX_BOOKINGS_TO_FETCH, MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
-import { getDateRange } from '../../utils/dashboard.helpers';
+import { useConfig } from '../../hooks/useConfig';
+import { getDateRange, getDuration } from '../../utils/dashboard.helpers';
 import BookingsIcon from '../icons/BookingsIcon';
+import ArrivingAndDeparting from './ArrivingAndDeparting';
+import BookingsWithRoomInfo from './BookingsWithRoomInfo';
 import OccupancyCard from './OccupancyCard';
 
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 const now = Date.now();
+
+const paidStatuses = ['paid', 'tokens-staked', 'credits-paid'];
+const relevantStatuses = [
+  ...paidStatuses,
+  'pending',
+  'confirmed',
+  'checked-in',
+  'checked-out',
+];
 
 interface Filter {
   where: { [key: string]: any };
@@ -35,22 +51,18 @@ interface Props {
 const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
-
-  const paidStatuses = ['paid', 'tokens-staked', 'credits-paid'];
-  const relevantStatuses = [
-    ...paidStatuses,
-    'pending',
-    'confirmed',
-    'checked-in',
-    'checked-out',
-  ];
+  const { TIME_ZONE } = useConfig();
 
   const [isLoading, setIsLoading] = useState(false);
-
   const [filter, setFilter] = useState<Filter>({
     where: {},
     limit: MAX_BOOKINGS_TO_FETCH,
   });
+
+  const duration = getDuration(timeFrame, fromDate, toDate);
+
+  console.log('duration=', duration);
+
   const listingFilter = {
     where: {},
     limit: MAX_LISTINGS_TO_FETCH,
@@ -96,23 +108,6 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
     nightlyListings &&
     nightlyListings.map((listing: any) => listing.get('_id'));
 
-  const arrivingNightlyBookings =
-    arrivingBookings &&
-    nightlyListings &&
-    arrivingBookings?.filter((booking: any) => {
-      {
-        return nightlyListingsIds.includes(booking.get('listing'));
-      }
-    });
-  const departingNightlyBookings =
-    departingBookings &&
-    nightlyListings &&
-    departingBookings?.filter((booking: any) => {
-      {
-        return nightlyListingsIds.includes(booking.get('listing'));
-      }
-    });
-
   const nightlyBookings =
     bookings &&
     nightlyListings &&
@@ -150,8 +145,6 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
   };
 
   const numVolunteers = getPeopleCount(bookings, 'volunteerId') || 0;
-
-  console.log('numVolunteers=', numVolunteers);
 
   const numEventAttendees = getPeopleCount(bookings, 'eventId') || 0;
   const numTeam = getPeopleCount(bookings, 'isTeamBooking') || 0;
@@ -217,27 +210,24 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
   }, [filter]);
 
   useEffect(() => {
-    const { start, end } = getDateRange(timeFrame, fromDate, toDate);
-    if (!toDate && !fromDate) {
-      setFilter({
-        ...filter,
-        where: {
-          status: {
-            $in: relevantStatuses,
-          },
-          $and: [{ start: { $lte: end } }, { end: { $gte: start } }],
+    const { start, end } = getDateRange({
+      timeFrame,
+      fromDate,
+      toDate,
+      timeZone: TIME_ZONE,
+    });
+    console.log('start=', start);
+    console.log('end=', end);
+
+    setFilter({
+      ...filter,
+      where: {
+        status: {
+          $in: relevantStatuses,
         },
-      });
-    }
-    if (fromDate && toDate) {
-      setFilter({
-        ...filter,
-        where: {
-          status: { $in: paidStatuses },
-          $and: [{ start: { $lte: toDate } }, { end: { $gte: fromDate } }],
-        },
-      });
-    }
+        $and: [{ start: { $lte: end } }, { end: { $gte: start } }],
+      },
+    });
   }, [timeFrame, fromDate, toDate]);
 
   return (
@@ -255,36 +245,21 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
             spaceBookings={spaceBookings}
             nightlyBookings={nightlyBookings}
             spaceListings={spaceListings}
+            duration={duration}
           />
-          <div className="grid grid-rows-2 gap-4">
-            <Card className="p-2 flex flex-row gap-1 justify-between items-center">
-              <p className="text-xl font-bold">
-                {arrivingNightlyBookings && arrivingNightlyBookings.size}
-              </p>
-              <div>
-                <p>{t('dashboard_rooms')}</p>
-                <p className="text-accent">{t('dashboard_arriving')}</p>
-              </div>
-
-              <div className="flex-shrink-0 bg-neutral-dark rounded-md w-9 h-9 flex items-center justify-center">
-                <ArrivingIcon />
-              </div>
-            </Card>
-
-            <Card className="p-2 flex flex-row gap-1 justify-between items-center">
-              <p className="text-xl font-bold">
-                {departingNightlyBookings && departingNightlyBookings.size}
-              </p>
-              <div>
-                <p>{t('dashboard_rooms')}</p>
-                <p className="text-accent">{t('dashboard_departing')}</p>
-              </div>
-
-              <div className="flex-shrink-0 bg-neutral-dark rounded-md w-9 h-9 flex items-center justify-center">
-                <DepartingIcon />
-              </div>
-            </Card>
-          </div>
+          {(timeFrame === 'today' || duration === 1) && (
+            <ArrivingAndDeparting
+              arrivingBookings={arrivingBookings}
+              departingBookings={departingBookings}
+              nightlyListings={nightlyListings}
+              nightlyListingsIds={nightlyListingsIds}
+            />
+          )}
+          {!(timeFrame === 'today' && duration === 1) && (
+           <Card className="p-2 flex flex-col gap-1 ">
+            
+              dd aa</Card>
+          )}
         </div>
         <div className="grid grid-cols-2 gap-4">
           <OccupancyCard
@@ -294,22 +269,13 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
             spaceBookings={spaceBookings}
             nightlyBookings={nightlyBookings}
             spaceListings={spaceListings}
+            duration={duration}
           />
-          <Card className="p-2 gap-2">
-            <p>
-              Room 1 <span className="text-neon-dark">night</span>
-            </p>
-            <p>
-              Room 3 <span className="text-neon-dark">night</span>
-            </p>
-            <p>
-              Meeting Room on the first floor 1{' '}
-              <span className="text-neon-dark">14:00 - 16:00</span>
-            </p>
-            <p>
-              Room 1 <span className="text-neon-dark">night</span>
-            </p>
-          </Card>
+          <BookingsWithRoomInfo
+            bookings={bookings}
+            listings={listings}
+            TIME_ZONE={TIME_ZONE}
+          />
         </div>
       </div>
 

@@ -17,6 +17,7 @@ interface Props {
   nightlyBookings: any;
   spaceBookings: any;
   spaceListings: any;
+  duration: number;
 }
 
 const OccupancyCard = ({
@@ -26,17 +27,19 @@ const OccupancyCard = ({
   nightlyBookings,
   spaceBookings,
   spaceListings,
+  duration
 }: Props) => {
   const t = useTranslations();
 
-  const totalNumNights = listings && getTotalNumNights(nightlyListings);
-  const totalNumSpaceSlots = listings && getTotalNumSpaceSlots(spaceListings);
+  const totalNumNights = listings && getTotalNumNights(nightlyListings) * duration || 0;
+  const totalNumSpaceSlots = listings && spaceListings && getTotalNumSpaceSlots(spaceListings) * duration;
+  console.log('totalNumSpaceSlots=',totalNumSpaceSlots);
 
   const numBookedNights = getNumBookedNights(nightlyBookings, nightlyListings);
   const numBookedSpaceSlots = getNumBookedSpaceSlots(
     spaceBookings,
     spaceListings,
-  );
+  ) ;
   const hospitalityOccupancy = (
     (numBookedNights / totalNumNights) *
     100
@@ -80,7 +83,7 @@ const OccupancyCard = ({
           <span className="text-xl">
             {isNightly ? totalNumNights : totalNumSpaceSlots}
           </span>{' '}
-          {isNightly ? t('dashboard_rooms') : t('dashboard_booking_slots')}
+          {isNightly ? t('dashboard_nights') : t('dashboard_booking_slots')}
         </div>
       </div>
     </Card>
