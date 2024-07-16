@@ -1284,6 +1284,7 @@
   "dashboard_spaces_occupancy": "Spaces occupancy",
   "dashboard_booked": "Booked",
   "dashboard_rooms": "Rooms",
+  "dashboard_booking_slots": "Booking slots",
   "dashboard_arriving": "Arriving",
   "dashboard_departing": "Departing",
   "dashboard_applications": "Applications",

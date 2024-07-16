@@ -1,3 +1,5 @@
+import { List, Map } from 'immutable';
+
 export const getDateRange = (
   timeFrame: string,
   fromDate: Date | string,
@@ -33,17 +35,10 @@ export const getDateRange = (
   }
 };
 
-export const getTotalNumListings = (listings: any) => {
-  // excluding spaces booked by hour slots
+export const getTotalNumNights = (listings: List<Map<string, unknown>>) => {
   if (!listings) return 0;
   let numListings = 0;
   listings.forEach((listing: any) => {
-    if (
-      !listing.get('priceDuration') ||
-      listing.get('priceDuration') !== 'night'
-    ) {
-      return;
-    }
     if (listing.get('private')) {
       numListings += listing.get('quantity');
     } else {
@@ -51,4 +46,61 @@ export const getTotalNumListings = (listings: any) => {
     }
   });
   return numListings;
+};
+
+export const getTotalNumSpaceSlots = (listings: List<Map<string, unknown>>) => {
+  if (!listings) return 0;
+  let numListings = 0;
+
+  listings.forEach((listing: any) => {
+    console.log('listing?.workingHoursEnd=',listing.get('workingHoursEnd'));
+    const numHourSlots = listing.get('workingHoursEnd') - listing.get('workingHoursStart');
+
+    numListings += numHourSlots
+  });
+
+  console.log('numListings hour slots', numListings);
+  return numListings;
+};
+
+export const getNumBookedNights = (
+  bookings: List<Map<string, unknown>>,
+  listings: List<Map<string, unknown>>,
+) => {
+  if (!bookings || !listings) return 0;
+  let numBookedNights = 0;
+
+  const sharedListingIds = listings
+    .filter((listing: any) => !listing.get('private'))
+    .map((listing: any) => listing.get('_id'));
+
+  bookings.forEach((booking: any) => {
+    if (sharedListingIds.includes(booking.get('listing'))) {
+      numBookedNights += booking.get('adults');
+    } else {
+      numBookedNights += 1;
+    }
+  });
+  return numBookedNights;
+};
+
+export const getNumBookedSpaceSlots = (
+  bookings: List<Map<string, unknown>>,
+  listings: List<Map<string, unknown>>,
+) => {
+  if (!bookings || !listings) return 0;
+  let numBookedNights = 0;
+
+  const sharedListingIds = listings
+    .filter((listing: any) => !listing.get('private'))
+    .map((listing: any) => listing.get('_id'));
+
+  bookings.forEach((booking: any) => {
+    if (sharedListingIds.includes(booking.get('listing'))) {
+      numBookedNights += booking.get('adults');
+    } else {
+      numBookedNights += 1;
+    }
+  });
+  return numBookedNights;
 };

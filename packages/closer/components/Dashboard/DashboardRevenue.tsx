@@ -1,4 +1,3 @@
-import { useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
@@ -6,11 +5,9 @@ import RevenueIcon from '../icons/RevenueIcon';
 import { Card, Heading } from '../ui';
 import LineChart from '../ui/Charts/LineChart';
 import StackedBarChart from '../ui/Charts/StackedBarChart';
-import TimeFrameSelector from './TimeFrameSelector';
 
 const DashboardRevenue = () => {
   const t = useTranslations();
-  const [timeFrame, setTimeFrame] = useState('year');
 
   const revenueData = [
     {
@@ -71,12 +68,9 @@ const DashboardRevenue = () => {
 
   return (
     <section className="bg-white rounded-md p-6 flex flex-col gap-6">
-      <div className="flex justify-between">
-        <Heading level={3} className="uppercase text-md flex gap-3">
-          <RevenueIcon /> {t('dashboard_revenue_title')}
-        </Heading>
-        <TimeFrameSelector timeFrame={timeFrame} setTimeFrame={setTimeFrame} />
-      </div>
+      <Heading level={3} className="uppercase text-md flex gap-3">
+        <RevenueIcon /> {t('dashboard_revenue_title')}
+      </Heading>
 
       <div className="grid grid-cols-3 gap-4">
         <Card className="col-span-2 p-2 gap-2">
