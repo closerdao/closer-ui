@@ -24,6 +24,8 @@ const tdfTheme = {
       // system colors belong to closer
       // TODO: decide with Daneel about brand color system
       neutral: '#f0f0ee', //disabled button bg
+      'neutral-light': '#FDF9FB',
+
       // 'neutral-dark': '#EDE8EB' ,
       'neutral-dark': '#F0F0F0',
       // these colors are not suppoerted anymore, please use those above

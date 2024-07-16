@@ -13,6 +13,8 @@ module.exports = {
       'foreground-dark': '#dadada',
       card: '#ebf1f6',
       neutral: '#F0F0F0',
+      'neutral-light': '#FDF9FB',
+      'neutral-dark': '#F0F0F0',
       'complimentary-light': '#333333',
       'complimentary-core': '#000000',
       error: '#9f1f42',
@@ -20,6 +22,9 @@ module.exports = {
       failure: '#DB4726',
       success: '#58B741',
       pending: '#E8AB1B',
+      'neon-dark': '#42CC93',
+
+      
       // 'system-success': '#58B741',
       // 'system-warning': '#E8AB1B',
 

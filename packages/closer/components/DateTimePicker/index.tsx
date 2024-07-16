@@ -35,6 +35,7 @@ interface Props {
   priceDuration?: string;
   timeOptions?: string[] | null;
   hourAvailability?: { hour: string; isAvailable: boolean }[] | [];
+  isDashboard?: boolean;
 }
 
 const DateTimePicker = ({
@@ -51,6 +52,7 @@ const DateTimePicker = ({
   priceDuration = 'night',
   timeOptions,
   hourAvailability,
+  isDashboard,
 }: Props) => {
   const t = useTranslations();
   const router = useRouter();
@@ -313,11 +315,13 @@ const DateTimePicker = ({
           {priceDuration === 'night' && (
             <>
               <div>
-                <div className="text-sm mb-2">
-                  {isAdmin
-                    ? t('events_event_start_date')
-                    : t('listings_book_check_in')}
-                </div>
+                {!isDashboard && (
+                  <div className="text-sm mb-2">
+                    {isAdmin
+                      ? t('events_event_start_date')
+                      : t('listings_book_check_in')}
+                  </div>
+                )}
                 <div className="text-sm border rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
                   {dateRange?.from
                     ? dayjs(dateRange?.from).format('ll')
@@ -325,11 +329,13 @@ const DateTimePicker = ({
                 </div>
               </div>
               <div>
-                <div className="text-sm mb-2">
-                  {isAdmin
-                    ? t('events_event_end_date')
-                    : t('listings_book_check_out')}
-                </div>
+                {!isDashboard && (
+                  <div className="text-sm mb-2">
+                    {isAdmin
+                      ? t('events_event_end_date')
+                      : t('listings_book_check_out')}
+                  </div>
+                )}
                 <div className="text-sm border rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
                   {dateRange?.to
                     ? dayjs(dateRange?.to).format('ll')

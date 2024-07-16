@@ -87,6 +87,8 @@ const BookingsCalendarPage = () => {
     where: {},
     limit: MAX_LISTINGS_TO_FETCH,
   });
+
+  console.log('listings', listings && listings);
   const allUsers = platform.user.find({ limit: MAX_USERS_TO_FETCH });
   const formattedListings = listings && formatListings(listings.toJS());
   const listingOptions = listings?.toJS().map((listing: Listing) => ({
