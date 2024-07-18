@@ -51,7 +51,10 @@ const DatesSelector = ({
   volunteer,
   futureEvents,
   event,
+  messages
 }: Props) => {
+
+  console.log('messages=',messages);
   const t = useTranslations();
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -391,7 +394,7 @@ DatesSelector.getInitialProps = async (
         bookingConfig,
         ticketOptions: ticketsAvailable?.data?.ticketOptions,
         event: event?.data?.results,
-        messages: null,
+        messages,
       };
     }
     if (volunteerId) {
