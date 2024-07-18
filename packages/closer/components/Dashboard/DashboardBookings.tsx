@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Card, Heading } from '../../components/ui';
 import DonutChart from '../../components/ui/Charts/DonutChart';
@@ -11,7 +11,12 @@ import { useTranslations } from 'next-intl';
 import { MAX_BOOKINGS_TO_FETCH, MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
-import { getDateRange, getDuration } from '../../utils/dashboard.helpers';
+import {
+  getDateRange,
+  getDuration,
+  // getNumBookedNights,
+  // getTotalNumNights,
+} from '../../utils/dashboard.helpers';
 import BookingsIcon from '../icons/BookingsIcon';
 import ArrivingAndDeparting from './ArrivingAndDeparting';
 import BookingsWithRoomInfo from './BookingsWithRoomInfo';
@@ -54,14 +59,13 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
   const { TIME_ZONE } = useConfig();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [filter, setFilter] = useState<Filter>({
-    where: {},
-    limit: MAX_BOOKINGS_TO_FETCH,
-  });
+  const [filter, setFilter] = useState<Filter | null>(null);
+  const [start, setStart] = useState<Date | null>(null);
+  const [end, setEnd] = useState<Date | null>(null);
 
   const duration = getDuration(timeFrame, fromDate, toDate);
 
-  console.log('duration=', duration);
+  // console.log('duration=', duration);
 
   const listingFilter = {
     where: {},
@@ -96,13 +100,15 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
   const departingBookings = platform.booking.find(departingFilter);
 
   console.log('=====================');
-  const nightlyListings =
-    listings &&
-    listings.filter(
-      (listing: any) =>
-        !listing.get('priceDuration') ||
-        listing.get('priceDuration') === 'night',
-    );
+  const nightlyListings = useMemo(
+    () =>
+      listings?.filter(
+        (listing: any) =>
+          !listing.get('priceDuration') ||
+          listing.get('priceDuration') === 'night',
+      ),
+    [listings],
+  );
 
   const nightlyListingsIds =
     nightlyListings &&
@@ -115,19 +121,41 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
       return nightlyListingsIds.includes(booking.get('listing'));
     });
 
-  const spaceListings =
-    listings &&
-    listings.filter((listing: any) => listing.get('priceDuration') !== 'night');
+  
 
-  const spaceListingsIds =
-    spaceListings && spaceListings.map((listing: any) => listing.get('_id'));
+  const getOccupancyByListing = (
+    nightlyListings: any,
+    nightlyBookings: any,
+    duration: number,
+  ) => {
+    // console.log('nightlyBookings=', nightlyBookings);
+    const occupancyByListing = nightlyListings?.map((listing: any) => {
+      
+      const listingBookings = nightlyBookings?.filter(
+        (booking: any) => booking.get('listing') === listing.get('_id'),
+      );
 
-  const spaceBookings =
-    bookings &&
-    spaceListings &&
-    bookings.filter((booking: any) => {
-      return spaceListingsIds.includes(booking.get('listing'));
+      // console.log('listing=',listing.get('name'));
+
+      // console.log('listingBookings=',listingBookings);
+      // const numBookedNights = getNumBookedNights(listingBookings, listing);
+      // const totalNumNights = getTotalNumNights(listing) * duration;
+      // const occupancy = ((numBookedNights / totalNumNights) * 100).toFixed(1);
+      // console.log('occupancy=', occupancy);
+      // return { listing, occupancy };
     });
+
+    // console.log('occupancyByListing=',nightlyListings && occupancyByListing);
+
+    return 0;
+  };
+
+  const occupancyByListing =
+    nightlyListings &&
+    nightlyListings &&
+    getOccupancyByListing(nightlyListings, nightlyBookings, duration);
+
+  // console.log('occupancyByListing=', occupancyByListing);
 
   const getPeopleCount = (bookings: any, fieldToCheck: string) => {
     return (
@@ -216,8 +244,10 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
       toDate,
       timeZone: TIME_ZONE,
     });
-    console.log('start=', start);
-    console.log('end=', end);
+    setStart(start);
+    setEnd(end);
+    // console.log('start=', start);
+    // console.log('end=', end);
 
     setFilter({
       ...filter,
@@ -242,10 +272,11 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
             isNightly={true}
             listings={listings}
             nightlyListings={nightlyListings}
-            spaceBookings={spaceBookings}
+            bookings={bookings}
             nightlyBookings={nightlyBookings}
-            spaceListings={spaceListings}
             duration={duration}
+            start={start}
+            end={end}
           />
           {(timeFrame === 'today' || duration === 1) && (
             <ArrivingAndDeparting
@@ -256,9 +287,10 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
             />
           )}
           {!(timeFrame === 'today' && duration === 1) && (
-           <Card className="p-2 flex flex-col gap-1 ">
-            
-              dd aa</Card>
+            <Card className="p-2 flex flex-col gap-1 ">
+
+              ddd
+            </Card>
           )}
         </div>
         <div className="grid grid-cols-2 gap-4">
@@ -266,16 +298,17 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
             isNightly={false}
             listings={listings}
             nightlyListings={nightlyListings}
-            spaceBookings={spaceBookings}
+            bookings={bookings}
             nightlyBookings={nightlyBookings}
-            spaceListings={spaceListings}
             duration={duration}
+            start={start}
+            end={end}
           />
-          <BookingsWithRoomInfo
+          {/* <BookingsWithRoomInfo
             bookings={bookings}
             listings={listings}
             TIME_ZONE={TIME_ZONE}
-          />
+          /> */}
         </div>
       </div>
 

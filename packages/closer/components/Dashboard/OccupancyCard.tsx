@@ -1,7 +1,7 @@
 import { useTranslations } from 'next-intl';
 
 import {
-  getNumBookedNights,
+  getBookedNights,
   getNumBookedSpaceSlots,
   getTotalNumNights,
   getTotalNumSpaceSlots,
@@ -15,9 +15,10 @@ interface Props {
   nightlyListings: any;
   listings: any;
   nightlyBookings: any;
-  spaceBookings: any;
-  spaceListings: any;
+  bookings: any;
   duration: number;
+  start: Date | null;
+  end: Date | null;
 }
 
 const OccupancyCard = ({
@@ -25,23 +26,44 @@ const OccupancyCard = ({
   nightlyListings,
   listings,
   nightlyBookings,
-  spaceBookings,
-  spaceListings,
-  duration
+  bookings,
+  duration,
+  start,
+  end,
 }: Props) => {
   const t = useTranslations();
 
-  const totalNumNights = listings && getTotalNumNights(nightlyListings) * duration || 0;
-  const totalNumSpaceSlots = listings && spaceListings && getTotalNumSpaceSlots(spaceListings) * duration;
-  console.log('totalNumSpaceSlots=',totalNumSpaceSlots);
+  const spaceListings =
+    listings &&
+    listings.filter((listing: any) => listing.get('priceDuration') !== 'night');
 
-  const numBookedNights = getNumBookedNights(nightlyBookings, nightlyListings);
+  const spaceListingsIds =
+    spaceListings && spaceListings.map((listing: any) => listing.get('_id'));
+
+  const spaceBookings =
+    bookings &&
+    spaceListings &&
+    bookings.filter((booking: any) => {
+      return spaceListingsIds.includes(booking.get('listing'));
+    });
+
+  const totalNumNights =
+    (listings && getTotalNumNights(nightlyListings) * duration) || 0;
+  const totalNumSpaceSlots =
+    listings &&
+    spaceListings &&
+    getTotalNumSpaceSlots(spaceListings) * duration;
+  // console.log('totalNumSpaceSlots=', totalNumSpaceSlots);
+
+  const bookedNights = getBookedNights(nightlyBookings, nightlyListings, start, end);
+
+  // console.log('numBookedNights=',numBookedNights);
   const numBookedSpaceSlots = getNumBookedSpaceSlots(
     spaceBookings,
     spaceListings,
-  ) ;
+  );
   const hospitalityOccupancy = (
-    (numBookedNights / totalNumNights) *
+    (bookedNights.numBookedNights / totalNumNights) *
     100
   ).toFixed(1);
 
