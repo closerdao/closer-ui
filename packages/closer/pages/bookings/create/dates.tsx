@@ -51,10 +51,8 @@ const DatesSelector = ({
   volunteer,
   futureEvents,
   event,
-  messages
 }: Props) => {
 
-  console.log('messages=',messages);
   const t = useTranslations();
   const isBookingEnabled =
     bookingConfig?.enabled &&

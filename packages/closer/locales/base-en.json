@@ -78,7 +78,7 @@
   "bookings_dates_step_guest_book_horizon": "As a guest, you can book up to {var} days in advance",
   "bookings_dates_step_book_duration": "and book up to {var} days of stay.",
   "bookings_stay_duration": "Stay duration (days)",
-  "bookings_dates_step_member_book_horizon": "Members can book up to {duration} days in advance",
+  "bookings_dates_step_member_book_horizon": "Members can book up to {var} days in advance",
   "bookings_dates_step_total": "Total Nights",
   "bookings_dates_step_payment_title": "Payment Method",
   "bookings_dates_enter_date": "Enter date",
