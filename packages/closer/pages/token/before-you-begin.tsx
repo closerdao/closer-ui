@@ -115,7 +115,7 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
                 <Card className="mb-4">
                   <Link
                     className="text-accent font-bold underline"
-                    href={t('token_sale_complete_guide_link')}
+                    href='/pdf/Token-Sale-Support.pdf'
                   >
                     📄 {t('token_sale_complete_guide')}
                   </Link>
@@ -140,9 +140,17 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
               <li className="mb-1.5">
                 <Link
                   className="text-accent font-bold underline"
-                  href={t('token_sale_before_you_begin_guide_3_link')}
+                  href='https://ramp.network/buy'
                 >
                   {t('token_sale_before_you_begin_guide_3')}
+                </Link>
+              </li>
+              <li className="mb-1.5">
+                <Link
+                  className="text-accent font-bold underline"
+                  href='https://v2.app.squidrouter.com/'
+                >
+                  {t('token_sale_before_you_begin_guide_5')}
                 </Link>
               </li>
               <li className="mb-1.5">
