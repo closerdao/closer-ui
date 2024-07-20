@@ -424,8 +424,7 @@ export const getLocalTimeAvailability = (
   const DEFAULT_TIMEZONE = 'UTC';
 
   return availability?.map((time) => {
-    const [hours, minutes] = time.hour.split(':').map(Number);
-
+    const [hours, minutes] = time?.hour?.split(':').map(Number) || [0, 0];
     const date = new Date();
     date.setUTCHours(hours, minutes, 0, 0);
 
