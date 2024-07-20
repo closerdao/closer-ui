@@ -95,6 +95,7 @@ const ListingDateSelector = ({
           {isHourlyBooking &&
             isStartTimeSet &&
             isEndTimeSet &&
+            getTimeOnly(start) !== getTimeOnly(end) &&
             `- ${getTimeOnly(start)} - ${getTimeOnly(end)}`}
 
           {!isHourlyBooking && (
