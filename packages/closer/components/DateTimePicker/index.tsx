@@ -307,7 +307,7 @@ const DateTimePicker = ({
           {priceDuration !== 'night' && startTime && savedStartDate && (
             <div className="text-sm border rounded-md bg-neutral py-3 px-4 font-bold ">
               {getDateOnly(savedStartDate)}
-              {isStartTimeSelected && ` - ${startTimeOnly} - ${endTimeOnly}`}
+              {isStartTimeSelected && startTimeOnly !== endTimeOnly && ` - ${startTimeOnly} - ${endTimeOnly}`}
             </div>
           )}
           {priceDuration === 'night' && (
@@ -393,10 +393,8 @@ const DateTimePicker = ({
         <div className="py-2 border-t">
           <TimePicker
             startDate={savedStartDate}
-            endDate={savedEndDate}
             setStartDate={setStartDate}
             setEndDate={setEndDate}
-            timeOptions={timeOptions}
             hourAvailability={hourAvailability}
           />
         </div>

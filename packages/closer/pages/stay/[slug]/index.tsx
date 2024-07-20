@@ -129,7 +129,8 @@ const ListingPage: NextPage<Props> = ({
 
   const isTimeSet =
     timeOptions?.includes(String(getTimeOnly(start))) &&
-    timeOptions?.includes(String(getTimeOnly(end)));
+    timeOptions?.includes(String(getTimeOnly(end))) &&
+    String(getTimeOnly(start)) !== String(getTimeOnly(end));
 
   const [bookingError, setBookingError] = useState<null | string>(null);
   const durationRateDays =
@@ -540,14 +541,14 @@ const ListingPage: NextPage<Props> = ({
                           end={end}
                           start={start}
                           isSmallScreen={isSmallScreen}
-                          blockedDateRanges={getBlockedDateRanges(
-                            { start,
+                          blockedDateRanges={getBlockedDateRanges({
+                            start,
                             end,
                             maxHorizon,
                             maxDuration,
                             unavailableDates,
-                            isHourlyBooking }
-                          )}
+                            isHourlyBooking,
+                          })}
                           timeOptions={timeOptions}
                           hourAvailability={hourAvailability}
                         />
@@ -592,24 +593,28 @@ const ListingPage: NextPage<Props> = ({
                                   }
                                   isPrivate={listing?.private}
                                 />
-                                <div className="my-0 flex flex-row justify-between items-start ">
-                                  <label
-                                    htmlFor="separateBeds"
-                                    className="text-sm w-3/4"
-                                  >
-                                    {t('bookings_pickup')}
-                                    <span className="w-full text-xs ml-2">
-                                      ({t('bookings_pickup_disclaimer')})
-                                    </span>
-                                  </label>
-                                  <Switch
-                                    disabled={false}
-                                    name="pickup"
-                                    label=""
-                                    onChange={setDoesNeedPickup}
-                                    checked={doesNeedPickup}
-                                  />
-                                </div>
+
+                                {settings?.pickUpEnabled && (
+                                  <div className="my-0 flex flex-row justify-between items-start ">
+                                    <label
+                                      htmlFor="separateBeds"
+                                      className="text-sm w-3/4"
+                                    >
+                                      {t('bookings_pickup')}
+                                      <span className="w-full text-xs ml-2">
+                                        ({t('bookings_pickup_disclaimer')})
+                                      </span>
+                                    </label>
+                                    <Switch
+                                      disabled={false}
+                                      name="pickup"
+                                      label=""
+                                      onChange={setDoesNeedPickup}
+                                      checked={doesNeedPickup}
+                                    />
+                                  </div>
+                                )}
+
                                 {isTeamMember && (
                                   <div className="my-0 flex flex-row justify-between flex-wrap">
                                     <label
@@ -869,7 +874,6 @@ ListingPage.getInitialProps = async (context: NextPageContext) => {
         return null;
       }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-
     ]);
 
     const options = {
