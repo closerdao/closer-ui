@@ -592,24 +592,28 @@ const ListingPage: NextPage<Props> = ({
                                   }
                                   isPrivate={listing?.private}
                                 />
-                                <div className="my-0 flex flex-row justify-between items-start ">
-                                  <label
-                                    htmlFor="separateBeds"
-                                    className="text-sm w-3/4"
-                                  >
-                                    {t('bookings_pickup')}
-                                    <span className="w-full text-xs ml-2">
-                                      ({t('bookings_pickup_disclaimer')})
-                                    </span>
-                                  </label>
-                                  <Switch
-                                    disabled={false}
-                                    name="pickup"
-                                    label=""
-                                    onChange={setDoesNeedPickup}
-                                    checked={doesNeedPickup}
-                                  />
-                                </div>
+
+                                {settings?.pickUpEnabled && (
+                                  <div className="my-0 flex flex-row justify-between items-start ">
+                                    <label
+                                      htmlFor="separateBeds"
+                                      className="text-sm w-3/4"
+                                    >
+                                      {t('bookings_pickup')}
+                                      <span className="w-full text-xs ml-2">
+                                        ({t('bookings_pickup_disclaimer')})
+                                      </span>
+                                    </label>
+                                    <Switch
+                                      disabled={false}
+                                      name="pickup"
+                                      label=""
+                                      onChange={setDoesNeedPickup}
+                                      checked={doesNeedPickup}
+                                    />
+                                  </div>
+                                )}
+
                                 {isTeamMember && (
                                   <div className="my-0 flex flex-row justify-between flex-wrap">
                                     <label

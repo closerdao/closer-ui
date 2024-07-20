@@ -55,7 +55,8 @@ export type BookingSettings = {
   cancellationPolicyLastday: number,
   cancellationPolicyLastweek: number,
   cancellationPolicyLastmonth: number,
-  cancellationPolicyDefault: number
+  cancellationPolicyDefault: number,
+  pickUpEnabled: boolean;
 };
 
 export interface Config {
