@@ -1,79 +1,64 @@
 import { useTranslations } from 'next-intl';
 
 import {
-  getBookedNights,
-  getNumBookedSpaceSlots,
   getTotalNumNights,
   getTotalNumSpaceSlots,
 } from '../../utils/dashboard.helpers';
 import HospitalityIcon from '../icons/HospitalityIcon';
 import SpacesIcon from '../icons/SpacesIcon';
 import { Card, Heading } from '../ui';
+import ArrivingAndDeparting from './ArrivingAndDeparting';
 
 interface Props {
   isNightly: boolean;
   nightlyListings: any;
+  spaceListings: any;
   listings: any;
-  nightlyBookings: any;
-  bookings: any;
   duration: number;
-  start: Date | null;
-  end: Date | null;
+  numBookedNights?: number;
+  numBookedSpaceSlots?: number;
+
+  arrivingBookings?: any;
+  departingBookings?: any;
+  nightlyListingsIds?: string[];
+  timeFrame?: string;
 }
 
 const OccupancyCard = ({
   isNightly,
   nightlyListings,
+  spaceListings,
   listings,
-  nightlyBookings,
-  bookings,
   duration,
-  start,
-  end,
+  numBookedNights,
+  numBookedSpaceSlots,
+  arrivingBookings,
+  departingBookings,
+  nightlyListingsIds,
+  timeFrame,
 }: Props) => {
   const t = useTranslations();
 
-  const spaceListings =
-    listings &&
-    listings.filter((listing: any) => listing.get('priceDuration') !== 'night');
-
-  const spaceListingsIds =
-    spaceListings && spaceListings.map((listing: any) => listing.get('_id'));
-
-  const spaceBookings =
-    bookings &&
-    spaceListings &&
-    bookings.filter((booking: any) => {
-      return spaceListingsIds.includes(booking.get('listing'));
-    });
-
   const totalNumNights =
     (listings && getTotalNumNights(nightlyListings) * duration) || 0;
+
   const totalNumSpaceSlots =
     listings &&
     spaceListings &&
     getTotalNumSpaceSlots(spaceListings) * duration;
-  // console.log('totalNumSpaceSlots=', totalNumSpaceSlots);
 
-  const bookedNights = getBookedNights(nightlyBookings, nightlyListings, start, end);
-
-  // console.log('numBookedNights=',numBookedNights);
-  const numBookedSpaceSlots = getNumBookedSpaceSlots(
-    spaceBookings,
-    spaceListings,
-  );
   const hospitalityOccupancy = (
-    (bookedNights.numBookedNights / totalNumNights) *
+    ((numBookedNights || 0) / totalNumNights) *
     100
   ).toFixed(1);
 
   const spaceOccupancy = (
-    (numBookedSpaceSlots / totalNumSpaceSlots) *
+    ((numBookedSpaceSlots || 0) / totalNumSpaceSlots) *
     100
   ).toFixed(1);
 
   return (
-    <Card className="p-2 bg-neutral-light flex flex-col">
+    <Card className="p-2 flex flex-col h-[160px] ">
       <div className="flex gap-1 justify-between">
         <Heading
           level={3}
@@ -90,7 +75,7 @@ const OccupancyCard = ({
             isNightly ? 'bg-accent' : 'bg-accent-alt'
           } flex-shrink-0  rounded-md w-9 h-9 flex items-center justify-center`}
         >
-          {isNightly ? <HospitalityIcon /> : <SpacesIcon />}
+          {isNightly ? <HospitalityIcon color="white" /> : <SpacesIcon />}
         </div>
       </div>
 
@@ -101,11 +86,22 @@ const OccupancyCard = ({
           </p>
           <p> {t('dashboard_booked')}</p>
         </div>
-        <div>
-          <span className="text-xl">
-            {isNightly ? totalNumNights : totalNumSpaceSlots}
-          </span>{' '}
-          {isNightly ? t('dashboard_nights') : t('dashboard_booking_slots')}
+
+        <div className="flex flex-col gap-1">
+          <div>
+            <span className="text-xl">
+              {isNightly ? totalNumNights : totalNumSpaceSlots}
+            </span>{' '}
+            {isNightly ? t('dashboard_nights') : t('dashboard_booking_slots')}
+          </div>
+          {(timeFrame === 'today' || duration === 1) && nightlyListingsIds && (
+            <ArrivingAndDeparting
+              arrivingBookings={arrivingBookings}
+              departingBookings={departingBookings}
+              nightlyListings={nightlyListings}
+              nightlyListingsIds={nightlyListingsIds}
+            />
+          )}
         </div>
       </div>
     </Card>

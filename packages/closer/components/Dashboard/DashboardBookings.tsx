@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { isMobile } from 'react-device-detect';
 
-import { Card, Heading } from '../../components/ui';
+import { Card, Heading, Spinner } from '../../components/ui';
 import DonutChart from '../../components/ui/Charts/DonutChart';
 
 import dayjs from 'dayjs';
@@ -11,15 +12,16 @@ import { useTranslations } from 'next-intl';
 import { MAX_BOOKINGS_TO_FETCH, MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
+import { Filter } from '../../types';
 import {
+  getBookedNights,
+  getBookedSpaceSlots,
   getDateRange,
   getDuration,
-  // getNumBookedNights,
-  // getTotalNumNights,
 } from '../../utils/dashboard.helpers';
 import BookingsIcon from '../icons/BookingsIcon';
-import ArrivingAndDeparting from './ArrivingAndDeparting';
 import BookingsWithRoomInfo from './BookingsWithRoomInfo';
+import OccupancyByListing from './OccupancyByListing';
 import OccupancyCard from './OccupancyCard';
 
 dayjs.extend(utc);
@@ -28,24 +30,13 @@ dayjs.extend(timezone);
 const now = Date.now();
 
 const paidStatuses = ['paid', 'tokens-staked', 'credits-paid'];
-const relevantStatuses = [
+const dashboardRelevantStatuses = [
   ...paidStatuses,
   'pending',
   'confirmed',
   'checked-in',
   'checked-out',
 ];
-
-interface Filter {
-  where: { [key: string]: any };
-  limit?: number;
-  start?: DateRangeFilter;
-}
-
-interface DateRangeFilter {
-  $lte?: Date;
-  $gte?: Date;
-}
 
 interface Props {
   timeFrame: string;
@@ -64,8 +55,6 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
   const [end, setEnd] = useState<Date | null>(null);
 
   const duration = getDuration(timeFrame, fromDate, toDate);
-
-  // console.log('duration=', duration);
 
   const listingFilter = {
     where: {},
@@ -99,7 +88,6 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
   const arrivingBookings = platform.booking.find(arrivingFilter);
   const departingBookings = platform.booking.find(departingFilter);
 
-  console.log('=====================');
   const nightlyListings = useMemo(
     () =>
       listings?.filter(
@@ -121,41 +109,33 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
       return nightlyListingsIds.includes(booking.get('listing'));
     });
 
-  
+  const { bookedNights, numBookedNights } = getBookedNights(
+    nightlyBookings,
+    nightlyListings,
+    start,
+    end,
+    duration,
+  );
 
-  const getOccupancyByListing = (
-    nightlyListings: any,
-    nightlyBookings: any,
-    duration: number,
-  ) => {
-    // console.log('nightlyBookings=', nightlyBookings);
-    const occupancyByListing = nightlyListings?.map((listing: any) => {
-      
-      const listingBookings = nightlyBookings?.filter(
-        (booking: any) => booking.get('listing') === listing.get('_id'),
-      );
+  const spaceListings =
+    listings &&
+    listings.filter((listing: any) => listing.get('priceDuration') !== 'night');
 
-      // console.log('listing=',listing.get('name'));
+  const spaceListingsIds =
+    spaceListings && spaceListings.map((listing: any) => listing.get('_id'));
 
-      // console.log('listingBookings=',listingBookings);
-      // const numBookedNights = getNumBookedNights(listingBookings, listing);
-      // const totalNumNights = getTotalNumNights(listing) * duration;
-      // const occupancy = ((numBookedNights / totalNumNights) * 100).toFixed(1);
-      // console.log('occupancy=', occupancy);
-      // return { listing, occupancy };
+  const spaceBookings =
+    bookings &&
+    spaceListings &&
+    bookings.filter((booking: any) => {
+      return spaceListingsIds.includes(booking.get('listing'));
     });
 
-    // console.log('occupancyByListing=',nightlyListings && occupancyByListing);
-
-    return 0;
-  };
-
-  const occupancyByListing =
-    nightlyListings &&
-    nightlyListings &&
-    getOccupancyByListing(nightlyListings, nightlyBookings, duration);
-
-  // console.log('occupancyByListing=', occupancyByListing);
+  const { bookedSpaceSlots, numBookedSpaceSlots } = getBookedSpaceSlots(
+    spaceBookings,
+    spaceListings,
+    duration,
+  );
 
   const getPeopleCount = (bookings: any, fieldToCheck: string) => {
     return (
@@ -186,23 +166,23 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
         !booking.get('isTeamBooking') &&
         paidStatuses.includes(booking.get('status'))
       ) {
-        // console.log('adults=', booking.get('adults'));
         return sum + booking.get('adults');
       }
       return sum;
     }, 0);
 
-  const totalPeople = numGuests + numVolunteers + numTeam + numEventAttendees;
-
-  // console.log('totalPeople-=', totalPeople);
-
-  const numPendingApplications =
+  const numPendingBookings =
     bookings &&
     bookings.filter((booking: any) => booking.get('status') === 'pending').size;
-  const numConfirmedApplications =
+  const numConfirmedBookings =
     bookings &&
     bookings.filter((booking: any) => booking.get('status') === 'confirmed')
       .size;
+  const numPaidBookings =
+    bookings &&
+    bookings.filter((booking: any) =>
+      paidStatuses.includes(booking.get('status')),
+    ).size;
 
   const peopleData = [
     { name: 'Guests', value: numGuests },
@@ -212,8 +192,9 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
   ];
 
   const applicationsData = [
-    { name: 'Confirmed', value: numConfirmedApplications },
-    { name: 'Pending', value: numPendingApplications },
+    { name: 'Confirmed', value: numConfirmedBookings },
+    { name: 'Pending', value: numPendingBookings },
+    { name: 'Paid', value: numPaidBookings },
   ];
 
   const loadData = async () => {
@@ -246,17 +227,16 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
     });
     setStart(start);
     setEnd(end);
-    // console.log('start=', start);
-    // console.log('end=', end);
 
     setFilter({
       ...filter,
       where: {
         status: {
-          $in: relevantStatuses,
+          $in: dashboardRelevantStatuses,
         },
         $and: [{ start: { $lte: end } }, { end: { $gte: start } }],
       },
+      limit: MAX_BOOKINGS_TO_FETCH,
     });
   }, [timeFrame, fromDate, toDate]);
 
@@ -266,65 +246,61 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
         <BookingsIcon /> {t('dashboard_bookings_title')}
       </Heading>
 
-      <div className="grid grid-cols-2 gap-4 text-sm">
-        <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <OccupancyCard
             isNightly={true}
             listings={listings}
-            nightlyListings={nightlyListings}
-            bookings={bookings}
-            nightlyBookings={nightlyBookings}
             duration={duration}
-            start={start}
-            end={end}
+            nightlyListings={nightlyListings}
+            spaceListings={spaceListings}
+            numBookedNights={numBookedNights}
+            arrivingBookings={arrivingBookings}
+            departingBookings={departingBookings}
+            nightlyListingsIds={nightlyListingsIds}
+            timeFrame={timeFrame}
           />
-          {(timeFrame === 'today' || duration === 1) && (
-            <ArrivingAndDeparting
-              arrivingBookings={arrivingBookings}
-              departingBookings={departingBookings}
-              nightlyListings={nightlyListings}
-              nightlyListingsIds={nightlyListingsIds}
-            />
-          )}
-          {!(timeFrame === 'today' && duration === 1) && (
-            <Card className="p-2 flex flex-col gap-1 ">
 
-              ddd
-            </Card>
-          )}
+          <OccupancyByListing
+            bookedNights={bookedNights}
+            bookedSpaceSlots={bookedSpaceSlots}
+          />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <OccupancyCard
             isNightly={false}
             listings={listings}
             nightlyListings={nightlyListings}
-            bookings={bookings}
-            nightlyBookings={nightlyBookings}
+            spaceListings={spaceListings}
             duration={duration}
-            start={start}
-            end={end}
+            numBookedSpaceSlots={numBookedSpaceSlots}
           />
-          {/* <BookingsWithRoomInfo
+
+          <BookingsWithRoomInfo
             bookings={bookings}
             listings={listings}
             TIME_ZONE={TIME_ZONE}
-          /> */}
+          />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="p-2 gap-2">
           <Heading level={3} className="uppercase text-sm">
-            {t('dashboard_applications')}
+            {t('dashboard_bookings')}
           </Heading>
-          <DonutChart data={applicationsData} />
+          <div className={`${isMobile ? 'h-[280px]' : 'h-[220px]'} overflow-hidden`}>
+            {isLoading ? <Spinner /> : <DonutChart data={applicationsData} />}
+          </div>
         </Card>
 
         <Card className="p-2 gap-2">
           <Heading level={3} className="uppercase text-sm">
             {t('dashboard_people')}
           </Heading>
-          <DonutChart data={peopleData} />
+          <div className={`${isMobile ? 'h-[280px]' : 'h-[220px]'}  overflow-hidden`}>
+            {isLoading ? <Spinner /> : <DonutChart data={peopleData} />}
+          </div>
         </Card>
       </div>
     </section>

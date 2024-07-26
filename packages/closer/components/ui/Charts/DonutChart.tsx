@@ -2,6 +2,7 @@ import { Cell, Legend, Pie, PieChart } from 'recharts';
 
 import { CHART_COLORS } from './chartColors';
 
+import { isMobile } from 'react-device-detect';
 const RADIAN = Math.PI / 180;
 const renderCustomizedLabel = ({
   cx,
@@ -29,6 +30,7 @@ const renderCustomizedLabel = ({
   );
 };
 
+
 interface Props {
   data: Record<string, unknown>[];
 }
@@ -36,11 +38,12 @@ interface Props {
 const DonutChart = ({ data }: Props) => {
 
   return (
-    <div>
-      <PieChart width={370} height={220}>
+    <div className=''>
+
+      <PieChart width={isMobile ? 190 : 370} height={isMobile ? 280 : 220}>
         <Pie
           data={data}
-          cx={100}
+          cx={isMobile ? 90 : 100}
           cy={110}
           labelLine={false}
           label={renderCustomizedLabel}
@@ -48,7 +51,7 @@ const DonutChart = ({ data }: Props) => {
           innerRadius={50}
           dataKey="value"
         >
-          {data.map((entry, index) => (
+          {data.map((_, index) => (
             <Cell
               key={`cell-${index}`}
               fill={CHART_COLORS[index % CHART_COLORS.length]}
@@ -62,9 +65,16 @@ const DonutChart = ({ data }: Props) => {
             value: item.name as string,
             color: CHART_COLORS[index % CHART_COLORS.length],
           }))}
-          align="right"
-          verticalAlign="middle"
-          layout="vertical"
+          align={isMobile ? 'center' : 'right'}
+
+          // verticalAlign="top"
+          verticalAlign={isMobile ? 'bottom' : 'top'}
+             layout={isMobile ? 'horizontal' : 'vertical' }
+           
+          // layout="vertical"
+            // layout="horizontal"
+          wrapperStyle={{ marginTop: '50px' }} // Add top margin here
+
         />
       </PieChart>
     </div>

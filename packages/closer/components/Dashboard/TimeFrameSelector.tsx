@@ -43,7 +43,7 @@ const TimeFrameSelector = ({ timeFrame, setTimeFrame, toDate, fromDate, setFromD
 
   return (
     <div>
-      <div className="flex gap-1">
+      <div className="flex gap-x-1 gap-y-4 flex-wrap sm:flex-nowrap">
         {timeFrames.map((frame) => (
           <button
             key={frame}

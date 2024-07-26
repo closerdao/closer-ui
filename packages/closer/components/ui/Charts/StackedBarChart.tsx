@@ -21,25 +21,25 @@ interface CustomPayload {
   value: string | number;
 }
 
-const CustomTooltipContent = ({ payload, label }: any) => {
+const CustomTooltipContent = ({ payload, label, colorOverride }: any) => {
   if (!payload || !Array.isArray(payload)) return null;
 
   return (
     <div className="p-4 bg-white rounded-md border-0 shadow-lg">
       <p className="text-md font-bold">{label}</p>
       {payload.map((entry: CustomPayload, index) => (
-        <p
+        <div
           key={index}
           className="text-md"
-          style={{ color: CHART_COLORS[index] }}
-        >{`${entry.name}: ${entry.value}`}</p>
+          style={colorOverride ? { color: colorOverride } : { color: CHART_COLORS[index] }}
+        >{`${entry.name}: ${entry.value}`}</div>
       ))}
     </div>
   );
 };
 
 const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
-  const dataWithTotalValues = data.map((item) => ({
+  const dataWithTotalValues = data?.map((item) => ({
     ...item,
     total: Object.keys(item).reduce((sum, key) => {
       if (key !== 'name' && typeof item[key] === 'number') {
@@ -50,7 +50,7 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
   }));
 
   return (
-    <div className="w-full h-[400px] py-4">
+    <div className="w-full h-full py-4">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           layout={layout || 'horizontal'}
@@ -61,13 +61,13 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
             layout === 'vertical'
               ? {
                   top: 20,
-                  right: 30,
-                  left: 120,
+                  right: 0,
+                  left: 80,
                   bottom: 10,
                 }
               : {
                   top: 20,
-                  right: 10,
+                  right: 0,
                   left: 10,
                   bottom: 10,
                 }
@@ -80,6 +80,7 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
               axisLine={false}
               tickLine={false}
               tick={{ fill: 'black' }}
+              style={{ fontSize: '13px' }}
             />
           )}
           {layout === 'vertical' && (
@@ -99,22 +100,31 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
             </>
           )}
 
-          <Tooltip
-            cursor={{ fill: 'transparent' }}
-            content={<CustomTooltipContent />}
-          />
+          {layout === 'horizontal' && (
+            <Tooltip
+              cursor={{ fill: 'transparent' }}
+              content={<CustomTooltipContent />}
+            />
+          )}
+          {layout === 'vertical' && (
+            <Tooltip
+              cursor={{ fill: 'transparent' }}
+              content={<CustomTooltipContent colorOverride={CHART_COLORS[1]} />}
+            />
+          )}
           <Legend
             iconType="circle"
           />
           {layout === 'horizontal' && (
             <>
-              <Bar dataKey="Hospitality" stackId="a" fill={CHART_COLORS[0]} />
-              <Bar dataKey="Events" stackId="a" fill={CHART_COLORS[1]} />
-              <Bar dataKey="Spaces" stackId="a" fill={CHART_COLORS[2]} />
-              <Bar dataKey="Subscriptions" stackId="a" fill={CHART_COLORS[3]} />
-              <Bar dataKey="Tokens" stackId="a" fill={CHART_COLORS[4]}>
+              <Bar dataKey="hospitality" stackId="a" fill={CHART_COLORS[0]} />
+              <Bar dataKey="events" stackId="a" fill={CHART_COLORS[1]} />
+              <Bar dataKey="spaces" stackId="a" fill={CHART_COLORS[2]} />
+              <Bar dataKey="food" stackId="a" fill={CHART_COLORS[3]} />
+              <Bar dataKey="subscriptions" stackId="a" fill={CHART_COLORS[4]} />
+              <Bar dataKey="tokens" stackId="a" fill={CHART_COLORS[5]}>
                 <LabelList
-                  style={{ fill: 'black' }}
+                  style={{ fill: 'black', fontSize: '13px' }}
                   dataKey="total"
                   position="top"
                   formatter={(props: any) => {
@@ -126,27 +136,19 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
           )}
           {layout === 'vertical' && (
             <>
-              <Bar dataKey="Platform" stackId="a" fill={CHART_COLORS[0]}>
+              <Bar dataKey="amount" stackId="a" fill={CHART_COLORS[1]}>
                 <LabelList
-                  dataKey="Platform"
+                  dataKey="amount"
                   position="insideLeft"
-                  style={{ fill: 'white' }}
-                />
-              </Bar>
-
-              <Bar dataKey="External" stackId="a" fill={CHART_COLORS[1]}>
-                <LabelList
-                  dataKey="External"
-                  position="insideLeft"
-                  style={{ fill: 'white' }}
-                />
-
-                <LabelList
-                  style={{ fill: 'black' }}
-                  dataKey="total"
-                  position={layout === 'vertical' ? 'right' : 'top'}
-                  formatter={(props: any) => {
-                    return `${props}`;
+                  // style={{ fill: 'silver' }}
+                  content={(props) => {
+                    const { x, y, height, value } = props;
+                    const fill = Number(value) > 3 ? 'white' : 'silver';
+                    return (
+                      <text x={x} y={y} dy={Number(height) / 2 + 5} dx={5} textAnchor="center" fill={fill}>
+                        {value}
+                      </text>
+                    );
                   }}
                 />
               </Bar>

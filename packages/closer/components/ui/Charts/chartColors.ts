@@ -1,10 +1,10 @@
 import themeColors from '../../../theme.js';
 
 export const CHART_COLORS = [
+  '#C2A3B6',
+  '#565E6C',
   themeColors.extend.colors['accent'],
-  '#27A8E9',
-  themeColors.extend.colors['neon-dark'],
-  '#85EEFC',
-  '#CC94F8',
-  '#ED6C93',
+  themeColors.extend.colors['accent-alt'],
+  themeColors.extend.colors['accent-dark'],
+  '#AFAFAF',
 ];

@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import DashboardBookings from '../../components/Dashboard/DashboardBookings';
 import DashboardMetrics from '../../components/Dashboard/DashboardMetrics';
+import DashboardNav from '../../components/Dashboard/DashboardNav';
 import DashboardRevenue from '../../components/Dashboard/DashboardRevenue';
 import TimeFrameSelector from '../../components/Dashboard/TimeFrameSelector';
 import { Heading } from '../../components/ui';
@@ -28,12 +29,12 @@ interface Props {
 const DashboardPage = ({ generalConfig }: Props) => {
   const t = useTranslations();
   const defaultConfig = useConfig();
+  const { user } = useAuth();
 
   const [timeFrame, setTimeFrame] = useState('today');
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
 
-  const { user } = useAuth();
   const isAdmin = user?.roles.includes('admin');
 
   const PLATFORM_NAME =
@@ -49,9 +50,10 @@ const DashboardPage = ({ generalConfig }: Props) => {
         <title>{`${t('dashboard_title')} - ${PLATFORM_NAME}`}</title>
       </Head>
       <div className="flex min-h-screen">
-        <nav className="w-[60px] lg:w-[200px] flex-shrink-0 border">navbar</nav>
-        <main className="bg-neutral-light flex-grow px-6 py-8 flex flex-col gap-4">
-          <div className="flex justify-between">
+        <DashboardNav />
+
+        <main className="bg-white sm:bg-neutral-light flex-grow px-0 sm:px-6 py-8 flex flex-col gap-4">
+          <div className="flex justify-between flex-col md:flex-row gap-4">
             <Heading level={2}>{t('dashboard_title')}</Heading>
             <TimeFrameSelector
               timeFrame={timeFrame}
@@ -63,11 +65,21 @@ const DashboardPage = ({ generalConfig }: Props) => {
             />
           </div>
 
-          <DashboardBookings timeFrame={timeFrame} fromDate={fromDate} toDate={toDate} />
-
-          <DashboardRevenue />
-
-          <DashboardMetrics />
+          <DashboardBookings
+            timeFrame={timeFrame}
+            fromDate={fromDate}
+            toDate={toDate}
+          />
+          <DashboardRevenue
+            timeFrame={timeFrame}
+            fromDate={fromDate}
+            toDate={toDate}
+          />
+          <DashboardMetrics
+            timeFrame={timeFrame}
+            fromDate={fromDate}
+            toDate={toDate}
+          />
         </main>
       </div>
     </>

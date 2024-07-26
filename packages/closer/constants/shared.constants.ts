@@ -262,6 +262,21 @@ export const MAX_USERS_TO_FETCH = 2000;
 
 export const MAX_LISTINGS_TO_FETCH = 100;
 
-export const DEFAULT_AVAILABILITY_RANGE_TO_CHECK = 120
+export const DEFAULT_AVAILABILITY_RANGE_TO_CHECK = 120;
 
+export const paidStatuses = [
+  'paid',
+  'tokens-staked',
+  'credits-paid',
+  'checked-in',
+  'checked-out',
+];
+export const dashboardRelevantStatuses = [
+  ...paidStatuses,
+  'pending',
+  'confirmed',
+];
 
+export const STRIPE_AMOUNT_MULTIPLIER = 100;
+
+export const GNOSIS_SAFE_ADDRESS = '0x5E810b93c51981eccA16e030Ea1cE8D8b1DEB83b';

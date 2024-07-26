@@ -55,46 +55,52 @@ const MemberMenu = () => {
   ) => {
     const links = [
       {
-        label: 'Subscriptions',
+        label: t('navigation_subscriptions'),
         url: '/subscriptions',
         enabled: areSubscriptionsEnabled,
       },
       {
-        label: 'Events',
+        label: t('navigation_events'),
         url: '/events',
         enabled: true,
       },
       {
-        label: 'Volunteer',
+        label: t('navigation_volunteer'),
         url: '/volunteer',
         enabled: isVolunteeringEnabled,
       },
       {
-        label: 'Booking requests',
+        label: t('navigation_dashboard'),
+        url: '/dashboard',
+        enabled: isBookingEnabled,
+        roles: ['space-host', 'admin'],
+      },
+      {
+        label: t('navigation_booking_requests'),
         url: '/bookings/requests',
         enabled: isBookingEnabled,
         roles: ['space-host'],
       },
       {
-        label: 'Current bookings',
+        label: t('navigation_current_bookings'),
         url: '/bookings/current',
         enabled: isBookingEnabled,
         roles: ['space-host'],
       },
       {
-        label: 'All bookings',
+        label: t('navigation_all_bookings'),
         url: '/bookings/all',
         enabled: isBookingEnabled,
         roles: ['space-host'],
       },
       {
-        label: 'Booking calendar',
+        label: t('navigation_booking_calendar'),
         url: '/bookings/calendar',
         enabled: isBookingEnabled,
         roles: ['space-host'],
       },
       {
-        label: 'Edit listings',
+        label: t('navigation_edit_listings'),
         url: '/listings',
         enabled: isBookingEnabled,
         roles: ['space-host'],
@@ -105,72 +111,72 @@ const MemberMenu = () => {
         enabled: isBookingEnabled,
       },
       // {
-      //   label: 'Invest',
+      //   label: t('navigation_invest'),
       //   url: '/token',
       //   enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
       // },
       {
-        label: 'My bookings',
+        label: t('navigation_my_bookings'),
         url: '/bookings',
         enabled: isBookingEnabled,
       },
       {
-        label: 'Refer a friend',
+        label: t('navigation_refer_a_friend'),
         url: '/settings/referrals',
         enabled: process.env.NEXT_PUBLIC_FEATURE_REFERRAL === 'true',
       },
       {
-        label: 'Governance',
+        label: t('navigation_governance'),
         url: 'https://snapshot.org/#/traditionaldreamfactory.eth',
         target: '_blank',
         enabled: true,
         roles: ['member'],
       },
       {
-        label: 'User list',
+        label: t('navigation_user_list'),
         url: '/admin/manage-users',
         enabled: true,
         roles: ['admin'],
       },
       {
-        label: 'New event',
+        label: t('navigation_new_event'),
         url: '/events/create',
         enabled: true,
         roles: ['event-creator'],
       },
       {
-        label: 'New volunteer',
+        label: t('navigation_new_volunteer'),
         url: '/volunteer/create',
         enabled: true,
         roles: ['steward'],
       },
       {
-        label: 'Resources',
+        label: t('navigation_resources'),
         url: '/resources',
         enabled: true,
       },
       {
-        label: 'Support us',
+        label: t('navigation_support_us'),
         url: '/support-us',
         enabled: process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true',
       },
       {
-        label: 'Learning hub',
+        label: t('navigation_learning_hub'),
         url: '/learn/category/all',
         enabled: process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true',
       },
       {
-        label: 'Blog',
+        label: t('navigation_blog'),
         url: '/blog',
         enabled: process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true',
       },
       {
-        label: 'Platform settings',
+        label: t('navigation_platform_settings'),
         url: '/admin/config',
         enabled: true,
         roles: ['admin'],
       },
-    ];
+    ]
     return links;
   };
 

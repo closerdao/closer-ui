@@ -136,3 +136,37 @@ export interface BookingItem {
   end_time: Date;
   roomOrBedNumbers?: number[];
 }
+
+export type NightlyBookingByListing = {
+  listingName: string;
+  roomOrBedNumber: number;
+  nights: number;
+  totalNights: number;
+};
+
+export type SpaceBookingByListing = {
+  listingName: string;
+  roomOrBedNumber: number;
+  spaceSlots: number;
+  totalSpaceSlots: number;
+};
+
+export interface ListingByType {
+  listingName: string;
+  roomOrBedNumber: number;
+  nights?: number;
+  spaceSlots?: number;
+  totalNights?: number;
+  totalSpaceSlots?: number;
+}
+
+export interface Filter {
+  where: { [key: string]: any };
+  limit?: number;
+  start?: DateRangeFilter;
+}
+
+export interface DateRangeFilter {
+  $lte?: Date;
+  $gte?: Date;
+}

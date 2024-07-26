@@ -25,11 +25,11 @@ const CustomTooltipContent = ({ payload, label }: any) => {
     <div className="p-4 bg-white rounded-md border-0 shadow-lg ">
       <p className="text-md font-bold">{label}</p>
       {payload.map((entry: CustomPayload, index) => (
-        <p
+        <div
           key={index}
           className="text-md"
           style={{ color: CHART_COLORS[index] }}
-        >{`${entry.name}: ${entry.value}`}</p>
+        >{`${entry.name}: ${entry.value}`}</div>
       ))}
     </div>
   );
@@ -51,13 +51,13 @@ const LineCurvedChart = ({ data }: Props) => {
           }}
         >
           <CartesianGrid vertical={false} />
-          <XAxis dataKey="name" axisLine={false} tickLine={false} />
+          <XAxis dataKey="name" style={{ fontSize: '13px' }} axisLine={false} tickLine={false} />
 
           <Tooltip content={<CustomTooltipContent />} />
           <Line
             type="monotone"
-            dataKey="Revenue"
-            stroke={CHART_COLORS[0]}
+            dataKey="tokens"
+            stroke={CHART_COLORS[2]}
             activeDot={{ r: 8 }}
             strokeWidth={2}
           />

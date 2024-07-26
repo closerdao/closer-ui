@@ -1,20 +1,32 @@
+import axios from 'axios';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
-import { List, Map } from 'immutable';
+import { ethers } from 'ethers';
+import { List } from 'immutable';
 
+import { blockchainConfig } from '../config_blockchain';
+import { GNOSIS_SAFE_ADDRESS } from '../constants';
+import {
+  ListingByType,
+  NightlyBookingByListing,
+  SpaceBookingByListing,
+} from '../types';
+import { SalesResult, TokenTransaction } from '../types/dashboard';
 import { dateToPropertyTimeZone } from './booking.helpers';
+
+const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const toEndOfDay = (date: Date | string, timeZone: string) => {
+export const toEndOfDay = (date: Date | string, timeZone: string) => {
   const dateOnly = dayjs(date).format('YYYY-MM-DD');
   const endOfZonedDay = dayjs.tz(dateOnly, timeZone).endOf('day');
   return endOfZonedDay.toDate();
 };
 
-const toStartOfDay = (date: Date | string, timeZone: string) => {
+export const toStartOfDay = (date: Date | string, timeZone: string) => {
   const dateOnly = dayjs(date).format('YYYY-MM-DD');
   const startOfZonedDay = dayjs.tz(dateOnly, timeZone).startOf('day');
   return startOfZonedDay.toDate();
@@ -44,12 +56,18 @@ export const getDateRange = ({
       };
     case 'month':
       return {
-        start: toStartOfDay(dayjs().subtract(1, 'month').subtract(1, 'day').toDate(), timeZone),
+        start: toStartOfDay(
+          dayjs().subtract(1, 'month').subtract(1, 'day').toDate(),
+          timeZone,
+        ),
         end: toEndOfDay(new Date(), timeZone),
       };
     case 'year':
       return {
-        start: toStartOfDay(dayjs().subtract(1, 'year').subtract(1, 'day').toDate(), timeZone),
+        start: toStartOfDay(
+          dayjs().subtract(1, 'year').subtract(1, 'day').toDate(),
+          timeZone,
+        ),
         end: toEndOfDay(new Date(), timeZone),
       };
     case 'custom':
@@ -70,8 +88,6 @@ export const getDateRange = ({
 export const getTotalNumNights = (listings: List<Map<string, unknown>>) => {
   if (!listings) return 0;
 
-
-  // console.log('listings=',listings && listings.toJS());
   let numListings = 0;
   listings?.forEach((listing: any) => {
     if (listing?.get('private')) {
@@ -97,22 +113,22 @@ export const getTotalNumSpaceSlots = (listings: List<Map<string, unknown>>) => {
   return numListings;
 };
 
-function calculateOverlappingNights(
+const calculateOverlappingNights = (
   rangeStart: Date | null,
   rangeEnd: Date | null,
   bookingStart: Date | null,
   bookingEnd: Date | null,
-): number {
-
+): number => {
   if (!bookingStart || !bookingEnd || !rangeStart || !rangeEnd) {
     return 0;
   }
 
-  console.log('rangeStart=', rangeStart);
-  console.log('rangeEnd=', rangeEnd);
-
-  const overlapStart = new Date(Math.max(bookingStart.getTime(), rangeStart.getTime()));
-  const overlapEnd = new Date(Math.min(bookingEnd.getTime(), rangeEnd.getTime()));
+  const overlapStart = new Date(
+    Math.max(bookingStart.getTime(), rangeStart.getTime()),
+  );
+  const overlapEnd = new Date(
+    Math.min(bookingEnd.getTime(), rangeEnd.getTime()),
+  );
 
   const diffTime = Math.max(overlapEnd.getTime() - overlapStart.getTime(), 0);
   let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -123,61 +139,183 @@ function calculateOverlappingNights(
   }
 
   return diffDays;
+};
+
+function groupByListingAndRoom(
+  ListingWithNumber: Array<SpaceBookingByListing>,
+): Array<SpaceBookingByListing> {
+  const grouped = ListingWithNumber.reduce(
+    (acc, { listingName, roomOrBedNumber, spaceSlots, totalSpaceSlots }) => {
+      const key = `${listingName}-${roomOrBedNumber}`;
+      if (!acc[key]) {
+        acc[key] = {
+          listingName,
+          roomOrBedNumber,
+          spaceSlots: 0,
+          totalSpaceSlots,
+        };
+      }
+      acc[key].spaceSlots += spaceSlots;
+      return acc;
+    },
+    {} as Record<string, SpaceBookingByListing>,
+  );
+
+  return Object.values(grouped);
+}
+
+function groupNightlyByListingAndRoom(
+  ListingWithNumber: Array<NightlyBookingByListing>,
+): Array<NightlyBookingByListing> {
+  const grouped = ListingWithNumber.reduce(
+    (acc, { listingName, roomOrBedNumber, nights, totalNights }) => {
+      const key = `${listingName}-${roomOrBedNumber}`;
+
+      if (!acc[key]) {
+        acc[key] = { listingName, roomOrBedNumber, nights: 0, totalNights };
+      }
+      acc[key].nights += nights;
+      return acc;
+    },
+    {} as Record<string, NightlyBookingByListing>,
+  );
+
+  return Object.values(grouped);
 }
 
 export const getBookedNights = (
-  bookings: List<Map<string, unknown>>,
-  listings: List<Map<string, unknown>>,
+  bookings: List<Map<string, any>>,
+  listings: List<Map<string, any>>,
   start: Date | null,
   end: Date | null,
+  duration: number,
 ) => {
-  // question: if guest left, do we count this last day as a booked night? makes sense to not count it
+  // if guest left this day, do not count this last day as a booked night
 
-  if (!bookings || !listings) return [];
+  // total bookable nights for shared glamping = duration * beds * quantity
+  // 3 for one day for a bed
+
+  if (!bookings || !listings) return { bookedNights: [], numBookedNights: 0 };
   const bookedNights: any[] = [];
-  let numBookedNights= 0
-  
-  bookings.forEach((booking: any) => {
-    const listing = listings.find((listing: any) => listing.get('_id') === booking.get('listing'));
-    const listingName = listing && listing.get('name');
-    const numOverlappingNights = calculateOverlappingNights(start, end, new Date(booking.get('start')), new Date(booking.get('end')));
+  let numBookedNights = 0;
+  const listingsWithoutBookings = listings.filter(
+    (listing: any) =>
+      !bookings.find(
+        (booking: any) => booking.get('listing') === listing.get('_id'),
+      ),
+  );
 
-    // numBookedNights += numOverlappingNights;
-    booking.get('roomOrBedNumbers').map((roomOrBedNumber: any) => { 
+  bookings.forEach((booking: any) => {
+    const listing = listings.find(
+      (listing: any) => listing.get('_id') === booking.get('listing'),
+    );
+    const listingName = listing && listing.get('name');
+    const numOverlappingNights = calculateOverlappingNights(
+      start,
+      end,
+      new Date(booking.get('start')),
+      new Date(booking.get('end')),
+    );
+    const totalNights = listing?.get('private')
+      ? duration * listing?.get('quantity')
+      : duration * listing?.get('quantity') * listing?.get('beds');
+
+    booking.get('roomOrBedNumbers').map((roomOrBedNumber: any) => {
       bookedNights.push({
         listingName,
         roomOrBedNumber,
-        nights: numOverlappingNights,
+        nights: numOverlappingNights < 0 ? 0 : numOverlappingNights,
+        totalNights: totalNights || 0,
       });
-      numBookedNights +=1
     });
-
+    numBookedNights += listing?.get('private') ? 1 : booking.get('adults');
   });
 
-  console.log('bookedNights=',bookedNights);
-  return { bookedNights, numBookedNights};
+  listingsWithoutBookings.forEach((listing: any) => {
+    const totalNights = listing?.get('private')
+      ? duration * listing?.get('quantity')
+      : duration * listing?.get('quantity') * listing?.get('beds');
+
+    bookedNights.push({
+      listingName: listing.get('name'),
+      roomOrBedNumber: -1,
+      nights: 0,
+      totalNights,
+    });
+  });
+
+  return {
+    bookedNights: groupNightlyByListingAndRoom(bookedNights) || [],
+    numBookedNights,
+  };
 };
 
-export const getNumBookedSpaceSlots = (
-  bookings: List<Map<string, unknown>>,
-  listings: List<Map<string, unknown>>,
+export const getBookedSpaceSlots = (
+  bookings: List<any>,
+  listings: List<any>,
+  duration: number,
 ) => {
+  if (!bookings || !listings)
+    return { bookedSpaceSlots: [], numBookedSpaceSlots: 0 };
 
-  if (!bookings || !listings) return 0;
-  let numBookedNights = 0;
+  const bookedSpaceSlots: any[] = [];
+  let numBookedSpaceSlots = 0;
 
-  const sharedListingIds = listings
-    .filter((listing: any) => !listing.get('private'))
-    .map((listing: any) => listing.get('_id'));
+  const listingsWithoutBookings = listings.filter(
+    (listing: any) =>
+      !bookings.find(
+        (booking: any) => booking.get('listing') === listing.get('_id'),
+      ),
+  );
 
   bookings.forEach((booking: any) => {
-    if (sharedListingIds.includes(booking.get('listing'))) {
-      numBookedNights += booking.get('adults');
-    } else {
-      numBookedNights += 1;
-    }
+    const listing = listings.find(
+      (listing: any) => listing.get('_id') === booking.get('listing'),
+    );
+
+    const listingName = listing && listing.get('name');
+
+    const bookingNumSlots = dayjs(booking.get('end')).diff(
+      dayjs(booking.get('start')),
+      'hour',
+    );
+
+    const totalSpaceSlots =
+      (listing &&
+        listing.get('workingHoursEnd') - listing.get('workingHoursStart')) *
+        listing.get('quantity') *
+        duration || 0;
+
+    booking.get('roomOrBedNumbers').map((roomOrBedNumber: any) => {
+      bookedSpaceSlots.push({
+        listingName,
+        roomOrBedNumber,
+        spaceSlots: bookingNumSlots,
+        totalSpaceSlots,
+      });
+      numBookedSpaceSlots += bookingNumSlots;
+    });
   });
-  return numBookedNights;
+
+  listingsWithoutBookings.forEach((listing: any) => {
+    const totalSpaceSlots =
+      (listing &&
+        listing.get('workingHoursEnd') - listing.get('workingHoursStart')) *
+        listing.get('quantity') *
+        duration || 0;
+
+    bookedSpaceSlots.push({
+      listingName: listing.get('name'),
+      roomOrBedNumber: -1,
+      spaceSlots: 0,
+      totalSpaceSlots,
+    });
+  });
+
+  return {
+    bookedSpaceSlots: groupByListingAndRoom(bookedSpaceSlots) || [],
+    numBookedSpaceSlots,
+  };
 };
 
 export const getBookingsWithRoomInfo = (
@@ -188,8 +326,8 @@ export const getBookingsWithRoomInfo = (
   const bookingsWithRoomInfo: any[] = [];
   bookings &&
     bookings.forEach((booking: any) => {
-      const listing = listings.find(
-        (l: any) => l.get('_id') === booking.get('listing'),
+      const listing = listings?.find(
+        (listing: any) => listing.get('_id') === booking.get('listing'),
       );
 
       booking.get('roomOrBedNumbers').map((roomOrBedNumber: any) => {
@@ -198,11 +336,11 @@ export const getBookingsWithRoomInfo = (
           'day',
         );
         bookingsWithRoomInfo.push({
-          room: listing.get('name') + ' ' + roomOrBedNumber,
+          room: listing?.get('name') + ' ' + roomOrBedNumber,
           doesCheckoutToday,
           period:
-            !listing.get('priceDuration') ||
-            listing.get('priceDuration') !== 'hour'
+            !listing?.get('priceDuration') ||
+            listing?.get('priceDuration') !== 'hour'
               ? 'night'
               : dayjs(
                   dateToPropertyTimeZone(timeZone, booking.get('start')),
@@ -236,4 +374,269 @@ export const getDuration = (
     default:
       return 1;
   }
+};
+
+export const groupListingsByType = (listings: any[]) => {
+  const groupedMap = new Map<string, ListingByType>();
+
+  for (const listing of listings) {
+    const key = listing.listingName;
+
+    if (groupedMap.has(key)) {
+      const existingListing = groupedMap.get(key) as ListingByType;
+
+      if ('nights' in listing) {
+        existingListing.nights += listing.nights;
+      } else {
+        existingListing.spaceSlots += listing.spaceSlots;
+      }
+    } else {
+      groupedMap.set(key, { ...listing });
+    }
+  }
+
+  return Array.from(groupedMap.values());
+};
+
+export const isSaleTransaction = (tx: TokenTransaction) => {
+  const zeroHash = '0x0000000000000000000000000000000000000000';
+  const transferEventHash =
+    '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+  const notRelatedToProxy =
+    tx.fromAddressHash.toLowerCase() !== GNOSIS_SAFE_ADDRESS.toLowerCase() &&
+    tx.toAddressHash.toLowerCase() !== GNOSIS_SAFE_ADDRESS.toLowerCase();
+  const isTransfer = tx.fromAddressHash !== zeroHash;
+  const isTransferEvent = tx.topics[0] === transferEventHash;
+  const isNotSelfTransfer =
+    tx.fromAddressHash.toLowerCase() !== tx.toAddressHash.toLowerCase();
+  const isPositiveAmount =
+    ethers.BigNumber.from(tx.amount) > ethers.BigNumber.from(0);
+
+  return (
+    isTransferEvent &&
+    isNotSelfTransfer &&
+    isPositiveAmount &&
+    isTransfer &&
+    notRelatedToProxy
+  );
+};
+
+export const getTokenSales = (txs: TokenTransaction[]): SalesResult => {
+  const sales = txs.filter((tx) => {
+    return isSaleTransaction(tx);
+  });
+
+  const totalSales = sales.reduce((sum, tx) => {
+    const amountInWei = ethers.BigNumber.from(tx.amount);
+    return sum.add(amountInWei);
+  }, ethers.BigNumber.from(0));
+
+  const totalSalesInTDF = ethers.utils.formatEther(totalSales);
+
+  return {
+    salesCount: sales.length,
+    totalSalesAmount: totalSalesInTDF,
+  };
+};
+
+export const getAllTokenTransactions = async () => {
+  try {
+    const celoApiBaseUrl = 'https://explorer.celo.org/mainnet/api';
+    const latestBlockUrl =
+      'https://explorer.celo.org/mainnet/api?module=block&action=eth_block_number';
+
+    const latestBlockResponse = await axios.get(latestBlockUrl);
+    const data = latestBlockResponse.data;
+    const latestBlockNumber = parseInt(data.result, 16);
+    const oldBlockNumber = Math.max(0, latestBlockNumber - 10000000);
+    const apiUrl = `${celoApiBaseUrl}?module=token&action=tokentx&contractaddress=${BLOCKCHAIN_DAO_TOKEN.address}&fromBlock=${oldBlockNumber}&toBlock=${latestBlockNumber}`;
+    const response = await axios.get(apiUrl);
+    const tokenTransactions = response.data.result;
+
+    return tokenTransactions;
+  } catch (error) {
+    console.log('Error fetching Token transactions:', error);
+    return null;
+  }
+};
+
+export const getTokenSalesByDateRange = (
+  txs: TokenTransaction[] | [],
+  startDate: string | Date,
+  endDate: string | Date,
+): SalesResult => {
+  const start = new Date(startDate).getTime();
+  const end = new Date(endDate).getTime();
+
+  const filteredTxs = txs.filter((tx) => {
+    const txDateSeconds = parseInt(tx.timeStamp, 16);
+    const txDate = new Date(txDateSeconds * 1000).getTime();
+    return txDate >= start && txDate <= end;
+  });
+
+  return getTokenSales(filteredTxs);
+};
+
+export const getPeriodName = (
+  subPeriod: { start: string; end: string },
+  timeFrame: string,
+) => {
+  if (timeFrame === 'year') {
+    return dayjs(subPeriod.start).format('MMM');
+  }
+
+  return subPeriod.start !== subPeriod.end
+    ? dayjs(subPeriod.start).format('MM.DD') +
+        '-' +
+        dayjs(subPeriod.end).format('MM.DD')
+    : dayjs(subPeriod.end).format('MM.DD');
+};
+
+const getNDays = (days: number, toDate: string | Date) => {
+  return Array.from({ length: days }, (_, i) => {
+    return {
+      start: dayjs(toDate).subtract(i, 'days').format('YYYY-MM-DD'),
+      end: dayjs(toDate).subtract(i, 'days').format('YYYY-MM-DD'),
+    };
+  }).reverse();
+};
+
+const getNWeeks = (
+  days: number,
+  fromDate: string | Date,
+  toDate: string | Date,
+) => {
+  const periods = [];
+  for (let i = 1; i <= Math.ceil(days / 7); i++) {
+    const endOfPeriod = dayjs(toDate).subtract((i - 1) * 7, 'day');
+    const startOfPeriod =
+      dayjs(toDate).subtract(i * 7, 'day') < dayjs(fromDate)
+        ? dayjs(fromDate)
+        : dayjs(toDate).subtract(i * 7, 'day');
+
+    periods.push({
+      start: startOfPeriod.format('YYYY-MM-DD'),
+      end: endOfPeriod.format('YYYY-MM-DD'),
+    });
+  }
+  return periods.reverse();
+};
+
+const getPrev7Days = () => {
+  return Array.from({ length: 7 }, (_, i) => {
+    return {
+      start: dayjs().subtract(i, 'days').format('YYYY-MM-DD'),
+      end: dayjs().subtract(i, 'days').format('YYYY-MM-DD'),
+    };
+  }).reverse();
+};
+
+const getPrev4Weeks = () => {
+  const periods = [];
+  for (let i = 1; i <= 4; i++) {
+    const endOfPeriod = dayjs().subtract((i - 1) * 7, 'day');
+    const startOfPeriod = dayjs().subtract(i * 7, 'day');
+    periods.push({
+      start: startOfPeriod.format('YYYY-MM-DD'),
+      end: endOfPeriod.format('YYYY-MM-DD'),
+    });
+  }
+  return periods.reverse();
+};
+
+const getPrev12Months = () => {
+  const today = dayjs();
+  const result: { start: string; end: string }[] = [];
+
+  for (let i = 0; i < 12; i++) {
+    const startOfMonth = today.subtract(i, 'month').startOf('month');
+    const endOfMonth = startOfMonth.endOf('month');
+
+    result.unshift({
+      start: startOfMonth.format('YYYY-MM-DD'),
+      end: endOfMonth.format('YYYY-MM-DD'),
+    });
+  }
+
+  return result;
+};
+
+const getCustomPeriods = (fromDate: string | Date, toDate: string | Date) => {
+  const start = dayjs(fromDate);
+  const end = dayjs(toDate);
+  const diffInDays = end.diff(start, 'days');
+
+  if (diffInDays <= 6) {
+    return getNDays(diffInDays + 1, toDate);
+  } else if (diffInDays <= 62) {
+    return getNWeeks(diffInDays, fromDate, toDate);
+  } else {
+    return [
+      {
+        start: dayjs(fromDate).format('YYYY-MM-DD'),
+        end: dayjs(toDate).format('YYYY-MM-DD'),
+      },
+    ];
+  }
+
+  return [];
+};
+
+export const getTimePeriod = (
+  timeFrame: string,
+  fromDate: string | Date,
+  toDate: string | Date,
+): { subPeriods: { start: string; end: string }[] } => {
+  switch (timeFrame) {
+    case 'today':
+      return {
+        subPeriods: [
+          {
+            start: dayjs().format('YYYY-MM-DD'),
+            end: dayjs().format('YYYY-MM-DD'),
+          },
+        ],
+      };
+    case 'week':
+      return {
+        subPeriods: getPrev7Days(),
+      };
+    case 'month':
+      return {
+        subPeriods: getPrev4Weeks(),
+      };
+    case 'year':
+      return {
+        subPeriods: getPrev12Months(),
+      };
+    case 'custom':
+      return {
+        subPeriods: getCustomPeriods(fromDate, toDate),
+      };
+    default:
+      return {
+        subPeriods: [
+          {
+            start: dayjs().format('YYYY-MM-DD'),
+            end: dayjs().format('YYYY-MM-DD'),
+          },
+        ],
+      };
+  }
+  // const prev7Days = getPrev7Days();
+  // const prev4Weeks = getPrev4Weeks();
+  // const prev12Months = getPrev12Months();
+  // return {
+  //   today: {
+  //     subPeriods: [
+  //       {
+  //         start: dayjs().format('YYYY-MM-DD'),
+  //         end: dayjs().format('YYYY-MM-DD'),
+  //       },
+  //     ],
+  //   },
+  //   week: { subPeriods: prev7Days },
+  //   month: { subPeriods: prev4Weeks },
+  //   year: { subPeriods: prev12Months },
+  // };
 };
