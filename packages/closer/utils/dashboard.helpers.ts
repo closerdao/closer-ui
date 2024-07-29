@@ -6,7 +6,7 @@ import { ethers } from 'ethers';
 import { List } from 'immutable';
 
 import { blockchainConfig } from '../config_blockchain';
-import { GNOSIS_SAFE_ADDRESS } from '../constants';
+import { GNOSIS_SAFE_ADDRESS, paidStatuses } from '../constants';
 import {
   ListingByType,
   NightlyBookingByListing,
@@ -192,8 +192,11 @@ export const getBookedNights = (
 ) => {
   // if guest left this day, do not count this last day as a booked night
 
-  // total bookable nights for shared glamping = duration * beds * quantity
-  // 3 for one day for a bed
+  console.log('bookings===', bookings);
+  console.log('listings===', listings);
+  console.log('start===', start);
+  console.log('end===', end);
+  console.log('duration===', duration)
 
   if (!bookings || !listings) return { bookedNights: [], numBookedNights: 0 };
   const bookedNights: any[] = [];
@@ -228,8 +231,13 @@ export const getBookedNights = (
         totalNights: totalNights || 0,
       });
     });
-    numBookedNights += listing?.get('private') ? 1 : booking.get('adults');
+
+    if (paidStatuses.includes(booking.get('status'))) {
+      numBookedNights += listing?.get('private') ? 1 : booking.get('adults');
+    }
   });
+
+  console.log('listingsWithoutBookings===',listingsWithoutBookings);
 
   listingsWithoutBookings.forEach((listing: any) => {
     const totalNights = listing?.get('private')
@@ -623,20 +631,4 @@ export const getTimePeriod = (
         ],
       };
   }
-  // const prev7Days = getPrev7Days();
-  // const prev4Weeks = getPrev4Weeks();
-  // const prev12Months = getPrev12Months();
-  // return {
-  //   today: {
-  //     subPeriods: [
-  //       {
-  //         start: dayjs().format('YYYY-MM-DD'),
-  //         end: dayjs().format('YYYY-MM-DD'),
-  //       },
-  //     ],
-  //   },
-  //   week: { subPeriods: prev7Days },
-  //   month: { subPeriods: prev4Weeks },
-  //   year: { subPeriods: prev12Months },
-  // };
 };

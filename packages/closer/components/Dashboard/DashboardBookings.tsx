@@ -9,7 +9,12 @@ import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import { useTranslations } from 'next-intl';
 
-import { MAX_BOOKINGS_TO_FETCH, MAX_LISTINGS_TO_FETCH } from '../../constants';
+import {
+  MAX_BOOKINGS_TO_FETCH,
+  MAX_LISTINGS_TO_FETCH,
+  dashboardRelevantStatuses,
+  paidStatuses,
+} from '../../constants';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { Filter } from '../../types';
@@ -20,7 +25,6 @@ import {
   getDuration,
 } from '../../utils/dashboard.helpers';
 import BookingsIcon from '../icons/BookingsIcon';
-import BookingsWithRoomInfo from './BookingsWithRoomInfo';
 import OccupancyByListing from './OccupancyByListing';
 import OccupancyCard from './OccupancyCard';
 
@@ -28,15 +32,6 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 const now = Date.now();
-
-const paidStatuses = ['paid', 'tokens-staked', 'credits-paid'];
-const dashboardRelevantStatuses = [
-  ...paidStatuses,
-  'pending',
-  'confirmed',
-  'checked-in',
-  'checked-out',
-];
 
 interface Props {
   timeFrame: string;
@@ -116,6 +111,8 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
     end,
     duration,
   );
+
+  console.log('numBookedNights====', numBookedNights);
 
   const spaceListings =
     listings &&
@@ -264,6 +261,7 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
           <OccupancyByListing
             bookedNights={bookedNights}
             bookedSpaceSlots={bookedSpaceSlots}
+            isNightly={true}
           />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -275,12 +273,17 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
             duration={duration}
             numBookedSpaceSlots={numBookedSpaceSlots}
           />
+          <OccupancyByListing
+            bookedNights={bookedNights}
+            bookedSpaceSlots={bookedSpaceSlots}
+            isNightly={false}
+          />
 
-          <BookingsWithRoomInfo
+          {/* <BookingsWithRoomInfo
             bookings={bookings}
             listings={listings}
             TIME_ZONE={TIME_ZONE}
-          />
+          /> */}
         </div>
       </div>
 
@@ -289,7 +292,11 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
           <Heading level={3} className="uppercase text-sm">
             {t('dashboard_bookings')}
           </Heading>
-          <div className={`${isMobile ? 'h-[280px]' : 'h-[220px]'} overflow-hidden`}>
+          <div
+            className={`${
+              isMobile ? 'h-[280px]' : 'h-[220px]'
+            } overflow-hidden`}
+          >
             {isLoading ? <Spinner /> : <DonutChart data={applicationsData} />}
           </div>
         </Card>
@@ -298,7 +305,11 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
           <Heading level={3} className="uppercase text-sm">
             {t('dashboard_people')}
           </Heading>
-          <div className={`${isMobile ? 'h-[280px]' : 'h-[220px]'}  overflow-hidden`}>
+          <div
+            className={`${
+              isMobile ? 'h-[280px]' : 'h-[220px]'
+            }  overflow-hidden`}
+          >
             {isLoading ? <Spinner /> : <DonutChart data={peopleData} />}
           </div>
         </Card>

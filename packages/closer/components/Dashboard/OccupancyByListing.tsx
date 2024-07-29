@@ -9,12 +9,18 @@ import { Card } from '../ui';
 interface Props {
   bookedNights: NightlyBookingByListing[];
   bookedSpaceSlots: SpaceBookingByListing[];
+  isNightly: boolean;
 }
 
-const OccupancyByListing = ({ bookedNights, bookedSpaceSlots }: Props) => {
-  const mergedBooked = [...bookedNights, ...bookedSpaceSlots];
+const OccupancyByListing = ({ bookedNights, bookedSpaceSlots, isNightly }: Props) => {
+  // const mergedBooked = [...bookedNights, ...bookedSpaceSlots];
 
-  const occupancyByListingType = groupListingsByType(mergedBooked);
+  console.log('bookedNights===', bookedNights);
+  
+  const occupancyNights = groupListingsByType(bookedNights);
+  const occupancySpaces = groupListingsByType(bookedSpaceSlots);
+  const occupancyByListingType = isNightly ? occupancyNights : occupancySpaces;
+
   return (
     <Card className="p-0 flex flex-col gap-1 h-[160px] overflow-hidden justify-start relative">
       <div className="z-1000 absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent"></div>

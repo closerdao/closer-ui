@@ -1,11 +1,11 @@
 import Head from 'next/head';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import DashboardBookings from '../../components/Dashboard/DashboardBookings';
-import DashboardMetrics from '../../components/Dashboard/DashboardMetrics';
+// import DashboardBookings from '../../components/Dashboard/DashboardBookings';
+// import DashboardMetrics from '../../components/Dashboard/DashboardMetrics';
 import DashboardNav from '../../components/Dashboard/DashboardNav';
-import DashboardRevenue from '../../components/Dashboard/DashboardRevenue';
+// import DashboardRevenue from '../../components/Dashboard/DashboardRevenue';
 import TimeFrameSelector from '../../components/Dashboard/TimeFrameSelector';
 import { Heading } from '../../components/ui';
 
@@ -40,6 +40,21 @@ const DashboardPage = ({ generalConfig }: Props) => {
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
+  useEffect(() => {
+
+    (async () => {
+      try {
+        
+        const res = await api.post('/metrics/token-sales')
+  
+        console.log('res.data===', res?.data);
+      } catch (error) {
+        console.log('error===', error);
+      }
+    })()
+
+  }, []);
+
   if (!user || !isAdmin) {
     return <PageNotFound error="User may not access" />;
   }
@@ -65,7 +80,7 @@ const DashboardPage = ({ generalConfig }: Props) => {
             />
           </div>
 
-          <DashboardBookings
+          {/* <DashboardBookings
             timeFrame={timeFrame}
             fromDate={fromDate}
             toDate={toDate}
@@ -79,7 +94,7 @@ const DashboardPage = ({ generalConfig }: Props) => {
             timeFrame={timeFrame}
             fromDate={fromDate}
             toDate={toDate}
-          />
+          /> */}
         </main>
       </div>
     </>

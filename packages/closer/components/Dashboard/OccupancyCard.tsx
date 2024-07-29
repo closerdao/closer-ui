@@ -17,7 +17,6 @@ interface Props {
   duration: number;
   numBookedNights?: number;
   numBookedSpaceSlots?: number;
-
   arrivingBookings?: any;
   departingBookings?: any;
   nightlyListingsIds?: string[];
