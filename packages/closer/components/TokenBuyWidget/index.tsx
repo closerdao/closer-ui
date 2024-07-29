@@ -13,6 +13,7 @@ import { MAX_LISTINGS_TO_FETCH, SALES_CONFIG } from '../../constants';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
+import { Listing } from '../../types';
 import api from '../../utils/api';
 import { getCurrentUnitPrice, getTotalPrice } from '../../utils/bondingCurve';
 import { Information } from '../ui';
@@ -70,7 +71,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
     price: 0,
   });
   const [tokensToSpend, setTokensToSpend] = useState(0);
-  const [daysToStay, setDaysToStay] = useState(0);
+  const [nightsPerYear, setNightsPerYear] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -79,9 +80,13 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
           limit: MAX_LISTINGS_TO_FETCH,
         },
       });
-      const labels = res.data.results.map((option: any) => {
-        return { label: option.name, value: option.name };
-      });
+      const labels = res.data.results
+        .filter((option: Listing) => {
+          return !option?.priceDuration || option?.priceDuration === 'night';
+        })
+        .map((option: any) => {
+          return { label: option.name, value: option.name };
+        });
 
       const labelsFuture = FUTURE_ACCOMMODATION_TYPES.map(
         (accommodatinType: any) => {
@@ -102,6 +107,10 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
       labels.push(...labelsFuture);
       prices.push(...pricesFuture);
 
+      const price = res?.data?.results[0].tokenPrice.val || 1;
+
+      setNightsPerYear(tokensToBuy / price);
+      setNightsPerYear(tokensToBuy / price);
       setAccommodationOptions({ labels, prices });
       setSelectedAccommodation({
         name: res?.data?.results[0].name,
@@ -119,8 +128,6 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
         setUserTdfBalance(tdfBalance);
       })();
     }
-
-    setDaysToStay(tokensToBuy);
   }, [isWalletReady]);
 
   useEffect(() => {
@@ -143,11 +150,8 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
         accommodationOptions.prices[index]) ||
       1;
 
+    setNightsPerYear(tokensToBuy / price);
     setSelectedAccommodation({ name: value, price });
-    const possibleAmount = calculatePossibleAmount(daysToStay * price);
-    const priceForTotalAmount = getTotalPrice(currentSupply, possibleAmount);
-    setTokensToBuy(possibleAmount);
-    setTokensToSpend(priceForTotalAmount);
   };
 
   const handleTokensToBuyChange = (
@@ -171,50 +175,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
     setTokensToBuy(possibleAmount);
     setTokensToSpend(priceForTotalAmount);
     if (price) {
-      setDaysToStay(Math.floor(possibleAmount / Number(price)));
-    }
-  };
-
-  const handleTokensToSpendChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const value =
-      event.target.value === '' ? 0 : parseInt(event.target.value, 10);
-
-    const possibleAmount = calculatePossibleAmount(value);
-    const priceForTotalAmount = getTotalPrice(currentSupply, possibleAmount);
-
-    setTokensToBuy(possibleAmount);
-    setTokensToSpend(priceForTotalAmount);
-
-    setDaysToStay(
-      Math.floor(
-        priceForTotalAmount / tokenPrice / selectedAccommodation.price,
-      ),
-    );
-  };
-
-  const handleDaysToStayChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const index = accommodationOptions?.labels.findIndex((option: Item) => {
-      return option.label === selectedAccommodation.name;
-    });
-
-    const price =
-      index !== undefined &&
-      accommodationOptions &&
-      accommodationOptions.prices[index];
-    const value =
-      event.target.value === '' ? 0 : parseInt(event.target.value, 10);
-
-    if (price) {
-      const possibleAmount = calculatePossibleAmount(value * Number(price));
-      const priceForTotalAmount = getTotalPrice(currentSupply, possibleAmount);
-
-      setTokensToBuy(possibleAmount);
-      setTokensToSpend(priceForTotalAmount);
-      setDaysToStay(possibleAmount / price);
+      setNightsPerYear(possibleAmount / selectedAccommodation.price || 0);
     }
   };
 
@@ -235,55 +196,6 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
         1 {t('token_sale_token_symbol')} ≈ {tokenPrice} {SOURCE_TOKEN}
       </p>
 
-      <div className="flex gap-4 flex-wrap sm:flex-nowrap">
-        <label
-          htmlFor="accommodationOptions"
-          className="font-bold bg-accent-light  py-3.5 px-6 rounded-md text-xl"
-        >
-          {t('token_sale_widget_stay')}
-        </label>
-
-        <div className="flex-1 min-w-[220px]">
-          <Select
-            id="accommodationOptions"
-            value={selectedAccommodation.name}
-            options={accommodationOptions?.labels || []}
-            className="flex-1"
-            onChange={handleAccommodationSelect}
-            isRequired
-            size="large"
-          />
-        </div>
-      </div>
-
-      <div className="flex gap-4 flex-wrap items-stretch">
-        <label
-          htmlFor="daysToStay"
-          className="  font-bold bg-accent-light py-3.5 px-6 rounded-md text-xl"
-        >
-          {t('token_sale_widget_for')}
-        </label>
-        <div className="flex-1">
-          <input
-            id="daysToStay"
-            value={daysToStay}
-            onChange={handleDaysToStayChange}
-            className="w-full h-14 px-4 pr-8 rounded-md text-xl bg-neutral text-black"
-          />
-        </div>
-        <p className="  font-bold bg-accent-light   py-3.5 px-6 rounded-md text-xl">
-          {t('token_sale_widget_days')}
-        </p>
-      </div>
-
-      <div className="relative flex py-5 items-center">
-        <div className="flex-grow border-t-2 border-neutral"></div>
-        <span className="flex-shrink mx-4 uppercase">
-          {t('token_sale_i_should_buy')}
-        </span>
-        <div className="flex-grow border-t-2 border-neutral"></div>
-      </div>
-
       <div className="flex gap-4">
         <label
           htmlFor="tokensToBuy"
@@ -303,7 +215,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
         </div>
       </div>
 
-      <div className="flex gap-4 mb-10">
+      <div className="flex gap-4 mb-2">
         <label
           htmlFor="tokensToSpend"
           className="font-bold bg-accent-light py-3.5 px-6 rounded-md text-xl"
@@ -315,10 +227,27 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
             id="tokensToSpend"
             disabled={true}
             value={tokensToSpend}
-            onChange={handleTokensToSpendChange}
             className="h-14 px-4 pr-8 rounded-md text-xl bg-neutral text-black !border-none"
           />
           <p className="absolute right-3 top-4"> {t('token_sale_pay')}</p>
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-2 items-left sm:items-center mb-8">
+        <p className=" whitespace-normal sm:whitespace-nowrap">
+          This amount will give you right of staying{' '}
+          <strong>{nightsPerYear}</strong> nights a year in a{' '}
+        </p>
+
+        <div>
+          <Select
+            id="accommodationOptions"
+            value={selectedAccommodation.name}
+            options={accommodationOptions?.labels || []}
+            className="rounded-full border-black w-[170px] text-sm py-0.5"
+            onChange={handleAccommodationSelect}
+            isRequired
+          />
         </div>
       </div>
 
