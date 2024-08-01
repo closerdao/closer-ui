@@ -27,7 +27,7 @@ const ArticleList = ({
 }: Props) => {
   const t = useTranslations();
   return (
-    <div className="pb-12 flex flex-col">
+    <div className="pb-12 flex flex-col border">
       <div className="max-w-[900px] pb-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-14 gap-y-[100px] pt-20 pb-0">
           {articlesWithAuthorInfo

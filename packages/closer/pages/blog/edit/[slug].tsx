@@ -2,8 +2,6 @@ import Head from 'next/head';
 import Link from 'next/link';
 import router from 'next/router';
 
-import { useState } from 'react';
-
 import EditModel from '../../../components/EditModel';
 import { LinkButton } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
@@ -31,21 +29,23 @@ const Article = ({ article, error }: Props) => {
   const isAdmin = user?.roles.includes('admin');
   const isModerator = user?.roles.includes('moderator');
 
-  const [photo, setPhoto] = useState<undefined | string>(
-    article && article?.photo,
-  );
+  const photo = article && article?.photo;
 
-  const fullImageUrl =
-    photo && !photo.startsWith('http') ? `${cdn}${photo}-max-lg.jpg` : photo;
-
+  const fullImageUrl = photo?.startsWith('http')
+    ? photo
+    : `${cdn}${photo}-max-lg.jpg`;
   const onUpdate = async (
     name: string,
     value: any,
     option?: any,
     actionType?: string,
   ) => {
-    if (actionType === 'ADD' && name === 'visibleBy' && option?._id) {
-      await api.post(`/moderator/article/${article._id}/add`, option);
+    try {
+      if (actionType === 'ADD' && name === 'visibleBy' && option?._id) {
+        await api.post(`/moderator/article/${article._id}/add`, option);
+      }
+    } catch (error) {
+      console.error('Error updating article:', error);
     }
   };
 

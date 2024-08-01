@@ -38,8 +38,8 @@ const ArticlePage = ({ article, author, error, relatedArticles }: Props) => {
   const t = useTranslations();
   const router = useRouter();
   const { user } = useAuth();
-  const isAdmin = user?.roles.includes('admin');
-  const isModerator = user?.roles.includes('moderator');
+  const isAdmin = user && user?.roles.includes('admin');
+  const isModerator = user && user?.roles.includes('moderator');
 
   const fullImageUrl =
     article &&
@@ -256,7 +256,7 @@ const ArticlePage = ({ article, author, error, relatedArticles }: Props) => {
           )}
         </section>
 
-        <section className="px-8 flex flex-col items-center gap-10 bg-gray-700 -ml-4 w-[calc(100vw+16px)] pb-12">
+        <section className="pl-8 pr-4 flex flex-col items-center gap-10 bg-gray-700 -ml-4 w-[calc(100vw+16px)] pb-12">
           <div className="max-w-[900px] py-20">
             <div className="flex flex-col gap-8 items-center">
               {(isAdmin || isModerator) && (
@@ -286,9 +286,7 @@ const ArticlePage = ({ article, author, error, relatedArticles }: Props) => {
 ArticlePage.getInitialProps = async (context: NextPageContext) => {
   try {
     const { query, req } = context;
-    const slug =
-      (req && req.url && req.url.replace('/blog/', '')) ||
-      (query && query.slug);
+    const slug = req?.url?.replace('/blog/', '') || query?.slug;
 
     const [articleRes, messages] = await Promise.all([
       api.get(`/article/${slug}`).catch(() => {
@@ -298,7 +296,7 @@ ArticlePage.getInitialProps = async (context: NextPageContext) => {
     ]);
 
     const article = articleRes?.data?.results;
-    const authorId = article.createdBy;
+    const authorId = article?.createdBy;
 
     const [relatedArticlesRes, authorRes] = await Promise.all([
       api
