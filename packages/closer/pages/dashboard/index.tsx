@@ -40,20 +40,20 @@ const DashboardPage = ({ generalConfig }: Props) => {
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
-  useEffect(() => {
+  // useEffect(() => {
 
-    (async () => {
-      try {
+  //   (async () => {
+  //     try {
         
-        const res = await api.post('/metrics/token-sales')
+  //       const res = await api.post('/metrics/token-sales')
   
-        console.log('res.data===', res?.data);
-      } catch (error) {
-        console.log('error===', error);
-      }
-    })()
+  //       console.log('res.data===', res?.data);
+  //     } catch (error) {
+  //       console.log('error===', error);
+  //     }
+  //   })()
 
-  }, []);
+  // }, []);
 
   if (!user || !isAdmin) {
     return <PageNotFound error="User may not access" />;
