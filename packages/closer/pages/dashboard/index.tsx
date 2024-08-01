@@ -1,6 +1,6 @@
 import Head from 'next/head';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import DashboardBookings from '../../components/Dashboard/DashboardBookings';
 import DashboardMetrics from '../../components/Dashboard/DashboardMetrics';
