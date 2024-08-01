@@ -1,8 +1,14 @@
 import Link from 'next/link';
 
-import React from 'react';
-
-const Pagination = ({ loadPage, queryParam, total, page, limit, maxPages }) => {
+const Pagination = ({
+  loadPage,
+  queryParam,
+  total,
+  page,
+  limit,
+  maxPages,
+  isInverted = false,
+}) => {
   const totalPages = Math.ceil(total / limit);
   const pageOffset =
     totalPages > maxPages ? Math.max(Math.floor(page - maxPages / 2), 0) : 0;
@@ -17,7 +23,7 @@ const Pagination = ({ loadPage, queryParam, total, page, limit, maxPages }) => {
         {page > 1 && (
           <Link
             href={{ query: { [queryParam]: page - 1 } }}
-            className="p-1"
+            className={`${isInverted ? 'text-white' : 'text-black'} p-1 px-3`}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -41,7 +47,7 @@ const Pagination = ({ loadPage, queryParam, total, page, limit, maxPages }) => {
                 <Link
                   href={{ query: { [queryParam]: toPage } }}
                   key={`page-${toPage}`}
-                  className={`p-1 mr-2 ${
+                  className={`p-1 px-2 rounded-md mr-2 ${
                     page === toPage ? 'bg-accent text-white' : 'bg-gray-100'
                   }`}
                   onClick={(e) => {
@@ -60,7 +66,7 @@ const Pagination = ({ loadPage, queryParam, total, page, limit, maxPages }) => {
         {page < totalPages && (
           <Link
             href={{ query: { [queryParam]: page + 1 } }}
-            className="p-1"
+            className={`${isInverted ? 'text-white' : 'text-black'} p-1`}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -80,6 +86,7 @@ Pagination.defaultProps = {
   page: 1,
   limit: 50,
   maxPages: 5,
+  isInverted: false,
 };
 
 export default Pagination;

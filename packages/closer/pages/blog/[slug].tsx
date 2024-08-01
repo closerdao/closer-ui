@@ -1,41 +1,61 @@
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
+import {
+  FacebookIcon,
+  FacebookShareButton,
+  TwitterShareButton,
+  XIcon,
+} from 'react-share';
+
+import RelatedArticles from '../../components/RelatedArticles';
+import { Button, Card, LinkButton } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
+import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import dayjs from 'dayjs';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
-import api, { cdn } from '../../utils/api';
+import { Article, ArticleWithAuthorInfo, Author } from '../../types/blog';
+import api, { cdn, formatSearch } from '../../utils/api';
+import { estimateReadingTime } from '../../utils/blog.utils';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 interface Props {
-  article: any;
+  article: Article;
   error?: string;
+  author: Author;
+  relatedArticles: ArticleWithAuthorInfo[];
 }
 
-const Article = ({ article, error }: Props) => {
+const ArticlePage = ({ article, author, error, relatedArticles }: Props) => {
   const t = useTranslations();
-  const { user, isAuthenticated } = useAuth();
+  const router = useRouter();
+  const { user } = useAuth();
+  const isAdmin = user?.roles.includes('admin');
+  const isModerator = user?.roles.includes('moderator');
 
   const fullImageUrl =
     article &&
     article.photo &&
     (!article.photo.startsWith('http')
-      ? `${cdn}/${article.photo}-max-lg.jpg`
+      ? `${cdn}${article.photo}-max-lg.jpg`
       : article.photo);
 
-  const createdAt =
-    article &&
-    new Date(article.created).toLocaleDateString('en-US', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
+  const handleDeleteArticle = async () => {
+    try {
+      await api.delete(`/article/${article?._id}`);
+      router.push('/blog');
+    } catch (err) {
+      console.log(parseMessageFromError(err));
+    }
+  };
 
   if (!article) {
     return <PageNotFound error={error} />;
@@ -64,67 +84,206 @@ const Article = ({ article, error }: Props) => {
           />
         )}
       </Head>
-      <main className="main-content w-full max-w-6xl">
-        <section>
-          {article.photo && (
-            <div className="relative w-full h-96 md:basis-1/2 md:w-96">
-              <Image
-                src={fullImageUrl}
-                alt={article.title}
-                fill={true}
-                className="bg-cover bg-center"
-              />
+      <main className="w-full flex flex-col items-center gap-12">
+        <section className="flex flex-col items-center  mb-6 max-w-[600px] gap-12">
+          <div>
+            <Link href="/blog">◀️ {t('blog_title')}</Link>
+          </div>
+
+          <div className="w-full ">
+            {article.category && (
+              <Heading
+                level={2}
+                className="text-md uppercase mb-4  text-center"
+              >
+                {article.category}
+              </Heading>
+            )}
+
+            <Heading level={1} className="text-4xl text-center">
+              {article.title}
+            </Heading>
+          </div>
+          {(user?._id === article?.createdBy || isAdmin || isModerator) && (
+            <div className="flex gap-2">
+              <Link href={`/blog/edit/${article.slug}`} className="btn-primary">
+                Edit
+              </Link>
+
+              <Button
+                isFullWidth={false}
+                size="small"
+                onClick={handleDeleteArticle}
+                className="btn-primary"
+              >
+                Delete
+              </Button>
             </div>
           )}
-          <div className="mb-4">
-            <div>
-              <Link href="/blog">◀️ Blog</Link>
+        </section>
+
+        {article?.photo && (
+          <section className="pl-8 pr-4 flex flex-col items-center gap-10 -ml-4 w-[calc(100vw+16px)] pb-12 max-w-5xl">
+            <div className="h-[280px] sm:h-[400px] md:h-[600px] w-full">
+              <Image
+                className="object-cover h-full w-full "
+                src={fullImageUrl || ''}
+                alt={article?.title || ''}
+                width={400}
+                height={300}
+              />
             </div>
-            <Heading>{article.title}</Heading>
-            <Heading level={2} className="opacity-50 mb-4">
-              {article.category}
-            </Heading>
-            {isAuthenticated && user?._id === article.createdBy && (
-              <div>
-                <Link
-                  href={`/blog/edit/${article.slug}`}
-                  className="btn-primary"
-                >
-                  Edit
-                </Link>
+          </section>
+        )}
+
+        <section className="flex flex-col items-center  mb-6 max-w-[600px] gap-20 pb-20">
+          <div className="flex flex-col gap-10 ">
+            {author && (
+              <div className="flex justify-between items-center  w-full">
+                <div className="flex gap-4 items-center">
+                  <Link href={author?._id ? `/members/${author._id}` : '#'}>
+                    {author?.photo ? (
+                      <Image
+                        className="rounded-full min-w-[50px] min-h-[50px]"
+                        src={`${cdn}${author.photo}-profile-sm.jpg`}
+                        alt={author.screenname || ''}
+                        width={50}
+                        height={50}
+                      />
+                    ) : (
+                      <div className="rounded-full overflow-hidden">
+                        <FaUser className="text-neutral w-[50px] h-[50px] " />
+                      </div>
+                    )}
+                  </Link>
+                  <div className="flex flex-col text-left">
+                    <p>
+                      <Link
+                        className="text-accent font-normal text-lg no-underline normal-case"
+                        href={author?._id ? `/members/${author?._id}` : '#'}
+                      >
+                        {author.screenname}
+                      </Link>
+                    </p>
+                    <p className="font-normal normal-case">
+                      {dayjs(article?.updated).format('MMMM DD, YYYY')} &middot;{' '}
+                      {estimateReadingTime(article?.html)} {t('blog_min_read')}
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
+            <div
+              className="rich-text article limit-width padding-right"
+              dangerouslySetInnerHTML={{ __html: article?.html || '' }}
+            />
           </div>
-        </section>
-        <section
-          className="article limit-width padding-right"
-          dangerouslySetInnerHTML={{ __html: article.html }}
-        />
-        <section className="col right-col">
-          <h3 className="mt-8">Posted</h3>
-          <p>{createdAt}</p>
-          <h3 className="mt-8">Tags</h3>
-          <p className="tags">
-            {article.tags &&
-              article.tags.length > 0 &&
-              article.tags.map((tag: string) => (
+
+          {article.tags && article.tags.length > 0 && (
+            <div className=" w-full flex gap-2 items-center flex-wrap">
+              <Heading level={3} className="text-md font-normal">
+                {t('blog_tags')}
+              </Heading>
+              {article.tags.map((tag: string) => (
                 <Link
                   key={tag}
                   as={`/blog/search/${tag}`}
                   href="/blog/search/[keyword]"
-                  className="mr-4 mb-2 text-xs inline-flex items-center font-bold leading-sm uppercase text-black px-3 py-1 bg-gray-200 rounded-full"
+                  className="rounded-full bg-accent-light px-3 py-1 text-accent"
                 >
                   {tag}
                 </Link>
               ))}
-          </p>
+            </div>
+          )}
+
+          <Card className="w-full flex flex-row items-center gap-3">
+            <FacebookShareButton
+              url={
+                process.env.NEXT_PUBLIC_PLATFORM_URL + '/blog/' + article?.slug
+              }
+              className="flex gap-3 items-center w-1/2"
+            >
+              <FacebookIcon size={32} round={true} />
+              {t('blog_share_on_facebook')}
+            </FacebookShareButton>
+
+            <TwitterShareButton
+              title={article?.title}
+              url={
+                process.env.NEXT_PUBLIC_PLATFORM_URL + '/blog/' + article?.slug
+              }
+              related={['@tdfinyourdreams']}
+              className="flex gap-3 items-center w-1/2"
+            >
+              <XIcon size={32} round={true} />
+              {t('blog_share_on_x')}
+            </TwitterShareButton>
+          </Card>
+
+          {author && (
+            <div className="flex justify-between items-center  w-full">
+              <div className="flex gap-4 ">
+                <Link href={author?._id ? `/members/${author._id}` : '#'}>
+                  {author?.photo ? (
+                    <Image
+                      className="rounded-full  min-w-[50px] min-h-[50px]"
+                      src={`${cdn}${author.photo}-profile-sm.jpg`}
+                      alt={author.screenname || ''}
+                      width={50}
+                      height={50}
+                    />
+                  ) : (
+                    <div className="rounded-full overflow-hidden">
+                      <FaUser className="text-neutral w-[50px] h-[50px] " />
+                    </div>
+                  )}
+                </Link>
+
+                <div className="flex flex-col text-left">
+                  <p>
+                    <Link
+                      className="text-accent font-normal text-lg no-underline normal-case"
+                      href={author?._id ? `/members/${author?._id}` : '#'}
+                    >
+                      {author.screenname}
+                    </Link>
+                  </p>
+                  <p className="font-normal normal-case">{author.about}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+
+        <section className="px-8 flex flex-col items-center gap-10 bg-gray-700 -ml-4 w-[calc(100vw+16px)] pb-12">
+          <div className="max-w-[900px] py-20">
+            <div className="flex flex-col gap-8 items-center">
+              {(isAdmin || isModerator) && (
+                <div className="mb-4">
+                  <LinkButton
+                    size="small"
+                    href="/blog/create"
+                    className="bg-white text-black border-0 w-[200px]"
+                  >
+                    {t('blog_write_article')}
+                  </LinkButton>
+                </div>
+              )}
+              <Heading level={3} className="text-white text-3xl">
+                {t('blog_what_to_read_next')}
+              </Heading>
+            </div>
+
+            <RelatedArticles relatedArticles={relatedArticles} />
+          </div>
         </section>
       </main>
     </>
   );
 };
 
-Article.getInitialProps = async (context: NextPageContext) => {
+ArticlePage.getInitialProps = async (context: NextPageContext) => {
   try {
     const { query, req } = context;
     const slug =
@@ -132,13 +291,38 @@ Article.getInitialProps = async (context: NextPageContext) => {
       (query && query.slug);
 
     const [articleRes, messages] = await Promise.all([
-      api.get(`/article/${slug}`),
+      api.get(`/article/${slug}`).catch(() => {
+        return null;
+      }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
-    const res = articleRes.data?.results;
+
+    const article = articleRes?.data?.results;
+    const authorId = article.createdBy;
+
+    const [relatedArticlesRes, authorRes] = await Promise.all([
+      api
+        .post('/articles/related', {
+          id: article._id,
+          category: article.category,
+          tags: article.tags,
+        })
+        .catch(() => {
+          return null;
+        }),
+      api
+        .get(`/user?where=${formatSearch({ _id: { $eq: authorId } })}`)
+        .catch(() => {
+          return null;
+        }),
+    ]);
+
+    const relatedArticles = relatedArticlesRes?.data?.results || [];
 
     return {
-      article: res.data?.results,
+      article,
+      author: authorRes?.data?.results[0] || null,
+      relatedArticles,
       messages,
     };
   } catch (err) {
@@ -149,4 +333,4 @@ Article.getInitialProps = async (context: NextPageContext) => {
   }
 };
 
-export default Article;
+export default ArticlePage;

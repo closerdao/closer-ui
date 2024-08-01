@@ -313,6 +313,54 @@ const models = {
       placeholder: 'Add tag',
     },
   ],
+  article: [
+    {
+      name: 'title',
+      className: 'text-4xl font-bold',
+      label: 'Article title',
+      type: 'text',
+      placeholder: 'Enter article title',
+      required: true,
+      tab: 'general',
+    },
+    {
+      name: 'photo',
+      label: 'Photo',
+      public: true,
+      editable: true,
+      tab: 'general',
+      type: 'photos',
+    },
+    {
+      name: 'summary',
+      label: 'Summary',
+      type: 'text',
+      placeholder: 'Article summary...',
+      tab: 'general',
+    },
+    {
+      name: 'html',
+      label: 'html',
+      type: 'longtext',
+      placeholder: 'Article full text...',
+      tab: 'general',
+    },
+
+    {
+      name: 'category',
+      label: 'Category',
+      public: true,
+      editable: true,
+      required: true,
+      type: 'text',
+    },
+    {
+      name: 'tags',
+      label: 'Tags',
+      type: 'tags',
+      placeholder: 'Add tag',
+    },
+  ],
   task: [
     {
       name: 'title',
@@ -477,7 +525,6 @@ const models = {
       placeholder: '20',
       required: false,
     },
-
   ],
   booking: [
     { name: 'start', label: 'Start date', type: 'date' },

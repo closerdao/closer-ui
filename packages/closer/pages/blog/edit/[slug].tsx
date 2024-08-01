@@ -1,11 +1,11 @@
 import Head from 'next/head';
-import Image from 'next/image';
 import Link from 'next/link';
+import router from 'next/router';
 
 import { useState } from 'react';
 
-import RichTextEditor from '../../../components/RichTextEditor';
-import { Button } from '../../../components/ui';
+import EditModel from '../../../components/EditModel';
+import { LinkButton } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
 import { NextPageContext } from 'next';
@@ -13,6 +13,7 @@ import { useTranslations } from 'next-intl';
 
 import { HOME_PAGE_CATEGORY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import models from '../../../models';
 import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
@@ -25,33 +26,35 @@ interface Props {
 
 const Article = ({ article, error }: Props) => {
   const t = useTranslations();
-  const { user, isAuthenticated } = useAuth();
-  const [html, setHtml] = useState(article.html);
-  const onChange = (value: string) => {
-    setHtml(value);
-  };
 
-  const persist = async () => {
-    await api.patch(`/article/${article._id}`, { html });
-  };
+  const { user } = useAuth();
+  const isAdmin = user?.roles.includes('admin');
+  const isModerator = user?.roles.includes('moderator');
+
+  const [photo, setPhoto] = useState<undefined | string>(
+    article && article?.photo,
+  );
 
   const fullImageUrl =
-    article &&
-    article.photo &&
-    (!article.photo.startsWith('http')
-      ? `${cdn}/${article.photo}-max-lg.jpg`
-      : article.photo);
+    photo && !photo.startsWith('http') ? `${cdn}${photo}-max-lg.jpg` : photo;
 
-  const createdAt =
-    article &&
-    new Date(article.created).toLocaleDateString('en-US', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
+  const onUpdate = async (
+    name: string,
+    value: any,
+    option?: any,
+    actionType?: string,
+  ) => {
+    if (actionType === 'ADD' && name === 'visibleBy' && option?._id) {
+      await api.post(`/moderator/article/${article._id}/add`, option);
+    }
+  };
 
   if (!article) {
     return <PageNotFound error={error} />;
+  }
+
+  if (!isAdmin && !isModerator && article.createdBy !== user?._id) {
+    return <PageNotFound error="User may not access" />;
   }
 
   return (
@@ -77,44 +80,44 @@ const Article = ({ article, error }: Props) => {
           />
         )}
       </Head>
-      <main className="main-content w-full max-w-6xl">
+      <main className="main-content w-full max-w-4xl flex flex-col gap-8">
         <section>
-          {article.photo && (
-            <div className="relative w-full h-96 md:basis-1/2 md:w-96">
-              <Image
-                src={fullImageUrl}
-                alt={article.title}
-                fill={true}
-                className="bg-cover bg-center"
-              />
-            </div>
-          )}
-          <div className="mb-4">
-            <div className="flex gap-2">
-              <Link href="/blog">◀️ Blog</Link>
-              {article.category === HOME_PAGE_CATEGORY && (
-                <Link href="/">◀️ {t('blog_home_button')}</Link>
-              )}
-            </div>
-            <Heading>{article.title}</Heading>
-            <Heading level={2} className="opacity-50 mb-4">
-              {article.category}
-            </Heading>
-            {isAuthenticated && user?.roles.includes('admin') && (
-              <div>
-                <Button
-                  onClick={() => persist()}
-                  type="primary"
-                  isFullWidth={false}
-                >
-                  Save
-                </Button>
-              </div>
+          <div className="flex gap-2">
+            <Link href="/blog">◀️ {t('blog_title')}</Link>
+            {article.category === HOME_PAGE_CATEGORY && (
+              <Link href="/">◀️ {t('blog_home_button')}</Link>
             )}
           </div>
+          <div className="flex justify-between items-center">
+            <Heading>{t('blog_edit_article')}</Heading>
+            <LinkButton
+              href={`/blog/${article.slug}`}
+              size="small"
+              isFullWidth={false}
+            >
+              {t('blog_view_article')}
+            </LinkButton>
+          </div>
         </section>
-        {/* <Editor value={html} onChange={onChange} /> */}
-        <RichTextEditor value={html} onChange={onChange} />
+        <section className=" w-full flex justify-center ">
+          <div
+            className={
+              '"w-full relative bg-accent-light rounded-md w-full  min-h-[400px]" '
+            }
+          >
+            <EditModel
+              id={article._id}
+              endpoint="/article"
+              fields={models.article}
+              initialData={article}
+              onSave={(article) => router.push(`/blog/${article.slug}`)}
+              onUpdate={onUpdate}
+              allowDelete
+              deleteButton="Delete article"
+              onDelete={() => router.push('/blog')}
+            />
+          </div>
+        </section>
       </main>
     </>
   );
