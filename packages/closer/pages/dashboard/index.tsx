@@ -2,10 +2,10 @@ import Head from 'next/head';
 
 import { useEffect, useState } from 'react';
 
-// import DashboardBookings from '../../components/Dashboard/DashboardBookings';
-// import DashboardMetrics from '../../components/Dashboard/DashboardMetrics';
+import DashboardBookings from '../../components/Dashboard/DashboardBookings';
+import DashboardMetrics from '../../components/Dashboard/DashboardMetrics';
 import DashboardNav from '../../components/Dashboard/DashboardNav';
-// import DashboardRevenue from '../../components/Dashboard/DashboardRevenue';
+import DashboardRevenue from '../../components/Dashboard/DashboardRevenue';
 import TimeFrameSelector from '../../components/Dashboard/TimeFrameSelector';
 import { Heading } from '../../components/ui';
 
@@ -80,7 +80,7 @@ const DashboardPage = ({ generalConfig }: Props) => {
             />
           </div>
 
-          {/* <DashboardBookings
+          <DashboardBookings
             timeFrame={timeFrame}
             fromDate={fromDate}
             toDate={toDate}
@@ -94,7 +94,7 @@ const DashboardPage = ({ generalConfig }: Props) => {
             timeFrame={timeFrame}
             fromDate={fromDate}
             toDate={toDate}
-          /> */}
+          />
         </main>
       </div>
     </>

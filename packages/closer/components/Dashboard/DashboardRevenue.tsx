@@ -64,8 +64,8 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
       let eventsRevenue = 0;
       let subscriptionsRevenue = 0;
       let foodRevenue = 0;
-      let start = null;
-      let end = null;
+      let start: Date | string  = '';
+      let end: Date | string  = '';
 
       ({ start, end } = getDateRange({
         timeFrame: 'custom',
