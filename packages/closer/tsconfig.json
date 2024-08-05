@@ -1,5 +1,5 @@
 {
   "extends": "tsconfig/nextjs.json",
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "components/icons/CheckIcon.tsx", "components/Resources/index.jsx", "../../apps/tdf/pages/quill.tsx", "components/CheckoutPayment.js", "../../apps/tdf/cypress.config.ts", "hooks/useAuth.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "components/icons/CheckIcon.tsx", "components/Resources/index.jsx", "../../apps/tdf/pages/quill.tsx", "components/CheckoutPayment.js", "../../apps/tdf/cypress.config.ts", "hooks/useAuth.js", "components/Pagination.js"],
   "exclude": ["node_modules"]
 }
