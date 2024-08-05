@@ -1,13 +1,17 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
-
-import { useEffect } from 'react';
-import React from 'react';
 
 import Heading from '../components/ui/Heading';
 
+import { GetStaticPropsContext, PreviewData } from 'next';
+import { ParsedUrlQuery } from 'querystring';
+
+import { useRouter } from 'next/router';
+import { useEffect } from 'react';
+import { loadLocaleData } from '../utils/locale.helpers';
+
 const Page404 = ({ error }: { error?: string }) => {
+
   const router = useRouter();
 
   useEffect(() => {
@@ -36,5 +40,17 @@ const Page404 = ({ error }: { error?: string }) => {
     </>
   );
 };
+
+export async function getStaticProps(
+  context: GetStaticPropsContext<ParsedUrlQuery, PreviewData>,
+) {
+  const messages = await loadLocaleData(
+    context?.locale,
+    process.env.NEXT_PUBLIC_APP_NAME,
+  );
+  return {
+    props: { messages },
+  };
+}
 
 export default Page404;
