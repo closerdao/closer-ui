@@ -34,8 +34,10 @@ const Create = () => {
 
       <main className="main-content w-full max-w-4xl flex flex-col gap-8">
         <section>
-          <div className="flex gap-2">
-            <Link href="/blog">◀️ {t('blog_title')}</Link>
+          <div>
+            <Link href="/blog" className="uppercase text-accent font-bold">
+              ◀️ {t('blog_title')}
+            </Link>
           </div>
           <Heading>{t('blog_write_article')}</Heading>
         </section>

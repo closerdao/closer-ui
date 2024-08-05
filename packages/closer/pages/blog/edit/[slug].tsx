@@ -83,7 +83,11 @@ const Article = ({ article, error }: Props) => {
       <main className="main-content w-full max-w-4xl flex flex-col gap-8">
         <section>
           <div className="flex gap-2">
-            <Link href="/blog">◀️ {t('blog_title')}</Link>
+            <div>
+              <Link href="/blog" className="uppercase text-accent font-bold">
+                ◀️ {t('blog_title')}
+              </Link>
+            </div>
             {article.category === HOME_PAGE_CATEGORY && (
               <Link href="/">◀️ {t('blog_home_button')}</Link>
             )}

@@ -85,21 +85,24 @@ const ArticlePage = ({ article, author, error, relatedArticles }: Props) => {
         )}
       </Head>
       <main className="w-full flex flex-col items-center gap-12">
-        <section className="flex flex-col items-center  mb-6 max-w-[600px] gap-12">
-          <div>
-            <Link href="/blog">◀️ {t('blog_title')}</Link>
+        <section className="flex flex-col items-center w-full mb-6 max-w-[600px] gap-12">
+          <div className="w-full flex justify-between">
+            <Link href="/blog" className="uppercase text-accent font-bold">
+              ◀️ {t('blog_title')}
+            </Link>
+            <div>
+              {article.category && (
+                <Heading
+                  level={2}
+                  className="text-md uppercase mb-4  text-center"
+                >
+                  {article.category}
+                </Heading>
+              )}
+            </div>
           </div>
 
           <div className="w-full ">
-            {article.category && (
-              <Heading
-                level={2}
-                className="text-md uppercase mb-4  text-center"
-              >
-                {article.category}
-              </Heading>
-            )}
-
             <Heading level={1} className="text-4xl text-center">
               {article.title}
             </Heading>
@@ -256,7 +259,7 @@ const ArticlePage = ({ article, author, error, relatedArticles }: Props) => {
           )}
         </section>
 
-        <section className="pl-8 pr-4 flex flex-col items-center gap-10 bg-gray-700 -ml-4 w-[calc(100vw+16px)] pb-12">
+        <section className="pl-8 pr-4 flex flex-col items-center gap-10 bg-complimentary-light -ml-4 w-[calc(100vw+16px)] pb-12">
           <div className="max-w-[900px] py-20">
             <div className="flex flex-col gap-8 items-center">
               {(isAdmin || isModerator) && (

@@ -47,13 +47,15 @@ const Search = ({ articles, error, keyword, tags, authors }: Props) => {
         <title>{keyword}</title>
       </Head>
       <main className="w-full flex flex-col items-center gap-6">
-        <section className="flex flex-col items-center max-w-[600px] ">
+        <section className="flex w-full items-center max-w-[900px] ">
           <div>
-            <Link href="/blog">◀️ {t('blog_title')}</Link>
+            <Link href="/blog" className="uppercase text-accent font-bold">
+              ◀️ {t('blog_title')}
+            </Link>
           </div>
         </section>
 
-        <section className="px-8 flex flex-col items-center gap-10 bg-gray-700 -ml-4 w-[calc(100vw+16px)] pb-12">
+        <section className="px-8 flex flex-col items-center gap-10 bg-complimentary-light -ml-4 w-[calc(100vw+16px)] pb-12">
           <div className="max-w-[900px] py-20">
             <div className="flex flex-col gap-3 items-center">
               <Heading level={3} className="text-white text-3xl">

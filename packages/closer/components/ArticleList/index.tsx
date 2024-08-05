@@ -138,7 +138,6 @@ const ArticleList = ({
             })}
         </div>
       </div>
-
       <Pagination
         loadPage={(page: number) => {
           loadPage(page);
