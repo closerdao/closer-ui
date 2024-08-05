@@ -6,7 +6,6 @@ import { useEffect } from 'react';
 
 import Heading from '../components/ui/Heading';
 
-import { defaultLocale } from '../../../locales.config';
 import { loadLocaleData } from '../utils/locale.helpers';
 
 const Page404 = ({ error }: { error?: string }) => {
@@ -41,7 +40,7 @@ const Page404 = ({ error }: { error?: string }) => {
 
 export async function getStaticProps() {
   const messages = await loadLocaleData(
-    defaultLocale,
+    'en',
     process.env.NEXT_PUBLIC_APP_NAME || 'tdf',
   );
   return {
