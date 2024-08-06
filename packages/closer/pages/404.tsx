@@ -45,6 +45,7 @@ export async function getStaticProps() {
   );
   return {
     props: { messages },
+    revalidate: 86400, // 24 hours
   };
 }
 
