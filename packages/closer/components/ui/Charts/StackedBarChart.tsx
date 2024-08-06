@@ -122,7 +122,7 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
               <Bar dataKey="spaces" stackId="a" fill={CHART_COLORS[2]} />
               <Bar dataKey="food" stackId="a" fill={CHART_COLORS[3]} />
               <Bar dataKey="subscriptions" stackId="a" fill={CHART_COLORS[4]} />
-              <Bar dataKey="tokens" stackId="a" fill={CHART_COLORS[5]}>
+              {/* <Bar dataKey="tokens" stackId="a" fill={CHART_COLORS[5]}>
                 <LabelList
                   style={{ fill: 'black', fontSize: '13px' }}
                   dataKey="total"
@@ -131,7 +131,7 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
                     return `${props}`;
                   }}
                 />
-              </Bar>
+              </Bar> */}
             </>
           )}
           {layout === 'vertical' && (

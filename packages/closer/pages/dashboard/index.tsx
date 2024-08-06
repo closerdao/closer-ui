@@ -1,6 +1,6 @@
 import Head from 'next/head';
 
-import { useState } from 'react';
+import {  useState } from 'react';
 
 import DashboardBookings from '../../components/Dashboard/DashboardBookings';
 import DashboardMetrics from '../../components/Dashboard/DashboardMetrics';
@@ -9,7 +9,7 @@ import DashboardRevenue from '../../components/Dashboard/DashboardRevenue';
 import TimeFrameSelector from '../../components/Dashboard/TimeFrameSelector';
 import { Heading } from '../../components/ui';
 
-import { NextPageContext } from 'next';
+import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import process from 'process';
 
@@ -24,9 +24,12 @@ import PageNotFound from '../not-found';
 interface Props {
   generalConfig: GeneralConfig;
   error?: string;
+  tokenMetrics: any
 }
 
-const DashboardPage = ({ generalConfig }: Props) => {
+const DashboardPage = ({ generalConfig, tokenMetrics }: Props) => {
+
+  console.log('tokenMetrics=',tokenMetrics);
   const t = useTranslations();
   const defaultConfig = useConfig();
   const { user } = useAuth();
@@ -41,18 +44,15 @@ const DashboardPage = ({ generalConfig }: Props) => {
     generalConfig?.platformName || defaultConfig.platformName;
 
   // useEffect(() => {
-
   //   (async () => {
   //     try {
-        
-  //       const res = await api.post('/metrics/token-sales')
-  
+  //       const res = await api.post('/metrics/token-sales');
+
   //       console.log('res.data===', res?.data);
   //     } catch (error) {
   //       console.log('error===', error);
   //     }
-  //   })()
-
+  //   })();
   // }, []);
 
   if (!user || !isAdmin) {
@@ -102,23 +102,36 @@ const DashboardPage = ({ generalConfig }: Props) => {
 };
 
 DashboardPage.getInitialProps = async (context: NextPageContext) => {
+  const { req } = context;
   try {
-    const [generalRes, messages] = await Promise.all([
+    const [generalRes, tokenMetricsRes, messages] = await Promise.all([
       api.get('/config/general').catch(() => {
+        return null;
+      }),
+      api.post('/metrics/token-sales', {
+        headers: (req as NextApiRequest)?.cookies?.access_token && {
+          Authorization: `Bearer ${
+            (req as NextApiRequest)?.cookies?.access_token
+          }`,
+        },
+      }).catch(() => {
         return null;
       }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const generalConfig = generalRes?.data?.results?.value;
+    const tokenMetrics = tokenMetricsRes?.data?.results;
 
     return {
       generalConfig,
+      tokenMetrics,
       messages,
     };
   } catch (error) {
     return {
       error: parseMessageFromError(error),
       generalConfig: null,
+      tokenMetricsRes: null,
       messages: null,
     };
   }
