@@ -10,7 +10,6 @@ import {
 } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
-import { useTokenSales } from '../../hooks/useTokenSales';
 import { getDateRange } from '../../utils/dashboard.helpers';
 import UserMetricsIcon from '../icons/UserMetricsIcon';
 import { Heading, Spinner } from '../ui';
@@ -27,7 +26,7 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
   const { platform }: any = usePlatform();
 
   const { TIME_ZONE } = useConfig();
-  const { getTokenSalesForDateRange, isBlcokchainLoading } = useTokenSales();
+  // const { getTokenSalesForDateRange, isBlockchainLoading } = useTokenSales();
 
   const [isLoading, setIsLoading] = useState(false);
   const [userFilter, setUserFilter] = useState<any>(null);
@@ -35,8 +34,13 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
   const [start, setStart] = useState<Date | string>('');
   const [end, setEnd] = useState<Date | string>('');
 
+  const tokenSalesFilter = {
+    where: {},
+    limit: MAX_BOOKINGS_TO_FETCH,
+  };
   const newUsers = platform.user.find(userFilter);
   const bookings = platform.booking.find(bookingsFilter);
+  const tokenSales = platform.metrics.findTokenSales('metrics');
 
   const loadData = async () => {
     try {
@@ -44,6 +48,7 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
       await Promise.all([
         platform.user.get(userFilter),
         platform.booking.get(bookingsFilter),
+        platform.metrics.getTokenSales(tokenSalesFilter),
       ]);
     } catch (err) {
     } finally {
@@ -117,6 +122,20 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
       user.get('roles').includes('member');
     }).size;
 
+    const timePeriodTokenSales = tokenSales.filter((sale: any) => {
+      const saleDate = new Date(sale.get('created'));
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+
+      return saleDate >= startDate && saleDate <= endDate;
+    });
+    const timePeriodTokenRevenue = timePeriodTokenSales.reduce(
+      (acc: number, curr: any) => {
+        return Number(acc) + Number(curr.get('value'));
+      },
+      0,
+    );
+
     data.push(
       {
         name: 'Accounts created',
@@ -136,21 +155,17 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
       },
       {
         name: 'Tokens sold',
-        amount: Number(getTokenSalesForDateRange(start, end).toFixed(1)),
+        amount: Number(timePeriodTokenRevenue?.toFixed(1)),
       },
       {
         name: 'Event participants',
         amount: numEventAttendees,
       },
-      {
-        name: 'New members',
-        amount: numMembers,
-      },
     );
     return data;
   };
 
-  const metricsData = newUsers && bookings && getMetricsData();
+  const metricsData = newUsers && bookings && tokenSales && getMetricsData();
 
   return (
     <section className="bg-white rounded-md p-6 flex flex-col gap-6">
@@ -161,7 +176,7 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
         className=" h-[400px] 
       "
       >
-        {isLoading || isBlcokchainLoading ? (
+        {isLoading ? (
           <Spinner />
         ) : (
           <StackedBarChart layout="vertical" data={metricsData} />

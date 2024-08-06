@@ -43,6 +43,7 @@ export const getDateRange = ({
   toDate: Date | string;
   timeZone: string;
 }) => {
+  console.log('timeFrame=', timeFrame);
   switch (timeFrame) {
     case 'today':
       return {
@@ -71,6 +72,7 @@ export const getDateRange = ({
         end: toEndOfDay(new Date(), timeZone),
       };
     case 'custom':
+      console.log('custom');
       return {
         start:
           fromDate && toDate ? toStartOfDay(fromDate, timeZone) : new Date(),
@@ -196,7 +198,7 @@ export const getBookedNights = (
   console.log('listings===', listings);
   console.log('start===', start);
   console.log('end===', end);
-  console.log('duration===', duration)
+  console.log('duration===', duration);
 
   if (!bookings || !listings) return { bookedNights: [], numBookedNights: 0 };
   const bookedNights: any[] = [];
@@ -237,7 +239,7 @@ export const getBookedNights = (
     }
   });
 
-  console.log('listingsWithoutBookings===',listingsWithoutBookings);
+  console.log('listingsWithoutBookings===', listingsWithoutBookings);
 
   listingsWithoutBookings.forEach((listing: any) => {
     const totalNights = listing?.get('private')
@@ -488,8 +490,15 @@ export const getTokenSalesByDateRange = (
 export const getPeriodName = (
   subPeriod: { start: string; end: string },
   timeFrame: string,
+  diffInDays?: number,
 ) => {
-  if (timeFrame === 'year') {
+  if (
+    timeFrame === 'year' ||
+    (timeFrame === 'custom' &&
+      diffInDays &&
+      diffInDays >= 62 &&
+      diffInDays <= 364)
+  ) {
     return dayjs(subPeriod.start).format('MMM');
   }
 
@@ -569,6 +578,50 @@ const getPrev12Months = () => {
   return result;
 };
 
+// const getNMonths = (diffInDays: number, startDate: string | Date, endDate: string | Date) => {
+//   const today = dayjs();
+//   const result: { start: string; end: string }[] = [];
+
+//   for (let i = 0; i < 12; i++) {
+//     const startOfMonth = today.subtract(i, 'month').startOf('month');
+//     const endOfMonth = startOfMonth.endOf('month');
+
+//     result.unshift({
+//       start: startOfMonth.format('YYYY-MM-DD'),
+//       end: endOfMonth.format('YYYY-MM-DD'),
+//     });
+//   }
+
+//   return result;
+// };
+const getNMonths = (
+  diffInDays: number,
+  startDate: string | Date,
+  endDate: string | Date,
+) => {
+  const start = dayjs(startDate);
+  const end = dayjs(endDate);
+  const result: { start: string; end: string }[] = [];
+
+  let currentMonth = start.startOf('month');
+
+  while (currentMonth.isBefore(end) || currentMonth.isSame(end, 'month')) {
+    const periodStart = currentMonth.isAfter(start) ? currentMonth : start;
+    const periodEnd = currentMonth.endOf('month').isAfter(end)
+      ? end
+      : currentMonth.endOf('month');
+
+    result.push({
+      start: periodStart.format('YYYY-MM-DD'),
+      end: periodEnd.format('YYYY-MM-DD'),
+    });
+
+    currentMonth = currentMonth.add(1, 'month');
+  }
+
+  return result;
+};
+
 const getCustomPeriods = (fromDate: string | Date, toDate: string | Date) => {
   const start = dayjs(fromDate);
   const end = dayjs(toDate);
@@ -578,6 +631,8 @@ const getCustomPeriods = (fromDate: string | Date, toDate: string | Date) => {
     return getNDays(diffInDays + 1, toDate);
   } else if (diffInDays <= 62) {
     return getNWeeks(diffInDays, fromDate, toDate);
+  } else if (diffInDays <= 364) {
+    return getNMonths(diffInDays, fromDate, toDate);
   } else {
     return [
       {

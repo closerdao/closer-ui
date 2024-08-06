@@ -31,7 +31,11 @@ const CustomTooltipContent = ({ payload, label, colorOverride }: any) => {
         <div
           key={index}
           className="text-md"
-          style={colorOverride ? { color: colorOverride } : { color: CHART_COLORS[index] }}
+          style={
+            colorOverride
+              ? { color: colorOverride }
+              : { color: CHART_COLORS[index] }
+          }
         >{`${entry.name}: ${entry.value}`}</div>
       ))}
     </div>
@@ -112,9 +116,7 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
               content={<CustomTooltipContent colorOverride={CHART_COLORS[1]} />}
             />
           )}
-          <Legend
-            iconType="circle"
-          />
+          <Legend iconType="circle" />
           {layout === 'horizontal' && (
             <>
               <Bar dataKey="hospitality" stackId="a" fill={CHART_COLORS[0]} />
@@ -122,16 +124,6 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
               <Bar dataKey="spaces" stackId="a" fill={CHART_COLORS[2]} />
               <Bar dataKey="food" stackId="a" fill={CHART_COLORS[3]} />
               <Bar dataKey="subscriptions" stackId="a" fill={CHART_COLORS[4]} />
-              {/* <Bar dataKey="tokens" stackId="a" fill={CHART_COLORS[5]}>
-                <LabelList
-                  style={{ fill: 'black', fontSize: '13px' }}
-                  dataKey="total"
-                  position="top"
-                  formatter={(props: any) => {
-                    return `${props}`;
-                  }}
-                />
-              </Bar> */}
             </>
           )}
           {layout === 'vertical' && (
@@ -140,12 +132,19 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
                 <LabelList
                   dataKey="amount"
                   position="insideLeft"
-                  // style={{ fill: 'silver' }}
                   content={(props) => {
-                    const { x, y, height, value } = props;
-                    const fill = Number(value) > 3 ? 'white' : 'silver';
+                    const { x, y, height, width, value } = props;
+
+                    const fill = Number(width) > 40 ? 'white' : 'silver';
                     return (
-                      <text x={x} y={y} dy={Number(height) / 2 + 5} dx={5} textAnchor="center" fill={fill}>
+                      <text
+                        x={x}
+                        y={y}
+                        dy={Number(height) / 2 + 5}
+                        dx={5}
+                        textAnchor="center"
+                        fill={fill}
+                      >
                         {value}
                       </text>
                     );

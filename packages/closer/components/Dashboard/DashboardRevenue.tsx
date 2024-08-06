@@ -11,7 +11,6 @@ import {
 } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
-import { useTokenSales } from '../../hooks/useTokenSales';
 import { Filter } from '../../types';
 import api from '../../utils/api';
 import {
@@ -19,8 +18,6 @@ import {
   getDuration,
   getPeriodName,
   getTimePeriod,
-  toEndOfDay,
-  toStartOfDay,
 } from '../../utils/dashboard.helpers';
 import RevenueIcon from '../icons/RevenueIcon';
 import { Card, Heading, Spinner } from '../ui';
@@ -36,12 +33,10 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
   const { TIME_ZONE, TOKEN_PRICE } = useConfig();
-  const { getTokenSalesForDateRange } = useTokenSales();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isStripeLoading, setIsStripeLoading] = useState(false);
   const [filter, setFilter] = useState<Filter | null>(null);
-
   const [stripeSubsPayments, setStripeSubsPayments] = useState<any[]>([]);
 
   const listingFilter = {
@@ -49,14 +44,22 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
     limit: MAX_LISTINGS_TO_FETCH,
   };
 
+  const tokenSalesFilter = {
+    where: {},
+    limit: MAX_BOOKINGS_TO_FETCH,
+  };
+
   const bookings = platform.booking.find(filter);
   const listings = platform.listing.find(listingFilter);
-
+  const tokenSales = platform.metrics.findTokenSales('metrics');
   const duration = getDuration(timeFrame, fromDate, toDate);
 
-  const getRevenueData = (bookings: any) => {
+  const getRevenueData = (bookings: any, tokenSales: any, fromDate: Date | string, toDate: Date | string) => {
+      if (timeFrame === 'custom' && !toDate) return [];
     const data: any[] = [];
     const timePeriod = getTimePeriod(timeFrame, fromDate, toDate);
+
+    const diffInDays = dayjs(toDate).diff(dayjs(fromDate), 'days');
 
     timePeriod.subPeriods.forEach((subPeriod: any) => {
       let hospitalityRevenue = 0;
@@ -64,8 +67,8 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
       let eventsRevenue = 0;
       let subscriptionsRevenue = 0;
       let foodRevenue = 0;
-      let start: Date | string  = '';
-      let end: Date | string  = '';
+      let start: Date | string = '';
+      let end: Date | string = '';
 
       ({ start, end } = getDateRange({
         timeFrame: 'custom',
@@ -73,6 +76,20 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
         toDate: subPeriod.end,
         timeZone: TIME_ZONE,
       }));
+
+      const timePeriodTokenSales = tokenSales.filter((sale: any) => {
+        const saleDate = new Date(sale.get('created'));
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+
+        return saleDate >= startDate && saleDate <= endDate;
+      });
+      const timePeriodTokenRevenue = timePeriodTokenSales.reduce(
+        (acc: number, curr: any) => {
+          return Number(acc) + Number(curr.get('value'));
+        },
+        0,
+      );
 
       const timePeriodSubsData = stripeSubsPayments.filter((sub) => {
         const paymentDate = new Date(sub.date);
@@ -128,7 +145,7 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
       });
 
       data.push({
-        name: getPeriodName(subPeriod, timeFrame),
+        name: getPeriodName(subPeriod, timeFrame, diffInDays),
         hospitality: Number(hospitalityRevenue.toFixed(1)),
         spaces: Number(spacesRevenue.toFixed(1)),
         events: Number(eventsRevenue.toFixed(1)),
@@ -136,14 +153,7 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
         food: Number(foodRevenue.toFixed(1)),
 
         // TODO: calculate token price more precisely
-        tokens: Number(
-          (
-            getTokenSalesForDateRange(
-              toStartOfDay(subPeriod.start, TIME_ZONE),
-              toEndOfDay(subPeriod.end, TIME_ZONE),
-            ) * TOKEN_PRICE
-          ).toFixed(1),
-        ),
+        tokens: Number((timePeriodTokenRevenue * TOKEN_PRICE).toFixed(1)),
       });
     });
 
@@ -151,7 +161,11 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
   };
 
   const revenueData =
-    bookings && duration && listings && getRevenueData(bookings);
+    bookings &&
+    duration &&
+    listings &&
+    tokenSales &&
+    getRevenueData(bookings, tokenSales, fromDate, toDate);
 
   const loadData = async () => {
     try {
@@ -159,6 +173,7 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
       await Promise.all([
         platform.booking.get(filter),
         platform.listing.get(listingFilter),
+        platform.metrics.getTokenSales(tokenSalesFilter),
       ]);
     } catch (err) {
     } finally {
@@ -175,6 +190,8 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
   useEffect(() => {}, []);
 
   useEffect(() => {
+
+  
     const { start, end } = getDateRange({
       timeFrame,
       fromDate,

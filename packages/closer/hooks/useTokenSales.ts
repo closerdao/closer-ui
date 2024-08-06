@@ -8,22 +8,28 @@ import {
 } from '../utils/dashboard.helpers';
 
 export const useTokenSales = () => {
-  const [isBlcokchainLoading, setIsBlockchainLoading] = useState(false);
+  const [isBlockchainLoading, setIsBlockchainLoading] = useState(false);
   const [allTokenSales, setAllTokenSales] = useState<SalesResult | null>();
   const [allTransactions, setAllTransactions] = useState<TokenTransaction[]>(
     [],
   );
 
-  const getTokenSalesForDateRange = (startDate: string | Date, endDate: string | Date) => {
-    
-    return Number(getTokenSalesByDateRange(allTransactions, startDate, endDate)
-      .totalSalesAmount) || 0;
+  const getTokenSalesForDateRange = (
+    startDate: string | Date,
+    endDate: string | Date,
+  ) => {
+    return (
+      Number(
+        getTokenSalesByDateRange(allTransactions, startDate, endDate)
+          .totalSalesAmount,
+      ) || 0
+    );
   };
 
   useEffect(() => {
     (async () => {
       try {
-        setIsBlockchainLoading(true)
+        setIsBlockchainLoading(true);
         setAllTransactions(await getAllTokenTransactions());
         setAllTokenSales(getTokenSales(allTransactions));
       } catch (error) {
@@ -34,5 +40,5 @@ export const useTokenSales = () => {
     })();
   }, []);
 
-  return { allTokenSales, getTokenSalesForDateRange, isBlcokchainLoading };
+  return { allTokenSales, getTokenSalesForDateRange, isBlockchainLoading };
 };
