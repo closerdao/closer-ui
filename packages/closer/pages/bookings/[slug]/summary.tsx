@@ -7,6 +7,7 @@ import Conditions from '../../../components/Conditions';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
+import { ErrorMessage } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
@@ -42,8 +43,17 @@ interface Props extends BaseBookingParams {
   paymentConfig: PaymentConfig | null;
 }
 
-const Summary = ({ booking, listing, event, error, bookingConfig, paymentConfig }: Props) => {
+const Summary = ({
+  booking,
+  listing,
+  event,
+  error,
+  bookingConfig,
+  paymentConfig,
+}: Props) => {
   const t = useTranslations();
+
+  const { APP_NAME } = useConfig();
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -56,6 +66,8 @@ const Summary = ({ booking, listing, event, error, bookingConfig, paymentConfig 
   const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
   const vatRateFromConfig = Number(paymentConfig?.vatRate);
   const vatRate = vatRateFromConfig || defaultVatRate;
+
+  const hasFilledProfile = Boolean(user?.about && user?.photo);
 
   const [handleNextError, setHandleNextError] = useState<string | null>(null);
   const [hasComplied, setCompliance] = useState(false);
@@ -212,9 +224,21 @@ const Summary = ({ booking, listing, event, error, bookingConfig, paymentConfig 
               {t('buttons_checkout')}
             </Button>
           ) : (
-            <Button className="booking-btn" onClick={handleNext}>
-              {t('buttons_booking_request')}
-            </Button>
+            <div>
+              <Button
+                isEnabled={APP_NAME === 'moos' ? hasFilledProfile : true}
+                className="booking-btn"
+                onClick={handleNext}
+              >
+                {t('buttons_booking_request')}
+              </Button>
+              {APP_NAME === 'moos' && !hasFilledProfile && (
+                <ErrorMessage
+                  error="Please add description and photo to your profile to book
+                  spaces"
+                />
+              )}
+            </div>
           )}
         </div>
       )}
@@ -226,26 +250,27 @@ Summary.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
 
   try {
-    const [bookingRes, bookingConfigRes, paymentConfigRes, messages] = await Promise.all([
-      api
-        .get(`/booking/${query.slug}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
-        })
-        .catch(() => {
+    const [bookingRes, bookingConfigRes, paymentConfigRes, messages] =
+      await Promise.all([
+        api
+          .get(`/booking/${query.slug}`, {
+            headers: (req as NextApiRequest)?.cookies?.access_token && {
+              Authorization: `Bearer ${
+                (req as NextApiRequest)?.cookies?.access_token
+              }`,
+            },
+          })
+          .catch(() => {
+            return null;
+          }),
+        api.get('/config/booking').catch(() => {
           return null;
         }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-      api.get('/config/payment').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+        api.get('/config/payment').catch(() => {
+          return null;
+        }),
+        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
     const paymentConfig = paymentConfigRes?.data?.results?.value;
@@ -271,7 +296,15 @@ Summary.getInitialProps = async (context: NextPageContext) => {
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
 
-    return { booking, listing, event, error: null, bookingConfig, paymentConfig, messages };
+    return {
+      booking,
+      listing,
+      event,
+      error: null,
+      bookingConfig,
+      paymentConfig,
+      messages,
+    };
   } catch (err) {
     console.log('Error', err);
     return {

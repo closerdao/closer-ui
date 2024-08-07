@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Linkify from 'react-linkify';
 
 import ConnectedWallet from '../../components/ConnectedWallet';
@@ -18,6 +18,7 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
+import { useConfig } from '../../hooks/useConfig';
 import api, { cdn } from '../../utils/api';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
@@ -25,6 +26,9 @@ import PageNotFound from '../not-found';
 const MemberPage = ({ member, loadError }) => {
   const t = useTranslations();
   const { user: currentUser, isAuthenticated } = useAuth();
+
+  const { APP_NAME } = useConfig();
+
   const router = useRouter();
   const [introMessage, setMessage] = useState('');
   const [openIntro, setOpenIntro] = useState(false);
@@ -36,9 +40,21 @@ const MemberPage = ({ member, loadError }) => {
   const [about, setAbout] = useState(member?.about || '');
   const [tagline, setTagline] = useState(member?.tagline || '');
   const [showForm, toggleShowForm] = useState(false);
-  const [editProfile, toggleEditProfile] = useState(false);
+  const [editProfile, toggleEditProfile] = useState(true);
+
+  const [hasSaved, setHasSaved] = useState(false);
 
   const { platform } = usePlatform();
+
+  useEffect(() => {
+    if (hasSaved) {
+      setTimeout(() => {
+        if (setHasSaved) {
+          setHasSaved(false);
+        }
+      }, 2000);
+    }
+  }, [hasSaved]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -74,7 +90,7 @@ const MemberPage = ({ member, loadError }) => {
     event.preventDefault();
     saveAbout(about);
     saveTagline(tagline);
-    toggleEditProfile(!editProfile);
+    setHasSaved(true);
   };
 
   const saveAbout = async (about) => {
@@ -127,7 +143,7 @@ const MemberPage = ({ member, loadError }) => {
       <Head>
         <title>{member.screenname}</title>
       </Head>
-      <div className="main-content w-full">
+      <div className="main-content w-full flex flex-col items-center">
         {openIntro && (
           <>
             <div className="flex justify-center items-center overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline">
@@ -175,39 +191,38 @@ const MemberPage = ({ member, loadError }) => {
           </>
         )}
 
-        <div className="flex flex-col items-start">
-          <div className="flex flex-col items-start space-y-5 md:w-full md:mt-3">
-            <div className="flex flex-col md:flex-row w-full">
-              <div className="group md:w-72 items-center justify-start relative">
-                <div className="flex flex-col items-start mb-4 md:mr-8 md:items-center">
-                  {isAuthenticated && member._id === currentUser._id ? (
-                    <UploadPhoto
-                      model="user"
-                      id={member._id}
-                      onSave={() => {
-                        router.push(router.asPath);
-                      }}
-                      label={member.photo ? 'Change photo' : 'Add photo'}
-                    />
-                  ) : member?.photo ? (
-                    <img
-                      src={`${cdn}${member.photo}-profile-lg.jpg`}
-                      loading="lazy"
-                      alt={member.screenname}
-                      className="peer w-32 md:w-44 mt-4 md:mt-0 rounded-full"
-                    />
-                  ) : (
-                    <FaUser className="text-gray-200 text-6xl" />
-                  )}
+        <div className="flex flex-col items-start max-w-5xl">
+          <div className="flex flex-col items-start space-y-5 md:w-full md:mt-3 w-full">
+            <div className="flex flex-col w-full">
+              <section className="w-full flex gap-8">
+                <div className="flex flex-col md:flex-row">
+                  <div className="group  items-center justify-start relative">
+                    {isAuthenticated && member._id === currentUser._id ? (
+                      <UploadPhoto
+                        model="user"
+                        id={member._id}
+                        onSave={() => {
+                          router.push(router.asPath);
+                        }}
+                        label={member.photo ? 'Change photo' : 'Add photo'}
+                      />
+                    ) : member?.photo ? (
+                      <img
+                        src={`${cdn}${member.photo}-profile-lg.jpg`}
+                        loading="lazy"
+                        alt={member.screenname}
+                        className="peer w-32 md:w-44 mt-4 md:mt-0 rounded-full"
+                      />
+                    ) : (
+                      <FaUser className="text-gray-200 text-6xl" />
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex flex-col items-start w-full gap-8">
-                <div>
+                <div className="flex flex-col">
                   <h3 className="font-medium text-5xl md:text-6xl md:w-6/12 flex flex-wrap">
                     {member.screenname}
                   </h3>
-
                   {isAuthenticated && member._id !== currentUser._id && (
                     <div className="my-3">
                       <a
@@ -222,7 +237,7 @@ const MemberPage = ({ member, loadError }) => {
                       </a>
                     </div>
                   )}
-                  <div className="mt-1 w-full">
+                  <div>
                     {member.roles && (
                       <div className="text-sm mt-1 tags">
                         {member.roles.map((role) => (
@@ -237,113 +252,117 @@ const MemberPage = ({ member, loadError }) => {
                         ))}
                       </div>
                     )}
+                  </div>
+                </div>
+              </section>
 
-                    {currentUser &&
-                      currentUser.roles.includes('space-host') && (
-                        <Card className="my-6 bg-accent-light">
-                          {member?.email && (
-                            <p>
-                              {t('user_data_email')}{' '}
-                              <span className="font-bold">{member.email}</span>
-                            </p>
-                          )}
-                          {member?.phone && (
-                            <p>
-                              {t('user_data_phone')}{' '}
-                              <span className="font-bold">{member.phone}</span>
-                            </p>
-                          )}
-                          {member?.preferences?.sharedAccomodation && (
-                            <p>
-                              {t('user_data_shared_accommodation')}{' '}
-                              <span className="font-bold">
-                                {member.preferences.sharedAccomodation}
-                              </span>
-                            </p>
-                          )}
-                          {member?.preferences?.diet && (
-                            <p>
-                              {t('user_data_diet')}{' '}
-                              <span className="font-bold">
-                                {member.preferences.diet}
-                              </span>
-                            </p>
-                          )}
-                          {member?.preferences?.skills && (
-                            <p>
-                              {t('user_data_skills')}{' '}
-                              <span className="font-bold">
-                                {member.preferences.skills.map((skill, i) => {
-                                  if (
-                                    i ===
-                                    member.preferences.skills.length - 1
-                                  ) {
-                                    return skill;
-                                  }
-                                  return skill + ', ';
-                                })}
-                              </span>
-                            </p>
-                          )}
-                          {member?.preferences?.superpower && (
-                            <p>
-                              {t('user_data_superpower')}{' '}
-                              <span className="font-bold">
-                                {member.preferences.superpower}
-                              </span>
-                            </p>
-                          )}
-                          {member?.preferences?.needs && (
-                            <p>
-                              {t('user_data_needs')}{' '}
-                              <span className="font-bold">
-                                {member.preferences.needs}
-                              </span>
-                            </p>
-                          )}
-                          {member?.preferences?.dream && (
-                            <p>
-                              {t('user_data_dream')}{' '}
-                              <span className="font-bold">
-                                {member.preferences.dream}
-                              </span>
-                            </p>
-                          )}
-                          {member?.preferences?.moreInfo && (
-                            <p>
-                              {t('user_data_more_info')}{' '}
-                              <span className="font-bold">
-                                {member.preferences.moreInfo}
-                              </span>
-                            </p>
-                          )}
-                          {member?.subscription?.plan && (
-                            <p>
-                              {t('user_data_subscription')}{' '}
-                              <span className="font-bold">
-                                {member.subscription.plan}
-                              </span>
-                            </p>
-                          )}
-                        </Card>
+              <div className="flex flex-col items-start w-full gap-8">
+                <div className="mt-1 w-full">
+                  {currentUser && currentUser.roles.includes('space-host') && (
+                    <Card className="my-6 bg-accent-light w-full">
+                      {member?.email && (
+                        <p>
+                          {t('user_data_email')}{' '}
+                          <span className="font-bold">{member.email}</span>
+                        </p>
                       )}
-
-                    {member &&
-                      currentUser &&
-                      currentUser.roles.includes('space-host') && (
-                        <UserBookings user={member} isSpaceHostView={true} />
+                      {member?.phone && (
+                        <p>
+                          {t('user_data_phone')}{' '}
+                          <span className="font-bold">{member.phone}</span>
+                        </p>
                       )}
+                      {member?.preferences?.sharedAccomodation && (
+                        <p>
+                          {t('user_data_shared_accommodation')}{' '}
+                          <span className="font-bold">
+                            {member.preferences.sharedAccomodation}
+                          </span>
+                        </p>
+                      )}
+                      {member?.preferences?.diet && (
+                        <p>
+                          {t('user_data_diet')}{' '}
+                          <span className="font-bold">
+                            {member.preferences.diet}
+                          </span>
+                        </p>
+                      )}
+                      {member?.preferences?.skills && (
+                        <p>
+                          {t('user_data_skills')}{' '}
+                          <span className="font-bold">
+                            {member.preferences.skills.map((skill, i) => {
+                              if (i === member.preferences.skills.length - 1) {
+                                return skill;
+                              }
+                              return skill + ', ';
+                            })}
+                          </span>
+                        </p>
+                      )}
+                      {member?.preferences?.superpower && (
+                        <p>
+                          {t('user_data_superpower')}{' '}
+                          <span className="font-bold">
+                            {member.preferences.superpower}
+                          </span>
+                        </p>
+                      )}
+                      {member?.preferences?.needs && (
+                        <p>
+                          {t('user_data_needs')}{' '}
+                          <span className="font-bold">
+                            {member.preferences.needs}
+                          </span>
+                        </p>
+                      )}
+                      {member?.preferences?.dream && (
+                        <p>
+                          {t('user_data_dream')}{' '}
+                          <span className="font-bold">
+                            {member.preferences.dream}
+                          </span>
+                        </p>
+                      )}
+                      {member?.preferences?.moreInfo && (
+                        <p>
+                          {t('user_data_more_info')}{' '}
+                          <span className="font-bold">
+                            {member.preferences.moreInfo}
+                          </span>
+                        </p>
+                      )}
+                      {member?.subscription?.plan && (
+                        <p>
+                          {t('user_data_subscription')}{' '}
+                          <span className="font-bold">
+                            {member.subscription.plan}
+                          </span>
+                        </p>
+                      )}
+                    </Card>
+                  )}
 
+                  <div className="my-8">
                     {editProfile ? (
-                      <input
-                        autoFocus
-                        value={about}
-                        className="w-full md:w-11/12 bg-transparent border-b-2 pb-2 mt-6 focus:outline-none"
-                        onChange={(e) => setAbout(e.target.value)}
-                        onBlur={() => {
-                          saveAbout(about);
-                        }}
-                      />
+                      <div>
+                        {APP_NAME === 'moos' && (
+                          <div className="my-4 font-bold">
+                            Required to book spaces:
+                          </div>
+                        )}
+                        <input
+                          autoFocus
+                          value={about}
+                          className="bg-neutral rounded-md h-8 px-2 py-1"
+                          placeholder={t('members_slug_about_prompt')}
+                          onChange={(e) => setAbout(e.target.value)}
+                          onBlur={() => {
+                            saveAbout(about);
+                          }}
+                        />
+                      </div>
                     ) : isAuthenticated && member._id === currentUser._id ? (
                       <p className="mt-6 pb-2 w-full md:w-11/12">
                         <Linkify
@@ -400,17 +419,32 @@ const MemberPage = ({ member, loadError }) => {
                         </Linkify>
                       </p>
                     )}
+
+                    {isAuthenticated && member._id === currentUser._id && (
+                      <div className="flex gap-2 items-center  my-4">
+                        <button
+                          type="button"
+                          className="btn-primary"
+                          onClick={handleClick}
+                        >
+                          {editProfile ? 'Save' : 'Edit'}
+                        </button>
+                        <div className="text-disabled ">
+                          {hasSaved && t('settings_saved')}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  {isAuthenticated && member._id === currentUser._id && (
-                    <button
-                      type="button"
-                      className="btn-primary mt-2"
-                      onClick={handleClick}
-                    >
-                      {editProfile ? 'Save' : 'Edit'}
-                    </button>
-                  )}
                 </div>
+
+                <div>
+                  {member &&
+                    currentUser &&
+                    currentUser.roles.includes('space-host') && (
+                      <UserBookings user={member} isSpaceHostView={true} />
+                    )}
+                </div>
+
                 {isAuthenticated && member._id === currentUser._id && (
                   <ConnectedWallet />
                 )}
@@ -563,7 +597,7 @@ const MemberPage = ({ member, loadError }) => {
 };
 
 MemberPage.getInitialProps = async (context) => {
-  const { req, query } = context
+  const { req, query } = context;
   try {
     const [res, messages] = await Promise.all([
       api.get(`/user/${query.slug}`, {
