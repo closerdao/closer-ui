@@ -1,4 +1,5 @@
 export type User = {
+  about?: string;
   stats: any;
   screenname: string;
   timezone: string;

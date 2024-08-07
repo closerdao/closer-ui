@@ -1,13 +1,12 @@
 import Link from 'next/link';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { calculateFullDaysDifference } from 'closer';
-import { LinkButton } from 'closer';
+import { LinkButton, calculateFullDaysDifference } from 'closer';
 import { useAuth } from 'closer/contexts/auth';
 import { User } from 'closer/contexts/auth/types';
 
-const PROMPTS = ['FundraiserPrompt'];
+const PROMPTS = ['FillSettingsPrompt', 'FundraiserPrompt'];
 
 interface PromptCloseButtonProps {
   closePrompt: (promptName: string) => void;
@@ -34,12 +33,41 @@ const PromptCloseButton = ({
   );
 };
 
+const FillSettingsPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
+  const { user } = useAuth();
+  return (
+    <>
+      <div className=" flex gap-3 justify-between w-full">
+        <div className="flex justify-start sm:items-center gap-2">
+          <span>
+            Please add description and photo to your profile to book spaces
+          </span>
+        </div>
+        <div className="flex items-end justify-end sm:items-center gap-2 flex-col-reverse sm:flex-row">
+          <LinkButton
+            size="small"
+            className="max-h-[34px] p-0 px-4"
+            href={`/members/${user?.slug}`}
+          >
+            Update profile
+          </LinkButton>
+          <PromptCloseButton
+            closePrompt={closePrompt}
+            promptName="FillSettingsPrompt"
+          />
+        </div>
+      </div>
+    </>
+  );
+};
 const FundraiserPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
   return (
     <>
       <div className=" flex gap-3 justify-between w-full">
         <div className="flex justify-start sm:items-center gap-2">
-          <span>MOOS is rediscovering urban living. Help us clear the path.</span>
+          <span>
+            MOOS is rediscovering urban living. Help us clear the path.
+          </span>
         </div>
         <div className="flex items-end justify-end sm:items-center gap-2 flex-col-reverse sm:flex-row">
           <LinkButton
@@ -77,10 +105,13 @@ const getClosedPrompts = () => {
 };
 
 const getPromptToShow = (user: User | null, isAuthenticated: boolean) => {
+
   const daysUserCreated = calculateFullDaysDifference(user?.created);
   const closedPrompts = getClosedPrompts();
 
-  if (
+  if (isAuthenticated && !closedPrompts.includes('FillSettingsPrompt') && (!user?.photo || !user?.about)) {
+    return 'FillSettingsPrompt';
+  } else if (
     (!isAuthenticated && !closedPrompts.includes('FundraiserPrompt')) ||
     (isAuthenticated &&
       daysUserCreated > 3 &&
@@ -97,7 +128,7 @@ const Prompts = () => {
 
   useEffect(() => {
     setPromptTosShow(getPromptToShow(user, isAuthenticated));
-  }, []);
+  }, [user, isAuthenticated]);
 
   const closePrompt = (promptName: string) => {
     localStorage.setItem(`hidePrompt.${promptName}`, new Date().toISOString());
@@ -114,6 +145,9 @@ const Prompts = () => {
   return (
     <div className="w-full flex justify-center bg-accent-light mb-2">
       <div className="w-[800px] p-2.5 flex justify-between text-left gap-2">
+        {promptTosShow === 'FillSettingsPrompt' && (
+          <FillSettingsPrompt closePrompt={closePrompt} />
+        )}
         {promptTosShow === 'FundraiserPrompt' && (
           <FundraiserPrompt closePrompt={closePrompt} />
         )}

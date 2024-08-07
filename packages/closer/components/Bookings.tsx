@@ -197,7 +197,9 @@ const Bookings = ({ filter, page, setPage }: Props) => {
                       booking={platform.booking.findOne(booking.get('_id'))}
                       listingName={listingName}
                       isPrivate={listing && listing.get('private')}
-                      isHourly={listing && listing.get('priceDuration') === 'hour'}
+                      isHourly={
+                        listing && listing.get('priceDuration') === 'hour'
+                      }
                       userInfo={
                         user && {
                           name: user.screenname,
