@@ -1,5 +1,6 @@
 import {
   CartesianGrid,
+  LabelList,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -44,14 +45,19 @@ const LineCurvedChart = ({ data }: Props) => {
           height={300}
           data={data}
           margin={{
-            top: 5,
+            top: 25,
             right: 30,
             left: 20,
             bottom: 5,
           }}
         >
           <CartesianGrid vertical={false} />
-          <XAxis dataKey="name" style={{ fontSize: '13px' }} axisLine={false} tickLine={false} />
+          <XAxis
+            dataKey="name"
+            style={{ fontSize: '13px' }}
+            axisLine={false}
+            tickLine={false}
+          />
 
           <Tooltip content={<CustomTooltipContent />} />
           <Line
@@ -60,7 +66,28 @@ const LineCurvedChart = ({ data }: Props) => {
             stroke={CHART_COLORS[2]}
             activeDot={{ r: 8 }}
             strokeWidth={2}
-          />
+          >
+            {' '}
+            <LabelList
+              dataKey="tokens"
+              position="top"
+              content={(props) => {
+                const { x, y, width, value } = props;
+                return (
+                  <text
+                    x={Number(x) + (Number(width) || 0) / 2}
+                    y={y}
+                    dy={-10}
+                    textAnchor="middle"
+                    fill="#000000"
+                    fontSize="12"
+                  >
+                    {Math.floor(Number(value))}
+                  </text>
+                );
+              }}
+            />
+          </Line>
         </LineChart>
       </ResponsiveContainer>
     </div>

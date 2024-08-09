@@ -164,6 +164,7 @@ export interface Filter {
   where: { [key: string]: any };
   limit?: number;
   start?: DateRangeFilter;
+  sort_by?: string;
 }
 
 export interface DateRangeFilter {

@@ -1274,7 +1274,6 @@
   "token_sale_public_sale_community": "Community",
   "token_sale_public_sale_button_book_a_call": "Book a call",
   "token_sale_public_sale_tokens_left": "tokens left",
-  "": "",
 
   "dashboard_title": "Dashboard",
   "dashboard_bookings_title": "Bookings",
@@ -1295,8 +1294,13 @@
   "dashboard_month": "Month",
   "dashboard_week": "Week",
   "dashboard_today": "Today",
+  "dashboard_allTime": "All time",
   "dashboard_token_revenue": "$TDF revenue (EUR)",
-  "dashboard_metrics": "TDF metrics",
+  "dashboard_metrics": "Platform metrics",
+  "dashboard_total": "Total:",
+  "dashboard_listing": "Listing",
+  "dashboard_listing_booked": "Booked",
+  "dashboard_listing_total": "Total",
 
   "navigation_dashboard": "Dashboard",
   "navigation_bookings": "Bookings",

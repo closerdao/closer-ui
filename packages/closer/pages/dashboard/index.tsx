@@ -1,15 +1,15 @@
 import Head from 'next/head';
 
-import {  useState } from 'react';
+import { useState } from 'react';
 
-// import DashboardBookings from '../../components/Dashboard/DashboardBookings';
+import DashboardBookings from '../../components/Dashboard/DashboardBookings';
 import DashboardMetrics from '../../components/Dashboard/DashboardMetrics';
 import DashboardNav from '../../components/Dashboard/DashboardNav';
 import DashboardRevenue from '../../components/Dashboard/DashboardRevenue';
 import TimeFrameSelector from '../../components/Dashboard/TimeFrameSelector';
 import { Heading } from '../../components/ui';
 
-import {  NextPageContext } from 'next';
+import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import process from 'process';
 
@@ -24,7 +24,6 @@ import PageNotFound from '../not-found';
 interface Props {
   generalConfig: GeneralConfig;
   error?: string;
-
 }
 
 const DashboardPage = ({ generalConfig }: Props) => {
@@ -40,8 +39,6 @@ const DashboardPage = ({ generalConfig }: Props) => {
 
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
-
-
 
   if (!user || !isAdmin) {
     return <PageNotFound error="User may not access" />;
@@ -68,11 +65,11 @@ const DashboardPage = ({ generalConfig }: Props) => {
             />
           </div>
 
-          {/* <DashboardBookings
+          <DashboardBookings
             timeFrame={timeFrame}
             fromDate={fromDate}
             toDate={toDate}
-          /> */}
+          />
           <DashboardRevenue
             timeFrame={timeFrame}
             fromDate={fromDate}

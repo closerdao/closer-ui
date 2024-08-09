@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import {
   Bar,
   BarChart,
@@ -9,6 +10,7 @@ import {
   YAxis,
 } from 'recharts';
 
+import { useConfig } from '../../../hooks/useConfig';
 import { CHART_COLORS } from './chartColors';
 
 interface Props {
@@ -21,8 +23,21 @@ interface CustomPayload {
   value: string | number;
 }
 
-const CustomTooltipContent = ({ payload, label, colorOverride }: any) => {
+const CustomTooltipContent = ({
+  payload,
+  label,
+  colorOverride,
+  layout,
+}: any) => {
+  const t = useTranslations();
+
   if (!payload || !Array.isArray(payload)) return null;
+
+  const total = Math.floor(
+    payload.reduce((sum: number, entry: CustomPayload) => {
+      return sum + Number(entry.value);
+    }, 0),
+  );
 
   return (
     <div className="p-4 bg-white rounded-md border-0 shadow-lg">
@@ -38,21 +53,18 @@ const CustomTooltipContent = ({ payload, label, colorOverride }: any) => {
           }
         >{`${entry.name}: ${entry.value}`}</div>
       ))}
+
+      {layout === 'horizontal' && (
+        <div className="font-bold">
+          {t('dashboard_total')} {total}{' '}
+        </div>
+      )}
     </div>
   );
 };
 
 const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
-  const dataWithTotalValues = data?.map((item) => ({
-    ...item,
-    total: Object.keys(item).reduce((sum, key) => {
-      if (key !== 'name' && typeof item[key] === 'number') {
-        return sum + (item[key] as number);
-      }
-      return sum;
-    }, 0),
-  }));
-
+  const { APP_NAME } = useConfig();
   return (
     <div className="w-full h-full py-4">
       <ResponsiveContainer width="100%" height="100%">
@@ -60,7 +72,7 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
           layout={layout || 'horizontal'}
           width={500}
           height={300}
-          data={dataWithTotalValues}
+          data={data}
           margin={
             layout === 'vertical'
               ? {
@@ -113,17 +125,50 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
           {layout === 'vertical' && (
             <Tooltip
               cursor={{ fill: 'transparent' }}
-              content={<CustomTooltipContent colorOverride={CHART_COLORS[1]} />}
+              content={
+                <CustomTooltipContent
+                  layout={layout}
+                  colorOverride={CHART_COLORS[1]}
+                />
+              }
             />
           )}
           <Legend iconType="circle" />
           {layout === 'horizontal' && (
             <>
-              <Bar dataKey="hospitality" stackId="a" fill={CHART_COLORS[0]} />
               <Bar dataKey="events" stackId="a" fill={CHART_COLORS[1]} />
               <Bar dataKey="spaces" stackId="a" fill={CHART_COLORS[2]} />
               <Bar dataKey="food" stackId="a" fill={CHART_COLORS[3]} />
-              <Bar dataKey="subscriptions" stackId="a" fill={CHART_COLORS[4]} />
+
+              {APP_NAME === 'tdf' && (
+                <Bar
+                  dataKey="subscriptions"
+                  stackId="a"
+                  fill={CHART_COLORS[4]}
+                />
+              )}
+              <Bar dataKey="hospitality" stackId="a" fill={CHART_COLORS[0]}>
+                {' '}
+                <LabelList
+                  dataKey="totalOperations"
+                  position="top"
+                  content={(props) => {
+                    const { x, y, width, value } = props;
+                    return (
+                      <text
+                        x={Number(x) + (Number(width) || 0) / 2}
+                        y={y}
+                        dy={-10}
+                        textAnchor="middle"
+                        fill="#000000"
+                        fontSize="12"
+                      >
+                        {value}
+                      </text>
+                    );
+                  }}
+                />
+              </Bar>
             </>
           )}
           {layout === 'vertical' && (

@@ -32,11 +32,11 @@ interface Props {
 const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
-  const { TIME_ZONE, TOKEN_PRICE } = useConfig();
+  const { TIME_ZONE, TOKEN_PRICE, APP_NAME } = useConfig();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isStripeLoading, setIsStripeLoading] = useState(false);
-  const [filter, setFilter] = useState<Filter | null>(null);
+  const [bookingFilter, setBookingFilter] = useState<Filter | null>(null);
   const [stripeSubsPayments, setStripeSubsPayments] = useState<any[]>([]);
 
   const listingFilter = {
@@ -49,17 +49,41 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
     limit: MAX_BOOKINGS_TO_FETCH,
   };
 
-  const bookings = platform.booking.find(filter);
+  const bookings = platform.booking.find(bookingFilter);
   const listings = platform.listing.find(listingFilter);
-  const tokenSales = platform.metrics.findTokenSales('metrics');
+  const tokenSales =
+    APP_NAME === 'tdf' ? platform.metrics.findTokenSales('metrics') : [];
+
+  const firstBooking =
+    bookings &&
+    bookings.find((booking: any) => {
+      return paidStatuses.includes(booking.get('status'));
+    });
+
+  const firstBookingDate = firstBooking && firstBooking.get('start');
+
   const duration = getDuration(timeFrame, fromDate, toDate);
 
-  const getRevenueData = (bookings: any, tokenSales: any, fromDate: Date | string, toDate: Date | string) => {
-      if (timeFrame === 'custom' && !toDate) return [];
+  const getRevenueData = (
+    bookings: any,
+    tokenSales: any,
+    fromDate: Date | string,
+    toDate: Date | string,
+  ) => {
+    if (timeFrame === 'custom' && !toDate) return [];
     const data: any[] = [];
-    const timePeriod = getTimePeriod(timeFrame, fromDate, toDate);
 
-    const diffInDays = dayjs(toDate).diff(dayjs(fromDate), 'days');
+    const timePeriod = getTimePeriod(
+      timeFrame,
+      fromDate,
+      toDate,
+      firstBookingDate,
+    );
+
+    const diffInDays =
+      timeFrame === 'custom'
+        ? dayjs(toDate).diff(dayjs(fromDate), 'days')
+        : dayjs(new Date()).diff(dayjs(firstBookingDate), 'days');
 
     timePeriod.subPeriods.forEach((subPeriod: any) => {
       let hospitalityRevenue = 0;
@@ -102,7 +126,7 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
       subscriptionsRevenue =
         timePeriodSubsData.reduce((acc, curr) => {
           return acc + curr.amount;
-        }, 0) / STRIPE_AMOUNT_MULTIPLIER;
+        }, 0) / STRIPE_AMOUNT_MULTIPLIER || 0;
 
       const filteredBookings = bookings.filter((booking: any) => {
         return (
@@ -144,6 +168,14 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
         }
       });
 
+      const totalOperations = Math.floor(
+        Number(hospitalityRevenue) +
+          Number(spacesRevenue) +
+          Number(eventsRevenue) +
+          Number(subscriptionsRevenue) +
+          Number(foodRevenue),
+      );
+
       data.push({
         name: getPeriodName(subPeriod, timeFrame, diffInDays),
         hospitality: Number(hospitalityRevenue.toFixed(1)),
@@ -154,6 +186,7 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
 
         // TODO: calculate token price more precisely
         tokens: Number((timePeriodTokenRevenue * TOKEN_PRICE).toFixed(1)),
+        totalOperations,
       });
     });
 
@@ -165,33 +198,33 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
     duration &&
     listings &&
     tokenSales &&
+    firstBookingDate &&
     getRevenueData(bookings, tokenSales, fromDate, toDate);
 
   const loadData = async () => {
     try {
       setIsLoading(true);
       await Promise.all([
-        platform.booking.get(filter),
+        platform.booking.get(bookingFilter),
         platform.listing.get(listingFilter),
-        platform.metrics.getTokenSales(tokenSalesFilter),
+        APP_NAME === 'tdf'
+          ? platform.metrics.getTokenSales(tokenSalesFilter)
+          : [],
       ]);
     } catch (err) {
+      console.log('Error fetching  data:', err);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (filter) {
+    if (bookingFilter) {
       loadData();
     }
-  }, [filter]);
-
-  useEffect(() => {}, []);
+  }, [bookingFilter]);
 
   useEffect(() => {
-
-  
     const { start, end } = getDateRange({
       timeFrame,
       fromDate,
@@ -199,42 +232,62 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
       timeZone: TIME_ZONE,
     });
 
-    (async () => {
-      try {
-        setIsStripeLoading(true);
+    if (APP_NAME === 'tdf') {
+      (async () => {
+        try {
+          setIsStripeLoading(true);
+          const res = await api.post('/stripe/subscription-payments', {
+            start,
+            end,
+          });
 
-        const res = await api.post('/stripe/subscription-payments', {
-          start,
-          end,
-        });
+          setStripeSubsPayments(res.data.results);
+        } catch (error) {
+          console.log('Error fetching stripe subs payments:', error);
+        } finally {
+          setIsStripeLoading(false);
+        }
+      })();
+    } else {
+      setStripeSubsPayments([]);
+    }
 
-        setStripeSubsPayments(res.data.results);
-      } catch (error) {
-        console.log('Error fetching stripe subs payments:', error);
-      } finally {
-        setIsStripeLoading(false);
-      }
-    })();
-
-    setFilter({
-      ...filter,
-      where: {
-        status: {
-          $in: paidStatuses,
+    if (timeFrame === 'allTime') {
+      setBookingFilter({
+        where: {
+          status: {
+            $in: paidStatuses,
+          },
         },
-        $and: [{ start: { $lte: end } }, { end: { $gte: start } }],
-      },
-      limit: MAX_BOOKINGS_TO_FETCH,
-    });
+        sort_by: 'start',
+        limit: MAX_BOOKINGS_TO_FETCH,
+      });
+    } else {
+      setBookingFilter({
+        where: {
+          status: {
+            $in: paidStatuses,
+          },
+          $and: [{ start: { $lte: end } }, { end: { $gte: start } }],
+        },
+
+        sort_by: 'start',
+        limit: MAX_BOOKINGS_TO_FETCH,
+      });
+    }
   }, [timeFrame, fromDate, toDate]);
 
   return (
-    <section className="bg-white rounded-md p-6 flex flex-col gap-6">
+    <section className="bg-white rounded-md px-0 sm:px-6 py-6 flex flex-col gap-6">
       <Heading level={3} className="uppercase text-md flex gap-3">
         <RevenueIcon /> {t('dashboard_revenue_title')}
       </Heading>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 ">
+      <div
+        className={`${
+          APP_NAME === 'tdf' ? 'lg:grid-cols-3' : ''
+        } grid-cols-1 grid gap-4 min-h-[300px]`}
+      >
         <Card className="col-span-1 lg:col-span-2 p-2 gap-2 h-[300px] sm:h-auto">
           <Heading level={3} className="uppercase text-sm">
             {t('dashboard_general_revenue')}
@@ -250,13 +303,15 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
           {isLoading ? <Spinner /> : <StackedBarChart data={revenueData} />}
         </Card>
 
-        <Card className="col-span-1 p-2 gap-2">
-          <Heading level={3} className="uppercase text-sm">
-            {t('dashboard_token_revenue')}
-          </Heading>
+        {APP_NAME === 'tdf' && (
+          <Card className="col-span-1 p-2 gap-2">
+            <Heading level={3} className="uppercase text-sm">
+              {t('dashboard_token_revenue')}
+            </Heading>
 
-          <LineChart data={revenueData} />
-        </Card>
+            <LineChart data={revenueData} />
+          </Card>
+        )}
       </div>
     </section>
   );

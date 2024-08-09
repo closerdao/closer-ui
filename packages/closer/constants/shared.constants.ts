@@ -251,7 +251,7 @@ export const BOOKING_EXISTS_ERROR =
   'execution reverted: BookingFacet: Booking already exists';
 export const USER_REJECTED_TRANSACTION_ERROR = 'user rejected transaction';
 
-export const MAX_BOOKINGS_TO_FETCH = 2000;
+export const MAX_BOOKINGS_TO_FETCH = 3000;
 export const BOOKINGS_PER_PAGE = 36;
 
 export const MAX_CREDITS_PER_MONTH = 90;

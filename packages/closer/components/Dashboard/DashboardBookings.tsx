@@ -45,11 +45,9 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
   const { TIME_ZONE } = useConfig();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [filter, setFilter] = useState<Filter | null>(null);
+  const [bookingFilter, setBookingFilter] = useState<Filter | null>(null);
   const [start, setStart] = useState<Date | null>(null);
   const [end, setEnd] = useState<Date | null>(null);
-
-  const duration = getDuration(timeFrame, fromDate, toDate);
 
   const listingFilter = {
     where: {},
@@ -78,10 +76,24 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
     limit: MAX_BOOKINGS_TO_FETCH,
   };
 
-  const bookings = platform.booking.find(filter);
+  const bookings = platform.booking.find(bookingFilter);
   const listings = platform.listing.find(listingFilter);
   const arrivingBookings = platform.booking.find(arrivingFilter);
   const departingBookings = platform.booking.find(departingFilter);
+
+  const firstBooking =
+    bookings &&
+    bookings.find((booking: any) => {
+      return paidStatuses.includes(booking.get('status'));
+    });
+
+  const firstBookingDate = firstBooking && firstBooking.get('start');
+
+  const duration = getDuration(
+    timeFrame,
+    timeFrame === 'allTime' ? new Date(firstBookingDate) : fromDate,
+    toDate,
+  );
 
   const nightlyListings = useMemo(
     () =>
@@ -104,15 +116,15 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
       return nightlyListingsIds.includes(booking.get('listing'));
     });
 
-  const { bookedNights, numBookedNights } = getBookedNights(
+  const { bookedNights, numBookedNights } = getBookedNights({
     nightlyBookings,
     nightlyListings,
     start,
     end,
     duration,
-  );
-
-  console.log('numBookedNights====', numBookedNights);
+    TIME_ZONE,
+    firstBookingDate: timeFrame === 'allTime' ? firstBookingDate : undefined,
+  });
 
   const spaceListings =
     listings &&
@@ -198,7 +210,7 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
     try {
       setIsLoading(true);
       await Promise.all([
-        platform.booking.get(filter),
+        platform.booking.get(bookingFilter),
         platform.booking.get(arrivingFilter),
         platform.booking.get(departingFilter),
         platform.listing.get(listingFilter),
@@ -210,10 +222,10 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
   };
 
   useEffect(() => {
-    if (filter) {
+    if (bookingFilter) {
       loadData();
     }
-  }, [filter]);
+  }, [bookingFilter]);
 
   useEffect(() => {
     const { start, end } = getDateRange({
@@ -222,23 +234,37 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
       toDate,
       timeZone: TIME_ZONE,
     });
+
     setStart(start);
     setEnd(end);
 
-    setFilter({
-      ...filter,
-      where: {
-        status: {
-          $in: dashboardRelevantStatuses,
+    if (timeFrame === 'allTime') {
+      setBookingFilter({
+        where: {
+          status: {
+            $in: dashboardRelevantStatuses,
+          },
         },
-        $and: [{ start: { $lte: end } }, { end: { $gte: start } }],
-      },
-      limit: MAX_BOOKINGS_TO_FETCH,
-    });
+        sort_by: 'start',
+        limit: MAX_BOOKINGS_TO_FETCH,
+      });
+    } else {
+      setBookingFilter({
+        where: {
+          status: {
+            $in: dashboardRelevantStatuses,
+          },
+          $and: [{ start: { $lte: end } }, { end: { $gte: start } }],
+        },
+
+        sort_by: 'start',
+        limit: MAX_BOOKINGS_TO_FETCH,
+      });
+    }
   }, [timeFrame, fromDate, toDate]);
 
   return (
-    <section className="bg-white rounded-md p-6 flex flex-col gap-6">
+    <section className="bg-white rounded-md px-0 sm:px-6 py-6 flex flex-col gap-6">
       <Heading level={3} className="uppercase text-md flex gap-3">
         <BookingsIcon /> {t('dashboard_bookings_title')}
       </Heading>
@@ -278,12 +304,6 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
             bookedSpaceSlots={bookedSpaceSlots}
             isNightly={false}
           />
-
-          {/* <BookingsWithRoomInfo
-            bookings={bookings}
-            listings={listings}
-            TIME_ZONE={TIME_ZONE}
-          /> */}
         </div>
       </div>
 

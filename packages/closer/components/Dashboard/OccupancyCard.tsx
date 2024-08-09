@@ -49,12 +49,12 @@ const OccupancyCard = ({
   const hospitalityOccupancy = (
     ((numBookedNights || 0) / totalNumNights) *
     100
-  ).toFixed(1);
+  ).toFixed(1) || 0;
 
   const spaceOccupancy = (
     ((numBookedSpaceSlots || 0) / totalNumSpaceSlots) *
-    100
-  ).toFixed(1);
+    100 || 0
+  ).toFixed(1) || 0;
 
   return (
     <Card className="p-2 flex flex-col h-[160px] ">
@@ -81,7 +81,7 @@ const OccupancyCard = ({
       <div className="flex gap-1 justify-between items-end text-sm">
         <div>
           <p className="text-2xl font-bold">
-            {isNightly ? hospitalityOccupancy : spaceOccupancy}%
+            {isNightly ? hospitalityOccupancy || 0 : spaceOccupancy || 0}%
           </p>
           <p> {t('dashboard_booked')}</p>
         </div>
@@ -89,7 +89,7 @@ const OccupancyCard = ({
         <div className="flex flex-col gap-1">
           <div>
             <span className="text-xl">
-              {isNightly ? totalNumNights : totalNumSpaceSlots}
+              {isNightly ? totalNumNights || 0 : totalNumSpaceSlots || 0}
             </span>{' '}
             {isNightly ? t('dashboard_nights') : t('dashboard_booking_slots')}
           </div>

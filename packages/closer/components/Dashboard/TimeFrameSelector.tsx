@@ -7,7 +7,7 @@ import { useOutsideClick } from '../../hooks/useOutsideClick';
 import DateTimePicker from '../DateTimePicker';
 import { Button } from '../ui';
 
-const timeFrames = ['year', 'month', 'week', 'today'];
+const TIME_FRAMES = ['allTime', 'year', 'month', 'week', 'today'];
 
 interface Props {
   setTimeFrame: Dispatch<SetStateAction<string>>;
@@ -44,7 +44,7 @@ const TimeFrameSelector = ({ timeFrame, setTimeFrame, toDate, fromDate, setFromD
   return (
     <div>
       <div className="flex gap-x-1 gap-y-4 flex-wrap sm:flex-nowrap">
-        {timeFrames.map((frame) => (
+        {TIME_FRAMES.map((frame) => (
           <button
             key={frame}
             onClick={() => {

@@ -1,21 +1,15 @@
-import axios from 'axios';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
-import { ethers } from 'ethers';
 import { List } from 'immutable';
 
-import { blockchainConfig } from '../config_blockchain';
-import { GNOSIS_SAFE_ADDRESS, paidStatuses } from '../constants';
+import { paidStatuses } from '../constants';
 import {
   ListingByType,
   NightlyBookingByListing,
   SpaceBookingByListing,
 } from '../types';
-import { SalesResult, TokenTransaction } from '../types/dashboard';
 import { dateToPropertyTimeZone } from './booking.helpers';
-
-const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -43,7 +37,6 @@ export const getDateRange = ({
   toDate: Date | string;
   timeZone: string;
 }) => {
-  console.log('timeFrame=', timeFrame);
   switch (timeFrame) {
     case 'today':
       return {
@@ -71,8 +64,13 @@ export const getDateRange = ({
         ),
         end: toEndOfDay(new Date(), timeZone),
       };
+    case 'allTime':
+      return {
+        start:
+          fromDate && toDate ? toStartOfDay(fromDate, timeZone) : new Date(),
+        end: toEndOfDay(new Date(), timeZone),
+      };
     case 'custom':
-      console.log('custom');
       return {
         start:
           fromDate && toDate ? toStartOfDay(fromDate, timeZone) : new Date(),
@@ -185,36 +183,47 @@ function groupNightlyByListingAndRoom(
   return Object.values(grouped);
 }
 
-export const getBookedNights = (
-  bookings: List<Map<string, any>>,
-  listings: List<Map<string, any>>,
-  start: Date | null,
-  end: Date | null,
-  duration: number,
-) => {
+export const getBookedNights = ({
+  nightlyBookings,
+  nightlyListings,
+  start,
+  end,
+  duration,
+  TIME_ZONE,
+  firstBookingDate,
+}: {
+  nightlyBookings: List<Map<string, any>>;
+  nightlyListings: List<Map<string, any>>;
+  start: Date | null;
+  end: Date | null;
+  duration: number;
+  TIME_ZONE: string;
+  firstBookingDate?: string;
+}) => {
   // if guest left this day, do not count this last day as a booked night
 
-  console.log('bookings===', bookings);
-  console.log('listings===', listings);
-  console.log('start===', start);
-  console.log('end===', end);
-  console.log('duration===', duration);
+  if (!nightlyBookings || !nightlyListings)
+    return { bookedNights: [], numBookedNights: 0 };
 
-  if (!bookings || !listings) return { bookedNights: [], numBookedNights: 0 };
+  if (firstBookingDate) {
+    start = toStartOfDay(firstBookingDate, TIME_ZONE);
+    end = toEndOfDay(new Date(), TIME_ZONE);
+  }
   const bookedNights: any[] = [];
   let numBookedNights = 0;
-  const listingsWithoutBookings = listings.filter(
+  const listingsWithoutBookings = nightlyListings.filter(
     (listing: any) =>
-      !bookings.find(
+      !nightlyBookings.find(
         (booking: any) => booking.get('listing') === listing.get('_id'),
       ),
   );
 
-  bookings.forEach((booking: any) => {
-    const listing = listings.find(
+  nightlyBookings.forEach((booking: any) => {
+    const listing = nightlyListings.find(
       (listing: any) => listing.get('_id') === booking.get('listing'),
     );
     const listingName = listing && listing.get('name');
+
     const numOverlappingNights = calculateOverlappingNights(
       start,
       end,
@@ -225,21 +234,29 @@ export const getBookedNights = (
       ? duration * listing?.get('quantity')
       : duration * listing?.get('quantity') * listing?.get('beds');
 
-    booking.get('roomOrBedNumbers').map((roomOrBedNumber: any) => {
+    if (booking.get('roomOrBedNumbers').size) {
+      booking.get('roomOrBedNumbers').map((roomOrBedNumber: any) => {
+        bookedNights.push({
+          listingName,
+          roomOrBedNumber,
+          nights: numOverlappingNights < 0 ? 0 : numOverlappingNights,
+          totalNights: totalNights || 0,
+        });
+      });
+    } else {
       bookedNights.push({
         listingName,
-        roomOrBedNumber,
+        roomOrBedNumber: -1,
         nights: numOverlappingNights < 0 ? 0 : numOverlappingNights,
         totalNights: totalNights || 0,
       });
-    });
+      numBookedNights += listing?.get('private') ? 1 : booking.get('adults');
+    }
 
     if (paidStatuses.includes(booking.get('status'))) {
       numBookedNights += listing?.get('private') ? 1 : booking.get('adults');
     }
   });
-
-  console.log('listingsWithoutBookings===', listingsWithoutBookings);
 
   listingsWithoutBookings.forEach((listing: any) => {
     const totalNights = listing?.get('private')
@@ -381,6 +398,8 @@ export const getDuration = (
       return 364;
     case 'custom':
       return fromDate && toDate ? dayjs(toDate).diff(fromDate, 'day') + 1 : 1;
+    case 'allTime':
+      return fromDate ? dayjs(new Date()).diff(fromDate, 'day') + 1 : 1;
     default:
       return 1;
   }
@@ -408,84 +427,84 @@ export const groupListingsByType = (listings: any[]) => {
   return Array.from(groupedMap.values());
 };
 
-export const isSaleTransaction = (tx: TokenTransaction) => {
-  const zeroHash = '0x0000000000000000000000000000000000000000';
-  const transferEventHash =
-    '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
-  const notRelatedToProxy =
-    tx.fromAddressHash.toLowerCase() !== GNOSIS_SAFE_ADDRESS.toLowerCase() &&
-    tx.toAddressHash.toLowerCase() !== GNOSIS_SAFE_ADDRESS.toLowerCase();
-  const isTransfer = tx.fromAddressHash !== zeroHash;
-  const isTransferEvent = tx.topics[0] === transferEventHash;
-  const isNotSelfTransfer =
-    tx.fromAddressHash.toLowerCase() !== tx.toAddressHash.toLowerCase();
-  const isPositiveAmount =
-    ethers.BigNumber.from(tx.amount) > ethers.BigNumber.from(0);
+// export const isSaleTransaction = (tx: TokenTransaction) => {
+//   const zeroHash = '0x0000000000000000000000000000000000000000';
+//   const transferEventHash =
+//     '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+//   const notRelatedToProxy =
+//     tx.fromAddressHash.toLowerCase() !== GNOSIS_SAFE_ADDRESS.toLowerCase() &&
+//     tx.toAddressHash.toLowerCase() !== GNOSIS_SAFE_ADDRESS.toLowerCase();
+//   const isTransfer = tx.fromAddressHash !== zeroHash;
+//   const isTransferEvent = tx.topics[0] === transferEventHash;
+//   const isNotSelfTransfer =
+//     tx.fromAddressHash.toLowerCase() !== tx.toAddressHash.toLowerCase();
+//   const isPositiveAmount =
+//     ethers.BigNumber.from(tx.amount) > ethers.BigNumber.from(0);
 
-  return (
-    isTransferEvent &&
-    isNotSelfTransfer &&
-    isPositiveAmount &&
-    isTransfer &&
-    notRelatedToProxy
-  );
-};
+//   return (
+//     isTransferEvent &&
+//     isNotSelfTransfer &&
+//     isPositiveAmount &&
+//     isTransfer &&
+//     notRelatedToProxy
+//   );
+// };
 
-export const getTokenSales = (txs: TokenTransaction[]): SalesResult => {
-  const sales = txs.filter((tx) => {
-    return isSaleTransaction(tx);
-  });
+// export const getTokenSales = (txs: TokenTransaction[]): SalesResult => {
+//   const sales = txs.filter((tx) => {
+//     return isSaleTransaction(tx);
+//   });
 
-  const totalSales = sales.reduce((sum, tx) => {
-    const amountInWei = ethers.BigNumber.from(tx.amount);
-    return sum.add(amountInWei);
-  }, ethers.BigNumber.from(0));
+//   const totalSales = sales.reduce((sum, tx) => {
+//     const amountInWei = ethers.BigNumber.from(tx.amount);
+//     return sum.add(amountInWei);
+//   }, ethers.BigNumber.from(0));
 
-  const totalSalesInTDF = ethers.utils.formatEther(totalSales);
+//   const totalSalesInTDF = ethers.utils.formatEther(totalSales);
 
-  return {
-    salesCount: sales.length,
-    totalSalesAmount: totalSalesInTDF,
-  };
-};
+//   return {
+//     salesCount: sales.length,
+//     totalSalesAmount: totalSalesInTDF,
+//   };
+// };
 
-export const getAllTokenTransactions = async () => {
-  try {
-    const celoApiBaseUrl = 'https://explorer.celo.org/mainnet/api';
-    const latestBlockUrl =
-      'https://explorer.celo.org/mainnet/api?module=block&action=eth_block_number';
+// export const getAllTokenTransactions = async () => {
+//   try {
+//     const celoApiBaseUrl = 'https://explorer.celo.org/mainnet/api';
+//     const latestBlockUrl =
+//       'https://explorer.celo.org/mainnet/api?module=block&action=eth_block_number';
 
-    const latestBlockResponse = await axios.get(latestBlockUrl);
-    const data = latestBlockResponse.data;
-    const latestBlockNumber = parseInt(data.result, 16);
-    const oldBlockNumber = Math.max(0, latestBlockNumber - 10000000);
-    const apiUrl = `${celoApiBaseUrl}?module=token&action=tokentx&contractaddress=${BLOCKCHAIN_DAO_TOKEN.address}&fromBlock=${oldBlockNumber}&toBlock=${latestBlockNumber}`;
-    const response = await axios.get(apiUrl);
-    const tokenTransactions = response.data.result;
+//     const latestBlockResponse = await axios.get(latestBlockUrl);
+//     const data = latestBlockResponse.data;
+//     const latestBlockNumber = parseInt(data.result, 16);
+//     const oldBlockNumber = Math.max(0, latestBlockNumber - 10000000);
+//     const apiUrl = `${celoApiBaseUrl}?module=token&action=tokentx&contractaddress=${BLOCKCHAIN_DAO_TOKEN.address}&fromBlock=${oldBlockNumber}&toBlock=${latestBlockNumber}`;
+//     const response = await axios.get(apiUrl);
+//     const tokenTransactions = response.data.result;
 
-    return tokenTransactions;
-  } catch (error) {
-    console.log('Error fetching Token transactions:', error);
-    return null;
-  }
-};
+//     return tokenTransactions;
+//   } catch (error) {
+//     console.log('Error fetching Token transactions:', error);
+//     return null;
+//   }
+// };
 
-export const getTokenSalesByDateRange = (
-  txs: TokenTransaction[] | [],
-  startDate: string | Date,
-  endDate: string | Date,
-): SalesResult => {
-  const start = new Date(startDate).getTime();
-  const end = new Date(endDate).getTime();
+// export const getTokenSalesByDateRange = (
+//   txs: TokenTransaction[] | [],
+//   startDate: string | Date,
+//   endDate: string | Date,
+// ): SalesResult => {
+//   const start = new Date(startDate).getTime();
+//   const end = new Date(endDate).getTime();
 
-  const filteredTxs = txs.filter((tx) => {
-    const txDateSeconds = parseInt(tx.timeStamp, 16);
-    const txDate = new Date(txDateSeconds * 1000).getTime();
-    return txDate >= start && txDate <= end;
-  });
+//   const filteredTxs = txs.filter((tx) => {
+//     const txDateSeconds = parseInt(tx.timeStamp, 16);
+//     const txDate = new Date(txDateSeconds * 1000).getTime();
+//     return txDate >= start && txDate <= end;
+//   });
 
-  return getTokenSales(filteredTxs);
-};
+//   return getTokenSales(filteredTxs);
+// };
 
 export const getPeriodName = (
   subPeriod: { start: string; end: string },
@@ -494,12 +513,20 @@ export const getPeriodName = (
 ) => {
   if (
     timeFrame === 'year' ||
+    (timeFrame === 'allTime' &&
+      diffInDays &&
+      diffInDays >= 62 &&
+      diffInDays <= 364) ||
     (timeFrame === 'custom' &&
       diffInDays &&
       diffInDays >= 62 &&
       diffInDays <= 364)
   ) {
     return dayjs(subPeriod.start).format('MMM');
+  }
+
+  if (timeFrame === 'allTime' && diffInDays && diffInDays >= 364) {
+    return dayjs(subPeriod.start).format('YYYY');
   }
 
   return subPeriod.start !== subPeriod.end
@@ -578,22 +605,6 @@ const getPrev12Months = () => {
   return result;
 };
 
-// const getNMonths = (diffInDays: number, startDate: string | Date, endDate: string | Date) => {
-//   const today = dayjs();
-//   const result: { start: string; end: string }[] = [];
-
-//   for (let i = 0; i < 12; i++) {
-//     const startOfMonth = today.subtract(i, 'month').startOf('month');
-//     const endOfMonth = startOfMonth.endOf('month');
-
-//     result.unshift({
-//       start: startOfMonth.format('YYYY-MM-DD'),
-//       end: endOfMonth.format('YYYY-MM-DD'),
-//     });
-//   }
-
-//   return result;
-// };
 const getNMonths = (
   diffInDays: number,
   startDate: string | Date,
@@ -622,6 +633,34 @@ const getNMonths = (
   return result;
 };
 
+const getNYears = (
+  diffInDays: number,
+  startDate: string | Date,
+  endDate: string | Date,
+) => {
+  const start = dayjs(startDate);
+  const end = dayjs(endDate);
+  const result: { start: string; end: string }[] = [];
+
+  let currentYear = start.startOf('year');
+
+  while (currentYear.isBefore(end) || currentYear.isSame(end, 'year')) {
+    const periodStart = currentYear.isAfter(start) ? currentYear : start;
+    const periodEnd = currentYear.endOf('year').isAfter(end)
+      ? end
+      : currentYear.endOf('year');
+
+    result.push({
+      start: periodStart.format('YYYY-MM-DD'),
+      end: periodEnd.format('YYYY-MM-DD'),
+    });
+
+    currentYear = currentYear.add(1, 'year');
+  }
+
+  return result;
+};
+
 const getCustomPeriods = (fromDate: string | Date, toDate: string | Date) => {
   const start = dayjs(fromDate);
   const end = dayjs(toDate);
@@ -641,14 +680,29 @@ const getCustomPeriods = (fromDate: string | Date, toDate: string | Date) => {
       },
     ];
   }
+};
 
-  return [];
+const getAllTimePeriods = (firstBookingDate: string) => {
+  const start = dayjs(firstBookingDate);
+  const end = dayjs(new Date());
+  const diffInDays = end.diff(start, 'days');
+
+  if (diffInDays <= 6) {
+    return getNDays(diffInDays + 1, new Date());
+  } else if (diffInDays <= 62) {
+    return getNWeeks(diffInDays, firstBookingDate, new Date());
+  } else if (diffInDays <= 364) {
+    return getNMonths(diffInDays, firstBookingDate, new Date());
+  } else {
+    return getNYears(diffInDays, firstBookingDate, new Date());
+  }
 };
 
 export const getTimePeriod = (
   timeFrame: string,
   fromDate: string | Date,
   toDate: string | Date,
+  firstBookingDate?: string,
 ): { subPeriods: { start: string; end: string }[] } => {
   switch (timeFrame) {
     case 'today':
@@ -675,6 +729,12 @@ export const getTimePeriod = (
     case 'custom':
       return {
         subPeriods: getCustomPeriods(fromDate, toDate),
+      };
+    case 'allTime':
+      return {
+        subPeriods: getAllTimePeriods(
+          firstBookingDate || new Date().toISOString(),
+        ),
       };
     default:
       return {
