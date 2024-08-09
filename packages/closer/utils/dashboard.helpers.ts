@@ -6,7 +6,11 @@ import { ethers } from 'ethers';
 import { List } from 'immutable';
 
 import { blockchainConfig } from '../config_blockchain';
-import { GNOSIS_SAFE_ADDRESS, paidStatuses } from '../constants';
+import {
+  GNOSIS_SAFE_ADDRESS,
+  STRIPE_AMOUNT_MULTIPLIER,
+  paidStatuses,
+} from '../constants';
 import {
   ListingByType,
   NightlyBookingByListing,
@@ -752,4 +756,138 @@ export const getTimePeriod = (
         ],
       };
   }
+};
+
+export const getSubPeriodData = ({
+  subPeriod,
+  bookings,
+  tokenSales,
+  timeFrame,
+  fromDate,
+  toDate,
+  firstBookingDate,
+  TIME_ZONE,
+  stripeSubsPayments,
+  listings,
+  TOKEN_PRICE,
+}: {
+  subPeriod: { start: string; end: string };
+  bookings: List<any>;
+  tokenSales: List<any>;
+  timeFrame: string;
+  fromDate: string | Date;
+  toDate: string | Date;
+  firstBookingDate: string;
+  TIME_ZONE: string;
+  stripeSubsPayments: any[];
+  listings: List<any>;
+  TOKEN_PRICE: number;
+}) => {
+  let hospitalityRevenue = 0;
+  let spacesRevenue = 0;
+  let eventsRevenue = 0;
+  let subscriptionsRevenue = 0;
+  let foodRevenue = 0;
+  let start: Date | string = '';
+  let end: Date | string = '';
+
+  const diffInDays =
+    timeFrame === 'custom'
+      ? dayjs(toDate).diff(dayjs(fromDate), 'days')
+      : dayjs(new Date()).diff(dayjs(firstBookingDate), 'days');
+
+  ({ start, end } = getDateRange({
+    timeFrame: 'custom',
+    fromDate: subPeriod.start,
+    toDate: subPeriod.end,
+    timeZone: TIME_ZONE,
+  }));
+
+  const timePeriodTokenSales = tokenSales.filter((sale: any) => {
+    const saleDate = new Date(sale.get('created'));
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+
+    return saleDate >= startDate && saleDate <= endDate;
+  });
+  const timePeriodTokenRevenue = timePeriodTokenSales.reduce(
+    (acc: number, curr: any) => {
+      return Number(acc) + Number(curr.get('value'));
+    },
+    0,
+  );
+
+  const timePeriodSubsData = stripeSubsPayments.filter((sub) => {
+    const paymentDate = new Date(sub.date);
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+
+    return paymentDate >= startDate && paymentDate <= endDate;
+  });
+
+  subscriptionsRevenue =
+    timePeriodSubsData.reduce((acc, curr) => {
+      return acc + curr.amount;
+    }, 0) / STRIPE_AMOUNT_MULTIPLIER || 0;
+
+  const filteredBookings = bookings.filter((booking: any) => {
+    return (
+      dayjs(booking.get('start')).isBefore(end) &&
+      dayjs(booking.get('end')).isAfter(start)
+    );
+  });
+
+  filteredBookings.forEach((booking: any) => {
+    const listing = listings.find((listing: any) => {
+      return listing.get('_id') === booking.get('listing');
+    });
+
+    const isCheckin =
+      dayjs(booking.get('start')).isAfter(start) &&
+      dayjs(booking.get('start')).isBefore(end);
+    const isEvent = booking.get('eventId');
+    const isNightly =
+      listing?.get('priceDuration') === 'night' ||
+      !listing?.get('priceDuration');
+
+    if (isCheckin) {
+      if (isNightly) {
+        const fiatPrice = booking.get('rentalFiat').get('val');
+
+        hospitalityRevenue += fiatPrice;
+
+        const utilityPrice = booking.get('utilityFiat').get('val');
+        foodRevenue += utilityPrice;
+      }
+      if (!isNightly) {
+        const fiatPrice = booking.get('rentalFiat').get('val');
+        spacesRevenue += fiatPrice;
+      }
+      if (isEvent) {
+        const ticketPrice = booking.get('ticketOption').get('price');
+        eventsRevenue += ticketPrice;
+      }
+    }
+  });
+
+  const totalOperations = Math.floor(
+    Number(hospitalityRevenue) +
+      Number(spacesRevenue) +
+      Number(eventsRevenue) +
+      Number(subscriptionsRevenue) +
+      Number(foodRevenue),
+  );
+
+  return {
+    name: getPeriodName(subPeriod, timeFrame, diffInDays),
+    hospitality: Number(hospitalityRevenue.toFixed(1)),
+    spaces: Number(spacesRevenue.toFixed(1)),
+    events: Number(eventsRevenue.toFixed(1)),
+    subscriptions: Number(subscriptionsRevenue.toFixed(1)),
+    food: Number(foodRevenue.toFixed(1)),
+
+    // TODO: calculate token price more precisely
+    tokens: Number((timePeriodTokenRevenue * TOKEN_PRICE).toFixed(1)),
+    totalOperations,
+  };
 };
