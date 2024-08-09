@@ -232,7 +232,7 @@ export const getBookedNights = ({
     const listing = nightlyListings.find(
       (listing: any) => listing.get('_id') === booking.get('listing'),
     );
-    const listingName = listing && listing.get('name');
+    const listingName = listing?.get('name');
 
     const numOverlappingNights = calculateOverlappingNights(
       start,
