@@ -60,7 +60,7 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
       return paidStatuses.includes(booking.get('status'));
     });
 
-  const firstBookingDate = firstBooking && firstBooking.get('start');
+  const firstBookingDate = firstBooking && firstBooking?.get('start');
 
   const duration = getDuration(timeFrame, fromDate, toDate);
 
