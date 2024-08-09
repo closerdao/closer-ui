@@ -1,15 +1,21 @@
+import axios from 'axios';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
+import { ethers } from 'ethers';
 import { List } from 'immutable';
 
-import { paidStatuses } from '../constants';
+import { blockchainConfig } from '../config_blockchain';
+import { GNOSIS_SAFE_ADDRESS, paidStatuses } from '../constants';
 import {
   ListingByType,
   NightlyBookingByListing,
   SpaceBookingByListing,
 } from '../types';
+import { SalesResult, TokenTransaction } from '../types/dashboard';
 import { dateToPropertyTimeZone } from './booking.helpers';
+
+const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -427,84 +433,84 @@ export const groupListingsByType = (listings: any[]) => {
   return Array.from(groupedMap.values());
 };
 
-// export const isSaleTransaction = (tx: TokenTransaction) => {
-//   const zeroHash = '0x0000000000000000000000000000000000000000';
-//   const transferEventHash =
-//     '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
-//   const notRelatedToProxy =
-//     tx.fromAddressHash.toLowerCase() !== GNOSIS_SAFE_ADDRESS.toLowerCase() &&
-//     tx.toAddressHash.toLowerCase() !== GNOSIS_SAFE_ADDRESS.toLowerCase();
-//   const isTransfer = tx.fromAddressHash !== zeroHash;
-//   const isTransferEvent = tx.topics[0] === transferEventHash;
-//   const isNotSelfTransfer =
-//     tx.fromAddressHash.toLowerCase() !== tx.toAddressHash.toLowerCase();
-//   const isPositiveAmount =
-//     ethers.BigNumber.from(tx.amount) > ethers.BigNumber.from(0);
+export const isSaleTransaction = (tx: TokenTransaction) => {
+  const zeroHash = '0x0000000000000000000000000000000000000000';
+  const transferEventHash =
+    '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+  const notRelatedToProxy =
+    tx.fromAddressHash.toLowerCase() !== GNOSIS_SAFE_ADDRESS.toLowerCase() &&
+    tx.toAddressHash.toLowerCase() !== GNOSIS_SAFE_ADDRESS.toLowerCase();
+  const isTransfer = tx.fromAddressHash !== zeroHash;
+  const isTransferEvent = tx.topics[0] === transferEventHash;
+  const isNotSelfTransfer =
+    tx.fromAddressHash.toLowerCase() !== tx.toAddressHash.toLowerCase();
+  const isPositiveAmount =
+    ethers.BigNumber.from(tx.amount) > ethers.BigNumber.from(0);
 
-//   return (
-//     isTransferEvent &&
-//     isNotSelfTransfer &&
-//     isPositiveAmount &&
-//     isTransfer &&
-//     notRelatedToProxy
-//   );
-// };
+  return (
+    isTransferEvent &&
+    isNotSelfTransfer &&
+    isPositiveAmount &&
+    isTransfer &&
+    notRelatedToProxy
+  );
+};
 
-// export const getTokenSales = (txs: TokenTransaction[]): SalesResult => {
-//   const sales = txs.filter((tx) => {
-//     return isSaleTransaction(tx);
-//   });
+export const getTokenSales = (txs: TokenTransaction[]): SalesResult => {
+  const sales = txs.filter((tx) => {
+    return isSaleTransaction(tx);
+  });
 
-//   const totalSales = sales.reduce((sum, tx) => {
-//     const amountInWei = ethers.BigNumber.from(tx.amount);
-//     return sum.add(amountInWei);
-//   }, ethers.BigNumber.from(0));
+  const totalSales = sales.reduce((sum, tx) => {
+    const amountInWei = ethers.BigNumber.from(tx.amount);
+    return sum.add(amountInWei);
+  }, ethers.BigNumber.from(0));
 
-//   const totalSalesInTDF = ethers.utils.formatEther(totalSales);
+  const totalSalesInTDF = ethers.utils.formatEther(totalSales);
 
-//   return {
-//     salesCount: sales.length,
-//     totalSalesAmount: totalSalesInTDF,
-//   };
-// };
+  return {
+    salesCount: sales.length,
+    totalSalesAmount: totalSalesInTDF,
+  };
+};
 
-// export const getAllTokenTransactions = async () => {
-//   try {
-//     const celoApiBaseUrl = 'https://explorer.celo.org/mainnet/api';
-//     const latestBlockUrl =
-//       'https://explorer.celo.org/mainnet/api?module=block&action=eth_block_number';
+export const getAllTokenTransactions = async () => {
+  try {
+    const celoApiBaseUrl = 'https://explorer.celo.org/mainnet/api';
+    const latestBlockUrl =
+      'https://explorer.celo.org/mainnet/api?module=block&action=eth_block_number';
 
-//     const latestBlockResponse = await axios.get(latestBlockUrl);
-//     const data = latestBlockResponse.data;
-//     const latestBlockNumber = parseInt(data.result, 16);
-//     const oldBlockNumber = Math.max(0, latestBlockNumber - 10000000);
-//     const apiUrl = `${celoApiBaseUrl}?module=token&action=tokentx&contractaddress=${BLOCKCHAIN_DAO_TOKEN.address}&fromBlock=${oldBlockNumber}&toBlock=${latestBlockNumber}`;
-//     const response = await axios.get(apiUrl);
-//     const tokenTransactions = response.data.result;
+    const latestBlockResponse = await axios.get(latestBlockUrl);
+    const data = latestBlockResponse.data;
+    const latestBlockNumber = parseInt(data.result, 16);
+    const oldBlockNumber = Math.max(0, latestBlockNumber - 10000000);
+    const apiUrl = `${celoApiBaseUrl}?module=token&action=tokentx&contractaddress=${BLOCKCHAIN_DAO_TOKEN.address}&fromBlock=${oldBlockNumber}&toBlock=${latestBlockNumber}`;
+    const response = await axios.get(apiUrl);
+    const tokenTransactions = response.data.result;
 
-//     return tokenTransactions;
-//   } catch (error) {
-//     console.log('Error fetching Token transactions:', error);
-//     return null;
-//   }
-// };
+    return tokenTransactions;
+  } catch (error) {
+    console.log('Error fetching Token transactions:', error);
+    return null;
+  }
+};
 
-// export const getTokenSalesByDateRange = (
-//   txs: TokenTransaction[] | [],
-//   startDate: string | Date,
-//   endDate: string | Date,
-// ): SalesResult => {
-//   const start = new Date(startDate).getTime();
-//   const end = new Date(endDate).getTime();
+export const getTokenSalesByDateRange = (
+  txs: TokenTransaction[] | [],
+  startDate: string | Date,
+  endDate: string | Date,
+): SalesResult => {
+  const start = new Date(startDate).getTime();
+  const end = new Date(endDate).getTime();
 
-//   const filteredTxs = txs.filter((tx) => {
-//     const txDateSeconds = parseInt(tx.timeStamp, 16);
-//     const txDate = new Date(txDateSeconds * 1000).getTime();
-//     return txDate >= start && txDate <= end;
-//   });
+  const filteredTxs = txs.filter((tx) => {
+    const txDateSeconds = parseInt(tx.timeStamp, 16);
+    const txDate = new Date(txDateSeconds * 1000).getTime();
+    return txDate >= start && txDate <= end;
+  });
 
-//   return getTokenSales(filteredTxs);
-// };
+  return getTokenSales(filteredTxs);
+};
 
 export const getPeriodName = (
   subPeriod: { start: string; end: string },
