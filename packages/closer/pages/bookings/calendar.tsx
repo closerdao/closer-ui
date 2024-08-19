@@ -1,6 +1,6 @@
 import Head from 'next/head';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Timeline, {
   CustomMarker,
   DateHeader,
@@ -9,6 +9,7 @@ import Timeline, {
 } from 'react-calendar-timeline';
 
 import SpaceHostBooking from '../../components/SpaceHostBooking';
+import Switch from '../../components/Switch';
 import { ErrorMessage, Spinner } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
@@ -66,6 +67,9 @@ const BookingsCalendarPage = () => {
     start: new Date(loadTime),
     end: defaultTimeEnd,
   });
+
+  const [showListingsWithBookings, setShowListingsWithBookings] =
+    useState(false);
 
   const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -128,27 +132,43 @@ const BookingsCalendarPage = () => {
     loadData();
   }, [debouncedVisibleRange]);
 
-  useEffect(() => {
-    if (filteredAccommodationUnits && filteredAccommodationUnits.length > 0) {
-      if (
-        JSON.stringify(filteredAccommodationUnits) !==
-        JSON.stringify(lastNonEmptyUnits)
-      ) {
-        setLastNonEmptyUnits(filteredAccommodationUnits);
-      }
-    }
-  }, [filteredAccommodationUnits, lastNonEmptyUnits]);
+  const prevFilteredAccommodationUnits = useRef(null);
+  const prevBookingItems = useRef(null);
 
   useEffect(() => {
-    if (bookingItems && bookingItems.length > 0) {
+    if (showListingsWithBookings) {
       if (
-        JSON.stringify(bookingItems) !==
-        JSON.stringify(lastNonEmptyBookingItems)
+        JSON.stringify(filteredAccommodationUnits) !==
+        JSON.stringify(prevFilteredAccommodationUnits.current)
       ) {
-        setLastNonEmptyBookingItems(bookingItems);
+        setLastNonEmptyUnits(
+          filteredAccommodationUnits || defaultAccommodationUnits,
+        );
+        prevFilteredAccommodationUnits.current = filteredAccommodationUnits;
+      }
+    } else {
+      if (
+        JSON.stringify(accommodationUnits) !==
+        JSON.stringify(prevFilteredAccommodationUnits.current)
+      ) {
+        setLastNonEmptyUnits(accommodationUnits || defaultAccommodationUnits);
+        prevFilteredAccommodationUnits.current = accommodationUnits;
       }
     }
-  }, [bookingItems, lastNonEmptyBookingItems]);
+  }, [
+    showListingsWithBookings,
+    filteredAccommodationUnits,
+    accommodationUnits,
+  ]);
+
+  useEffect(() => {
+    if (
+      JSON.stringify(bookingItems) !== JSON.stringify(prevBookingItems.current)
+    ) {
+      setLastNonEmptyBookingItems(bookingItems || []);
+      prevBookingItems.current = bookingItems;
+    }
+  }, [bookingItems]);
 
   const handleSelectedRangeChange = (
     visibleTimeStart: number,
@@ -204,11 +224,18 @@ const BookingsCalendarPage = () => {
         <title>{t('booking_calendar')}</title>
       </Head>
 
-      <main className="flex flex-col gap-4">
+      <main className="flex flex-col">
         <Heading level={1}>{t('booking_calendar')}</Heading>
 
-        <section className="mt-10">
+        <section className="mt-10 flex flex-col gap-8">
           <SpaceHostBooking listingOptions={listings && listingOptions} />
+          <Switch
+            disabled={false}
+            name="showListingsWithBookings"
+            label="Only show listings with bookings"
+            onChange={setShowListingsWithBookings}
+            checked={showListingsWithBookings}
+          />
         </section>
 
         <div className="min-h-[600px]">
@@ -227,7 +254,7 @@ const BookingsCalendarPage = () => {
             onTimeChange={handleSelectedRangeChange}
             minZoom={sixHours}
             maxZoom={oneMonth}
-            className="relative "
+            className="relative"
           >
             <TimelineHeaders className="sticky">
               {loading && (
