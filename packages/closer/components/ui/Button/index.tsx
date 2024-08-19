@@ -106,7 +106,7 @@ const Button = ({
         )}
         `}
       >
-        {isLoading ? <Spinner /> : children}
+        {isLoading ?<div className='flex items-center gap-2'> <Spinner /> {children}</div>: children}
       </button>
       {infoText && <div className="text-sm text-center pt-2">{infoText}</div>}
     </>

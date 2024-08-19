@@ -391,7 +391,7 @@ DatesSelector.getInitialProps = async (
         bookingConfig,
         ticketOptions: ticketsAvailable?.data?.ticketOptions,
         event: event?.data?.results,
-        messages: null,
+        messages,
       };
     }
     if (volunteerId) {

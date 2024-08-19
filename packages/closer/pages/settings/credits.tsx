@@ -25,15 +25,15 @@ const CreditsPage = () => {
   return (
     <>
       <Head>
-        <title>{APP_NAME && t('carrots_heading')}</title>
+        <title>{ t('carrots_heading')}</title>
       </Head>
       <div className="max-w-screen-sm mx-auto md:p-8 h-full main-content w-full flex flex-col gap-12  min-h-screen py-2">
         <div className="bg-accent-light rounded-md p-6 flex flex-wrap content-center justify-center">
           <Heading level={1} className="flex justify-center flex-wrap">
             <div className="text-6xl w-full flex justify-center">
-              {t('carrots_balance')}
+              { t('carrots_balance')}
             </div>
-            {t('carrots_heading')}
+            { t('carrots_heading')}
           </Heading>
           <Heading
             level={2}
@@ -55,7 +55,9 @@ const CreditsPage = () => {
           </div>
         </Card>
         {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
-          <Heading level={3}>{t('carrots_subheading_what_are')}</Heading>
+          <Heading level={3}>
+            {t('carrots_subheading_what_are')}
+          </Heading>
         )}
         {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
           <div>
@@ -127,13 +129,27 @@ const CreditsPage = () => {
             </Heading>
 
             <div>
-              <p className="mb-4">{t('carrots_additional_guidelines_1')}</p>
-              <p className="mb-4">{t('carrots_additional_guidelines_2')}</p>
-              <p className="mb-4">{t('carrots_additional_guidelines_3')}</p>
-              <p className="mb-4">{t('carrots_additional_guidelines_4')}</p>
-              <p className="mb-4">{t('carrots_additional_guidelines_5')}</p>
-              <p className="mb-4">{t('carrots_additional_guidelines_6')}</p>
-              <p className="mb-4">{t('carrots_additional_guidelines_7')}</p>
+              <p className="mb-4">
+                {t('carrots_additional_guidelines_1')}
+              </p>
+              <p className="mb-4">
+                {t('carrots_additional_guidelines_2')}
+              </p>
+              <p className="mb-4">
+                {t('carrots_additional_guidelines_3')}
+              </p>
+              <p className="mb-4">
+                {t('carrots_additional_guidelines_4')}
+              </p>
+              <p className="mb-4">
+                {t('carrots_additional_guidelines_5')}
+              </p>
+              <p className="mb-4">
+                {t('carrots_additional_guidelines_6')}
+              </p>
+              <p className="mb-4">
+                {t('carrots_additional_guidelines_7')}
+              </p>
               <p className="mb-4">
                 {APP_NAME &&
                   APP_NAME.toLowerCase() !== 'moos' &&

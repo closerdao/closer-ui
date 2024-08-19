@@ -1,3 +1,4 @@
+import { format, toZonedTime } from 'date-fns-tz';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
@@ -423,10 +424,14 @@ export const getLocalTimeAvailability = (
   const DEFAULT_TIMEZONE = 'UTC';
 
   return availability?.map((time) => {
-    const localTime = dayjs
-      .utc(`1970-01-01T${time.hour}:00Z`)
-      .tz(timeZone || DEFAULT_TIMEZONE)
-      .format('HH:mm');
+    const [hours, minutes] = time?.hour?.split(':').map(Number) || [0, 0];
+    const date = new Date();
+    date.setUTCHours(hours, minutes, 0, 0);
+
+    const zonedDate = toZonedTime(date, timeZone || DEFAULT_TIMEZONE);
+    const localTime = format(zonedDate, 'HH:mm', {
+      timeZone: timeZone || DEFAULT_TIMEZONE,
+    });
 
     return { hour: localTime, isAvailable: time.isAvailable };
   });
@@ -547,4 +552,11 @@ export const formatCheckoutDate = (
     .second(0)
     .millisecond(0);
   return localTime;
+};
+
+export const addOneHour = (time: string) => {
+  if (String(Number(time.substring(0, 2)) + 1).length === 1) {
+    return String('0' + (Number(time.substring(0, 2)) + 1) + ':00');
+  }
+  return String(Number(time.substring(0, 2)) + 1 + ':00');
 };

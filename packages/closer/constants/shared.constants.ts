@@ -280,3 +280,6 @@ export const dashboardRelevantStatuses = [
 export const STRIPE_AMOUNT_MULTIPLIER = 100;
 
 export const GNOSIS_SAFE_ADDRESS = '0x5E810b93c51981eccA16e030Ea1cE8D8b1DEB83b';
+export const BLOG_POSTS_PER_PAGE = 9;
+
+export const DEFAULT_BLOG_IMAGE_ID = '66a7da14aca528c59057785e';

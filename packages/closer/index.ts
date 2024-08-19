@@ -44,6 +44,7 @@ export * from './hooks/useConfig';
 export * from './hooks/useHasMounted';
 export { default as Page401 } from './pages/401';
 export { default as Page404 } from './pages/404';
+export { getStaticProps as getStaticProps404 } from './pages/404';
 export { default as AdminPage } from './pages/admin';
 export { default as ApplicationsPage } from './pages/applications';
 export { default as ArticlePage } from './pages/blog/[slug]';

@@ -70,8 +70,8 @@ const RedeemCredits = ({
                     {isDemo
                       ? priceFormat(
                           APP_NAME && APP_NAME.toLowerCase() !== 'moos'
-                            ? '50'
-                            : '5',
+                            ? 50
+                            : 5,
                         )
                       : priceFormat(rentalFiat)}
                   </Heading>

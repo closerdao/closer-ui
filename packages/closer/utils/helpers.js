@@ -395,7 +395,7 @@ export const getMaxBookingHorizon = (settings, isMember) => {
     if (isMember) {
       return [settings.memberMaxBookingHorizon, settings.memberMaxDuration];
     }
-    return [settings.memberMaxBookingHorizon, settings.guestMaxDuration];
+    return [settings.guestMaxBookingHorizon, settings.guestMaxDuration];
   }
   return [0, 0];
 };

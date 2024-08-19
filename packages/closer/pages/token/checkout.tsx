@@ -62,12 +62,6 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   }, [isAuthenticated, isLoading]);
 
   useEffect(() => {
-    if (!isWalletReady) {
-      router.push('/token/before-you-begin');
-    }
-  }, []);
-
-  useEffect(() => {
     isWalletReady &&
       (async () => {
         const totalCost = await getTotalCost(tokens as string);
@@ -105,6 +99,14 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     const { success, txHash, error } = await buyTokens(tokens as string);
     if (success) {
       try {
+        await api.post('/accounting/token-sales-log', {
+          txHash,
+          unitPrice,
+          tokens,
+          total,
+          userId: user?._id,
+        });
+
         await api.post('/metric', {
           event: 'token-sale',
           value: Number(tokens),

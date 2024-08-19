@@ -3,9 +3,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
-import React from 'react';
 
 import Heading from '../components/ui/Heading';
+
+import { loadLocaleData } from '../utils/locale.helpers';
 
 const Page404 = ({ error }: { error?: string }) => {
   const router = useRouter();
@@ -36,5 +37,16 @@ const Page404 = ({ error }: { error?: string }) => {
     </>
   );
 };
+
+export async function getStaticProps() {
+  const messages = await loadLocaleData(
+    'en',
+    process.env.NEXT_PUBLIC_APP_NAME || 'tdf',
+  );
+  return {
+    props: { messages },
+    revalidate: 86400, // 24 hours
+  };
+}
 
 export default Page404;

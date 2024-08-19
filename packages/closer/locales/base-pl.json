@@ -1319,5 +1319,23 @@
   "navigation_new_volunteer": "New volunteer",
   "navigation_support_us": "Support us",
   "navigation_learning_hub": "Learning hub",
-  "navigation_platform_settings": "Platform settings"
+  "navigation_platform_settings": "Platform settings",
+  
+  "blog_read_more": "Read more",
+  "blog_title": "Blog",
+  "blog_write_article": "Write an article",
+  "blog_latest_articles": "Latest articles",
+  "blog_what_to_read_next": "What to read next",
+  "blog_min_read": "min read",
+  "blog_label_category": "Category:",
+  "blog_edit_article": "Edit article",
+  "blog_view_article": "View article",
+  "blog_tags": "Tags:",
+  "blog_share_on_facebook": "Share on Facebook",
+  "blog_share_on_x": "Share on X",
+  "blog_found": "Found",
+  "blog_article": "article",
+  "blog_about": "about",
+
+  "": ""
 }
