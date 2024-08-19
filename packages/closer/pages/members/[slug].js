@@ -25,7 +25,7 @@ import PageNotFound from '../not-found';
 
 const MemberPage = ({ member, loadError }) => {
   const t = useTranslations();
-  const { user: currentUser, isAuthenticated } = useAuth();
+  const { user: currentUser, isAuthenticated, refetchUser } = useAuth();
 
   const { APP_NAME } = useConfig();
 
@@ -54,6 +54,7 @@ const MemberPage = ({ member, loadError }) => {
         }
       }, 2000);
     }
+    refetchUser();
   }, [hasSaved]);
 
   const handleSubmit = async (event) => {
@@ -347,8 +348,11 @@ const MemberPage = ({ member, loadError }) => {
                   <div className="my-8">
                     {editProfile ? (
                       <div>
-                        {APP_NAME === 'moos' && (
-                          <div className="my-4 font-bold">
+                        {APP_NAME === 'moos' && currentUser?.about && currentUser?.photo && <div className="my-4 font-bold0">
+                             You can now apply to book spaces!
+                          </div>}
+                        {APP_NAME === 'moos' && !currentUser?.about  && (
+                          <div className="my-4 font-bold text-red-500">
                             Required to book spaces:
                           </div>
                         )}

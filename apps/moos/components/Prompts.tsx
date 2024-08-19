@@ -35,27 +35,64 @@ const PromptCloseButton = ({
 
 const FillSettingsPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
   const { user } = useAuth();
+
+  const isFullScreen = true;
   return (
     <>
-      <div className=" flex gap-3 justify-between w-full">
-        <div className="flex justify-start sm:items-center gap-2">
-          <span>
-            Please add description and photo to your profile to book spaces
-          </span>
-        </div>
-        <div className="flex items-end justify-end sm:items-center gap-2 flex-col-reverse sm:flex-row">
-          <LinkButton
-            size="small"
-            className="max-h-[34px] p-0 px-4"
-            href={`/members/${user?.slug}`}
-          >
-            Update profile
-          </LinkButton>
-          <PromptCloseButton
-            closePrompt={closePrompt}
-            promptName="FillSettingsPrompt"
-          />
-        </div>
+      <div
+        className={`flex gap-3 justify-between w-full ${
+          isFullScreen
+            ? 'fixed left-0 h-full w-full bg-accent-light z-[10] mt-[-12px]'
+            : ''
+        }`}
+      >
+        {isFullScreen && (
+          <div className="flex flex-col justify-center w-full items-center h-full gap-6 relative">
+            <div className="absolute top-8 right-8">
+              <PromptCloseButton
+                closePrompt={closePrompt}
+                promptName="FillSettingsPrompt"
+              />
+            </div>
+            <div className="w-[300px] mt-[-100px] text-xl font-bold text-center">
+              Please add description and photo to your profile to book spaces
+            </div>
+            <div className="flex ">
+              <LinkButton
+                size="medium"
+                className="max-h-[34px] p-0 px-4"
+                href={`/members/${user?.slug}`}
+                onClick={() => {
+                  closePrompt('FillSettingsPrompt');
+                }}
+              >
+                Update profile
+              </LinkButton>
+            </div>
+          </div>
+        )}
+        {!isFullScreen && (
+          <>
+            <div className="flex justify-start sm:items-center gap-2">
+              <span>
+                Please add description and photo to your profile to book spaces
+              </span>
+            </div>
+            <div className="flex items-end justify-end sm:items-center gap-2 flex-col-reverse sm:flex-row">
+              <LinkButton
+                size="small"
+                className="max-h-[34px] p-0 px-4"
+                href={`/members/${user?.slug}`}
+              >
+                Update profile
+              </LinkButton>
+              <PromptCloseButton
+                closePrompt={closePrompt}
+                promptName="FillSettingsPrompt"
+              />
+            </div>
+          </>
+        )}
       </div>
     </>
   );
@@ -105,11 +142,14 @@ const getClosedPrompts = () => {
 };
 
 const getPromptToShow = (user: User | null, isAuthenticated: boolean) => {
-
   const daysUserCreated = calculateFullDaysDifference(user?.created);
   const closedPrompts = getClosedPrompts();
 
-  if (isAuthenticated && !closedPrompts.includes('FillSettingsPrompt') && (!user?.photo || !user?.about)) {
+  if (
+    isAuthenticated &&
+    !closedPrompts.includes('FillSettingsPrompt') &&
+    (!user?.photo || !user?.about)
+  ) {
     return 'FillSettingsPrompt';
   } else if (
     (!isAuthenticated && !closedPrompts.includes('FundraiserPrompt')) ||
@@ -144,7 +184,7 @@ const Prompts = () => {
 
   return (
     <div className="w-full flex justify-center bg-accent-light mb-2">
-      <div className="w-[800px] p-2.5 flex justify-between text-left gap-2">
+      <div className="w-[800px] p-2.5 flex justify-between text-left gap-2 relative">
         {promptTosShow === 'FillSettingsPrompt' && (
           <FillSettingsPrompt closePrompt={closePrompt} />
         )}
