@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer } from 'react';
+import { createContext, useContext, useReducer } from 'react';
 
 import { Map, fromJS } from 'immutable';
 
@@ -17,7 +17,6 @@ export const models = [
   'ticket',
   'listing',
   'message',
-  'metric',
   'product',
   'post',
   'photo',
@@ -209,6 +208,16 @@ const reducer = (state, action) => {
     case constants.GET_BALANCE_SUCCESS:
       return state.setIn(
         ['balance', action.filterKey],
+        Map({
+          data: action.results,
+          loading: false,
+          error: null,
+          receivedAt: Date.now(),
+        }),
+      );
+    case constants.GET_TOKEN_SALES_SUCCESS:
+      return state.setIn(
+        ['tokenSales', action.filterKey],
         Map({
           data: action.results,
           loading: false,
@@ -533,7 +542,28 @@ export const PlatformProvider = ({ children }) => {
         return action;
       }),
 
-    findBalance: (filterKey) => state.getIn(['balance', filterKey, 'data']),
+    findBalance: (filterKey) => {
+      return state.getIn(['balance', filterKey, 'data']);
+    },
+  };
+
+  platform.metrics = {
+    getTokenSales: () =>
+      api.get('/metrics/token-sales').then((res) => {
+        const results = fromJS(res.data.results);
+
+        const action = {
+          filterKey: 'metrics',
+          results,
+          type: constants.GET_TOKEN_SALES_SUCCESS,
+        };
+        dispatch(action);
+        return action;
+      }),
+
+    findTokenSales: (filterKey) => {
+      return state.getIn(['tokenSales', filterKey, 'data']);
+    },
   };
 
   return (
