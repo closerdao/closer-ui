@@ -51,7 +51,7 @@ const CustomTooltipContent = ({
               ? { color: colorOverride }
               : { color: CHART_COLORS[index] }
           }
-        >{`${entry.name}: ${entry.value}`}</div>
+        >{`${entry.name}: ${entry.value} index=${index} `}</div>
       ))}
 
       {layout === 'horizontal' && (
@@ -136,18 +136,18 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
           <Legend iconType="circle" />
           {layout === 'horizontal' && (
             <>
-              <Bar dataKey="events" stackId="a" fill={CHART_COLORS[1]} />
-              <Bar dataKey="spaces" stackId="a" fill={CHART_COLORS[2]} />
-              <Bar dataKey="food" stackId="a" fill={CHART_COLORS[3]} />
+              <Bar dataKey="events" stackId="a" fill={CHART_COLORS[0]} />
+              <Bar dataKey="spaces" stackId="a" fill={CHART_COLORS[1]} />
+              <Bar dataKey="food" stackId="a" fill={CHART_COLORS[2]} />
 
               {APP_NAME === 'tdf' && (
                 <Bar
                   dataKey="subscriptions"
                   stackId="a"
-                  fill={CHART_COLORS[4]}
+                  fill={CHART_COLORS[3]}
                 />
               )}
-              <Bar dataKey="hospitality" stackId="a" fill={CHART_COLORS[0]}>
+              <Bar dataKey="hospitality" stackId="a" fill={CHART_COLORS[4]}>
                 {' '}
                 <LabelList
                   dataKey="totalOperations"
