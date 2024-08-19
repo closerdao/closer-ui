@@ -51,7 +51,7 @@ const CustomTooltipContent = ({
               ? { color: colorOverride }
               : { color: CHART_COLORS[index] }
           }
-        >{`${entry.name}: ${entry.value} index=${index} `}</div>
+        >{`${entry.name}: ${entry.value} `}</div>
       ))}
 
       {layout === 'horizontal' && (
