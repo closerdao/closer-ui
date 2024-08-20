@@ -139,15 +139,15 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
               <Bar dataKey="events" stackId="a" fill={CHART_COLORS[0]} />
               <Bar dataKey="spaces" stackId="a" fill={CHART_COLORS[1]} />
               <Bar dataKey="food" stackId="a" fill={CHART_COLORS[2]} />
-
+              <Bar dataKey="hospitality" stackId="a" fill={CHART_COLORS[3]}>
+                
               {APP_NAME === 'tdf' && (
                 <Bar
                   dataKey="subscriptions"
                   stackId="a"
-                  fill={CHART_COLORS[3]}
+                  fill={CHART_COLORS[4]}
                 />
               )}
-              <Bar dataKey="hospitality" stackId="a" fill={CHART_COLORS[4]}>
                 {' '}
                 <LabelList
                   dataKey="totalOperations"

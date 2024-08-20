@@ -210,7 +210,9 @@ export const getBookedNights = ({
   TIME_ZONE: string;
   firstBookingDate?: string;
 }) => {
-  // if guest left this day, do not count this last day as a booked night
+  nightlyBookings = nightlyBookings?.filter((booking: any) => {
+    return paidStatuses.includes(booking.get('status'));
+  });
 
   if (!nightlyBookings || !nightlyListings)
     return { bookedNights: [], numBookedNights: 0 };
@@ -220,7 +222,7 @@ export const getBookedNights = ({
     end = toEndOfDay(new Date(), TIME_ZONE);
   }
   const bookedNights: any[] = [];
-  let numBookedNights = 0;
+
   const listingsWithoutBookings = nightlyListings.filter(
     (listing: any) =>
       !nightlyBookings.find(
@@ -260,11 +262,6 @@ export const getBookedNights = ({
         nights: numOverlappingNights < 0 ? 0 : numOverlappingNights,
         totalNights: totalNights || 0,
       });
-      numBookedNights += listing?.get('private') ? 1 : booking.get('adults');
-    }
-
-    if (paidStatuses.includes(booking.get('status'))) {
-      numBookedNights += listing?.get('private') ? 1 : booking.get('adults');
     }
   });
 
@@ -281,9 +278,15 @@ export const getBookedNights = ({
     });
   });
 
+  const groupedBookedNights = groupNightlyByListingAndRoom(bookedNights);
+  const sumBookedNights = groupedBookedNights.reduce(
+    (sum, current) => sum + current.nights,
+    0,
+  );
+
   return {
-    bookedNights: groupNightlyByListingAndRoom(bookedNights) || [],
-    numBookedNights,
+    bookedNights: groupedBookedNights || [],
+    numBookedNights: sumBookedNights,
   };
 };
 
