@@ -160,6 +160,11 @@ const MemberMenu = () => {
         enabled: process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true',
       },
       {
+        label: t('navigation_buy_token'), 
+        url: '/token',
+        enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
+      },
+      {
         label: 'Blog',
         url: '/blog',
         enabled: process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true',
