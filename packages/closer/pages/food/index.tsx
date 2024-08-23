@@ -46,7 +46,7 @@ const FoodPage = () => {
       <Head>
         <title>{t('food_edit_title')}</title>
       </Head>
-      {foodOptions && foodOptions.get('error') && (
+      {foodOptions?.get('error') && (
         <div className="validation-error">{foodOptions.get('error')}</div>
       )}
 

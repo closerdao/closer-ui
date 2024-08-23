@@ -64,7 +64,7 @@ EditFood.getInitialProps = async (context: NextPageContext) => {
   const { query } = context;
   try {
     if (!query.slug) {
-      throw new Error('No food');
+      throw new Error('No food slug provided');
     }
 
     const [foodRes, messages] = await Promise.all([

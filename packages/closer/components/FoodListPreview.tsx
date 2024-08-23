@@ -43,10 +43,10 @@ const FoodListPreview = ({ food }: Props) => {
           />
         )}
       </div>
-      {user && user.roles.includes('space-host') && (
+      {user?.roles?.includes('space-host') && (
         <div className="card-footer">
-          {(user.roles.includes('admin') ||
-            user.roles.includes('space-host')) && (
+          {(user?.roles?.includes('admin') ||
+            user?.roles?.includes('space-host')) && (
             <Link href={`/food/${food.get('slug')}/edit`} className="btn mr-2">
               {t('food_preview_edit')}
             </Link>

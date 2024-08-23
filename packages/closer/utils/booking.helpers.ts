@@ -38,6 +38,17 @@ export const getBookingType = (
   return '🏡 Stay';
 };
 
+interface FiatTotalParams {
+  isTeamBooking: boolean;
+  foodOption: string;
+  eventTotal?: number;
+  utilityTotal: number;
+  foodTotal: number;
+  accommodationFiatTotal: number;
+  useTokens?: boolean;
+  useCredits?: boolean;
+}
+
 export const getFiatTotal = ({
   isTeamBooking,
   foodOption,
@@ -47,16 +58,7 @@ export const getFiatTotal = ({
   accommodationFiatTotal,
   useTokens,
   useCredits,
-}: {
-  isTeamBooking: boolean;
-  foodOption: string;
-  eventTotal?: number;
-  utilityTotal: number;
-  foodTotal: number;
-  accommodationFiatTotal: number;
-  useTokens?: boolean;
-  useCredits?: boolean;
-}) => {
+}: FiatTotalParams) => {
   if (isTeamBooking) {
     return 0;
   }
@@ -68,6 +70,15 @@ export const getFiatTotal = ({
   return utilityTotal + foodTotal + accommodationTotal + (eventTotal || 0);
 };
 
+interface UtilityTotalParams {
+  utilityFiatVal: number | undefined;
+  updatedAdults: number;
+  updatedDuration: number;
+  discountRate: number;
+  isTeamBooking: boolean | undefined;
+  isUtilityOptionEnabled: boolean;
+}
+
 export const getUtilityTotal = ({
   utilityFiatVal,
   updatedAdults,
@@ -75,14 +86,7 @@ export const getUtilityTotal = ({
   discountRate,
   isTeamBooking,
   isUtilityOptionEnabled,
-}: {
-  utilityFiatVal: number | undefined;
-  updatedAdults: number;
-  updatedDuration: number;
-  discountRate: number;
-  isTeamBooking: boolean | undefined;
-  isUtilityOptionEnabled: boolean;
-}) => {
+}: UtilityTotalParams) => {
   if (isTeamBooking || !utilityFiatVal || !isUtilityOptionEnabled) {
     return 0;
   }
@@ -570,6 +574,16 @@ export const addOneHour = (time: string) => {
   }
   return String(Number(time.substring(0, 2)) + 1 + ':00');
 };
+interface FoodTotalParams {
+  isHourlyBooking: boolean;
+  foodOption: string;
+  foodPriceBasic: number;
+  foodPriceChef: number;
+  durationInDays: number;
+  adults: number;
+  isFoodOptionEnabled: boolean;
+  isTeamMember: boolean;
+}
 
 export const getFoodTotal = ({
   isHourlyBooking,
@@ -580,16 +594,7 @@ export const getFoodTotal = ({
   adults,
   isFoodOptionEnabled,
   isTeamMember,
-}: {
-  isHourlyBooking: boolean;
-  foodOption: string;
-  foodPriceBasic: number;
-  foodPriceChef: number;
-  durationInDays: number;
-  adults: number;
-  isFoodOptionEnabled: boolean;
-  isTeamMember: boolean;
-}) => {
+}: FoodTotalParams) => {
   if (isHourlyBooking || !isFoodOptionEnabled || isTeamMember) return 0;
   switch (foodOption) {
     case 'no_food':
@@ -603,36 +608,33 @@ export const getFoodTotal = ({
   }
 };
 
+interface FoodPriceParams {
+  foodOption: string;
+  isTeamBooking: boolean | undefined;
+  isFood: boolean;
+  adults: number | undefined;
+  duration: number | undefined;
+  eventId: string | undefined;
+  bookingConfig: BookingConfig | undefined | null;
+}
+
 export const calculateFoodPrice = ({
   foodOption,
   isTeamBooking,
   isFood,
   adults,
   duration,
-  bookingConfig
-}: {
-  foodOption: string;
-  isTeamBooking: boolean | undefined;
-  isFood: boolean;
-  adults: number | undefined;
-    duration: number | undefined;
-    eventId: string | undefined;
-    bookingConfig: BookingConfig | undefined | null;
-  }) => {
-    if (
-    !isFood ||
-    !adults ||
-    !duration
-  )
-    return 0;
+  bookingConfig,
+}: FoodPriceParams) => {
+  if (!isFood || !adults || !duration) return 0;
   if (isTeamBooking === true) return 0;
 
-  const foodPricePerNight = foodOption === 'chef' ? bookingConfig?.foodPriceChef : bookingConfig?.foodPriceBasic;
+  const foodPricePerNight =
+    foodOption === 'chef'
+      ? bookingConfig?.foodPriceChef
+      : bookingConfig?.foodPriceBasic;
   if (isFood) {
-    return (
-     (foodPricePerNight || 0) * (adults || 1) * (duration || 1) ||
-      0
-    );
+    return (foodPricePerNight || 0) * (adults || 1) * (duration || 1) || 0;
   }
   return 0;
 };
