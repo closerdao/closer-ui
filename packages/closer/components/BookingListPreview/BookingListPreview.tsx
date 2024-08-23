@@ -64,6 +64,7 @@ const BookingListPreview = ({
     duration,
     adminBookingReason,
     roomOrBedNumbers,
+    foodFiat,
   } = bookingMapItem.toJS();
 
   const router = useRouter();
@@ -231,10 +232,23 @@ const BookingListPreview = ({
           )}
         </p>
       </div>
+
+      {utilityFiat && (
+        <div>
+          <p className="card-feature">{t('booking_card_payment_utility')}</p>
+          <p>
+            {priceFormat(utilityFiat)}{' '}
+            {isNotPaid && (
+              <span className="text-failure">{t('booking_card_unpaid')}</span>
+            )}
+          </p>
+        </div>
+      )}
+
       <div>
-        <p className="card-feature">{t('booking_card_payment_utility')}</p>
+        <p className="card-feature">{t('booking_food')}</p>
         <p>
-          {priceFormat(utilityFiat)}{' '}
+          {priceFormat(foodFiat)}{' '}
           {isNotPaid && (
             <span className="text-failure">{t('booking_card_unpaid')}</span>
           )}

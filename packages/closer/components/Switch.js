@@ -13,7 +13,7 @@ const Switch = ({ checked, disabled, name, label, onChange }) => (
       disabled={disabled}
       onChange={() => onChange(!checked)}
     />
-    <div className="w-11 h-6 bg-gray-200 rounded-full border border-gray-200 flex items-center toggle-bg dark:bg-gray-700 dark:border-gray-600"></div>
+    <div className={` ${disabled ? 'toggle-bg-disabled': 'toggle-bg'} w-11 h-6 bg-gray-200 rounded-full border border-gray-200 flex items-center toggle-bg dark:bg-gray-700 dark:border-gray-600`}></div>
     {label && <span className="label">{label}</span>}
   </label>
 );

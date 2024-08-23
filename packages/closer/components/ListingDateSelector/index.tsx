@@ -72,7 +72,7 @@ const ListingDateSelector = ({
             isEditMode
               ? 'py-2 px-5 w-full border-2'
               : 'py-1 px-0 w-auto border-0'
-          } min-h-[20px] font-bold sm:font-normal underline sm:no-underline text-black  sm:border-2 border-black normal-case  sm:w-full  sm:px-3 sm:p-3 sm:py-2 text-sm bg-white`}
+          } bg-white min-h-[20px] font-bold sm:font-normal underline sm:no-underline text-black  sm:border-2 border-black normal-case  sm:w-full  sm:px-3 sm:p-3 sm:py-2 text-sm `}
         >
           {isHourlyBooking &&
             !isStartTimeSet &&

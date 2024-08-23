@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer } from 'react';
+import { createContext, useContext, useReducer } from 'react';
 
 import { Map, fromJS } from 'immutable';
 
@@ -27,6 +27,7 @@ export const models = [
   'user',
   'volunteer',
   'lesson',
+  'food',
 ];
 
 const filterToKey = (filter) => JSON.stringify(filter) || '__';

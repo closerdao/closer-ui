@@ -5,14 +5,17 @@ import utc from 'dayjs/plugin/utc';
 
 import {
   BOOKING_EXISTS_ERROR,
+  DEFAULT_FOOD_OPTIONS,
   USER_REJECTED_TRANSACTION_ERROR,
 } from '../constants';
 import { User } from '../contexts/auth/types';
 import {
   AccommodationUnit,
+  BookingConfig,
   BookingItem,
   BookingWithUserAndListing,
   CloserCurrencies,
+  Event,
   Listing,
   Price,
 } from '../types';
@@ -35,48 +38,55 @@ export const getBookingType = (
   return '🏡 Stay';
 };
 
-export const getFiatTotal = (
-  isTeamBooking: boolean,
-  foodOption: string,
-  utilityTotal: number,
-  accomodationTotal: number,
-  eventTotal?: number,
-  useTokens?: boolean,
-  useCredits?: boolean,
-) => {
+export const getFiatTotal = ({
+  isTeamBooking,
+  foodOption,
+  eventTotal,
+  utilityTotal,
+  foodTotal,
+  accommodationFiatTotal,
+  useTokens,
+  useCredits,
+}: {
+  isTeamBooking: boolean;
+  foodOption: string;
+  eventTotal?: number;
+  utilityTotal: number;
+  foodTotal: number;
+  accommodationFiatTotal: number;
+  useTokens?: boolean;
+  useCredits?: boolean;
+}) => {
   if (isTeamBooking) {
     return 0;
   }
-  const accommodationFiatTotal =
-    useTokens || useCredits ? 0 : accomodationTotal;
-  if (foodOption === 'no_food') {
-    return accommodationFiatTotal + (eventTotal || 0);
-  }
-  return utilityTotal + accommodationFiatTotal + (eventTotal || 0);
+  const accommodationTotal =
+    useTokens || useCredits ? 0 : accommodationFiatTotal;
+
+  foodTotal = foodOption !== 'no_food' ? foodTotal : 0;
+
+  return utilityTotal + foodTotal + accommodationTotal + (eventTotal || 0);
 };
 
 export const getUtilityTotal = ({
-  foodOption,
   utilityFiatVal,
-  isPrivate,
   updatedAdults,
   updatedDuration,
   discountRate,
   isTeamBooking,
+  isUtilityOptionEnabled,
 }: {
-  foodOption: string;
   utilityFiatVal: number | undefined;
-  isPrivate: boolean;
   updatedAdults: number;
   updatedDuration: number;
   discountRate: number;
   isTeamBooking: boolean | undefined;
+  isUtilityOptionEnabled: boolean;
 }) => {
-  if (foodOption === 'no_food' || isTeamBooking || !utilityFiatVal) {
+  if (isTeamBooking || !utilityFiatVal || !isUtilityOptionEnabled) {
     return 0;
   }
-  const multiplier = isPrivate ? 1 : updatedAdults;
-  const total = utilityFiatVal * multiplier * updatedDuration * discountRate;
+  const total = utilityFiatVal * updatedAdults * updatedDuration * discountRate;
   return total;
 };
 
@@ -559,4 +569,92 @@ export const addOneHour = (time: string) => {
     return String('0' + (Number(time.substring(0, 2)) + 1) + ':00');
   }
   return String(Number(time.substring(0, 2)) + 1 + ':00');
+};
+
+export const getFoodTotal = ({
+  isHourlyBooking,
+  foodOption,
+  foodPriceBasic,
+  foodPriceChef,
+  durationInDays,
+  adults,
+  isFoodOptionEnabled,
+  isTeamMember,
+}: {
+  isHourlyBooking: boolean;
+  foodOption: string;
+  foodPriceBasic: number;
+  foodPriceChef: number;
+  durationInDays: number;
+  adults: number;
+  isFoodOptionEnabled: boolean;
+  isTeamMember: boolean;
+}) => {
+  if (isHourlyBooking || !isFoodOptionEnabled || isTeamMember) return 0;
+  switch (foodOption) {
+    case 'no_food':
+      return 0;
+    case 'basic':
+      return foodPriceBasic * adults * durationInDays;
+    case 'chef':
+      return foodPriceChef * adults * durationInDays;
+    default:
+      return 0;
+  }
+};
+
+export const calculateFoodPrice = ({
+  foodOption,
+  isTeamBooking,
+  isFood,
+  adults,
+  duration,
+  bookingConfig
+}: {
+  foodOption: string;
+  isTeamBooking: boolean | undefined;
+  isFood: boolean;
+  adults: number | undefined;
+    duration: number | undefined;
+    eventId: string | undefined;
+    bookingConfig: BookingConfig | undefined | null;
+  }) => {
+    if (
+    !isFood ||
+    !adults ||
+    !duration
+  )
+    return 0;
+  if (isTeamBooking === true) return 0;
+
+  const foodPricePerNight = foodOption === 'chef' ? bookingConfig?.foodPriceChef : bookingConfig?.foodPriceBasic;
+  if (isFood) {
+    return (
+     (foodPricePerNight || 0) * (adults || 1) * (duration || 1) ||
+      0
+    );
+  }
+  return 0;
+};
+
+export const getFoodOption = ({
+  eventId,
+  event,
+}: {
+  eventId: string | undefined;
+  event: Event | undefined;
+}) => {
+  if (!eventId || !event) return DEFAULT_FOOD_OPTIONS[1];
+  if (!event?.foodOption) return DEFAULT_FOOD_OPTIONS[1];
+
+  switch (event?.foodOption) {
+    case 'no_food':
+      return DEFAULT_FOOD_OPTIONS[0];
+    case 'basic':
+      return DEFAULT_FOOD_OPTIONS[1];
+    case 'chef':
+      return DEFAULT_FOOD_OPTIONS[2];
+    default:
+      return DEFAULT_FOOD_OPTIONS[1];
+  }
 };

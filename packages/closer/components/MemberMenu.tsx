@@ -100,6 +100,12 @@ const MemberMenu = () => {
         roles: ['space-host'],
       },
       {
+        label: 'Edit food',
+        url: '/food',
+        enabled: isBookingEnabled,
+        roles: ['space-host'],
+      },
+      {
         label: t('navigation_stay'),
         url: '/stay',
         enabled: isBookingEnabled,

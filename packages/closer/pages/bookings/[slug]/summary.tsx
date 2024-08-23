@@ -42,7 +42,14 @@ interface Props extends BaseBookingParams {
   paymentConfig: PaymentConfig | null;
 }
 
-const Summary = ({ booking, listing, event, error, bookingConfig, paymentConfig }: Props) => {
+const Summary = ({
+  booking,
+  listing,
+  event,
+  error,
+  bookingConfig,
+  paymentConfig,
+}: Props) => {
   const t = useTranslations();
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -64,6 +71,7 @@ const Summary = ({ booking, listing, event, error, bookingConfig, paymentConfig 
 
   const {
     utilityFiat,
+    foodFiat,
     rentalToken,
     rentalFiat,
     useTokens,
@@ -171,6 +179,7 @@ const Summary = ({ booking, listing, event, error, bookingConfig, paymentConfig 
           />
           <SummaryCosts
             utilityFiat={utilityFiat}
+            foodFiat={foodFiat}
             useTokens={useTokens || false}
             useCredits={booking?.useCredits || false}
             accomodationCost={useTokens ? rentalToken : rentalFiat}
@@ -226,26 +235,27 @@ Summary.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
 
   try {
-    const [bookingRes, bookingConfigRes, paymentConfigRes, messages] = await Promise.all([
-      api
-        .get(`/booking/${query.slug}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
-        })
-        .catch(() => {
+    const [bookingRes, bookingConfigRes, paymentConfigRes, messages] =
+      await Promise.all([
+        api
+          .get(`/booking/${query.slug}`, {
+            headers: (req as NextApiRequest)?.cookies?.access_token && {
+              Authorization: `Bearer ${
+                (req as NextApiRequest)?.cookies?.access_token
+              }`,
+            },
+          })
+          .catch(() => {
+            return null;
+          }),
+        api.get('/config/booking').catch(() => {
           return null;
         }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-      api.get('/config/payment').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+        api.get('/config/payment').catch(() => {
+          return null;
+        }),
+        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
     const paymentConfig = paymentConfigRes?.data?.results?.value;
@@ -271,7 +281,15 @@ Summary.getInitialProps = async (context: NextPageContext) => {
     const event = optionalEvent?.data?.results;
     const listing = optionalListing?.data?.results;
 
-    return { booking, listing, event, error: null, bookingConfig, paymentConfig, messages };
+    return {
+      booking,
+      listing,
+      event,
+      error: null,
+      bookingConfig,
+      paymentConfig,
+      messages,
+    };
   } catch (err) {
     console.log('Error', err);
     return {

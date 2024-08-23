@@ -58,6 +58,7 @@ export { default as BookingConfirmationPage } from './pages/bookings/[slug]/conf
 export { default as BookingPage } from './pages/bookings/[slug]/index';
 export { default as BookingQuestionsPage } from './pages/bookings/[slug]/questions';
 export { default as BookingSummaryPage } from './pages/bookings/[slug]/summary';
+export { default as FoodSelectionPage } from './pages/bookings/[slug]/food';
 export { default as AllBookingsRequestsPage } from './pages/bookings/all';
 export { default as BookingsCalendarPage } from './pages/bookings/calendar';
 export { default as CreateBookingAccomodationPage } from './pages/bookings/create/accomodation';
@@ -87,6 +88,9 @@ export { default as EditLessonPage } from './pages/learn/[slug]/edit';
 export { default as LearnCategoryPage } from './pages/learn/category/[slug]/';
 export { default as CreateLessonPage } from './pages/learn/create';
 export { default as ListingsPage } from './pages/listings';
+export { default as FoodPage } from './pages/food';
+export { default as CreateFoodPage } from './pages/food/create';
+export { default as EditFoodPage } from './pages/food/[slug]/edit';
 export { default as EditListingPage } from './pages/listings/[slug]/edit';
 export { default as CreateListingPage } from './pages/listings/create';
 export { default as LoginPage } from './pages/login';
