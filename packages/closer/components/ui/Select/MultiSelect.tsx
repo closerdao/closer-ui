@@ -55,7 +55,7 @@ const MultiSelect: FC<MultiSelectProps> = React.memo(
           data-testid={dataTestId}
           tagOptionComponent={(props) => (
             <Tag
-              className="bg-accent-light border-accent-core ml-2 mt-2"
+              className="bg-accent-light border-accent ml-2 mt-2"
               remove={() => handleRemove(props.dataItem)}
             >
               {props.children}
