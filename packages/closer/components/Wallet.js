@@ -1,10 +1,10 @@
 import { useContext } from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import { WalletState } from '../contexts/wallet';
 import WalletActions from './WalletActions';
 import WalletHeader from './WalletHeader';
-import { useTranslations } from 'next-intl';
-
 
 const Wallet = () => {
   const t = useTranslations();
@@ -27,19 +27,19 @@ const Wallet = () => {
         <div className="flex flex-col gap-2 mt-4">
           <div className="flex justify-between items-center">
             <p>{t('wallet_ceur')}</p>
-            <p className="font-bold">{balanceCeurAvailable.toFixed(2)}</p>
+            <p className="font-bold">{balanceCeurAvailable?.toFixed(2)}</p>
           </div>
           <div className="flex justify-between items-center">
             <p>{t('wallet_tdf')}</p>
-            <p className="font-bold">{balanceTotal}</p>
+            <p className="font-bold">{balanceTotal?.toFixed(2)}</p>
           </div>
           <div className="flex justify-between items-center">
             <p>{t('wallet_tdf_available')}</p>
-            <p className="font-bold">{balanceAvailable}</p>
+            <p className="font-bold">{balanceAvailable?.toFixed(2)}</p>
           </div>
           <div className="flex justify-between items-center">
             <p>{t('wallet_pop')}</p>
-            <p className="font-bold">{proofOfPresence}</p>
+            <p className="font-bold">{proofOfPresence?.toFixed(2)}</p>
           </div>
         </div>
       )}
