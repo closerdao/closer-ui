@@ -251,7 +251,7 @@ export const BOOKING_EXISTS_ERROR =
   'execution reverted: BookingFacet: Booking already exists';
 export const USER_REJECTED_TRANSACTION_ERROR = 'user rejected transaction';
 
-export const MAX_BOOKINGS_TO_FETCH = 2000;
+export const MAX_BOOKINGS_TO_FETCH = 3000;
 export const BOOKINGS_PER_PAGE = 36;
 
 export const MAX_CREDITS_PER_MONTH = 90;
@@ -262,4 +262,24 @@ export const MAX_USERS_TO_FETCH = 2000;
 
 export const MAX_LISTINGS_TO_FETCH = 100;
 
-export const DEFAULT_AVAILABILITY_RANGE_TO_CHECK = 120
+export const DEFAULT_AVAILABILITY_RANGE_TO_CHECK = 120;
+
+export const paidStatuses = [
+  'paid',
+  'tokens-staked',
+  'credits-paid',
+  'checked-in',
+  'checked-out',
+];
+export const dashboardRelevantStatuses = [
+  ...paidStatuses,
+  'pending',
+  'confirmed',
+];
+
+export const STRIPE_AMOUNT_MULTIPLIER = 100;
+
+export const GNOSIS_SAFE_ADDRESS = '0x5E810b93c51981eccA16e030Ea1cE8D8b1DEB83b';
+export const BLOG_POSTS_PER_PAGE = 9;
+
+export const DEFAULT_BLOG_IMAGE_ID = '66a7da14aca528c59057785e';

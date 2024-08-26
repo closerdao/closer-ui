@@ -52,7 +52,6 @@ const DatesSelector = ({
   futureEvents,
   event,
 }: Props) => {
-
   const t = useTranslations();
   const isBookingEnabled =
     bookingConfig?.enabled &&

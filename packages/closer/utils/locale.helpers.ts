@@ -48,8 +48,12 @@ export async function loadLocaleData(
     }
   }
 
-  if (!locale || !appName) {
-    throw new Error('Locale or appName is undefined');
+  if (!locale) {
+    throw new Error('Locale is undefined');
+  }
+
+  if (!appName) {
+    throw new Error('appName is undefined');
   }
 
   const [messagesLocalRes, messagesBaseRes] = await importLocaleData(

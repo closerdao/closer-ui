@@ -86,7 +86,6 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             <p className="step-title mb-8">Share this page:</p>
             <div className="flex gap-2">
               <FacebookShareButton
-                quote="Support Traditional Dream Factory"
                 url="https://www.traditionaldreamfactory.com/support-us"
               >
                 <FacebookIcon size={32} round={true} />

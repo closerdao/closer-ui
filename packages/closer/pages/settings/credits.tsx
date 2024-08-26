@@ -8,11 +8,10 @@ import Heading from '../../components/ui/Heading';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { Page404, api } from '../..';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
-import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
+import PageNotFound from '../not-found';
 
 const CreditsPage = () => {
   const t = useTranslations();
@@ -20,7 +19,7 @@ const CreditsPage = () => {
   const { platform }: any = usePlatform();
 
   if (process.env.NEXT_PUBLIC_FEATURE_CARROTS !== 'true') {
-    return <Page404 error="" />;
+    return <PageNotFound error="" />;
   }
 
   return (
@@ -41,10 +40,9 @@ const CreditsPage = () => {
             className="p-4 text-xl text-center font-normal w-full"
           >
             {' '}
-            { t('carrots_subheading')}
+            {t('carrots_subheading')}
           </Heading>
         </div>
-
         <Card>
           <div className="flex">
             <Heading level={3} className="w-1/2">
@@ -52,36 +50,30 @@ const CreditsPage = () => {
             </Heading>
             <Heading level={3} className="w-1/2 text-right">
               {(platform.carrots.findBalance('carrots') || 0).toFixed(2)}{' '}
-              { t('carrots_balance')}
+              {t('carrots_balance')}
             </Heading>
           </div>
         </Card>
-
         {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
           <Heading level={3}>
             {t('carrots_subheading_what_are')}
           </Heading>
         )}
-
         {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
           <div>
-            <p className="mb-4">{t('carrots_what_are_1')}</p>
+            <p className="mb-4">{t('carrots_what_are_1')}</p> 
             <p className="mb-4">{t('carrots_what_are_2')}</p>
           </div>
         )}
-
-        <Heading level={3}>
-          {APP_NAME && t('carrots_subheading_what')}
-        </Heading>
-
+        <Heading level={3}>{t('carrots_subheading_what')}</Heading>
         <div>
-          <p className="mb-4">{APP_NAME && t('carrots_what_1')}</p>
-          <p className="mb-4">{APP_NAME && t('carrots_what_2')}</p>
+          <p className="mb-4">{t('carrots_what_1')}</p>
+          <p className="mb-4">{t('carrots_what_2')}</p>
           {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
             <p className="mb-4">{t('carrots_what_2_5')}</p>
           )}
-          <p className="mb-4">{APP_NAME && t('carrots_what_3')}</p>
-          <p className="mb-4">{APP_NAME && t('carrots_what_4')}</p>
+          <p className="mb-4">{t('carrots_what_3')}</p>
+          <p className="mb-4">{t('carrots_what_4')}</p>
 
           {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
             <>
@@ -90,13 +82,13 @@ const CreditsPage = () => {
             </>
           )}
         </div>
-
         <Heading level={3}>{t('carrots_subheading_where')}</Heading>
-
         <div>
           <p className="mb-4">{t('carrots_where_1')}</p>
           <Profile isDemo={true} />
         </div>
+
+        <Heading level={3}>{t('carrots_subheading_how_to_use')}</Heading>
 
         {APP_NAME && (
           <>
@@ -118,7 +110,6 @@ const CreditsPage = () => {
         )}
 
         <RedeemCredits isDemo={true} />
-
         {/* {APP_NAME && APP_NAME.toLowerCase() !== 'moos' && (
           <>
             <Heading level={3}>{t('carrots_subheading_how_to_earn')}</Heading>
@@ -183,17 +174,11 @@ CreditsPage.getInitialProps = async (context: NextPageContext) => {
       context?.locale,
       process.env.NEXT_PUBLIC_APP_NAME,
     );
-    const generalRes = await api.get('/config/general').catch(() => null);
-    const generalConfig = generalRes?.data?.results?.value;
-
     return {
-      generalConfig,
       messages,
     };
   } catch (err: unknown) {
     return {
-      generalConfig: null,
-      error: parseMessageFromError(err),
       messages: null,
     };
   }

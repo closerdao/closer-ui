@@ -22,6 +22,7 @@ export const PUT_SUCCESS = 'PUT_SUCCESS';
 export const PATCH_SUCCESS = 'PATCH_SUCCESS';
 export const POST_SUCCESS = 'POST_SUCCESS';
 export const DELETE_SUCCESS = 'DELETE_SUCCESS';
+export const GET_TOKEN_SALES_SUCCESS = 'GET_TOKEN_SALES_SUCCESS';
 export const GET_ERROR = 'GET_ERROR';
 export const GET_ONE_ERROR = 'GET_ONE_ERROR';
 export const GET_IN_ERROR = 'GET_IN_ERROR';

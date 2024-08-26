@@ -1,81 +1,63 @@
 import Head from 'next/head';
 import Link from 'next/link';
-// import Image from 'next/image';
 import { useRouter } from 'next/router';
 
-import { useState } from 'react';
-
-import RichTextEditor from '../../../components/RichTextEditor';
+import EditModel from '../../../components/EditModel';
+import { Heading } from '../../../components/ui';
 
 import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../../contexts/auth';
-import api from '../../../utils/api';
+import models from '../../../models';
 import { loadLocaleData } from '../../../utils/locale.helpers';
+import PageNotFound from '../../not-found';
 
 const Create = () => {
+  const t = useTranslations();
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
-  const [html, setHtml] = useState('');
-  const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('');
-  const onChange = (value: string) => {
-    setHtml(value);
-  };
+  const { user } = useAuth();
+  const isAdmin = user?.roles.includes('admin');
+  const isModerator = user?.roles.includes('moderator');
 
-  const persist = async () => {
-    const res = await api.post('/article', { title, category, html });
-    router.push(decodeURIComponent(`/blog/${res.data.results.slug}`));
-  };
+  if (!isAdmin && !isModerator) {
+    return <PageNotFound error="User may not access" />;
+  }
 
   return (
     <>
       <Head>
-        <title>{title || 'Write article'}</title>
+        <title>{t('blog_write_article')}</title>
 
         <meta property="og:type" content="article" />
       </Head>
-      <form
-        onSubmit={(e) => e.preventDefault()}
-        className="main-content w-full max-w-6xl"
-      >
-        {/* { article.photo && <div className="relative w-full h-96 md:basis-1/2 md:w-96">
-          <Image
-            src={ fullImageUrl }
-            alt={ article.title }
-            fill={ true }
-            className="bg-cover bg-center"
-          />
-        </div> } */}
-        <div className="mb-4">
-          <div>
-            <Link href="/blog">◀️ Blog</Link>
-          </div>
-          <input
-            type="text"
-            className="text-xl mb-2"
-            placeholder="Article Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <input
-            type="text"
-            className="mb-2"
-            placeholder="Article Category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          />
-          {isAuthenticated && (
-            <div>
-              <button className="btn-primary" type="submit" onClick={persist}>
-                Save
-              </button>
-            </div>
-          )}
-        </div>
 
-        <RichTextEditor value={html} onChange={onChange} />
-      </form>
+      <main className="main-content w-full max-w-4xl flex flex-col gap-8">
+        <section>
+          <div>
+            <Link href="/blog" className="uppercase text-accent font-bold">
+              ◀️ {t('blog_title')}
+            </Link>
+          </div>
+          <Heading>{t('blog_write_article')}</Heading>
+        </section>
+        <section className=" w-full flex justify-center ">
+          <div
+            className={
+              '"w-full relative bg-accent-light rounded-md w-full  min-h-[400px]" '
+            }
+          >
+            <EditModel
+              endpoint="/article"
+              fields={models.article}
+              onSave={(article) => router.push(`/blog/${article.slug}`)}
+              allowDelete
+              deleteButton="Delete article"
+              onDelete={() => router.push('/blog')}
+            />
+          </div>
+        </section>
+      </main>
     </>
   );
 };
