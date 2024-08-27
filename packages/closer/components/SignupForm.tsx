@@ -11,8 +11,8 @@ import { event as gaEvent } from 'nextjs-google-analytics';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import { useAuth } from '../contexts/auth';
 import { getRedirectUrl } from '../utils/auth.helpers';
-import GoogleButton from './GoogleButton';
 import { isInputValid } from '../utils/helpers';
+import GoogleButton from './GoogleButton';
 import { Button, Card, Checkbox, ErrorMessage, Input } from './ui';
 import Heading from './ui/Heading';
 
@@ -221,17 +221,19 @@ const SignupForm = ({ app }: Props) => {
               {t('signup_form_create')}
             </Button>
 
-            <GoogleButton
-              isLoading={isGoogleLoading}
-              onClick={authUserWithGoogle}
-            />
+            {process.env.NEXT_PUBLIC_FIREBASE_CONFIG && (
+              <GoogleButton
+                isLoading={isGoogleLoading}
+                onClick={authUserWithGoogle}
+              />
+            )}
           </div>
           <div className="text-center text-sm">
             {t('signup_form_have_account')}{' '}
-              <Link
-                data-testid="login-link"
+            <Link
+              data-testid="login-link"
               className="text-accent underline font-bold"
-                href={`/login${signupQuery}`}
+              href={`/login${signupQuery}`}
             >
               {t('login_title')}{' '}
             </Link>

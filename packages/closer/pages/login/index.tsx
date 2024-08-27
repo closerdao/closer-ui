@@ -220,10 +220,13 @@ const Login = () => {
                     </div>
                   </div>
                 </form>
-                <GoogleButton
-                  isLoading={isGoogleLoading}
-                  onClick={authUserWithGoogle}
-                />
+
+                {process.env.NEXT_PUBLIC_FIREBASE_CONFIG && (
+                  <GoogleButton
+                    isLoading={isGoogleLoading}
+                    onClick={authUserWithGoogle}
+                  />
+                )}
               </div>
             ) : (
               <div>
