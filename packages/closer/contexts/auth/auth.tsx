@@ -12,6 +12,7 @@ import {
 
 import { AxiosError } from 'axios';
 import {
+  Auth,
   GoogleAuthProvider,
   getAuth,
   signInWithPopup,
@@ -247,7 +248,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       setError('');
       const provider = new GoogleAuthProvider();
 
-      const googleRes = await signInWithPopup(auth, provider);
+      const googleRes = await signInWithPopup(auth as Auth, provider);
       const idToken = await googleRes.user.getIdToken();
 
       const res = await api.post('/check-user-exists', {
