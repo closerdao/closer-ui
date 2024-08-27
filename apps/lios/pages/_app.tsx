@@ -125,7 +125,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
           <NextIntlClientProvider
             locale={router.locale || 'en'}
             messages={pageProps.messages || {}}
-            timeZone={config.timeZone || appConfig.DEFAULT_TIMEZONE}
+            timeZone={config?.timeZone || appConfig.DEFAULT_TIMEZONE}
           >
             <AuthProvider>
               <PlatformProvider>

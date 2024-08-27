@@ -1,5 +1,7 @@
 import { BONDING_CURVE } from '../constants';
 
+
+
 export const getCurrentUnitPrice = (currentSupply: number) => {
   const { a, b, c } = BONDING_CURVE.COEFFICIENTS;
   const currentPrice = c + a / currentSupply ** 2 + b / currentSupply ** 3;

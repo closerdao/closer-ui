@@ -7,6 +7,7 @@ import Conditions from '../../../components/Conditions';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
+import { ErrorMessage } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
@@ -55,14 +56,15 @@ const Summary = ({
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
-  const { STAY_BOOKING_ALLOWED_PLANS } = useConfig();
+  const { STAY_BOOKING_ALLOWED_PLANS, APP_NAME, VISITORS_GUIDE } = useConfig();
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
-  const { VISITORS_GUIDE } = useConfig() || {};
 
   const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
   const vatRateFromConfig = Number(paymentConfig?.vatRate);
   const vatRate = vatRateFromConfig || defaultVatRate;
+
+  const hasFilledProfile = Boolean(user?.about && user?.photo);
 
   const [handleNextError, setHandleNextError] = useState<string | null>(null);
   const [hasComplied, setCompliance] = useState(false);
@@ -221,9 +223,21 @@ const Summary = ({
               {t('buttons_checkout')}
             </Button>
           ) : (
-            <Button className="booking-btn" onClick={handleNext}>
-              {t('buttons_booking_request')}
-            </Button>
+            <div>
+              <Button
+                isEnabled={APP_NAME === 'moos' ? hasFilledProfile : true}
+                className="booking-btn"
+                onClick={handleNext}
+              >
+                {t('buttons_booking_request')}
+              </Button>
+              {APP_NAME === 'moos' && !hasFilledProfile && (
+                <ErrorMessage
+                  error="Please add description and photo to your profile to book
+                  spaces"
+                />
+              )}
+            </div>
           )}
         </div>
       )}
