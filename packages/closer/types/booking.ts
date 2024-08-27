@@ -20,6 +20,7 @@ export interface BaseBookingParams {
   useTokens?: boolean | undefined;
   doesNeedPickup?: boolean | undefined;
   doesNeedSeparateBeds?: boolean | undefined;
+  foodOption?: string | undefined;
 }
 
 export type Listing = {
@@ -63,6 +64,7 @@ export type Booking = {
   useTokens: boolean;
   useCredits: boolean;
   utilityFiat: Price<CloserCurrencies.EUR>;
+  foodFiat: Price<CloserCurrencies.EUR>;
   rentalFiat: Price<CloserCurrencies.EUR>;
   rentalToken: Price<CloserCurrencies.TDF | CloserCurrencies.ETH>;
   dailyUtilityFiat: Price<CloserCurrencies.EUR>;

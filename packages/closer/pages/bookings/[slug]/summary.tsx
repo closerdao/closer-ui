@@ -73,6 +73,7 @@ const Summary = ({
 
   const {
     utilityFiat,
+    foodFiat,
     rentalToken,
     rentalFiat,
     useTokens,
@@ -180,6 +181,7 @@ const Summary = ({
           />
           <SummaryCosts
             utilityFiat={utilityFiat}
+            foodFiat={foodFiat}
             useTokens={useTokens || false}
             useCredits={booking?.useCredits || false}
             accomodationCost={useTokens ? rentalToken : rentalFiat}

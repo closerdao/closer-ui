@@ -34,6 +34,7 @@ import {
   dateToPropertyTimeZone,
   getAccommodationTotal,
   getFiatTotal,
+  getFoodTotal,
   getPaymentDelta,
   getUtilityTotal,
 } from '../../../utils/booking.helpers';
@@ -109,6 +110,8 @@ const BookingPage = ({
     created,
     isTeamBooking,
     eventPrice,
+    foodOption,
+    foodFiat,
   } = booking || {};
 
   const userInfo = bookingCreatedBy && {
@@ -183,29 +186,38 @@ const BookingPage = ({
     isTeamBooking,
   );
 
-  const foodOption = 'no_food';
-
   const updatedUtilityTotal = getUtilityTotal({
-    foodOption,
     utilityFiatVal: bookingConfig?.utilityFiatVal,
-    isPrivate: listing?.private,
     updatedAdults,
     updatedDuration,
     discountRate: updatedDiscountRate,
     isTeamBooking,
+    isUtilityOptionEnabled: bookingConfig?.utilityOptionEnabled || false,
+  });
+
+  const updatedFoodTotal = getFoodTotal({
+    isHourlyBooking,
+    foodOption,
+    foodPriceBasic: bookingConfig?.foodPriceBasic || 0,
+    foodPriceChef: bookingConfig?.foodPriceChef || 0,
+    durationInDays: updatedDuration,
+    adults,
+    isFoodOptionEnabled: bookingConfig?.foodOptionEnabled || false,
+    isTeamMember: isTeamBooking || false,
   });
 
   const updatedEventTotal = (eventPrice?.val || 0) * updatedAdults || 0;
 
-  const updatedFiatTotal = getFiatTotal(
-    Boolean(isTeamBooking),
+  const updatedFiatTotal = getFiatTotal({
+    isTeamBooking: Boolean(isTeamBooking),
     foodOption,
-    updatedUtilityTotal,
-    updatedAccomodationTotal,
-    updatedEventTotal,
+    foodTotal: updatedFoodTotal,
+    utilityTotal: updatedUtilityTotal,
+    accommodationFiatTotal: updatedAccomodationTotal,
+    eventTotal: updatedEventTotal,
     useTokens,
     useCredits,
-  );
+  });
 
   const paymentDelta = isNotPaid
     ? null
@@ -396,6 +408,7 @@ const BookingPage = ({
           />
           <SummaryCosts
             utilityFiat={utilityFiat}
+            foodFiat={foodFiat}
             useTokens={useTokens}
             useCredits={useCredits}
             accomodationCost={
@@ -417,6 +430,10 @@ const BookingPage = ({
             isEditMode={isSpaceHost}
             updatedUtilityTotal={{
               val: updatedUtilityTotal,
+              cur: utilityFiat?.cur,
+            }}
+            updatedFoodTotal={{
+              val: updatedFoodTotal,
               cur: utilityFiat?.cur,
             }}
             updatedFiatTotal={{

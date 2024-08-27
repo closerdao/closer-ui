@@ -90,8 +90,10 @@
   "bookings_checkout_step_hourly": "Your Space Booking",
   "bookings_checkout_step_comply_with": "I comply with the ",
   "bookings_checkout_step_cancellation_policy": "Cancellation Policy",
-  "bookings_checkout_step_utility_title": "Food Cost",
-  "bookings_checkout_step_utility_daily": "Daily Food",
+  "bookings_checkout_step_utility_title": "Utilities",
+  "bookings_checkout_step_food_title": "Food",
+  "bookings_checkout_step_food_cost": "Food cost",
+  "bookings_checkout_step_utility_daily": "Daily utilities fee",
   "bookings_checkout_step_total_description": "Inc. VAT",
   "bookings_checkout_step_accomodation_description": "Daily * Nights * Guests",
   "bookings_checkout_step_accomodation_description_hourly": "Hourly price * Hours",
@@ -101,6 +103,8 @@
   "bookings_checkout_step_wallet_disclaimer": "I acknowledge that: (1) my tokens are being staked for 1 year upon payment, (2) token refund is not currently available.",
   "bookings_checkout_step_accomodation_not_enough_balance": "You don't have enough token to pay for your accommodation.",
   "bookings_summary_step_title": "Summary",
+  "bookings_food_step_title": "Food",
+
   "bookings_summary_step_dates_title": "Your Stay",
   "bookings_summary_step_dates_title_hourly": "Your Space Booking",
   "bookings_summary_step_your_event": "Your event",
@@ -113,7 +117,9 @@
   "bookings_summary_step_dates_ticket_option": "Ticket option",
   "bookings_summary_step_accomodation_type_description": "Daily rate * Nights * Guests",
   "bookings_summary_step_costs_title": "Costs",
-  "bookings_summary_step_utility_total": "Food:",
+  "bookings_summary_step_utility_total": "Utilities fee:",
+  "bookings_summary_step_food_total": "Food:",
+
   "bookings_summary_step_utility_description": "Daily costs * Nights * Guests",
   "bookings_confirmation_step_success": "Success",
   "bookings_confirmation_step_error": "Payment rejected",
@@ -360,7 +366,7 @@
   "booking_card_checkout_button": "Pay",
   "booking_card_join_chat_button": "Join TDF Today chat",
   "booking_card_feedback_button": "Give us your feedback",
-  "booking_card_payment_utility": "Payment food Cost",
+  "booking_card_payment_utility": "Utilities fee",
   "booking_card_payment_event": "Event Cost",
   "booking_card_pickup_needed": "Pickup needed",
   "booking_card_separate_beds_needed": "Single beds needed",
@@ -374,6 +380,8 @@
   "booking_rate_daily": "Night",
   "booking_rate_weekly": "Week",
   "booking_rate_monthly": "Month",
+  "booking_food": "Food",
+  "booking_add_food": "Add",
   "bookings_id": "Booking #",
   "bookings_edit_slug_title": "Edit",
   "bookings_edit_slug_not_found": "Event_not_found",
@@ -957,7 +965,7 @@
 
   "config_label_utilityFiatVal": "Utility price (per night)",
   "config_label_utilityFiatCur": "Utility currency",
-  "config_label_utilityDayFiatVal": "Utility price (per day)",
+  "config_label_utilityDayFiatVal": "Utility price (for one day events)",
   "config_label_utilityTokenVal": "Utility token price",
   "config_label_utilityTokenCur": "Utility token currency",
   "config_label_checkinTime": "Check in time (24-hour format)",
@@ -1085,6 +1093,12 @@
   "config_label_creditPrice180Credits": "Price per credit (180 credits package)",
   "config_label_pickUpEnabled": "Train / bus station pick up enabled",
   "config_label_vatRate": "VAT rate (e.g. 0.1 equals 10%)",
+  "config_label_foodOptionEnabled": "Food selection enabled",
+  "config_label_foodPriceBasic": "Food price (basic food)",
+  "config_label_foodPriceChef": "Food price (chef cooked food)",
+  "config_label_utilityOptionEnabled": "Utility fee payment enabled (separate from accommodation)",
+
+
   "config_features_heading": "Platform features",
   "generic_delete_button": "Delete",
   "generic_export_csv": "Export CSV",
@@ -1336,6 +1350,14 @@
   "blog_found": "Found",
   "blog_article": "article",
   "blog_about": "about",
+
+  "food_preview_edit": "Edit",
+  "food_edit_title": "Edit food options",
+  "food_photo_gallery": "View food photo gallery",
+  "food_no_food_disclaimer": "Basic outdoor kitchen provided with no access to communal kitchen",
+  "food_create_title": "Create food option",
+
+
 
   "": ""
 }

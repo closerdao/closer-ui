@@ -231,6 +231,20 @@ const models = {
       editable: true,
       type: 'text',
     },
+    {
+      name: 'foodOption',
+      label: 'Food option',
+      ownerVisible: true,
+      editable: true,
+      default: [],
+      type: 'select',
+      options: [
+        { label: 'No food', value: 'no_food' },
+        { label: 'Basic food', value: 'basic' },
+        { label: 'Chef cooked food', value: 'chef' },
+        { label: 'Let guests choose', value: 'default' },
+      ],
+    },
   ],
 
   lesson: [
@@ -525,6 +539,24 @@ const models = {
       placeholder: '20',
       required: false,
     },
+  ],
+  food: [
+    {
+      name: 'name',
+      label: 'Food option name',
+      type: 'text',
+      placeholder: 'Basic food',
+      required: true,
+      tab: 'general',
+    },
+    {
+      name: 'description',
+      label: 'Description',
+      type: 'longtext',
+      placeholder: 'Food option description',
+      tab: 'general',
+    },
+    { name: 'photos', label: 'Photos', type: 'photos', tab: 'photos' },
   ],
   booking: [
     { name: 'start', label: 'Start date', type: 'date' },
