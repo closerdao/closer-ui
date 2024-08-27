@@ -273,7 +273,7 @@ const MemberMenu = () => {
       <Profile isDemo={false} />
       {isWalletEnabled && <Wallet />}
       {navOptions.length > 1 && (
-        <div className="mb-8 mt-4">
+        <div className="mb-4 mt-4">
           <Switcher
             options={navOptions}
             selectedOption={selectedSwitcherOption}
@@ -281,15 +281,17 @@ const MemberMenu = () => {
           />
         </div>
       )}
-      {filteredLinks &&
-        filteredLinks.map((link: NavigationLink) => (
-          <NavLink key={link.url} href={link.url} target={link.target}>
-            {link.label}
-          </NavLink>
-        ))}
-      <NavLink isButton={true} onClick={logout}>
-        {t('navigation_sign_out')}
-      </NavLink>
+      <div className='flex flex-col'>
+        {filteredLinks &&
+          filteredLinks.map((link: NavigationLink) => (
+            <NavLink key={link.url} href={link.url} target={link.target}>
+              {link.label}
+            </NavLink>
+          ))}
+        <NavLink isButton={true} onClick={logout}>
+          {t('navigation_sign_out')}
+        </NavLink>
+      </div>
       <ReportABug />
     </nav>
   );

@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { useEffect } from 'react';
 
+import AdminLayout from '../../components/Dashboard/AdminLayout';
 import ListingListPreview from '../../components/ListingListPreview';
 import Heading from '../../components/ui/Heading';
 
@@ -63,62 +64,65 @@ const Listings = ({ bookingConfig }: Props) => {
       <Head>
         <title>{t('listings_edit_title')}</title>
       </Head>
-      {listings && listings.get('error') && (
-        <div className="validation-error">{listings.get('error')}</div>
-      )}
 
-      <section className="text-center flex justify-center flex-wrap mb-12 ">
-        <div className="md:max-w-5xl">
-          <div className="mb-6 flex justify-between flex-col sm:flex-row gap-4">
-            <Heading>{t('listings_edit_title')}</Heading>
-            {(user?.roles.includes('admin') ||
-              user?.roles.includes('space-host')) && (
-              <div className="user-actions">
-                <Link
-                  as="/listings/create"
-                  href="/listings/create"
-                  className="btn-primary"
-                >
-                  {t('listings_create')}
-                </Link>
-              </div>
-            )}
-          </div>
-          <div className="grid md:grid-cols-4 gap-x-12 md:gap-x-5 gap-y-16">
-            {listings &&
-              listings.count() > 0 &&
-              isTeamMember &&
-              user &&
-              listings.map((listing: any) => {
-                return (
-                  <ListingListPreview
-                    discounts={discounts}
-                    isAdminPage={true}
-                    key={listing.get('_id')}
-                    listing={listing}
-                  />
-                );
-              })}
-            {guestListings &&
-              guestListings.count() > 0 &&
-              (!isTeamMember || !user) &&
-              guestListings.map((listing: any) => {
-                return (
-                  <ListingListPreview
-                    discounts={discounts}
-                    isAdminPage={true}
-                    key={listing.get('_id')}
-                    listing={listing}
-                  />
-                );
-              })}
+      <AdminLayout>
+        {listings && listings.get('error') && (
+          <div className="validation-error">{listings.get('error')}</div>
+        )}
 
-            {listings?.count() === 0 &&
-              guestListings?.count() === 0 &&
-              t('listing_no_listings_found')}
+        <section className="text-center flex flex-wrap mb-12 ">
+          <div className="md:max-w-5xl">
+            <div className="mb-6 flex justify-between flex-col sm:flex-row gap-4">
+              <Heading>{t('listings_edit_title')}</Heading>
+              {(user?.roles.includes('admin') ||
+                user?.roles.includes('space-host')) && (
+                <div className="user-actions">
+                  <Link
+                    as="/listings/create"
+                    href="/listings/create"
+                    className="btn-primary"
+                  >
+                    {t('listings_create')}
+                  </Link>
+                </div>
+              )}
+            </div>
+            <div className="grid md:grid-cols-4 gap-x-12 md:gap-x-5 gap-y-16">
+              {listings &&
+                listings.count() > 0 &&
+                isTeamMember &&
+                user &&
+                listings.map((listing: any) => {
+                  return (
+                    <ListingListPreview
+                      discounts={discounts}
+                      isAdminPage={true}
+                      key={listing.get('_id')}
+                      listing={listing}
+                    />
+                  );
+                })}
+              {guestListings &&
+                guestListings.count() > 0 &&
+                (!isTeamMember || !user) &&
+                guestListings.map((listing: any) => {
+                  return (
+                    <ListingListPreview
+                      discounts={discounts}
+                      isAdminPage={true}
+                      key={listing.get('_id')}
+                      listing={listing}
+                    />
+                  );
+                })}
+
+              {listings?.count() === 0 &&
+                guestListings?.count() === 0 &&
+                t('listing_no_listings_found')}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </AdminLayout>
     </>
   );
 };
