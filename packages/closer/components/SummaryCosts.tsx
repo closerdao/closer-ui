@@ -64,7 +64,7 @@ const SummaryCosts = ({
         <div className="flex justify-between items-center mt-3">
           <p>{t('bookings_checkout_event_cost')}</p>
           <div className="flex items-center gap-2">
-            {isEditMode && updatedEventTotal?.val !== eventDefaultCost && (
+            {isEditMode && updatedEventTotal?.val !== eventCost?.val && (
               <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
                 {t('bookings_updated_price')}: {priceFormat(updatedEventTotal)}
               </div>

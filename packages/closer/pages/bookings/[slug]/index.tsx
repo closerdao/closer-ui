@@ -31,7 +31,10 @@ import {
 } from '../../../types';
 import api from '../../../utils/api';
 import {
+  convertToDateString,
   dateToPropertyTimeZone,
+  formatCheckinDate,
+  formatCheckoutDate,
   getAccommodationTotal,
   getFiatTotal,
   getFoodTotal,
@@ -71,8 +74,6 @@ const BookingPage = ({
   paymentConfig,
 }: Props) => {
   const t = useTranslations();
-
-  console.log('booking=',booking);
 
   const { timeZone } = generalConfig;
 
@@ -138,6 +139,9 @@ const BookingPage = ({
   const [updatedListingId, setUpdatedListingId] = useState(listing?._id);
   const [isLoading, setIsLoading] = useState(false);
   const [hasUpdated, setHasUpdated] = useState(false);
+
+  const checkInTime = bookingConfig?.checkinTime || 14;
+  const checkOutTime = bookingConfig?.checkoutTime || 11;
 
   const setters = {
     setUpdatedAdults,
@@ -233,8 +237,16 @@ const BookingPage = ({
 
   const updatedBooking = {
     ...booking,
-    start: updatedStartDate,
-    end: updatedEndDate,
+    start: formatCheckinDate(
+      convertToDateString(updatedStartDate),
+      timeZone,
+      checkInTime,
+    ),
+    end: formatCheckoutDate(
+      convertToDateString(updatedEndDate),
+      timeZone,
+      checkOutTime,
+    ),
     duration: updatedDuration,
     adults: updatedAdults,
     children: updatedChildren,
@@ -259,6 +271,7 @@ const BookingPage = ({
         }
       : null),
     listing: updatedListingId,
+    foodFiat: { val: updatedFoodTotal, cur: rentalFiat?.cur },
     total: { val: updatedFiatTotal, cur: rentalFiat?.cur },
     paymentDelta: paymentDelta ? paymentDelta : null,
   };
@@ -290,6 +303,7 @@ const BookingPage = ({
   };
 
   const handleSaveBooking = async () => {
+    console.log('updatedBooking====', updatedBooking);
     try {
       setIsLoading(true);
       const res = await api.patch(`/booking/${_id}`, updatedBooking);

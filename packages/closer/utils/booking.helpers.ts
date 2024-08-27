@@ -11,13 +11,15 @@ import {
 import { User } from '../contexts/auth/types';
 import {
   AccommodationUnit,
-  BookingConfig,
   BookingItem,
   BookingWithUserAndListing,
   CloserCurrencies,
   Event,
+  FiatTotalParams,
+  FoodPriceParams,
   Listing,
   Price,
+  UtilityTotalParams,
 } from '../types';
 import api from './api';
 import { priceFormat } from './helpers';
@@ -37,17 +39,6 @@ export const getBookingType = (
   }
   return '🏡 Stay';
 };
-
-interface FiatTotalParams {
-  isTeamBooking: boolean;
-  foodOption: string;
-  eventTotal?: number;
-  utilityTotal: number;
-  foodTotal: number;
-  accommodationFiatTotal: number;
-  useTokens?: boolean;
-  useCredits?: boolean;
-}
 
 export const getFiatTotal = ({
   isTeamBooking,
@@ -69,15 +60,6 @@ export const getFiatTotal = ({
 
   return utilityTotal + foodTotal + accommodationTotal + (eventTotal || 0);
 };
-
-interface UtilityTotalParams {
-  utilityFiatVal: number | undefined;
-  updatedAdults: number;
-  updatedDuration: number;
-  discountRate: number;
-  isTeamBooking: boolean | undefined;
-  isUtilityOptionEnabled: boolean;
-}
 
 export const getUtilityTotal = ({
   utilityFiatVal,
@@ -457,6 +439,7 @@ export const dateToPropertyTimeZone = (
 ) => {
   return dayjs.utc(date).tz(timeZone).format('YYYY-MM-DD HH:mm');
 };
+
 export const payTokens = async (
   bookingId: string | undefined,
   dailyRentalTokenVal: number | undefined,
@@ -559,6 +542,7 @@ export const formatCheckoutDate = (
   TIME_ZONE: string,
   checkoutTime: number | undefined,
 ) => {
+  if (!date) return;
   const localDate = dayjs.tz(date, TIME_ZONE);
   const localTime = localDate
     .hour(Number(checkoutTime) || 11)
@@ -608,16 +592,6 @@ export const getFoodTotal = ({
   }
 };
 
-interface FoodPriceParams {
-  foodOption: string;
-  isTeamBooking: boolean | undefined;
-  isFood: boolean;
-  adults: number | undefined;
-  duration: number | undefined;
-  eventId: string | undefined;
-  bookingConfig: BookingConfig | undefined | null;
-}
-
 export const calculateFoodPrice = ({
   foodOption,
   isTeamBooking,
@@ -659,4 +633,8 @@ export const getFoodOption = ({
     default:
       return DEFAULT_FOOD_OPTIONS[1];
   }
+};
+
+export const convertToDateString = (date: string | Date | null) => {
+  return date ? dayjs(date).format('YYYY-MM-DD') : '';
 };
