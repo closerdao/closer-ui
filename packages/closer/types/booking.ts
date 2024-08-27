@@ -1,3 +1,4 @@
+import { BookingConfig } from './api';
 import { CloserCurrencies, Price } from './currency';
 import { Discount, TicketOption } from './event';
 
@@ -173,3 +174,33 @@ export interface DateRangeFilter {
   $lte?: Date;
   $gte?: Date;
 }
+
+export type FiatTotalParams = {
+  isTeamBooking: boolean;
+  foodOption: string;
+  eventTotal?: number;
+  utilityTotal: number;
+  foodTotal: number;
+  accommodationFiatTotal: number;
+  useTokens?: boolean;
+  useCredits?: boolean;
+};
+
+export type UtilityTotalParams = {
+  utilityFiatVal: number | undefined;
+  updatedAdults: number;
+  updatedDuration: number;
+  discountRate: number;
+  isTeamBooking: boolean | undefined;
+  isUtilityOptionEnabled: boolean;
+};
+
+export type FoodPriceParams = {
+  foodOption: string;
+  isTeamBooking: boolean | undefined;
+  isFood: boolean;
+  adults: number | undefined;
+  duration: number | undefined;
+  eventId: string | undefined;
+  bookingConfig: BookingConfig | undefined | null;
+};
