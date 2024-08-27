@@ -46,11 +46,7 @@ const CustomTooltipContent = ({
         <div
           key={index}
           className="text-md"
-          style={
-            colorOverride
-              ? { color: colorOverride }
-              : { color: CHART_COLORS[index] }
-          }
+          style={{ color: CHART_COLORS[index] }}
         >{`${entry.name}: ${entry.value} `}</div>
       ))}
 
@@ -65,6 +61,10 @@ const CustomTooltipContent = ({
 
 const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
   const { APP_NAME } = useConfig();
+
+  if (layout === 'horizontal') {
+    console.log('data=', data);
+  }
   return (
     <div className="w-full h-full py-4">
       <ResponsiveContainer width="100%" height="100%">
@@ -128,7 +128,7 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
               content={
                 <CustomTooltipContent
                   layout={layout}
-                  colorOverride={CHART_COLORS[1]}
+                  colorOverride={CHART_COLORS[4]}
                 />
               }
             />
@@ -139,36 +139,53 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
               <Bar dataKey="events" stackId="a" fill={CHART_COLORS[0]} />
               <Bar dataKey="spaces" stackId="a" fill={CHART_COLORS[1]} />
               <Bar dataKey="food" stackId="a" fill={CHART_COLORS[2]} />
+
               <Bar dataKey="hospitality" stackId="a" fill={CHART_COLORS[3]}>
-                
-              {APP_NAME === 'tdf' && (
-                <Bar
-                  dataKey="subscriptions"
-                  stackId="a"
-                  fill={CHART_COLORS[4]}
-                />
-              )}
-                {' '}
-                <LabelList
-                  dataKey="totalOperations"
-                  position="top"
-                  content={(props) => {
-                    const { x, y, width, value } = props;
-                    return (
-                      <text
-                        x={Number(x) + (Number(width) || 0) / 2}
-                        y={y}
-                        dy={-10}
-                        textAnchor="middle"
-                        fill="#000000"
-                        fontSize="12"
-                      >
-                        {value}
-                      </text>
-                    );
-                  }}
-                />
+                {APP_NAME !== 'tdf' && (
+                  <LabelList
+                    dataKey="totalOperations"
+                    position="top"
+                    content={(props) => {
+                      const { x, y, width, value } = props;
+                      return (
+                        <text
+                          x={Number(x) + (Number(width) || 0) / 2}
+                          y={y}
+                          dy={-10}
+                          textAnchor="middle"
+                          fill="#000000"
+                          fontSize="12"
+                        >
+                          {value}
+                        </text>
+                      );
+                    }}
+                  />
+                )}{' '}
               </Bar>
+              {APP_NAME === 'tdf' && (
+                <Bar dataKey="subscriptions" stackId="a" fill={CHART_COLORS[4]}>
+                  <LabelList
+                    dataKey="totalOperations"
+                    position="top"
+                    content={(props) => {
+                      const { x, y, width, value } = props;
+                      return (
+                        <text
+                          x={Number(x) + (Number(width) || 0) / 2}
+                          y={y}
+                          dy={-10}
+                          textAnchor="middle"
+                          fill="#000000"
+                          fontSize="12"
+                        >
+                          {value}
+                        </text>
+                      );
+                    }}
+                  />
+                </Bar>
+              )}
             </>
           )}
           {layout === 'vertical' && (

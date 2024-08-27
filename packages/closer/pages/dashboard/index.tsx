@@ -31,7 +31,7 @@ const DashboardPage = ({ generalConfig }: Props) => {
   const defaultConfig = useConfig();
   const { user } = useAuth();
 
-  const [timeFrame, setTimeFrame] = useState('today');
+  const [timeFrame, setTimeFrame] = useState('month');
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
 
