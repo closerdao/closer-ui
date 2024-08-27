@@ -104,7 +104,6 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
     duration &&
     listings &&
     tokenSales &&
-    firstBookingDate &&
     getRevenueData(bookings, tokenSales, fromDate, toDate);
 
   const loadData = async () => {

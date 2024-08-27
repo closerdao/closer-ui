@@ -75,6 +75,8 @@ const BookingPage = ({
 }: Props) => {
   const t = useTranslations();
 
+  console.log('booking=',booking);
+
   const { timeZone } = generalConfig;
 
   const isBookingEnabled =

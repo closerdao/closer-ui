@@ -479,6 +479,7 @@ const ListingPage: NextPage<Props> = ({
         )}
       </Head>
       <main className="flex justify-center flex-wrap my-4 ">
+
         <div className="flex flex-col gap-8  max-w-4xl">
           <Heading level={1}>{listing.name}</Heading>
 
@@ -861,9 +862,10 @@ const ListingPage: NextPage<Props> = ({
                               isDurationValid &&
                               t('listing_not_available')}
                             {!isDurationValid &&
-                              t('bookings_dates_min_duration_error', {
-                                var: settings?.minDuration,
-                              })}
+                              t(
+                                'bookings_dates_min_duration_error',
+                                { var: settings?.minDuration },
+                              )}
                             {isGuestLimit &&
                               t('listing_not_available_guest_limit')}
                           </Information>
