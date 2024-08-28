@@ -148,18 +148,18 @@ const DatesSelector = ({
 const hasEventIdAndValidTicket = Boolean(eventId && (!ticketOptions?.length || selectedTicketOption));
 const hasVolunteerId = volunteerId;
 const hasValidDates = (start && end) || (savedStartDate && savedEndDate);
-const isGeneralCase = !eventId && !volunteerId && start && end && !bookingError;
-
-  const canProceed = !!(hasEventIdAndValidTicket && hasValidDates || hasVolunteerId && hasValidDates || isGeneralCase);
+  const isGeneralCase = !eventId && !volunteerId && start && end && !bookingError;
+  const startDate = dayjs(start).startOf('day');
+  const endDate = dayjs(end).startOf('day');
+  const diffInDays = endDate.diff(startDate, 'day');
+  const isMinDurationMatched = Boolean((bookingConfig && diffInDays >= bookingConfig?.minDuration )|| eventId)
+  const canProceed = !!((hasEventIdAndValidTicket && hasValidDates || hasVolunteerId && hasValidDates || isGeneralCase) && isMinDurationMatched);
 
   useEffect(() => {
     setBookingError(null);
     if (start && end) {
-      const startDate = dayjs(start).startOf('day');
-      const endDate = dayjs(end).startOf('day');
-      const diffInDays = endDate.diff(startDate, 'day');
 
-      if (bookingConfig && diffInDays < bookingConfig?.minDuration) {
+      if (!isMinDurationMatched) {
         setBookingError(
           t('bookings_dates_min_duration_error', {
             var: bookingConfig?.minDuration,
