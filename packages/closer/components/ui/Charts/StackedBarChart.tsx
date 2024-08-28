@@ -62,9 +62,6 @@ const CustomTooltipContent = ({
 const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
   const { APP_NAME } = useConfig();
 
-  if (layout === 'horizontal') {
-    console.log('data=', data);
-  }
   return (
     <div className="w-full h-full py-4">
       <ResponsiveContainer width="100%" height="100%">
