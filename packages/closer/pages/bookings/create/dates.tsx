@@ -145,6 +145,13 @@ const DatesSelector = ({
   const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
   const [bookingError, setBookingError] = useState<null | string>(null);
 
+const hasEventIdAndValidTicket = Boolean(eventId && (!ticketOptions?.length || selectedTicketOption));
+const hasVolunteerId = volunteerId;
+const hasValidDates = (start && end) || (savedStartDate && savedEndDate);
+const isGeneralCase = !eventId && !volunteerId && start && end && !bookingError;
+
+  const canProceed = !!(hasEventIdAndValidTicket && hasValidDates || hasVolunteerId && hasValidDates || isGeneralCase);
+
   useEffect(() => {
     setBookingError(null);
     if (start && end) {
@@ -188,7 +195,7 @@ const DatesSelector = ({
     try {
       const data = {
         start: String(dayjs(start as string).format('YYYY-MM-DD')) || '',
-        end: String(dayjs(end as string).format('YYYY-MM-DD')) || '',
+        end:  String(dayjs(end as string).format('YYYY-MM-DD')) || '',
         adults: String(adults),
         kids: String(kids),
         infants: String(infants),
@@ -202,7 +209,7 @@ const DatesSelector = ({
         doesNeedSeparateBeds: String(doesNeedSeparateBeds),
       };
 
-      if (data.start === data.end || selectedTicketOption?.isDayTicket) {
+      if (selectedTicketOption?.isDayTicket) {
         if (!isAuthenticated) {
           redirectToSignup();
           return;
@@ -212,8 +219,8 @@ const DatesSelector = ({
           data: { results: newBooking },
         } = await api.post('/bookings/request', {
           // useTokens,
-          start,
-          end,
+          start: selectedTicketOption?.isDayTicket ? savedStartDate : start,
+          end: selectedTicketOption?.isDayTicket ? savedStartDate : end,
           adults,
           infants,
           pets,
@@ -350,14 +357,7 @@ const DatesSelector = ({
           <Button
             onClick={handleNext}
             isEnabled={
-              !!(
-                (eventId &&
-                  (!ticketOptions?.length || selectedTicketOption) &&
-                  start &&
-                  end) ||
-                (volunteerId && start && end) ||
-                (!eventId && !volunteerId && start && end && !bookingError)
-              )
+              canProceed
             }
           >
             {t('generic_search')}
