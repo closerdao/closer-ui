@@ -855,19 +855,19 @@ export const getSubPeriodData = ({
 
     if (isCheckin) {
       if (isNightly) {
-        const fiatPrice = booking.get('rentalFiat').get('val');
+        const fiatPrice = booking?.get('rentalFiat')?.get('val') || 0;
 
         hospitalityRevenue += fiatPrice;
 
-        const utilityPrice = booking.get('utilityFiat').get('val');
+        const utilityPrice = booking?.get('utilityFiat')?.get('val');
         foodRevenue += utilityPrice;
       }
       if (!isNightly) {
-        const fiatPrice = booking.get('rentalFiat').get('val');
+        const fiatPrice = booking?.get('rentalFiat')?.get('val');
         spacesRevenue += fiatPrice;
       }
       if (isEvent) {
-        const ticketPrice = booking.get('ticketOption').get('price');
+        const ticketPrice = booking?.get('ticketOption')?.get('price');
         eventsRevenue += ticketPrice;
       }
     }
