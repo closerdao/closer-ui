@@ -29,9 +29,6 @@ export const getPreparedInputValue = (value: string) => {
   if (value === 'false') {
     return false;
   }
-  if (!isNaN(Number(value))) {
-    return Number(value);
-  }
   return String(value);
 };
 
