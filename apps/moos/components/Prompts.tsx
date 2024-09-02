@@ -61,7 +61,7 @@ const FillSettingsPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
               <LinkButton
                 size="medium"
                 className="max-h-[34px] p-0 px-4"
-                href={`/members/${user?.slug}`}
+                href={'/settings'}
                 onClick={() => {
                   closePrompt('FillSettingsPrompt');
                 }}

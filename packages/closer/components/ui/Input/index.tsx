@@ -47,6 +47,7 @@ interface InputProps extends VariantProps<typeof inputStyles> {
   isInstantSave?: boolean;
   hasSaved?: boolean;
   setHasSaved?: Dispatch<SetStateAction<boolean>>;
+  additionalInfo?: string;
 }
 
 const Input = React.memo(
@@ -68,6 +69,7 @@ const Input = React.memo(
     isInstantSave = false,
     hasSaved,
     setHasSaved,
+    additionalInfo,
   }: InputProps) => {
     const t = useTranslations();
 
@@ -161,8 +163,8 @@ const Input = React.memo(
       <div className={'flex flex-col gap-4 relative '}>
         {label && (
           <label className="font-medium text-complimentary-light" id={label}>
-            {isRequired && '* '}
             {label}
+            {isRequired && <span className='text-red-500'>{additionalInfo ? ` [${additionalInfo}]*` : '*'}</span> }
           </label>
         )}
         <div>
