@@ -145,20 +145,29 @@ const DatesSelector = ({
   const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
   const [bookingError, setBookingError] = useState<null | string>(null);
 
-const hasEventIdAndValidTicket = Boolean(eventId && (!ticketOptions?.length || selectedTicketOption));
-const hasVolunteerId = volunteerId;
-const hasValidDates = (start && end) || (savedStartDate && savedEndDate);
-  const isGeneralCase = !eventId && !volunteerId && start && end && !bookingError;
+  const hasEventIdAndValidTicket = Boolean(
+    eventId && (!ticketOptions?.length || selectedTicketOption),
+  );
+  const hasVolunteerId = volunteerId;
+  const hasValidDates = (start && end) || (savedStartDate && savedEndDate);
+  const isGeneralCase =
+    !eventId && !volunteerId && start && end && !bookingError;
   const startDate = dayjs(start).startOf('day');
   const endDate = dayjs(end).startOf('day');
   const diffInDays = endDate.diff(startDate, 'day');
-  const isMinDurationMatched = Boolean((bookingConfig && diffInDays >= bookingConfig?.minDuration )|| eventId)
-  const canProceed = !!((hasEventIdAndValidTicket && hasValidDates || hasVolunteerId && hasValidDates || isGeneralCase) && isMinDurationMatched);
+  const isMinDurationMatched = Boolean(
+    (bookingConfig && diffInDays >= bookingConfig?.minDuration) || eventId,
+  );
+  const canProceed = !!(
+    ((hasEventIdAndValidTicket && hasValidDates) ||
+      (hasVolunteerId && hasValidDates) ||
+      isGeneralCase) &&
+    isMinDurationMatched
+  );
 
   useEffect(() => {
     setBookingError(null);
     if (start && end) {
-
       if (!isMinDurationMatched) {
         setBookingError(
           t('bookings_dates_min_duration_error', {
@@ -195,7 +204,7 @@ const hasValidDates = (start && end) || (savedStartDate && savedEndDate);
     try {
       const data = {
         start: String(dayjs(start as string).format('YYYY-MM-DD')) || '',
-        end:  String(dayjs(end as string).format('YYYY-MM-DD')) || '',
+        end: String(dayjs(end as string).format('YYYY-MM-DD')) || '',
         adults: String(adults),
         kids: String(kids),
         infants: String(infants),
@@ -268,7 +277,11 @@ const hasValidDates = (start && end) || (savedStartDate && savedEndDate);
         <BackButton handleClick={goBack}>{t('buttons_back')}</BackButton>
         <Heading className="pb-4 mt-8">
           <span className="mr-2">🏡</span>
-          <span>{t('bookings_summary_step_dates_title')}</span>
+          <span>
+            {selectedTicketOption?.isDayTicket
+              ? t('bookings_summary_step_dates_event')
+              : t('bookings_summary_step_dates_title')}
+          </span>
         </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
 
@@ -354,13 +367,10 @@ const hasValidDates = (start && end) || (savedStartDate && savedEndDate);
           {handleNextError && (
             <div className="error-box">{handleNextError}</div>
           )}
-          <Button
-            onClick={handleNext}
-            isEnabled={
-              canProceed
-            }
-          >
-            {t('generic_search')}
+          <Button onClick={handleNext} isEnabled={canProceed}>
+            {selectedTicketOption?.isDayTicket
+              ? t('booking_button_continue')
+              : t('generic_search')}
           </Button>
         </div>
       </div>
