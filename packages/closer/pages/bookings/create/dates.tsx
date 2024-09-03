@@ -79,7 +79,7 @@ const DatesSelector = ({
     volunteerId,
   } = router.query || {};
 
-  const isHourlyBooking = savedStartDate === savedEndDate;
+  const isHourlyBooking = false;
 
   const [blockedDateRanges, setBlockedDateRanges] = useState<any[]>([]);
 
