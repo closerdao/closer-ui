@@ -7,7 +7,12 @@ import 'react-day-picker/dist/style.css';
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
-import { getDateOnly, getTimeOnly } from '../../utils/booking.helpers';
+import { useConfig } from '../../hooks/useConfig';
+import {
+  dateToPropertyTimeZone,
+  getDateOnly,
+  getTimeOnly,
+} from '../../utils/booking.helpers';
 import TimePicker from '../TimePicker';
 import { Button, ErrorMessage, Input } from '../ui';
 import { getDateTime, includesBlockedDateRange } from './dateTimePicker.utils';
@@ -54,6 +59,10 @@ const DateTimePicker = ({
   hourAvailability,
   isDashboard,
 }: Props) => {
+  const { TIME_ZONE } = useConfig();
+  savedStartDate = dateToPropertyTimeZone(TIME_ZONE, savedStartDate);
+  savedEndDate = dateToPropertyTimeZone(TIME_ZONE, savedEndDate);
+
   const t = useTranslations();
   const router = useRouter();
   const { volunteerId } = router.query;
@@ -309,7 +318,9 @@ const DateTimePicker = ({
           {priceDuration !== 'night' && startTime && savedStartDate && (
             <div className="text-sm border rounded-md bg-neutral py-3 px-4 font-bold ">
               {getDateOnly(savedStartDate)}
-              {isStartTimeSelected && startTimeOnly !== endTimeOnly && ` - ${startTimeOnly} - ${endTimeOnly}`}
+              {isStartTimeSelected &&
+                startTimeOnly !== endTimeOnly &&
+                ` - ${startTimeOnly} - ${endTimeOnly}`}
             </div>
           )}
           {priceDuration === 'night' && (

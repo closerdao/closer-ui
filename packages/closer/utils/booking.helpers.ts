@@ -439,8 +439,11 @@ export const getLocalTimeAvailability = (
 
 export const dateToPropertyTimeZone = (
   timeZone: string,
-  date: string | Date,
+  date: string | Date | null | undefined,
 ) => {
+  if ((typeof date !== 'string' && !(date instanceof Date)) || !date) {
+    return null;
+  }
   return dayjs.utc(date).tz(timeZone).format('YYYY-MM-DD HH:mm');
 };
 export const payTokens = async (
