@@ -7,12 +7,7 @@ import 'react-day-picker/dist/style.css';
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
-import { useConfig } from '../../hooks/useConfig';
-import {
-  dateToPropertyTimeZone,
-  getDateOnly,
-  getTimeOnly,
-} from '../../utils/booking.helpers';
+import { getDateOnly, getTimeOnly } from '../../utils/booking.helpers';
 import TimePicker from '../TimePicker';
 import { Button, ErrorMessage, Input } from '../ui';
 import { getDateTime, includesBlockedDateRange } from './dateTimePicker.utils';
@@ -59,9 +54,8 @@ const DateTimePicker = ({
   hourAvailability,
   isDashboard,
 }: Props) => {
-  const { TIME_ZONE } = useConfig();
-  savedStartDate = dateToPropertyTimeZone(TIME_ZONE, savedStartDate);
-  savedEndDate = dateToPropertyTimeZone(TIME_ZONE, savedEndDate);
+  savedStartDate = getDateOnly(savedStartDate);
+  savedEndDate = getDateOnly(savedEndDate);
 
   const t = useTranslations();
   const router = useRouter();
