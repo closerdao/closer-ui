@@ -66,7 +66,7 @@ const Listings = ({ bookingConfig }: Props) => {
       </Head>
 
       <AdminLayout>
-        {listings && listings.get('error') && (
+        {listings?.get('error') && (
           <div className="validation-error">{listings.get('error')}</div>
         )}
 
