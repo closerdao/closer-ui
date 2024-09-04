@@ -350,7 +350,7 @@ it('should have correct authenticated overnight event booking flow', () => {
   cy.get('button').contains(/yes/i).click();
 });
 
-it.only('should have correct authenticated day ticket event booking flow', () => {
+it('should have correct authenticated day ticket event booking flow', () => {
   cy.visit(`${Cypress.config('baseUrl')}/login`);
   login({ isAdmin: true });
 
