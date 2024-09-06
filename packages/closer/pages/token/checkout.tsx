@@ -13,7 +13,9 @@ import {
   Spinner,
 } from '../../components/ui';
 
-import PageNotFound from '../404';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
 import { TOKEN_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { WalletState } from '../../contexts/wallet';
@@ -22,13 +24,15 @@ import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
+import PageNotFound from '../not-found';
 
 interface Props {
   generalConfig: GeneralConfig | null;
 }
 
 const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
+  const t = useTranslations();
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
@@ -58,12 +62,6 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   }, [isAuthenticated, isLoading]);
 
   useEffect(() => {
-    if (!isWalletReady) {
-      router.push('/token/before-you-begin');
-    }
-  }, []);
-
-  useEffect(() => {
     isWalletReady &&
       (async () => {
         const totalCost = await getTotalCost(tokens as string);
@@ -89,7 +87,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     if (success) {
       setIsApproved(true);
     } else {
-      setWeb3Error(__('token_sale_approval_error'));
+      setWeb3Error(t('token_sale_approval_error'));
     }
     setIsMetamaskLoading(false);
   };
@@ -101,6 +99,14 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     const { success, txHash, error } = await buyTokens(tokens as string);
     if (success) {
       try {
+        await api.post('/accounting/token-sales-log', {
+          txHash,
+          unitPrice,
+          tokens,
+          total,
+          userId: user?._id,
+        });
+
         await api.post('/metric', {
           event: 'token-sale',
           value: Number(tokens),
@@ -116,7 +122,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
         `/token/success?amountOfTokensPurchased=${tokens}&transactionId=${txHash}`,
       );
     } else {
-      setWeb3Error(__('token_sale_buy_error'));
+      setWeb3Error(t('token_sale_buy_error'));
       setIsMetamaskLoading(false);
     }
   };
@@ -133,17 +139,15 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     <>
       <Head>
         <title>{`
-        ${__('token_sale_heading_checkout')} - 
-        ${__(
-          'token_sale_public_sale_announcement',
-        )} - ${PLATFORM_NAME}`}</title>
+        ${t('token_sale_heading_checkout')} - 
+        ${t('token_sale_public_sale_announcement')} - ${PLATFORM_NAME}`}</title>
       </Head>
 
       <div className="w-full max-w-screen-sm mx-auto py-8 px-4">
-        <BackButton handleClick={goBack}>{__('buttons_back')}</BackButton>
+        <BackButton handleClick={goBack}>{t('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-4">
-          💰 {__('token_sale_heading_checkout')}
+          💰 {t('token_sale_heading_checkout')}
         </Heading>
 
         <ProgressBar steps={TOKEN_SALE_STEPS} />
@@ -151,13 +155,13 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
         <main className="pt-14 pb-24 flex flex-col gap-12">
           <div className="">
             <Heading level={3} hasBorder={true}>
-              🏡 {__('token_sale_checkout_your_purchse')}
+              🏡 {t('token_sale_checkout_your_purchse')}
             </Heading>
             <div className="mb-10">
               <Row
-                rowKey={__('token_sale_token_symbol')}
+                rowKey={t('token_sale_token_symbol')}
                 value={tokens?.toString()}
-                additionalInfo={`1 ${__(
+                additionalInfo={`1 ${t(
                   'token_sale_token_symbol',
                 )} = ${unitPrice} ${SOURCE_TOKEN}`}
               />
@@ -167,25 +171,25 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
               type="secondary"
               onClick={handleEditAmount}
             >
-              {__('subscriptions_summary_edit_button')}
+              {t('subscriptions_summary_edit_button')}
             </Button>
           </div>
           <div className="">
             <Heading level={3} hasBorder={true}>
-              ➕ {__('token_sale_checkout_total')}
+              ➕ {t('token_sale_checkout_total')}
             </Heading>
             <div className="flex flex-col gap-6">
               <Row
-                rowKey={__('token_sale_checkout_total')}
-                value={`${__('token_sale_source_token')} ${total} `}
-                additionalInfo={__('token_sale_ceur_disclaimer')}
+                rowKey={t('token_sale_checkout_total')}
+                value={`${t('token_sale_source_token')} ${total} `}
+                additionalInfo={t('token_sale_ceur_disclaimer')}
               />
             </div>
           </div>
 
           {balanceCeurAvailable < total && (
             <div className="font-bold">
-              {__('token_sale_not_enough_ceur_error')}
+              {t('token_sale_not_enough_ceur_error')}
             </div>
           )}
           {isApproved ? (
@@ -198,10 +202,10 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
               {isPending || isMetamaskLoading ? (
                 <div className="flex gap-2 items-center">
                   <Spinner />
-                  {__('token_sale_checkout_button_pending_transaction')}
+                  {t('token_sale_checkout_button_pending_transaction')}
                 </div>
               ) : (
-                __('token_sale_checkout_button_purchase_transaction')
+                t('token_sale_checkout_button_purchase_transaction')
               )}
             </Button>
           ) : (
@@ -214,21 +218,21 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
               {isPending || isMetamaskLoading ? (
                 <div className="flex gap-2 items-center">
                   <Spinner />
-                  {__('token_sale_checkout_button_pending_transaction')}
+                  {t('token_sale_checkout_button_pending_transaction')}
                 </div>
               ) : (
-                __('token_sale_checkout_button_approve_transaction')
+                t('token_sale_checkout_button_approve_transaction')
               )}
             </Button>
           )}
           <p className="text-center">
-            {!isApproved && !isPending && __('token_sale_approve_text')}
+            {!isApproved && !isPending && t('token_sale_approve_text')}
 
-            {!isApproved && isPending && __('token_sale_approve_pending_text')}
+            {!isApproved && isPending && t('token_sale_approve_pending_text')}
 
-            {isApproved && !isPending && __('token_sale_buy_text')}
+            {isApproved && !isPending && t('token_sale_buy_text')}
 
-            {isApproved && isPending && __('token_sale_buy_pending_text')}
+            {isApproved && isPending && t('token_sale_buy_pending_text')}
           </p>
           {web3Error && <ErrorMessage error={web3Error} />}
           {apiError && <ErrorMessage error={apiError} />}
@@ -238,20 +242,24 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   );
 };
 
-TokenSaleCheckoutPage.getInitialProps = async () => {
+TokenSaleCheckoutPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const generalRes = await api.get('/config/general').catch(() => {
-      return null;
-    });
+    const [generalRes, messages] = await Promise.all([
+      api.get('/config/general').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
+
     const generalConfig = generalRes?.data?.results?.value;
 
     return {
       generalConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
+      messsages: null,
     };
   }
 };

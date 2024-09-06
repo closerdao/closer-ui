@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 
+import { useTranslations } from 'next-intl';
 import PropTypes from 'prop-types';
 
 import { useAuth } from '../contexts/auth';
-import { __ } from '../utils/helpers';
 import Checkbox from './Checkbox';
 import Modal from './Modal';
 import Heading from './ui/Heading';
-import { useConfig } from '../hooks/useConfig';
 
 const Conditions = ({ setComply, visitorsGuide }) => {
-  const { APP_NAME } = useConfig() || {};
+  const t = useTranslations();
+
   const { user } = useAuth();
   const isMember = user?.roles.includes('member');
 
@@ -49,14 +49,14 @@ const Conditions = ({ setComply, visitorsGuide }) => {
         className="mb-4"
       >
         <p>
-          <span>{__('bookings_checkout_step_comply_with')}</span>
+          <span>{t('bookings_checkout_step_comply_with')}</span>
           <a
             className="border-b pb-1 border-neutral-400 border-dashed no-underline"
             href={visitorsGuide}
             target="_blank"
             rel="noreferrer noopener"
           >
-            {APP_NAME && __('bookings_checkout_step_visitors_guide', APP_NAME)}
+            {t('bookings_checkout_step_visitors_guide')}
           </a>
         </p>
       </Checkbox>
@@ -67,12 +67,12 @@ const Conditions = ({ setComply, visitorsGuide }) => {
         }
       >
         <p>
-          <span>{__('bookings_checkout_step_comply_with')}</span>
+          <span>{t('bookings_checkout_step_comply_with')}</span>
           <button
             className="border-b pb-1 border-neutral-400 border-dashed"
             onClick={openModal}
           >
-            {__('bookings_checkout_step_cancellation_policy')}
+            {t('bookings_checkout_step_cancellation_policy')}
           </button>
         </p>
       </Checkbox>
@@ -80,11 +80,11 @@ const Conditions = ({ setComply, visitorsGuide }) => {
         <Modal closeModal={closeModal}>
           <div>
             <Heading className="step-title mb-8">
-              {__('bookings_checkout_step_cancellation_policy')}
+              {t('bookings_checkout_step_cancellation_policy')}
             </Heading>
             {isMember
-              ? __('booking_cancelation_policy_member')
-              : __('booking_cancelation_policy')}
+              ? t('booking_cancelation_policy_member')
+              : t('booking_cancelation_policy')}
           </div>
         </Modal>
       )}

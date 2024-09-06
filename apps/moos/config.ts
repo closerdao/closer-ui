@@ -1,6 +1,6 @@
 const config = {
-  // protect APP_NAME from being changed by admin - temporary hotfix, until configs validation is implemented
   APP_NAME: 'moos',
+  DEFAULT_TIMEZONE: 'Europe/Berlin',
   platformAllowedConfigs: ['booking', 'general', 'booking-rules', 'payment','fundraiser', 'emails', 'volunteering'],
   PORT: 14444,
   EXPOSE_STORE: true,

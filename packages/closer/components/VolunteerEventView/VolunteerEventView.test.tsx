@@ -1,9 +1,10 @@
 // write smoke test for VolunteerEventView
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 
 import { AuthContext } from '../../contexts/auth';
 import { VolunteerOpportunity } from '../../types';
 import VolunteerEventView from './VolunteerEventView';
+import { renderWithNextIntl } from '../../test/utils';
 
 const volunteerEventMock: VolunteerOpportunity = {
   name: 'Test title',
@@ -76,7 +77,7 @@ const authContextMock = {
 
 describe('VolunteerEventView', () => {
   it('should render', () => {
-    render(
+    renderWithNextIntl(
       <AuthContext.Provider value={authContextMock}>
         <VolunteerEventView volunteer={volunteerEventMock} />
       </AuthContext.Provider>,
@@ -94,7 +95,7 @@ describe('VolunteerEventView', () => {
       },
     };
 
-    render(
+    renderWithNextIntl(
       <AuthContext.Provider value={authContextWithUserStewardRole}>
         <VolunteerEventView volunteer={volunteerEventMock} />
       </AuthContext.Provider>,

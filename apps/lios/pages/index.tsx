@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 import { useEffect, useRef, useState } from 'react';
 import { isMobile } from 'react-device-detect';
@@ -15,7 +16,6 @@ import {
   Heading,
   LinkButton,
   YoutubeEmbed,
-  __,
   api,
   useAuth,
   useConfig,
@@ -23,6 +23,9 @@ import {
 } from 'closer';
 import { useFaqs } from 'closer/hooks/useFaqs';
 import { parseMessageFromError } from 'closer/utils/common';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 interface Props {
   generalConfig: GeneralConfig | null;
@@ -30,7 +33,9 @@ interface Props {
 }
 
 const HomePage = ({ generalConfig, bookingSettings }: Props) => {
+  const t = useTranslations();
   const { isAuthenticated } = useAuth();
+  const router = useRouter();
 
   const { APP_NAME, FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
 
@@ -202,275 +207,382 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
       <div className="relative top-[105vh]">
         <section className="mb-12 max-w-3xl mx-auto md:pt-12 md:flex ">
           <div className="text-accent-alt">
-            <Heading
-              level={2}
-              display
-              className="text-center mb-6 md:text-[45px] normal-case leading-[50px]"
-            >
-              Join the wild faculty of transformation <br />
-              <br />
-              Dołącz do dzikiego fakultetu transformacji!
-            </Heading>
-            <p className="mb-6">
-              Come and stay in our desert village and let your imagination roam
-              freely. Get a chance to learn about local ecosystems, regenerative
-              cultures, transition design, and practice agency in a playful way.
-            </p>{' '}
-            <p className="mb-6">
-              You’ll have the opportunity to immerse in communal experiences
-              while surrounded by the unique ecosystem of Błędowska Desert. We
-              encourage you to be open to adventurous conditions and let them
-              transform you, to embrace the raw beauty and complexity of Nature.
-            </p>
-            <p className="mb-6">
-              We guarantee you’ll meet some inspiring creatures you’ll become
-              friends with. You will have a chance to join workshops and
-              experiments merging art, ecology, system thinking and science. If
-              this invitation sounds like something for you, there are plenty of
-              ways to get involved. Follow the dusty trail.
-            </p>
-            <div className="flex justify-center mb-4 mt-2">
-              <div className="border-t w-[120px] border-accent-alt"></div>
-            </div>
-            <p className="mb-6">
-              Przyjedź i zatrzymaj się w naszej pustynnej wiosce. Pozwól swojej
-              wyobraźni swobodnie wędrować. Skorzystaj z okazji, aby w ciekawy i
-              zabawny sposób poznać lokalne ekosystemy, praktyki kulturotwórcze
-              i regeneratywne, a także praktykować sprawczość.
-            </p>{' '}
-            <p className="mb-6">
-              Będzie to okazja do zanurzenia się we wspólnych doświadczeniach w
-              otoczeniu unikalnego ekosystemu Pustyni Błędowskiej. Zachęcamy Cię
-              do otwarcia się na warunki pełne przygód i pozwolenie im, aby Cię
-              przemieniły i pokazały surowe piękno oraz złożoność otaczającej
-              przyrody.
-            </p>
-            <p className="mb-6">
-              Gwarantujemy, że spotkasz inspirujące stworzenia, z którymi się
-              zaprzyjaźnisz. Będzie to sposobność do wzięcia udziału w
-              warsztatach i eksperymentach łączących sztukę, ekologię, myślenie
-              systemowe i naukę. Jeśli to zaproszenie brzmi jak coś dla Ciebie,
-              istnieje wiele sposobów, aby się zaangażować. Podążaj piaszczystym
-              szlakiem.
-            </p>
+            {router.locale === 'en' && (
+              <div>
+                <Heading
+                  level={2}
+                  display
+                  className="text-center mb-6 md:text-[45px] normal-case leading-[50px]"
+                >
+                  Join the wild faculty of transformation
+                </Heading>
+                <p className="mb-6">
+                  Come and stay in our desert village and let your imagination
+                  roam freely. Get a chance to learn about local ecosystems,
+                  regenerative cultures, transition design, and practice agency
+                  in a playful way.
+                </p>{' '}
+                <p className="mb-6">
+                  You’ll have the opportunity to immerse in communal experiences
+                  while surrounded by the unique ecosystem of Błędowska Desert.
+                  We encourage you to be open to adventurous conditions and let
+                  them transform you, to embrace the raw beauty and complexity
+                  of Nature.
+                </p>
+                <p className="mb-6">
+                  We guarantee you’ll meet some inspiring creatures you’ll
+                  become friends with. You will have a chance to join workshops
+                  and experiments merging art, ecology, system thinking and
+                  science. If this invitation sounds like something for you,
+                  there are plenty of ways to get involved. Follow the dusty
+                  trail.
+                </p>
+              </div>
+            )}
+            {router.locale === 'pl' && (
+              <div>
+                <Heading
+                  level={2}
+                  display
+                  className="text-center mb-6 md:text-[45px] normal-case leading-[50px]"
+                >
+                  Dołącz do dzikiego fakultetu transformacji!
+                </Heading>
+                <p className="mb-6">
+                  Przyjedź i zatrzymaj się w naszej pustynnej wiosce. Pozwól
+                  swojej wyobraźni swobodnie wędrować. Skorzystaj z okazji, aby
+                  w ciekawy i zabawny sposób poznać lokalne ekosystemy, praktyki
+                  kulturotwórcze i regeneratywne, a także praktykować
+                  sprawczość.
+                </p>{' '}
+                <p className="mb-6">
+                  Będzie to okazja do zanurzenia się we wspólnych
+                  doświadczeniach w otoczeniu unikalnego ekosystemu Pustyni
+                  Błędowskiej. Zachęcamy Cię do otwarcia się na warunki pełne
+                  przygód i pozwolenie im, aby Cię przemieniły i pokazały surowe
+                  piękno oraz złożoność otaczającej przyrody.
+                </p>
+                <p className="mb-6">
+                  Gwarantujemy, że spotkasz inspirujące stworzenia, z którymi
+                  się zaprzyjaźnisz. Będzie to sposobność do wzięcia udziału w
+                  warsztatach i eksperymentach łączących sztukę, ekologię,
+                  myślenie systemowe i naukę. Jeśli to zaproszenie brzmi jak coś
+                  dla Ciebie, istnieje wiele sposobów, aby się zaangażować.
+                  Podążaj piaszczystym szlakiem.
+                </p>
+              </div>
+            )}
           </div>
         </section>
 
-        <section className="mb-12 max-w-3xl mx-auto md:pt-12 md:flex ">
-          <div className="flex flex-col gap-4 text-accent-alt">
-            <Heading
-              level={2}
-              display
-              className="text-left mb-6 md:text-2xl normal-case"
-            >
-              Before the wild adventure begins... please read our Desert Values
-              /<br />
-              Zanim rozpocznie się dzika przygoda, przeczytaj proszę nasze
-              Pustynne Wartości
-            </Heading>
-            <p>
-              Desert Transformation Lab is shaped by shared ethics: equity of
-              all beings, awareness, ecology, care, queerness, wholeness,
-              non-violence, community, and sustainability. What does it mean in
-              practice?
-            </p>
-            <div className="flex justify-center mb-4 mt-2">
-              <div className="border-t w-[120px] border-accent-alt"></div>
-            </div>
-            <p>
-              Pustynne Laboratorium Transformacji kształtuje się poprzez wspólne
-              wartości: równość wszystkich istot, świadomość, ekologia, troska,
-              różnorodność, całość, niestosowanie przemocy, społeczność i
-              zrównoważony rozwój. Co to oznacza w praktyce?
-            </p>
+        {router.locale === 'en' && (
+          <>
+            <section className="mb-12 max-w-3xl mx-auto md:pt-12 md:flex ">
+              <div className="flex flex-col gap-4 text-accent-alt">
+                <Heading
+                  level={2}
+                  display
+                  className="text-left mb-6 md:text-2xl normal-case"
+                >
+                  Before the wild adventure begins... please read our Desert
+                  Values
+                </Heading>
+                <p>
+                  Desert Transformation Lab is shaped by shared ethics: equity
+                  of all beings, awareness, ecology, care, queerness, wholeness,
+                  non-violence, community, and sustainability. What does it mean
+                  in practice?
+                </p>
 
-            <Heading level={4} display className="mt-6 md:text-xl normal-case ">
-              Active Participation / <br />
-              Aktywna partycypacja
-            </Heading>
-            <p>
-              We know that transformative change can occur only through deeply
-              personal participation - on individual, collective, and societal
-              levels. We encourage you to embrace learning by doing. Everyone is
-              invited to work for the common good of our planet and its
-              inhabitants. All participants are involved in the daily routine of
-              the village and are asked to comply with the{' '}
-              <Link
-                className="text-accent no-underline"
-                href="https://drive.google.com/file/d/1W7wgWGboRayeAJZcTP9P9OrQgbhj4NkT/view?usp=drive_link"
-              >
-                Desert Guidelines
-              </Link>
-              .
-            </p>
-            <div className="flex justify-center mb-4 mt-2">
-              <div className="border-t w-[120px] border-accent-alt"></div>
-            </div>
-            <p>
-              Wierzymy, że transformacyjne zmiany mogą nastąpić tylko poprzez
-              głębokie zaangażowanie - na poziomie indywidualnym, kolektywnym i
-              społecznym. Zachęcamy do uczenia się poprzez działanie. Każda
-              osoba jest zaproszona do pracy na rzecz wspólnego dobra, naszej
-              planety i zamieszkujących ją istot. Wszystkie osoby uczestniczące
-              biorą udział w codziennych zajęciach wioski i proszone są o
-              przestrzeganie{' '}
-              <Link
-                className="text-accent no-underline"
-                href="https://drive.google.com/file/d/1W7wgWGboRayeAJZcTP9P9OrQgbhj4NkT/view?usp=drive_link"
-              >
-                Pustynnych Wartości
-              </Link>
-              .
-            </p>
+                <Heading
+                  level={4}
+                  display
+                  className="mt-6 md:text-xl normal-case "
+                >
+                  Active Participation
+                </Heading>
+                <p>
+                  We know that transformative change can occur only through
+                  deeply personal participation - on individual, collective, and
+                  societal levels. We encourage you to embrace learning by
+                  doing. Everyone is invited to work for the common good of our
+                  planet and its inhabitants. All participants are involved in
+                  the daily routine of the village and are asked to comply with
+                  the{' '}
+                  <Link
+                    className="text-accent no-underline"
+                    href="https://drive.google.com/file/d/1W7wgWGboRayeAJZcTP9P9OrQgbhj4NkT/view?usp=drive_link"
+                  >
+                    Desert Guidelines
+                  </Link>
+                  .
+                </p>
 
-            <Heading level={4} display className="mt-6 md:text-xl normal-case ">
-              Sustainability / <br />
-              Ekologia & Zrównoważony Rozwój
-            </Heading>
-            <p>
-              Sustainability lies at the core of Desert Transformation Lab and
-              we wish to incorporate it into our daily practice. The residency
-              is an ideal ecosystem for developing new habits and rethinking
-              their impact on the natural environment. Create a positive trace:
-              We are a regenerative playground. Come and leave a mark that
-              future generations will appreciate.
-            </p>
-            <div className="flex justify-center mb-4 mt-2">
-              <div className="border-t w-[120px] border-accent-alt"></div>
-            </div>
-            <p>
-              Praktyki ekologiczne leżą u podstaw Laboratorium Pustynnej
-              Transformacji i włączamy je w naszą codzienność. Pobyt na Pustyni
-              jest idealnym ekosystemem do rozwijania nowych nawyków i ponownego
-              przemyślenia ich wpływu na środowisko naturalne. Stwórzmy
-              pozytywny ślad: Jesteśmy regeneratywnym placem zabaw. Przyjedź i
-              zostaw po sobie coś, co docenią przyszłe pokolenia.
-            </p>
+                <Heading
+                  level={4}
+                  display
+                  className="mt-6 md:text-xl normal-case "
+                >
+                  Sustainability
+                </Heading>
+                <p>
+                  Sustainability lies at the core of Desert Transformation Lab
+                  and we wish to incorporate it into our daily practice. The
+                  residency is an ideal ecosystem for developing new habits and
+                  rethinking their impact on the natural environment. Create a
+                  positive trace: We are a regenerative playground. Come and
+                  leave a mark that future generations will appreciate.
+                </p>
 
-            <Heading level={4} display className="mt-6 md:text-xl normal-case ">
-              Consent / <br />
-              Zgoda
-            </Heading>
-            <p>
-              Bring awareness to your boundaries & needs, respect those of
-              others. If it’s not a full yes, then it’s a no.
-            </p>
-            <div className="flex justify-center mb-4 mt-2">
-              <div className="border-t w-[120px] border-accent-alt"></div>
-            </div>
-            <p>
-              Zadbaj o swoje granice i potrzeby, szanuj granice i potrzeby
-              innych osób. Jeśli to nie jest pełne &quot;tak&quot;, to jest to
-              &quot;nie&quot;.
-            </p>
+                <Heading
+                  level={4}
+                  display
+                  className="mt-6 md:text-xl normal-case "
+                >
+                  Consent
+                </Heading>
+                <p>
+                  Bring awareness to your boundaries & needs, respect those of
+                  others. If it’s not a full yes, then it’s a no.
+                </p>
 
-            <Heading level={4} display className="mt-6 md:text-xl normal-case ">
-              Radical Self-Reliance /<br />
-              Radykalna Samowystarczalność
-            </Heading>
-            <p>
-              When you come to the Desert Transformation Lab, you are
-              responsible for your own survival, safety, comfort, and well-being
-              of yourself and the village.
-            </p>
-            <div className="flex justify-center mb-4 mt-2">
-              <div className="border-t w-[120px] border-accent-alt"></div>
-            </div>
-            <p>
-              Kiedy przyjedziesz do Laboratorium Pustynnego Wyobraźni, weź
-              odpowiedzialność za siebie, swoje bezpieczeństwo, komfort oraz
-              dobrobyt własny i wioski. Jeśli widzisz, że coś jest do zrobienia
-              to znaczy, że jest to Twoje zadanie.
-            </p>
+                <Heading
+                  level={4}
+                  display
+                  className="mt-6 md:text-xl normal-case "
+                >
+                  Radical Self-Reliance
+                </Heading>
+                <p>
+                  When you come to the Desert Transformation Lab, you are
+                  responsible for your own survival, safety, comfort, and
+                  well-being of yourself and the village.
+                </p>
 
-            <Heading level={4} display className="mt-6 md:text-xl normal-case ">
-              Gift Economy / <br />
-              Ekonomia Daru
-            </Heading>
-            <p>
-              What is your deepest gift that you can share with the community?
-              How we can collectively practice non-capitalistic forms of
-              exchange that are based on mutual care?
-            </p>
-            <div className="flex justify-center mb-4 mt-2">
-              <div className="border-t w-[120px] border-accent-alt"></div>
-            </div>
-            <p>
-              Jaki jest Twój najgłębszy dar, którym chcesz podzielić się z
-              społecznością? Jak możemy wspólnie praktykować formy wymiany
-              oparte na wzajemnej trosce, a nie na modelach kapitalistycznych?
-            </p>
+                <Heading
+                  level={4}
+                  display
+                  className="mt-6 md:text-xl normal-case "
+                >
+                  Gift Economy
+                </Heading>
+                <p>
+                  What is your deepest gift that you can share with the
+                  community? How we can collectively practice non-capitalistic
+                  forms of exchange that are based on mutual care?
+                </p>
 
-            <Heading level={4} display className="mt-6 md:text-xl normal-case ">
-              Decommodification / <br />
-              Dekomercjalizacja
-            </Heading>
-            <p>
-              To preserve the spirit of gifting, our community seeks to create
-              social environments that are unmediated by commercial
-              sponsorships, transactions, or advertising. We stand ready to
-              protect our culture from such exploitation. We resist the
-              substitution of consumption for participatory experience.
-            </p>
-            <div className="flex justify-center mb-4 mt-2">
-              <div className="border-t w-[120px] border-accent-alt"></div>
-            </div>
-            <p>
-              Aby zachować ducha dawania, nasza społeczność stara się tworzyć
-              środowiska społeczne, które są pozbawione komercyjnych partnerstw,
-              transakcji lub reklam. Chcemy chronić naszą kulturę przed taką
-              eksploatacją. Wesprzyj nas w tym dążeniu!
-            </p>
+                <Heading
+                  level={4}
+                  display
+                  className="mt-6 md:text-xl normal-case "
+                >
+                  Decommodification
+                </Heading>
+                <p>
+                  To preserve the spirit of gifting, our community seeks to
+                  create social environments that are unmediated by commercial
+                  sponsorships, transactions, or advertising. We stand ready to
+                  protect our culture from such exploitation. We resist the
+                  substitution of consumption for participatory experience.
+                </p>
 
-            <Heading level={4} display className="mt-6 md:text-xl normal-case ">
-              Communal Effort / <br />
-              Kolektywny Wysiłek
-            </Heading>
-            <p>
-              Our community values creative cooperation and collaboration. We
-              strive to produce, promote and protect social networks, public
-              spaces, works of art, and methods of communication that support
-              such interaction.
-            </p>
-            <div className="flex justify-center mb-4 mt-2">
-              <div className="border-t w-[120px] border-accent-alt"></div>
-            </div>
-            <p>
-              Nasza społeczność ceni twórczą współpracę i kolaborację. Staramy
-              się wytwarzać, promować i chronić sieci społeczne, przestrzenie
-              publiczne, dzieła sztuki oraz metody komunikacji, które wspierają
-              takie interakcje.
-            </p>
+                <Heading
+                  level={4}
+                  display
+                  className="mt-6 md:text-xl normal-case "
+                >
+                  Communal Effort
+                </Heading>
+                <p>
+                  Our community values creative cooperation and collaboration.
+                  We strive to produce, promote and protect social networks,
+                  public spaces, works of art, and methods of communication that
+                  support such interaction.
+                </p>
 
-            <Heading level={4} display className="mt-6 md:text-xl normal-case ">
-              Ecological Awareness / <br />
-              Świadomość Ekologiczna
-            </Heading>
-            <p>
-              Desert Transformation Lab is nested in Eagle’s Nest Landscape
-              Park, within the dunes of Błędowska Desert, an ecosystem that is
-              part of the Natura 2000 protection program. You are invited to
-              meet our neighbours, human and more than human, and please be
-              respectful and aware that their needs may be different from yours.
-            </p>
-            <div className="flex justify-center mb-4 mt-2">
-              <div className="border-t w-[120px] border-accent-alt"></div>
-            </div>
-            <p>
-              Pustynne Laboratorium Transformacji jest osadzone w Parku
-              Krajobrazowym Orlich Gniazd, w obrębie wydm Pustyni Błędowskiej,
-              ekosystemie będącym częścią programu ochrony Natura 2000.
-              Zapraszamy Cię do spotkania się z naszymi sąsiadami, ludźmi i
-              innymi istotami, prosimy jednak o szacunek i świadomość, że ich
-              potrzeby mogą się różnić od Twoich.
-            </p>
-          </div>
-        </section>
+                <Heading
+                  level={4}
+                  display
+                  className="mt-6 md:text-xl normal-case "
+                >
+                  Ecological Awareness
+                </Heading>
+                <p>
+                  Desert Transformation Lab is nested in Eagle’s Nest Landscape
+                  Park, within the dunes of Błędowska Desert, an ecosystem that
+                  is part of the Natura 2000 protection program. You are invited
+                  to meet our neighbours, human and more than human, and please
+                  be respectful and aware that their needs may be different from
+                  yours.
+                </p>
+              </div>
+            </section>
+          </>
+        )}
+
+        {router.locale === 'pl' && (
+          <>
+            <section className="mb-12 max-w-3xl mx-auto md:pt-12 md:flex ">
+              <div className="flex flex-col gap-4 text-accent-alt">
+                <Heading
+                  level={2}
+                  display
+                  className="text-left mb-6 md:text-2xl normal-case"
+                >
+                  Zanim rozpocznie się dzika przygoda, przeczytaj proszę nasze
+                  Pustynne Wartości
+                </Heading>
+
+                <p>
+                  Pustynne Laboratorium Transformacji kształtuje się poprzez
+                  wspólne wartości: równość wszystkich istot, świadomość,
+                  ekologia, troska, różnorodność, całość, niestosowanie
+                  przemocy, społeczność i zrównoważony rozwój. Co to oznacza w
+                  praktyce?
+                </p>
+
+                <Heading
+                  level={4}
+                  display
+                  className="mt-6 md:text-xl normal-case "
+                >
+                  Aktywna partycypacja
+                </Heading>
+
+                <p>
+                  Wierzymy, że transformacyjne zmiany mogą nastąpić tylko
+                  poprzez głębokie zaangażowanie - na poziomie indywidualnym,
+                  kolektywnym i społecznym. Zachęcamy do uczenia się poprzez
+                  działanie. Każda osoba jest zaproszona do pracy na rzecz
+                  wspólnego dobra, naszej planety i zamieszkujących ją istot.
+                  Wszystkie osoby uczestniczące biorą udział w codziennych
+                  zajęciach wioski i proszone są o przestrzeganie{' '}
+                  <Link
+                    className="text-accent no-underline"
+                    href="https://drive.google.com/file/d/1W7wgWGboRayeAJZcTP9P9OrQgbhj4NkT/view?usp=drive_link"
+                  >
+                    Pustynnych Wartości
+                  </Link>
+                  .
+                </p>
+
+                <Heading
+                  level={4}
+                  display
+                  className="mt-6 md:text-xl normal-case "
+                >
+                  Ekologia & Zrównoważony Rozwój
+                </Heading>
+
+                <p>
+                  Praktyki ekologiczne leżą u podstaw Laboratorium Pustynnej
+                  Transformacji i włączamy je w naszą codzienność. Pobyt na
+                  Pustyni jest idealnym ekosystemem do rozwijania nowych nawyków
+                  i ponownego przemyślenia ich wpływu na środowisko naturalne.
+                  Stwórzmy pozytywny ślad: Jesteśmy regeneratywnym placem zabaw.
+                  Przyjedź i zostaw po sobie coś, co docenią przyszłe pokolenia.
+                </p>
+
+                <Heading
+                  level={4}
+                  display
+                  className="mt-6 md:text-xl normal-case "
+                >
+                  Zgoda
+                </Heading>
+
+                <p>
+                  Zadbaj o swoje granice i potrzeby, szanuj granice i potrzeby
+                  innych osób. Jeśli to nie jest pełne &quot;tak&quot;, to jest
+                  to &quot;nie&quot;.
+                </p>
+
+                <Heading
+                  level={4}
+                  display
+                  className="mt-6 md:text-xl normal-case "
+                >
+                  Radykalna Samowystarczalność
+                </Heading>
+
+                <p>
+                  Kiedy przyjedziesz do Laboratorium Pustynnego Wyobraźni, weź
+                  odpowiedzialność za siebie, swoje bezpieczeństwo, komfort oraz
+                  dobrobyt własny i wioski. Jeśli widzisz, że coś jest do
+                  zrobienia to znaczy, że jest to Twoje zadanie.
+                </p>
+
+                <Heading
+                  level={4}
+                  display
+                  className="mt-6 md:text-xl normal-case "
+                >
+                  Ekonomia Daru
+                </Heading>
+
+                <p>
+                  Jaki jest Twój najgłębszy dar, którym chcesz podzielić się z
+                  społecznością? Jak możemy wspólnie praktykować formy wymiany
+                  oparte na wzajemnej trosce, a nie na modelach
+                  kapitalistycznych?
+                </p>
+
+                <Heading
+                  level={4}
+                  display
+                  className="mt-6 md:text-xl normal-case "
+                >
+                  Dekomercjalizacja
+                </Heading>
+
+                <p>
+                  Aby zachować ducha dawania, nasza społeczność stara się
+                  tworzyć środowiska społeczne, które są pozbawione komercyjnych
+                  partnerstw, transakcji lub reklam. Chcemy chronić naszą
+                  kulturę przed taką eksploatacją. Wesprzyj nas w tym dążeniu!
+                </p>
+
+                <Heading
+                  level={4}
+                  display
+                  className="mt-6 md:text-xl normal-case "
+                >
+                  Kolektywny Wysiłek
+                </Heading>
+
+                <p>
+                  Nasza społeczność ceni twórczą współpracę i kolaborację.
+                  Staramy się wytwarzać, promować i chronić sieci społeczne,
+                  przestrzenie publiczne, dzieła sztuki oraz metody komunikacji,
+                  które wspierają takie interakcje.
+                </p>
+
+                <Heading
+                  level={4}
+                  display
+                  className="mt-6 md:text-xl normal-case "
+                >
+                  Świadomość Ekologiczna
+                </Heading>
+
+                <p>
+                  Pustynne Laboratorium Transformacji jest osadzone w Parku
+                  Krajobrazowym Orlich Gniazd, w obrębie wydm Pustyni
+                  Błędowskiej, ekosystemie będącym częścią programu ochrony
+                  Natura 2000. Zapraszamy Cię do spotkania się z naszymi
+                  sąsiadami, ludźmi i innymi istotami, prosimy jednak o szacunek
+                  i świadomość, że ich potrzeby mogą się różnić od Twoich.
+                </p>
+              </div>
+            </section>
+          </>
+        )}
 
         <section className="mb-12 max-w-4xl mx-auto md:pt-8 md:flex justify-center">
           <div className="flex gap-4 flex-col sm:flex-row">
             <LinkButton href="/stay" className="lowercase">
-              apply to stay
+              Participate / dołącz
             </LinkButton>
           </div>
         </section>
@@ -485,7 +597,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
               level={2}
               className="text-2xl mb-8 max-w-prose text-white "
             >
-              {__('stay_chose_accommodation', appName)}
+              {t('stay_chose_accommodation', appName)}
             </Heading>
             <div className="flex justify-center">
               {listings && listings.count() > 0 && (
@@ -504,7 +616,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                   })}
                 </div>
               )}
-              {listings?.count() === 0 && __('listing_no_listings_found')}
+              {listings?.count() === 0 && t('listing_no_listings_found')}
             </div>
           </div>
         </section>
@@ -624,8 +736,12 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
   );
 };
 
-HomePage.getInitialProps = async () => {
+HomePage.getInitialProps = async (context: NextPageContext) => {
   try {
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
     const [bookingResponse, generalRes] = await Promise.all([
       api.get('/config/booking').catch((err) => {
         console.error('Error fetching booking config:', err);
@@ -642,12 +758,14 @@ HomePage.getInitialProps = async () => {
     return {
       generalConfig,
       bookingSettings,
+      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       bookingSettings: null,
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

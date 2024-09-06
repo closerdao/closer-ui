@@ -75,6 +75,7 @@ interface ButtonProps extends VariantProps<typeof buttonStyles> {
   isEnabled?: boolean;
   isLoading?: boolean;
   size?: 'small' | 'medium' | 'large';
+  dataTestid?: string
 }
 
 const Button = ({
@@ -89,10 +90,12 @@ const Button = ({
   color,
   isFullWidth,
   size,
+  dataTestid
 }: ButtonProps) => {
   return (
     <>
       <button
+        {...(dataTestid && { 'data-testid': dataTestid })}
         onClick={onClick}
         disabled={!isEnabled || isLoading}
         title={title}
@@ -103,7 +106,7 @@ const Button = ({
         )}
         `}
       >
-        {isLoading ? <Spinner /> : children}
+        {isLoading ?<div className='flex items-center gap-2'> <Spinner /> {children}</div>: children}
       </button>
       {infoText && <div className="text-sm text-center pt-2">{infoText}</div>}
     </>

@@ -1,6 +1,6 @@
 import Head from 'next/head';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Timeline, {
   CustomMarker,
   DateHeader,
@@ -9,12 +9,14 @@ import Timeline, {
 } from 'react-calendar-timeline';
 
 import SpaceHostBooking from '../../components/SpaceHostBooking';
+import Switch from '../../components/Switch';
 import { ErrorMessage, Spinner } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
 import dayjs from 'dayjs';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
-import PageNotFound from '../404';
 import {
   MAX_BOOKINGS_TO_FETCH,
   MAX_LISTINGS_TO_FETCH,
@@ -24,6 +26,7 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { useDebounce } from '../../hooks/useDebounce';
+import { Listing } from '../../types';
 import {
   formatListings,
   generateBookingItems,
@@ -31,13 +34,14 @@ import {
   getFilterAccommodationUnits,
 } from '../../utils/booking.helpers';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers';
-import { Listing } from '../../types';
+import { loadLocaleData } from '../../utils/locale.helpers';
+import PageNotFound from '../not-found';
 
 const loadTime = Date.now();
 
 const BookingsCalendarPage = () => {
-  const { enabledConfigs } = useConfig();
+  const t = useTranslations();
+  const { enabledConfigs, TIME_ZONE } = useConfig();
   const { user } = useAuth();
   const { platform }: any = usePlatform();
 
@@ -46,7 +50,7 @@ const BookingsCalendarPage = () => {
   const dayAsMs = 24 * 60 * 60 * 1000;
   const sixHours = 6 * 60 * 60 * 1000;
   const oneMonth = 30 * dayAsMs;
-  const defaultAccommodationUnits = [{ title: __('bookings_no_bookings') }];
+  const defaultAccommodationUnits = [{ title: t('bookings_no_bookings') }];
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -63,6 +67,11 @@ const BookingsCalendarPage = () => {
     start: new Date(loadTime),
     end: defaultTimeEnd,
   });
+
+  const [showListingsWithBookings, setShowListingsWithBookings] =
+    useState(false);
+
+  const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   const debouncedVisibleRange = useDebounce(visibleRange, 500);
 
@@ -82,6 +91,7 @@ const BookingsCalendarPage = () => {
     where: {},
     limit: MAX_LISTINGS_TO_FETCH,
   });
+
   const allUsers = platform.user.find({ limit: MAX_USERS_TO_FETCH });
   const formattedListings = listings && formatListings(listings.toJS());
   const listingOptions = listings?.toJS().map((listing: Listing) => ({
@@ -89,11 +99,13 @@ const BookingsCalendarPage = () => {
     label: listing.name,
   }));
 
-  const bookingsWithUserAndListing = getBookingsWithUserAndListing(
+  const bookingsWithUserAndListing = getBookingsWithUserAndListing({
     bookings,
     listings,
     allUsers,
-  );
+    TIME_ZONE,
+    browserTimezone,
+  });
 
   const accommodationUnits =
     formattedListings &&
@@ -121,27 +133,43 @@ const BookingsCalendarPage = () => {
     loadData();
   }, [debouncedVisibleRange]);
 
-  useEffect(() => {
-    if (filteredAccommodationUnits && filteredAccommodationUnits.length > 0) {
-      if (
-        JSON.stringify(filteredAccommodationUnits) !==
-        JSON.stringify(lastNonEmptyUnits)
-      ) {
-        setLastNonEmptyUnits(filteredAccommodationUnits);
-      }
-    }
-  }, [filteredAccommodationUnits, lastNonEmptyUnits]);
+  const prevFilteredAccommodationUnits = useRef(null);
+  const prevBookingItems = useRef(null);
 
   useEffect(() => {
-    if (bookingItems && bookingItems.length > 0) {
+    if (showListingsWithBookings) {
       if (
-        JSON.stringify(bookingItems) !==
-        JSON.stringify(lastNonEmptyBookingItems)
+        JSON.stringify(filteredAccommodationUnits) !==
+        JSON.stringify(prevFilteredAccommodationUnits.current)
       ) {
-        setLastNonEmptyBookingItems(bookingItems);
+        setLastNonEmptyUnits(
+          filteredAccommodationUnits || defaultAccommodationUnits,
+        );
+        prevFilteredAccommodationUnits.current = filteredAccommodationUnits;
+      }
+    } else {
+      if (
+        JSON.stringify(accommodationUnits) !==
+        JSON.stringify(prevFilteredAccommodationUnits.current)
+      ) {
+        setLastNonEmptyUnits(accommodationUnits || defaultAccommodationUnits);
+        prevFilteredAccommodationUnits.current = accommodationUnits;
       }
     }
-  }, [bookingItems, lastNonEmptyBookingItems]);
+  }, [
+    showListingsWithBookings,
+    filteredAccommodationUnits,
+    accommodationUnits,
+  ]);
+
+  useEffect(() => {
+    if (
+      JSON.stringify(bookingItems) !== JSON.stringify(prevBookingItems.current)
+    ) {
+      setLastNonEmptyBookingItems(bookingItems || []);
+      prevBookingItems.current = bookingItems;
+    }
+  }, [bookingItems]);
 
   const handleSelectedRangeChange = (
     visibleTimeStart: number,
@@ -157,6 +185,10 @@ const BookingsCalendarPage = () => {
   };
 
   const handleBookingClick = (itemId: string) => {
+    // react-calendar-timeline library uses itemId's for keys. We add index to itemId to have a unique key, and have to remove it here.
+    if (itemId.length > 24) {
+      itemId = itemId.substring(0, 24);
+    }
     window.open(`/bookings/${itemId}`, '_blank');
   };
 
@@ -190,14 +222,21 @@ const BookingsCalendarPage = () => {
   return (
     <>
       <Head>
-        <title>{__('booking_calendar')}</title>
+        <title>{t('booking_calendar')}</title>
       </Head>
 
-      <main className="flex flex-col gap-4">
-        <Heading level={1}>{__('booking_calendar')}</Heading>
+      <main className="flex flex-col">
+        <Heading level={1}>{t('booking_calendar')}</Heading>
 
-        <section className="mt-10">
+        <section className="mt-10 flex flex-col gap-8">
           <SpaceHostBooking listingOptions={listings && listingOptions} />
+          <Switch
+            disabled={false}
+            name="showListingsWithBookings"
+            label="Only show listings with bookings"
+            onChange={setShowListingsWithBookings}
+            checked={showListingsWithBookings}
+          />
         </section>
 
         <div className="min-h-[600px]">
@@ -216,7 +255,7 @@ const BookingsCalendarPage = () => {
             onTimeChange={handleSelectedRangeChange}
             minZoom={sixHours}
             maxZoom={oneMonth}
-            className="relative "
+            className="relative"
           >
             <TimelineHeaders className="sticky">
               {loading && (
@@ -249,6 +288,22 @@ const BookingsCalendarPage = () => {
       </main>
     </>
   );
+};
+
+BookingsCalendarPage.getInitialProps = async (context: NextPageContext) => {
+  try {
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    return {
+      messages,
+    };
+  } catch (err: unknown) {
+    return {
+      messages: null,
+    };
+  }
 };
 
 export default BookingsCalendarPage;

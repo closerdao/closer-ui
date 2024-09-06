@@ -7,19 +7,21 @@ import { useState } from 'react';
 import CreditsBalance from 'closer/components/CreditsBalance';
 import { Card, Heading, LinkButton } from 'closer/components/ui';
 
-import { useConfig } from 'closer';
-import { FundraisingConfig } from 'closer/types';
+import { PageNotFound, priceFormat } from 'closer';
 import api from 'closer/utils/api';
-import { __, priceFormat } from 'closer/utils/helpers';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+import { FundraisingConfig } from 'closer/types';
 
-import PageNotFound from '../404';
+const VYBE_PACKAGES = [84, 500, 2000];
 
 interface Props {
   fundraisingConfig: FundraisingConfig;
 }
 
 const SupportUsPage = ({ fundraisingConfig }: Props) => {
-  const { APP_NAME } = useConfig();
+  const t = useTranslations();
   const isCreditsEnabled = process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true';
 
   const isFundraiserEnabled =
@@ -67,8 +69,8 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               Join the Vybes
             </Heading>
             <p>
-              <strong>The Y Berlin</strong> is fundraising to support cutting-edge residencies and next-level
-              events at MOOS.
+              <strong>The Y Berlin</strong> is fundraising to support
+              cutting-edge residencies and next-level events at MOOS.
             </p>
             <p>
               With the packages below you can join the Y and receive{' '}
@@ -86,7 +88,8 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               >
                 more.
               </Link>{' '}
-              We are currently offering the first 25,000 Vybes at a discounted price of €4 per Vybe (worth €5).
+              We are currently offering the first 25,000 Vybes at a discounted
+              price of €4 per Vybe (worth €5).
             </p>
             <p>
               Stay or host at MOOS with unique flexibility. Secure your spot now
@@ -126,7 +129,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
           <Card className="flex-col sm:flex-row justify-between">
             <div className="flex items-center justify-center flex-col">
               <Heading level={3} className="uppercase">
-                Vybe 30
+                Vybe {VYBE_PACKAGES[0]}
               </Heading>
               <p className="text-gray-600 text-sm">
                 €{fundraisingConfig.creditPrice30Credits} per Vybe
@@ -134,17 +137,19 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             </div>
             <div className="flex flex-col sm:flex-row gap-4 items-center">
               <div className="text-accent flex items-center justify-center flex-col rounded-full w-[70px] h-[70px] shadow-[0_0_10px_rgba(107,82,244,0.7)]">
-                <div className="font-bold text-xl h-[25px]">30</div>
+                <div className="font-bold text-xl h-[25px]">
+                  {VYBE_PACKAGES[0]}
+                </div>
                 <div className="text-xs uppercase">Vybes</div>
               </div>
 
               <div className="h-full p-6 sm:border-r sm:border-l font-bold text-lg">
-                €{fundraisingConfig.creditPrice30Credits * 30}
+                €{fundraisingConfig.creditPrice30Credits * VYBE_PACKAGES[0]}
               </div>
 
               <div className="pl-2">
                 <LinkButton
-                  href="/credits/checkout?amount=30"
+                  href={`/credits/checkout?amount=${VYBE_PACKAGES[0]}`}
                   className="w-[200px] text-md sm:w-[150px]"
                 >
                   Join
@@ -155,7 +160,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
           <Card className="flex-col sm:flex-row justify-between">
             <div className="flex items-center justify-center flex-col">
               <Heading level={3} className="uppercase">
-                Vybe 90
+                Vybe {VYBE_PACKAGES[1]}
               </Heading>
               <p className="text-gray-600 text-sm">
                 €{fundraisingConfig.creditPrice90Credits} per Vybe
@@ -163,17 +168,19 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             </div>
             <div className="flex flex-col sm:flex-row gap-4 items-center">
               <div className="text-accent flex items-center justify-center flex-col rounded-full w-[70px] h-[70px] shadow-[0_0_10px_rgba(107,82,244,0.7)]">
-                <div className="font-bold text-xl h-[25px]">90</div>
+                <div className="font-bold text-xl h-[25px]">
+                  {VYBE_PACKAGES[1]}
+                </div>
                 <div className="text-xs uppercase">Vybes</div>
               </div>
 
               <div className="h-full p-6 sm:border-r sm:border-l font-bold text-lg">
-                €{fundraisingConfig.creditPrice90Credits * 90}
+                €{fundraisingConfig.creditPrice90Credits * VYBE_PACKAGES[1]}
               </div>
 
               <div className="pl-2">
                 <LinkButton
-                  href="/credits/checkout?amount=90"
+                  href={`/credits/checkout?amount=${VYBE_PACKAGES[1]}`}
                   className="w-[200px] text-md sm:w-[150px]"
                 >
                   Join
@@ -184,7 +191,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
           <Card className="flex-col sm:flex-row justify-between">
             <div className="flex items-center justify-center flex-col">
               <Heading level={3} className="uppercase">
-                Vybe 180
+                Vybe {VYBE_PACKAGES[2]}
               </Heading>
               <p className="text-gray-600 text-sm">
                 €{fundraisingConfig.creditPrice180Credits} per Vybe
@@ -192,17 +199,19 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             </div>
             <div className="flex flex-col sm:flex-row gap-4 items-center">
               <div className="text-accent flex items-center justify-center flex-col rounded-full w-[70px] h-[70px] shadow-[0_0_10px_rgba(107,82,244,0.7)]">
-                <div className="font-bold text-xl h-[25px]">180</div>
+                <div className="font-bold text-xl h-[25px]">
+                  {VYBE_PACKAGES[2]}
+                </div>
                 <div className="text-xs uppercase">Vybes</div>
               </div>
 
               <div className="h-full p-6 sm:border-r sm:border-l font-bold text-lg">
-                €{fundraisingConfig.creditPrice180Credits * 180}
+                €{fundraisingConfig.creditPrice180Credits * VYBE_PACKAGES[2]}
               </div>
 
               <div className="pl-2">
                 <LinkButton
-                  href="/credits/checkout?amount=180"
+                  href={`/credits/checkout?amount=${VYBE_PACKAGES[2]}`}
                   className="w-[200px] text-md sm:w-[150px]"
                 >
                   Join
@@ -305,18 +314,14 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               )}
             </div>
           </Card>
-          <Heading level={3}>
-            {APP_NAME && __('carrots_subheading_what', APP_NAME)}
-          </Heading>
+          <Heading level={3}>{t('carrots_subheading_what')}</Heading>
 
           <div>
-            <p className="mb-4">{APP_NAME && __('carrots_what_1', APP_NAME)}</p>
-            <p className="mb-4">{APP_NAME && __('carrots_what_2', APP_NAME)}</p>
-            <p className="mb-4">
-              {APP_NAME && __('carrots_what_2.5', APP_NAME)}
-            </p>
-            <p className="mb-4">{APP_NAME && __('carrots_what_3', APP_NAME)}</p>
-            <p className="mb-4">{APP_NAME && __('carrots_what_4', APP_NAME)}</p>
+            <p className="mb-4">{t('carrots_what_1')}</p>
+            <p className="mb-4">{t('carrots_what_2')}</p>
+            <p className="mb-4">{t('carrots_what_2_5')}</p>
+            <p className="mb-4">{t('carrots_what_3')}</p>
+            <p className="mb-4">{t('carrots_what_4')}</p>
           </div>
         </section>
       </div>
@@ -324,19 +329,24 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
   );
 };
 
-SupportUsPage.getInitialProps = async () => {
+SupportUsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const {
-      data: { results: fundraisingConfig },
-    } = await api.get('/config/fundraiser');
+    const [fundraisingConfigResponse, messages] = await Promise.all([
+      api.get('/config/fundraiser').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
+
+    const fundraisingConfig = fundraisingConfigResponse?.data.results.value;
 
     return {
-      fundraisingConfig: fundraisingConfig.value,
+      fundraisingConfig,
+      messages,
     };
   } catch (err) {
     return {
       fundraisingConfig: {},
       error: err,
+      messages: null,
     };
   }
 };

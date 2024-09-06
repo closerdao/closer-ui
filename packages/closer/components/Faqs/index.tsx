@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { FormattedFaqs, QuestionAndAnswer } from '../../types/resources';
 import { ErrorMessage } from '../ui';
 
@@ -11,7 +9,7 @@ interface Props {
 
 const Faqs = ({ faqs, error, isExpanded }: Props) => {
   return (
-    <div className='w-full'>
+    <div className="w-full">
       {error && <ErrorMessage error={error} />}
 
       {faqs &&
@@ -25,7 +23,10 @@ const Faqs = ({ faqs, error, isExpanded }: Props) => {
               key={category[0]}
               className="border-b border-accent-light text-sm"
             >
-              <details className="appearance-none group py-2 " {...(isExpanded ? { open: true } : {})}>
+              <details
+                className="appearance-none group py-2 "
+                {...(isExpanded ? { open: true } : {})}
+              >
                 <summary className="custom-summary flex cursor-pointer items-center justify-between py-1 hover:text-c-blue ">
                   <p className="uppercase font-bold text-lg my-2">
                     {category[0]}

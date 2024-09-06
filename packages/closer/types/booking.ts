@@ -42,6 +42,11 @@ export type Listing = {
   managedBy: string[];
   _id: string;
   availableFor?: string[];
+  priceDuration?: string;
+  workingHoursStart?: number;
+  workingHoursEnd?: number;
+  fiatHourlyPrice?: Price<CloserCurrencies.EUR>;
+  tokenHourlyPrice?: Price<CloserCurrencies.TDF>;
 };
 
 export type Booking = {
@@ -94,6 +99,7 @@ export type Booking = {
   } | null;
   roomNumber?: number;
   adminBookingReason?: string;
+  roomOrBedNumbers?: number[];
 };
 
 export interface StatusColor {
@@ -112,6 +118,7 @@ export interface BookingWithUserAndListing {
   listingId: string;
   fiatPriceVal: number;
   fiatPriceCur: CloserCurrencies;
+  roomOrBedNumbers?: number[];
   adminBookingReason?: string;
 }
 
@@ -127,4 +134,40 @@ export interface BookingItem {
   title: string;
   start_time: Date;
   end_time: Date;
+  roomOrBedNumbers?: number[];
+}
+
+export type NightlyBookingByListing = {
+  listingName: string;
+  roomOrBedNumber: number;
+  nights: number;
+  totalNights: number;
+};
+
+export type SpaceBookingByListing = {
+  listingName: string;
+  roomOrBedNumber: number;
+  spaceSlots: number;
+  totalSpaceSlots: number;
+};
+
+export interface ListingByType {
+  listingName: string;
+  roomOrBedNumber: number;
+  nights?: number;
+  spaceSlots?: number;
+  totalNights?: number;
+  totalSpaceSlots?: number;
+}
+
+export interface Filter {
+  where: { [key: string]: any };
+  limit?: number;
+  start?: DateRangeFilter;
+  sort_by?: string;
+}
+
+export interface DateRangeFilter {
+  $lte?: Date;
+  $gte?: Date;
 }

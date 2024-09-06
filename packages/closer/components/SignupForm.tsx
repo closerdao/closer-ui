@@ -5,12 +5,14 @@ import { useRouter } from 'next/router';
 import { FormEvent, useEffect, useState } from 'react';
 
 import dayjs from 'dayjs';
+import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import { useAuth } from '../contexts/auth';
-import { parseMessageFromError } from '../utils/common';
-import { __, isInputValid } from '../utils/helpers';
+import { getRedirectUrl } from '../utils/auth.helpers';
+import { isInputValid } from '../utils/helpers';
+import GoogleButton from './GoogleButton';
 import { Button, Card, Checkbox, ErrorMessage, Input } from './ui';
 import Heading from './ui/Heading';
 
@@ -19,14 +21,22 @@ interface Props {
 }
 
 const SignupForm = ({ app }: Props) => {
+  const t = useTranslations();
   const router = useRouter();
   const { back, source, start, end, adults, useTokens, eventId, volunteerId } =
     router.query || {};
 
-  const { signup, isAuthenticated, error, setError } = useAuth();
+  const {
+    isAuthenticated,
+    user,
+    error,
+    isLoading,
+    hasSignedUp,
+    isGoogleLoading,
+    authGoogle,
+    signup,
+  } = useAuth();
 
-  const [submitted, setSubmitted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [application, setApplication] = useState({
     screenname: '',
     phone: '',
@@ -35,6 +45,8 @@ const SignupForm = ({ app }: Props) => {
     fields: {},
     source: typeof window !== 'undefined' && window.location.href,
   });
+  const [isLogin, setIsLogin] = useState(false);
+
   const dateFormat = 'YYYY-MM-DD';
 
   const getSignupQuery = () => {
@@ -59,39 +71,7 @@ const SignupForm = ({ app }: Props) => {
 
   const [isEmailConsent, setIsEmailConsent] = useState(true);
 
-  const handleSubmit = async (e: FormEvent) => {
-    setIsLoading(true);
-    e.preventDefault();
-    setError(null);
-    if (!application.email) {
-      setError('Please enter a valid email.');
-      return;
-    }
-
-    try {
-      const referredBy = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
-      const response = await signup({
-        ...application,
-        ...(referredBy && { referredBy }),
-      });
-
-      if (response && response._id) {
-        setSubmitted(true);
-        gaEvent('sign_up', {
-          category: 'signing',
-          label: 'success',
-        });
-      } else {
-        console.log('Invalid response', response);
-      }
-    } catch (err: unknown) {
-      setError(parseMessageFromError(err));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const redirect = () => {
+  const redirectAfterSignup = () => {
     if (source) {
       router.push(
         `${decodeURIComponent(back as string)}&source=${source}` || '/settings',
@@ -102,13 +82,26 @@ const SignupForm = ({ app }: Props) => {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
-      redirect();
+    if (isAuthenticated && user) {
+      redirectAfterSignup();
     }
-  }, [isAuthenticated, submitted, back]);
+    if (isAuthenticated && isLogin) {
+      const redirectUrl = getRedirectUrl({
+        back,
+        source,
+        start,
+        end,
+        adults,
+        useTokens,
+        eventId,
+        volunteerId,
+        hasSubscription: Boolean(user && user?.subscription?.plan),
+      });
+      redirectTo(redirectUrl);
+    }
+  }, [isAuthenticated, back, user]);
 
   const updateApplication = (update: any) => {
-    setError(null);
     setApplication((prevState) => ({ ...prevState, ...update }));
   };
 
@@ -117,8 +110,42 @@ const SignupForm = ({ app }: Props) => {
     !application.screenname ||
     !isInputValid(application.email, 'email');
 
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!application.email) {
+      return;
+    }
+    const referredBy = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
+    await signup({
+      ...application,
+      ...(referredBy && { referredBy }),
+    });
+  };
+
+  const redirectTo = (url: string) => {
+    router.push(url);
+  };
+
+  const authUserWithGoogle = async () => {
+    setIsLogin(false);
+    const authRes = await authGoogle();
+    if (authRes.result === 'login') {
+      setIsLogin(true);
+    }
+    if (authRes.result === 'signup') {
+      gaEvent('sign_up', {
+        category: 'signing',
+        // label: 'success',
+      });
+    }
+  };
+
   return (
-    <Card className={`${app && app.toLowerCase() === 'tdf' ? 'mt-[200px]':'mt-0'} pb-8 relative  md:mt-0`}>
+    <Card
+      className={`${
+        app && app.toLowerCase() === 'tdf' ? 'mt-[200px]' : 'mt-0'
+      } pb-8 relative  md:mt-0`}
+    >
       {app && app.toLowerCase() === 'tdf' && (
         <div className="absolute top-[-202px] h-[200px] overflow-hidden w-[90%]">
           <Image
@@ -130,12 +157,12 @@ const SignupForm = ({ app }: Props) => {
           />{' '}
         </div>
       )}
-      {submitted && !error ? (
+      {hasSignedUp && !error ? (
         <>
           <Heading level={2} className="my-4">
-            {__('signup_success')}
+            {t('signup_success')}
           </Heading>
-          <p>{__('signup_success_cta')}</p>
+          <p>{t('signup_success_cta')}</p>
         </>
       ) : (
         <form className=" flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -146,8 +173,8 @@ const SignupForm = ({ app }: Props) => {
           />
 
           <Input
-            label={__('signup_form_name')}
-            placeholder={__('signup_form_name_placeholder')}
+            label={t('signup_form_name')}
+            placeholder={t('signup_form_name_placeholder')}
             value={application.screenname}
             onChange={(e) =>
               updateApplication({
@@ -156,8 +183,8 @@ const SignupForm = ({ app }: Props) => {
             }
           />
           <Input
-            label={__('signup_form_email')}
-            placeholder={__('signup_form_email_placeholder')}
+            label={t('signup_form_email')}
+            placeholder={t('signup_form_email_placeholder')}
             value={application.email}
             onChange={(e) =>
               updateApplication({
@@ -167,8 +194,8 @@ const SignupForm = ({ app }: Props) => {
           />
           <Input
             type="password"
-            placeholder={__('signup_form_password_placeholder')}
-            label={__('signup_form_password')}
+            placeholder={t('signup_form_password_placeholder')}
+            label={t('signup_form_password')}
             value={application.password}
             onChange={(e) =>
               updateApplication({
@@ -182,25 +209,33 @@ const SignupForm = ({ app }: Props) => {
             isChecked={isEmailConsent}
             onChange={() => setIsEmailConsent(!isEmailConsent)}
           >
-            {__('signup_form_email_consent')}
+            {t('signup_form_email_consent')}
           </Checkbox>
 
           {error && <ErrorMessage error={error} />}
-          <div className="w-full my-4">
+          <div className="w-full my-4 flex flex-col gap-6">
             <Button
               isEnabled={!isSignupDisabled && !isLoading && isEmailConsent}
               isLoading={isLoading}
             >
-              {__('signup_form_create')}
+              {t('signup_form_create')}
             </Button>
+
+            {process.env.NEXT_PUBLIC_FIREBASE_CONFIG && (
+              <GoogleButton
+                isLoading={isGoogleLoading}
+                onClick={authUserWithGoogle}
+              />
+            )}
           </div>
           <div className="text-center text-sm">
-            {__('signup_form_have_account')}{' '}
+            {t('signup_form_have_account')}{' '}
             <Link
+              data-testid="login-link"
               className="text-accent underline font-bold"
               href={`/login${signupQuery}`}
             >
-              {__('login_title')}{' '}
+              {t('login_title')}{' '}
             </Link>
           </div>
         </form>

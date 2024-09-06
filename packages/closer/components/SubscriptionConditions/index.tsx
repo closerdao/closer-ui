@@ -2,7 +2,8 @@ import Link from 'next/link';
 
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
-import { __ } from '../../utils/helpers';
+import { useTranslations } from 'next-intl';
+
 import Modal from '../Modal';
 import Checkbox from '../ui/Checkbox';
 
@@ -13,6 +14,7 @@ interface SubscriptionConditionsProps {
 const SubscriptionConditions = ({
   setHasAcceptedConditions,
 }: SubscriptionConditionsProps) => {
+  const t = useTranslations();
   const [isSubscriptionsTermsChecked, setIsSubscriptionsTermsChecked] =
     useState(false);
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
@@ -39,7 +41,7 @@ const SubscriptionConditions = ({
         <Modal closeModal={closeModal}>
           <div>
             <p className="step-title mb-8">
-              {__('subscriptions_terms_full_text')}
+              {t('subscriptions_terms_full_text')}
             </p>
           </div>
         </Modal>
@@ -50,13 +52,13 @@ const SubscriptionConditions = ({
           setIsSubscriptionsTermsChecked(!isSubscriptionsTermsChecked)
         }
       >
-        {__('subscriptions_checkout_comply_with')}{' '}
+        {t('subscriptions_checkout_comply_with')}{' '}
         <Link
           href="/legal/terms"
           className="text-accent underline"
           target="_blank"
         >
-          {__('subscriptions_checkout_subscription_terms')}
+          {t('subscriptions_checkout_subscription_terms')}
         </Link>
       </Checkbox>
     </>

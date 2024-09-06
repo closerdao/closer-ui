@@ -23,19 +23,34 @@ export const formatDate = (date: Date | string | null) => {
   return formattedDate;
 };
 
-export const getBlockedDateRanges = (
-  start: string | Date | null,
-  end: string | Date | null,
-  maxHorizon: number,
-  maxDuration: number,
-  unavailableDates?: string[],
-) => {
+export const getBlockedDateRanges = ({
+  start,
+  end,
+  maxHorizon,
+  maxDuration,
+  unavailableDates,
+  isHourlyBooking,
+}: {
+  start: string | Date | null;
+  end: string | Date | null;
+  maxHorizon: number;
+  maxDuration: number;
+  unavailableDates?: string[];
+  isHourlyBooking?: boolean;
+}) => {
   const dateRanges: any[] = [];
-  dateRanges.push({ before: new Date() });
+
+  if (isHourlyBooking) {
+    dateRanges.push({ before: new Date() });
+    dateRanges.push({
+      after: new Date().setDate(new Date().getDate()  + maxHorizon ),
+    });
+    return dateRanges;
+  }
+  
   dateRanges.push({
     after: new Date().setDate(new Date().getDate() + maxHorizon),
   });
-
   if (start) {
     dateRanges.push({
       after: new Date(

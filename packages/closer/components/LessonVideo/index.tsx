@@ -1,6 +1,7 @@
-import React, { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 
-import { __ } from '../../utils/helpers';
+import { useTranslations } from 'next-intl';
+
 import {
   getVideoPlatform,
   getVimeoIdFromURL,
@@ -25,6 +26,7 @@ const LessonVideo = ({
   isVideoLoading,
   getAccessUrl,
 }: Props) => {
+  const t = useTranslations();
   const videoPlatform = getVideoPlatform(videoUrl);
   const embedId =
     videoPlatform === 'vimeo'
@@ -55,10 +57,10 @@ const LessonVideo = ({
         </>
       ) : (
         <div className="w-60 text-center flex flex-col gap-4 items-center">
-          <Heading level={2}>{__('learn_cta')}</Heading>
+          <Heading level={2}>{t('learn_cta')}</Heading>
 
           <LinkButton href={getAccessUrl} className="w-[200px]">
-            {__('learn_get_access_button')}
+            {t('learn_get_access_button')}
           </LinkButton>
         </div>
       )}

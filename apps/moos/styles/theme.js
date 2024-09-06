@@ -7,16 +7,14 @@ const tdfTheme = {
     ...closerTheme.extend,
     colors: {
       ...closerTheme.extend.colors,
-      'accent-core': '#6B52F4',
-      'accent-light': '#D3C8FF',
+      'accent': '#590911',
+      'accent-light': '#ebd5d8',
       dominant: '#ffffff',
       complimentary: '#000000',
       'complimentary-medium': '#262626',
       'complimentary-light': '#333333',
-      accent: '#6B52F4',
       'accent-dark': '#368e2f',
       'accent-medium': '#368e2f',
-      'accent-light': '#D3C8FF',
       'accent-alt': '#52FFB8',
       'accent-alt-dark': '#42CC93',
       'accent-alt-medium': '#97FFD4',
@@ -24,6 +22,8 @@ const tdfTheme = {
       // system colors belong to closer
       // TODO: decide with Daneel about brand color system
       neutral: '#F8F3F5', //disabled button bg
+      'neutral-light': '#FDF9FB',
+
       // 'neutral-dark': '#EDE8EB' ,
       'neutral-dark': '#F0F0F0',
       // these colors are not suppoerted anymore, please use those above

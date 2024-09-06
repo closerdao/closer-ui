@@ -4,17 +4,21 @@ import { useRouter } from 'next/router';
 
 import { FormEvent, useContext, useEffect, useState } from 'react';
 
+import GoogleButton from '../../components/GoogleButton';
 import { Card, ErrorMessage, Heading, Input } from '../../components/ui';
 import Button from '../../components/ui/Button';
 import Switcher from '../../components/ui/Switcher';
 
-import dayjs from 'dayjs';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+import { event as gaEvent } from 'nextjs-google-analytics';
 
 import { useAuth } from '../../contexts/auth';
 import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import api from '../../utils/api';
+import { getRedirectUrl } from '../../utils/auth.helpers';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
 
 const loginOptions =
   process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true'
@@ -22,71 +26,60 @@ const loginOptions =
     : null;
 
 const Login = () => {
+  const t = useTranslations();
   const { injected } = useContext(WalletState);
   const { signMessage } = useContext(WalletDispatch);
 
   const router = useRouter();
+  const {
+    isAuthenticated,
+    user,
+    login,
+    setAuthentification,
+    error,
+    isLoading,
+    hasSignedUp,
+    isGoogleLoading,
+    authGoogle,
+  } = useAuth();
   const { back, source, start, end, adults, useTokens, eventId, volunteerId } =
     router.query || {};
-
-  const redirect = (hasSubscription: boolean) => {
-    const dateFormat = 'YYYY-MM-DD';
-    if (!source && !back) {
-      redirectTo('/');
-      return;
-    }
-    if (!source && back && start && end && adults) {
-      redirectTo(
-        `${back}?start=${dayjs(start as string).format(dateFormat)}&end=${dayjs(
-          end as string,
-        ).format(dateFormat)}&adults=${adults}&useTokens=${useTokens}${
-          volunteerId ? `&volunteerId=${volunteerId}` : ''
-        }${eventId ? `&eventId=${eventId}` : ''}`,
-      );
-      return;
-    }
-    if (!source && back) {
-      redirectTo(`${back}`);
-      return;
-    }
-
-    if (hasSubscription && source) {
-      redirectTo(source as string);
-      return;
-    }
-    if (!hasSubscription && source !== 'undefined') {
-      const redirectUrl = back
-        ? `${decodeURIComponent(back as string).replace('back=', '')}&source=${(
-            source as string
-          ).replace('&source=', '')}`
-        : '/';
-      redirectTo(redirectUrl);
-      return;
-    }
-  };
 
   const redirectTo = (url: string) => {
     router.push(url);
   };
 
-  const { isAuthenticated, user, login, setAuthentification, error, setError } =
-    useAuth();
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setLoading] = useState(false);
   const [isWeb3Loading, setWeb3Loading] = useState(false);
   const [isLoginWithWallet, setisLoginWithWallet] = useState(false);
   const [selectedSwitcherOption, setSelectedSwitcherOption] = useState('Email');
   const [web3Error, setWeb3Error] = useState(null);
 
-  if (isAuthenticated) {
-    if (user && user?.subscription?.plan) {
-      redirect(true);
-    } else {
-      redirect(false);
-    }
+  if (isAuthenticated && !hasSignedUp) {
+    const redirectUrl = getRedirectUrl({
+      back,
+      source,
+      start,
+      end,
+      adults,
+      useTokens,
+      eventId,
+      volunteerId,
+      hasSubscription: Boolean(user && user?.subscription?.plan),
+    });
+    redirectTo(redirectUrl);
   }
+
+  const redirectToSettings = () => {
+    if (source) {
+      router.push(
+        `${decodeURIComponent(back as string)}&source=${source}` || '/settings',
+      );
+      return;
+    }
+    router.push(back ? `${decodeURIComponent(back as string)}` : '/settings');
+  };
 
   useEffect(() => {
     if (selectedSwitcherOption === 'Wallet') {
@@ -95,6 +88,12 @@ const Login = () => {
       setisLoginWithWallet(false);
     }
   }, [selectedSwitcherOption]);
+
+  useEffect(() => {
+    if (isAuthenticated && hasSignedUp) {
+      redirectToSettings();
+    }
+  }, [isAuthenticated, hasSignedUp, back]);
 
   const signInWithWallet = async (walletAddress: string) => {
     setWeb3Error(null);
@@ -141,16 +140,23 @@ const Login = () => {
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    setLoading(true);
-    setError('');
-    await login(email, password);
-    setLoading(false);
+    await login({ email, password });
+  };
+
+  const authUserWithGoogle = async () => {
+    const authRes = await authGoogle();
+    if (authRes.result === 'signup') {
+      gaEvent('sign_up', {
+        category: 'signing',
+        // label: 'success',
+      });
+    }
   };
 
   return (
     <>
       <Head>
-        <title>{__('login_title')}</title>
+        <title>{t('login_title')}</title>
       </Head>
       <main className="flex flex-col items-center">
         <section className="min-w-prose w-[280px] sm:w-96 flex flex-col gap-8 py-20">
@@ -158,17 +164,17 @@ const Login = () => {
             level={1}
             className="uppercase text-5xl sm:text-6xl font-extrabold"
           >
-            {__('login_title')}
+            {t('login_title')}
           </Heading>
 
           {back && (
             <p>
-              {__('log_in_redirect_message')}{' '}
+              {t('log_in_redirect_message')}{' '}
               <strong>
                 {typeof back === 'string' &&
                   back.substring(back[0] === '/' ? 1 : 0).substring(0, 40)}
               </strong>
-              {back.length > 40 && '...'} {__('log_in_redirect_message_page')}
+              {back.length > 40 && '...'} {t('log_in_redirect_message_page')}
             </p>
           )}
 
@@ -180,36 +186,48 @@ const Login = () => {
             />
           )}
 
-          <Card className="w-full">
+          <Card className="w-full pb-12">
             {!isLoginWithWallet ? (
-              <form onSubmit={onSubmit} className="w-full flex flex-col gap-6">
-                <Input
-                  label={__('login_email')}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder=""
-                />
-                <Input
-                  label={__('login_password')}
-                  value={password}
-                  type="password"
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder=""
-                />
+              <div>
+                <form
+                  onSubmit={onSubmit}
+                  className="w-full flex flex-col gap-6"
+                >
+                  <Input
+                    label={t('login_email')}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder=""
+                  />
+                  <Input
+                    label={t('login_password')}
+                    value={password}
+                    type="password"
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder=""
+                  />
 
-                {error && <ErrorMessage error={error} />}
+                  {error && <ErrorMessage error={error} />}
 
-                <div className="flex flex-col justify-between items-center gap-4 sm:flex-row">
-                  <div className="flex flex-col gap-4 w-full sm:flex-row py-6">
-                    <Button
-                      isEnabled={!isWeb3Loading && !isLoading}
-                      isLoading={isLoading}
-                    >
-                      {__('login_submit')}
-                    </Button>
+                  <div className="flex flex-col justify-between items-center gap-4 sm:flex-row">
+                    <div className="flex flex-col gap-4 w-full sm:flex-row py-6">
+                      <Button
+                        isEnabled={!isWeb3Loading && !isLoading}
+                        isLoading={isLoading}
+                      >
+                        {t('login_submit')}
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </form>
+                </form>
+
+                {process.env.NEXT_PUBLIC_FIREBASE_CONFIG && (
+                  <GoogleButton
+                    isLoading={isGoogleLoading}
+                    onClick={authUserWithGoogle}
+                  />
+                )}
+              </div>
             ) : (
               <div>
                 {web3Error && <ErrorMessage error={web3Error} />}
@@ -219,28 +237,49 @@ const Login = () => {
                   className="btn-primary"
                   onClick={walletConnectAndSignInFlow}
                 >
-                  {__('blockchain_sign_in_with_wallet')}
+                  {t('blockchain_sign_in_with_wallet')}
                 </Button>
               </div>
             )}
           </Card>
           <div className="text-center text-sm">
-            {__('login_no_account')}{' '}
-            <Link className="text-accent underline font-bold" href={`/signup${back ? `?back=${encodeURIComponent(back as string)}` : ''}`}>
-              {__('signup_form_create')}
+            {t('login_no_account')}{' '}
+            <Link
+              className="text-accent underline font-bold"
+              href={`/signup${
+                back ? `?back=${encodeURIComponent(back as string)}` : ''
+              }`}
+            >
+              {t('signup_form_create')}
             </Link>
             <Link
               href="/login/forgot-password"
               as="/login/forgot-password"
               className="block text-accent underline font-bold my-2"
             >
-              {__('login_link_forgotten_password')}
+              {t('login_link_forgotten_password')}
             </Link>
           </div>
         </section>
       </main>
     </>
   );
+};
+
+Login.getInitialProps = async (context: NextPageContext) => {
+  try {
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    return {
+      messages,
+    };
+  } catch (err: unknown) {
+    return {
+      messages: null,
+    };
+  }
 };
 
 export default Login;

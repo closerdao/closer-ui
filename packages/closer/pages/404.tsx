@@ -2,38 +2,26 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 import Heading from '../components/ui/Heading';
 
-import { NextPage } from 'next';
+import { loadLocaleData } from '../utils/locale.helpers';
 
-import { useAuth } from '../contexts/auth';
-import { __ } from '../utils/helpers';
-
-const PageNotFound: NextPage<{ error?: string; back?: string }> = ({
-  error,
-  back,
-}) => {
-  const { user, isAuthenticated } = useAuth();
+const Page404 = ({ error }: { error?: string }) => {
   const router = useRouter();
-  useEffect(() => {
-    if ((!isAuthenticated || !user) && back) {
-      redirectToLogin();
-    }
-  }, [isAuthenticated]);
 
-  const redirectToLogin = () => {
-    router.push(`/login?back=${back}`);
-  };
+  useEffect(() => {
+    router.push('/404');
+  }, []);
 
   return (
     <>
       <Head>
-        <title>{__('404_title')}</title>
+        <title>Page not found</title>
       </Head>
       <main className="main-content about intro page-not-found max-w-prose h-full flex flex-col flex-1 justify-center gap-4">
-        <Heading>{__('404_title')}</Heading>
+        <Heading>Page not found</Heading>
         {error && (
           <Heading level={2} className="font-light italic my-4">
             {' '}
@@ -42,7 +30,7 @@ const PageNotFound: NextPage<{ error?: string; back?: string }> = ({
         )}
         <p>
           <Link href="/" className="btn text-center">
-            {__('404_go_back')}
+            Take me home
           </Link>
         </p>
       </main>
@@ -50,4 +38,15 @@ const PageNotFound: NextPage<{ error?: string; back?: string }> = ({
   );
 };
 
-export default PageNotFound;
+export async function getStaticProps() {
+  const messages = await loadLocaleData(
+    'en',
+    process.env.NEXT_PUBLIC_APP_NAME || 'tdf',
+  );
+  return {
+    props: { messages },
+    revalidate: 86400, // 24 hours
+  };
+}
+
+export default Page404;

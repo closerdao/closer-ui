@@ -1,7 +1,9 @@
+import { useTranslations } from 'next-intl';
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 import router from 'next/router';
+
 
 import { isMobile } from 'react-device-detect';
 
@@ -12,14 +14,17 @@ import UpcomingEventsIntro from 'closer/components/UpcomingEventsIntro';
 import { Button, Card, Heading, Tag, YoutubeEmbed } from 'closer';
 import { SubscriptionPlan } from 'closer/types/subscriptions';
 import api from 'closer/utils/api';
-import { __ } from 'closer/utils/helpers';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { prepareSubscriptions } from 'closer/utils/subscriptions.helpers';
+import { NextPageContext } from 'next';
 import { event } from 'nextjs-google-analytics';
+
 
 interface Props {
   subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
 }
 const HomePage = ({ subscriptionsConfig }: Props) => {
+  const t = useTranslations();
   const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
   return (
     <div>
@@ -368,7 +373,7 @@ const HomePage = ({ subscriptionsConfig }: Props) => {
                     {plan.available === false ? (
                       <Heading level={3} className="uppercase">
                         <span className="block">🤩</span>
-                        {__('generic_coming_soon')}
+                        {t('generic_coming_soon')}
                       </Heading>
                     ) : (
                       <div className="w-full text-left ">
@@ -480,19 +485,23 @@ const HomePage = ({ subscriptionsConfig }: Props) => {
   );
 };
 
-HomePage.getInitialProps = async () => {
+HomePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const {
-      data: { results: subscriptions },
-    } = await api.get('/config/subscriptions');
+    const [subsRes, messages] = await Promise.all([
+      api.get('/config/subscriptions').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
+    const subscriptionsConfig = subsRes?.data?.results?.value.plans;
 
     return {
-      subscriptionsConfig: subscriptions.value.plans,
+      subscriptionsConfig,
+      messages,
     };
   } catch (err) {
     return {
-      subscriptionsConfig: { enabled: false, elements: [] },
+      subscriptionsConfig: { enabled: false, plans: [] },
       error: err,
+      messages: null,
     };
   }
 };

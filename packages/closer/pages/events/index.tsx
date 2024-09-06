@@ -4,12 +4,15 @@ import Link from 'next/link';
 import EventsList from '../../components/EventsList';
 import Heading from '../../components/ui/Heading';
 
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { __ } from '../../utils/helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
 
 const now = new Date();
 
@@ -18,6 +21,7 @@ interface Props {
 }
 
 const Events = ({ generalConfig }: Props) => {
+  const t = useTranslations();
   const { PERMISSIONS } = useConfig() || {};
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
@@ -28,7 +32,7 @@ const Events = ({ generalConfig }: Props) => {
   return (
     <>
       <Head>
-        <title>{`${PLATFORM_NAME} - ${__('events_title')}`}</title>
+        <title>{`${PLATFORM_NAME} - ${t('events_title')}`}</title>
         <link
           rel="canonical"
           href="https://www.traditionaldreamfactory.com/events"
@@ -38,7 +42,7 @@ const Events = ({ generalConfig }: Props) => {
       <div className="main-content w-full mb-12">
         <div className="flex justify-between">
           <Heading level={2} className="mb-4 text-xl">
-            {__('events_upcoming')}
+            {t('events_upcoming')}
           </Heading>
           <div className="action">
             {user &&
@@ -46,7 +50,7 @@ const Events = ({ generalConfig }: Props) => {
                 !PERMISSIONS.event.create ||
                 user.roles.includes(PERMISSIONS.event.create)) && (
                 <Link href="/events/create" className="btn-primary">
-                  {__('events_link')}
+                  {t('events_link')}
                 </Link>
               )}
           </div>
@@ -64,7 +68,7 @@ const Events = ({ generalConfig }: Props) => {
       <div className="main-content intro">
         <div className="page-title flex justify-between">
           <Heading level={2} className="mb-4 text-xl">
-            {__('events_past')}
+            {t('events_past')}
           </Heading>
         </div>
         <EventsList
@@ -81,20 +85,24 @@ const Events = ({ generalConfig }: Props) => {
   );
 };
 
-Events.getInitialProps = async () => {
+Events.getInitialProps = async (context: NextPageContext) => {
   try {
-    const generalRes = await api.get('/config/general').catch(() => {
-      return null;
-    });
+    const [generalRes, messages] = await Promise.all([
+      api.get('/config/general').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
+
     const generalConfig = generalRes?.data?.results?.value;
 
     return {
       generalConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
+      messages: null,
     };
   }
 };

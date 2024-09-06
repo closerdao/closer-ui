@@ -2,11 +2,15 @@ import { useContext } from 'react';
 
 import { WalletState } from '../contexts/wallet';
 import { useConfig } from '../hooks/useConfig';
-import { __, priceFormat } from '../utils/helpers';
+import { priceFormat } from '../utils/helpers';
 import WalletActions from './WalletActions';
 import WalletHeader from './WalletHeader';
+import { useTranslations } from 'next-intl';
+
 
 const BookingWallet = ({ toPay, switchToEUR }) => {
+  const t = useTranslations();
+  
   const { BLOCKCHAIN_DAO_TOKEN } = useConfig();
   const { balanceAvailable, isWalletReady } = useContext(WalletState);
   const balanceAfterPayment = balanceAvailable - toPay;
@@ -18,14 +22,14 @@ const BookingWallet = ({ toPay, switchToEUR }) => {
       {isWalletReady ? (
         <div className="flex flex-col gap-2 mt-4">
           <div className="flex justify-between items-center">
-            <p>{__('wallet_booking_available_balance')}</p>
+            <p>{t('wallet_booking_available_balance')}</p>
             <p className="font-bold">
               {priceFormat(balanceAvailable, BLOCKCHAIN_DAO_TOKEN.symbol)}
             </p>
           </div>
           {!isInsufficientBalance ? (
             <div className="flex justify-between items-center">
-              <p>{__('wallet_booking_after_payment')}</p>
+              <p>{t('wallet_booking_after_payment')}</p>
               <p className="font-bold">
                 {priceFormat(balanceAfterPayment, BLOCKCHAIN_DAO_TOKEN.symbol)}
               </p>

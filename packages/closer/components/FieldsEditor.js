@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { ObjectId } from 'bson';
 
-import { __ } from '../utils/helpers';
+import { ObjectId } from 'bson';
+import { useTranslations } from 'next-intl';
 
 const fieldTypes = [
   {
@@ -19,6 +19,8 @@ const fieldTypes = [
 ];
 
 const FieldsEditor = ({ value, onChange }) => {
+  const t = useTranslations();
+
   const [options, setOptions] = useState(value);
   const updateOptions = (update) => {
     setOptions(update);
@@ -53,11 +55,11 @@ const FieldsEditor = ({ value, onChange }) => {
             className="mr-3 mb-4 p-3 shadow"
           >
             <div className="mb-3">
-              <label>{ __('fields_editor_questions') }</label>
+              <label>{t('fields_editor_questions')}</label>
               <input
                 type="text"
                 value={option.name}
-                placeholder={ option.placeholder }
+                placeholder={option.placeholder}
                 onChange={(e) => {
                   e.preventDefault();
                   updateOption(index, {
@@ -68,7 +70,7 @@ const FieldsEditor = ({ value, onChange }) => {
               />
             </div>
             <div className="mb-3">
-              <label>{__('fields_editor_type')}</label>
+              <label>{t('fields_editor_type')}</label>
               <select
                 value={option.fieldType}
                 onChange={(e) =>
@@ -87,7 +89,7 @@ const FieldsEditor = ({ value, onChange }) => {
             </div>
             {option.fieldType === 'select' && (
               <div className="mb-3">
-                <label>{__('fields_editor_options')}</label>
+                <label>{t('fields_editor_options')}</label>
                 {option.options &&
                   option.options.map((opt, i) => (
                     <div
@@ -123,7 +125,7 @@ const FieldsEditor = ({ value, onChange }) => {
                           });
                         }}
                       >
-                        {__('fields_editor_remove')}
+                        {t('fields_editor_remove')}
                       </a>
                     </div>
                   ))}
@@ -139,7 +141,7 @@ const FieldsEditor = ({ value, onChange }) => {
                       });
                     }}
                   >
-                    {__('fields_editor_add_option')}
+                    {t('fields_editor_add_option')}
                   </a>
                 </div>
               </div>
@@ -150,14 +152,14 @@ const FieldsEditor = ({ value, onChange }) => {
                 className="danger-link"
                 onClick={(e) => removeOption(e, index)}
               >
-                {__('fields_editor_remove')}
+                {t('fields_editor_remove')}
               </a>
             </div>
           </div>
         ))}
       <div className="flex justify-start items-center">
         <a href="#" className="btn" onClick={(e) => addOption(e)}>
-          {__('fields_editor_add_custom_field')}
+          {t('fields_editor_add_custom_field')}
         </a>
       </div>
     </div>

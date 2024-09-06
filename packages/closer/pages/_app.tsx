@@ -1,56 +1,142 @@
 import { AppProps } from 'next/app';
+import Head from 'next/head';
 import { useRouter } from 'next/router';
+import Script from 'next/script';
 
-import { FC } from 'react';
+import { useEffect, useState } from 'react';
+import React from 'react';
 
-import Footer from '../components/Footer';
-import Layout from '../components/Layout';
-import { AppHead } from '../components/Metatags';
-import Navigation from '../components/Navigation';
-
-import { ExternalProvider, Web3Provider } from '@ethersproject/providers';
+import {
+  ExternalProvider,
+  JsonRpcFetchFunc,
+  Web3Provider,
+} from '@ethersproject/providers';
 import { Web3ReactProvider } from '@web3-react/core';
+import {
+  AuthProvider,
+  ConfigProvider,
+  PlatformProvider,
+  WalletProvider,
+  api,
+  blockchainConfig,
+} from 'closer';
+import { configDescription } from 'closer/config';
+import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
+import { prepareGeneralConfig } from 'closer/utils/app.helpers';
+import { NextIntlClientProvider } from 'next-intl';
+import { GoogleAnalytics } from 'nextjs-google-analytics';
 
-import { closerConfig } from '../config';
-import { blockchainConfig } from '../config_blockchain';
-import { AuthProvider } from '../contexts/auth';
-import { ConfigProvider } from '../contexts/config';
-import { PlatformProvider } from '../contexts/platform';
-import { WalletProvider } from '../contexts/wallet';
-import '../public/styles.css';
+interface AppOwnProps extends AppProps {
+  configGeneral: any;
+}
 
-const Application: FC<AppProps> = ({ Component, pageProps }) => {
+export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
+  const library = new Web3Provider(provider);
+  return library;
+}
+
+const prepareDefaultConfig = () => {
+  const general =
+    configDescription.find((config) => config.slug === 'general')?.value ?? {};
+  const transformedObject = Object.entries(general).reduce(
+    (acc, [key, value]) => {
+      return { ...acc, [key]: '' };
+    },
+    {},
+  );
+  return transformedObject;
+};
+
+const MyApp = ({ Component, pageProps }: AppOwnProps) => {
+  const defaultGeneralConfig = prepareDefaultConfig();
+
   const router = useRouter();
-  const query = router.query;
-  if (query?.ref && typeof localStorage !== 'undefined') {
-    localStorage.setItem('referrer', query?.ref as string);
-  }
+  const { query } = router;
+  const referral = query.referral;
 
-  function getLibrary(provider: ExternalProvider) {
-    const library = new Web3Provider(provider);
-    return library;
-  }
+  const [config, setConfig] = useState<any>(
+    prepareGeneralConfig(defaultGeneralConfig),
+  );
+
+  const { FACEBOOK_PIXEL_ID } = config || {};
+
+  useEffect(() => {
+    if (referral) {
+      localStorage.setItem(REFERRAL_ID_LOCAL_STORAGE_KEY, referral as string);
+    }
+  }, [referral]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const generalConfigRes = await api.get('config/general').catch(() => {
+          return;
+        });
+        setConfig(prepareGeneralConfig(generalConfigRes?.data.results.value));
+      } catch (err) {
+        console.error(err);
+        return;
+      }
+    })();
+  }, []);
 
   return (
-    <ConfigProvider config={{ ...closerConfig, ...blockchainConfig }}>
-      <AuthProvider>
-        <PlatformProvider>
-          <Web3ReactProvider getLibrary={getLibrary}>
-            <WalletProvider>
-              <div className="h-100 w-100 static bg-[url('/images/backgrounds/light-green.svg')]">
-                <AppHead />
-                <Navigation />
-                <Layout>
-                  <Component {...pageProps} />
-                </Layout>
-                <Footer />
-              </div>
-            </WalletProvider>
-          </Web3ReactProvider>
-        </PlatformProvider>
-      </AuthProvider>
-    </ConfigProvider>
+    <>
+      <Head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+        />
+      </Head>
+
+      <Script
+        id="fb-pixel"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '${FACEBOOK_PIXEL_ID}');
+  fbq('track', 'PageView');
+  `,
+        }}
+      />
+
+<ConfigProvider
+        config={{
+          ...config,
+          ...blockchainConfig,
+        }}
+      >
+        <NextIntlClientProvider
+          locale={router.locale || 'en'}
+          messages={pageProps.messages || {}}
+          timeZone={config.timeZone || 'Europe/Lisbon'}
+        >
+          <AuthProvider>
+            <PlatformProvider>
+              <Web3ReactProvider getLibrary={getLibrary}>
+                <WalletProvider>
+                  <GoogleAnalytics trackPageViews />
+                  <Component {...pageProps} config={config} />
+                  {/* TODO: create cookie consent page with property-specific parameters #357  */}
+                  
+                </WalletProvider>
+              </Web3ReactProvider>
+            </PlatformProvider>
+          </AuthProvider>
+        </NextIntlClientProvider>
+      </ConfigProvider>
+
+    
+    </>
   );
 };
 
-export default Application;
+export default MyApp;

@@ -5,9 +5,10 @@ import { FormEvent, useState } from 'react';
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { StripeCardElementChangeEvent } from '@stripe/stripe-js';
 
+import { useTranslations } from 'next-intl';
+
 import { CloserCurrencies } from '../../types';
 import api from '../../utils/api';
-import { __ } from '../../utils/helpers';
 import { Button, ErrorMessage } from '../ui';
 
 interface Props {
@@ -16,6 +17,7 @@ interface Props {
 }
 
 function CreditsCheckoutForm({ userEmail, credits }: Props) {
+  const t = useTranslations();
   const [isSubmitEnabled, setIsSubmitEnabled] = useState(false);
   const [error, setError] = useState<any>();
   const [isLoading, setIsLoading] = useState(false);
@@ -51,9 +53,9 @@ function CreditsCheckoutForm({ userEmail, credits }: Props) {
 
   const renderButtonText = () => {
     if (isLoading) {
-      return __('checkout_processing_payment');
+      return t('checkout_processing_payment');
     }
-    return __('checkout_pay');
+    return t('checkout_pay');
   };
 
   const handlePay = async (e: FormEvent<HTMLFormElement>) => {
