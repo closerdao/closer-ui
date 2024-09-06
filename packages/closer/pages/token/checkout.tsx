@@ -104,6 +104,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
         await api.post('/metric', {
           event: 'token-sale',
           value: Number(tokens),
+          point: Number(tokens),
           category: 'revenue',
         });
       } catch (error: unknown) {
