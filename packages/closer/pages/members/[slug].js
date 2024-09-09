@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
-import Linkify from 'react-linkify';
 
 import ConnectedWallet from '../../components/ConnectedWallet';
 import EventsList from '../../components/EventsList';
@@ -40,8 +39,6 @@ const MemberPage = ({ member, loadError }) => {
   const [about, setAbout] = useState(member?.about || '');
   const [tagline, setTagline] = useState(member?.tagline || '');
   const [showForm, toggleShowForm] = useState(false);
-  const [editProfile, toggleEditProfile] = useState(true);
-
   const [hasSaved, setHasSaved] = useState(false);
 
   const { platform } = usePlatform();
@@ -344,101 +341,6 @@ const MemberPage = ({ member, loadError }) => {
                       )}
                     </Card>
                   )}
-
-                  <div className="my-8">
-                    {editProfile ? (
-                      <div>
-                        {APP_NAME === 'moos' && currentUser?.about && currentUser?.photo && <div className="my-4 font-bold0">
-                             You can now apply to book spaces!
-                          </div>}
-                        {APP_NAME === 'moos' && !currentUser?.about  && (
-                          <div className="my-4 font-bold text-red-500">
-                            Required to book spaces:
-                          </div>
-                        )}
-                        <input
-                          autoFocus
-                          value={about}
-                          className="bg-neutral rounded-md h-8 px-2 py-1"
-                          placeholder={t('members_slug_about_prompt')}
-                          onChange={(e) => setAbout(e.target.value)}
-                          onBlur={() => {
-                            saveAbout(about);
-                          }}
-                        />
-                      </div>
-                    ) : isAuthenticated && member._id === currentUser._id ? (
-                      <p className="mt-6 pb-2 w-full md:w-11/12">
-                        <Linkify
-                          componentDecorator={(
-                            decoratedHref,
-                            decoratedText,
-                            key,
-                          ) => (
-                            <a
-                              target="_blank"
-                              rel="nofollow noreferrer"
-                              href={decoratedHref}
-                              key={key}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {decoratedText}
-                            </a>
-                          )}
-                        >
-                          {about}
-                          {!about && (
-                            <span className="placeholder">
-                              {t('members_slug_about_prompt')}
-                            </span>
-                          )}
-                        </Linkify>
-                      </p>
-                    ) : (
-                      <p className="">
-                        <Linkify
-                          componentDecorator={(
-                            decoratedHref,
-                            decoratedText,
-                            key,
-                          ) => (
-                            <a
-                              target="_blank"
-                              rel="nofollow noreferrer"
-                              href={decoratedHref}
-                              key={key}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {decoratedText}
-                            </a>
-                          )}
-                        >
-                          {about}
-                          {!about && (
-                            <span className="placeholder">
-                              {member.screenname}{' '}
-                              {t('members_slug_about_empty')}
-                            </span>
-                          )}
-                        </Linkify>
-                      </p>
-                    )}
-
-                    {isAuthenticated && member._id === currentUser._id && (
-                      <div className="flex gap-2 items-center  my-4">
-                        <button
-                          type="button"
-                          className="btn-primary"
-                          onClick={handleClick}
-                        >
-                          {editProfile ? 'Save' : 'Edit'}
-                        </button>
-                        <div className="text-disabled ">
-                          {hasSaved && t('settings_saved')}
-                        </div>
-                      </div>
-                    )}
-                  </div>
                 </div>
 
                 <div>
