@@ -1,8 +1,11 @@
 import PropTypes from 'prop-types';
+import { useEffect, useRef } from 'react';
 
 import CloseIcon from './icons/CloseIcon.js';
 
 const MenuContainer = ({ isOpen, toggleNav, children }) => {
+  const menuRef = useRef(null);
+
   const menuClassnames = {
     container: 'w-full h-full fixed inset-0',
     overlay:
@@ -10,6 +13,32 @@ const MenuContainer = ({ isOpen, toggleNav, children }) => {
     slider:
       'md:max-w-sm w-full bg-white h-full absolute right-0 duration-300 ease-out transition-all overflow-y-auto',
   };
+
+  const handleClickOutside = (event) => {
+    if (menuRef.current && !menuRef.current.contains(event.target)) {
+      toggleNav();
+    }
+  };
+
+  const handleEscKey = (event) => {
+    if (event.key === 'Escape' && isOpen) {
+      toggleNav();
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscKey);
+    } 
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, [isOpen]); 
+
+
   return (
     <>
       <button className="space-y-2" onClick={toggleNav}>
@@ -19,10 +48,9 @@ const MenuContainer = ({ isOpen, toggleNav, children }) => {
       </button>
       <div
         className={
-          isOpen
-            ? menuClassnames.container
-            : `${menuClassnames.container} invisible`
+          isOpen ? menuClassnames.container : `${menuClassnames.container} invisible`
         }
+        ref={menuRef}
       >
         <div
           className={
@@ -30,6 +58,7 @@ const MenuContainer = ({ isOpen, toggleNav, children }) => {
               ? `${menuClassnames.overlay} opacity-50`
               : `${menuClassnames.overlay} opacity-0`
           }
+          onClick={toggleNav} 
         />
         <div
           className={
