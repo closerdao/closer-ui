@@ -124,11 +124,9 @@ const ListingPage: NextPage<Props> = ({
   const [doesNeedPickup, setDoesNeedPickup] = useState(false);
   const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
   const [isTeamBooking, setIsTeamBooking] = useState(false);
-  const [foodOption, setFoodOption] = useState('no_food');
   const [hourAvailability, setHourAvailability] = useState<
     { hour: string; isAvailable: boolean }[] | []
   >([]);
-  const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
 
   const isTimeSet =
     timeOptions?.includes(String(getTimeOnly(start))) &&
@@ -183,18 +181,14 @@ const ListingPage: NextPage<Props> = ({
   });
 
   const foodTotal =
-    (settings &&
-      getFoodTotal({
-        isHourlyBooking,
-        adults,
-        durationInDays,
-        foodPriceBasic: settings?.foodPriceBasic,
-        foodPriceChef: settings?.foodPriceChef,
-        foodOption,
-        isFoodOptionEnabled: settings?.foodOptionEnabled || false,
-        isTeamMember: isTeamBooking || false,
-      })) ||
-    0;
+    getFoodTotal({
+      isHourlyBooking,
+      foodPrice: 0, // we do not add food price at this stage of booking
+      adults,
+      durationInDays,
+      isFoodOptionEnabled: settings?.foodOptionEnabled || false,
+      isTeamMember: isTeamBooking || false,
+    }) || 0;
 
   const [apiError, setApiError] = useState(null);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
@@ -229,7 +223,6 @@ const ListingPage: NextPage<Props> = ({
 
   const fiatTotal = getFiatTotal({
     isTeamBooking,
-    foodOption,
     foodTotal,
     utilityTotal,
     accommodationFiatTotal,
@@ -425,7 +418,6 @@ const ListingPage: NextPage<Props> = ({
       const {
         data: { results: newBooking },
       } = await api.post('/bookings/request', {
-        foodOption,
         useTokens: currency === CURRENCIES[1],
         start: isHourlyBooking ? start : formatDate(start),
         end: isHourlyBooking ? end : formatDate(end),
@@ -479,7 +471,6 @@ const ListingPage: NextPage<Props> = ({
         )}
       </Head>
       <main className="flex justify-center flex-wrap my-4 ">
-
         <div className="flex flex-col gap-8  max-w-4xl">
           <Heading level={1}>{listing.name}</Heading>
 
@@ -765,13 +756,6 @@ const ListingPage: NextPage<Props> = ({
                                 listing.tokenPrice?.cur,
                               )}{' '}
                               +{' '}
-                              {settings &&
-                                priceFormat(
-                                  isTeamBooking || foodOption === 'no_food'
-                                    ? 0
-                                    : foodTotal,
-                                  settings.utilityFiatCur,
-                                )}
                             </div>
                           ) : (
                             <span>
@@ -809,7 +793,6 @@ const ListingPage: NextPage<Props> = ({
                                   )}
                             </p>
                           </div>
-              
                           {settings?.utilityOptionEnabled && (
                             <div className="flex justify-between items-center mt-3">
                               <p>{t('bookings_summary_step_utility_total')}</p>
@@ -835,13 +818,6 @@ const ListingPage: NextPage<Props> = ({
                                     listing.tokenPrice?.cur,
                                   )}{' '}
                                   +{' '}
-                                  {settings &&
-                                    priceFormat(
-                                      isTeamBooking || foodOption === 'no_food'
-                                        ? 0
-                                        : foodTotal,
-                                      settings.utilityFiatCur,
-                                    )}
                                 </div>
                               ) : (
                                 <span>
@@ -862,10 +838,9 @@ const ListingPage: NextPage<Props> = ({
                               isDurationValid &&
                               t('listing_not_available')}
                             {!isDurationValid &&
-                              t(
-                                'bookings_dates_min_duration_error',
-                                { var: settings?.minDuration },
-                              )}
+                              t('bookings_dates_min_duration_error', {
+                                var: settings?.minDuration,
+                              })}
                             {isGuestLimit &&
                               t('listing_not_available_guest_limit')}
                           </Information>
@@ -889,7 +864,7 @@ ListingPage.getInitialProps = async (context: NextPageContext) => {
   try {
     const [listing, settings, generalSettings, messages] = await Promise.all([
       api.get(`/listing/${query.slug}`).catch((err) => {
-        console.error('Error fetching booking config:', err);
+        console.error('Error fetching listing:', err);
         return null;
       }),
       api.get('/config/booking').catch((err) => {
@@ -897,7 +872,7 @@ ListingPage.getInitialProps = async (context: NextPageContext) => {
         return null;
       }),
       api.get('/config/general').catch((err) => {
-        console.error('Error fetching booking config:', err);
+        console.error('Error fetching general config:', err);
         return null;
       }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),

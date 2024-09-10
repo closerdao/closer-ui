@@ -377,9 +377,9 @@ const Checkout = ({
               <div className="flex justify-between items-center mt-3">
                 <p> {t('bookings_summary_step_food_total')}</p>
                 <p className="font-bold">
-                  {booking?.foodOption === 'no_food'
-                    ? 'NOT INCLUDED'
-                    : priceFormat(foodFiat)}
+                  {booking?.foodOptionId
+                    ? priceFormat(foodFiat)
+                    : 'NOT INCLUDED'}
                 </p>
               </div>
               <p className="text-right text-xs">

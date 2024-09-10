@@ -14,8 +14,12 @@ import process from 'process';
 import { blockchainConfig } from '../../../config_blockchain';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
-import { Event } from '../../../types';
-import { BaseBookingParams, BookingConfig, Listing } from '../../../types';
+import {
+  BaseBookingParams,
+  BookingConfig,
+  Event,
+  Listing,
+} from '../../../types';
 import api from '../../../utils/api';
 import { getBookingType } from '../../../utils/booking.helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
@@ -49,13 +53,10 @@ const AccomodationSelector = ({
   bookingConfig,
   bookingError,
   foodOption,
-  optionalEvent,
 }: Props) => {
   const t = useTranslations();
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
-
-  const eventFoodOption = optionalEvent?.foodOption;
 
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -101,7 +102,7 @@ const AccomodationSelector = ({
         doesNeedSeparateBeds,
         foodOption,
       });
-      if (bookingConfig?.foodOptionEnabled && eventFoodOption !== 'no_food') {
+      if (bookingConfig?.foodOptionEnabled) {
         router.push(
           `/bookings/${newBooking._id}/food?discountCode=${discountCode}`,
         );
@@ -246,15 +247,6 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
 
     const bookingConfig = bookingConfigRes?.data?.results?.value;
 
-    const optionalEventRes =
-      eventId &&
-      (await api.get(`/event/${eventId}`).catch(() => {
-        return null;
-      }));
-
-    const optionalEvent =
-      (optionalEventRes && optionalEventRes?.data?.results) || null;
-
     return {
       listings: availability,
       start,
@@ -275,7 +267,6 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       bookingError,
       messages,
       foodOption,
-      optionalEvent,
     };
   } catch (err: any) {
     console.log(err);
@@ -283,7 +274,6 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       error: err.response?.data?.error || err.message,
       bookingConfig: null,
       messages: null,
-      optionalEvent: null,
     };
   }
 };

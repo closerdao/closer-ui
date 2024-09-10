@@ -29,6 +29,7 @@ import {
   PaymentConfig,
   VolunteerOpportunity,
 } from '../../../types';
+import { FoodOption } from '../../../types/food';
 import api from '../../../utils/api';
 import {
   convertToDateString,
@@ -59,6 +60,7 @@ interface Props {
   listings: Listing[];
   generalConfig: GeneralConfig;
   paymentConfig: PaymentConfig | null;
+  foodOptions: FoodOption[];
 }
 
 const BookingPage = ({
@@ -72,10 +74,9 @@ const BookingPage = ({
   listings,
   generalConfig,
   paymentConfig,
+  foodOptions,
 }: Props) => {
   const t = useTranslations();
-
-  console.log('booking=',booking);
 
   const { timeZone } = generalConfig;
 
@@ -114,8 +115,13 @@ const BookingPage = ({
     isTeamBooking,
     eventPrice,
     foodOption,
+    foodOptionId,
     foodFiat,
   } = booking || {};
+
+  const selectedFoodOption = foodOptions?.find(
+    (option) => option._id === foodOptionId,
+  );
 
   const userInfo = bookingCreatedBy && {
     name: bookingCreatedBy.screenname,
@@ -203,12 +209,10 @@ const BookingPage = ({
 
   const updatedFoodTotal = getFoodTotal({
     isHourlyBooking,
-    foodOption,
-    foodPriceBasic: bookingConfig?.foodPriceBasic || 0,
-    foodPriceChef: bookingConfig?.foodPriceChef || 0,
+    foodPrice: selectedFoodOption?.price || 0,
     durationInDays: updatedDuration,
     adults,
-    isFoodOptionEnabled: bookingConfig?.foodOptionEnabled || false,
+    isFoodOptionEnabled: Boolean(selectedFoodOption?._id) || false,
     isTeamMember: isTeamBooking || false,
   });
 
@@ -216,7 +220,7 @@ const BookingPage = ({
 
   const updatedFiatTotal = getFiatTotal({
     isTeamBooking: Boolean(isTeamBooking),
-    foodOption,
+    foodPrice: selectedFoodOption?.price || 0,
     foodTotal: updatedFoodTotal,
     utilityTotal: updatedUtilityTotal,
     accommodationFiatTotal: updatedAccomodationTotal,
@@ -305,7 +309,6 @@ const BookingPage = ({
   };
 
   const handleSaveBooking = async () => {
-    console.log('updatedBooking====', updatedBooking);
     try {
       setIsLoading(true);
       const res = await api.patch(`/booking/${_id}`, updatedBooking);
@@ -423,6 +426,7 @@ const BookingPage = ({
             listingId={listing?._id}
           />
           <SummaryCosts
+            isFoodIncluded={Boolean(booking?.foodOptionId)}
             utilityFiat={utilityFiat}
             foodFiat={foodFiat}
             useTokens={useTokens}
@@ -509,6 +513,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       listingRes,
       generalConfigRes,
       paymentConfigRes,
+      foodRes,
       messages,
     ] = await Promise.all([
       api
@@ -540,6 +545,9 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       api.get('/config/payment').catch(() => {
         return null;
       }),
+      api.get('/food').catch(() => {
+        return null;
+      }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const booking = bookingRes?.data?.results;
@@ -548,6 +556,8 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
 
     const listings = listingRes?.data?.results;
     const paymentConfig = paymentConfigRes?.data?.results?.value;
+
+    const foodOptions = foodRes?.data?.results;
 
     const [optionalEvent, optionalListing, optionalVolunteer] =
       await Promise.all([
@@ -606,6 +616,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       listings,
       messages,
       paymentConfig,
+      foodOptions,
     };
   } catch (err: any) {
     return {
@@ -620,6 +631,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       listings: null,
       messages: null,
       paymentConfig: null,
+      foodOptions: null,
     };
   }
 };

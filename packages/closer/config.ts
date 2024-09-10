@@ -49,14 +49,6 @@ export const configDescription: ConfigType[] = [
         type: 'boolean',
         default: false
       },
-      foodPriceBasic: {
-        type: 'number',
-        default: 12,
-      },
-      foodPriceChef: {
-        type: 'number',
-        default: 18,
-      },
       utilityOptionEnabled: {
         type: 'boolean',
         default: false
