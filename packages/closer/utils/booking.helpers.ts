@@ -587,7 +587,6 @@ export const getFoodOption = ({
   event: Event | undefined;
   foodOptions: FoodOption[];
 }) => {
-  console.log('foodOptions=', foodOptions);
   const defaultFoodOption =
     foodOptions.find((option) => option.isDefault) || foodOptions[0];
   if (!eventId || !event || !event?.foodOptionId) return defaultFoodOption;
