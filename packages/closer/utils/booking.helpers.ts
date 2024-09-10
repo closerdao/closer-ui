@@ -5,7 +5,6 @@ import utc from 'dayjs/plugin/utc';
 
 import {
   BOOKING_EXISTS_ERROR,
-  DEFAULT_FOOD_OPTIONS,
   USER_REJECTED_TRANSACTION_ERROR,
 } from '../constants';
 import { User } from '../contexts/auth/types';
@@ -16,11 +15,11 @@ import {
   CloserCurrencies,
   Event,
   FiatTotalParams,
-  FoodPriceParams,
   Listing,
   Price,
   UtilityTotalParams,
 } from '../types';
+import { FoodOption } from '../types/food';
 import api from './api';
 import { priceFormat } from './helpers';
 
@@ -42,7 +41,6 @@ export const getBookingType = (
 
 export const getFiatTotal = ({
   isTeamBooking,
-  foodOption,
   eventTotal,
   utilityTotal,
   foodTotal,
@@ -56,9 +54,9 @@ export const getFiatTotal = ({
   const accommodationTotal =
     useTokens || useCredits ? 0 : accommodationFiatTotal;
 
-  foodTotal = foodOption !== 'no_food' ? foodTotal : 0;
-
-  return utilityTotal + foodTotal + accommodationTotal + (eventTotal || 0);
+  return (
+    utilityTotal + (foodTotal || 0) + accommodationTotal + (eventTotal || 0)
+  );
 };
 
 export const getUtilityTotal = ({
@@ -560,9 +558,7 @@ export const addOneHour = (time: string) => {
 };
 interface FoodTotalParams {
   isHourlyBooking: boolean;
-  foodOption: string;
-  foodPriceBasic: number;
-  foodPriceChef: number;
+  foodPrice: number;
   durationInDays: number;
   adults: number;
   isFoodOptionEnabled: boolean;
@@ -571,68 +567,38 @@ interface FoodTotalParams {
 
 export const getFoodTotal = ({
   isHourlyBooking,
-  foodOption,
-  foodPriceBasic,
-  foodPriceChef,
+  foodPrice,
   durationInDays,
   adults,
   isFoodOptionEnabled,
   isTeamMember,
 }: FoodTotalParams) => {
-  if (isHourlyBooking || !isFoodOptionEnabled || isTeamMember) return 0;
-  switch (foodOption) {
-    case 'no_food':
-      return 0;
-    case 'basic':
-      return foodPriceBasic * adults * durationInDays;
-    case 'chef':
-      return foodPriceChef * adults * durationInDays;
-    default:
-      return 0;
-  }
-};
-
-export const calculateFoodPrice = ({
-  foodOption,
-  isTeamBooking,
-  isFood,
-  adults,
-  duration,
-  bookingConfig,
-}: FoodPriceParams) => {
-  if (!isFood || !adults || !duration) return 0;
-  if (isTeamBooking === true) return 0;
-
-  const foodPricePerNight =
-    foodOption === 'chef'
-      ? bookingConfig?.foodPriceChef
-      : bookingConfig?.foodPriceBasic;
-  if (isFood) {
-    return (foodPricePerNight || 0) * (adults || 1) * (duration || 1) || 0;
-  }
-  return 0;
+  if (isHourlyBooking || !isFoodOptionEnabled || isTeamMember || !foodPrice)
+    return 0;
+  return foodPrice * adults * durationInDays;
 };
 
 export const getFoodOption = ({
   eventId,
   event,
+  foodOptions,
 }: {
   eventId: string | undefined;
   event: Event | undefined;
+  foodOptions: FoodOption[];
 }) => {
-  if (!eventId || !event) return DEFAULT_FOOD_OPTIONS[1];
-  if (!event?.foodOption) return DEFAULT_FOOD_OPTIONS[1];
+  console.log('foodOptions=', foodOptions);
+  const defaultFoodOption =
+    foodOptions.find((option) => option.isDefault) || foodOptions[0];
+  if (!eventId || !event || !event?.foodOptionId) return defaultFoodOption;
 
-  switch (event?.foodOption) {
-    case 'no_food':
-      return DEFAULT_FOOD_OPTIONS[0];
-    case 'basic':
-      return DEFAULT_FOOD_OPTIONS[1];
-    case 'chef':
-      return DEFAULT_FOOD_OPTIONS[2];
-    default:
-      return DEFAULT_FOOD_OPTIONS[1];
+  if (event?.foodOptionId) {
+    const foodOption = foodOptions.find(
+      (option) => option._id === event?.foodOptionId,
+    );
+    return foodOption || defaultFoodOption;
   }
+  return defaultFoodOption;
 };
 
 export const convertToDateString = (date: string | Date | null) => {

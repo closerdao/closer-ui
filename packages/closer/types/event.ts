@@ -11,6 +11,7 @@ export type Event = {
   description: string;
   participationGuideUrl: string;
   foodOption: string; // no_food, chef, basic, default
+  foodOptionId?: string | null;
   ticket: string;
   virtual?: boolean;
   paid: boolean;
