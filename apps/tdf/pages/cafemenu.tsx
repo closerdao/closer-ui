@@ -22,7 +22,7 @@ const ArtFaire = () => {
           key="canonical"
         />
       </Head>
-      <section className="-mt-4 max-w-6xl mx-auto">
+      <section className="-mt-4 max-w-6xl mx-auto py-6">
 
         <Button
           onClick={() => window.open('https://buy.stripe.com/cN2dRC1B08AO4De7sC')}
