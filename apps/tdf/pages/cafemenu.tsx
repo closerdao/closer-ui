@@ -27,42 +27,42 @@ const ArtFaire = () => {
         <Button
           onClick={() => window.open('https://buy.stripe.com/cN2dRC1B08AO4De7sC')}
           type="primary"
-          className=""
+          className="mb-4"
         >
           Blubucha - 2.5€
         </Button>
         <Button
           onClick={() => window.open('https://buy.stripe.com/9AQ8xi2F42cq7Pq7sA')}
           type="primary"
-          className=""
+          className="mb-4"
         >
           Cappuchino - 2.5€
         </Button>
         <Button
           onClick={() => window.open('https://buy.stripe.com/9AQ8xi2F42cq7Pq7sA')}
           type="primary"
-          className=""
+          className="mb-4"
         >
           Flat White - 3€
         </Button>
         <Button
           onClick={() => window.open('https://buy.stripe.com/14k8xia7w4ky4DedR4')}
           type="primary"
-          className=""
+          className="mb-4"
         >
           Latte - 3.5€
         </Button>
         <Button
           onClick={() => window.open('https://buy.stripe.com/8wMcNycfE7wK7Pq4gs')}
           type="primary"
-          className=""
+          className="mb-4"
         >
           Espresso - 1.5€
         </Button>
         <Button
             onClick={() => window.open('https://buy.stripe.com/eVa3cY5RgcR4edO5kx')}
           type="primary"
-          className=""
+          className="mb-4"
         >
           Double Espresso - 2€
         </Button>
