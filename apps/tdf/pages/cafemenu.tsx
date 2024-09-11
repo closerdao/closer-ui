@@ -32,7 +32,7 @@ const ArtFaire = () => {
           Blubucha - 2.5€
         </Button>
         <Button
-          onClick={() => window.open('https://buy.stripe.com/9AQ8xi2F42cq7Pq7sA')}
+          onClick={() => window.open('https://buy.stripe.com/dR66pacfEg3gglW00b')}
           type="primary"
           className="mb-4"
         >
