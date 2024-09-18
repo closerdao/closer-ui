@@ -14,9 +14,13 @@ interface Props {
   hasAppliedCredits?: boolean;
   creditsError?: string | null | undefined;
   isDemo?: boolean;
+  creditsPricePerNight?: number;
+  creditsBalance?: number;
 }
 
 const RedeemCredits = ({
+  creditsBalance,
+  creditsPricePerNight,
   useCredits,
   className,
   rentalFiat,
@@ -28,6 +32,20 @@ const RedeemCredits = ({
 }: Props) => {
   const t = useTranslations();
   const { APP_NAME } = useConfig();
+  if (creditsBalance && creditsPricePerNight) {
+    const maxNightsToPayWithCredits = Math.floor(
+      creditsBalance / creditsPricePerNight,
+    );
+    console.log('maxNightsToPayWithCredits=', maxNightsToPayWithCredits);
+  }
+
+  const shouldShowCreditsCalculation =
+    (!hasAppliedCredits &&
+      !useCredits &&
+      (rentalFiat?.val || rentalToken?.val)) ||
+    isDemo;
+
+
   return (
     <div className={`${className ? className : ''}`}>
       {isDemo && (
@@ -36,10 +54,7 @@ const RedeemCredits = ({
         </Heading>
       )}
       <Card className="text-center gap-4">
-        {(!hasAppliedCredits &&
-          !useCredits &&
-          (rentalFiat?.val || rentalToken?.val)) ||
-        isDemo ? (
+        {shouldShowCreditsCalculation ? (
           <>
             <Heading level={2}>
               {t('carrots_heading_redeem')} {isDemo && '[DEMO]'}
@@ -52,7 +67,10 @@ const RedeemCredits = ({
             <div className="flex w-full justify-center items-center mb-6">
               <div className="w-2/5">
                 <Heading level={4}>
-                  {isDemo ? 1 : (rentalToken?.val as number)}
+                  stopped here 
+                
+                
+                  {/* {isDemo ? 1 : (maxNightsToPayWithCredits as number)} */}
                 </Heading>
                 <div className="text-xs">
                   {(rentalToken?.val as number) === 1 || isDemo

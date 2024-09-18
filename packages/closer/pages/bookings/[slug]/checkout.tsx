@@ -116,6 +116,7 @@ const Checkout = ({
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const [useCreditsUpdated, setUseCreditsUpdated] = useState(useCredits);
+  const [creditsBalance, setCreditsBalance] = useState(0);
 
   const isStripeBooking = updatedTotal && updatedTotal.val > 0;
   const isFreeBooking = updatedTotal && updatedTotal.val === 0 && !useTokens;
@@ -126,16 +127,25 @@ const Checkout = ({
     updatedTotal &&
     updatedTotal.val === 0;
 
+  const creditsPricePerNight = listing?.tokenPrice.val;
+
   useEffect(() => {
     if (user) {
       (async () => {
         try {
-          const areCreditsAvailable = (
-            await api.post('/carrots/availability', {
-              startDate: start,
-              creditsAmount: rentalToken?.val,
-            })
-          ).data.results;
+          const [areCreditsAvailable, creditsBalance] = await Promise.all([
+            api
+              .post('/carrots/availability', {
+                startDate: start,
+                creditsAmount: rentalToken?.val,
+                minCreditsAmount: creditsPricePerNight,
+              })
+              .then((response) => response.data.results),
+            api
+              .get('/carrots/balance')
+              .then((response) => response.data.results),
+          ]);
+          setCreditsBalance(creditsBalance);
 
           setCanApplyCredits(areCreditsAvailable);
         } catch (error) {
@@ -313,7 +323,9 @@ const Checkout = ({
             canApplyCredits &&
             !booking?.volunteerId &&
             !useTokens ? (
-              <RedeemCredits
+                <RedeemCredits
+                creditsBalance={creditsBalance || 0}
+                creditsPricePerNight={creditsPricePerNight || 0}
                 useCredits={useCreditsUpdated}
                 rentalFiat={rentalFiat}
                 rentalToken={
