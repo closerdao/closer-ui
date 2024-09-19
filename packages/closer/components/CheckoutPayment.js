@@ -22,6 +22,8 @@ import HeadingRow from './ui/HeadingRow';
 const stripe = loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY);
 
 const CheckoutPayment = ({
+  partialPriceInCredits,
+  isPartialCreditsPayment,
   bookingId,
   buttonDisabled,
   useTokens,
@@ -73,9 +75,14 @@ const CheckoutPayment = ({
 
   const payWithCredits = async () => {
     try {
+      const creditsAmount = isPartialCreditsPayment
+        ? partialPriceInCredits
+        : rentalToken?.val;
+      console.log('creditsAmount=',creditsAmount);
       const res = await api.post(`/bookings/${bookingId}/credit-payment`, {
         startDate,
-        creditsAmount: rentalToken?.val,
+        creditsAmount,
+        isPartialCreditsPayment,
       });
       return res;
     } catch (error) {

@@ -118,6 +118,23 @@ const Checkout = ({
   const [useCreditsUpdated, setUseCreditsUpdated] = useState(useCredits);
   const [creditsBalance, setCreditsBalance] = useState(0);
 
+  const creditsPricePerNight = listing?.tokenPrice.val;
+
+  let maxNightsToPayWithCredits = 0;
+  let isPartialCreditsPayment = false;
+  let partialPriceInCredits;
+  if (creditsBalance && creditsPricePerNight) {
+    maxNightsToPayWithCredits = Math.floor(
+      creditsBalance / creditsPricePerNight,
+    );
+    if (maxNightsToPayWithCredits > 0 && maxNightsToPayWithCredits < (duration || 0)) {
+      isPartialCreditsPayment = true;
+      partialPriceInCredits = (
+        (maxNightsToPayWithCredits || 0) * (creditsPricePerNight || 0)
+      ).toFixed(2);
+    }
+  }
+
   const isStripeBooking = updatedTotal && updatedTotal.val > 0;
   const isFreeBooking = updatedTotal && updatedTotal.val === 0 && !useTokens;
   const isTokenOnlyBooking =
@@ -126,8 +143,6 @@ const Checkout = ({
     rentalToken.val > 0 &&
     updatedTotal &&
     updatedTotal.val === 0;
-
-  const creditsPricePerNight = listing?.tokenPrice.val;
 
   useEffect(() => {
     if (user) {
@@ -240,6 +255,8 @@ const Checkout = ({
       const res = await api.post(`/bookings/${booking?._id}/update-payment`, {
         useCredits: true,
         isHourlyBooking,
+        maxNightsToPayWithCredits,
+        isPartialCreditsPayment,
       });
       setUseCreditsUpdated(true);
 
@@ -323,9 +340,11 @@ const Checkout = ({
             canApplyCredits &&
             !booking?.volunteerId &&
             !useTokens ? (
-                <RedeemCredits
-                creditsBalance={creditsBalance || 0}
-                creditsPricePerNight={creditsPricePerNight || 0}
+              <RedeemCredits
+                fiatPricePerNight={listing?.fiatPrice.val}
+                isPartialCreditsPayment={isPartialCreditsPayment}
+                partialPriceInCredits={partialPriceInCredits}
+                maxNightsToPayWithCredits={maxNightsToPayWithCredits}
                 useCredits={useCreditsUpdated}
                 rentalFiat={rentalFiat}
                 rentalToken={
@@ -408,6 +427,8 @@ const Checkout = ({
 
           {isStripeBooking && (
             <CheckoutPayment
+              isPartialCreditsPayment={isPartialCreditsPayment}
+              partialPriceInCredits={partialPriceInCredits}
               bookingId={booking?._id || ''}
               buttonDisabled={
                 (useTokens &&

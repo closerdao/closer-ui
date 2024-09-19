@@ -75,16 +75,25 @@ export const getUtilityTotal = ({
 };
 
 // a better idea is recalculate booking price on backend, so that price calculation logic is in one place
-export const getAccommodationTotal = (
-  listing: Listing | undefined,
-  useTokens: boolean,
-  useCredits: boolean,
-  adults: number,
-  durationInDaysOrHours: number,
-  discountRate: number,
-  volunteerId: string | undefined,
-  isTeamBooking: boolean | undefined,
-) => {
+export const getAccommodationTotal = ({
+  listing,
+  useTokens,
+  useCredits,
+  adults,
+  durationInDaysOrHours,
+  discountRate,
+  volunteerId,
+  isTeamBooking,
+}: {
+  listing: Listing | undefined;
+  useTokens: boolean;
+  useCredits: boolean;
+  adults: number;
+  durationInDaysOrHours: number;
+  discountRate: number;
+  volunteerId: string | undefined;
+  isTeamBooking: boolean | undefined;
+}) => {
   if (!listing || volunteerId || isTeamBooking) return 0;
 
   let price: number | undefined =
@@ -587,7 +596,6 @@ export const getFoodOption = ({
   event: Event | undefined;
   foodOptions: FoodOption[];
 }) => {
-
   const defaultFoodOption =
     foodOptions.find((option) => option.isDefault) || foodOptions[0];
   if (!eventId || !event || !event?.foodOptionId) return defaultFoodOption;

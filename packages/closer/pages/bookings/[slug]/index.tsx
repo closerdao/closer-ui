@@ -114,10 +114,10 @@ const BookingPage = ({
     created,
     isTeamBooking,
     eventPrice,
-    foodOption,
     foodOptionId,
     foodFiat,
   } = booking || {};
+
 
   const selectedFoodOption = foodOptions?.find(
     (option) => option._id === foodOptionId,
@@ -187,16 +187,16 @@ const BookingPage = ({
     ? 1 - getDiscountRate(updatedDurationName, bookingConfig)
     : 0;
 
-  const updatedAccomodationTotal = getAccommodationTotal(
-    updatedListing,
+  const updatedAccomodationTotal = getAccommodationTotal({
+    listing: updatedListing,
     useTokens,
     useCredits,
-    updatedAdults,
-    updatedDuration,
-    updatedDiscountRate,
+    adults: updatedAdults,
+    durationInDaysOrHours: updatedDuration,
+    discountRate: updatedDiscountRate,
     volunteerId,
     isTeamBooking,
-  );
+  });
 
   const updatedUtilityTotal = getUtilityTotal({
     utilityFiatVal: bookingConfig?.utilityFiatVal,
@@ -426,6 +426,7 @@ const BookingPage = ({
             listingId={listing?._id}
           />
           <SummaryCosts
+            rentalFiat={rentalFiat}
             isFoodIncluded={Boolean(booking?.foodOptionId)}
             utilityFiat={utilityFiat}
             foodFiat={foodFiat}
