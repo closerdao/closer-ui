@@ -17,7 +17,7 @@ export const useFaqs = (googleSheetId: string) => {
           const res = await response.text();
           const json = JSON.parse(
             res.replace(
-              /.*google.visualization.Query.setResponse\({(.*?)}\);?/s,
+              /.*google\.visualization\.Query\.setResponse\(\{([\s\S]*?)\}\);?/,
               '{$1}',
             ),
           );
