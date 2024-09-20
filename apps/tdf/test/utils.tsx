@@ -17,54 +17,30 @@ import { NextIntlClientProvider } from 'next-intl';
 
 import { getLibrary } from '../pages/_app';
 import { RouterContext } from 'next/dist/shared/lib/router-context.shared-runtime';
-import { useRouter } from 'next/router';
 
-// Update the mockRouter object
-const mockRouter = {
-  basePath: '',
-  pathname: '/',
-  route: '/',
-  asPath: '/',
-  query: {},
-  push: jest.fn(),
-  replace: jest.fn(),
-  reload: jest.fn(),
-  back: jest.fn(),
-  prefetch: jest.fn(),
-  beforePopState: jest.fn(),
-  events: {
-    on: jest.fn(),
-    off: jest.fn(),
-    emit: jest.fn(),
-  },
-  isFallback: false,
-  isLocaleDomain: false,
-  isReady: true,
-  isPreview: false,
-  // Add these new properties
-  locale: 'en',
-  locales: ['en'],
-  defaultLocale: 'en',
-};
+// Import MockRouter from next-router-mock
+import MockRouter from 'next-router-mock';
 
-// Create a custom hook to use the mock router
-function useTestRouter() {
-  return mockRouter;
-}
+// Remove the old mockRouter object
 
+// Update the renderWithProviders function
 export const renderWithProviders = (ui: React.ReactElement, options = {}) => {
   function Wrapper({ children }: { children?: React.ReactNode }) {
     return (
-      <RouterContext.Provider value={mockRouter as any}>
+      <RouterContext.Provider value={MockRouter as any}>
         <ConfigProvider config={{ ...config, ...blockchainConfig }}>
           <NextIntlClientProvider
             locale={'en'}
             messages={{ ...messagesBase, ...messagesLocal }}
             timeZone={'Europe/Lisbon'}
           >
-            {/* Rest of the providers */}
-            {children}
-            {/* Rest of the providers */}
+            <AuthProvider>
+              <PlatformProvider>
+                <Web3ReactProvider getLibrary={getLibrary}>
+                  <WalletProvider>{children}</WalletProvider>
+                </Web3ReactProvider>
+              </PlatformProvider>
+            </AuthProvider>
           </NextIntlClientProvider>
         </ConfigProvider>
       </RouterContext.Provider>
