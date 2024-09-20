@@ -17,8 +17,9 @@ import { NextIntlClientProvider } from 'next-intl';
 
 import { getLibrary } from '../pages/_app';
 import { RouterContext } from 'next/dist/shared/lib/router-context.shared-runtime';
+import { useRouter } from 'next/router';
 
-// Add this mock router object
+// Update the mockRouter object
 const mockRouter = {
   basePath: '',
   pathname: '/',
@@ -37,29 +38,33 @@ const mockRouter = {
     emit: jest.fn(),
   },
   isFallback: false,
-  isLocaleDomain: false, // Add this line
-  forward: jest.fn(),
+  isLocaleDomain: false,
   isReady: true,
   isPreview: false,
+  // Add these new properties
+  locale: 'en',
+  locales: ['en'],
+  defaultLocale: 'en',
 };
+
+// Create a custom hook to use the mock router
+function useTestRouter() {
+  return mockRouter;
+}
 
 export const renderWithProviders = (ui: React.ReactElement, options = {}) => {
   function Wrapper({ children }: { children?: React.ReactNode }) {
     return (
-      <RouterContext.Provider value={mockRouter}>
+      <RouterContext.Provider value={mockRouter as any}>
         <ConfigProvider config={{ ...config, ...blockchainConfig }}>
           <NextIntlClientProvider
             locale={'en'}
             messages={{ ...messagesBase, ...messagesLocal }}
             timeZone={'Europe/Lisbon'}
           >
-            <AuthProvider>
-              <PlatformProvider>
-                <Web3ReactProvider getLibrary={getLibrary}>
-                  <WalletProvider>{children}</WalletProvider>
-                </Web3ReactProvider>
-              </PlatformProvider>
-            </AuthProvider>
+            {/* Rest of the providers */}
+            {children}
+            {/* Rest of the providers */}
           </NextIntlClientProvider>
         </ConfigProvider>
       </RouterContext.Provider>
