@@ -6,16 +6,9 @@ let firebaseConfig;
 try {
   firebaseConfig = process.env.NEXT_PUBLIC_FIREBASE_CONFIG ? JSON.parse(process.env.NEXT_PUBLIC_FIREBASE_CONFIG) : null;
 } catch (e) {
-  console.warn('Failed to parse Firebase configuration:', e);
+  console.error('Failed to parse Firebase configuration:', e);
   firebaseConfig = null;
 }
-
-// Mock configuration for testing environments
-const mockConfig = {
-  apiKey: 'mock-api-key',
-  authDomain: 'mock-auth-domain',
-  projectId: 'mock-project-id',
-};
 
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
@@ -25,12 +18,10 @@ if (firebaseConfig) {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
   } catch (e) {
-    console.warn('Failed to initialize Firebase app:', e);
+    console.error('Failed to initialize Firebase app:', e);
   }
 } else {
-  console.warn('Using mock Firebase configuration for testing.');
-  app = initializeApp(mockConfig);
-  auth = getAuth(app);
+  console.error('Firebase configuration is missing or invalid.');
 }
 
 export { auth };
