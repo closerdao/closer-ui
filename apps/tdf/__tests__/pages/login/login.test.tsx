@@ -1,14 +1,7 @@
 import Login from '@/pages/login';
 import { renderWithProviders } from '@/test/utils';
+
 import { screen } from '@testing-library/react';
-import { useRouter } from 'next/router';
-
-jest.mock('next/router', () => ({
-  useRouter: jest.fn(),
-}));
-
-// Add this to ensure consistent timezone
-process.env.TZ = 'UTC';
 
 describe('Login', () => {
   const OLD_ENV = process.env;
@@ -16,17 +9,6 @@ describe('Login', () => {
   beforeEach(() => {
     jest.resetModules();
     process.env = { ...OLD_ENV };
-    
-    (useRouter as jest.Mock).mockImplementation(() => ({
-      push: jest.fn(),
-      pathname: '/',
-      query: {},
-      asPath: '/',
-    }));
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
   });
 
   afterAll(() => {
