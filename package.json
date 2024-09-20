@@ -34,7 +34,7 @@
   "dependencies": {
     "@types/react-calendar-timeline": "^0.28.6",
     "interactjs": "^1.10.26",
-    "next": "^14.2.8",
+    "next": "^14.2.10",
     "react-calendar-timeline": "^0.28.0",
     "yarn-audit-fix": "^10.0.9"
   }
