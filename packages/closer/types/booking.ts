@@ -52,7 +52,8 @@ export type Listing = {
 };
 
 export type Booking = {
-  foodOption: string;
+  foodOption?: string;
+  foodOptionId?: string;
   status: string;
   listing: string;
   start: string;
@@ -176,8 +177,8 @@ export interface DateRangeFilter {
 }
 
 export type FiatTotalParams = {
+  foodPrice?: number;
   isTeamBooking: boolean;
-  foodOption: string;
   eventTotal?: number;
   utilityTotal: number;
   foodTotal: number;

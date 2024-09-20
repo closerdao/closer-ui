@@ -56,14 +56,12 @@ const EventPage = ({
   const { platform }: any = usePlatform();
   const { user, isAuthenticated } = useAuth();
   const { APP_NAME } = useConfig() || {};
-  const dailyUtilityFee = settings?.utilityFiatVal;
 
   const [photo, setPhoto] = useState(event && event.photo);
   const [password, setPassword] = useState('');
   const [attendees, setAttendees] = useState(event && (event.attendees || []));
   const [isShowingEvent, setIsShowingEvent] = useState(true);
   const [passwordError, setPasswordError] = useState<null | string>(null);
-  const [foodOption] = useState(event?.foodOption || 'no_food');
 
   const canEditEvent = user
     ? user?._id === event?.createdBy || user?.roles.includes('admin')
@@ -297,15 +295,10 @@ const EventPage = ({
                       height={20}
                     />
                     <label className="text-sm uppercase font-bold flex gap-1">
-                    
-                        {start && dayjs(start).format(dateFormat)}
-
-                        {end &&
+                      {start && dayjs(start).format(dateFormat)}
+                      {end &&
                         Number(duration) <= 24 &&
-                          ` ${dayjs(start).format('HH:mm')}`}{' '}
-                        
-
-
+                        ` ${dayjs(start).format('HH:mm')}`}{' '}
                       {end &&
                         Number(duration) <= 24 &&
                         ` ${dayjs(start).format('HH:mm')}`}{' '}
@@ -501,16 +494,6 @@ const EventPage = ({
                                   {priceFormat(
                                     maxAccommodationPrice * discountRate,
                                   )}
-                                </strong>
-                              </div>
-                              <div className="text-sm">
-                                {t('events_utility')}{' '}
-                                <strong>
-                                  {foodOption === 'no_food'
-                                    ? t('stay_food_not_included')
-                                    : priceFormat(
-                                        durationInDays * dailyUtilityFee,
-                                      )}
                                 </strong>
                               </div>
                             </>
