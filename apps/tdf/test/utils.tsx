@@ -25,6 +25,7 @@ import MockRouter from 'next-router-mock';
 
 // Update the renderWithProviders function
 export const renderWithProviders = (ui: React.ReactElement, options = {}) => {
+  setupMockRouter(); // Add this line
   function Wrapper({ children }: { children?: React.ReactNode }) {
     return (
       <RouterContext.Provider value={MockRouter as any}>
@@ -82,3 +83,8 @@ export const renderWithNextIntl = (ui: React.ReactElement, options = {}) => {
   }
   return rtlRender(ui, { wrapper: Wrapper, ...options });
 };
+
+// Add this function
+export function setupMockRouter() {
+  MockRouter.push('/'); // Reset to a default route
+}
