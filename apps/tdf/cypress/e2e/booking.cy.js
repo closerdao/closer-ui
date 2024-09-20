@@ -2,6 +2,7 @@
 
 const LISTING = { slug: 'glamping-private', name: 'Glamping (private)' };
 const LISTING_HOURLY = { slug: 'meeting-room', name: 'Meeting room' };
+const TEST_EVENT_SLUG = 'cypress-test-event';
 
 const login = ({ isAdmin }) => {
   if (isAdmin) {
@@ -318,7 +319,6 @@ describe('Booking flow', () => {
     cy.get('button').contains(/yes/i).click();
   });
 
-  // TODO: add more realistic test for hourly booking
   it('should have correct unauthenticated user (can instant book) hourly booking flow', () => {
     cy.visit(`${Cypress.config('baseUrl')}/stay/${LISTING_HOURLY.slug}`);
 
@@ -336,3 +336,126 @@ describe('Booking flow', () => {
     
   });
 });
+
+it('should have correct authenticated overnight event booking flow', () => {
+  cy.visit(`${Cypress.config('baseUrl')}/login`);
+  login({ isAdmin: true });
+
+  cy.visit(`${Cypress.config('baseUrl')}/events/${TEST_EVENT_SLUG}`);
+  cy.get('a')
+    .contains(/buy ticket/i)
+    .click();
+
+    
+    cy.contains('button', 'overnight ticket', { matchCase: false })
+    .should('exist')
+    .click();
+    
+    
+    cy.get('button')
+      .contains(/clear selection/i)
+      .click();
+    
+  selectDatesSearchListings();
+
+  cy.get('button')
+    .contains(/search/i)
+    .click();
+
+  cy.contains('div', LISTING.name)
+    .find('h4')
+    .contains(LISTING.name)
+    .parents('div')
+    .contains('button', 'Select')
+    .click();
+
+    cy.get('h1')
+    .contains(/food/i)
+    .should('be.visible')
+
+    cy.get('button')
+    .contains(/continue/i)
+    .should('be.visible')
+    .should('be.enabled')
+    .click();
+
+  cy.get('button')
+    .contains(/submit/i)
+    .click();
+
+    cy.get('button')
+    .contains(/checkout/i)
+    .click();
+    
+  cy.url().should('include', '/checkout');
+
+  cy.get('button').contains(/pay/i).should('be.disabled');
+
+  fillStripeForm();
+
+  cy.get('input[type="checkbox"]').click({ multiple: true });
+  cy.get('button').contains(/pay/i).click();
+  cy.wait(16000);
+  cy.url().should('include', '/confirmation');
+
+  cy.get('button')
+    .contains(/view ticket/i)
+    .click();
+
+  cy.url().should('include', '/bookings');
+
+  cy.get('button')
+    .contains(/cancel booking/i)
+    .click();
+  cy.url().should('include', '/cancel');
+
+  cy.get('button').contains(/yes/i).click();
+});
+
+it('should have correct authenticated day ticket event booking flow', () => {
+  cy.visit(`${Cypress.config('baseUrl')}/login`);
+  login({ isAdmin: true });
+
+  cy.visit(`${Cypress.config('baseUrl')}/events/${TEST_EVENT_SLUG}`);
+  cy.get('a')
+    .contains(/buy ticket/i)
+    .click();
+
+
+  cy.get('button')
+    .contains(/continue/i)
+    .click();
+
+  cy.get('button')
+    .contains(/submit/i)
+    .click();
+
+    cy.get('button')
+    .contains(/checkout/i)
+    .click();
+    
+  cy.url().should('include', '/checkout');
+
+  cy.get('button').contains(/pay/i).should('be.disabled');
+
+  fillStripeForm();
+
+  cy.get('input[type="checkbox"]').click({ multiple: true });
+  cy.get('button').contains(/pay/i).click();
+  cy.wait(16000);
+  cy.url().should('include', '/confirmation');
+
+  cy.get('button')
+    .contains(/view ticket/i)
+    .click();
+
+  cy.url().should('include', '/bookings');
+
+  cy.get('button')
+    .contains(/cancel booking/i)
+    .click();
+  cy.url().should('include', '/cancel');
+
+  cy.get('button').contains(/yes/i).click();
+});
+
