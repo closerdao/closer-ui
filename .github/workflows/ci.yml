@@ -24,7 +24,8 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: '20.15.0'
+          yarn-version: '1.22.19'
           cache: 'yarn'
 
       - name: Install dependencies
@@ -35,10 +36,5 @@ jobs:
 
       - name: Test
         # run: yarn test
-        run: yarn test apps/tdf/__tests__/pages/login/login.test.tsx -- --silent
+        run: yarn test apps/tdf/__tests__/pages/login/login.test.tsx
 
-      - name: Print environment details
-        run: |
-          node -v
-          yarn -v
-          yarn list --depth=0
