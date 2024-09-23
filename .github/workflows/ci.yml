@@ -25,16 +25,16 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '20.15.0'
-          yarn-version: '1.22.19'
           cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn --frozen-lockfile
+        run: |
+        yarn policies set-version 1.22.19
+        yarn install --frozen-lockfile
 
       - name: Build
         run: yarn build
 
       - name: Test
-        # run: yarn test
-        run: npx jest apps/tdf/__tests__/pages/login/login.test.tsx
+        run: yarn test
 
