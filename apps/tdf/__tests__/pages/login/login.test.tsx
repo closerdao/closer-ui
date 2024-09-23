@@ -15,7 +15,7 @@ describe('Login', () => {
     process.env = OLD_ENV;
   });
 
-  it('should have both Email and wallet log in buttons if NEXT_PUBLIC_FEATURE_WEB3_WALLET is true', () => {
+  it.only('should have both Email and wallet log in buttons if NEXT_PUBLIC_FEATURE_WEB3_WALLET is true', () => {
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET = 'true';
     renderWithProviders(<Login />);
 

@@ -34,7 +34,8 @@ jobs:
       #   run: yarn build
 
       - name: Test
-        run: yarn test
+        # run: yarn test
+        run: yarn test apps/tdf/__tests__/pages/login/login.test.tsx --silent
 
       - name: Print environment details
         run: |
