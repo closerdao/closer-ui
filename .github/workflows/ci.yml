@@ -1,8 +1,8 @@
 name: CI
 
 on:
-  # push:
-  #   branches: ['main', 'develop']
+  push:
+    branches: ['main', 'develop']
   pull_request:
     types: [opened, synchronize]
 
@@ -28,7 +28,7 @@ jobs:
           cache: 'yarn'
 
       - name: Install dependencies
-          run: yarn --frozen-lockfile
+        run: yarn --frozen-lockfile
 
       # - name: Build
       #   run: yarn build
