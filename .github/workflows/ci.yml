@@ -36,5 +36,5 @@ jobs:
 
       - name: Test
         # run: yarn test
-        run: yarn test apps/tdf/__tests__/pages/login/login.test.tsx
+        run: npx jest apps/tdf/__tests__/pages/login/login.test.tsx
 
