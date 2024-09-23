@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
+import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import EditModel from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
 
@@ -38,25 +39,27 @@ const EditListing = ({ listing }: Props) => {
       <Head>
         <title>{`${listing.name} - ${t('listings_slug_edit_title')}`}</title>
       </Head>
-      <div className="justify-center flex">
-        <section className="max-w-4xl w-full">
-          <Heading level={2} className="mb-2">
-            Edit Listing <i>{listing.name}</i>
-          </Heading>
-          <EditModel
-            id={listing._id}
-            endpoint={'/listing'}
-            fields={models.listing}
-            onSave={(listing) => router.push(`/stay/${listing.slug}`)}
-            onUpdate={(name, value, option, actionType) =>
-              onUpdate(name, value, option, actionType)
-            }
-            allowDelete
-            deleteButton="Delete Listing"
-            onDelete={() => router.push('/')}
-          />
-        </section>
-      </div>
+      <AdminLayout>
+        <div className="">
+          <section className="max-w-4xl w-full">
+            <Heading level={2} className="mb-2">
+              Edit Listing <i>{listing.name}</i>
+            </Heading>
+            <EditModel
+              id={listing._id}
+              endpoint={'/listing'}
+              fields={models.listing}
+              onSave={(listing) => router.push(`/stay/${listing.slug}`)}
+              onUpdate={(name, value, option, actionType) =>
+                onUpdate(name, value, option, actionType)
+              }
+              allowDelete
+              deleteButton="Delete Listing"
+              onDelete={() => router.push('/')}
+            />
+          </section>
+        </div>
+      </AdminLayout>
     </>
   );
 };

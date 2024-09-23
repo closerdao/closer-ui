@@ -11,17 +11,31 @@ import { useTranslations } from 'next-intl';
 
 import models from '../../../models';
 import { Event } from '../../../types';
+import { FoodOption } from '../../../types/food';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 
 interface Props {
   event: Event;
+  foodOptions: FoodOption[];
   error?: string;
 }
 
-const EditEvent = ({ event, error }: Props) => {
+const EditEvent = ({ event, error, foodOptions }: Props) => {
   const t = useTranslations();
+
+  const foodOptionsWithDefault = [
+    {
+      label: 'Allow guests to select',
+      value: '',
+    },
+    ...foodOptions?.map((option) => ({
+      label: option.name,
+      value: option._id,
+    })),
+  ];
+
   const router = useRouter();
   const onUpdate = async (
     name: any,
@@ -59,8 +73,12 @@ const EditEvent = ({ event, error }: Props) => {
           </div>
         )}
         <EditModel
+          endpoint={'/event'}
+          dynamicField={{
+            name: 'foodOptionId',
+            options: foodOptionsWithDefault,
+          }}
           id={event._id}
-          endpoint="/event"
           fields={models.event}
           initialData={event}
           onSave={(event) => router.push(`/events/${event.slug}`)}
@@ -81,30 +99,31 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No event');
     }
 
-    const [eventRes, messages] = await Promise.all([
-      api
-        .get(`/event/${query.slug}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
-        })
-        .catch((err) => {
-          console.error('Error fetching event:', err);
-          return null;
-        }),
+    const [eventRes, foodRes, messages] = await Promise.all([
+      api.get(`/event/${query.slug}`, {
+        headers: (req as NextApiRequest)?.cookies?.access_token && {
+          Authorization: `Bearer ${
+            (req as NextApiRequest)?.cookies?.access_token
+          }`,
+        },
+      }),
+      api.get('/food').catch((err) => {
+        console.error('Error fetching food:', err);
+        return null;
+      }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const event = eventRes?.data?.results;
+    const foodOptions = foodRes?.data?.results;
 
-    return { event, messages };
+    return { event, foodOptions, messages };
   } catch (err) {
     console.log(err);
     return {
       error: parseMessageFromError(err),
       messages: null,
+      foodOptions: null,
     };
   }
 };

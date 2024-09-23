@@ -17,7 +17,6 @@ interface Props {
   eventDefaultCost?: number;
   accomodationDefaultCost?: number;
   volunteerId?: string;
-  foodOption?: string;
   isNotPaid?: boolean;
   updatedAccomodationTotal?: Price<CloserCurrencies>;
   isEditMode?: boolean;
@@ -27,13 +26,13 @@ interface Props {
   updatedEventTotal?: Price<CloserCurrencies>;
   priceDuration?: string;
   vatRate?: number;
+  isFoodIncluded: boolean;
 }
 
 const SummaryCosts = ({
   utilityFiat,
   foodFiat,
   accomodationCost,
-  foodOption,
   useTokens,
   useCredits,
   totalToken,
@@ -49,6 +48,7 @@ const SummaryCosts = ({
   updatedEventTotal,
   priceDuration,
   vatRate,
+  isFoodIncluded,
 }: Props) => {
   const t = useTranslations();
   const { APP_NAME } = useConfig();
@@ -169,9 +169,9 @@ const SummaryCosts = ({
                     </div>
                   )}
                   <p className="font-bold">
-                    {foodOption === 'no_food'
-                      ? 'NOT INCLUDED'
-                      : priceFormat(foodFiat.val)}
+                    {isFoodIncluded
+                      ? priceFormat(foodFiat.val)
+                      : 'NOT INCLUDED'}
                     {isNotPaid && (
                       <span className="text-failure">
                         {' '}
@@ -188,12 +188,12 @@ const SummaryCosts = ({
           ) : null}
         </>
       )}
+
       <div className="flex justify-between items-center mt-3">
         <p>{t('bookings_total')}</p>
         <div className="flex items-center gap-2">
           {isEditMode &&
-            (updatedFiatTotal?.val !== totalFiat?.val ||
-              updatedAccomodationTotal?.val !== accomodationCost?.val) && (
+            updatedAccomodationTotal?.val !== accomodationCost?.val && (
               <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
                 {t('bookings_updated_price')}:{' '}
                 {priceDuration === 'night' && (
@@ -234,7 +234,8 @@ const SummaryCosts = ({
                 )}
               </div>
             )}
-          {priceDuration === 'night' && (
+
+          {(priceDuration === 'night' || !priceDuration) && (
             <div className="font-bold">
               {useTokens && (
                 <>

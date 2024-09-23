@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
-import FoodPhotoGallery from '../../../components/FoodPhotoGallery';
+import FoodDescription from '../../../components/FoodDescription';
 import PageError from '../../../components/PageError';
 import Switch from '../../../components/Switch';
 import { Button, Information } from '../../../components/ui';
@@ -25,11 +25,9 @@ import {
   Event,
   Listing,
 } from '../../../types';
+import { FoodOption } from '../../../types/food';
 import api from '../../../utils/api';
-import {
-  calculateFoodPrice,
-  getFoodOption,
-} from '../../../utils/booking.helpers';
+import { getFoodOption } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
@@ -42,6 +40,7 @@ interface Props extends BaseBookingParams {
   event?: Event;
   bookingConfig: BookingConfig | null;
   discountCode?: string;
+  foodOptions: FoodOption[];
 }
 
 const FoodSelectionPage = ({
@@ -51,46 +50,26 @@ const FoodSelectionPage = ({
   error,
   bookingConfig,
   discountCode,
+  foodOptions,
 }: Props) => {
   const t = useTranslations();
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+  const { useTokens, start, end, adults, children, pets, infants, eventId } =
+    booking || {};
 
   const router = useRouter();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
 
-  const eventFoodOptionSet =
-    event?.foodOption !== 'default' && event?.foodOption;
+  const eventFoodOptionSet = Boolean(event?.foodOptionId);
 
   const [apiError, setApiError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isFood, setIsFood] = useState(Boolean(eventFoodOptionSet) || false);
+  const [isFood, setIsFood] = useState(true);
 
-  const {
-    useTokens,
-    start,
-    end,
-    adults,
-    duration,
-    children,
-    pets,
-    infants,
-    eventId,
-  } = booking || {};
-
-  const foodOption = getFoodOption({ eventId, event });
-
-
-  const foodPrice = calculateFoodPrice({
-    foodOption: foodOption.value,
-    isTeamBooking: booking?.isTeamBooking,
-    isFood,
-    eventId,
-    adults,
-    duration,
-    bookingConfig,
-  });
+  const foodOption = getFoodOption({ eventId, event, foodOptions });
+  const foodPricePerNight = foodOption?.price;
 
   useEffect(() => {
     if (booking?.status === 'pending' || booking?.status === 'paid') {
@@ -103,7 +82,7 @@ const FoodSelectionPage = ({
       setApiError(null);
       setIsLoading(true);
       await api.post(`/bookings/${booking?._id}/update-food`, {
-        foodOption: isFood ? foodOption.value : 'no_food',
+        foodOptionId: isFood ? foodOption._id : null,
         discountCode,
       });
 
@@ -178,18 +157,22 @@ const FoodSelectionPage = ({
       <ProgressBar steps={BOOKING_STEPS} />
 
       <section className="flex flex-col gap-12 py-12">
-        {foodOption.value !== 'no_food' && (
+        {foodOption.name !== 'no_food' && (
           <div className="flex justify-between items-center">
             <label htmlFor="food">
-              {t('booking_add_food')} {foodOption.label}
+              {eventFoodOptionSet
+                ? foodOption?.name
+                : t('booking_add_food') + ' ' + foodOption?.name}
             </label>
-            <Switch
-              disabled={eventFoodOptionSet}
-              name="food"
-              onChange={() => setIsFood((oldValue) => !oldValue)}
-              checked={isFood}
-              label=""
-            />
+            {!eventFoodOptionSet && (
+              <Switch
+                disabled={false}
+                name="food"
+                onChange={() => setIsFood((oldValue) => !oldValue)}
+                checked={isFood}
+                label=""
+              />
+            )}
           </div>
         )}
 
@@ -201,16 +184,17 @@ const FoodSelectionPage = ({
           <div className="flex justify-between items-top mt-3">
             <p> {t('bookings_summary_step_food_total')}</p>
             <p className="font-bold text-right">
-              {booking?.isTeamBooking && 'Free for team members'} {priceFormat(foodPrice)}
+              {booking?.isTeamBooking && 'Free for team members'}{' '}
+              {isFood ? priceFormat(foodPricePerNight) : priceFormat(0)}
             </p>
           </div>
           <p className="text-right text-xs">
-            {t('bookings_summary_step_utility_description')}
+            {t('booking_price_per_night_per_adult')}
           </p>
         </div>
 
         <div className="flex items-start gap-2 sm:items-center font-bold mt-1 sm:mt-0">
-          <FoodPhotoGallery foodOption={foodOption.value} />
+          <FoodDescription foodOption={foodOption} />
         </div>
 
         {!isFood && (
@@ -237,26 +221,32 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
   const discountCode = query?.discountCode;
 
   try {
-    const [bookingRes, bookingConfigRes, messages] = await Promise.all([
-      api
-        .get(`/booking/${query.slug}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
-        })
-        .catch(() => {
+    const [bookingRes, bookingConfigRes, foodRes, messages] = await Promise.all(
+      [
+        api
+          .get(`/booking/${query.slug}`, {
+            headers: (req as NextApiRequest)?.cookies?.access_token && {
+              Authorization: `Bearer ${
+                (req as NextApiRequest)?.cookies?.access_token
+              }`,
+            },
+          })
+          .catch(() => {
+            return null;
+          }),
+        api.get('/config/booking').catch(() => {
           return null;
         }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
+        api.get('/food').catch(() => {
+          return null;
+        }),
 
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      ],
+    );
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
+    const foodOptions = foodRes?.data?.results;
 
     const [optionalEvent, optionalListing] = await Promise.all([
       booking?.eventId &&
@@ -287,6 +277,7 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
       bookingConfig,
       discountCode,
       messages,
+      foodOptions,
     };
   } catch (err) {
     console.log('Error', err);
@@ -296,6 +287,7 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
       listing: null,
       bookingConfig: null,
       messages: null,
+      foodOptions: null,
     };
   }
 };

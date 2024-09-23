@@ -285,8 +285,3 @@ export const BLOG_POSTS_PER_PAGE = 9;
 
 export const DEFAULT_BLOG_IMAGE_ID = '66a7da14aca528c59057785e';
 
-export const DEFAULT_FOOD_OPTIONS = [
-  { label: 'No food', value: 'no_food' },
-  { label: 'Basic food', value: 'basic' },
-  { label: 'Chef food', value: 'chef' },
-];
