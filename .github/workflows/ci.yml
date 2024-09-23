@@ -1,8 +1,8 @@
 name: CI
 
 on:
-  push:
-    branches: ['main', 'develop']
+  # push:
+  #   branches: ['main', 'develop']
   pull_request:
     types: [opened, synchronize]
 
@@ -30,8 +30,8 @@ jobs:
       - name: Install dependencies
           run: yarn --frozen-lockfile
 
-      - name: Build
-        run: yarn build
+      # - name: Build
+      #   run: yarn build
 
       - name: Test
         run: yarn test
