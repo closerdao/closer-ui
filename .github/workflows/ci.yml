@@ -10,7 +10,7 @@ jobs:
   build:
     name: Build and Test
     timeout-minutes: 15
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
@@ -24,7 +24,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
           cache: 'yarn'
 
       - name: Install dependencies
@@ -35,3 +35,9 @@ jobs:
 
       - name: Test
         run: yarn test
+
+      - name: Print environment details
+        run: |
+          node -v
+          yarn -v
+          yarn list --depth=0
