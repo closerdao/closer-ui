@@ -211,7 +211,7 @@ const BookingPage = ({
     isHourlyBooking,
     foodPrice: selectedFoodOption?.price || 0,
     durationInDays: updatedDuration,
-    adults,
+    adults:  updatedAdults,
     isFoodOptionEnabled: Boolean(selectedFoodOption?._id) || false,
     isTeamMember: isTeamBooking || false,
   });
