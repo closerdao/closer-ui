@@ -202,13 +202,7 @@ const ListingPage: NextPage<Props> = ({
   const [calendarError, setCalendarError] = useState<string | null>(null);
   const [unavailableDates, setUnavailableDates] = useState<any[]>([]);
 
-  const isBookingAvailable = Boolean(
-    start &&
-      end &&
-      isListingAvailable &&
-      !calendarError &&
-      (isHourlyBooking ? isTimeSet : true),
-  );
+
 
   const isWeb3BookingEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
@@ -220,6 +214,19 @@ const ListingPage: NextPage<Props> = ({
   const isTeamMember = user?.roles.some((roles) =>
     ['space-host', 'steward', 'land-manager', 'team'].includes(roles),
   );
+
+  const isStartToday = start && dayjs(start).isSame(dayjs(), 'day');
+  const isTodayAndToken = Boolean(isStartToday && isTokenPaymentSelected);
+
+  const isBookingAvailable = Boolean(
+    start &&
+      end &&
+      isListingAvailable &&
+      !calendarError &&
+    (isHourlyBooking ? isTimeSet : true) &&
+    !isTodayAndToken
+  );
+
 
   const fiatTotal = getFiatTotal({
     isTeamBooking,
@@ -662,6 +669,9 @@ const ListingPage: NextPage<Props> = ({
 
                     <div className="flex flex-col w-1/2 sm:w-full">
                       <div className="">
+                        {isTodayAndToken && (
+                          <ErrorMessage error={'Same day token booking not available'} />
+                        )}
                         {error && (
                           <ErrorMessage error={parseMessageFromError(error)} />
                         )}
