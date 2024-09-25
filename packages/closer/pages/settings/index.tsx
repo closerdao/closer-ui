@@ -159,12 +159,48 @@ const SettingsPage = () => {
             <span className="block sm:inline">{error}</span>
           </div>
         )}
+
+        <Heading
+          level={3}
+          className="border-b border-divider pb-2.5 leading-9 mt-12"
+        >
+          ⭐ Profile
+        </Heading>
+
+        <Input
+          label="About me"
+          additionalInfo={APP_NAME === 'moos' ? 'Required to make bookings' : ''}
+          isRequired={APP_NAME === 'moos' ? true : false}
+          placeholder="Tell us more about yourself"
+          value={user.about}
+          onChange={saveUserData('about') as any}
+          isInstantSave={true}
+          hasSaved={hasSaved}
+          setHasSaved={setHasSaved}
+        />
+
+        <div className="relative mt-8 flex flex-col gap-6 group">
+          <label className="font-medium text-complimentary-light" htmlFor="">
+            Profile Picture{' '}
+            {APP_NAME === 'moos' && (
+              <span className="text-red-500">[Required to make bookings]*</span>
+            )}
+          </label>
+          <UploadPhoto
+            model="user"
+            id={user._id}
+            label={user.photo ? 'Change' : 'Add photo'}
+            className="my-4"
+          />
+        </div>
+
         <Heading
           level={3}
           className="border-b border-divider pb-2.5 leading-9 mt-12"
         >
           ⭐ Account
         </Heading>
+
         <Input
           label="Name"
           placeholder="Your name"
@@ -262,18 +298,6 @@ const SettingsPage = () => {
               </Button>
             )
           )}
-        </div>
-
-        <div className="md:w-72 relative mt-8 flex flex-col gap-6 group">
-          <label className="font-medium text-complimentary-light" htmlFor="">
-            Profile Picture
-          </label>
-          <UploadPhoto
-            model="user"
-            id={user._id}
-            label={user.photo ? 'Change' : 'Add photo'}
-            className="my-4"
-          />
         </div>
 
         <div id="recommended"></div>
