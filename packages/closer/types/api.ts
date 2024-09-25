@@ -58,8 +58,6 @@ export type BookingSettings = {
   cancellationPolicyDefault: number;
   pickUpEnabled: boolean;
   foodOptionEnabled: boolean;
-  foodPriceBasic: number;
-  foodPriceChef: number;
   utilityOptionEnabled: boolean;
 };
 

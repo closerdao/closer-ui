@@ -855,7 +855,7 @@ export const getSubPeriodData = ({
 
     if (isCheckin) {
       if (isNightly) {
-        const fiatPrice = booking?.get('rentalFiat')?.get('val');
+        const fiatPrice = booking?.get('rentalFiat')?.get('val') || 0;
 
         hospitalityRevenue += fiatPrice;
 

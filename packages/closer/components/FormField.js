@@ -31,6 +31,7 @@ const FormField = ({
   min,
   max,
   step,
+  dynamicField = null,
 }) => {
   const t = useTranslations();
 
@@ -156,17 +157,26 @@ const FormField = ({
             </div>
           )}
           {type === 'select' && (
-            <select
-              value={objectPath.get(data, name)}
-              onChange={(e) => update(name, e.target.value)}
-              className={`px-2 py-1 min-w-[180px] ${className}`}
-            >
-              {options.map((opt) => (
-                <option value={opt.value} key={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+            <>
+              <select
+                value={objectPath.get(data, name)}
+                onChange={(e) => update(name, e.target.value)}
+                className={`px-2 py-1 min-w-[180px] ${className}`}
+              >
+                {dynamicField?.name === name &&
+                  dynamicField?.options.map((opt) => (
+                    <option value={opt.value} key={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                {dynamicField?.name !== name &&
+                  options.map((opt) => (
+                    <option value={opt.value} key={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+              </select>
+            </>
           )}
           {type === 'multi-select' && (
             <div className="flex flex-wrap gap-4 my-6">
