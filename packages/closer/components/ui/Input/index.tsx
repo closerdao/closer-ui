@@ -19,7 +19,7 @@ const inputStyles = cva('new-input px-4 py-3 rounded-lg', {
     },
     isValid: {
       true: 'border-neutral bg-neutral',
-      false: 'border-accent-core border bg-accent-light',
+      false: 'border-accent border bg-accent-light',
     },
   },
 

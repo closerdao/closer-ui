@@ -30,15 +30,15 @@ const BookingRequestButtons = ({
 }: Props) => {
   const t = useTranslations();
   const { user } = useAuth();
+  const isSpaceHost = user?.roles.includes('space-host');
   const isBookingCancelable =
-    createdBy === user?._id &&
+    (createdBy === user?._id || isSpaceHost) &&
     (status === 'open' || status === 'pending' || status === 'confirmed') &&
     dayjs().isBefore(dayjs(end));
 
-  const isSpaceHost = user?.roles.includes('space-host');
-
   return (
     <div className="mt-4 flex flex-col gap-4">
+  
       {/* Hide buttons if start date is in the past: */}
       {new Date(start) > new Date() && (
         <>
@@ -78,20 +78,13 @@ const BookingRequestButtons = ({
             </Link>
           )}
 
-          {user &&
-            (status === 'paid' ||
-              status === 'credits-paid' ||
-              status === 'tokens-staked') &&
-            (user._id === createdBy || isSpaceHost) && (
-              <Link passHref href={`/bookings/${_id}/cancel`}>
-                <Button type="secondary">
-                  ⭕ {t('booking_cancel_button')}
-                </Button>
-              </Link>
-            )}
         </>
       )}
-
+      {isSpaceHost && !Boolean(user && isBookingCancelable && user._id === createdBy) && (
+        <Link passHref href={`/bookings/${_id}/cancel`}>
+          <Button type="secondary">⭕ {t('booking_cancel_button')}</Button>
+        </Link>
+      )}
       {user && user.roles.includes('space-host') && (
         <>
           {status === 'pending' && (

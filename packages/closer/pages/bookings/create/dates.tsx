@@ -79,7 +79,7 @@ const DatesSelector = ({
     volunteerId,
   } = router.query || {};
 
-  const isHourlyBooking = savedStartDate === savedEndDate;
+  const isHourlyBooking = false;
 
   const [blockedDateRanges, setBlockedDateRanges] = useState<any[]>([]);
 
@@ -145,14 +145,30 @@ const DatesSelector = ({
   const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
   const [bookingError, setBookingError] = useState<null | string>(null);
 
+  const hasEventIdAndValidTicket = Boolean(
+    eventId && (!ticketOptions?.length || selectedTicketOption),
+  );
+  const hasVolunteerId = volunteerId;
+  const hasValidDates = (start && end) || (savedStartDate && savedEndDate);
+  const isGeneralCase =
+    !eventId && !volunteerId && start && end && !bookingError;
+  const startDate = dayjs(start).startOf('day');
+  const endDate = dayjs(end).startOf('day');
+  const diffInDays = endDate.diff(startDate, 'day');
+  const isMinDurationMatched = Boolean(
+    (bookingConfig && diffInDays >= bookingConfig?.minDuration) || eventId,
+  );
+  const canProceed = !!(
+    ((hasEventIdAndValidTicket && hasValidDates) ||
+      (hasVolunteerId && hasValidDates) ||
+      isGeneralCase) &&
+    isMinDurationMatched
+  );
+
   useEffect(() => {
     setBookingError(null);
     if (start && end) {
-      const startDate = dayjs(start).startOf('day');
-      const endDate = dayjs(end).startOf('day');
-      const diffInDays = endDate.diff(startDate, 'day');
-
-      if (bookingConfig && diffInDays < bookingConfig?.minDuration) {
+      if (!isMinDurationMatched) {
         setBookingError(
           t('bookings_dates_min_duration_error', {
             var: bookingConfig?.minDuration,
@@ -202,7 +218,7 @@ const DatesSelector = ({
         doesNeedSeparateBeds: String(doesNeedSeparateBeds),
       };
 
-      if (data.start === data.end || selectedTicketOption?.isDayTicket) {
+      if (selectedTicketOption?.isDayTicket) {
         if (!isAuthenticated) {
           redirectToSignup();
           return;
@@ -212,8 +228,8 @@ const DatesSelector = ({
           data: { results: newBooking },
         } = await api.post('/bookings/request', {
           // useTokens,
-          start,
-          end,
+          start: selectedTicketOption?.isDayTicket ? savedStartDate : start,
+          end: selectedTicketOption?.isDayTicket ? savedStartDate : end,
           adults,
           infants,
           pets,
@@ -261,7 +277,11 @@ const DatesSelector = ({
         <BackButton handleClick={goBack}>{t('buttons_back')}</BackButton>
         <Heading className="pb-4 mt-8">
           <span className="mr-2">🏡</span>
-          <span>{t('bookings_summary_step_dates_title')}</span>
+          <span>
+            {selectedTicketOption?.isDayTicket
+              ? t('bookings_summary_step_dates_event')
+              : t('bookings_summary_step_dates_title')}
+          </span>
         </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
 
@@ -347,20 +367,10 @@ const DatesSelector = ({
           {handleNextError && (
             <div className="error-box">{handleNextError}</div>
           )}
-          <Button
-            onClick={handleNext}
-            isEnabled={
-              !!(
-                (eventId &&
-                  (!ticketOptions?.length || selectedTicketOption) &&
-                  start &&
-                  end) ||
-                (volunteerId && start && end) ||
-                (!eventId && !volunteerId && start && end && !bookingError)
-              )
-            }
-          >
-            {t('generic_search')}
+          <Button onClick={handleNext} isEnabled={canProceed}>
+            {selectedTicketOption?.isDayTicket
+              ? t('booking_button_continue')
+              : t('generic_search')}
           </Button>
         </div>
       </div>
