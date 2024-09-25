@@ -117,7 +117,7 @@ const BookingPage = ({
     foodOptionId,
     foodFiat,
   } = booking || {};
-
+ 
 
   const selectedFoodOption = foodOptions?.find(
     (option) => foodOptionId && option._id === foodOptionId,
@@ -211,7 +211,7 @@ const BookingPage = ({
     isHourlyBooking,
     foodPrice: selectedFoodOption?.price || 0,
     durationInDays: updatedDuration,
-    adults,
+    adults:  updatedAdults,
     isFoodOptionEnabled: Boolean(selectedFoodOption?._id) || false,
     isTeamMember: isTeamBooking || false,
   });
@@ -426,7 +426,6 @@ const BookingPage = ({
             listingId={listing?._id}
           />
           <SummaryCosts
-            rentalFiat={rentalFiat}
             isFoodIncluded={Boolean(booking?.foodOptionId)}
             utilityFiat={utilityFiat}
             foodFiat={foodFiat}

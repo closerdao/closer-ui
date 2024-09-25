@@ -269,7 +269,8 @@ const SummaryCosts = ({
                 )}
               </div>
             )}
-          {priceDuration === 'night' && (
+          
+          {(priceDuration === 'night' || !priceDuration) && (
             <div className="font-bold">
               {useTokens && (
                 <>
