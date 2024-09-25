@@ -13,9 +13,13 @@ import {
   BookingItem,
   BookingWithUserAndListing,
   CloserCurrencies,
+  Event,
+  FiatTotalParams,
   Listing,
   Price,
+  UtilityTotalParams,
 } from '../types';
+import { FoodOption } from '../types/food';
 import api from './api';
 import { priceFormat } from './helpers';
 
@@ -35,48 +39,38 @@ export const getBookingType = (
   return '🏡 Stay';
 };
 
-export const getFiatTotal = (
-  isTeamBooking: boolean,
-  foodOption: string,
-  utilityTotal: number,
-  accomodationTotal: number,
-  eventTotal?: number,
-  useTokens?: boolean,
-  useCredits?: boolean,
-) => {
+export const getFiatTotal = ({
+  isTeamBooking,
+  eventTotal,
+  utilityTotal,
+  foodTotal,
+  accommodationFiatTotal,
+  useTokens,
+  useCredits,
+}: FiatTotalParams) => {
   if (isTeamBooking) {
     return 0;
   }
-  const accommodationFiatTotal =
-    useTokens || useCredits ? 0 : accomodationTotal;
-  if (foodOption === 'no_food') {
-    return accommodationFiatTotal + (eventTotal || 0);
-  }
-  return utilityTotal + accommodationFiatTotal + (eventTotal || 0);
+  const accommodationTotal =
+    useTokens || useCredits ? 0 : accommodationFiatTotal;
+
+  return (
+    utilityTotal + (foodTotal || 0) + accommodationTotal + (eventTotal || 0)
+  );
 };
 
 export const getUtilityTotal = ({
-  foodOption,
   utilityFiatVal,
-  isPrivate,
   updatedAdults,
   updatedDuration,
   discountRate,
   isTeamBooking,
-}: {
-  foodOption: string;
-  utilityFiatVal: number | undefined;
-  isPrivate: boolean;
-  updatedAdults: number;
-  updatedDuration: number;
-  discountRate: number;
-  isTeamBooking: boolean | undefined;
-}) => {
-  if (foodOption === 'no_food' || isTeamBooking || !utilityFiatVal) {
+  isUtilityOptionEnabled,
+}: UtilityTotalParams) => {
+  if (isTeamBooking || !utilityFiatVal || !isUtilityOptionEnabled) {
     return 0;
   }
-  const multiplier = isPrivate ? 1 : updatedAdults;
-  const total = utilityFiatVal * multiplier * updatedDuration * discountRate;
+  const total = utilityFiatVal * updatedAdults * updatedDuration * discountRate;
   return total;
 };
 
@@ -446,6 +440,7 @@ export const dateToPropertyTimeZone = (
   }
   return dayjs.utc(date).tz(timeZone).format('YYYY-MM-DD HH:mm');
 };
+
 export const payTokens = async (
   bookingId: string | undefined,
   dailyRentalTokenVal: number | undefined,
@@ -548,6 +543,7 @@ export const formatCheckoutDate = (
   TIME_ZONE: string,
   checkoutTime: number | undefined,
 ) => {
+  if (!date) return;
   const localDate = dayjs.tz(date, TIME_ZONE);
   const localTime = localDate
     .hour(Number(checkoutTime) || 11)
@@ -562,4 +558,51 @@ export const addOneHour = (time: string) => {
     return String('0' + (Number(time.substring(0, 2)) + 1) + ':00');
   }
   return String(Number(time.substring(0, 2)) + 1 + ':00');
+};
+interface FoodTotalParams {
+  isHourlyBooking: boolean;
+  foodPrice: number;
+  durationInDays: number;
+  adults: number;
+  isFoodOptionEnabled: boolean;
+  isTeamMember: boolean;
+}
+
+export const getFoodTotal = ({
+  isHourlyBooking,
+  foodPrice,
+  durationInDays,
+  adults,
+  isFoodOptionEnabled,
+  isTeamMember,
+}: FoodTotalParams) => {
+  if (isHourlyBooking || !isFoodOptionEnabled || isTeamMember || !foodPrice)
+    return 0;
+  return foodPrice * adults * durationInDays;
+};
+
+export const getFoodOption = ({
+  eventId,
+  event,
+  foodOptions,
+}: {
+  eventId: string | undefined;
+  event: Event | undefined;
+  foodOptions: FoodOption[];
+}) => {
+  const defaultFoodOption =
+    foodOptions.find((option) => option.isDefault) || foodOptions[0];
+  if (!eventId || !event || !event?.foodOptionId) return defaultFoodOption;
+
+  if (event?.foodOptionId) {
+    const foodOption = foodOptions.find(
+      (option) => option._id === event?.foodOptionId,
+    );
+    return foodOption || defaultFoodOption;
+  }
+  return defaultFoodOption;
+};
+
+export const convertToDateString = (date: string | Date | null) => {
+  return date ? dayjs(date).format('YYYY-MM-DD') : '';
 };

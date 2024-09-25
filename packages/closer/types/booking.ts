@@ -1,3 +1,4 @@
+import { BookingConfig } from './api';
 import { CloserCurrencies, Price } from './currency';
 import { Discount, TicketOption } from './event';
 
@@ -20,6 +21,7 @@ export interface BaseBookingParams {
   useTokens?: boolean | undefined;
   doesNeedPickup?: boolean | undefined;
   doesNeedSeparateBeds?: boolean | undefined;
+  foodOption?: string | undefined;
 }
 
 export type Listing = {
@@ -50,7 +52,8 @@ export type Listing = {
 };
 
 export type Booking = {
-  foodOption: string;
+  foodOption?: string;
+  foodOptionId?: string;
   status: string;
   listing: string;
   start: string;
@@ -63,6 +66,7 @@ export type Booking = {
   useTokens: boolean;
   useCredits: boolean;
   utilityFiat: Price<CloserCurrencies.EUR>;
+  foodFiat: Price<CloserCurrencies.EUR>;
   rentalFiat: Price<CloserCurrencies.EUR>;
   rentalToken: Price<CloserCurrencies.TDF | CloserCurrencies.ETH>;
   dailyUtilityFiat: Price<CloserCurrencies.EUR>;
@@ -171,3 +175,33 @@ export interface DateRangeFilter {
   $lte?: Date;
   $gte?: Date;
 }
+
+export type FiatTotalParams = {
+  foodPrice?: number;
+  isTeamBooking: boolean;
+  eventTotal?: number;
+  utilityTotal: number;
+  foodTotal: number;
+  accommodationFiatTotal: number;
+  useTokens?: boolean;
+  useCredits?: boolean;
+};
+
+export type UtilityTotalParams = {
+  utilityFiatVal: number | undefined;
+  updatedAdults: number;
+  updatedDuration: number;
+  discountRate: number;
+  isTeamBooking: boolean | undefined;
+  isUtilityOptionEnabled: boolean;
+};
+
+export type FoodPriceParams = {
+  foodOption: string;
+  isTeamBooking: boolean | undefined;
+  isFood: boolean;
+  adults: number | undefined;
+  duration: number | undefined;
+  eventId: string | undefined;
+  bookingConfig: BookingConfig | undefined | null;
+};

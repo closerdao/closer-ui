@@ -20,6 +20,7 @@ import dayjs from 'dayjs';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import PageNotAllowed from '../../401';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
@@ -39,7 +40,6 @@ import { payTokens } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
-import PageNotAllowed from '../../401';
 import PageNotFound from '../../not-found';
 
 interface Props extends BaseBookingParams {
@@ -67,6 +67,7 @@ const Checkout = ({
 
   const {
     utilityFiat,
+    foodFiat,
     rentalToken,
     rentalFiat,
     eventFiat,
@@ -310,6 +311,7 @@ const Checkout = ({
 
             {process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' &&
             canApplyCredits &&
+            !booking?.volunteerId &&
             !useTokens ? (
               <RedeemCredits
                 useCredits={useCreditsUpdated}
@@ -347,7 +349,10 @@ const Checkout = ({
                 </div>
               )}
           </div>
-          {!isHourlyBooking && (
+
+          {!isHourlyBooking &&
+          utilityFiat?.val &&
+          bookingConfig?.utilityOptionEnabled ? (
             <div>
               <HeadingRow>
                 <span className="mr-2">🛠</span>
@@ -355,19 +360,33 @@ const Checkout = ({
               </HeadingRow>
               <div className="flex justify-between items-center mt-3">
                 <p> {t('bookings_summary_step_utility_total')}</p>
+                <p className="font-bold">{priceFormat(utilityFiat)}</p>
+              </div>
+              <p className="text-right text-xs">
+                {t('bookings_summary_step_utility_description')}
+              </p>
+            </div>
+          ) : null}
+
+          {!isHourlyBooking && foodFiat?.val ? (
+            <div>
+              <HeadingRow>
+                <span className="mr-2">🥦</span>
+                <span>{t('bookings_checkout_step_food_title')}</span>
+              </HeadingRow>
+              <div className="flex justify-between items-center mt-3">
+                <p> {t('bookings_summary_step_food_total')}</p>
                 <p className="font-bold">
-                  {booking?.foodOption === 'no_food'
-                    ? 'NOT INCLUDED'
-                    : priceFormat(utilityFiat)}
+                  {booking?.foodOptionId
+                    ? priceFormat(foodFiat)
+                    : 'NOT INCLUDED'}
                 </p>
               </div>
               <p className="text-right text-xs">
                 {t('bookings_summary_step_utility_description')}
               </p>
-             
             </div>
-          )}
-
+          ) : null}
           <CheckoutTotal
             total={updatedTotal}
             useTokens={useTokens || false}
@@ -418,7 +437,7 @@ const Checkout = ({
           )}
           {paymentError && <ErrorMessage error={paymentError} />}
         </div>
-        </div>
+      </div>
     </>
   );
 };
@@ -439,7 +458,7 @@ Checkout.getInitialProps = async (context: NextPageContext) => {
           return null;
         }),
       api.get('/config/booking').catch(() => {
-      return null;
+        return null;
       }),
       api.get('/config/payment').catch(() => {
         return null;

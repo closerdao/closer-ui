@@ -346,7 +346,7 @@ const DatesSelector = ({
                   <span className="mr-2">➕</span>
                   <span>{t('bookings_heading_extras')}</span>
                 </HeadingRow>
-                <div className="my-10 flex flex-row justify-between flex-wrap">
+                <div className="mt-10 flex flex-row justify-between flex-wrap">
                   <label htmlFor="separateBeds" className="text-md">
                     {t('bookings_pickup')}
                     <span className="w-full text-xs ml-2">

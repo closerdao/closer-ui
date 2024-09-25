@@ -14,7 +14,12 @@ import process from 'process';
 import { blockchainConfig } from '../../../config_blockchain';
 import { BOOKING_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
-import { BaseBookingParams, BookingConfig, Listing } from '../../../types';
+import {
+  BaseBookingParams,
+  BookingConfig,
+  Event,
+  Listing,
+} from '../../../types';
 import api from '../../../utils/api';
 import { getBookingType } from '../../../utils/booking.helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
@@ -25,6 +30,7 @@ interface Props extends BaseBookingParams {
   error?: string;
   bookingConfig: BookingConfig | null;
   bookingError?: string | null;
+  optionalEvent: Event | null;
 }
 
 const AccomodationSelector = ({
@@ -46,14 +52,16 @@ const AccomodationSelector = ({
   doesNeedSeparateBeds,
   bookingConfig,
   bookingError,
+  foodOption,
 }: Props) => {
   const t = useTranslations();
+  const router = useRouter();
+  const { isAuthenticated, user } = useAuth();
+
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
-  const router = useRouter();
-  const { isAuthenticated, user } = useAuth();
   const isTeamMember = user?.roles.some((roles) =>
     ['space-host', 'steward', 'land-manager', 'team'].includes(roles),
   );
@@ -88,17 +96,20 @@ const AccomodationSelector = ({
         listing: listingId,
         children: kids,
         discountCode,
-
         ...(eventId && { eventId, ticketOption }),
         ...(volunteerId && { volunteerId }),
         doesNeedPickup,
         doesNeedSeparateBeds,
+        foodOption,
       });
-      if (volunteerId) {
-        router.push(`/bookings/${newBooking._id}/summary`);
-      } else {
-        router.push(`/bookings/${newBooking._id}/questions`);
+      if (bookingConfig?.foodOptionEnabled) {
+        router.push(
+          `/bookings/${newBooking._id}/food?discountCode=${discountCode}`,
+        );
+        return;
       }
+
+      router.push(`/bookings/${newBooking._id}/questions`);
     } catch (err) {
       console.log(err); // TO DO handle error
     } finally {
@@ -200,6 +211,7 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       discountCode,
       doesNeedPickup,
       doesNeedSeparateBeds,
+      foodOption,
     }: BaseBookingParams = query || {};
     const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
     const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
@@ -254,6 +266,7 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       bookingConfig,
       bookingError,
       messages,
+      foodOption,
     };
   } catch (err: any) {
     console.log(err);

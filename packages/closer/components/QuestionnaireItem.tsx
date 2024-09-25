@@ -34,7 +34,7 @@ const QuestionnaireItem = ({
   };
 
   return (
-    <div className="mb-16 last:mb-0">
+    <div className="mb-16 last:mb-0 flex flex-col gap-2">
       <label
         htmlFor={name}
         className=" pb-1 capitalize font-normal text-base text-black"

@@ -45,6 +45,14 @@ export const configDescription: ConfigType[] = [
         type: 'boolean',
         default: false,
       },
+      foodOptionEnabled: {
+        type: 'boolean',
+        default: false
+      },
+      utilityOptionEnabled: {
+        type: 'boolean',
+        default: false
+      },
       utilityFiatVal: {
         type: 'number',
         default: 2,

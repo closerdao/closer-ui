@@ -38,9 +38,11 @@ import {
 import api, { cdn } from '../../../utils/api';
 import {
   getFiatTotal,
+  getFoodTotal,
   getLocalTimeAvailability,
   getTimeOnly,
   getTimeOptions,
+  getUtilityTotal,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import {
@@ -122,7 +124,6 @@ const ListingPage: NextPage<Props> = ({
   const [doesNeedPickup, setDoesNeedPickup] = useState(false);
   const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
   const [isTeamBooking, setIsTeamBooking] = useState(false);
-  const [foodOption, setFoodOption] = useState('no_food');
   const [hourAvailability, setHourAvailability] = useState<
     { hour: string; isAvailable: boolean }[] | []
   >([]);
@@ -170,9 +171,24 @@ const ListingPage: NextPage<Props> = ({
   const nightlyTotal = listing
     ? listing.fiatPrice?.val * (listing.private ? 1 : adults) * discountRate
     : 0;
-  const utilityTotal = settings
-    ? settings.utilityFiatVal * adults * durationInDays
-    : 0;
+  const utilityTotal = getUtilityTotal({
+    utilityFiatVal: settings?.utilityFiatVal,
+    updatedAdults: adults,
+    updatedDuration: durationInDays,
+    discountRate,
+    isTeamBooking,
+    isUtilityOptionEnabled: settings?.utilityOptionEnabled || false,
+  });
+
+  const foodTotal =
+    getFoodTotal({
+      isHourlyBooking,
+      foodPrice: 0, // we do not add food price at this stage of booking
+      adults,
+      durationInDays,
+      isFoodOptionEnabled: settings?.foodOptionEnabled || false,
+      isTeamMember: isTeamBooking || false,
+    }) || 0;
 
   const [apiError, setApiError] = useState(null);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
@@ -205,12 +221,12 @@ const ListingPage: NextPage<Props> = ({
     ['space-host', 'steward', 'land-manager', 'team'].includes(roles),
   );
 
-  const fiatTotal = getFiatTotal(
+  const fiatTotal = getFiatTotal({
     isTeamBooking,
-    foodOption,
+    foodTotal,
     utilityTotal,
     accommodationFiatTotal,
-  );
+  });
 
   const getAvailability = async (
     startDate: Date | string | null,
@@ -371,13 +387,22 @@ const ListingPage: NextPage<Props> = ({
     return urlParams;
   };
 
-  const redirectToSummary = (bookingId: string) => {
-    router.push(
-      `/bookings/${bookingId}/summary?back=stay/${
-        listing?.slug
-      }&${getUrlParams()}`,
-    );
+  const redirectToNextStep = (bookingId: string) => {
+    if (settings?.foodOptionEnabled) {
+      router.push(
+        `/bookings/${bookingId}/food?back=stay/${
+          listing?.slug
+        }&${getUrlParams()}`,
+      );
+    } else {
+      router.push(
+        `/bookings/${bookingId}/summary?back=stay/${
+          listing?.slug
+        }&${getUrlParams()}`,
+      );
+    }
   };
+
   const redirectToSignup = () => {
     router.push(`/signup?back=stay/${listing?.slug}&${getUrlParams()}`);
   };
@@ -408,7 +433,7 @@ const ListingPage: NextPage<Props> = ({
         isHourlyBooking,
       });
       sendAnalyticsEvent('Click', 'ListingPage', 'Book');
-      redirectToSummary(newBooking._id);
+      redirectToNextStep(newBooking._id);
     } catch (err: any) {
       setApiError(err);
     } finally {
@@ -446,7 +471,6 @@ const ListingPage: NextPage<Props> = ({
         )}
       </Head>
       <main className="flex justify-center flex-wrap my-4 ">
-
         <div className="flex flex-col gap-8  max-w-4xl">
           <Heading level={1}>{listing.name}</Heading>
 
@@ -492,8 +516,8 @@ const ListingPage: NextPage<Props> = ({
                   </div>
                 </div>
 
-                <div className="w-full sm:w-auto fixed left-0 bottom-0 right-0 sm:sticky">
-                  <Card className="min-w-[250px] bg-white flex-row sm:flex-col items-center border border-gray-100 pb-8">
+                <div className="w-full  sm:w-auto fixed left-0 bottom-0 right-0 sm:sticky">
+                  <Card className="bg-white min-w-[250px]  flex-row sm:flex-col items-center border border-gray-100 pb-4">
                     <div className="w-1/2 sm:w-full flex flex-col gap-2">
                       {isWeb3BookingEnabled && (
                         <CurrencySwitcher
@@ -514,10 +538,7 @@ const ListingPage: NextPage<Props> = ({
                               )}{' '}
                             +{' '}
                             {settings?.utilityFiatVal &&
-                              priceFormat(
-                                utilityTotal,
-                                settings.utilityFiatCur,
-                              )}
+                              priceFormat(foodTotal, settings.utilityFiatCur)}
                           </div>
                         ) : (
                           <div>
@@ -563,7 +584,7 @@ const ListingPage: NextPage<Props> = ({
                             onClick={() =>
                               setShowGuestsDropdown(!showGuestsDropdown)
                             }
-                            className="font-bold sm:font-normal underline sm:no-underline text-black border-0 sm:border-2 border-black normal-case w-auto sm:w-full py-1 px-0 sm:px-3 sm:p-3 sm:py-2 text-sm bg-white"
+                            className="bg-white min-h-[20px] font-bold sm:font-normal underline sm:no-underline text-black border-0 sm:border-2 border-black normal-case  w-auto sm:w-full  sm:px-3 sm:p-3 sm:py-2 text-sm py-1 px-0"
                           >
                             {adults}{' '}
                             {adults > 1
@@ -601,7 +622,7 @@ const ListingPage: NextPage<Props> = ({
                                       className="text-sm w-3/4"
                                     >
                                       {t('bookings_pickup')}
-                                      <span className="w-full text-xs ml-2">
+                                      <span className="w-full text-xs ml-2 ">
                                         ({t('bookings_pickup_disclaimer')})
                                       </span>
                                     </label>
@@ -735,13 +756,6 @@ const ListingPage: NextPage<Props> = ({
                                 listing.tokenPrice?.cur,
                               )}{' '}
                               +{' '}
-                              {settings &&
-                                priceFormat(
-                                  isTeamBooking || foodOption === 'no_food'
-                                    ? 0
-                                    : utilityTotal,
-                                  settings.utilityFiatCur,
-                                )}
                             </div>
                           ) : (
                             <span>
@@ -779,21 +793,17 @@ const ListingPage: NextPage<Props> = ({
                                   )}
                             </p>
                           </div>
-                          <div className="flex justify-between items-center mt-3">
-                            <p>{t('bookings_summary_step_utility_total')}</p>
-                            <p>
-                              {foodOption === 'no_food' ? (
-                                <b title={t('stay_food_not_included_tooltip')}>
-                                  {t('stay_food_not_included')}
-                                </b>
-                              ) : (
-                                priceFormat(
+                          {settings?.utilityOptionEnabled && (
+                            <div className="flex justify-between items-center mt-3">
+                              <p>{t('bookings_summary_step_utility_total')}</p>
+                              <p>
+                                {priceFormat(
                                   isTeamBooking ? 0 : utilityTotal,
                                   settings?.utilityFiatCur,
-                                )
-                              )}
-                            </p>
-                          </div>
+                                )}
+                              </p>
+                            </div>
+                          )}
                           <div className="flex justify-between items-center mt-3">
                             <p>
                               {t('bookings_checkout_step_total_title')} (
@@ -808,13 +818,6 @@ const ListingPage: NextPage<Props> = ({
                                     listing.tokenPrice?.cur,
                                   )}{' '}
                                   +{' '}
-                                  {settings &&
-                                    priceFormat(
-                                      isTeamBooking || foodOption === 'no_food'
-                                        ? 0
-                                        : utilityTotal,
-                                      settings.utilityFiatCur,
-                                    )}
                                 </div>
                               ) : (
                                 <span>
@@ -835,10 +838,9 @@ const ListingPage: NextPage<Props> = ({
                               isDurationValid &&
                               t('listing_not_available')}
                             {!isDurationValid &&
-                              t(
-                                'bookings_dates_min_duration_error',
-                                { var: settings?.minDuration },
-                              )}
+                              t('bookings_dates_min_duration_error', {
+                                var: settings?.minDuration,
+                              })}
                             {isGuestLimit &&
                               t('listing_not_available_guest_limit')}
                           </Information>
@@ -862,7 +864,7 @@ ListingPage.getInitialProps = async (context: NextPageContext) => {
   try {
     const [listing, settings, generalSettings, messages] = await Promise.all([
       api.get(`/listing/${query.slug}`).catch((err) => {
-        console.error('Error fetching booking config:', err);
+        console.error('Error fetching listing:', err);
         return null;
       }),
       api.get('/config/booking').catch((err) => {
@@ -870,7 +872,7 @@ ListingPage.getInitialProps = async (context: NextPageContext) => {
         return null;
       }),
       api.get('/config/general').catch((err) => {
-        console.error('Error fetching booking config:', err);
+        console.error('Error fetching general config:', err);
         return null;
       }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),

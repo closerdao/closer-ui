@@ -47,6 +47,10 @@ interface Props {
   allowDelete?: boolean;
   deleteButton?: any;
   isPublic?: boolean;
+  dynamicField?: {
+    name: string;
+    options: any[]
+  };
 }
 
 const EditModel: FC<Props> = ({
@@ -61,6 +65,7 @@ const EditModel: FC<Props> = ({
   allowDelete,
   deleteButton,
   isPublic,
+  dynamicField,
 }) => {
   const t = useTranslations();
   const { isAuthenticated, user } = useAuth();
@@ -249,7 +254,7 @@ const EditModel: FC<Props> = ({
               title: key,
               value: key,
               datePicker:
-                endpoint !== '/listing' ? (
+                endpoint !== '/listing' && endpoint !== '/food' ? (
                   <DateTimePicker
                     setStartDate={setStartDate}
                     setEndDate={setEndDate}
@@ -261,6 +266,7 @@ const EditModel: FC<Props> = ({
                 ) : null,
               content: filterFields(fieldsByTab[key], data).map((field) => (
                 <FormField
+                  dynamicField={dynamicField}
                   {...field}
                   key={field.name}
                   data={data}

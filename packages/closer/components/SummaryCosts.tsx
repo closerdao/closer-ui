@@ -7,6 +7,7 @@ import HeadingRow from './ui/HeadingRow';
 
 interface Props {
   utilityFiat?: Price<CloserCurrencies>;
+  foodFiat?: Price<CloserCurrencies>;
   accomodationCost?: Price<CloserCurrencies>;
   useTokens: boolean;
   useCredits: boolean;
@@ -16,21 +17,22 @@ interface Props {
   eventDefaultCost?: number;
   accomodationDefaultCost?: number;
   volunteerId?: string;
-  foodOption?: string;
   isNotPaid?: boolean;
   updatedAccomodationTotal?: Price<CloserCurrencies>;
   isEditMode?: boolean;
   updatedUtilityTotal?: Price<CloserCurrencies>;
+  updatedFoodTotal?: Price<CloserCurrencies>;
   updatedFiatTotal?: Price<CloserCurrencies>;
   updatedEventTotal?: Price<CloserCurrencies>;
   priceDuration?: string;
   vatRate?: number;
+  isFoodIncluded: boolean;
 }
 
 const SummaryCosts = ({
   utilityFiat,
+  foodFiat,
   accomodationCost,
-  foodOption,
   useTokens,
   useCredits,
   totalToken,
@@ -41,10 +43,12 @@ const SummaryCosts = ({
   updatedAccomodationTotal,
   isEditMode,
   updatedUtilityTotal,
+  updatedFoodTotal,
   updatedFiatTotal,
   updatedEventTotal,
   priceDuration,
   vatRate,
+  isFoodIncluded
 }: Props) => {
   const t = useTranslations();
   const { APP_NAME } = useConfig();
@@ -60,7 +64,7 @@ const SummaryCosts = ({
         <div className="flex justify-between items-center mt-3">
           <p>{t('bookings_checkout_event_cost')}</p>
           <div className="flex items-center gap-2">
-            {isEditMode && updatedEventTotal?.val !== eventDefaultCost && (
+            {isEditMode && updatedEventTotal?.val !== eventCost?.val && (
               <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
                 {t('bookings_updated_price')}: {priceFormat(updatedEventTotal)}
               </div>
@@ -72,6 +76,12 @@ const SummaryCosts = ({
                 </span>
               )}{' '}
               {priceFormat(eventCost)}
+              {isNotPaid && (
+                <span className="text-failure">
+                  {' '}
+                  {t('booking_card_unpaid')}
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -98,8 +108,7 @@ const SummaryCosts = ({
                         val: accomodationCost?.val,
                         cur: 'credits',
                         app: APP_NAME,
-                      })}{' '}
-                      + <span>{priceFormat(totalFiat)}</span>
+                      })}
                     </>
                   )}
                 </>
@@ -117,31 +126,66 @@ const SummaryCosts = ({
           <p className="text-right text-xs">
             {t('bookings_summary_step_accomodation_type_description')}
           </p>
-          <div className="flex justify-between items-center mt-3">
-            <p> {t('bookings_summary_step_utility_total')}</p>
-            <div className="flex items-center gap-2">
-              {isEditMode && updatedUtilityTotal?.val !== utilityFiat?.val && (
-                <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
-                  {t('bookings_updated_price')}:{' '}
-                  {priceFormat(updatedUtilityTotal)}
+
+          {utilityFiat?.val ? (
+            <div>
+              <div className="flex justify-between items-center mt-3">
+                <p> {t('bookings_summary_step_utility_total')}</p>
+                <div className="flex items-center gap-2">
+                  {isEditMode &&
+                    updatedUtilityTotal?.val !== utilityFiat?.val && (
+                      <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
+                        {t('bookings_updated_price')}:{' '}
+                        {priceFormat(updatedUtilityTotal)}
+                      </div>
+                    )}
+
+                  <p className="font-bold">
+                    {priceFormat(utilityFiat)}
+                    {isNotPaid && (
+                      <span className="text-failure">
+                        {' '}
+                        {t('booking_card_unpaid')}
+                      </span>
+                    )}
+                  </p>
                 </div>
-              )}
-              <p className="font-bold">
-                {foodOption === 'no_food'
-                  ? 'NOT INCLUDED'
-                  : priceFormat(utilityFiat)}
-                {isNotPaid && (
-                  <span className="text-failure">
-                    {' '}
-                    {t('booking_card_unpaid')}
-                  </span>
-                )}
+              </div>
+              <p className="text-right text-xs">
+                {t('bookings_summary_step_utility_description')}
               </p>
             </div>
-          </div>
-          <p className="text-right text-xs">
-            {t('bookings_summary_step_utility_description')}
-          </p>
+          ) : null}
+
+          {foodFiat?.val ? (
+            <div>
+              <div className="flex justify-between items-center mt-3">
+                <p> {t('bookings_summary_step_food_total')}</p>
+                <div className="flex items-center gap-2">
+                  {isEditMode && updatedFoodTotal?.val !== foodFiat?.val && (
+                    <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
+                      {t('bookings_updated_price')}:{' '}
+                      {priceFormat(updatedFoodTotal)}
+                    </div>
+                  )}
+                  <p className="font-bold">
+                    {isFoodIncluded
+                      ? priceFormat(foodFiat.val)
+                      : 'NOT INCLUDED'}
+                    {isNotPaid && (
+                      <span className="text-failure">
+                        {' '}
+                        {t('booking_card_unpaid')}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+              <p className="text-right text-xs">
+                {t('bookings_summary_step_utility_description')}
+              </p>
+            </div>
+          ) : null}
         </>
       )}
       <div className="flex justify-between items-center mt-3">
@@ -155,10 +199,7 @@ const SummaryCosts = ({
                 {priceDuration === 'night' && (
                   <div>
                     {useTokens && (
-                      <div>
-                        {priceFormat(updatedAccomodationTotal)} +{' '}
-                        {priceFormat(updatedFiatTotal)}
-                      </div>
+                      <div>{priceFormat(updatedAccomodationTotal)}</div>
                     )}
                     {useCredits && (
                       <div>
@@ -167,7 +208,7 @@ const SummaryCosts = ({
                           cur: 'credits',
                           app: APP_NAME,
                         })}{' '}
-                        + <span>{priceFormat(totalFiat)}</span>
+                        +{priceFormat(updatedFiatTotal)}
                       </div>
                     )}
                     {!useTokens && !useCredits && priceFormat(updatedFiatTotal)}

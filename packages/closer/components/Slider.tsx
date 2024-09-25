@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { GrNext } from '@react-icons/all-files/gr/GrNext';
 import { GrPrevious } from '@react-icons/all-files/gr/GrPrevious';
+import { twMerge } from 'tailwind-merge';
 
 interface Props {
   slides: any;
@@ -11,6 +12,7 @@ interface Props {
   link?: string;
   isListing?: boolean;
   isListingPreview?: boolean;
+  className?: string;
 }
 
 const Slider = ({
@@ -19,13 +21,14 @@ const Slider = ({
   link,
   isListing,
   isListingPreview,
+  className,
 }: Props) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const slide = slides[currentSlide] || slides[0] || {};
 
   return (
-    <div className={`slider ${reverse ? 'reverse' : ''} `}>
-      <div className="relative">
+    <div className={twMerge(`slider  ${reverse ? 'reverse' : ''} `, className)}>
+      <div className="relative w-full">
         {link ? (
           <Link href={(link as string) || ''}>
             <img
@@ -35,7 +38,7 @@ const Slider = ({
             />
           </Link>
         ) : isListing ? (
-          <div className="h-[350px] md:h-[600px]">
+            <div className="h-[350px] md:h-[600px]">
             <img
               src={slide.image}
               className="object-cover rounded-md w-full h-full"
@@ -43,7 +46,7 @@ const Slider = ({
             />
           </div>
         ) : (
-          <img src={slide.image} alt="" className="rounded-md" />
+          <img src={slide.image} alt="" className="object-cover rounded-md w-full" />
         )}
 
         {(isListing || isListingPreview) && slides.length > 1 && (
@@ -84,13 +87,13 @@ const Slider = ({
         {isListing || isListingPreview ? (
           <div className="absolute bottom-0  flex flex-row  justify-center text-sm w-full my-2">
             {slides.length > 1 && (
-              <figure className="bg-white px-2 rounded-full opacity-60">
+              <figure className="bg-white px-2 rounded-full opacity-60 font-normal">
                 {currentSlide + 1} / {slides.length}
               </figure>
             )}
           </div>
         ) : (
-          <div className="flex flex-row justify-between items-center text-sm">
+          <div className="flex flex-row justify-between items-center text-sm font-normal">
             <button
               className="py-2"
               onClick={() =>

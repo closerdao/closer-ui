@@ -32,31 +32,33 @@ export type Question = {
 };
 
 export type BookingSettings = {
-  utilityFiatVal: number,
-  utilityFiatCur: CloserCurrencies,
-  utilityDayFiatVal: number,
-  utilityTokenVal: number,
-  utilityTokenCur: CloserCurrencies,
-  checkinTime: number,
-  checkoutTime: number,
-  maxDuration: number,
-  minDuration: number,
-  volunteerCommitment: string,
-  memberMaxDuration: number,
-  memberMaxBookingHorizon: number,
-  guestMaxDuration: number,
-  guestMaxBookingHorizon: number,
-  discountsDaily: number,
-  discountsWeekly: number,
-  discountsMonthly: number,
-  seasonsHighStart: string,
-  seasonsHighEnd: string,
-  seasonsHighModifier: number,
-  cancellationPolicyLastday: number,
-  cancellationPolicyLastweek: number,
-  cancellationPolicyLastmonth: number,
-  cancellationPolicyDefault: number,
+  utilityFiatVal: number;
+  utilityFiatCur: CloserCurrencies;
+  utilityDayFiatVal: number;
+  utilityTokenVal: number;
+  utilityTokenCur: CloserCurrencies;
+  checkinTime: number;
+  checkoutTime: number;
+  maxDuration: number;
+  minDuration: number;
+  volunteerCommitment: string;
+  memberMaxDuration: number;
+  memberMaxBookingHorizon: number;
+  guestMaxDuration: number;
+  guestMaxBookingHorizon: number;
+  discountsDaily: number;
+  discountsWeekly: number;
+  discountsMonthly: number;
+  seasonsHighStart: string;
+  seasonsHighEnd: string;
+  seasonsHighModifier: number;
+  cancellationPolicyLastday: number;
+  cancellationPolicyLastweek: number;
+  cancellationPolicyLastmonth: number;
+  cancellationPolicyDefault: number;
   pickUpEnabled: boolean;
+  foodOptionEnabled: boolean;
+  utilityOptionEnabled: boolean;
 };
 
 export interface Config {
@@ -121,6 +123,10 @@ export type BookingConfig = {
   cancellationPolicyLastweek: number;
   utilityFiatVal: number;
   pickUpEnabled: boolean;
+  foodOptionEnabled: boolean;
+  utilityOptionEnabled: boolean;
+  foodPriceBasic: number;
+  foodPriceChef: number;
 };
 
 export type PaymentConfig = {

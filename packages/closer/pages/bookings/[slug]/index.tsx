@@ -29,11 +29,16 @@ import {
   PaymentConfig,
   VolunteerOpportunity,
 } from '../../../types';
+import { FoodOption } from '../../../types/food';
 import api from '../../../utils/api';
 import {
+  convertToDateString,
   dateToPropertyTimeZone,
+  formatCheckinDate,
+  formatCheckoutDate,
   getAccommodationTotal,
   getFiatTotal,
+  getFoodTotal,
   getPaymentDelta,
   getUtilityTotal,
 } from '../../../utils/booking.helpers';
@@ -55,6 +60,7 @@ interface Props {
   listings: Listing[];
   generalConfig: GeneralConfig;
   paymentConfig: PaymentConfig | null;
+  foodOptions: FoodOption[];
 }
 
 const BookingPage = ({
@@ -68,10 +74,9 @@ const BookingPage = ({
   listings,
   generalConfig,
   paymentConfig,
+  foodOptions,
 }: Props) => {
   const t = useTranslations();
-
-  console.log('booking=',booking);
 
   const { timeZone } = generalConfig;
 
@@ -109,7 +114,14 @@ const BookingPage = ({
     created,
     isTeamBooking,
     eventPrice,
+    foodOption,
+    foodOptionId,
+    foodFiat,
   } = booking || {};
+
+  const selectedFoodOption = foodOptions?.find(
+    (option) => option._id === foodOptionId,
+  );
 
   const userInfo = bookingCreatedBy && {
     name: bookingCreatedBy.screenname,
@@ -135,6 +147,9 @@ const BookingPage = ({
   const [updatedListingId, setUpdatedListingId] = useState(listing?._id);
   const [isLoading, setIsLoading] = useState(false);
   const [hasUpdated, setHasUpdated] = useState(false);
+
+  const checkInTime = bookingConfig?.checkinTime || 14;
+  const checkOutTime = bookingConfig?.checkoutTime || 11;
 
   const setters = {
     setUpdatedAdults,
@@ -183,29 +198,36 @@ const BookingPage = ({
     isTeamBooking,
   );
 
-  const foodOption = 'no_food';
-
   const updatedUtilityTotal = getUtilityTotal({
-    foodOption,
     utilityFiatVal: bookingConfig?.utilityFiatVal,
-    isPrivate: listing?.private,
     updatedAdults,
     updatedDuration,
     discountRate: updatedDiscountRate,
     isTeamBooking,
+    isUtilityOptionEnabled: bookingConfig?.utilityOptionEnabled || false,
+  });
+
+  const updatedFoodTotal = getFoodTotal({
+    isHourlyBooking,
+    foodPrice: selectedFoodOption?.price || 0,
+    durationInDays: updatedDuration,
+    adults,
+    isFoodOptionEnabled: Boolean(selectedFoodOption?._id) || false,
+    isTeamMember: isTeamBooking || false,
   });
 
   const updatedEventTotal = (eventPrice?.val || 0) * updatedAdults || 0;
 
-  const updatedFiatTotal = getFiatTotal(
-    Boolean(isTeamBooking),
-    foodOption,
-    updatedUtilityTotal,
-    updatedAccomodationTotal,
-    updatedEventTotal,
+  const updatedFiatTotal = getFiatTotal({
+    isTeamBooking: Boolean(isTeamBooking),
+    foodPrice: selectedFoodOption?.price || 0,
+    foodTotal: updatedFoodTotal,
+    utilityTotal: updatedUtilityTotal,
+    accommodationFiatTotal: updatedAccomodationTotal,
+    eventTotal: updatedEventTotal,
     useTokens,
     useCredits,
-  );
+  });
 
   const paymentDelta = isNotPaid
     ? null
@@ -221,8 +243,16 @@ const BookingPage = ({
 
   const updatedBooking = {
     ...booking,
-    start: updatedStartDate,
-    end: updatedEndDate,
+    start: formatCheckinDate(
+      convertToDateString(updatedStartDate),
+      timeZone,
+      checkInTime,
+    ),
+    end: formatCheckoutDate(
+      convertToDateString(updatedEndDate),
+      timeZone,
+      checkOutTime,
+    ),
     duration: updatedDuration,
     adults: updatedAdults,
     children: updatedChildren,
@@ -247,6 +277,7 @@ const BookingPage = ({
         }
       : null),
     listing: updatedListingId,
+    foodFiat: { val: updatedFoodTotal, cur: rentalFiat?.cur },
     total: { val: updatedFiatTotal, cur: rentalFiat?.cur },
     paymentDelta: paymentDelta ? paymentDelta : null,
   };
@@ -395,7 +426,9 @@ const BookingPage = ({
             listingId={listing?._id}
           />
           <SummaryCosts
+            isFoodIncluded={Boolean(booking?.foodOptionId)}
             utilityFiat={utilityFiat}
+            foodFiat={foodFiat}
             useTokens={useTokens}
             useCredits={useCredits}
             accomodationCost={
@@ -417,6 +450,10 @@ const BookingPage = ({
             isEditMode={isSpaceHost}
             updatedUtilityTotal={{
               val: updatedUtilityTotal,
+              cur: utilityFiat?.cur,
+            }}
+            updatedFoodTotal={{
+              val: updatedFoodTotal,
               cur: utilityFiat?.cur,
             }}
             updatedFiatTotal={{
@@ -476,6 +513,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       listingRes,
       generalConfigRes,
       paymentConfigRes,
+      foodRes,
       messages,
     ] = await Promise.all([
       api
@@ -507,6 +545,9 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       api.get('/config/payment').catch(() => {
         return null;
       }),
+      api.get('/food').catch(() => {
+        return null;
+      }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const booking = bookingRes?.data?.results;
@@ -515,6 +556,8 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
 
     const listings = listingRes?.data?.results;
     const paymentConfig = paymentConfigRes?.data?.results?.value;
+
+    const foodOptions = foodRes?.data?.results;
 
     const [optionalEvent, optionalListing, optionalVolunteer] =
       await Promise.all([
@@ -573,6 +616,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       listings,
       messages,
       paymentConfig,
+      foodOptions,
     };
   } catch (err: any) {
     return {
@@ -587,6 +631,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       listings: null,
       messages: null,
       paymentConfig: null,
+      foodOptions: null,
     };
   }
 };
