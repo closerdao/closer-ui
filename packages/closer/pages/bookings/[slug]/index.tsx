@@ -120,7 +120,7 @@ const BookingPage = ({
 
 
   const selectedFoodOption = foodOptions?.find(
-    (option) => option._id === foodOptionId,
+    (option) => foodOptionId && option._id === foodOptionId,
   );
 
   const userInfo = bookingCreatedBy && {
