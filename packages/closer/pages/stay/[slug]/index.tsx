@@ -670,7 +670,7 @@ const ListingPage: NextPage<Props> = ({
                     <div className="flex flex-col w-1/2 sm:w-full">
                       <div className="">
                         {isTodayAndToken && (
-                          <ErrorMessage error={'Same day token booking not available'} />
+                          <ErrorMessage error={t('booking_token_same_day_error')} />
                         )}
                         {error && (
                           <ErrorMessage error={parseMessageFromError(error)} />
