@@ -12,13 +12,12 @@ import Button from './ui/Button';
 const cardStyle = {
   style: {
     base: {
-      fontSize: '18px',
+      fontSize: '16px',
       lineHeight: '1.6',
       color: 'black',
-      padding: '0.2rem',
+      padding: '10px 14px',
       fontWeight: 'normal',
       fontFamily: 'Barlow, sans-serif',
-      minWidth: '50%',
       '::placeholder': {
         color: '#8f8f8f',
       },
@@ -233,11 +232,16 @@ const CheckoutForm = ({
   return (
     <form onSubmit={handleSubmit}>
       {error && <ErrorMessage error={error} />}
-      <CardElement
-        options={cardStyle}
-        className={cardElementClassName}
-        onChange={validateCardElement}
-      />
+      <div className="card-element-container">
+        <CardElement
+          options={{
+            ...cardStyle,
+            hidePostalCode: true,
+          }}
+          className={`${cardElementClassName} card-element`}
+          onChange={validateCardElement}
+        />
+      </div>
       {conditions}
       <div className="mt-8">
         <Button
