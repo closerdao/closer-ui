@@ -576,7 +576,6 @@ export const getFoodTotal = ({
   isFoodOptionEnabled,
   isTeamMember,
 }: FoodTotalParams) => {
-  console.log('adults=',adults);
   if (isHourlyBooking || !isFoodOptionEnabled || isTeamMember || !foodPrice)
     return 0;
   return foodPrice * adults * durationInDays;
