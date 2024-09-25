@@ -338,7 +338,7 @@ describe('Booking flow', () => {
   });
 });
 
-it('should have correct authenticated overnight event booking flow', () => {
+it.only('should have correct authenticated overnight event booking flow', () => {
   cy.visit(`${Cypress.config('baseUrl')}/login`);
   login({ isAdmin: true });
 
@@ -368,6 +368,16 @@ it('should have correct authenticated overnight event booking flow', () => {
     .contains(LISTING.name)
     .parents('div')
     .contains('button', 'Select')
+    .click();
+  
+    cy.get('h1')
+    .contains(/food/i)
+    .should('be.visible')
+
+    cy.get('button')
+    .contains(/continue/i)
+    .should('be.visible')
+    .should('be.enabled')
     .click();
 
   cy.get('button')
