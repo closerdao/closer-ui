@@ -426,6 +426,7 @@ const BookingPage = ({
             listingId={listing?._id}
           />
           <SummaryCosts
+            rentalFiat={rentalFiat}
             isFoodIncluded={Boolean(booking?.foodOptionId)}
             utilityFiat={utilityFiat}
             foodFiat={foodFiat}

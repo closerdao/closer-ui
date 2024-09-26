@@ -110,7 +110,8 @@ const SummaryCosts = ({
                         val: updatedAccomodationTotal?.val,
                         cur: updatedAccomodationTotal?.cur,
                       })}
-                    {!useTokens && !useCredits &&
+                    {!useTokens &&
+                      !useCredits &&
                       priceFormat({
                         val: updatedAccomodationTotal?.val,
                         cur: updatedAccomodationTotal?.cur,
@@ -269,7 +270,7 @@ const SummaryCosts = ({
                 )}
               </div>
             )}
-          
+
           {(priceDuration === 'night' || !priceDuration) && (
             <div className="font-bold">
               {useTokens && (
