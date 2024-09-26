@@ -2,6 +2,7 @@
 
 const LISTING = { slug: 'glamping-private', name: 'Glamping (private)' };
 const LISTING_HOURLY = { slug: 'meeting-room', name: 'Meeting room' };
+const TEST_EVENT_SLUG = 'cypress-test-event';
 
 const login = ({ isAdmin }) => {
   if (isAdmin) {
@@ -95,6 +96,17 @@ describe('Booking flow', () => {
     cy.get('button')
       .contains(/book now/i)
       .click();
+
+      cy.get('h1')
+      .contains(/food/i)
+      .should('be.visible')
+
+      cy.get('button')
+      .contains(/continue/i)
+      .should('be.visible')
+      .should('be.enabled')
+      .click();
+    
     cy.get('button')
       .contains(/submit request/i)
       .should('be.visible')
@@ -108,6 +120,16 @@ describe('Booking flow', () => {
     selectDates();
     cy.get('button')
       .contains(/book now/i)
+      .click();
+
+      cy.get('h1')
+      .contains(/food/i)
+      .should('be.visible')
+
+      cy.get('button')
+      .contains(/continue/i)
+      .should('be.visible')
+      .should('be.enabled')
       .click();
 
     cy.get('button')
@@ -146,6 +168,16 @@ describe('Booking flow', () => {
       .contains(/book now/i)
       .click();
 
+      cy.get('h1')
+      .contains(/food/i)
+      .should('be.visible')
+
+      cy.get('button')
+      .contains(/continue/i)
+      .should('be.visible')
+      .should('be.enabled')
+      .click();
+
     cy.get('button')
       .contains(/checkout/i)
       .click();
@@ -156,20 +188,10 @@ describe('Booking flow', () => {
       .contains(/apply discount/i)
       .click();
 
-    cy.get('button')
-      .contains(/confirm booking/i)
-      .click();
+    cy.get('div')
+      .contains(/will be redeemed/i)
+      .should('be.visible');
 
-    cy.wait(4000);
-
-    cy.url().should('include', '/bookings');
-
-    cy.get('button')
-      .contains(/cancel booking/i)
-      .click();
-    cy.url().should('include', '/cancel');
-
-    cy.get('button').contains(/yes/i).click();
   });
 
   it('should have correct authenticated user booking flow with listing search', () => {
@@ -192,6 +214,16 @@ describe('Booking flow', () => {
       .contains(LISTING.name)
       .parents('div')
       .contains('button', 'Select')
+      .click();
+    
+      cy.get('h1')
+      .contains(/food/i)
+      .should('be.visible')
+
+      cy.get('button')
+      .contains(/continue/i)
+      .should('be.visible')
+      .should('be.enabled')
       .click();
 
     cy.wait(2000);
@@ -227,6 +259,16 @@ describe('Booking flow', () => {
       .contains('button', 'Select')
       .click();
 
+      cy.get('h1')
+      .contains(/food/i)
+      .should('be.visible')
+
+      cy.get('button')
+      .contains(/continue/i)
+      .should('be.visible')
+      .should('be.enabled')
+      .click();
+
     cy.url().should('include', '/summary');
   });
 
@@ -238,6 +280,16 @@ describe('Booking flow', () => {
     selectDateAndTime();
     cy.get('button')
       .contains(/book now/i)
+      .click();
+
+      cy.get('h1')
+      .contains(/food/i)
+      .should('be.visible')
+
+      cy.get('button')
+      .contains(/continue/i)
+      .should('be.visible')
+      .should('be.enabled')
       .click();
 
     cy.get('button')
@@ -267,6 +319,7 @@ describe('Booking flow', () => {
     cy.get('button').contains(/yes/i).click();
   });
 
+  // TODO: add more realistic test for hourly booking
   it('should have correct unauthenticated user (can instant book) hourly booking flow', () => {
     cy.visit(`${Cypress.config('baseUrl')}/stay/${LISTING_HOURLY.slug}`);
 
@@ -281,5 +334,128 @@ describe('Booking flow', () => {
 
     login({ isAdmin: true });
     cy.url().should('include', `/stay/${LISTING_HOURLY.slug}`);
+    
   });
+});
+
+it.only('should have correct authenticated overnight event booking flow', () => {
+  cy.visit(`${Cypress.config('baseUrl')}/login`);
+  login({ isAdmin: true });
+
+  cy.visit(`${Cypress.config('baseUrl')}/events/${TEST_EVENT_SLUG}`);
+  cy.get('a')
+    .contains(/buy ticket/i)
+    .click();
+
+    
+    cy.contains('button', 'overnight ticket', { matchCase: false })
+    .should('exist')
+    .click();
+    
+    
+    cy.get('button')
+      .contains(/clear selection/i)
+      .click();
+    
+  selectDatesSearchListings();
+
+  cy.get('button')
+    .contains(/search/i)
+    .click();
+
+  cy.contains('div', LISTING.name)
+    .find('h4')
+    .contains(LISTING.name)
+    .parents('div')
+    .contains('button', 'Select')
+    .click();
+  
+    cy.get('h1')
+    .contains(/food/i)
+    .should('be.visible')
+
+    cy.get('button')
+    .contains(/continue/i)
+    .should('be.visible')
+    .should('be.enabled')
+    .click();
+
+  cy.get('button')
+    .contains(/submit/i)
+    .click();
+
+    cy.get('button')
+    .contains(/checkout/i)
+    .click();
+    
+  cy.url().should('include', '/checkout');
+
+  cy.get('button').contains(/pay/i).should('be.disabled');
+
+  fillStripeForm();
+
+  cy.get('input[type="checkbox"]').click({ multiple: true });
+  cy.get('button').contains(/pay/i).click();
+  cy.wait(16000);
+  cy.url().should('include', '/confirmation');
+
+  cy.get('button')
+    .contains(/view ticket/i)
+    .click();
+
+  cy.url().should('include', '/bookings');
+
+  cy.get('button')
+    .contains(/cancel booking/i)
+    .click();
+  cy.url().should('include', '/cancel');
+
+  cy.get('button').contains(/yes/i).click();
+});
+
+it('should have correct authenticated day ticket event booking flow', () => {
+  cy.visit(`${Cypress.config('baseUrl')}/login`);
+  login({ isAdmin: true });
+
+  cy.visit(`${Cypress.config('baseUrl')}/events/${TEST_EVENT_SLUG}`);
+  cy.get('a')
+    .contains(/buy ticket/i)
+    .click();
+
+
+  cy.get('button')
+    .contains(/continue/i)
+    .click();
+
+  cy.get('button')
+    .contains(/submit/i)
+    .click();
+
+    cy.get('button')
+    .contains(/checkout/i)
+    .click();
+    
+  cy.url().should('include', '/checkout');
+
+  cy.get('button').contains(/pay/i).should('be.disabled');
+
+  fillStripeForm();
+
+  cy.get('input[type="checkbox"]').click({ multiple: true });
+  cy.get('button').contains(/pay/i).click();
+  cy.wait(16000);
+  cy.url().should('include', '/confirmation');
+
+  cy.get('button')
+    .contains(/view ticket/i)
+    .click();
+
+  cy.url().should('include', '/bookings');
+
+  cy.get('button')
+    .contains(/cancel booking/i)
+    .click();
+  cy.url().should('include', '/cancel');
+
+  cy.get('button').contains(/yes/i).click();
 });

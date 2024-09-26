@@ -212,7 +212,7 @@
   "events_no_stripe_integration": "This platform doesn't have a global Stripe integration. If you wish to set paid tickets for your event you must define a custom Stripe integration in the tickets tab below.",
   "events_slug_welcome_message": "Hi",
   "events_list_no_events": "No upcoming events.",
-  "events_utility": "Food cost:",
+  "events_food": "Food cost:",
   "events_accommodation": "Accommodation:",
   "fields_editor_questions": "Questions",
   "fields_editor_type": "Type",
@@ -1350,12 +1350,15 @@
   "blog_found": "Found",
   "blog_article": "article",
   "blog_about": "about",
+  "booking_button_continue": "Continue",
 
   "food_preview_edit": "Edit",
   "food_edit_title": "Edit food options",
   "food_photo_gallery": "View food photo gallery",
   "food_no_food_disclaimer": "Basic outdoor kitchen provided with no access to communal kitchen",
   "food_create_title": "Create food option",
+  "booking_price_per_night_per_adult": "Price per night per adult",
+
 
 
 

@@ -1,8 +1,8 @@
 name: CI
 
 on:
-  # push:
-  #   branches: ['main', 'develop']
+  push:
+    branches: ['main', 'develop', 'main2', 'develop2']
   pull_request:
     types: [opened, synchronize]
 

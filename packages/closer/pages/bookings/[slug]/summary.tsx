@@ -188,7 +188,7 @@ const Summary = ({
             totalToken={rentalToken || { val: 0, cur: CloserCurrencies.EUR }}
             totalFiat={total || { val: 0, cur: CloserCurrencies.EUR }}
             eventCost={eventFiat}
-            foodOption={booking?.foodOption}
+            isFoodIncluded={Boolean(booking?.foodOptionId)}
             eventDefaultCost={
               booking?.ticketOption?.price
                 ? booking?.ticketOption.price * booking?.adults

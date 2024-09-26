@@ -575,7 +575,7 @@ const HomePage = () => {
                         Free accomodation (dorm, shared glamper, or camping)
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        1 week minimum stay
+                        2 week minimum stay
                       </li>
                     </ul>
                   </div>
@@ -607,6 +607,9 @@ const HomePage = () => {
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                         Free food
+                      </li>
+                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                        Accrue real estate assets for completing work
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                         1 month minimum stay

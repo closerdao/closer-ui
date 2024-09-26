@@ -54,6 +54,9 @@ const DateTimePicker = ({
   hourAvailability,
   isDashboard,
 }: Props) => {
+  savedStartDate = getDateOnly(savedStartDate);
+  savedEndDate = getDateOnly(savedEndDate);
+
   const t = useTranslations();
   const router = useRouter();
   const { volunteerId } = router.query;
@@ -309,7 +312,9 @@ const DateTimePicker = ({
           {priceDuration !== 'night' && startTime && savedStartDate && (
             <div className="text-sm border rounded-md bg-neutral py-3 px-4 font-bold ">
               {getDateOnly(savedStartDate)}
-              {isStartTimeSelected && startTimeOnly !== endTimeOnly && ` - ${startTimeOnly} - ${endTimeOnly}`}
+              {isStartTimeSelected &&
+                startTimeOnly !== endTimeOnly &&
+                ` - ${startTimeOnly} - ${endTimeOnly}`}
             </div>
           )}
           {priceDuration === 'night' && (
