@@ -2,7 +2,7 @@ import { ChangeEvent, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { Button, Card, Heading } from '../ui';
+import { Button, Card, ErrorMessage, Heading } from '../ui';
 
 interface Props {
   currentValue: string | number | boolean | any[];
@@ -19,6 +19,7 @@ interface Props {
   description: any;
   slug: string;
   resetToDefault: (name: string) => void;
+  errors: Record<string, string | null>;
 }
 
 const ArrayConfig = ({
@@ -30,6 +31,7 @@ const ArrayConfig = ({
   description,
   slug,
   resetToDefault,
+  errors,
 }: Props) => {
   const t = useTranslations();
   const isEmailConfig = slug === 'emails';
@@ -62,7 +64,10 @@ const ArrayConfig = ({
                 const inputType = description.elements.type[0][innerKey];
 
                 return (
-                  <div key={`${innerKey}2`} className="flex flex-col gap-1">
+                  <div
+                    key={`${innerKey}-${index}`}
+                    className="flex flex-col gap-1"
+                  >
                     {isEmailConfig && innerKey === 'name' && (
                       <button
                         onClick={() => toggleCard(index)}
@@ -97,7 +102,6 @@ const ArrayConfig = ({
                     {!(isEmailConfig && innerKey === 'name') && (
                       <>
                         <label>{t(`config_label_${innerKey}`)}:</label>
-
                         {inputType === 'boolean' && (
                           <div className="flex gap-3">
                             <label className="flex gap-1 items-center">
@@ -131,7 +135,7 @@ const ArrayConfig = ({
                         {(inputType === 'text' || inputType === 'number') && (
                           <input
                             className="bg-neutral rounded-md p-1"
-                            name={innerKey}
+                            name={`${innerKey}-${index}`}
                             onChange={(event) =>
                               handleChange(event, elementsKey, index)
                             }
@@ -168,6 +172,18 @@ const ArrayConfig = ({
                             })}
                           </select>
                         )}
+                        {Object.keys(errors).length > 0 && errors[
+                          `${innerKey}-${index}` as keyof typeof errors
+                        ] !== null && errors[
+                          `${innerKey}-${index}` as keyof typeof errors
+                        ] && (
+                          <ErrorMessage
+                            error={errors[
+                              `${innerKey}-${index}` as keyof typeof errors
+                            ]?.toString() || ''}
+                          ></ErrorMessage>
+                        )}
+                       
                       </>
                     )}
                   </div>
