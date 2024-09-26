@@ -359,7 +359,7 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
       <div className="max-w-3xl mx-auto flex flex-col gap-10">
         <Heading level={1}>{t('platform_configs')}</Heading>
 
-        {allConfigCategories.length > 1 && isGeneralConfigEnabled && (
+       {allConfigCategories.length > 1 && isGeneralConfigEnabled && (
           <PlatformFeatureSelector
             enabledConfigs={enabledConfigs}
             allConfigCategories={allConfigCategories}
@@ -367,13 +367,13 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
           />
         )}
 
-        {!isGeneralConfigEnabled && (
+       {!isGeneralConfigEnabled && (
           <Card className="flex flex-col gap-4">
             <Heading level={4}>
               {t('platform_configs_initial_settings')}
             </Heading>
 
-            {(updatedConfigs.find((config) => config.slug === 'general')
+           {(updatedConfigs.find((config) => config.slug === 'general')
               ?.value ??
               []) &&
               Object.entries(
@@ -425,7 +425,7 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
                 );
               })}
 
-            <Button
+           <Button
               onClick={saveInitialConfig}
               isLoading={isLoading}
               isEnabled={!isLoading}
@@ -438,7 +438,7 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
           </Card>
         )}
 
-        {enabledConfigs.length > 0 && isGeneralConfigEnabled && (
+       {enabledConfigs.length > 0 && isGeneralConfigEnabled && (
           <div className="flex flex-col gap-10">
             <Switcher
               options={enabledConfigs}

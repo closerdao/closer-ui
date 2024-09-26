@@ -32,6 +32,6 @@ describe('SettingsPage', () => {
       </AuthContext.Provider>,
     );
 
-    expect(await screen.findByText(/User List/i)).toBeInTheDocument();
+    expect(await screen.findByText(/👀 User List/i)).toBeInTheDocument();
   });
 });
