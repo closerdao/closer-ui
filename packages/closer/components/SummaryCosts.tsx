@@ -53,6 +53,7 @@ const SummaryCosts = ({
   const t = useTranslations();
   const { APP_NAME } = useConfig();
 
+
   return (
     <div>
       <HeadingRow>
