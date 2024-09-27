@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import EditModel from '../../components/EditModel';
 import Heading from '../../components/ui/Heading';
 
-import { NextApiRequest, NextPageContext } from 'next';
+import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import models from '../../models';
