@@ -8,7 +8,6 @@ const tdfTheme = {
     colors: {
       ...closerTheme.extend.colors,
       'accent-core': '#6fb600',
-      'accent-light': '#FFC8E9',
       dominant: '#ffffff',
       complimentary: '#000000',
       'complimentary-medium': '#262626',

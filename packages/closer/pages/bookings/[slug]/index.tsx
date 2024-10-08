@@ -80,6 +80,9 @@ const BookingPage = ({
 
   const { timeZone } = generalConfig;
 
+    console.log('booking=',booking);
+
+
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';

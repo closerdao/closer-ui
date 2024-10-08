@@ -7,7 +7,7 @@ import Prompts from '../Prompts';
 
 export const Layout: FC<PropsWithChildren> = ({ children }) => {
   return (
-    <div className="flex-1 flex flex-col relative mx-auto mt-20 w-full">
+    <div className="flex-1 flex flex-col relative mx-auto mt-20 w-full bg-white">
       <Navigation />
       <Prompts/>
       <div className="p-4">{children}</div>
