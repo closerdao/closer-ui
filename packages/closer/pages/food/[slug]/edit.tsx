@@ -11,6 +11,7 @@ import models from '../../../models';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
+import AdminLayout from '../../../components/Dashboard/AdminLayout';
 
 interface Props {
   food: any;
@@ -37,25 +38,27 @@ const EditFood = ({ food }: Props) => {
       <Head>
         <title>{`${food.name} - ${t('listings_slug_edit_title')}`}</title>
       </Head>
-      <div className="justify-center flex">
-        <section className="max-w-4xl w-full">
-          <Heading level={2} className="mb-2">
-            Edit option <i>{food.name}</i>
-          </Heading>
-          <EditModel
-            id={food._id}
-            endpoint={'/food'}
-            fields={models.food}
-            onSave={() => router.push('/food')}
-            onUpdate={(name, value, option, actionType) =>
-              onUpdate(name, value, option, actionType)
-            }
-            allowDelete
-            deleteButton="Delete food option"
-            onDelete={() => router.push('/food')}
-          />
-        </section>
-      </div>
+      <AdminLayout>
+        <div className=" flex">
+          <section className="max-w-4xl w-full">
+            <Heading level={2} className="mb-2">
+              Edit option <i>{food.name}</i>
+            </Heading>
+            <EditModel
+              id={food._id}
+              endpoint={'/food'}
+              fields={models.food}
+              onSave={() => router.push('/food')}
+              onUpdate={(name, value, option, actionType) =>
+                onUpdate(name, value, option, actionType)
+              }
+              allowDelete
+              deleteButton="Delete food option"
+              onDelete={() => router.push('/food')}
+            />
+          </section>
+        </div>
+      </AdminLayout>
     </>
   );
 };

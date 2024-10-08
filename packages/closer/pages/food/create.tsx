@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 
 import models from '../../models';
 import { loadLocaleData } from '../../utils/locale.helpers';
+import AdminLayout from '../../components/Dashboard/AdminLayout';
 
 const CreateFood = () => {
   const t = useTranslations();
@@ -19,18 +20,20 @@ const CreateFood = () => {
       <Head>
         <title>{t('food_create_title')}</title>
       </Head>
-      <div className="justify-center flex">
-        <section className="max-w-4xl w-full">
-          <Heading level={2} className="mb-2">
-            {t('food_create_title')}
-          </Heading>
-          <EditModel
-            endpoint={'/food'}
-            fields={models.food}
-            onSave={() => router.push('/food')}
-          />
-        </section>
-      </div>
+      <AdminLayout>
+        <div className="flex">
+          <section className="max-w-4xl w-full">
+            <Heading level={2} className="mb-2">
+              {t('food_create_title')}
+            </Heading>
+            <EditModel
+              endpoint={'/food'}
+              fields={models.food}
+              onSave={() => router.push('/food')}
+            />
+          </section>
+        </div>
+      </AdminLayout>
     </>
   );
 };

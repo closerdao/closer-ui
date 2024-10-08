@@ -46,6 +46,10 @@ const DashboardNav = () => {
       url: '/listings',
     },
     {
+      label: t('navigation_food'),
+      url: '/food',
+    },
+    {
       label: t('navigation_user_list'),
       url: '/admin/manage-users',
     },
@@ -68,7 +72,7 @@ const DashboardNav = () => {
       case t('navigation_platform_settings'):
         return <SettingsIcon />;
       default:
-        return null;
+        return <div className='w-[20px] h-[20px]'></div>;
     }
   };
   return (
