@@ -165,6 +165,10 @@ const DatesSelector = ({
     isMinDurationMatched
   );
 
+  const isTokenPaymentSelected = currency === CURRENCIES[1];
+  const isStartToday = start && dayjs(start).isSame(dayjs(), 'day');
+  const isTodayAndToken = Boolean(isStartToday && isTokenPaymentSelected);
+
   useEffect(() => {
     setBookingError(null);
     if (start && end) {
@@ -324,6 +328,7 @@ const DatesSelector = ({
                 eventEndDate={event?.end ? event?.end : volunteer?.end}
               />
               {bookingError && <ErrorMessage error={bookingError} />}
+              {isTodayAndToken && <ErrorMessage error={t('booking_token_same_day_error')} />}
             </>
           )}
           <BookingGuests
@@ -367,10 +372,10 @@ const DatesSelector = ({
           {handleNextError && (
             <div className="error-box">{handleNextError}</div>
           )}
-          <Button onClick={handleNext} isEnabled={canProceed}>
+          <Button onClick={handleNext} isEnabled={canProceed && !isTodayAndToken}>
             {selectedTicketOption?.isDayTicket
               ? t('booking_button_continue')
-              : t('generic_search')}
+              : t('generic_search')} 
           </Button>
         </div>
       </div>

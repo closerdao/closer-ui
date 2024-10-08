@@ -1364,6 +1364,7 @@
   "food_no_food_disclaimer": "Basic outdoor kitchen provided with no access to communal kitchen",
   "food_create_title": "Create food option",
   "booking_price_per_night_per_adult": "Price per night per adult",
+  "booking_token_same_day_error": "Same day token booking not available",
 
 
   "":""
