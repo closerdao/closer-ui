@@ -92,7 +92,8 @@ const Navigation = () => {
           {!isAuthenticated &&
             APP_NAME &&
             (APP_NAME.toLowerCase() === 'moos' ||
-              APP_NAME.toLowerCase() === 'lios') && (
+              APP_NAME.toLowerCase() === 'lios' ||
+              APP_NAME.toLowerCase() === 'foz') && (
               <Button
                 onClick={() => router.push('/login')}
                 size="small"
@@ -107,7 +108,8 @@ const Navigation = () => {
           {isAuthenticated &&
             APP_NAME &&
             (APP_NAME.toLowerCase() === 'moos' ||
-              APP_NAME.toLowerCase() === 'lios') && (
+              APP_NAME.toLowerCase() === 'lios' ||
+              APP_NAME.toLowerCase() === 'foz') && (
               <Button
                 onClick={() => router.push('/stay')}
                 size="small"
