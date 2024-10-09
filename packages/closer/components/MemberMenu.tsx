@@ -73,7 +73,7 @@ const MemberMenu = () => {
         label: t('navigation_dashboard'),
         url: '/dashboard',
         enabled: isBookingEnabled,
-        roles: ['space-host', 'admin'],
+        roles: ['admin'],
       },
       {
         label: t('navigation_booking_requests'),
