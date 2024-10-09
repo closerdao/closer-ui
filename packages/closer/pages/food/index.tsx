@@ -14,6 +14,7 @@ import { usePlatform } from '../../contexts/platform';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
+import AdminLayout from '../../components/Dashboard/AdminLayout';
 
 const FoodPage = () => {
   const t = useTranslations();
@@ -46,37 +47,38 @@ const FoodPage = () => {
       <Head>
         <title>{t('food_edit_title')}</title>
       </Head>
-      {foodOptions?.get('error') && (
-        <div className="validation-error">{foodOptions.get('error')}</div>
-      )}
-
-      <section className="text-center flex justify-center flex-wrap mb-12 ">
-        <div className="md:max-w-5xl">
-          <div className="mb-6 flex justify-between flex-col sm:flex-row gap-4">
-            <Heading>{t('food_edit_title')}</Heading>
-            {(user?.roles.includes('admin') ||
-              user?.roles.includes('space-host')) && (
-              <div className="user-actions">
-                <Link
-                  as="/food/create"
-                  href="/food/create"
-                  className="btn-primary"
-                >
-                  {t('listings_create')}
-                </Link>
-              </div>
-            )}
+      <AdminLayout>
+        {foodOptions?.get('error') && (
+          <div className="validation-error">{foodOptions.get('error')}</div>
+        )}
+        <section className="text-center flex flex-wrap mb-12 ">
+          <div className="md:max-w-5xl">
+            <div className="mb-6 flex justify-between flex-col sm:flex-row gap-4">
+              <Heading>{t('food_edit_title')}</Heading>
+              {(user?.roles.includes('admin') ||
+                user?.roles.includes('space-host')) && (
+                <div className="user-actions">
+                  <Link
+                    as="/food/create"
+                    href="/food/create"
+                    className="btn-primary"
+                  >
+                    {t('listings_create')}
+                  </Link>
+                </div>
+              )}
+            </div>
+            <div className="grid md:grid-cols-4 gap-x-12 md:gap-x-5 gap-y-16">
+              {foodOptions &&
+                foodOptions.count() > 0 &&
+                user &&
+                foodOptions.map((food: any) => {
+                  return <FoodListPreview key={food.get('_id')} food={food} />;
+                })}
+            </div>
           </div>
-          <div className="grid md:grid-cols-4 gap-x-12 md:gap-x-5 gap-y-16">
-            {foodOptions &&
-              foodOptions.count() > 0 &&
-              user &&
-              foodOptions.map((food: any) => {
-                return <FoodListPreview key={food.get('_id')} food={food} />;
-              })}
-          </div>
-        </div>
-      </section>
+        </section>
+      </AdminLayout>
     </>
   );
 };

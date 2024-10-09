@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import Bookings from '../../components/Bookings';
 import BookingsFilter from '../../components/BookingsFilter';
+import AdminLayout from '../../components/Dashboard/AdminLayout';
 import Heading from '../../components/ui/Heading';
 
 import { NextPageContext } from 'next';
@@ -49,17 +50,20 @@ const AllBookingsRequestsPage = ({ bookingConfig }: Props) => {
       <Head>
         <title>{t('booking_requests_title_all')}</title>
       </Head>
-      <div className="max-w-screen-lg mx-auto flex flex-col gap-10">
-        <Heading level={1}>{t('booking_requests_title_all')}</Heading>
-        <BookingsFilter
-          setFilter={setFilter}
-          page={page}
-          setPage={setPage}
-          defaultWhere={defaultWhere}
-        />
 
-        <Bookings filter={filter} setPage={setPage} page={page} />
-      </div>
+      <AdminLayout>
+        <div className="max-w-screen-xl flex flex-col gap-10">
+          <Heading level={1}>{t('booking_requests_title_all')}</Heading>
+          <BookingsFilter
+            setFilter={setFilter}
+            page={page}
+            setPage={setPage}
+            defaultWhere={defaultWhere}
+          />
+
+          <Bookings filter={filter} setPage={setPage} page={page} />
+        </div>
+      </AdminLayout>
     </>
   );
 };

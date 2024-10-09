@@ -8,6 +8,7 @@ import Timeline, {
   TimelineHeaders,
 } from 'react-calendar-timeline';
 
+import AdminLayout from '../../components/Dashboard/AdminLayout';
 import SpaceHostBooking from '../../components/SpaceHostBooking';
 import Switch from '../../components/Switch';
 import { ErrorMessage, Spinner } from '../../components/ui';
@@ -225,67 +226,69 @@ const BookingsCalendarPage = () => {
         <title>{t('booking_calendar')}</title>
       </Head>
 
-      <main className="flex flex-col">
-        <Heading level={1}>{t('booking_calendar')}</Heading>
+      <AdminLayout>
+        <main className="flex flex-col w-full">
+          <Heading level={1}>{t('booking_calendar')}</Heading>
 
-        <section className="mt-10 flex flex-col gap-8">
-          <SpaceHostBooking listingOptions={listings && listingOptions} />
-          <Switch
-            disabled={false}
-            name="showListingsWithBookings"
-            label="Only show listings with bookings"
-            onChange={setShowListingsWithBookings}
-            checked={showListingsWithBookings}
-          />
-        </section>
+          <section className="mt-10 flex flex-col gap-8">
+            <SpaceHostBooking listingOptions={listings && listingOptions} />
+            <Switch
+              disabled={false}
+              name="showListingsWithBookings"
+              label="Only show listings with bookings"
+              onChange={setShowListingsWithBookings}
+              checked={showListingsWithBookings}
+            />
+          </section>
 
-        <div className="min-h-[600px]">
-          <Timeline
-            sidebarWidth={220}
-            groups={(lastNonEmptyUnits || defaultAccommodationUnits).map(
-              (unit, index) => ({
-                id: index.toString(),
-                ...unit,
-              }),
-            )}
-            items={lastNonEmptyBookingItems || []}
-            defaultTimeStart={defaultTimeStart}
-            defaultTimeEnd={defaultTimeEnd}
-            onItemSelect={handleBookingClick}
-            onTimeChange={handleSelectedRangeChange}
-            minZoom={sixHours}
-            maxZoom={oneMonth}
-            className="relative"
-          >
-            <TimelineHeaders className="sticky">
-              {loading && (
-                <div className="px-4 w-[200px] flex gap-2 items-center absolute h-[30px] bottom-[-30px] left-0   bg-white z-10">
-                  <Spinner /> Updating...
-                </div>
+          <div className="min-h-[600px] w-full">
+            <Timeline
+              sidebarWidth={220}
+              groups={(lastNonEmptyUnits || defaultAccommodationUnits).map(
+                (unit, index) => ({
+                  id: index.toString(),
+                  ...unit,
+                }),
               )}
-              <SidebarHeader>
-                {({ getRootProps }) => {
-                  return <div {...getRootProps()}>Listing/bed</div>;
-                }}
-              </SidebarHeader>
-              <DateHeader unit="primaryHeader" />
-              <DateHeader height={44} />
-            </TimelineHeaders>
+              items={lastNonEmptyBookingItems || []}
+              defaultTimeStart={defaultTimeStart}
+              defaultTimeEnd={defaultTimeEnd}
+              onItemSelect={handleBookingClick}
+              onTimeChange={handleSelectedRangeChange}
+              minZoom={sixHours}
+              maxZoom={oneMonth}
+              className="relative"
+            >
+              <TimelineHeaders className="sticky">
+                {loading && (
+                  <div className="px-4 w-[200px] flex gap-2 items-center absolute h-[30px] bottom-[-30px] left-0   bg-white z-10">
+                    <Spinner /> Updating...
+                  </div>
+                )}
+                <SidebarHeader>
+                  {({ getRootProps }) => {
+                    return <div {...getRootProps()}>Listing/bed</div>;
+                  }}
+                </SidebarHeader>
+                <DateHeader unit="primaryHeader" />
+                <DateHeader height={44} />
+              </TimelineHeaders>
 
-            <CustomMarker date={Math.floor(new Date().getTime() / 1000)}>
-              {({ styles }) => {
-                const customStyles = {
-                  ...styles,
-                  backgroundColor: 'deeppink',
-                  width: '3px',
-                };
-                return <div style={customStyles} />;
-              }}
-            </CustomMarker>
-          </Timeline>
-          {error && <ErrorMessage error={parseMessageFromError(error)} />}
-        </div>
-      </main>
+              <CustomMarker date={Math.floor(new Date().getTime() / 1000)}>
+                {({ styles }) => {
+                  const customStyles = {
+                    ...styles,
+                    backgroundColor: 'deeppink',
+                    width: '3px',
+                  };
+                  return <div style={customStyles} />;
+                }}
+              </CustomMarker>
+            </Timeline>
+            {error && <ErrorMessage error={parseMessageFromError(error)} />}
+          </div>
+        </main>
+      </AdminLayout>
     </>
   );
 };

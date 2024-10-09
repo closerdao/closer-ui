@@ -2,6 +2,7 @@ import Head from 'next/head';
 
 import { useState } from 'react';
 
+import AdminLayout from '../../components/Dashboard/AdminLayout';
 import UsersFilter from '../../components/UsersFilter';
 import UsersList from '../../components/UsersList';
 import { Heading } from '../../components/ui';
@@ -29,22 +30,25 @@ const ManageUsersPage = () => {
       <Head>
         <title>{t('manage_users_heading')}</title>
       </Head>
-      <div className="max-w-screen-lg mx-auto flex flex-col gap-10">
-        <Heading level={1}>{t('manage_users_heading')}</Heading>
-        <UsersFilter
-          page={page}
-          setPage={setPage}
-          setWhere={setWhere}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-        />
-        <UsersList
-          where={where}
-          page={page}
-          setPage={setPage}
-          sortBy={sortBy}
-        />
-      </div>
+
+      <AdminLayout>
+        <div className="max-w-screen-lg flex flex-col gap-10">
+          <Heading level={1}>{t('manage_users_heading')}</Heading>
+          <UsersFilter
+            page={page}
+            setPage={setPage}
+            setWhere={setWhere}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+          />
+          <UsersList
+            where={where}
+            page={page}
+            setPage={setPage}
+            sortBy={sortBy}
+          />
+        </div>
+      </AdminLayout>
     </div>
   );
 };

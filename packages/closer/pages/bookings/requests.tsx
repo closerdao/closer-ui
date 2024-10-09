@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { useState } from 'react';
 
 import Bookings from '../../components/Bookings';
+import AdminLayout from '../../components/Dashboard/AdminLayout';
 // import BookingsFilter from '../../components/BookingsFilter';
 import Heading from '../../components/ui/Heading';
 
@@ -53,11 +54,14 @@ const BookingsRequests = ({ bookingConfig }: Props) => {
       <Head>
         <title>{t('booking_requests_title')}</title>
       </Head>
-      <div className="max-w-screen-lg mx-auto flex flex-col gap-10">
-        <Heading level={1}>{t('booking_requests_title')}</Heading>
 
-        <Bookings filter={filter} setPage={setPage} page={page} />
-      </div>
+      <AdminLayout>
+        <div className="max-w-screen-xl flex flex-col gap-10">
+          <Heading level={1}>{t('booking_requests_title')}</Heading>
+
+          <Bookings filter={filter} setPage={setPage} page={page} />
+        </div>
+      </AdminLayout>
     </>
   );
 };

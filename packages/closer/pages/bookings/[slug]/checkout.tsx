@@ -116,6 +116,24 @@ const Checkout = ({
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const [useCreditsUpdated, setUseCreditsUpdated] = useState(useCredits);
+  const [creditsBalance, setCreditsBalance] = useState(0);
+
+  const creditsPricePerNight = listing?.tokenPrice.val;
+
+  let maxNightsToPayWithCredits = 0;
+  let isPartialCreditsPayment = false;
+  let partialPriceInCredits;
+  if (creditsBalance && creditsPricePerNight) {
+    maxNightsToPayWithCredits = Math.floor(
+      creditsBalance / creditsPricePerNight,
+    );
+    if (maxNightsToPayWithCredits > 0 && maxNightsToPayWithCredits < (duration || 0)) {
+      isPartialCreditsPayment = true;
+      partialPriceInCredits = (
+        (maxNightsToPayWithCredits || 0) * (creditsPricePerNight || 0)
+      ).toFixed(2);
+    }
+  }
 
   const isStripeBooking = updatedTotal && updatedTotal.val > 0;
   const isFreeBooking = updatedTotal && updatedTotal.val === 0 && !useTokens;
@@ -130,12 +148,19 @@ const Checkout = ({
     if (user) {
       (async () => {
         try {
-          const areCreditsAvailable = (
-            await api.post('/carrots/availability', {
-              startDate: start,
-              creditsAmount: rentalToken?.val,
-            })
-          ).data.results;
+          const [areCreditsAvailable, creditsBalance] = await Promise.all([
+            api
+              .post('/carrots/availability', {
+                startDate: start,
+                creditsAmount: rentalToken?.val,
+                minCreditsAmount: creditsPricePerNight,
+              })
+              .then((response) => response.data.results),
+            api
+              .get('/carrots/balance')
+              .then((response) => response.data.results),
+          ]);
+          setCreditsBalance(creditsBalance);
 
           setCanApplyCredits(areCreditsAvailable);
         } catch (error) {
@@ -230,6 +255,8 @@ const Checkout = ({
       const res = await api.post(`/bookings/${booking?._id}/update-payment`, {
         useCredits: true,
         isHourlyBooking,
+        maxNightsToPayWithCredits,
+        isPartialCreditsPayment,
       });
       setUseCreditsUpdated(true);
 
@@ -314,6 +341,10 @@ const Checkout = ({
             !booking?.volunteerId &&
             !useTokens ? (
               <RedeemCredits
+                fiatPricePerNight={listing?.fiatPrice.val}
+                isPartialCreditsPayment={isPartialCreditsPayment}
+                partialPriceInCredits={partialPriceInCredits}
+                maxNightsToPayWithCredits={maxNightsToPayWithCredits}
                 useCredits={useCreditsUpdated}
                 rentalFiat={rentalFiat}
                 rentalToken={
@@ -396,6 +427,8 @@ const Checkout = ({
 
           {isStripeBooking && (
             <CheckoutPayment
+              isPartialCreditsPayment={isPartialCreditsPayment}
+              partialPriceInCredits={partialPriceInCredits}
               bookingId={booking?._id || ''}
               buttonDisabled={
                 (useTokens &&

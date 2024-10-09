@@ -30,7 +30,7 @@ const EditEvent = ({ event, error, foodOptions }: Props) => {
       label: 'Allow guests to select',
       value: '',
     },
-    ...foodOptions?.map((option) => ({
+    ...(foodOptions ?? [])?.map((option) => ({
       label: option.name,
       value: option._id,
     })),

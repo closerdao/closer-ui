@@ -82,7 +82,7 @@ const FoodSelectionPage = ({
       setApiError(null);
       setIsLoading(true);
       await api.post(`/bookings/${booking?._id}/update-food`, {
-        foodOptionId: isFood ? foodOption._id : null,
+        foodOptionId: isFood && foodOption ? foodOption._id : null,
         discountCode,
       });
 
@@ -157,7 +157,7 @@ const FoodSelectionPage = ({
       <ProgressBar steps={BOOKING_STEPS} />
 
       <section className="flex flex-col gap-12 py-12">
-        {foodOption.name !== 'no_food' && (
+        {foodOption && foodOption?.name !== 'no_food' && (
           <div className="flex justify-between items-center">
             <label htmlFor="food">
               {eventFoodOptionSet
@@ -185,7 +185,7 @@ const FoodSelectionPage = ({
             <p> {t('bookings_summary_step_food_total')}</p>
             <p className="font-bold text-right">
               {booking?.isTeamBooking && 'Free for team members'}{' '}
-              {isFood ? priceFormat(foodPricePerNight) : priceFormat(0)}
+              {isFood ? priceFormat(foodPricePerNight || 0) : priceFormat(0)}
             </p>
           </div>
           <p className="text-right text-xs">
@@ -244,9 +244,9 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
         loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       ],
     );
-    const booking = bookingRes?.data?.results;
-    const bookingConfig = bookingConfigRes?.data?.results?.value;
-    const foodOptions = foodRes?.data?.results;
+    const booking = bookingRes?.data?.results || null;
+    const bookingConfig = bookingConfigRes?.data?.results?.value || null;
+    const foodOptions = foodRes?.data?.results || null;
 
     const [optionalEvent, optionalListing] = await Promise.all([
       booking?.eventId &&

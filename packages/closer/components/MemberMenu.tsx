@@ -172,7 +172,7 @@ const MemberMenu = () => {
         enabled: process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true',
       },
       {
-        label: t('navigation_buy_token'), 
+        label: t('navigation_buy_token'),
         url: '/token',
         enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
       },
@@ -187,7 +187,7 @@ const MemberMenu = () => {
         enabled: true,
         roles: ['admin'],
       },
-    ]
+    ];
     return links;
   };
 
@@ -281,12 +281,11 @@ const MemberMenu = () => {
           />
         </div>
       )}
-      {filteredLinks &&
-        filteredLinks.map((link: NavigationLink) => (
-          <NavLink key={link.url} href={link.url} target={link.target}>
-            {link.label}
-          </NavLink>
-        ))}
+      {filteredLinks?.map((link: NavigationLink) => (
+        <NavLink key={link.url} href={link.url} target={link.target}>
+          {link.label}
+        </NavLink>
+      ))}
       <NavLink isButton={true} onClick={logout}>
         {t('navigation_sign_out')}
       </NavLink>
