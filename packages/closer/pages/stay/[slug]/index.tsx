@@ -156,11 +156,15 @@ const ListingPage: NextPage<Props> = ({
         discountRate
       : 0;
   }
+  const numPrivateSpacesRequired = listing?.private
+    ? Math.ceil(adults / (listing?.beds || 1))
+    : 1;
   const accommodationFiatTotal = listing
     ? listing.fiatPrice?.val *
       (listing.private ? 1 : adults) *
       durationInDays *
-      discountRate
+      discountRate *
+      numPrivateSpacesRequired
     : 0;
   const accommodationTokenTotal = listing
     ? listing.tokenPrice?.val *
@@ -201,6 +205,7 @@ const ListingPage: NextPage<Props> = ({
 
   const [calendarError, setCalendarError] = useState<string | null>(null);
   const [unavailableDates, setUnavailableDates] = useState<any[]>([]);
+  const [numSpacesAvailable, setNumSpacesAvailable] = useState<number>(0);
 
   const isBookingAvailable = Boolean(
     start &&
@@ -248,7 +253,6 @@ const ListingPage: NextPage<Props> = ({
       });
 
       setIsGuestLimit(availability[0].reason === 'Guest limit');
-
       return { results, availability, error: null };
     } catch (error: any) {
       return {
@@ -294,6 +298,12 @@ const ListingPage: NextPage<Props> = ({
         );
         if (availability) {
           setHourAvailability(getLocalTimeAvailability(availability, timeZone));
+          const minNumSpacesAvailable = availability.reduce(
+            (min: number, day: { numSpacesAvailable: number }) =>
+              Math.min(min, day.numSpacesAvailable),
+            Infinity,
+          );
+          setNumSpacesAvailable(minNumSpacesAvailable);
         }
         setIsListingAvailable(results);
         setBookingError(error);
@@ -680,12 +690,16 @@ const ListingPage: NextPage<Props> = ({
                       <div className="flex flex-col gap-2">
                         <div className="hidden sm:block">
                           {listing.quantity === 1
-                            ? `${listing.quantity} ${t(
-                                'listing_listings_available_singular',
-                              )}`
-                            : `${listing.quantity} ${t(
-                                'listing_listings_available',
-                              )}`}
+                            ? `${
+                                start && end
+                                  ? numSpacesAvailable
+                                  : listing?.quantity
+                              } ${t('listing_listings_available_singular')}`
+                            : `${
+                                start && end
+                                  ? numSpacesAvailable
+                                  : listing?.quantity
+                              } ${t('listing_listings_available')}`}
                         </div>
                         {isWeb3BookingEnabled && (
                           <CurrencySwitcher

@@ -202,7 +202,6 @@ const SummaryDates = ({
                     value={totalGuests}
                     setFn={setters?.setUpdatedAdults}
                     minValue={1}
-                    maxValue={updatedMaxBeds}
                   />
                 </div>
               ) : (

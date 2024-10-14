@@ -1,6 +1,6 @@
 import Head from 'next/head';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import BookingRequestButtons from '../../../components/BookingRequestButtons';
 import PageError from '../../../components/PageError';
@@ -27,6 +27,7 @@ import {
   GeneralConfig,
   Listing,
   PaymentConfig,
+  UpdatedPrices,
   VolunteerOpportunity,
 } from '../../../types';
 import { FoodOption } from '../../../types/food';
@@ -36,14 +37,9 @@ import {
   dateToPropertyTimeZone,
   formatCheckinDate,
   formatCheckoutDate,
-  getAccommodationTotal,
-  getFiatTotal,
-  getFoodTotal,
   getPaymentDelta,
-  getUtilityTotal,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { getBookingRate, getDiscountRate } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
@@ -74,14 +70,10 @@ const BookingPage = ({
   listings,
   generalConfig,
   paymentConfig,
-  foodOptions,
 }: Props) => {
   const t = useTranslations();
 
   const { timeZone } = generalConfig;
-
-    console.log('booking=',booking);
-
 
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -115,16 +107,8 @@ const BookingPage = ({
     createdBy,
     _id,
     created,
-    isTeamBooking,
-    eventPrice,
-    foodOptionId,
     foodFiat,
   } = booking || {};
- 
-
-  const selectedFoodOption = foodOptions?.find(
-    (option) => foodOptionId && option._id === foodOptionId,
-  );
 
   const userInfo = bookingCreatedBy && {
     name: bookingCreatedBy.screenname,
@@ -150,6 +134,9 @@ const BookingPage = ({
   const [updatedListingId, setUpdatedListingId] = useState(listing?._id);
   const [isLoading, setIsLoading] = useState(false);
   const [hasUpdated, setHasUpdated] = useState(false);
+  const [updatedPrices, setUpdatedPrices] = useState<UpdatedPrices | null>(
+    null,
+  );
 
   const checkInTime = bookingConfig?.checkinTime || 14;
   const checkOutTime = bookingConfig?.checkoutTime || 11;
@@ -185,52 +172,38 @@ const BookingPage = ({
   );
   const updatedMaxBeds = updatedListing?.beds || 1;
 
-  const updatedDurationName = getBookingRate(updatedDuration);
-  const updatedDiscountRate = bookingConfig
-    ? 1 - getDiscountRate(updatedDurationName, bookingConfig)
-    : 0;
-
-  const updatedAccomodationTotal = getAccommodationTotal({
-    listing: updatedListing,
-    useTokens,
-    useCredits,
-    adults: updatedAdults,
-    durationInDaysOrHours: updatedDuration,
-    discountRate: updatedDiscountRate,
-    volunteerId,
-    isTeamBooking,
-  });
-
-  const updatedUtilityTotal = getUtilityTotal({
-    utilityFiatVal: bookingConfig?.utilityFiatVal,
-    updatedAdults,
+  useEffect(() => {
+    const fetchUpdatedPrice = async () => {
+      try {
+        const res = await api.post('/bookings/calculate-totals', {
+          bookingId: booking._id,
+          updatedListingId,
+          updatedAdults,
+          updatedDuration,
+        });
+        setUpdatedPrices(res.data.results);
+      } catch (error) {
+        console.error('Failed to fetch updated prices:', error);
+      }
+    };
+    (async () => {
+      await fetchUpdatedPrice();
+    })();
+  }, [
     updatedDuration,
-    discountRate: updatedDiscountRate,
-    isTeamBooking,
-    isUtilityOptionEnabled: bookingConfig?.utilityOptionEnabled || false,
-  });
+    updatedAdults,
+    updatedStartDate,
+    updatedEndDate,
+    updatedListingId,
+  ]);
 
-  const updatedFoodTotal = getFoodTotal({
-    isHourlyBooking,
-    foodPrice: selectedFoodOption?.price || 0,
-    durationInDays: updatedDuration,
-    adults:  updatedAdults,
-    isFoodOptionEnabled: Boolean(selectedFoodOption?._id) || false,
-    isTeamMember: isTeamBooking || false,
-  });
-
-  const updatedEventTotal = (eventPrice?.val || 0) * updatedAdults || 0;
-
-  const updatedFiatTotal = getFiatTotal({
-    isTeamBooking: Boolean(isTeamBooking),
-    foodPrice: selectedFoodOption?.price || 0,
-    foodTotal: updatedFoodTotal,
-    utilityTotal: updatedUtilityTotal,
-    accommodationFiatTotal: updatedAccomodationTotal,
-    eventTotal: updatedEventTotal,
-    useTokens,
-    useCredits,
-  });
+  const updatedAccomodationTotal = useTokens
+    ? updatedPrices?.rentalToken?.val || 0
+    : updatedPrices?.rentalFiat?.val || 0;
+  const updatedUtilityTotal = updatedPrices?.utilityFiat?.val || 0;
+  const updatedFoodTotal = updatedPrices?.foodFiat?.val || 0;
+  const updatedEventTotal = updatedPrices?.eventFiat?.val || 0;
+  const updatedFiatTotal = updatedPrices?.total?.val || 0;
 
   const paymentDelta = isNotPaid
     ? null
