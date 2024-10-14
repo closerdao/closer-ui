@@ -6,6 +6,10 @@ import { priceFormat } from '../../utils/helpers';
 import { Button, Card, ErrorMessage, Heading } from '../ui';
 
 interface Props {
+  fiatPricePerNight?: number;
+  isPartialCreditsPayment?: boolean;
+  partialPriceInCredits?: string;
+  maxNightsToPayWithCredits?: number;
   useCredits?: boolean;
   rentalFiat?: Price<CloserCurrencies>;
   rentalToken?: Price<CloserCurrencies>;
@@ -17,6 +21,10 @@ interface Props {
 }
 
 const RedeemCredits = ({
+  isPartialCreditsPayment,
+  fiatPricePerNight,
+  maxNightsToPayWithCredits,
+  partialPriceInCredits,
   useCredits,
   className,
   rentalFiat,
@@ -28,6 +36,13 @@ const RedeemCredits = ({
 }: Props) => {
   const t = useTranslations();
   const { APP_NAME } = useConfig();
+
+  const shouldShowCreditsCalculation =
+    (!hasAppliedCredits &&
+      !useCredits &&
+      (rentalFiat?.val || rentalToken?.val)) ||
+    isDemo;
+
   return (
     <div className={`${className ? className : ''}`}>
       {isDemo && (
@@ -36,10 +51,7 @@ const RedeemCredits = ({
         </Heading>
       )}
       <Card className="text-center gap-4">
-        {(!hasAppliedCredits &&
-          !useCredits &&
-          (rentalFiat?.val || rentalToken?.val)) ||
-        isDemo ? (
+        {shouldShowCreditsCalculation ? (
           <>
             <Heading level={2}>
               {t('carrots_heading_redeem')} {isDemo && '[DEMO]'}
@@ -52,7 +64,9 @@ const RedeemCredits = ({
             <div className="flex w-full justify-center items-center mb-6">
               <div className="w-2/5">
                 <Heading level={4}>
-                  {isDemo ? 1 : (rentalToken?.val as number)}
+                  {isDemo && 1}
+                  {!isDemo && !isPartialCreditsPayment && rentalToken?.val}
+                  {!isDemo && isPartialCreditsPayment && partialPriceInCredits}
                 </Heading>
                 <div className="text-xs">
                   {(rentalToken?.val as number) === 1 || isDemo
@@ -67,13 +81,19 @@ const RedeemCredits = ({
                 </div>
                 <div className="w-2/5">
                   <Heading level={4}>
-                    {isDemo
-                      ? priceFormat(
-                          APP_NAME && APP_NAME.toLowerCase() !== 'moos'
-                            ? 50
-                            : 5,
-                        )
-                      : priceFormat(rentalFiat)}
+                    {isDemo &&
+                      priceFormat(
+                        APP_NAME && APP_NAME.toLowerCase() !== 'moos' ? 50 : 5,
+                      )}
+                    {!isDemo &&
+                      !isPartialCreditsPayment &&
+                      priceFormat(rentalFiat)}
+                    {!isDemo &&
+                      isPartialCreditsPayment &&
+                      priceFormat(
+                        (maxNightsToPayWithCredits || 0) *
+                          (fiatPricePerNight || 0),
+                      )}
                   </Heading>
                   <div className="text-xs">
                     {t('carrots_off_accommodation')}
@@ -90,8 +110,12 @@ const RedeemCredits = ({
           </>
         ) : (
           <div className="text-system-success font-bold">
-            🥕 {rentalToken?.val as number}{' '}
-            {(rentalToken?.val as number) === 1
+            🥕{' '}
+            {isPartialCreditsPayment
+              ? partialPriceInCredits
+              : (rentalToken?.val as number)}{' '}
+            {(isPartialCreditsPayment && Number(partialPriceInCredits) === 1) ||
+            (!isPartialCreditsPayment && (rentalToken?.val as number) === 1)
               ? t('carrots_success_message_singular')
               : t('carrots_success_message')}
           </div>

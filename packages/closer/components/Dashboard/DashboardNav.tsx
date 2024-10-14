@@ -4,14 +4,15 @@ import { useRouter } from 'next/router';
 import { useTranslations } from 'next-intl';
 
 import BookingsIcon from '../icons/BookingsIcon';
-import HospitalityIcon from '../icons/HospitalityIcon';
+import ListingsIcon from '../icons/ListingsIcon';
 import NavBookingsIcon from '../icons/NavBookingsIcon';
+import SettingsIcon from './SettingsIcon';
 import UserListIcon from './UserListIcon';
 
 const DashboardNav = () => {
   const t = useTranslations();
   const router = useRouter();
-  const path = router.asPath;
+  const path = router.pathname;
 
   const DASHBOARD_LINKS = [
     {
@@ -45,8 +46,16 @@ const DashboardNav = () => {
       url: '/listings',
     },
     {
+      label: t('navigation_food'),
+      url: '/food',
+    },
+    {
       label: t('navigation_user_list'),
       url: '/admin/manage-users',
+    },
+    {
+      label: t('navigation_platform_settings'),
+      url: '/admin/config',
     },
   ];
 
@@ -59,9 +68,11 @@ const DashboardNav = () => {
       case t('navigation_user_list'):
         return <UserListIcon />;
       case t('navigation_edit_listings'):
-        return <HospitalityIcon color="black" />;
+        return <ListingsIcon color="black" />;
+      case t('navigation_platform_settings'):
+        return <SettingsIcon />;
       default:
-        return null;
+        return <div className='w-[20px] h-[20px]'></div>;
     }
   };
   return (
@@ -83,7 +94,7 @@ const DashboardNav = () => {
                     <Link
                       key={sublink.label}
                       className={`${
-                        path === link?.url ? 'bg-accent-light' : ''
+                        path === sublink?.url ? 'bg-accent-light' : ''
                       } pl-[40px] py-2 px-3 hover:bg-accent-light flex gap-2 rounded-full`}
                       href={sublink.url || ''}
                     >

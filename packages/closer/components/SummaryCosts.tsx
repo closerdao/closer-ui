@@ -6,6 +6,7 @@ import { getVatInfo, priceFormat } from '../utils/helpers';
 import HeadingRow from './ui/HeadingRow';
 
 interface Props {
+  rentalFiat?: Price<CloserCurrencies>;
   utilityFiat?: Price<CloserCurrencies>;
   foodFiat?: Price<CloserCurrencies>;
   accomodationCost?: Price<CloserCurrencies>;
@@ -30,6 +31,7 @@ interface Props {
 }
 
 const SummaryCosts = ({
+  rentalFiat,
   utilityFiat,
   foodFiat,
   accomodationCost,
@@ -48,11 +50,12 @@ const SummaryCosts = ({
   updatedEventTotal,
   priceDuration,
   vatRate,
-  isFoodIncluded
+  isFoodIncluded,
 }: Props) => {
   const t = useTranslations();
   const { APP_NAME } = useConfig();
 
+  const isPartialCreditsPayment = Boolean(rentalFiat?.val && totalToken.val);
 
   return (
     <div>
@@ -97,19 +100,51 @@ const SummaryCosts = ({
                 updatedAccomodationTotal?.val !== accomodationCost?.val && (
                   <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
                     {t('bookings_updated_price')}:{' '}
-                    {priceFormat(updatedAccomodationTotal)}
+                    {useCredits &&
+                      priceFormat({
+                        val: updatedAccomodationTotal?.val,
+                        cur: 'credits',
+                      })}
+                    {useTokens &&
+                      priceFormat({
+                        val: updatedAccomodationTotal?.val,
+                        cur: updatedAccomodationTotal?.cur,
+                      })}
+                    {!useTokens &&
+                      !useCredits &&
+                      priceFormat({
+                        val: updatedAccomodationTotal?.val,
+                        cur: updatedAccomodationTotal?.cur,
+                      })}
                   </div>
                 )}
+
               <div className="font-bold">
                 <>
                   {useTokens && <>{priceFormat(accomodationCost)}</>}
                   {useCredits && (
                     <>
-                      {priceFormat({
-                        val: accomodationCost?.val,
-                        cur: 'credits',
-                        app: APP_NAME,
-                      })}
+                      {isPartialCreditsPayment && (
+                        <div>
+                          {priceFormat({
+                            val: accomodationCost?.val,
+                            cur: 'credits',
+                            app: APP_NAME,
+                          })}
+                          {' + '}
+                          {priceFormat({
+                            val: rentalFiat?.val,
+                            cur: rentalFiat?.cur,
+                            app: APP_NAME,
+                          })}
+                        </div>
+                      )}
+                      {!isPartialCreditsPayment &&
+                        priceFormat({
+                          val: accomodationCost?.val,
+                          cur: 'credits',
+                          app: APP_NAME,
+                        })}
                     </>
                   )}
                 </>
@@ -235,7 +270,7 @@ const SummaryCosts = ({
                 )}
               </div>
             )}
-          
+
           {(priceDuration === 'night' || !priceDuration) && (
             <div className="font-bold">
               {useTokens && (
