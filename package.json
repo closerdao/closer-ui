@@ -32,6 +32,7 @@
   },
   "dependencies": {
     "@types/react-calendar-timeline": "^0.28.6",
+    "axios": "1.7.7",
     "interactjs": "^1.10.26",
     "react-calendar-timeline": "^0.28.0"
   }

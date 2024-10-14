@@ -10,7 +10,7 @@ import {
   useState,
 } from 'react';
 
-import { AxiosError } from 'axios';
+import axios from 'axios';
 import {
   Auth,
   GoogleAuthProvider,
@@ -115,13 +115,15 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         setError('');
       }
     } catch (err) {
-      if ((err as AxiosError).response?.status === 401) {
-        setError(t('auth_error_401_message'));
-        return;
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 401) {
+          setError(t('auth_error_401_message'));
+          return;
+        }
+        setError(err.response?.data?.error || err.message);
+      } else {
+        setError((err as Error).message);
       }
-      setError(
-        (err as AxiosError).response?.data?.error || (err as Error).message,
-      );
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -162,9 +164,11 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         return { result: null };
       }
     } catch (err) {
-      setError(
-        (err as AxiosError).response?.data?.error || (err as Error).message,
-      );
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.error || err.message);
+      } else {
+        setError((err as Error).message);
+      }
       console.error(err);
       return { result: null };
     }
@@ -187,9 +191,11 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       }
       return userData;
     } catch (err) {
-      setError(
-        (err as AxiosError).response?.data?.error || (err as Error).message,
-      );
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.error || err.message);
+      } else {
+        setError((err as Error).message);
+      }
     }
   };
 
@@ -204,9 +210,11 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       } = await api.post('/set-password', { reset_token, password });
       onSuccess(status);
     } catch (err) {
-      setError(
-        (err as AxiosError).response?.data?.error || (err as Error).message,
-      );
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.error || err.message);
+      } else {
+        setError((err as Error).message);
+      }
     }
   };
 
