@@ -53,6 +53,7 @@ interface SummaryDatesProps {
   workingHoursStart?: number | undefined;
   workingHoursEnd?: number | undefined;
   listingId?: string | undefined;
+  numSpacesRequired?: number;
 }
 
 const SummaryDates = ({
@@ -75,11 +76,11 @@ const SummaryDates = ({
   setters,
   updatedListingId,
   listings,
-  updatedMaxBeds,
   priceDuration,
   workingHoursStart,
   workingHoursEnd,
   listingId,
+  numSpacesRequired,
 }: SummaryDatesProps) => {
   const t = useTranslations();
 
@@ -96,15 +97,14 @@ const SummaryDates = ({
   let listingOptions: { value: string; label: string }[] | null =
     listings?.map((listing) => ({ value: listing._id, label: listing.name })) ||
     null;
-  
-    if (priceDuration === 'hour') {
-      listingOptions =
-        listings
-          ?.filter((listing) => listing.priceDuration === 'hour')
-          .map((listing) => ({ value: listing._id, label: listing.name })) ||
-        null;
-    }
-  
+
+  if (priceDuration === 'hour') {
+    listingOptions =
+      listings
+        ?.filter((listing) => listing.priceDuration === 'hour')
+        .map((listing) => ({ value: listing._id, label: listing.name })) ||
+      null;
+  }
 
   const durationInDays = dayjs(endDate)
     .startOf('day')
@@ -202,7 +202,6 @@ const SummaryDates = ({
                     value={totalGuests}
                     setFn={setters?.setUpdatedAdults}
                     minValue={1}
-                    maxValue={updatedMaxBeds}
                   />
                 </div>
               ) : (
@@ -348,7 +347,7 @@ const SummaryDates = ({
               href={`/stay/${listingUrl}`}
               className="font-bold uppercase text-right text-accent"
             >
-              {listingName}
+              {listingName} {numSpacesRequired && 'x' + ' ' + numSpacesRequired}
             </Link>
           )}
         </div>

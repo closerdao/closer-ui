@@ -62,7 +62,7 @@ const fillStripeForm = () => {
   getIframeBody().find('input[name="cardnumber"]').type('4242424242424242');
   getIframeBody().find('input[name="exp-date"]').type('1035');
   getIframeBody().find('input[name="cvc"]').type('111');
-  getIframeBody().find('input[name="postal"]').type('90210');
+  // getIframeBody().find('input[name="postal"]').type('90210');
 };
 
 describe('Booking flow', () => {
@@ -338,7 +338,7 @@ describe('Booking flow', () => {
   });
 });
 
-it.only('should have correct authenticated overnight event booking flow', () => {
+it('should have correct authenticated overnight event booking flow', () => {
   cy.visit(`${Cypress.config('baseUrl')}/login`);
   login({ isAdmin: true });
 

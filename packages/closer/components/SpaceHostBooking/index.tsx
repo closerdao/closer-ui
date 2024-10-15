@@ -44,7 +44,8 @@ const SpaceHostBooking = ({ listingOptions }: Props) => {
     }
     if (isCalendarSelectionValid) {
       (async function updatePrices() {
-        const { results } = await getAvailability(start, end, listingId);
+        const { results, availability } = await getAvailability(start, end, listingId);
+ 
         setIsListingAvailable(Boolean(results));
       })();
     }
@@ -62,6 +63,7 @@ const SpaceHostBooking = ({ listingOptions }: Props) => {
         start: formatDate(startDate),
         end: formatDate(endDate),
         listing: listingId,
+        adults,
       });
 
       return { results, availability };

@@ -205,3 +205,12 @@ export type FoodPriceParams = {
   eventId: string | undefined;
   bookingConfig: BookingConfig | undefined | null;
 };
+
+export type UpdatedPrices = {
+  rentalFiat: Price<CloserCurrencies.EUR>;
+  rentalToken: Price<CloserCurrencies.TDF>;
+  eventFiat: Price<CloserCurrencies.EUR>;
+  foodFiat: Price<CloserCurrencies.EUR>;
+  utilityFiat: Price<CloserCurrencies.EUR>;
+  total: Price<CloserCurrencies.EUR>;
+};
