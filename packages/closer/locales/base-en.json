@@ -1103,6 +1103,7 @@
   "config_label_foodPriceBasic": "Food price (basic food)",
   "config_label_foodPriceChef": "Food price (chef cooked food)",
   "config_label_utilityOptionEnabled": "Utility fee payment enabled (separate from accommodation)",
+  "config_label_volunteeringMinStay": "Minimum volunteering stay (days)",
 
 
   "config_features_heading": "Platform features",
@@ -1365,7 +1366,7 @@
   "food_create_title": "Create food option",
   "booking_price_per_night_per_adult": "Price per night per adult",
   "booking_token_same_day_error": "Same day token booking not available",
-
+  "bookings_dates_min_volunteering_stay_error": "Minimum volunteering stay is {var} days",
 
   "":""
 }
