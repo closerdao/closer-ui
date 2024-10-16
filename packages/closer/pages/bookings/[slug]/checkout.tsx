@@ -6,6 +6,7 @@ import BookingBackButton from '../../../components/BookingBackButton';
 import BookingWallet from '../../../components/BookingWallet';
 import CheckoutPayment from '../../../components/CheckoutPayment';
 import CheckoutTotal from '../../../components/CheckoutTotal';
+import CurrencySwitcher from '../../../components/CurrencySwitcher';
 import PageError from '../../../components/PageError';
 import RedeemCredits from '../../../components/RedeemCredits';
 import { ErrorMessage } from '../../../components/ui';
@@ -21,9 +22,12 @@ import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
-import { BOOKING_STEPS } from '../../../constants';
+import {
+  BOOKING_STEPS,
+  CURRENCIES,
+  DEFAULT_CURRENCY,
+} from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
-import { usePlatform } from '../../../contexts/platform';
 import { WalletState } from '../../../contexts/wallet';
 import { useBookingSmartContract } from '../../../hooks/useBookingSmartContract';
 import {
@@ -65,6 +69,8 @@ const Checkout = ({
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
+  const [updatedBooking, setUpdatedBooking] = useState<Booking | null>(null);
+
   const {
     utilityFiat,
     foodFiat,
@@ -82,10 +88,14 @@ const Checkout = ({
     total,
     _id,
     eventId,
-  } = booking || {};
+  } = updatedBooking ?? booking ?? {};
+
 
   const { balanceAvailable } = useContext(WalletState);
   const { user, isAuthenticated } = useAuth();
+
+  const isWeb3BookingEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
 
   const bookingYear = dayjs(start).year();
   const bookingStartDayOfYear = dayjs(start).dayOfYear();
@@ -118,6 +128,10 @@ const Checkout = ({
   const [useCreditsUpdated, setUseCreditsUpdated] = useState(useCredits);
   const [creditsBalance, setCreditsBalance] = useState(0);
 
+  const [currency, setCurrency] = useState<CloserCurrencies>(
+    useTokens ? CURRENCIES[1] : DEFAULT_CURRENCY,
+  );
+
   const creditsPricePerNight = listing?.tokenPrice.val;
 
   let maxNightsToPayWithCredits = 0;
@@ -127,7 +141,10 @@ const Checkout = ({
     maxNightsToPayWithCredits = Math.floor(
       creditsBalance / creditsPricePerNight,
     );
-    if (maxNightsToPayWithCredits > 0 && maxNightsToPayWithCredits < (duration || 0)) {
+    if (
+      maxNightsToPayWithCredits > 0 &&
+      maxNightsToPayWithCredits < (duration || 0)
+    ) {
       isPartialCreditsPayment = true;
       partialPriceInCredits = (
         (maxNightsToPayWithCredits || 0) * (creditsPricePerNight || 0)
@@ -162,7 +179,7 @@ const Checkout = ({
           ]);
           setCreditsBalance(creditsBalance);
 
-          setCanApplyCredits(areCreditsAvailable);
+          setCanApplyCredits(areCreditsAvailable && !useTokens);
         } catch (error) {
           setCanApplyCredits(false);
         }
@@ -177,6 +194,14 @@ const Checkout = ({
       }
     }
   }, [router]);
+
+  useEffect(() => {
+    if (currency === CURRENCIES[1] && !useTokens) {
+      switchToToken();
+    } else if (currency === DEFAULT_CURRENCY && useTokens) {
+      switchToFiat();
+    }
+  }, [currency]);
 
   const renderButtonText = () => {
     if (isStaking) {
@@ -254,6 +279,7 @@ const Checkout = ({
       setCreditsError(null);
       const res = await api.post(`/bookings/${booking?._id}/update-payment`, {
         useCredits: true,
+        useTokens: false,
         isHourlyBooking,
         maxNightsToPayWithCredits,
         isPartialCreditsPayment,
@@ -268,12 +294,25 @@ const Checkout = ({
     }
   };
 
-  const { platform }: any = usePlatform();
+  const updateBooking = async ({ useTokens }: { useTokens: boolean }) => {
+    const res = await api.post(`/bookings/${booking?._id}/update-payment`, {
+      useCredits: false,
+      useTokens: useTokens,
+      isHourlyBooking,
+      maxNightsToPayWithCredits,
+      isPartialCreditsPayment,
+    });
+    return res.data.results;
+  };
 
-  const switchToEUR = async () => {
-    // TODO - this should not be possible - should enable a custom endpoint to change the booking type
-    await platform.booking.patch(booking?._id, { useTokens: false });
-    router.push(`/bookings/${booking?._id}/checkout`);
+  const switchToFiat = async () => {
+    const localUpdatedBooking = await updateBooking({ useTokens: false });
+    setUpdatedBooking(localUpdatedBooking);
+  };
+
+  const switchToToken = async () => {
+    const localUpdatedBooking = await updateBooking({ useTokens: true });
+    setUpdatedBooking(localUpdatedBooking);
   };
 
   if (!isAuthenticated) {
@@ -298,6 +337,14 @@ const Checkout = ({
         </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
         <div className="mt-16 flex flex-col gap-16">
+          {isWeb3BookingEnabled && (
+            <CurrencySwitcher
+              selectedCurrency={currency}
+              onSelect={setCurrency as any}
+              currencies={CURRENCIES}
+            />
+          )}
+
           <div>
             {eventPrice && (
               <div>
@@ -366,7 +413,7 @@ const Checkout = ({
                 <div className="mt-4">
                   <BookingWallet
                     toPay={rentalToken.val}
-                    switchToEUR={switchToEUR}
+                    switchToFiat={() => setCurrency(DEFAULT_CURRENCY)}
                   />
                   <Checkbox
                     isChecked={hasAgreedToWalletDisclaimer}
@@ -419,7 +466,7 @@ const Checkout = ({
             </div>
           ) : null}
           <CheckoutTotal
-            total={updatedTotal}
+            total={total}
             useTokens={useTokens || false}
             rentalToken={rentalToken}
             vatRate={vatRate}
