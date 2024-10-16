@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { useConfig } from '../hooks/useConfig';
 import api from '../utils/api';
 import ReportABug from './ReportABug';
 import QuestionMarkIcon from './icons/QuestionMarkIcon';
@@ -9,6 +10,8 @@ import NavLink from './ui/NavLink';
 
 const GuestMenu = () => {
   const t = useTranslations();
+  const { APP_NAME } = useConfig();
+
   const [isVolunteeringEnabled, setIsVolunteeringEnabled] = useState(false);
   useEffect(() => {
     (async () => {
@@ -51,7 +54,9 @@ const GuestMenu = () => {
           <NavLink href="/volunteer">{t('navigation_volunteer')}</NavLink>
         )}
 
-        <NavLink href="/resources">{t('navigation_resources')}</NavLink>
+        {APP_NAME !== 'foz' && (
+          <NavLink href="/resources">{t('navigation_resources')}</NavLink>
+        )}
 
         {process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true' && (
           <NavLink href="/support-us">{t('support_us_navigation')}</NavLink>
@@ -62,12 +67,10 @@ const GuestMenu = () => {
           </NavLink>
         )}
 
-          {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && (
-            <NavLink href="/token">
-              {t('navigation_buy_token')}
-            </NavLink>
+        {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && (
+          <NavLink href="/token">{t('navigation_buy_token')}</NavLink>
         )}
-        
+
         {process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true' && (
           <NavLink href="/blog">{t('navigation_blog')}</NavLink>
         )}
