@@ -83,6 +83,12 @@ export const priceFormat = (price, currency = DEFAULT_CURRENCY) => {
   if (price?.cur && price.cur === 'credits') {
     return `${price.val} ${price.cur}`;
   }
+  if (price?.val === null) {
+    return parseFloat(0).toLocaleString('en-US', {
+      style: 'currency',
+      currency,
+    });
+   }
   if (!currency) {
     currency = DEFAULT_CURRENCY;
   }
