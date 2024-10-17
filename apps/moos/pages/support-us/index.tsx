@@ -1,18 +1,15 @@
 import Head from 'next/head';
-import Image from 'next/image';
-import Link from 'next/link';
 
 import { useState } from 'react';
 
-import CreditsBalance from 'closer/components/CreditsBalance';
-import { Card, Heading, LinkButton } from 'closer/components/ui';
+import { Heading } from 'closer/components/ui';
 
-import { PageNotFound, priceFormat } from 'closer';
+import { PageNotFound } from 'closer';
+import { FundraisingConfig } from 'closer/types';
 import api from 'closer/utils/api';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
-import { FundraisingConfig } from 'closer/types';
 
 const VYBE_PACKAGES = [84, 500, 2000];
 
@@ -63,11 +60,24 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
       </Head>
 
       <div className="w-full flex items-center flex-col gap-20 mt-6">
-        <section className=" w-full flex flex-col sm:flex-row gap-10 justify-center max-w-3xl">
+        <section className="w-full flex flex-col gap-10 max-w-3xl min-h-[300px]">
+          <Heading level={1} className="uppercase text-4xl  font-extrabold ">
+            Support MOOS
+          </Heading>
+          <div className="flex flex-col gap-4">
+            {' '}
+            <p className="flex-1 text-lg font-bold">
+              We are starting a MOOS DAO collective. You can purchase tokens
+              (giving voting power){' '}
+              <a href="https://juicebox.money/v2/p/750?tablet=about">here</a> or
+              contribute to the GoFundMe{' '}
+              <a href="https://www.gofundme.com/f/save-moos">here</a>
+            </p>
+          </div>
+        </section>
+        {/* <section className=" w-full flex flex-col sm:flex-row gap-10 justify-center max-w-3xl">
           <div className="flex flex-col gap-4">
             <Heading level={1} className="uppercase text-4xl  font-extrabold">
-              Join the Vybes
-            </Heading>
             <p>
               <strong>The Y Berlin</strong> is fundraising to support
               cutting-edge residencies and next-level events at MOOS.
@@ -323,7 +333,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
             <p className="mb-4">{t('carrots_what_3')}</p>
             <p className="mb-4">{t('carrots_what_4')}</p>
           </div>
-        </section>
+        </section> */}
       </div>
     </>
   );
