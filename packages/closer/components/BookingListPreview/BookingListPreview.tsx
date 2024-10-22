@@ -14,7 +14,7 @@ import {
 import { priceFormat } from '../../utils/helpers';
 import BookingRequestButtons from '../BookingRequestButtons';
 import UserInfoButton from '../UserInfoButton';
-import { Card, LinkButton } from '../ui';
+import { Button, Card, LinkButton } from '../ui';
 
 interface Props {
   booking: any;
@@ -70,6 +70,12 @@ const BookingListPreview = ({
   const router = useRouter();
 
   const { platform }: any = usePlatform();
+
+  const isPaidBooking =
+    status === 'paid' ||
+    status === 'credits-paid' ||
+    status === 'tokens-staked';
+
   const flagPickup =
     doesNeedPickup && start > new Date(Date.now() - 12 * 60 * 60 * 1000);
   const startFormatted = dayjs(start).format('DD/MM/YYYY');
@@ -79,7 +85,9 @@ const BookingListPreview = ({
   const isNotPaid =
     status !== 'paid' &&
     status !== 'tokens-staked' &&
-    status !== 'credits-paid';
+    status !== 'credits-paid' &&
+    status !== 'checked-in' &&
+    status !== 'checked-out';
 
   const bookingType = getBookingType(eventId, volunteerId);
 
@@ -88,6 +96,12 @@ const BookingListPreview = ({
   };
   const rejectBooking = async () => {
     await platform.bookings.reject(_id);
+  };
+  const checkInBooking = async () => {
+    await platform.bookings.checkIn(_id);
+  };
+  const checkOutBooking = async () => {
+    await platform.bookings.checkOut(_id);
   };
 
   const getStatusText = (status: string, updated: string | Date) => {
@@ -290,6 +304,20 @@ const BookingListPreview = ({
           {t('booking_card_email_user')}
         </LinkButton>
       )}
+
+      {isPaidBooking &&
+        new Date(bookingMapItem.get('end')) > new Date() &&
+        status !== 'checked-in' && (
+          <Button className="mt-6" type="secondary" onClick={checkInBooking}>
+            ➡️ {t('booking_card_checkin')}
+          </Button>
+        )}
+      {status === 'checked-in' &&
+         (
+          <Button className="mt-6" type="secondary" onClick={checkOutBooking}>
+            ⬅️ {t('booking_card_checkout')}
+          </Button>
+        )}
 
       <BookingRequestButtons
         _id={_id}

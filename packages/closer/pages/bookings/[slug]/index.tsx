@@ -170,7 +170,9 @@ const BookingPage = ({
   const isNotPaid =
     status !== 'paid' &&
     status !== 'credits-paid' &&
-    status !== 'tokens-staked';
+    status !== 'tokens-staked' &&
+    status !== 'checked-in' &&
+    status !== 'checked-out';
 
   let updatedDuration = 0;
 
