@@ -91,7 +91,7 @@ const SummaryCosts = ({
         </div>
       ) : null}
 
-      {priceDuration === 'night' && (
+      {(priceDuration === 'night' || !priceDuration) && (
         <>
           <div className="flex justify-between items-center mt-3">
             <p>{t('bookings_summary_step_dates_accomodation_type')}</p>
@@ -142,7 +142,6 @@ const SummaryCosts = ({
                       {!isPartialCreditsPayment &&
                         priceFormat({
                           val: accomodationCost?.val,
-                          cur: 'credits',
                           app: APP_NAME,
                         })}
                     </>
