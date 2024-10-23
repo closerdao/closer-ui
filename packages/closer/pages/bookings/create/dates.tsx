@@ -134,8 +134,12 @@ const DatesSelector = ({
     }
   }, []);
 
-  const [start, setStartDate] = useState<string | null | Date>();
-  const [end, setEndDate] = useState<string | null | Date>();
+  const [start, setStartDate] = useState<string | null | Date>(
+    (savedStartDate as string) || null,
+  );
+  const [end, setEndDate] = useState<string | null | Date>(
+    (savedEndDate as string) || null,
+  );
   const [adults, setAdults] = useState<number>(Number(savedAdults) || 1);
   const [kids, setKids] = useState<number>(Number(savedKids) || 0);
   const [infants, setInfants] = useState<number>(Number(savedInfants) || 0);
@@ -156,9 +160,10 @@ const DatesSelector = ({
     eventId && (!ticketOptions?.length || selectedTicketOption),
   );
   const hasVolunteerId = volunteerId;
-  const hasValidDates = (start && end) || (savedStartDate && savedEndDate);
+  const hasValidDates =
+    Boolean(start && end) || Boolean(savedStartDate && savedEndDate);
   const isGeneralCase =
-    !eventId && !volunteerId && start && end && !bookingError;
+    !eventId && !volunteerId && hasValidDates && !bookingError;
   const startDate = dayjs(start).startOf('day');
   const endDate = dayjs(end).startOf('day');
   const diffInDays = endDate.diff(startDate, 'day');
