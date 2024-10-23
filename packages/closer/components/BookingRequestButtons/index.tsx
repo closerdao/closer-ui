@@ -42,7 +42,8 @@ const BookingRequestButtons = ({
       {/* Hide buttons if start date is in the past: */}
       {new Date(start) > new Date() && (
         <>
-          {status === 'checked-in' && (
+          {/* TODO: add links for checked in and checked out guests */}
+          {/* {status === 'checked-in' && (
             <Link passHref href="">
               <Button type="secondary">
                 {t('booking_card_join_chat_button')}
@@ -55,7 +56,7 @@ const BookingRequestButtons = ({
                 {t('booking_card_feedback_button')}
               </Button>
             </Link>
-          )}
+          )} */}
           {status === 'open' && (
             <Link passHref href={`/bookings/${_id}/summary`}>
               <Button type="secondary">
