@@ -202,8 +202,6 @@ const ListingPage: NextPage<Props> = ({
   const [calendarError, setCalendarError] = useState<string | null>(null);
   const [unavailableDates, setUnavailableDates] = useState<any[]>([]);
 
-
-
   const isWeb3BookingEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
 
@@ -827,7 +825,8 @@ const ListingPage: NextPage<Props> = ({
                                       listing.tokenPrice?.val,
                                     listing.tokenPrice?.cur,
                                   )}{' '}
-                                  +{' '}
+                                    +{' '}
+                                    {priceFormat(utilityTotal)}
                                 </div>
                               ) : (
                                 <span>
