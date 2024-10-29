@@ -512,7 +512,7 @@ const models = {
     {
       name: 'priceDuration',
       label: 'Booking duration unit',
-      default: 'public',
+      default: 'night',
       type: 'select',
       options: [
         { label: 'Night', value: 'night' },

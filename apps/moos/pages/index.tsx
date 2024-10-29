@@ -231,20 +231,9 @@ const HomePage = ({ generalConfig }: Props) => {
             </div>
 
             <div className="flex  gap-4 bg-accent-light rounded-md p-4">
-              <p className="flex-1">
-                Explore our experience design + residency programs in our{' '}
-                <Link
-                  href="/pdf/moos-menu.pdf"
-                  className="text-accent font-bold"
-                >
-                  menu
-                </Link>
-              </p>
-              <p className="flex-1">
-                Learn more about the History of MOOS{' '}
-                <Link href="/history" className="text-accent font-bold">
-                  here
-                </Link>
+              <p className="flex-1 text-lg font-bold">
+              We are starting a MOOS DAO collective. You can purchase tokens (giving voting power)  <a href='https://juicebox.money/v2/p/750?tablet=about'>here</a> or contribute to the GoFundMe <a href='https://www.gofundme.com/f/save-moos'>here</a>
+
               </p>
             </div>
           </section>
