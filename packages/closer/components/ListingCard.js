@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import PropTypes from 'prop-types';
 
+import { CloserCurrencies } from '../types';
 import { cdn } from '../utils/api';
 import ListingPrice from './ListingPrice';
 import Button from './ui/Button';
@@ -17,16 +18,14 @@ const ListingCard = ({
   useTokens,
   bookingType,
   isAuthenticated,
-  adults,
 }) => {
   const t = useTranslations();
   const router = useRouter();
-  const { name, description, rentalFiat, rentalToken, utilityFiat, available } =
+  const { name, description, rentalToken, utilityFiat, available } =
     listing;
 
   const [firstPHtml, setFirstPHtml] = useState('');
 
-  // const firstParagraphHTML = extractFirstParagraph(description);
 
   useEffect(() => {
     const extractFirstParagraph = (html) => {
@@ -84,7 +83,9 @@ const ListingCard = ({
       </ul>
       <div className="my-8">
         <ListingPrice
-          rentalFiat={rentalFiat}
+          rentalFiat={
+            listing?.fiatPrice || { val: 0, cur: CloserCurrencies.EUR }
+          }
           rentalToken={rentalToken}
           utilityFiat={utilityFiat}
           useTokens={useTokens}
@@ -92,16 +93,11 @@ const ListingCard = ({
         />
       </div>
 
-      {adults > listing.beds && listing.private && (
-        <div className="my-6 font-bold">
-          {name} {t('listing_preview_max_beds', { var: listing.beds })}{' '}
-        </div>
-      )}
       <Button
         onClick={handleBooking}
         type="secondary"
         isEnabled={
-          available !== false && !(listing.private && adults > listing.beds)
+          available !== false 
         }
       >
         {available !== false
