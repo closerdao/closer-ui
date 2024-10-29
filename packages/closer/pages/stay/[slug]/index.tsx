@@ -302,7 +302,7 @@ const ListingPage: NextPage<Props> = ({
             (min: number, day: { numSpacesAvailable: number }) =>
               Math.min(min, day.numSpacesAvailable),
             Infinity,
-          );
+          ) || 0;
           setNumSpacesAvailable(minNumSpacesAvailable);
         }
         setIsListingAvailable(results);
