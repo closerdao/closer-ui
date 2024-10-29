@@ -528,6 +528,30 @@ export const PlatformProvider = ({ children }) => {
         dispatch(action);
         return action;
       }),
+    checkIn: (_id) =>
+      api.post(`/bookings/${_id}/check-in`).then((res) => {
+        const results = fromJS(res.data.results);
+        const action = {
+          results,
+          _id,
+          model: 'booking',
+          type: constants.PATCH_SUCCESS,
+        };
+        dispatch(action);
+        return action;
+      }),
+    checkOut: (_id) =>
+      api.post(`/bookings/${_id}/check-out`).then((res) => {
+        const results = fromJS(res.data.results);
+        const action = {
+          results,
+          _id,
+          model: 'booking',
+          type: constants.PATCH_SUCCESS,
+        };
+        dispatch(action);
+        return action;
+      }),
   };
 
   platform.carrots = {

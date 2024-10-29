@@ -1,10 +1,13 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
+import { useState } from 'react';
+
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
 import { STATUS_COLOR } from '../../constants';
+import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import {
@@ -14,7 +17,7 @@ import {
 import { priceFormat } from '../../utils/helpers';
 import BookingRequestButtons from '../BookingRequestButtons';
 import UserInfoButton from '../UserInfoButton';
-import { Card, LinkButton } from '../ui';
+import { Button, Card, LinkButton, Spinner } from '../ui';
 
 interface Props {
   booking: any;
@@ -41,7 +44,7 @@ const BookingListPreview = ({
 }: Props) => {
   const t = useTranslations();
 
-  const { APP_NAME, TIME_ZONE } = useConfig();
+  const { TIME_ZONE } = useConfig();
   const {
     _id,
     start,
@@ -70,16 +73,30 @@ const BookingListPreview = ({
   const router = useRouter();
 
   const { platform }: any = usePlatform();
+  const { user } = useAuth();
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const isPaidBooking =
+    status === 'paid' ||
+    status === 'credits-paid' ||
+    status === 'tokens-staked';
+
+  const isSpaceHost = user?.roles.includes('space-host');
+  const isOwnBooking = createdBy === user?._id;
+
   const flagPickup =
     doesNeedPickup && start > new Date(Date.now() - 12 * 60 * 60 * 1000);
   const startFormatted = dayjs(start).format('DD/MM/YYYY');
 
   const endFormatted = dayjs(end).format('DD/MM/YYYY');
   const createdFormatted = dayjs(created).format('DD/MM/YYYY - HH:mm:A');
-  const isNotPaid =
+  const isNotPaidOrCheckedInOrCheckedOut =
     status !== 'paid' &&
     status !== 'tokens-staked' &&
-    status !== 'credits-paid';
+    status !== 'credits-paid' &&
+    status !== 'checked-in' &&
+    status !== 'checked-out';
 
   const bookingType = getBookingType(eventId, volunteerId);
 
@@ -88,6 +105,27 @@ const BookingListPreview = ({
   };
   const rejectBooking = async () => {
     await platform.bookings.reject(_id);
+  };
+
+  const checkInBooking = async () => {
+    try {
+      setIsLoading(true);
+      await platform.bookings.checkIn(_id);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const checkOutBooking = async () => {
+    try {
+      setIsLoading(true);
+      await platform.bookings.checkOut(_id);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getStatusText = (status: string, updated: string | Date) => {
@@ -227,7 +265,7 @@ const BookingListPreview = ({
             })}
           {!useCredits && !useTokens && priceFormat(rentalFiat)}
 
-          {isNotPaid && (
+          {isNotPaidOrCheckedInOrCheckedOut && (
             <span className="text-failure">{t('booking_card_unpaid')}</span>
           )}
         </p>
@@ -238,7 +276,7 @@ const BookingListPreview = ({
           <p className="card-feature">{t('booking_card_payment_utility')}</p>
           <p>
             {priceFormat(utilityFiat)}{' '}
-            {isNotPaid && (
+            {isNotPaidOrCheckedInOrCheckedOut && (
               <span className="text-failure">{t('booking_card_unpaid')}</span>
             )}
           </p>
@@ -249,7 +287,7 @@ const BookingListPreview = ({
         <p className="card-feature">{t('booking_food')}</p>
         <p>
           {priceFormat(foodFiat)}{' '}
-          {isNotPaid && (
+          {isNotPaidOrCheckedInOrCheckedOut && (
             <span className="text-failure">{t('booking_card_unpaid')}</span>
           )}
         </p>
@@ -259,7 +297,7 @@ const BookingListPreview = ({
           <p className="card-feature">{t('booking_card_payment_event')}</p>
           <p>
             {priceFormat(eventFiat)}{' '}
-            {isNotPaid && (
+            {isNotPaidOrCheckedInOrCheckedOut && (
               <span className="text-failure">{t('booking_card_unpaid')}</span>
             )}
           </p>
@@ -289,6 +327,31 @@ const BookingListPreview = ({
         >
           {t('booking_card_email_user')}
         </LinkButton>
+      )}
+
+      {isPaidBooking &&
+        isSpaceHost &&
+        dayjs(bookingMapItem.get('end')).isAfter(dayjs()) &&
+        dayjs(bookingMapItem.get('start')).isBefore(dayjs()) &&
+        status !== 'checked-in' && (
+          <Button
+            className="mt-6 flex gap-1"
+            type="secondary"
+            onClick={checkInBooking}
+            isEnabled={!isLoading}
+          >
+            ➡️ {t('booking_card_checkin')} {isLoading && <Spinner />}
+          </Button>
+        )}
+      {status === 'checked-in' && (isSpaceHost || isOwnBooking) && (
+        <Button
+          className="mt-6 flex gap-1"
+          type="secondary"
+          onClick={checkOutBooking}
+          isEnabled={!isLoading}
+        >
+          ⬅️ {t('booking_card_checkout')} {isLoading && <Spinner />}
+        </Button>
       )}
 
       <BookingRequestButtons
