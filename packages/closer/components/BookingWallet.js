@@ -8,7 +8,7 @@ import WalletHeader from './WalletHeader';
 import { useTranslations } from 'next-intl';
 
 
-const BookingWallet = ({ toPay, switchToEUR }) => {
+const BookingWallet = ({ toPay, switchToFiat }) => {
   const t = useTranslations();
   
   const { BLOCKCHAIN_DAO_TOKEN } = useConfig();
@@ -35,7 +35,7 @@ const BookingWallet = ({ toPay, switchToEUR }) => {
               </p>
             </div>
           ) : (
-            <button className="btn mt-4 w-full uppercase" onClick={switchToEUR}>
+            <button className="btn mt-4 w-full uppercase" onClick={switchToFiat}>
               Pay in Euro
             </button>
           )}
