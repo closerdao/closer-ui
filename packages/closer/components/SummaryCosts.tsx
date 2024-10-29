@@ -227,6 +227,7 @@ const SummaryCosts = ({
           ) : null}
         </>
       )}
+
       <div className="flex justify-between items-center mt-3">
         <p>{t('bookings_total')}</p>
         <div className="flex items-center gap-2">

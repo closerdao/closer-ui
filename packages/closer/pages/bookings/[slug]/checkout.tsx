@@ -421,7 +421,7 @@ const Checkout = ({
         </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
         <div className="mt-16 flex flex-col gap-16">
-          {isWeb3BookingEnabled && (
+          {isWeb3BookingEnabled && !ticketOption?.isDayTicket &&(
             <CurrencySwitcher
               selectedCurrency={currency}
               onSelect={setCurrency as any}
@@ -444,51 +444,55 @@ const Checkout = ({
                 </div>
               </div>
             )}
-
-            <HeadingRow>
-              <span className="mr-2">🏡</span>
-              <span>
-                {isHourlyBooking
-                  ? t('bookings_checkout_step_accomodation')
-                  : t('bookings_checkout_step_hourly')}
-              </span>
-            </HeadingRow>
-
-            <div className="flex justify-between items-center mt-3">
-              <p>{listingName}</p>
-              {useTokens && rentalToken ? (
-                <>
-                  {paymentType === PaymentType.PARTIAL_TOKENS ? (
-                    <div>
-                      <p className="font-bold">
-                        {priceFormat({
-                          val: partialPriceInTokens,
-                          cur: rentalToken.cur,
-                        })}{' '}
-                        + {priceFormat(rentalFiat)}
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="font-bold">{priceFormat(rentalToken)}</p>
-                  )}
-                </>
-              ) : (
-                <p className="font-bold">
-                  {useCredits && (
+            {!ticketOption?.isDayTicket && (
+              <>
+                <HeadingRow>
+                  <span className="mr-2">🏡</span>
+                  <span>
+                    {isHourlyBooking
+                      ? t('bookings_checkout_step_accomodation')
+                      : t('bookings_checkout_step_hourly')}
+                  </span>
+                </HeadingRow>
+                <div className="flex justify-between items-center mt-3">
+                  <p>{listingName}</p>
+                  {useTokens && rentalToken ? (
                     <>
-                      {priceFormat({ val: priceInCredits, cur: 'credits' })} +{' '}
+                      {paymentType === PaymentType.PARTIAL_TOKENS ? (
+                        <div>
+                          <p className="font-bold">
+                            {priceFormat({
+                              val: partialPriceInTokens,
+                              cur: rentalToken.cur,
+                            })}{' '}
+                            + {priceFormat(rentalFiat)}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="font-bold">{priceFormat(rentalToken)}</p>
+                      )}
                     </>
+                  ) : (
+                    <p className="font-bold">
+                      {useCredits && (
+                        <>
+                          {priceFormat({ val: priceInCredits, cur: 'credits' })}{' '}
+                          +{' '}
+                        </>
+                      )}
+                      {priceFormat(rentalFiat)}
+                    </p>
                   )}
-                  {priceFormat(rentalFiat)}
+                </div>
+                <p className="text-right text-xs">
+                  {isHourlyBooking
+                    ? t(
+                        'bookings_checkout_step_accomodation_description_hourly',
+                      )
+                    : t('bookings_checkout_step_accomodation_description')}
                 </p>
-              )}
-            </div>
-            <p className="text-right text-xs">
-              {isHourlyBooking
-                ? t('bookings_checkout_step_accomodation_description_hourly')
-                : t('bookings_checkout_step_accomodation_description')}
-            </p>
-
+              </>
+            )}
             {process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' &&
             canApplyCredits &&
             !booking?.volunteerId &&
@@ -516,7 +520,6 @@ const Checkout = ({
                 className="my-12"
               />
             ) : null}
-
             {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' &&
               rentalToken &&
               rentalToken.val > 0 &&
@@ -628,7 +631,7 @@ const Checkout = ({
               isEnabled={
                 !processing && !isStaking && hasAgreedToWalletDisclaimer
               }
-               className="booking-btn"
+              className="booking-btn"
               onClick={handleTokenOnlyBooking}
             >
               {renderButtonText()}
