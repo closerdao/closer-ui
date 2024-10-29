@@ -28,6 +28,7 @@ interface Props {
   priceDuration?: string;
   vatRate?: number;
   isFoodIncluded: boolean;
+  creditsPrice?: number;
 }
 
 const SummaryCosts = ({
@@ -51,11 +52,17 @@ const SummaryCosts = ({
   priceDuration,
   vatRate,
   isFoodIncluded,
+  creditsPrice,
 }: Props) => {
   const t = useTranslations();
   const { APP_NAME } = useConfig();
 
-  const isPartialCreditsPayment = Boolean(rentalFiat?.val && totalToken.val);
+  const isPartialTokenPayment = Boolean(
+    totalToken?.val && rentalFiat?.val && useTokens,
+  );
+  const isFullTokenPayment = Boolean(
+    totalToken?.val && !rentalFiat?.val && useTokens,
+  );
 
   return (
     <div>
@@ -121,29 +128,26 @@ const SummaryCosts = ({
 
               <div className="font-bold">
                 <>
-                  {useTokens && <>{priceFormat(accomodationCost)}</>}
+                  {isFullTokenPayment && <>{priceFormat(accomodationCost)}</>}
+                  {isPartialTokenPayment && (
+                    <>
+                      {priceFormat(totalToken)} + {priceFormat(rentalFiat)}
+                    </>
+                  )}
                   {useCredits && (
                     <>
-                      {isPartialCreditsPayment && (
-                        <div>
-                          {priceFormat({
-                            val: accomodationCost?.val,
-                            cur: 'credits',
-                            app: APP_NAME,
-                          })}
-                          {' + '}
-                          {priceFormat({
-                            val: rentalFiat?.val,
-                            cur: rentalFiat?.cur,
-                            app: APP_NAME,
-                          })}
-                        </div>
-                      )}
-                      {!isPartialCreditsPayment &&
-                        priceFormat({
-                          val: accomodationCost?.val,
+                      <span>
+                        {priceFormat({
+                          val: creditsPrice || totalToken?.val,
+                          cur: 'credits',
                           app: APP_NAME,
                         })}
+                      </span>{' '}
+                      +{' '}
+                      {priceFormat({
+                        val: accomodationCost?.val,
+                        app: APP_NAME,
+                      })}
                     </>
                   )}
                 </>
@@ -234,7 +238,15 @@ const SummaryCosts = ({
                 {priceDuration === 'night' && (
                   <div>
                     {useTokens && (
-                      <div>{priceFormat(updatedAccomodationTotal)}</div>
+                      <div>
+                        {(rentalFiat?.val || 0) > 0 && (
+                          <>
+                            {' '}
+                            + <span>{priceFormat(rentalFiat)}</span>
+                          </>
+                        )}
+                        <div>{priceFormat(updatedAccomodationTotal)}</div>
+                      </div>
                     )}
                     {useCredits && (
                       <div>
@@ -243,7 +255,7 @@ const SummaryCosts = ({
                           cur: 'credits',
                           app: APP_NAME,
                         })}{' '}
-                        +{priceFormat(updatedFiatTotal)}
+                        + {priceFormat(updatedFiatTotal)}
                       </div>
                     )}
                     {!useTokens && !useCredits && priceFormat(updatedFiatTotal)}
@@ -274,8 +286,13 @@ const SummaryCosts = ({
             <div className="font-bold">
               {useTokens && (
                 <>
-                  <span>{priceFormat(totalToken)}</span> +{' '}
-                  <span>{priceFormat(totalFiat)}</span>
+                  <span>{priceFormat(totalToken)}</span>
+                  {totalFiat?.val > 0 && (
+                    <>
+                      {' '}
+                      + <span>{priceFormat(totalFiat)}</span>
+                    </>
+                  )}
                   {isNotPaid && (
                     <span className="text-failure">
                       {' '}
@@ -288,7 +305,7 @@ const SummaryCosts = ({
                 <>
                   <span>
                     {priceFormat({
-                      val: totalToken.val,
+                      val: creditsPrice || totalToken?.val,
                       cur: 'credits',
                       app: APP_NAME,
                     })}

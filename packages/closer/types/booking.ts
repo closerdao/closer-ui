@@ -205,3 +205,11 @@ export type FoodPriceParams = {
   eventId: string | undefined;
   bookingConfig: BookingConfig | undefined | null;
 };
+
+export enum PaymentType {
+  FIAT = 'fiat',
+  FULL_TOKENS = 'fullTokens',
+  FULL_CREDITS = 'fullCredits',
+  PARTIAL_TOKENS = 'partialTokens',
+  PARTIAL_CREDITS = 'partialCredits',
+}

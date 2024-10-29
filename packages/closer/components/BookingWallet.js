@@ -6,6 +6,7 @@ import { priceFormat } from '../utils/helpers';
 import WalletActions from './WalletActions';
 import WalletHeader from './WalletHeader';
 import { useTranslations } from 'next-intl';
+import { ErrorMessage } from './ui';
 
 
 const BookingWallet = ({ toPay, switchToFiat }) => {
@@ -35,9 +36,12 @@ const BookingWallet = ({ toPay, switchToFiat }) => {
               </p>
             </div>
           ) : (
-            <button className="btn mt-4 w-full uppercase" onClick={switchToFiat}>
-              Pay in Euro
-            </button>
+            <div>
+              <button className="btn mt-4 w-full uppercase" onClick={switchToFiat}>
+                Pay in Euro
+              </button>
+              <ErrorMessage error={t('error_insufficient_token_balance')}/>
+            </div>
           )}
         </div>
       ) : null}

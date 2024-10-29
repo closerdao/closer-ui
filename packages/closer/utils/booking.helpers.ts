@@ -5,6 +5,7 @@ import utc from 'dayjs/plugin/utc';
 
 import {
   BOOKING_EXISTS_ERROR,
+  CURRENCIES,
   USER_REJECTED_TRANSACTION_ERROR,
 } from '../constants';
 import { User } from '../contexts/auth/types';
@@ -16,6 +17,7 @@ import {
   Event,
   FiatTotalParams,
   Listing,
+  PaymentType,
   Price,
   UtilityTotalParams,
 } from '../types';
@@ -614,4 +616,49 @@ export const getFoodOption = ({
 
 export const convertToDateString = (date: string | Date | null) => {
   return date ? dayjs(date).format('YYYY-MM-DD') : '';
+};
+
+export const getPaymentType = ({
+  useCredits,
+  duration,
+  currency,
+  maxNightsToPayWithTokens,
+  maxNightsToPayWithCredits,
+}: {
+  creditsOrTokensPricePerNight: number;
+  useTokens: boolean;
+  useCredits: boolean;
+  duration: number;
+  currency: CloserCurrencies;
+  maxNightsToPayWithTokens: number;
+  maxNightsToPayWithCredits: number;
+}): PaymentType => {
+  let localPaymentType: PaymentType = PaymentType.FIAT;
+
+  if (currency === CURRENCIES[0]) {
+    if (
+      maxNightsToPayWithCredits > 0 &&
+      maxNightsToPayWithCredits < (duration || 0) &&
+      useCredits
+    ) {
+      localPaymentType = PaymentType.PARTIAL_CREDITS;
+    } else if (maxNightsToPayWithCredits >= (duration || 0) && useCredits) {
+      localPaymentType = PaymentType.FULL_CREDITS;
+    } else {
+      localPaymentType = PaymentType.FIAT;
+    }
+  } else if (currency === CURRENCIES[1]) {
+    if (
+      maxNightsToPayWithTokens > 0 &&
+      maxNightsToPayWithTokens < (duration || 0)
+    ) {
+      localPaymentType = PaymentType.PARTIAL_TOKENS;
+    } else if (maxNightsToPayWithTokens >= (duration || 0)) {
+      localPaymentType = PaymentType.FULL_TOKENS;
+    } else {
+      localPaymentType = PaymentType.FULL_TOKENS;
+    }
+  }
+
+  return localPaymentType;
 };

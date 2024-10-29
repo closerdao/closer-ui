@@ -1361,6 +1361,8 @@
   "booking_price_per_night_per_adult": "Price per night per adult",
   "booking_token_same_day_error": "Same day token booking not available",
 
+  "error_insufficient_token_balance": "Insufficient balance to pay with tokens",
+
 
 
 

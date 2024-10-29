@@ -91,7 +91,7 @@ export const WalletProvider = ({ children }) => {
     [BLOCKCHAIN_DAO_TOKEN.address, 'balanceOf', account],
     {
       fetcher: fetcher(library, BLOCKCHAIN_DAO_TOKEN_ABI),
-      fallbackData: BigNumber.from(0),
+      fallbackData: null,
     },
   );
 
@@ -121,11 +121,11 @@ export const WalletProvider = ({ children }) => {
     [
       activatedBookingYears
         ? activatedBookingYears.map(([year]) => [
-            BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
-            'getAccommodationBookings',
-            account,
-            year,
-          ])
+          BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
+          'getAccommodationBookings',
+          account,
+          year,
+        ])
         : null,
     ],
     {
@@ -138,7 +138,7 @@ export const WalletProvider = ({ children }) => {
     .filter((date) => date.status === 2).length;
 
   const balanceTotal = formatBigNumberForDisplay(
-    balanceDAOToken.add(lockedStake),
+    (balanceDAOToken || BigNumber.from(0)).add(lockedStake),
     BLOCKCHAIN_DAO_TOKEN.decimals,
   );
   const balanceAvailable = formatBigNumberForDisplay(
