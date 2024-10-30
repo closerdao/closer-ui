@@ -500,9 +500,10 @@ const HomePage = () => {
           )}
         </section>
 
-        <section className="mb-12">
+        <section className="mb-12" id="how-to-play">
           <div>
-            <div className="max-w-prose mb-12 mx-auto">
+            <div className="max-w-prose mb-12 mx-auto" >
+
               <Heading
                 level={2}
                 className="text-center md:text-left mb-4 uppercase text-2xl font-black"
@@ -618,7 +619,7 @@ const HomePage = () => {
                   </div>
                   <div className="mt-4 mb-4 flex justify-center align-center">
                     <Link
-                      href="mailto:space@traditionaldreamfactory.com?subject=Residency%20Application"
+                      href="/builders-residency"
                       className="uppercase btn-primary"
                     >
                       Apply

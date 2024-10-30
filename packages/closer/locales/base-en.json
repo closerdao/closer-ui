@@ -1367,5 +1367,7 @@
   "booking_token_same_day_error": "Same day token booking not available",
   "bookings_dates_min_volunteering_stay_error": "Minimum volunteering stay is {var} days",
 
+  "button_other_ways_to_join": "Explore other ways to join TDF",
+
   "":""
 }
