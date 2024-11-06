@@ -131,7 +131,7 @@ const SubscriptionSuccessPage = ({
 
             <Button
               className="mt-3"
-              type="primary"
+              variant="primary"
               onClick={handleViewSubscription}
             >
               {t('subscriptions_success_view_button')}

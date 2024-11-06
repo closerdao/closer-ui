@@ -226,7 +226,7 @@ const UsersFilter = ({ setWhere, setPage, page, sortBy, setSortBy }: Props) => {
         onClick={handleClearFilters}
         isFullWidth={false}
         className="my-6"
-        type="secondary"
+        variant="secondary"
       >
         {t('manage_users_lear_filters_button')}
       </Button>

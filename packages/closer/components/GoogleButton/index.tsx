@@ -14,7 +14,7 @@ const GoogleButton = ({ onClick, isLoading }: Props) => {
   return (
     <Button
       className="gap-2 border-[#747775] text-[#1F1F1F] normal-case"
-      type="secondary"
+      variant="secondary"
       onClick={onClick}
       isEnabled={!isLoading}
     >

@@ -38,7 +38,7 @@ const buttonStyles = cva(
         // temporary override until we update all buttons:
         false: '!w-auto',
       },
-      type: {
+      variant: {
         primary: 'w-full py-2 bg-accent border-accent text-white',
         secondary: 'w-full enabled:bg-white border-accent text-accent py-2 ',
         instantSave:
@@ -56,7 +56,7 @@ const buttonStyles = cva(
     },
 
     defaultVariants: {
-      type: 'primary',
+      variant: 'primary',
       isEnabled: true,
       isFullWidth: true,
       // color: 'accent',
@@ -71,7 +71,7 @@ interface ButtonProps extends VariantProps<typeof buttonStyles> {
   infoText?: string | React.ReactNode;
   className?: string;
   title?: string;
-  type?: 'primary' | 'secondary' | 'instantSave' | 'inline';
+  variant?: 'primary' | 'secondary' | 'instantSave' | 'inline';
   isEnabled?: boolean;
   isLoading?: boolean;
   size?: 'small' | 'medium' | 'large';
@@ -83,7 +83,7 @@ const Button = ({
   onClick,
   infoText,
   className,
-  type = 'primary',
+  variant = 'primary',
   title,
   isEnabled = true,
   isLoading,
@@ -101,7 +101,7 @@ const Button = ({
         title={title}
         className={` 
         ${twMerge(
-          buttonStyles({ type, color, isFullWidth, size, isEnabled }),
+          buttonStyles({ variant, color, isFullWidth, size, isEnabled }),
           className,
         )}
         `}

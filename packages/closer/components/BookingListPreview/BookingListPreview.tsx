@@ -284,7 +284,7 @@ const BookingListPreview = ({
       {userInfo?.email && (
         <LinkButton
           className="mt-6"
-          type="secondary"
+          variant="secondary"
           href={`mailto:${userInfo.email}`}
         >
           {t('booking_card_email_user')}

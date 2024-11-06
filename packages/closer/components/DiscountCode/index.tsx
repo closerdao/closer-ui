@@ -55,7 +55,7 @@ const DiscountCode = ({
           className=""
         />
         <Button
-          type="inline"
+          variant="inline"
           onClick={handleApplyDiscountCode}
           isEnabled={!!(discountCode && selectedTicketOption)}
           className="mt-4 ml-0 sm:mt-0 sm:ml-4"

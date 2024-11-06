@@ -66,8 +66,7 @@ const RedeemCredits = ({
               <div className="w-2/5">
                 <Heading level={4}>
                   {isDemo && 1}
-                  {(!isDemo && priceInCredits ) && priceInCredits}
-                  {(!isDemo && !priceInCredits) && rentalToken?.val}
+                  {!isDemo && (priceInCredits ?? rentalToken?.val)}
                 </Heading>
                 <div className="text-xs">
                   {(rentalToken?.val as number) === 1 || isDemo

@@ -1,9 +1,7 @@
-import { useTranslations } from 'next-intl';
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 import router from 'next/router';
-
 
 import { isMobile } from 'react-device-detect';
 
@@ -17,8 +15,8 @@ import api from 'closer/utils/api';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { prepareSubscriptions } from 'closer/utils/subscriptions.helpers';
 import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 import { event } from 'nextjs-google-analytics';
-
 
 interface Props {
   subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
@@ -457,7 +455,7 @@ const HomePage = ({ subscriptionsConfig }: Props) => {
               onClick={() => {
                 router.push('https://oasa.earth/');
               }}
-              type="secondary"
+              variant="secondary"
             >
               Learn more about OASA
             </Button>

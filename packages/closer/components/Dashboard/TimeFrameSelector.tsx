@@ -18,13 +18,18 @@ interface Props {
   setToDate: Dispatch<SetStateAction<string>>;
 }
 
-const TimeFrameSelector = ({ timeFrame, setTimeFrame, toDate, fromDate, setFromDate, setToDate }: Props) => {
+const TimeFrameSelector = ({
+  timeFrame,
+  setTimeFrame,
+  toDate,
+  fromDate,
+  setFromDate,
+  setToDate,
+}: Props) => {
   const t = useTranslations();
   const dateRangeDropdownRef = useOutsideClick(handleClickOutsideDropdown);
 
   const [showDropdown, setShowDropdown] = useState(false);
-
-
 
   useEffect(() => {
     if (fromDate && toDate) {
@@ -70,7 +75,7 @@ const TimeFrameSelector = ({ timeFrame, setTimeFrame, toDate, fromDate, setFromD
             onClick={() => setShowDropdown((prev) => !prev)}
             className="text-black border-black normal-case text-md py-1 text-sm"
             size="small"
-            type="secondary"
+            variant="secondary"
           >
             {!fromDate && !toDate && t('bookings_select_dates_button')}
             {fromDate && <>{dayjs(fromDate).format('DD/MM/YY')} - </>}
@@ -88,7 +93,7 @@ const TimeFrameSelector = ({ timeFrame, setTimeFrame, toDate, fromDate, setFromD
               />
               <Button
                 isEnabled={Boolean(toDate && fromDate)}
-                type="secondary"
+                variant="secondary"
                 size="small"
                 onClick={handleClearDates}
               >
