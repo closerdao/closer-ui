@@ -26,7 +26,11 @@ import {
 } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { Event, TicketOption } from '../../../types';
-import { BookingConfig, VolunteerOpportunity } from '../../../types/api';
+import {
+  BookingConfig,
+  VolunteerConfig,
+  VolunteerOpportunity,
+} from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
@@ -42,6 +46,7 @@ interface Props {
   event?: Event;
   bookingConfig: BookingConfig | null;
   messages?: any;
+  volunteerConfig: VolunteerConfig | null;
 }
 
 const DatesSelector = ({
@@ -51,6 +56,7 @@ const DatesSelector = ({
   volunteer,
   futureEvents,
   event,
+  volunteerConfig,
 }: Props) => {
   const t = useTranslations();
   const isBookingEnabled =
@@ -119,6 +125,7 @@ const DatesSelector = ({
         ...ranges,
         { before: new Date(volunteer?.start as string) },
         { after: new Date(volunteer?.end as string) },
+        { before: new Date() },
       ]);
     }
 
@@ -127,8 +134,12 @@ const DatesSelector = ({
     }
   }, []);
 
-  const [start, setStartDate] = useState<string | null | Date>();
-  const [end, setEndDate] = useState<string | null | Date>();
+  const [start, setStartDate] = useState<string | null | Date>(
+    (savedStartDate as string) || null,
+  );
+  const [end, setEndDate] = useState<string | null | Date>(
+    (savedEndDate as string) || null,
+  );
   const [adults, setAdults] = useState<number>(Number(savedAdults) || 1);
   const [kids, setKids] = useState<number>(Number(savedKids) || 0);
   const [infants, setInfants] = useState<number>(Number(savedInfants) || 0);
@@ -149,12 +160,17 @@ const DatesSelector = ({
     eventId && (!ticketOptions?.length || selectedTicketOption),
   );
   const hasVolunteerId = volunteerId;
-  const hasValidDates = (start && end) || (savedStartDate && savedEndDate);
+  const hasValidDates =
+    Boolean(start && end) || Boolean(savedStartDate && savedEndDate);
   const isGeneralCase =
-    !eventId && !volunteerId && start && end && !bookingError;
+    !eventId && !volunteerId && hasValidDates && !bookingError;
   const startDate = dayjs(start).startOf('day');
   const endDate = dayjs(end).startOf('day');
   const diffInDays = endDate.diff(startDate, 'day');
+
+  const isMinVolunteeringStayMatched =
+    diffInDays >= (volunteerConfig?.volunteeringMinStay || 1);
+
   const isMinDurationMatched = Boolean(
     (bookingConfig && diffInDays >= bookingConfig?.minDuration) || eventId,
   );
@@ -162,7 +178,8 @@ const DatesSelector = ({
     ((hasEventIdAndValidTicket && hasValidDates) ||
       (hasVolunteerId && hasValidDates) ||
       isGeneralCase) &&
-    isMinDurationMatched
+    isMinDurationMatched &&
+    isMinVolunteeringStayMatched
   );
 
   const isTokenPaymentSelected = currency === CURRENCIES[1];
@@ -176,6 +193,14 @@ const DatesSelector = ({
         setBookingError(
           t('bookings_dates_min_duration_error', {
             var: bookingConfig?.minDuration,
+          }),
+        );
+      }
+
+      if (!isMinVolunteeringStayMatched && hasVolunteerId) {
+        setBookingError(
+          t('bookings_dates_min_volunteering_stay_error', {
+            var: volunteerConfig?.volunteeringMinStay,
           }),
         );
       }
@@ -328,7 +353,9 @@ const DatesSelector = ({
                 eventEndDate={event?.end ? event?.end : volunteer?.end}
               />
               {bookingError && <ErrorMessage error={bookingError} />}
-              {isTodayAndToken && <ErrorMessage error={t('booking_token_same_day_error')} />}
+              {isTodayAndToken && (
+                <ErrorMessage error={t('booking_token_same_day_error')} />
+              )}
             </>
           )}
           <BookingGuests
@@ -372,10 +399,13 @@ const DatesSelector = ({
           {handleNextError && (
             <div className="error-box">{handleNextError}</div>
           )}
-          <Button onClick={handleNext} isEnabled={canProceed && !isTodayAndToken}>
+          <Button
+            onClick={handleNext}
+            isEnabled={canProceed && !isTodayAndToken}
+          >
             {selectedTicketOption?.isDayTicket
               ? t('booking_button_continue')
-              : t('generic_search')} 
+              : t('generic_search')}
           </Button>
         </div>
       </div>
@@ -390,12 +420,13 @@ DatesSelector.getInitialProps = async (
     const { query } = context;
     const { eventId, volunteerId } = query;
 
-    const [bookingConfigRes, messages] = await Promise.all([
+    const [bookingConfigRes, volunteerConfigRes, messages] = await Promise.all([
       api.get('/config/booking').catch(() => null),
+      api.get('/config/volunteering').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const bookingConfig = bookingConfigRes?.data?.results?.value;
-
+    const volunteerConfig = volunteerConfigRes?.data?.results?.value;
     if (eventId) {
       const [ticketsAvailable, event] = await Promise.all([
         api.get(`/bookings/event/${eventId}/availability`).catch(() => null),
@@ -404,6 +435,7 @@ DatesSelector.getInitialProps = async (
 
       return {
         bookingConfig,
+        volunteerConfig,
         ticketOptions: ticketsAvailable?.data?.ticketOptions,
         event: event?.data?.results,
         messages,
@@ -415,6 +447,7 @@ DatesSelector.getInitialProps = async (
         .catch(() => null);
       return {
         bookingConfig,
+        volunteerConfig,
         volunteer: volunteer?.data?.results,
         messages,
       };
@@ -432,12 +465,14 @@ DatesSelector.getInitialProps = async (
 
       return {
         bookingConfig,
+        volunteerConfig,
         futureEvents: res?.data?.results,
         messages,
       };
     }
     return {
       bookingConfig,
+      volunteerConfig,
       messages,
     };
   } catch (err) {
@@ -445,6 +480,7 @@ DatesSelector.getInitialProps = async (
       error: parseMessageFromError(err),
       bookingConfig: null,
       messages: null,
+      volunteerConfig: null,
     };
   }
 };

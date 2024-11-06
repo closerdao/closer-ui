@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 
 // import { useTranslations } from 'next-intl';
 import { useAuth } from '../contexts/auth';
+import { useConfig } from '../hooks/useConfig';
 import { NavigationLink } from '../types/nav';
 import api from '../utils/api';
 import Profile from './Profile';
@@ -42,6 +43,8 @@ const filterLinks = (links: any[], option: string, roles: string[]) => {
 
 const MemberMenu = () => {
   const t = useTranslations();
+  const { APP_NAME } = useConfig();
+
   const { user, logout } = useAuth();
   const [navOptions, setNavOptions] = useState(['guest']);
   const [selectedSwitcherOption, setSelectedSwitcherOption] = useState('Guest');
@@ -73,7 +76,7 @@ const MemberMenu = () => {
         label: t('navigation_dashboard'),
         url: '/dashboard',
         enabled: isBookingEnabled,
-        roles: ['space-host', 'admin'],
+        roles: ['admin'],
       },
       {
         label: t('navigation_booking_requests'),
@@ -156,11 +159,11 @@ const MemberMenu = () => {
         enabled: true,
         roles: ['steward'],
       },
-      {
+      ...(APP_NAME !== 'foz' ? [{
         label: t('navigation_resources'),
         url: '/resources',
         enabled: true,
-      },
+      }] : []),
       {
         label: t('navigation_support_us'),
         url: '/support-us',

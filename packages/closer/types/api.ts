@@ -129,6 +129,8 @@ export type BookingConfig = {
   foodPriceChef: number;
 };
 
+
+
 export type PaymentConfig = {
   enabled: boolean;
   cardPayment: string;
@@ -140,6 +142,7 @@ export type PaymentConfig = {
 
 export type VolunteerConfig = {
   enabled: boolean;
+  volunteeringMinStay: number;
 };
 
 export type FundraisingConfig = {

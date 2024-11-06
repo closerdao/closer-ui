@@ -205,7 +205,6 @@ export type FoodPriceParams = {
   eventId: string | undefined;
   bookingConfig: BookingConfig | undefined | null;
 };
-
 export enum PaymentType {
   FIAT = 'fiat',
   FULL_TOKENS = 'fullTokens',
@@ -213,3 +212,11 @@ export enum PaymentType {
   PARTIAL_TOKENS = 'partialTokens',
   PARTIAL_CREDITS = 'partialCredits',
 }
+export type UpdatedPrices = {
+  rentalFiat: Price<CloserCurrencies.EUR>;
+  rentalToken: Price<CloserCurrencies.TDF>;
+  eventFiat: Price<CloserCurrencies.EUR>;
+  foodFiat: Price<CloserCurrencies.EUR>;
+  utilityFiat: Price<CloserCurrencies.EUR>;
+  total: Price<CloserCurrencies.EUR>;
+};

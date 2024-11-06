@@ -127,7 +127,6 @@ const Checkout = ({
   const [processing, setProcessing] = useState(false);
   const [useCreditsUpdated, setUseCreditsUpdated] = useState(useCredits);
   const [creditsBalance, setCreditsBalance] = useState(0);
-
   const [currency, setCurrency] = useState<CloserCurrencies>(
     useTokens ? CURRENCIES[1] : DEFAULT_CURRENCY,
   );

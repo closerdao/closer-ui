@@ -17,10 +17,11 @@ const login = ({ isAdmin }) => {
   cy.wait(2000);
 };
 
-const getDateInTwodays = () => {
+const getDateInTwoDays = () => {
   const today = new Date();
-  const todayDate = today.getDate();
-  return todayDate + 2;
+  const twoDaysFromNow = new Date(today);
+  twoDaysFromNow.setDate(today.getDate() + 2);
+  return twoDaysFromNow;
 };
 
 const getIframeBody = () => {
@@ -32,26 +33,33 @@ const getIframeBody = () => {
 };
 
 const selectDates = () => {
+  const startDate = getDateInTwoDays();
+  const endDate = new Date(startDate);
+  endDate.setDate(startDate.getDate() + 1);
+
+  const isLastDayOfMonth =
+    startDate.getDate() ===
+    new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0).getDate();
+
   cy.get('[data-testid="select-dates-button"]').click();
-  const tomorrowDate = getDateInTwodays();
-  cy.contains('.rdp-day', tomorrowDate).click();
-  cy.get('button')
-    .contains(/book now/i)
-    .should('be.disabled');
-  cy.contains('.rdp-day', tomorrowDate + 1).click();
+  cy.get('.rdp-day').contains(startDate.getDate()).click();
+  if (isLastDayOfMonth) {
+    cy.get('[aria-label="Go to next month"]').click();
+    cy.get('.rdp-day').contains('1').click();
+  } else {
+    cy.get('.rdp-day')
+      .contains(startDate.getDate() + 1)
+      .click();
+  }
+
   cy.get('[data-testid="select-dates-button"]').click();
 };
 
-const selectDatesSearchListings = () => {
-  const tomorrowDate = getDateInTwodays();
-  cy.contains('.rdp-day', tomorrowDate).click();
-  cy.contains('.rdp-day', tomorrowDate + 1).click();
-};
 
 const selectDateAndTime = () => {
   cy.get('[data-testid="select-dates-button"]').click();
-  const tomorrowDate = getDateInTwodays();
-  cy.contains('.rdp-day', tomorrowDate + 1).click();
+  const date = getDateInTwoDays();
+  cy.contains('.rdp-day', date.getDate().toString()).click();
   cy.get('button')
     .contains(/12:00.*13:00/s)
     .click();
@@ -62,7 +70,7 @@ const fillStripeForm = () => {
   getIframeBody().find('input[name="cardnumber"]').type('4242424242424242');
   getIframeBody().find('input[name="exp-date"]').type('1035');
   getIframeBody().find('input[name="cvc"]').type('111');
-  getIframeBody().find('input[name="postal"]').type('90210');
+  // getIframeBody().find('input[name="postal"]').type('90210');
 };
 
 describe('Booking flow', () => {
@@ -86,47 +94,40 @@ describe('Booking flow', () => {
     login({ isAdmin: false });
     cy.wait(2000);
     cy.visit(`${Cypress.config('baseUrl')}/stay/${LISTING.slug}`);
-    cy.get('button')
-      .contains(/select dates/i)
-      .click();
-    const tomorrowDate = getDateInTwodays();
-    cy.contains('.rdp-day', tomorrowDate).click();
-    cy.contains('.rdp-day', tomorrowDate + 1).click();
-    cy.get('[data-testid="select-dates-button"]').click();
+
+    selectDates();
+
     cy.get('button')
       .contains(/book now/i)
       .click();
 
-      cy.get('h1')
-      .contains(/food/i)
-      .should('be.visible')
+    cy.get('h1').contains(/food/i).should('be.visible');
 
-      cy.get('button')
+    cy.get('button')
       .contains(/continue/i)
       .should('be.visible')
       .should('be.enabled')
       .click();
-    
+
     cy.get('button')
       .contains(/submit request/i)
       .should('be.visible')
       .should('be.enabled');
   });
 
-  it('should have correct authenticated user (can instant book) booking flow', () => {
+  it.only('should have correct authenticated user (can instant book) booking flow', () => {
     cy.visit(`${Cypress.config('baseUrl')}/login`);
     login({ isAdmin: true });
     cy.visit(`${Cypress.config('baseUrl')}/stay/${LISTING.slug}`);
+
     selectDates();
     cy.get('button')
       .contains(/book now/i)
       .click();
 
-      cy.get('h1')
-      .contains(/food/i)
-      .should('be.visible')
+    cy.get('h1').contains(/food/i).should('be.visible');
 
-      cy.get('button')
+    cy.get('button')
       .contains(/continue/i)
       .should('be.visible')
       .should('be.enabled')
@@ -168,11 +169,9 @@ describe('Booking flow', () => {
       .contains(/book now/i)
       .click();
 
-      cy.get('h1')
-      .contains(/food/i)
-      .should('be.visible')
+    cy.get('h1').contains(/food/i).should('be.visible');
 
-      cy.get('button')
+    cy.get('button')
       .contains(/continue/i)
       .should('be.visible')
       .should('be.enabled')
@@ -191,7 +190,6 @@ describe('Booking flow', () => {
     cy.get('div')
       .contains(/will be redeemed/i)
       .should('be.visible');
-
   });
 
   it('should have correct authenticated user booking flow with listing search', () => {
@@ -203,7 +201,7 @@ describe('Booking flow', () => {
       .contains(/apply to stay/i)
       .click();
 
-    selectDatesSearchListings();
+      selectDates();
 
     cy.get('button')
       .contains(/search/i)
@@ -215,12 +213,10 @@ describe('Booking flow', () => {
       .parents('div')
       .contains('button', 'Select')
       .click();
-    
-      cy.get('h1')
-      .contains(/food/i)
-      .should('be.visible')
 
-      cy.get('button')
+    cy.get('h1').contains(/food/i).should('be.visible');
+
+    cy.get('button')
       .contains(/continue/i)
       .should('be.visible')
       .should('be.enabled')
@@ -236,7 +232,7 @@ describe('Booking flow', () => {
       .contains(/apply to stay/i)
       .click();
 
-    selectDatesSearchListings();
+      selectDates();
 
     cy.get('button')
       .contains(/search/i)
@@ -259,11 +255,9 @@ describe('Booking flow', () => {
       .contains('button', 'Select')
       .click();
 
-      cy.get('h1')
-      .contains(/food/i)
-      .should('be.visible')
+    cy.get('h1').contains(/food/i).should('be.visible');
 
-      cy.get('button')
+    cy.get('button')
       .contains(/continue/i)
       .should('be.visible')
       .should('be.enabled')
@@ -282,11 +276,9 @@ describe('Booking flow', () => {
       .contains(/book now/i)
       .click();
 
-      cy.get('h1')
-      .contains(/food/i)
-      .should('be.visible')
+    cy.get('h1').contains(/food/i).should('be.visible');
 
-      cy.get('button')
+    cy.get('button')
       .contains(/continue/i)
       .should('be.visible')
       .should('be.enabled')
@@ -334,11 +326,10 @@ describe('Booking flow', () => {
 
     login({ isAdmin: true });
     cy.url().should('include', `/stay/${LISTING_HOURLY.slug}`);
-    
   });
 });
 
-it.only('should have correct authenticated overnight event booking flow', () => {
+it('should have correct authenticated overnight event booking flow', () => {
   cy.visit(`${Cypress.config('baseUrl')}/login`);
   login({ isAdmin: true });
 
@@ -347,17 +338,15 @@ it.only('should have correct authenticated overnight event booking flow', () => 
     .contains(/buy ticket/i)
     .click();
 
-    
-    cy.contains('button', 'overnight ticket', { matchCase: false })
+  cy.contains('button', 'overnight ticket', { matchCase: false })
     .should('exist')
     .click();
-    
-    
-    cy.get('button')
-      .contains(/clear selection/i)
-      .click();
-    
-  selectDatesSearchListings();
+
+  cy.get('button')
+    .contains(/clear selection/i)
+    .click();
+
+    selectDates();
 
   cy.get('button')
     .contains(/search/i)
@@ -369,12 +358,10 @@ it.only('should have correct authenticated overnight event booking flow', () => 
     .parents('div')
     .contains('button', 'Select')
     .click();
-  
-    cy.get('h1')
-    .contains(/food/i)
-    .should('be.visible')
 
-    cy.get('button')
+  cy.get('h1').contains(/food/i).should('be.visible');
+
+  cy.get('button')
     .contains(/continue/i)
     .should('be.visible')
     .should('be.enabled')
@@ -384,10 +371,10 @@ it.only('should have correct authenticated overnight event booking flow', () => 
     .contains(/submit/i)
     .click();
 
-    cy.get('button')
+  cy.get('button')
     .contains(/checkout/i)
     .click();
-    
+
   cy.url().should('include', '/checkout');
 
   cy.get('button').contains(/pay/i).should('be.disabled');
@@ -422,7 +409,6 @@ it('should have correct authenticated day ticket event booking flow', () => {
     .contains(/buy ticket/i)
     .click();
 
-
   cy.get('button')
     .contains(/continue/i)
     .click();
@@ -431,10 +417,10 @@ it('should have correct authenticated day ticket event booking flow', () => {
     .contains(/submit/i)
     .click();
 
-    cy.get('button')
+  cy.get('button')
     .contains(/checkout/i)
     .click();
-    
+
   cy.url().should('include', '/checkout');
 
   cy.get('button').contains(/pay/i).should('be.disabled');

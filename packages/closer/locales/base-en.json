@@ -505,7 +505,6 @@
   "listings_book_accomodation_type": "Accommodation type",
   "listings_book_button": "Book",
   "listings_create_title": "Create Listing",
-  "stay_title": "Experience regenerative living at ",
   "stay_what_to_expect_title": "What to expect",
   "stay_what_to_expect_1": "Surround yourself with beautiful nature: reforestation area, treehouse, food forest",
   "stay_what_to_expect_2": "Weekly activities: yoga, meditation, sharing, breathwork, dance",
@@ -1103,6 +1102,7 @@
   "config_label_foodPriceBasic": "Food price (basic food)",
   "config_label_foodPriceChef": "Food price (chef cooked food)",
   "config_label_utilityOptionEnabled": "Utility fee payment enabled (separate from accommodation)",
+  "config_label_volunteeringMinStay": "Minimum volunteering stay (days)",
 
 
   "config_features_heading": "Platform features",
@@ -1370,6 +1370,7 @@
 
   "booking_pay_in_euro": "Pay in Euro",
 
+  "bookings_dates_min_volunteering_stay_error": "Minimum volunteering stay is {var} days",
 
   "":""
 }

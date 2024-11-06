@@ -4,7 +4,7 @@ import Faqs from 'closer/components/Faqs';
 import Resources from 'closer/components/Resources';
 import { Heading } from 'closer/components/ui';
 
-import { GeneralConfig, api } from 'closer';
+import { GeneralConfig, PageNotFound, api } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import { useFaqs } from 'closer/hooks/useFaqs';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
@@ -22,6 +22,9 @@ const ResourcesPage = ({ generalConfig }: Props) => {
     generalConfig?.platformName || defaultConfig.platformName;
   const { APP_NAME, FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
   const { faqs, error } = useFaqs(FAQS_GOOGLE_SHEET_ID);
+
+  // no resources page for now on Foz instance
+  return <PageNotFound />;
 
   return (
     <div className="max-w-screen-lg mx-auto">

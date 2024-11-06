@@ -279,6 +279,7 @@ const Summary = ({
             eventName={event?.name}
             ticketOption={ticketOption?.name}
             priceDuration={listing?.priceDuration}
+            numSpacesRequired={listing?.private ? Math.ceil(booking.adults / (listing?.beds || 1)) : booking.adults}
           />
           <SummaryCosts
             utilityFiat={utilityFiat}

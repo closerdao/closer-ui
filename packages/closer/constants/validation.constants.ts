@@ -73,6 +73,7 @@ export const configFormSchema = z.object({
   cancellationPolicyLastmonth: numberRequired,
   cancellationPolicyDefault: numberRequired,
   vatRate: numberRequired,
+  volunteeringMinStay: numberRequired,
 });
 
 const arrayValidationRules = {

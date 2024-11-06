@@ -124,11 +124,11 @@ const StayPage = ({
             {`
             ${APP_NAME && APP_NAME === 'tdf' ? PLATFORM_NAME : ''}`}
           </Heading>
-          <p>
-            {APP_NAME &&
-              !t('stay_description').includes('missing') &&
-              t('stay_description')}
-          </p>
+
+          <div className='rich-text font-accent' dangerouslySetInnerHTML={{ __html: 
+              t.raw('stay_description')
+            }} />
+     
         </div>
       </section>
 
