@@ -54,7 +54,7 @@ const Profile = ({ isDemo }) => {
               onClick={() => {
                 router.push('/settings');
               }}
-              type="secondary"
+              variant="secondary"
               className="!w-[80px] !text-accent ml-auto"
             >
               {t('generic_edit_button')}

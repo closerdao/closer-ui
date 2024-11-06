@@ -1365,6 +1365,8 @@
   "bookings_dates_min_volunteering_stay_error": "Minimum volunteering stay is {var} days",
 
 
+  "error_insufficient_token_balance": "Insufficient balance to pay with tokens",
+  "booking_pay_in_euro": "Pay in Euro",
 
 
 

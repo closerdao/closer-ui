@@ -186,7 +186,11 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
                 </div>
               )}
             </div>
-            <Button className="mt-3" type="secondary" onClick={handleEditPlan}>
+            <Button
+              className="mt-3"
+              variant="secondary"
+              onClick={handleEditPlan}
+            >
               {t('subscriptions_summary_edit_button')}
             </Button>
           </div>
@@ -201,10 +205,13 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
                 value={`${priceFormat(total, DEFAULT_CURRENCY)}`}
                 additionalInfo={`${t(
                   'bookings_checkout_step_total_description',
-                )} ${getVatInfo({
-                  val: total,
-                  cur: DEFAULT_CURRENCY,
-                }, vatRate)} ${t('subscriptions_summary_per_month')}`}
+                )} ${getVatInfo(
+                  {
+                    val: total,
+                    cur: DEFAULT_CURRENCY,
+                  },
+                  vatRate,
+                )} ${t('subscriptions_summary_per_month')}`}
               />
             </div>
             <Button className="mt-3" onClick={handleCheckout}>
@@ -219,18 +226,19 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
 
 SubscriptionsSummaryPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [subscriptionsRes, generalRes, paymentRes, messages] = await Promise.all([
-      api.get('/config/subscriptions').catch(() => {
-        return null;
-      }),
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      api.get('/config/payment').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const [subscriptionsRes, generalRes, paymentRes, messages] =
+      await Promise.all([
+        api.get('/config/subscriptions').catch(() => {
+          return null;
+        }),
+        api.get('/config/general').catch(() => {
+          return null;
+        }),
+        api.get('/config/payment').catch(() => {
+          return null;
+        }),
+        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      ]);
 
     const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
     const generalConfig = generalRes?.data?.results?.value;

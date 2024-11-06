@@ -169,8 +169,7 @@ const ListingPage: NextPage<Props> = ({
   const accommodationTokenTotal = listing
     ? listing.tokenPrice?.val *
       (listing.private ? 1 : adults) *
-      durationInDays *
-      discountRate
+      durationInDays 
     : 0;
   const nightlyTotal = listing
     ? listing.fiatPrice?.val * (listing.private ? 1 : adults) * discountRate
@@ -835,8 +834,7 @@ const ListingPage: NextPage<Props> = ({
                               {currency === CURRENCIES[1] && fiatTotal > 0 ? (
                                 <div>
                                   {priceFormat(
-                                    listing.tokenPrice &&
-                                      listing.tokenPrice?.val,
+                                    accommodationTokenTotal,
                                     listing.tokenPrice?.cur,
                                   )}{' '}
                                     +{' '}
