@@ -175,16 +175,20 @@ const Summary = ({
     partialPriceInTokens?: number;
     paymentType?: PaymentType;
   }) => {
-    const res = await api.post(`/bookings/${booking?._id}/update-payment`, {
-      useCredits,
-      useTokens,
-      isHourlyBooking,
-      maxNightsToPayWithCredits: 0,
-      paymentType,
-      partialTokenPaymentNights,
-      partialPriceInTokens,
-    });
-    return res.data.results;
+    try {
+      const res = await api.post(`/bookings/${booking?._id}/update-payment`, {
+        useCredits,
+        useTokens,
+        isHourlyBooking,
+        maxNightsToPayWithCredits: 0,
+        paymentType,
+        partialTokenPaymentNights,
+        partialPriceInTokens,
+      });
+      return res.data.results;
+    } catch (error) {
+      console.log('error=', error);
+    }
   };
 
   const switchToToken = async (
@@ -279,7 +283,11 @@ const Summary = ({
             eventName={event?.name}
             ticketOption={ticketOption?.name}
             priceDuration={listing?.priceDuration}
-            numSpacesRequired={listing?.private ? Math.ceil(booking.adults / (listing?.beds || 1)) : booking.adults}
+            numSpacesRequired={
+              listing?.private
+                ? Math.ceil(booking.adults / (listing?.beds || 1))
+                : booking.adults
+            }
           />
           <SummaryCosts
             utilityFiat={utilityFiat}

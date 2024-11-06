@@ -64,6 +64,7 @@ const Checkout = ({
   bookingConfig,
   paymentConfig,
 }: Props) => {
+  console.log('booking=', booking);
   const t = useTranslations();
   const isHourlyBooking = listing?.priceDuration === 'hour';
   const isBookingEnabled =
@@ -215,12 +216,25 @@ const Checkout = ({
         }
         break;
     }
-  }, [currency, tokenBalanceAvailable, useCredits, maxNightsToPayWithCredits, maxNightsToPayWithTokens]);
+  }, [
+    currency,
+    tokenBalanceAvailable,
+    useCredits,
+    maxNightsToPayWithCredits,
+    maxNightsToPayWithTokens,
+    useTokens,
+    creditsOrTokensPricePerNight,
+    duration,
+  ]);
 
   const isStripeBooking = total && total.val > 0;
   const isFreeBooking = total && total.val === 0 && !useTokens;
   const isTokenOnlyBooking =
-    useTokens && rentalToken && rentalToken?.val > 0 && total && total.val === 0;
+    useTokens &&
+    rentalToken &&
+    rentalToken?.val > 0 &&
+    total &&
+    total.val === 0;
 
   useEffect(() => {
     if (user) {
@@ -358,16 +372,20 @@ const Checkout = ({
     partialPriceInTokens?: number;
     paymentType?: PaymentType;
   }) => {
-    const res = await api.post(`/bookings/${booking?._id}/update-payment`, {
-      useCredits,
-      useTokens,
-      isHourlyBooking,
-      maxNightsToPayWithCredits,
-      paymentType,
-      partialTokenPaymentNights,
-      partialPriceInTokens,
-    });
-    return res.data.results;
+    try {
+      const res = await api.post(`/bookings/${booking?._id}/update-payment`, {
+        useCredits,
+        useTokens,
+        isHourlyBooking,
+        maxNightsToPayWithCredits,
+        paymentType,
+        partialTokenPaymentNights,
+        partialPriceInTokens,
+      });
+      return res.data.results;
+    } catch (error) {
+      console.log('error=', error);
+    }
   };
 
   const switchToFiat = async (type: PaymentType) => {
@@ -416,7 +434,7 @@ const Checkout = ({
         </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
         <div className="mt-16 flex flex-col gap-16">
-          {isWeb3BookingEnabled && !ticketOption?.isDayTicket &&(
+          {isWeb3BookingEnabled && !ticketOption?.isDayTicket && (
             <CurrencySwitcher
               selectedCurrency={currency}
               onSelect={setCurrency as any}
