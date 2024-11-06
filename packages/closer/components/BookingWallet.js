@@ -38,7 +38,7 @@ const BookingWallet = ({ toPay, switchToFiat }) => {
           ) : (
             <div>
               <button className="btn mt-4 w-full uppercase" onClick={switchToFiat}>
-                Pay in Euro
+                {t('booking_pay_in_euro')}
               </button>
               <ErrorMessage error={t('error_insufficient_token_balance')}/>
             </div>

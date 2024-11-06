@@ -625,8 +625,6 @@ export const getPaymentType = ({
   maxNightsToPayWithTokens,
   maxNightsToPayWithCredits,
 }: {
-  creditsOrTokensPricePerNight: number;
-  useTokens: boolean;
   useCredits: boolean;
   duration: number;
   currency: CloserCurrencies;

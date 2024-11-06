@@ -112,7 +112,7 @@ const Checkout = ({
   const router = useRouter();
 
   const isNotEnoughBalance = rentalToken?.val
-    ? tokenBalanceAvailable < rentalToken.val
+    ? tokenBalanceAvailable < rentalToken?.val
     : false;
 
   const listingName = listing?.name;
@@ -158,8 +158,6 @@ const Checkout = ({
 
   const [paymentType, setPaymentType] = useState<PaymentType>(
     getPaymentType({
-      creditsOrTokensPricePerNight: creditsOrTokensPricePerNight || 0,
-      useTokens: useTokens || false,
       useCredits: useCredits || false,
       duration: duration || 0,
       currency,
@@ -170,8 +168,6 @@ const Checkout = ({
 
   useEffect(() => {
     const type = getPaymentType({
-      creditsOrTokensPricePerNight: creditsOrTokensPricePerNight || 0,
-      useTokens: useTokens || false,
       useCredits: useCredits || false,
       duration: duration || 0,
       currency,
@@ -220,12 +216,12 @@ const Checkout = ({
         }
         break;
     }
-  }, [currency, tokenBalanceAvailable, useCredits]);
+  }, [currency, tokenBalanceAvailable, useCredits, maxNightsToPayWithCredits, maxNightsToPayWithTokens]);
 
   const isStripeBooking = total && total.val > 0;
   const isFreeBooking = total && total.val === 0 && !useTokens;
   const isTokenOnlyBooking =
-    useTokens && rentalToken && rentalToken.val > 0 && total && total.val === 0;
+    useTokens && rentalToken && rentalToken?.val > 0 && total && total.val === 0;
 
   useEffect(() => {
     if (user) {
@@ -522,14 +518,14 @@ const Checkout = ({
             ) : null}
             {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' &&
               rentalToken &&
-              rentalToken.val > 0 &&
+              rentalToken?.val > 0 &&
               useTokens && (
                 <div className="mt-4">
                   <BookingWallet
                     toPay={
                       paymentType === PaymentType.PARTIAL_TOKENS
                         ? partialPriceInTokens
-                        : rentalToken.val
+                        : rentalToken?.val
                     }
                     switchToFiat={() => setCurrency(DEFAULT_CURRENCY)}
                   />

@@ -112,6 +112,7 @@ const Summary = ({
   const maxNightsToPayWithTokens =
     (creditsOrTokensPricePerNight &&
       isWalletReady &&
+      creditsOrTokensPricePerNight > 0 &&
       Math.floor(tokenBalanceAvailable / creditsOrTokensPricePerNight)) ||
     0;
 
@@ -132,8 +133,6 @@ const Summary = ({
 
   useEffect(() => {
     const type = getPaymentType({
-      creditsOrTokensPricePerNight: creditsOrTokensPricePerNight || 0,
-      useTokens: useTokens || false,
       useCredits: useCredits || false,
       duration: duration || 0,
       currency: useTokens ? CURRENCIES[1] : DEFAULT_CURRENCY,
@@ -141,27 +140,23 @@ const Summary = ({
       maxNightsToPayWithCredits: 0,
     });
 
+    const processTokenPayment = (paymentType: PaymentType) => {
+      if (useTokens && tokenBalanceAvailable) {
+        const nights = maxNightsToPayWithTokens;
+        const price = (nights || 0) * (creditsOrTokensPricePerNight || 0);
+        switchToToken(nights, price, paymentType);
+      }
+    };
+
     switch (type) {
       case PaymentType.PARTIAL_TOKENS:
         {
-          if (useTokens && tokenBalanceAvailable) {
-            const nights = maxNightsToPayWithTokens;
-            const price =
-              (maxNightsToPayWithTokens || 0) *
-              (creditsOrTokensPricePerNight || 0);
-            switchToToken(nights, price, PaymentType.PARTIAL_TOKENS);
-          }
+          processTokenPayment(PaymentType.PARTIAL_TOKENS);
         }
         break;
       case PaymentType.FULL_TOKENS:
         {
-          if (useTokens && tokenBalanceAvailable) {
-            const nights = maxNightsToPayWithTokens;
-            const price =
-              (maxNightsToPayWithTokens || 0) *
-              (creditsOrTokensPricePerNight || 0);
-            switchToToken(nights, price, PaymentType.FULL_TOKENS);
-          }
+          processTokenPayment(PaymentType.FULL_TOKENS);
         }
         break;
     }
@@ -197,14 +192,18 @@ const Summary = ({
     price: number,
     type: PaymentType,
   ) => {
-    const localUpdatedBooking = await updateBooking({
-      useTokens: true,
-      useCredits: false,
-      partialTokenPaymentNights: nights,
-      partialPriceInTokens: price,
-      paymentType: type,
-    });
-    setUpdatedBooking(localUpdatedBooking);
+    try {
+      const localUpdatedBooking = await updateBooking({
+        useTokens: true,
+        useCredits: false,
+        partialTokenPaymentNights: nights,
+        partialPriceInTokens: price,
+        paymentType: type,
+      });
+      setUpdatedBooking(localUpdatedBooking);
+    } catch (error) {
+      console.error('error=', error);
+    }
   };
 
   const handleNext = async () => {

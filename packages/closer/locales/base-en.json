@@ -1368,6 +1368,8 @@
 
   "error_insufficient_token_balance": "Insufficient balance to pay with tokens",
 
+  "booking_pay_in_euro": "Pay in Euro",
+
 
   "":""
 }
