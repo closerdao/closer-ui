@@ -8,7 +8,7 @@ import { Button, Card, ErrorMessage, Heading } from '../ui';
 interface Props {
   fiatPricePerNight?: number;
   isPartialCreditsPayment?: boolean;
-  partialPriceInCredits?: string;
+  priceInCredits?: number;
   maxNightsToPayWithCredits?: number;
   useCredits?: boolean;
   rentalFiat?: Price<CloserCurrencies>;
@@ -24,7 +24,7 @@ const RedeemCredits = ({
   isPartialCreditsPayment,
   fiatPricePerNight,
   maxNightsToPayWithCredits,
-  partialPriceInCredits,
+  priceInCredits,
   useCredits,
   className,
   rentalFiat,
@@ -34,6 +34,7 @@ const RedeemCredits = ({
   creditsError,
   isDemo,
 }: Props) => {
+
   const t = useTranslations();
   const { APP_NAME } = useConfig();
 
@@ -65,8 +66,7 @@ const RedeemCredits = ({
               <div className="w-2/5">
                 <Heading level={4}>
                   {isDemo && 1}
-                  {!isDemo && !isPartialCreditsPayment && rentalToken?.val}
-                  {!isDemo && isPartialCreditsPayment && partialPriceInCredits}
+                  {!isDemo && (priceInCredits ?? rentalToken?.val)}
                 </Heading>
                 <div className="text-xs">
                   {(rentalToken?.val as number) === 1 || isDemo
@@ -86,14 +86,10 @@ const RedeemCredits = ({
                         APP_NAME && APP_NAME.toLowerCase() !== 'moos' ? 50 : 5,
                       )}
                     {!isDemo &&
-                      !isPartialCreditsPayment &&
-                      priceFormat(rentalFiat)}
-                    {!isDemo &&
-                      isPartialCreditsPayment &&
                       priceFormat(
-                        (maxNightsToPayWithCredits || 0) *
-                          (fiatPricePerNight || 0),
+                        (fiatPricePerNight || 0) * (maxNightsToPayWithCredits || 0),
                       )}
+
                   </Heading>
                   <div className="text-xs">
                     {t('carrots_off_accommodation')}
@@ -112,9 +108,9 @@ const RedeemCredits = ({
           <div className="text-system-success font-bold">
             🥕{' '}
             {isPartialCreditsPayment
-              ? partialPriceInCredits
+              ? priceInCredits
               : (rentalToken?.val as number)}{' '}
-            {(isPartialCreditsPayment && Number(partialPriceInCredits) === 1) ||
+            {(isPartialCreditsPayment && Number(priceInCredits) === 1) ||
             (!isPartialCreditsPayment && (rentalToken?.val as number) === 1)
               ? t('carrots_success_message_singular')
               : t('carrots_success_message')}

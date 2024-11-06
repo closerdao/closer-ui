@@ -97,7 +97,7 @@ const Navigation = () => {
               <Button
                 onClick={() => router.push('/login')}
                 size="small"
-                type="primary"
+                variant="primary"
                 className={`${
                   router?.locales?.length > 1 ? 'hidden sm:block' : ''
                 }`}
@@ -113,7 +113,7 @@ const Navigation = () => {
               <Button
                 onClick={() => router.push('/stay')}
                 size="small"
-                type="primary"
+                variant="primary"
                 className={`${
                   router?.locales?.length > 1 ? 'hidden sm:block' : ''
                 }`}
@@ -126,7 +126,7 @@ const Navigation = () => {
             <Button
               onClick={() => router.push('/stay')}
               size="small"
-              type="primary"
+              variant="primary"
             >
               {t('navigation_stay')}
             </Button>

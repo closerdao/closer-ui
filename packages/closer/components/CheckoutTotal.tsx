@@ -11,9 +11,17 @@ interface Props {
   useTokens: boolean;
   rentalToken: Price<CloserCurrencies> | undefined;
   vatRate: number;
+  useCredits: boolean;
+  priceInCredits: number;
 }
 
-const CheckoutTotal = ({ total, useTokens, rentalToken }: Props) => {
+const CheckoutTotal = ({
+  total,
+  useTokens,
+  rentalToken,
+  useCredits,
+  priceInCredits,
+}: Props) => {
   const t = useTranslations();
   return (
     <div>
@@ -26,8 +34,10 @@ const CheckoutTotal = ({ total, useTokens, rentalToken }: Props) => {
       <div className="flex justify-between items-center mt-3">
         <p> {t('bookings_total')}</p>
         <p className="font-bold">
+          {useTokens && `${priceFormat(rentalToken?.val, rentalToken?.cur)} + `}
+          {useCredits &&
+            `${priceFormat({ val: priceInCredits, cur: 'credits' })} + `}
           {total ? priceFormat(total.val, total.cur || DEFAULT_CURRENCY) : '?€'}
-          {useTokens && ` + ${priceFormat(rentalToken?.val, rentalToken?.cur)}`}
         </p>
       </div>
       <p className="text-right text-xs">
