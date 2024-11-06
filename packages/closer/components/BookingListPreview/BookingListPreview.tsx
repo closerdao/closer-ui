@@ -336,7 +336,7 @@ const BookingListPreview = ({
         status !== 'checked-in' && (
           <Button
             className="mt-6 flex gap-1"
-            type="secondary"
+            variant="secondary"
             onClick={checkInBooking}
             isEnabled={!isLoading}
           >
@@ -346,7 +346,7 @@ const BookingListPreview = ({
       {status === 'checked-in' && (isSpaceHost || isOwnBooking) && (
         <Button
           className="mt-6 flex gap-1"
-          type="secondary"
+          variant="secondary"
           onClick={checkOutBooking}
           isEnabled={!isLoading}
         >
