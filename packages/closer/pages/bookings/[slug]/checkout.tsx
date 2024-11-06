@@ -182,7 +182,7 @@ const Checkout = ({
           const nights = maxNightsToPayWithTokens;
           const price =
             (maxNightsToPayWithTokens || 0) *
-            (creditsOrTokensPricePerNight || 0);
+            (creditsOrTokensPricePerNight || 0) || 0;
           setPartialPriceInTokens(price);
           if (!useTokens) {
             switchToToken(nights, price, type);
@@ -476,7 +476,7 @@ const Checkout = ({
                           <p className="font-bold">
                             {priceFormat({
                               val: partialPriceInTokens,
-                              cur: rentalToken.cur,
+                              cur: rentalToken?.cur,
                             })}{' '}
                             + {priceFormat(rentalFiat)}
                           </p>

@@ -654,7 +654,7 @@ export const getPaymentType = ({
     } else if (maxNightsToPayWithTokens >= (duration || 0)) {
       localPaymentType = PaymentType.FULL_TOKENS;
     } else {
-      localPaymentType = PaymentType.FULL_TOKENS;
+      localPaymentType = PaymentType.FIAT;
     }
   }
 
