@@ -59,6 +59,7 @@ const CancelBooking = ({
           ? t('booking_cancelation_policy_member')
           : t('booking_cancelation_policy')}
       </p>
+      <p>correct cancel policy</p>
       <Heading
         level={2}
         className="text-2xl leading-10 font-normal mt-16 mb-3 border-b border-[#e1e1e1] border-solid pb-2 flex space-x-1 items-center"

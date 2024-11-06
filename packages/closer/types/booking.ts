@@ -51,6 +51,38 @@ export type Listing = {
   tokenHourlyPrice?: Price<CloserCurrencies.TDF>;
 };
 
+export type Charge = {
+  id: string;
+  status: 'paid' | 'refunded' | 'pending-refund';
+  method: 'stripe' | 'tokens' | 'credits';
+  date: Date;
+  amount: {
+    total: {
+      val: number;
+      cur: CloserCurrencies;
+    };
+    rental?: { val: number; cur: CloserCurrencies };
+    food?: { val: number; cur: CloserCurrencies };
+    utilities?: { val: number; cur: CloserCurrencies };
+    event?: { val: number; cur: CloserCurrencies };
+  };
+  meta: {
+    stripePaymentIntentId?: string;
+    stripeConnectFee?: number;
+    stripeProcessingFee?: number;
+    txId?: string;
+    isTokenRefund?: boolean;
+    stripeConnectFeeRefunded?: number;
+    fractionToRefund?: number;
+  };
+};
+
+// export type Charge = BasicCharge & {
+//   type: 'booking' | 'subscription' | 'product';
+//   bookingId: string;
+//   createdBy: string;
+// };
+
 export type Booking = {
   foodOption?: string;
   foodOptionId?: string;
@@ -104,6 +136,7 @@ export type Booking = {
   roomNumber?: number;
   adminBookingReason?: string;
   roomOrBedNumbers?: number[];
+  charges?: Charge[];
 };
 
 export interface StatusColor {

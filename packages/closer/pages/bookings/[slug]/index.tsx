@@ -1,22 +1,23 @@
 import Head from 'next/head';
-import React from 'react';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import BookingRequestButtons from '../../../components/BookingRequestButtons';
+import Charges from '../../../components/Charges';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
 import UserInfoButton from '../../../components/UserInfoButton';
 import { Button, Card, Information } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
+import Input from '../../../components/ui/Input';
 
 import dayjs from 'dayjs';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import Input from '../../../components/ui/Input';
+import PageNotAllowed from '../../401';
 import { MAX_LISTINGS_TO_FETCH, STATUS_COLOR } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
@@ -42,7 +43,6 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
-import PageNotAllowed from '../../401';
 import PageNotFound from '../../not-found';
 
 dayjs.extend(LocalizedFormat);
@@ -123,7 +123,8 @@ const BookingPage = ({
   const vatRate = vatRateFromConfig || defaultVatRate;
 
   const [status, setStatus] = useState(booking?.status);
-  const [updatedRoomNumbers, setUpdatedRoomNumbers] = useState(roomOrBedNumbers);
+  const [updatedRoomNumbers, setUpdatedRoomNumbers] =
+    useState(roomOrBedNumbers);
   const [updatedAdults, setUpdatedAdults] = useState(adults);
   const [updatedChildren, setUpdatedChildren] = useState(children);
   const [updatedInfants, setUpdatedInfants] = useState(infants);
@@ -240,7 +241,10 @@ const BookingPage = ({
     children: updatedChildren,
     pets: updatedPets,
     infants: updatedInfants,
-    roomOrBedNumbers: updatedAdults !== adults ? updatedRoomNumbers?.slice(0, updatedAdults) : updatedRoomNumbers,
+    roomOrBedNumbers:
+      updatedAdults !== adults
+        ? updatedRoomNumbers?.slice(0, updatedAdults)
+        : updatedRoomNumbers,
     utilityFiat: { val: updatedUtilityTotal, cur: rentalFiat?.cur },
     rentalFiat:
       useTokens || useCredits
@@ -309,10 +313,12 @@ const BookingPage = ({
       setIsLoading(false);
     }
   };
-  
+
   const handleUpdateRoomNumbers = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newRoomNumbers = e.target.value.split(',').map(num => parseInt(num.trim(), 10));
-    if(e.target.value) {
+    const newRoomNumbers = e.target.value
+      .split(',')
+      .map((num) => parseInt(num.trim(), 10));
+    if (e.target.value) {
       setUpdatedRoomNumbers(newRoomNumbers);
     }
   };
@@ -343,12 +349,16 @@ const BookingPage = ({
         />
         <meta property="og:type" content="booking" />
       </Head>
-      <main className="main-content max-w-prose booking flex flex-col gap-8">
+      <main className="main-content max-w-xl booking flex flex-col gap-8">
         <Heading className="mb-4">
           {t(`bookings_title_${booking.status}`)}
         </Heading>
 
         <section className="flex flex-col gap-2 mb-6">
+          {isSpaceHost && booking?.charges && booking.charges.length > 0 && (
+            <Charges charges={booking.charges} />
+          )}
+
           <div className="text-sm text-disabled">
             <p>{createdFormatted}</p>
             <p>
@@ -376,25 +386,27 @@ const BookingPage = ({
           booking.roomOrBedNumbers &&
           booking.roomOrBedNumbers.length > 0 && (
             <section className="rounded-md p-4 bg-accent-light">
-                <p className="font-bold">
-                  {listing.private
-                    ? t('booking_card_room_number')
-                    : t('booking_card_bed_numbers')}{' '}
-                  {booking.roomOrBedNumbers &&
-                    booking.roomOrBedNumbers.toString()}
-            </p>
-            <div className='flex flex-col gap-2'>
-              <label htmlFor='roomNumbers'>
-                {roomOrBedNumbers && roomOrBedNumbers?.length > 0 ? 'Enter new bed numbers (comma delimited, must match updated number of adults):' : 'Enter new room number:'}
-              </label>
-              <Input
-                onChange={handleUpdateRoomNumbers}
-                placeholder='Number (s)'
-                id='roomNumbers'
-                type="text"
-                className='w-[100px] bg-white py-0.5 px-2'
-              />
-            </div>
+              <p className="font-bold">
+                {listing.private
+                  ? t('booking_card_room_number')
+                  : t('booking_card_bed_numbers')}{' '}
+                {booking.roomOrBedNumbers &&
+                  booking.roomOrBedNumbers.toString()}
+              </p>
+              <div className="flex flex-col gap-2">
+                <label htmlFor="roomNumbers">
+                  {roomOrBedNumbers && roomOrBedNumbers?.length > 0
+                    ? 'Enter new bed numbers (comma delimited, must match updated number of adults):'
+                    : 'Enter new room number:'}
+                </label>
+                <Input
+                  onChange={handleUpdateRoomNumbers}
+                  placeholder="Number (s)"
+                  id="roomNumbers"
+                  type="text"
+                  className="w-[100px] bg-white py-0.5 px-2"
+                />
+              </div>
             </section>
           )}
 
