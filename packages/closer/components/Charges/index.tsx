@@ -8,7 +8,7 @@ import HeadingRow from '../ui/HeadingRow';
 
 const Charges = ({ charges }: { charges: Charge[] }) => {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 pb-6">
       <HeadingRow>
         <span className="mr-4">🏡</span>
         <span>Charges</span>

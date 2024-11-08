@@ -39,6 +39,7 @@ import {
   dateToPropertyTimeZone,
   formatCheckinDate,
   formatCheckoutDate,
+  getBookingPaymentType,
   getPaymentDelta,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
@@ -73,6 +74,7 @@ const BookingPage = ({
   generalConfig,
   paymentConfig,
 }: Props) => {
+  console.log('booking=',booking);
   const t = useTranslations();
 
   const { timeZone } = generalConfig;
@@ -143,6 +145,12 @@ const BookingPage = ({
     null,
   );
 
+  const paymentType = getBookingPaymentType({
+    useCredits,
+    useTokens,
+    rentalFiat,
+  });
+
   const checkInTime = bookingConfig?.checkinTime || 14;
   const checkOutTime = bookingConfig?.checkoutTime || 11;
 
@@ -187,7 +195,9 @@ const BookingPage = ({
           updatedListingId,
           updatedAdults,
           updatedDuration,
+          paymentType,
         });
+        console.log('res=', res.data.results);
         setUpdatedPrices(res.data.results);
       } catch (error) {
         console.error('Failed to fetch updated prices:', error);
@@ -204,7 +214,7 @@ const BookingPage = ({
     updatedListingId,
   ]);
 
-  const updatedAccomodationTotal = useTokens
+  const updatedAccomodationTotal = (useTokens || useCredits)
     ? updatedPrices?.rentalToken?.val || 0
     : updatedPrices?.rentalFiat?.val || 0;
   const updatedUtilityTotal = updatedPrices?.utilityFiat?.val || 0;
@@ -267,6 +277,7 @@ const BookingPage = ({
     foodFiat: { val: updatedFoodTotal, cur: rentalFiat?.cur },
     total: { val: updatedFiatTotal, cur: rentalFiat?.cur },
     paymentDelta: paymentDelta ? paymentDelta : null,
+    // status: paymentDelta
   };
 
   if (booking?.paymentDelta) {
@@ -355,10 +366,6 @@ const BookingPage = ({
         </Heading>
 
         <section className="flex flex-col gap-2 mb-6">
-          {isSpaceHost && booking?.charges && booking.charges.length > 0 && (
-            <Charges charges={booking.charges} />
-          )}
-
           <div className="text-sm text-disabled">
             <p>{createdFormatted}</p>
             <p>
@@ -395,9 +402,10 @@ const BookingPage = ({
               </p>
               <div className="flex flex-col gap-2">
                 <label htmlFor="roomNumbers">
-                  {roomOrBedNumbers && roomOrBedNumbers?.length > 0
-                    ? 'Enter new bed numbers (comma delimited, must match updated number of adults):'
-                    : 'Enter new room number:'}
+                {listing.private
+                  ? 'Enter new room number(s):'
+                  : 'Enter new bed number(s) (comma delimited, must match updated number of adults):'
+                }
                 </label>
                 <Input
                   onChange={handleUpdateRoomNumbers}
@@ -439,6 +447,7 @@ const BookingPage = ({
           />
           <SummaryCosts
             rentalFiat={rentalFiat}
+            rentalToken={rentalToken}
             isFoodIncluded={Boolean(booking?.foodOptionId)}
             utilityFiat={utilityFiat}
             foodFiat={foodFiat}
@@ -477,9 +486,18 @@ const BookingPage = ({
               val: updatedEventTotal,
               cur: eventFiat?.cur,
             }}
+            updatedRentalFiat={{
+              val: updatedAccomodationTotal,
+              cur: rentalFiat?.cur,
+            }}
+            updatedRentalToken={updatedPrices?.rentalToken}
             priceDuration={listing?.priceDuration}
             vatRate={vatRate}
           />
+
+          {isSpaceHost && booking?.charges && booking.charges.length > 0 && (
+            <Charges charges={booking.charges} />
+          )}
         </section>
 
         <section>

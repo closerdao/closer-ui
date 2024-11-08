@@ -9,6 +9,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 
 import { blockchainConfig } from '../config_blockchain';
 import { DEFAULT_CURRENCY, REFUND_PERIODS } from '../constants';
+import { PaymentType } from '../types';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(relativeTime);
@@ -80,11 +81,10 @@ export const getTimeDetails = (eventTime) => {
 };
 
 export const priceFormat = (price, currency = DEFAULT_CURRENCY) => {
-
   if (currency === 'credits') {
     return `${price} ${currency}`;
   }
-  if ((price?.cur && price.cur === 'credits')) {
+  if (price?.cur && price.cur === 'credits') {
     return `${price.val} ${price.cur}`;
   }
   if (price?.val === null) {
@@ -92,7 +92,7 @@ export const priceFormat = (price, currency = DEFAULT_CURRENCY) => {
       style: 'currency',
       currency,
     });
-   }
+  }
   if (!currency) {
     currency = DEFAULT_CURRENCY;
   }
@@ -206,12 +206,26 @@ export const getSample = (field) => {
 
 export const calculateRefundTotal = ({
   bookingStatus,
-  initialValue,
+  fiatPrice,
+  tokenOrCreditPrice,
   policy,
   startDate,
+  paymentType,
 }) => {
+
   const { default: defaultRefund, lastmonth, lastweek, lastday } = policy || {};
   const bookingStartDate = dayjs(startDate);
+
+  const isTokenOrCreditPayment =
+    paymentType === PaymentType.PARTIAL_TOKENS ||
+    paymentType === PaymentType.FULL_TOKENS ||
+    paymentType === PaymentType.PARTIAL_CREDITS ||
+    paymentType === PaymentType.FULL_CREDITS;
+
+  const localTokenOrCreditPrice = isTokenOrCreditPayment
+    ? tokenOrCreditPrice
+    : 0;
+
   const now = dayjs();
   const daysUntilBookingStart = bookingStartDate.diff(now, 'days');
   if (
@@ -219,22 +233,59 @@ export const calculateRefundTotal = ({
     bookingStatus === 'confirmed' ||
     bookingStatus === 'open'
   ) {
-    return 0;
+    return {
+      fiat: { val: 0, cur: fiatPrice.cur },
+      tokensOrCredits: {
+        val: 0,
+        cur: 'credits',
+      },
+    };
   }
 
   if (daysUntilBookingStart > REFUND_PERIODS.MONTH) {
-    return initialValue * defaultRefund;
+    return {
+      fiat: { val: fiatPrice.val * defaultRefund, cur: fiatPrice.cur },
+      tokensOrCredits: {
+        val: localTokenOrCreditPrice.val * defaultRefund,
+        cur: 'credits',
+      },
+    };
   }
   if (daysUntilBookingStart >= REFUND_PERIODS.WEEK) {
-    return initialValue * lastmonth;
+    return {
+      fiat: { val: fiatPrice.val * lastmonth, cur: fiatPrice.cur },
+      tokensOrCredits: {
+        val: localTokenOrCreditPrice.val * lastmonth,
+        cur: 'credits',
+      },
+    };
   }
   if (daysUntilBookingStart > REFUND_PERIODS.DAY) {
-    return initialValue * lastweek;
+    return {
+      fiat: { val: fiatPrice.val * lastweek, cur: fiatPrice.cur },
+      tokensOrCredits: {
+        val: localTokenOrCreditPrice.val * lastweek,
+        cur: 'credits',
+      },
+    };
   }
   if (daysUntilBookingStart > REFUND_PERIODS.LASTDAY) {
-    return initialValue * lastday;
+    return {
+      fiat: { val: fiatPrice.val * lastday, cur: fiatPrice.cur },
+      tokensOrCredits: {
+        val: localTokenOrCreditPrice.val * lastday,
+        cur: 'credits',
+      },
+    };
   }
-  return 0;
+
+  return {
+    fiat: { val: fiatPrice.val * defaultRefund, cur: fiatPrice.cur },
+    tokensOrCredits: {
+      val: localTokenOrCreditPrice.val * defaultRefund,
+      cur: 'credits',
+    },
+  };
 };
 
 export const checkIfBookingEqBlockchain = (booking, blockchain) => {

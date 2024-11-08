@@ -2,11 +2,14 @@ import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../hooks/useConfig';
 import { CloserCurrencies, Price } from '../types';
+import { getBookingPaymentType } from '../utils/booking.helpers';
 import { getVatInfo, priceFormat } from '../utils/helpers';
+import DisplayPrice from './DisplayPrice';
 import HeadingRow from './ui/HeadingRow';
 
 interface Props {
   rentalFiat?: Price<CloserCurrencies>;
+  rentalToken?: Price<CloserCurrencies>;
   utilityFiat?: Price<CloserCurrencies>;
   foodFiat?: Price<CloserCurrencies>;
   accomodationCost?: Price<CloserCurrencies>;
@@ -29,10 +32,13 @@ interface Props {
   vatRate?: number;
   isFoodIncluded: boolean;
   creditsPrice?: number;
+  updatedRentalFiat?: Price<CloserCurrencies>;
+  updatedRentalToken?: Price<CloserCurrencies>;
 }
 
 const SummaryCosts = ({
   rentalFiat,
+  rentalToken,
   utilityFiat,
   foodFiat,
   accomodationCost,
@@ -53,9 +59,21 @@ const SummaryCosts = ({
   vatRate,
   isFoodIncluded,
   creditsPrice,
+  updatedRentalFiat,
+  updatedRentalToken,
 }: Props) => {
+
+  console.log('updatedFiatTotal======',updatedFiatTotal);
   const t = useTranslations();
   const { APP_NAME } = useConfig();
+
+  const paymentType = getBookingPaymentType({
+    useCredits,
+    useTokens,
+    rentalFiat,
+  });
+
+  console.log('paymentType======',paymentType);
 
   const isPartialTokenPayment = Boolean(
     totalToken?.val && rentalFiat?.val && useTokens,
@@ -103,11 +121,19 @@ const SummaryCosts = ({
           <div className="flex justify-between items-center mt-3">
             <p>{t('bookings_summary_step_dates_accomodation_type')}</p>
             <div className="flex items-center gap-2">
+        
               {isEditMode &&
                 updatedAccomodationTotal?.val !== accomodationCost?.val && (
                   <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
-                    {t('bookings_updated_price')}:{' '}
-                    {useCredits &&
+                  {t('bookings_updated_price')}:{' '}
+                  <DisplayPrice
+                    paymentType={paymentType}
+                    isEditMode={false}
+                    rentalFiat={updatedRentalFiat}
+                    rentalToken={updatedRentalToken}
+                    totalFiat={updatedFiatTotal}
+                    />
+                    {/* {useCredits &&
                       priceFormat({
                         val: updatedAccomodationTotal?.val,
                         cur: 'credits',
@@ -122,12 +148,20 @@ const SummaryCosts = ({
                       priceFormat({
                         val: updatedAccomodationTotal?.val,
                         cur: updatedAccomodationTotal?.cur,
-                      })}
+                      })} */}
                   </div>
                 )}
 
               <div className="font-bold">
-                <>
+              <DisplayPrice
+                    paymentType={paymentType}
+                    isEditMode={false}
+                    rentalFiat={rentalFiat}
+                    rentalToken={rentalToken}
+                    // totalFiat={fiatTotal}
+                    />
+                {/* <>
+
                   {isFullTokenPayment && <>{priceFormat(accomodationCost)}</>}
                   {isPartialTokenPayment && (
                     <>
@@ -151,7 +185,7 @@ const SummaryCosts = ({
                     </>
                   )}
                 </>
-                {!useTokens && !useCredits && priceFormat(accomodationCost)}
+                {!useTokens && !useCredits && priceFormat(accomodationCost)} */}
 
                 {isNotPaid && (
                   <span className="text-failure">
@@ -237,8 +271,16 @@ const SummaryCosts = ({
               <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
                 {t('bookings_updated_price')}:{' '}
                 {priceDuration === 'night' && (
-                  <div>
-                    {useTokens && (
+                <div>
+                  <DisplayPrice
+                      paymentType={paymentType}
+                    isEditMode={true}
+                    rentalFiat={updatedRentalFiat}
+                    rentalToken={updatedRentalToken}
+                    totalFiat={updatedFiatTotal}
+                    isTotalPrice={true}
+                    />
+                    {/* {useTokens && (
                       <div>
                         {(rentalFiat?.val || 0) > 0 && (
                           <>
@@ -259,7 +301,7 @@ const SummaryCosts = ({
                         + {priceFormat(updatedFiatTotal)}
                       </div>
                     )}
-                    {!useTokens && !useCredits && priceFormat(updatedFiatTotal)}
+                    {!useTokens && !useCredits && priceFormat(updatedFiatTotal)} */}
                   </div>
                 )}
                 {priceDuration === 'hour' && (

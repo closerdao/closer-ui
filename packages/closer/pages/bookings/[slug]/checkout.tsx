@@ -605,6 +605,8 @@ const Checkout = ({
             priceInCredits={priceInCredits}
           />
 
+rentalToken={rentalToken?.val}
+
           {isStripeBooking && (
             <CheckoutPayment
               isPartialCreditsPayment={
@@ -622,7 +624,7 @@ const Checkout = ({
               totalToPayInFiat={total || { val: 0, cur: CloserCurrencies.EUR }}
               dailyTokenValue={dailyRentalToken?.val || 0}
               startDate={start}
-              rentalToken={dailyRentalToken?.val || 0 * (duration || 0)}
+              rentalToken={rentalToken}
               totalNights={duration || 0}
               user={user}
               eventId={event?._id}

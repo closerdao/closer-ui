@@ -654,9 +654,24 @@ export const getPaymentType = ({
     } else if (maxNightsToPayWithTokens >= (duration || 0)) {
       localPaymentType = PaymentType.FULL_TOKENS;
     } else {
-      localPaymentType = PaymentType.FIAT;
+      localPaymentType = PaymentType.FULL_TOKENS;
     }
   }
 
   return localPaymentType;
+};
+
+export   const getBookingPaymentType = ({ useCredits, useTokens, rentalFiat }: { useCredits: boolean, useTokens: boolean, rentalFiat: Price<CloserCurrencies> | undefined }) => {
+  if (useCredits && rentalFiat?.val) {
+    return PaymentType.PARTIAL_CREDITS;
+  } else if (useCredits && !rentalFiat?.val) {
+    return PaymentType.FULL_CREDITS;
+  } else if (useTokens && !rentalFiat?.val) {
+    return PaymentType.FULL_TOKENS;
+  } else if (useTokens && rentalFiat?.val) {
+    return PaymentType.PARTIAL_TOKENS;
+  } else if (!useCredits && !useTokens) {
+    return PaymentType.FIAT;
+  }
+  return PaymentType.FIAT;
 };

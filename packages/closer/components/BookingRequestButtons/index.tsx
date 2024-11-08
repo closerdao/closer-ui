@@ -31,11 +31,12 @@ const BookingRequestButtons = ({
   const t = useTranslations();
   const { user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
+  console.log('status==', status);
   const isBookingCancelable =
     (createdBy === user?._id || isSpaceHost) &&
     (status === 'open' || status === 'pending' || status === 'confirmed') &&
     dayjs().isBefore(dayjs(end));
-
+  console.log('isBookingCancelable', isBookingCancelable);
   return (
     <div className="mt-4 flex flex-col gap-4">
       {/* Hide buttons if start date is in the past: */}
@@ -80,7 +81,7 @@ const BookingRequestButtons = ({
         </>
       )}
       {isSpaceHost &&
-        !Boolean(user && isBookingCancelable && user._id === createdBy) && (
+        Boolean(user && isBookingCancelable && user._id === createdBy) && (
           <Link passHref href={`/bookings/${_id}/cancel`}>
             <Button variant="secondary">⭕ {t('booking_cancel_button')}</Button>
           </Link>
