@@ -168,7 +168,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
             </div>
             <Button
               className="mt-3"
-              type="secondary"
+              variant="secondary"
               onClick={handleEditAmount}
             >
               {t('subscriptions_summary_edit_button')}

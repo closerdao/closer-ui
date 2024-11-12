@@ -677,7 +677,7 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
         <Button
           onClick={() => handleAction('Export all')}
           className="w-auto"
-          type="secondary"
+          variant="secondary"
         >
           {t('manage_users_save_all')}
         </Button>

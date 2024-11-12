@@ -172,18 +172,21 @@ const ArrayConfig = ({
                             })}
                           </select>
                         )}
-                        {Object.keys(errors).length > 0 && errors[
-                          `${innerKey}-${index}` as keyof typeof errors
-                        ] !== null && errors[
-                          `${innerKey}-${index}` as keyof typeof errors
-                        ] && (
-                          <ErrorMessage
-                            error={errors[
-                              `${innerKey}-${index}` as keyof typeof errors
-                            ]?.toString() || ''}
-                          ></ErrorMessage>
-                        )}
-                       
+                        {Object.keys(errors).length > 0 &&
+                          errors[
+                            `${innerKey}-${index}` as keyof typeof errors
+                          ] !== null &&
+                          errors[
+                            `${innerKey}-${index}` as keyof typeof errors
+                          ] && (
+                            <ErrorMessage
+                              error={
+                                errors[
+                                  `${innerKey}-${index}` as keyof typeof errors
+                                ]?.toString() || ''
+                              }
+                            ></ErrorMessage>
+                          )}
                       </>
                     )}
                   </div>
@@ -194,7 +197,7 @@ const ArrayConfig = ({
                 <Button
                   className="w-[300px]"
                   onClick={() => resetToDefault(currentValue[index].name)}
-                  type="secondary"
+                  variant="secondary"
                 >
                   {t('config_reset_to_default')}
                 </Button>
@@ -204,7 +207,7 @@ const ArrayConfig = ({
                 <Button
                   onClick={() => handleDeleteElement(index)}
                   className="w-40"
-                  type="secondary"
+                  variant="secondary"
                 >
                   {t('generic_delete_button')}
                 </Button>
@@ -214,7 +217,7 @@ const ArrayConfig = ({
         })}
 
       {slug !== 'emails' && (
-        <Button onClick={handleAddElement} type="secondary">
+        <Button onClick={handleAddElement} variant="secondary">
           {t('config_add_entry_button')}
         </Button>
       )}

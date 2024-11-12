@@ -95,7 +95,7 @@ const ListingCard = ({
 
       <Button
         onClick={handleBooking}
-        type="secondary"
+        variant="secondary"
         isEnabled={
           available !== false 
         }

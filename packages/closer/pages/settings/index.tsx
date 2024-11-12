@@ -169,7 +169,9 @@ const SettingsPage = () => {
 
         <Input
           label="About me"
-          additionalInfo={APP_NAME === 'moos' ? 'Required to make bookings' : ''}
+          additionalInfo={
+            APP_NAME === 'moos' ? 'Required to make bookings' : ''
+          }
           isRequired={APP_NAME === 'moos' ? true : false}
           placeholder="Tell us more about yourself"
           value={user.about}
@@ -228,7 +230,7 @@ const SettingsPage = () => {
               <Button
                 onClick={() => saveEmail(user.email)}
                 isEnabled={!emailSaving}
-                type="inline"
+                variant="inline"
               >
                 {emailSaving ? 'Verifying...' : 'Verify Email'}
               </Button>
@@ -238,7 +240,7 @@ const SettingsPage = () => {
                   toggleUpdateEmail(false);
                 }}
                 className="ml-4"
-                type="inline"
+                variant="inline"
               >
                 Cancel
               </Button>
@@ -247,7 +249,7 @@ const SettingsPage = () => {
             !emailSaved && (
               <Button
                 onClick={() => toggleUpdateEmail(!updateEmail)}
-                type="inline"
+                variant="inline"
               >
                 Edit Email
               </Button>
@@ -273,7 +275,7 @@ const SettingsPage = () => {
               <Button
                 onClick={() => savePhone(user.phone)}
                 isEnabled={!phoneSaving}
-                type="inline"
+                variant="inline"
               >
                 {phoneSaving ? 'Verifying...' : 'Verify Phone'}
               </Button>
@@ -283,7 +285,7 @@ const SettingsPage = () => {
                   toggleUpdatePhone(false);
                 }}
                 className="ml-4"
-                type="inline"
+                variant="inline"
               >
                 Cancel
               </Button>
@@ -292,7 +294,7 @@ const SettingsPage = () => {
             !phoneSaved && (
               <Button
                 onClick={() => toggleUpdatePhone(!updatePhone)}
-                type="inline"
+                variant="inline"
               >
                 Edit Phone
               </Button>

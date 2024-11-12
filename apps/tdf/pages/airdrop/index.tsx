@@ -42,7 +42,7 @@ const AirdropPage = () => {
               {user && !user.walletAddress && (
                 <LinkButton
                   className=" font-bold mt-8 sm:px-8 px-3 text-md sm:text-lg"
-                  type="primary"
+                  variant="primary"
                   isFullWidth={false}
                   href={`/members/${user.slug}`}
                 >
@@ -81,7 +81,11 @@ const AirdropPage = () => {
                   grant.
                 </p>
               </div>
-              <LinkButton href="/token" type="secondary" className="w-[200px]">
+              <LinkButton
+                href="/token"
+                variant="secondary"
+                className="w-[200px]"
+              >
                 buy $tdf tokens
               </LinkButton>
             </div>
@@ -167,7 +171,7 @@ const AirdropPage = () => {
                         {user && !user.walletAddress && (
                           <LinkButton
                             className=" font-bold mt-8 px-8"
-                            type="secondary"
+                            variant="secondary"
                             isFullWidth={false}
                             href={`/members/${user?.slug}`}
                           >
@@ -203,7 +207,7 @@ const AirdropPage = () => {
                         {qualifiers && !qualifiers.presence && (
                           <LinkButton
                             className=" font-bold mt-8 px-8"
-                            type="secondary"
+                            variant="secondary"
                             isFullWidth={false}
                             href="/stay"
                           >
@@ -234,7 +238,7 @@ const AirdropPage = () => {
                         {qualifiers && !qualifiers.tokensBought && (
                           <LinkButton
                             className=" font-bold mt-8 px-8"
-                            type="secondary"
+                            variant="secondary"
                             isFullWidth={false}
                             href="/token"
                           >
@@ -288,7 +292,7 @@ const AirdropPage = () => {
                         {qualifiers && !qualifiers.volunteeringPresence && (
                           <LinkButton
                             className=" font-bold mt-8 px-8"
-                            type="secondary"
+                            variant="secondary"
                             isFullWidth={false}
                             href="/volunteer"
                           >

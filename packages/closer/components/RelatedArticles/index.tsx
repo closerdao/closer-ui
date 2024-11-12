@@ -110,7 +110,7 @@ const RelatedArticles = ({ relatedArticles }: Props) => {
                   isFullWidth={false}
                   href={`/blog/${article.slug}`}
                   className="bg-white "
-                  type="secondary"
+                  variant="secondary"
                 >
                   {t('blog_read_more')}
                 </LinkButton>

@@ -36,7 +36,7 @@ const HistoryPage = ({ article, generalConfig }: Props) => {
               <Card className="block w-full max-w-3xl mb-6">
                 {article ? (
                   <LinkButton
-                    type="inline"
+                    variant="inline"
                     className="w-[200px]"
                     isFullWidth={false}
                     href={`/blog/edit/${article?.slug}`}
@@ -45,7 +45,7 @@ const HistoryPage = ({ article, generalConfig }: Props) => {
                   </LinkButton>
                 ) : (
                   <LinkButton
-                    type="inline"
+                    variant="inline"
                     className="w-[200px]"
                     isFullWidth={false}
                     href={'/blog/create'}

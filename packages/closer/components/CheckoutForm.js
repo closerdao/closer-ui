@@ -245,7 +245,7 @@ const CheckoutForm = ({
       {conditions}
       <div className="mt-8">
         <Button
-          type="submit"
+          className="booking-btn"
           isEnabled={
             !submitDisabled && hasComplied && !processing && !buttonDisabled
           }

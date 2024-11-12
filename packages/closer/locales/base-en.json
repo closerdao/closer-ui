@@ -1365,6 +1365,11 @@
   "food_create_title": "Create food option",
   "booking_price_per_night_per_adult": "Price per night per adult",
   "booking_token_same_day_error": "Same day token booking not available",
+
+  "error_insufficient_token_balance": "Insufficient balance to pay with tokens",
+
+  "booking_pay_in_euro": "Pay in Euro",
+
   "bookings_dates_min_volunteering_stay_error": "Minimum volunteering stay is {var} days",
 
   "button_other_ways_to_join": "Explore other ways to join TDF",
