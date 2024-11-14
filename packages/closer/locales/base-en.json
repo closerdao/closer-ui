@@ -1103,6 +1103,8 @@
   "config_label_foodPriceChef": "Food price (chef cooked food)",
   "config_label_utilityOptionEnabled": "Utility fee payment enabled (separate from accommodation)",
   "config_label_volunteeringMinStay": "Minimum volunteering stay (days)",
+  "config_label_skills": "Skills & qualifications (comma delimited)",
+  "config_label_residenceMinStay": "Minimum residence stay (days)",
 
 
   "config_features_heading": "Platform features",
@@ -1367,12 +1369,30 @@
   "booking_token_same_day_error": "Same day token booking not available",
 
   "error_insufficient_token_balance": "Insufficient balance to pay with tokens",
-
   "booking_pay_in_euro": "Pay in Euro",
-
   "bookings_dates_min_volunteering_stay_error": "Minimum volunteering stay is {var} days",
-
   "button_other_ways_to_join": "Explore other ways to join TDF",
 
+  "projects_page_title": "Projects",
+  "projects_create_title": "Create a project",
+  "projects_edit_page_delete": "Delete project",
+  "projects_edit_project_title": "Edit project",
+  "projects_budget": "💰 Budget:",
+  "projects_reward": "🏅 Reward:",
+  "projects_estimate": "🗓 Estimate:",
+  "projects_managed_by": "️👷🏽‍♀️  Managed by:",
+  "projects_go_to_document": "Go to document",
+  "projects_application_title": "👷🏽‍♀️ Application",
+  "projects_skills_and_qualifications_title": "💪🏽 Skills & Qualifications",
+  "projects_skills_and_qualifications_intro": "What interests, qualifications or gifts you have?",
+  "projects_other_label": "Other:",
+  "projects_suggestions_title": "💪🏽 Suggestions & Proposals:",
+  "projects_suggestions_intro": "Do you have other suggestions/proposals for projects? Categories & Examples: activity spaces, social areas, playgrounds, tree houses, furniture, outdoor showers, toilets, gyms, buildings, tiny houses, domes, greenhouses, mushroom farm, yoga studio, music studio, co-living, art, smart systems (e.g. water filtration, biopools, renewable energy, kitchen & food flows, composting)...",
+  "projects_suggestions_label": "Ideas, suggestions, proposals?",
+  "projects_food_title": "🥑 Food",
+  "projects_food_intro": "Any dietary needs / preferences?",
+  "projects_volunteer_application_title": "👷🏽‍♀️ Volunteer application",
+  "bookings_dates_min_residence_stay_error": "Minimum residence stay is {var} days ",
+  
   "":""
 }

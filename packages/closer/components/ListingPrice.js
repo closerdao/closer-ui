@@ -5,30 +5,21 @@ import { priceFormat } from '../utils/helpers';
 const ListingPrice = ({
   rentalFiat,
   rentalToken,
-  utilityFiat,
   useTokens,
-  bookingType,
+  bookingCategory,
 }) => {
   return (
     <div>
       <div className="flex items-center justify-center">
         <div className="flex flex-col items-center">
           <div className="text-2xl leading-9">
-            {bookingType === 'volunteer' ? (
+            {bookingCategory.toLowerCase().includes('volunteer') ? (
               <div>{priceFormat(0)}</div>
             ) : (
               priceFormat(useTokens ? rentalToken : rentalFiat)
             )}
           </div>
-          {/* <p>{t('bookings_price_switch_accomodation')}</p> */}
         </div>
-        {/* <div className="flex-1 flex justify-center">
-          <PlusIcon width={16} height={16} />
-        </div>
-        <div className="flex flex-col items-center">
-          <p className="text-2xl leading-9">{priceFormat(utilityFiat)}</p>
-          <p>{t('bookings_price_switch_utility')}</p>
-        </div> */}
       </div>
     </div>
   );

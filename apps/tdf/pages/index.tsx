@@ -619,7 +619,7 @@ const HomePage = () => {
                   </div>
                   <div className="mt-4 mb-4 flex justify-center align-center">
                     <Link
-                      href="/builders-residency"
+                      href="/projects"
                       className="uppercase btn-primary"
                     >
                       Apply

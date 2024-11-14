@@ -230,7 +230,16 @@ export const configDescription: ConfigType[] = [
       },
       volunteeringMinStay: {
         type: 'number',
-        default: 1,
+        default: 14,
+      },
+      residenceMinStay: {
+        type: 'number',
+        default: 30,
+      },
+      skills: {
+        type: 'text',
+        default:
+          '',
       },
     },
   },

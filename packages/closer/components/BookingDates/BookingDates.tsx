@@ -77,11 +77,6 @@ const BookingDates: FC<Props> = ({
           <DateTimePicker
             setStartDate={setStartDate}
             setEndDate={setEndDate}
-            maxDuration={
-              isMember
-                ? conditions?.memberMaxDuration
-                : conditions?.guestMaxDuration
-            }
             blockedDateRanges={blockedDateRanges}
             savedStartDate={savedStartDate}
             savedEndDate={savedEndDate}

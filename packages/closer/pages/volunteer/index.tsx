@@ -1,157 +1,199 @@
 import Head from 'next/head';
+import Image from 'next/image';
 import Link from 'next/link';
 
-import EventPreview from '../../components/EventPreview';
-import { LinkButton } from '../../components/ui';
-import Heading from '../../components/ui/Heading';
+// import { loadLocaleData } from 'closer/utils/locale.helpers';
+import PageError from 'closer/components/PageError';
+import { Heading, LinkButton } from 'closer/components/ui';
 
-import { NextPage, NextPageContext } from 'next';
+import { GeneralConfig, api, useAuth } from 'closer';
+import { useConfig } from 'closer/hooks/useConfig';
+import { parseMessageFromError } from 'closer/utils/common';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import PageNotFound from '../404';
-import { useAuth } from '../../contexts/auth';
-import { useConfig } from '../../hooks/useConfig';
-import {
-  OpportunityByCategory,
-  VolunteerConfig,
-  type VolunteerOpportunity,
-} from '../../types';
-import api from '../../utils/api';
-import { loadLocaleData } from '../../utils/locale.helpers';
-import { getOpportunitiesByCategory } from '../../utils/volunteer.helpers';
-
 interface Props {
-  opportunities: VolunteerOpportunity[];
-  volunteerConfig: VolunteerConfig | null;
+  generalConfig: GeneralConfig | null;
+  error: string | null;
 }
-const VolunteerOpportunitiesPage: NextPage<Props> = ({
-  opportunities,
-  volunteerConfig,
-}) => {
+
+const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
   const t = useTranslations();
-  const { APP_NAME, SEMANTIC_URL } = useConfig() || {};
-  const opportunitiesByCategory = getOpportunitiesByCategory(opportunities);
 
   const { user } = useAuth();
   const hasStewardRole = user?.roles?.includes('steward');
 
-  const volunteerTerms = [
-    'volunteers_page_terms_1',
-    'volunteers_page_terms_2',
-    'volunteers_page_terms_3',
-    'volunteers_page_terms_4',
-    'volunteers_page_terms_5',
-    'volunteers_page_terms_6',
-  ];
+  const defaultConfig = useConfig();
+  const PLATFORM_NAME =
+    generalConfig?.platformName || defaultConfig.platformName;
 
-  const doesHaveVolunteerTerms =
-    !volunteerTerms.every((item) => t(item) === '') &&
-    APP_NAME &&
-    (APP_NAME.toLowerCase() === 'tdf' || APP_NAME.toLowerCase() === 'lios');
-
-  const isVolunteeringEnabled =
-    volunteerConfig?.enabled === true &&
-    process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
-
-  if (!isVolunteeringEnabled) {
-    return <PageNotFound />;
+  if (error) {
+    return <PageError error={error} />;
   }
 
   return (
-    <div className="flex justify-center">
+    <div className="max-w-screen-lg mx-auto">
       <Head>
-        <title>{t('volunteers_page_title')}</title>
-        <link
-          rel="canonical"
-          href={`https://${SEMANTIC_URL}/volunteer`}
-          key="canonical"
-        />
+        <title>{`${t('projects_page_title')} - ${PLATFORM_NAME}`}</title>
       </Head>
-
-      <div className="flex flex-col gap-10 max-w-4xl">
-        <section className="w-full flex justify-between  flex-col gap-6 sm:gap-2 sm:flex-row">
-          <Heading level={1}>{t('volunteers_page_title')}</Heading>
+      <main className=" pb-24">
+        <section className="w-full flex justify-center max-w-4xl mx-auto mb-4 relative">
           {hasStewardRole && (
-            <Link href="/volunteer/create">
-              <div className="btn-primary">Create opportunity</div>
-            </Link>
-          )}
-        </section>
-
-        <section className=" flex flex-col gap-6">
-          <div className="bg-accent-light rounded-md p-6 flex flex-col gap-6">
-            <p>{t('volunteers_page_intro_text')}</p>
-            {doesHaveVolunteerTerms && (
-              <ul>
-                {volunteerTerms.map((term: string) => {
-                  if (term !== t(term)) {
-                    return (
-                      <li
-                        key={term}
-                        className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5"
-                      >
-                        {t(term)}
-                      </li>
-                    );
-                  }
-                })}
-              </ul>
-            )}
-          </div>
-          {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
             <LinkButton
-              className="w-[300px]"
-              href="https://t.me/+EYSkTvSomodkMWUx"
+              href="/projects/create"
+              className="w-fit absolute bottom-6 right-6"
             >
-              Join Telegram group
+              {t('projects_create_title')}
             </LinkButton>
           )}
-
-          {t.raw('volunteers_page_more_info') !== 'volunteers_page_more_info' && (
-            <div
-              dangerouslySetInnerHTML={{
-                __html: t.raw('volunteers_page_more_info'),
-              }}
-            />
-          )}
+          <Image
+            alt="Traditional Dream Factory Builders Residency"
+            src="/images/builders-l.png"
+            width={1344}
+            height={600}
+          />
+        </section>
+        <section className=" w-full flex justify-center">
+          <div className="max-w-4xl w-full ">
+            <div className="w-full py-2">
+              <div className="w-full flex flex-col sm:flex-row gap-4 sm:gap-8">
+                <div className="flex gap-1 items-center min-w-[120px]">
+                  <Image
+                    alt="calendar icon"
+                    src="/images/icons/calendar-icon.svg"
+                    width={20}
+                    height={20}
+                  />
+                  <label className="text-sm uppercase font-bold flex gap-1">
+                    October 2024 - December 2025
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
-        <div>
-          {opportunities?.length === 0 &&
-          APP_NAME &&
-          APP_NAME.toLowerCase() === 'tdf' ? (
-            <p>{t('volunteers_page_empty')}</p>
-          ) : (
-            <section className="flex flex-col gap-8">
-              {opportunitiesByCategory?.map(
-                (opportunityGroup: OpportunityByCategory) => (
-                  <div
-                    key={opportunityGroup.category}
-                    className="flex flex-col gap-6"
-                  >
-                    <Heading level={2} className="uppercase text-xl">
-                      {opportunityGroup.category}
+        <section className=" w-full flex justify-center min-h-[400px]">
+          <div className="max-w-4xl w-full">
+            <div className="flex flex-col sm:flex-row">
+              <div className="flex items-start justify-between gap-6 w-full">
+                <div className="flex flex-col gap-6 w-full">
+                  <div className="flex flex-col sm:flex-row justify-between gap-4 items-center pt-4">
+                    <Heading level={1} className="md:text-4xl  font-bold">
+                      Volunteers Open Call
                     </Heading>
-                    <div className="flex-col flex gap-6">
-                      {opportunityGroup.opportunities.map(
-                        (opportunity: VolunteerOpportunity) => {
-                          return (
-                            <EventPreview
-                              key={opportunity.name}
-                              event={opportunity}
-                              isVolunteerCard={true}
-                            />
-                          );
-                        },
-                      )}
+                    <div className=" w-full sm:w-[250px]">
+                      <LinkButton href="/volunteer/apply">
+                        {t('apply_submit_button')}
+                      </LinkButton>
                     </div>
                   </div>
-                ),
-              )}
-            </section>
-          )}
-        </div>
-      </div>
+                  <div className="flex flex-col gap-6">
+                    <p>
+                      We are excited to extend an invitation to join us at the
+                      Traditional Dream Factory, a regenerative farm and
+                      co-living development in Abela, Alentejo, Portugal.
+                    </p>
+                    <p>
+                      We are looking for enthusiastic individuals who are
+                      interested in living, learning, and contributing to a
+                      vibrant and growing community based on respect for the
+                      land and each other. As a volunteer at TDF, you will have
+                      the chance to participate in a variety of activities:
+                    </p>
+                    <p>
+                      <strong className="uppercase">Requirements: </strong>4
+                      hours per day, 2 weeks minimum ✅ Free accommodation
+                      (glamping tents and dorms available, or bring your van)
+                    </p>
+                    <p>
+                      <strong className="uppercase">Community culture: </strong>
+                      To join us, you should align with our community&apos;s
+                      values, be open to learning, sharing, and working, and be
+                      excited to contribute to our collective efforts. Our
+                      community is about more than just work; it&apos;s about
+                      having fun, growing together, and sharing in the
+                      co-creation of our land and experiences. 🥙💃🏽🔥🎶🎭
+                    </p>
+                    <Heading level={2}>
+                      Skill & qualifications that can support us 👍🏼
+                    </Heading>
+                    <ul className="mb-4 list-disc pl-5">
+                      <li>
+                        <strong>Gardening:</strong> Experience hands-on
+                        regenerative agriculture, learn about permaculture, and
+                        contribute to our food production.
+                      </li>
+                      <li>
+                        <strong>Hospitality:</strong> Assist in maintaining a
+                        welcoming environment for all of our community members
+                        and visitors, including cleaning, bed dressing, and
+                        making people feel at home.
+                      </li>
+                      <li>
+                        <strong>Kitchen and Cooking:</strong> Help prepare
+                        delicious and nutritious meals using fresh produce from
+                        our garden.
+                      </li>
+                      <li>
+                        <strong>Building Projects:</strong> Use and develop your
+                        skills to contribute to various building projects around
+                        the property, from furniture to social areas, outdoor
+                        showers, or building smart systems like helophyte
+                        filters or biopools.
+                      </li>
+                      <li>
+                        <strong>Others:</strong> As part of a dynamic community,
+                        there will be many other opportunities to learn,
+                        contribute, and grow.
+                      </li>
+                    </ul>
+                    <p>
+                      We ask for a minimum commitment of two weeks. In return,
+                      you&apos;ll be immersed in our community, gaining
+                      invaluable experience and insights, and contributing to a
+                      meaningful project.
+                    </p>
+                    <p>
+                      We expect volunteers to contribute four hours of work each
+                      day, five days a week. Before you apply, we recommend
+                      reading our{' '}
+                      <Link
+                        href="https://docs.google.com/document/d/177JkHCy0AhplsaEEYpFHBsiI6d4uLk0TgURSKfBIewE/edit?tab=t.0"
+                        target="_blank"
+                      >
+                        pink paper
+                      </Link>
+                      , which details our community&apos;s culture and
+                      processes. If our vision resonates with you and
+                      you&apos;re eager to play, learn, and create with us,
+                      we&apos;d love to hear from you. Check our{' '}
+                      <Link
+                        target="_blank"
+                        href="https://docs.google.com/document/d/198vWYEQCC1lELQa8f76Jcw3l3UDiPcBKt04PGFKnUvg/edit?tab=t.0"
+                      >
+                        Visitor&apos;s Guide
+                      </Link>{' '}
+                      and let&apos;s schedule a call to know each other by
+                      sending an email to{' '}
+                      <Link href="mailto:space@traditionaldreamfactory.com">
+                        space@traditionaldreamfactory.com
+                      </Link>
+                      .
+                    </p>
+                    <p>
+                      The recommended stay is 1 month - and ideally coming in
+                      the beginning of the month so that we can have a good
+                      group dynamic.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
   );
 };
@@ -160,29 +202,21 @@ VolunteerOpportunitiesPage.getInitialProps = async (
   context: NextPageContext,
 ) => {
   try {
-    const [opportunitiesRes, volunteerConfigRes, messages] = await Promise.all([
-      api.get('/volunteer').catch(() => {
-        return null;
-      }),
-      api.get('/config/volunteering').catch(() => {
-        return null;
-      }),
+    const [messages, generalRes] = await Promise.all([
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      api.get('/config/general').catch(() => null),
+      api.get('/project').catch(() => {
+        return null;
+      }),
     ]);
 
-    const opportunities = opportunitiesRes?.data?.results || null;
-    const volunteerConfig = volunteerConfigRes?.data?.results?.value || null;
+    const generalConfig = generalRes?.data?.results?.value;
 
+    return { messages, generalConfig };
+  } catch (err: unknown) {
     return {
-      opportunities,
-      volunteerConfig,
-      messages,
-    };
-  } catch (error) {
-    console.error(error);
-    return {
-      opportunities: [],
-      volunteerConfig: null,
+      generalConfig: null,
+      error: parseMessageFromError(err),
       messages: null,
     };
   }

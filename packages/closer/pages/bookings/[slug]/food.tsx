@@ -53,6 +53,7 @@ const FoodSelectionPage = ({
   foodOptions,
 }: Props) => {
   const t = useTranslations();
+
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';

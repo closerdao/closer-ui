@@ -41,7 +41,6 @@ interface Props {
 const DateTimePicker = ({
   setStartDate,
   setEndDate,
-  maxDuration,
   blockedDateRanges,
   savedStartDate,
   savedEndDate,
@@ -366,7 +365,6 @@ const DateTimePicker = ({
           numberOfMonths={isOneMonthCalendar ? 1 : 2}
           onSelect={handleSelectDay}
           selected={dateRange}
-          max={maxDuration}
         />
         {dateError && <ErrorMessage error={dateError} />}
 

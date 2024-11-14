@@ -29,6 +29,7 @@ interface Props {
   vatRate?: number;
   isFoodIncluded: boolean;
   creditsPrice?: number;
+  isVolunteerOrResidency?: boolean;
 }
 
 const SummaryCosts = ({
@@ -53,6 +54,7 @@ const SummaryCosts = ({
   vatRate,
   isFoodIncluded,
   creditsPrice,
+  isVolunteerOrResidency,
 }: Props) => {
   const t = useTranslations();
   const { APP_NAME } = useConfig();

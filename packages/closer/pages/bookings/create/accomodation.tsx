@@ -45,7 +45,6 @@ const AccomodationSelector = ({
   useTokens,
   listings,
   eventId,
-  volunteerId,
   ticketOption,
   discountCode,
   doesNeedPickup,
@@ -53,10 +52,19 @@ const AccomodationSelector = ({
   bookingConfig,
   bookingError,
   foodOption,
+  skills,
+  diet,
+  suggestions,
+  bookingType,
 }: Props) => {
   const t = useTranslations();
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
+
+  const parsedSkills =
+    (skills && Array.isArray(skills) ? skills : skills?.split(',')) || [];
+  const parsedDiet =
+    (diet && Array.isArray(diet) ? diet : diet?.split(',')) || [];
 
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -71,7 +79,7 @@ const AccomodationSelector = ({
     listings?.filter((listing: Listing) => {
       if (isTeamMember) {
         return listing.availableFor?.includes('team');
-      } else if (volunteerId) {
+      } else if (bookingType) {
         return listing.availableFor?.includes('volunteer');
       } else if (eventId) {
         return listing.availableFor?.includes('events');
@@ -80,10 +88,16 @@ const AccomodationSelector = ({
       }
     });
 
-  const bookingType = getBookingType(eventId, volunteerId);
+  const bookingCategory = getBookingType(eventId, bookingType);
 
   const bookListing = async (listingId: string) => {
     try {
+      const volunteerInfo = {
+        skills: parsedSkills,
+        diet: parsedDiet,
+        suggestions,
+        bookingType,
+      };
       const {
         data: { results: newBooking },
       } = await api.post('/bookings/request', {
@@ -97,10 +111,10 @@ const AccomodationSelector = ({
         children: kids,
         discountCode,
         ...(eventId && { eventId, ticketOption }),
-        ...(volunteerId && { volunteerId }),
         doesNeedPickup,
         doesNeedSeparateBeds,
         foodOption,
+        ...(volunteerInfo && { volunteerInfo }),
       });
       if (bookingConfig?.foodOptionEnabled) {
         router.push(
@@ -137,7 +151,10 @@ const AccomodationSelector = ({
       ...(pets && { pets }),
       ...(currency && { currency }),
       ...(eventId && { eventId }),
-      ...(volunteerId && { volunteerId }),
+      ...(bookingType && { bookingType }),
+      ...(skills && { skills }),
+      ...(diet && { diet }),
+      ...(suggestions && { suggestions }),
     };
     const urlParams = new URLSearchParams(params);
     router.push(`/bookings/create/dates?${urlParams}`);
@@ -182,9 +199,10 @@ const AccomodationSelector = ({
                 listing={listing}
                 bookListing={bookListing}
                 useTokens={useTokens}
-                bookingType={bookingType}
+                bookingCategory={bookingCategory}
                 isAuthenticated={isAuthenticated}
                 adults={Number(adults)}
+                isVolunteerOrResidency={Boolean(bookingType)}
               />
             ))}
         </div>
@@ -206,12 +224,15 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       pets,
       currency,
       eventId,
-      volunteerId,
       ticketOption,
       discountCode,
       doesNeedPickup,
       doesNeedSeparateBeds,
       foodOption,
+      skills,
+      diet,
+      suggestions,
+      bookingType,
     }: BaseBookingParams = query || {};
     const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
     const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
@@ -228,7 +249,6 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
           useTokens,
           discountCode,
           ...(eventId && { eventId, ticketOption }),
-          ...(volunteerId && { volunteerId }),
         })
         .catch((err: any) => {
           console.error(
@@ -258,7 +278,6 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       currency,
       useTokens,
       eventId,
-      volunteerId,
       ticketOption,
       discountCode,
       doesNeedPickup,
@@ -267,6 +286,10 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       bookingError,
       messages,
       foodOption,
+      skills,
+      diet,
+      suggestions,
+      bookingType,
     };
   } catch (err: any) {
     console.log(err);

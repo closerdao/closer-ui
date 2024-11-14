@@ -1,13 +1,12 @@
 import Head from 'next/head';
 import Image from 'next/image';
 
-// import { loadLocaleData } from 'closer/utils/locale.helpers';
+import ProjectCard from '../../components/ProjectCard/ProjectCard';
 import PageError from 'closer/components/PageError';
-import { Card, Heading, LinkButton } from 'closer/components/ui';
+import { Heading, LinkButton } from 'closer/components/ui';
 
-import { GeneralConfig, api } from 'closer';
+import { GeneralConfig, Project, api, useAuth } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
-import { useFaqs } from 'closer/hooks/useFaqs';
 import { parseMessageFromError } from 'closer/utils/common';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
@@ -16,16 +15,18 @@ import { useTranslations } from 'next-intl';
 interface Props {
   generalConfig: GeneralConfig | null;
   error: string | null;
+  projects: Project[] | null;
 }
 
-const ResourcesPage = ({ generalConfig, error }: Props) => {
+const ProjectsPage = ({ generalConfig, error, projects }: Props) => {
   const t = useTranslations();
+
+  const { user } = useAuth();
+  const hasStewardRole = user?.roles?.includes('steward');
 
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
-  const { FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
-  const { faqs, error: faqsError } = useFaqs(FAQS_GOOGLE_SHEET_ID);
 
   if (error) {
     return <PageError error={error} />;
@@ -34,10 +35,18 @@ const ResourcesPage = ({ generalConfig, error }: Props) => {
   return (
     <div className="max-w-screen-lg mx-auto">
       <Head>
-        <title>{`${t('resources_heading')} - ${PLATFORM_NAME}`}</title>
+        <title>{`${t('projects_page_title')} - ${PLATFORM_NAME}`}</title>
       </Head>
       <main className=" pb-24">
-        <section className="w-full flex justify-center max-w-4xl mx-auto mb-4">
+        <section className="w-full flex justify-center max-w-4xl mx-auto mb-4 relative">
+          {hasStewardRole && (
+            <LinkButton
+              href="/projects/create"
+              className="w-fit absolute bottom-6 right-6"
+            >
+              {t('projects_create_title')}
+            </LinkButton>
+          )}
           <Image
             alt="Traditional Dream Factory Builders Residency"
             src="/images/builders-l.png"
@@ -69,13 +78,19 @@ const ResourcesPage = ({ generalConfig, error }: Props) => {
           <div className="max-w-4xl w-full">
             <div className="flex flex-col sm:flex-row">
               <div className="flex items-start justify-between gap-6 w-full">
-                <div className="flex flex-col gap-10 w-full sm:w-2/3 overflow-hidden">
-                  <Heading level={1} className="md:text-4xl mt-4 font-bold">
-                    Builders Residency Open Call
-                  </Heading>
+                <div className="flex flex-col gap-6 w-full">
+                  <div className="flex flex-col sm:flex-row justify-between gap-4 items-center pt-4">
+                    <Heading level={1} className="md:text-4xl  font-bold">
+                      Builders Residency Open Call
+                    </Heading>
+                    <div className=" w-full sm:w-[250px]">
+                      <LinkButton href="/projects/apply">
+                        {t('apply_submit_button')}
+                      </LinkButton>
+                    </div>
+                  </div>
 
                   <div className="flex flex-col gap-6">
-             
                     <p>
                       We are starting to build! TDF has secured funding to start
                       major renovations. In Jan 2025, the first phase of
@@ -85,9 +100,10 @@ const ResourcesPage = ({ generalConfig, error }: Props) => {
                     </p>
 
                     <p>
-                      <strong className='uppercase'>Requirements: </strong> 6 hours per day, 1 month minimum ✅. Free
-                      accommodation & food (glamping tents and dorms available,
-                      or bring your van)
+                      <strong className="uppercase">Requirements: </strong> 6
+                      hours per day, 1 month minimum ✅. Free accommodation &
+                      food (glamping tents and dorms available, or bring your
+                      van)
                     </p>
 
                     <p>
@@ -107,44 +123,24 @@ const ResourcesPage = ({ generalConfig, error }: Props) => {
                       practices, yoga, massage, and more 🥙💃🏽🔥🎶🎭
                     </p>
 
-                    <Heading level={2} className='text-lg uppercase'>Build Projects 🛠🏡🛕</Heading>
-                    <ul>
-                      <li>
-                        <strong>BioPool:</strong> Concrete & Geomembrane
-                        installation with ceramic tiling.
-                      </li>
-                      <li>
-                        <strong>Small House:</strong> New windows, insulation,
-                        opening up central lounge, building mezzanine,
-                        refurbishment, and furniture build.
-                      </li>
-                      <li>
-                        <strong>Temple:</strong> Sealing the walls and pool
-                        construction. Adding stretch roof.
-                      </li>
-                      <li>
-                        <strong>Workshops</strong> 
-                      </li>
-                      <li>
-                        <strong>Activity Space:</strong> Full refurbishment with
-                        new floors and mezzanine, electrics, plumbing,
-                        insulation, roof tiling.
-                      </li>
-                      <li>
-                        <strong>Mushroom Farm:</strong> Design/construction of a
-                        mushroom cultivation farm inside two containers, at the
-                        back end of the biopool. Design of operation from
-                        cultivation facilities to harvesting, processing,
-                        storage, and packaging.
-                      </li>
-                      <li>
-                        <strong>GreenHouse:</strong> Design/construction of
-                        greenhouse at the edge of living spaces.
-                      </li>
-                    </ul>
+                    <Heading level={2}>Build Projects 🛠🏡🛕</Heading>
 
-                    <Heading level={2} className='text-lg uppercase'>Skill & qualifications that can support us 👍🏼</Heading>
-                    <ul>
+                    {projects && projects.length > 0 && (
+                      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-6">
+                        {projects.map((project) => (
+                          <ProjectCard
+                            key={project.slug}
+                            project={project}
+                            hasStewardRole={hasStewardRole || false}
+                          />
+                        ))}
+                      </section>
+                    )}
+
+                    <Heading level={2}>
+                      Skill & qualifications that can support us 👍🏼
+                    </Heading>
+                    <ul className="mb-4 list-disc pl-5">
                       <li>Practical build skills</li>
                       <li>Electrical</li>
                       <li>Plumbing</li>
@@ -156,9 +152,9 @@ const ResourcesPage = ({ generalConfig, error }: Props) => {
                       <li>Design & drawing skills</li>
                     </ul>
 
-
                     <p>
-                      <strong className="uppercase">Time frame: </strong> Starting October 2024 - December 2025 🗓.
+                      <strong className="uppercase">Time frame: </strong>{' '}
+                      Starting October 2024 - December 2025 🗓.
                     </p>
                     <p>
                       We are ideally looking for people to join us from October
@@ -166,11 +162,6 @@ const ResourcesPage = ({ generalConfig, error }: Props) => {
                       continue to the end of next year.
                     </p>
                   </div>
-                </div>
-                <div className="h-auto fixed bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px]">
-                  <Card className="bg-white border border-gray-100">
-                    <LinkButton href="/">{t('apply_submit_button')}</LinkButton>
-                  </Card>
                 </div>
               </div>
             </div>
@@ -181,22 +172,41 @@ const ResourcesPage = ({ generalConfig, error }: Props) => {
   );
 };
 
-ResourcesPage.getInitialProps = async (context: NextPageContext) => {
+ProjectsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [messages, generalRes] = await Promise.all([
+    const [messages, generalRes, projectsRes] = await Promise.all([
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       api.get('/config/general').catch(() => null),
+      api.get('/project').catch(() => {
+        return null;
+      }),
     ]);
-    const generalConfig = generalRes?.data?.results?.value;
+    const projectManagerIds = projectsRes?.data?.results?.map(
+      (project: Project) => project.createdBy,
+    );
 
-    return { messages, generalConfig };
+    const projectManagersRes = await Promise.all(
+      projectManagerIds.map((id: string) => api.get(`/user/${id}`)),
+    );
+
+    const projectManagers = projectManagersRes.map((res) => res?.data?.results);
+
+    const generalConfig = generalRes?.data?.results?.value;
+    const projects =
+      projectsRes?.data?.results.map((project: Project, index: number) => ({
+        ...project,
+        manager: projectManagers[index],
+      })) || null;
+
+    return { messages, generalConfig, projects };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
       messages: null,
+      projects: null,
     };
   }
 };
 
-export default ResourcesPage;
+export default ProjectsPage;

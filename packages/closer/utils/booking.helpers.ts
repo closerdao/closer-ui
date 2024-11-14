@@ -30,13 +30,16 @@ dayjs.extend(timezone);
 
 export const getBookingType = (
   eventId: string | undefined,
-  volunteerId: string | undefined,
+  bookingType: 'volunteer' | 'residence' | undefined,
 ) => {
   if (eventId) {
     return '🎉 Event';
   }
-  if (volunteerId) {
+  if (bookingType === 'volunteer') {
     return '💪🏽 Volunteer';
+  }
+  if (bookingType === 'residence') {
+    return '💪🏽 Residence';
   }
   return '🏡 Stay';
 };
