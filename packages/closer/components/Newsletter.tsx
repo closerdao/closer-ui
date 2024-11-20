@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 
 import { useTranslations } from 'next-intl';
 
@@ -10,7 +10,7 @@ import { trackEvent } from './Analytics';
 import { Button, ErrorMessage, Heading } from './ui';
 
 const attemptSignup = async (
-  event: React.FormEvent<HTMLFormElement>,
+  event: FormEvent<HTMLFormElement>,
   request: {
     email: string;
     screenname: string;
