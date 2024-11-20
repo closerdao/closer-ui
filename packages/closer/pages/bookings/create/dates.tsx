@@ -176,10 +176,9 @@ const DatesSelector = ({
   );
   const canProceed = !!(
     ((hasEventIdAndValidTicket && hasValidDates) ||
-      (hasVolunteerId && hasValidDates) ||
+      (hasVolunteerId && hasValidDates && isMinVolunteeringStayMatched) ||
       isGeneralCase) &&
-    isMinDurationMatched &&
-    isMinVolunteeringStayMatched
+    isMinDurationMatched
   );
 
   const isTokenPaymentSelected = currency === CURRENCIES[1];
