@@ -13,7 +13,7 @@ const ListingPrice = ({
       <div className="flex items-center justify-center">
         <div className="flex flex-col items-center">
           <div className="text-2xl leading-9">
-            {bookingCategory.toLowerCase().includes('volunteer') ? (
+            {['volunteer', 'residency'].includes(bookingCategory.toLowerCase()) ? (
               <div>{priceFormat(0)}</div>
             ) : (
               priceFormat(useTokens ? rentalToken : rentalFiat)

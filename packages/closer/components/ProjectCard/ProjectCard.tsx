@@ -49,7 +49,7 @@ const ProjectCard = ({ project, hasStewardRole }: Props) => {
           <div className="flex flex-col gap-2 text-md">
             <div className="flex gap-2 flex-wrap pb-2">
               {project?.skills &&
-                project?.skills.map((skill) => (
+                project?.skills?.map((skill) => (
                   <Tag key={skill} size="small" color="primary">
                     {skill}
                   </Tag>
@@ -65,10 +65,14 @@ const ProjectCard = ({ project, hasStewardRole }: Props) => {
               {t('projects_estimate')} {project?.estimate}
             </p>
             <p>
-              {t('projects_managed_by')}{' '}
-              <Link href={`/members/${project?.manager?.slug}`}>
-                {project?.manager?.screenname}
-              </Link>
+            {t('projects_managed_by')}{' '}  
+              {project?.manager ? (  
+                <Link href={`/members/${project.manager.slug}`}>  
+                  {project.manager.screenname}  
+                </Link>  
+              ) : (  
+                <span>no manager</span>  
+              )}  
             </p>
           </div>
           <div className="flex flex-col gap-4">

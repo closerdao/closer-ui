@@ -89,6 +89,7 @@ const LinkButton = ({
         `}
         onClick={onClick}
         target={target}
+        rel="noopener noreferrer"
       >
         {children}
       </Link>
