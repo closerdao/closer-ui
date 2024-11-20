@@ -9,17 +9,30 @@ const colors = {
   primary: 'bg-accent-light text-accent',
 };
 
+const sizes = {
+  small: 'text-xs',
+  medium: 'text-sm',
+  large: 'text-md',
+};
+
 interface Props {
   color: keyof typeof colors;
   remove?: () => void;
   className?: string;
   children: React.ReactNode;
+  size?: keyof typeof sizes;
 }
 
-const Tag = ({ color, children, remove, className }: Props) => {
+const Tag = ({
+  color,
+  children,
+  remove,
+  className,
+  size = 'medium',
+}: Props) => {
   return (
     <span
-      className={`${colors[color]} ${className} pr-1 normal-case	font-normal inline-flex items-center text-sm rounded-full overflow-hidden`}
+      className={`${colors[color]} ${sizes[size]} ${className} pr-1 normal-case	font-normal inline-flex items-center  rounded-full overflow-hidden`}
     >
       <span
         className="ml-2 mr-1 leading-relaxed truncate max-w-xs px-1"

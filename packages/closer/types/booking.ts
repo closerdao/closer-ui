@@ -22,6 +22,11 @@ export interface BaseBookingParams {
   doesNeedPickup?: boolean | undefined;
   doesNeedSeparateBeds?: boolean | undefined;
   foodOption?: string | undefined;
+  skills?: string | undefined;
+  diet?: string | undefined;
+  projectId?: string | undefined;
+  suggestions?: string | undefined;
+  bookingType?: 'volunteer' | 'residence' | undefined;
 }
 
 export type Listing = {
@@ -83,6 +88,14 @@ export type Charge = {
 //   createdBy: string;
 // };
 
+export type VolunteerInfo = {
+  skills?: string[];
+  diet?: string[];
+  projectId?: string[];
+  suggestions?: string;
+  bookingType?: 'volunteer' | 'residence' | undefined;
+};
+
 export type Booking = {
   foodOption?: string;
   foodOptionId?: string;
@@ -137,6 +150,7 @@ export type Booking = {
   adminBookingReason?: string;
   roomOrBedNumbers?: number[];
   charges?: Charge[];
+  volunteerInfo?: VolunteerInfo;
 };
 
 export interface StatusColor {
@@ -252,4 +266,9 @@ export type UpdatedPrices = {
   foodFiat: Price<CloserCurrencies.EUR>;
   utilityFiat: Price<CloserCurrencies.EUR>;
   total: Price<CloserCurrencies.EUR>;
+};
+
+export type DynamicField = {
+  name: string;
+  options: { label: string; value: string }[] | string[];
 };

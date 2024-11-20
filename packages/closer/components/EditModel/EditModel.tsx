@@ -49,7 +49,7 @@ interface Props {
   isPublic?: boolean;
   dynamicField?: {
     name: string;
-    options: any[]
+    options: any[];
   };
 }
 
@@ -280,6 +280,7 @@ const EditModel: FC<Props> = ({
           filterFields(fields, data).map((field) => (
             <FormField
               {...field}
+              dynamicField={dynamicField}
               key={field.name}
               data={data}
               update={update}
@@ -288,7 +289,7 @@ const EditModel: FC<Props> = ({
           ))
         )}
 
-        {endpoint === '/volunteer' && (
+        {(endpoint === '/volunteer' || endpoint === '/projects') && (
           <div>
             <DateTimePicker
               setStartDate={setStartDate}
@@ -324,13 +325,6 @@ const EditModel: FC<Props> = ({
       </form>
     </div>
   );
-};
-
-EditModel.defaultProps = {
-  fields: [],
-  allowDelete: false,
-  deleteButton: 'Delete',
-  isPublic: false,
 };
 
 export default EditModel;

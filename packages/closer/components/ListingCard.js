@@ -16,8 +16,9 @@ const ListingCard = ({
   listing,
   bookListing,
   useTokens,
-  bookingType,
+  bookingCategory,
   isAuthenticated,
+  isVolunteerOrResidency,
 }) => {
   const t = useTranslations();
   const router = useRouter();
@@ -84,12 +85,12 @@ const ListingCard = ({
       <div className="my-8">
         <ListingPrice
           rentalFiat={
-            listing?.fiatPrice || { val: 0, cur: CloserCurrencies.EUR }
+            listing?.fiatPrice && !isVolunteerOrResidency ? listing?.fiatPrice : { val: 0, cur: CloserCurrencies.EUR }
           }
           rentalToken={rentalToken}
           utilityFiat={utilityFiat}
           useTokens={useTokens}
-          bookingType={bookingType}
+          bookingCategory={bookingCategory}
         />
       </div>
 

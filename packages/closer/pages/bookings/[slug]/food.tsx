@@ -53,6 +53,7 @@ const FoodSelectionPage = ({
   foodOptions,
 }: Props) => {
   const t = useTranslations();
+
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -69,7 +70,8 @@ const FoodSelectionPage = ({
   const [isFood, setIsFood] = useState(true);
 
   const foodOption = getFoodOption({ eventId, event, foodOptions });
-  const foodPricePerNight = foodOption?.price;
+  const foodPricePerNight =
+    booking?.volunteerInfo?.bookingType === 'residence' ? 0 : foodOption?.price;
 
   useEffect(() => {
     if (booking?.status === 'pending' || booking?.status === 'paid') {

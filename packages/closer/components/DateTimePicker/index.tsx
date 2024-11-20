@@ -41,7 +41,6 @@ interface Props {
 const DateTimePicker = ({
   setStartDate,
   setEndDate,
-  maxDuration,
   blockedDateRanges,
   savedStartDate,
   savedEndDate,
@@ -59,7 +58,7 @@ const DateTimePicker = ({
 
   const t = useTranslations();
   const router = useRouter();
-  const { volunteerId } = router.query;
+  const { volunteerId, bookingType } = router.query;
   const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [dateError, setDateError] = useState<null | string>(null);
@@ -128,6 +127,8 @@ const DateTimePicker = ({
       savedStartDate &&
       savedEndDate &&
       !volunteerId &&
+      bookingType !== 'volunteer' &&
+      bookingType !== 'residence' &&
       defaultDatesAreAvailable
     ) {
       if (!isDateRangeSet) {
@@ -149,7 +150,9 @@ const DateTimePicker = ({
         if (
           (eventStartDate !== savedStartDate ||
             eventEndDate !== savedEndDate) &&
-          !volunteerId
+          !volunteerId &&
+          bookingType !== 'volunteer' &&
+          bookingType !== 'residence'
         ) {
           setDateRange({
             from: new Date(savedStartDate as string),
@@ -158,7 +161,11 @@ const DateTimePicker = ({
           setEndDate(savedEndDate as string);
           setStartDate(savedStartDate as string);
         } else {
-          if (!volunteerId) {
+          if (
+            !volunteerId &&
+            bookingType !== 'volunteer' &&
+            bookingType !== 'residence'
+          ) {
             setDateRange({
               from: new Date(eventStartDate),
               to: new Date(eventEndDate),
@@ -366,7 +373,6 @@ const DateTimePicker = ({
           numberOfMonths={isOneMonthCalendar ? 1 : 2}
           onSelect={handleSelectDay}
           selected={dateRange}
-          max={maxDuration}
         />
         {dateError && <ErrorMessage error={dateError} />}
 

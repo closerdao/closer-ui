@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 
 import React, { useEffect, useState } from 'react';
 
@@ -18,6 +19,7 @@ import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
+import { HeadingRow, Tag } from '../../..';
 import { MAX_LISTINGS_TO_FETCH, STATUS_COLOR } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
@@ -29,6 +31,7 @@ import {
   GeneralConfig,
   Listing,
   PaymentConfig,
+  Project,
   UpdatedPrices,
   VolunteerOpportunity,
 } from '../../../types';
@@ -60,6 +63,7 @@ interface Props {
   generalConfig: GeneralConfig;
   paymentConfig: PaymentConfig | null;
   foodOptions: FoodOption[];
+  projects: Project[];
 }
 
 const BookingPage = ({
@@ -73,6 +77,7 @@ const BookingPage = ({
   listings,
   generalConfig,
   paymentConfig,
+  projects,
 }: Props) => {
   console.log('booking=',booking);
   const t = useTranslations();
@@ -102,7 +107,6 @@ const BookingPage = ({
     start: bookingStart,
     end: bookingEnd,
     adults,
-    volunteerId,
     ticketOption,
     eventFiat,
     total,
@@ -113,6 +117,7 @@ const BookingPage = ({
     created,
     foodFiat,
     roomOrBedNumbers,
+    volunteerInfo,
   } = booking || {};
 
   const userInfo = bookingCreatedBy && {
@@ -402,10 +407,9 @@ const BookingPage = ({
               </p>
               <div className="flex flex-col gap-2">
                 <label htmlFor="roomNumbers">
-                {listing.private
-                  ? 'Enter new room number(s):'
-                  : 'Enter new bed number(s) (comma delimited, must match updated number of adults):'
-                }
+                  {roomOrBedNumbers && roomOrBedNumbers?.length > 0
+                    ? 'Enter new bed numbers (comma delimited, must match updated number of adults):'
+                    : 'Enter new room number:'}
                 </label>
                 <Input
                   onChange={handleUpdateRoomNumbers}
@@ -418,6 +422,67 @@ const BookingPage = ({
             </section>
           )}
 
+        {booking.volunteerInfo && (
+          <section className="flex flex-col gap-4">
+            {booking.volunteerInfo.bookingType === 'volunteer' ? (
+              <HeadingRow>
+                {t('projects_volunteer_application_title')}
+              </HeadingRow>
+            ) : (
+              <HeadingRow>
+                {t('projects_residence_application_title')}
+              </HeadingRow>
+            )}
+
+            {booking?.volunteerInfo?.projectId &&
+              booking?.volunteerInfo?.projectId?.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <Heading level={5}>{t('projects_build_title')}</Heading>
+                  {booking.volunteerInfo.projectId?.map((projectId) => (
+                    <p key={projectId}>
+                      <Link
+                        href={`/projects/${
+                          projects?.find((project) => project._id === projectId)
+                            ?.slug
+                        }`}
+                      >
+                        {
+                          projects?.find((project) => project._id === projectId)
+                            ?.name
+                        }
+                      </Link>
+                    </p>
+                  ))}
+                </div>
+              )}
+
+            <Heading level={5}>
+              {t('projects_skills_and_qualifications_title')}
+            </Heading>
+            <div className="flex flex-wrap gap-2">
+              {booking.volunteerInfo.skills?.map((skill) => (
+                <Tag color="primary" size="small" key={skill}>
+                  {skill}
+                </Tag>
+              ))}
+            </div>
+            <Heading level={5}>{t('projects_food_title')}</Heading>
+            <div className="flex flex-wrap gap-2">
+              {booking.volunteerInfo.diet?.map((diet) => (
+                <Tag color="primary" size="small" key={diet}>
+                  {diet}
+                </Tag>
+              ))}
+            </div>
+            <Heading level={5}>{t('projects_suggestions_title')}</Heading>
+            <p>
+              {(booking.volunteerInfo.suggestions === 'undefined' || !booking.volunteerInfo.suggestions )
+                ? 'No suggestions'
+                : booking.volunteerInfo.suggestions}
+            </p>
+          </section>
+        )}
+
         <section className="flex flex-col gap-12">
           <SummaryDates
             isDayTicket={booking?.isDayTicket}
@@ -429,7 +494,7 @@ const BookingPage = ({
             endDate={isSpaceHost ? updatedEndDate : bookingEnd}
             listingName={listing?.name}
             listingUrl={listing?.slug}
-            volunteerId={volunteerId}
+            isVolunteer={volunteerInfo?.bookingType === 'volunteer'}
             eventName={event?.name}
             volunteerName={volunteer?.name}
             ticketOption={ticketOption?.name}
@@ -463,7 +528,6 @@ const BookingPage = ({
               ticketOption?.price ? ticketOption.price * adults : undefined
             }
             accomodationDefaultCost={listing?.fiatPrice?.val * adults}
-            volunteerId={volunteerId}
             isNotPaid={isNotPaid}
             updatedAccomodationTotal={{
               val: updatedAccomodationTotal,
@@ -546,6 +610,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       generalConfigRes,
       paymentConfigRes,
       foodRes,
+      projectsRes,
       messages,
     ] = await Promise.all([
       api
@@ -580,6 +645,9 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       api.get('/food').catch(() => {
         return null;
       }),
+      api.get('/project').catch(() => {
+        return null;
+      }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const booking = bookingRes?.data?.results;
@@ -590,6 +658,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
     const paymentConfig = paymentConfigRes?.data?.results?.value;
 
     const foodOptions = foodRes?.data?.results;
+    const projects = projectsRes?.data?.results;
 
     const [optionalEvent, optionalListing, optionalVolunteer] =
       await Promise.all([
@@ -649,6 +718,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       messages,
       paymentConfig,
       foodOptions,
+      projects,
     };
   } catch (err: any) {
     return {
@@ -664,6 +734,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       messages: null,
       paymentConfig: null,
       foodOptions: null,
+      projects: null,
     };
   }
 };

@@ -54,6 +54,7 @@ interface SummaryDatesProps {
   workingHoursEnd?: number | undefined;
   listingId?: string | undefined;
   numSpacesRequired?: number;
+  isVolunteer?: boolean;
 }
 
 const SummaryDates = ({
@@ -66,7 +67,6 @@ const SummaryDates = ({
   endDate,
   listingName,
   listingUrl,
-  volunteerId,
   eventName,
   volunteerName,
   ticketOption,
@@ -81,6 +81,7 @@ const SummaryDates = ({
   workingHoursEnd,
   listingId,
   numSpacesRequired,
+  isVolunteer,
 }: SummaryDatesProps) => {
   const t = useTranslations();
 
@@ -355,7 +356,7 @@ const SummaryDates = ({
 
       {!isHourlyBooking && (
         <div>
-          {volunteerId && (
+          {isVolunteer && (
             <div className="flex justify-between items-start mt-3">
               <p>{t('bookings_summary_step_dates_commitment')}</p>
               <p className="font-bold uppercase">

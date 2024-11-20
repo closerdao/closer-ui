@@ -10,13 +10,13 @@ interface Props {
 
 const BookingResult = ({ booking, eventName }: Props) => {
   const t = useTranslations();
-  const { status, volunteerId, eventId, _id } = booking || {};
+  const { status, volunteerId, eventId, _id, volunteerInfo } = booking || {};
 
   if (!booking) return null;
 
   return (
     <div className="flex flex-col gap-16 flex-nowrap">
-      {status === 'paid' && !volunteerId && !eventId && (
+      {status === 'paid' && !volunteerId && !volunteerInfo && !eventId && (
         <>
           <p className="font-bold text-3xl">{t('bookings_title_confirmed')}</p>
           <p>{t('subscriptions_success_thank_you_message')}</p>
@@ -27,7 +27,7 @@ const BookingResult = ({ booking, eventName }: Props) => {
         </>
       )}
 
-      {status === 'pending' && !volunteerId && !eventId && (
+      {status === 'pending' && !volunteerId && !volunteerInfo && !eventId && (
         <>
           <p className="font-bold text-3xl">{t('bookings_title_pending')}</p>
           <p>{t('subscriptions_success_thank_you_message')}</p>
@@ -54,7 +54,7 @@ const BookingResult = ({ booking, eventName }: Props) => {
         </div>
       )}
 
-      {volunteerId && (
+      {(volunteerId || volunteerInfo) && (
         <>
           <p className="font-bold text-3xl">
             {t('bookings_title_application_sent')}

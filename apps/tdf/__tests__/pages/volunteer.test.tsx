@@ -18,6 +18,6 @@ describe('Volunteer', () => {
     renderWithProviders(<VolunteerPage volunteerConfig={volunteerConfigMock} opportunities={eventListMock} />);
     const title = screen.getByRole('heading', { level: 1 });
 
-    expect(title).toHaveTextContent(/Volunteering Opportunities/i);
+    expect(title).toHaveTextContent(/Volunteers Open Call/i);
   });
 });

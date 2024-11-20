@@ -17,6 +17,7 @@ import { useAuth } from '../../contexts/auth';
 import { type User } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
+import { VolunteerConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
@@ -30,20 +31,24 @@ const SHARED_ACCOMODATION_PREFERENCES = [
   { label: 'Female Only', value: 'female only' },
 ];
 
-const SKILLS_EXAMPLES = [
-  'javascript',
-  'woodworking',
-  'farming',
-  'cooking',
-  'gardening',
-  'plumbing',
-  'carpentry',
-];
-
-const SettingsPage = () => {
+const SettingsPage = ({
+  volunteerConfig,
+}: {
+  volunteerConfig: VolunteerConfig;
+}) => {
   const { APP_NAME } = useConfig();
 
+  const skillsOptions =
+    (volunteerConfig?.skills && volunteerConfig?.skills.split(',')) || [];
+  const dietOptions =
+    (volunteerConfig?.diet && volunteerConfig?.diet?.split(',')) || [];
+
   const { user: initialUser, isAuthenticated, refetchUser } = useAuth();
+
+  const initialDiet = Array.isArray(initialUser?.preferences?.diet)
+    ? initialUser?.preferences?.diet
+    : initialUser?.preferences?.diet?.split(',') || [];
+
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(initialUser);
   const [updatePhone, toggleUpdatePhone] = useState<boolean | null>(null);
@@ -309,13 +314,13 @@ const SettingsPage = () => {
         >
           🔰 Recommended
         </Heading>
-        <Input
-          label="Dietary Preferences"
-          placeholder="Vegetarian, Vegan, Gluten Free, etc."
-          onChange={saveUserData('diet') as any}
-          hasSaved={hasSaved}
-          value={user?.preferences?.diet}
-          isInstantSave={true}
+
+        <MultiSelect
+          label="Dietary Preferences?"
+          values={initialDiet}
+          onChange={saveUserData('diet')}
+          options={dietOptions}
+          placeholder="Pick or create yours"
         />
 
         {APP_NAME && APP_NAME.toLowerCase() !== 'moos' && (
@@ -342,7 +347,7 @@ const SettingsPage = () => {
           label="What skills do you have?"
           values={user?.preferences?.skills}
           onChange={saveUserData('skills')}
-          options={SKILLS_EXAMPLES}
+          options={skillsOptions}
           placeholder="Pick or create yours"
         />
         <Heading
@@ -398,16 +403,23 @@ const SettingsPage = () => {
 
 SettingsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
+    const [volunteerConfigRes, messages] = await Promise.all([
+      api.get('/config/volunteering').catch(() => {
+        return null;
+      }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
+
+    const volunteerConfig = volunteerConfigRes?.data?.results.value;
+
     return {
+      volunteerConfig,
       messages,
     };
   } catch (err: unknown) {
     return {
       messages: null,
+      volunteerConfig: null,
     };
   }
 };

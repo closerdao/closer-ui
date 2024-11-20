@@ -76,7 +76,6 @@ const TicketOptions: FC<Props> = ({
   items,
   selectTicketOption,
   selectedTicketOption,
-  volunteer,
   discountCode,
   setDiscountCode,
   eventId,
@@ -89,32 +88,20 @@ const TicketOptions: FC<Props> = ({
         <span>{t('bookings_dates_step_tickets_title')}</span>
       </HeadingRow>
       <div className="ticket-options my-4 flex flex-row flex-wrap">
-        {volunteer ? (
-          <Ticket
-            key={volunteer.name}
-            name={volunteer.name}
-            isVolunteer={true}
-            currency={CloserCurrencies.EUR}
-            available={20}
-            selectTicketOption={selectTicketOption}
-            selectedTicketOption={selectedTicketOption}
-          />
-        ) : (
-          items?.map(
-            ({ name, price, currency, disclaimer, available, isDayTicket }) => (
-              <Ticket
-                key={name}
-                name={name}
-                price={price}
-                disclaimer={disclaimer}
-                currency={currency}
-                available={available}
-                isDayTicket={isDayTicket}
-                selectTicketOption={selectTicketOption}
-                selectedTicketOption={selectedTicketOption}
-              />
-            ),
-          )
+        {items?.map(
+          ({ name, price, currency, disclaimer, available, isDayTicket }) => (
+            <Ticket
+              key={name}
+              name={name}
+              price={price}
+              disclaimer={disclaimer}
+              currency={currency}
+              available={available}
+              isDayTicket={isDayTicket}
+              selectTicketOption={selectTicketOption}
+              selectedTicketOption={selectedTicketOption}
+            />
+          ),
         )}
       </div>
       <DiscountCode
