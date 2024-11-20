@@ -45,9 +45,10 @@ const VolunteerOrResidenceApplication = ({
     skills: initialSkills,
     diet: initialDiet,
     projectId: normalizeProjectId(router.query.projectId),
+    // suggestions: '',
   };
   const [volunteerData, setVolunteerData] =
-    useState<Record<string, string | string[]>>(initialVolunteerData);
+    useState<Record<string, string | string[] | undefined>>(initialVolunteerData);
   const [loading, setLoading] = useState(false);
 
   const updateVolunteerData = (key: string, value: any, remove = false) => {
@@ -70,26 +71,26 @@ const VolunteerOrResidenceApplication = ({
 
   const handleNext = async () => {
     const params = new URLSearchParams({
-      skills: Array.isArray(volunteerData.skills)
+      skills: (Array.isArray(volunteerData.skills)
         ? volunteerData.skills.join(',')
-        : volunteerData.skills,
-      diet: Array.isArray(volunteerData.diet)
+        : volunteerData.skills) || '',
+      diet: (Array.isArray(volunteerData.diet)
         ? volunteerData.diet.join(',')
-        : volunteerData.diet,
-      suggestions: volunteerData.suggestions as string,
+        : volunteerData.diet) || '',
+      suggestions: volunteerData.suggestions as string || '',
       bookingType: type,
-      ...(volunteerData.projectId.length > 0 && {
+      ...(volunteerData?.projectId && volunteerData.projectId.length > 0 && {
         projectId: Array.isArray(volunteerData.projectId)
           ? volunteerData.projectId.join(',')
           : volunteerData.projectId,
       }),
-    }).toString();
+    } as Record<string, string>);
 
     const updatedUser = {
       ...user,
       preferences: {
-        skills: Array.from(new Set([...volunteerData.skills])),
-        diet: Array.from(new Set([...volunteerData.diet])),
+        skills: Array.isArray(volunteerData.skills) ? [...new Set(volunteerData.skills)] : [],
+        diet: Array.isArray(volunteerData.diet) ? [...new Set(volunteerData.diet)] : [],
       },
     };
 
@@ -144,7 +145,7 @@ const VolunteerOrResidenceApplication = ({
                         !e.target.checked,
                       );
                     }}
-                    isChecked={volunteerData.projectId.includes(project._id)}
+                    isChecked={volunteerData.projectId?.includes(project._id)}
                   >
                     {project.name}
                   </Checkbox>

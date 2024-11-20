@@ -24,7 +24,7 @@ const EditProject = ({ project, volunteerConfig }: Props) => {
 
   const skillsDynamicField = {
     name: 'skills',
-    options: volunteerConfig?.skills.split(','),
+    options: volunteerConfig?.skills?.split(',') ?? [],
   };
 
   if (!hasStewardRole) return <Page401 />;
