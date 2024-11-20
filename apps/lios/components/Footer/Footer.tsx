@@ -9,7 +9,7 @@ export const Footer: FC = () => {
   const { INSTAGRAM_URL, FACEBOOK_URL } = useConfig() || {};
 
   return (
-    <footer className="w-full mt-16 mx-auto text-center max-w-prose">
+    <footer className="w-full mt-8 mx-auto text-center max-w-prose">
       <div className="p-6 text-gray-700 italic">
         <p>
           Platform developed by <a href="https://closer.earth">Closer</a>.

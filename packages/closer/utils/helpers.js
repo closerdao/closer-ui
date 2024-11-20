@@ -289,7 +289,8 @@ export const getAccommodationCost = (
 
 export const getVatInfo = (total, vatRate) => {
   if (vatRate) {
-    return `${priceFormat(total?.val * Number(vatRate), total?.cur)}
+    const vatAmount = total?.val * Number(vatRate) / (1 + Number(vatRate) );
+    return `${priceFormat(vatAmount, total?.cur)}
     (${Number(vatRate) * 100}%)`;
   }
   return '';
