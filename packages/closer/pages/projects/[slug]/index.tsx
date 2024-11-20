@@ -4,7 +4,7 @@ import ProjectView from '../../../components/ProjectView';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { Project } from '../../../types/api';
+import { Project, VolunteerConfig } from '../../../types/api';
 import api from '../../../utils/api';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import NotFoundPage from '../../not-found';
@@ -12,9 +12,10 @@ import NotFoundPage from '../../not-found';
 interface Props {
   project: Project;
   descriptionText?: string;
+  volunteerConfig?: VolunteerConfig;
 }
 
-const ProjectPage = ({ project, descriptionText }: Props) => {
+const ProjectPage = ({ project, descriptionText, volunteerConfig }: Props) => {
   const t = useTranslations();
   const { photo, name } = project || {};
 
@@ -28,31 +29,29 @@ const ProjectPage = ({ project, descriptionText }: Props) => {
         title={name}
         description={descriptionText || ''}
       />
-      <ProjectView project={project} />
+      <ProjectView
+        project={project}
+        timeFrame={volunteerConfig?.residenceTimeFrame || ''}
+      />
     </>
   );
 };
 
 ProjectPage.getInitialProps = async (context: NextPageContext) => {
-  const { convert } = require('html-to-text');
   try {
     const id = context.query.slug;
-    const [projectResponse, messages] = await Promise.all([
-      api.get(`/project/${id}`),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const [projectResponse, volunteerConfigResponse, messages] =
+      await Promise.all([
+        api.get(`/project/${id}`),
+        api.get('/config/volunteering'),
+        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      ]);
     const project = projectResponse?.data?.results;
-
-    const options = {
-      baseElements: { selectors: ['p', 'h2', 'span'] },
-    };
-    const descriptionText = convert(project.description, options)
-      .trim()
-      .slice(0, 100);
+    const volunteerConfig = volunteerConfigResponse?.data?.results?.value;
 
     return {
       project,
-      descriptionText,
+      volunteerConfig,
       messages,
     };
   } catch (error) {
@@ -61,6 +60,7 @@ ProjectPage.getInitialProps = async (context: NextPageContext) => {
       project: null,
       descriptionText: null,
       messages: null,
+      volunteerConfig: null,
     };
   }
 };

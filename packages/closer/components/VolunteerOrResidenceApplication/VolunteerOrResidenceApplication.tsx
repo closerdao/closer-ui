@@ -8,30 +8,47 @@ import HeadingRow from '../../components/ui/HeadingRow';
 
 import { useTranslations } from 'next-intl';
 
-import { VolunteerConfig } from '../../types';
-
-const DIET_OPTIONS = [
-  'Vegan',
-  'Vegetarian',
-  'Non-Vegetarian',
-  'Gluten-free',
-  'Diary-free',
-];
+import { useAuth } from '../../contexts/auth';
+import { usePlatform } from '../../contexts/platform';
+import { Project, VolunteerConfig } from '../../types';
+import MultiSelect from '../ui/Select/MultiSelect';
 
 interface Props {
   volunteerConfig: VolunteerConfig;
   type: 'volunteer' | 'residence';
+  projects?: Project[];
 }
-const VolunteerOrResidenceApplication = ({ volunteerConfig, type }: Props) => {
+
+const normalizeProjectId = (
+  projectId: string | string[] | undefined,
+): string[] => {
+  if (!projectId) return [];
+  return Array.isArray(projectId) ? projectId : [projectId];
+};
+
+const VolunteerOrResidenceApplication = ({
+  volunteerConfig,
+  type,
+  projects,
+}: Props) => {
   const t = useTranslations();
-
   const router = useRouter();
+  const { user } = useAuth();
+  const { platform } = usePlatform() as any;
 
-  const [volunteerData, setVolunteerData] = useState<
-    Record<string, string | string[]>
-  >({});
-  const [skillsInputValue, setSkillsInputValue] = useState('');
-  const [dietInputValue, setDietInputValue] = useState('');
+  const initialDiet = Array.isArray(user?.preferences?.diet)
+    ? user?.preferences?.diet
+    : user?.preferences?.diet?.split(',') || [];
+  const initialSkills = user?.preferences?.skills || [];
+
+  const initialVolunteerData = {
+    skills: initialSkills,
+    diet: initialDiet,
+    projectId: normalizeProjectId(router.query.projectId),
+  };
+  const [volunteerData, setVolunteerData] =
+    useState<Record<string, string | string[]>>(initialVolunteerData);
+  const [loading, setLoading] = useState(false);
 
   const updateVolunteerData = (key: string, value: any, remove = false) => {
     if (key === 'suggestions') {
@@ -61,9 +78,30 @@ const VolunteerOrResidenceApplication = ({ volunteerConfig, type }: Props) => {
         : volunteerData.diet,
       suggestions: volunteerData.suggestions as string,
       bookingType: type,
+      ...(volunteerData.projectId.length > 0 && {
+        projectId: Array.isArray(volunteerData.projectId)
+          ? volunteerData.projectId.join(',')
+          : volunteerData.projectId,
+      }),
     }).toString();
 
-    router.push(`/bookings/create/dates?${params}`);
+    const updatedUser = {
+      ...user,
+      preferences: {
+        skills: Array.from(new Set([...volunteerData.skills])),
+        diet: Array.from(new Set([...volunteerData.diet])),
+      },
+    };
+
+    try {
+      setLoading(true);
+      await platform.user.patch(user?._id, updatedUser);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+      router.push(`/bookings/create/dates?${params}`);
+    }
   };
 
   return (
@@ -73,46 +111,48 @@ const VolunteerOrResidenceApplication = ({ volunteerConfig, type }: Props) => {
         <div className="flex flex-col  gap-6 mt-3 ">
           <p> {t('projects_skills_and_qualifications_intro')}</p>
 
-          <div className="flex flex-col  w-full">
-            {volunteerConfig?.skills &&
-              volunteerConfig?.skills &&
-              volunteerConfig?.skills.split(',').map((skill) => (
-                <div key={skill}>
-                  <Checkbox
-                    id={skill}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                      updateVolunteerData('skills', skill, !e.target.checked);
-                    }}
-                    className="mb-4"
-                  >
-                    {skill}
-                  </Checkbox>
-                </div>
-              ))}
-          </div>
-
-          <div className="flex flex-col  w-full">
-            <Input
-              label={t('projects_other_label')}
-              type="text"
-              value={skillsInputValue}
-              onChange={(e) => {
-                const newValue = e.target.value;
-                setSkillsInputValue(newValue);
-                setVolunteerData((prevData) => ({
-                  ...prevData,
-                  skills: [
-                    ...((prevData.skills as string[]) || []).filter(
-                      (skill) => skill !== skillsInputValue,
-                    ),
-                    newValue,
-                  ].filter(Boolean),
-                }));
-              }}
-            />
-          </div>
+          <MultiSelect
+            values={volunteerData.skills as string[]}
+            onChange={(newSkills: string[]) => {
+              setVolunteerData((prevData) => ({
+                ...prevData,
+                skills: newSkills.filter(Boolean),
+              }));
+            }}
+            options={volunteerConfig?.skills?.split(',') || []}
+            placeholder="Pick or create yours"
+          />
         </div>
       </section>
+
+      {type === 'residence' && (
+        <section>
+          <HeadingRow>{t('projects_build_title')}</HeadingRow>
+          <div className="flex flex-col  gap-6 mt-3 ">
+            <p> {t('projects_build_intro')}</p>
+
+            <div>
+              {projects &&
+                projects.map((project) => (
+                  <Checkbox
+                    key={project._id}
+                    id={project.name}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                      updateVolunteerData(
+                        'projectId',
+                        project._id,
+                        !e.target.checked,
+                      );
+                    }}
+                    isChecked={volunteerData.projectId.includes(project._id)}
+                  >
+                    {project.name}
+                  </Checkbox>
+                ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section>
         <HeadingRow>{t('projects_suggestions_title')}</HeadingRow>
@@ -136,43 +176,20 @@ const VolunteerOrResidenceApplication = ({ volunteerConfig, type }: Props) => {
         <div className="flex flex-col  gap-6 mt-3 ">
           <p> {t('projects_food_intro')}</p>
 
-          <div>
-            {DIET_OPTIONS.map((option) => (
-              <Checkbox
-                key={option}
-                id={option}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                  updateVolunteerData('diet', option, !e.target.checked);
-                }}
-              >
-                {option}
-              </Checkbox>
-            ))}
-          </div>
-
-          <div className="flex flex-col  w-full">
-            <Input
-              label={t('projects_other_label')}
-              type="text"
-              value={dietInputValue}
-              onChange={(e) => {
-                const newValue = e.target.value;
-                setDietInputValue(newValue);
-                setVolunteerData((prevData) => ({
-                  ...prevData,
-                  diet: [
-                    ...((prevData.diet as string[]) || []).filter(
-                      (diet) => diet !== dietInputValue,
-                    ),
-                    newValue,
-                  ].filter(Boolean),
-                }));
-              }}
-            />
-          </div>
+          <MultiSelect
+            values={volunteerData.diet as string[]}
+            onChange={(newDiet: string[]) => {
+              setVolunteerData((prevData) => ({
+                ...prevData,
+                diet: newDiet,
+              }));
+            }}
+            options={volunteerConfig?.diet?.split(',') || []}
+            placeholder="Pick or create yours"
+          />
         </div>
       </section>
-      <Button className="booking-btn" onClick={handleNext}>
+      <Button className="booking-btn" onClick={handleNext} isEnabled={!loading}>
         {t('token_sale_button_continue')}
       </Button>
     </main>

@@ -81,6 +81,7 @@ const Summary = ({
   const [hasComplied, setCompliance] = useState(false);
   const [isMember, setIsMember] = useState(false);
   const [updatedBooking, setUpdatedBooking] = useState<Booking | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const onComply = (isComplete: boolean) => setCompliance(isComplete);
 
@@ -211,6 +212,7 @@ const Summary = ({
   };
 
   const handleNext = async () => {
+    setLoading(true);
     setHandleNextError(null);
     if (booking?.status === 'confirmed') {
       return router.push(`/bookings/${booking?._id}/checkout`);
@@ -228,6 +230,8 @@ const Summary = ({
       }
     } catch (err: any) {
       setHandleNextError(err.response?.data?.error || err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -287,7 +291,7 @@ const Summary = ({
                 ? Math.ceil(booking.adults / (listing?.beds || 1))
                 : booking.adults
             }
-            isVolunteerOrResidency={Boolean(volunteerInfo)}
+            isVolunteer={volunteerInfo?.bookingType === 'volunteer'}
           />
           <SummaryCosts
             utilityFiat={utilityFiat}
@@ -310,7 +314,6 @@ const Summary = ({
               (listing && listing?.fiatPrice?.val * booking?.adults) ||
               undefined
             }
-            isVolunteerOrResidency={Boolean(volunteerInfo)}
             priceDuration={listing?.priceDuration}
             vatRate={vatRate}
           />
@@ -319,7 +322,7 @@ const Summary = ({
             <>
               <Conditions setComply={onComply} visitorsGuide={VISITORS_GUIDE} />
               <Button
-                isEnabled={hasComplied}
+                isEnabled={hasComplied && !loading}
                 className="booking-btn"
                 onClick={handleNext}
               >

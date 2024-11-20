@@ -81,6 +81,7 @@ const DatesSelector = ({
     diet,
     suggestions,
     bookingType,
+    projectId,
   } = router.query || {};
 
   const isHourlyBooking = false;
@@ -147,7 +148,12 @@ const DatesSelector = ({
   const hasValidDates =
     Boolean(start && end) || Boolean(savedStartDate && savedEndDate);
   const isGeneralCase =
-    !eventId && !volunteerId && hasValidDates && !bookingError;
+    !eventId &&
+    !volunteerId &&
+    bookingType !== 'volunteer' &&
+    bookingType !== 'residence' &&
+    hasValidDates &&
+    !bookingError;
   const startDate = dayjs(start).startOf('day');
   const endDate = dayjs(end).startOf('day');
   const diffInDays = endDate.diff(startDate, 'day');
@@ -161,12 +167,14 @@ const DatesSelector = ({
   const isMinDurationMatched = Boolean(
     (bookingConfig && diffInDays >= bookingConfig?.minDuration) || eventId,
   );
+
   const canProceed = !!(
     ((hasEventIdAndValidTicket && hasValidDates) ||
-      ((isResidenceApplication || isVolunteerApplication) && hasValidDates) ||
+      ((isResidenceApplication || isVolunteerApplication) &&
+        hasValidDates &&
+        (isMinVolunteeringStayMatched || isMinResidenceStayMatched)) ||
       isGeneralCase) &&
-    isMinDurationMatched &&
-    (isMinVolunteeringStayMatched || isMinResidenceStayMatched)
+    isMinDurationMatched
   );
 
   const isTokenPaymentSelected = currency === CURRENCIES[1];
@@ -231,6 +239,7 @@ const DatesSelector = ({
       ...((isVolunteerApplication || isResidenceApplication) && {
         skills: skills as string,
       }),
+      ...(projectId && { projectId: projectId as string }),
       ...((isVolunteerApplication || isResidenceApplication) && {
         diet: diet as string,
       }),
@@ -259,15 +268,15 @@ const DatesSelector = ({
         pets: String(pets),
         currency,
         ...(eventId && { eventId: eventId as string }),
-        ...(volunteerId && { volunteerId: volunteerId as string }),
         ticketOption: selectedTicketOption?.name,
         discountCode: discountCode,
         doesNeedPickup: String(doesNeedPickup),
         doesNeedSeparateBeds: String(doesNeedSeparateBeds),
         ...(skills && { skills: skills as string }),
         ...(diet && { diet: diet as string }),
+        ...(projectId && { projectId: projectId as string }),
         ...(suggestions && { suggestions: suggestions as string }),
-        bookingType: bookingType as string,
+        bookingType: (bookingType as string) || '',
       };
 
       if (selectedTicketOption?.isDayTicket) {
@@ -293,6 +302,8 @@ const DatesSelector = ({
           doesNeedPickup,
           doesNeedSeparateBeds,
           isHourlyBooking,
+          isResidenceApplication,
+          isVolunteerApplication,
         });
         router.push(`/bookings/${newBooking._id}/questions`);
       } else {
@@ -444,7 +455,7 @@ DatesSelector.getInitialProps = async (
 ): Promise<Props> => {
   try {
     const { query } = context;
-    const { eventId, volunteerId } = query;
+    const { eventId, volunteerId, bookingType } = query;
 
     const [bookingConfigRes, volunteerConfigRes, messages] = await Promise.all([
       api.get('/config/booking').catch(() => null),
@@ -467,7 +478,12 @@ DatesSelector.getInitialProps = async (
         messages,
       };
     }
-    if (!eventId && !volunteerId) {
+    if (
+      !eventId &&
+      !volunteerId &&
+      bookingType !== 'volunteer' &&
+      bookingType !== 'residence'
+    ) {
       const res = await api
         .get(
           `/event?&where=${JSON.stringify({

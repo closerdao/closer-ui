@@ -260,6 +260,7 @@
   "navigation_events": "Events",
   "navigation_member": "Member",
   "navigation_volunteer": "Volunteer",
+  "navigation_residence": "Residency",
   "navigation_subscriptions": "Subscriptions",
   "navigation_buy_token": "Buy token",
   "navigation_resources": "Resources",
@@ -732,6 +733,7 @@
   "volunteers_page_intro_text": "Experience community living by getting your hands dirty! Be an active part of the community during your stay and contribute your skills or bring something completely new and fresh. Choose an option below that resonates with you.",
   "volunteers_page_empty": "There are no volunteer opportunities at the moment.",
   "button_edit_opportunity": "Edit opportunity",
+  "button_edit_project": "Edit project",
   "event_description_title": "Event description",
   "event_view_tickets_button": "View tickets",
   "event_organiser": "Organizer:",
@@ -1105,6 +1107,9 @@
   "config_label_volunteeringMinStay": "Minimum volunteering stay (days)",
   "config_label_skills": "Skills & qualifications (comma delimited)",
   "config_label_residenceMinStay": "Minimum residence stay (days)",
+  "config_label_residenceTimeFrame": "Residence time frame",
+  "config_label_diet": "Diet (comma delimited options)",
+  "config_label_shouldResidentsPayUtilities": "Should residents pay utilities",
 
 
   "config_features_heading": "Platform features",
@@ -1384,14 +1389,18 @@
   "projects_go_to_document": "Go to document",
   "projects_application_title": "👷🏽‍♀️ Application",
   "projects_skills_and_qualifications_title": "💪🏽 Skills & Qualifications",
+
   "projects_skills_and_qualifications_intro": "What interests, qualifications or gifts you have?",
   "projects_other_label": "Other:",
   "projects_suggestions_title": "💪🏽 Suggestions & Proposals:",
   "projects_suggestions_intro": "Do you have other suggestions/proposals for projects? Categories & Examples: activity spaces, social areas, playgrounds, tree houses, furniture, outdoor showers, toilets, gyms, buildings, tiny houses, domes, greenhouses, mushroom farm, yoga studio, music studio, co-living, art, smart systems (e.g. water filtration, biopools, renewable energy, kitchen & food flows, composting)...",
   "projects_suggestions_label": "Ideas, suggestions, proposals?",
   "projects_food_title": "🥑 Food",
+  "projects_build_title": "🧱 Build projects",
+  "projects_build_intro": "Which of the ongoing projects can you (/would you like to) contribute to?",
   "projects_food_intro": "Any dietary needs / preferences?",
   "projects_volunteer_application_title": "👷🏽‍♀️ Volunteer application",
+  "projects_residence_application_title": "👷🏽‍♀️ Residence application",
   "bookings_dates_min_residence_stay_error": "Minimum residence stay is {var} days ",
   
   "":""

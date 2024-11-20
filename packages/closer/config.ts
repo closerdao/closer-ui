@@ -236,10 +236,22 @@ export const configDescription: ConfigType[] = [
         type: 'number',
         default: 30,
       },
+      residenceTimeFrame: {
+        type: 'text',
+        default: 'October 2024 - December 2025',
+      },
       skills: {
         type: 'text',
         default:
-          '',
+          'Gardening & Permaculture, Carpentry & Construction, Hospitality & Space Care, Cooking, Photography',
+      },
+      diet: {
+        type: 'text',
+        default: 'Vegetarian, Vegan, Gluten-free, Dairy-free, Non-Vegetarian',
+      },
+      shouldResidentsPayUtilities: {
+        type: 'boolean',
+        default: true,
       },
     },
   },

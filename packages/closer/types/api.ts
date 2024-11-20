@@ -33,6 +33,7 @@ export type Project = VolunteerOpportunity & {
   skills?: string[];
   estimate?: string;
   manager?: User;
+  descriptionText?: string;
 };
 
 export type Question = {
@@ -153,7 +154,9 @@ export type VolunteerConfig = {
   enabled: boolean;
   volunteeringMinStay: number;
   residenceMinStay: number;
-  skills: string;
+  skills?: string;
+  residenceTimeFrame?: string;
+  diet?: string;
 };
 
 export type FundraisingConfig = {

@@ -12,7 +12,7 @@ import { useTranslations } from 'next-intl';
 
 import { BOOKING_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
-import { GeneralConfig, VolunteerConfig } from '../../types';
+import { GeneralConfig, Project, VolunteerConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
@@ -25,21 +25,22 @@ interface Props {
   volunteerConfig: VolunteerConfig | null;
   error: string | null;
   generalConfig: GeneralConfig | null;
+  projects: Project[];
 }
 
 const ProjectApplicationPage = ({
   volunteerConfig,
   error,
   generalConfig,
+  projects,
 }: Props) => {
   const PLATFORM_NAME = generalConfig?.platformName || '';
-
   const t = useTranslations();
 
   const isVolunteerEnabled = volunteerConfig?.enabled;
 
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const goBack = () => {
     router.push('/projects');
@@ -74,6 +75,7 @@ const ProjectApplicationPage = ({
         <VolunteerOrResidenceApplication
           volunteerConfig={volunteerConfig}
           type="residence"
+          projects={projects}
         />
       </div>
     </>
@@ -82,23 +84,28 @@ const ProjectApplicationPage = ({
 
 ProjectApplicationPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalConfigRes, volunteerConfigRes, messages] = await Promise.all([
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      api.get('/config/volunteering').catch(() => {
-        return null;
-      }),
-
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const [generalConfigRes, volunteerConfigRes, projectsRes, messages] =
+      await Promise.all([
+        api.get('/config/general').catch(() => {
+          return null;
+        }),
+        api.get('/config/volunteering').catch(() => {
+          return null;
+        }),
+        api.get('/project').catch(() => {
+          return null;
+        }),
+        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      ]);
 
     const volunteerConfig = volunteerConfigRes?.data?.results?.value || null;
     const generalConfig = generalConfigRes?.data?.results?.value || null;
+    const projects = projectsRes?.data?.results || [];
 
     return {
       volunteerConfig,
       generalConfig,
+      projects,
       messages,
     };
   } catch (err) {
@@ -107,6 +114,7 @@ ProjectApplicationPage.getInitialProps = async (context: NextPageContext) => {
       error: parseMessageFromError(err),
       volunteerConfig: null,
       generalConfig: null,
+      projects: [],
       messages: null,
     };
   }

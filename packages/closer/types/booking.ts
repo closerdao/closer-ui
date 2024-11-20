@@ -24,6 +24,7 @@ export interface BaseBookingParams {
   foodOption?: string | undefined;
   skills?: string | undefined;
   diet?: string | undefined;
+  projectId?: string | undefined;
   suggestions?: string | undefined;
   bookingType?: 'volunteer' | 'residence' | undefined;
 }
@@ -58,9 +59,10 @@ export type Listing = {
 export type VolunteerInfo = {
   skills?: string[];
   diet?: string[];
+  projectId?: string[];
   suggestions?: string;
   bookingType?: 'volunteer' | 'residence' | undefined;
-}
+};
 
 export type Booking = {
   foodOption?: string;

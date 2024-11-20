@@ -7,6 +7,7 @@ import { Heading, LinkButton } from 'closer/components/ui';
 
 import { GeneralConfig, Project, api, useAuth } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
+import { VolunteerConfig } from 'closer/types/api';
 import { parseMessageFromError } from 'closer/utils/common';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
@@ -16,9 +17,15 @@ interface Props {
   generalConfig: GeneralConfig | null;
   error: string | null;
   projects: Project[] | null;
+  volunteerConfig: VolunteerConfig | null;
 }
 
-const ProjectsPage = ({ generalConfig, error, projects }: Props) => {
+const ProjectsPage = ({
+  generalConfig,
+  error,
+  projects,
+  volunteerConfig,
+}: Props) => {
   const t = useTranslations();
 
   const { user } = useAuth();
@@ -65,9 +72,9 @@ const ProjectsPage = ({ generalConfig, error, projects }: Props) => {
                     width={20}
                     height={20}
                   />
-                  <label className="text-sm uppercase font-bold flex gap-1">
-                    October 2024 - December 2025
-                  </label>
+                  <p className="text-sm uppercase font-bold flex gap-1">
+                    {volunteerConfig?.residenceTimeFrame}
+                  </p>
                 </div>
               </div>
             </div>
@@ -78,7 +85,7 @@ const ProjectsPage = ({ generalConfig, error, projects }: Props) => {
           <div className="max-w-4xl w-full">
             <div className="flex flex-col sm:flex-row">
               <div className="flex items-start justify-between gap-6 w-full">
-                <div className="flex flex-col gap-6 w-full">
+                <div className="flex flex-col gap-6 w-full ">
                   <div className="flex flex-col sm:flex-row justify-between gap-4 items-center pt-4">
                     <Heading level={1} className="md:text-4xl  font-bold">
                       Builders Residency Open Call
@@ -154,7 +161,7 @@ const ProjectsPage = ({ generalConfig, error, projects }: Props) => {
 
                     <p>
                       <strong className="uppercase">Time frame: </strong>{' '}
-                      Starting October 2024 - December 2025 🗓.
+                      Starting {volunteerConfig?.residenceTimeFrame} 🗓.
                     </p>
                     <p>
                       We are ideally looking for people to join us from October
@@ -173,14 +180,18 @@ const ProjectsPage = ({ generalConfig, error, projects }: Props) => {
 };
 
 ProjectsPage.getInitialProps = async (context: NextPageContext) => {
+  const { convert } = require('html-to-text');
+
   try {
-    const [messages, generalRes, projectsRes] = await Promise.all([
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      api.get('/config/general').catch(() => null),
-      api.get('/project').catch(() => {
-        return null;
-      }),
-    ]);
+    const [messages, generalRes, projectsRes, volunteerConfigRes] =
+      await Promise.all([
+        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+        api.get('/config/general').catch(() => null),
+        api.get('/project').catch(() => {
+          return null;
+        }),
+        api.get('/config/volunteering').catch(() => null),
+      ]);
     const projectManagerIds = projectsRes?.data?.results?.map(
       (project: Project) => project.createdBy,
     );
@@ -192,19 +203,23 @@ ProjectsPage.getInitialProps = async (context: NextPageContext) => {
     const projectManagers = projectManagersRes.map((res) => res?.data?.results);
 
     const generalConfig = generalRes?.data?.results?.value;
+    const volunteerConfig = volunteerConfigRes?.data?.results?.value;
     const projects =
       projectsRes?.data?.results.map((project: Project, index: number) => ({
         ...project,
+        descriptionText:
+          convert(project.description).trim().slice(0, 120) + '...',
         manager: projectManagers[index],
       })) || null;
 
-    return { messages, generalConfig, projects };
+    return { messages, generalConfig, projects, volunteerConfig };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
       messages: null,
       projects: null,
+      volunteerConfig: null,
     };
   }
 };

@@ -722,7 +722,7 @@ const models = {
       label: 'Description',
       public: true,
       editable: true,
-      type: 'text',
+      type: 'longtext',
     },
     {
       name: 'start',
@@ -764,14 +764,14 @@ const models = {
     },
     {
       name: 'documentUrl',
-      label: 'Document',
+      label: 'Project document link',
       public: true,
       editable: true,
       type: 'text',
     },
     {
       name: 'estimate',
-      label: 'Estimate',
+      label: 'Estimate (project duration)',
       public: true,
       editable: true,
       type: 'text',

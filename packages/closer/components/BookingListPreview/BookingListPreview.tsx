@@ -60,7 +60,6 @@ const BookingListPreview = ({
     rentalFiat,
     utilityFiat,
     eventId,
-    volunteerId,
     eventFiat,
     doesNeedPickup,
     doesNeedSeparateBeds,
@@ -68,6 +67,8 @@ const BookingListPreview = ({
     adminBookingReason,
     roomOrBedNumbers,
     foodFiat,
+    volunteerInfo,
+    volunteerId,
   } = bookingMapItem.toJS();
 
   const router = useRouter();
@@ -98,7 +99,11 @@ const BookingListPreview = ({
     status !== 'checked-in' &&
     status !== 'checked-out';
 
-  const bookingType = getBookingType(eventId, volunteerId);
+  const bookingType = getBookingType(
+    eventId,
+    volunteerInfo?.bookingType,
+    volunteerId,
+  );
 
   const confirmBooking = async () => {
     await platform.bookings.confirm(_id);
@@ -250,7 +255,7 @@ const BookingListPreview = ({
 
       <div>
         <p className="card-feature">{t('booking_card_diet')}</p>
-        <p>{userInfo?.diet || '-'}</p>
+        <p>{userInfo?.diet?.toString() || '-'}</p>
       </div>
 
       <div>

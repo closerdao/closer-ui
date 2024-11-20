@@ -70,7 +70,8 @@ const FoodSelectionPage = ({
   const [isFood, setIsFood] = useState(true);
 
   const foodOption = getFoodOption({ eventId, event, foodOptions });
-  const foodPricePerNight = foodOption?.price;
+  const foodPricePerNight =
+    booking?.volunteerInfo?.bookingType === 'residence' ? 0 : foodOption?.price;
 
   useEffect(() => {
     if (booking?.status === 'pending' || booking?.status === 'paid') {

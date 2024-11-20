@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 
 import React, { useEffect, useState } from 'react';
 
@@ -29,6 +30,7 @@ import {
   GeneralConfig,
   Listing,
   PaymentConfig,
+  Project,
   UpdatedPrices,
   VolunteerOpportunity,
 } from '../../../types';
@@ -59,6 +61,7 @@ interface Props {
   generalConfig: GeneralConfig;
   paymentConfig: PaymentConfig | null;
   foodOptions: FoodOption[];
+  projects: Project[];
 }
 
 const BookingPage = ({
@@ -72,6 +75,7 @@ const BookingPage = ({
   listings,
   generalConfig,
   paymentConfig,
+  projects,
 }: Props) => {
   const t = useTranslations();
 
@@ -408,7 +412,37 @@ const BookingPage = ({
 
         {booking.volunteerInfo && (
           <section className="flex flex-col gap-4">
-            <HeadingRow>{t('projects_volunteer_application_title')}</HeadingRow>
+            {booking.volunteerInfo.bookingType === 'volunteer' ? (
+              <HeadingRow>
+                {t('projects_volunteer_application_title')}
+              </HeadingRow>
+            ) : (
+              <HeadingRow>
+                {t('projects_residence_application_title')}
+              </HeadingRow>
+            )}
+
+            {booking?.volunteerInfo?.projectId &&
+              booking?.volunteerInfo?.projectId?.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <Heading level={5}>{t('projects_build_title')}</Heading>
+                  {booking.volunteerInfo.projectId?.map((projectId) => (
+                    <p key={projectId}>
+                      <Link
+                        href={`/projects/${
+                          projects?.find((project) => project._id === projectId)
+                            ?.slug
+                        }`}
+                      >
+                        {
+                          projects?.find((project) => project._id === projectId)
+                            ?.name
+                        }
+                      </Link>
+                    </p>
+                  ))}
+                </div>
+              )}
 
             <Heading level={5}>
               {t('projects_skills_and_qualifications_title')}
@@ -429,7 +463,11 @@ const BookingPage = ({
               ))}
             </div>
             <Heading level={5}>{t('projects_suggestions_title')}</Heading>
-            <p>{booking.volunteerInfo.suggestions}</p>
+            <p>
+              {booking.volunteerInfo.suggestions === 'undefined'
+                ? 'No suggestions'
+                : booking.volunteerInfo.suggestions}
+            </p>
           </section>
         )}
 
@@ -444,7 +482,7 @@ const BookingPage = ({
             endDate={isSpaceHost ? updatedEndDate : bookingEnd}
             listingName={listing?.name}
             listingUrl={listing?.slug}
-            isVolunteerOrResidency={Boolean(volunteerInfo)}
+            isVolunteer={volunteerInfo?.bookingType === 'volunteer'}
             eventName={event?.name}
             volunteerName={volunteer?.name}
             ticketOption={ticketOption?.name}
@@ -477,7 +515,6 @@ const BookingPage = ({
               ticketOption?.price ? ticketOption.price * adults : undefined
             }
             accomodationDefaultCost={listing?.fiatPrice?.val * adults}
-            isVolunteerOrResidency={Boolean(volunteerInfo)}
             isNotPaid={isNotPaid}
             updatedAccomodationTotal={{
               val: updatedAccomodationTotal,
@@ -550,6 +587,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       generalConfigRes,
       paymentConfigRes,
       foodRes,
+      projectsRes,
       messages,
     ] = await Promise.all([
       api
@@ -584,6 +622,9 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       api.get('/food').catch(() => {
         return null;
       }),
+      api.get('/project').catch(() => {
+        return null;
+      }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const booking = bookingRes?.data?.results;
@@ -594,6 +635,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
     const paymentConfig = paymentConfigRes?.data?.results?.value;
 
     const foodOptions = foodRes?.data?.results;
+    const projects = projectsRes?.data?.results;
 
     const [optionalEvent, optionalListing, optionalVolunteer] =
       await Promise.all([
@@ -653,6 +695,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       messages,
       paymentConfig,
       foodOptions,
+      projects,
     };
   } catch (err: any) {
     return {
@@ -668,6 +711,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       messages: null,
       paymentConfig: null,
       foodOptions: null,
+      projects: null,
     };
   }
 };

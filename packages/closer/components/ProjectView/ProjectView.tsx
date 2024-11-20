@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 
 import { FC, useState } from 'react';
 
@@ -8,17 +9,20 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import { Project } from '../../types';
 import { cdn } from '../../utils/api';
+import { priceFormat } from '../../utils/helpers';
 import EventDescription from '../EventDescription';
 import EventPhoto from '../EventPhoto';
+import Tag from '../Tag';
 import UploadPhoto from '../UploadPhoto/UploadPhoto';
-import { Card, LinkButton } from '../ui';
+import { LinkButton } from '../ui';
 import Heading from '../ui/Heading';
 
 interface Props {
   project: Project;
+  timeFrame?: string;
 }
 
-const ProjectView: FC<Props> = ({ project }) => {
+const ProjectView: FC<Props> = ({ project, timeFrame }) => {
   const t = useTranslations();
 
   const {
@@ -27,6 +31,13 @@ const ProjectView: FC<Props> = ({ project }) => {
     photo: projectPhoto,
     start: startDate,
     end: endDate,
+    documentUrl,
+    budget,
+    reward,
+    estimate,
+    skills,
+    manager,
+    _id,
   } = project || {};
 
   const { user, isAuthenticated } = useAuth();
@@ -40,7 +51,6 @@ const ProjectView: FC<Props> = ({ project }) => {
   const duration = end.diff(start, 'hour', true);
   const isThisYear = dayjs().isSame(start, 'year');
   const dateFormat = isThisYear ? 'MMMM Do' : 'MMMM Do';
-  const isEnded = end.isBefore(dayjs());
 
   return (
     <div className="w-full flex items-center flex-col gap-4">
@@ -61,7 +71,7 @@ const ProjectView: FC<Props> = ({ project }) => {
                 size="small"
                 href={project.slug && `/projects/${project.slug}/edit`}
               >
-                {t('button_edit_opportunity')}
+                {t('button_edit_project')}
               </LinkButton>
 
               <UploadPhoto
@@ -87,17 +97,21 @@ const ProjectView: FC<Props> = ({ project }) => {
                   height={20}
                 />
                 <label className="text-sm uppercase font-bold flex gap-1">
-                  {start && dayjs(start).format(dateFormat)}
-                  {end &&
-                    Number(duration) > 24 &&
-                    ` - ${dayjs(end).format(dateFormat)}`}
-                  {end &&
-                    Number(duration) <= 24 &&
-                    ` - ${dayjs(end).format('HH:mm')}`}{' '}
-                  {end && end.isBefore(dayjs()) && (
-                    <p className="text-disabled">
-                      {t('project_opportunity_ended')}
-                    </p>
+                  {timeFrame ?? (
+                    <>
+                      {start && dayjs(start).format(dateFormat)}
+                      {end &&
+                        Number(duration) > 24 &&
+                        ` - ${dayjs(end).format(dateFormat)}`}
+                      {end &&
+                        Number(duration) <= 24 &&
+                        ` - ${dayjs(end).format('HH:mm')}`}{' '}
+                      {end && end.isBefore(dayjs()) && (
+                        <p className="text-disabled">
+                          {t('project_opportunity_ended')}
+                        </p>
+                      )}
+                    </>
                   )}
                 </label>
               </div>
@@ -109,29 +123,62 @@ const ProjectView: FC<Props> = ({ project }) => {
       <section className=" w-full flex justify-center min-h-[400px]">
         <div className="max-w-4xl w-full">
           <div className="flex flex-col sm:flex-row">
-            <div className="flex items-start justify-between gap-6 w-full">
-              <div className="flex flex-col gap-10 w-full sm:w-2/3 overflow-hidden">
-                <Heading className="md:text-4xl mt-4 font-bold">{name}</Heading>
-
-                {description && (
-                  <section className="">
-                    <EventDescription event={project} isVolunteer={true} />
-                  </section>
-                )}
-              </div>
-              <div className="h-auto fixed bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px]">
-                {!isEnded && (
-                  <Card className="bg-white border border-gray-100">
-                    <LinkButton
-                      href={`/bookings/create/dates?projectId=${
-                        project._id
-                      }&start=${start.format('YYYY-MM-DD')}&end=${end.format(
-                        'YYYY-MM-DD',
-                      )}`}
-                    >
+            <div className="flex items-start justify-between gap-6 w-full ">
+              <div className="flex flex-col gap-10 w-full overflow-hidden">
+                <div className=" w-full flex flex-col sm:flex-row justify-between gap-4 items-center pt-4">
+                  <Heading level={1} className="md:text-4xl  font-bold">
+                    {name}
+                  </Heading>
+                  <div className=" w-full sm:w-[250px]">
+                    <LinkButton href={`/projects/apply?projectId=${_id}`}>
                       {t('apply_submit_button')}
                     </LinkButton>
-                  </Card>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-6">
+                  <div className="flex flex-col gap-2 text-md">
+                    <div className="flex gap-2 flex-wrap pb-2">
+                      {skills &&
+                        skills.map((skill) => (
+                          <Tag key={skill} size="small" color="primary">
+                            {skill}
+                          </Tag>
+                        ))}
+                    </div>
+                    <p>
+                      {t('projects_reward')} {priceFormat(reward)}
+                    </p>
+                    <p>
+                      {t('projects_budget')} {priceFormat(budget)}
+                    </p>
+                    <p>
+                      {t('projects_estimate')} {estimate}
+                    </p>
+                    <p>
+                      {t('projects_managed_by')}{' '}
+                      <Link href={`/members/${manager?.slug}`}>
+                        {manager?.screenname}
+                      </Link>
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-4">
+                    <LinkButton
+                      size="small"
+                      className="w-fit"
+                      variant="secondary"
+                      href={documentUrl}
+                      target="_blank"
+                    >
+                      {t('projects_go_to_document')}
+                    </LinkButton>
+                  </div>
+                </div>
+
+                {description && (
+                  <section className="max-w-2xl">
+                    <EventDescription event={project} isVolunteer={true} />
+                  </section>
                 )}
               </div>
             </div>

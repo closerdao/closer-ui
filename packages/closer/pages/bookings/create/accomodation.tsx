@@ -56,6 +56,8 @@ const AccomodationSelector = ({
   diet,
   suggestions,
   bookingType,
+  projectId,
+  volunteerId,
 }: Props) => {
   const t = useTranslations();
   const router = useRouter();
@@ -65,6 +67,10 @@ const AccomodationSelector = ({
     (skills && Array.isArray(skills) ? skills : skills?.split(',')) || [];
   const parsedDiet =
     (diet && Array.isArray(diet) ? diet : diet?.split(',')) || [];
+  const parsedProjectId =
+    (projectId && Array.isArray(projectId)
+      ? projectId
+      : projectId?.split(',')) || [];
 
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -88,13 +94,14 @@ const AccomodationSelector = ({
       }
     });
 
-  const bookingCategory = getBookingType(eventId, bookingType);
+  const bookingCategory = getBookingType(eventId, bookingType, volunteerId);
 
   const bookListing = async (listingId: string) => {
     try {
       const volunteerInfo = {
         skills: parsedSkills,
         diet: parsedDiet,
+        projectId: parsedProjectId,
         suggestions,
         bookingType,
       };
@@ -231,8 +238,10 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       foodOption,
       skills,
       diet,
+      projectId,
       suggestions,
       bookingType,
+      volunteerId,
     }: BaseBookingParams = query || {};
     const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
     const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
@@ -288,8 +297,10 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       foodOption,
       skills,
       diet,
+      projectId,
       suggestions,
       bookingType,
+      volunteerId,
     };
   } catch (err: any) {
     console.log(err);

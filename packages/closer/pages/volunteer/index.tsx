@@ -39,17 +39,9 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
       </Head>
       <main className=" pb-24">
         <section className="w-full flex justify-center max-w-4xl mx-auto mb-4 relative">
-          {hasStewardRole && (
-            <LinkButton
-              href="/projects/create"
-              className="w-fit absolute bottom-6 right-6"
-            >
-              {t('projects_create_title')}
-            </LinkButton>
-          )}
           <Image
-            alt="Traditional Dream Factory Builders Residency"
-            src="/images/builders-l.png"
+            alt="Traditional Dream Factory Volunteers open call"
+            src="/images/tdf-volunteers-open-call.png"
             width={1344}
             height={600}
           />
@@ -66,7 +58,7 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
                     height={20}
                   />
                   <label className="text-sm uppercase font-bold flex gap-1">
-                    October 2024 - December 2025
+                    Any time
                   </label>
                 </div>
               </div>
@@ -89,7 +81,7 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
                       </LinkButton>
                     </div>
                   </div>
-                  <div className="flex flex-col gap-6">
+                  <div className="flex flex-col gap-6 max-w-2xl">
                     <p>
                       We are excited to extend an invitation to join us at the
                       Traditional Dream Factory, a regenerative farm and

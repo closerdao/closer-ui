@@ -23,19 +23,27 @@ const ProjectCard = ({ project, hasStewardRole }: Props) => {
       className="p-0 bg-white border border-gray-100 justify-start"
     >
       <div className="relative w-full h-[180px] border rounded-t-md overflow-hidden">
-        <Image
-          src={`${cdn}${project.photo}-post-md.jpg`}
-          alt={project.name}
-          fill
-          className="object-cover"
-        />
+        <Link className="hover:text-accent" href={`/projects/${project.slug}`}>
+          <Image
+            src={`${cdn}${project.photo}-post-md.jpg`}
+            alt={project.name}
+            fill
+            className="object-cover"
+          />
+        </Link>
       </div>
       <div className="relative px-4 pb-4 flex flex-col justify-between gap-4 h-[calc(100%-180px)]">
         <div className="space-y-2">
           <Heading level={3} className="uppercase">
-            {project.name}
+            <Link
+              className="hover:text-accent"
+              href={`/projects/${project.slug}`}
+            >
+              {project.name}
+            </Link>
           </Heading>
-          <p>{project.description}</p>
+
+          <p>{project?.descriptionText}</p>
         </div>
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-2 text-md">
