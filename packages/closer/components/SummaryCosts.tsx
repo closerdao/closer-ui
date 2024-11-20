@@ -34,6 +34,7 @@ interface Props {
   creditsPrice?: number;
   updatedRentalFiat?: Price<CloserCurrencies>;
   updatedRentalToken?: Price<CloserCurrencies>;
+  status?: string;
 }
 
 const SummaryCosts = ({
@@ -61,9 +62,8 @@ const SummaryCosts = ({
   creditsPrice,
   updatedRentalFiat,
   updatedRentalToken,
+  status,
 }: Props) => {
-
-  console.log('updatedFiatTotal======',updatedFiatTotal);
   const t = useTranslations();
   const { APP_NAME } = useConfig();
 
@@ -73,7 +73,7 @@ const SummaryCosts = ({
     rentalFiat,
   });
 
-  console.log('paymentType======',paymentType);
+  console.log('paymentType======', paymentType);
 
   const isPartialTokenPayment = Boolean(
     totalToken?.val && rentalFiat?.val && useTokens,
@@ -93,11 +93,14 @@ const SummaryCosts = ({
         <div className="flex justify-between items-center mt-3">
           <p>{t('bookings_checkout_event_cost')}</p>
           <div className="flex items-center gap-2">
-            {isEditMode && updatedEventTotal?.val !== eventCost?.val && (
-              <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
-                {t('bookings_updated_price')}: {priceFormat(updatedEventTotal)}
-              </div>
-            )}
+            {isEditMode &&
+              updatedEventTotal?.val !== eventCost?.val &&
+              status !== 'cancelled' && (
+                <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
+                  {t('bookings_updated_price')}:{' '}
+                  {priceFormat(updatedEventTotal)}
+                </div>
+              )}
             <p className="font-bold">
               {eventCost?.val !== 0 && eventDefaultCost !== eventCost?.val && (
                 <span className="line-through">
@@ -121,17 +124,17 @@ const SummaryCosts = ({
           <div className="flex justify-between items-center mt-3">
             <p>{t('bookings_summary_step_dates_accomodation_type')}</p>
             <div className="flex items-center gap-2">
-        
               {isEditMode &&
-                updatedAccomodationTotal?.val !== accomodationCost?.val && (
+                updatedAccomodationTotal?.val !== accomodationCost?.val &&
+                status !== 'cancelled' && (
                   <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
-                  {t('bookings_updated_price')}:{' '}
-                  <DisplayPrice
-                    paymentType={paymentType}
-                    isEditMode={false}
-                    rentalFiat={updatedRentalFiat}
-                    rentalToken={updatedRentalToken}
-                    totalFiat={updatedFiatTotal}
+                    {t('bookings_updated_price')}:{' '}
+                    <DisplayPrice
+                      paymentType={paymentType}
+                      isEditMode={false}
+                      rentalFiat={updatedRentalFiat}
+                      rentalToken={updatedRentalToken}
+                      totalFiat={updatedFiatTotal}
                     />
                     {/* {useCredits &&
                       priceFormat({
@@ -153,13 +156,13 @@ const SummaryCosts = ({
                 )}
 
               <div className="font-bold">
-              <DisplayPrice
-                    paymentType={paymentType}
-                    isEditMode={false}
-                    rentalFiat={rentalFiat}
-                    rentalToken={rentalToken}
-                    // totalFiat={fiatTotal}
-                    />
+                <DisplayPrice
+                  paymentType={paymentType}
+                  isEditMode={false}
+                  rentalFiat={rentalFiat}
+                  rentalToken={rentalToken}
+                  // totalFiat={fiatTotal}
+                />
                 {/* <>
 
                   {isFullTokenPayment && <>{priceFormat(accomodationCost)}</>}
@@ -206,6 +209,7 @@ const SummaryCosts = ({
                 <p> {t('bookings_summary_step_utility_total')}</p>
                 <div className="flex items-center gap-2">
                   {isEditMode &&
+                    status !== 'cancelled' &&
                     updatedUtilityTotal?.val !== utilityFiat?.val && (
                       <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
                         {t('bookings_updated_price')}:{' '}
@@ -235,12 +239,14 @@ const SummaryCosts = ({
               <div className="flex justify-between items-center mt-3">
                 <p> {t('bookings_summary_step_food_total')}</p>
                 <div className="flex items-center gap-2">
-                  {isEditMode && updatedFoodTotal?.val !== foodFiat?.val && (
-                    <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
-                      {t('bookings_updated_price')}:{' '}
-                      {priceFormat(updatedFoodTotal)}
-                    </div>
-                  )}
+                  {isEditMode &&
+                    updatedFoodTotal?.val !== foodFiat?.val &&
+                    status !== 'cancelled' && (
+                      <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
+                        {t('bookings_updated_price')}:{' '}
+                        {priceFormat(updatedFoodTotal)}
+                      </div>
+                    )}
                   <p className="font-bold">
                     {isFoodIncluded
                       ? priceFormat(foodFiat.val)
@@ -266,19 +272,20 @@ const SummaryCosts = ({
         <p>{t('bookings_total')}</p>
         <div className="flex items-center gap-2">
           {isEditMode &&
+            status !== 'cancelled' &&
             (updatedFiatTotal?.val !== totalFiat?.val ||
               updatedAccomodationTotal?.val !== accomodationCost?.val) && (
               <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
                 {t('bookings_updated_price')}:{' '}
                 {priceDuration === 'night' && (
-                <div>
-                  <DisplayPrice
+                  <div>
+                    <DisplayPrice
                       paymentType={paymentType}
-                    isEditMode={true}
-                    rentalFiat={updatedRentalFiat}
-                    rentalToken={updatedRentalToken}
-                    totalFiat={updatedFiatTotal}
-                    isTotalPrice={true}
+                      isEditMode={true}
+                      rentalFiat={updatedRentalFiat}
+                      rentalToken={updatedRentalToken}
+                      totalFiat={updatedFiatTotal}
+                      isTotalPrice={true}
                     />
                     {/* {useTokens && (
                       <div>

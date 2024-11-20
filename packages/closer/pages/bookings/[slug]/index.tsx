@@ -493,6 +493,7 @@ const BookingPage = ({
             updatedRentalToken={updatedPrices?.rentalToken}
             priceDuration={listing?.priceDuration}
             vatRate={vatRate}
+            status={status}
           />
 
           {isSpaceHost && booking?.charges && booking.charges.length > 0 && (

@@ -8,6 +8,7 @@ interface Props {
   rentalFiat?: Price<CloserCurrencies> | undefined;
   rentalToken?: Price<CloserCurrencies> | undefined;
   isTotalPrice?: boolean;
+  price?: Price<CloserCurrencies> | undefined;
 }
 
 const DisplayPrice = ({
@@ -17,6 +18,7 @@ const DisplayPrice = ({
   totalFiat,
     rentalToken,
   isTotalPrice,
+  price,
 }: Props) => {
   switch (paymentType) {
     case PaymentType.PARTIAL_CREDITS:
