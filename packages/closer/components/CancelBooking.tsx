@@ -93,9 +93,10 @@ const CancelBooking = ({
           <div className="font-bold">
             <DisplayPrice
               paymentType={paymentType}
-              price={refundTotal.tokensOrCredits}
               isEditMode={false}
               rentalFiat={refundTotal.fiat}
+              rentalToken={refundTotal.tokensOrCredits}
+              totalFiat={refundTotal.fiat}
             />
           </div>
         )}

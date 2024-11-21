@@ -43,9 +43,9 @@ import {
   formatCheckinDate,
   formatCheckoutDate,
   getBookingPaymentType,
-  getPaymentDelta,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { priceFormat } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
@@ -79,7 +79,6 @@ const BookingPage = ({
   paymentConfig,
   projects,
 }: Props) => {
-  console.log('booking=',booking);
   const t = useTranslations();
 
   const { timeZone } = generalConfig;
@@ -201,8 +200,8 @@ const BookingPage = ({
           updatedAdults,
           updatedDuration,
           paymentType,
+          isBookingEdit: true,
         });
-        console.log('res=', res.data.results);
         setUpdatedPrices(res.data.results);
       } catch (error) {
         console.error('Failed to fetch updated prices:', error);
@@ -219,25 +218,51 @@ const BookingPage = ({
     updatedListingId,
   ]);
 
-  const updatedAccomodationTotal = (useTokens || useCredits)
-    ? updatedPrices?.rentalToken?.val || 0
-    : updatedPrices?.rentalFiat?.val || 0;
+  const updatedAccomodationTotal =
+    useTokens || useCredits
+      ? updatedPrices?.rentalToken?.val || 0
+      : updatedPrices?.rentalFiat?.val || 0;
   const updatedUtilityTotal = updatedPrices?.utilityFiat?.val || 0;
   const updatedFoodTotal = updatedPrices?.foodFiat?.val || 0;
   const updatedEventTotal = updatedPrices?.eventFiat?.val || 0;
   const updatedFiatTotal = updatedPrices?.total?.val || 0;
 
-  const paymentDelta = isNotPaid
-    ? null
-    : getPaymentDelta(
-        total?.val,
-        updatedFiatTotal,
-        useTokens,
-        useCredits,
-        rentalToken,
-        updatedAccomodationTotal,
-        rentalFiat?.cur,
-      );
+  // const paymentDelta = null
+  // isNotPaid
+  //     ? null
+  //     :
+  // : getPaymentDelta(
+  //     total?.val,
+  //     updatedFiatTotal,
+  //     useTokens,
+  //     useCredits,
+  //     rentalToken,
+  //     updatedAccomodationTotal,
+  //     rentalFiat?.cur,
+  //   );
+
+  const updatedBookingValues = {
+    adults: updatedAdults,
+    duration: updatedDuration,
+    children: updatedChildren,
+    infants: updatedInfants,
+    pets: updatedPets,
+    roomOrBedNumbers:
+      updatedAdults !== adults
+        ? updatedRoomNumbers?.slice(0, updatedAdults)
+        : updatedRoomNumbers,
+    listing: updatedListingId,
+    start: formatCheckinDate(
+      convertToDateString(updatedStartDate),
+      timeZone,
+      checkInTime,
+    ),
+    end: formatCheckoutDate(
+      convertToDateString(updatedEndDate),
+      timeZone,
+      checkOutTime,
+    ),
+  };
 
   const updatedBooking = {
     ...booking,
@@ -281,13 +306,9 @@ const BookingPage = ({
     listing: updatedListingId,
     foodFiat: { val: updatedFoodTotal, cur: rentalFiat?.cur },
     total: { val: updatedFiatTotal, cur: rentalFiat?.cur },
-    paymentDelta: paymentDelta ? paymentDelta : null,
+    // paymentDelta: paymentDelta ? paymentDelta : null,
     // status: paymentDelta
   };
-
-  if (booking?.paymentDelta) {
-    booking.paymentDelta = null;
-  }
 
   const hasUpdatedBooking =
     JSON.stringify(booking) !== JSON.stringify(updatedBooking);
@@ -314,7 +335,12 @@ const BookingPage = ({
   const handleSaveBooking = async () => {
     try {
       setIsLoading(true);
-      const res = await api.patch(`/booking/${_id}`, updatedBooking);
+      // const res = await api.patch(`/booking/${_id}`, updatedBooking);
+      const res = await api.post(`/bookings/update`, {
+        updatedBookingValues,
+        bookingId: _id,
+        paymentType,
+      });
       setHasUpdated(false);
       if (res.status === 200) {
         setHasUpdated(true);
@@ -476,7 +502,8 @@ const BookingPage = ({
             </div>
             <Heading level={5}>{t('projects_suggestions_title')}</Heading>
             <p>
-              {(booking.volunteerInfo.suggestions === 'undefined' || !booking.volunteerInfo.suggestions )
+              {booking.volunteerInfo.suggestions === 'undefined' ||
+              !booking.volunteerInfo.suggestions
                 ? 'No suggestions'
                 : booking.volunteerInfo.suggestions}
             </p>
@@ -559,10 +586,25 @@ const BookingPage = ({
             vatRate={vatRate}
             status={status}
           />
-
           {isSpaceHost && booking?.charges && booking.charges.length > 0 && (
             <Charges charges={booking.charges} />
           )}
+
+          {booking.paymentDelta?.fiat.val ? (
+            <div className="flex justify-between gap-2 p-4 bg-accent-light rounded-md">
+              <p className="font-bold">
+                {booking.paymentDelta?.fiat.val >= 0
+                  ? t('bookings_amount_due')
+                  : t('bookings_amount_to_refund')}
+              </p>
+              <p className="font-bold">
+                {priceFormat(
+                  booking.paymentDelta?.fiat.val,
+                  booking.paymentDelta?.fiat.cur,
+                )}
+              </p>
+            </div>
+          ) : null}
         </section>
 
         <section>

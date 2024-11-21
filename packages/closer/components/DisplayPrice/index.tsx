@@ -16,7 +16,7 @@ const DisplayPrice = ({
   rentalFiat,
   isEditMode,
   totalFiat,
-    rentalToken,
+  rentalToken,
   isTotalPrice,
   price,
 }: Props) => {
@@ -39,18 +39,17 @@ const DisplayPrice = ({
 
     case PaymentType.FULL_CREDITS:
       return isEditMode && isTotalPrice ? (
-            <span>
-              {priceFormat({ val: rentalToken?.val, cur: 'credits' })}
-              +{' '}
-              {priceFormat({ val: totalFiat?.val, cur: totalFiat?.cur })}
-            </span>
-          ): (
-            <span>
-                  {priceFormat({ val: rentalToken?.val, cur: 'credits' })}
-                  
-            </span>
-          )
-      
+        <span>
+          {priceFormat({ val: rentalToken?.val, cur: 'credits' })}+{' '}
+          {priceFormat({ val: totalFiat?.val, cur: totalFiat?.cur })}
+        </span>
+      ) : (
+        <span>
+          {priceFormat({ val: rentalToken?.val, cur: 'credits' })}+{' '}
+          {priceFormat({ val: totalFiat?.val, cur: totalFiat?.cur })}
+        </span>
+      );
+
     case PaymentType.PARTIAL_TOKENS:
       return isEditMode ? (
         <span>
@@ -70,14 +69,12 @@ const DisplayPrice = ({
       );
     case PaymentType.FIAT:
       return isEditMode && isTotalPrice ? (
-        <span>
-          {priceFormat({ val: totalFiat?.val, cur: totalFiat?.cur })}
-        </span>
-      ): (
+        <span>{priceFormat({ val: totalFiat?.val, cur: totalFiat?.cur })}</span>
+      ) : (
         <span>
           {priceFormat({ val: rentalFiat?.val, cur: rentalFiat?.cur })}
         </span>
-      )
+      );
     default:
       return null;
   }

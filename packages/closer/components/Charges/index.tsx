@@ -37,10 +37,15 @@ const Charges = ({ charges }: { charges: Charge[] }) => {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  {priceFormat(
-                    charge.amount.total.val,
-                    charge.amount.total.cur,
-                  )}
+                  {charge.status === 'paid'
+                    ? priceFormat(
+                        charge.amount.total?.val,
+                        charge.amount.total?.cur,
+                      )
+                    : priceFormat(
+                        charge.amount.totalRefunded?.val,
+                        charge.amount.totalRefunded?.cur,
+                      )}
                 </Link>
               ) : (
                 priceFormat(charge.amount.total.val, charge.amount.total.cur)

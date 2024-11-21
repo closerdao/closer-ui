@@ -70,6 +70,10 @@ export type Charge = {
     food?: { val: number; cur: CloserCurrencies };
     utilities?: { val: number; cur: CloserCurrencies };
     event?: { val: number; cur: CloserCurrencies };
+    totalRefunded?: {
+      val: number;
+      cur: CloserCurrencies;
+    };
   };
   meta: {
     stripePaymentIntentId?: string;
@@ -142,9 +146,9 @@ export type Booking = {
   doesNeedPickup?: boolean;
   isTeamBooking?: boolean;
   paymentDelta?: {
-    token: CloserCurrencies.TDF;
-    fiat: CloserCurrencies.EUR;
-    credits: { val: number; cur: string };
+    fiat: { val: number; cur: CloserCurrencies.EUR };
+    token?: { val: number; cur: CloserCurrencies.TDF };
+    credits?: { val: number; cur: 'credits' };
   } | null;
   roomNumber?: number;
   adminBookingReason?: string;
