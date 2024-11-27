@@ -51,7 +51,10 @@ const GuestMenu = () => {
         <NavLink href="/events">{t('navigation_events')}</NavLink>
         <NavLink href="/stay">{t('navigation_stay')}</NavLink>
         {isVolunteeringEnabled && (
-          <NavLink href="/volunteer">{t('navigation_volunteer')}</NavLink>
+          <div className="flex flex-col gap-3">
+            <NavLink href="/volunteer">{t('navigation_volunteer')}</NavLink>
+            <NavLink href="/projects">{t('navigation_residence')}</NavLink>
+          </div>
         )}
 
         {APP_NAME !== 'foz' && (

@@ -17,7 +17,7 @@ export type User = {
   viewChannels: string[];
   manageChannels: string[];
   preferences: {
-    diet?: string;
+    diet?: string | string[];
     sharedAccomodation?: string;
     superpower?: string;
     skills?: string[];

@@ -267,7 +267,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 </ul>
                 <Button
                   isFullWidth={false}
-                  type="secondary"
+                  variant="secondary"
                   onClick={handleNext}
                 >
                   UNLOCK ACCESS
@@ -627,7 +627,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
               />
             </div>
           </div>
-          <Button isFullWidth={false} type="secondary" onClick={handleNext}>
+          <Button isFullWidth={false} variant="secondary" onClick={handleNext}>
             UNLOCK ACCESS
           </Button>
         </section>
@@ -643,7 +643,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 <div className="w-full sm:w-1/3 flex justify-center sm:justify-end">
                   {selectedInvestmentIndex > 0 ? (
                     <Button
-                      type="secondary"
+                      variant="secondary"
                       isFullWidth={false}
                       className="h-[25px]"
                       onClick={() =>
@@ -666,7 +666,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                   {selectedInvestmentIndex <
                   INVESTMENT_COMPARISON.length - 1 ? (
                     <Button
-                      type="secondary"
+                      variant="secondary"
                       isFullWidth={false}
                       className="h-[25px]"
                       onClick={() =>

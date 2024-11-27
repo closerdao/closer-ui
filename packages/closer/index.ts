@@ -123,9 +123,15 @@ export { default as TokenCounterPage } from './pages/token/token-counter';
 export { default as YourInfoPage } from './pages/token/your-info';
 export { default as VolunteerOpportunitiesPage } from './pages/volunteer/';
 export { default as VolunteerPage } from './pages/volunteer/[slug]/';
+export { default as ProjectsPage } from './pages/projects/index';
+export { default as CreateProject } from './pages/projects/create';
+export { default as ProjectPage } from './pages/projects/[slug]/';
+export { default as EditProject } from './pages/projects/[slug]/edit';
 export { default as EditVolunteerOportunity } from './pages/volunteer/[slug]/edit';
 export { default as CreateVolunteerOportunity } from './pages/volunteer/create';
 export { default as DashboardPage } from './pages/dashboard';
+export { default as ProjectApplicationPage } from './pages/projects/apply';
+export { default as VolunteerApplicationPage } from './pages/volunteer/apply';
 
 // Types
 export * from './types/';

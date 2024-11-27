@@ -17,6 +17,7 @@ import { useAuth } from '../../contexts/auth';
 import { type User } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
+import { VolunteerConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
@@ -30,20 +31,24 @@ const SHARED_ACCOMODATION_PREFERENCES = [
   { label: 'Female Only', value: 'female only' },
 ];
 
-const SKILLS_EXAMPLES = [
-  'javascript',
-  'woodworking',
-  'farming',
-  'cooking',
-  'gardening',
-  'plumbing',
-  'carpentry',
-];
-
-const SettingsPage = () => {
+const SettingsPage = ({
+  volunteerConfig,
+}: {
+  volunteerConfig: VolunteerConfig;
+}) => {
   const { APP_NAME } = useConfig();
 
+  const skillsOptions =
+    volunteerConfig?.skills?.split(',') || [];
+  const dietOptions =
+    (volunteerConfig?.diet?.split(',')) || [];
+
   const { user: initialUser, isAuthenticated, refetchUser } = useAuth();
+
+  const initialDiet = Array.isArray(initialUser?.preferences?.diet)
+    ? initialUser?.preferences?.diet
+    : initialUser?.preferences?.diet?.split(',') || [];
+
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(initialUser);
   const [updatePhone, toggleUpdatePhone] = useState<boolean | null>(null);
@@ -169,7 +174,9 @@ const SettingsPage = () => {
 
         <Input
           label="About me"
-          additionalInfo={APP_NAME === 'moos' ? 'Required to make bookings' : ''}
+          additionalInfo={
+            APP_NAME === 'moos' ? 'Required to make bookings' : ''
+          }
           isRequired={APP_NAME === 'moos' ? true : false}
           placeholder="Tell us more about yourself"
           value={user.about}
@@ -228,7 +235,7 @@ const SettingsPage = () => {
               <Button
                 onClick={() => saveEmail(user.email)}
                 isEnabled={!emailSaving}
-                type="inline"
+                variant="inline"
               >
                 {emailSaving ? 'Verifying...' : 'Verify Email'}
               </Button>
@@ -238,7 +245,7 @@ const SettingsPage = () => {
                   toggleUpdateEmail(false);
                 }}
                 className="ml-4"
-                type="inline"
+                variant="inline"
               >
                 Cancel
               </Button>
@@ -247,7 +254,7 @@ const SettingsPage = () => {
             !emailSaved && (
               <Button
                 onClick={() => toggleUpdateEmail(!updateEmail)}
-                type="inline"
+                variant="inline"
               >
                 Edit Email
               </Button>
@@ -273,7 +280,7 @@ const SettingsPage = () => {
               <Button
                 onClick={() => savePhone(user.phone)}
                 isEnabled={!phoneSaving}
-                type="inline"
+                variant="inline"
               >
                 {phoneSaving ? 'Verifying...' : 'Verify Phone'}
               </Button>
@@ -283,7 +290,7 @@ const SettingsPage = () => {
                   toggleUpdatePhone(false);
                 }}
                 className="ml-4"
-                type="inline"
+                variant="inline"
               >
                 Cancel
               </Button>
@@ -292,7 +299,7 @@ const SettingsPage = () => {
             !phoneSaved && (
               <Button
                 onClick={() => toggleUpdatePhone(!updatePhone)}
-                type="inline"
+                variant="inline"
               >
                 Edit Phone
               </Button>
@@ -307,13 +314,13 @@ const SettingsPage = () => {
         >
           🔰 Recommended
         </Heading>
-        <Input
-          label="Dietary Preferences"
-          placeholder="Vegetarian, Vegan, Gluten Free, etc."
-          onChange={saveUserData('diet') as any}
-          hasSaved={hasSaved}
-          value={user?.preferences?.diet}
-          isInstantSave={true}
+
+        <MultiSelect
+          label="Dietary Preferences?"
+          values={initialDiet}
+          onChange={saveUserData('diet')}
+          options={dietOptions}
+          placeholder="Pick or create yours"
         />
 
         {APP_NAME && APP_NAME.toLowerCase() !== 'moos' && (
@@ -340,7 +347,7 @@ const SettingsPage = () => {
           label="What skills do you have?"
           values={user?.preferences?.skills}
           onChange={saveUserData('skills')}
-          options={SKILLS_EXAMPLES}
+          options={skillsOptions}
           placeholder="Pick or create yours"
         />
         <Heading
@@ -396,16 +403,23 @@ const SettingsPage = () => {
 
 SettingsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
+    const [volunteerConfigRes, messages] = await Promise.all([
+      api.get('/config/volunteering').catch(() => {
+        return null;
+      }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
+
+    const volunteerConfig = volunteerConfigRes?.data?.results.value;
+
     return {
+      volunteerConfig,
       messages,
     };
   } catch (err: unknown) {
     return {
       messages: null,
+      volunteerConfig: null,
     };
   }
 };

@@ -127,10 +127,14 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
       where: {
         ...(filterValues.type === 'event' && { eventId: { $exists: true } }),
         ...(filterValues.type === 'volunteer' && {
-          volunteerId: { $exists: true },
+          $or: [
+            { volunteerId: { $exists: true } },
+            { volunteerInfo: { $exists: true } },
+          ],
         }),
         ...(filterValues.type === 'stay' && {
           volunteerId: { $exists: false },
+          volunteerInfo: { $exists: false },
           eventId: { $exists: false },
         }),
         ...(filterValues.status !== 'any'
@@ -317,7 +321,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
             onClick={() => setShowArrivalDropdown(!showArrivalDropdown)}
             className="text-black border-black normal-case text-md py-2 text-sm"
             size="small"
-            type="secondary"
+            variant="secondary"
           >
             {!arrivalFromDate &&
               !arrivalToDate &&
@@ -338,7 +342,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
               />
               <Button
                 isEnabled={Boolean(arrivalToDate && arrivalFromDate)}
-                type="secondary"
+                variant="secondary"
                 size="small"
                 onClick={handleClearArrivalDates}
               >
@@ -358,7 +362,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
             onClick={() => setShowDepartureDropdown(!showDepartureDropdown)}
             className="text-black border-black normal-case py-2 text-sm"
             size="small"
-            type="secondary"
+            variant="secondary"
           >
             {!departureFromDate &&
               !departureToDate &&
@@ -379,7 +383,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
               />
               <Button
                 isEnabled={Boolean(departureToDate && departureFromDate)}
-                type="secondary"
+                variant="secondary"
                 size="small"
                 onClick={handleClearDepartureDates}
               >
@@ -394,7 +398,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
       <Button
         isEnabled={filterValues.sortBy !== 'start'}
         onClick={() => setFilterValues({ ...filterValues, sortBy: 'start' })}
-        type="secondary"
+        variant="secondary"
         isFullWidth={false}
         size="small"
       >
@@ -403,7 +407,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
       <Button
         isEnabled={filterValues.sortBy !== 'end'}
         onClick={() => setFilterValues({ ...filterValues, sortBy: 'end' })}
-        type="secondary"
+        variant="secondary"
         isFullWidth={false}
         size="small"
       >
@@ -412,7 +416,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
       <Button
         isEnabled={filterValues.sortBy !== '-created'}
         onClick={() => setFilterValues({ ...filterValues, sortBy: '-created' })}
-        type="secondary"
+        variant="secondary"
         isFullWidth={false}
         size="small"
       >

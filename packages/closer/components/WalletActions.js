@@ -14,7 +14,7 @@ const WalletActions = () => {
   if (isWalletConnected && !isCorrectNetwork) {
     return (
       <Button
-        type="secondary"
+        variant="secondary"
         className=" mt-4 w-full uppercase"
         onClick={switchNetwork}
       >
@@ -28,7 +28,7 @@ const WalletActions = () => {
       <>
         <p className="my-4 text-xs">{t('wallet_not_connected_cta')}</p>
         <Button
-          type="secondary"
+          variant="secondary"
           className=" mt-4 w-full uppercase"
           onClick={connectWallet}
         >

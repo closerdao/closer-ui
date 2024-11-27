@@ -156,17 +156,18 @@ const ListingPage: NextPage<Props> = ({
         discountRate
       : 0;
   }
+  const numPrivateSpacesRequired = listing?.private
+    ? Math.ceil(adults / (listing?.beds || 1))
+    : 1;
   const accommodationFiatTotal = listing
     ? listing.fiatPrice?.val *
       (listing.private ? 1 : adults) *
       durationInDays *
-      discountRate
+      discountRate *
+      numPrivateSpacesRequired
     : 0;
   const accommodationTokenTotal = listing
-    ? listing.tokenPrice?.val *
-      (listing.private ? 1 : adults) *
-      durationInDays *
-      discountRate
+    ? listing.tokenPrice?.val * (listing.private ? 1 : adults) * durationInDays
     : 0;
   const nightlyTotal = listing
     ? listing.fiatPrice?.val * (listing.private ? 1 : adults) * discountRate
@@ -201,8 +202,7 @@ const ListingPage: NextPage<Props> = ({
 
   const [calendarError, setCalendarError] = useState<string | null>(null);
   const [unavailableDates, setUnavailableDates] = useState<any[]>([]);
-
-
+  const [numSpacesAvailable, setNumSpacesAvailable] = useState<number>(0);
 
   const isWeb3BookingEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
@@ -223,10 +223,9 @@ const ListingPage: NextPage<Props> = ({
       end &&
       isListingAvailable &&
       !calendarError &&
-    (isHourlyBooking ? isTimeSet : true) &&
-    !isTodayAndToken
+      (isHourlyBooking ? isTimeSet : true) &&
+      !isTodayAndToken,
   );
-
 
   const fiatTotal = getFiatTotal({
     isTeamBooking,
@@ -256,6 +255,7 @@ const ListingPage: NextPage<Props> = ({
 
       setIsGuestLimit(availability[0].reason === 'Guest limit');
 
+      console.log('availability=', availability);
       return { results, availability, error: null };
     } catch (error: any) {
       return {
@@ -301,6 +301,13 @@ const ListingPage: NextPage<Props> = ({
         );
         if (availability) {
           setHourAvailability(getLocalTimeAvailability(availability, timeZone));
+          const minNumSpacesAvailable =
+            availability.reduce(
+              (min: number, day: { numSpacesAvailable: number }) =>
+                Math.min(min, day.numSpacesAvailable),
+              Infinity,
+            ) || 0;
+          setNumSpacesAvailable(minNumSpacesAvailable);
         }
         setIsListingAvailable(results);
         setBookingError(error);
@@ -670,7 +677,9 @@ const ListingPage: NextPage<Props> = ({
                     <div className="flex flex-col w-1/2 sm:w-full">
                       <div className="">
                         {isTodayAndToken && (
-                          <ErrorMessage error={t('booking_token_same_day_error')} />
+                          <ErrorMessage
+                            error={t('booking_token_same_day_error')}
+                          />
                         )}
                         {error && (
                           <ErrorMessage error={parseMessageFromError(error)} />
@@ -690,12 +699,16 @@ const ListingPage: NextPage<Props> = ({
                       <div className="flex flex-col gap-2">
                         <div className="hidden sm:block">
                           {listing.quantity === 1
-                            ? `${listing.quantity} ${t(
-                                'listing_listings_available_singular',
-                              )}`
-                            : `${listing.quantity} ${t(
-                                'listing_listings_available',
-                              )}`}
+                            ? `${
+                                start && end
+                                  ? numSpacesAvailable
+                                  : listing?.quantity
+                              } ${t('listing_listings_available_singular')}`
+                            : `${
+                                start && end
+                                  ? numSpacesAvailable
+                                  : listing?.quantity
+                              } ${t('listing_listings_available')}`}
                         </div>
                         {isWeb3BookingEnabled && (
                           <CurrencySwitcher
@@ -823,11 +836,10 @@ const ListingPage: NextPage<Props> = ({
                               {currency === CURRENCIES[1] && fiatTotal > 0 ? (
                                 <div>
                                   {priceFormat(
-                                    listing.tokenPrice &&
-                                      listing.tokenPrice?.val,
+                                    accommodationTokenTotal,
                                     listing.tokenPrice?.cur,
                                   )}{' '}
-                                  +{' '}
+                                  + {priceFormat(utilityTotal)}
                                 </div>
                               ) : (
                                 <span>

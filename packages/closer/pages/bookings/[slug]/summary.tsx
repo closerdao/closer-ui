@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import Conditions from '../../../components/Conditions';
@@ -17,8 +17,13 @@ import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
-import { BOOKING_STEPS } from '../../../constants';
+import {
+  BOOKING_STEPS,
+  CURRENCIES,
+  DEFAULT_CURRENCY,
+} from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import { WalletState } from '../../../contexts/wallet';
 import { useConfig } from '../../../hooks/useConfig';
 import {
   BaseBookingParams,
@@ -28,8 +33,10 @@ import {
   Event,
   Listing,
   PaymentConfig,
+  PaymentType,
 } from '../../../types';
 import api from '../../../utils/api';
+import { getPaymentType } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
@@ -52,6 +59,10 @@ const Summary = ({
   paymentConfig,
 }: Props) => {
   const t = useTranslations();
+
+  const { balanceAvailable: tokenBalanceAvailable, isWalletReady } =
+    useContext(WalletState);
+
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -69,6 +80,9 @@ const Summary = ({
   const [handleNextError, setHandleNextError] = useState<string | null>(null);
   const [hasComplied, setCompliance] = useState(false);
   const [isMember, setIsMember] = useState(false);
+  const [updatedBooking, setUpdatedBooking] = useState<Booking | null>(null);
+  const [loading, setLoading] = useState(false);
+
   const onComply = (isComplete: boolean) => setCompliance(isComplete);
 
   const {
@@ -77,18 +91,31 @@ const Summary = ({
     rentalToken,
     rentalFiat,
     useTokens,
+    useCredits,
     start,
     end,
     adults,
     children,
     pets,
     infants,
-    volunteerId,
     eventId,
     ticketOption,
     eventFiat,
     total,
-  } = booking || {};
+    dailyRentalToken,
+    duration,
+    volunteerInfo,
+  } = updatedBooking || booking || {};
+
+  const isHourlyBooking = listing?.priceDuration === 'hour';
+
+  const creditsOrTokensPricePerNight = listing?.tokenPrice?.val;
+  const maxNightsToPayWithTokens =
+    (creditsOrTokensPricePerNight &&
+      isWalletReady &&
+      creditsOrTokensPricePerNight > 0 &&
+      Math.floor(tokenBalanceAvailable / creditsOrTokensPricePerNight)) ||
+    0;
 
   useEffect(() => {
     if (booking?.status === 'pending' || booking?.status === 'paid') {
@@ -105,7 +132,87 @@ const Summary = ({
     }
   }, [user]);
 
+  useEffect(() => {
+    const type = getPaymentType({
+      useCredits: useCredits || false,
+      duration: duration || 0,
+      currency: useTokens ? CURRENCIES[1] : DEFAULT_CURRENCY,
+      maxNightsToPayWithTokens,
+      maxNightsToPayWithCredits: 0,
+    });
+
+    const processTokenPayment = (paymentType: PaymentType) => {
+      if (useTokens && tokenBalanceAvailable) {
+        const nights = maxNightsToPayWithTokens;
+        const price = (nights || 0) * (creditsOrTokensPricePerNight || 0);
+        switchToToken(nights, price, paymentType);
+      }
+    };
+
+    switch (type) {
+      case PaymentType.PARTIAL_TOKENS:
+        {
+          processTokenPayment(PaymentType.PARTIAL_TOKENS);
+        }
+        break;
+      case PaymentType.FULL_TOKENS:
+        {
+          processTokenPayment(PaymentType.FULL_TOKENS);
+        }
+        break;
+    }
+  }, [tokenBalanceAvailable, useTokens]);
+
+  const updateBooking = async ({
+    useTokens,
+    useCredits,
+    paymentType,
+    partialTokenPaymentNights,
+    partialPriceInTokens,
+  }: {
+    useTokens: boolean;
+    useCredits?: boolean;
+    partialTokenPaymentNights?: number;
+    partialPriceInTokens?: number;
+    paymentType?: PaymentType;
+  }) => {
+    try {
+      const res = await api.post(`/bookings/${booking?._id}/update-payment`, {
+        useCredits,
+        useTokens,
+        isHourlyBooking,
+        maxNightsToPayWithCredits: 0,
+        paymentType,
+        partialTokenPaymentNights,
+        partialPriceInTokens,
+      });
+      return res.data.results;
+    } catch (error) {
+      console.log('error=', error);
+    }
+  };
+
+  const switchToToken = async (
+    nights: number,
+    price: number,
+    type: PaymentType,
+  ) => {
+    try {
+      const localUpdatedBooking = await updateBooking({
+        useTokens: true,
+        useCredits: false,
+        partialTokenPaymentNights: nights,
+        partialPriceInTokens: price,
+        paymentType: type,
+      });
+      setUpdatedBooking(localUpdatedBooking);
+    } catch (error) {
+      console.error('error=', error);
+    }
+  };
+
   const handleNext = async () => {
+    setLoading(true);
     setHandleNextError(null);
     if (booking?.status === 'confirmed') {
       return router.push(`/bookings/${booking?._id}/checkout`);
@@ -123,6 +230,8 @@ const Summary = ({
       }
     } catch (err: any) {
       setHandleNextError(err.response?.data?.error || err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -174,18 +283,25 @@ const Summary = ({
             endDate={end || ''}
             listingName={listing?.name || ''}
             listingUrl={listing?.slug || ''}
-            volunteerId={volunteerId}
             eventName={event?.name}
             ticketOption={ticketOption?.name}
             priceDuration={listing?.priceDuration}
+            numSpacesRequired={
+              listing?.private
+                ? Math.ceil(booking.adults / (listing?.beds || 1))
+                : booking.adults
+            }
+            isVolunteer={volunteerInfo?.bookingType === 'volunteer'}
           />
           <SummaryCosts
             utilityFiat={utilityFiat}
+            rentalFiat={rentalFiat}
             foodFiat={foodFiat}
             useTokens={useTokens || false}
-            useCredits={booking?.useCredits || false}
+            useCredits={useCredits || false}
             accomodationCost={useTokens ? rentalToken : rentalFiat}
             totalToken={rentalToken || { val: 0, cur: CloserCurrencies.EUR }}
+            creditsPrice={(dailyRentalToken?.val || 0) * (duration || 0)}
             totalFiat={total || { val: 0, cur: CloserCurrencies.EUR }}
             eventCost={eventFiat}
             isFoodIncluded={Boolean(booking?.foodOptionId)}
@@ -198,16 +314,15 @@ const Summary = ({
               (listing && listing?.fiatPrice?.val * booking?.adults) ||
               undefined
             }
-            volunteerId={volunteerId}
             priceDuration={listing?.priceDuration}
             vatRate={vatRate}
           />
 
-          {volunteerId ? (
+          {booking?.volunteerInfo ? (
             <>
               <Conditions setComply={onComply} visitorsGuide={VISITORS_GUIDE} />
               <Button
-                isEnabled={hasComplied}
+                isEnabled={hasComplied && !loading}
                 className="booking-btn"
                 onClick={handleNext}
               >

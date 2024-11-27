@@ -1,7 +1,7 @@
 import Head from 'next/head';
-import React from 'react';
+import Link from 'next/link';
 
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import BookingRequestButtons from '../../../components/BookingRequestButtons';
 import PageError from '../../../components/PageError';
@@ -10,13 +10,15 @@ import SummaryDates from '../../../components/SummaryDates';
 import UserInfoButton from '../../../components/UserInfoButton';
 import { Button, Card, Information } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
+import Input from '../../../components/ui/Input';
 
 import dayjs from 'dayjs';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import Input from '../../../components/ui/Input';
+import PageNotAllowed from '../../401';
+import { HeadingRow, Tag } from '../../..';
 import { MAX_LISTINGS_TO_FETCH, STATUS_COLOR } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
@@ -28,6 +30,8 @@ import {
   GeneralConfig,
   Listing,
   PaymentConfig,
+  Project,
+  UpdatedPrices,
   VolunteerOpportunity,
 } from '../../../types';
 import { FoodOption } from '../../../types/food';
@@ -37,16 +41,10 @@ import {
   dateToPropertyTimeZone,
   formatCheckinDate,
   formatCheckoutDate,
-  getAccommodationTotal,
-  getFiatTotal,
-  getFoodTotal,
   getPaymentDelta,
-  getUtilityTotal,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { getBookingRate, getDiscountRate } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
-import PageNotAllowed from '../../401';
 import PageNotFound from '../../not-found';
 
 dayjs.extend(LocalizedFormat);
@@ -63,6 +61,7 @@ interface Props {
   generalConfig: GeneralConfig;
   paymentConfig: PaymentConfig | null;
   foodOptions: FoodOption[];
+  projects: Project[];
 }
 
 const BookingPage = ({
@@ -76,14 +75,11 @@ const BookingPage = ({
   listings,
   generalConfig,
   paymentConfig,
-  foodOptions,
+  projects,
 }: Props) => {
   const t = useTranslations();
 
   const { timeZone } = generalConfig;
-
-    console.log('booking=',booking);
-
 
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -108,7 +104,6 @@ const BookingPage = ({
     start: bookingStart,
     end: bookingEnd,
     adults,
-    volunteerId,
     ticketOption,
     eventFiat,
     total,
@@ -117,17 +112,10 @@ const BookingPage = ({
     createdBy,
     _id,
     created,
-    isTeamBooking,
-    eventPrice,
-    foodOptionId,
     foodFiat,
     roomOrBedNumbers,
+    volunteerInfo,
   } = booking || {};
- 
-
-  const selectedFoodOption = foodOptions?.find(
-    (option) => foodOptionId && option._id === foodOptionId,
-  );
 
   const userInfo = bookingCreatedBy && {
     name: bookingCreatedBy.screenname,
@@ -139,7 +127,8 @@ const BookingPage = ({
   const vatRate = vatRateFromConfig || defaultVatRate;
 
   const [status, setStatus] = useState(booking?.status);
-  const [updatedRoomNumbers, setUpdatedRoomNumbers] = useState(roomOrBedNumbers);
+  const [updatedRoomNumbers, setUpdatedRoomNumbers] =
+    useState(roomOrBedNumbers);
   const [updatedAdults, setUpdatedAdults] = useState(adults);
   const [updatedChildren, setUpdatedChildren] = useState(children);
   const [updatedInfants, setUpdatedInfants] = useState(infants);
@@ -154,6 +143,9 @@ const BookingPage = ({
   const [updatedListingId, setUpdatedListingId] = useState(listing?._id);
   const [isLoading, setIsLoading] = useState(false);
   const [hasUpdated, setHasUpdated] = useState(false);
+  const [updatedPrices, setUpdatedPrices] = useState<UpdatedPrices | null>(
+    null,
+  );
 
   const checkInTime = bookingConfig?.checkinTime || 14;
   const checkOutTime = bookingConfig?.checkoutTime || 11;
@@ -170,7 +162,9 @@ const BookingPage = ({
   const isNotPaid =
     status !== 'paid' &&
     status !== 'credits-paid' &&
-    status !== 'tokens-staked';
+    status !== 'tokens-staked' &&
+    status !== 'checked-in' &&
+    status !== 'checked-out';
 
   let updatedDuration = 0;
 
@@ -189,52 +183,38 @@ const BookingPage = ({
   );
   const updatedMaxBeds = updatedListing?.beds || 1;
 
-  const updatedDurationName = getBookingRate(updatedDuration);
-  const updatedDiscountRate = bookingConfig
-    ? 1 - getDiscountRate(updatedDurationName, bookingConfig)
-    : 0;
-
-  const updatedAccomodationTotal = getAccommodationTotal({
-    listing: updatedListing,
-    useTokens,
-    useCredits,
-    adults: updatedAdults,
-    durationInDaysOrHours: updatedDuration,
-    discountRate: updatedDiscountRate,
-    volunteerId,
-    isTeamBooking,
-  });
-
-  const updatedUtilityTotal = getUtilityTotal({
-    utilityFiatVal: bookingConfig?.utilityFiatVal,
-    updatedAdults,
+  useEffect(() => {
+    const fetchUpdatedPrice = async () => {
+      try {
+        const res = await api.post('/bookings/calculate-totals', {
+          bookingId: booking._id,
+          updatedListingId,
+          updatedAdults,
+          updatedDuration,
+        });
+        setUpdatedPrices(res.data.results);
+      } catch (error) {
+        console.error('Failed to fetch updated prices:', error);
+      }
+    };
+    (async () => {
+      await fetchUpdatedPrice();
+    })();
+  }, [
     updatedDuration,
-    discountRate: updatedDiscountRate,
-    isTeamBooking,
-    isUtilityOptionEnabled: bookingConfig?.utilityOptionEnabled || false,
-  });
+    updatedAdults,
+    updatedStartDate,
+    updatedEndDate,
+    updatedListingId,
+  ]);
 
-  const updatedFoodTotal = getFoodTotal({
-    isHourlyBooking,
-    foodPrice: selectedFoodOption?.price || 0,
-    durationInDays: updatedDuration,
-    adults:  updatedAdults,
-    isFoodOptionEnabled: Boolean(selectedFoodOption?._id) || false,
-    isTeamMember: isTeamBooking || false,
-  });
-
-  const updatedEventTotal = (eventPrice?.val || 0) * updatedAdults || 0;
-
-  const updatedFiatTotal = getFiatTotal({
-    isTeamBooking: Boolean(isTeamBooking),
-    foodPrice: selectedFoodOption?.price || 0,
-    foodTotal: updatedFoodTotal,
-    utilityTotal: updatedUtilityTotal,
-    accommodationFiatTotal: updatedAccomodationTotal,
-    eventTotal: updatedEventTotal,
-    useTokens,
-    useCredits,
-  });
+  const updatedAccomodationTotal = useTokens
+    ? updatedPrices?.rentalToken?.val || 0
+    : updatedPrices?.rentalFiat?.val || 0;
+  const updatedUtilityTotal = updatedPrices?.utilityFiat?.val || 0;
+  const updatedFoodTotal = updatedPrices?.foodFiat?.val || 0;
+  const updatedEventTotal = updatedPrices?.eventFiat?.val || 0;
+  const updatedFiatTotal = updatedPrices?.total?.val || 0;
 
   const paymentDelta = isNotPaid
     ? null
@@ -265,7 +245,10 @@ const BookingPage = ({
     children: updatedChildren,
     pets: updatedPets,
     infants: updatedInfants,
-    roomOrBedNumbers: updatedAdults !== adults ? updatedRoomNumbers?.slice(0, updatedAdults) : updatedRoomNumbers,
+    roomOrBedNumbers:
+      updatedAdults !== adults
+        ? updatedRoomNumbers?.slice(0, updatedAdults)
+        : updatedRoomNumbers,
     utilityFiat: { val: updatedUtilityTotal, cur: rentalFiat?.cur },
     rentalFiat:
       useTokens || useCredits
@@ -334,10 +317,12 @@ const BookingPage = ({
       setIsLoading(false);
     }
   };
-  
+
   const handleUpdateRoomNumbers = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newRoomNumbers = e.target.value.split(',').map(num => parseInt(num.trim(), 10));
-    if(e.target.value) {
+    const newRoomNumbers = e.target.value
+      .split(',')
+      .map((num) => parseInt(num.trim(), 10));
+    if (e.target.value) {
       setUpdatedRoomNumbers(newRoomNumbers);
     }
   };
@@ -401,27 +386,90 @@ const BookingPage = ({
           booking.roomOrBedNumbers &&
           booking.roomOrBedNumbers.length > 0 && (
             <section className="rounded-md p-4 bg-accent-light">
-                <p className="font-bold">
-                  {listing.private
-                    ? t('booking_card_room_number')
-                    : t('booking_card_bed_numbers')}{' '}
-                  {booking.roomOrBedNumbers &&
-                    booking.roomOrBedNumbers.toString()}
-            </p>
-            <div className='flex flex-col gap-2'>
-              <label htmlFor='roomNumbers'>
-                {roomOrBedNumbers && roomOrBedNumbers?.length > 0 ? 'Enter new bed numbers (comma delimited, must match updated number of adults):' : 'Enter new room number:'}
-              </label>
-              <Input
-                onChange={handleUpdateRoomNumbers}
-                placeholder='Number (s)'
-                id='roomNumbers'
-                type="text"
-                className='w-[100px] bg-white py-0.5 px-2'
-              />
-            </div>
+              <p className="font-bold">
+                {listing.private
+                  ? t('booking_card_room_number')
+                  : t('booking_card_bed_numbers')}{' '}
+                {booking.roomOrBedNumbers &&
+                  booking.roomOrBedNumbers.toString()}
+              </p>
+              <div className="flex flex-col gap-2">
+                <label htmlFor="roomNumbers">
+                  {roomOrBedNumbers && roomOrBedNumbers?.length > 0
+                    ? 'Enter new bed numbers (comma delimited, must match updated number of adults):'
+                    : 'Enter new room number:'}
+                </label>
+                <Input
+                  onChange={handleUpdateRoomNumbers}
+                  placeholder="Number (s)"
+                  id="roomNumbers"
+                  type="text"
+                  className="w-[100px] bg-white py-0.5 px-2"
+                />
+              </div>
             </section>
           )}
+
+        {booking.volunteerInfo && (
+          <section className="flex flex-col gap-4">
+            {booking.volunteerInfo.bookingType === 'volunteer' ? (
+              <HeadingRow>
+                {t('projects_volunteer_application_title')}
+              </HeadingRow>
+            ) : (
+              <HeadingRow>
+                {t('projects_residence_application_title')}
+              </HeadingRow>
+            )}
+
+            {booking?.volunteerInfo?.projectId &&
+              booking?.volunteerInfo?.projectId?.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <Heading level={5}>{t('projects_build_title')}</Heading>
+                  {booking.volunteerInfo.projectId?.map((projectId) => (
+                    <p key={projectId}>
+                      <Link
+                        href={`/projects/${
+                          projects?.find((project) => project._id === projectId)
+                            ?.slug ?? projectId
+                        }`}
+                      >
+                        {
+                          projects?.find((project) => project._id === projectId)
+                            ?.name
+                        }
+                      </Link>
+                    </p>
+                  ))}
+                </div>
+              )}
+
+            <Heading level={5}>
+              {t('projects_skills_and_qualifications_title')}
+            </Heading>
+            <div className="flex flex-wrap gap-2">
+              {booking.volunteerInfo.skills?.map((skill) => (
+                <Tag color="primary" size="small" key={skill}>
+                  {skill}
+                </Tag>
+              ))}
+            </div>
+            <Heading level={5}>{t('projects_food_title')}</Heading>
+            <div className="flex flex-wrap gap-2">
+              {booking.volunteerInfo.diet?.map((diet) => (
+                <Tag color="primary" size="small" key={diet}>
+                  {diet}
+                </Tag>
+              ))}
+            </div>
+            <Heading level={5}>{t('projects_suggestions_title')}</Heading>
+            <p>
+              {(!booking.volunteerInfo.suggestions )
+                ? 'No suggestions'
+                : booking.volunteerInfo.suggestions}
+            </p>
+          </section>
+        )}
 
         <section className="flex flex-col gap-12">
           <SummaryDates
@@ -434,7 +482,7 @@ const BookingPage = ({
             endDate={isSpaceHost ? updatedEndDate : bookingEnd}
             listingName={listing?.name}
             listingUrl={listing?.slug}
-            volunteerId={volunteerId}
+            isVolunteer={volunteerInfo?.bookingType === 'volunteer'}
             eventName={event?.name}
             volunteerName={volunteer?.name}
             ticketOption={ticketOption?.name}
@@ -467,7 +515,6 @@ const BookingPage = ({
               ticketOption?.price ? ticketOption.price * adults : undefined
             }
             accomodationDefaultCost={listing?.fiatPrice?.val * adults}
-            volunteerId={volunteerId}
             isNotPaid={isNotPaid}
             updatedAccomodationTotal={{
               val: updatedAccomodationTotal,
@@ -540,6 +587,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       generalConfigRes,
       paymentConfigRes,
       foodRes,
+      projectsRes,
       messages,
     ] = await Promise.all([
       api
@@ -574,6 +622,9 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       api.get('/food').catch(() => {
         return null;
       }),
+      api.get('/project').catch(() => {
+        return null;
+      }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const booking = bookingRes?.data?.results;
@@ -584,6 +635,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
     const paymentConfig = paymentConfigRes?.data?.results?.value;
 
     const foodOptions = foodRes?.data?.results;
+    const projects = projectsRes?.data?.results;
 
     const [optionalEvent, optionalListing, optionalVolunteer] =
       await Promise.all([
@@ -643,6 +695,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       messages,
       paymentConfig,
       foodOptions,
+      projects,
     };
   } catch (err: any) {
     return {
@@ -658,6 +711,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       messages: null,
       paymentConfig: null,
       foodOptions: null,
+      projects: null,
     };
   }
 };

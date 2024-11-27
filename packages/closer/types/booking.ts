@@ -22,6 +22,11 @@ export interface BaseBookingParams {
   doesNeedPickup?: boolean | undefined;
   doesNeedSeparateBeds?: boolean | undefined;
   foodOption?: string | undefined;
+  skills?: string | undefined;
+  diet?: string | undefined;
+  projectId?: string | undefined;
+  suggestions?: string | undefined;
+  bookingType?: 'volunteer' | 'residence' | undefined;
 }
 
 export type Listing = {
@@ -49,6 +54,14 @@ export type Listing = {
   workingHoursEnd?: number;
   fiatHourlyPrice?: Price<CloserCurrencies.EUR>;
   tokenHourlyPrice?: Price<CloserCurrencies.TDF>;
+};
+
+export type VolunteerInfo = {
+  skills?: string[];
+  diet?: string[];
+  projectId?: string[];
+  suggestions?: string;
+  bookingType?: 'volunteer' | 'residence' | undefined;
 };
 
 export type Booking = {
@@ -104,6 +117,7 @@ export type Booking = {
   roomNumber?: number;
   adminBookingReason?: string;
   roomOrBedNumbers?: number[];
+  volunteerInfo?: VolunteerInfo;
 };
 
 export interface StatusColor {
@@ -204,4 +218,24 @@ export type FoodPriceParams = {
   duration: number | undefined;
   eventId: string | undefined;
   bookingConfig: BookingConfig | undefined | null;
+};
+export enum PaymentType {
+  FIAT = 'fiat',
+  FULL_TOKENS = 'fullTokens',
+  FULL_CREDITS = 'fullCredits',
+  PARTIAL_TOKENS = 'partialTokens',
+  PARTIAL_CREDITS = 'partialCredits',
+}
+export type UpdatedPrices = {
+  rentalFiat: Price<CloserCurrencies.EUR>;
+  rentalToken: Price<CloserCurrencies.TDF>;
+  eventFiat: Price<CloserCurrencies.EUR>;
+  foodFiat: Price<CloserCurrencies.EUR>;
+  utilityFiat: Price<CloserCurrencies.EUR>;
+  total: Price<CloserCurrencies.EUR>;
+};
+
+export type DynamicField = {
+  name: string;
+  options: { label: string; value: string }[] | string[];
 };

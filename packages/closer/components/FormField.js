@@ -163,33 +163,40 @@ const FormField = ({
                 onChange={(e) => update(name, e.target.value)}
                 className={`px-2 py-1 min-w-[180px] ${className}`}
               >
-                {dynamicField?.name === name &&
-                  dynamicField?.options.map((opt) => (
-                    <option value={opt.value} key={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                {dynamicField?.name !== name &&
-                  options.map((opt) => (
-                    <option value={opt.value} key={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
+                {(dynamicField?.name === name
+                  ? dynamicField?.options
+                  : options
+                )?.map((opt) => (
+                  <option value={opt.value} key={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
               </select>
             </>
           )}
           {type === 'multi-select' && (
             <div className="flex flex-wrap gap-4 my-6">
-              {options.map((option) => (
-                <Checkbox
-                  key={option}
-                  onChange={() => handleCheckboxChange(option)}
-                  checked={objectPath.get(data, name).includes(option)}
-                  className="mb-4"
-                >
-                  {option}
-                </Checkbox>
-              ))}
+              {dynamicField?.name === name
+                ? dynamicField?.options.map((option) => (
+                    <Checkbox
+                      key={option}
+                      onChange={() => handleCheckboxChange(option)}
+                      checked={objectPath.get(data, name).includes(option)}
+                      className="mb-4"
+                    >
+                      {option}
+                    </Checkbox>
+                  ))
+                : options.map((option) => (
+                    <Checkbox
+                      key={option}
+                      onChange={() => handleCheckboxChange(option)}
+                      checked={objectPath.get(data, name).includes(option)}
+                      className="mb-4"
+                    >
+                      {option}
+                    </Checkbox>
+                  ))}
             </div>
           )}
 

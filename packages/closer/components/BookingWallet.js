@@ -6,9 +6,10 @@ import { priceFormat } from '../utils/helpers';
 import WalletActions from './WalletActions';
 import WalletHeader from './WalletHeader';
 import { useTranslations } from 'next-intl';
+import { ErrorMessage } from './ui';
 
 
-const BookingWallet = ({ toPay, switchToEUR }) => {
+const BookingWallet = ({ toPay, switchToFiat }) => {
   const t = useTranslations();
   
   const { BLOCKCHAIN_DAO_TOKEN } = useConfig();
@@ -35,9 +36,12 @@ const BookingWallet = ({ toPay, switchToEUR }) => {
               </p>
             </div>
           ) : (
-            <button className="btn mt-4 w-full uppercase" onClick={switchToEUR}>
-              Pay in Euro
-            </button>
+            <div>
+              <button className="btn mt-4 w-full uppercase" onClick={switchToFiat}>
+                {t('booking_pay_in_euro')}
+              </button>
+              <ErrorMessage error={t('error_insufficient_token_balance')}/>
+            </div>
           )}
         </div>
       ) : null}

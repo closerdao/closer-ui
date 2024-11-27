@@ -26,11 +26,7 @@ import {
 } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { Event, TicketOption } from '../../../types';
-import {
-  BookingConfig,
-  VolunteerConfig,
-  VolunteerOpportunity,
-} from '../../../types/api';
+import { BookingConfig, VolunteerConfig } from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
@@ -41,7 +37,6 @@ import PageNotFound from '../../not-found';
 interface Props {
   error?: string;
   ticketOptions?: TicketOption[];
-  volunteer?: VolunteerOpportunity;
   futureEvents?: Event[];
   event?: Event;
   bookingConfig: BookingConfig | null;
@@ -53,7 +48,6 @@ const DatesSelector = ({
   error,
   bookingConfig,
   ticketOptions,
-  volunteer,
   futureEvents,
   event,
   volunteerConfig,
@@ -83,59 +77,23 @@ const DatesSelector = ({
     currency: savedCurrency,
     eventId,
     volunteerId,
+    skills,
+    diet,
+    suggestions,
+    bookingType,
+    projectId,
   } = router.query || {};
 
   const isHourlyBooking = false;
 
   const [blockedDateRanges, setBlockedDateRanges] = useState<any[]>([]);
 
-  const memoizedBlockedDateRanges = useMemo(() => {
-    return getBlockedDateRanges();
-  }, [futureEvents, savedStartDate, savedEndDate]);
-
-  function getBlockedDateRanges() {
-    const dateRanges: any[] = [];
-    futureEvents?.forEach((event: Event) => {
-      if (event.blocksBookingCalendar) {
-        dateRanges.push({
-          from: new Date(event.start),
-          to: new Date(event.end),
-        });
-      }
-    });
-    dateRanges.push({ before: new Date() });
-    dateRanges.push({
-      after: new Date().setDate(
-        new Date().getDate() + getMaxBookingHorizon(bookingConfig, isMember)[0],
-      ),
-    });
-    return dateRanges;
-  }
-
-  useEffect(() => {
-    if (eventId) {
-      setBlockedDateRanges((ranges) => [
-        ...ranges,
-        { before: new Date(event?.start as string) },
-        { after: new Date(event?.end as string) },
-      ]);
-    }
-    if (volunteerId) {
-      setBlockedDateRanges((ranges) => [
-        ...ranges,
-        { before: new Date(volunteer?.start as string) },
-        { after: new Date(volunteer?.end as string) },
-        { before: new Date() },
-      ]);
-    }
-
-    if (!eventId && !volunteerId) {
-      setBlockedDateRanges(memoizedBlockedDateRanges);
-    }
-  }, []);
-
-  const [start, setStartDate] = useState<string | null | Date>();
-  const [end, setEndDate] = useState<string | null | Date>();
+  const [start, setStartDate] = useState<string | null | Date>(
+    (savedStartDate as string) || null,
+  );
+  const [end, setEndDate] = useState<string | null | Date>(
+    (savedEndDate as string) || null,
+  );
   const [adults, setAdults] = useState<number>(Number(savedAdults) || 1);
   const [kids, setKids] = useState<number>(Number(savedKids) || 0);
   const [infants, setInfants] = useState<number>(Number(savedInfants) || 0);
@@ -155,10 +113,48 @@ const DatesSelector = ({
   const hasEventIdAndValidTicket = Boolean(
     eventId && (!ticketOptions?.length || selectedTicketOption),
   );
-  const hasVolunteerId = volunteerId;
-  const hasValidDates = (start && end) || (savedStartDate && savedEndDate);
+
+  const decodedBookingType = bookingType
+    ? decodeURIComponent(bookingType as string)
+    : '';
+  const isResidenceApplication = decodedBookingType === 'residence';
+  const isVolunteerApplication = decodedBookingType === 'volunteer';
+
+  function getBlockedDateRanges() {
+    const dateRanges: any[] = [];
+    futureEvents?.forEach((event: Event) => {
+      if (event.blocksBookingCalendar) {
+        dateRanges.push({
+          from: new Date(event.start),
+          to: new Date(event.end),
+        });
+      }
+    });
+    dateRanges.push({ before: new Date() });
+    !isVolunteerApplication &&
+      !isResidenceApplication &&
+      dateRanges.push({
+        after: new Date().setDate(
+          new Date().getDate() +
+            getMaxBookingHorizon(bookingConfig, isMember)[0],
+        ),
+      });
+    return dateRanges;
+  }
+
+  const memoizedBlockedDateRanges = useMemo(() => {
+    return getBlockedDateRanges();
+  }, [futureEvents, savedStartDate, savedEndDate]);
+
+  const hasValidDates =
+    Boolean(start && end) || Boolean(savedStartDate && savedEndDate);
   const isGeneralCase =
-    !eventId && !volunteerId && start && end && !bookingError;
+    !eventId &&
+    !volunteerId &&
+    bookingType !== 'volunteer' &&
+    bookingType !== 'residence' &&
+    hasValidDates &&
+    !bookingError;
   const startDate = dayjs(start).startOf('day');
   const endDate = dayjs(end).startOf('day');
   const diffInDays = endDate.diff(startDate, 'day');
@@ -166,20 +162,42 @@ const DatesSelector = ({
   const isMinVolunteeringStayMatched =
     diffInDays >= (volunteerConfig?.volunteeringMinStay || 1);
 
+  const isMinResidenceStayMatched =
+    diffInDays >= (volunteerConfig?.residenceMinStay || 1);
+
   const isMinDurationMatched = Boolean(
     (bookingConfig && diffInDays >= bookingConfig?.minDuration) || eventId,
   );
+
   const canProceed = !!(
     ((hasEventIdAndValidTicket && hasValidDates) ||
-      (hasVolunteerId && hasValidDates) ||
+      ((isResidenceApplication || isVolunteerApplication) &&
+        hasValidDates &&
+        (isMinVolunteeringStayMatched || isMinResidenceStayMatched)) ||
       isGeneralCase) &&
-    isMinDurationMatched &&
-    isMinVolunteeringStayMatched
+    isMinDurationMatched
   );
 
   const isTokenPaymentSelected = currency === CURRENCIES[1];
   const isStartToday = start && dayjs(start).isSame(dayjs(), 'day');
   const isTodayAndToken = Boolean(isStartToday && isTokenPaymentSelected);
+
+  useEffect(() => {
+    if (eventId) {
+      setBlockedDateRanges((ranges) => [
+        ...ranges,
+        { before: new Date(event?.start as string) },
+        { after: new Date(event?.end as string) },
+      ]);
+    }
+    if (isVolunteerApplication || isResidenceApplication) {
+      setBlockedDateRanges((ranges) => [...ranges, { before: new Date() }]);
+    }
+
+    if (!eventId && !isVolunteerApplication && !isResidenceApplication) {
+      setBlockedDateRanges(memoizedBlockedDateRanges);
+    }
+  }, []);
 
   useEffect(() => {
     setBookingError(null);
@@ -192,10 +210,17 @@ const DatesSelector = ({
         );
       }
 
-      if (!isMinVolunteeringStayMatched && hasVolunteerId) {
+      if (!isMinVolunteeringStayMatched && isVolunteerApplication) {
         setBookingError(
           t('bookings_dates_min_volunteering_stay_error', {
             var: volunteerConfig?.volunteeringMinStay,
+          }),
+        );
+      }
+      if (!isMinResidenceStayMatched && isResidenceApplication) {
+        setBookingError(
+          t('bookings_dates_min_residence_stay_error', {
+            var: volunteerConfig?.residenceMinStay,
           }),
         );
       }
@@ -212,7 +237,16 @@ const DatesSelector = ({
       ...(infants && { infants: String(infants) }),
       ...(pets && { pets: String(pets) }),
       ...(eventId && { eventId: eventId as string }),
-      ...(volunteerId && { volunteerId: volunteerId as string }),
+      ...((isVolunteerApplication || isResidenceApplication) && {
+        skills: skills as string,
+      }),
+      ...(projectId && { projectId: projectId as string }),
+      ...((isVolunteerApplication || isResidenceApplication) && {
+        diet: diet as string,
+      }),
+      ...((isVolunteerApplication || isResidenceApplication) && {
+        suggestions: suggestions as string,
+      }),
     };
     const urlParams = new URLSearchParams(params);
 
@@ -235,11 +269,15 @@ const DatesSelector = ({
         pets: String(pets),
         currency,
         ...(eventId && { eventId: eventId as string }),
-        ...(volunteerId && { volunteerId: volunteerId as string }),
         ticketOption: selectedTicketOption?.name,
         discountCode: discountCode,
         doesNeedPickup: String(doesNeedPickup),
         doesNeedSeparateBeds: String(doesNeedSeparateBeds),
+        ...(skills && { skills: skills as string }),
+        ...(diet && { diet: diet as string }),
+        ...(projectId && { projectId: projectId as string }),
+        ...(suggestions && { suggestions: suggestions as string }),
+        bookingType: (bookingType as string) || '',
       };
 
       if (selectedTicketOption?.isDayTicket) {
@@ -265,10 +303,13 @@ const DatesSelector = ({
           doesNeedPickup,
           doesNeedSeparateBeds,
           isHourlyBooking,
+          isResidenceApplication,
+          isVolunteerApplication,
         });
         router.push(`/bookings/${newBooking._id}/questions`);
       } else {
         const urlParams = new URLSearchParams(data);
+
         router.push(`/bookings/create/accomodation?${urlParams}`);
       }
     } catch (err: any) {
@@ -277,8 +318,12 @@ const DatesSelector = ({
   };
 
   const goBack = () => {
-    if (volunteerId) {
-      router.push(`/volunteer/${volunteer?.slug}`);
+    if (isResidenceApplication) {
+      router.push('/projects/apply');
+      return;
+    }
+    if (isVolunteerApplication) {
+      router.push('/volunteer/apply');
       return;
     }
     if (eventId) {
@@ -328,7 +373,6 @@ const DatesSelector = ({
               items={ticketOptions}
               selectedTicketOption={selectedTicketOption}
               selectTicketOption={selectTicketOption}
-              volunteer={volunteer}
               discountCode={discountCode}
               setDiscountCode={setDiscountCode}
               eventId={eventId as string}
@@ -344,8 +388,8 @@ const DatesSelector = ({
                 blockedDateRanges={blockedDateRanges}
                 savedStartDate={savedStartDate as string}
                 savedEndDate={savedEndDate as string}
-                eventStartDate={event?.start ? event?.start : volunteer?.start}
-                eventEndDate={event?.end ? event?.end : volunteer?.end}
+                eventStartDate={event?.start && event?.start}
+                eventEndDate={event?.end && event?.end}
               />
               {bookingError && <ErrorMessage error={bookingError} />}
               {isTodayAndToken && (
@@ -413,7 +457,7 @@ DatesSelector.getInitialProps = async (
 ): Promise<Props> => {
   try {
     const { query } = context;
-    const { eventId, volunteerId } = query;
+    const { eventId, volunteerId, bookingType } = query;
 
     const [bookingConfigRes, volunteerConfigRes, messages] = await Promise.all([
       api.get('/config/booking').catch(() => null),
@@ -436,18 +480,12 @@ DatesSelector.getInitialProps = async (
         messages,
       };
     }
-    if (volunteerId) {
-      const volunteer = await api
-        .get(`/volunteer/${volunteerId}`)
-        .catch(() => null);
-      return {
-        bookingConfig,
-        volunteerConfig,
-        volunteer: volunteer?.data?.results,
-        messages,
-      };
-    }
-    if (!eventId && !volunteerId) {
+    if (
+      !eventId &&
+      !volunteerId &&
+      bookingType !== 'volunteer' &&
+      bookingType !== 'residence'
+    ) {
       const res = await api
         .get(
           `/event?&where=${JSON.stringify({

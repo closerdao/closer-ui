@@ -1,4 +1,6 @@
-import { CloserCurrencies } from './currency';
+import { User } from 'closer/contexts/auth/types';
+
+import { CloserCurrencies, Price } from './currency';
 
 export type BookingConditions = {
   memberMaxDuration: number | undefined;
@@ -22,6 +24,16 @@ export type VolunteerOpportunity = {
   attributes: any[];
   managedBy: any[];
   _id: string;
+};
+
+export type Project = VolunteerOpportunity & {
+  budget?: number;
+  documentUrl?: string;
+  reward?: Price<CloserCurrencies>;
+  skills?: string[];
+  estimate?: string;
+  manager?: User;
+  descriptionText?: string;
 };
 
 export type Question = {
@@ -129,8 +141,6 @@ export type BookingConfig = {
   foodPriceChef: number;
 };
 
-
-
 export type PaymentConfig = {
   enabled: boolean;
   cardPayment: string;
@@ -143,6 +153,10 @@ export type PaymentConfig = {
 export type VolunteerConfig = {
   enabled: boolean;
   volunteeringMinStay: number;
+  residenceMinStay: number;
+  skills?: string;
+  residenceTimeFrame?: string;
+  diet?: string;
 };
 
 export type FundraisingConfig = {

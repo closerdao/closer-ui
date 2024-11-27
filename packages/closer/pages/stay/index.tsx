@@ -116,19 +116,25 @@ const StayPage = ({
 
       <section className="max-w-6xl mx-auto mb-16">
         <div className="mb-6 max-w-prose">
-          <Heading level={1} className={`${APP_NAME === 'lios' ? 'text-xl sm:text-2xl': 'text-4xl'}  pb-2 mt-8`}>
-            <p className='font-accent' dangerouslySetInnerHTML={{ __html: 
-              t.raw('stay_title')
-            }} />
-                        
+          <Heading
+            level={1}
+            className={`${
+              APP_NAME === 'lios' ? 'text-xl sm:text-2xl' : 'text-4xl'
+            }  pb-2 mt-8`}
+          >
+            <p
+              className="font-accent"
+              dangerouslySetInnerHTML={{ __html: t.raw('stay_title') }}
+            />
+
             {`
             ${APP_NAME && APP_NAME === 'tdf' ? PLATFORM_NAME : ''}`}
           </Heading>
 
-          <div className='rich-text font-accent' dangerouslySetInnerHTML={{ __html: 
-              t.raw('stay_description')
-            }} />
-     
+          <div
+            className="rich-text font-accent"
+            dangerouslySetInnerHTML={{ __html: t.raw('stay_description') }}
+          />
         </div>
       </section>
 
@@ -148,7 +154,8 @@ const StayPage = ({
         {process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING &&
           opportunities &&
           opportunities?.length > 0 &&
-          volunteerConfig.enabled === true && (
+          volunteerConfig.enabled === true &&
+          APP_NAME !== 'tdf' && (
             <Link
               href="/volunteer"
               className="text-xl px-8 py-3 text-accent italic underline"
@@ -156,6 +163,15 @@ const StayPage = ({
               {t('buttons_volunteer')}
             </Link>
           )}
+
+        {APP_NAME && APP_NAME === 'tdf' && (
+          <Link
+            href="/#how-to-play"
+            className="text-xl px-8 py-3 text-accent italic underline"
+          >
+            {t('button_other_ways_to_join')}
+          </Link>
+        )}
       </section>
 
       <section className="max-w-6xl mx-auto mb-16">
@@ -210,7 +226,7 @@ StayPage.getInitialProps = async (context: NextPageContext) => {
       generalRes,
       volunteerRes,
       volunteerConfigRes,
-      messages
+      messages,
     ] = await Promise.all([
       api.get('/config/booking').catch((err) => {
         console.error('Error fetching booking config:', err);
@@ -230,7 +246,6 @@ StayPage.getInitialProps = async (context: NextPageContext) => {
         return null;
       }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-
     ]);
     const generalConfig = generalRes?.data?.results?.value;
 

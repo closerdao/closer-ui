@@ -38,62 +38,62 @@ const BookingRequestButtons = ({
 
   return (
     <div className="mt-4 flex flex-col gap-4">
-  
       {/* Hide buttons if start date is in the past: */}
       {new Date(start) > new Date() && (
         <>
-          {status === 'checked-in' && (
+          {/* TODO: add links for checked in and checked out guests */}
+          {/* {status === 'checked-in' && (
             <Link passHref href="">
-              <Button type="secondary">
+              <Button variant="secondary">
                 {t('booking_card_join_chat_button')}
               </Button>
             </Link>
           )}
           {status === 'checked-out' && (
             <Link passHref href="">
-              <Button type="secondary">
+              <Button variant="secondary">
                 {t('booking_card_feedback_button')}
               </Button>
             </Link>
-          )}
+          )} */}
           {status === 'open' && (
             <Link passHref href={`/bookings/${_id}/summary`}>
-              <Button type="secondary">
+              <Button variant="secondary">
                 💰 {t('booking_card_checkout_button')}
               </Button>
             </Link>
           )}
           {status === 'confirmed' && user && user._id === createdBy && (
             <Link passHref href={`/bookings/${_id}/checkout`}>
-              <Button type="secondary">
+              <Button variant="secondary">
                 💰 {t('booking_card_checkout_button')}
               </Button>
             </Link>
           )}
           {user && isBookingCancelable && user._id === createdBy && (
             <Link passHref href={`/bookings/${_id}/cancel`}>
-              <Button type="secondary" className="  uppercase">
+              <Button variant="secondary" className="  uppercase">
                 ⭕ {t('booking_cancel_button')}
               </Button>
             </Link>
           )}
-
         </>
       )}
-      {isSpaceHost && !Boolean(user && isBookingCancelable && user._id === createdBy) && (
-        <Link passHref href={`/bookings/${_id}/cancel`}>
-          <Button type="secondary">⭕ {t('booking_cancel_button')}</Button>
-        </Link>
-      )}
+      {isSpaceHost &&
+        !Boolean(user && isBookingCancelable && user._id === createdBy) && (
+          <Link passHref href={`/bookings/${_id}/cancel`}>
+            <Button variant="secondary">⭕ {t('booking_cancel_button')}</Button>
+          </Link>
+        )}
       {user && user.roles.includes('space-host') && (
         <>
           {status === 'pending' && (
-            <Button type="secondary" onClick={confirmBooking}>
+            <Button variant="secondary" onClick={confirmBooking}>
               ✅ {t('booking_confirm_button')}
             </Button>
           )}
           {status === 'pending' && (
-            <Button type="secondary" onClick={rejectBooking}>
+            <Button variant="secondary" onClick={rejectBooking}>
               ❌ {t('booking_reject_button')}
             </Button>
           )}
