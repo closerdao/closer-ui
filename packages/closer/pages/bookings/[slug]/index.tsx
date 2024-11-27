@@ -335,8 +335,7 @@ const BookingPage = ({
   const handleSaveBooking = async () => {
     try {
       setIsLoading(true);
-      // const res = await api.patch(`/booking/${_id}`, updatedBooking);
-      const res = await api.post(`/bookings/update`, {
+      const res = await api.post('/bookings/update', {
         updatedBookingValues,
         bookingId: _id,
         paymentType,
