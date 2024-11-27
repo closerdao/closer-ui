@@ -60,6 +60,8 @@ interface ButtonProps extends VariantProps<typeof buttonStyles> {
   size?: 'small' | 'medium' | 'large';
   href?: string;
   onClick?: () => void;
+  target?: string;
+  rel?: string;
 }
 
 const LinkButton = ({
@@ -73,6 +75,8 @@ const LinkButton = ({
   isFullWidth,
   size,
   onClick,
+  target,
+  rel,
 }: ButtonProps) => {
   return (
     <>
@@ -86,6 +90,8 @@ const LinkButton = ({
         )}
         `}
         onClick={onClick}
+        target={target}
+        rel={rel}
       >
         {children}
       </Link>

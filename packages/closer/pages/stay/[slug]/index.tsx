@@ -167,9 +167,7 @@ const ListingPage: NextPage<Props> = ({
       numPrivateSpacesRequired
     : 0;
   const accommodationTokenTotal = listing
-    ? listing.tokenPrice?.val *
-      (listing.private ? 1 : adults) *
-      durationInDays 
+    ? listing.tokenPrice?.val * (listing.private ? 1 : adults) * durationInDays
     : 0;
   const nightlyTotal = listing
     ? listing.fiatPrice?.val * (listing.private ? 1 : adults) * discountRate
@@ -225,10 +223,9 @@ const ListingPage: NextPage<Props> = ({
       end &&
       isListingAvailable &&
       !calendarError &&
-    (isHourlyBooking ? isTimeSet : true) &&
-    !isTodayAndToken
+      (isHourlyBooking ? isTimeSet : true) &&
+      !isTodayAndToken,
   );
-
 
   const fiatTotal = getFiatTotal({
     isTeamBooking,
@@ -257,6 +254,8 @@ const ListingPage: NextPage<Props> = ({
       });
 
       setIsGuestLimit(availability[0].reason === 'Guest limit');
+
+      console.log('availability=', availability);
       return { results, availability, error: null };
     } catch (error: any) {
       return {
@@ -302,11 +301,12 @@ const ListingPage: NextPage<Props> = ({
         );
         if (availability) {
           setHourAvailability(getLocalTimeAvailability(availability, timeZone));
-          const minNumSpacesAvailable = availability.reduce(
-            (min: number, day: { numSpacesAvailable: number }) =>
-              Math.min(min, day.numSpacesAvailable),
-            Infinity,
-          ) || 0;
+          const minNumSpacesAvailable =
+            availability.reduce(
+              (min: number, day: { numSpacesAvailable: number }) =>
+                Math.min(min, day.numSpacesAvailable),
+              Infinity,
+            ) || 0;
           setNumSpacesAvailable(minNumSpacesAvailable);
         }
         setIsListingAvailable(results);
@@ -677,7 +677,9 @@ const ListingPage: NextPage<Props> = ({
                     <div className="flex flex-col w-1/2 sm:w-full">
                       <div className="">
                         {isTodayAndToken && (
-                          <ErrorMessage error={t('booking_token_same_day_error')} />
+                          <ErrorMessage
+                            error={t('booking_token_same_day_error')}
+                          />
                         )}
                         {error && (
                           <ErrorMessage error={parseMessageFromError(error)} />
@@ -837,8 +839,7 @@ const ListingPage: NextPage<Props> = ({
                                     accommodationTokenTotal,
                                     listing.tokenPrice?.cur,
                                   )}{' '}
-                                    +{' '}
-                                    {priceFormat(utilityTotal)}
+                                  + {priceFormat(utilityTotal)}
                                 </div>
                               ) : (
                                 <span>

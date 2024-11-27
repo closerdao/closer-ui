@@ -4,31 +4,71 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
-import PropTypes from 'prop-types';
 
-import { CloserCurrencies } from '../types';
+import { Listing } from '../types';
 import { cdn } from '../utils/api';
 import ListingPrice from './ListingPrice';
 import Button from './ui/Button';
 import Heading from './ui/Heading';
 
+interface ListingCardProps {
+  listing: Listing;
+  bookListing: (listingId: string) => void;
+  useTokens: boolean;
+  bookingCategory: string;
+  isAuthenticated: boolean;
+  isVolunteerOrResidency: boolean;
+  adults: number;
+  durationInDays: number;
+  discountRate: number;
+}
+
 const ListingCard = ({
   listing,
   bookListing,
   useTokens,
-  bookingType,
+  bookingCategory,
   isAuthenticated,
-}) => {
+  isVolunteerOrResidency,
+  adults,
+  durationInDays,
+  discountRate,
+}: ListingCardProps) => {
   const t = useTranslations();
   const router = useRouter();
-  const { name, description, rentalToken, utilityFiat, available } =
-    listing;
+  const { name, description } = listing;
+
+  const numPrivateSpacesRequired = listing?.private
+    ? Math.ceil(adults / (listing?.beds || 1))
+    : 1;
+
+  const accommodationFiatTotal = listing?.fiatPrice
+    ? {
+        val:
+          listing.fiatPrice.val *
+          (listing.private ? 1 : adults) *
+          durationInDays *
+          discountRate *
+          numPrivateSpacesRequired,
+        cur: listing.fiatPrice.cur,
+      }
+    : { val: 0, cur: listing.fiatPrice?.cur };
+
+  const rentalToken = listing?.tokenPrice
+    ? {
+        val:
+          listing.tokenPrice.val *
+          (listing.private ? 1 : adults) *
+          durationInDays *
+          numPrivateSpacesRequired,
+        cur: listing.tokenPrice.cur,
+      }
+    : { val: 0, cur: listing.tokenPrice?.cur };
 
   const [firstPHtml, setFirstPHtml] = useState('');
 
-
   useEffect(() => {
-    const extractFirstParagraph = (html) => {
+    const extractFirstParagraph = (html: string) => {
       const div = document.createElement('div');
       div.innerHTML = html;
       const paragraphs = div.querySelectorAll('p');
@@ -54,6 +94,7 @@ const ListingCard = ({
       <Heading level={4} className="mb-4">
         {name}
       </Heading>
+
       {listing.photos && listing.photos.length > 0 && (
         <div className="relative h-48 rounded-lg my-4 overflow-hidden">
           <Image
@@ -84,60 +125,28 @@ const ListingCard = ({
       <div className="my-8">
         <ListingPrice
           rentalFiat={
-            listing?.fiatPrice || { val: 0, cur: CloserCurrencies.EUR }
+            isVolunteerOrResidency
+              ? { val: 0, cur: accommodationFiatTotal.cur }
+              : accommodationFiatTotal
           }
           rentalToken={rentalToken}
-          utilityFiat={utilityFiat}
           useTokens={useTokens}
-          bookingType={bookingType}
+          bookingCategory={bookingCategory}
         />
       </div>
 
       <Button
         onClick={handleBooking}
         variant="secondary"
-        isEnabled={
-          available !== false 
-        }
+        // isEnabled={available !== false}
       >
-        {available !== false
-          ? isAuthenticated
-            ? t('listing_preview_book')
-            : t('listing_preview_sign_in_to_book')
-          : t('listing_preview_not_available')}
+        {isAuthenticated
+          ? t('listing_preview_book')
+          : t('listing_preview_sign_in_to_book')}
+        {/* : t('listing_preview_not_available')} */}
       </Button>
     </div>
   );
-};
-
-ListingCard.propTypes = {
-  listing: PropTypes.shape({
-    name: PropTypes.string,
-    description: PropTypes.string,
-    fiatPrice: PropTypes.shape({
-      val: PropTypes.number,
-      cur: PropTypes.string,
-    }),
-    tokenPrice: PropTypes.shape({
-      val: PropTypes.number,
-      cur: PropTypes.string,
-    }),
-    rentalFiat: PropTypes.shape({
-      val: PropTypes.number,
-      cur: PropTypes.string,
-    }),
-    rentalToken: PropTypes.shape({
-      val: PropTypes.number,
-      cur: PropTypes.string,
-    }),
-    utilityPrice: PropTypes.shape({
-      val: PropTypes.number,
-      cur: PropTypes.string,
-    }),
-  }),
-  bookListing: PropTypes.func,
-  useToken: PropTypes.bool,
-  adults: PropTypes.number,
 };
 
 export default ListingCard;

@@ -81,6 +81,7 @@ const Summary = ({
   const [hasComplied, setCompliance] = useState(false);
   const [isMember, setIsMember] = useState(false);
   const [updatedBooking, setUpdatedBooking] = useState<Booking | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const onComply = (isComplete: boolean) => setCompliance(isComplete);
 
@@ -97,13 +98,13 @@ const Summary = ({
     children,
     pets,
     infants,
-    volunteerId,
     eventId,
     ticketOption,
     eventFiat,
     total,
     dailyRentalToken,
     duration,
+    volunteerInfo,
   } = updatedBooking || booking || {};
 
   const isHourlyBooking = listing?.priceDuration === 'hour';
@@ -211,6 +212,7 @@ const Summary = ({
   };
 
   const handleNext = async () => {
+    setLoading(true);
     setHandleNextError(null);
     if (booking?.status === 'confirmed') {
       return router.push(`/bookings/${booking?._id}/checkout`);
@@ -228,6 +230,8 @@ const Summary = ({
       }
     } catch (err: any) {
       setHandleNextError(err.response?.data?.error || err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -279,7 +283,6 @@ const Summary = ({
             endDate={end || ''}
             listingName={listing?.name || ''}
             listingUrl={listing?.slug || ''}
-            volunteerId={volunteerId}
             eventName={event?.name}
             ticketOption={ticketOption?.name}
             priceDuration={listing?.priceDuration}
@@ -288,6 +291,7 @@ const Summary = ({
                 ? Math.ceil(booking.adults / (listing?.beds || 1))
                 : booking.adults
             }
+            isVolunteer={volunteerInfo?.bookingType === 'volunteer'}
           />
           <SummaryCosts
             utilityFiat={utilityFiat}
@@ -310,16 +314,15 @@ const Summary = ({
               (listing && listing?.fiatPrice?.val * booking?.adults) ||
               undefined
             }
-            volunteerId={volunteerId}
             priceDuration={listing?.priceDuration}
             vatRate={vatRate}
           />
 
-          {volunteerId ? (
+          {booking?.volunteerInfo ? (
             <>
               <Conditions setComply={onComply} visitorsGuide={VISITORS_GUIDE} />
               <Button
-                isEnabled={hasComplied}
+                isEnabled={hasComplied && !loading}
                 className="booking-btn"
                 onClick={handleNext}
               >

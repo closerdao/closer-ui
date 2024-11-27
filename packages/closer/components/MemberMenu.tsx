@@ -73,6 +73,11 @@ const MemberMenu = () => {
         enabled: isVolunteeringEnabled,
       },
       {
+        label: t('navigation_residence'),
+        url: '/projects',
+        enabled: isVolunteeringEnabled,
+      },
+      {
         label: t('navigation_dashboard'),
         url: '/dashboard',
         enabled: isBookingEnabled,
@@ -159,11 +164,15 @@ const MemberMenu = () => {
         enabled: true,
         roles: ['steward'],
       },
-      ...(APP_NAME !== 'foz' ? [{
-        label: t('navigation_resources'),
-        url: '/resources',
-        enabled: true,
-      }] : []),
+      ...(APP_NAME !== 'foz'
+        ? [
+            {
+              label: t('navigation_resources'),
+              url: '/resources',
+              enabled: true,
+            },
+          ]
+        : []),
       {
         label: t('navigation_support_us'),
         url: '/support-us',

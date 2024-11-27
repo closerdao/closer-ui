@@ -64,7 +64,6 @@ const Checkout = ({
   bookingConfig,
   paymentConfig,
 }: Props) => {
-  console.log('booking=', booking);
   const t = useTranslations();
   const isHourlyBooking = listing?.priceDuration === 'hour';
   const isBookingEnabled =
@@ -182,7 +181,7 @@ const Checkout = ({
           const nights = maxNightsToPayWithTokens;
           const price =
             (maxNightsToPayWithTokens || 0) *
-            (creditsOrTokensPricePerNight || 0) || 0;
+              (creditsOrTokensPricePerNight || 0) || 0;
           setPartialPriceInTokens(price);
           if (!useTokens) {
             switchToToken(nights, price, type);
@@ -509,6 +508,8 @@ const Checkout = ({
             {process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' &&
             canApplyCredits &&
             !booking?.volunteerId &&
+            rentalFiat &&
+            rentalFiat?.val > 0 &&
             !useTokens ? (
               <RedeemCredits
                 fiatPricePerNight={listing?.fiatPrice.val}
