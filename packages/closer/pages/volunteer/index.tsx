@@ -35,7 +35,7 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
   return (
     <div className="max-w-screen-lg mx-auto">
       <Head>
-        <title>{`${t('projects_page_title')} - ${PLATFORM_NAME}`}</title>
+        <title>{`${t('volunteer_page_title')} - ${PLATFORM_NAME}`}</title>
       </Head>
       <main className=" pb-24">
         <section className="w-full flex justify-center max-w-4xl mx-auto mb-4 relative">
@@ -154,6 +154,7 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
                       <Link
                         href="https://docs.google.com/document/d/177JkHCy0AhplsaEEYpFHBsiI6d4uLk0TgURSKfBIewE/edit?tab=t.0"
                         target="_blank"
+                        rel="noopener noreferrer"
                       >
                         pink paper
                       </Link>
@@ -163,6 +164,7 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
                       we&apos;d love to hear from you. Check our{' '}
                       <Link
                         target="_blank"
+                        rel="noopener noreferrer"
                         href="https://docs.google.com/document/d/198vWYEQCC1lELQa8f76Jcw3l3UDiPcBKt04PGFKnUvg/edit?tab=t.0"
                       >
                         Visitor&apos;s Guide
@@ -197,9 +199,6 @@ VolunteerOpportunitiesPage.getInitialProps = async (
     const [messages, generalRes] = await Promise.all([
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       api.get('/config/general').catch(() => null),
-      api.get('/project').catch(() => {
-        return null;
-      }),
     ]);
 
     const generalConfig = generalRes?.data?.results?.value;

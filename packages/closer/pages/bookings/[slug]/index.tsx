@@ -431,7 +431,7 @@ const BookingPage = ({
                       <Link
                         href={`/projects/${
                           projects?.find((project) => project._id === projectId)
-                            ?.slug
+                            ?.slug ?? projectId
                         }`}
                       >
                         {
@@ -464,7 +464,7 @@ const BookingPage = ({
             </div>
             <Heading level={5}>{t('projects_suggestions_title')}</Heading>
             <p>
-              {(booking.volunteerInfo.suggestions === 'undefined' || !booking.volunteerInfo.suggestions )
+              {(!booking.volunteerInfo.suggestions )
                 ? 'No suggestions'
                 : booking.volunteerInfo.suggestions}
             </p>

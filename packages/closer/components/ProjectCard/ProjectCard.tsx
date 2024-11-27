@@ -19,14 +19,14 @@ const ProjectCard = ({ project, hasStewardRole }: Props) => {
   const t = useTranslations();
   return (
     <Card
-      key={project._id}
+      key={project?._id}
       className="p-0 bg-white border border-gray-100 justify-start"
     >
       <div className="relative w-full h-[180px] border rounded-t-md overflow-hidden">
-        <Link className="hover:text-accent" href={`/projects/${project.slug}`}>
+        <Link className="hover:text-accent" href={`/projects/${project?.slug}`}>
           <Image
-            src={`${cdn}${project.photo}-post-md.jpg`}
-            alt={project.name}
+            src={`${cdn}${project?.photo}-post-md.jpg`}
+            alt={project?.name}
             fill
             className="object-cover"
           />
@@ -37,9 +37,9 @@ const ProjectCard = ({ project, hasStewardRole }: Props) => {
           <Heading level={3} className="uppercase">
             <Link
               className="hover:text-accent"
-              href={`/projects/${project.slug}`}
+              href={`/projects/${project?.slug}`}
             >
-              {project.name}
+              {project?.name}
             </Link>
           </Heading>
 
@@ -48,31 +48,30 @@ const ProjectCard = ({ project, hasStewardRole }: Props) => {
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-2 text-md">
             <div className="flex gap-2 flex-wrap pb-2">
-              {project?.skills &&
-                project?.skills?.map((skill) => (
-                  <Tag key={skill} size="small" color="primary">
-                    {skill}
-                  </Tag>
-                ))}
+              {project?.skills?.map((skill) => (
+                <Tag key={skill} size="small" color="primary">
+                  {skill}
+                </Tag>
+              ))}
             </div>
             <p>
-              {t('projects_reward')} {priceFormat(project.reward)}
+              {t('projects_reward')} {priceFormat(project?.reward)}
             </p>
             <p>
-              {t('projects_budget')} {priceFormat(project.budget)}
+              {t('projects_budget')} {priceFormat(project?.budget)}
             </p>
             <p>
               {t('projects_estimate')} {project?.estimate}
             </p>
             <p>
-            {t('projects_managed_by')}{' '}  
-              {project?.manager ? (  
-                <Link href={`/members/${project.manager.slug}`}>  
-                  {project.manager.screenname}  
-                </Link>  
-              ) : (  
-                <span>no manager</span>  
-              )}  
+              {t('projects_managed_by')}{' '}
+              {project?.manager ? (
+                <Link href={`/members/${project?.manager.slug}`}>
+                  {project?.manager.screenname}
+                </Link>
+              ) : (
+                <span>{t('projects_no_manager')}</span>
+              )}
             </p>
           </div>
           <div className="flex flex-col gap-4">
@@ -81,11 +80,12 @@ const ProjectCard = ({ project, hasStewardRole }: Props) => {
               variant="secondary"
               href={project?.documentUrl}
               target="_blank"
+              rel="noopener noreferrer"
             >
               {t('projects_go_to_document')}
             </LinkButton>
             {hasStewardRole && (
-              <LinkButton size="small" href={`/projects/${project.slug}/edit`}>
+              <LinkButton size="small" href={`/projects/${project?.slug}/edit`}>
                 {t('projects_edit_project_title')}
               </LinkButton>
             )}

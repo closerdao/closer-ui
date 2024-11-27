@@ -47,11 +47,13 @@ CreateProject.getInitialProps = async (context: NextPageContext) => {
   try {
     const [messages, volunteerConfigRes] = await Promise.all([
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME).catch(
-        () => {
+        (error) => {
+          console.error('Failed to load locale data:', error);  
           return null;
         },
       ),
-      api.get('/config/volunteering').catch(() => {
+      api.get('/config/volunteering').catch((error) => {
+        console.error('Failed to load volunteer config:', error);
         return null;
       }),
     ]);

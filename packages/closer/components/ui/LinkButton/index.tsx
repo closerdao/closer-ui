@@ -61,6 +61,7 @@ interface ButtonProps extends VariantProps<typeof buttonStyles> {
   href?: string;
   onClick?: () => void;
   target?: string;
+  rel?: string;
 }
 
 const LinkButton = ({
@@ -75,6 +76,7 @@ const LinkButton = ({
   size,
   onClick,
   target,
+  rel,
 }: ButtonProps) => {
   return (
     <>
@@ -89,7 +91,7 @@ const LinkButton = ({
         `}
         onClick={onClick}
         target={target}
-        rel="noopener noreferrer"
+        rel={rel}
       >
         {children}
       </Link>

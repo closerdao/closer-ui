@@ -396,6 +396,7 @@
   "bookings_title_credits-paid": "Pack your bags!",
   "bookings_title_tokens-staked": "Pack your bags!",
   "bookings_title_application_sent": "Your volunteer application has been sent!",
+  "bookings_title_residency_application_sent": "Your residency application has been sent!",
   "bookings_title_confirmed_see_you_on": "See you on",
   "bookings_title_open": "Your booking not yet completed.",
   "bookings_title_cancelled": "Your booking was cancelled.",
@@ -1401,6 +1402,7 @@
   "projects_food_intro": "Any dietary needs / preferences?",
   "projects_volunteer_application_title": "👷🏽‍♀️ Volunteer application",
   "projects_residence_application_title": "👷🏽‍♀️ Residence application",
+  "projects_no_manager": "no manager",
   "bookings_dates_min_residence_stay_error": "Minimum residence stay is {var} days ",
   
   "":""

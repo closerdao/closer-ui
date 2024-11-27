@@ -16,6 +16,16 @@ const BookingResult = ({ booking, eventName }: Props) => {
 
   return (
     <div className="flex flex-col gap-16 flex-nowrap">
+      {status === 'paid' && (volunteerId || volunteerInfo) && (
+        <>
+          <p className="font-bold text-3xl">{t('bookings_title_confirmed')}</p>
+          <p>{t('subscriptions_success_thank_you_message')}</p>
+          <p className="uppercase font-bold">
+            {t('bookings_confirmation_step_success_your_booking_id')} {_id}
+          </p>
+          <p>{t('booking_status_booking_complete')}</p>
+        </>
+      )}
       {status === 'paid' && !volunteerId && !volunteerInfo && !eventId && (
         <>
           <p className="font-bold text-3xl">{t('bookings_title_confirmed')}</p>
@@ -54,15 +64,17 @@ const BookingResult = ({ booking, eventName }: Props) => {
         </div>
       )}
 
-      {(volunteerId || volunteerInfo) && (
+      {status !== 'paid' && (volunteerId || volunteerInfo) && (
         <>
           <p className="font-bold text-3xl">
-            {t('bookings_title_application_sent')}
+            {volunteerInfo?.bookingType === 'volunteer'
+              ? t('bookings_title_application_sent')
+              : t('bookings_title_residency_application_sent')}
           </p>
 
           <p>{t('subscriptions_success_thank_you_message')}</p>
           <p className="font-black uppercase">
-            {t('bookings_confirmation_step_success_your_application_id')}
+            {t('bookings_confirmation_step_success_your_application_id')} {_id}
           </p>
           <div>
             <p className="mb-4">

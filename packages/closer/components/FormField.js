@@ -163,18 +163,14 @@ const FormField = ({
                 onChange={(e) => update(name, e.target.value)}
                 className={`px-2 py-1 min-w-[180px] ${className}`}
               >
-                {dynamicField?.name === name
-                  ? dynamicField?.options.map((opt) => (
-                      <option value={opt.value} key={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))
-                  : dynamicField?.name !== name &&
-                    options.map((opt) => (
-                      <option value={opt.value} key={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
+                {(dynamicField?.name === name
+                  ? dynamicField?.options
+                  : options
+                )?.map((opt) => (
+                  <option value={opt.value} key={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
               </select>
             </>
           )}
