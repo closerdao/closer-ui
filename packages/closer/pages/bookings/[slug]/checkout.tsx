@@ -64,7 +64,6 @@ const Checkout = ({
   bookingConfig,
   paymentConfig,
 }: Props) => {
-  console.log('booking=', booking);
   const t = useTranslations();
   const isHourlyBooking = listing?.priceDuration === 'hour';
   const isBookingEnabled =

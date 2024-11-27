@@ -6,7 +6,7 @@ import Link from 'next/link';
 import PageError from 'closer/components/PageError';
 import { Heading, LinkButton } from 'closer/components/ui';
 
-import { GeneralConfig, api, useAuth } from 'closer';
+import { GeneralConfig, api } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import { parseMessageFromError } from 'closer/utils/common';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
@@ -21,9 +21,6 @@ interface Props {
 const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
   const t = useTranslations();
 
-  const { user } = useAuth();
-  const hasStewardRole = user?.roles?.includes('steward');
-
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
@@ -35,7 +32,7 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
   return (
     <div className="max-w-screen-lg mx-auto">
       <Head>
-        <title>{`${t('volunteer_page_title')} - ${PLATFORM_NAME}`}</title>
+        <title>{`Volunteers Open Call - ${PLATFORM_NAME}`}</title>
       </Head>
       <main className=" pb-24">
         <section className="w-full flex justify-center max-w-4xl mx-auto mb-4 relative">
