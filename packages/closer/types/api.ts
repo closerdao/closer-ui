@@ -141,8 +141,6 @@ export type BookingConfig = {
   foodPriceChef: number;
 };
 
-
-
 export type PaymentConfig = {
   enabled: boolean;
   cardPayment: string;

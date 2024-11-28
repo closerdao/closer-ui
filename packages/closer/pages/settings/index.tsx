@@ -39,9 +39,9 @@ const SettingsPage = ({
   const { APP_NAME } = useConfig();
 
   const skillsOptions =
-    (volunteerConfig?.skills && volunteerConfig?.skills.split(',')) || [];
+    volunteerConfig?.skills?.split(',') || [];
   const dietOptions =
-    (volunteerConfig?.diet && volunteerConfig?.diet?.split(',')) || [];
+    (volunteerConfig?.diet?.split(',')) || [];
 
   const { user: initialUser, isAuthenticated, refetchUser } = useAuth();
 

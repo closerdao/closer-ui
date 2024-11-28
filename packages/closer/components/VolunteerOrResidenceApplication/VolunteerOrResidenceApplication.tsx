@@ -48,49 +48,58 @@ const VolunteerOrResidenceApplication = ({
     // suggestions: '',
   };
   const [volunteerData, setVolunteerData] =
-    useState<Record<string, string | string[] | undefined>>(initialVolunteerData);
+    useState<Record<string, string | string[] | undefined>>(
+      initialVolunteerData,
+    );
   const [loading, setLoading] = useState(false);
 
   const updateVolunteerData = (key: string, value: any, remove = false) => {
     if (key === 'suggestions') {
-      setVolunteerData({
-        ...volunteerData,
+      setVolunteerData((prev) => ({
+        ...prev,
         [key]: value,
-      });
+      }));
     } else {
-      setVolunteerData({
-        ...volunteerData,
+      setVolunteerData((prev) => ({
+        ...prev,
         [key]: remove
-          ? ((volunteerData[key] as string[]) || []).filter(
+          ? ((prev[key] as string[]) || []).filter(
               (item: string) => item !== value,
             )
-          : [...(volunteerData[key] || []), value],
-      });
+          : [...(prev[key] || []), value],
+      }));
     }
   };
 
   const handleNext = async () => {
     const params = new URLSearchParams({
-      skills: (Array.isArray(volunteerData.skills)
-        ? volunteerData.skills.join(',')
-        : volunteerData.skills) || '',
-      diet: (Array.isArray(volunteerData.diet)
-        ? volunteerData.diet.join(',')
-        : volunteerData.diet) || '',
-      suggestions: volunteerData.suggestions as string || '',
+      skills:
+        (Array.isArray(volunteerData.skills)
+          ? volunteerData.skills.join(',')
+          : volunteerData.skills) || '',
+      diet:
+        (Array.isArray(volunteerData.diet)
+          ? volunteerData.diet.join(',')
+          : volunteerData.diet) || '',
+      suggestions: (volunteerData.suggestions as string) || '',
       bookingType: type,
-      ...(volunteerData?.projectId && volunteerData.projectId.length > 0 && {
-        projectId: Array.isArray(volunteerData.projectId)
-          ? volunteerData.projectId.join(',')
-          : volunteerData.projectId,
-      }),
+      ...(volunteerData?.projectId &&
+        volunteerData.projectId.length > 0 && {
+          projectId: Array.isArray(volunteerData.projectId)
+            ? volunteerData.projectId.join(',')
+            : volunteerData.projectId,
+        }),
     } as Record<string, string>);
 
     const updatedUser = {
       ...user,
       preferences: {
-        skills: Array.isArray(volunteerData.skills) ? [...new Set(volunteerData.skills)] : [],
-        diet: Array.isArray(volunteerData.diet) ? [...new Set(volunteerData.diet)] : [],
+        skills: Array.isArray(volunteerData.skills)
+          ? [...new Set(volunteerData.skills)]
+          : [],
+        diet: Array.isArray(volunteerData.diet)
+          ? [...new Set(volunteerData.diet)]
+          : [],
       },
     };
 
@@ -133,23 +142,22 @@ const VolunteerOrResidenceApplication = ({
             <p> {t('projects_build_intro')}</p>
 
             <div>
-              {projects &&
-                projects.map((project) => (
-                  <Checkbox
-                    key={project._id}
-                    id={project.name}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                      updateVolunteerData(
-                        'projectId',
-                        project._id,
-                        !e.target.checked,
-                      );
-                    }}
-                    isChecked={volunteerData.projectId?.includes(project._id)}
-                  >
-                    {project.name}
-                  </Checkbox>
-                ))}
+              {projects?.map((project) => (
+                <Checkbox
+                  key={project._id}
+                  id={project.name}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                    updateVolunteerData(
+                      'projectId',
+                      project._id,
+                      !e.target.checked,
+                    );
+                  }}
+                  isChecked={volunteerData.projectId?.includes(project._id)}
+                >
+                  {project.name}
+                </Checkbox>
+              ))}
             </div>
           </div>
         </section>

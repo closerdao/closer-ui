@@ -7,6 +7,8 @@ import { ErrorMessage } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
+import dayjs, { duration } from 'dayjs';
+import advancedFormat from 'dayjs/plugin/advancedFormat';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import process from 'process';
@@ -22,8 +24,11 @@ import {
 } from '../../../types';
 import api from '../../../utils/api';
 import { getBookingType } from '../../../utils/booking.helpers';
+import { getBookingRate, getDiscountRate } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
+
+dayjs.extend(advancedFormat);
 
 interface Props extends BaseBookingParams {
   listings: Listing[];
@@ -60,8 +65,17 @@ const AccomodationSelector = ({
   volunteerId,
 }: Props) => {
   const t = useTranslations();
+
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
+  console.log('duration=', duration);
+  const durationInDays = dayjs(end).diff(dayjs(start), 'day');
+
+  const durationName = getBookingRate(durationInDays);
+
+  const discountRate = bookingConfig
+    ? 1 - getDiscountRate(durationName, bookingConfig)
+    : 0;
 
   const parsedSkills =
     (skills && Array.isArray(skills) ? skills : skills?.split(',')) || [];
@@ -102,7 +116,7 @@ const AccomodationSelector = ({
         skills: parsedSkills,
         diet: parsedDiet,
         projectId: parsedProjectId,
-        suggestions,
+        suggestions: suggestions || '',
         bookingType,
       };
       const {
@@ -205,11 +219,13 @@ const AccomodationSelector = ({
                 key={listing._id}
                 listing={listing}
                 bookListing={bookListing}
-                useTokens={useTokens}
+                useTokens={Boolean(useTokens)}
                 bookingCategory={bookingCategory}
                 isAuthenticated={isAuthenticated}
                 adults={Number(adults)}
                 isVolunteerOrResidency={Boolean(bookingType)}
+                durationInDays={durationInDays}
+                discountRate={discountRate}
               />
             ))}
         </div>
@@ -313,3 +329,4 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
 };
 
 export default AccomodationSelector;
+

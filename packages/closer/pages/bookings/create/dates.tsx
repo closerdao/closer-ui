@@ -114,10 +114,11 @@ const DatesSelector = ({
     eventId && (!ticketOptions?.length || selectedTicketOption),
   );
 
-  const isResidenceApplication =
-    decodeURIComponent(bookingType as string) === 'residence';
-  const isVolunteerApplication =
-    decodeURIComponent(bookingType as string) === 'volunteer';
+  const decodedBookingType = bookingType
+    ? decodeURIComponent(bookingType as string)
+    : '';
+  const isResidenceApplication = decodedBookingType === 'residence';
+  const isVolunteerApplication = decodedBookingType === 'volunteer';
 
   function getBlockedDateRanges() {
     const dateRanges: any[] = [];
@@ -308,6 +309,7 @@ const DatesSelector = ({
         router.push(`/bookings/${newBooking._id}/questions`);
       } else {
         const urlParams = new URLSearchParams(data);
+
         router.push(`/bookings/create/accomodation?${urlParams}`);
       }
     } catch (err: any) {

@@ -102,7 +102,7 @@ VolunteerApplicationPage.getInitialProps = async (context: NextPageContext) => {
       messages,
     };
   } catch (err) {
-    console.log('Error', err);
+    console.error('Error', err);
     return {
       error: parseMessageFromError(err),
       volunteerConfig: null,
