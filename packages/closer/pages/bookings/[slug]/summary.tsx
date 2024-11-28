@@ -60,6 +60,15 @@ const Summary = ({
 }: Props) => {
   const t = useTranslations();
 
+  const cancellationPolicy = bookingConfig
+    ? {
+        lastday: bookingConfig.cancellationPolicyLastday,
+        lastweek: bookingConfig.cancellationPolicyLastweek,
+        lastmonth: bookingConfig.cancellationPolicyLastmonth,
+        default: bookingConfig.cancellationPolicyDefault,
+      }
+    : null;
+
   const { balanceAvailable: tokenBalanceAvailable, isWalletReady } =
     useContext(WalletState);
 
@@ -320,7 +329,7 @@ const Summary = ({
 
           {booking?.volunteerInfo ? (
             <>
-              <Conditions setComply={onComply} visitorsGuide={VISITORS_GUIDE} />
+              <Conditions cancellationPolicy={cancellationPolicy} setComply={onComply} visitorsGuide={VISITORS_GUIDE} />
               <Button
                 isEnabled={hasComplied && !loading}
                 className="booking-btn"

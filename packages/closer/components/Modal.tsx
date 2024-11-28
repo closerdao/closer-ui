@@ -3,10 +3,11 @@ import { ReactNode } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 import CloseIcon from './icons/CloseIcon';
+import { MouseEvent } from 'react';
 
 interface Props {
   children: ReactNode;
-  closeModal: () => void;
+  closeModal: (event: MouseEvent<HTMLButtonElement>) => void;
   doesShowVideo?: boolean;
   className?: string;
 }
@@ -14,7 +15,7 @@ interface Props {
 const Modal = ({ children, closeModal, doesShowVideo, className }: Props) => {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center min-h-[600px]">
-      <div className="fixed inset-0 bg-black opacity-50" onClick={closeModal} />
+      <button className="fixed inset-0 bg-black opacity-50" onClick={closeModal} />
       <div
         className={`p-5 rounded-md relative bg-white z-[101] shadow-lg   ${twMerge(
           ' w-full h-full md:h-2/3 sm:p-8 md:w-[500px]',

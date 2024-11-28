@@ -174,8 +174,7 @@ const DatesSelector = ({
         hasValidDates &&
         (isMinVolunteeringStayMatched || isMinResidenceStayMatched)) ||
       isGeneralCase) &&
-    isMinDurationMatched &&
-    isMinVolunteeringStayMatched
+    isMinDurationMatched
   );
 
   const isTokenPaymentSelected = currency === CURRENCIES[1];
