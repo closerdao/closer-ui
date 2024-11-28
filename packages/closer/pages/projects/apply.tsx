@@ -20,6 +20,7 @@ import {
   default as PageNotAllowed,
   default as PageNotFound,
 } from '../not-found';
+import { useEffect } from 'react';
 
 interface Props {
   volunteerConfig: VolunteerConfig | null;
@@ -40,7 +41,13 @@ const ProjectApplicationPage = ({
   const isVolunteerEnabled = volunteerConfig?.enabled;
 
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { isLoading, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push(`/login?back=${encodeURIComponent(router.asPath)}`);
+    }
+  }, [isAuthenticated, isLoading]);
 
   const goBack = () => {
     router.push('/projects');
