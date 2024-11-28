@@ -56,6 +56,42 @@ export type Listing = {
   tokenHourlyPrice?: Price<CloserCurrencies.TDF>;
 };
 
+export type Charge = {
+  id: string;
+  status: 'paid' | 'refunded' | 'pending-refund';
+  method: 'stripe' | 'tokens' | 'credits';
+  date: Date;
+  amount: {
+    total: {
+      val: number;
+      cur: CloserCurrencies;
+    };
+    rental?: { val: number; cur: CloserCurrencies };
+    food?: { val: number; cur: CloserCurrencies };
+    utilities?: { val: number; cur: CloserCurrencies };
+    event?: { val: number; cur: CloserCurrencies };
+    totalRefunded?: {
+      val: number;
+      cur: CloserCurrencies;
+    };
+  };
+  meta: {
+    stripePaymentIntentId?: string;
+    stripeConnectFee?: number;
+    stripeProcessingFee?: number;
+    txId?: string;
+    isTokenRefund?: boolean;
+    stripeConnectFeeRefunded?: number;
+    fractionToRefund?: number;
+  };
+};
+
+// export type Charge = BasicCharge & {
+//   type: 'booking' | 'subscription' | 'product';
+//   bookingId: string;
+//   createdBy: string;
+// };
+
 export type VolunteerInfo = {
   skills?: string[];
   diet?: string[];
@@ -110,13 +146,14 @@ export type Booking = {
   doesNeedPickup?: boolean;
   isTeamBooking?: boolean;
   paymentDelta?: {
-    token: CloserCurrencies.TDF;
-    fiat: CloserCurrencies.EUR;
-    credits: { val: number; cur: string };
+    fiat: { val: number; cur: CloserCurrencies.EUR };
+    token?: { val: number; cur: CloserCurrencies.TDF };
+    credits?: { val: number; cur: 'credits' };
   } | null;
   roomNumber?: number;
   adminBookingReason?: string;
   roomOrBedNumbers?: number[];
+  charges?: Charge[];
   volunteerInfo?: VolunteerInfo;
 };
 

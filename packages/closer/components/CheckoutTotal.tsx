@@ -21,6 +21,7 @@ const CheckoutTotal = ({
   rentalToken,
   useCredits,
   priceInCredits,
+  vatRate,
 }: Props) => {
   const t = useTranslations();
   return (
@@ -41,7 +42,7 @@ const CheckoutTotal = ({
         </p>
       </div>
       <p className="text-right text-xs">
-        {t('bookings_checkout_step_total_description')} {getVatInfo(total)}
+        {t('bookings_checkout_step_total_description')} {getVatInfo(total, vatRate)}
       </p>
     </div>
   );

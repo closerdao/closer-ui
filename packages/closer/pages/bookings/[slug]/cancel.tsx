@@ -11,8 +11,9 @@ import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
-import { BaseBookingParams, Booking, BookingConfig } from '../../../types';
+import { BaseBookingParams, Booking, BookingConfig, CloserCurrencies, Price } from '../../../types';
 import api from '../../../utils/api';
+import { getBookingPaymentType } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { calculateRefundTotal } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
@@ -32,21 +33,28 @@ const BookingCancelPage = ({ booking, bookingConfig, error }: Props) => {
 
   const router = useRouter();
   const bookingId = router.query.slug;
-  const bookingPrice = booking?.total || {
-    val: booking && booking?.utilityFiat?.val + booking?.rentalFiat?.val,
-    cur: booking?.rentalFiat?.cur,
-  };
+  const bookingPrice = booking?.total;
   const { isAuthenticated, user } = useAuth();
   const isMember = user?.roles.includes('member');
   const [policy, setPolicy] = useState<any>(null);
   const [isPolicyLoading, setPolicyLoading] = useState(false);
   const [isCancelCompleted, setCancelCompleted] = useState(false);
+
+  const paymentType = getBookingPaymentType({
+    useCredits: booking?.useCredits || false,
+    useTokens: booking?.useTokens || false,
+    rentalFiat: booking?.rentalFiat,
+  });
+
   const refundTotal = calculateRefundTotal({
     bookingStatus: booking?.status,
-    initialValue: bookingPrice.val,
+    fiatPrice: bookingPrice || { val: 0, cur: CloserCurrencies.EUR },
+    tokenOrCreditPrice:
+      booking?.rentalToken || { val: 0, cur: CloserCurrencies.TDF },
     policy,
     startDate: booking?.start,
-  });
+    paymentType,
+  }) as { fiat: Price<CloserCurrencies>; tokensOrCredits: Price<CloserCurrencies> };
 
   useEffect(() => {
     const fetchPolicy = async () => {
@@ -90,16 +98,18 @@ const BookingCancelPage = ({ booking, bookingConfig, error }: Props) => {
         <meta name="description" content={t('cancel_booking_page_title')} />
         <meta property="og:type" content="booking" />
       </Head>
+
       {isCancelCompleted ? (
         <CancelCompleted />
       ) : (
         <CancelBooking
-          bookingId={bookingId}
+          bookingId={bookingId as string}
           policy={policy}
-          isMember={isMember}
+          isMember={isMember || false}
           refundTotal={refundTotal}
           isPolicyLoading={isPolicyLoading}
           setCancelCompleted={setCancelCompleted}
+          paymentType={paymentType}
         />
       )}
     </>

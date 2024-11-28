@@ -4,11 +4,26 @@ import { useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { PaymentType, Price } from '../types';
+import { CloserCurrencies } from '../types/currency';
 import api from '../utils/api';
-import { priceFormat } from '../utils/helpers';
+import DisplayPrice from './DisplayPrice';
 import Spinner from './Spinner';
 import CalculatorIcon from './icons/CalculatorIcon';
 import Heading from './ui/Heading';
+
+interface Props {
+  setCancelCompleted: (cancelCompleted: boolean) => void;
+  bookingId: string;
+  isMember: boolean;
+  refundTotal: {
+    fiat: Price<CloserCurrencies>;
+    tokensOrCredits: Price<CloserCurrencies>;
+  };
+  isPolicyLoading: boolean;
+  policy: any;
+  paymentType: PaymentType;
+}
 
 const CancelBooking = ({
   setCancelCompleted,
@@ -17,7 +32,8 @@ const CancelBooking = ({
   refundTotal,
   isPolicyLoading,
   policy,
-}) => {
+  paymentType,
+}: Props) => {
   const t = useTranslations();
 
   const router = useRouter();
@@ -29,9 +45,9 @@ const CancelBooking = ({
       setSendingCancelRequest(true);
       await api.post(`/bookings/${bookingId}/cancel`);
       setCancelCompleted(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error===', err.message);
-      if (err.response.data.error) {
+      if (err.response?.data.error) {
         setError(err.response.data.error);
       } else {
         setError(err.message);
@@ -55,9 +71,12 @@ const CancelBooking = ({
         {t('cancel_booking_refund_policy')}
       </Heading>
       <p>
-        {isMember
-          ? t('booking_cancelation_policy_member')
-          : t('booking_cancelation_policy')}
+        {/* TODO: discuss member cancellation policy */}
+
+        {t('booking_cancelation_policy', {
+          lastweek: `${policy?.lastweek * 100}%`,
+          lastmonth: `${policy?.lastmonth * 100}%`,
+        })}
       </p>
       <Heading
         level={2}
@@ -71,7 +90,15 @@ const CancelBooking = ({
         {isPolicyLoading || !policy ? (
           <Spinner />
         ) : (
-          <p className="font-black">{priceFormat(refundTotal)}</p>
+          <div className="font-bold">
+            <DisplayPrice
+              paymentType={paymentType}
+              isEditMode={false}
+              rentalFiat={refundTotal.fiat}
+              rentalToken={refundTotal.tokensOrCredits}
+              totalFiat={refundTotal.fiat}
+            />
+          </div>
         )}
       </div>
       {error && <p className="text-red-500 m-2 text-center">{error}</p>}

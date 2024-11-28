@@ -187,7 +187,9 @@ const FoodSelectionPage = ({
             <p> {t('bookings_summary_step_food_total')}</p>
             <p className="font-bold text-right">
               {booking?.isTeamBooking && 'Free for team members'}{' '}
-              {isFood ? priceFormat(foodPricePerNight || 0) : priceFormat(0)}
+              {isFood && !booking?.isTeamBooking
+                ? priceFormat(foodPricePerNight || 0)
+                : priceFormat(0)}
             </p>
           </div>
           <p className="text-right text-xs">

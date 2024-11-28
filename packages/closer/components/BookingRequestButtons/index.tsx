@@ -31,9 +31,13 @@ const BookingRequestButtons = ({
   const t = useTranslations();
   const { user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
+
   const isBookingCancelable =
     (createdBy === user?._id || isSpaceHost) &&
-    (status === 'open' || status === 'pending' || status === 'confirmed') &&
+    (status === 'open' ||
+      status === 'pending' ||
+      status === 'confirmed' ||
+      status === 'paid') &&
     dayjs().isBefore(dayjs(end));
 
   return (
@@ -70,17 +74,27 @@ const BookingRequestButtons = ({
               </Button>
             </Link>
           )}
-          {user && isBookingCancelable && user._id === createdBy && (
-            <Link passHref href={`/bookings/${_id}/cancel`}>
-              <Button variant="secondary" className="  uppercase">
-                ⭕ {t('booking_cancel_button')}
+          {status === 'pending-payment' && user && user._id === createdBy && (
+            <Link passHref href={`/bookings/${_id}/checkout`}>
+              <Button variant="secondary">
+                💰 {t('booking_card_checkout_button')}
               </Button>
             </Link>
           )}
+          {user &&
+            isBookingCancelable &&
+            user._id === createdBy &&
+            !isSpaceHost && (
+              <Link passHref href={`/bookings/${_id}/cancel`}>
+                <Button variant="secondary" className="  uppercase">
+                  ⭕ {t('booking_cancel_button')}
+                </Button>
+              </Link>
+            )}
         </>
       )}
       {isSpaceHost &&
-        !Boolean(user && isBookingCancelable && user._id === createdBy) && (
+        Boolean(user && isBookingCancelable && user._id === createdBy) && (
           <Link passHref href={`/bookings/${_id}/cancel`}>
             <Button variant="secondary">⭕ {t('booking_cancel_button')}</Button>
           </Link>
