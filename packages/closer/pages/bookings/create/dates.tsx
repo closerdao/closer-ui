@@ -211,7 +211,7 @@ const DatesSelector = ({
 
       if (!isMinVolunteeringStayMatched && isVolunteerApplication) {
         setBookingError(
-          t('bookings_dates_min_residence_stay_error', {
+          t('bookings_dates_min_volunteering_stay_error', {
             var: volunteerConfig?.volunteeringMinStay,
           }),
         );

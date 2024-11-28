@@ -92,6 +92,15 @@ const Checkout = ({
     adults,
   } = updatedBooking ?? booking ?? {};
 
+  const cancellationPolicy = bookingConfig
+    ? {
+        lastday: bookingConfig.cancellationPolicyLastday,
+        lastweek: bookingConfig.cancellationPolicyLastweek,
+        lastmonth: bookingConfig.cancellationPolicyLastmonth,
+        default: bookingConfig.cancellationPolicyDefault,
+      }
+    : null;
+
   const { balanceAvailable: tokenBalanceAvailable, isWalletReady } =
     useContext(WalletState);
 
@@ -627,6 +636,7 @@ const Checkout = ({
 
           {isStripeBooking && (
             <CheckoutPayment
+              cancellationPolicy={cancellationPolicy}
               isPartialCreditsPayment={
                 paymentType === PaymentType.PARTIAL_CREDITS
               }
