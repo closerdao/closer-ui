@@ -196,9 +196,6 @@ VolunteerOpportunitiesPage.getInitialProps = async (
     const [messages, generalRes] = await Promise.all([
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       api.get('/config/general').catch(() => null),
-      api.get('/project').catch(() => {
-        return null;
-      }),
     ]);
 
     const generalConfig = generalRes?.data?.results?.value;
