@@ -56,10 +56,28 @@ export type Listing = {
   tokenHourlyPrice?: Price<CloserCurrencies.TDF>;
 };
 
+export type SubscriptionChargeMeta = {
+  subscriptionPlan: string;
+  monthlyCredits: number;
+  priceId: string;
+  stripeChargeUrl: string;
+};
+
+export type TokenSaleChargeMeta = {
+  txId: string;
+  unitPrice: number;
+  tokensPurchased: number;
+  country: string;
+  address: string;
+  legalName: string;
+  walletAddress: string;
+};
+
 export type Charge = {
   id: string;
   status: 'paid' | 'refunded' | 'pending-refund';
-  method: 'stripe' | 'tokens' | 'credits';
+  method: 'stripe' | 'tokens' | 'credits' | 'crypto';
+  type: 'booking' | 'subscription' | 'product' | 'tokenSale';
   date: Date;
   amount: {
     total: {
@@ -83,7 +101,8 @@ export type Charge = {
     isTokenRefund?: boolean;
     stripeConnectFeeRefunded?: number;
     fractionToRefund?: number;
-  };
+  } & Partial<SubscriptionChargeMeta> &
+    Partial<TokenSaleChargeMeta>;
 };
 
 // export type Charge = BasicCharge & {
