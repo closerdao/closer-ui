@@ -665,7 +665,15 @@ export const getPaymentType = ({
   return localPaymentType;
 };
 
-export   const getBookingPaymentType = ({ useCredits, useTokens, rentalFiat }: { useCredits: boolean, useTokens: boolean, rentalFiat: Price<CloserCurrencies> | undefined }) => {
+export const getBookingPaymentType = ({
+  useCredits,
+  useTokens,
+  rentalFiat,
+}: {
+  useCredits: boolean;
+  useTokens: boolean;
+  rentalFiat: Price<CloserCurrencies> | undefined;
+}) => {
   if (useCredits && rentalFiat?.val) {
     return PaymentType.PARTIAL_CREDITS;
   } else if (useCredits && !rentalFiat?.val) {

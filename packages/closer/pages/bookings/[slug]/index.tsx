@@ -227,20 +227,6 @@ const BookingPage = ({
   const updatedEventTotal = updatedPrices?.eventFiat?.val || 0;
   const updatedFiatTotal = updatedPrices?.total?.val || 0;
 
-  // const paymentDelta = null
-  // isNotPaid
-  //     ? null
-  //     :
-  // : getPaymentDelta(
-  //     total?.val,
-  //     updatedFiatTotal,
-  //     useTokens,
-  //     useCredits,
-  //     rentalToken,
-  //     updatedAccomodationTotal,
-  //     rentalFiat?.cur,
-  //   );
-
   const updatedBookingValues = {
     adults: updatedAdults,
     duration: updatedDuration,

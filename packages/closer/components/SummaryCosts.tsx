@@ -73,15 +73,6 @@ const SummaryCosts = ({
     rentalFiat,
   });
 
-  console.log('paymentType======', paymentType);
-
-  const isPartialTokenPayment = Boolean(
-    totalToken?.val && rentalFiat?.val && useTokens,
-  );
-  const isFullTokenPayment = Boolean(
-    totalToken?.val && !rentalFiat?.val && useTokens,
-  );
-
   return (
     <div>
       <HeadingRow>
@@ -161,34 +152,7 @@ const SummaryCosts = ({
                   isEditMode={false}
                   rentalFiat={rentalFiat}
                   rentalToken={rentalToken}
-                  // totalFiat={fiatTotal}
                 />
-                {/* <>
-
-                  {isFullTokenPayment && <>{priceFormat(accomodationCost)}</>}
-                  {isPartialTokenPayment && (
-                    <>
-                      {priceFormat(totalToken)} + {priceFormat(rentalFiat)}
-                    </>
-                  )}
-                  {useCredits && (
-                    <>
-                      <span>
-                        {priceFormat({
-                          val: creditsPrice || totalToken?.val,
-                          cur: 'credits',
-                          app: APP_NAME,
-                        })}
-                      </span>{' '}
-                      +{' '}
-                      {priceFormat({
-                        val: accomodationCost?.val,
-                        app: APP_NAME,
-                      })}
-                    </>
-                  )}
-                </>
-                {!useTokens && !useCredits && priceFormat(accomodationCost)} */}
 
                 {isNotPaid && (
                   <span className="text-failure">
@@ -287,28 +251,6 @@ const SummaryCosts = ({
                       totalFiat={updatedFiatTotal}
                       isTotalPrice={true}
                     />
-                    {/* {useTokens && (
-                      <div>
-                        {(rentalFiat?.val || 0) > 0 && (
-                          <>
-                            {' '}
-                            + <span>{priceFormat(rentalFiat)}</span>
-                          </>
-                        )}
-                        <div>{priceFormat(updatedAccomodationTotal)}</div>
-                      </div>
-                    )}
-                    {useCredits && (
-                      <div>
-                        {priceFormat({
-                          val: updatedAccomodationTotal?.val,
-                          cur: 'credits',
-                          app: APP_NAME,
-                        })}{' '}
-                        + {priceFormat(updatedFiatTotal)}
-                      </div>
-                    )}
-                    {!useTokens && !useCredits && priceFormat(updatedFiatTotal)} */}
                   </div>
                 )}
                 {priceDuration === 'hour' && (

@@ -133,6 +133,8 @@ const Summary = ({
   }, [booking?.status]);
 
   useEffect(() => {
+    console.log('user?.subscription?.plan=', user?.subscription?.plan);
+    console.log('user.roles=', user?.roles);
     if (user) {
       setIsMember(
         STAY_BOOKING_ALLOWED_PLANS.includes(user?.subscription?.plan) ||
@@ -271,6 +273,48 @@ const Summary = ({
     return <PageNotAllowed />;
   }
 
+  let buttonContent;
+
+  if (booking?.volunteerInfo) {
+    buttonContent = (
+      <section className="space-y-6">
+        <Conditions
+          cancellationPolicy={cancellationPolicy}
+          setComply={onComply}
+          visitorsGuide={VISITORS_GUIDE}
+        />
+        <Button
+          isEnabled={hasComplied && !loading}
+          className="booking-btn"
+          onClick={handleNext}
+        >
+          {t('apply_submit_button')}
+        </Button>
+      </section>
+    );
+  } else if (eventId || (user && isMember)) {
+    buttonContent = (
+      <Button className="booking-btn" onClick={handleNext}>
+        {t('buttons_checkout')}
+      </Button>
+    );
+  } else {
+    buttonContent = (
+      <div>
+        <Button
+          isEnabled={APP_NAME === 'moos' ? hasFilledProfile : true}
+          className="booking-btn"
+          onClick={handleNext}
+        >
+          {t('buttons_booking_request')}
+        </Button>
+        {APP_NAME === 'moos' && !hasFilledProfile && (
+          <ErrorMessage error="Please add description and photo to your profile to book spaces" />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-screen-sm mx-auto p-8">
       <BookingBackButton onClick={goBack} name={t('buttons_back')} />
@@ -327,42 +371,7 @@ const Summary = ({
             vatRate={vatRate}
           />
 
-          {booking?.volunteerInfo ? (
-            <>
-              <Conditions cancellationPolicy={cancellationPolicy} setComply={onComply} visitorsGuide={VISITORS_GUIDE} />
-              <Button
-                isEnabled={hasComplied && !loading}
-                className="booking-btn"
-                onClick={handleNext}
-              >
-                {t('apply_submit_button')}
-              </Button>
-            </>
-          ) : eventId ? (
-            <Button className="booking-btn" onClick={handleNext}>
-              {t('buttons_checkout')}
-            </Button>
-          ) : user && isMember ? (
-            <Button className="booking-btn" onClick={handleNext}>
-              {t('buttons_checkout')}
-            </Button>
-          ) : (
-            <div>
-              <Button
-                isEnabled={APP_NAME === 'moos' ? hasFilledProfile : true}
-                className="booking-btn"
-                onClick={handleNext}
-              >
-                {t('buttons_booking_request')}
-              </Button>
-              {APP_NAME === 'moos' && !hasFilledProfile && (
-                <ErrorMessage
-                  error="Please add description and photo to your profile to book
-                  spaces"
-                />
-              )}
-            </div>
-          )}
+          <div>{buttonContent}</div>
         </div>
       )}
     </div>

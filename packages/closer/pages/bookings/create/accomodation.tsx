@@ -112,12 +112,13 @@ const AccomodationSelector = ({
 
   const bookListing = async (listingId: string) => {
     try {
-      const volunteerInfo = {
-        skills: parsedSkills,
-        diet: parsedDiet,
-        projectId: parsedProjectId,
-        suggestions: suggestions || '',
-        bookingType,
+      const volunteerInfo =
+        (bookingType === 'volunteer' || bookingType === 'residence') && {
+          skills: parsedSkills,
+          diet: parsedDiet,
+          projectId: parsedProjectId,
+          suggestions: suggestions || '',
+          bookingType,
       };
       const {
         data: { results: newBooking },

@@ -75,15 +75,18 @@ const ProjectCard = ({ project, hasStewardRole }: Props) => {
             </p>
           </div>
           <div className="flex flex-col gap-4">
-            <LinkButton
-              size="small"
-              variant="secondary"
-              href={project?.documentUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {t('projects_go_to_document')}
-            </LinkButton>
+            {project?.documentUrl && (
+              <LinkButton
+                size="small"
+                variant="secondary"
+                href={project?.documentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {t('projects_go_to_document')}
+              </LinkButton>
+            )}
+
             {hasStewardRole && (
               <LinkButton size="small" href={`/projects/${project?.slug}/edit`}>
                 {t('projects_edit_project_title')}

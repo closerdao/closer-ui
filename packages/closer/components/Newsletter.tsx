@@ -55,7 +55,7 @@ const Newsletter = ({ placement, ctaText, className, onSuccess }: Props) => {
 
   return (
     <div className={`Newsletter pt-12 pb-5 px-4 ${className}`}>
-      {!signupCompleted ? (
+      {signupCompleted ? (
         <h3>{t('newsletter_success')}</h3>
       ) : (
         <form
