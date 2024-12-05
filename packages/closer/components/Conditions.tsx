@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { MouseEvent } from 'react';
 
 import { useTranslations } from 'next-intl';
 import PropTypes from 'prop-types';
@@ -8,7 +9,22 @@ import Checkbox from './Checkbox';
 import Modal from './Modal';
 import Heading from './ui/Heading';
 
-const Conditions = ({ setComply, visitorsGuide }) => {
+interface Props {
+  setComply: (comply: boolean) => void;
+  visitorsGuide: string;
+  cancellationPolicy: {
+    lastday: number;
+    lastweek: number;
+    lastmonth: number;
+    default: number;
+  } | null;
+}
+
+const Conditions = ({
+  setComply,
+  visitorsGuide,
+  cancellationPolicy,
+}: Props) => {
   const t = useTranslations();
 
   const { user } = useAuth();
@@ -27,16 +43,16 @@ const Conditions = ({ setComply, visitorsGuide }) => {
     }
   }, [isVisitorsGuideChecked, isCancellationPolicyChecked]);
 
-  const stopPropagation = (event) => {
+  const stopPropagation = (event: MouseEvent<HTMLDivElement>) => {
     event.stopPropagation();
   };
 
-  const openModal = (event) => {
+  const openModal = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     setIsInfoModalOpened(true);
   };
 
-  const closeModal = (event) => {
+  const closeModal = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     setIsInfoModalOpened(false);
   };
@@ -82,9 +98,15 @@ const Conditions = ({ setComply, visitorsGuide }) => {
             <Heading className="step-title mb-8">
               {t('bookings_checkout_step_cancellation_policy')}
             </Heading>
-            {isMember
-              ? t('booking_cancelation_policy_member')
-              : t('booking_cancelation_policy')}
+
+            <p>
+              {/* TODO: discuss member cancellation policy */}
+
+              {t('booking_cancelation_policy', {
+                lastweek: `${(cancellationPolicy?.lastweek || 1) * 100}%`,
+                lastmonth: `${(cancellationPolicy?.lastmonth || 1) * 100}%`,
+              })}
+            </p>
           </div>
         </Modal>
       )}

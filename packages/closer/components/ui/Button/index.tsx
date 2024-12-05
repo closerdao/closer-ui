@@ -75,7 +75,8 @@ interface ButtonProps extends VariantProps<typeof buttonStyles> {
   isEnabled?: boolean;
   isLoading?: boolean;
   size?: 'small' | 'medium' | 'large';
-  dataTestid?: string
+  dataTestid?: string;
+  type?: 'button' | 'submit' | 'reset';
 }
 
 const Button = ({
@@ -90,7 +91,8 @@ const Button = ({
   color,
   isFullWidth,
   size,
-  dataTestid
+  dataTestid,
+  type,
 }: ButtonProps) => {
   return (
     <>
@@ -99,6 +101,7 @@ const Button = ({
         onClick={onClick}
         disabled={!isEnabled || isLoading}
         title={title}
+        type={type}
         className={` 
         ${twMerge(
           buttonStyles({ variant, color, isFullWidth, size, isEnabled }),

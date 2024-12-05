@@ -441,9 +441,9 @@ const ListingPage: NextPage<Props> = ({
         listing: listing?._id,
         children: kids,
         discountCode: '',
-        doesNeedPickup: doesNeedPickup.toString(),
-        isTeamBooking: isTeamBooking.toString(),
-        doesNeedSeparateBeds: doesNeedSeparateBeds.toString(),
+        doesNeedPickup: doesNeedPickup,
+        isTeamBooking: isTeamBooking,
+        doesNeedSeparateBeds: doesNeedSeparateBeds,
         isHourlyBooking,
       });
       sendAnalyticsEvent('Click', 'ListingPage', 'Book');

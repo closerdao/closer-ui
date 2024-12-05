@@ -35,6 +35,7 @@ const CheckoutPayment = ({
   totalNights,
   user,
   eventId,
+  cancellationPolicy,
 }) => {
   const t = useTranslations();
 
@@ -117,7 +118,7 @@ const CheckoutPayment = ({
           dailyTokenValue={dailyTokenValue}
           bookingNights={bookingNights}
         >
-          <Conditions setComply={onComply} visitorsGuide={VISITORS_GUIDE} />
+          <Conditions cancellationPolicy={cancellationPolicy} setComply={onComply} visitorsGuide={VISITORS_GUIDE} />
         </CheckoutForm>
       </Elements>
     </div>

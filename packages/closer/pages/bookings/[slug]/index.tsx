@@ -4,6 +4,7 @@ import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 
 import BookingRequestButtons from '../../../components/BookingRequestButtons';
+import Charges from '../../../components/Charges';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
@@ -41,9 +42,10 @@ import {
   dateToPropertyTimeZone,
   formatCheckinDate,
   formatCheckoutDate,
-  getPaymentDelta,
+  getBookingPaymentType,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { priceFormat } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
@@ -147,6 +149,12 @@ const BookingPage = ({
     null,
   );
 
+  const paymentType = getBookingPaymentType({
+    useCredits,
+    useTokens,
+    rentalFiat,
+  });
+
   const checkInTime = bookingConfig?.checkinTime || 14;
   const checkOutTime = bookingConfig?.checkoutTime || 11;
 
@@ -191,6 +199,8 @@ const BookingPage = ({
           updatedListingId,
           updatedAdults,
           updatedDuration,
+          paymentType,
+          isBookingEdit: true,
         });
         setUpdatedPrices(res.data.results);
       } catch (error) {
@@ -208,25 +218,37 @@ const BookingPage = ({
     updatedListingId,
   ]);
 
-  const updatedAccomodationTotal = useTokens
-    ? updatedPrices?.rentalToken?.val || 0
-    : updatedPrices?.rentalFiat?.val || 0;
+  const updatedAccomodationTotal =
+    useTokens || useCredits
+      ? updatedPrices?.rentalToken?.val || 0
+      : updatedPrices?.rentalFiat?.val || 0;
   const updatedUtilityTotal = updatedPrices?.utilityFiat?.val || 0;
   const updatedFoodTotal = updatedPrices?.foodFiat?.val || 0;
   const updatedEventTotal = updatedPrices?.eventFiat?.val || 0;
   const updatedFiatTotal = updatedPrices?.total?.val || 0;
 
-  const paymentDelta = isNotPaid
-    ? null
-    : getPaymentDelta(
-        total?.val,
-        updatedFiatTotal,
-        useTokens,
-        useCredits,
-        rentalToken,
-        updatedAccomodationTotal,
-        rentalFiat?.cur,
-      );
+  const updatedBookingValues = {
+    adults: updatedAdults,
+    duration: updatedDuration,
+    children: updatedChildren,
+    infants: updatedInfants,
+    pets: updatedPets,
+    roomOrBedNumbers:
+      updatedAdults !== adults
+        ? updatedRoomNumbers?.slice(0, updatedAdults)
+        : updatedRoomNumbers,
+    listing: updatedListingId,
+    start: formatCheckinDate(
+      convertToDateString(updatedStartDate),
+      timeZone,
+      checkInTime,
+    ),
+    end: formatCheckoutDate(
+      convertToDateString(updatedEndDate),
+      timeZone,
+      checkOutTime,
+    ),
+  };
 
   const updatedBooking = {
     ...booking,
@@ -270,12 +292,9 @@ const BookingPage = ({
     listing: updatedListingId,
     foodFiat: { val: updatedFoodTotal, cur: rentalFiat?.cur },
     total: { val: updatedFiatTotal, cur: rentalFiat?.cur },
-    paymentDelta: paymentDelta ? paymentDelta : null,
+    // paymentDelta: paymentDelta ? paymentDelta : null,
+    // status: paymentDelta
   };
-
-  if (booking?.paymentDelta) {
-    booking.paymentDelta = null;
-  }
 
   const hasUpdatedBooking =
     JSON.stringify(booking) !== JSON.stringify(updatedBooking);
@@ -302,7 +321,11 @@ const BookingPage = ({
   const handleSaveBooking = async () => {
     try {
       setIsLoading(true);
-      const res = await api.patch(`/booking/${_id}`, updatedBooking);
+      const res = await api.post('/bookings/update', {
+        updatedBookingValues,
+        bookingId: _id,
+        paymentType,
+      });
       setHasUpdated(false);
       if (res.status === 200) {
         setHasUpdated(true);
@@ -353,7 +376,7 @@ const BookingPage = ({
         />
         <meta property="og:type" content="booking" />
       </Head>
-      <main className="main-content max-w-prose booking flex flex-col gap-8">
+      <main className="main-content max-w-xl booking flex flex-col gap-8">
         <Heading className="mb-4">
           {t(`bookings_title_${booking.status}`)}
         </Heading>
@@ -500,6 +523,7 @@ const BookingPage = ({
           />
           <SummaryCosts
             rentalFiat={rentalFiat}
+            rentalToken={rentalToken}
             isFoodIncluded={Boolean(booking?.foodOptionId)}
             utilityFiat={utilityFiat}
             foodFiat={foodFiat}
@@ -537,9 +561,34 @@ const BookingPage = ({
               val: updatedEventTotal,
               cur: eventFiat?.cur,
             }}
+            updatedRentalFiat={{
+              val: updatedAccomodationTotal,
+              cur: rentalFiat?.cur,
+            }}
+            updatedRentalToken={updatedPrices?.rentalToken}
             priceDuration={listing?.priceDuration}
             vatRate={vatRate}
+            status={status}
           />
+          {isSpaceHost && booking?.charges && booking.charges.length > 0 && (
+            <Charges charges={booking.charges} />
+          )}
+
+          {booking.paymentDelta?.fiat.val ? (
+            <div className="flex justify-between gap-2 p-4 bg-accent-light rounded-md">
+              <p className="font-bold">
+                {booking.paymentDelta?.fiat.val >= 0
+                  ? t('bookings_amount_due')
+                  : t('bookings_amount_to_refund')}
+              </p>
+              <p className="font-bold">
+                {priceFormat(
+                  booking.paymentDelta?.fiat.val,
+                  booking.paymentDelta?.fiat.cur,
+                )}
+              </p>
+            </div>
+          ) : null}
         </section>
 
         <section>

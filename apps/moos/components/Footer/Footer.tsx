@@ -8,7 +8,7 @@ export const Footer: FC = () => {
   const { INSTAGRAM_URL, TWITTER_URL } = useConfig() || {};
 
   return (
-    <footer className="w-full mt-16 flex justify-center bg-neutral pl-4 sm:pl-20 p-20">
+    <footer className="w-full mt-8 flex justify-center bg-neutral pl-4 sm:pl-20 p-20">
       <div className="w-full max-w-6xl flex justify-between flex-col gap-6 sm:flex-row ">
         <div className="flex gap-6 items-center">
           <p className="uppercase font-bold">The Y Berlin @ MOOS</p>
