@@ -1409,6 +1409,11 @@
   "projects_residence_application_title": "👷🏽‍♀️ Residence application",
   "projects_no_manager": "no manager",
   "bookings_dates_min_residence_stay_error": "Minimum residence stay is {var} days ",
+  "vouch_button": "Vouch",
+  "vouch_min_duration_not_met": "The guest needs to stay for at least {var} days to be eligible for vouching",
+  "vouch_already_vouched": "You have already vouched for this user",
+  "vouch_already_vouched_by_users": "The user has been vouched for by:",
+  "vouch_not_vouched_by_users": "The user has not been vouched for",
   
   "":""
 }
