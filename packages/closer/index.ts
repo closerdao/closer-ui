@@ -108,6 +108,11 @@ export { default as SubscriptionsCheckoutPage } from './pages/subscriptions/chec
 export { default as SubscriptionsPage } from './pages/subscriptions/index';
 export { default as SubscriptionSuccessPage } from './pages/subscriptions/success';
 export { default as SubscriptionsSummaryPage } from './pages/subscriptions/summary';
+export { default as SubscriptionsCitizenApplyPage } from './pages/subscriptions/citizen/apply';
+export { default as SubscriptionsCitizenIntroPage } from './pages/subscriptions/citizen/intro';
+
+export { default as SubscriptionsCitizenSuccessPage } from './pages/subscriptions/citizen/success';
+export { default as SubscriptionsCitizenValidationPage } from './pages/subscriptions/citizen/validation';
 export { default as TasksPage } from './pages/tasks';
 export { default as TaskPage } from './pages/tasks/[slug]';
 export { default as CreateTaskPage } from './pages/tasks/create';

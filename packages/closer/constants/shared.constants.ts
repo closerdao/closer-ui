@@ -50,6 +50,13 @@ export const SUBSCRIPTION_STEPS = [
   'success',
 ];
 
+export const SUBSCRIPTION_CITIZEN_STEPS = [
+  'intro',
+  'validation',
+  'apply',
+  'success',
+];
+
 export const TOKEN_SALE_STEPS = [
   'before-you-begin',
   'nationality',
