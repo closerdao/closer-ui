@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
+import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { Heading, Card } from 'closer/components/ui';
 import Tabs from 'closer/components/Tabs';
+import { loadLocaleData } from '../../utils/locale.helpers';
 
 const PLATFORM_NAME = "testing";
 
 const StatsCard = ({ title, value, icon, subtext }) => {
   return (
-    <Card>
+    <Card className="col-span-1">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-gray-600">{title}</p>
@@ -51,10 +53,10 @@ const AffiliateDashboard = () => {
   });
 
   const tabs = [
-    { value: 'overview', title: t('Overview') },
-    { value: 'revenue', title: t('Revenue Tracking') },
-    { value: 'tokens', title: t('Token Sales') },
-    { value: 'analytics', title: t('Referral Analytics') }
+    { value: 'overview', title: t('Overview'), content: <div>Overview</div> },
+    { value: 'revenue', title: t('Revenue Tracking'), content: <div>Revenue</div> },
+    { value: 'tokens', title: t('Token Sales'), content: <div>Token Sales</div> },
+    { value: 'analytics', title: t('Referral Analytics'), content: <div>Analytics</div> },
   ];
 
   return (
@@ -80,8 +82,7 @@ const AffiliateDashboard = () => {
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4" >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" >
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-6" >
             <StatsCard
               title={t('stats_total_earnings')}
               value={`€${metrics.totalEarnings}`}
@@ -106,7 +107,6 @@ const AffiliateDashboard = () => {
               icon={Coins}
               subtext={t('stats_tokens_subtext')}
             />
-            </div>
         </div>
 
         <Tabs tabs={tabs} activeTab={activeTab} onChange={(tab) => setActiveTab(tab.value)} />
@@ -163,6 +163,22 @@ const AffiliateDashboard = () => {
       </div>
     </>
   );
+};
+
+AffiliateDashboard.getInitialProps = async (context: NextPageContext) => {
+  try {
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    return {
+      messages,
+    };
+  } catch (err: unknown) {
+    return {
+      messages: null,
+    };
+  }
 };
 
 export default AffiliateDashboard;
