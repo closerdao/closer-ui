@@ -43,11 +43,11 @@ const AffiliateDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [dateRange, setDateRange] = useState('30d');
   const [metrics, setMetrics] = useState({
-    totalEarnings: 1,
-    totalReferrals: 2,
-    activeSubscriptions: 3,
-    tokensSold: 4,
-    conversionRate: 5
+    totalEarnings: 111,
+    totalReferrals: 222,
+    activeSubscriptions: 333,
+    tokensSold: 444,
+    conversionRate: 555
   });
 
   const tabs = [
@@ -109,9 +109,9 @@ const AffiliateDashboard = () => {
             </div>
         </div>
 
-        <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
+        <Tabs tabs={tabs} activeTab={activeTab} onChange={(tab) => setActiveTab(tab.value)} />
 
-        Active tab = {activeTab.toString()}
+        Active tab = {JSON.stringify(activeTab)}
 
         {activeTab === 'overview' && (
           <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -146,7 +146,8 @@ const AffiliateDashboard = () => {
         {activeTab === 'tokens' && (
           <div className="mt-8">
             <div className="bg-white rounded-lg shadow overflow-hidden">
-              <Table
+            <Heading level={3}>Tokens tab</Heading>
+              {/* <Table
                 columns={[
                   { header: 'Date', accessor: 'date' },
                   { header: 'Tokens Sold', accessor: 'tokens' },
@@ -155,7 +156,7 @@ const AffiliateDashboard = () => {
                   { header: 'Status', accessor: 'status' }
                 ]}
                 data={[]}
-              />
+              /> */}
             </div>
           </div>
         )}

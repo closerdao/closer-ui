@@ -56,5 +56,15 @@
 
   "buttons_apply_to_stay": "Apply to stay",
 
-  "bookings_checkout_step_visitors_guide": "Visitors Guide"
+  "bookings_checkout_step_visitors_guide": "Visitors Guide",
+
+  "stats_total_earnings": "Total Earnings",
+  "stats_earnings_subtext": "All time earnings",
+  "stats_total_referrals": "Total Referrals",
+  "stats_referrals_subtext": "Unique visitors",
+  "stats_active_subscriptions": "Active subscriptions",
+  "stats_subscriptions_subtext": "Monthly recurring",
+  "stats_token_sales": "Token sales",
+  "stats_tokens_subtext": "Total tokens sold"
+
 }
