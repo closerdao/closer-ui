@@ -1415,6 +1415,7 @@
   "vouch_already_vouched": "You have already vouched for this user",
   "vouch_already_vouched_by_users": "The user has been vouched for by:",
   "vouch_not_vouched_by_users": "The user has not been vouched for",
+  "vouch_why_vouch": "Why do you want to vouch for this user?",
   
   "":""
 }

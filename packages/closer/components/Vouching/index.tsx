@@ -6,13 +6,20 @@ import { useEffect, useMemo, useState } from 'react';
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 import { useTranslations } from 'next-intl';
 
-import { api } from '../..';
+import { Modal, api } from '../..';
 import { User, Vouched } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
 import { Booking } from '../../types/booking';
 import { cdn } from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { Card, ErrorMessage, Heading, Information, Spinner } from '../ui';
+import {
+  Card,
+  ErrorMessage,
+  Heading,
+  Information,
+  Input,
+  Spinner,
+} from '../ui';
 import Button from '../ui/Button';
 
 const Vouching = ({
@@ -33,6 +40,8 @@ const Vouching = ({
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [updatedVouchData, setUpdatedVouchData] = useState(vouchData);
+  const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
+  const [vouchMessage, setVouchMessage] = useState('');
 
   const hasBeenVouchedByMe = updatedVouchData?.some(
     (vouched: Vouched) => vouched.vouchedBy === myId,
@@ -77,9 +86,11 @@ const Vouching = ({
       return acc + booking.duration;
     }, 0) || 0;
 
-  console.log('totalStayDays=', totalStayDays);
-
   const hasStayedForMinDuration = totalStayDays >= minVouchingStayDuration;
+
+  useEffect(() => {
+    loadData();
+  }, [filter, userFilter]);
 
   const vouchUser = async () => {
     try {
@@ -87,11 +98,13 @@ const Vouching = ({
       setError(null);
       setLoading(true);
 
-      const res = await api.get(`/users/${userId}/vouch`);
+      const res = await api.post(`/users/${userId}/vouch`, {
+        message: vouchMessage,
+      });
       const updatedUser = res.data.results.user;
 
       setUpdatedVouchData(updatedUser.vouched);
-
+      setIsInfoModalOpened(false);
       setSuccess(true);
     } catch (error) {
       setError(parseMessageFromError(error));
@@ -100,7 +113,7 @@ const Vouching = ({
     }
   };
 
-  const loadData = async () => {
+  async function loadData() {
     try {
       setLoading(true);
       await Promise.all([
@@ -108,69 +121,102 @@ const Vouching = ({
         platform.user.get(userFilter),
       ]);
     } catch (err) {
+      setError(parseMessageFromError(err));
     } finally {
       setLoading(false);
     }
+  }
+
+  const openModal = () => {
+    setIsInfoModalOpened(true);
   };
 
-  useEffect(() => {
-    loadData();
-  }, [filter, userFilter]);
+  const closeModal = () => {
+    setIsInfoModalOpened(false);
+  };
 
   return (
-    <Card className="space-y-2 w-full">
-      <Heading level={2} className="text-lg">
-        {updatedVouchData?.length > 0
-          ? t('vouch_already_vouched_by_users')
-          : t('vouch_not_vouched_by_users')}
-      </Heading>
-
-      <div className="space-y-4">
-        {vouchedUsers?.toJS().map((user: User) => (
-          <div key={user._id}>
-            <Link
-              href={`/members/${user._id}`}
+    <>
+      <Card className="space-y-2 w-full">
+        <Heading level={2} className="text-lg">
+          {updatedVouchData?.length > 0
+            ? t('vouch_already_vouched_by_users')
+            : t('vouch_not_vouched_by_users')}
+        </Heading>
+        <div className="space-y-4">
+          {vouchedUsers?.toJS().map((user: User) => (
+            <div key={user._id}>
+              <Link
+                href={`/members/${user._id}`}
+                className="flex items-center gap-2"
+              >
+                {user.photo ? (
+                  <Image
+                    className="rounded-full"
+                    src={`${cdn}${user.photo}-profile-sm.jpg`}
+                    alt={user.screenname || ''}
+                    width={50}
+                    height={50}
+                  />
+                ) : (
+                  <div className="rounded-full overflow-hidden">
+                    <FaUser className="text-neutral w-[50px] h-[50px] " />
+                  </div>
+                )}
+                <p className="text-accent">{user.screenname}</p>
+              </Link>
+            </div>
+          ))}
+        </div>
+        <Button
+          variant="primary"
+          isEnabled={
+            hasStayedForMinDuration &&
+            !hasBeenVouchedByMe &&
+            !loading &&
+            !success
+          }
+          onClick={openModal}
+          className="flex items-center gap-2"
+        >
+          {t('vouch_button')} {loading && <Spinner />}
+        </Button>
+        {!hasStayedForMinDuration && (
+          <Information>
+            {t('vouch_min_duration_not_met', { var: minVouchingStayDuration })}
+          </Information>
+        )}
+        {hasBeenVouchedByMe && (
+          <Information>{t('vouch_already_vouched')}</Information>
+        )}
+        {error && <ErrorMessage error={error} />}
+      </Card>
+      {isInfoModalOpened && (
+        <Modal closeModal={closeModal}>
+          <div className="flex flex-col gap-5 min-w-[160px] h-full justify-center">
+            <Input
+              label={t('vouch_why_vouch')}
+              value={vouchMessage}
+              onChange={(e) => setVouchMessage(e.target.value)}
+            />
+            <Button
+              variant="primary"
+              isEnabled={
+                hasStayedForMinDuration &&
+                !hasBeenVouchedByMe &&
+                !loading &&
+                !success &&
+                vouchMessage.length > 0
+              }
+              onClick={vouchUser}
               className="flex items-center gap-2"
             >
-              {user.photo ? (
-                <Image
-                  className="rounded-full"
-                  src={`${cdn}${user.photo}-profile-sm.jpg`}
-                  alt={user.screenname || ''}
-                  width={50}
-                  height={50}
-                />
-              ) : (
-                <div className="rounded-full overflow-hidden">
-                  <FaUser className="text-neutral w-[50px] h-[50px] " />
-                </div>
-              )}
-              <p className="text-accent">{user.screenname}</p>
-            </Link>
+              {t('vouch_button')} {loading && <Spinner />}
+            </Button>
           </div>
-        ))}
-      </div>
-
-      <Button
-        variant="primary"
-        isEnabled={
-          hasStayedForMinDuration && !hasBeenVouchedByMe && !loading && !success
-        }
-        onClick={vouchUser}
-        className="flex items-center gap-2"
-      >
-        {t('vouch_button')} {loading && <Spinner />}
-      </Button>
-      {!hasStayedForMinDuration && (
-        <Information>
-          {t('vouch_min_duration_not_met', { var: minVouchingStayDuration })}
-        </Information>
+        </Modal>
       )}
-      {hasBeenVouchedByMe && (
-        <Information>{t('vouch_already_vouched')}</Information>
-      )}
-      {error && <ErrorMessage error={error} />}
-    </Card>
+    </>
   );
 };
 

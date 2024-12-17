@@ -7,6 +7,7 @@ export interface UserLink {
 export interface Vouched {
   vouchedBy: string;
   vouchedAt: Date;
+  message?: string;
 }
 
 export type User = {
