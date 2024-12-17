@@ -39,12 +39,10 @@ const StatsCard = ({ title, value, icon, subtext }) => {
   );
 };
 
-const Euro = () => <span className="text-2xl">🤝1</span>;
-const Users = () => <span className="text-2xl">🤝2</span>;
-const Calendar = () => <span className="text-2xl">🤝3</span>;
-const Coins = () => <span className="text-2xl">🤝4</span>;
-
-
+const Euro =  <span className="text-2xl">🤝1</span>;
+const Users = <span className="text-2xl">🤝2</span>;
+const Calendar = <span className="text-2xl">🤝3</span>;
+const Coins = <span className="text-2xl">🤝4</span>;
 
 const AffiliateDashboard = () => {
   const t  = useTranslations();
@@ -61,9 +59,10 @@ const AffiliateDashboard = () => {
 
 
   const loadData = async () => {
+    console.log("loadData, userFilter", userFilter);
     try {
       await Promise.all([
-        platform.user.get(userFilter),
+        platform.user.getCount(userFilter),
       ]);
     } catch (err) {
     } finally {
@@ -72,26 +71,22 @@ const AffiliateDashboard = () => {
 
   const { user, isAuthenticated }: any = useAuth();
 
-  let referredBy = null;
-  if (isAuthenticated) {
-    referredBy = user.id
-  }
-
-  const userFilter = { where: { referredBy: referredBy } };
+  const userFilter = { where: { referredBy: user?.id } };
 
   useEffect(() => {
+    console.log("useEffect, isAuthenticated", isAuthenticated);
+    console.log("useEffect, userFilter", userFilter);
     if (userFilter) {
       loadData();
     }
-  }, [userFilter]);
+  }, [user, isAuthenticated]);
 
 
   const { platform }: any = usePlatform();
 
-  const totalReferrals = platform.booking.find(userFilter);
+  const totalReferrals = platform.booking.findCount(userFilter);
 
-  console.log("********");
-  console.log(totalReferrals);
+  console.log("******** Total referrals: ", totalReferrals);
 
   if (!user) {
     return <PageNotAllowed />;

@@ -65,6 +65,11 @@
   "stats_active_subscriptions": "Active subscriptions",
   "stats_subscriptions_subtext": "Monthly recurring",
   "stats_token_sales": "Token sales",
-  "stats_tokens_subtext": "Total tokens sold"
+  "stats_tokens_subtext": "Total tokens sold",
+  "Overview":"Overview",
+  "Revenue Tracking":"Revenue Tracking",
+  "Token Sales": "Token Sales",
+  "Referral Analytics": "Referral Analytics",
+  "Affiliate Dashboard": "Affiliate Dashboard"
 
 }
