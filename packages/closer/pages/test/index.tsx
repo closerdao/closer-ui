@@ -21,7 +21,7 @@ const StatsCard = ({ title, value, icon, subtext }) => {
         <div>
           <p className="text-sm text-gray-600">{title}</p>
           <p className="text-2xl font-semibold mt-1">{value}</p>
-          <p className="text-2xl font-semibold mt-1">{subtext}</p>
+          <p className="text-sm mt-1">{subtext}</p>
           {/* {trend && (
             <div className={`flex items-center mt-2 text-sm ${trend.positive ? 'text-green-600' : 'text-red-600'}`}>
               <span>{trend.value}%</span>
@@ -39,63 +39,36 @@ const StatsCard = ({ title, value, icon, subtext }) => {
   );
 };
 
-const Euro =  <span className="text-2xl">🤝1</span>;
-const Users = <span className="text-2xl">🤝2</span>;
-const Calendar = <span className="text-2xl">🤝3</span>;
-const Coins = <span className="text-2xl">🤝4</span>;
+const Euro =  <span className="text-2xl">💶</span>;
+const Users = <span className="text-2xl">🤷‍♀️</span>;
+const Calendar = <span className="text-2xl">📆</span>;
+const Coins = <span className="text-2xl">💰</span>;
 
 const AffiliateDashboard = () => {
   const t  = useTranslations();
-  const router = useRouter();
+  // const router = useRouter();
   const [activeTab, setActiveTab] = useState('overview');
   const [dateRange, setDateRange] = useState('30d');
-  const [metrics, setMetrics] = useState({
-    totalEarnings: 111,
-    totalReferrals: 222,
-    activeSubscriptions: 333,
-    tokensSold: 444,
-    conversionRate: 555
-  });
+  // const [metrics, setMetrics] = useState({
+  //   totalEarnings: 111,
+  //   totalReferrals: 222,
+  //   activeSubscriptions: 333,
+  //   tokensSold: 444,
+  //   conversionRate: 555
+  // });
+
+
+  
+
+  const [totalEarnings,  setTotalEarnings] = useState(111);
+  const [totalReferrals, setTotalReferrals] = useState(222);
+  const [activeSubscriptions, setActiveSubscriptions] = useState(333);
+  const [tokensSold, setTokensSold] = useState(444);
+  const [conversionRate, setConversionRate] = useState(555);
+
+  const [subsciptionFilter, setSubsciptionFilter] = useState(null);
   const [userFilter, setUserFilter] = useState(null);
-  const [totalReferrals, setTotalReferrals] = useState(null);
-
   const { user, isAuthenticated }: any = useAuth();
-
-
-  // const loadData = async () => {
-  //   console.log("loadData, userFilter", userFilter);
-  //   try {
-  //     await Promise.all([
-  //       platform.user.getCount(userFilter),
-  //     ]);
-  //   } catch (err) {
-  //   } finally {
-  //   }
-  // };
-
-  // const userFilter = { where: { referredBy: user?.id } };
-
-  // useEffect(() => {
-  //   console.log("useEffect, isAuthenticated", isAuthenticated);
-  //   console.log("useEffect, userFilter", userFilter);
-  //   if (userFilter) {
-  //     loadData();
-  //   }
-  // }, [user,isAuthenticated]);
-
-
-  // const { platform }: any = usePlatform();
-
-  // const totalReferrals = platform.booking.findCount(userFilter);
-
-  // console.log("******** Total referrals: ", totalReferrals);
-
-  // if (!user) {
-  //   return <PageNotAllowed />;
-  // }
-
-
-
 
   // Update userFilter when the user is authenticated and has an ID
   useEffect(() => {
@@ -115,8 +88,6 @@ const AffiliateDashboard = () => {
         const result = await Promise.all([
           platform.user.getCount(userFilter),
         ]);
-        console.log("Data Loaded: ", result);
-
         setTotalReferrals(result[0].results);
       } catch (err) {
         console.error("Error loading data:", err);
@@ -126,26 +97,6 @@ const AffiliateDashboard = () => {
     loadData();
   }, [userFilter]);
 
-  // // Fetch total referrals
-  // useEffect(() => {
-  //   const fetchTotalReferrals = async () => {
-  //     if (!userFilter) {
-  //       console.log("*********** userFilter is null, therefore not doing anything");
-  //       return;
-  //     } else {
-  //       console.log("*********** userFilter is NOT null (great to hear), therefore doing something");
-  //     }
-  //     try {
-  //       const referralsCount = await platform.booking.findCount(userFilter);
-  //       console.log("This is the data that I've received (in useEffect) ******** Total referrals: ", referralsCount)
-  //       setTotalReferrals(referralsCount);
-  //     } catch (err) {
-  //       console.error("Error fetching referrals count:", err);
-  //     }
-  //   };
-
-  //   fetchTotalReferrals();
-  // }, [userFilter]);
 
   if (!user) {
     return <PageNotAllowed />;
@@ -172,13 +123,8 @@ const AffiliateDashboard = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        
-
-
         <div className="flex justify-between items-center mb-8">
           <Heading level={1}>🤝 {t('Affiliate Dashboard')}</Heading>
-
-          <h1>Total referrals: { totalReferrals }</h1>
 
           <div className="flex gap-4">
             <select 
@@ -197,33 +143,31 @@ const AffiliateDashboard = () => {
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-6" >
             <StatsCard
               title={t('stats_total_earnings')}
-              value={`€${metrics.totalEarnings}`}
+              value={`€${totalEarnings}`}
               icon={Euro}
               subtext={t('stats_earnings_subtext')}
             />
             <StatsCard
               title={t('stats_total_referrals')}
-              value={metrics.totalReferrals}
+              value={totalReferrals}
               icon={Users}
               subtext={t('stats_referrals_subtext')}
             />
             <StatsCard
               title={t('stats_active_subscriptions')}
-              value={metrics.activeSubscriptions}
+              value={activeSubscriptions}
               icon={Calendar}
               subtext={t('stats_subscriptions_subtext')}
             />
             <StatsCard
               title={t('stats_token_sales')}
-              value={`${metrics.tokensSold} TDF`}
+              value={`${tokensSold} TDF`}
               icon={Coins}
               subtext={t('stats_tokens_subtext')}
             />
         </div>
 
         <Tabs tabs={tabs} activeTab={activeTab} onChange={(tab) => setActiveTab(tab.value)} />
-
-        Active tab = {JSON.stringify(activeTab)}
 
         {activeTab === 'overview' && (
           <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -257,18 +201,8 @@ const AffiliateDashboard = () => {
 
         {activeTab === 'tokens' && (
           <div className="mt-8">
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-            <Heading level={3}>Tokens tab</Heading>
-              {/* <Table
-                columns={[
-                  { header: 'Date', accessor: 'date' },
-                  { header: 'Tokens Sold', accessor: 'tokens' },
-                  { header: 'Sale Value', accessor: 'value' },
-                  { header: 'Commission', accessor: 'commission' },
-                  { header: 'Status', accessor: 'status' }
-                ]}
-                data={[]}
-              /> */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <Heading level={3}>Tokens tab</Heading>
             </div>
           </div>
         )}
