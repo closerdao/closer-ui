@@ -7,6 +7,11 @@ import { Heading, Card } from 'closer/components/ui';
 import Tabs from 'closer/components/Tabs';
 import { loadLocaleData } from '../../utils/locale.helpers';
 
+import { usePlatform } from '../../contexts/platform';
+import { useAuth } from '../../contexts/auth';
+import PageNotAllowed from '../401';
+
+
 const PLATFORM_NAME = "testing";
 
 const StatsCard = ({ title, value, icon, subtext }) => {
@@ -39,6 +44,8 @@ const Users = () => <span className="text-2xl">🤝2</span>;
 const Calendar = () => <span className="text-2xl">🤝3</span>;
 const Coins = () => <span className="text-2xl">🤝4</span>;
 
+
+
 const AffiliateDashboard = () => {
   const t  = useTranslations();
   const router = useRouter();
@@ -51,6 +58,47 @@ const AffiliateDashboard = () => {
     tokensSold: 444,
     conversionRate: 555
   });
+
+
+  const loadData = async () => {
+    try {
+      await Promise.all([
+        platform.user.get(userFilter),
+      ]);
+    } catch (err) {
+    } finally {
+    }
+  };
+
+  const { user, isAuthenticated }: any = useAuth();
+
+  let referredBy = null;
+  if (isAuthenticated) {
+    referredBy = user.id
+  }
+
+  const userFilter = { where: { referredBy: referredBy } };
+
+  useEffect(() => {
+    if (userFilter) {
+      loadData();
+    }
+  }, [userFilter]);
+
+
+  const { platform }: any = usePlatform();
+
+  const totalReferrals = platform.booking.find(userFilter);
+
+  console.log("********");
+  console.log(totalReferrals);
+
+  if (!user) {
+    return <PageNotAllowed />;
+  }
+
+  
+
 
   const tabs = [
     { value: 'overview', title: t('Overview'), content: <div>Overview</div> },
@@ -66,8 +114,15 @@ const AffiliateDashboard = () => {
       </Head>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        
+
+
         <div className="flex justify-between items-center mb-8">
           <Heading level={1}>🤝 {t('Affiliate Dashboard')}</Heading>
+
+          <h1>Total referrals: { JSON.stringify(totalReferrals) } { totalReferrals }</h1>
+
           <div className="flex gap-4">
             <select 
               value={dateRange}
