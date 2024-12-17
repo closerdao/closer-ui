@@ -2,46 +2,56 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 
 import ConnectedWallet from '../../components/ConnectedWallet';
 import EventsList from '../../components/EventsList';
 import UploadPhoto from '../../components/UploadPhoto/UploadPhoto';
 import UserBookings from '../../components/UserBookings';
+import Vouching from '../../components/Vouching';
 import { Card } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 import { TiDelete } from '@react-icons/all-files/ti/TiDelete';
+import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
+import { User, UserLink } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
-import { useConfig } from '../../hooks/useConfig';
 import api, { cdn } from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
+import { GeneralConfig } from '../../types/api';
 
-const MemberPage = ({ member, loadError }) => {
+interface MemberPageProps {
+  member: User;
+  loadError: string;
+  generalConfig: GeneralConfig;
+}
+
+const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
   const t = useTranslations();
   const { user: currentUser, isAuthenticated, refetchUser } = useAuth();
 
-  const { APP_NAME } = useConfig();
+  const { platform }: any = usePlatform();
+  const isMember = currentUser?.roles.includes('member');
+  const isAdmin = currentUser?.roles.includes('admin');
+  const isSpaceHost = currentUser?.roles.includes('space-host');
+  const isOwnProfile = currentUser?._id === member?._id;
 
   const router = useRouter();
   const [introMessage, setMessage] = useState('');
   const [openIntro, setOpenIntro] = useState(false);
-  const [error, setErrors] = useState(false);
+  const [error, setErrors] = useState(null);
   const [sendError, setSendErrors] = useState(false);
   const [linkName, setLinkName] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
-  const [links, setLinks] = useState(member?.links || []);
-  const [about, setAbout] = useState(member?.about || '');
-  const [tagline, setTagline] = useState(member?.tagline || '');
+  const [links, setLinks] = useState<UserLink[]>(member?.links || []);
   const [showForm, toggleShowForm] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
-
-  const { platform } = usePlatform();
 
   useEffect(() => {
     if (hasSaved) {
@@ -54,76 +64,43 @@ const MemberPage = ({ member, loadError }) => {
     refetchUser();
   }, [hasSaved]);
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
       const { data } = await platform.user.patch(currentUser?._id, {
-        links: (links || []).concat({ name: linkName, url: linkUrl }),
+        links: [...links, { name: linkName, url: linkUrl }],
       });
       setLinks(data.links);
       setLinkName('');
       setLinkUrl('');
       toggleShowForm(!showForm);
       setErrors(null);
-    } catch (err) {
-      const error = err?.response?.data?.error || err.message;
+    } catch (err: unknown) {
+      const error = parseMessageFromError(err);
       setErrors(error);
     }
   };
 
-  const deleteLink = async (link) => {
+  const deleteLink = async (link: UserLink) => {
     try {
       const { data } = await platform.user.patch(currentUser?._id, {
         links: links.filter((item) => item.name !== link.name),
       });
       setLinks(data.links);
       setErrors(null);
-    } catch (err) {
-      const error = err?.response?.data?.error || err.message;
+    } catch (err: unknown) {
+      const error = parseMessageFromError(err);
       setErrors(error);
     }
   };
 
-  const handleClick = (event) => {
-    event.preventDefault();
-    saveAbout(about);
-    saveTagline(tagline);
-    setHasSaved(true);
-  };
-
-  const saveAbout = async (about) => {
+  const sendMessage = async (content: string) => {
     try {
-      const {
-        data: { results: savedData },
-      } = await api.patch(`/user/${member._id}`, { about });
-      setAbout(savedData.about);
-      setErrors(null);
-    } catch (err) {
-      const error = err?.response?.data?.error || err.message;
-      setErrors(error);
-    }
-  };
-
-  const saveTagline = async (tagline) => {
-    try {
-      const {
-        data: { results: savedData },
-      } = await api.patch(`/user/${member._id}`, { tagline });
-      setTagline(savedData.tagline);
-      setErrors(null);
-    } catch (err) {
-      const error = err?.response?.data?.error || err.message;
-      setErrors(error);
-    }
-  };
-
-  const sendMessage = async (content) => {
-    try {
-      setSendErrors(null);
+      setSendErrors(false);
       await api.post('/message', { content, visibleBy: [member._id] });
       setOpenIntro(false);
-    } catch (err) {
-      const error = err?.response?.data?.error || err.message;
+    } catch (err: unknown) {
+      const error = parseMessageFromError(err);
       setSendErrors(error);
     }
   };
@@ -133,7 +110,7 @@ const MemberPage = ({ member, loadError }) => {
   }
 
   if (!member) {
-    return <PageNotFound error={error} />;
+    return <PageNotFound error={error || undefined} />;
   }
 
   return (
@@ -191,11 +168,11 @@ const MemberPage = ({ member, loadError }) => {
 
         <div className="flex flex-col items-start max-w-5xl">
           <div className="flex flex-col items-start space-y-5 md:w-full md:mt-3 w-full">
-            <div className="flex flex-col w-full">
+            <div className="flex flex-col w-full gap-6">
               <section className="w-full flex gap-8">
                 <div className="flex flex-col md:flex-row">
                   <div className="group  items-center justify-start relative">
-                    {isAuthenticated && member._id === currentUser._id ? (
+                    {isAuthenticated && member?._id === currentUser?._id ? (
                       <UploadPhoto
                         model="user"
                         id={member._id}
@@ -221,8 +198,8 @@ const MemberPage = ({ member, loadError }) => {
                   <h3 className="font-medium text-5xl md:text-6xl md:w-6/12 flex flex-wrap">
                     {member.screenname}
                   </h3>
-                  {isAuthenticated && member._id !== currentUser._id && (
-                    <div className="my-3">
+                  {isAuthenticated && member?._id !== currentUser?._id && (
+                    <div className="my-3 space-y-2">
                       <a
                         href="#"
                         onClick={(e) => {
@@ -254,7 +231,15 @@ const MemberPage = ({ member, loadError }) => {
                 </div>
               </section>
 
-              <div className="flex flex-col items-start w-full gap-8">
+              <section className="flex flex-col items-start w-full gap-4">
+                {(isMember || isAdmin || isSpaceHost) && !isOwnProfile && (
+                  <Vouching
+                    vouchData={member?.vouched || []}
+                    myId={currentUser?._id}
+                    userId={member._id}
+                    minVouchingStayDuration={Number(generalConfig?.minVouchingStayDuration) || 14}
+                  />
+                )}
                 <div className="mt-1 w-full">
                   {currentUser && currentUser.roles.includes('space-host') && (
                     <Card className="my-6 bg-accent-light w-full">
@@ -290,12 +275,16 @@ const MemberPage = ({ member, loadError }) => {
                         <p>
                           {t('user_data_skills')}{' '}
                           <span className="font-bold">
-                            {member.preferences.skills.map((skill, i) => {
-                              if (i === member.preferences.skills.length - 1) {
-                                return skill;
-                              }
-                              return skill + ', ';
-                            })}
+                            {member.preferences?.skills &&
+                              member.preferences?.skills?.map((skill, i) => {
+                                if (
+                                  i ===
+                                  (member.preferences?.skills?.length || 1) - 1
+                                ) {
+                                  return skill;
+                                }
+                                return skill + ', ';
+                              })}
                           </span>
                         </p>
                       )}
@@ -351,7 +340,7 @@ const MemberPage = ({ member, loadError }) => {
                     )}
                 </div>
 
-                {isAuthenticated && member._id === currentUser._id && (
+                {isAuthenticated && member?._id === currentUser?._id && (
                   <ConnectedWallet />
                 )}
                 <div className="">
@@ -365,7 +354,7 @@ const MemberPage = ({ member, loadError }) => {
                     limit={7}
                     showPagination={false}
                     where={{
-                      attendees: member._id,
+                      attendees: member?._id,
                       visibility: 'public',
                     }}
                   />
@@ -375,11 +364,10 @@ const MemberPage = ({ member, loadError }) => {
                       <p className="font-semibold text-md mr-5">
                         {t('members_slug_stay_social')}
                       </p>
-                      {isAuthenticated && member._id === currentUser._id && (
+                      {isAuthenticated && member?._id === currentUser?._id && (
                         <div className="flex flex-row items-center justify-start space-x-3 w-20">
                           <a
                             href="#"
-                            name="Add links"
                             onClick={(e) => {
                               e.preventDefault();
                               toggleShowForm(!showForm);
@@ -399,7 +387,7 @@ const MemberPage = ({ member, loadError }) => {
                             >
                               <a href={link.url}>{link.name}</a>
                               {isAuthenticated &&
-                                member._id === currentUser._id && (
+                                member?._id === currentUser?._id && (
                                   <a
                                     href="#"
                                     onClick={(e) => {
@@ -416,7 +404,7 @@ const MemberPage = ({ member, loadError }) => {
                     </ul>
 
                     {isAuthenticated &&
-                      member._id === currentUser._id &&
+                      member?._id === currentUser?._id &&
                       showForm && (
                         <>
                           <div className="flex justify-center items-center overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline">
@@ -491,7 +479,7 @@ const MemberPage = ({ member, loadError }) => {
                       )}
                   </div>
                 </div>
-              </div>
+              </section>
             </div>
           </div>
 
@@ -502,27 +490,37 @@ const MemberPage = ({ member, loadError }) => {
   );
 };
 
-MemberPage.getInitialProps = async (context) => {
+MemberPage.getInitialProps = async (context: NextPageContext) => {
   const { req, query } = context;
   try {
-    const [res, messages] = await Promise.all([
+    const [res, generalRes,messages] = await Promise.all([
       api.get(`/user/${query.slug}`, {
-        headers: req?.cookies?.access_token
-          ? { Authorization: `Bearer ${req?.cookies?.access_token}` }
+        headers: (req as NextApiRequest)?.cookies?.access_token
+          ? {
+              Authorization: `Bearer ${
+                (req as NextApiRequest)?.cookies?.access_token
+              }`,
+            }
           : {},
+      }),
+      api.get('/config/general').catch(() => {
+        return null;
       }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
+    const generalConfig = generalRes?.data?.results?.value;
 
     return {
       member: res.data.results,
+      generalConfig,
       messages,
     };
-  } catch (err) {
-    console.log('Error', err.message);
+  } catch (err: unknown) {
+    console.log('Error', err);
 
     return {
-      loadError: err.message,
+      loadError: parseMessageFromError(err),
+      generalConfig: null,
       messages: null,
     };
   }
