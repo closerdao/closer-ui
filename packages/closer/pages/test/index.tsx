@@ -10,6 +10,7 @@ import { loadLocaleData } from '../../utils/locale.helpers';
 import { usePlatform } from '../../contexts/platform';
 import { useAuth } from '../../contexts/auth';
 import PageNotAllowed from '../401';
+import { sub } from 'date-fns';
 
 
 const PLATFORM_NAME = "testing";
@@ -48,17 +49,7 @@ const AffiliateDashboard = () => {
   const t  = useTranslations();
   // const router = useRouter();
   const [activeTab, setActiveTab] = useState('overview');
-  const [dateRange, setDateRange] = useState('30d');
-  // const [metrics, setMetrics] = useState({
-  //   totalEarnings: 111,
-  //   totalReferrals: 222,
-  //   activeSubscriptions: 333,
-  //   tokensSold: 444,
-  //   conversionRate: 555
-  // });
-
-
-  
+  const [dateRange, setDateRange] = useState('30d');  
 
   const [totalEarnings,  setTotalEarnings] = useState(111);
   const [totalReferrals, setTotalReferrals] = useState(222);
@@ -68,6 +59,9 @@ const AffiliateDashboard = () => {
 
   const [subsciptionFilter, setSubsciptionFilter] = useState(null);
   const [userFilter, setUserFilter] = useState(null);
+  const [earningsFilter, setEarningsFilter] = useState(null);
+
+
   const { user, isAuthenticated }: any = useAuth();
 
   // Update userFilter when the user is authenticated and has an ID
@@ -76,6 +70,8 @@ const AffiliateDashboard = () => {
 
     if (isAuthenticated && user?._id) {
       setUserFilter({ where: { referredBy: user._id } });
+      setSubsciptionFilter({ where: { referredBy: user._id, subscription: { $ne: null} } });
+      setEarningsFilter({ where: {} }); // TODO: add me later when present on the model: referredBy: user._id
     } else {
       setUserFilter(null);
     }
@@ -96,6 +92,43 @@ const AffiliateDashboard = () => {
 
     loadData();
   }, [userFilter]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      console.log("Subscription filter changed, fetching new data");
+      if (!subsciptionFilter) return;
+      try {
+        const result = await Promise.all([
+          platform.user.getCount(subsciptionFilter),
+        ]);
+        console.log("Subscription filter changed, fetching new data, here it is:", result);
+        setActiveSubscriptions(result[0].results);
+      } catch (err) {
+        console.error("Error loading data:", err);
+      }
+    };
+
+    loadData();
+  }, [subsciptionFilter]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      console.log("Subscription filter changed, fetching new data");
+      if (!earningsFilter) return;
+      try {
+        const result = await Promise.all([
+          platform.user.getCount(earningsFilter),
+        ]);
+        console.log("Subscription filter changed, fetching new data, here it is:", result);
+        setActiveSubscriptions(result[0].results);
+      } catch (err) {
+        console.error("Error loading data:", err);
+      }
+    };
+
+    loadData();
+  }, [earningsFilter]);
+
 
 
   if (!user) {
@@ -173,32 +206,27 @@ const AffiliateDashboard = () => {
           <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div className="bg-white rounded-lg shadow p-6">
               <Heading level={3}>Revenue Distribution</Heading>
-              {/* <Chart 
-                type="pie"
-                data={{
-                  labels: ['Subscriptions', 'Stays', 'Events', 'Tokens'],
-                  datasets: [{
-                    data: [45, 25, 20, 10]
-                  }]
-                }}
-              /> */}
             </div>
             <div className="bg-white rounded-lg shadow p-6">
               <Heading level={3}>Monthly Performance</Heading>
-              {/* <Chart
-                type="line"
-                data={{
-                  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                  datasets: [{
-                    label: 'Earnings',
-                    data: [30, 45, 35, 50, 40, 60]
-                  }]
-                }}
-              /> */}
             </div>
           </div>
         )}
 
+        {activeTab === 'tokens' && (
+          <div className="mt-8">
+            <div className="bg-white rounded-lg shadow p-6">
+              <Heading level={3}>Tokens tab</Heading>
+            </div>
+          </div>
+        )}
+        {activeTab === 'tokens' && (
+          <div className="mt-8">
+            <div className="bg-white rounded-lg shadow p-6">
+              <Heading level={3}>Tokens tab</Heading>
+            </div>
+          </div>
+        )}
         {activeTab === 'tokens' && (
           <div className="mt-8">
             <div className="bg-white rounded-lg shadow p-6">
