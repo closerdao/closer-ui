@@ -63,7 +63,7 @@ const SubscriptionsPage: NextPage<Props> = ({
 
   const handleNext = (priceId: string, hasVariants: boolean, slug: string) => {
     if (slug === 'citizen') {
-      router.push('/subscriptions/citizen/intro');
+      router.push('/subscriptions/citizen/validation');
       return;
     }
     if (priceId?.includes(',')) {

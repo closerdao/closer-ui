@@ -40,14 +40,14 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
 
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isLoading, user } = useAuth();
   const { isWalletReady } = useContext(WalletState);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !user) {
       router.push(`/signup?back=${encodeURIComponent(router.asPath)}`);
     }
-  }, [isAuthenticated, isLoading]);
+  }, [user, isLoading]);
 
   const handleNext = async () => {
     if (user && user.kycPassed === true) {

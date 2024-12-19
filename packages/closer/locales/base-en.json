@@ -105,7 +105,6 @@
   "bookings_summary_step_title": "Summary",
   "bookings_food_step_title": "Food",
 
-
   "bookings_summary_step_dates_title": "Your Stay",
   "bookings_summary_step_dates_title_hourly": "Your Space Booking",
   "bookings_summary_step_your_event": "Your event",
@@ -155,8 +154,8 @@
   "buttons_volunteer": "Join as a volunteer",
   "buttons_booking_request": "Submit request",
   "buttons_go_to_bookings": "< Back to Bookings",
-  "buttons_go_back": "< Back",
-  "buttons_back_to_dates": "< Back to Dates",
+  "buttons_go_back": "<link Back",
+  "buttons_back_to_dates": "<link Back to Dates",
   "buttons_edit_profile": "Edit Profile",
 
   "cancel_booking_page_title": "Cancellation",
@@ -385,7 +384,6 @@
   "booking_rate_monthly": "Month",
   "booking_food": "Food",
   "booking_add_food": "Add",
-  
 
   "bookings_id": "Booking #",
   "bookings_edit_slug_title": "Edit",
@@ -418,8 +416,6 @@
   "bookings_amount_due": "Amount due:",
   "bookings_amount_to_refund": "Amount to refund:",
   "bookings_utility_fee": "Utilities fee:",
-
-
 
   "bookings_rental_cost": "Cost of the accommodation:",
   "bookings_tokens_lock": "Total tokens locked:",
@@ -620,7 +616,7 @@
   "subscriptions_credits_included": "night credits included",
   "subscriptions_become_citizen_button": "Become citizen",
   "subscriptions_hold": "Hold",
-  "subscriptions_from": "from",
+  "subscriptions_from": "or finance it from",
   "subscriptions_for_3_years": "for 3 years",
   "subscriptions_citizen_apply_title": "🐑 Citizensheep Application",
   "subscriptions_citizen_intro_title": "👋🏼 Hello fellow dreamer",
@@ -629,20 +625,62 @@
   "subscriptions_citizen_perks_list": "Proof of presence, Proof of sweat, Forum proposals, Membership NFT, TDF Members page, Members Telegram group, Instant book",
   "subscriptions_citizen_good_to_go": "👋🏼 You are good to go!",
   "subscriptions_citizen_good_to_go_intro": "Being a Traditional Dream Factory (TDF) Member means that TDF is one of your homes. That comes with many advantages and also certain duties and responsibilities - “with great power, great responsibility”.",
-  "subscriptions_citizen_good_why": "Why do you want to become a member?",
+  "subscriptions_citizen_good_why": "Why do you want to become a member? (required)",
   "subscriptions_citizen_good_how": "How do you wish to contribute to TDF?",
   "subscriptions_citizen_i_own_tokens": "I own 30+ tokens",
-  "subscriptions_citizen_i_want_to_finance_tokens": "I wish to finance 30+ tokens",
   "subscriptions_citizen_not_eligible": "👋🏼 You are not eligible to become a member just yet",
   "subscriptions_citizen_not_eligible_reason": "Here is why you are currently unable to apply for a TDF Citizensheep:",
   "subscriptions_citizen_report_mistake": "Is there a mistake? Please let us know at",
-  "subscriptions_citizen_stayed_for_min_duration": "You spent at least 14 days at TDF during last two years",
-  "subscriptions_citizen_vouched_by_3_members": "You have been vouched for by 3 other members",
+  "subscriptions_citizen_stayed_for_min_duration": "You spent at least 14 days at TDF in the past two years",
+  "subscriptions_citizen_vouched_by_n_members": "You have been vouched for by {var} other members",
   "subscriptions_citizen_created_account": "You created an account",
   "subscriptions_citizen_no_reports": "You have not been reported my other members",
   "subscriptions_citizen_owns_30_tokens": "You own 30 tokens",
   "subscriptions_citizen_on_way_to_30_tokens": "You are on your way to owning at least 30 tokens",
   "subscriptions_citizen_see_other_ways": "See other ways to be part of TDF",
+  "subscriptions_citizen_i_wish_to_finance_tokens": "I wish to finance 30+ tokens",
+  "subscriptions_citizen_i_wish_to_buy_now": "I would like to buy 30+ tokens now",
+  "subscriptions_citizen_i_own_tokens_and_wish_to_buy_now": "I own 30+ tokens & I wish to buy 30+ tokens now",
+  "subscriptions_citizen_i_own_tokens_and_wish_to_finance_tokens": "I own 30+ tokens & I wish to finance 30+ tokens",
+  "subscriptions_citizen_connect_wallet": "Please connect your wallet if you wish to confirm your current token balance",
+  "subscriptions_citizen_apply": "Apply for citizenship",
+  "subscriptions_citizen_read_agreement": "Please read the Citizenship Agreement carefully.",
+  "subscriptions_citizen_agree_to_terms": "I accept the <link>Citizenship Agreement</link>",
+  "subscriptions_citizen_become_citizen": "Become citizen",
+  "subscriptions_citizen_welcome": "👋🏼 Welcome!",
+  "subscriptions_citizen_confirmation": "Woohoo - you have become a TDF Citizen! ",
+  "subscriptions_citizen_you_are_on_your_way": "Woohoo - you are on your way to becoming a TDF Citizen! ",
+  "subscriptions_citizen_back_to_homepage": "Back to homepage",
+
+
+  "subscriptions_citizen_finance_tokens": "💰 Finance your Tokens",
+  "subscriptions_citizen_finance_tokens_details": "You can choose to finance 30, 60, 90 or 120 tokens. Here are a few details about it:",
+  "subscriptions_citizen_finance_tokens_details_36_months": "Paid over 36 months via bank transfers",
+  "subscriptions_citizen_finance_tokens_details_stay_credits": "You get <link>stay credits</link> to be able to get the utility of all tokens ahead of owning them",
+  "subscriptions_citizen_finance_tokens_details_10_down_payment": "10% down payment (non-refundable)",
+  "subscriptions_citizen_finance_tokens_details_tokens_accrued": "Tokens accrue every 6 month if payments are made",
+  "subscriptions_citizen_finance_tokens_details_tokens_how_many": "How many tokens would you like to finance?",
+  "subscriptions_citizen_finance_tokens_tokens": "tokens",
+  "subscriptions_citizen_finance_tokens_you_have_chosen": "You have chosen to finance <b>{var} $TDF</b> tokens. Here are the details of your payment plan:",
+  "subscriptions_citizen_finance_tokens_total_cost": "Total Cost:",
+  "subscriptions_citizen_finance_tokens_total_cost_36_months": "€{var} over the next 36 months.",
+  "subscriptions_citizen_finance_tokens_down_payment": "Down payment:",
+
+  "subscriptions_citizen_finance_tokens_down_payment_amount": "€{var} (non-refundable).",
+  "subscriptions_citizen_finance_tokens_monthly_payment": "Monthly payment:",
+  "subscriptions_citizen_finance_tokens_monthly_payment_amount": "€{var}.",
+  "subscriptions_citizen_finance_tokens_cost_per_token": "Cost per token:",
+  "subscriptions_citizen_finance_tokens_hint": "Hint: want to get tokens 5% cheaper?",
+  "subscriptions_citizen_finance_tokens_hint_here": "You can buy them here",
+  "subscriptions_citizen_finance_tokens_bank_account": "From what bank account will you transfer the payments?",
+  "subscriptions_citizen_finance_tokens_bank_account_placeholder": "Please enter your IBAN here",
+  "subscriptions_citizen_finance_tokens_disclaimer": "By clicking the 'Become Citizen' button, you agree to:",
+  "subscriptions_citizen_finance_tokens_disclaimer_1": "Make the initial down payment upon receiving the first invoice via email.",
+  "subscriptions_citizen_finance_tokens_disclaimer_2": "Ensure timely monthly payments of €{var} for the duration of the plan.",
+  "subscriptions_citizen_finance_tokens_calculating": "Please wait, calculating token price...",
+  "subscriptions_citizen_finance_tokens_payment_details": "Please make your €{downPayment} payment to: {closerIban} from your account ending in {userIbanLast4}.",
+  "subscriptions_citizen_finance_tokens_after_application": "Once we receive the payment, we will send you a confirmation of Citizenship with 48h. If you do not receive the email, please send us a proof of payment to <link>space@traditionaldreamfactory.com</link>",
+
 
 
 
@@ -821,6 +859,7 @@
   "token_sale_before_you_begin_guide_2": "Connect your Metamask wallet to the CELO network (press 'Add to Metamask' button in 'Celo Mainnet' section)",
   "token_sale_before_you_begin_guide_3": "Where to get cEUR and CELO?",
   "token_sale_before_you_begin_guide_4": "Contact support",
+  "token_sale_before_you_begin_guide_5": "Where to get cEUR and CELO — alternative",
   "token_sale_before_you_begin_guide_1_link": "https://www.youtube.com/watch?v=-HTubEJ61zU",
   "token_sale_before_you_begin_guide_2_link": "https://chainlist.org/?search=celo",
   "token_sale_before_you_begin_guide_3_link": "https://ramp.network/buy",
@@ -1144,7 +1183,11 @@
   "config_label_residenceTimeFrame": "Residence time frame",
   "config_label_diet": "Diet (comma delimited options)",
   "config_label_shouldResidentsPayUtilities": "Should residents pay utilities",
-
+  "config_label_isSpaceHostVouchRequired": "Is space host vouch required",
+  "config_label_downPaymentPercent": "Down payment in percent",
+  "config_label_tokenPriceModifierPercent": "Token price modifier in percent",
+  "config_label_minVouches": "Minimum number of vouches",
+  "config_label_minVouchingStayDuration": "Minimum stay duration to be eligible for vouching (days)",
 
   "config_features_heading": "Platform features",
   "generic_delete_button": "Delete",
@@ -1437,6 +1480,6 @@
   "projects_residence_application_title": "👷🏽‍♀️ Residence application",
   "projects_no_manager": "no manager",
   "bookings_dates_min_residence_stay_error": "Minimum residence stay is {var} days ",
-  
-  "":""
+
+  "": ""
 }

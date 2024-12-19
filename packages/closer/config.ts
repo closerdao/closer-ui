@@ -39,6 +39,35 @@ export const configDescription: ConfigType[] = [
     These are all the configs that exist within the platform
      */
   {
+    slug: 'citizenship',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      isSpaceHostVouchRequired: {
+        type: 'boolean',
+        default: true,
+      },
+      downPaymentPercent: {
+        type: 'number',
+        default: 10,
+      },
+      tokenPriceModifierPercent: {
+        type: 'number',
+        default: 5,
+      },
+      minVouches: {
+        type: 'number',
+        default: 3,
+      },
+      minVouchingStayDuration: {
+        type: 'number',
+        default: 14,
+      },
+    },
+  },
+  {
     slug: 'booking',
     value: {
       enabled: {

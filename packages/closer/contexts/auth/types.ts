@@ -1,3 +1,5 @@
+import { Charge } from "../../types/booking";
+
 export interface Vouched {
   vouchedBy: string;
   vouchedAt: Date;
@@ -66,6 +68,15 @@ export type User = {
     monthlyPrice: { val: number; cur: string };
     monthlyCredits: number;
     stripeCustomerEmail: string;
+    citizenship?: {
+      createdAt?: Date;
+      status?: 'open' | 'pending-payment'| 'cancelled' | 'paid';
+      iban?: string;
+      why?: string;
+      tokensToFinance?: number;
+      totalToPayInFiat?: number;
+      charges: Charge[];
+    }
   };
   presence?: number;
   tokensBought?: number;
