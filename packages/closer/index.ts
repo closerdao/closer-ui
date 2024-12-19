@@ -132,7 +132,7 @@ export { default as CreateVolunteerOportunity } from './pages/volunteer/create';
 export { default as DashboardPage } from './pages/dashboard';
 export { default as ProjectApplicationPage } from './pages/projects/apply';
 export { default as VolunteerApplicationPage } from './pages/volunteer/apply';
-export { default as MarsTestPage } from './pages/test/index';
+export { default as AffiliateDashboard } from './pages/affiliate/index';
 
 // Types
 export * from './types/';

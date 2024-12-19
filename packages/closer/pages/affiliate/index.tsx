@@ -5,7 +5,6 @@ import Head from 'next/head';
 import { Heading, Card } from 'closer/components/ui';
 import Tabs from 'closer/components/Tabs';
 import { loadLocaleData } from '../../utils/locale.helpers';
-// import { usePlatform } from '../../contexts/platform';
 import { useAuth } from '../../contexts/auth';
 import PageNotAllowed from '../401';
 
