@@ -11,7 +11,8 @@ const config = {
     'fundraiser',
     'payment',
     'emails',
-    'learningHub'
+    'learningHub',
+    'citizenship',
   ],
   PORT: 14444,
   EXPOSE_STORE: true,
