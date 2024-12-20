@@ -141,7 +141,7 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
       (async () => {
         try {
           setIsStripeLoading(true);
-          const res = await api.post('/stripe/subscription-payments', {
+          const res = await api.post('/stripe-data/subscription-payments', {
             start,
             end,
           });

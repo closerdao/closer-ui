@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
+import { CloserCurrencies } from '../../types/currency';
 import { SubscriptionPlan } from '../../types/subscriptions';
 import { getCurrencySymbol } from '../../utils/helpers';
 import Button from '../ui/Button';
@@ -28,10 +29,30 @@ const SubscriptionCards = ({
   plans,
 }: SubscriptionCardsProps) => {
   const t = useTranslations();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+
+  const isMember = user?.roles?.includes('member');
 
   const paidSubscriptionPlans = plans.filter((plan) => plan.priceId !== 'free');
   const filteredPlans = isAuthenticated ? paidSubscriptionPlans : plans;
+
+  const getCtaText = (price: number, slug: string) => {
+    if (slug === 'citizen') {
+      if (isMember) {
+        return t('subscriptions_citizen_finance_tokens_button');
+      } else {
+        return t('subscriptions_citizen_become_citizen');
+      }
+    }
+
+    if (price === 0) {
+      return t('subscriptions_create_account_button');
+    }
+    if (userActivePlan?.price !== 0) {
+      return t('subscriptions_manage_button');
+    }
+    return t('subscriptions_subscribe_button');
+  };
 
   const getSubscriptionInfoText = (plan: SubscriptionPlan) => {
     if (userActivePlan?.title === plan.title && validUntil && !cancelledAt) {
@@ -125,12 +146,28 @@ const SubscriptionCards = ({
                         t('subscriptions_free')
                       ) : (
                         <div>
+                          {plan.slug === 'citizen' && (
+                            <div>
+                              <p className="text-sm font-normal">
+                                {t('subscriptions_hold')}
+                              </p>
+                              <p>
+                                {getCurrencySymbol(CloserCurrencies.TDF)}
+                                {30}
+                              </p>
+                              <p className="text-sm font-normal">
+                                {t('subscriptions_from')}
+                              </p>
+                            </div>
+                          )}
                           <div>
                             {getCurrencySymbol(currency)}
                             {plan.price}
                           </div>
                           <p className="text-sm font-normal">
-                            {t('subscriptions_summary_per_month')}
+                            {plan.slug === 'citizen'
+                              ? t('subscriptions_for_3_years')
+                              : t('subscriptions_summary_per_month')}
                           </p>
                         </div>
                       )}
@@ -149,11 +186,7 @@ const SubscriptionCards = ({
                       className={`${plan.price === 0 ? 'mb-7' : ''}`}
                       size="small"
                     >
-                      {plan.price === 0
-                        ? t('subscriptions_create_account_button')
-                        : userActivePlan?.price !== 0
-                        ? t('subscriptions_manage_button')
-                        : t('subscriptions_subscribe_button')}
+                      {getCtaText(plan.price, plan.slug)}
                     </Button>
                   </>
                 )}

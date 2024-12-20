@@ -106,6 +106,15 @@ export type GeneralConfig = {
   facebookPixelId: string;
   faqsGoogleSheetId: string;
   timeZone: string;
+  minVouchingStayDuration?: number;
+};
+export type CitizenshipConfig = {
+  enabled: boolean;
+  isSpaceHostVouchRequired: boolean;
+  downPaymentPercent: number;
+  tokenPriceModifierPercent: number;
+  minVouches: number;
+  minVouchingStayDuration: number;
 };
 
 export type BookingConfig = {
