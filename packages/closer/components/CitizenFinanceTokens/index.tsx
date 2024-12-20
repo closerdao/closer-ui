@@ -1,13 +1,13 @@
 import Link from 'next/link';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { useAuth } from '../../contexts/auth';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { getCurrentUnitPrice } from '../../utils/bondingCurve';
 import { Button, Card, Checkbox, Heading, Input, Spinner } from '../ui';
-import { useAuth } from '../../contexts/auth';
 
 interface CitizenFinanceTokensProps {
   application: any;
@@ -38,7 +38,6 @@ const CitizenFinanceTokens = ({
     isPending,
   } = useBuyTokens();
 
-
   const totalToPayInFiat = application?.totalToPayInFiat || 0;
 
   const averagePricePerToken =
@@ -53,13 +52,11 @@ const CitizenFinanceTokens = ({
     if (isConfigReady) {
       (async () => {
         try {
-
           const supply = await getCurrentSupplyWithoutWallet();
 
           const totalCost = await getTotalCostWithoutWallet(
             application?.tokensToFinance.toString(),
           );
-
 
           const calculatedTotalToPayInFiat =
             Number(
@@ -67,14 +64,12 @@ const CitizenFinanceTokens = ({
             ) || 0;
           updateApplication('totalToPayInFiat', calculatedTotalToPayInFiat);
 
-
           const price = getCurrentUnitPrice(supply);
-
         } catch (error) {
           console.error('Error in supply/price calculation:', error);
         }
       })();
-    } 
+    }
   }, [isConfigReady, application?.tokensToFinance]);
 
   return (
@@ -279,9 +274,9 @@ const CitizenFinanceTokens = ({
           className="booking-btn"
           onClick={applyCitizen}
         >
-                  {isMember
-                      ? t('subscriptions_citizen_finance_tokens_button')
-                      : t('subscriptions_citizen_become_citizen')}
+          {isMember
+            ? t('subscriptions_citizen_finance_tokens_button')
+            : t('subscriptions_citizen_become_citizen')}
         </Button>
       </div>
     </section>
