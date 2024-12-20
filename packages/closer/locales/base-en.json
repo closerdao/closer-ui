@@ -614,6 +614,7 @@
   "subscriptions_pioneer_title": "Become a pioneer",
   "subscriptions_pioneer_intro_text": "With these subscription packages you can continuously support us and get some Carrots  in return. You can then use your Carrots to cover your Accommodation Fee at TDF. Wo oh! Experience living at TDF, with no specific dates or long-term commitment required. Come!",
   "subscriptions_credits_included": "night credits included",
+  
   "subscriptions_become_citizen_button": "Become citizen",
   "subscriptions_hold": "Hold",
   "subscriptions_from": "or finance it from",
@@ -650,6 +651,7 @@
   "subscriptions_citizen_welcome": "👋🏼 Welcome!",
   "subscriptions_citizen_confirmation": "Woohoo - you have become a TDF Citizen! ",
   "subscriptions_citizen_you_are_on_your_way": "Woohoo - you are on your way to becoming a TDF Citizen! ",
+  "subscriptions_citizen_you_are_on_your_way_finance": "Woohoo - you are on your way to financing $TDF tokens! ",
   "subscriptions_citizen_back_to_homepage": "Back to homepage",
 
 
@@ -674,12 +676,22 @@
   "subscriptions_citizen_finance_tokens_hint_here": "You can buy them here",
   "subscriptions_citizen_finance_tokens_bank_account": "From what bank account will you transfer the payments?",
   "subscriptions_citizen_finance_tokens_bank_account_placeholder": "Please enter your IBAN here",
-  "subscriptions_citizen_finance_tokens_disclaimer": "By clicking the 'Become Citizen' button, you agree to:",
+  "subscriptions_citizen_finance_tokens_disclaimer": "By clicking the 'Become Citizen' or 'Finance tokens' button, you agree to:",
   "subscriptions_citizen_finance_tokens_disclaimer_1": "Make the initial down payment upon receiving the first invoice via email.",
   "subscriptions_citizen_finance_tokens_disclaimer_2": "Ensure timely monthly payments of €{var} for the duration of the plan.",
   "subscriptions_citizen_finance_tokens_calculating": "Please wait, calculating token price...",
   "subscriptions_citizen_finance_tokens_payment_details": "Please make your €{downPayment} payment to: {closerIban} from your account ending in {userIbanLast4}.",
-  "subscriptions_citizen_finance_tokens_after_application": "Once we receive the payment, we will send you a confirmation of Citizenship with 48h. If you do not receive the email, please send us a proof of payment to <link>space@traditionaldreamfactory.com</link>",
+  "subscriptions_citizen_finance_tokens_after_application": "Once we receive the payment, we will send you a confirmation of Citizenship within 48h. If you do not receive the email, please send us a proof of payment to <link>space@traditionaldreamfactory.com</link>",
+  "subscriptions_citizen_finance_tokens_after_application_finance": "Once we receive the payment, we will send you a confirmation of of yor financed token plan within 48h. If you do not receive the email, please send us a proof of payment to <link>space@traditionaldreamfactory.com</link>",
+  "subscriptions_citizen_finance_tokens_button": "Finance tokens",
+  
+  "subscriptions_citizen_user_page_created": "Created at:",
+  "subscriptions_citizen_user_page_iban": "Your IBAN:",
+  "subscriptions_citizen_user_page_why": "Why do you want to become a member?",
+  "subscriptions_citizen_user_page_total_to_pay": "Total cost:",
+  "subscriptions_citizen_user_page_tokens_to_finance": "Tokens to finance:",
+  "subscriptions_citizen_user_page_charges": "Payment history:",
+  "subscriptions_citizen_user_page_status": "Status:",
 
 
 

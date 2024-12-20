@@ -43,19 +43,28 @@ const SuccessCitizenPage: NextPage<Props> = ({
     subscriptionsConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
 
-  const { isLoading, user } = useAuth();
+  const { isLoading, user, refetchUser } = useAuth();
+  const isMember = user?.roles?.includes('member');
+
+
   const router = useRouter();
   const { intent } = router.query;
 
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
-  
-  const CLOSER_IBAN = '1234456767'
 
-  const downPayment = (
-    user?.subscription?.citizenship?.totalToPayInFiat ?? 0 * 0.1
-  ).toFixed(2) || '0';
+  const closerIban = process.env.NEXT_PUBLIC_CLOSER_IBAN;
+
+  if (!closerIban) {
+    throw new Error('closerIban is not set');
+  }
+
+  const downPayment =
+    (
+      (Number(user?.subscription?.citizenship?.totalToPayInFiat) ?? 0) * 0.1
+    ).toFixed(2) || 0;
+
   const userIbanLast4 = user?.subscription?.citizenship?.iban?.slice(-4) || '';
 
   useEffect(() => {
@@ -63,6 +72,12 @@ const SuccessCitizenPage: NextPage<Props> = ({
       router.push(`/signup?back=${router.asPath}`);
     }
   }, [user, isLoading]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      refetchUser();
+    }
+  }, [isLoading]);
 
   const goBack = () => {
     router.push(`/subscriptions/citizen/apply?intent=${intent}`);
@@ -109,18 +124,19 @@ const SuccessCitizenPage: NextPage<Props> = ({
                 {t('subscriptions_citizen_welcome')}
               </Heading>
 
-              <p>{t('subscriptions_citizen_you_are_on_your_way')}</p>
+              <p>{isMember ? t('subscriptions_citizen_you_are_on_your_way_finance') : t('subscriptions_citizen_you_are_on_your_way')}</p>
               <p>
                 {t('subscriptions_citizen_finance_tokens_payment_details', {
                   downPayment,
-                  closerIban: CLOSER_IBAN,
+                  closerIban,
                   userIbanLast4,
                 })}
               </p>
 
               <p>
-
-              {t.rich('subscriptions_citizen_finance_tokens_after_application', {
+                {isMember ? t.rich(
+                  'subscriptions_citizen_finance_tokens_after_application_finance',
+                  {
                     link: (chunks) => (
                       <a
                         href="mailto:space@traditionaldreamfactory.com"
@@ -131,8 +147,24 @@ const SuccessCitizenPage: NextPage<Props> = ({
                         {chunks}
                       </a>
                     ),
-                  })}
-                      
+                  },
+                ) : t.rich(
+                  'subscriptions_citizen_finance_tokens_after_application',
+                  {
+                    link: (chunks) => (
+                      <a
+                        href="mailto:space@traditionaldreamfactory.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ textDecoration: 'underline' }}
+                      >
+                        {chunks}
+                      </a>
+                    ),
+                  },
+                )
+                }
+
               </p>
             </section>
           )}

@@ -1,4 +1,4 @@
-import { Charge } from "../../types/booking";
+import { Charge } from '../../types/booking';
 
 export interface Vouched {
   vouchedBy: string;
@@ -8,7 +8,7 @@ export type Report = {
   reportedBy: string;
   reportedAt: Date;
   report: { reason: string; unsafe: boolean };
-}
+};
 export type User = {
   vouched?: Vouched[];
   reports?: Report[];
@@ -70,13 +70,13 @@ export type User = {
     stripeCustomerEmail: string;
     citizenship?: {
       createdAt?: Date;
-      status?: 'open' | 'pending-payment'| 'cancelled' | 'paid';
+      status?: 'open' | 'pending-payment' | 'cancelled' | 'paid';
       iban?: string;
       why?: string;
       tokensToFinance?: number;
       totalToPayInFiat?: number;
       charges: Charge[];
-    }
+    };
   };
   presence?: number;
   tokensBought?: number;

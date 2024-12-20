@@ -23,9 +23,7 @@ import { usePlatform } from '../../../contexts/platform';
 import { WalletState } from '../../../contexts/wallet';
 import { useConfig } from '../../../hooks/useConfig';
 import { CitizenshipConfig } from '../../../types';
-import {
-  SubscriptionPlan, // Tier,
-} from '../../../types/subscriptions';
+import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
@@ -40,7 +38,6 @@ interface Props {
 
 const ValidationCitizenPage: NextPage<Props> = ({
   subscriptionsConfig,
-
   citizenshipConfig,
   error,
 }) => {
@@ -50,43 +47,31 @@ const ValidationCitizenPage: NextPage<Props> = ({
   const { platform }: any = usePlatform();
   const router = useRouter();
 
-  console.log('user===>', user);
-
   const { balanceTotal } = useContext(WalletState);
-  const minVouchingStayDuration =
-    citizenshipConfig?.minVouchingStayDuration || 14;
 
-  console.log('balanceTotal===>', balanceTotal);
-  // const owns30Tokens = balanceTotal >= 30;
-
-  // this is temp for testing:
-  const owns30Tokens = balanceTotal >= 1;
-
-  console.log('owns30Tokens===>', owns30Tokens);
+  const owns30Tokens = balanceTotal >= 30;
 
   const areSubscriptionsEnabled =
     subscriptionsConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
+  const isMember = user?.roles?.includes('member');
 
   const [isVouched, setIsVouched] = useState(false);
   const [hasStayedForMinDuration, setHasStayedForMinDuration] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState('');
   const [eligibility, setEligibility] = useState<null | string>(null);
   const [application, setApplication] = useState<any>({
     owns30Tokens,
     why: '',
     intent: {
-      iWantToApply: Boolean(owns30Tokens),
-      iWantToBuyTokens: Boolean(!owns30Tokens),
-      iWantToFinanceTokens: false,
+      iWantToApply: Boolean(owns30Tokens) && !isMember,
+      iWantToBuyTokens: false,
+      iWantToFinanceTokens: true,
     },
   });
 
-  const isMember = user?.roles?.includes('member');
-  console.log('isMember', isMember);
   const minVouches = citizenshipConfig?.minVouches || 3;
 
   const getCtaButtonText = () => {
@@ -108,7 +93,6 @@ const ValidationCitizenPage: NextPage<Props> = ({
       case 'not_eligible':
         return t('subscriptions_citizen_see_other_ways');
       default:
-
         return t('booking_button_continue');
     }
   };
@@ -120,16 +104,19 @@ const ValidationCitizenPage: NextPage<Props> = ({
         owns30Tokens,
         intent: {
           ...prev.intent,
-          iWantToApply: Boolean(owns30Tokens),
-          iWantToBuyTokens: Boolean(!owns30Tokens),
+          iWantToApply: false,
+          iWantToFinanceTokens: true,
+          iWantToBuyTokens: false,
         },
       }));
     }
     (async () => {
       try {
+        setApiError('');
         const hasStayedRes = await api.get(
           '/subscription/citizen/check-has-stayed-for-min-duration',
         );
+
         const hasStayedForMinDurationLocal =
           hasStayedRes?.data?.hasStayedForMinDuration;
 
@@ -139,7 +126,6 @@ const ValidationCitizenPage: NextPage<Props> = ({
         );
         const isVouchedLocal = isVouchedRes?.data?.isVouched;
 
-        console.log('isVouchedLocal===>', isVouchedLocal);
         setIsVouched(isVouchedLocal);
 
         if (isVouchedLocal && hasStayedForMinDurationLocal && owns30Tokens) {
@@ -153,7 +139,6 @@ const ValidationCitizenPage: NextPage<Props> = ({
           setEligibility('not_eligible');
         }
       } catch (error) {
-        console.log('error=', error);
         setApiError(parseMessageFromError(error));
       }
     })();
@@ -182,25 +167,30 @@ const ValidationCitizenPage: NextPage<Props> = ({
   }
 
   const handleNext = async () => {
-    console.log('eligibility in handlenext=', eligibility);
     switch (eligibility) {
       case 'good_to_buy':
         if (application?.intent?.iWantToBuyTokens) {
           router.push('/token/before-you-begin?isCitizenApplication=true');
           return;
         } else {
-          router.push(`/subscriptions/citizen/apply?why=${application?.why}`);
+          router.push(
+            `/subscriptions/citizen/apply?intent=finance&why=${application?.why}`,
+          );
           return;
         }
       case 'buy_more':
         if (application?.intent?.iWantToBuyTokens) {
-          router.push('/token/before-you-begin');
+          router.push('/token/before-you-begin?isCitizenApplication=true');
           return;
         } else if (application?.intent?.iWantToApply) {
-          router.push(`/subscriptions/citizen/apply?intent=apply&why=${application?.why}`);
+          router.push(
+            `/subscriptions/citizen/apply?intent=apply&why=${application?.why}`,
+          );
           return;
         } else {
-          router.push(`/subscriptions/citizen/apply?intent=finance&why=${application?.why}`);
+          router.push(
+            `/subscriptions/citizen/apply?intent=finance&why=${application?.why}`,
+          );
           return;
         }
       case 'not_eligible':
@@ -223,16 +213,13 @@ const ValidationCitizenPage: NextPage<Props> = ({
 
       <div className="w-full max-w-screen-sm mx-auto p-8">
         <BackButton handleClick={goBack}>{t('buttons_back')}</BackButton>
-
         <Heading level={1} className="mb-4">
           {t('subscriptions_citizen_apply_title')}
         </Heading>
-
         <ProgressBar steps={SUBSCRIPTION_CITIZEN_STEPS} />
 
         <main className="pt-14 pb-24 space-y-6">
           <section className="mb-10 space-y-6">
-            eligibility={eligibility}
             <Heading level={2} className="border-b pb-2 mb-6 text-xl">
               {eligibility === 'good_to_buy' || eligibility === 'buy_more'
                 ? t('subscriptions_citizen_good_to_go')

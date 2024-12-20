@@ -29,14 +29,20 @@ const SubscriptionCards = ({
   plans,
 }: SubscriptionCardsProps) => {
   const t = useTranslations();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+
+  const isMember = user?.roles?.includes('member');
 
   const paidSubscriptionPlans = plans.filter((plan) => plan.priceId !== 'free');
   const filteredPlans = isAuthenticated ? paidSubscriptionPlans : plans;
 
   const getCtaText = (price: number, slug: string) => {
     if (slug === 'citizen') {
-      return t('subscriptions_become_citizen_button');
+      if (isMember) {
+        return t('subscriptions_citizen_finance_tokens_button');
+      } else {
+        return t('subscriptions_citizen_become_citizen');
+      }
     }
 
     if (price === 0) {

@@ -6,12 +6,7 @@ import { useContext, useEffect, useState } from 'react';
 import CitizenApply from '../../../components/CitizenApply';
 import CitizenFinanceTokens from '../../../components/CitizenFinanceTokens';
 import PageError from '../../../components/PageError';
-import {
-  BackButton,
-
-  Heading,
-  ProgressBar,
-} from '../../../components/ui/';
+import { BackButton, Heading, ProgressBar } from '../../../components/ui/';
 
 import { NextPage, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -64,13 +59,7 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
 
   const { balanceTotal } = useContext(WalletState);
 
-  console.log('balanceTotal===>', balanceTotal);
-  // const owns30Tokens = balanceTotal >= 30;
-
-  // this is temp for testing:
   const owns30Tokens = balanceTotal >= 1;
-
-  console.log('owns30Tokens===>', owns30Tokens);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -95,7 +84,6 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
   };
 
   const applyCitizen = async () => {
-    
     try {
       setLoading(true);
       if (intent === 'apply') {
@@ -103,8 +91,8 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
         try {
           const res = await api.post('/subscription/citizen/apply', {
             owns30Tokens,
-            intent,
             why,
+            intent,
           });
 
           if (res.data.status === 'success') {
@@ -123,6 +111,7 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
             intent,
             iban: application?.iban,
             tokensToFinance: application?.tokensToFinance,
+            totalToPayInFiat: application?.totalToPayInFiat,
           });
 
           if (res.data.status === 'success') {
@@ -130,11 +119,11 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
             return;
           }
         } catch (error) {
-          console.log('error=', error);
+          console.error('error=', error);
         }
       }
     } catch (error) {
-      console.log('error=', error);
+      console.error('error=', error);
     } finally {
       setLoading(false);
     }
@@ -168,15 +157,16 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
           ) : (
             <CitizenFinanceTokens
               application={application}
-                updateApplication={updateApplication}
-                tokenPriceModifierPercent={citizenshipConfig?.tokenPriceModifierPercent || 0}
-                isAgreementAccepted={isAgreementAccepted}
-                setIsAgreementAccepted={setIsAgreementAccepted}
-                applyCitizen={applyCitizen}
-                loading={loading}
+              updateApplication={updateApplication}
+              tokenPriceModifierPercent={
+                citizenshipConfig?.tokenPriceModifierPercent || 0
+              }
+              isAgreementAccepted={isAgreementAccepted}
+              setIsAgreementAccepted={setIsAgreementAccepted}
+              applyCitizen={applyCitizen}
+              loading={loading}
             />
           )}
-
         </main>
       </div>
     </>
@@ -187,19 +177,20 @@ SubscriptionsCitizenApplyPage.getInitialProps = async (
   context: NextPageContext,
 ) => {
   try {
-    const [subscriptionsRes, generalRes, citizenshipRes, messages] = await Promise.all([
-      api.get('/config/subscriptions').catch(() => {
-        return null;
-      }),
+    const [subscriptionsRes, generalRes, citizenshipRes, messages] =
+      await Promise.all([
+        api.get('/config/subscriptions').catch(() => {
+          return null;
+        }),
 
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      api.get('/config/citizenship').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+        api.get('/config/general').catch(() => {
+          return null;
+        }),
+        api.get('/config/citizenship').catch(() => {
+          return null;
+        }),
+        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      ]);
 
     const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
     const generalConfig = generalRes?.data?.results?.value;
