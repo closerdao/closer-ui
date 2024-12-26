@@ -70,12 +70,14 @@ export type User = {
     stripeCustomerEmail: string;
     citizenship?: {
       createdAt?: Date;
-      status?: 'open' | 'pending-payment' | 'cancelled' | 'paid';
+      status?: 'pending-payment' | 'cancelled' | 'paid' | 'completed';
       iban?: string;
       why?: string;
       tokensToFinance?: number;
       totalToPayInFiat?: number;
+      monthlyPaymentAmount?: number;
       charges: Charge[];
+      downPaymentAmount?: number;
     };
   };
   presence?: number;
