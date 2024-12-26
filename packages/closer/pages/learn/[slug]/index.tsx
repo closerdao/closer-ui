@@ -65,8 +65,6 @@ const LessonPage = ({
       user?.roles.includes('admin'),
   );
 
-  console.log('canViewLessons=', canViewLessons);
-
   const [isVideoPreview, setIsVideoPreview] = useState(
     Boolean(lesson?.previewVideo),
   );
