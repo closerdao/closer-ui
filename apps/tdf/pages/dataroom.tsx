@@ -116,6 +116,13 @@ const HomePage = () => {
                     >
                       2022 report
                     </Link>
+                    <Link
+                      href="/pdf/2024-TDF-report.pdf"
+                      target="_blank"
+                      className="ml-2 underline"
+                    >
+                      2024 report
+                    </Link>
                   </li>
                 </ul>
               </div>

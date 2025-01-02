@@ -484,6 +484,13 @@ const LearnMorePage = ({ subscriptionsConfig }: Props) => {
             >
               2022 report
             </Link>
+            <Link
+              href="/pdf/2024-TDF-report.pdf"
+              target="_blank"
+              className="bg-accent-light px-5 py-2 rounded-full uppercase"
+            >
+              2024 report
+            </Link>
           </div>
         </section>
         <section className="flex flex-wrap justify-center">
