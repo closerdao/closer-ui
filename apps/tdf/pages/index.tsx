@@ -298,7 +298,7 @@ const HomePage = () => {
             <Link
               href="/pdf/2022-TDF-report.pdf"
               target="_blank"
-              className="bg-accent-light px-5 py-2 rounded-full uppercase"
+              className="bg-accent-light px-5 py-2 rounded-full uppercase mr-4"
             >
               2022 report
             </Link>
