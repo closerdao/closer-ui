@@ -40,7 +40,9 @@ const LessonPage = ({
   learningHubConfig,
 }: Props) => {
   const t = useTranslations();
-  const subscriptions = prepareSubscriptions(subscriptionsConfig);
+  const subscriptions = subscriptionsConfig
+    ? prepareSubscriptions(subscriptionsConfig)
+    : null;
   const { asPath } = useRouter();
   const { user, refetchUser } = useAuth();
 
@@ -59,7 +61,8 @@ const LessonPage = ({
   const getAccessUrl = `/subscriptions/checkout?priceId=${subscriptionPriceId}&source=${asPath}`;
 
   const canViewLessons = Boolean(
-    user && (user?.subscription?.plan || !lesson?.paid),
+    (user && (user?.subscription?.plan || !lesson?.paid)) ||
+      user?.roles.includes('admin'),
   );
 
   const [isVideoPreview, setIsVideoPreview] = useState(
@@ -240,34 +243,32 @@ const LessonPage = ({
 LessonPage.getInitialProps = async (context: NextPageContext) => {
   const { req, query } = context;
   try {
-    const [
-      {
-        data: { results: subscriptions },
-      },
-      {
-        data: { results: lesson },
-      },
-      learningHubRes,
-      messages,
-    ] = await Promise.all([
-      api.get('/config/subscriptions'),
-      api.get(`/lesson/${query.slug}`, {
-        headers: (req as NextApiRequest)?.cookies?.access_token && {
-          Authorization: `Bearer ${
-            (req as NextApiRequest)?.cookies?.access_token
-          }`,
-        },
-      }),
-      api.get('/config/learningHub').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const [subscriptionsConfigRes, lessonRes, learningHubRes, messages] =
+      await Promise.all([
+        api.get('/config/subscriptions').catch(() => {
+          return null;
+        }),
+        api
+          .get(`/lesson/${query.slug}`, {
+            headers: (req as NextApiRequest)?.cookies?.access_token && {
+              Authorization: `Bearer ${
+                (req as NextApiRequest)?.cookies?.access_token
+              }`,
+            },
+          })
+          .catch(() => {
+            return null;
+          }),
+        api.get('/config/learningHub').catch(() => {
+          return null;
+        }),
+        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      ]);
     const learningHubConfig = learningHubRes?.data?.results?.value || null;
 
     return {
-      subscriptionsConfig: subscriptions.value,
-      lesson,
+      subscriptionsConfig: subscriptionsConfigRes?.data?.results?.value || null,
+      lesson: lessonRes?.data?.results || null,
       error: null,
       learningHubConfig,
       messages,

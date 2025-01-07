@@ -1,7 +1,15 @@
 const config = {
-  platformAllowedConfigs: ['booking', 'general', 'booking-rules', 'payment', 'emails', 'volunteering'],
+  platformAllowedConfigs: [
+    'booking',
+    'general',
+    'booking-rules',
+    'payment',
+    'emails',
+    'volunteering',
+    'learningHub',
+  ],
   PORT: 14444,
-  APP_NAME: 'lios', 
+  APP_NAME: 'lios',
   DEFAULT_TIMEZONE: 'Europe/Warsaw',
 
   EXPOSE_STORE: true,
