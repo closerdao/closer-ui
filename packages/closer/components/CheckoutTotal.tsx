@@ -13,9 +13,11 @@ interface Props {
   vatRate: number;
   useCredits: boolean;
   priceInCredits: number;
+  productName?: string;
 }
 
 const CheckoutTotal = ({
+  productName,
   total,
   useTokens,
   rentalToken,
@@ -33,7 +35,7 @@ const CheckoutTotal = ({
         <span>{t('bookings_checkout_step_total_title')}</span>
       </HeadingRow>
       <div className="flex justify-between items-center mt-3">
-        <p> {t('bookings_total')}</p>
+        <p> {productName ? `${productName} ` : t('bookings_total')} </p>
         <p className="font-bold">
           {useTokens && `${priceFormat(rentalToken?.val, rentalToken?.cur)} + `}
           {useCredits &&
@@ -42,7 +44,8 @@ const CheckoutTotal = ({
         </p>
       </div>
       <p className="text-right text-xs">
-        {t('bookings_checkout_step_total_description')} {getVatInfo(total, vatRate)}
+        {t('bookings_checkout_step_total_description')}{' '}
+        {getVatInfo(total, vatRate)}
       </p>
     </div>
   );

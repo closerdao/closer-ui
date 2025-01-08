@@ -244,6 +244,42 @@ const models = {
 
   lesson: [
     {
+      name: 'variant',
+      label: 'Variant',
+      type: 'select',
+      options: [
+        { label: 'Pre-recorded course', value: 'prerecorded-course' },
+        { label: 'Pre-recorded lesson', value: 'prerecorded-lesson' },
+        { label: 'Live course', value: 'live-course' },
+        { label: 'Live lesson', value: 'live-lesson' },
+      ],
+    },
+    {
+      name: 'access',
+      label: 'Access',
+      type: 'select',
+      options: [
+        { label: 'Any subscription tier', value: 'subscription-any' },
+        { label: 'Free', value: 'free' },
+        { label: 'Single payment', value: 'single-payment' },
+        { label: 'Subscription tier 1', value: 'subscription-tier-1' },
+        { label: 'Subscription tier 2', value: 'subscription-tier-2' },
+      ],
+    },
+    {
+      name: 'modules',
+      label: 'Course content',
+      type: 'learnEditor',
+      // tab: 'Course content',
+    },
+    {
+      name: 'price',
+      label: 'Enter course/lesson price',
+      type: 'currency',
+      placeholder: 'Enter course/lesson price (for single payment corses)',
+      tab: 'general',
+    },
+    {
       name: 'title',
       className: 'text-4xl font-bold',
       label: 'Lesson title',

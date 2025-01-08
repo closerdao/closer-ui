@@ -47,6 +47,7 @@ const LessonPage = ({
   const { user, refetchUser } = useAuth();
 
   const isLearningHubEnabled = learningHubConfig && learningHubConfig?.enabled;
+  const learnVariant = lesson?.variant;
 
   const [hasRefetchedUser, setHasRefetchedUser] = useState(false);
 
@@ -58,7 +59,14 @@ const LessonPage = ({
     },
   )?.priceId;
 
-  const getAccessUrl = `/subscriptions/checkout?priceId=${subscriptionPriceId}&source=${asPath}`;
+  const getAccessUrl = () => {
+    if (lesson?.access === 'single-payment') {
+      return `/learn/checkout?lessonId=${lesson._id}&source=${encodeURIComponent(asPath)}`;
+    }
+    return `/subscriptions/checkout?priceId=${subscriptionPriceId}&source=${encodeURIComponent(asPath)}`;
+  };
+
+  const accessUrl = getAccessUrl();
 
   const canViewLessons = Boolean(
     (user && (user?.subscription?.plan || !lesson?.paid)) ||
@@ -122,7 +130,7 @@ const LessonPage = ({
               isUnlocked={canViewLessons || isVideoPreview}
               setIsVideoLoading={setIsVideoLoading}
               isVideoLoading={isVideoLoading}
-              getAccessUrl={getAccessUrl}
+              getAccessUrl={accessUrl}
             />
 
             {(user?._id === lesson.createdBy ||
@@ -159,6 +167,7 @@ const LessonPage = ({
             <div className="flex-col-reverse sm:flex-row static flex items-start justify-between gap-6 w-full">
               <div className="flex flex-col gap-10 w-full sm:w-2/3">
                 <div>
+                  learnVariant={learnVariant}
                   <Heading level={1} className="md:text-4xl mt-2 font-bold">
                     {lesson.title}
                   </Heading>
@@ -216,10 +225,13 @@ const LessonPage = ({
                   </div>
 
                   {!canViewLessons && lesson.fullVideo && (
-                    <LinkButton href={getAccessUrl}>
+                    <LinkButton href={accessUrl}>
                       {t('learn_get_access_button')}
                     </LinkButton>
                   )}
+                  <LinkButton href={accessUrl}>
+                    {t('learn_get_access_button')}
+                  </LinkButton>
 
                   <Heading className="uppercase text-md" level={3}>
                     {t('learn_tags_heading')}
