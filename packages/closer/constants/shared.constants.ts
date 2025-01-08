@@ -18,7 +18,7 @@ export const BOOKING_STEPS = [
   'confirmation',
 ];
 export const PRODUCT_SALE_STEPS = [
-  'product-description',
+  'learn',
   'checkout',
   'confirmation',
 ];

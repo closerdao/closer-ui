@@ -5,12 +5,11 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import LessonDescription from '../../../components/LessonDescription';
+import LessonList from '../../../components/LessonList';
 import LessonVideo from '../../../components/LessonVideo';
 import Tag from '../../../components/Tag';
 import { Card, ErrorMessage, LinkButton } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
-import IconLocked from '../../../components/ui/IconLocked';
-import IconPlay from '../../../components/ui/IconPlay';
 
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -20,6 +19,8 @@ import { Lesson } from '../../../types/lesson';
 import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
+import { priceFormat } from '../../../utils/helpers';
+import { getVideoParams } from '../../../utils/learn.helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import { prepareSubscriptions } from '../../../utils/subscriptions.helpers';
 import PageNotFound from '../../not-found';
@@ -61,9 +62,13 @@ const LessonPage = ({
 
   const getAccessUrl = () => {
     if (lesson?.access === 'single-payment') {
-      return `/learn/checkout?lessonId=${lesson._id}&source=${encodeURIComponent(asPath)}`;
+      return `/learn/checkout?lessonId=${
+        lesson._id
+      }&source=${encodeURIComponent(asPath)}`;
     }
-    return `/subscriptions/checkout?priceId=${subscriptionPriceId}&source=${encodeURIComponent(asPath)}`;
+    return `/subscriptions/checkout?priceId=${subscriptionPriceId}&source=${encodeURIComponent(
+      asPath,
+    )}`;
   };
 
   const accessUrl = getAccessUrl();
@@ -77,6 +82,13 @@ const LessonPage = ({
     Boolean(lesson?.previewVideo),
   );
   const [isVideoLoading, setIsVideoLoading] = useState(false);
+  const [currentLessonId, setCurrentLessonId] = useState<null | string>(null);
+
+  const currentLesson = lesson?.modules
+    ?.find((module) =>
+      module.lessons.find((lesson) => lesson._id === currentLessonId),
+    )
+    ?.lessons.find((lesson) => lesson._id === currentLessonId);
 
   useEffect(() => {
     if (user && !hasRefetchedUser) {
@@ -90,10 +102,16 @@ const LessonPage = ({
   const handleShowPreview = () => {
     setIsVideoPreview(true);
     setIsVideoLoading(true);
+    setCurrentLessonId(null);
   };
   const handleShowFullVideo = () => {
     setIsVideoPreview(false);
     setIsVideoLoading(true);
+  };
+
+  const handleShowLesson = (lessonId: string) => {
+    setCurrentLessonId(lessonId);
+    setIsVideoPreview(false);
   };
 
   if (!lesson) {
@@ -122,12 +140,12 @@ const LessonPage = ({
           </Link>
           <div className="w-full relative">
             <LessonVideo
-              videoUrl={
-                isVideoPreview && lesson.previewVideo
-                  ? lesson.previewVideo
-                  : lesson.fullVideo
+              videoParams={getVideoParams(currentLessonId, lesson)}
+              isUnlocked={
+                canViewLessons ||
+                isVideoPreview ||
+                Boolean(currentLesson?.isFree)
               }
-              isUnlocked={canViewLessons || isVideoPreview}
               setIsVideoLoading={setIsVideoLoading}
               isVideoLoading={isVideoLoading}
               getAccessUrl={accessUrl}
@@ -167,7 +185,6 @@ const LessonPage = ({
             <div className="flex-col-reverse sm:flex-row static flex items-start justify-between gap-6 w-full">
               <div className="flex flex-col gap-10 w-full sm:w-2/3">
                 <div>
-                  learnVariant={learnVariant}
                   <Heading level={1} className="md:text-4xl mt-2 font-bold">
                     {lesson.title}
                   </Heading>
@@ -175,63 +192,72 @@ const LessonPage = ({
 
                 {error && <ErrorMessage error={error} />}
 
-                <div>
-                  {lesson.description && <LessonDescription lesson={lesson} />}
-                </div>
+                {currentLessonId &&
+                currentLesson &&
+                (canViewLessons || Boolean(currentLesson?.isFree)) ? (
+                  <div className="flex flex-col gap-6">
+                    <div>
+                      <span>
+                        {
+                          lesson.modules?.find((module) =>
+                            module.lessons.find(
+                              (lesson) => lesson._id === currentLessonId,
+                            ),
+                          )?.title
+                        }
+                        :{' '}
+                      </span>
+                      <Heading level={2} className="">
+                        {currentLesson?.title}
+                      </Heading>
+                    </div>
+                    <LessonDescription fullText={currentLesson.fullText} />
+                  </div>
+                ) : (
+                  <LessonDescription fullText={lesson.description} />
+                )}
               </div>
               <div className="h-auto static sm:sticky bottom-0 left-0  sm:top-[100px] w-full sm:w-[250px]">
                 <Card className="bg-white border border-gray-100 gap-6">
                   <Heading level={2}>{t('learn_lessons_heading')}</Heading>
-                  <div className="flex flex-col">
-                    {lesson.previewVideo && (
-                      <button
-                        onClick={handleShowPreview}
-                        disabled={isVideoPreview}
-                        className={`flex gap-2 py-1 px-2 rounded-md ${
-                          isVideoPreview
-                            ? 'bg-accent-light font-bold'
-                            : 'bg-transparent font-normal'
-                        }`}
-                      >
-                        <div className="border-accent border rounded-full flex justify-center items-center w-[21px] h-[21px]">
-                          <IconPlay />
-                        </div>
-                        {t('learn_introduction_heading')}
-                      </button>
-                    )}
 
-                    {lesson.fullVideo && (
-                      <button
-                        onClick={handleShowFullVideo}
-                        disabled={!isVideoPreview}
-                        className={`flex gap-2 py-1 px-2 rounded-md ${
-                          !isVideoPreview
-                            ? 'bg-accent-light font-bold'
-                            : 'bg-transparent font-normal'
-                        }`}
-                      >
-                        {canViewLessons ? (
-                          <div className="border-accent border rounded-full flex justify-center items-center w-[21px] h-[21px]">
-                            <IconPlay />
-                          </div>
-                        ) : (
-                          <div className=" flex justify-center items-center w-[21px] h-[21px]">
-                            <IconLocked />
-                          </div>
-                        )}
-                        {t('learn_full_lesson_heading')}
-                      </button>
-                    )}
-                  </div>
+                  <LessonList
+                    lesson={lesson}
+                    isVideoPreview={isVideoPreview}
+                    canViewLessons={canViewLessons}
+                    onShowPreview={handleShowPreview}
+                    onShowFullVideo={handleShowFullVideo}
+                    onShowLesson={handleShowLesson}
+                    currentLessonId={currentLessonId || ''}
+                  />
 
-                  {!canViewLessons && lesson.fullVideo && (
+                  {!canViewLessons &&
+                    lesson.fullVideo &&
+                    lesson.access !== 'single-payment' && (
+                      <LinkButton href={accessUrl}>
+                        {t('learn_get_access_button')}
+                      </LinkButton>
+                    )}
+                  {lesson.access === 'single-payment' && (
                     <LinkButton href={accessUrl}>
-                      {t('learn_get_access_button')}
+                      {t('learn_buy_single_course')}
                     </LinkButton>
                   )}
-                  <LinkButton href={accessUrl}>
-                    {t('learn_get_access_button')}
-                  </LinkButton>
+
+                  {lesson.access === 'single-payment' && lesson.price && (
+                    <div className="">
+                      <p>{t('learn_course_price')}</p>
+                      <p className="text-xl font-bold">
+                        {priceFormat(lesson.price)}
+                      </p>
+                    </div>
+                  )}
+
+                  {lesson.access === 'single-payment' && !lesson.price && (
+                    <LinkButton href={accessUrl}>
+                      {t('learn_buy_single_course')}
+                    </LinkButton>
+                  )}
 
                   <Heading className="uppercase text-md" level={3}>
                     {t('learn_tags_heading')}

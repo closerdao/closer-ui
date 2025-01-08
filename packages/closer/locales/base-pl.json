@@ -1388,6 +1388,23 @@
   "projects_no_manager": "no manager",
   "bookings_dates_min_residence_stay_error": "Minimum residence stay is {var} days ",
   
+  "learn_add_module": "Add module",
+   "learn_module_title": "Module title",
+   "learn_module_description": "Module description",
+   "learn_module_lessons": "Lessons in this module",
+   "learn_lesson_title": "Lesson title",
+   "learn_lesson_full_text": "Lesson full text",
+   "learn_lesson_video_url": "Lesson video URL",
+   "learn_lesson_is_free": "This lesson is free",
+   "learn_lesson_add": "Add lesson",
+   "learn_lesson_edit": "Edit lesson",
+   "learn_lesson_delete": "Delete lesson",
+   "learn_remove_module": "Delete module",
+   "learn_confirmation_title": "💰 Purchase successful",
+   "learn_confirmation_message": "Thank you for your purchase! 🌱",
+   "learn_confirmation_message_2": "We will contact you soon with the course details.",
+   "learn_buy_single_course": "Buy this course",
+   "learn_course_price": "Course price:",
 
 
 

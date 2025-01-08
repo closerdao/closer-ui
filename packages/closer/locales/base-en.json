@@ -1402,6 +1402,12 @@
    "learn_lesson_edit": "Edit lesson",
    "learn_lesson_delete": "Delete lesson",
    "learn_remove_module": "Delete module",
+   "learn_confirmation_title": "💰 Purchase successful",
+   "learn_confirmation_message": "Thank you for your purchase! 🌱",
+   "learn_confirmation_message_2": "We will contact you soon with the course details.",
+   "learn_buy_single_course": "Buy this course",
+   "learn_course_price": "Course price:",
+
   
   "":""
 }

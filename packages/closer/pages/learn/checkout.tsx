@@ -1,12 +1,9 @@
 import { useRouter } from 'next/router';
 
-import { useState } from 'react';
-
 import BookingBackButton from '../../components/BookingBackButton';
 import CheckoutTotal from '../../components/CheckoutTotal';
 import PageError from '../../components/PageError';
 import ProductCheckout from '../../components/ProductCheckout';
-import { ErrorMessage } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 import ProgressBar from '../../components/ui/ProgressBar';
 
@@ -31,71 +28,17 @@ interface Props {
 const LearnCheckout = ({ error, lesson, paymentConfig }: Props) => {
   const t = useTranslations();
 
-  console.log('lesson=', lesson);
+  const { isAuthenticated } = useAuth();
 
-  const { user, isAuthenticated } = useAuth();
-
-  const totalToPayInFiat = lesson?.price?.val || 0;
   const vatRateFromConfig = Number(paymentConfig?.vatRate);
   const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
   const vatRate = vatRateFromConfig || defaultVatRate;
 
-  console.log('vatRate=', vatRate);
-  console.log('totalToPayInFiat=', totalToPayInFiat);
-
   const router = useRouter();
 
-  const [paymentError, setPaymentError] = useState<string | null>(null);
-  const [processing, setProcessing] = useState(false);
-
-  // useEffect(() => {
-  //   if (booking?.status === 'paid') {
-  //     if (router) {
-  //       router.push(`/bookings/${booking?._id}`);
-  //     }
-  //   }
-  // }, [router]);
-
-  const renderButtonText = () => {
-    return t('checkout_pay');
-  };
-
   const goBack = () => {
-    router.push(`/learn/${lesson?._id}/summary`);
+    router.push(`/learn/${lesson?._id}`);
   };
-
-  const onSuccess = () => {
-    router.push(`/learn/${lesson?._id}/confirmation`);
-  };
-
-  // const updateBooking = async ({
-  //   useTokens,
-  //   useCredits,
-  //   paymentType,
-  //   partialTokenPaymentNights,
-  //   partialPriceInTokens,
-  // }: {
-  //   useTokens: boolean;
-  //   useCredits?: boolean;
-  //   partialTokenPaymentNights?: number;
-  //   partialPriceInTokens?: number;
-  //   paymentType?: PaymentType;
-  // }) => {
-  //   try {
-  //     const res = await api.post(`/bookings/${booking?._id}/update-payment`, {
-  //       useCredits,
-  //       useTokens,
-  //       isHourlyBooking,
-  //       maxNightsToPayWithCredits,
-  //       paymentType,
-  //       partialTokenPaymentNights,
-  //       partialPriceInTokens,
-  //     });
-  //     return res.data.results;
-  //   } catch (error) {
-  //     console.log('error=', error);
-  //   }
-  // };
 
   if (!isAuthenticated) {
     return <PageNotAllowed />;
@@ -128,11 +71,9 @@ const LearnCheckout = ({ error, lesson, paymentConfig }: Props) => {
 
           <ProductCheckout
             total={lesson?.price || { val: 0, cur: CloserCurrencies.EUR }}
-            type="learn"
+            productType="lesson"
             productId={lesson?._id || ''}
           />
-
-          {paymentError && <ErrorMessage error={paymentError} />}
         </div>
       </div>
     </>

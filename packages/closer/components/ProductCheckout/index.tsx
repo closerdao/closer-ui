@@ -13,12 +13,16 @@ import HeadingRow from '../ui/HeadingRow';
 import ProductCheckoutForm from './ProductCheckoutForm';
 
 interface ProductCheckoutProps {
-  type: string;
+  productType: string;
   productId: string;
   total: Price<CloserCurrencies>;
 }
 
-const ProductCheckout = ({ type, productId, total }: ProductCheckoutProps) => {
+const ProductCheckout = ({
+  productType,
+  productId,
+  total,
+}: ProductCheckoutProps) => {
   const t = useTranslations();
 
   const router = useRouter();
@@ -47,7 +51,7 @@ const ProductCheckout = ({ type, productId, total }: ProductCheckoutProps) => {
       {error && <ErrorMessage error={error} />}
       <Elements stripe={stripe}>
         <ProductCheckoutForm
-          type={type}
+          productType={productType}
           productId={productId}
           onSuccess={onSuccess}
           cardElementClassName="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-4"

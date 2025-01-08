@@ -4,6 +4,7 @@ import { ObjectId } from 'bson';
 import { useTranslations } from 'next-intl';
 
 import { Button, Card, Checkbox, Heading, Input } from '../ui';
+import { v4 as uuidv4 } from 'uuid';
 
 interface LearnOption {
   _id?: string;
@@ -72,7 +73,7 @@ const LearnEditor = ({ value = [], onChange, required }: LearnEditorProps) => {
       fullText: '',
       videoUrl: '',
       isFree: false,
-      _id: new ObjectId().toString(),
+      _id: uuidv4(),
     });
     updateOptions(updatedOptions);
   };

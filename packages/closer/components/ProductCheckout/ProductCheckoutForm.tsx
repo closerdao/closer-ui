@@ -7,9 +7,9 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import { CloserCurrencies, Price } from '../../types';
 import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
 import { ErrorMessage } from '../ui';
 import Button from '../ui/Button';
-import { parseMessageFromError } from '../../utils/common';
 
 const cardStyle = {
   style: {
@@ -31,7 +31,7 @@ const cardStyle = {
 };
 
 interface ProductCheckoutFormProps {
-  type: string;
+  productType: string;
   productId: string;
   onSuccess: () => void;
 
@@ -41,11 +41,9 @@ interface ProductCheckoutFormProps {
 }
 
 const ProductCheckoutForm = ({
-  type,
+  productType,
   productId,
-
   onSuccess,
-
   cardElementClassName,
   buttonDisabled,
   total,
@@ -77,6 +75,7 @@ const ProductCheckoutForm = ({
       }
 
       const { error, token } = await stripe.createToken(cardElement);
+
       if (error) {
         setProcessing(false);
         setError(error.message || '');
@@ -106,12 +105,11 @@ const ProductCheckoutForm = ({
       const {
         data: { results: payment },
       } = await api.post('/products/payment', {
-        type,
+        productType,
         productId,
-
         total,
-
         paymentMethod: createdPaymentMethod?.paymentMethod.id,
+        token: token.id,
       });
 
       // 3d secure required for this payment
@@ -132,6 +130,7 @@ const ProductCheckoutForm = ({
                 paymentMethod: createdPaymentMethod?.paymentMethod.id,
                 paymentId: payment.paymentIntent.id,
                 productId,
+                productType,
                 token: token.id,
               },
             );
@@ -160,6 +159,7 @@ const ProductCheckoutForm = ({
             paymentMethod: createdPaymentMethod?.paymentMethod.id,
             paymentId: payment.paymentIntent.id,
             productId,
+            productType,
             token: token.id,
           },
         );
