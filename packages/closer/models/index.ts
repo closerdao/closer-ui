@@ -270,7 +270,7 @@ const models = {
       name: 'modules',
       label: 'Course content',
       type: 'learnEditor',
-      // tab: 'Course content',
+      tab: 'Course content',
     },
     {
       name: 'price',
