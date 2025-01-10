@@ -289,8 +289,6 @@ const EditModel: FC<Props> = ({
           ))
         )}
 
-endpoint={endpoint}
-
         {(endpoint === '/volunteer' || endpoint === '/projects') && (
           <div>
             <DateTimePicker
