@@ -231,6 +231,20 @@ const LessonPage = ({
                     currentLessonId={currentLessonId || ''}
                   />
 
+                  {lesson.access === 'single-payment' && lesson.price && (
+                    <div className="">
+                      <p>{t('learn_course_price')}</p>
+                      <p className="text-xl font-bold">
+                        {priceFormat(lesson.price)}
+                      </p>
+                      {lesson?.variant === 'live-course' && (
+                        <p className="text-xs">
+                          Course format: {t('learn_live_course')}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   {!canViewLessons &&
                     lesson.fullVideo &&
                     lesson.access !== 'single-payment' && (
@@ -242,15 +256,6 @@ const LessonPage = ({
                     <LinkButton href={accessUrl}>
                       {t('learn_buy_single_course')}
                     </LinkButton>
-                  )}
-
-                  {lesson.access === 'single-payment' && lesson.price && (
-                    <div className="">
-                      <p>{t('learn_course_price')}</p>
-                      <p className="text-xl font-bold">
-                        {priceFormat(lesson.price)}
-                      </p>
-                    </div>
                   )}
 
                   {lesson.access === 'single-payment' && !lesson.price && (

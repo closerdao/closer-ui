@@ -22,6 +22,8 @@ export type Lesson = {
   managedBy: string[];
   _id: string;
 
+  liveSessionUrl?: string;
+  // todo add this field everywhere
   price?: Price<CloserCurrencies>;
   variant?:
     | 'live-lesson'
