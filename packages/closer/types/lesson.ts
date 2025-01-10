@@ -11,7 +11,7 @@ export type Lesson = {
   summary: string;
   photo: string;
   description: string;
-  paid: boolean; // deprecate
+  paid: boolean; // deprecated
   slug: string;
   visibleBy: string[];
   fields: Field[];
@@ -22,8 +22,8 @@ export type Lesson = {
   managedBy: string[];
   _id: string;
 
+  isDraft?: boolean;
   liveSessionUrl?: string;
-  // todo add this field everywhere
   price?: Price<CloserCurrencies>;
   variant?:
     | 'live-lesson'

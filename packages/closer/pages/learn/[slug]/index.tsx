@@ -74,7 +74,7 @@ const LessonPage = ({
   const accessUrl = getAccessUrl();
 
   const canViewLessons = Boolean(
-    (user && (user?.subscription?.plan || !lesson?.paid)) ||
+    (user && (user?.subscription?.plan || !lesson?.paid)) || lesson?.access === 'free' ||
       user?.roles.includes('admin'),
   );
 
@@ -140,7 +140,7 @@ const LessonPage = ({
           </Link>
           <div className="w-full relative">
             <LessonVideo
-              videoParams={getVideoParams(currentLessonId, lesson)}
+              videoParams={getVideoParams(currentLessonId, lesson, isVideoPreview)}
               isUnlocked={
                 canViewLessons ||
                 isVideoPreview ||

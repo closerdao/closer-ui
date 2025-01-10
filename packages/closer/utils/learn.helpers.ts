@@ -39,6 +39,7 @@ export const getEmbedIdFromURL = (url: string | undefined) => {
 export const getVideoParams = (
   lessonId: null | string,
   lesson: Lesson,
+  isVideoPreview: boolean,
 ): { embedId: string; platform: string } => {
   if (lessonId) {
     const currentModule = lesson?.modules?.find((module) =>
@@ -64,15 +65,23 @@ export const getVideoParams = (
     };
   }
 
-  if (lesson?.previewVideo) {
+  if (lesson?.previewVideo && !lesson?.fullVideo && isVideoPreview) {
     return {
-      embedId: getEmbedIdFromURL(lesson.previewVideo) || '',
-      platform: getVideoPlatform(lesson.previewVideo) || '',
+      embedId: getEmbedIdFromURL(lesson?.previewVideo) || '',
+      platform: getVideoPlatform(lesson?.previewVideo) || '',
+    };
+  }
+
+  if (lesson?.fullVideo && !isVideoPreview) {
+    return {
+      embedId: getEmbedIdFromURL(lesson?.fullVideo) || '',
+      platform: getVideoPlatform(lesson?.fullVideo) || '',
     };
   }
 
   return {
-    embedId: getEmbedIdFromURL(lesson.fullVideo) || '',
-    platform: getVideoPlatform(lesson.fullVideo) || '',
+    embedId: getEmbedIdFromURL(lesson?.previewVideo) || '',
+    platform: getVideoPlatform(lesson?.previewVideo) || '',
   };
+
 };
