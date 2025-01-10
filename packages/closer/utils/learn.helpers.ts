@@ -1,4 +1,4 @@
-import { Lesson } from '@/types/lesson';
+import { Lesson } from '../types/lesson';
 
 export const getVimeoIdFromURL = (videoUrl: string) => {
   const urlSplit = videoUrl.split('/');
