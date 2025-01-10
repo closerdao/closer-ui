@@ -25,7 +25,7 @@ const Heading = ({
     2: `text-2xl ${display ? 'uppercase md-5xl font-black' : 'font-bold'}`,
     3: `text-xl ${display ? 'uppercase md-4xl font-black' : 'font-bold'}`,
     4: `text-lg ${display ? 'uppercase md-3xl font-bold' : 'font-bold'}`,
-    5: `text-md ${display ? 'uppercase md-2xl font-bold' : 'font-bold'}`,
+    5: `text-md ${display ? 'uppercase md-2xl font-normal' : 'font-normal'}`,
   } as Record<number, string>;
   twMerge(
     styleMap[level],

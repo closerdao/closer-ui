@@ -939,7 +939,6 @@
 
   "resources_faqs_error": "Error fetching FAQs",
 
-
   "generic_clear_selection": "Clear selection",
   "support_us_heading": "Support Traditional Dream Factory",
   "support_us_navigation": "Support us",
@@ -1092,7 +1091,6 @@
   "config_label_residenceTimeFrame": "Residence time frame",
   "config_label_diet": "Diet (comma delimited options)",
   "config_label_shouldResidentsPayUtilities": "Should residents pay utilities",
-
 
   "config_features_heading": "Platform features",
   "generic_delete_button": "Delete",
@@ -1284,7 +1282,6 @@
   "token_sale_public_sale_button_book_a_call": "Book a call",
   "token_sale_public_sale_tokens_left": "tokens left",
 
-  
   "dashboard_title": "Dashboard",
   "dashboard_bookings_title": "Bookings",
   "dashboard_revenue_title": "Revenue",
@@ -1330,7 +1327,7 @@
   "navigation_learning_hub": "Learning hub",
   "navigation_platform_settings": "Platform settings",
   "navigation_food": "Edit food",
-  
+
   "blog_read_more": "Read more",
   "blog_title": "Blog",
   "blog_write_article": "Write an article",
@@ -1359,11 +1356,10 @@
 
   "button_other_ways_to_join": "Explore other ways to join TDF",
 
-
   "error_insufficient_token_balance": "Insufficient balance to pay with tokens",
   "booking_pay_in_euro": "Pay in Euro",
-  
-"projects_page_title": "Projects",
+
+  "projects_page_title": "Projects",
   "projects_create_title": "Create a project",
   "projects_edit_page_delete": "Delete project",
   "projects_edit_project_title": "Edit project",
@@ -1387,9 +1383,47 @@
   "projects_residence_application_title": "👷🏽‍♀️ Residence application",
   "projects_no_manager": "no manager",
   "bookings_dates_min_residence_stay_error": "Minimum residence stay is {var} days ",
-  
 
+  "learn_heading": "Learning Hub",
+  "learn_subheading": "Dive into Lios Learning Hub and tap into a reservoir of actionable knowledge.",
+  "learn_categories_heading": "Categories",
+  "learn_courses": "courses",
+  "learn_lesson_category": "Category",
+  "learn_lesson_created_by": "Lesson by:",
+  "learn_lessons_heading": "Lessons",
+  "learn_introduction_heading": "Introduction",
+  "learn_full_lesson_heading": "Full lesson",
+  "learn_create_lesson_hading": "Create course",
+  "learn_edit_lesson_hading": "Edit course",
+  "learn_tags_heading": "Tags",
+  "learn_get_access_button": "Get full access",
+  "learn_cta": "Subscribe to unlock all lessons",
+  "learn_loading_video": "Loading video",
+  "learn_edit_heading": "Edit course:",
+  "learn_categories_all": "All",
+  "learn_no_lessons_found": "No lessons found",
+  "learn_create_lesson": "Create lesson",
+  "learn_all_courses": "Back to all courses",
 
+  "learn_add_module": "Add module",
+  "learn_module_title": "Module title",
+  "learn_module_description": "Module description",
+  "learn_module_lessons": "Lessons in this module",
+  "learn_lesson_title": "Lesson title",
+  "learn_lesson_full_text": "Lesson full text",
+  "learn_lesson_video_url": "Lesson video URL",
+  "learn_lesson_is_free": "This lesson is free",
+  "learn_lesson_add": "Add lesson",
+  "learn_lesson_edit": "Edit lesson",
+  "learn_lesson_delete": "Delete lesson",
+  "learn_remove_module": "Delete module",
+  "learn_confirmation_title": "💰 Purchase successful",
+  "learn_confirmation_message": "Thank you for your purchase! 🌱",
+  "learn_confirmation_message_2": "We will contact you soon with the course details.",
+  "learn_buy_single_course": "Buy this course",
+  "learn_course_price": "Course price:",
+
+  "learn_live_course": "live course",
 
   "": ""
 }
