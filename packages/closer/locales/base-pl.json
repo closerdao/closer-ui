@@ -1119,6 +1119,8 @@
   "config_email_user_subscriptionPaused_user": "Subscription paused - send to user",
   "config_email_user_subscriptionResumed_user": "Subscription resumed - send to user",
   "config_email_user_subscriptionPaymentFailed_user": "Subscription payment failed - send to user",
+  "config_email_product_paid_guest": "Product paid, send to user immediately",
+  "config_email_product_paid_admin": "Product paid, send to admins immediately",
 
   "edit_homepage_button": "Edit History page",
   "blog_home_button": "Homepage",
@@ -1418,8 +1420,6 @@
   "learn_lesson_delete": "Delete lesson",
   "learn_remove_module": "Delete module",
   "learn_confirmation_title": "💰 Purchase successful",
-  "learn_confirmation_message": "Thank you for your purchase! 🌱",
-  "learn_confirmation_message_2": "We will contact you soon with the course details.",
   "learn_buy_single_course": "Buy this course",
   "learn_course_price": "Course price:",
 

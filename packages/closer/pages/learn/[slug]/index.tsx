@@ -48,7 +48,6 @@ const LessonPage = ({
   const { user, refetchUser } = useAuth();
 
   const isLearningHubEnabled = learningHubConfig && learningHubConfig?.enabled;
-  const learnVariant = lesson?.variant;
 
   const [hasRefetchedUser, setHasRefetchedUser] = useState(false);
 
@@ -74,7 +73,8 @@ const LessonPage = ({
   const accessUrl = getAccessUrl();
 
   const canViewLessons = Boolean(
-    (user && (user?.subscription?.plan || !lesson?.paid)) || lesson?.access === 'free' ||
+    (user && (user?.subscription?.plan || !lesson?.paid)) ||
+      lesson?.access === 'free' ||
       user?.roles.includes('admin'),
   );
 
@@ -140,7 +140,11 @@ const LessonPage = ({
           </Link>
           <div className="w-full relative">
             <LessonVideo
-              videoParams={getVideoParams(currentLessonId, lesson, isVideoPreview)}
+              videoParams={getVideoParams(
+                currentLessonId,
+                lesson,
+                isVideoPreview,
+              )}
               isUnlocked={
                 canViewLessons ||
                 isVideoPreview ||
