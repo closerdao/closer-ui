@@ -140,7 +140,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
         <title>{`Welcome to ${PLATFORM_NAME}!`}</title>
         <meta
           name="description"
-          content="Desert Transformation Lab is an experimental school of ecological imagination in Błędowska Desert, Poland."
+          content="School of Ecological Imagination"
         />
       </Head>
       <section className="w-[100vw] md:w-[calc(100vw+16px)] -mx-4 absolute -top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-alt mb-8 md:mb-[100vh] 1-100">
@@ -288,7 +288,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                   Values
                 </Heading>
                 <p>
-                  Desert Transformation Lab is shaped by shared ethics: equity
+                  School of Ecological Imagination is shaped by shared ethics: equity
                   of all beings, awareness, ecology, care, queerness, wholeness,
                   non-violence, community, and sustainability. What does it mean
                   in practice?
@@ -326,7 +326,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                   Sustainability
                 </Heading>
                 <p>
-                  Sustainability lies at the core of Desert Transformation Lab
+                  Sustainability lies at the core of School of Ecological Imagination
                   and we wish to incorporate it into our daily practice. The
                   residency is an ideal ecosystem for developing new habits and
                   rethinking their impact on the natural environment. Create a
@@ -354,7 +354,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                   Radical Self-Reliance
                 </Heading>
                 <p>
-                  When you come to the Desert Transformation Lab, you are
+                  When you come to the School of Ecological Imagination, you are
                   responsible for your own survival, safety, comfort, and
                   well-being of yourself and the village.
                 </p>
@@ -409,7 +409,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                   Ecological Awareness
                 </Heading>
                 <p>
-                  Desert Transformation Lab is nested in Eagle’s Nest Landscape
+                  School of Ecological Imagination is nested in Eagle’s Nest Landscape
                   Park, within the dunes of Błędowska Desert, an ecosystem that
                   is part of the Natura 2000 protection program. You are invited
                   to meet our neighbours, human and more than human, and please
@@ -697,7 +697,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
             />
 
             <Heading level={2} className="text-2xl uppercase text-center">
-              Desert Transformation lab
+              School of Ecological Imagination
             </Heading>
 
             <LinkButton
@@ -724,7 +724,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
               className="font-accent uppercase text-accent"
               href="https://lios.io/deserttransformation"
             >
-              DESERT TRANSFORMATION LAB Website
+              School of Ecological Imagination Website
             </Link>
           </div>
         </section>
