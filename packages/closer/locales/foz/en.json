@@ -25,7 +25,6 @@
   "stay_chose_accommodation_description": "From bringing your own van to staying in a shared dorm, we have a range of options to fit your needs. We recommend staying for 1 month to get the full experience of our community, but you can also come just for an event.",
   "stay_title": "Discover Foz da Cova: A Regenerative Retreat",
 
-
   "navigation_stay": "Book a stay",
   "navigation_member_login": "Member login",
 
@@ -56,6 +55,8 @@
   "referrals_description_text_3": "You  are restricted to a maximum of 🥕 6 per month - which will be refreshed on the 1st of every month.",
   "referrals_credits_link": "Find out more about 🥕 carrots.",
   "bookings_checkout_step_visitors_guide": "Visitors Guide",
+
+  "learn_course_purchase_confirmation_message": "<p>Thank you for your purchase! 🌱</p><p>We will contact you soon with the course details.</p>",
 
   "buttons_apply_to_stay": "Apply to stay"
 }

@@ -9,7 +9,7 @@
   "volunteers_page_terms_2": "",
   "volunteers_page_terms_3": "",
   "volunteers_page_terms_4": "",
-  "volunteers_page_terms_5": "", 
+  "volunteers_page_terms_5": "",
   "volunteers_page_terms_6": "",
   "volunteers_page_more_info": "More information coming soon.",
 
@@ -35,8 +35,8 @@
   "carrots_balance": "✨",
   "carrots_subheading": "Swap Vybes for stays, events, and more",
   "carrots_subheading_what_are": "What are Vybes?",
-  "carrots_what_are_1":"Vybes are an innovative timeshare concept, offering customised voucher packages that enable unique forms of participation at MOOS. Vybes are about more than booking stays and event spaces; they are an invitation for the co-creation of a regenerative future at MOOS.",
-  "carrots_what_are_2":"We are currently offering the first 25,000 Vybes at a discounted price of €4 per Vybe (worth €5).",
+  "carrots_what_are_1": "Vybes are an innovative timeshare concept, offering customised voucher packages that enable unique forms of participation at MOOS. Vybes are about more than booking stays and event spaces; they are an invitation for the co-creation of a regenerative future at MOOS.",
+  "carrots_what_are_2": "We are currently offering the first 25,000 Vybes at a discounted price of €4 per Vybe (worth €5).",
 
   "carrots_subheading_what": "What do Vybes do?",
   "carrots_what_1": "The Y Berlin at MOOS runs on vybes. Vybes are a post-transactional timeshare mechanism. Vybes can be redeemed for personal use, organisational use, or donated to support community projects.",
@@ -81,8 +81,10 @@
   "signup_intro_2": "Did you know that we run on vybes? ",
   "signup_intro_3": "Vybes are community frequencies that open the portals to serendipity. We don’t rent spaces at MOOS. We gift experiences.",
   "signup_intro_4": "Join us. ",
-  
+
   "buttons_apply_to_stay": "Apply to stay",
+
+  "learn_course_purchase_confirmation_message": "<p>Thank you for your purchase! 🌱</p><p>We will contact you soon with the course details.</p>",
 
   "support_us_heading": "SUPPORT THE MOOS"
 }
