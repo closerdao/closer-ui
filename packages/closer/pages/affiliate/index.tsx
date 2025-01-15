@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import Head from 'next/head';
 import { Heading, Card } from 'closer/components/ui';
 import Tabs from 'closer/components/Tabs';
+import { usePlatform } from 'closer';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import { useAuth } from '../../contexts/auth';
 import PageNotAllowed from '../401';
@@ -13,7 +14,7 @@ import PageNotAllowed from '../401';
 // Current status: WIP (work in progress)
 // Awaiting API endpoints to retrieve data
 
-const StatsCard = ({ title, value, icon, subtext }) => {
+const StatsCard = ({ title, value, icon, subtext }: { title: string, value: string, icon?: JSX.Element, subtext: string }) => {
   return (
     <Card className="col-span-1">
       <div className="flex items-center justify-between">
@@ -66,6 +67,7 @@ const TabAnalytics =  <div className="mt-8">
 
 const AffiliateDashboard = () => {
   const t  = useTranslations();
+  const { platform }: any = usePlatform();
   const { user, isAuthenticated }: any = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [dateRange, setDateRange] = useState('30d'); // TODO: unsure if supported by the API (please fact check)
@@ -75,10 +77,10 @@ const AffiliateDashboard = () => {
   const [activeSubscriptions, setActiveSubscriptions] = useState(333);
   const [tokensSales, setTokensSales] = useState(444);
 
-  const [totalEarningsFilter, setTotalEarningsFilter] = useState(null);
-  const [totalReferralsFilter, setTotalReferralsFilter] = useState(null);
-  const [activeSubscriptionsFilter, setActiveSubscriptonsFilter] = useState(null);
-  const [tokensSalesFilter, setTokensSalesFilter] = useState(null);
+  const [totalEarningsFilter, setTotalEarningsFilter] = useState({});
+  const [totalReferralsFilter, setTotalReferralsFilter] = useState({});
+  const [activeSubscriptionsFilter, setActiveSubscriptonsFilter] = useState({});
+  const [tokensSalesFilter, setTokensSalesFilter] = useState({});
 
   // Update filters when the user is authenticated
   // Futher down the line we pass these filters as dependency to `useEffect` to load data based on the user._id
@@ -89,7 +91,10 @@ const AffiliateDashboard = () => {
       setActiveSubscriptonsFilter({ where: { referredBy: user._id } });
       setTokensSalesFilter({ where: {} }); // TODO: add me later
     } else {
-      setActiveSubscriptonsFilter(null);
+      setTotalEarningsFilter({});
+      setTotalReferralsFilter({});
+      setActiveSubscriptonsFilter({});
+      setTokensSalesFilter({});
     }
   }, [user?._id, isAuthenticated]);
 
@@ -163,16 +168,16 @@ const AffiliateDashboard = () => {
   }
 
   const tabs = [
-    { value: 'overview', title: t('Overview'), content: TabOverview },
-    { value: 'revenue', title: t('Revenue Tracking'), content: TabRevenue },
-    { value: 'tokens', title: t('Token Sales'), content: TabTokenSale },
-    { value: 'analytics', title: t('Referral Analytics'), content: TabAnalytics },
+    { value: 'overview', title: t('overview'), content: TabOverview },
+    { value: 'revenue', title: t('revenue_tracking'), content: TabRevenue },
+    { value: 'tokens', title: t('token_sales'), content: TabTokenSale },
+    { value: 'analytics', title: t('referral_analytics'), content: TabAnalytics },
   ];
 
   return (
     <>
       <Head>
-        <title>{`${t('Affiliate Dashboard')}`}</title>
+        <title>{`${t('affiliate_dashboard')}`}</title>
       </Head>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -203,13 +208,13 @@ const AffiliateDashboard = () => {
             />
             <StatsCard
               title={t('stats_total_referrals')}
-              value={totalReferrals}
+              value={""+totalReferrals}
               icon={Users}
               subtext={t('stats_referrals_subtext')}
             />
             <StatsCard
               title={t('stats_active_subscriptions')}
-              value={activeSubscriptions}
+              value={""+activeSubscriptions}
               icon={Calendar}
               subtext={t('stats_subscriptions_subtext')}
             />
