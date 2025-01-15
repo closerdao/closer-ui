@@ -1,14 +1,17 @@
+import { CloserCurrencies } from './currency';
+
+import { Price } from './currency';
+
 export type Lesson = {
   previewVideo: string;
-  fullVideo: string;
+  fullVideo: string; // deprecate
   title: string;
   category: string;
   tags: string[];
   summary: string;
   photo: string;
   description: string;
-  paid: boolean;
-
+  paid: boolean; // deprecated
   slug: string;
   visibleBy: string[];
   fields: Field[];
@@ -18,6 +21,33 @@ export type Lesson = {
   attributes: string[];
   managedBy: string[];
   _id: string;
+
+  isDraft?: boolean;
+  liveSessionUrl?: string;
+  price?: Price<CloserCurrencies>;
+  variant?:
+    | 'live-lesson'
+    | 'live-course'
+    | 'prerecorded-lesson'
+  | 'prerecorded-course';
+  access?:
+  | 'subscription-any'
+  | 'subscription-tier-1'
+  | 'subscription-tier-2'
+  | 'single-payment'
+  | 'free';
+  modules?: {
+    title: string;
+    description: string;
+    lessons: {
+      title: string;
+      fullText: string;
+      videoUrl: string;
+      isFree: boolean;
+      _id: string;
+    }[];
+    _id: string;
+  }[];
 };
 
 export type Field = {
