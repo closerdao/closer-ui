@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
+import CitizenSubscriptionProgress from '../../components/CitizenSubscriptionProgress';
 import ConnectedWallet from '../../components/ConnectedWallet';
 import EventsList from '../../components/EventsList';
 import UploadPhoto from '../../components/UploadPhoto/UploadPhoto';
@@ -15,7 +16,6 @@ import { FaUser } from '@react-icons/all-files/fa/FaUser';
 import { TiDelete } from '@react-icons/all-files/ti/TiDelete';
 import { useTranslations } from 'next-intl';
 
-import dayjs from 'dayjs';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import api, { cdn } from '../../utils/api';
@@ -25,8 +25,6 @@ import PageNotFound from '../not-found';
 const MemberPage = ({ member, loadError }) => {
   const t = useTranslations();
   const { user: currentUser, isAuthenticated, refetchUser } = useAuth();
-
-
 
   const router = useRouter();
   const [introMessage, setMessage] = useState('');
@@ -342,50 +340,12 @@ const MemberPage = ({ member, loadError }) => {
                     </Card>
                   )}
 
-                  {/* {
-    "createdAt": "2024-12-20T13:03:34.513Z",
-    "status": "open",
-    "iban": "rewqwerq",
-    "why": "sdfff",
-    "tokensToFinance": 90,
-    "totalToPayInFiat": 24160.26,
-    "charges": []
-} */}
-
-                  {member?.subscription?.citizenship && (
-                    <Card className=" w-full">
-                      <p>
-                        {t('subscriptions_citizen_user_page_created')}{' '}
-                        <span className="font-bold">
-                          {dayjs(member.subscription.citizenship.createdAt).format('YYYY-MM-DD')}
-                        </span>
-                      </p>
-                      <p>
-                        {t('subscriptions_citizen_user_page_why')}{' '}
-                        <span className="font-bold">
-                          {member.subscription.citizenship.why}
-                        </span>
-                      </p>
-                      <p>
-                        {t('subscriptions_citizen_user_page_total_to_pay')}{' '}
-                        <span className="font-bold">
-                        €{member.subscription.citizenship.totalToPayInFiat}
-                        </span>
-                      </p>
-                      <p>
-                        {t('subscriptions_citizen_user_page_tokens_to_finance')}{' '}
-                        <span className="font-bold">
-                          {member.subscription.citizenship.tokensToFinance}
-                        </span>
-                      </p>
-                      {member.subscription.citizenship.charges.length > 0 &&
-                      
-                      <p>
-                       {/* TODO: add payment history */}
-                      </p>
-                      }
-                    </Card>
-                  )}
+                  {member?.subscription?.citizenship &&
+                    (member._id === currentUser?._id ||
+                      currentUser?.roles?.includes('admin') ||
+                      currentUser?.roles?.includes('community-curator')) && (
+                      <CitizenSubscriptionProgress member={member} />
+                    )}
                 </div>
 
                 <div>

@@ -37,6 +37,8 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
 }) => {
   const t = useTranslations();
 
+  const MIN_TOKENS_TO_FINANCE = 30;
+
   const areSubscriptionsEnabled =
     subscriptionsConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
@@ -50,7 +52,7 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
   const [application, setApplication] = useState<any>({
     why: why || '',
     iban: '',
-    tokensToFinance: 30,
+    tokensToFinance: MIN_TOKENS_TO_FINANCE,
   });
 
   const defaultConfig = useConfig();
@@ -59,7 +61,7 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
 
   const { balanceTotal } = useContext(WalletState);
 
-  const owns30Tokens = balanceTotal >= 1;
+  const owns30Tokens = balanceTotal >= MIN_TOKENS_TO_FINANCE;
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -100,7 +102,7 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
             return;
           }
         } catch (error) {
-          console.log('error=', error);
+          console.error('error with citizen application:', error);
         }
       } else {
         // user wants to finance tokens
@@ -119,11 +121,11 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
             return;
           }
         } catch (error) {
-          console.error('error=', error);
+          console.error('error with citizen application:', error);
         }
       }
     } catch (error) {
-      console.error('error=', error);
+      console.error('error with citizen application:', error);
     } finally {
       setLoading(false);
     }
