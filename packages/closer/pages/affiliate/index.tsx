@@ -72,15 +72,17 @@ const AffiliateDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [dateRange, setDateRange] = useState('30d'); // TODO: unsure if supported by the API (please fact check)
 
-  const [totalEarnings,  setTotalEarnings] = useState(111);
-  const [totalReferrals, setTotalReferrals] = useState(222);
-  const [activeSubscriptions, setActiveSubscriptions] = useState(333);
-  const [tokensSales, setTokensSales] = useState(444);
+  const [totalEarnings,  setTotalEarnings] = useState(0);
+  const [totalReferrals, setTotalReferrals] = useState(0);
+  const [activeSubscriptions, setActiveSubscriptions] = useState(0);
+  const [tokensSales, setTokensSales] = useState(0);
 
   const [totalEarningsFilter, setTotalEarningsFilter] = useState({});
   const [totalReferralsFilter, setTotalReferralsFilter] = useState({});
-  const [activeSubscriptionsFilter, setActiveSubscriptonsFilter] = useState({});
+  const [activeSubscriptionsFilter, setActiveSubscriptionsFilter] = useState({});
   const [tokensSalesFilter, setTokensSalesFilter] = useState({});
+
+  const isLocal = process.env.NEXT_PUBLIC_PLATFORM_URL === 'http://localhost:3000'; // mocking data for local development
 
   // Update filters when the user is authenticated
   // Futher down the line we pass these filters as dependency to `useEffect` to load data based on the user._id
@@ -88,47 +90,15 @@ const AffiliateDashboard = () => {
     if (isAuthenticated && user?._id) {
       setTotalEarningsFilter({ where: {} }); // TODO: add me later when present on the model: referredBy: user._id
       setTotalReferralsFilter({ where: { referredBy: user._id, subscription: { $ne: null} } });
-      setActiveSubscriptonsFilter({ where: { referredBy: user._id } });
+      setActiveSubscriptionsFilter({ where: { referredBy: user._id } });
       setTokensSalesFilter({ where: {} }); // TODO: add me later
     } else {
       setTotalEarningsFilter({});
       setTotalReferralsFilter({});
-      setActiveSubscriptonsFilter({});
+      setActiveSubscriptionsFilter({});
       setTokensSalesFilter({});
     }
   }, [user?._id, isAuthenticated]);
-
-  useEffect(() => {
-    const loadData = async () => {
-      if (!activeSubscriptionsFilter) return;
-      try {
-        const result = await Promise.all([
-          platform.user.getCount(activeSubscriptionsFilter),
-        ]);
-        setActiveSubscriptions(result[0].results);
-      } catch (err) {
-        console.error("Error loading data:", err);
-      }
-    };
-
-    loadData();
-  }, [activeSubscriptionsFilter]);
-
-  useEffect(() => {
-    const loadData = async () => {
-      if (!totalReferralsFilter) return;
-      try {
-        const result = await Promise.all([
-          platform.user.getCount(totalReferralsFilter),
-        ]);
-        setTotalReferrals(result[0].results);
-      } catch (err) {
-        console.error("Error loading data:", err);
-      }
-    };
-
-    loadData();
-  }, [totalReferralsFilter]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -148,12 +118,45 @@ const AffiliateDashboard = () => {
 
   useEffect(() => {
     const loadData = async () => {
+      if (!totalReferralsFilter) return;
+      try {
+        const result = await Promise.all([
+          platform.user.getCount(totalReferralsFilter),
+        ]);
+        setTotalReferrals(result[0].results);
+      } catch (err) {
+        console.error("Error loading data:", err);
+      }
+    };
+
+    loadData();
+  }, [totalReferralsFilter]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (!activeSubscriptionsFilter) return;
+      try {
+        const result = await Promise.all([
+          platform.user.getCount(activeSubscriptionsFilter),
+        ]);
+        setActiveSubscriptions(result[0].results);
+      } catch (err) {
+        console.error("Error loading data:", err);
+      }
+    };
+
+    loadData();
+  }, [activeSubscriptionsFilter]);
+
+  useEffect(() => {
+    const loadData = async () => {
       if (!totalEarningsFilter) return;
       try {
-        // TODO: figure out where is the data coming from
-        // const result = await Promise.all([
-        // ]);
-        // setTokensSales(result[0].results);
+        if (isLocal) {
+          setTokensSales(12345); // FYI: mocking data in the simplest way possible
+        } else {
+          // TODO: implement the actual API enpoint
+        }
       } catch (err) {
         console.error("Error loading data:", err);
       }
@@ -226,7 +229,7 @@ const AffiliateDashboard = () => {
             />
         </div>
 
-        <Tabs tabs={tabs} activeTab={activeTab} onChange={(tab) => setActiveTab(tab.value)} />
+        <Tabs tabs={tabs} onChange={(tab) => setActiveTab(tab.value)} />
 
       </div>
     </>
