@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import objectPath from 'object-path';
 
 import { CURRENCIES_WITH_LABELS } from '../constants';
+import LearnEditor from './LearnEditor';
 import Autocomplete from './Autocomplete';
 import Checkbox from './Checkbox';
 import DiscountsEditor from './DiscountsEditor';
@@ -290,6 +291,12 @@ const FormField = ({
           )}
           {type === 'ticketOptions' && (
             <TicketOptionsEditor
+              value={objectPath.get(data, name)}
+              onChange={(value) => update(name, value)}
+            />
+          )}
+          {type === 'learnEditor' && (
+            <LearnEditor
               value={objectPath.get(data, name)}
               onChange={(value) => update(name, value)}
             />

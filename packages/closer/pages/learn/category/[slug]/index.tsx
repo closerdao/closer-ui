@@ -10,6 +10,7 @@ import Pagination from '../../../../components/Pagination';
 import { ErrorMessage, Spinner } from '../../../../components/ui';
 import Heading from '../../../../components/ui/Heading';
 
+import { Record } from 'immutable';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -48,6 +49,8 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
 
+  const isAdmin = user?.roles.includes('admin');
+
   const filter = {
     where: getCategoryWhere(),
     limit: LESSONS_PER_PAGE,
@@ -56,13 +59,32 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
   };
 
   const lessons = platform.lesson.find(filter);
+
+  const publicLessons = lessons?.filter(
+    (lesson: Record<Lesson>) => !lesson.get('isDraft'),
+  );
+
   const totalLessons = platform.lesson.findCount(filter);
+  const totalPublicLessons = publicLessons?.size;
+  
   const allLessons = platform.lesson.find();
+  const allPublicLessons = allLessons?.filter(
+    (lesson: Record<Lesson>) => !lesson.get('isDraft'),
+  );
 
   const categories = lessons &&
     allLessons && [
       ...new Set(
         allLessons.toJS().map((lesson: Lesson) => {
+          return lesson.category;
+        }),
+      ),
+    ];
+  
+  const publicCategories = allPublicLessons &&
+    allLessons && [
+      ...new Set(
+        allPublicLessons.toJS().map((lesson: Lesson) => {
           return lesson.category;
         }),
       ),
@@ -140,7 +162,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
             </Heading>
 
             <LearnCategoriesNav
-              categories={categories}
+              categories={isAdmin ? categories : publicCategories}
               currentCategory={category as string}
             />
           </nav>
@@ -156,7 +178,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
               <Heading level={1}>{t('generic_coming_soon')}</Heading>
             )}
 
-            <LessonsList lessons={lessons} />
+            <LessonsList lessons={isAdmin ? lessons : publicLessons} />
 
             {lessons && totalLessons > LESSONS_PER_PAGE && (
               <Pagination
@@ -165,7 +187,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
                 }}
                 page={page}
                 limit={LESSONS_PER_PAGE}
-                total={totalLessons}
+                total={isAdmin ? totalLessons : totalPublicLessons}
               />
             )}
           </section>

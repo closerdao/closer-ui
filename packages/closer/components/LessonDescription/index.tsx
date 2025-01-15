@@ -1,13 +1,10 @@
-import React, { FC, useEffect, useState } from 'react';
-
-import { Lesson } from '../../types/lesson';
+import { FC, useEffect, useState } from 'react';
 
 interface Props {
-  lesson: Lesson;
-  isVolunteer?: boolean;
+  fullText: string | undefined;
 }
 
-const LessonDescription: FC<Props> = ({ lesson }) => {
+const LessonDescription: FC<Props> = ({ fullText }) => {
   const [initialRenderComplete, setInitialRenderComplete] = useState(false);
 
   // This useEffect is needed to fix next js hydration issue
@@ -17,10 +14,10 @@ const LessonDescription: FC<Props> = ({ lesson }) => {
 
   return (
     <section className="mb-6 flex flex-col gap-6">
-      {initialRenderComplete && (
+      {initialRenderComplete && fullText && (
         <p
           className="rich-text"
-          dangerouslySetInnerHTML={{ __html: lesson.description }}
+          dangerouslySetInnerHTML={{ __html: fullText }}
         />
       )}
     </section>
