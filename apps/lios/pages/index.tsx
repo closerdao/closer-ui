@@ -122,7 +122,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
         <meta name="description" content="School of Ecological Imagination" />
       </Head>
       <section className="w-[100vw] md:w-[calc(100vw+16px)] -mx-4 absolute -top-2 overflow-hidden md:left-0 h-[400px] md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-alt mb-8 md:mb-[100vh] 1-100">
-        <div className="w-full h-full bg-red-300 relative">
+        <div className="w-full h-full relative">
           <Image
             className="w-full h-full object-cover relative"
             src="/images/landing/SOEI_Header.png"
