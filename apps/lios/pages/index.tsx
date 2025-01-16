@@ -6,16 +6,13 @@ import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
-import Faqs from 'closer/components/Faqs';
 import Hosts from 'closer/components/Hosts';
-import ListingListPreview from 'closer/components/ListingListPreview';
 
 import {
   BookingConfig,
+  Card,
   GeneralConfig,
   Heading,
-  LinkButton,
-  YoutubeEmbed,
   api,
   useAuth,
   useConfig,
@@ -104,32 +101,16 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
 
   const hosts = platform.user.find(hostsFilter);
 
-  const CTA = isAuthenticated ? (
+  const CTA = (
     <Link
-      href="https://lios.io/program"
+      href="/learn/category/all"
       type="submit"
       className="font-accent lowercase bg-accent text-white rounded-full py-2.5 px-8 text-xl"
     >
-      full programme
+      see courses
     </Link>
-  ) : (
-    <div className="flex gap-4 flex-col sm:flex-row">
-      <Link
-        href="/stay"
-        type="submit"
-        className="font-accent lowercase bg-accent text-white rounded-full py-2.5 px-8 text-xl"
-      >
-        full programme{' '}
-      </Link>
-      <Link
-        href="/signup"
-        type="submit"
-        className="font-accent lowercase bg-accent text-white rounded-full py-2.5 px-8 text-xl"
-      >
-        join the dream
-      </Link>
-    </div>
   );
+
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
@@ -138,25 +119,24 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
     <div>
       <Head>
         <title>{`Welcome to ${PLATFORM_NAME}!`}</title>
-        <meta
-          name="description"
-          content="School of Ecological Imagination"
-        />
+        <meta name="description" content="School of Ecological Imagination" />
       </Head>
-      <section className="w-[100vw] md:w-[calc(100vw+16px)] -mx-4 absolute -top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-alt mb-8 md:mb-[100vh] 1-100">
-        <div className="md:h-[100vh] ">
-          {isSmallScreen && (
+      <section className="w-[100vw] md:w-[calc(100vw+16px)] -mx-4 absolute -top-2 overflow-hidden md:left-0 h-[400px] md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-alt mb-8 md:mb-[100vh] 1-100">
+        <div className="w-full h-full bg-red-300 relative">
+          <Image
+            className="w-full h-full object-cover relative"
+            src="/images/landing/SOEI_Header.png"
+            width={731}
+            height={786}
+            alt="Lios labs"
+          />
+        </div>
+        {/* <div className="min-w-[100vw] min-h-[110vh] w-[calc(100vh+100vh)] h-[calc(100vh+20vw)] absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
+          {!isSmallScreen && (
             <div className="h-[calc(100vh)]">
               <div
-                className={`h-full ${!isAutoplaying ? 'visible' : 'hidden'} `}
+               
               >
-                <Image
-                  className="w-full h-full object-cover"
-                  src="/images/lios-fallback.jpg"
-                  width={731}
-                  height={786}
-                  alt="Lios labs"
-                />
               </div>
               <video
                 ref={videoRef}
@@ -178,11 +158,11 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
           {!isSmallScreen && (
             <YoutubeEmbed isBackgroundVideo={true} embedId="8XrtA7R1aew" />
           )}
-        </div>
+        </div> */}
         <div className="absolute left-0 top-0 w-full h-full bg-black/20 flex justify-center z-1000">
           <div className="w-full flex justify-center flex-col items-center ">
-            <div className=" md:w-full md:max-w-6xl p-6 md:p-4 flex flex-col items-center gap-2 md:gap-10">
-              <Image
+            <div className=" md:w-full md:max-w-6xl p-6 md:py-10 flex flex-col items-end gap-2 justify-end md:gap-10 h-full py-10">
+              {/* <Image
                 className="drop-shadow-sm"
                 src="/images/sygnet.png"
                 width={350}
@@ -196,7 +176,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                 level={1}
               >
                 A Desert school of ecological imagination.
-              </Heading>
+              </Heading> */}
 
               <div className="w-full flex justify-end">{CTA}</div>
             </div>
@@ -204,7 +184,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
         </div>
       </section>
 
-      <div className="relative top-[105vh]">
+      <div className="relative top-[440px] md:top-[105vh]">
         <section className="mb-12 max-w-3xl mx-auto md:pt-12 md:flex ">
           <div className="text-accent-alt">
             {router.locale === 'en' && (
@@ -214,28 +194,33 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                   display
                   className="text-center mb-6 md:text-[45px] normal-case leading-[50px]"
                 >
-                  Join the wild faculty of transformation
+                  Welcome to the School of Ecological Imagination!
                 </Heading>
                 <p className="mb-6">
-                  Come and stay in our desert village and let your imagination
-                  roam freely. Get a chance to learn about local ecosystems,
-                  regenerative cultures, transition design, and practice agency
-                  in a playful way.
+                  The School of Ecological Imagination is a portal for
+                  (un)learning, transformative experiences and reconnecting with
+                  ourselves, our more-than-human kin, and planetary rhythms.
                 </p>{' '}
                 <p className="mb-6">
-                  You’ll have the opportunity to immerse in communal experiences
-                  while surrounded by the unique ecosystem of Błędowska Desert.
-                  We encourage you to be open to adventurous conditions and let
-                  them transform you, to embrace the raw beauty and complexity
-                  of Nature.
+                  At SoEI, we shed the pursuit of control and mastery, instead
+                  approaching education as a process of mutually engaged
+                  curiosity, symbiotic resonance, and playful experimentation.
+                  Through embodied, transdisciplinary, polyrhythmic collective
+                  experiences, we cultivate ecological awareness, attune with
+                  biospheric pulses, and wander alternative paths of being and
+                  becoming.
                 </p>
                 <p className="mb-6">
-                  We guarantee you’ll meet some inspiring creatures you’ll
-                  become friends with. You will have a chance to join workshops
-                  and experiments merging art, ecology, system thinking and
-                  science. If this invitation sounds like something for you,
-                  there are plenty of ways to get involved. Follow the dusty
-                  trail.
+                  Within the circles of the School, we learn to think, feel,
+                  move, and imagine with the vitality of the animate earth,
+                  supporting healing and wholing, and developing the tools to
+                  navigate the polycrisis.
+                </p>
+                <p className="mb-6">
+                  We tend a momentary garden of ecological wisdom, personal
+                  development, and creative practice - providing accessible and
+                  engaging pathways for learners to imagine narratives of
+                  earthly flourishing, and embody them.
                 </p>
               </div>
             )}
@@ -284,14 +269,17 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                   display
                   className="text-left mb-6 md:text-2xl normal-case"
                 >
-                  Before the wild adventure begins... please read our Desert
-                  Values
+                  The School of Ecological Imagination: Guiding Principles 🌿
                 </Heading>
                 <p>
-                  School of Ecological Imagination is shaped by shared ethics: equity
-                  of all beings, awareness, ecology, care, queerness, wholeness,
-                  non-violence, community, and sustainability. What does it mean
-                  in practice?
+                  At the heart of the School of Ecological Imagination lies a
+                  deep commitment to re-enchanting the world and reimagining how
+                  we learn, live, and create together. Our values are rooted in
+                  reciprocity, regeneration, and ecosystem well-being. Radical
+                  optimism, active hope and compassionate inquiry are prisms and
+                  methods through which we approach transformation. Through our
+                  initiatives we seek to better understand how to serve Life
+                  through building common spaces for ecological education.
                 </p>
 
                 <Heading
@@ -299,23 +287,15 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                   display
                   className="mt-6 md:text-xl normal-case "
                 >
-                  Active Participation
+                  🌟 Community as the pedagogical Body
                 </Heading>
                 <p>
-                  We know that transformative change can occur only through
-                  deeply personal participation - on individual, collective, and
-                  societal levels. We encourage you to embrace learning by
-                  doing. Everyone is invited to work for the common good of our
-                  planet and its inhabitants. All participants are involved in
-                  the daily routine of the village and are asked to comply with
-                  the{' '}
-                  <Link
-                    className="text-accent no-underline"
-                    href="https://drive.google.com/file/d/1W7wgWGboRayeAJZcTP9P9OrQgbhj4NkT/view?usp=drive_link"
-                  >
-                    Desert Guidelines
-                  </Link>
-                  .
+                  We see the School as a nest woven from the threads of
+                  curiosity, trust and shared meaning. The space and its
+                  processes are held by and for those at the edges—queer, BIPOC,
+                  femme, marginalised, intergenerational voices—all teaching,
+                  learning, and supporting each other inviting relational forms
+                  of exchange and co-creation . &lt;3
                 </p>
 
                 <Heading
@@ -323,15 +303,13 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                   display
                   className="mt-6 md:text-xl normal-case "
                 >
-                  Sustainability
+                  🌱 (Un)learning and Reimagining
                 </Heading>
                 <p>
-                  Sustainability lies at the core of School of Ecological Imagination
-                  and we wish to incorporate it into our daily practice. The
-                  residency is an ideal ecosystem for developing new habits and
-                  rethinking their impact on the natural environment. Create a
-                  positive trace: We are a regenerative playground. Come and
-                  leave a mark that future generations will appreciate.
+                  We challenge dominant paradigms, unlearn biases, and expand
+                  what education can be. Through peer-to-peer (un)learning and
+                  open curiosity, we nurture growth and invite a world of
+                  possibilities.
                 </p>
 
                 <Heading
@@ -339,11 +317,12 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                   display
                   className="mt-6 md:text-xl normal-case "
                 >
-                  Consent
+                  🌍 Interconnectedness
                 </Heading>
                 <p>
-                  Bring awareness to your boundaries & needs, respect those of
-                  others. If it’s not a full yes, then it’s a no.
+                  Every being, element, and ecosystem is woven into a greater
+                  whole. Our work honours this intrinsic connection, listening
+                  to the earth and its more-than-human voices as our teachers.
                 </p>
 
                 <Heading
@@ -351,12 +330,13 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                   display
                   className="mt-6 md:text-xl normal-case "
                 >
-                  Radical Self-Reliance
+                  🎭 Art and Creativity
                 </Heading>
                 <p>
-                  When you come to the School of Ecological Imagination, you are
-                  responsible for your own survival, safety, comfort, and
-                  well-being of yourself and the village.
+                  The arts are our language for healing, imagining, and
+                  meaning-making. Through movement, storytelling, and ecological
+                  practices, we cultivate creative expressions that shift
+                  perspectives and envision radically optimistic futures.
                 </p>
 
                 <Heading
@@ -364,12 +344,12 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                   display
                   className="mt-6 md:text-xl normal-case "
                 >
-                  Gift Economy
+                  ✨ Re-Enchantment and Wonder
                 </Heading>
                 <p>
-                  What is your deepest gift that you can share with the
-                  community? How we can collectively practice non-capitalistic
-                  forms of exchange that are based on mutual care?
+                  We seek to rediscover the sacredness in the everyday and the
+                  magick within the natural world. This sense of wonder inspires
+                  us to see life anew and act with care.
                 </p>
 
                 <Heading
@@ -377,14 +357,12 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                   display
                   className="mt-6 md:text-xl normal-case "
                 >
-                  Decommodification
+                  🌊 Playfulness and Joy
                 </Heading>
                 <p>
-                  To preserve the spirit of gifting, our community seeks to
-                  create social environments that are unmediated by commercial
-                  sponsorships, transactions, or advertising. We stand ready to
-                  protect our culture from such exploitation. We resist the
-                  substitution of consumption for participatory experience.
+                  Learning is joyful, curious, and playful. We embrace the art
+                  of play as a way to deepen ecological literacy and create
+                  life-serving practices.
                 </p>
 
                 <Heading
@@ -392,13 +370,13 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                   display
                   className="mt-6 md:text-xl normal-case "
                 >
-                  Communal Effort
+                  🌀 Holistic Education
                 </Heading>
                 <p>
-                  Our community values creative cooperation and collaboration.
-                  We strive to produce, promote and protect social networks,
-                  public spaces, works of art, and methods of communication that
-                  support such interaction.
+                  True learning nourishes the whole self—mind, body, heart, and
+                  spirit. By bridging intellectual knowledge, natural wisdom
+                  with embodied, collective practices, we invite transformative
+                  change.
                 </p>
 
                 <Heading
@@ -406,15 +384,74 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                   display
                   className="mt-6 md:text-xl normal-case "
                 >
-                  Ecological Awareness
+                  🌟 Inclusivity and Queering
                 </Heading>
                 <p>
-                  School of Ecological Imagination is nested in Eagle’s Nest Landscape
-                  Park, within the dunes of Błędowska Desert, an ecosystem that
-                  is part of the Natura 2000 protection program. You are invited
-                  to meet our neighbours, human and more than human, and please
-                  be respectful and aware that their needs may be different from
-                  yours.
+                  Through queering, we reject binaries and challenge restrictive
+                  norms. We celebrate diversity in all its forms and create
+                  spaces of belonging for people and the more-than-human world.
+                </p>
+                <Heading
+                  level={4}
+                  display
+                  className="mt-6 md:text-xl normal-case "
+                >
+                  🌿 Regeneration and Healing
+                </Heading>
+                <p>
+                  Our practices reflect reciprocity and care, fostering
+                  ecological restoration and mending broken relationships with
+                  the Earth. Healing and wholeness guide us toward a just and
+                  sustainable future.
+                </p>
+                <Heading
+                  level={4}
+                  display
+                  className="mt-6 md:text-xl normal-case "
+                >
+                  🔄 Embracing Change
+                </Heading>
+                <p>
+                  As Octavia Butler reminds us, &quot;Everything you touch, you
+                  change. All that you change, changes you.&quot; Change is a
+                  constant, and we adapt with it, listening, learning, and
+                  evolving alongside the earth and each other.
+                </p>
+                <Heading
+                  level={4}
+                  display
+                  className="mt-6 md:text-xl normal-case "
+                >
+                  🔥 Commoning Knowledge
+                </Heading>
+                <p>
+                  We believe in sharing knowledge and skills freely, where
+                  everyone is a teacher and a student. There are no experts—just
+                  a wiggly web of collective wisdom.
+                </p>
+                <Heading
+                  level={4}
+                  display
+                  className="mt-6 md:text-xl normal-case "
+                >
+                  🌌 Transparency and Care
+                </Heading>
+                <p>
+                  The process of creation is open, evolving, and intentional.
+                  Together, we cultivate a culture of care—caring for ourselves,
+                  each other, and the earth, with equity and sustainability at
+                  the core.
+                </p>
+                <p>
+                  The School of Ecological Imagination is a living system,
+                  co-created by all who join it. Together, we yarn art, ecology,
+                  queerness, magic, science, and spirituality into pathways of
+                  expanded perception and action, always grounded in equity,
+                  awareness, and love.
+                </p>
+                <p>
+                  Welcome to this shared journey of becoming, blooming, and
+                  belonging.
                 </p>
               </div>
             </section>
@@ -579,19 +616,20 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
           </>
         )}
 
-        <section className="mb-12 max-w-4xl mx-auto md:pt-8 md:flex justify-center">
+        {/* <section className="mb-12 max-w-4xl mx-auto md:pt-8 md:flex justify-center">
           <div className="flex gap-4 flex-col sm:flex-row">
             <LinkButton href="/stay" className="lowercase">
               Participate / dołącz
             </LinkButton>
           </div>
-        </section>
+        </section> */}
 
         <section className="mb-12 max-w-4xl mx-auto md:pt-20 md:flex justify-center">
           <Hosts hosts={hosts} email={TEAM_EMAIL} />
         </section>
 
-        <section className="w-[100vw] -mx-4 min-h-[600px] py-10  md:flex justify-center bg-[url(/images/lios-bg.jpg)] bg-cover bg-center">
+        {/* Archived accommodation selector: */}
+        {/* <section className="w-[100vw] -mx-4 min-h-[600px] py-10  md:flex justify-center bg-[url(/images/lios-bg.jpg)] bg-cover bg-center">
           <div className="flex flex-col gap-4 max-w-4xl px-4">
             <Heading
               level={2}
@@ -619,9 +657,97 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
               {listings?.count() === 0 && t('listing_no_listings_found')}
             </div>
           </div>
+        </section> */}
+
+        <section className="w-[100vw] -mx-4 min-h-[600px] py-10  md:flex justify-center bg-neutral">
+          <div className="flex flex-col gap-6 max-w-4xl px-4">
+            <Heading level={2} className="text-2xl mb-8 max-w-prose ">
+              Choose your path
+            </Heading>
+            <div className="flex justify-center gap-6">
+              <Card className="bg-white flex-1 justify-start">
+                <Heading level={4} className="text-lg uppercase">
+                  Petals
+                </Heading>
+                <p>
+                  <strong className="font-bold">
+                    Single session €10 per session.
+                  </strong>
+                </p>
+                <p>Stop by for a single session whiff of a course</p>
+              </Card>
+              <Card className="bg-white flex-1 justify-start">
+                <Heading level={4} className="text-lg uppercase">
+                  Seeds{' '}
+                </Heading>
+                <p>
+                  <strong className="font-bold">
+                    Individual Course sign up €60/ per course 4-8 Sessions
+                  </strong>
+                </p>
+                <p>
+                  This is a fixed course price to cover facilitation costs. If
+                  this is a barrier to access the course, please email us{' '}
+                  <a href="mailto:unlearn@lios.io">unlearn@lios.io</a> to
+                  arrange a subsided place. These are limited and come on a
+                  first come first serve basis.{' '}
+                </p>
+              </Card>
+              <Card className="bg-white flex-1 justify-start">
+                <Heading level={4} className="text-lg uppercase">
+                  Berries{' '}
+                </Heading>
+                <p>
+                  <strong className="font-bold">
+                    Individual Course sign up €80/ per course 12 Sessions{' '}
+                  </strong>
+                </p>
+                <p>
+                  This is a fixed course price to cover facilitation costs. If
+                  this is a barrier to access the course, please email us{' '}
+                  <a href="mailto:unlearn@lios.io">unlearn@lios.io</a> to
+                  arrange a subsided place. These are limited and come on a
+                  first come first serve basis.{' '}
+                </p>
+              </Card>
+            </div>
+            <div className="flex justify-center gap-6">
+              <Card className="bg-white flex-1 justify-start">
+                <Heading level={4} className="text-lg uppercase">
+                  Carrier Bag{' '}
+                </Heading>
+                <p>
+                  <strong className="font-bold">
+                    Verein Member - Annual - Standard Rate - €111 / year (coming
+                    soon)
+                  </strong>
+                </p>
+                <p>
+                  Full access to all the courses, recordings, and discussion
+                  boards and the ability to propose LIOS projects.
+                </p>
+              </Card>
+              <Card className="bg-white flex-1 justify-start">
+                <Heading level={4} className="text-lg uppercase">
+                  Sacred Vessel{' '}
+                </Heading>
+                <p>
+                  <strong className="font-bold">
+                    Angel Rate - Verein Membership - € 222 / year (coming soon)
+                  </strong>
+                </p>
+                <p>
+                  Your extra support for LIOS helps keep our programming
+                  evolving and accessible for more people! Full access to all
+                  courses, recordings and discussion boards and the ability to
+                  propose LIOS projects.
+                </p>
+              </Card>
+            </div>
+          </div>
         </section>
 
-        <section className="min-h-[600px] w-[100vw] -mx-4 px-4  pt-20 pb-10 flex justify-center bg-[url(/images/lios-bg-2.jpg)] bg-cover bg-center">
+        {/* <section className="min-h-[600px] w-[100vw] -mx-4 px-4  pt-20 pb-10 flex justify-center bg-[url(/images/lios-bg-2.jpg)] bg-cover bg-center">
           <div className="flex flex-col gap-8 items-center ">
             <Heading level={2} className="text-6xl text-center">
               HOW TO PLAY
@@ -685,9 +811,9 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
 
-        <section className="min-h-[600px] w-[100vw] -mx-4 pt-12 pb-10 px-4 md:flex justify-center bg-neutral">
+        {/* <section className="min-h-[600px] w-[100vw] -mx-4 pt-12 pb-10 px-4 md:flex justify-center bg-neutral">
           <div className="flex flex-col gap-8 items-center">
             <Image
               src="/images/planetary-movement.png"
@@ -710,21 +836,21 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
               PROGRAMME OUTLINE
             </LinkButton>
           </div>
-        </section>
+        </section> */}
 
-        <section className="min-h-[600px] h-[700px] overflow-scroll w-[100vw] -mx-4 px-4  pt-12 pb-20 flex justify-center bg-[url(/images/lios-faq.jpg)] bg-cover bg-center">
+        {/* <section className="min-h-[600px] h-[700px] overflow-scroll w-[100vw] -mx-4 px-4  pt-12 pb-20 flex justify-center bg-[url(/images/lios-faq.jpg)] bg-cover bg-center">
           <div className="flex flex-col gap-8 items-center w-full sm:w-[600px] ">
             <Faqs faqs={faqs} error={error} isExpanded />
           </div>
-        </section>
+        </section> */}
 
-        <section className=" w-[100vw] -mx-4 px-4  pt-12 pb-20 flex justify-center">
+        <section className=" w-[100vw] -mx-4 px-4  pt-20 flex justify-center">
           <div className="flex flex-col gap-8 items-center w-full sm:w-[600px] ">
             <Link
               className="font-accent uppercase text-accent"
               href="https://lios.io/deserttransformation"
             >
-              School of Ecological Imagination Website
+              Desert Transformation Lab Website
             </Link>
           </div>
         </section>
