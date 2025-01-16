@@ -399,6 +399,10 @@ export const configDescription: ConfigType[] = [
         type: 'text',
         default: '1dlaVEfLwHAbXCwoiDGzUd3w8d7YYnGl5dbPDINKmRUg',
       },
+      minVouchingStayDuration: {
+        type: 'number',
+        default: 14,
+      },
     },
   },
   {
