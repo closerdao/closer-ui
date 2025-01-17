@@ -1285,6 +1285,7 @@
   "token_sale_public_sale_tokens_left": "tokens left",
 
   "dashboard_title": "Dashboard",
+  "dashboard_performance_title": "Performance",
   "dashboard_bookings_title": "Bookings",
   "dashboard_revenue_title": "Revenue",
   "dashboard_general_revenue": "Operations revenue (EUR)",
@@ -1328,6 +1329,7 @@
   "navigation_support_us": "Support us",
   "navigation_learning_hub": "Learning hub",
   "navigation_platform_settings": "Platform settings",
+  "navigation_performance": "Performance",
   "navigation_food": "Edit food",
 
   "blog_read_more": "Read more",

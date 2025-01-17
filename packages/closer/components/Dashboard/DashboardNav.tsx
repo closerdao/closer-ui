@@ -54,6 +54,10 @@ const DashboardNav = () => {
       url: '/admin/manage-users',
     },
     {
+      label: t('navigation_performance'),
+      url: '/dashboard/performance',
+    },
+    {
       label: t('navigation_platform_settings'),
       url: '/admin/config',
     },

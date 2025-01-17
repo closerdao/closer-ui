@@ -134,6 +134,8 @@ export { default as ProjectApplicationPage } from './pages/projects/apply';
 export { default as VolunteerApplicationPage } from './pages/volunteer/apply';
 export { default as LearnCheckout } from './pages/learn/checkout';
 export { default as LearnConfirmation } from './pages/learn/[slug]/confirmation';
+export { default as PerformancePage } from './pages/dashboard/performance';
+
 // Types
 export * from './types/';
 // Utils
