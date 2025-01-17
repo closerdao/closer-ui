@@ -13,11 +13,17 @@ const GuestMenu = () => {
   const { APP_NAME } = useConfig();
 
   const [isVolunteeringEnabled, setIsVolunteeringEnabled] = useState(false);
+  const [isBookingEnabled, setIsBookingEnabled] = useState(false);
+
   useEffect(() => {
     (async () => {
       try {
-        const [volunteerRes] = await Promise.all([
+        const [volunteerRes, bookingRes] = await Promise.all([
           api.get('config/volunteering').catch((err) => {
+            console.error('Error fetching booking config:', err);
+            return null;
+          }),
+          api.get('config/booking').catch((err) => {
             console.error('Error fetching booking config:', err);
             return null;
           }),
@@ -27,6 +33,7 @@ const GuestMenu = () => {
           volunteerRes?.data.results.value.enabled === true &&
           process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
         setIsVolunteeringEnabled(isVolunteeringEnabled);
+        setIsBookingEnabled(bookingRes?.data.results.value.enabled === true);
       } catch (err) {
         console.log('error');
       }
@@ -48,8 +55,15 @@ const GuestMenu = () => {
           </NavLink>
         )}
 
-        <NavLink href="/events">{t('navigation_events')}</NavLink>
-        <NavLink href="/stay">{t('navigation_stay')}</NavLink>
+        {APP_NAME.toLowerCase() !== 'lios' && (
+          <NavLink href="/events">{t('navigation_events')}</NavLink>
+        )}
+
+
+        {isBookingEnabled && (
+          <NavLink href="/stay">{t('navigation_stay')}</NavLink>
+        )}
+
         {isVolunteeringEnabled && (
           <div className="flex flex-col gap-3">
             <NavLink href="/volunteer">{t('navigation_volunteer')}</NavLink>
@@ -57,7 +71,7 @@ const GuestMenu = () => {
           </div>
         )}
 
-        {APP_NAME !== 'foz' && (
+        {APP_NAME !== 'foz' && APP_NAME.toLowerCase() !== 'lios' && (
           <NavLink href="/resources">{t('navigation_resources')}</NavLink>
         )}
 

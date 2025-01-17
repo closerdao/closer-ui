@@ -65,7 +65,7 @@ const MemberMenu = () => {
       {
         label: t('navigation_events'),
         url: '/events',
-        enabled: true,
+        enabled: APP_NAME.toLowerCase() !== 'lios',
       },
       {
         label: t('navigation_volunteer'),
@@ -169,7 +169,7 @@ const MemberMenu = () => {
             {
               label: t('navigation_resources'),
               url: '/resources',
-              enabled: true,
+              enabled: APP_NAME.toLowerCase() !== 'lios',
             },
           ]
         : []),

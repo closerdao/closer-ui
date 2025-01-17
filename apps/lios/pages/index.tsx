@@ -107,7 +107,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
       type="submit"
       className="font-accent lowercase bg-accent text-white rounded-full py-2.5 px-8 text-xl"
     >
-      see courses
+       {t('navigation_see_courses')}
     </Link>
   );
 
@@ -121,7 +121,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
         <title>{`Welcome to ${PLATFORM_NAME}!`}</title>
         <meta name="description" content="School of Ecological Imagination" />
       </Head>
-      <section className="w-[100vw] md:w-[calc(100vw+16px)] -mx-4 absolute -top-2 overflow-hidden md:left-0 h-[400px] md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-alt mb-8 md:mb-[100vh] 1-100">
+      <section className="w-[100vw] md:w-[calc(100vw+16px)] -mx-4 absolute -top-2 overflow-hidden md:left-0 h-[400px] md:h-[calc(100vh-60px)] md:min-w-[100vw] md:min-h-[calc(100vh-60px)] bg-accent-alt mb-8 md:mb-[calc(100vh-60px)] 1-100">
         <div className="w-full h-full relative">
           <Image
             className="w-full h-full object-cover relative"
@@ -178,14 +178,14 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                 A Desert school of ecological imagination.
               </Heading> */}
 
-              <div className="w-full flex justify-end">{CTA}</div>
+              {/* <div className="w-full flex justify-end">{CTA}</div> */}
             </div>
           </div>
         </div>
       </section>
 
-      <div className="relative top-[440px] md:top-[105vh]">
-        <section className="mb-12 max-w-3xl mx-auto md:pt-12 md:flex ">
+      <div className="relative top-[440px] md:top-[calc(100vh-60px)]">
+        <section className="max-w-3xl mx-auto md:pt-12 md:flex ">
           <div className="text-accent-alt">
             {router.locale === 'en' && (
               <div>
@@ -659,7 +659,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
           </div>
         </section> */}
 
-        <section className="w-[100vw] -mx-4 min-h-[600px] py-10  md:flex justify-center bg-neutral">
+        <section className="w-[100vw] -mx-4 min-h-[600px] py-10 pb-20 md:flex justify-center bg-neutral">
           <div className="flex flex-col gap-6 max-w-4xl px-4">
             <Heading level={2} className="text-2xl mb-8 max-w-prose ">
               Choose your path
@@ -718,8 +718,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                 </Heading>
                 <p>
                   <strong className="font-bold">
-                    Verein Member - Annual - Standard Rate - €111 / year (coming
-                    soon)
+                    Verein Member - Annual - Standard Rate - €111 / year 
                   </strong>
                 </p>
                 <p>
@@ -733,7 +732,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                 </Heading>
                 <p>
                   <strong className="font-bold">
-                    Angel Rate - Verein Membership - € 222 / year (coming soon)
+                    Angel Rate - Verein Membership - € 222 / year 
                   </strong>
                 </p>
                 <p>
@@ -744,6 +743,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                 </p>
               </Card>
             </div>
+            <div className="w-[200px]">{CTA}</div>
           </div>
         </section>
 
