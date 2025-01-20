@@ -664,7 +664,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
             <Heading level={2} className="text-2xl mb-8 max-w-prose ">
               Choose your path
             </Heading>
-            <div className="flex justify-center gap-6">
+            <div className="flex justify-center gap-6 flex-col sm:flex-row">
               <Card className="bg-white flex-1 justify-start">
                 <Heading level={4} className="text-lg uppercase">
                   Petals
@@ -711,8 +711,8 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                 </p>
               </Card>
             </div>
-            <div className="flex justify-center gap-6">
-              <Card className="bg-white flex-1 justify-start">
+            <div className="flex justify-center gap-6 flex-col sm:flex-row">
+              <Card className="bg-white flex-1 justify-start ">
                 <Heading level={4} className="text-lg uppercase">
                   Carrier Bag{' '}
                 </Heading>

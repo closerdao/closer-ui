@@ -153,6 +153,7 @@ const LessonPage = ({
               setIsVideoLoading={setIsVideoLoading}
               isVideoLoading={isVideoLoading}
               getAccessUrl={accessUrl}
+              imageUrl={lesson.photo}
             />
 
             {(user?._id === lesson.createdBy ||

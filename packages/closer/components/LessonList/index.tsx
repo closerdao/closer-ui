@@ -31,6 +31,12 @@ const LessonList = ({
 }: LessonListProps) => {
   const t = useTranslations();
 
+  const doesHaveLessons =
+    lesson.modules &&
+    lesson.modules.some((module) => module.lessons.length > 0);
+
+  if (!doesHaveLessons) return null;
+
   return (
     <section className="flex flex-col gap-2">
       {lesson.previewVideo ? (
