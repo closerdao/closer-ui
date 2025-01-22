@@ -2,7 +2,7 @@ import Card from '../../../components/ui/Card';
 
 import { useTranslations } from 'next-intl';
 
-export const StatsCard = ({
+const StatsCard = ({
   title,
   value,
   icon,
@@ -27,3 +27,5 @@ export const StatsCard = ({
     </Card>
   );
 };
+
+export default StatsCard;

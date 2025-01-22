@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 
 import Select from '../../components/ui/Select/Dropdown';
-import { StatsCard } from './components/Affiliate';
+import StatsCard from './components/Affiliate';
 import { Card, Heading } from 'closer/components/ui';
 
 import { FaCalendarAlt } from '@react-icons/all-files/fa/FaCalendarAlt';
@@ -147,7 +147,9 @@ const AffiliateDashboard = ({
           <Heading level={1}>🤝 {t('affiliate_dashboard')}</Heading>
 
           <div className="flex gap-2 flex-col sm:flex-row items-start sm:items-center">
-            <p className="whitespace-nowrap text-sm">{t('affiliate_select_timeframe')}</p>
+            <p className="whitespace-nowrap text-sm">
+              {t('affiliate_select_timeframe')}
+            </p>
             <Select
               id="dateRangeOptions"
               value={dateRange.value}
