@@ -59,6 +59,17 @@ export type User = {
   attributes: string[];
   managedBy: string[];
   _id: string;
+  citizenship?: {
+    createdAt?: Date;
+    status?: 'pending-payment' | 'cancelled' | 'paid' | 'completed';
+    iban?: string;
+    why?: string;
+    tokensToFinance?: number;
+    totalToPayInFiat?: number;
+    monthlyPaymentAmount?: number;
+    charges: Charge[];
+    downPaymentAmount?: number;
+  };
   subscription: {
     plan: string;
     tier: string;
@@ -68,17 +79,7 @@ export type User = {
     monthlyPrice: { val: number; cur: string };
     monthlyCredits: number;
     stripeCustomerEmail: string;
-    citizenship?: {
-      createdAt?: Date;
-      status?: 'pending-payment' | 'cancelled' | 'paid' | 'completed';
-      iban?: string;
-      why?: string;
-      tokensToFinance?: number;
-      totalToPayInFiat?: number;
-      monthlyPaymentAmount?: number;
-      charges: Charge[];
-      downPaymentAmount?: number;
-    };
+   
   };
   presence?: number;
   tokensBought?: number;

@@ -62,10 +62,10 @@ const SuccessCitizenPage: NextPage<Props> = ({
 
   const downPayment =
     (
-      (Number(user?.subscription?.citizenship?.totalToPayInFiat) ?? 0) * 0.1
+      (Number(user?.citizenship?.totalToPayInFiat) ?? 0) * 0.1
     ).toFixed(2) || 0;
 
-  const userIbanLast4 = user?.subscription?.citizenship?.iban?.slice(-4) || '';
+  const userIbanLast4 = user?.citizenship?.iban?.slice(-4) || '';
 
   useEffect(() => {
     if (!isLoading && !user) {

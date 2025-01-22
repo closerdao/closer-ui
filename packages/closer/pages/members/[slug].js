@@ -340,7 +340,7 @@ const MemberPage = ({ member, loadError }) => {
                     </Card>
                   )}
 
-                  {member?.subscription?.citizenship &&
+                  {member?.citizenship &&
                     (member._id === currentUser?._id ||
                       currentUser?.roles?.includes('admin') ||
                       currentUser?.roles?.includes('community-curator')) && (

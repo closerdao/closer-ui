@@ -15,8 +15,8 @@ const CitizenSubscriptionProgress = ({
   const t = useTranslations();
 
   const amountDue =
-    (member?.subscription?.citizenship?.totalToPayInFiat ?? 0) -
-    (member?.subscription?.citizenship?.charges?.reduce(
+    (member?.citizenship?.totalToPayInFiat ?? 0) -
+    (member?.citizenship?.charges?.reduce(
       (acc, charge) => acc + charge.amount.total.val,
       0,
     ) ?? 0);
@@ -27,7 +27,7 @@ const CitizenSubscriptionProgress = ({
       <p>
         {t('subscriptions_citizen_user_page_created')}{' '}
         <span className="font-bold">
-          {dayjs(member?.subscription?.citizenship?.createdAt).format(
+          {dayjs(member?.citizenship?.createdAt).format(
             'YYYY-MM-DD',
           )}
         </span>
@@ -35,19 +35,19 @@ const CitizenSubscriptionProgress = ({
       <p>
         {t('subscriptions_citizen_user_page_why')}{' '}
         <span className="font-bold">
-          {member?.subscription?.citizenship?.why}
+          {member?.citizenship?.why}
         </span>
       </p>
       <p>
         {t('subscriptions_citizen_user_page_total_to_pay')}{' '}
         <span className="font-bold">
-          €{member?.subscription?.citizenship?.totalToPayInFiat}
+          €{member?.citizenship?.totalToPayInFiat}
         </span>
       </p>
       <p>
         {t('subscriptions_citizen_monthly_payment')}{' '}
         <span className="font-bold">
-          €{member?.subscription?.citizenship?.monthlyPaymentAmount}
+          €{member?.citizenship?.monthlyPaymentAmount}
         </span>
       </p>
       <p>
@@ -57,11 +57,11 @@ const CitizenSubscriptionProgress = ({
       <p>
         {t('subscriptions_citizen_user_page_tokens_to_finance')}{' '}
         <span className="font-bold">
-          {member?.subscription?.citizenship?.tokensToFinance}
+          {member?.citizenship?.tokensToFinance}
         </span>
       </p>
-      {member?.subscription?.citizenship?.charges &&
-        member?.subscription?.citizenship?.charges?.length > 0 && (
+      {member?.citizenship?.charges &&
+        member?.citizenship?.charges?.length > 0 && (
           <div className='space-y-4'>
             <Heading level={5}>
               Payment History
@@ -78,7 +78,7 @@ const CitizenSubscriptionProgress = ({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {member?.subscription?.citizenship?.charges.map(
+                {member?.citizenship?.charges.map(
                   (charge: Charge) => (
                     <tr key={charge.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm ">
