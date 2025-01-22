@@ -1,5 +1,7 @@
 import Head from 'next/head';
 
+import { usePlatform } from '../../../contexts/platform';
+
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import { Heading } from '../../../components/ui';
 
@@ -14,6 +16,8 @@ import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
+import { useEffect } from 'react';
+import { useState } from 'react';
 
 interface Props {
   generalConfig: GeneralConfig;
@@ -24,6 +28,35 @@ const PerformancePage = ({ generalConfig }: Props) => {
   const t = useTranslations();
   const defaultConfig = useConfig();
   const { user } = useAuth();
+
+  const { platform }: any = usePlatform();
+
+  const [error, setError] = useState(null);
+
+
+  const openBookingsFilter = {
+    status: 'open',
+    startDate: {
+      // $gte: new Date().toISOString(),
+    },
+  };
+
+  // const openBookingsCount = platform.booking.findCount(openBookingsFilter);
+
+  const loadData = async () => {
+    try {
+      await platform.carrots.getBalance();
+    } catch (err) {
+      console.log('Load error', err);
+      setError(parseMessageFromError(err));
+
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
 
   const isAdmin = user?.roles.includes('admin');
 
