@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Image from 'next/image';
 
 import { useEffect, useMemo, useState } from 'react';
 
@@ -14,8 +15,10 @@ import { AffiliateConfig, api, usePlatform } from 'closer';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import PageNotAllowed from '../401';
 import { useAuth } from '../../contexts/auth';
 import { User } from '../../contexts/auth/types';
+import { useConfig } from '../../hooks/useConfig';
 import { DateRange } from '../../types/affiliate';
 import {
   calculateAffiliateRevenue,
@@ -39,10 +42,17 @@ const AffiliateDashboard = ({
   const t = useTranslations();
   const { platform }: any = usePlatform();
   const { user } = useAuth();
+  const config = useConfig();
+  const { SEMANTIC_URL } = config || {};
 
   const [dateRange, setDateRange] = useState<DateRange>(
     DATE_RANGES.find((range) => range.value === 'all') || DATE_RANGES[0],
   );
+  const [copied, setCopied] = useState(false);
+
+  const referralLink = `${SEMANTIC_URL}/signup/?referral=${user?._id}`;
+
+  console.log('user=', user);
 
   const filters = useMemo(
     () => ({
@@ -94,6 +104,20 @@ const AffiliateDashboard = ({
     financedTokenRevenue,
   } = calculateAffiliateRevenue(referralCharges, affiliateConfig);
 
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(referralLink).then(
+      () => {
+        setCopied(true);
+        setTimeout(() => {
+          setCopied(false);
+        }, 2000);
+      },
+      (err) => {
+        console.log('failed to copy', err.mesage);
+      },
+    );
+  };
+
   const loadData = async () => {
     await Promise.all([
       platform.user.getCount(filters.referralsFilter),
@@ -108,6 +132,10 @@ const AffiliateDashboard = ({
     }
   }, [user, filters.referralChargesFilter]);
 
+  if (!user) {
+    return <PageNotAllowed />;
+  }
+
   return (
     <>
       <Head>
@@ -115,7 +143,7 @@ const AffiliateDashboard = ({
       </Head>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
-        <div className="flex justify-between items-center ">
+        <section className="flex gap-4 justify-between items-start sm:items-center flex-col sm:flex-row">
           <Heading level={1}>🤝 {t('affiliate_dashboard')}</Heading>
 
           <div className="flex gap-4">
@@ -134,9 +162,33 @@ const AffiliateDashboard = ({
               isRequired
             />
           </div>
-        </div>
+        </section>
 
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <section className="flex gap-4 flex-col sm:flex-row items-start sm:items-center">
+          <Heading level={2} className="text-lg font-normal flex-none">
+            {t('affiliate_link')}
+          </Heading>
+          <Card className=" flex-1">
+            <div className="flex justify-between flex-col gap-1 sm:flex-row items-start sm:items-center">
+              <div className="w-2/3 sm:w-4/5 break-words select-all text-sm ">
+                {referralLink}
+              </div>
+              <div className="w-1/5 text-sm ">
+                {copied ? t('referrals_link_copied') : ''}
+              </div>
+              <button onClick={copyToClipboard}>
+                <Image
+                  src="/images/icon-copy.svg"
+                  alt="Copy"
+                  width={26}
+                  height={26}
+                />
+              </button>
+            </div>
+          </Card>
+        </section>
+
+        <section className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <StatsCard
             title={t('stats_total_earnings')}
             value={`€${totalRevenue}`}
@@ -157,11 +209,11 @@ const AffiliateDashboard = ({
           />
           <StatsCard
             title={t('stats_token_sales')}
-            value={`€${tokenSaleRevenue}`}
+            value={`€${tokenSaleRevenue + financedTokenRevenue}`}
             icon={<FaCoins className="fill-accent text-2xl" />}
             subtext={t('stats_tokens_subtext')}
           />
-        </div>
+        </section>
 
         <Card>
           <Heading level={2} className="text-lg font-normal">
@@ -194,6 +246,13 @@ const AffiliateDashboard = ({
               {affiliateConfig.tokenSaleCommissionPercent}%)
             </p>
             <p>€{tokenSaleRevenue.toFixed(2)}</p>
+          </div>
+          <div>
+            <p className="font-bold">
+              {t('earnings_breakdown_financed_token_sales')} (
+              {affiliateConfig.financedTokenSaleCommissionPercent}%)
+            </p>
+            <p>€{financedTokenRevenue.toFixed(2)}</p>
           </div>
         </Card>
       </div>
