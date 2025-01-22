@@ -146,7 +146,8 @@ const AffiliateDashboard = ({
         <section className="flex gap-4 justify-between items-start sm:items-center flex-col sm:flex-row">
           <Heading level={1}>🤝 {t('affiliate_dashboard')}</Heading>
 
-          <div className="flex gap-4">
+          <div className="flex gap-2 flex-col sm:flex-row items-start sm:items-center">
+            <p className="whitespace-nowrap text-sm">{t('affiliate_select_timeframe')}</p>
             <Select
               id="dateRangeOptions"
               value={dateRange.value}
@@ -222,35 +223,40 @@ const AffiliateDashboard = ({
           <div>
             <p className="font-bold">
               {t('earnings_breakdown_stays')} (
-              {affiliateConfig.staysCommissionPercent}%)
+              {affiliateConfig.staysCommissionPercent}%{' '}
+              {t('affiliate_commission')})
             </p>
             <p>€{staysRevenue.toFixed(2)}</p>
           </div>
           <div>
             <p className="font-bold">
               {t('earnings_breakdown_events')} (
-              {affiliateConfig.eventsCommissionPercent}%)
+              {affiliateConfig.eventsCommissionPercent}%{' '}
+              {t('affiliate_commission')})
             </p>
             <p>€{eventsRevenue.toFixed(2)}</p>
           </div>
           <div>
             <p className="font-bold">
               {t('earnings_breakdown_subscriptions')} (
-              {affiliateConfig.subscriptionCommissionPercent}%)
+              {affiliateConfig.subscriptionCommissionPercent}%{' '}
+              {t('affiliate_commission')})
             </p>
             <p>€{subscriptionsRevenue.toFixed(2)}</p>
           </div>
           <div>
             <p className="font-bold">
               {t('earnings_breakdown_token_sales')} (
-              {affiliateConfig.tokenSaleCommissionPercent}%)
+              {affiliateConfig.tokenSaleCommissionPercent}%{' '}
+              {t('affiliate_commission')})
             </p>
             <p>€{tokenSaleRevenue.toFixed(2)}</p>
           </div>
           <div>
             <p className="font-bold">
               {t('earnings_breakdown_financed_token_sales')} (
-              {affiliateConfig.financedTokenSaleCommissionPercent}%)
+              {affiliateConfig.financedTokenSaleCommissionPercent}%{' '}
+              {t('affiliate_commission')})
             </p>
             <p>€{financedTokenRevenue.toFixed(2)}</p>
           </div>

@@ -22,7 +22,7 @@ export const calculateAffiliateRevenue = (
           acc + (charge.affiliateRevenue?.val || 0),
         0,
       ) *
-      affiliateConfig.subscriptionCommissionPercent) /
+      affiliateConfig?.subscriptionCommissionPercent) /
       100 || 0;
 
   const staysRevenue =
