@@ -1125,7 +1125,11 @@
   "config_email_user_subscriptionPaused_user": "Subscription paused - send to user",
   "config_email_user_subscriptionResumed_user": "Subscription resumed - send to user",
   "config_email_user_subscriptionPaymentFailed_user": "Subscription payment failed - send to user",
-
+  "config_label_tokenSaleCommissionPercent": "Token sale commission percent",
+  "config_label_subscriptionCommissionPercent": "Subscriptions commission percent",
+  "config_label_staysCommissionPercent": "Stays commission percent",
+  "config_label_eventsCommissionPercent": "Events commission percent",
+  "config_label_financedTokenSaleCommissionPercent": "Financed token sale commission percent",
   "edit_homepage_button": "Edit History page",
   "blog_home_button": "Homepage",
   "generic_save_button": "Save",

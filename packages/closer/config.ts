@@ -439,4 +439,33 @@ export const configDescription: ConfigType[] = [
       },
     },
   },
+  {
+    slug: 'affiliate',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      tokenSaleCommissionPercent: {
+        type: 'number',
+        default: 3,
+      },
+      financedTokenSaleCommissionPercent: {
+        type: 'number',
+        default: 3,
+      },
+      subscriptionCommissionPercent: {
+        type: 'number',
+        default: 30,
+      },
+      staysCommissionPercent: {
+        type: 'number',
+        default: 10,
+      },
+      eventsCommissionPercent: {
+        type: 'number',
+        default: 10,
+      },
+    },
+  },
 ];

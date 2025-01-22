@@ -59,16 +59,24 @@
   "bookings_checkout_step_visitors_guide": "Visitors Guide",
 
   "stats_total_earnings": "Total Earnings",
-  "stats_earnings_subtext": "All time earnings",
+  "stats_earnings_subtext": "Selected period earnings",
   "stats_total_referrals": "Total Referrals",
-  "stats_referrals_subtext": "Unique visitors",
+  "stats_referrals_subtext": "Referred users",
   "stats_active_subscriptions": "Active subscriptions",
   "stats_subscriptions_subtext": "Monthly recurring",
   "stats_token_sales": "Token sales",
-  "stats_tokens_subtext": "Total tokens sold",
+  "stats_tokens_subtext": "Token sale amount in EUR",
   "overview": "Overview",
-  "revenue_tracking": "Revenue Tracking",
   "token_sales": "Token Sales",
-  "referral_analytics": "Referral Analytics",
-  "affiliate_dashboard": "Affiliate Dashboard"
+  "affiliate_dashboard": "Affiliate Dashboard",
+  "earnings_breakdown": "Earnings breakdown",
+  "earnings_breakdown_events": "Events earnings",
+  "earnings_breakdown_stays": "Stays earnings",
+  "earnings_breakdown_subscriptions": "Subscriptions earnings",
+  "earnings_breakdown_token_sales": "Token sales earnings",
+
+
+
+  "referrals": "Referrals"
+
 }
