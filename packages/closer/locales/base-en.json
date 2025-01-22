@@ -1359,6 +1359,7 @@
   "food_photo_gallery": "View food photo gallery",
   "food_no_food_disclaimer": "Basic outdoor kitchen provided with no access to communal kitchen",
   "food_create_title": "Create food option",
+  "food_no_food_available": "No food packages available for this event",
   "booking_price_per_night_per_adult": "Price per night per adult",
   "booking_token_same_day_error": "Same day token booking not available",
 
