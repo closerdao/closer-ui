@@ -10,6 +10,8 @@ import LessonVideo from '../../../components/LessonVideo';
 import Tag from '../../../components/Tag';
 import { Card, ErrorMessage, LinkButton } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
+import IconLocked from '../../../components/ui/IconLocked';
+import IconPlay from '../../../components/ui/IconPlay';
 
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -197,54 +199,6 @@ const LessonPage = ({
 
                 {error && <ErrorMessage error={error} />}
 
-                <div className="flex flex-col">
-                    {lesson.previewVideo && (
-                      <button
-                        onClick={handleShowPreview}
-                        disabled={isVideoPreview}
-                        className={`flex gap-2 py-1 px-2 rounded-md ${
-                          isVideoPreview
-                            ? 'bg-accent-light font-bold'
-                            : 'bg-transparent font-normal'
-                        }`}
-                      >
-                        <div className="border-accent border rounded-full flex justify-center items-center w-[21px] h-[21px]">
-                          <IconPlay />
-                        </div>
-                        {t('learn_introduction_heading')}
-                      </button>
-                    )}
-
-                    {lesson.fullVideo && (
-                      <button
-                        onClick={handleShowFullVideo}
-                        disabled={!isVideoPreview}
-                        className={`flex gap-2 py-1 px-2 rounded-md ${
-                          !isVideoPreview
-                            ? 'bg-accent-light font-bold'
-                            : 'bg-transparent font-normal'
-                        }`}
-                      >
-                        {canViewLessons ? (
-                          <div className="border-accent border rounded-full flex justify-center items-center w-[21px] h-[21px]">
-                            <IconPlay />
-                          </div>
-                        ) : (
-                          <div className=" flex justify-center items-center w-[21px] h-[21px]">
-                            <IconLocked />
-                          </div>
-                        )}
-                        {t('learn_full_lesson_heading')}
-                      </button>
-                    )}
-                  </div>
-
-                  {!canViewLessons && lesson.fullVideo && (
-                    <LinkButton href={getAccessUrl}>
-                      {t('learn_get_access_button')}
-                    </LinkButton>
-                  )}
-
                 {currentLessonId &&
                 currentLesson &&
                 (canViewLessons || Boolean(currentLesson?.isFree)) ? (
@@ -273,6 +227,50 @@ const LessonPage = ({
               <div className="h-auto static sm:sticky bottom-0 left-0  sm:top-[100px] w-full sm:w-[250px]">
                 <Card className="bg-white border border-gray-100 gap-6">
                   <Heading level={2}>{t('learn_lessons_heading')}</Heading>
+
+                  {lesson?.fullVideo && (
+                    <section className="flex flex-col">
+                      {lesson.previewVideo && (
+                        <button
+                          onClick={handleShowPreview}
+                          disabled={isVideoPreview}
+                          className={`flex gap-2 py-1 px-2 rounded-md ${
+                            isVideoPreview
+                              ? 'bg-accent-light font-bold'
+                              : 'bg-transparent font-normal'
+                          }`}
+                        >
+                          <div className="border-accent border rounded-full flex justify-center items-center w-[21px] h-[21px]">
+                            <IconPlay />
+                          </div>
+                          {t('learn_introduction_heading')}
+                        </button>
+                      )}
+
+                      {lesson.fullVideo && (
+                        <button
+                          onClick={handleShowFullVideo}
+                          disabled={!isVideoPreview}
+                          className={`flex gap-2 py-1 px-2 rounded-md ${
+                            !isVideoPreview
+                              ? 'bg-accent-light font-bold'
+                              : 'bg-transparent font-normal'
+                          }`}
+                        >
+                          {canViewLessons ? (
+                            <div className="border-accent border rounded-full flex justify-center items-center w-[21px] h-[21px]">
+                              <IconPlay />
+                            </div>
+                          ) : (
+                            <div className=" flex justify-center items-center w-[21px] h-[21px]">
+                              <IconLocked />
+                            </div>
+                          )}
+                          {t('learn_full_lesson_heading')}
+                        </button>
+                      )}
+                    </section>
+                  )}
 
                   <LessonList
                     lesson={lesson}
