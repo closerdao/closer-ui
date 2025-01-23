@@ -150,7 +150,8 @@ const LessonPage = ({
               isUnlocked={
                 canViewLessons ||
                 isVideoPreview ||
-                Boolean(currentLesson?.isFree)
+                Boolean(currentLesson?.isFree) ||
+                !lesson.fullVideo
               }
               setIsVideoLoading={setIsVideoLoading}
               isVideoLoading={isVideoLoading}
