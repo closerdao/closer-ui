@@ -197,6 +197,54 @@ const LessonPage = ({
 
                 {error && <ErrorMessage error={error} />}
 
+                <div className="flex flex-col">
+                    {lesson.previewVideo && (
+                      <button
+                        onClick={handleShowPreview}
+                        disabled={isVideoPreview}
+                        className={`flex gap-2 py-1 px-2 rounded-md ${
+                          isVideoPreview
+                            ? 'bg-accent-light font-bold'
+                            : 'bg-transparent font-normal'
+                        }`}
+                      >
+                        <div className="border-accent border rounded-full flex justify-center items-center w-[21px] h-[21px]">
+                          <IconPlay />
+                        </div>
+                        {t('learn_introduction_heading')}
+                      </button>
+                    )}
+
+                    {lesson.fullVideo && (
+                      <button
+                        onClick={handleShowFullVideo}
+                        disabled={!isVideoPreview}
+                        className={`flex gap-2 py-1 px-2 rounded-md ${
+                          !isVideoPreview
+                            ? 'bg-accent-light font-bold'
+                            : 'bg-transparent font-normal'
+                        }`}
+                      >
+                        {canViewLessons ? (
+                          <div className="border-accent border rounded-full flex justify-center items-center w-[21px] h-[21px]">
+                            <IconPlay />
+                          </div>
+                        ) : (
+                          <div className=" flex justify-center items-center w-[21px] h-[21px]">
+                            <IconLocked />
+                          </div>
+                        )}
+                        {t('learn_full_lesson_heading')}
+                      </button>
+                    )}
+                  </div>
+
+                  {!canViewLessons && lesson.fullVideo && (
+                    <LinkButton href={getAccessUrl}>
+                      {t('learn_get_access_button')}
+                    </LinkButton>
+                  )}
+
                 {currentLessonId &&
                 currentLesson &&
                 (canViewLessons || Boolean(currentLesson?.isFree)) ? (
