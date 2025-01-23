@@ -1,82 +1,77 @@
 import Head from 'next/head';
 
-import { usePlatform } from '../../../contexts/platform';
+import { useState } from 'react';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import { Heading } from '../../../components/ui';
+import Select from '../../../components/ui/Select/Dropdown';
+import StaysFunnel from './components/StaysFunnel';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import process from 'process';
 
 import { useAuth } from '../../../contexts/auth';
-import { useConfig } from '../../../hooks/useConfig';
-import { GeneralConfig } from '../../../types';
+import PageNotAllowed from '../../../pages/401';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
-import PageNotFound from '../../not-found';
-import { useEffect } from 'react';
-import { useState } from 'react';
+import {
+  DateRange,
+  DATE_RANGES,
+} from '../../../utils/performance.utils';
+import TokenSalesFunnel from './components/TokenSalesFunnell';
+import SubscriptionsFunnel from './components/SubscriptionsFunnel';
 
-interface Props {
-  generalConfig: GeneralConfig;
-  error?: string;
-}
-
-const PerformancePage = ({ generalConfig }: Props) => {
+const PerformancePage = () => {
   const t = useTranslations();
-  const defaultConfig = useConfig();
   const { user } = useAuth();
+  console.log('user=====', user);
 
-  const { platform }: any = usePlatform();
+  const [dateRange, setDateRange] = useState<DateRange>(
+    DATE_RANGES.find((range: DateRange) => range.value === 'all') ||
+      DATE_RANGES[0],
+  );
 
-  const [error, setError] = useState(null);
-
-
-  const openBookingsFilter = {
-    status: 'open',
-    startDate: {
-      // $gte: new Date().toISOString(),
-    },
-  };
-
-  // const openBookingsCount = platform.booking.findCount(openBookingsFilter);
-
-  const loadData = async () => {
-    try {
-      await platform.carrots.getBalance();
-    } catch (err) {
-      console.log('Load error', err);
-      setError(parseMessageFromError(err));
-
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-
-  const isAdmin = user?.roles.includes('admin');
-
-  const PLATFORM_NAME =
-    generalConfig?.platformName || defaultConfig.platformName;
-
-  if (!user || !isAdmin) {
-    return <PageNotFound error="User may not access" />;
+  if (!user?.roles.includes('admin')) {
+    return <PageNotAllowed />;
   }
 
   return (
     <>
       <Head>
-        <title>{`${t(
-          'dashboard_performance_title',
-        )} - ${PLATFORM_NAME}`}</title>
+        <title>{t('dashboard_performance_title')}</title>
       </Head>
       <AdminLayout>
-        <div className="flex justify-between flex-col md:flex-row gap-4">
-          <Heading level={2}>{t('dashboard_performance_title')}</Heading>
+        <div className="max-w-screen-lg  px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex justify-between items-center mb-8 w-full">
+            <Heading level={1}>{t('dashboard_performance_title')}</Heading>
+            <div className="flex gap-2 flex-col sm:flex-row items-start sm:items-center">
+            <p className="whitespace-nowrap text-sm">
+              {t('dashboard_performance_token_sales_funnel_select_timeframe')}
+            </p>
+            <Select
+              id="dateRangeOptions"
+              value={dateRange.value}
+              options={DATE_RANGES.map((range) => ({
+                value: range.value,
+                label: range.label,
+              }))}
+              className="rounded-full border-black w-[170px] text-sm py-0.5"
+              onChange={(value) => {
+                const newRange = DATE_RANGES.find((r) => r.value === value);
+                if (newRange) setDateRange(newRange);
+              }}
+              isRequired
+            />
+          </div>
+          </div>
+
+          <section className='flex gap-4'>
+            <StaysFunnel dateRange={dateRange} />
+            <TokenSalesFunnel dateRange={dateRange} />
+            <SubscriptionsFunnel dateRange={dateRange} />
+          </section>
         </div>
       </AdminLayout>
     </>

@@ -1292,6 +1292,13 @@
 
   "dashboard_title": "Dashboard",
   "dashboard_performance_title": "Performance",
+  "dashboard_performance_stays_funnel": "Stays funnel",
+  "dashboard_performance_token_sales_funnel": "Token sales funnel",
+  "dashboard_performance_token_sales_funnel_select_timeframe": "Select time frame:",
+  "dashboard_performance_subscriptions_funnel": "Subscriptions funnel",
+
+
+
   "dashboard_bookings_title": "Bookings",
   "dashboard_revenue_title": "Revenue",
   "dashboard_general_revenue": "Operations revenue (EUR)",

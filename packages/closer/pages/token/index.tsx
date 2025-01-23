@@ -72,7 +72,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
             point: 0,
             category: 'engagement',
           });
-
+          console.log('metric posted');
         } catch (error) {
           console.error('Error logging page view:', error);
         }

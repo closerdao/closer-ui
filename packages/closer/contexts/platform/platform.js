@@ -27,6 +27,7 @@ export const models = [
   'volunteer',
   'lesson',
   'food',
+  'metric',
 ];
 
 const filterToKey = (filter) => JSON.stringify(filter) || '__';

@@ -89,12 +89,12 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
   const hasComponentRendered = useRef(false);
 
   useEffect(() => {
-    if (!hasComponentRendered.current) {
+    if (!hasComponentRendered.current && selectedPlan) {
       (async () => {
         try {
           await api.post('/metric', {
             event:
-              selectedPlan?.title === 'wanderer'
+              selectedPlan?.title.toLowerCase() === 'wanderer'
                 ? 'tier-1-checkout'
                 : 'tier-2-checkout',
             value: 'subscriptions',
@@ -107,7 +107,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
       })();
       hasComponentRendered.current = true;
     }
-  }, []);
+  }, [selectedPlan]);
 
   useEffect(() => {
     if (user?.subscription && user.subscription.priceId) {

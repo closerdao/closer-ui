@@ -57,8 +57,11 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
 
   const hasComponentRendered = useRef(false);
 
+  console.log('hasComponentRendered.current=', hasComponentRendered.current);
+
   useEffect(() => {
     if (!hasComponentRendered.current) {
+
       (async () => {
         try {
           await api.post('/metric', {
@@ -67,6 +70,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
             point: 0,
             category: 'engagement',
           });
+
         } catch (error) {
           console.error('Error logging page view:', error);
         }
