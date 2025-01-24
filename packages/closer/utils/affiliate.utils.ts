@@ -103,7 +103,7 @@ export const getDays = (dateRange: DateRange): number => {
       return 30;
     case '90d':
       return 90;
-    case '1y':
+    case '365d':
       return 365;
     default:
       return 30;
