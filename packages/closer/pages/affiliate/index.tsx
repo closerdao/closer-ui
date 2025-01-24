@@ -1,10 +1,11 @@
 import Head from 'next/head';
 import Image from 'next/image';
-
+ 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import Select from '../../components/ui/Select/Dropdown';
-import { StatsCard } from './components/Affiliate';
+
+import StatsCard from './components/Affiliate';
 import { Card, Heading } from 'closer/components/ui';
 
 import { FaCalendarAlt } from '@react-icons/all-files/fa/FaCalendarAlt';
@@ -19,8 +20,12 @@ import PageNotAllowed from '../401';
 import { useAuth } from '../../contexts/auth';
 import { User } from '../../contexts/auth/types';
 import { useConfig } from '../../hooks/useConfig';
-import { calculateAffiliateRevenue } from '../../utils/affiliate.utils';
-import { generateFilter } from '../../utils/filter.utils';
+
+import { DateRange } from '../../types/affiliate';
+import {
+  calculateAffiliateRevenue,
+  getDays,
+} from '../../utils/affiliate.utils';
 import { loadLocaleData } from '../../utils/locale.helpers';
 
 const DATE_RANGES = [
@@ -42,23 +47,42 @@ const AffiliateDashboard = ({
   const config = useConfig();
   const { SEMANTIC_URL } = config || {};
 
-  const [dateRange, setDateRange] = useState(
+  const [dateRange, setDateRange] = useState<DateRange>(
     DATE_RANGES.find((range) => range.value === 'all') || DATE_RANGES[0],
   );
   const [copied, setCopied] = useState(false);
 
-  const referralLink = useMemo(
-    () => `${SEMANTIC_URL}/signup/?referral=${user?._id}`,
-    [SEMANTIC_URL, user?._id],
-  );
+  const referralLink = `${SEMANTIC_URL}/signup/?referral=${user?._id}`;
+
+  console.log('user=', user);
 
   const filters = useMemo(
     () => ({
-      referralsFilter: generateFilter(user?._id, dateRange),
-      referralChargesFilter: generateFilter(user?._id, dateRange, {
-        dateField: 'date',
+      referralsFilter: {
+        where: {
+          referredBy: user?._id,
+          ...(dateRange.value !== 'all' && {
+            created: {
+              $gte: new Date(
+                new Date().setDate(new Date().getDate() - getDays(dateRange)),
+              ),
+            },
+          }),
+        },
+      },
+      referralChargesFilter: {
+        where: {
+          referredBy: user?._id,
+          ...(dateRange.value !== 'all' && {
+            date: {
+              $gte: new Date(
+                new Date().setDate(new Date().getDate() - getDays(dateRange)),
+              ),
+            },
+          }),
+        },
         limit: 1000,
-      }),
+      },
     }),
     [user?._id, dateRange],
   );

@@ -139,6 +139,15 @@ const MemberMenu = () => {
         url: '/settings/referrals',
         enabled: process.env.NEXT_PUBLIC_FEATURE_REFERRAL === 'true',
       },
+      ...(process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true'
+        ? [
+            {
+              label: t('navigation_affiliate_dashboard'),
+              url: '/affiliate',
+              enabled: true,
+            },
+          ]
+        : []),
       {
         label: t('navigation_governance'),
         url: 'https://snapshot.org/#/traditionaldreamfactory.eth',
