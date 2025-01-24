@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Card, Heading, Spinner } from '../../../../components/ui';
 
+import { useTranslations } from 'next-intl';
+
 import { usePlatform } from '../../../../contexts/platform';
 import { parseMessageFromError } from '../../../../utils/common';
 import {
@@ -9,7 +11,6 @@ import {
   generateBookingFilter,
 } from '../../../../utils/performance.utils';
 import FunnelBar from './FunnelBar';
-import { useTranslations } from 'next-intl';
 
 interface BookingStats {
   openCount: number;
@@ -23,14 +24,14 @@ interface BookingStats {
 interface Platform {
   booking: {
     find: (filter: any) => { toJS: () => any[] };
-      get: (filter: any) => Promise<any>;
-      findCount: (filter: any) => number;
+    get: (filter: any) => Promise<any>;
+    findCount: (filter: any) => number;
     getCount: (filter: any) => Promise<any>;
   };
 }
 const StaysFunnel = ({ dateRange }: { dateRange: DateRange }) => {
-    const { platform } = usePlatform() as { platform: Platform };
-    const t = useTranslations();
+  const { platform } = usePlatform() as { platform: Platform };
+  const t = useTranslations();
 
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -127,7 +128,7 @@ const StaysFunnel = ({ dateRange }: { dateRange: DateRange }) => {
       bookingStats.checkedInCount,
       bookingStats.checkedOutCount,
       1,
-    ); 
+    );
     const calculateStats = (count: number) => ({
       count,
       percentage: Math.round((count / total) * 100),
@@ -140,18 +141,32 @@ const StaysFunnel = ({ dateRange }: { dateRange: DateRange }) => {
       paid: calculateStats(bookingStats.paidCount),
       checkedIn: calculateStats(bookingStats.checkedInCount),
       checkedOut: calculateStats(bookingStats.checkedOutCount),
+      conversionRate: {
+        count: bookingStats.paidCount,
+        percentage: Number(
+          ((bookingStats.paidCount / bookingStats.openCount) * 100).toFixed(2),
+        ),
+      },
     };
   }, [bookingStats]);
   return (
-    <section className="w-1/3 ">
-      <Card className='min-h-[500px]  justify-start'>
-        <Heading level={2}>
-          {t('dashboard_performance_stays_funnel')}
-        </Heading>
+    <section className="w-full md:w-1/3 min-h-fit md:min-h-[600px]">
+      <Card className="h-full flex flex-col">
+        <Heading level={2}>{t('dashboard_performance_stays_funnel')}</Heading>
         {loading ? (
           <Spinner />
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 flex-1 overflow-y-auto ">
+            <div className="border-2 rounded-lg space-y-4 p-2 pb-4">
+              <Heading level={3}>
+                {t('dashboard_performance_conversion_rate')}
+              </Heading>
+              <FunnelBar
+                label="Paid / open bookings"
+                stats={funnelStats.conversionRate}
+                color="bg-accent"
+              />
+            </div>
             <FunnelBar
               label="Open"
               stats={funnelStats.open}

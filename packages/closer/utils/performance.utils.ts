@@ -12,7 +12,7 @@ export type BookingStatus =
   | 'checked-in'
   | 'checked-out';
 
-const getDays = (dateRange: DateRange): number => {
+export const getDays = (dateRange: DateRange): number => {
   switch (dateRange.value) {
     case '7d':
       return 7;
@@ -47,11 +47,6 @@ export const generateBookingFilter = (
   const { status } = options;
 
   const limit = 3000;
-
-  console.log(
-    'date',
-    new Date(new Date().setDate(new Date().getDate() - getDays(dateRange))),
-  );
 
   const filter = {
     where: {

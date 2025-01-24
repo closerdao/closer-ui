@@ -9,6 +9,7 @@ import { parseMessageFromError } from '../../../../utils/common';
 import {
   DateRange,
   generateTokenSalesFilter,
+  getDays,
 } from '../../../../utils/performance.utils';
 import FunnelBar from './FunnelBar';
 
@@ -16,7 +17,7 @@ interface TokenSaleStats {
   pageViewCount: number;
   whitepaperDownloadCount: number;
   openFlowCount: number;
-  useCalculatorCount: number; 
+  useCalculatorCount: number;
   approveCount: number;
   checkoutCount: number;
   successCount: number;
@@ -53,7 +54,19 @@ const TokenSalesFunnel = ({ dateRange }: { dateRange: DateRange }) => {
       openFlowFilter: generateTokenSalesFilter(dateRange, 'open-flow'),
       checkoutFilter: generateTokenSalesFilter(dateRange, 'checkout'),
       approveFilter: generateTokenSalesFilter(dateRange, 'approve'),
-      successFilter: generateTokenSalesFilter(dateRange, 'success'),
+      successFilter: {
+        where: {
+          event: { $in: ['token-sale'] },
+          ...(dateRange.value !== 'all' && {
+            created: {
+              $gte: new Date(
+                new Date().setDate(new Date().getDate() - getDays(dateRange)),
+              ).getTime(),
+            },
+          }),
+        },
+        limit: 10000,
+      },
     }),
     [dateRange],
   );
@@ -65,7 +78,8 @@ const TokenSalesFunnel = ({ dateRange }: { dateRange: DateRange }) => {
       platform.metric.findCount(filters.downloadWhitepaperFilter) || 0;
     const useCalculatorCount =
       platform.metric.findCount(filters.useCalculatorFilter) || 0;
-    const openFlowCount = platform.metric.findCount(filters.openFlowFilter) || 0;
+    const openFlowCount =
+      platform.metric.findCount(filters.openFlowFilter) || 0;
     const approveCount = platform.metric.findCount(filters.approveFilter) || 0;
     const checkoutCount =
       platform.metric.findCount(filters.checkoutFilter) || 0;
@@ -95,10 +109,6 @@ const TokenSalesFunnel = ({ dateRange }: { dateRange: DateRange }) => {
         platform.metric.getCount(filters.successFilter),
       ]);
 
-      // console.log('res==', res);
-
-      // const metrics = res[0]?.results?.toJS() || [];
-      // console.log('token sale metrics=', metrics);
     } catch (error) {
       setError(parseMessageFromError(error));
     } finally {
@@ -136,20 +146,41 @@ const TokenSalesFunnel = ({ dateRange }: { dateRange: DateRange }) => {
       approve: calculateStats(tokenSaleStats.approveCount),
       checkout: calculateStats(tokenSaleStats.checkoutCount),
       success: calculateStats(tokenSaleStats.successCount),
+      conversionRate: {
+        count: tokenSaleStats.successCount,
+        percentage: tokenSaleStats.successCount
+          ? Number(
+              (
+                (tokenSaleStats.successCount / tokenSaleStats.pageViewCount) *
+                100
+              ).toFixed(2),
+            )
+          : 0,
+      },
     };
   }, [tokenSaleStats]);
   return (
-    <section className="w-1/3 ">
-      <Card className="min-h-[500px]  justify-start">
+    <section className="w-full md:w-1/3 min-h-fit md:min-h-[600px]">
+      <Card className="h-full flex flex-col">
         <Heading level={2}>
           {t('dashboard_performance_token_sales_funnel')}
         </Heading>
         {loading ? (
           <Spinner />
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 flex-1 overflow-y-auto">
+            <div className="border-2 rounded-lg space-y-4 p-2 pb-4">
+              <Heading level={3}>
+                {t('dashboard_performance_conversion_rate')}
+              </Heading>
+              <FunnelBar
+                label="Success / page views"
+                stats={funnelStats.conversionRate}
+                color="bg-accent-alt"
+              />
+            </div>
             <FunnelBar
-              label="Open"
+              label="View Token Sale page"
               stats={funnelStats.pageView}
               color="bg-accent-alt"
             />

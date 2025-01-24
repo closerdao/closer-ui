@@ -105,7 +105,6 @@
   "bookings_summary_step_title": "Summary",
   "bookings_food_step_title": "Food",
 
-
   "bookings_summary_step_dates_title": "Your Stay",
   "bookings_summary_step_dates_title_hourly": "Your Space Booking",
   "bookings_summary_step_your_event": "Your event",
@@ -385,7 +384,6 @@
   "booking_rate_monthly": "Month",
   "booking_food": "Food",
   "booking_add_food": "Add",
-  
 
   "bookings_id": "Booking #",
   "bookings_edit_slug_title": "Edit",
@@ -418,8 +416,6 @@
   "bookings_amount_due": "Amount due:",
   "bookings_amount_to_refund": "Amount to refund:",
   "bookings_utility_fee": "Utilities fee:",
-
-
 
   "bookings_rental_cost": "Cost of the accommodation:",
   "bookings_tokens_lock": "Total tokens locked:",
@@ -944,7 +940,6 @@
 
   "resources_faqs_error": "Error fetching FAQs",
 
-
   "generic_clear_selection": "Clear selection",
   "support_us_heading": "Support Traditional Dream Factory",
   "support_us_navigation": "Support us",
@@ -1098,7 +1093,6 @@
   "config_label_diet": "Diet (comma delimited options)",
   "config_label_shouldResidentsPayUtilities": "Should residents pay utilities",
   "config_label_minVouchingStayDuration": "Minimum stay duration for vouching (days)",
-
 
   "config_features_heading": "Platform features",
   "generic_delete_button": "Delete",
@@ -1296,8 +1290,7 @@
   "dashboard_performance_token_sales_funnel": "Token sales funnel",
   "dashboard_performance_token_sales_funnel_select_timeframe": "Select time frame:",
   "dashboard_performance_subscriptions_funnel": "Subscriptions funnel",
-
-
+  "dashboard_performance_conversion_rate": "Conversion rate",
 
   "dashboard_bookings_title": "Bookings",
   "dashboard_revenue_title": "Revenue",
@@ -1428,26 +1421,25 @@
   "learn_create_lesson": "Create lesson",
   "learn_all_courses": "Back to all courses",
 
-   "learn_add_module": "Add module",
-   "learn_module_title": "Module title",
-   "learn_module_description": "Module description",
-   "learn_module_lessons": "Lessons in this module",
-   "learn_lesson_title": "Lesson title",
-   "learn_lesson_full_text": "Lesson full text",
-   "learn_lesson_video_url": "Lesson video URL",
-   "learn_lesson_is_free": "This lesson is free",
-   "learn_lesson_add": "Add lesson",
-   "learn_lesson_edit": "Edit lesson",
-   "learn_lesson_delete": "Delete lesson",
-   "learn_remove_module": "Delete module",
-   "learn_confirmation_title": "💰 Purchase successful",
-   "learn_confirmation_message": "Thank you for your purchase! 🌱",
-   "learn_confirmation_message_2": "We will contact you soon with the course details.",
-   "learn_buy_single_course": "Buy this course",
-   "learn_course_price": "Course price:",
+  "learn_add_module": "Add module",
+  "learn_module_title": "Module title",
+  "learn_module_description": "Module description",
+  "learn_module_lessons": "Lessons in this module",
+  "learn_lesson_title": "Lesson title",
+  "learn_lesson_full_text": "Lesson full text",
+  "learn_lesson_video_url": "Lesson video URL",
+  "learn_lesson_is_free": "This lesson is free",
+  "learn_lesson_add": "Add lesson",
+  "learn_lesson_edit": "Edit lesson",
+  "learn_lesson_delete": "Delete lesson",
+  "learn_remove_module": "Delete module",
+  "learn_confirmation_title": "💰 Purchase successful",
+  "learn_confirmation_message": "Thank you for your purchase! 🌱",
+  "learn_confirmation_message_2": "We will contact you soon with the course details.",
+  "learn_buy_single_course": "Buy this course",
+  "learn_course_price": "Course price:",
 
-   "learn_live_course": "Live course",
+  "learn_live_course": "Live course",
 
-  
-  "":""
+  "": ""
 }

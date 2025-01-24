@@ -25,7 +25,7 @@ const FunnelBar = memo(
       <div className="w-full bg-gray-100 rounded-full h-2.5">
         <div
           className={`${color} h-2.5 rounded-full transition-all duration-500`}
-          style={{ width: `${stats.percentage}%` }}
+          style={{ width: `${stats.percentage}%`, maxWidth: '100%' }}
         />
       </div>
     </div>
