@@ -105,7 +105,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
     <Link
       href="/learn/category/all"
       type="submit"
-      className="font-accent lowercase bg-accent text-white rounded-full py-2.5 px-8 text-xl"
+      className=" font-accent  lowercase bg-accent text-white rounded-full py-2.5 px-8 text-xl"
     >
        {t('navigation_see_courses')}
     </Link>
@@ -178,7 +178,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                 A Desert school of ecological imagination.
               </Heading> */}
 
-              {/* <div className="w-full flex justify-end">{CTA}</div> */}
+               <div className="justify-center w-full flex  pb-[5vh] md:pb-[calc(20vh)]">{CTA}</div> 
             </div>
           </div>
         </div>
@@ -693,7 +693,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                   first come first serve basis.{' '}
                 </p>
               </Card>
-              <Card className="bg-white flex-1 justify-start">
+              {/* <Card className="bg-white flex-1 justify-start">
                 <Heading level={4} className="text-lg uppercase">
                   Berries{' '}
                 </Heading>
@@ -709,7 +709,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                   arrange a subsided place. These are limited and come on a
                   first come first serve basis.{' '}
                 </p>
-              </Card>
+              </Card> */}
             </div>
             <div className="flex justify-center gap-6 flex-col sm:flex-row">
               <Card className="bg-white flex-1 justify-start ">
