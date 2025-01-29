@@ -7,8 +7,8 @@ export const calculateAffiliateRevenue = (
   affiliateConfig: AffiliateConfig,
 ) => {
   // we double check if affiliateRevenue currency is either EUR fiat or EUR stablecoin
-  // events revenue is calculated based on entire event booking price (stay + ticket + food + utility)
-  // stays revenue is calculated based on entire non-event booking price (stay + food + utility)
+  // events revenue is calculated based on ticket price only
+  // stays revenue is calculated based on accommodation price only
 
   const filteredCharges = charges?.filter((charge: Charge) => {
     return charge.affiliateRevenue?.cur.toLowerCase().includes('eur');

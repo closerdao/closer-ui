@@ -52,6 +52,14 @@ const AffiliateDashboard = ({
 
   const referralLink = `${SEMANTIC_URL}/signup/?referral=${user?._id}`;
 
+  const tokenFlowLink = `${SEMANTIC_URL}/token?referral=${user?._id}`;
+
+  const subscriptionsFlowLink = `${SEMANTIC_URL}/subscriptions?referral=${user?._id}`;
+
+  const staysFlowLink = `${SEMANTIC_URL}/stay?referral=${user?._id}`;
+
+  const eventsFlowLink = `${SEMANTIC_URL}/events?referral=${user?._id}`;
+
   console.log('user=', user);
 
   const filters = useMemo(
@@ -104,8 +112,8 @@ const AffiliateDashboard = ({
     financedTokenRevenue,
   } = calculateAffiliateRevenue(referralCharges, affiliateConfig);
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(referralLink).then(
+  const copyToClipboard = (link: string) => {
+    navigator.clipboard.writeText(link).then(
       () => {
         setCopied(true);
         setTimeout(() => {
@@ -142,7 +150,7 @@ const AffiliateDashboard = ({
         <title>{`${t('affiliate_dashboard')}`}</title>
       </Head>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
         <section className="flex gap-4 justify-between items-start sm:items-center flex-col sm:flex-row">
           <Heading level={1}>🤝 {t('affiliate_dashboard')}</Heading>
 
@@ -167,28 +175,99 @@ const AffiliateDashboard = ({
           </div>
         </section>
 
-        <section className="flex gap-4 flex-col sm:flex-row items-start sm:items-center">
-          <Heading level={2} className="text-lg font-normal flex-none">
-            {t('affiliate_link')}
-          </Heading>
-          <Card className=" flex-1">
-            <div className="flex justify-between flex-col gap-1 sm:flex-row items-start sm:items-center">
-              <div className="w-2/3 sm:w-4/5 break-words select-all text-sm ">
-                {referralLink}
+        <section className="flex flex-col gap-4">
+          <div className='flex gap-4 flex-col sm:flex-row items-start sm:items-center'>
+            <Heading level={2} className="text-lg font-normal flex-none">
+              {t('affiliate_link')}
+            </Heading>
+            <Card className=" flex-1 py-1.5">
+              <div className="flex justify-between flex-col gap-1 sm:flex-row items-start sm:items-center">
+                <div className="w-2/3 sm:w-4/5 break-words select-all text-sm ">
+                  {referralLink}
+                </div>
+                <div className="w-1/5 text-sm ">
+                  {copied ? t('referrals_link_copied') : ''}
+                </div>
+                <button onClick={() => copyToClipboard(referralLink)}>
+                  <Image
+                    src="/images/icon-copy.svg"
+                    alt="Copy"
+                    width={18}
+                    height={18}
+                  />
+                </button>
               </div>
-              <div className="w-1/5 text-sm ">
-                {copied ? t('referrals_link_copied') : ''}
+            </Card>
+          </div>
+          <div className='flex gap-4 flex-col sm:flex-row items-start sm:items-center'>
+            <Heading level={2} className="text-lg font-normal flex-none">
+              {t('affiliate_token_flow')}
+            </Heading>
+            <Card className=" flex-1 py-1.5">
+              <div className="flex justify-between flex-col gap-1 sm:flex-row items-start sm:items-center">
+                <div className="w-2/3 sm:w-4/5 break-words select-all text-sm ">
+                  {tokenFlowLink}
+                </div>
+                <div className="w-1/5 text-sm ">
+                  {copied ? t('referrals_link_copied') : ''}
+                </div>
+                <button onClick={() => copyToClipboard(tokenFlowLink)}>
+                  <Image
+                    src="/images/icon-copy.svg"
+                    alt="Copy"
+                    width={18}
+                    height={18}
+                  />
+                </button>
               </div>
-              <button onClick={copyToClipboard}>
-                <Image
-                  src="/images/icon-copy.svg"
-                  alt="Copy"
-                  width={26}
-                  height={26}
-                />
-              </button>
-            </div>
-          </Card>
+            </Card>
+          </div>
+          <div className='flex gap-4 flex-col sm:flex-row items-start sm:items-center'>
+            <Heading level={2} className="text-lg font-normal flex-none">
+              {t('affiliate_subscriptions_flow')}
+            </Heading>
+            <Card className=" flex-1 py-1.5">
+              <div className="flex justify-between flex-col gap-1 sm:flex-row items-start sm:items-center">
+                <div className="w-2/3 sm:w-4/5 break-words select-all text-sm ">
+                  {subscriptionsFlowLink}
+                </div>
+                <div className="w-1/5 text-sm ">
+                  {copied ? t('referrals_link_copied') : ''}
+                </div>
+                <button onClick={() => copyToClipboard(subscriptionsFlowLink)}>
+                  <Image
+                    src="/images/icon-copy.svg"
+                    alt="Copy"
+                    width={18}
+                    height={18}
+                  />
+                </button>
+              </div>
+            </Card>
+          </div>
+          <div className='flex gap-4 flex-col sm:flex-row items-start sm:items-center'>
+            <Heading level={2} className="text-lg font-normal flex-none">
+              {t('affiliate_stays_flow')}
+            </Heading>
+            <Card className=" flex-1 py-1.5">
+              <div className="flex justify-between flex-col gap-1 sm:flex-row items-start sm:items-center">
+                <div className="w-2/3 sm:w-4/5 break-words select-all text-sm ">
+                  {staysFlowLink}
+                </div>
+                <div className="w-1/5 text-sm ">
+                  {copied ? t('referrals_link_copied') : ''}
+                </div>
+                <button onClick={() => copyToClipboard(staysFlowLink)}>
+                  <Image
+                    src="/images/icon-copy.svg"
+                    alt="Copy"
+                    width={18}
+                    height={18}
+                  />
+                </button>
+              </div>
+            </Card>
+          </div>
         </section>
 
         <section className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -223,44 +302,44 @@ const AffiliateDashboard = ({
             {t('earnings_breakdown')}
           </Heading>
           <div>
-            <p className="font-bold">
+            <p>
               {t('earnings_breakdown_stays')} (
               {affiliateConfig.staysCommissionPercent}%{' '}
               {t('affiliate_commission')})
             </p>
-            <p>€{staysRevenue.toFixed(2)}</p>
+            <p  className="font-bold">€{staysRevenue.toFixed(2)}</p>
           </div>
           <div>
-            <p className="font-bold">
+            <p >
               {t('earnings_breakdown_events')} (
               {affiliateConfig.eventsCommissionPercent}%{' '}
               {t('affiliate_commission')})
             </p>
-            <p>€{eventsRevenue.toFixed(2)}</p>
+            <p className="font-bold">€{eventsRevenue.toFixed(2)}</p>
           </div>
           <div>
-            <p className="font-bold">
+            <p >
               {t('earnings_breakdown_subscriptions')} (
               {affiliateConfig.subscriptionCommissionPercent}%{' '}
               {t('affiliate_commission')})
             </p>
-            <p>€{subscriptionsRevenue.toFixed(2)}</p>
+            <p className="font-bold">€{subscriptionsRevenue.toFixed(2)}</p>
           </div>
           <div>
-            <p className="font-bold">
+            <p >
               {t('earnings_breakdown_token_sales')} (
               {affiliateConfig.tokenSaleCommissionPercent}%{' '}
               {t('affiliate_commission')})
             </p>
-            <p>€{tokenSaleRevenue.toFixed(2)}</p>
+            <p className="font-bold">€{tokenSaleRevenue.toFixed(2)}</p>
           </div>
           <div>
-            <p className="font-bold">
+            <p >
               {t('earnings_breakdown_financed_token_sales')} (
               {affiliateConfig.financedTokenSaleCommissionPercent}%{' '}
               {t('affiliate_commission')})
             </p>
-            <p>€{financedTokenRevenue.toFixed(2)}</p>
+            <p className="font-bold">€{financedTokenRevenue.toFixed(2)}</p>
           </div>
         </Card>
       </div>
