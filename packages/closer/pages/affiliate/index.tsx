@@ -29,7 +29,7 @@ const DATE_RANGES = [
   { value: '7d', label: 'Last 7 days' },
   { value: '30d', label: 'Last 30 days' },
   { value: '90d', label: 'Last 90 days' },
-  { value: '1y', label: 'Last 365 days' },
+  { value: '365d', label: 'Last 365 days' },
   { value: 'all', label: 'All time' },
 ] as const;
 
@@ -180,7 +180,6 @@ const AffiliateDashboard = ({
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
         <section className="flex gap-4 justify-between items-start sm:items-center flex-col sm:flex-row">
           <Heading level={1}>🤝 {t('affiliate_dashboard')}</Heading>
-          fromDate={fromDate} / toDate={toDate} / timeFrame={timeFrame}
           <div className="flex gap-2 flex-col sm:flex-row items-start sm:items-center">
             <TimeFrameSelector
               timeFrame={timeFrame}
