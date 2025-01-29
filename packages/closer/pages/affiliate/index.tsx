@@ -113,28 +113,28 @@ const AffiliateDashboard = ({
 
   // Load data only when filters change
   useEffect(() => {
-    if (user) {
+    if (user && platform) {
       loadData();
     }
-  }, [filters, user]);
+  }, [filters, user, platform]);
 
   const referralLink = `${SEMANTIC_URL}/signup/?referral=${user?._id}`;
-
   const tokenFlowLink = `${SEMANTIC_URL}/token?referral=${user?._id}`;
-
   const subscriptionsFlowLink = `${SEMANTIC_URL}/subscriptions?referral=${user?._id}`;
-
   const staysFlowLink = `${SEMANTIC_URL}/stay?referral=${user?._id}`;
 
-  const referralsCount = platform.user.findCount(filters.referralsFilter);
-  const referrals = platform.user.find(filters.referralsFilter)?.toJS();
-  const referralCharges = platform.charge
-    .find(filters.referralChargesFilter)
-    ?.toJS();
-  const activeSubscriptionsCount = referrals?.filter(
-    (user: User) =>
-      user.subscription && JSON.stringify(user.subscription) !== '{}',
-  ).length;
+  const referralsCount =
+    platform?.user?.findCount?.(filters.referralsFilter) || 0;
+  const referrals =
+    platform?.user?.find?.(filters.referralsFilter)?.toJS?.() || [];
+  const referralCharges =
+    platform?.charge?.find?.(filters.referralChargesFilter)?.toJS?.() || [];
+
+  const activeSubscriptionsCount =
+    referrals?.filter(
+      (user: User) =>
+        user.subscription && JSON.stringify(user.subscription) !== '{}',
+    )?.length || 0;
 
   const {
     totalRevenue,
@@ -160,6 +160,8 @@ const AffiliateDashboard = ({
   };
 
   const loadData = async () => {
+    if (!platform) return;
+
     await Promise.all([
       platform.user.getCount(filters.referralsFilter),
       platform.user.get(filters.referralsFilter),
@@ -169,6 +171,11 @@ const AffiliateDashboard = ({
 
   if (!user) {
     return <PageNotAllowed />;
+  }
+
+  // Add loading state check
+  if (!platform) {
+    return <div>Loading...</div>;
   }
 
   return (
