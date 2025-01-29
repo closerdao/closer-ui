@@ -21,11 +21,9 @@ import { useAuth } from '../../contexts/auth';
 import { User } from '../../contexts/auth/types';
 import { useConfig } from '../../hooks/useConfig';
 import { DateRange } from '../../types/affiliate';
-import {
-  calculateAffiliateRevenue,
-
-} from '../../utils/affiliate.utils';
+import { calculateAffiliateRevenue } from '../../utils/affiliate.utils';
 import { loadLocaleData } from '../../utils/locale.helpers';
+import { getStartAndEndDate } from '../../utils/performance.utils';
 
 const DATE_RANGES = [
   { value: '7d', label: 'Last 7 days' },
@@ -50,52 +48,75 @@ const AffiliateDashboard = ({
     DATE_RANGES.find((range) => range.value === 'all') || DATE_RANGES[0],
   );
   const [copied, setCopied] = useState(false);
-  const [fromDate, setFromDate] = useState<string>('');
-  const [toDate, setToDate] = useState<string>('');
-
   const router = useRouter();
-
   const { time_frame } = router.query;
+
   const [timeFrame, setTimeFrame] = useState<string>(
     time_frame?.toString() || 'month',
   );
+  const [fromDate, setFromDate] = useState<string>('');
+  const [toDate, setToDate] = useState<string>('');
 
-  useEffect(() => {
-    const urlTimeFrame = typeof time_frame === 'string' ? time_frame : 'month';
-    if (!router.isReady) return;
-
-    if (router.isReady && urlTimeFrame !== timeFrame) {
-      setTimeFrame(urlTimeFrame);
-    }
-  }, [router.isReady, time_frame]);
-
+  // Handle timeframe changes
   const handleTimeFrameChange = (
     value: string | ((prevState: string) => string),
   ) => {
     const newTimeFrame = typeof value === 'function' ? value(timeFrame) : value;
     setTimeFrame(newTimeFrame);
 
-    window.history.replaceState(
-      {},
-      '',
-      `/dashboard/performance?time_frame=${newTimeFrame}`,
-    );
-  }
+    // Only update URL for non-custom timeframes
+    if (newTimeFrame !== 'custom') {
+      router.replace(
+        {
+          pathname: router.pathname,
+          query: { ...router.query, time_frame: newTimeFrame },
+        },
+        undefined,
+        { shallow: true },
+      );
+    }
+  };
 
+  const { startDate, endDate } = useMemo(
+    () => getStartAndEndDate(timeFrame, fromDate, toDate),
+    [timeFrame, fromDate, toDate],
+  );
+
+  const filters = useMemo(
+    () => ({
+      referralsFilter: {
+        where: {
+          referredBy: user?._id,
+          ...(timeFrame !== 'allTime' && {
+            created: {
+              $gte: startDate,
+              $lte: endDate,
+            },
+          }),
+        },
+      },
+      referralChargesFilter: {
+        where: {
+          referredBy: user?._id,
+          ...(timeFrame !== 'allTime' && {
+            date: {
+              $gte: startDate,
+              $lte: endDate,
+            },
+          }),
+        },
+        limit: 1000,
+      },
+    }),
+    [user?._id, timeFrame, startDate, endDate],
+  );
+
+  // Load data only when filters change
   useEffect(() => {
-    const { startDate, endDate } = getStartAndEndDate(
-      timeFrame,
-      fromDate,
-      toDate,
-    );
-  
-  }, [timeFrame]);
-
-  // useEffect(() => {
-  //   if (time_frame) {
-  //     setTimeFrame(time_frame.toString());
-  //   }
-  // }, [router.query]);
+    if (user) {
+      loadData();
+    }
+  }, [filters, user]);
 
   const referralLink = `${SEMANTIC_URL}/signup/?referral=${user?._id}`;
 
@@ -104,35 +125,6 @@ const AffiliateDashboard = ({
   const subscriptionsFlowLink = `${SEMANTIC_URL}/subscriptions?referral=${user?._id}`;
 
   const staysFlowLink = `${SEMANTIC_URL}/stay?referral=${user?._id}`;
-
-  const filters = useMemo(
-    () => ({
-      referralsFilter: {
-        where: {
-          referredBy: user?._id,
-          ...(dateRange.value !== 'all' && {
-            created: {
-              $gte: fromDate,
-              $lte: toDate,
-            },
-          }),
-        },
-      },
-      referralChargesFilter: {
-        where: {
-          referredBy: user?._id,
-          ...(dateRange.value !== 'all' && {
-            date: {
-              $gte: fromDate,
-              $lte: toDate,
-            },
-          }),
-        },
-        limit: 1000,
-      },
-    }),
-    [user?._id, dateRange, fromDate, toDate],
-  );
 
   const referralsCount = platform.user.findCount(filters.referralsFilter);
   const referrals = platform.user.find(filters.referralsFilter)?.toJS();
@@ -175,12 +167,6 @@ const AffiliateDashboard = ({
     ]);
   };
 
-  useEffect(() => {
-    if (user) {
-      loadData();
-    }
-  }, [user, filters, fromDate, toDate, timeFrame]);
-
   if (!user) {
     return <PageNotAllowed />;
   }
@@ -194,20 +180,16 @@ const AffiliateDashboard = ({
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
         <section className="flex gap-4 justify-between items-start sm:items-center flex-col sm:flex-row">
           <Heading level={1}>🤝 {t('affiliate_dashboard')}</Heading>
-
           fromDate={fromDate} / toDate={toDate} / timeFrame={timeFrame}
-
           <div className="flex gap-2 flex-col sm:flex-row items-start sm:items-center">
-       
-       
-          <TimeFrameSelector
-                timeFrame={timeFrame}
-                setTimeFrame={handleTimeFrameChange}
-                fromDate={fromDate}
-                setFromDate={setFromDate}
-                toDate={toDate}
-                setToDate={setToDate}
-              />
+            <TimeFrameSelector
+              timeFrame={timeFrame}
+              setTimeFrame={handleTimeFrameChange}
+              fromDate={fromDate}
+              setFromDate={setFromDate}
+              toDate={toDate}
+              setToDate={setToDate}
+            />
           </div>
         </section>
 
