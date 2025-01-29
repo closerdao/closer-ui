@@ -7,9 +7,8 @@ import { useTranslations } from 'next-intl';
 import { usePlatform } from '../../../../contexts/platform';
 import { parseMessageFromError } from '../../../../utils/common';
 import {
-  DateRange,
   generateTokenSalesFilter,
-  getDays,
+  getStartAndEndDate,
 } from '../../../../utils/performance.utils';
 import FunnelBar from './FunnelBar';
 
@@ -31,44 +30,77 @@ interface Platform {
     findCount: (filter: any) => number;
   };
 }
-const TokenSalesFunnel = ({ dateRange }: { dateRange: DateRange }) => {
+const TokenSalesFunnel = ({
+  timeFrame,
+  fromDate,
+  toDate,
+}: {
+  timeFrame: string;
+  fromDate: string;
+  toDate: string;
+}) => {
   const { platform } = usePlatform() as { platform: Platform };
   const t = useTranslations();
+  const { startDate, endDate } = getStartAndEndDate(
+    timeFrame,
+    fromDate,
+    toDate,
+  );
 
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const filters = useMemo(
     () => ({
-      tokenSalePageVisitsFilter: generateTokenSalesFilter(
-        dateRange,
-        'page-view',
-      ),
-      downloadWhitepaperFilter: generateTokenSalesFilter(
-        dateRange,
-        'download-whitepaper',
-      ),
-      useCalculatorFilter: generateTokenSalesFilter(
-        dateRange,
-        'use-calculator',
-      ),
-      openFlowFilter: generateTokenSalesFilter(dateRange, 'open-flow'),
-      checkoutFilter: generateTokenSalesFilter(dateRange, 'checkout'),
-      approveFilter: generateTokenSalesFilter(dateRange, 'approve'),
+      tokenSalePageVisitsFilter: generateTokenSalesFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+        event: 'page-view',
+      }),
+      downloadWhitepaperFilter: generateTokenSalesFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+        event: 'download-whitepaper',
+      }),
+      useCalculatorFilter: generateTokenSalesFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+        event: 'use-calculator',
+      }),
+      openFlowFilter: generateTokenSalesFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+        event: 'open-flow',
+      }),
+      checkoutFilter: generateTokenSalesFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+        event: 'checkout',
+      }),
+      approveFilter: generateTokenSalesFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+        event: 'approve',
+      }),
       successFilter: {
         where: {
           event: { $in: ['token-sale'] },
-          ...(dateRange.value !== 'all' && {
+          ...(timeFrame !== 'allTime' && {
             created: {
-              $gte: new Date(
-                new Date().setDate(new Date().getDate() - getDays(dateRange)),
-              ).getTime(),
+              $gte: startDate,
+              $lte: endDate,
             },
           }),
         },
         limit: 10000,
       },
     }),
-    [dateRange],
+    [fromDate, toDate, timeFrame],
   );
 
   const tokenSaleStats = useMemo<TokenSaleStats>(() => {
@@ -93,7 +125,7 @@ const TokenSalesFunnel = ({ dateRange }: { dateRange: DateRange }) => {
       checkoutCount,
       successCount,
     };
-  }, [platform, filters]);
+  }, [platform]);
 
   const loadData = useCallback(async () => {
     try {
@@ -108,13 +140,12 @@ const TokenSalesFunnel = ({ dateRange }: { dateRange: DateRange }) => {
         platform.metric.getCount(filters.checkoutFilter),
         platform.metric.getCount(filters.successFilter),
       ]);
-
     } catch (error) {
       setError(parseMessageFromError(error));
     } finally {
       setLoading(false);
     }
-  }, [dateRange]);
+  }, [timeFrame, fromDate, toDate]);
 
   useEffect(() => {
     loadData();
@@ -161,7 +192,7 @@ const TokenSalesFunnel = ({ dateRange }: { dateRange: DateRange }) => {
   }, [tokenSaleStats]);
   return (
     <section className="w-full md:w-1/3 min-h-fit md:min-h-[600px]">
-      <Card className="h-full flex flex-col">
+      <Card className="h-full flex flex-col justify-start">
         <Heading level={2}>
           {t('dashboard_performance_token_sales_funnel')}
         </Heading>

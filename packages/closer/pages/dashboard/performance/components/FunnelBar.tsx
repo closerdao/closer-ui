@@ -1,7 +1,7 @@
 import { memo } from 'react';
 
 interface FunnelStats {
-  count: number;
+  count: string | number;
   percentage: number;
 }
 

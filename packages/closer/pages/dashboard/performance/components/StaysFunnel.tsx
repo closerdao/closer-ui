@@ -6,10 +6,7 @@ import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../../../../contexts/platform';
 import { parseMessageFromError } from '../../../../utils/common';
-import {
-  DateRange,
-  generateBookingFilter,
-} from '../../../../utils/performance.utils';
+import { generateBookingFilter } from '../../../../utils/performance.utils';
 import FunnelBar from './FunnelBar';
 
 interface BookingStats {
@@ -29,7 +26,14 @@ interface Platform {
     getCount: (filter: any) => Promise<any>;
   };
 }
-const StaysFunnel = ({ dateRange }: { dateRange: DateRange }) => {
+
+interface StaysFunnelProps {
+  timeFrame: string;
+  fromDate: string;
+  toDate: string;
+}
+
+const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
   const { platform } = usePlatform() as { platform: Platform };
   const t = useTranslations();
 
@@ -37,26 +41,56 @@ const StaysFunnel = ({ dateRange }: { dateRange: DateRange }) => {
   const [loading, setLoading] = useState(false);
   const filters = useMemo(
     () => ({
-      openBookingsFilter: generateBookingFilter(dateRange, {
-        status: 'open',
+      openBookingsFilter: generateBookingFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+        options: {
+          status: 'open',
+        },
       }),
-      confirmedBookingsFilter: generateBookingFilter(dateRange, {
-        status: 'confirmed',
+      confirmedBookingsFilter: generateBookingFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+        options: {
+          status: 'confirmed',
+        },
       }),
-      pendingBookingsFilter: generateBookingFilter(dateRange, {
-        status: 'pending',
+      pendingBookingsFilter: generateBookingFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+        options: {
+          status: 'pending',
+        },
       }),
-      paidBookingsFilter: generateBookingFilter(dateRange, {
-        status: 'paid',
+      paidBookingsFilter: generateBookingFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+        options: {
+          status: 'paid',
+        },
       }),
-      checkedInBookingsFilter: generateBookingFilter(dateRange, {
-        status: 'checked-in',
+      checkedInBookingsFilter: generateBookingFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+        options: {
+          status: 'checked-in',
+        },
       }),
-      checkedOutBookingsFilter: generateBookingFilter(dateRange, {
-        status: 'checked-out',
+      checkedOutBookingsFilter: generateBookingFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+        options: {
+          status: 'checked-out',
+        },
       }),
     }),
-    [dateRange],
+    [fromDate, toDate, timeFrame],
   );
 
   const bookingStats = useMemo<BookingStats>(() => {
@@ -113,7 +147,7 @@ const StaysFunnel = ({ dateRange }: { dateRange: DateRange }) => {
     } finally {
       setLoading(false);
     }
-  }, [dateRange]);
+  }, [fromDate, toDate, timeFrame]);
 
   useEffect(() => {
     loadData();
@@ -142,16 +176,16 @@ const StaysFunnel = ({ dateRange }: { dateRange: DateRange }) => {
       checkedIn: calculateStats(bookingStats.checkedInCount),
       checkedOut: calculateStats(bookingStats.checkedOutCount),
       conversionRate: {
-        count: bookingStats.paidCount,
+        count: `${bookingStats.paidCount} / ${bookingStats.openCount}`,
         percentage: Number(
           ((bookingStats.paidCount / bookingStats.openCount) * 100).toFixed(2),
-        ),
+        ) || 0,
       },
     };
   }, [bookingStats]);
   return (
     <section className="w-full md:w-1/3 min-h-fit md:min-h-[600px]">
-      <Card className="h-full flex flex-col">
+      <Card className="h-full flex flex-col justify-start">
         <Heading level={2}>{t('dashboard_performance_stays_funnel')}</Heading>
         {loading ? (
           <Spinner />

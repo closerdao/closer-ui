@@ -7,8 +7,8 @@ import { useTranslations } from 'next-intl';
 import { usePlatform } from '../../../../contexts/platform';
 import { parseMessageFromError } from '../../../../utils/common';
 import {
-  DateRange,
   generateSubscriptionsFilter,
+  getStartAndEndDate,
 } from '../../../../utils/performance.utils';
 import FunnelBar from './FunnelBar';
 
@@ -36,9 +36,22 @@ interface Platform {
     getCount: (filter: any) => Promise<number>;
   };
 }
-const SubscriptionsFunnel = ({ dateRange }: { dateRange: DateRange }) => {
+const SubscriptionsFunnel = ({
+  timeFrame,
+  fromDate,
+  toDate,
+}: {
+  timeFrame: string;
+  fromDate: string;
+  toDate: string;
+}) => {
   const { platform } = usePlatform() as { platform: Platform };
   const t = useTranslations();
+  const { startDate, endDate } = getStartAndEndDate(
+    timeFrame,
+    fromDate,
+    toDate,
+  );
 
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -48,37 +61,51 @@ const SubscriptionsFunnel = ({ dateRange }: { dateRange: DateRange }) => {
 
   const filters = useMemo(
     () => ({
-      subscriptionsPageVisitsFilter: generateSubscriptionsFilter(
-        dateRange,
-        'page-view',
-      ),
-      tier1ViewFilter: generateSubscriptionsFilter(
-        dateRange,
-        'tier-1-page-view',
-      ),
-      tier2ViewFilter: generateSubscriptionsFilter(
-        dateRange,
-        'tier-2-page-view',
-      ),
-      tier1CheckoutFilter: generateSubscriptionsFilter(
-        dateRange,
-        'tier-1-checkout',
-      ),
-      tier2CheckoutFilter: generateSubscriptionsFilter(
-        dateRange,
-        'tier-2-checkout',
-      ),
-      tier1PaymentFilter: generateSubscriptionsFilter(
-        dateRange,
-        'tier-1-first-payment',
-      ),
-      tier2PaymentFilter: generateSubscriptionsFilter(
-        dateRange,
-        'tier-2-first-payment',
-      ),
+      subscriptionsPageVisitsFilter: generateSubscriptionsFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+        event: 'page-view',
+      }),
+      tier1ViewFilter: generateSubscriptionsFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+        event: 'tier-1-page-view',
+      }),
+      tier2ViewFilter: generateSubscriptionsFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+        event: 'tier-2-page-view',
+      }),
+      tier1CheckoutFilter: generateSubscriptionsFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+        event: 'tier-1-checkout',
+      }),
+      tier2CheckoutFilter: generateSubscriptionsFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+        event: 'tier-2-checkout',
+      }),
+      tier1PaymentFilter: generateSubscriptionsFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+        event: 'tier-1-first-payment',
+      }),
+      tier2PaymentFilter: generateSubscriptionsFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+        event: 'tier-2-first-payment',
+      }),
       activeSubscribersCountFilter: {
         where: {
-          'subscription.createdAt': { $exists: true, $ne: null },
+          'subscription.createdAt': { $exists: true, $gte: startDate },
         },
         limit: 10000,
       },
@@ -86,14 +113,14 @@ const SubscriptionsFunnel = ({ dateRange }: { dateRange: DateRange }) => {
         where: {
           'subscription.createdAt': {
             $exists: true,
-            $ne: null,
+            $gte: startDate,
             $lte: threeMonthsAgo,
           },
         },
         limit: 10000,
       },
     }),
-    [dateRange],
+    [fromDate, toDate, timeFrame],
   );
 
   const subscriptionsStats = useMemo<SubscriptionStats>(() => {
@@ -142,14 +169,14 @@ const SubscriptionsFunnel = ({ dateRange }: { dateRange: DateRange }) => {
         platform.metric.getCount(filters.tier1PaymentFilter),
         platform.metric.getCount(filters.tier2PaymentFilter),
         platform.user.getCount(filters.activeSubscribersCountFilter),
-        platform.user.getCount(filters.threeMonthCountFilter),
+
       ]);
     } catch (error) {
       setError(parseMessageFromError(error));
     } finally {
       setLoading(false);
     }
-  }, [dateRange]);
+  }, [fromDate, toDate, timeFrame]);
 
   useEffect(() => {
     loadData();
@@ -165,7 +192,7 @@ const SubscriptionsFunnel = ({ dateRange }: { dateRange: DateRange }) => {
       subscriptionsStats.tier1PaymentCount,
       subscriptionsStats.tier2PaymentCount,
       subscriptionsStats.activeSubscribersCount,
-      subscriptionsStats.threeMonthSubscribersCount,
+
 
       1,
     ); // Prevent division by zero
@@ -191,22 +218,24 @@ const SubscriptionsFunnel = ({ dateRange }: { dateRange: DateRange }) => {
       ),
       conversionRate: {
         count:
-          subscriptionsStats.tier1PaymentCount +
-          subscriptionsStats.tier2PaymentCount,
+          `${subscriptionsStats.tier1PaymentCount +
+          subscriptionsStats.tier2PaymentCount} / ${subscriptionsStats.pageViewCount}`,
         percentage: Number(
           (
             ((subscriptionsStats.tier1PaymentCount +
               subscriptionsStats.tier2PaymentCount) /
               subscriptionsStats.pageViewCount) *
             100
-          ).toFixed(2),
+          ).toFixed(2) || 0,
         ),
       },
+
+    
     };
   }, [subscriptionsStats]);
   return (
-    <section className="w-full md:w-1/3 min-h-fit md:min-h-[600px]">
-      <Card className="justify-start">
+    <section className="w-full md:w-1/3 min-h-fit md:min-h-[600px]]">
+      <Card className="h-full flex flex-col justify-start">
         <Heading level={2}>
           {t('dashboard_performance_subscriptions_funnel')}
         </Heading>

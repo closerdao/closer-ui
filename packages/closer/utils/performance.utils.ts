@@ -34,28 +34,76 @@ export interface BookingFilterOptions {
   limit?: number;
 }
 
-/**
- * Generates a filter object for bookings with date range and status
- * @param dateRange - The date range to filter by
- * @param options - Additional filter options including status and user ID
- * @returns Filter object for platform booking queries
- */
-export const generateBookingFilter = (
-  dateRange: DateRange,
-  options: BookingFilterOptions = {},
+export const getStartAndEndDate = (
+  timeFrame: string,
+  fromDate: string,
+  toDate: string,
 ) => {
+  let startDate: Date;
+  let endDate: Date;
+
+  switch (timeFrame) {
+    case 'month':
+      startDate = new Date(new Date().setDate(new Date().getDate() - 30));
+      endDate = new Date();
+      break;
+    case 'year':
+      startDate = new Date(new Date().setDate(new Date().getDate() - 365));
+      endDate = new Date();
+      break;
+    case 'week':
+      startDate = new Date(new Date().setDate(new Date().getDate() - 7));
+      endDate = new Date();
+      break;
+    case 'allTime':
+      startDate = new Date(0);
+      endDate = new Date();
+      break;
+    case 'today':
+      startDate = new Date(new Date().setHours(0, 0, 0, 0));
+      endDate = new Date(new Date().setHours(23, 59, 59, 999));
+      break;
+    case 'custom':
+      startDate = new Date(fromDate);
+      endDate = new Date(toDate);
+      break;
+    default:
+      startDate = new Date(0);
+      endDate = new Date();
+      break;
+  }
+
+  return { startDate, endDate };
+};
+
+export const generateBookingFilter = ({
+  fromDate,
+  toDate,
+  timeFrame,
+  options,
+}: {
+  fromDate: string;
+  toDate: string;
+  timeFrame: string;
+  options: BookingFilterOptions;
+}) => {
   const { status } = options;
+
+  const { startDate, endDate } = getStartAndEndDate(
+    timeFrame,
+    fromDate,
+    toDate,
+  );
 
   const limit = 3000;
 
   const filter = {
     where: {
       ...(status && { status }),
-      ...(dateRange.value !== 'all' && {
+      ...(timeFrame !== 'allTime' && {
         created: {
-          $gte: new Date(
-            new Date().setDate(new Date().getDate() - getDays(dateRange)),
-          ),
+          $gte: startDate,
+          $lte: endDate,
         },
       }),
     },
@@ -65,11 +113,23 @@ export const generateBookingFilter = (
   return filter;
 };
 
-export const generateTokenSalesFilter = (
-  dateRange: DateRange,
-  event: string,
-) => {
+export const generateTokenSalesFilter = ({
+  fromDate,
+  toDate,
+  timeFrame,
+  event,
+}: {
+  fromDate: string;
+  toDate: string;
+  timeFrame: string;
+  event: string;
+}) => {
   const limit = 10000;
+  const { startDate, endDate } = getStartAndEndDate(
+    timeFrame,
+    fromDate,
+    toDate,
+  );
 
   const filter = {
     where: {
@@ -77,11 +137,10 @@ export const generateTokenSalesFilter = (
       value: { $in: ['token-sale'] },
       event: { $in: [event] },
 
-      ...(dateRange.value !== 'all' && {
+      ...(timeFrame !== 'allTime' && {
         created: {
-          $gte: new Date(
-            new Date().setDate(new Date().getDate() - getDays(dateRange)),
-          ).getTime(),
+          $gte: startDate,
+          $lte: endDate,
         },
       }),
     },
@@ -91,11 +150,23 @@ export const generateTokenSalesFilter = (
   return filter;
 };
 
-export const generateSubscriptionsFilter = (
-  dateRange: DateRange,
-  event: string,
-) => {
+export const generateSubscriptionsFilter = ({
+  fromDate,
+  toDate,
+  timeFrame,
+  event,
+}: {
+  fromDate: string;
+  toDate: string;
+  timeFrame: string;
+  event: string;
+}) => {
   const limit = 100000;
+  const { startDate, endDate } = getStartAndEndDate(
+    timeFrame,
+    fromDate,
+    toDate,
+  );
 
   const filter = {
     where: {
@@ -103,11 +174,10 @@ export const generateSubscriptionsFilter = (
       value: { $in: ['subscriptions'] },
       event: { $in: [event] },
 
-      ...(dateRange.value !== 'all' && {
+      ...(timeFrame !== 'allTime' && {
         created: {
-          $gte: new Date(
-            new Date().setDate(new Date().getDate() - getDays(dateRange)),
-          ).getTime(),
+          $gte: startDate,
+          $lte: endDate,
         },
       }),
     },

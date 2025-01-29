@@ -1,12 +1,12 @@
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
+import TimeFrameSelector from '../../../components/Dashboard/TimeFrameSelector';
 import { Heading } from '../../../components/ui';
-import Select from '../../../components/ui/Select/Dropdown';
 import StaysFunnel from './components/StaysFunnel';
-import SubscriptionsFunnel from './components/SubscriptionsFunnel';
 import TokenSalesFunnel from './components/TokenSalesFunnell';
 
 import { NextPageContext } from 'next';
@@ -18,16 +18,41 @@ import PageNotAllowed from '../../../pages/401';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
-import { DATE_RANGES, DateRange } from '../../../utils/performance.utils';
+import SubscriptionsFunnel from './components/SubscriptionsFunnel';
 
 const PerformancePage = () => {
   const t = useTranslations();
   const { user } = useAuth();
+  const router = useRouter();
+  const { time_frame } = router.query;
 
-  const [dateRange, setDateRange] = useState<DateRange>(
-    DATE_RANGES.find((range: DateRange) => range.value === 'all') ||
-      DATE_RANGES[0],
+  const [timeFrame, setTimeFrame] = useState<string>(() =>
+    typeof time_frame === 'string' ? time_frame : 'month',
   );
+  const [fromDate, setFromDate] = useState<string>('');
+  const [toDate, setToDate] = useState<string>('');
+
+  useEffect(() => {
+    const urlTimeFrame = typeof time_frame === 'string' ? time_frame : 'month';
+    if (!router.isReady) return;
+
+    if (router.isReady && urlTimeFrame !== timeFrame) {
+      setTimeFrame(urlTimeFrame);
+    }
+  }, [router.isReady, time_frame]);
+
+  const handleTimeFrameChange = (
+    value: string | ((prevState: string) => string),
+  ) => {
+    const newTimeFrame = typeof value === 'function' ? value(timeFrame) : value;
+    setTimeFrame(newTimeFrame);
+
+    window.history.replaceState(
+      {},
+      '',
+      `/dashboard/performance?time_frame=${newTimeFrame}`,
+    );
+  };
 
   if (!user?.roles.includes('admin')) {
     return <PageNotAllowed />;
@@ -40,33 +65,36 @@ const PerformancePage = () => {
       </Head>
       <AdminLayout>
         <div className="max-w-screen-lg  px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex justify-between items-center mb-8 w-full">
+          <div className="flex justify-between items-start md:items-center gap-4 mb-8 w-full flex-col md:flex-row">
             <Heading level={1}>{t('dashboard_performance_title')}</Heading>
-            <div className="flex gap-2 flex-col sm:flex-row items-start sm:items-center">
-              <p className="whitespace-nowrap text-sm">
-                {t('dashboard_performance_token_sales_funnel_select_timeframe')}
-              </p>
-              <Select
-                id="dateRangeOptions"
-                value={dateRange.value}
-                options={DATE_RANGES.map((range) => ({
-                  value: range.value,
-                  label: range.label,
-                }))}
-                className="rounded-full border-black w-[170px] text-sm py-0.5"
-                onChange={(value) => {
-                  const newRange = DATE_RANGES.find((r) => r.value === value);
-                  if (newRange) setDateRange(newRange);
-                }}
-                isRequired
+            <div className="flex gap-2 flex-col sm:flex-row items-start sm:items-center ">
+              <TimeFrameSelector
+                timeFrame={timeFrame}
+                setTimeFrame={handleTimeFrameChange}
+                fromDate={fromDate}
+                setFromDate={setFromDate}
+                toDate={toDate}
+                setToDate={setToDate}
               />
             </div>
           </div>
 
           <section className="flex gap-4 w-full flex-col md:flex-row">
-            <StaysFunnel dateRange={dateRange} />
-            <TokenSalesFunnel dateRange={dateRange} />
-            <SubscriptionsFunnel dateRange={dateRange} />
+            <StaysFunnel
+              timeFrame={timeFrame}
+              fromDate={fromDate}
+              toDate={toDate}
+            />
+            <TokenSalesFunnel
+              timeFrame={timeFrame}
+              fromDate={fromDate}
+              toDate={toDate}
+            />
+            <SubscriptionsFunnel
+              timeFrame={timeFrame}
+              fromDate={fromDate}
+              toDate={toDate}
+            />
           </section>
         </div>
       </AdminLayout>

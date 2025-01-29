@@ -20,6 +20,10 @@ const DashboardNav = () => {
       url: '/dashboard',
     },
     {
+      label: t('navigation_performance'),
+      url: '/dashboard/performance',
+    },
+    {
       label: t('navigation_bookings'),
       subsections: [
         {
@@ -52,10 +56,6 @@ const DashboardNav = () => {
     {
       label: t('navigation_user_list'),
       url: '/admin/manage-users',
-    },
-    {
-      label: t('navigation_performance'),
-      url: '/dashboard/performance',
     },
     {
       label: t('navigation_platform_settings'),
