@@ -7,7 +7,7 @@ import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import TimeFrameSelector from '../../../components/Dashboard/TimeFrameSelector';
 import { Heading } from '../../../components/ui';
 import StaysFunnel from './components/StaysFunnel';
-import TokenSalesFunnel from './components/TokenSalesFunnell';
+import TokenSalesFunnel from './components/TokenSalesFunnel';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';

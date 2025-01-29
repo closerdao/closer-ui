@@ -178,7 +178,7 @@ const TokenSalesFunnel = ({
       checkout: calculateStats(tokenSaleStats.checkoutCount),
       success: calculateStats(tokenSaleStats.successCount),
       conversionRate: {
-        count: tokenSaleStats.successCount,
+        count: `${tokenSaleStats.successCount} / ${tokenSaleStats.pageViewCount}`,
         percentage: tokenSaleStats.successCount
           ? Number(
               (
