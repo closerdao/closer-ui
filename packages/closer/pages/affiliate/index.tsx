@@ -1,9 +1,10 @@
 import Head from 'next/head';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 
 import { useEffect, useMemo, useState } from 'react';
 
-import Select from '../../components/ui/Select/Dropdown';
+import TimeFrameSelector from '../../components/Dashboard/TimeFrameSelector';
 import StatsCard from './components/Affiliate';
 import { Card, Heading } from 'closer/components/ui';
 
@@ -22,7 +23,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { DateRange } from '../../types/affiliate';
 import {
   calculateAffiliateRevenue,
-  getDays,
+
 } from '../../utils/affiliate.utils';
 import { loadLocaleData } from '../../utils/locale.helpers';
 
@@ -49,6 +50,28 @@ const AffiliateDashboard = ({
     DATE_RANGES.find((range) => range.value === 'all') || DATE_RANGES[0],
   );
   const [copied, setCopied] = useState(false);
+  const [fromDate, setFromDate] = useState<string>('');
+  const [toDate, setToDate] = useState<string>('');
+
+  const router = useRouter();
+
+  const { time_frame } = router.query;
+  const [timeFrame, setTimeFrame] = useState<string>(
+    time_frame?.toString() || 'month',
+  );
+
+  useEffect(() => {
+    router.push({
+      pathname: '/affiliate',
+      query: { time_frame: timeFrame },
+    });
+  }, [timeFrame]);
+
+  useEffect(() => {
+    if (time_frame) {
+      setTimeFrame(time_frame.toString());
+    }
+  }, [router.query]);
 
   const referralLink = `${SEMANTIC_URL}/signup/?referral=${user?._id}`;
 
@@ -58,10 +81,6 @@ const AffiliateDashboard = ({
 
   const staysFlowLink = `${SEMANTIC_URL}/stay?referral=${user?._id}`;
 
-  const eventsFlowLink = `${SEMANTIC_URL}/events?referral=${user?._id}`;
-
-  console.log('user=', user);
-
   const filters = useMemo(
     () => ({
       referralsFilter: {
@@ -69,9 +88,8 @@ const AffiliateDashboard = ({
           referredBy: user?._id,
           ...(dateRange.value !== 'all' && {
             created: {
-              $gte: new Date(
-                new Date().setDate(new Date().getDate() - getDays(dateRange)),
-              ),
+              $gte: fromDate,
+              $lte: toDate,
             },
           }),
         },
@@ -81,16 +99,15 @@ const AffiliateDashboard = ({
           referredBy: user?._id,
           ...(dateRange.value !== 'all' && {
             date: {
-              $gte: new Date(
-                new Date().setDate(new Date().getDate() - getDays(dateRange)),
-              ),
+              $gte: fromDate,
+              $lte: toDate,
             },
           }),
         },
         limit: 1000,
       },
     }),
-    [user?._id, dateRange],
+    [user?._id, dateRange, fromDate, toDate],
   );
 
   const referralsCount = platform.user.findCount(filters.referralsFilter);
@@ -138,7 +155,7 @@ const AffiliateDashboard = ({
     if (user) {
       loadData();
     }
-  }, [user, filters.referralChargesFilter]);
+  }, [user, filters, fromDate, toDate, timeFrame]);
 
   if (!user) {
     return <PageNotAllowed />;
@@ -154,11 +171,11 @@ const AffiliateDashboard = ({
         <section className="flex gap-4 justify-between items-start sm:items-center flex-col sm:flex-row">
           <Heading level={1}>🤝 {t('affiliate_dashboard')}</Heading>
 
+          fromDate={fromDate} / toDate={toDate} / timeFrame={timeFrame}
+
           <div className="flex gap-2 flex-col sm:flex-row items-start sm:items-center">
-            <p className="whitespace-nowrap text-sm">
-              {t('affiliate_select_timeframe')}
-            </p>
-            <Select
+       
+            {/* <Select
               id="dateRangeOptions"
               value={dateRange.value}
               options={DATE_RANGES.map((range) => ({
@@ -171,12 +188,20 @@ const AffiliateDashboard = ({
                 if (newRange) setDateRange(newRange);
               }}
               isRequired
+            /> */}
+            <TimeFrameSelector
+              timeFrame={timeFrame}
+              setTimeFrame={setTimeFrame}
+              fromDate={fromDate}
+              setFromDate={setFromDate}
+              toDate={toDate}
+              setToDate={setToDate}
             />
           </div>
         </section>
 
         <section className="flex flex-col gap-4">
-          <div className='flex gap-4 flex-col sm:flex-row items-start sm:items-center'>
+          <div className="flex gap-4 flex-col sm:flex-row items-start sm:items-center">
             <Heading level={2} className="text-lg font-normal flex-none">
               {t('affiliate_link')}
             </Heading>
@@ -199,7 +224,7 @@ const AffiliateDashboard = ({
               </div>
             </Card>
           </div>
-          <div className='flex gap-4 flex-col sm:flex-row items-start sm:items-center'>
+          <div className="flex gap-4 flex-col sm:flex-row items-start sm:items-center">
             <Heading level={2} className="text-lg font-normal flex-none">
               {t('affiliate_token_flow')}
             </Heading>
@@ -222,7 +247,7 @@ const AffiliateDashboard = ({
               </div>
             </Card>
           </div>
-          <div className='flex gap-4 flex-col sm:flex-row items-start sm:items-center'>
+          <div className="flex gap-4 flex-col sm:flex-row items-start sm:items-center">
             <Heading level={2} className="text-lg font-normal flex-none">
               {t('affiliate_subscriptions_flow')}
             </Heading>
@@ -245,7 +270,7 @@ const AffiliateDashboard = ({
               </div>
             </Card>
           </div>
-          <div className='flex gap-4 flex-col sm:flex-row items-start sm:items-center'>
+          <div className="flex gap-4 flex-col sm:flex-row items-start sm:items-center">
             <Heading level={2} className="text-lg font-normal flex-none">
               {t('affiliate_stays_flow')}
             </Heading>
@@ -304,39 +329,39 @@ const AffiliateDashboard = ({
           <div>
             <p>
               {t('earnings_breakdown_stays')} (
-              {affiliateConfig.staysCommissionPercent}%{' '}
+              {affiliateConfig?.staysCommissionPercent}%{' '}
               {t('affiliate_commission')})
             </p>
-            <p  className="font-bold">€{staysRevenue.toFixed(2)}</p>
+            <p className="font-bold">€{staysRevenue.toFixed(2)}</p>
           </div>
           <div>
-            <p >
+            <p>
               {t('earnings_breakdown_events')} (
-              {affiliateConfig.eventsCommissionPercent}%{' '}
+              {affiliateConfig?.eventsCommissionPercent}%{' '}
               {t('affiliate_commission')})
             </p>
             <p className="font-bold">€{eventsRevenue.toFixed(2)}</p>
           </div>
           <div>
-            <p >
+            <p>
               {t('earnings_breakdown_subscriptions')} (
-              {affiliateConfig.subscriptionCommissionPercent}%{' '}
+              {affiliateConfig?.subscriptionCommissionPercent}%{' '}
               {t('affiliate_commission')})
             </p>
             <p className="font-bold">€{subscriptionsRevenue.toFixed(2)}</p>
           </div>
           <div>
-            <p >
+            <p>
               {t('earnings_breakdown_token_sales')} (
-              {affiliateConfig.tokenSaleCommissionPercent}%{' '}
+              {affiliateConfig?.tokenSaleCommissionPercent}%{' '}
               {t('affiliate_commission')})
             </p>
             <p className="font-bold">€{tokenSaleRevenue.toFixed(2)}</p>
           </div>
           <div>
-            <p >
+            <p>
               {t('earnings_breakdown_financed_token_sales')} (
-              {affiliateConfig.financedTokenSaleCommissionPercent}%{' '}
+              {affiliateConfig?.financedTokenSaleCommissionPercent}%{' '}
               {t('affiliate_commission')})
             </p>
             <p className="font-bold">€{financedTokenRevenue.toFixed(2)}</p>

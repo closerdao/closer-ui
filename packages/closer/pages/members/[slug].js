@@ -25,7 +25,6 @@ import PageNotFound from '../not-found';
 const MemberPage = ({ member, loadError }) => {
   const t = useTranslations();
   const { user: currentUser, isAuthenticated, refetchUser } = useAuth();
-
   const { APP_NAME } = useConfig();
 
   const router = useRouter();
