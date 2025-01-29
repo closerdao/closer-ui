@@ -61,17 +61,41 @@ const AffiliateDashboard = ({
   );
 
   useEffect(() => {
-    router.push({
-      pathname: '/affiliate',
-      query: { time_frame: timeFrame },
-    });
-  }, [timeFrame]);
+    const urlTimeFrame = typeof time_frame === 'string' ? time_frame : 'month';
+    if (!router.isReady) return;
+
+    if (router.isReady && urlTimeFrame !== timeFrame) {
+      setTimeFrame(urlTimeFrame);
+    }
+  }, [router.isReady, time_frame]);
+
+  const handleTimeFrameChange = (
+    value: string | ((prevState: string) => string),
+  ) => {
+    const newTimeFrame = typeof value === 'function' ? value(timeFrame) : value;
+    setTimeFrame(newTimeFrame);
+
+    window.history.replaceState(
+      {},
+      '',
+      `/dashboard/performance?time_frame=${newTimeFrame}`,
+    );
+  }
 
   useEffect(() => {
-    if (time_frame) {
-      setTimeFrame(time_frame.toString());
-    }
-  }, [router.query]);
+    const { startDate, endDate } = getStartAndEndDate(
+      timeFrame,
+      fromDate,
+      toDate,
+    );
+  
+  }, [timeFrame]);
+
+  // useEffect(() => {
+  //   if (time_frame) {
+  //     setTimeFrame(time_frame.toString());
+  //   }
+  // }, [router.query]);
 
   const referralLink = `${SEMANTIC_URL}/signup/?referral=${user?._id}`;
 
@@ -175,28 +199,15 @@ const AffiliateDashboard = ({
 
           <div className="flex gap-2 flex-col sm:flex-row items-start sm:items-center">
        
-            {/* <Select
-              id="dateRangeOptions"
-              value={dateRange.value}
-              options={DATE_RANGES.map((range) => ({
-                value: range.value,
-                label: range.label,
-              }))}
-              className="rounded-full border-black w-[170px] text-sm py-0.5"
-              onChange={(value) => {
-                const newRange = DATE_RANGES.find((r) => r.value === value);
-                if (newRange) setDateRange(newRange);
-              }}
-              isRequired
-            /> */}
-            <TimeFrameSelector
-              timeFrame={timeFrame}
-              setTimeFrame={setTimeFrame}
-              fromDate={fromDate}
-              setFromDate={setFromDate}
-              toDate={toDate}
-              setToDate={setToDate}
-            />
+       
+          <TimeFrameSelector
+                timeFrame={timeFrame}
+                setTimeFrame={handleTimeFrameChange}
+                fromDate={fromDate}
+                setFromDate={setFromDate}
+                toDate={toDate}
+                setToDate={setToDate}
+              />
           </div>
         </section>
 
