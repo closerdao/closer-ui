@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 
 import Wallet from '../../components/Wallet';
 import {
@@ -42,6 +42,28 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
 
   const { isAuthenticated, isLoading, user } = useAuth();
   const { isWalletReady } = useContext(WalletState);
+
+  const hasComponentRendered = useRef(false);
+
+
+  useEffect(() => {
+    if (!hasComponentRendered.current) {
+      (async () => {
+        try {
+          await api.post('/metric', {
+            event: 'open-flow',
+            value: 'token-sale',
+            point: 0,
+            category: 'engagement',
+          });
+
+        } catch (error) {
+          console.error('Error logging page view:', error);
+        }
+      })();
+      hasComponentRendered.current = true;
+    }
+  }, []);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {

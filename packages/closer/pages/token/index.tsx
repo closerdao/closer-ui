@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 
 import Ama from '../../components/Ama';
 import Modal from '../../components/Modal';
@@ -36,10 +36,13 @@ interface Props {
 const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
   const t = useTranslations();
   const defaultConfig = useConfig();
+  const hasComponentRendered = useRef(false);
+
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
   const { getTokensAvailableForPurchase } = useBuyTokens();
   const { isWalletReady } = useContext(WalletState);
+
   const router = useRouter();
   const { tokens } = router.query;
 
@@ -59,20 +62,40 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
     }
   }, [isWalletReady]);
 
+  useEffect(() => {
+    if (!hasComponentRendered.current) {
+      (async () => {
+        try {
+           await api.post('/metric', {
+            event: 'page-view',
+            value: 'token-sale',
+            point: 0,
+            category: 'engagement',
+          });
+          console.log('metric posted');
+        } catch (error) {
+          console.error('Error logging page view:', error);
+        }
+      })();
+      hasComponentRendered.current = true;
+    }
+  }, []);
+
   const handleNext = async () => {
     router.push('/token/before-you-begin');
-  };
-
-  const openModal = () => {
-    setIsInfoModalOpened(true);
   };
 
   const closeModal = () => {
     setIsInfoModalOpened(false);
   };
 
-  const handleShowVideo = () => {
-    openModal();
+  const logDownloadWhitepaperAction = async () => {
+    await api.post('/metric', {
+      event: 'download-whitepaper',
+      value: 'token-sale',
+      point: 0,
+      category: 'engagement',
+    });
   };
 
   if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
@@ -246,6 +269,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                       Tokens can be resold after the Go-Live event (see{' '}
                       <Link
                         className="underline"
+                        onClick={logDownloadWhitepaperAction}
                         href="https://oasa.earth/papers/OASA-Whitepaper-V1.2.pdf"
                       >
                         Whitepaper
@@ -755,6 +779,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                       <Link
                         className="text-accent underline font-bold"
                         href="https://oasa.earth/papers/OASA-Whitepaper-V1.2.pdf"
+                        onClick={logDownloadWhitepaperAction}
                       >
                         {t('token_sale_white_paper')}
                       </Link>

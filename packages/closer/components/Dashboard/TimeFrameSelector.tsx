@@ -35,7 +35,7 @@ const TimeFrameSelector = ({
     if (fromDate && toDate && timeFrame !== 'custom') {
       setTimeFrame('custom');
     }
-  }, [fromDate, toDate]);
+  }, [fromDate, toDate, timeFrame]);
 
   function handleClickOutsideDropdown() {
     setShowDropdown(false);
@@ -48,10 +48,8 @@ const TimeFrameSelector = ({
 
   const handleTimeFrameClick = (frame: string) => {
     if (frame === timeFrame) return;
-    if (frame !== 'custom') {
-      setFromDate('');
-      setToDate('');
-    }
+    setToDate('');
+    setFromDate('');
     setTimeFrame(frame);
   };
 

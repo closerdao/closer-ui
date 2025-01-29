@@ -1091,6 +1091,8 @@
   "config_label_residenceTimeFrame": "Residence time frame",
   "config_label_diet": "Diet (comma delimited options)",
   "config_label_shouldResidentsPayUtilities": "Should residents pay utilities",
+  "config_label_minVouchingStayDuration": "Minimum stay duration for vouching (days)",
+
 
   "config_features_heading": "Platform features",
   "generic_delete_button": "Delete",
@@ -1283,6 +1285,7 @@
   "token_sale_public_sale_tokens_left": "tokens left",
 
   "dashboard_title": "Dashboard",
+  "dashboard_performance_title": "Performance",
   "dashboard_bookings_title": "Bookings",
   "dashboard_revenue_title": "Revenue",
   "dashboard_general_revenue": "Operations revenue (EUR)",
@@ -1326,6 +1329,7 @@
   "navigation_support_us": "Support us",
   "navigation_learning_hub": "Learning hub",
   "navigation_platform_settings": "Platform settings",
+  "navigation_performance": "Performance",
   "navigation_food": "Edit food",
 
   "blog_read_more": "Read more",
@@ -1383,6 +1387,13 @@
   "projects_residence_application_title": "👷🏽‍♀️ Residence application",
   "projects_no_manager": "no manager",
   "bookings_dates_min_residence_stay_error": "Minimum residence stay is {var} days ",
+  "vouch_button": "Vouch",
+  "vouch_min_duration_not_met": "The guest needs to stay for at least {var} days to be eligible for vouching",
+  "vouch_already_vouched": "You have already vouched for this user",
+  "vouch_already_vouched_by_users": "The user has been vouched for by:",
+  "vouch_not_vouched_by_users": "The user has not been vouched for",
+  "vouch_why_vouch": "Why do you want to vouch for this user?",
+
 
   "learn_heading": "Learning Hub",
   "learn_subheading": "Dive into Lios Learning Hub and tap into a reservoir of actionable knowledge.",

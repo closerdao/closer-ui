@@ -105,7 +105,6 @@
   "bookings_summary_step_title": "Summary",
   "bookings_food_step_title": "Food",
 
-
   "bookings_summary_step_dates_title": "Your Stay",
   "bookings_summary_step_dates_title_hourly": "Your Space Booking",
   "bookings_summary_step_your_event": "Your event",
@@ -385,7 +384,6 @@
   "booking_rate_monthly": "Month",
   "booking_food": "Food",
   "booking_add_food": "Add",
-  
 
   "bookings_id": "Booking #",
   "bookings_edit_slug_title": "Edit",
@@ -418,8 +416,6 @@
   "bookings_amount_due": "Amount due:",
   "bookings_amount_to_refund": "Amount to refund:",
   "bookings_utility_fee": "Utilities fee:",
-
-
 
   "bookings_rental_cost": "Cost of the accommodation:",
   "bookings_tokens_lock": "Total tokens locked:",
@@ -793,6 +789,7 @@
   "token_sale_before_you_begin_guide_2": "Connect your Metamask wallet to the CELO network (press 'Add to Metamask' button in 'Celo Mainnet' section)",
   "token_sale_before_you_begin_guide_3": "Where to get cEUR and CELO?",
   "token_sale_before_you_begin_guide_4": "Contact support",
+  "token_sale_before_you_begin_guide_5": "Where to get cEUR and CELO (alternative)?",
   "token_sale_before_you_begin_guide_1_link": "https://www.youtube.com/watch?v=-HTubEJ61zU",
   "token_sale_before_you_begin_guide_2_link": "https://chainlist.org/?search=celo",
   "token_sale_before_you_begin_guide_3_link": "https://ramp.network/buy",
@@ -942,7 +939,6 @@
   "manage_users_lear_filters_button": "Clear filters",
 
   "resources_faqs_error": "Error fetching FAQs",
-
 
   "generic_clear_selection": "Clear selection",
   "support_us_heading": "Support Traditional Dream Factory",
@@ -1096,7 +1092,7 @@
   "config_label_residenceTimeFrame": "Residence time frame",
   "config_label_diet": "Diet (comma delimited options)",
   "config_label_shouldResidentsPayUtilities": "Should residents pay utilities",
-
+  "config_label_minVouchingStayDuration": "Minimum stay duration for vouching (days)",
 
   "config_features_heading": "Platform features",
   "generic_delete_button": "Delete",
@@ -1293,6 +1289,13 @@
   "token_sale_public_sale_tokens_left": "tokens left",
 
   "dashboard_title": "Dashboard",
+  "dashboard_performance_title": "Performance",
+  "dashboard_performance_stays_funnel": "Stays funnel",
+  "dashboard_performance_token_sales_funnel": "Token sales funnel",
+  "dashboard_performance_token_sales_funnel_select_timeframe": "Select time frame:",
+  "dashboard_performance_subscriptions_funnel": "Subscriptions funnel",
+  "dashboard_performance_conversion_rate": "Conversion rate",
+
   "dashboard_bookings_title": "Bookings",
   "dashboard_revenue_title": "Revenue",
   "dashboard_general_revenue": "Operations revenue (EUR)",
@@ -1336,6 +1339,7 @@
   "navigation_support_us": "Support us",
   "navigation_learning_hub": "Learning hub",
   "navigation_platform_settings": "Platform settings",
+  "navigation_performance": "Performance",
   "navigation_food": "Edit food",
   "navigation_affiliate_dashboard": "Affiliate dashboard",
 
@@ -1394,6 +1398,12 @@
   "projects_residence_application_title": "👷🏽‍♀️ Residence application",
   "projects_no_manager": "no manager",
   "bookings_dates_min_residence_stay_error": "Minimum residence stay is {var} days ",
+  "vouch_button": "Vouch",
+  "vouch_min_duration_not_met": "The guest needs to stay for at least {var} days to be eligible for vouching",
+  "vouch_already_vouched": "You have already vouched for this user",
+  "vouch_already_vouched_by_users": "The user has been vouched for by:",
+  "vouch_not_vouched_by_users": "The user has not been vouched for",
+  "vouch_why_vouch": "Why do you want to vouch for this user?",
 
   "learn_heading": "Learning Hub",
   "learn_subheading": "Dive into Lios Learning Hub and tap into a reservoir of actionable knowledge.",
@@ -1416,26 +1426,25 @@
   "learn_create_lesson": "Create lesson",
   "learn_all_courses": "Back to all courses",
 
-   "learn_add_module": "Add module",
-   "learn_module_title": "Module title",
-   "learn_module_description": "Module description",
-   "learn_module_lessons": "Lessons in this module",
-   "learn_lesson_title": "Lesson title",
-   "learn_lesson_full_text": "Lesson full text",
-   "learn_lesson_video_url": "Lesson video URL",
-   "learn_lesson_is_free": "This lesson is free",
-   "learn_lesson_add": "Add lesson",
-   "learn_lesson_edit": "Edit lesson",
-   "learn_lesson_delete": "Delete lesson",
-   "learn_remove_module": "Delete module",
-   "learn_confirmation_title": "💰 Purchase successful",
-   "learn_confirmation_message": "Thank you for your purchase! 🌱",
-   "learn_confirmation_message_2": "We will contact you soon with the course details.",
-   "learn_buy_single_course": "Buy this course",
-   "learn_course_price": "Course price:",
+  "learn_add_module": "Add module",
+  "learn_module_title": "Module title",
+  "learn_module_description": "Module description",
+  "learn_module_lessons": "Lessons in this module",
+  "learn_lesson_title": "Lesson title",
+  "learn_lesson_full_text": "Lesson full text",
+  "learn_lesson_video_url": "Lesson video URL",
+  "learn_lesson_is_free": "This lesson is free",
+  "learn_lesson_add": "Add lesson",
+  "learn_lesson_edit": "Edit lesson",
+  "learn_lesson_delete": "Delete lesson",
+  "learn_remove_module": "Delete module",
+  "learn_confirmation_title": "💰 Purchase successful",
+  "learn_confirmation_message": "Thank you for your purchase! 🌱",
+  "learn_confirmation_message_2": "We will contact you soon with the course details.",
+  "learn_buy_single_course": "Buy this course",
+  "learn_course_price": "Course price:",
 
-   "learn_live_course": "Live course",
+  "learn_live_course": "Live course",
 
-  
-  "":""
+  "": ""
 }

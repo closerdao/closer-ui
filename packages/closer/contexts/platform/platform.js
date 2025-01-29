@@ -27,6 +27,7 @@ export const models = [
   'volunteer',
   'lesson',
   'food',
+  'metric',
   'charge',
 ];
 

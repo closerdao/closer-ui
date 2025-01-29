@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 
 import {
   BackButton,
@@ -55,6 +55,30 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
 
   const unitPrice = (total / parseInt(tokens as string)).toFixed(2);
 
+  const hasComponentRendered = useRef(false);
+
+  console.log('hasComponentRendered.current=', hasComponentRendered.current);
+
+  useEffect(() => {
+    if (!hasComponentRendered.current) {
+
+      (async () => {
+        try {
+          await api.post('/metric', {
+            event: 'checkout',
+            value: 'token-sale',
+            point: 0,
+            category: 'engagement',
+          });
+
+        } catch (error) {
+          console.error('Error logging page view:', error);
+        }
+      })();
+      hasComponentRendered.current = true;
+    }
+  }, []);
+
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push(`/login?back=${encodeURIComponent(router.asPath)}`);
@@ -83,9 +107,22 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     setWeb3Error(null);
     setApiError(null);
     setIsMetamaskLoading(true);
+
     const { success, error } = await approveCeur(total);
     if (success) {
       setIsApproved(true);
+      (async () => {
+        try {
+          await api.post('/metric', {
+            event: 'approve',
+            value: 'token-sale',
+            point: 0,
+            category: 'engagement',
+          });
+        } catch (error) {
+          console.error('Error logging page view:', error);
+        }
+      })();
     } else {
       setWeb3Error(t('token_sale_approval_error'));
     }
@@ -113,6 +150,19 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
           point: Number(tokens),
           category: 'revenue',
         });
+
+        (async () => {
+          try {
+            await api.post('/metric', {
+              event: 'success',
+              value: 'token-sale',
+              point: 0,
+              category: 'engagement',
+            });
+          } catch (error) {
+            console.error('Error logging page view:', error);
+          }
+        })();
       } catch (error: unknown) {
         setApiError(parseMessageFromError(error));
       } finally {

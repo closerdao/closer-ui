@@ -106,6 +106,7 @@ export type GeneralConfig = {
   facebookPixelId: string;
   faqsGoogleSheetId: string;
   timeZone: string;
+  minVouchingStayDuration?: number;
 };
 
 export type AffiliateConfig = {

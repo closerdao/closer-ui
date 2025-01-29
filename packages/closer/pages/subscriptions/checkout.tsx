@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
@@ -45,8 +45,8 @@ import PageNotFound from '../not-found';
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY as string,
   {
-    stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT
-  }
+    stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
+  },
 );
 
 interface Props {
@@ -75,7 +75,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
   const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
   const vatRateFromConfig = Number(paymentConfig?.vatRate);
   const vatRate = vatRateFromConfig || defaultVatRate;
-  
+
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
 
   const monthlyCreditsSelected = Math.min(
@@ -85,6 +85,29 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
+
+  const hasComponentRendered = useRef(false);
+
+  useEffect(() => {
+    if (!hasComponentRendered.current && selectedPlan) {
+      (async () => {
+        try {
+          await api.post('/metric', {
+            event:
+              selectedPlan?.title.toLowerCase() === 'wanderer'
+                ? 'tier-1-checkout'
+                : 'tier-2-checkout',
+            value: 'subscriptions',
+            point: 0,
+            category: 'engagement',
+          });
+        } catch (error) {
+          console.error('Error logging page view:', error);
+        }
+      })();
+      hasComponentRendered.current = true;
+    }
+  }, [selectedPlan]);
 
   useEffect(() => {
     if (user?.subscription && user.subscription.priceId) {
@@ -170,10 +193,13 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
                 }`}
                 additionalInfo={`${t(
                   'bookings_checkout_step_total_description',
-                )} ${getVatInfo({
-                  val: total,
-                  cur: DEFAULT_CURRENCY,
-                }, vatRate)} ${t('subscriptions_summary_per_month')}`}
+                )} ${getVatInfo(
+                  {
+                    val: total,
+                    cur: DEFAULT_CURRENCY,
+                  },
+                  vatRate,
+                )} ${t('subscriptions_summary_per_month')}`}
               />
             }
           </div>
