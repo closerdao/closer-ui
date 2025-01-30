@@ -97,100 +97,109 @@ const SubscriptionCards = ({
                 <Heading level={2} className="border-b-0 mb-6">
                   {plan.title}
                 </Heading>
-                <Heading level={4} className="mb-4 text-sm uppercase">
-                  {plan.description}
-                </Heading>
-                <Heading
-                  level={4}
-                  className="mb-4 text-sm uppercase text-accent"
-                >
-                  {plan.price !== 0 &&
-                    plan.available &&
-                    `everything on the ${
-                      isAuthenticated ? plans[i].title : plans[i - 1].title
-                    } package +`}
-                </Heading>
-
-                <ul className="mb-4">
-                  {plan.perks.split(',').map((perk) => {
-                    return (
-                      <li
-                        key={perk}
-                        className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5"
-                      >
-                        <span className="block">
-                          {perk.includes('<') ? (
-                            <span dangerouslySetInnerHTML={{ __html: perk }} />
-                          ) : (
-                            perk
-                          )}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-                <div className="text-accent">
-                  {plan?.note && <span>{plan?.note}</span>}
-                </div>
-              </div>
-              <div className="w-[290px] text-center flex flex-wrap justify-center">
-                {plan.available === false ? (
-                  <Heading level={3} className="uppercase">
-                    <span className="block">🤩</span>
-                    {t('generic_coming_soon')}
-                  </Heading>
-                ) : (
-                  <>
-                    <div className="w-full text-center text-2xl font-bold my-8">
-                      {plan.priceId === 'free' ? (
-                        t('subscriptions_free')
-                      ) : (
-                        <div>
-                          {plan.slug === 'citizen' && (
-                            <div>
-                              <p className="text-sm font-normal">
-                                {t('subscriptions_hold')}
-                              </p>
-                              <p>
-                                {getCurrencySymbol(CloserCurrencies.TDF)}
-                                {30}
-                              </p>
-                              <p className="text-sm font-normal">
-                                {t('subscriptions_from')}
-                              </p>
-                            </div>
-                          )}
-                          <div>
-                            {getCurrencySymbol(currency)}
-                            {plan.price}
-                          </div>
-                          <p className="text-sm font-normal">
-                            {plan.slug === 'citizen'
-                              ? t('subscriptions_for_3_years')
-                              : t('subscriptions_summary_per_month')}
-                          </p>
-                        </div>
-                      )}
-                    </div>{' '}
-                    <Button
-                      isEnabled={true}
-                      onClick={() =>
-                        clickHandler(
-                          plan.priceId,
-                          !!plan.variants,
-                          plan.slug as string,
-                        )
-                      }
-                      isFullWidth={false}
-                      infoText={getSubscriptionInfoText(plan)}
-                      className={`${plan.price === 0 ? 'mb-7' : ''}`}
-                      size="small"
+                {plan.slug !== 'citizen' || process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true' ? (
+                  <div>
+                    <Heading level={4} className="mb-4 text-sm uppercase">
+                      {plan.description}
+                    </Heading>
+                    <Heading
+                      level={4}
+                      className="mb-4 text-sm uppercase text-accent"
                     >
-                      {getCtaText(plan.price, plan.slug)}
-                    </Button>
-                  </>
+                      {plan.price !== 0 &&
+                        plan.available &&
+                        `everything on the ${
+                          isAuthenticated ? plans[i].title : plans[i - 1].title
+                        } package +`}
+                    </Heading>
+                    <ul className="mb-4">
+                      {plan.perks.split(',').map((perk) => {
+                        return (
+                          <li
+                            key={perk}
+                            className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5"
+                          >
+                            <span className="block">
+                              {perk.includes('<') ? (
+                                <span
+                                  dangerouslySetInnerHTML={{ __html: perk }}
+                                />
+                              ) : (
+                                perk
+                              )}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    <div className="text-accent">
+                      {plan?.note && <span>{plan?.note}</span>}
+                    </div>
+                  </div>
+                ) : (
+                  <div>{t('generic_coming_soon')}</div>
                 )}
               </div>
+              {plan.slug !== 'citizen' || process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true' ? (
+                <div className="w-[290px] text-center flex flex-wrap justify-center">
+                  {plan.available === false ? (
+                    <Heading level={3} className="uppercase">
+                      <span className="block">🤩</span>
+                      {t('generic_coming_soon')}
+                    </Heading>
+                  ) : (
+                    <>
+                      <div className="w-full text-center text-2xl font-bold my-8">
+                        {plan.priceId === 'free' ? (
+                          t('subscriptions_free')
+                        ) : (
+                          <div>
+                            {plan.slug === 'citizen' && (
+                              <div>
+                                <p className="text-sm font-normal">
+                                  {t('subscriptions_hold')}
+                                </p>
+                                <p>
+                                  {getCurrencySymbol(CloserCurrencies.TDF)}
+                                  {30}
+                                </p>
+                                <p className="text-sm font-normal">
+                                  {t('subscriptions_from')}
+                                </p>
+                              </div>
+                            )}
+                            <div>
+                              {getCurrencySymbol(currency)}
+                              {plan.price}
+                            </div>
+                            <p className="text-sm font-normal">
+                              {plan.slug === 'citizen'
+                                ? t('subscriptions_for_3_years')
+                                : t('subscriptions_summary_per_month')}
+                            </p>
+                          </div>
+                        )}
+                      </div>{' '}
+                      <Button
+                        isEnabled={true}
+                        onClick={() =>
+                          clickHandler(
+                            plan.priceId,
+                            !!plan.variants,
+                            plan.slug as string,
+                          )
+                        }
+                        isFullWidth={false}
+                        infoText={getSubscriptionInfoText(plan)}
+                        className={`${plan.price === 0 ? 'mb-7' : ''}`}
+                        size="small"
+                      >
+                        {getCtaText(plan.price, plan.slug)}
+                      </Button>
+                    </>
+                  )}
+                </div>
+              ) : null}
             </div>
           </Card>
         ))}

@@ -202,6 +202,10 @@ const ValidationCitizenPage: NextPage<Props> = ({
   if (!user && !isLoading) {
     return <PageNotFound error="" />;
   }
+  
+  if (process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP !== 'true') {
+    return <PageNotFound error="" />;
+  }
 
   return (
     <>

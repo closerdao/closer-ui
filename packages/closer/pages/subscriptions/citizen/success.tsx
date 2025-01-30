@@ -91,6 +91,10 @@ const SuccessCitizenPage: NextPage<Props> = ({
     return <PageNotFound error="" />;
   }
 
+  if (process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP !== 'true') {
+    return <PageNotFound error="" />;
+  }
+
   return (
     <>
       <Head>
