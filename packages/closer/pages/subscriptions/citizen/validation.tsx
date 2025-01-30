@@ -19,7 +19,7 @@ import { useTranslations } from 'next-intl';
 
 import { SUBSCRIPTION_CITIZEN_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
-import { usePlatform } from '../../../contexts/platform';
+
 import { WalletState } from '../../../contexts/wallet';
 import { useConfig } from '../../../hooks/useConfig';
 import { CitizenshipConfig } from '../../../types';
@@ -44,7 +44,7 @@ const ValidationCitizenPage: NextPage<Props> = ({
   const t = useTranslations();
   const { isLoading, user } = useAuth();
   const { PLATFORM_NAME } = useConfig();
-  const { platform }: any = usePlatform();
+
   const router = useRouter();
 
   const { balanceTotal } = useContext(WalletState);
