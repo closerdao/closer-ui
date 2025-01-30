@@ -108,7 +108,6 @@ const Navigation = () => {
           {isAuthenticated &&
             APP_NAME &&
             (APP_NAME.toLowerCase() === 'moos' ||
-              APP_NAME.toLowerCase() === 'lios' ||
               APP_NAME.toLowerCase() === 'foz') && (
               <Button
                 onClick={() => router.push('/stay')}
@@ -121,6 +120,15 @@ const Navigation = () => {
                 {t('navigation_stay')}
               </Button>
             )}
+          {isAuthenticated && APP_NAME && APP_NAME.toLowerCase() === 'lios' && (
+            <Button
+              onClick={() => router.push('/learn/category/all')}
+              size="small"
+              variant="primary"
+            >
+              {t('navigation_see_courses')}
+            </Button>
+          )}
 
           {isBookingEnabled && APP_NAME && APP_NAME.toLowerCase() === 'tdf' && (
             <Button

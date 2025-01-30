@@ -788,8 +788,9 @@
   "generic_input_placeholder": "Type Your Answer Here",
   "generic_input_empty_error": "Please fill in this field",
   "generic_select_placeholder": "Select Your Answer",
-  "401_title": "No access",
+  "401_title": "One Moment - Authentication Required",
   "401_signin": "Log In",
+  "401_message": "Please log in or sign up to continue.",
   "404_title": "Page not found",
   "404_go_back": "Take me home",
   "wallet_connected_title": "Wallet Balance",
@@ -1215,6 +1216,9 @@
   "config_label_staysCommissionPercent": "Stays commission percent",
   "config_label_eventsCommissionPercent": "Events commission percent",
   "config_label_financedTokenSaleCommissionPercent": "Financed token sale commission percent",
+  "config_email_product_paid_guest": "Product paid, send to user immediately",
+  "config_email_product_paid_admin": "Product paid, send to admins immediately",
+
   "edit_homepage_button": "Edit History page",
   "blog_home_button": "Homepage",
   "generic_save_button": "Save",
@@ -1431,6 +1435,7 @@
   "navigation_performance": "Performance",
   "navigation_food": "Edit food",
   "navigation_affiliate_dashboard": "Affiliate dashboard",
+  "navigation_see_courses": "See courses",
 
   "blog_read_more": "Read more",
   "blog_title": "Blog",
@@ -1454,6 +1459,7 @@
   "food_photo_gallery": "View food photo gallery",
   "food_no_food_disclaimer": "Basic outdoor kitchen provided with no access to communal kitchen",
   "food_create_title": "Create food option",
+  "food_no_food_available": "No food packages available for this event",
   "booking_price_per_night_per_adult": "Price per night per adult",
   "booking_token_same_day_error": "Same day token booking not available",
 

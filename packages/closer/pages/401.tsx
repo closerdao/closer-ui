@@ -20,7 +20,7 @@ const PageNotAllowed = ({ error }: { error?: string }) => {
       <Head>
         <title>{t('401_title')}</title>
       </Head>
-      <main className="main-content about intro page-not-found max-w-prose">
+      <main className="main-content about intro page-not-found max-w-prose pt-8">
         <Heading>{t('401_title')}</Heading>
         {error && (
           <Heading level={2} className="font-light italic my-4">
@@ -28,15 +28,25 @@ const PageNotAllowed = ({ error }: { error?: string }) => {
           </Heading>
         )}
         {!isAuthenticated && (
-          <p>
-            <Link
-              href={`/login?back=${encodeURIComponent(router.asPath)}`}
-              className="btn"
-            >
-              {t('401_signin')}
-            </Link>
-            .
-          </p>
+          <div className="flex flex-col gap-8">
+
+            <p className='text-lg'>{t('401_message')}</p>
+            <div className='flex  gap-4'>
+              <Link
+                href={`/login?back=${encodeURIComponent(router.asPath)}`}
+                className="btn"
+              >
+                {t('401_signin')}
+              </Link>
+              <Link
+                href={`/signup?back=${encodeURIComponent(router.asPath)}`}
+                className="btn"
+              >
+                {t('signup')}
+              </Link>
+            </div>
+            
+          </div>
         )}
       </main>
     </>

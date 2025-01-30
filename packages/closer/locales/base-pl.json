@@ -265,6 +265,7 @@
   "navigation_resources": "Resources",
   "navigation_online_courses": "Learning hub",
   "navigation_blog": "Blog",
+  "navigation_see_courses": "See courses",
   "newsletter_success": "Thanks, we will be in touch soon!",
   "newsletter_body": "Keep in the loop, subscribe:",
   "newsletter_signup": "Subscribe",
@@ -1208,6 +1209,8 @@
   "config_email_user_subscriptionPaused_user": "Subscription paused - send to user",
   "config_email_user_subscriptionResumed_user": "Subscription resumed - send to user",
   "config_email_user_subscriptionPaymentFailed_user": "Subscription payment failed - send to user",
+  "config_email_product_paid_guest": "Product paid, send to user immediately",
+  "config_email_product_paid_admin": "Product paid, send to admins immediately",
 
   "edit_homepage_button": "Edit History page",
   "blog_home_button": "Homepage",
@@ -1481,9 +1484,7 @@
   "vouch_not_vouched_by_users": "The user has not been vouched for",
   "vouch_why_vouch": "Why do you want to vouch for this user?",
 
-
   "learn_heading": "Learning Hub",
-  "learn_subheading": "Dive into Lios Learning Hub and tap into a reservoir of actionable knowledge.",
   "learn_categories_heading": "Categories",
   "learn_courses": "courses",
   "learn_lesson_category": "Category",

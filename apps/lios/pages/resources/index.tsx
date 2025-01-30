@@ -55,7 +55,7 @@ const ResourcesPage = ({ generalConfig }: Props) => {
           />
 
           <Heading level={2} className="text-2xl uppercase text-center">
-            Desert Transformation lab
+            School of Ecological Imagination
           </Heading>
 
           <LinkButton

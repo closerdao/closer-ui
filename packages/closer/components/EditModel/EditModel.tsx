@@ -254,7 +254,7 @@ const EditModel: FC<Props> = ({
               title: key,
               value: key,
               datePicker:
-                endpoint !== '/listing' && endpoint !== '/food' ? (
+                endpoint !== '/listing' && endpoint !== '/food' && endpoint !== '/lesson' ? (
                   <DateTimePicker
                     setStartDate={setStartDate}
                     setEndDate={setEndDate}
