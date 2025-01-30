@@ -57,7 +57,6 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
 
   const hasComponentRendered = useRef(false);
 
-  console.log('hasComponentRendered.current=', hasComponentRendered.current);
 
   useEffect(() => {
     if (!hasComponentRendered.current) {

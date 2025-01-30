@@ -110,7 +110,7 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
   }, [selectedPlan]);
 
   useEffect(() => {
-    if (user?.subscription && user.subscription.priceId) {
+    if (user?.subscription && user?.subscription?.priceId) {
       router.push('/subscriptions');
     }
   }, []);

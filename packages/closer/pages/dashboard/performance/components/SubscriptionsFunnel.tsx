@@ -231,7 +231,7 @@ const SubscriptionsFunnel = ({
     };
   }, [subscriptionsStats]);
   return (
-    <section className="w-full md:w-1/3 min-h-fit md:min-h-[600px]]">
+    <section className="w-full md:w-1/3 min-h-fit md:min-h-[600px]">
       <Card className="h-full flex flex-col justify-start">
         <Heading level={2}>
           {t('dashboard_performance_subscriptions_funnel')}
