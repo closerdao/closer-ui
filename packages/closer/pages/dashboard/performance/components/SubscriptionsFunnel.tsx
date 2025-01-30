@@ -169,7 +169,6 @@ const SubscriptionsFunnel = ({
         platform.metric.getCount(filters.tier1PaymentFilter),
         platform.metric.getCount(filters.tier2PaymentFilter),
         platform.user.getCount(filters.activeSubscribersCountFilter),
-
       ]);
     } catch (error) {
       setError(parseMessageFromError(error));
@@ -192,7 +191,6 @@ const SubscriptionsFunnel = ({
       subscriptionsStats.tier1PaymentCount,
       subscriptionsStats.tier2PaymentCount,
       subscriptionsStats.activeSubscribersCount,
-
 
       1,
     ); // Prevent division by zero
@@ -217,9 +215,10 @@ const SubscriptionsFunnel = ({
         subscriptionsStats.threeMonthSubscribersCount,
       ),
       conversionRate: {
-        count:
-          `${subscriptionsStats.tier1PaymentCount +
-          subscriptionsStats.tier2PaymentCount} / ${subscriptionsStats.pageViewCount}`,
+        count: `${
+          subscriptionsStats.tier1PaymentCount +
+          subscriptionsStats.tier2PaymentCount
+        } / ${subscriptionsStats.pageViewCount}`,
         percentage: Number(
           (
             ((subscriptionsStats.tier1PaymentCount +
@@ -229,8 +228,6 @@ const SubscriptionsFunnel = ({
           ).toFixed(2) || 0,
         ),
       },
-
-    
     };
   }, [subscriptionsStats]);
   return (
