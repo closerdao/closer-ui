@@ -13,6 +13,7 @@ const config = {
     'emails',
     'learningHub',
     'citizenship',
+    'affiliate',
   ],
   PORT: 14444,
   EXPOSE_STORE: true,

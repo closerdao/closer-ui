@@ -17,6 +17,11 @@ export const BOOKING_STEPS = [
   'checkout',
   'confirmation',
 ];
+export const PRODUCT_SALE_STEPS = [
+  'learn',
+  'checkout',
+  'confirmation',
+];
 
 export const CURRENCIES: CloserCurrencies[] = [
   CloserCurrencies.EUR,

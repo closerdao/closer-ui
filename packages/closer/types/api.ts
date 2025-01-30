@@ -117,6 +117,15 @@ export type CitizenshipConfig = {
   minVouchingStayDuration: number;
 };
 
+export type AffiliateConfig = {
+  enabled: boolean;
+  tokenSaleCommissionPercent: number;
+  financedTokenSaleCommissionPercent: number;
+  subscriptionCommissionPercent: number;
+  staysCommissionPercent: number;
+  eventsCommissionPercent: number;
+};
+
 export type BookingConfig = {
   guestMaxDuration: number;
   enabled: boolean;

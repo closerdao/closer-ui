@@ -428,6 +428,10 @@ export const configDescription: ConfigType[] = [
         type: 'text',
         default: '1dlaVEfLwHAbXCwoiDGzUd3w8d7YYnGl5dbPDINKmRUg',
       },
+      minVouchingStayDuration: {
+        type: 'number',
+        default: 14,
+      },
     },
   },
   {
@@ -465,6 +469,35 @@ export const configDescription: ConfigType[] = [
       enabled: {
         type: 'boolean',
         default: true,
+      },
+    },
+  },
+  {
+    slug: 'affiliate',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      tokenSaleCommissionPercent: {
+        type: 'number',
+        default: 3,
+      },
+      financedTokenSaleCommissionPercent: {
+        type: 'number',
+        default: 3,
+      },
+      subscriptionCommissionPercent: {
+        type: 'number',
+        default: 30,
+      },
+      staysCommissionPercent: {
+        type: 'number',
+        default: 10,
+      },
+      eventsCommissionPercent: {
+        type: 'number',
+        default: 10,
       },
     },
   },

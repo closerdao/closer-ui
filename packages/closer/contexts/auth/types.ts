@@ -1,4 +1,9 @@
 import { Charge } from '../../types/booking';
+export interface UserLink {
+  name: string;
+  url: string;
+  _id?: string;
+}
 
 export interface Vouched {
   vouchedBy: string;
@@ -9,9 +14,12 @@ export type Report = {
   reportedAt: Date;
   report: { reason: string; unsafe: boolean };
 };
+
 export type User = {
   vouched?: Vouched[];
   reports?: Report[];
+  message?: string;
+  tagline?: string;
   about?: string;
   stats: any;
   screenname: string;
@@ -51,7 +59,7 @@ export type User = {
   settings: {
     newsletter_weekly: boolean;
   };
-  links: string[];
+  links: UserLink[];
   visibleBy: string[];
   createdBy: string;
   updated: string;

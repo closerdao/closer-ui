@@ -199,6 +199,8 @@ export const getSample = (field) => {
           val: 0,
         },
       ];
+    case 'learnEditor':
+      return [];
     default:
       throw new Error(`Invalid model type:${field.type}`);
   }
@@ -212,7 +214,6 @@ export const calculateRefundTotal = ({
   startDate,
   paymentType,
 }) => {
-
   const { default: defaultRefund, lastmonth, lastweek, lastday } = policy || {};
   const bookingStartDate = dayjs(startDate);
 
@@ -309,10 +310,9 @@ export const formatCurrency = (currency) => {
   return `${symbol[currency]} ${currency}`;
 };
 
-
 export const getVatInfo = (total, vatRate) => {
   if (vatRate) {
-    const vatAmount = total?.val * Number(vatRate) / (1 + Number(vatRate) );
+    const vatAmount = (total?.val * Number(vatRate)) / (1 + Number(vatRate));
     return `${priceFormat(vatAmount, total?.cur)}
     (${Number(vatRate) * 100}%)`;
   }
