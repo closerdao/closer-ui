@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 
 import { FormEvent, useEffect, useState } from 'react';
 
+import CitizenSubscriptionProgress from '../../components/CitizenSubscriptionProgress';
 import ConnectedWallet from '../../components/ConnectedWallet';
 import EventsList from '../../components/EventsList';
 import UploadPhoto from '../../components/UploadPhoto/UploadPhoto';
@@ -330,6 +331,13 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                       )}
                     </Card>
                   )}
+
+                  {member?.citizenship &&
+                    (member._id === currentUser?._id ||
+                      currentUser?.roles?.includes('admin') ||
+                      currentUser?.roles?.includes('community-curator')) && (
+                      <CitizenSubscriptionProgress member={member} />
+                    )}
                 </div>
 
                 <div>

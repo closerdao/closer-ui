@@ -108,6 +108,14 @@ export type GeneralConfig = {
   timeZone: string;
   minVouchingStayDuration?: number;
 };
+export type CitizenshipConfig = {
+  enabled: boolean;
+  isSpaceHostVouchRequired: boolean;
+  downPaymentPercent: number;
+  tokenPriceModifierPercent: number;
+  minVouches: number;
+  minVouchingStayDuration: number;
+};
 
 export type AffiliateConfig = {
   enabled: boolean;

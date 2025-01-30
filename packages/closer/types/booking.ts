@@ -77,7 +77,13 @@ export type Charge = {
   id: string;
   status: 'paid' | 'refunded' | 'pending-refund';
   method: 'stripe' | 'tokens' | 'credits' | 'crypto' | 'monerium';
-  type: 'booking' | 'subscription' | 'product' | 'tokenSale' | 'financedToken';
+  type:
+    | 'booking'
+    | 'subscription'
+    | 'product'
+    | 'tokenSale'
+    | 'financedToken'
+    | 'citizenship';
   date: Date;
   amount: {
     total: {

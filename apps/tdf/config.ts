@@ -12,6 +12,7 @@ const config = {
     'payment',
     'emails',
     'learningHub',
+    'citizenship',
     'affiliate',
   ],
   PORT: 14444,
