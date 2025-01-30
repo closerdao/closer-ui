@@ -1,7 +1,7 @@
 import { memo } from 'react';
 
 interface FunnelStats {
-  count: string | number;
+  count: string | number | undefined | null;
   percentage: number;
 }
 
@@ -17,7 +17,7 @@ const FunnelBar = memo(
       <div className="flex justify-between items-center mb-1">
         <span className="text-sm font-medium">{label}</span>
         <div className="text-sm ">
-          <span className="font-medium">{stats.count}</span>
+          <span className="font-medium">{stats?.count || 0}</span>
           <span className="mx-1">-</span>
           <span>{stats.percentage}%</span>
         </div>
