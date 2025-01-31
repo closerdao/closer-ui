@@ -56,7 +56,37 @@
 
   "buttons_apply_to_stay": "Apply to stay",
 
-  "learn_course_purchase_confirmation_message": "<p>Thank you for your purchase! 🌱</p><p>We will contact you soon with the course details.</p>",
+  "bookings_checkout_step_visitors_guide": "Visitors Guide",
 
-  "bookings_checkout_step_visitors_guide": "Visitors Guide"
+  "stats_total_earnings": "Total Earnings",
+  "stats_earnings_subtext": "Selected period earnings",
+  "stats_total_referrals": "Total Referrals",
+  "stats_referrals_subtext": "Referred users",
+  "stats_active_subscriptions": "Active subscriptions",
+  "stats_subscriptions_subtext": "Monthly recurring",
+  "stats_token_sales": "Token sales",
+  "stats_tokens_subtext": "Token sale amount in EUR",
+  "overview": "Overview",
+  "token_sales": "Token Sales",
+  "affiliate_dashboard": "Affiliate Dashboard",
+  "earnings_breakdown": "Earnings breakdown",
+  "earnings_breakdown_events": "Events earnings",
+  "earnings_breakdown_stays": "Stays earnings",
+  "earnings_breakdown_subscriptions": "Subscriptions earnings",
+  "earnings_breakdown_token_sales": "Token sales earnings",
+  "earnings_breakdown_financed_token_sales": "Financed token sales earnings",
+  "affiliate_link": "Your personal affiliate link:",
+  "affiliate_commission": "commission",
+  "affiliate_select_timeframe": "Select time frame:",
+  "affiliate_token_flow": "Token sale affiliate link:",
+  "affiliate_subscriptions_flow": "Subscriptions affiliate link:",
+  "affiliate_stays_flow": "Stays affiliate link:",
+  "affiliate_events_flow": "Events affiliate link:",
+
+
+
+  "referrals": "Referrals"
+
+
+
 }

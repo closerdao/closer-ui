@@ -39,6 +39,35 @@ export const configDescription: ConfigType[] = [
     These are all the configs that exist within the platform
      */
   {
+    slug: 'citizenship',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      isSpaceHostVouchRequired: {
+        type: 'boolean',
+        default: true,
+      },
+      downPaymentPercent: {
+        type: 'number',
+        default: 10,
+      },
+      tokenPriceModifierPercent: {
+        type: 'number',
+        default: 5,
+      },
+      minVouches: {
+        type: 'number',
+        default: 3,
+      },
+      minVouchingStayDuration: {
+        type: 'number',
+        default: 14,
+      },
+    },
+  },
+  {
     slug: 'booking',
     value: {
       enabled: {
@@ -399,6 +428,10 @@ export const configDescription: ConfigType[] = [
         type: 'text',
         default: '1dlaVEfLwHAbXCwoiDGzUd3w8d7YYnGl5dbPDINKmRUg',
       },
+      minVouchingStayDuration: {
+        type: 'number',
+        default: 14,
+      },
     },
   },
   {
@@ -436,6 +469,35 @@ export const configDescription: ConfigType[] = [
       enabled: {
         type: 'boolean',
         default: true,
+      },
+    },
+  },
+  {
+    slug: 'affiliate',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      tokenSaleCommissionPercent: {
+        type: 'number',
+        default: 3,
+      },
+      financedTokenSaleCommissionPercent: {
+        type: 'number',
+        default: 3,
+      },
+      subscriptionCommissionPercent: {
+        type: 'number',
+        default: 30,
+      },
+      staysCommissionPercent: {
+        type: 'number',
+        default: 10,
+      },
+      eventsCommissionPercent: {
+        type: 'number',
+        default: 10,
       },
     },
   },

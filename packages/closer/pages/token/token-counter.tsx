@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 
 import TokenBuyWidget from '../../components/TokenBuyWidget';
 import { BackButton, Button, Heading, ProgressBar } from '../../components/ui';
@@ -34,10 +34,31 @@ const TokenCounterPage = ({ generalConfig }: Props) => {
   const { nationality, tokens } = router.query;
   const { isAuthenticated, isLoading, user } = useAuth();
   const { isWalletReady } = useContext(WalletState);
+  const hasComponentRendered = useRef(false);
 
   const [tokensToBuy, setTokensToBuy] = useState<number>(
     tokens !== undefined ? Number(tokens) : DEFAULT_TOKENS,
   );
+
+  useEffect(() => {
+    if (!hasComponentRendered.current) {
+      (async () => {
+        try {
+          await api.post('/metric', {
+            event: 'use-calculator',
+            value: 'token-sale',
+            point: 0,
+            category: 'engagement',
+          });
+
+        } catch (error) {
+          console.error('Error logging page view:', error);
+        }
+      })();
+      hasComponentRendered.current = true;
+    }
+  }, []);
+
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {

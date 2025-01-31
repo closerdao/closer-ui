@@ -108,6 +108,9 @@ export { default as SubscriptionsCheckoutPage } from './pages/subscriptions/chec
 export { default as SubscriptionsPage } from './pages/subscriptions/index';
 export { default as SubscriptionSuccessPage } from './pages/subscriptions/success';
 export { default as SubscriptionsSummaryPage } from './pages/subscriptions/summary';
+export { default as SubscriptionsCitizenApplyPage } from './pages/subscriptions/citizen/apply';
+export { default as SubscriptionsCitizenSuccessPage } from './pages/subscriptions/citizen/success';
+export { default as SubscriptionsCitizenValidationPage } from './pages/subscriptions/citizen/validation';
 export { default as TasksPage } from './pages/tasks';
 export { default as TaskPage } from './pages/tasks/[slug]';
 export { default as CreateTaskPage } from './pages/tasks/create';
@@ -132,8 +135,11 @@ export { default as CreateVolunteerOportunity } from './pages/volunteer/create';
 export { default as DashboardPage } from './pages/dashboard';
 export { default as ProjectApplicationPage } from './pages/projects/apply';
 export { default as VolunteerApplicationPage } from './pages/volunteer/apply';
+export { default as AffiliateDashboard } from './pages/affiliate/index';
 export { default as LearnCheckout } from './pages/learn/checkout';
 export { default as LearnConfirmation } from './pages/learn/[slug]/confirmation';
+export { default as PerformancePage } from './pages/dashboard/performance';
+
 // Types
 export * from './types/';
 // Utils

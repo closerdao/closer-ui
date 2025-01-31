@@ -76,8 +76,14 @@ export type TokenSaleChargeMeta = {
 export type Charge = {
   id: string;
   status: 'paid' | 'refunded' | 'pending-refund';
-  method: 'stripe' | 'tokens' | 'credits' | 'crypto';
-  type: 'booking' | 'subscription' | 'product' | 'tokenSale';
+  method: 'stripe' | 'tokens' | 'credits' | 'crypto' | 'monerium';
+  type:
+    | 'booking'
+    | 'subscription'
+    | 'product'
+    | 'tokenSale'
+    | 'financedToken'
+    | 'citizenship';
   date: Date;
   amount: {
     total: {
@@ -93,6 +99,8 @@ export type Charge = {
       cur: CloserCurrencies;
     };
   };
+  referredBy?: string;
+  affiliateRevenue?: { val: number; cur: CloserCurrencies };
   meta: {
     stripePaymentIntentId?: string;
     stripeConnectFee?: number;

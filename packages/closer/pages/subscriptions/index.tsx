@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import AccommodationOptions from '../../components/AccommodationOptions';
 import PageError from '../../components/PageError';
@@ -54,6 +54,26 @@ const SubscriptionsPage: NextPage<Props> = ({
 
   const [userActivePlan, setUserActivePlan] = useState<SubscriptionPlan>();
 
+  const hasComponentRendered = useRef(false);
+
+  useEffect(() => {
+    if (!hasComponentRendered.current) {
+      (async () => {
+        try {
+          await api.post('/metric', {
+            event: 'page-view',
+            value: 'subscriptions',
+            point: 0,
+            category: 'engagement',
+          });
+        } catch (error) {
+          console.error('Error logging page view:', error);
+        }
+      })();
+      hasComponentRendered.current = true;
+    }
+  }, []);
+
   useEffect(() => {
     const selectedSubscription = plans?.find(
       (plan: any) => plan.priceId === (user?.subscription?.priceId || 'free'),
@@ -62,6 +82,10 @@ const SubscriptionsPage: NextPage<Props> = ({
   }, [user]);
 
   const handleNext = (priceId: string, hasVariants: boolean, slug: string) => {
+    if (slug === 'citizen') {
+      router.push('/subscriptions/citizen/validation');
+      return;
+    }
     if (priceId?.includes(',')) {
       priceId = (priceId as string).split(',')[0];
     }

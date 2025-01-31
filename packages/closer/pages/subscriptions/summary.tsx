@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import Counter from '../../components/Counter';
 import PageError from '../../components/PageError';
@@ -80,8 +80,31 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
     defaultMonthlyCredits,
   );
 
+  const hasComponentRendered = useRef(false);
+
   useEffect(() => {
-    if (user?.subscription && user.subscription.priceId) {
+    if (!hasComponentRendered.current && selectedPlan) {
+      (async () => {
+        try {
+          await api.post('/metric', {
+            event:
+              selectedPlan?.title.toLowerCase() === 'wanderer'
+                ? 'tier-1-page-view'
+                : 'tier-2-page-view',
+            value: 'subscriptions',
+            point: 0,
+            category: 'engagement',
+          });
+        } catch (error) {
+          console.error('Error logging page view:', error);
+        }
+      })();
+      hasComponentRendered.current = true;
+    }
+  }, [selectedPlan]);
+
+  useEffect(() => {
+    if (user?.subscription && user?.subscription?.priceId) {
       router.push('/subscriptions');
     }
   }, []);

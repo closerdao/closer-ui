@@ -50,7 +50,6 @@ const LessonPage = ({
   const { user, refetchUser } = useAuth();
 
   const isLearningHubEnabled = learningHubConfig && learningHubConfig?.enabled;
-
   const [hasRefetchedUser, setHasRefetchedUser] = useState(false);
 
   const subscriptionPriceId = subscriptions?.find(

@@ -1,4 +1,25 @@
+import { Charge } from '../../types/booking';
+export interface UserLink {
+  name: string;
+  url: string;
+  _id?: string;
+}
+
+export interface Vouched {
+  vouchedBy: string;
+  vouchedAt: Date;
+}
+export type Report = {
+  reportedBy: string;
+  reportedAt: Date;
+  report: { reason: string; unsafe: boolean };
+};
+
 export type User = {
+  vouched?: Vouched[];
+  reports?: Report[];
+  message?: string;
+  tagline?: string;
   about?: string;
   stats: any;
   screenname: string;
@@ -38,7 +59,7 @@ export type User = {
   settings: {
     newsletter_weekly: boolean;
   };
-  links: string[];
+  links: UserLink[];
   visibleBy: string[];
   createdBy: string;
   updated: string;
@@ -46,6 +67,17 @@ export type User = {
   attributes: string[];
   managedBy: string[];
   _id: string;
+  citizenship?: {
+    createdAt?: Date;
+    status?: 'pending-payment' | 'cancelled' | 'paid' | 'completed';
+    iban?: string;
+    why?: string;
+    tokensToFinance?: number;
+    totalToPayInFiat?: number;
+    monthlyPaymentAmount?: number;
+    charges: Charge[];
+    downPaymentAmount?: number;
+  };
   subscription: {
     plan: string;
     tier: string;
@@ -55,6 +87,7 @@ export type User = {
     monthlyPrice: { val: number; cur: string };
     monthlyCredits: number;
     stripeCustomerEmail: string;
+   
   };
   presence?: number;
   tokensBought?: number;
@@ -68,12 +101,22 @@ export type User = {
 export type AuthenticationContext = {
   isAuthenticated: boolean;
   user: User | null;
-  login: ({ email, password, isGoogle, idToken }: { email: string; password?: string; isGoogle?: boolean, idToken?: string | undefined}) => Promise<void>;
+  login: ({
+    email,
+    password,
+    isGoogle,
+    idToken,
+  }: {
+    email: string;
+    password?: string;
+    isGoogle?: boolean;
+    idToken?: string | undefined;
+  }) => Promise<void>;
   setAuthentification: (user: User, token: string) => void;
   isLoading: boolean;
   logout: () => void;
   error: string | null;
-  signup: (data: unknown) => Promise<{result: string | null}>;
+  signup: (data: unknown) => Promise<{ result: string | null }>;
   completeRegistration: (
     signup_token: string,
     data: unknown,
@@ -90,5 +133,5 @@ export type AuthenticationContext = {
   refetchUser: () => Promise<void>;
   hasSignedUp: boolean;
   isGoogleLoading: boolean;
-  authGoogle: () => Promise<{result: string | null}>;
+  authGoogle: () => Promise<{ result: string | null }>;
 };
