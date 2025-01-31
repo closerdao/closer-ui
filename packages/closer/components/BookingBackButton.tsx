@@ -11,7 +11,7 @@ const BookingBackButton: FC<{
   const goBack = () => {
     window.history.back();
   };
-  return <button onClick={onClick || goBack}>{name || t('buttons_go_back')}</button>;
+  return <button onClick={onClick || goBack}>{name || t('buttons_back')}</button>;
 };
 
 export default BookingBackButton;
