@@ -7,6 +7,7 @@ import AdminLayout from '../../components/Dashboard/AdminLayout';
 import DashboardBookings from '../../components/Dashboard/DashboardBookings';
 import DashboardMetrics from '../../components/Dashboard/DashboardMetrics';
 import DashboardRevenue from '../../components/Dashboard/DashboardRevenue';
+import DashboardSubscriptions from '../../components/Dashboard/DashboardSubscriptions';
 import TimeFrameSelector from '../../components/Dashboard/TimeFrameSelector';
 import { Heading } from '../../components/ui';
 
@@ -92,11 +93,19 @@ const DashboardPage = ({ generalConfig }: Props) => {
           fromDate={fromDate}
           toDate={toDate}
         />
-        <DashboardMetrics
-          timeFrame={timeFrame}
-          fromDate={fromDate}
-          toDate={toDate}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <DashboardMetrics
+            timeFrame={timeFrame}
+            fromDate={fromDate}
+            toDate={toDate}
+          />
+
+          <DashboardSubscriptions
+            timeFrame={timeFrame}
+            fromDate={fromDate}
+            toDate={toDate}
+          />
+        </div>
       </AdminLayout>
     </>
   );

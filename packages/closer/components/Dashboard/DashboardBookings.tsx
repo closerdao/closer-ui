@@ -271,6 +271,7 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
           <OccupancyCard
             isNightly={true}
             listings={listings}
@@ -278,6 +279,7 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
             nightlyListings={nightlyListings}
             spaceListings={spaceListings}
             numBookedNights={numBookedNights}
+            
             arrivingBookings={arrivingBookings}
             departingBookings={departingBookings}
             nightlyListingsIds={nightlyListingsIds}

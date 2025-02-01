@@ -1392,6 +1392,8 @@
   "dashboard_bookings_title": "Bookings",
   "dashboard_revenue_title": "Revenue",
   "dashboard_general_revenue": "Operations revenue (EUR)",
+  "dashboard_revenue_by_source": "Operations revenue by source (EUR)",
+  "dashboard_subscriptions_title": "Subscriptions",
   "dashboard_metrics_title": "Metrics",
   "dashboard_hospitality_occupancy": "Hospitality occupancy",
   "dashboard_spaces_occupancy": "Spaces occupancy",
