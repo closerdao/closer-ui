@@ -671,7 +671,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                 </Heading>
                 <p>
                   <strong className="font-bold">
-                    Single session €10 per session.
+                    Single session €15 per session.
                   </strong>
                 </p>
                 <p>Stop by for a single session whiff of a course</p>
