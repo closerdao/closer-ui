@@ -1543,5 +1543,9 @@
   "learn_live_course": "Live course",
   "learn_no_data": "No single course sale data",
 
+
+  "learn_course_purchase_confirmation_message": "<p>Thank you for your purchase! 🌱</p><p>We will contact you soon with the course details.</p>",
+
+
   "": ""
 }
