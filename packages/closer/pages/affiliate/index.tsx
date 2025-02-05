@@ -20,18 +20,9 @@ import PageNotAllowed from '../401';
 import { useAuth } from '../../contexts/auth';
 import { User } from '../../contexts/auth/types';
 import { useConfig } from '../../hooks/useConfig';
-import { DateRange } from '../../types/affiliate';
 import { calculateAffiliateRevenue } from '../../utils/affiliate.utils';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import { getStartAndEndDate } from '../../utils/performance.utils';
-
-const DATE_RANGES = [
-  { value: '7d', label: 'Last 7 days' },
-  { value: '30d', label: 'Last 30 days' },
-  { value: '90d', label: 'Last 90 days' },
-  { value: '365d', label: 'Last 365 days' },
-  { value: 'all', label: 'All time' },
-] as const;
 
 const AffiliateDashboard = ({
   affiliateConfig,
@@ -44,9 +35,6 @@ const AffiliateDashboard = ({
   const config = useConfig();
   const { SEMANTIC_URL } = config || {};
 
-  const [dateRange, setDateRange] = useState<DateRange>(
-    DATE_RANGES.find((range) => range.value === 'all') || DATE_RANGES[0],
-  );
   const [copied, setCopied] = useState(false);
   const router = useRouter();
   const { time_frame } = router.query;
@@ -169,7 +157,7 @@ const AffiliateDashboard = ({
     ]);
   };
 
-  if (!user) {
+  if (!user || !user?.affiliate) {
     return <PageNotAllowed />;
   }
 
