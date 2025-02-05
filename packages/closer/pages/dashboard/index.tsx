@@ -49,10 +49,12 @@ const DashboardPage = ({ generalConfig, bookingConfig }: Props) => {
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   useEffect(() => {
-    router.push({
-      pathname: '/dashboard',
-      query: { time_frame: timeFrame },
-    });
+    if (isBookingEnabled) {
+      router.push({
+        pathname: '/dashboard',
+        query: { time_frame: timeFrame },
+      });
+    }
   }, [timeFrame]);
 
   useEffect(() => {
