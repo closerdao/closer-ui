@@ -80,7 +80,7 @@ const MemberMenu = () => {
       {
         label: t('navigation_dashboard'),
         url: '/dashboard',
-        enabled: isBookingEnabled,
+        enabled: true,
         roles: ['admin'],
       },
       {
