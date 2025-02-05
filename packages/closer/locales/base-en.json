@@ -1432,6 +1432,7 @@
   "navigation_support_us": "Support us",
   "navigation_learning_hub": "Learning hub",
   "navigation_platform_settings": "Platform settings",
+  "navigation_learn_settings": "Learning hub",
   "navigation_performance": "Performance",
   "navigation_food": "Edit food",
   "navigation_affiliate_dashboard": "Affiliate dashboard",
@@ -1540,6 +1541,8 @@
   "learn_course_price": "Course price:",
 
   "learn_live_course": "Live course",
+  "learn_no_data": "No single course sale data",
+
 
   "learn_course_purchase_confirmation_message": "<p>Thank you for your purchase! 🌱</p><p>We will contact you soon with the course details.</p>",
 

@@ -129,6 +129,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
             width={731}
             height={786}
             alt="Lios labs"
+            quality={87}
           />
         </div>
         {/* <div className="min-w-[100vw] min-h-[110vh] w-[calc(100vh+100vh)] h-[calc(100vh+20vw)] absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">

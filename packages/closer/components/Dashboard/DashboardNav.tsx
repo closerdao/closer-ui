@@ -9,12 +9,13 @@ import NavBookingsIcon from '../icons/NavBookingsIcon';
 import SettingsIcon from './SettingsIcon';
 import UserListIcon from './UserListIcon';
 
-const DashboardNav = () => {
+const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
   const t = useTranslations();
   const router = useRouter();
   const path = router.pathname;
 
-  const DASHBOARD_LINKS = [
+
+  const DASHBOARD_LINKS =  isBookingEnabled ? [
     {
       label: t('navigation_dashboard'),
       url: '/dashboard',
@@ -61,6 +62,24 @@ const DashboardNav = () => {
       label: t('navigation_platform_settings'),
       url: '/admin/config',
     },
+    {
+      label: t('navigation_learn_settings'),
+      url: '/admin/learn',
+    },
+  ] : [
+
+      {
+        label: t('navigation_user_list'),
+        url: '/admin/manage-users',
+      },
+      {
+        label: t('navigation_platform_settings'),
+        url: '/admin/config',
+      },
+      {
+        label: t('navigation_learn_settings'),
+        url: '/admin/learn',
+      },
   ];
 
   const getIcon = (label: string) => {

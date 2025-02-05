@@ -139,6 +139,7 @@ export { default as AffiliateDashboard } from './pages/affiliate/index';
 export { default as LearnCheckout } from './pages/learn/checkout';
 export { default as LearnConfirmation } from './pages/learn/[slug]/confirmation';
 export { default as PerformancePage } from './pages/dashboard/performance';
+export { default as LearnDashboardPage } from './pages/admin/learn';
 
 // Types
 export * from './types/';

@@ -34,6 +34,7 @@ import {
 import { capitalizeFirstLetter } from '../../utils/learn.helpers';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
+import AdminLayout from '../../components/Dashboard/AdminLayout';
 
 interface Props {
   defaultEmailsConfig: ConfigType;
@@ -356,6 +357,8 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
       <Head>
         <title>{t('platform_configs')}</title>
       </Head>
+
+      <AdminLayout>
       <div className="max-w-3xl mx-auto flex flex-col gap-10">
         <Heading level={1}>{t('platform_configs')}</Heading>
 
@@ -581,6 +584,7 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
           </div>
         )}
       </div>
+      </AdminLayout>
     </div>
   );
 };
