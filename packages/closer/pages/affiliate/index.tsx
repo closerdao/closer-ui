@@ -3,15 +3,13 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 
 import { useEffect, useMemo, useState } from 'react';
+import { LuLink2 } from 'react-icons/lu';
 
 import TimeFrameSelector from '../../components/Dashboard/TimeFrameSelector';
+import RevenueIcon from '../../components/icons/RevenueIcon';
 import StatsCard from './components/Affiliate';
 import { Card, Heading } from 'closer/components/ui';
 
-import { FaCalendarAlt } from '@react-icons/all-files/fa/FaCalendarAlt';
-import { FaCoins } from '@react-icons/all-files/fa/FaCoins';
-import { FaEuroSign } from '@react-icons/all-files/fa/FaEuroSign';
-import { FaUsers } from '@react-icons/all-files/fa/FaUsers';
 import { AffiliateConfig, api, usePlatform } from 'closer';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -23,6 +21,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { calculateAffiliateRevenue } from '../../utils/affiliate.utils';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import { getStartAndEndDate } from '../../utils/performance.utils';
+import PercentageBar from '../../components/PercentageBar';
 
 const AffiliateDashboard = ({
   affiliateConfig,
@@ -40,7 +39,7 @@ const AffiliateDashboard = ({
   const { time_frame } = router.query;
 
   const [timeFrame, setTimeFrame] = useState<string>(
-    time_frame?.toString() || 'month',
+    time_frame?.toString() || 'allTime',
   );
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
@@ -173,7 +172,7 @@ const AffiliateDashboard = ({
       </Head>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
-        <section className="flex gap-4 justify-between items-start sm:items-center flex-col sm:flex-row">
+        <section className="flex gap-8 justify-between items-start sm:items-center flex-col sm:flex-row">
           <Heading level={1}>🤝 {t('affiliate_dashboard')}</Heading>
           <div className="flex gap-2 flex-col sm:flex-row items-start sm:items-center">
             <TimeFrameSelector
@@ -188,8 +187,15 @@ const AffiliateDashboard = ({
         </section>
 
         <section className="flex flex-col gap-4">
+          <Heading
+            level={2}
+            className="text-lg flex gap-2 items-center uppercase"
+          >
+            {<LuLink2 />}
+            {t('affiliate_links')}
+          </Heading>
           <div className="flex gap-4 flex-col sm:flex-row items-start sm:items-center">
-            <Heading level={2} className="text-lg font-normal flex-none">
+            <Heading level={3} className="text-sm font-bold uppercase">
               {t('affiliate_link')}
             </Heading>
             <Card className=" flex-1 py-1.5">
@@ -212,7 +218,7 @@ const AffiliateDashboard = ({
             </Card>
           </div>
           <div className="flex gap-4 flex-col sm:flex-row items-start sm:items-center">
-            <Heading level={2} className="text-lg font-normal flex-none">
+            <Heading level={3} className="text-sm font-bold uppercase">
               {t('affiliate_token_flow')}
             </Heading>
             <Card className=" flex-1 py-1.5">
@@ -235,7 +241,7 @@ const AffiliateDashboard = ({
             </Card>
           </div>
           <div className="flex gap-4 flex-col sm:flex-row items-start sm:items-center">
-            <Heading level={2} className="text-lg font-normal flex-none">
+            <Heading level={3} className="text-sm font-bold uppercase">
               {t('affiliate_subscriptions_flow')}
             </Heading>
             <Card className=" flex-1 py-1.5">
@@ -258,7 +264,7 @@ const AffiliateDashboard = ({
             </Card>
           </div>
           <div className="flex gap-4 flex-col sm:flex-row items-start sm:items-center">
-            <Heading level={2} className="text-lg font-normal flex-none">
+            <Heading level={3} className="text-sm font-bold uppercase">
               {t('affiliate_stays_flow')}
             </Heading>
             <Card className=" flex-1 py-1.5">
@@ -282,76 +288,90 @@ const AffiliateDashboard = ({
           </div>
         </section>
 
-        <section className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <section className="flex flex-col gap-6">
+          <Heading
+            level={2}
+            className="text-lg flex gap-2 items-center uppercase"
+          >
+            <RevenueIcon /> {t('affiliate_earnings')}
+          </Heading>
           <StatsCard
             title={t('stats_total_earnings')}
             value={`€${totalRevenue}`}
-            icon={<FaEuroSign className="fill-accent text-2xl" />}
+            isAccent={true}
             subtext={t('stats_earnings_subtext')}
           />
-          <StatsCard
-            title={t('stats_total_referrals')}
-            value={referralsCount}
-            icon={<FaUsers className="fill-accent text-2xl" />}
-            subtext={t('stats_referrals_subtext')}
-          />
-          <StatsCard
-            title={t('stats_active_subscriptions')}
-            value={activeSubscriptionsCount?.toString()}
-            icon={<FaCalendarAlt className="fill-accent text-2xl" />}
-            subtext={t('stats_subscriptions_subtext')}
-          />
-          <StatsCard
-            title={t('stats_token_sales')}
-            value={`€${tokenSaleRevenue + financedTokenRevenue}`}
-            icon={<FaCoins className="fill-accent text-2xl" />}
-            subtext={t('stats_tokens_subtext')}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <StatsCard
+              title={t('stats_total_referrals')}
+              value={referralsCount}
+              subtext={t('stats_referrals_subtext')}
+            />
+            <StatsCard
+              title={t('stats_active_subscriptions')}
+              value={activeSubscriptionsCount?.toString()}
+              subtext={t('stats_subscriptions_subtext')}
+            />
+            <StatsCard
+              title={t('stats_token_sales')}
+              value={`€${tokenSaleRevenue + financedTokenRevenue}`}
+              subtext={t('stats_tokens_subtext')}
+            />
+          </div>
         </section>
 
-        <Card>
+        <Card className='space-y-4'>
           <Heading level={2} className="text-lg font-normal">
             {t('earnings_breakdown')}
           </Heading>
-          <div>
+          <div className='space-y-1'>
             <p>
               {t('earnings_breakdown_stays')} (
               {affiliateConfig?.staysCommissionPercent}%{' '}
               {t('affiliate_commission')})
             </p>
             <p className="font-bold">€{staysRevenue.toFixed(2)}</p>
+            <PercentageBar percentage={totalRevenue ? (staysRevenue/totalRevenue)*100 : 0} />
           </div>
-          <div>
+          <div className='space-y-1'>
             <p>
               {t('earnings_breakdown_events')} (
               {affiliateConfig?.eventsCommissionPercent}%{' '}
               {t('affiliate_commission')})
             </p>
             <p className="font-bold">€{eventsRevenue.toFixed(2)}</p>
+            <PercentageBar percentage={totalRevenue ? (eventsRevenue/totalRevenue)*100 : 0} />
+
           </div>
-          <div>
+          <div className='space-y-1'>
             <p>
               {t('earnings_breakdown_subscriptions')} (
               {affiliateConfig?.subscriptionCommissionPercent}%{' '}
               {t('affiliate_commission')})
             </p>
             <p className="font-bold">€{subscriptionsRevenue.toFixed(2)}</p>
+            <PercentageBar percentage={totalRevenue ? (subscriptionsRevenue/totalRevenue)*100 : 0} />
+
           </div>
-          <div>
+          <div className='space-y-1'>
             <p>
               {t('earnings_breakdown_token_sales')} (
               {affiliateConfig?.tokenSaleCommissionPercent}%{' '}
               {t('affiliate_commission')})
             </p>
             <p className="font-bold">€{tokenSaleRevenue.toFixed(2)}</p>
+            <PercentageBar percentage={totalRevenue ? (tokenSaleRevenue/totalRevenue)*100 : 0} />
+
           </div>
-          <div>
+          <div className='space-y-1'>
             <p>
               {t('earnings_breakdown_financed_token_sales')} (
               {affiliateConfig?.financedTokenSaleCommissionPercent}%{' '}
               {t('affiliate_commission')})
             </p>
             <p className="font-bold">€{financedTokenRevenue.toFixed(2)}</p>
+            <PercentageBar percentage={totalRevenue ? (financedTokenRevenue/totalRevenue)*100 : 0} />
+
           </div>
         </Card>
       </div>

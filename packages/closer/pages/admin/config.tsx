@@ -35,17 +35,22 @@ import { capitalizeFirstLetter } from '../../utils/learn.helpers';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 import AdminLayout from '../../components/Dashboard/AdminLayout';
-
+import { BookingConfig } from '@/types/api';
 interface Props {
   defaultEmailsConfig: ConfigType;
   error: null | string;
+  bookingConfig: BookingConfig;
 }
 
-const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
+const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
   const { platformAllowedConfigs } = useConfig() || {};
   const { user } = useAuth();
+
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   const myConfigs = platform.config.find();
 
@@ -358,7 +363,7 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
         <title>{t('platform_configs')}</title>
       </Head>
 
-      <AdminLayout>
+      <AdminLayout isBookingEnabled={isBookingEnabled}>
       <div className="max-w-3xl mx-auto flex flex-col gap-10">
         <Heading level={1}>{t('platform_configs')}</Heading>
 
@@ -591,21 +596,25 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
 
 ConfigPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [emailsRes, messages] = await Promise.all([
+    const [emailsRes, bookingRes, messages] = await Promise.all([
       api.get('/emails').catch(() => null),
+      api.get('/config/booking').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const defaultEmailsConfig = emailsRes?.data?.results;
+    const bookingConfig = bookingRes?.data?.results?.value;
 
     return {
       defaultEmailsConfig,
+      bookingConfig,
       error: null,
       messages,
     };
   } catch (err: unknown) {
     return {
       defaultEmailsConfig: null,
+      bookingConfig: null,
       error: parseMessageFromError(err),
       messages: null,
     };
