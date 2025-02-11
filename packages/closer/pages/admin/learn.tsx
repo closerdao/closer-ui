@@ -143,6 +143,7 @@ const LearnDashboardPage = () => {
                         className="flex flex-col gap-4"
                         key={course?.course ? course.course._id : index}
                       >
+                        {JSON.stringify(course)}
                         <div className="font-bold">
                           {course?.course
                             ? course.course.title

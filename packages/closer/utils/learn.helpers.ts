@@ -7,7 +7,7 @@ export const getVimeoIdFromURL = (videoUrl: string) => {
 
 export const getYoutubeIdFromURL = (url: string) => {
   const regExp =
-    /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/)([^#\&\?]*).*/;
 
   const match = url.match(regExp);
 
@@ -59,6 +59,7 @@ export const getVideoParams = (
     }
 
     const videoUrl = currentLesson?.videoUrl || '';
+    console.log('videoUrl=', videoUrl);
     return {
       embedId: getEmbedIdFromURL(videoUrl) || '',
       platform: getVideoPlatform(videoUrl) || '',
