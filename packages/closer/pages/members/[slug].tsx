@@ -54,6 +54,8 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
   const [showForm, toggleShowForm] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
 
+  console.log('user=', currentUser);
+
   useEffect(() => {
     if (hasSaved) {
       setTimeout(() => {

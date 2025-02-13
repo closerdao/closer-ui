@@ -96,6 +96,7 @@ export type User = {
   socialShare?: boolean;
   referrals?: number;
   actions?: any;
+  affiliate?: Date
 };
 
 export type AuthenticationContext = {

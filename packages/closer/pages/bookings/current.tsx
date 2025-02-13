@@ -43,7 +43,7 @@ const CurrentBookings = ({ bookingConfig }: Props) => {
         <title>{t('current_bookings_title')}</title>
       </Head>
 
-      <AdminLayout>
+      <AdminLayout isBookingEnabled={isBookingEnabled}>
         <div className="max-w-screen-xl flex flex-col gap-10">
           <Heading level={1}>{t('current_bookings_title')}</Heading>
 

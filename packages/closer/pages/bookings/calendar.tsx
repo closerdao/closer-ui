@@ -27,7 +27,7 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { useDebounce } from '../../hooks/useDebounce';
-import { Listing } from '../../types';
+import { BookingConfig, Listing } from '../../types';
 import {
   formatListings,
   generateBookingItems,
@@ -37,14 +37,19 @@ import {
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
+import api from '../../utils/api';
 
 const loadTime = Date.now();
 
-const BookingsCalendarPage = () => {
+const BookingsCalendarPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
   const t = useTranslations();
   const { enabledConfigs, TIME_ZONE } = useConfig();
   const { user } = useAuth();
   const { platform }: any = usePlatform();
+
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   const defaultTimeStart = dayjs().startOf('day').toDate();
   const defaultTimeEnd = dayjs().startOf('day').add(14, 'day').toDate();
@@ -226,7 +231,7 @@ const BookingsCalendarPage = () => {
         <title>{t('booking_calendar')}</title>
       </Head>
 
-      <AdminLayout>
+      <AdminLayout isBookingEnabled={isBookingEnabled}>
         <main className="flex flex-col w-full">
           <Heading level={1}>{t('booking_calendar')}</Heading>
 
@@ -295,15 +300,19 @@ const BookingsCalendarPage = () => {
 
 BookingsCalendarPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
+    const [bookingRes, messages] = await Promise.all([
+      api.get('/config/booking').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
+
+    const bookingConfig = bookingRes?.data?.results?.value;
     return {
+      bookingConfig,
       messages,
     };
   } catch (err: unknown) {
     return {
+      bookingConfig: null,
       messages: null,
     };
   }
