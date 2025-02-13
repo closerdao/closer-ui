@@ -14,7 +14,7 @@ const renderCustomizedLabel = ({
   innerRadius,
   outerRadius,
   value,
-  isEur
+  isEur,
 }: any) => {
   const radius = innerRadius + (outerRadius - innerRadius) * 0.4;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -25,15 +25,15 @@ const renderCustomizedLabel = ({
       x={x}
       y={y}
       fill="white"
-      textAnchor="middle" // Center-align the text
       dominantBaseline="central"
       style={{
         fontWeight: 'bold',
-        fontSize: '1.1rem',
+        fontSize: '0.8rem',
         textShadow: '0 0 1px black',
       }}
     >
-      {isEur ? '€' : ''}{formatThousands(Math.floor(value))}
+      {isEur ? '€' : ''}
+      {formatThousands(Math.floor(value))}
     </text>
   );
 };
@@ -51,6 +51,7 @@ const DonutChart = ({ data, isEur = false }: Props) => {
           data={data}
           cx={isMobile ? 90 : 100}
           cy={110}
+          minAngle={15}
           labelLine={false}
           label={(props) => renderCustomizedLabel({ ...props, isEur })}
           outerRadius={90}
@@ -72,12 +73,9 @@ const DonutChart = ({ data, isEur = false }: Props) => {
             color: CHART_COLORS[index % CHART_COLORS.length],
           }))}
           align={isMobile ? 'center' : 'right'}
-          // verticalAlign="top"
           verticalAlign={isMobile ? 'bottom' : 'top'}
           layout={isMobile ? 'horizontal' : 'vertical'}
-          // layout="vertical"
-          // layout="horizontal"
-          wrapperStyle={{ marginTop: '50px' }} // Add top margin here
+          wrapperStyle={{ marginTop: '50px' }}
         />
       </PieChart>
     </div>
