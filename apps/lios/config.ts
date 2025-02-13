@@ -7,6 +7,7 @@ const config = {
     'emails',
     'volunteering',
     'learningHub',
+    'subscriptions',
   ],
   PORT: 14444,
   APP_NAME: 'lios',
