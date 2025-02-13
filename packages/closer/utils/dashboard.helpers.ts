@@ -894,3 +894,9 @@ export const getSubPeriodData = ({
     totalOperations,
   };
 };
+
+export const formatThousands = (value: number): string => {
+  return value >= 1000
+    ? `${(value / 1000).toFixed(2).replace('.', ',')}k`
+    : value.toString();
+};

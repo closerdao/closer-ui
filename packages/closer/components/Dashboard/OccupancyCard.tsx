@@ -8,7 +8,7 @@ import HospitalityIcon from '../icons/HospitalityIcon';
 import SpacesIcon from '../icons/SpacesIcon';
 import { Card, Heading } from '../ui';
 import ArrivingAndDeparting from './ArrivingAndDeparting';
-
+import { formatThousands } from '../../utils/dashboard.helpers';
 interface Props {
   isNightly: boolean;
   nightlyListings: any;
@@ -78,7 +78,7 @@ const OccupancyCard = ({
         </div>
       </div>
 
-      <div className="flex gap-1 justify-between items-end text-sm">
+      <div className="flex gap-3 justify-between items-end text-sm">
         <div>
           <p className="text-2xl font-bold">
             {isNightly ? hospitalityOccupancy || 0 : spaceOccupancy || 0}%
@@ -86,10 +86,10 @@ const OccupancyCard = ({
           <p> {t('dashboard_booked')}</p>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <div>
+        <div className="flex flex-col gap-1 ">
+          <div >
             <span className="text-xl">
-              {isNightly ? totalNumNights || 0 : totalNumSpaceSlots || 0}
+             {formatThousands(numBookedNights || 0)} / {isNightly ? formatThousands(totalNumNights || 0) : formatThousands(totalNumSpaceSlots || 0)}
             </span>{' '}
             {isNightly ? t('dashboard_nights') : t('dashboard_booking_slots')}
           </div>

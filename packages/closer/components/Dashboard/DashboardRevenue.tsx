@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { isMobile } from 'react-device-detect';
 
+import { List } from 'immutable';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -19,6 +21,7 @@ import {
 } from '../../utils/dashboard.helpers';
 import RevenueIcon from '../icons/RevenueIcon';
 import { Card, Heading, Spinner } from '../ui';
+import DonutChart from '../ui/Charts/DonutChart';
 import LineChart from '../ui/Charts/LineChart';
 import StackedBarChart from '../ui/Charts/StackedBarChart';
 
@@ -27,6 +30,98 @@ interface Props {
   fromDate: Date | string;
   toDate: Date | string;
 }
+
+interface SummaryRevenueParams {
+  bookings: List<any>;
+  tokenSales: List<any>;
+  fromDate: Date | string;
+  toDate: Date | string;
+  stripeSubsPayments?: any[];
+  timeFrame: string;
+  firstBookingDate?: Date | string | null;
+  TIME_ZONE: string;
+  listings: List<any>;
+  TOKEN_PRICE: number;
+}
+
+const getSummaryRevenueData = ({
+  bookings,
+  tokenSales,
+  fromDate,
+  toDate,
+  stripeSubsPayments = [],
+  timeFrame,
+  firstBookingDate,
+  TIME_ZONE,
+  listings,
+  TOKEN_PRICE,
+}: SummaryRevenueParams) => {
+  if (!bookings || !tokenSales) return null;
+
+  // Initialize all revenue types with 0
+  let totalHospitality = 0;
+  let totalSpaces = 0;
+  let totalEvents = 0;
+  let totalSubscriptions = 0;
+  let totalFood = 0;
+  let totalTokens = 0;
+
+  // Get revenue data by subperiods first
+  const timePeriod = getTimePeriod(
+    timeFrame,
+    fromDate,
+    toDate,
+    firstBookingDate?.toString() || undefined,
+  );
+
+  timePeriod.subPeriods.forEach((subPeriod: any) => {
+    const periodData = getSubPeriodData({
+      subPeriod,
+      bookings,
+      tokenSales,
+      timeFrame,
+      fromDate,
+      toDate,
+      firstBookingDate: firstBookingDate?.toString() || '',
+      TIME_ZONE,
+      stripeSubsPayments,
+      listings,
+      TOKEN_PRICE,
+    });
+
+    // Sum up all values from each period
+    totalHospitality += periodData.hospitality || 0;
+    totalSpaces += periodData.spaces || 0;
+    totalEvents += periodData.events || 0;
+    totalSubscriptions += periodData.subscriptions || 0;
+    totalFood += periodData.food || 0;
+    totalTokens += periodData.tokens || 0;
+  });
+
+  const summaryData = [];
+
+  if (totalHospitality > 0) {
+    summaryData.push({ name: 'hospitality', value: totalHospitality });
+  }
+  if (totalSpaces > 0) {
+    summaryData.push({ name: 'spaces', value: totalSpaces });
+  }
+  if (totalEvents > 0) {
+    summaryData.push({ name: 'events', value: totalEvents });
+  }
+  if (totalSubscriptions > 0) {
+    summaryData.push({ name: 'subscriptions', value: totalSubscriptions });
+  }
+  if (totalFood > 0) {
+    summaryData.push({ name: 'food', value: totalFood });
+  }
+  if (totalTokens > 0) {
+    summaryData.push({ name: 'tokens', value: totalTokens });
+  }
+
+  return summaryData;
+};
+
 const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
@@ -99,6 +194,19 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
     return data;
   };
 
+  const summaryRevenueData = getSummaryRevenueData({
+    bookings,
+    tokenSales,
+    fromDate,
+    toDate,
+    stripeSubsPayments,
+    timeFrame,
+    firstBookingDate,
+    TIME_ZONE,
+    listings,
+    TOKEN_PRICE,
+  });
+
   const revenueData =
     bookings &&
     duration &&
@@ -123,6 +231,7 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
     }
   };
 
+
   useEffect(() => {
     if (bookingFilter) {
       loadData();
@@ -145,6 +254,12 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
             start,
             end,
           });
+          // const transactionsRes = await api.post('/stripe-data/transactions', {
+          //   start,
+          //   end,
+          // });
+
+          // console.log('transactionsRes=', transactionsRes.data.results);
 
           setStripeSubsPayments(res.data.results);
         } catch (error) {
@@ -188,11 +303,7 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
         <RevenueIcon /> {t('dashboard_revenue_title')}
       </Heading>
 
-      <div
-        className={`${
-          APP_NAME === 'tdf' ? 'lg:grid-cols-3' : ''
-        } grid-cols-1 grid gap-4 min-h-[300px]`}
-      >
+      <div className={' grid-cols-1 grid gap-4 min-h-[300px]'}>
         <Card className="col-span-1 lg:col-span-2 p-2 gap-2 h-[300px] sm:h-auto">
           <Heading level={3} className="uppercase text-sm">
             {t('dashboard_general_revenue')}
@@ -206,6 +317,25 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
             )}
           </div>
           {isLoading ? <Spinner /> : <StackedBarChart data={revenueData} />}
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="p-2 gap-2">
+          <Heading level={3} className="uppercase text-sm">
+            {t('dashboard_revenue_by_source')}
+          </Heading>
+          <div
+            className={`${
+              isMobile ? 'h-[280px]' : 'h-[220px]'
+            } overflow-hidden`}
+          >
+            {isLoading ? (
+              <Spinner />
+            ) : (
+              <DonutChart data={summaryRevenueData || []} isEur={true} />
+            )}
+          </div>
         </Card>
 
         {APP_NAME === 'tdf' && (

@@ -291,19 +291,26 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
           />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <OccupancyCard
-            isNightly={false}
-            listings={listings}
-            nightlyListings={nightlyListings}
-            spaceListings={spaceListings}
-            duration={duration}
-            numBookedSpaceSlots={numBookedSpaceSlots}
-          />
-          <OccupancyByListing
-            bookedNights={bookedNights}
-            bookedSpaceSlots={bookedSpaceSlots}
-            isNightly={false}
-          />
+          {spaceListings && spaceListings.size > 100 ? (
+            <>
+              {' '}
+              <OccupancyCard
+                isNightly={false}
+                listings={listings}
+                nightlyListings={nightlyListings}
+                spaceListings={spaceListings}
+                duration={duration}
+                numBookedSpaceSlots={numBookedSpaceSlots}
+              />
+              <OccupancyByListing
+                bookedNights={bookedNights}
+                bookedSpaceSlots={bookedSpaceSlots}
+                isNightly={false}
+              />
+            </>
+          ) : (
+            'No space listings'
+          )}
         </div>
       </div>
 
