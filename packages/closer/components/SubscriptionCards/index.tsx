@@ -10,6 +10,7 @@ import { getCurrencySymbol } from '../../utils/helpers';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Heading from '../ui/Heading';
+import { useConfig } from '../../hooks/useConfig';
 
 interface SubscriptionCardsProps {
   clickHandler: (priceId: string, hasVariants: boolean, slug: string) => void;
@@ -31,9 +32,11 @@ const SubscriptionCards = ({
   const t = useTranslations();
   const { isAuthenticated, user } = useAuth();
 
+  const { APP_NAME } = useConfig();
+
   const isMember = user?.roles?.includes('member');
 
-  const paidSubscriptionPlans = plans.filter((plan) => plan.priceId !== 'free');
+  const paidSubscriptionPlans = plans.filter((plan) => plan.priceId !== 'free' && plan?.available);
   const filteredPlans = isAuthenticated ? paidSubscriptionPlans : plans;
 
   const getCtaText = (price: number, slug: string) => {
@@ -82,17 +85,19 @@ const SubscriptionCards = ({
         filteredPlans.map((plan, i) => (
           <Card
             key={plan.title}
-            className={`w-full pb-8 mb-6 ${
+            className={`w-full py-8 mb-6 ${
               !plan.available && 'bg-accent-light'
             }`}
           >
             <div className="flex items-center gap-4 flex-col md:flex-row text-sm">
-              <Image
-                alt={plan.slug || ''}
-                src={`/images/subscriptions/${plan.slug}.png`}
-                width={200}
-                height={320}
-              />
+              {APP_NAME.toLowerCase() === 'tdf' && (
+                <Image
+                  alt={plan.slug || ''}
+                  src={`/images/subscriptions/${plan.slug}.png`}
+                  width={200}
+                  height={320}
+                />
+              )}
               <div className="w-[90%] md:w-[60%]">
                 <Heading level={2} className="border-b-0 mb-6">
                   {plan.title}
@@ -107,7 +112,7 @@ const SubscriptionCards = ({
                       className="mb-4 text-sm uppercase text-accent"
                     >
                       {plan.price !== 0 &&
-                        plan.available &&
+                        plan.available && APP_NAME.toLowerCase() === 'tdf' &&
                         `everything on the ${
                           isAuthenticated ? plans[i].title : plans[i - 1].title
                         } package +`}
