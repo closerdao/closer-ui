@@ -373,6 +373,7 @@
   "booking_card_pickup_needed": "Pickup needed",
   "booking_card_separate_beds_needed": "Single beds needed",
   "booking_card_edit_booking": "Edit booking",
+  "booking_card_set_booking_status": "Set booking status",
   "booking_card_save_booking": "Save booking",
   "booking_card_booking_updated": "Booking updated",
   "booking_card_room_number": "Room number:",
@@ -415,6 +416,7 @@
   "bookings_total": "Total:",
   "bookings_amount_due": "Amount due:",
   "bookings_amount_to_refund": "Amount to refund:",
+  "bookings_go_to_stripe_dashboard": "Go to Stripe dashboard",
   "bookings_utility_fee": "Utilities fee:",
 
   "bookings_rental_cost": "Cost of the accommodation:",

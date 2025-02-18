@@ -17,6 +17,7 @@ import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../../contexts/auth';
+import { usePlatform } from '../../../contexts/platform';
 import { Lesson } from '../../../types/lesson';
 import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
@@ -28,6 +29,13 @@ import { prepareSubscriptions } from '../../../utils/subscriptions.helpers';
 import PageNotFound from '../../not-found';
 
 const MIN_SUBSCRIPTION_PLAN = 'Wanderer';
+
+const FULL_ACCESS_COURSE_IDS = [
+  '678d5acd79c088534adc9667',
+  '67a33969690568a3608cd6bb',
+];
+
+const CHARGES_LIMIT = 1000;
 
 interface Props {
   lesson: Lesson;
@@ -50,9 +58,12 @@ const LessonPage = ({
     : null;
   const { asPath } = useRouter();
   const { user, refetchUser } = useAuth();
+  const { platform }: any = usePlatform();
 
   const isLearningHubEnabled = learningHubConfig && learningHubConfig?.enabled;
   const [hasRefetchedUser, setHasRefetchedUser] = useState(false);
+  const [doesHaveLiveCourseAccess, setDoesHaveLiveCourseAccess] =
+    useState(false);
 
   const isLegacyFullAccessLesson = LEGACY_FULL_ACCESS_LESSON_IDS.includes(
     lesson?._id,
@@ -81,8 +92,9 @@ const LessonPage = ({
 
   const canViewLessons = Boolean(
     (user && (user?.subscription?.plan || !lesson?.paid)) ||
-      lesson?.access?.includes('free') ||
-      user?.roles.includes('admin'),
+      lesson?.access === 'free' ||
+      user?.roles.includes('admin') ||
+      doesHaveLiveCourseAccess,
   );
 
   const [isVideoPreview, setIsVideoPreview] = useState(
@@ -96,6 +108,38 @@ const LessonPage = ({
       module.lessons.find((lesson) => lesson._id === currentLessonId),
     )
     ?.lessons.find((lesson) => lesson._id === currentLessonId);
+
+  const loadData = async () => {
+    const accessCourseIds = [...FULL_ACCESS_COURSE_IDS, lesson._id];
+
+    const chargeFilter = user &&
+      lesson && {
+        where: {
+          type: 'product',
+          'meta.productType': 'lesson',
+          createdBy: user?._id,
+          productId: { $in: accessCourseIds },
+        },
+        limit: CHARGES_LIMIT,
+      };
+
+    console.log('lessonid=', lesson._id);
+    const [chargesRes] = await Promise.all([platform.charge.get(chargeFilter)]);
+
+    const charges = chargesRes?.results?.toJS();
+
+    if (charges?.length > 0) {
+      setDoesHaveLiveCourseAccess(true);
+    } else {
+      setDoesHaveLiveCourseAccess(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && lesson) {
+      loadData();
+    }
+  }, [user, lesson]);
 
   useEffect(() => {
     if (user && !hasRefetchedUser) {
@@ -152,12 +196,13 @@ const LessonPage = ({
                 lesson,
                 isVideoPreview,
               )}
-              isUnlocked={
-                canViewLessons ||
+              isUnlocked={canViewLessons}
+              canPreview={
                 isVideoPreview ||
                 Boolean(currentLesson?.isFree) ||
                 !lesson.fullVideo
               }
+              isVideoPreview={isVideoPreview || Boolean(currentLesson?.isFree)}
               setIsVideoLoading={setIsVideoLoading}
               isVideoLoading={isVideoLoading}
               getAccessUrl={accessUrl}
@@ -178,7 +223,6 @@ const LessonPage = ({
             )}
           </div>
         </section>
-
         <section className=" w-full flex justify-center">
           <div className="max-w-4xl w-full ">
             <div className="w-full py-2">
@@ -192,7 +236,6 @@ const LessonPage = ({
             </div>
           </div>
         </section>
-
         <section className=" w-full flex justify-center min-h-[400px] ">
           <div className="max-w-4xl w-full">
             <div className="flex-col-reverse sm:flex-row static flex items-start justify-between gap-6 w-full">
