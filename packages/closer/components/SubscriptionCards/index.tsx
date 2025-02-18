@@ -4,13 +4,14 @@ import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
+import { useConfig } from '../../hooks/useConfig';
 import { CloserCurrencies } from '../../types/currency';
 import { SubscriptionPlan } from '../../types/subscriptions';
+import { slugify } from '../../utils/common';
 import { getCurrencySymbol } from '../../utils/helpers';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Heading from '../ui/Heading';
-import { useConfig } from '../../hooks/useConfig';
 
 interface SubscriptionCardsProps {
   clickHandler: (priceId: string, hasVariants: boolean, slug: string) => void;
@@ -36,7 +37,9 @@ const SubscriptionCards = ({
 
   const isMember = user?.roles?.includes('member');
 
-  const paidSubscriptionPlans = plans.filter((plan) => plan.priceId !== 'free' && plan?.available);
+  const paidSubscriptionPlans = plans.filter(
+    (plan) => plan.priceId !== 'free' && plan?.available,
+  );
   const filteredPlans = isAuthenticated ? paidSubscriptionPlans : plans;
 
   const getCtaText = (price: number, slug: string) => {
@@ -52,6 +55,13 @@ const SubscriptionCards = ({
       return t('subscriptions_create_account_button');
     }
     if (userActivePlan?.price !== 0) {
+      if (slugify(userActivePlan?.title || '') === slug) {
+        return t('subscriptions_manage_button');
+      }
+
+      if (price > (userActivePlan?.price || 0)) {
+        return t('subscriptions_upgrade_button');
+      }
       return t('subscriptions_manage_button');
     }
     return t('subscriptions_subscribe_button');
@@ -102,7 +112,8 @@ const SubscriptionCards = ({
                 <Heading level={2} className="border-b-0 mb-6">
                   {plan.title}
                 </Heading>
-                {plan.slug !== 'citizen' || process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true' ? (
+                {plan.slug !== 'citizen' ||
+                process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true' ? (
                   <div>
                     <Heading level={4} className="mb-4 text-sm uppercase">
                       {plan.description}
@@ -112,7 +123,8 @@ const SubscriptionCards = ({
                       className="mb-4 text-sm uppercase text-accent"
                     >
                       {plan.price !== 0 &&
-                        plan.available && APP_NAME.toLowerCase() === 'tdf' &&
+                        plan.available &&
+                        APP_NAME.toLowerCase() === 'tdf' &&
                         `everything on the ${
                           isAuthenticated ? plans[i].title : plans[i - 1].title
                         } package +`}
@@ -145,7 +157,8 @@ const SubscriptionCards = ({
                   <div>{t('generic_coming_soon')}</div>
                 )}
               </div>
-              {plan.slug !== 'citizen' || process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true' ? (
+              {plan.slug !== 'citizen' ||
+              process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true' ? (
                 <div className="w-[290px] text-center flex flex-wrap justify-center">
                   {plan.available === false ? (
                     <Heading level={3} className="uppercase">
@@ -178,8 +191,8 @@ const SubscriptionCards = ({
                               {plan.price}
                             </div>
                             <p className="text-sm font-normal">
-                              {plan.slug === 'citizen'
-                                ? t('subscriptions_for_3_years')
+                              {plan?.billingPeriod === 'yearly'
+                                ? t('subscriptions_summary_per_year')
                                 : t('subscriptions_summary_per_month')}
                             </p>
                           </div>
@@ -199,7 +212,7 @@ const SubscriptionCards = ({
                         className={`${plan.price === 0 ? 'mb-7' : ''}`}
                         size="small"
                       >
-                        {getCtaText(plan.price, plan.slug)}
+                        {getCtaText(plan.price, slugify(plan.title))}
                       </Button>
                     </>
                   )}

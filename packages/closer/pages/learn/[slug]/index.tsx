@@ -36,6 +36,8 @@ interface Props {
   learningHubConfig: { enabled: boolean; value?: any } | null;
 }
 
+const LEGACY_FULL_ACCESS_LESSON_IDS = ['678110ca8883c8ad90e0983b'];
+
 const LessonPage = ({
   lesson,
   subscriptionsConfig,
@@ -52,6 +54,10 @@ const LessonPage = ({
   const isLearningHubEnabled = learningHubConfig && learningHubConfig?.enabled;
   const [hasRefetchedUser, setHasRefetchedUser] = useState(false);
 
+  const isLegacyFullAccessLesson = LEGACY_FULL_ACCESS_LESSON_IDS.includes(
+    lesson?._id,
+  );
+
   const subscriptionPriceId = subscriptions?.find(
     (subscription: SubscriptionPlan) => {
       return (
@@ -61,7 +67,7 @@ const LessonPage = ({
   )?.priceId;
 
   const getAccessUrl = () => {
-    if (lesson?.access === 'single-payment') {
+    if (lesson?.access?.includes('single-payment')) {
       return `/learn/checkout?lessonId=${
         lesson._id
       }&source=${encodeURIComponent(asPath)}`;
@@ -75,7 +81,7 @@ const LessonPage = ({
 
   const canViewLessons = Boolean(
     (user && (user?.subscription?.plan || !lesson?.paid)) ||
-      lesson?.access === 'free' ||
+      lesson?.access?.includes('free') ||
       user?.roles.includes('admin'),
   );
 
@@ -280,38 +286,43 @@ const LessonPage = ({
                     onShowFullVideo={handleShowFullVideo}
                     onShowLesson={handleShowLesson}
                     currentLessonId={currentLessonId || ''}
+                    isLegacyFullAccessLesson={isLegacyFullAccessLesson}
                   />
 
-                  {lesson.access === 'single-payment' && lesson.price && (
-                    <div className="">
-                      <p>{t('learn_course_price')}</p>
-                      <p className="text-xl font-bold">
-                        {priceFormat(lesson.price)}
-                      </p>
-                      {lesson?.variant === 'live-course' && (
-                        <p className="text-xs">
-                          Course format: {t('learn_live_course')}
+                  {!lesson?.access?.includes('single-payment') &&
+                    lesson.price && (
+                      <div className="">
+                        <p>{t('learn_course_price')}</p>
+                        <p className="text-xl font-bold">
+                          {priceFormat(lesson.price)}
                         </p>
-                      )}
-                    </div>
-                  )}
+                        {lesson?.variant === 'live-course' && (
+                          <p className="text-xs">
+                            Course format: {t('learn_live_course')}
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                   {!canViewLessons &&
                     lesson.fullVideo &&
-                    lesson.access !== 'single-payment' && (
+                    !lesson.access?.includes('single-payment') && (
                       <LinkButton href={accessUrl}>
                         {t('learn_get_access_button')}
                       </LinkButton>
                     )}
-                  {lesson.access === 'single-payment' && (
-                    <LinkButton href={accessUrl}>
-                      {t('learn_buy_single_course')}
-                    </LinkButton>
-                  )}
 
-                  {lesson.access === 'single-payment' && !lesson.price && (
-                    <LinkButton href={accessUrl}>
-                      {t('learn_buy_single_course')}
+                  {!isLegacyFullAccessLesson &&
+                    lesson.access?.includes('single-payment') &&
+                    lesson.price?.val && (
+                      <LinkButton href={accessUrl}>
+                        {t('learn_buy_single_course')}
+                      </LinkButton>
+                    )}
+
+                  {lesson.access?.includes('subscription-any') && (
+                    <LinkButton href="/subscriptions">
+                      {t('learn_subscribe')}
                     </LinkButton>
                   )}
 
