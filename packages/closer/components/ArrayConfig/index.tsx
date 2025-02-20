@@ -35,6 +35,7 @@ const ArrayConfig = ({
 }: Props) => {
   const t = useTranslations();
   const isEmailConfig = slug === 'emails';
+  const isSubscriptionsConfig = slug === 'subscriptions';
   const [openCards, setOpenCards] = useState<boolean[]>([]);
 
   const toggleCard = (index: number) => {
@@ -107,7 +108,7 @@ const ArrayConfig = ({
                             <label className="flex gap-1 items-center">
                               <input
                                 type="radio"
-                                name={`${innerKey}${index}`}
+                                name={`${innerKey}-${index}`}
                                 value="true"
                                 checked={currentValue[index][innerKey] === true}
                                 onChange={(event) =>
@@ -119,7 +120,7 @@ const ArrayConfig = ({
                             <label className="flex gap-1 items-center">
                               <input
                                 type="radio"
-                                name={`${innerKey}${index}`}
+                                name={`${innerKey}-${index}`}
                                 value="false"
                                 checked={
                                   currentValue[index][innerKey] === false
@@ -203,7 +204,7 @@ const ArrayConfig = ({
                 </Button>
               )}
 
-              {index > 0 && !isEmailConfig && (
+              {index > 0 && !isEmailConfig && !isSubscriptionsConfig && (
                 <Button
                   onClick={() => handleDeleteElement(index)}
                   className="w-40"

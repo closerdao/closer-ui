@@ -26,14 +26,12 @@ export type Lesson = {
   liveSessionUrl?: string;
   price?: Price<CloserCurrencies>;
   variant?:
-    | 'live-lesson'
-    | 'live-course'
-    | 'prerecorded-lesson'
+  | 'live-lesson'
+  | 'live-course'
+  | 'prerecorded-lesson'
   | 'prerecorded-course';
   access?:
   | 'subscription-any'
-  | 'subscription-tier-1'
-  | 'subscription-tier-2'
   | 'single-payment'
   | 'free';
   modules?: {

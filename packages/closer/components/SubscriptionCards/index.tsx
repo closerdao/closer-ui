@@ -4,8 +4,10 @@ import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
+import { useConfig } from '../../hooks/useConfig';
 import { CloserCurrencies } from '../../types/currency';
 import { SubscriptionPlan } from '../../types/subscriptions';
+import { slugify } from '../../utils/common';
 import { getCurrencySymbol } from '../../utils/helpers';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
@@ -31,9 +33,13 @@ const SubscriptionCards = ({
   const t = useTranslations();
   const { isAuthenticated, user } = useAuth();
 
+  const { APP_NAME } = useConfig();
+
   const isMember = user?.roles?.includes('member');
 
-  const paidSubscriptionPlans = plans.filter((plan) => plan.priceId !== 'free');
+  const paidSubscriptionPlans = plans.filter(
+    (plan) => plan.priceId !== 'free' && plan?.available,
+  );
   const filteredPlans = isAuthenticated ? paidSubscriptionPlans : plans;
 
   const getCtaText = (price: number, slug: string) => {
@@ -49,6 +55,13 @@ const SubscriptionCards = ({
       return t('subscriptions_create_account_button');
     }
     if (userActivePlan?.price !== 0) {
+      if (slugify(userActivePlan?.title || '') === slug) {
+        return t('subscriptions_manage_button');
+      }
+
+      if (price > (userActivePlan?.price || 0)) {
+        return t('subscriptions_upgrade_button');
+      }
       return t('subscriptions_manage_button');
     }
     return t('subscriptions_subscribe_button');
@@ -79,25 +92,28 @@ const SubscriptionCards = ({
   return (
     <>
       {filteredPlans &&
-        filteredPlans.map((plan, i) => (
+        filteredPlans.filter((plan) => plan.available).map((plan, i) => (
           <Card
             key={plan.title}
-            className={`w-full pb-8 mb-6 ${
+            className={`w-full py-8 mb-6 ${
               !plan.available && 'bg-accent-light'
             }`}
           >
             <div className="flex items-center gap-4 flex-col md:flex-row text-sm">
-              <Image
-                alt={plan.slug || ''}
-                src={`/images/subscriptions/${plan.slug}.png`}
-                width={200}
-                height={320}
-              />
+              {APP_NAME.toLowerCase() === 'tdf' && (
+                <Image
+                  alt={plan.slug || ''}
+                  src={`/images/subscriptions/${plan.slug}.png`}
+                  width={200}
+                  height={320}
+                />
+              )}
               <div className="w-[90%] md:w-[60%]">
                 <Heading level={2} className="border-b-0 mb-6">
                   {plan.title}
                 </Heading>
-                {plan.slug !== 'citizen' || process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true' ? (
+                {plan.slug !== 'citizen' ||
+                process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true' ? (
                   <div>
                     <Heading level={4} className="mb-4 text-sm uppercase">
                       {plan.description}
@@ -108,6 +124,7 @@ const SubscriptionCards = ({
                     >
                       {plan.price !== 0 &&
                         plan.available &&
+                        APP_NAME.toLowerCase() === 'tdf' &&
                         `everything on the ${
                           isAuthenticated ? plans[i].title : plans[i - 1].title
                         } package +`}
@@ -140,7 +157,8 @@ const SubscriptionCards = ({
                   <div>{t('generic_coming_soon')}</div>
                 )}
               </div>
-              {plan.slug !== 'citizen' || process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true' ? (
+              {plan.slug !== 'citizen' ||
+              process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true' ? (
                 <div className="w-[290px] text-center flex flex-wrap justify-center">
                   {plan.available === false ? (
                     <Heading level={3} className="uppercase">
@@ -173,8 +191,8 @@ const SubscriptionCards = ({
                               {plan.price}
                             </div>
                             <p className="text-sm font-normal">
-                              {plan.slug === 'citizen'
-                                ? t('subscriptions_for_3_years')
+                              {plan?.billingPeriod === 'yearly'
+                                ? t('subscriptions_summary_per_year')
                                 : t('subscriptions_summary_per_month')}
                             </p>
                           </div>
@@ -194,7 +212,7 @@ const SubscriptionCards = ({
                         className={`${plan.price === 0 ? 'mb-7' : ''}`}
                         size="small"
                       >
-                        {getCtaText(plan.price, plan.slug)}
+                        {getCtaText(plan.price, slugify(plan.title))}
                       </Button>
                     </>
                   )}

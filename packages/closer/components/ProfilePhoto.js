@@ -22,7 +22,7 @@ const ProfilePhoto = ({ user, size, stack }) => {
         />
       ) : (
         <span className="text-lg text-white">
-          {user?.screenname
+          {user?.screenname && user.screenname
             .split(' ')
             .map((n) => n.slice(0, 1))
             .join('')

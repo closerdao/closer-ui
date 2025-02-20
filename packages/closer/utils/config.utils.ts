@@ -122,11 +122,11 @@ export const getUpdatedArray = (
   name: string,
   inputValue: string | number | boolean,
 ) => {
-  if (typeof inputValue === 'boolean' && index) {
-    name = name.substring(0, name.length - index?.toString().length);
-  }
+  // Strip the index from the name if it exists at the end
+  const strippedName = name.replace(/\d+$/, '');
+
   const updatedArray = value.map((item: any[], idx: number) =>
-    idx === index ? { ...item, [name as string]: inputValue } : item,
+    idx === index ? { ...item, [strippedName]: inputValue } : item,
   );
   return updatedArray;
 };
