@@ -92,7 +92,7 @@ const SubscriptionCards = ({
   return (
     <>
       {filteredPlans &&
-        filteredPlans.map((plan, i) => (
+        filteredPlans.filter((plan) => plan.available).map((plan, i) => (
           <Card
             key={plan.title}
             className={`w-full py-8 mb-6 ${

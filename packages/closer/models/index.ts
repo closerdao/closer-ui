@@ -281,7 +281,7 @@ const models = {
       name: 'access',
       label: 'Access',
       type: 'multi-select',
-      options: ['subscription-any', 'free', 'single-payment', 'subscription-tier-1', 'subscription-tier-2'],
+      options: ['subscription-any', 'free', 'single-payment'],
     },
     {
       name: 'modules',

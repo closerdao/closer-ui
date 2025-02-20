@@ -32,8 +32,6 @@ export type Lesson = {
   | 'prerecorded-course';
   access?:
   | 'subscription-any'
-  | 'subscription-tier-1'
-  | 'subscription-tier-2'
   | 'single-payment'
   | 'free';
   modules?: {

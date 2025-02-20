@@ -30,7 +30,7 @@ import PageNotFound from '../../not-found';
 
 const MIN_SUBSCRIPTION_PLAN = 'Wanderer';
 
-const FULL_ACCESS_COURSE_IDS = [
+const LEGACY_FULL_ACCESS_COURSE_IDS = [
   '678d5acd79c088534adc9667',
   '67a33969690568a3608cd6bb',
 ];
@@ -62,8 +62,7 @@ const LessonPage = ({
 
   const isLearningHubEnabled = learningHubConfig && learningHubConfig?.enabled;
   const [hasRefetchedUser, setHasRefetchedUser] = useState(false);
-  const [doesHaveLiveCourseAccess, setDoesHaveLiveCourseAccess] =
-    useState(false);
+  const [hasBoughtCourse, setHasBoughtCourse] = useState(false);
 
   const isLegacyFullAccessLesson = LEGACY_FULL_ACCESS_LESSON_IDS.includes(
     lesson?._id,
@@ -90,11 +89,17 @@ const LessonPage = ({
 
   const accessUrl = getAccessUrl();
 
+  const isSubscriber =
+    user?.subscription?.plan &&
+    new Date(user?.subscription?.validUntil || '') > new Date();
+
+  const isAdmin = user?.roles.includes('admin');
+
   const canViewLessons = Boolean(
-    (user && (user?.subscription?.plan || !lesson?.paid)) ||
-      lesson?.access === 'free' ||
-      user?.roles.includes('admin') ||
-      doesHaveLiveCourseAccess,
+    (isSubscriber && lesson?.access?.includes('subscription-any')) ||
+      lesson?.access?.includes('free') ||
+      isAdmin ||
+      hasBoughtCourse,
   );
 
   const [isVideoPreview, setIsVideoPreview] = useState(
@@ -110,7 +115,7 @@ const LessonPage = ({
     ?.lessons.find((lesson) => lesson._id === currentLessonId);
 
   const loadData = async () => {
-    const accessCourseIds = [...FULL_ACCESS_COURSE_IDS, lesson._id];
+    const accessCourseIds = [...LEGACY_FULL_ACCESS_COURSE_IDS, lesson._id];
 
     const chargeFilter = user &&
       lesson && {
@@ -123,15 +128,14 @@ const LessonPage = ({
         limit: CHARGES_LIMIT,
       };
 
-    console.log('lessonid=', lesson._id);
     const [chargesRes] = await Promise.all([platform.charge.get(chargeFilter)]);
 
     const charges = chargesRes?.results?.toJS();
 
     if (charges?.length > 0) {
-      setDoesHaveLiveCourseAccess(true);
+      setHasBoughtCourse(true);
     } else {
-      setDoesHaveLiveCourseAccess(false);
+      setHasBoughtCourse(false);
     }
   };
 
@@ -332,42 +336,35 @@ const LessonPage = ({
                     isLegacyFullAccessLesson={isLegacyFullAccessLesson}
                   />
 
-                  {!lesson?.access?.includes('single-payment') &&
-                    lesson.price && (
-                      <div className="">
-                        <p>{t('learn_course_price')}</p>
-                        <p className="text-xl font-bold">
-                          {priceFormat(lesson.price)}
-                        </p>
-                        {lesson?.variant === 'live-course' && (
-                          <p className="text-xs">
-                            Course format: {t('learn_live_course')}
+                  {!canViewLessons &&
+                    !isLegacyFullAccessLesson &&
+                    lesson.access?.includes('single-payment') &&
+                    lesson.price?.val &&
+                    !isSubscriber && (
+                      <div className="flex flex-col gap-4">
+                        <div className="">
+                          <p>{t('learn_course_price')}</p>
+                          <p className="text-xl font-bold">
+                            {priceFormat(lesson.price)}
                           </p>
-                        )}
+                          {lesson?.variant === 'live-course' && (
+                            <p className="text-xs">
+                              Course format: {t('learn_live_course')}
+                            </p>
+                          )}
+                        </div>
+                        <LinkButton href={accessUrl}>
+                          {t('learn_buy_single_course')}
+                        </LinkButton>
                       </div>
                     )}
 
                   {!canViewLessons &&
-                    lesson.fullVideo &&
-                    !lesson.access?.includes('single-payment') && (
-                      <LinkButton href={accessUrl}>
+                    lesson.access?.includes('subscription-any') && (
+                      <LinkButton href="/subscriptions">
                         {t('learn_get_access_button')}
                       </LinkButton>
                     )}
-
-                  {!isLegacyFullAccessLesson &&
-                    lesson.access?.includes('single-payment') &&
-                    lesson.price?.val && (
-                      <LinkButton href={accessUrl}>
-                        {t('learn_buy_single_course')}
-                      </LinkButton>
-                    )}
-
-                  {lesson.access?.includes('subscription-any') && (
-                    <LinkButton href="/subscriptions">
-                      {t('learn_subscribe')}
-                    </LinkButton>
-                  )}
 
                   <Heading className="uppercase text-md" level={3}>
                     {t('learn_tags_heading')}
