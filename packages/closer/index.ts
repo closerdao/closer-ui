@@ -122,8 +122,6 @@ export { default as TokenSaleCheckoutPage } from './pages/token/checkout';
 export { default as PublicTokenSalePage } from './pages/token/index';
 export { default as NationalityPage } from './pages/token/nationality';
 export { default as TokenSaleSuccessPage } from './pages/token/success';
-export { default as TokenCounterPage } from './pages/token/token-counter';
-export { default as YourInfoPage } from './pages/token/your-info';
 export { default as VolunteerOpportunitiesPage } from './pages/volunteer/';
 export { default as VolunteerPage } from './pages/volunteer/[slug]/';
 export { default as ProjectsPage } from './pages/projects/index';
