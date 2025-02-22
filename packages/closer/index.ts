@@ -140,6 +140,7 @@ export { default as LearnCheckout } from './pages/learn/checkout';
 export { default as LearnConfirmation } from './pages/learn/[slug]/confirmation';
 export { default as PerformancePage } from './pages/dashboard/performance';
 export { default as LearnDashboardPage } from './pages/admin/learn';
+export { default as BankTransferPage } from './pages/token/bank-transfer';
 
 // Types
 export * from './types/';

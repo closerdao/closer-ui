@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
-import { getCurrentUnitPrice } from '../../utils/bondingCurve';
 import { Button, Card, Checkbox, Heading, Input, Spinner } from '../ui';
 
 interface CitizenFinanceTokensProps {
@@ -52,8 +51,6 @@ const CitizenFinanceTokens = ({
     if (isConfigReady) {
       (async () => {
         try {
-          const supply = await getCurrentSupplyWithoutWallet();
-
           const totalCost = await getTotalCostWithoutWallet(
             application?.tokensToFinance.toString(),
           );
@@ -64,7 +61,6 @@ const CitizenFinanceTokens = ({
             ) || 0;
           updateApplication('totalToPayInFiat', calculatedTotalToPayInFiat);
 
-          const price = getCurrentUnitPrice(supply);
         } catch (error) {
           console.error('Error in supply/price calculation:', error);
         }

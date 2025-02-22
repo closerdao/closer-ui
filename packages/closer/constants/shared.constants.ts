@@ -64,9 +64,14 @@ export const SUBSCRIPTION_CITIZEN_STEPS = [
 export const TOKEN_SALE_STEPS = [
   'before-you-begin',
   'nationality',
-  'token-counter',
-  'your-info',
   'checkout',
+  'success',
+];
+
+export const TOKEN_SALE_STEPS_BANK_TRANSFER = [
+  'before-you-begin',
+  'nationality',
+  'bank-transfer',
   'success',
 ];
 
