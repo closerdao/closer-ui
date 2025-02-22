@@ -83,17 +83,9 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
         );
       }
     } else if (tokenSaleType === 'crypto') {
-      if (user && user.kycPassed === true) {
-        router.push(
-          `/token/checkout?tokens=${encodeURIComponent(tokensToBuy)}`,
-        );
-      } else {
-        router.push(
-          `/token/nationality?tokenSaleType=crypto&tokens=${encodeURIComponent(
-            tokensToBuy,
-          )}`,
-        );
-      }
+      router.push(
+        `/token/checklist-crypto?tokens=${encodeURIComponent(tokensToBuy)}`,
+      );
     }
   };
 

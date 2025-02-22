@@ -63,6 +63,7 @@ export const SUBSCRIPTION_CITIZEN_STEPS = [
 
 export const TOKEN_SALE_STEPS = [
   'before-you-begin',
+  'checklist-crypto',
   'nationality',
   'checkout',
   'success',
