@@ -26,6 +26,7 @@ import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
+import Wallet from '../../components/Wallet';
 
 interface Props {
   generalConfig: GeneralConfig | null;
@@ -38,6 +39,9 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     generalConfig?.platformName || defaultConfig.platformName;
   const router = useRouter();
   const { tokens } = router.query || { tokens: '33' };
+
+  const isWalletEnabled =
+  process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
 
   const { SOURCE_TOKEN } = useConfig() || {};
   const { buyTokens, getTotalCost, isCeurApproved, approveCeur, isPending } =
@@ -96,9 +100,9 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
 
   const goBack = async () => {
     if (user && user.kycPassed) {
-      router.push(`/token/token-counter?tokens=${tokens}`);
+      router.push(`/token/before-you-begin?tokens=${tokens}`);
     } else {
-      router.push(`/token/your-info?tokens=${tokens}`);
+      router.push(`/token/nationality?tokens=${tokens}`);
     }
   };
 
@@ -177,7 +181,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   };
 
   const handleEditAmount = () => {
-    router.push(`/token/token-counter?tokens=${tokens}`);
+    router.push(`/token/before-you-begin?tokens=${tokens}`);
   };
 
   if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
@@ -201,7 +205,14 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
 
         <ProgressBar steps={TOKEN_SALE_STEPS} />
 
-        <main className="pt-14 pb-24 flex flex-col gap-12">
+        {isWalletEnabled && (
+              <div className='mt-12'>
+                <Wallet />
+              </div>
+          )}
+          
+        <main className="pt- pb-24 flex flex-col gap-12">
+          
           <div className="">
             <Heading level={3} hasBorder={true}>
               🏡 {t('token_sale_checkout_your_purchse')}
