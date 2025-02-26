@@ -54,19 +54,6 @@ const NationalityPage = ({ generalConfig }: Props) => {
   const [canContinue, setCanContinue] = useState(false);
   const [isApiLoading, setApiIsLoading] = useState(false);
 
-  // useEffect(() => {
-  //   if (tokenSaleType === 'fiat') {
-  //     if (user && user.kycPassed) {
-  //       router.push(
-  //         `/token/bank-transfer?tokens=${tokens}&totalFiat=${totalFiat}`,
-  //       );
-  //     }
-  //   } else if (tokenSaleType === 'crypto') {
-  //     if (user && user.kycPassed) {
-  //       router.push(`/token/checkout?tokens=${tokens}`);
-  //     }
-  //   }
-  // }, [user]);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
