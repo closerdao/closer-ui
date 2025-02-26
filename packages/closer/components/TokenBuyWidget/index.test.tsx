@@ -16,7 +16,7 @@ describe('TokenBuyWidget', () => {
     );
 
     const tokensToBuyInput = screen.getByLabelText(/\$tdf/i);
-    const tokensToSellInput = screen.getByLabelText(/ceur/i);
+    const tokensToSellInput = screen.getByLabelText(/eur/i);
     expect(tokensToBuyInput).toBeInTheDocument();
     expect(tokensToSellInput).toBeInTheDocument();
   });
