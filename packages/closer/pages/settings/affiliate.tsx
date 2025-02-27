@@ -3,7 +3,6 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 
 import { useEffect, useMemo, useState } from 'react';
-import { LuLink2 } from 'react-icons/lu';
 
 import StatsCard from '../../components/Affiliate';
 import TimeFrameSelector from '../../components/Dashboard/TimeFrameSelector';
@@ -11,6 +10,7 @@ import PercentageBar from '../../components/PercentageBar';
 import RevenueIcon from '../../components/icons/RevenueIcon';
 import { Card, Heading } from 'closer/components/ui';
 
+import { FaLink } from '@react-icons/all-files/fa/FaLink';
 import { AffiliateConfig, api, usePlatform } from 'closer';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -205,7 +205,7 @@ const AffiliatePage = ({
             level={2}
             className="text-lg flex gap-2 items-center uppercase"
           >
-            {<LuLink2 />}
+            {<FaLink />}
             {t('affiliate_links')}
           </Heading>
           <div className="flex gap-4 flex-col sm:flex-row items-start sm:items-center">

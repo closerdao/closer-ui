@@ -141,7 +141,7 @@ export { default as LearnConfirmation } from './pages/learn/[slug]/confirmation'
 export { default as PerformancePage } from './pages/dashboard/performance';
 export { default as LearnDashboardPage } from './pages/admin/learn';
 export { default as AffiliateDashboardPage } from './pages/dashboard/affiliate';
-export { default as AffiliateLandingPage } from './pages/affiliate';
+export { default as AffiliateLandingPage } from './pages/affiliate/index';
 // Types
 export * from './types/';
 // Utils
