@@ -10,6 +10,7 @@ import { AffiliateConfig, api, useAuth, usePlatform } from 'closer';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import PageNotAllowed from '../401';
 import { loadLocaleData } from '../../utils/locale.helpers';
 
 const AffiliateLandingPage = ({
@@ -18,15 +19,15 @@ const AffiliateLandingPage = ({
   affiliateConfig: AffiliateConfig;
 }) => {
   const t = useTranslations();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const { platform }: any = usePlatform();
   const router = useRouter();
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isApiLoading, setIsApiLoading] = useState(false);
 
   const becomeAffiliate = async () => {
     try {
-      setIsLoading(true);
+      setIsApiLoading(true);
       await platform.user.patch(user?._id, {
         affiliate: new Date(),
       });
@@ -34,9 +35,13 @@ const AffiliateLandingPage = ({
     } catch (error) {
       console.error('error=', error);
     } finally {
-      setIsLoading(false);
+      setIsApiLoading(false);
     }
   };
+
+  if (!user && !isLoading) {
+    return <PageNotAllowed />;
+  }
   return (
     <>
       <Head>
@@ -188,8 +193,8 @@ const AffiliateLandingPage = ({
               variant="primary"
               color="accent"
               className="max-w-xs mx-auto"
-              isLoading={isLoading}
-              isEnabled={!isLoading}
+              isLoading={isApiLoading}
+              isEnabled={!isApiLoading}
             >
               BECOME AN AFFILIATE
             </Button>
