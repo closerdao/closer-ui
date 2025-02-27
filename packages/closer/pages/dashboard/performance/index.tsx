@@ -19,7 +19,7 @@ import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import SubscriptionsFunnel from './components/SubscriptionsFunnel';
-import { BookingConfig } from '@/types/api';
+import { BookingConfig } from '../../../types/api';
 
 const PerformancePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
   const t = useTranslations();

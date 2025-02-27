@@ -8,7 +8,7 @@ import StatsCard from '../../components/Affiliate';
 import TimeFrameSelector from '../../components/Dashboard/TimeFrameSelector';
 import PercentageBar from '../../components/PercentageBar';
 import RevenueIcon from '../../components/icons/RevenueIcon';
-import { Card, Heading } from 'closer/components/ui';
+import { Card, Heading, LinkButton } from 'closer/components/ui';
 
 import { FaLink } from '@react-icons/all-files/fa/FaLink';
 import { AffiliateConfig, api, usePlatform } from 'closer';
@@ -123,10 +123,12 @@ const AffiliatePage = ({
 
   const payoutCharges =
     platform?.charge?.find?.(filters.payoutsFilter)?.toJS?.() || [];
-  const userPayoutCharges = payoutCharges.filter(
+  const userPayoutCharges = payoutCharges?.filter(
     (charge: any) => charge.meta.affiliateId === user?._id,
   );
-  const totalPayoutCharges = userPayoutCharges.reduce(
+
+
+  const totalPayoutCharges = userPayoutCharges?.reduce(
     (acc: number, charge: any) => acc + charge.amount.total.val,
     0,
   );
@@ -300,6 +302,11 @@ const AffiliatePage = ({
               </div>
             </Card>
           </div>
+          <Card className=' rounded-md bg-accent-light'>
+            <LinkButton target='_blank'  className=' px-4  w-fit' href="https://drive.google.com/drive/folders/11i6UBGqEyC8aw0ufJybnbjueSpE3s8f-">
+              {t('dashboard_affiliate_promo_materials')}
+            </LinkButton>
+          </Card>
         </section>
 
         <section className="flex flex-col gap-6">
@@ -410,27 +417,31 @@ const AffiliatePage = ({
             />
           </div>
         </Card>
-        <Card>
-          <div className="flex flex-col gap-2 w-1/2">
-            <Heading level={3} className="text-md uppercase">
-              {t('affiliate_dashboard_payouts')}
-            </Heading>
-            <div>
-              <div className="grid grid-cols-2 gap-2 border-b py-1">
-                <p>{t('affiliate_dashboard_date')}</p>
-                <p className="text-right">{t('affiliate_dashboard_amount')}</p>
-              </div>
-              {userPayoutCharges.reverse().map((payout: any) => (
-                <div key={payout._id} className="grid grid-cols-2 gap-2 pt-1">
-                  <p>{payout.created.slice(0, 10)}</p>
+        {userPayoutCharges?.length > 0 && (
+          <Card>
+            <div className="flex flex-col gap-2 w-1/2">
+              <Heading level={3} className="text-md uppercase">
+                {t('affiliate_dashboard_payouts')}
+              </Heading>
+              <div>
+                <div className="grid grid-cols-2 gap-2 border-b py-1">
+                  <p>{t('affiliate_dashboard_date')}</p>
                   <p className="text-right">
-                    €{payout.amount.total.val.toLocaleString()}
+                    {t('affiliate_dashboard_amount')}
                   </p>
                 </div>
-              ))}
+                {userPayoutCharges.reverse().map((payout: any) => (
+                  <div key={payout._id} className="grid grid-cols-2 gap-2 pt-1">
+                    <p>{payout.created.slice(0, 10)}</p>
+                    <p className="text-right">
+                      €{payout.amount.total.val.toLocaleString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        )}
       </div>
     </>
   );

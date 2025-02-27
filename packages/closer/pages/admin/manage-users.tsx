@@ -14,7 +14,7 @@ import { useAuth } from '../../contexts/auth';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 import api from '../../utils/api';
-import { BookingConfig } from '@/types/api';
+import { BookingConfig } from '../../types/api';
 
 const ManageUsersPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
   const t = useTranslations();

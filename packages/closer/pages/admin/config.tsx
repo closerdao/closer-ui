@@ -35,7 +35,7 @@ import { capitalizeFirstLetter } from '../../utils/learn.helpers';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 import AdminLayout from '../../components/Dashboard/AdminLayout';
-import { BookingConfig } from '@/types/api';
+import { BookingConfig } from '../../types/api';
 interface Props {
   defaultEmailsConfig: ConfigType;
   error: null | string;

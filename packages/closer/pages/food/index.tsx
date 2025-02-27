@@ -16,7 +16,7 @@ import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 import AdminLayout from '../../components/Dashboard/AdminLayout';
 import api from '../../utils/api';
-import { BookingConfig } from '@/types/api';
+import { BookingConfig } from '../../types/api';
 
 const FoodPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
   const t = useTranslations();

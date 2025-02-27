@@ -1,10 +1,14 @@
 import Head from 'next/head';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 
-import { Heading, LinkButton } from '../../components/ui';
+import { useState } from 'react';
 
-import { AffiliateConfig, api } from 'closer';
+import { Button, Heading, LinkButton } from '../../components/ui';
+
+import { AffiliateConfig, api, useAuth, usePlatform } from 'closer';
 import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 import { loadLocaleData } from '../../utils/locale.helpers';
 
@@ -13,6 +17,26 @@ const AffiliateLandingPage = ({
 }: {
   affiliateConfig: AffiliateConfig;
 }) => {
+  const t = useTranslations();
+  const { user } = useAuth();
+  const { platform }: any = usePlatform();
+  const router = useRouter();
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const becomeAffiliate = async () => {
+    try {
+      setIsLoading(true);
+      await platform.user.patch(user?._id, {
+        affiliate: new Date(),
+      });
+      router.push('/settings/affiliate');
+    } catch (error) {
+      console.error('error=', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <>
       <Head>
@@ -148,18 +172,27 @@ const AffiliateLandingPage = ({
             while supporting us to restore ecosystems.
           </p>
 
+          <LinkButton
+            target="_blank"
+            className="mx-auto mt-6 px-4 bg-white text-accent   w-fit"
+            href="https://drive.google.com/drive/folders/11i6UBGqEyC8aw0ufJybnbjueSpE3s8f-"
+          >
+            {t('dashboard_affiliate_promo_materials')}
+          </LinkButton>
           <div className="mt-8 text-center bg-accent-light rounded-md p-4  mx-auto min-w-auto sm:min-w-[400px]">
             <Heading level={2} className="text-lg font-bold mb-4">
               READY TO JOIN?
             </Heading>
-            <LinkButton
-              href="/affiliate/signup"
+            <Button
+              onClick={becomeAffiliate}
               variant="primary"
               color="accent"
               className="max-w-xs mx-auto"
+              isLoading={isLoading}
+              isEnabled={!isLoading}
             >
               BECOME AN AFFILIATE
-            </LinkButton>
+            </Button>
           </div>
         </section>
       </div>
