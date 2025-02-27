@@ -1,7 +1,7 @@
-import Card from '../../../components/ui/Card';
+import Card from './ui/Card';
 
 import { useTranslations } from 'next-intl';
-import Heading from '../../../components/ui/Heading';
+import Heading from './ui/Heading';
 const StatsCard = ({
   title,
   value,

@@ -143,7 +143,7 @@ const MemberMenu = () => {
         ? [
             {
               label: t('navigation_affiliate_dashboard'),
-              url: '/affiliate',
+              url: '/settings/affiliate',
               enabled: true,
             },
           ]

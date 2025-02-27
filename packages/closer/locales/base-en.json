@@ -1545,6 +1545,7 @@
   "learn_course_purchase_confirmation_message": "<p>Thank you for your purchase! 🌱</p><p>We will contact you soon with the course details.</p>",
 
   "stats_total_earnings": "Total Earnings",
+  "stats_unpaid_earnings": "Unpaid Earnings",
   "stats_earnings_subtext": "Selected period earnings",
   "stats_total_referrals": "Total Referrals",
   "stats_referrals_subtext": "Referred users",
@@ -1587,6 +1588,6 @@
   "affiliate_dashboard_amount": "Amount",
   "affiliate_dashboard_date": "Date",
   "affiliate_dashboard_payouts": "Payouts",
-
+  "affiliate_dashboard_affiliate_revenue": "Affiliate revenue",
   "": ""
 }

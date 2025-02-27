@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { useEffect, useState } from 'react';
 
+import StatsCard from '../../../components/Affiliate';
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import Modal from '../../../components/Modal';
 import { ErrorMessage, Information } from '../../../components/ui';
@@ -10,7 +11,6 @@ import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
 import Input from '../../../components/ui/Input';
 import Spinner from '../../../components/ui/Spinner';
-import StatsCard from './../../affiliate/components/Affiliate';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -30,6 +30,7 @@ const AffiliateDashboardPage = ({
 }) => {
   const t = useTranslations();
   const { user } = useAuth();
+
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -144,6 +145,8 @@ const AffiliateDashboardPage = ({
                 </tr>
               </thead>
 
+              {/* {JSON.stringify(data?.affiliateData)} */}
+
               {data?.affiliateData?.map((affiliate: any) => (
                 <tbody key={affiliate._id}>
                   <tr className="bg-white border-b">
@@ -242,10 +245,13 @@ const AffiliateDashboardPage = ({
                                 {t('affiliate_dashboard_transactions')}
                               </Heading>
                               <div>
-                                <div className="grid grid-cols-3 gap-2 border-b py-1">
+                                <div className="grid grid-cols-4 gap-2 border-b py-1">
                                   <p>{t('affiliate_dashboard_type')}</p>
                                   <p className="text-right">
                                     {t('affiliate_dashboard_amount')}
+                                  </p>
+                                  <p className="text-right">
+                                    {t('affiliate_dashboard_affiliate_revenue')}
                                   </p>
                                   <p className="text-right">
                                     {t('affiliate_dashboard_date')}
@@ -257,7 +263,7 @@ const AffiliateDashboardPage = ({
                                   .map((charge: any) => (
                                     <div
                                       key={charge._id}
-                                      className="grid grid-cols-3 gap-2 pt-1"
+                                      className="grid grid-cols-4 gap-2 pt-1"
                                     >
                                       <p>
                                         {charge.type === 'booking' ? (
@@ -272,10 +278,14 @@ const AffiliateDashboardPage = ({
                                       </p>
                                       <p className="text-right">
                                         €
-                                        {charge.amount.total.val.toLocaleString()}
+                                        {charge?.amount?.total?.val?.toLocaleString()}
                                       </p>
                                       <p className="text-right">
-                                        {charge.created.slice(0, 10)}
+                                        €
+                                        {charge?.affiliateRevenue?.val?.toLocaleString()}
+                                      </p>
+                                      <p className="text-right">
+                                        {charge?.created?.slice(0, 10)}
                                       </p>
                                     </div>
                                   ))}
