@@ -42,7 +42,7 @@ const PageNotAllowed = ({ error }: { error?: string }) => {
                 href={`/signup?back=${encodeURIComponent(router.asPath)}`}
                 className="btn"
               >
-                {t('signup')}
+                {t('navigation_signup')}
               </Link>
             </div>
             
