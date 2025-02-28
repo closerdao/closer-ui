@@ -11,7 +11,7 @@ import RevenueIcon from '../../components/icons/RevenueIcon';
 import { Card, Heading, LinkButton } from 'closer/components/ui';
 
 import { FaLink } from '@react-icons/all-files/fa/FaLink';
-import { AffiliateConfig, api, usePlatform } from 'closer';
+import { AffiliateConfig, PageNotFound, api, usePlatform } from 'closer';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -127,7 +127,6 @@ const AffiliatePage = ({
     (charge: any) => charge.meta.affiliateId === user?._id,
   );
 
-
   const totalPayoutCharges = userPayoutCharges?.reduce(
     (acc: number, charge: any) => acc + charge.amount.total.val,
     0,
@@ -171,6 +170,10 @@ const AffiliatePage = ({
       platform.charge.get(filters.payoutsFilter),
     ]);
   };
+
+  if (!process.env.NEXT_PUBLIC_FEATURE_AFFILIATE) {
+    return <PageNotFound />;
+  }
 
   if (!user || !user?.affiliate) {
     return <PageNotAllowed />;
@@ -302,8 +305,12 @@ const AffiliatePage = ({
               </div>
             </Card>
           </div>
-          <Card className=' rounded-md bg-accent-light'>
-            <LinkButton target='_blank'  className=' px-4  w-fit' href="https://drive.google.com/drive/folders/11i6UBGqEyC8aw0ufJybnbjueSpE3s8f-">
+          <Card className=" rounded-md bg-accent-light">
+            <LinkButton
+              target="_blank"
+              className=" px-4  w-fit"
+              href="https://drive.google.com/drive/folders/11i6UBGqEyC8aw0ufJybnbjueSpE3s8f-"
+            >
               {t('dashboard_affiliate_promo_materials')}
             </LinkButton>
           </Card>

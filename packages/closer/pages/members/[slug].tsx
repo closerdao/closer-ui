@@ -21,11 +21,11 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import { User, UserLink } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
+import { GeneralConfig } from '../../types/api';
 import api, { cdn } from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
-import { GeneralConfig } from '../../types/api';
 
 interface MemberPageProps {
   member: User;
@@ -53,8 +53,6 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
   const [links, setLinks] = useState<UserLink[]>(member?.links || []);
   const [showForm, toggleShowForm] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
-
-  console.log('user=', currentUser);
 
   useEffect(() => {
     if (hasSaved) {
@@ -240,7 +238,9 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                     vouchData={member?.vouched || []}
                     myId={currentUser?._id}
                     userId={member._id}
-                    minVouchingStayDuration={Number(generalConfig?.minVouchingStayDuration) || 14}
+                    minVouchingStayDuration={
+                      Number(generalConfig?.minVouchingStayDuration) || 14
+                    }
                   />
                 )}
                 <div className="mt-1 w-full">
@@ -503,7 +503,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
 MemberPage.getInitialProps = async (context: NextPageContext) => {
   const { req, query } = context;
   try {
-    const [res, generalRes,messages] = await Promise.all([
+    const [res, generalRes, messages] = await Promise.all([
       api.get(`/user/${query.slug}`, {
         headers: (req as NextApiRequest)?.cookies?.access_token
           ? {

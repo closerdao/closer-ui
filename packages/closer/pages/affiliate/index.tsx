@@ -6,7 +6,13 @@ import { useState } from 'react';
 
 import { Button, Heading, LinkButton } from '../../components/ui';
 
-import { AffiliateConfig, api, useAuth, usePlatform } from 'closer';
+import {
+  AffiliateConfig,
+  PageNotFound,
+  api,
+  useAuth,
+  usePlatform,
+} from 'closer';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -38,6 +44,10 @@ const AffiliateLandingPage = ({
       setIsApiLoading(false);
     }
   };
+
+  if (!process.env.NEXT_PUBLIC_FEATURE_AFFILIATE) {
+    return <PageNotFound />;
+  }
 
   if (!user && !isLoading) {
     return <PageNotAllowed />;
