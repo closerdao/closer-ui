@@ -391,6 +391,7 @@
   "bookings_edit_slug_not_found": "Event_not_found",
   "bookings_checkout_title": "Confirm payment",
   "bookings_title_pending": "Your booking is pending approval.",
+  "bookings_title_refunded": "Your booking is refunded.",
   "bookings_title_confirmed": "Your booking is confirmed!",
   "bookings_title_paid": "Pack your bags!",
   "bookings_title_credits-paid": "Pack your bags!",
