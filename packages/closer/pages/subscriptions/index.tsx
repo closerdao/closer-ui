@@ -55,6 +55,7 @@ const SubscriptionsPage: NextPage<Props> = ({
 
   const [userActivePlan, setUserActivePlan] = useState<SubscriptionPlan>();
 
+
   const hasComponentRendered = useRef(false);
 
   useEffect(() => {
@@ -76,10 +77,12 @@ const SubscriptionsPage: NextPage<Props> = ({
   }, []);
 
   useEffect(() => {
+
+    const isSubscriber = user?.subscription?.plan && new Date(user?.subscription?.validUntil || '') > new Date();
     const selectedSubscription = plans?.find(
       (plan: any) => plan.priceId === (user?.subscription?.priceId || 'free'),
     );
-    setUserActivePlan(selectedSubscription);
+    setUserActivePlan(isSubscriber ? selectedSubscription : undefined);
   }, [user]);
 
   const handleNext = async (

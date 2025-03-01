@@ -43,12 +43,17 @@ const SubscriptionCards = ({
   const filteredPlans = isAuthenticated ? paidSubscriptionPlans : plans;
 
   const getCtaText = (price: number, slug: string) => {
+
     if (slug === 'citizen') {
       if (isMember) {
         return t('subscriptions_citizen_finance_tokens_button');
       } else {
         return t('subscriptions_citizen_become_citizen');
       }
+    }
+
+    if(!userActivePlan) {
+      return t('subscriptions_subscribe_button');
     }
 
     if (price === 0) {
