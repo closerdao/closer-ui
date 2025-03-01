@@ -140,11 +140,11 @@ const MemberMenu = () => {
         url: '/settings/referrals',
         enabled: process.env.NEXT_PUBLIC_FEATURE_REFERRAL === 'true',
       },
-      ...(process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true'
+      ...((process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true' && user?.affiliate) 
         ? [
             {
               label: t('navigation_affiliate_dashboard'),
-              url: '/affiliate',
+              url: '/settings/affiliate',
               enabled: true,
             },
           ]

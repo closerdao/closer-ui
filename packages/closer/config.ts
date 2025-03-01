@@ -499,6 +499,10 @@ export const configDescription: ConfigType[] = [
         type: 'number',
         default: 10,
       },
+      productsCommissionPercent: {
+        type: 'number',
+        default: 10,
+      },
     },
   },
 ];

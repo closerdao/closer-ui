@@ -19,12 +19,19 @@ import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import SubscriptionsFunnel from './components/SubscriptionsFunnel';
+import { BookingConfig } from '../../../types/api';
 
-const PerformancePage = () => {
+const PerformancePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
   const t = useTranslations();
   const { user } = useAuth();
   const router = useRouter();
   const { time_frame } = router.query;
+
+  const isBookingEnabled =
+  bookingConfig?.enabled &&
+  process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+
+
 
   const [timeFrame, setTimeFrame] = useState<string>(() =>
     typeof time_frame === 'string' ? time_frame : 'month',
@@ -63,7 +70,7 @@ const PerformancePage = () => {
       <Head>
         <title>{t('dashboard_performance_title')}</title>
       </Head>
-      <AdminLayout>
+      <AdminLayout isBookingEnabled={isBookingEnabled}>
         <div className="max-w-screen-lg  px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex justify-between items-start md:items-center gap-4 mb-8 w-full flex-col md:flex-row">
             <Heading level={1}>{t('dashboard_performance_title')}</Heading>
@@ -104,22 +111,28 @@ const PerformancePage = () => {
 
 PerformancePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalRes, messages] = await Promise.all([
+    const [generalRes, bookingRes, messages] = await Promise.all([
       api.get('/config/general').catch(() => {
+        return null;
+      }),
+      api.get('/config/booking').catch(() => {
         return null;
       }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const generalConfig = generalRes?.data?.results?.value;
+    const bookingConfig = bookingRes?.data?.results?.value;
 
     return {
       generalConfig,
+      bookingConfig,
       messages,
     };
   } catch (error) {
     return {
       error: parseMessageFromError(error),
       generalConfig: null,
+      bookingConfig: null,
       messages: null,
     };
   }

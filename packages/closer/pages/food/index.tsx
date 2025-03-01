@@ -15,14 +15,19 @@ import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 import AdminLayout from '../../components/Dashboard/AdminLayout';
+import api from '../../utils/api';
+import { BookingConfig } from '../../types/api';
 
-const FoodPage = () => {
+const FoodPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
   const t = useTranslations();
 
   const { platform }: any = usePlatform();
   const { user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
   const isAdmin = user?.roles.includes('admin');
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   const foodFilter = {
     where: {},
@@ -47,7 +52,7 @@ const FoodPage = () => {
       <Head>
         <title>{t('food_edit_title')}</title>
       </Head>
-      <AdminLayout>
+      <AdminLayout isBookingEnabled={isBookingEnabled}>
         {foodOptions?.get('error') && (
           <div className="validation-error">{foodOptions.get('error')}</div>
         )}
@@ -85,16 +90,21 @@ const FoodPage = () => {
 
 FoodPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [messages] = await Promise.all([
+    const [messages, bookingRes] = await Promise.all([
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      api.get('/config/booking').catch(() => null),
     ]);
+
+    const bookingConfig = bookingRes?.data?.results?.value;
 
     return {
       messages,
+      bookingConfig,
     };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
+      bookingConfig: null,
     };
   }
 };

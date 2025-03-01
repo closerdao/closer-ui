@@ -1,26 +1,28 @@
-import Card from '../../../components/ui/Card';
+import Card from './ui/Card';
 
 import { useTranslations } from 'next-intl';
-
+import Heading from './ui/Heading';
 const StatsCard = ({
   title,
   value,
   icon,
   subtext,
+  isAccent,
 }: {
   title: string;
   value: string;
   icon?: any;
-  subtext: string;
+  subtext?: string;
+  isAccent?: boolean;
 }) => {
   const t = useTranslations();
   return (
-    <Card className="col-span-1">
+    <Card className="col-span-1 bg-white">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-lg">{title}</p>
-          <p className="text-2xl font-semibold mt-1">{value || 0}</p>
-          <p className="text-sm mt-1">{subtext}</p>
+          <Heading level={2} className="text-lg font-normal">{title}</Heading>
+          <p className={`text-2xl font-semibold mt-1 ${isAccent ? 'text-accent' : ''}`}>{value || 0}</p>
+          {subtext && <p className="text-sm mt-1">{subtext}</p>}
         </div>
         {icon && <div className="text-gray-400">{icon}</div>}
       </div>
