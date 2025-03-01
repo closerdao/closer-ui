@@ -76,7 +76,7 @@ export const configFormSchema = z.object({
   volunteeringMinStay: numberRequired,
 });
 
-const arrayValidationRules = {
+const subscriptionValidationRules = {
   title: stringRequired,
   description: stringRequired,
   billingPeriod: stringRequired,
@@ -114,6 +114,9 @@ function buildValidationObject(
 }
 export const getValidationSchema = (data: DataSchema[]) => {
   if (!data) return null;
-  const arrayValidation = buildValidationObject(data, arrayValidationRules);
+  const arrayValidation = buildValidationObject(
+    data,
+    subscriptionValidationRules,
+  );
   return arrayValidation;
 };

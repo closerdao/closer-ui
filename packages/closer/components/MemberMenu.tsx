@@ -56,7 +56,7 @@ const MemberMenu = () => {
     areSubscriptionsEnabled: boolean,
     isVolunteeringEnabled: boolean,
   ) => {
-    console.log('isBookingEnabled==', isBookingEnabled);
+
     const links = [
       {
         label: t('navigation_subscriptions'),
