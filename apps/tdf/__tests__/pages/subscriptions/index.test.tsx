@@ -34,7 +34,7 @@ describe('Subscriptions', () => {
     );
 
     const createAccountButton = screen.getByRole('button', {
-      name: /create account/i,
+      name: /Subscribe/i,
     });
 
     expect(createAccountButton).toBeInTheDocument();
