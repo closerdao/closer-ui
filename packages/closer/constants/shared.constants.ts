@@ -270,7 +270,7 @@ export const MAX_CREDITS_PER_MONTH = 90;
 
 export const HOME_PAGE_CATEGORY = 'home page';
 
-export const MAX_USERS_TO_FETCH = 2000;
+export const MAX_USERS_TO_FETCH = 3000;
 
 export const MAX_LISTINGS_TO_FETCH = 100;
 

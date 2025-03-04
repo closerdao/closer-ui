@@ -13,8 +13,10 @@ import { usePlatform } from '../../contexts/platform';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
+import api from '../../utils/api';
+import { BookingConfig } from '../../types/api';
 
-const LearnDashboardPage = () => {
+const LearnDashboardPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
   const t = useTranslations();
 
   const { platform }: any = usePlatform();
@@ -22,6 +24,10 @@ const LearnDashboardPage = () => {
   const isSpaceHost = user?.roles.includes('space-host');
   const isAdmin = user?.roles.includes('admin');
   const CHARGES_LIMIT = 1000;
+
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   const [preparedCourseData, setPreparedCourseData] = useState([]);
 
@@ -129,7 +135,7 @@ const LearnDashboardPage = () => {
       <Head>
         <title>{t('learn_heading')}</title>
       </Head>
-      <AdminLayout>
+      <AdminLayout isBookingEnabled={isBookingEnabled}>
         <section className="flex flex-col gap-4 mb-12 ">
           <div className="md:max-w-3xl">
             <div className="mb-6 flex justify-between flex-col sm:flex-row gap-4">
@@ -182,16 +188,21 @@ const LearnDashboardPage = () => {
 
 LearnDashboardPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [messages] = await Promise.all([
+    const [messages, bookingRes] = await Promise.all([
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      api.get('/config/booking').catch(() => null),
     ]);
+
+    const bookingConfig = bookingRes?.data?.results?.value;
 
     return {
       messages,
+      bookingConfig,
     };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
+      bookingConfig: null,
     };
   }
 };

@@ -1,10 +1,8 @@
 import { DateRange } from '../types/affiliate';
-import { AffiliateConfig } from '../types/api';
 import { Charge } from '../types/booking';
 
 export const calculateAffiliateRevenue = (
   charges: Charge[],
-  affiliateConfig: AffiliateConfig,
 ) => {
   // we double check if affiliateRevenue currency is either EUR fiat or EUR stablecoin
   // events revenue is calculated based on ticket price only
@@ -21,9 +19,7 @@ export const calculateAffiliateRevenue = (
         (acc: number, charge: Charge) =>
           acc + (charge.affiliateRevenue?.val || 0),
         0,
-      ) *
-      affiliateConfig?.subscriptionCommissionPercent) /
-      100 || 0;
+      ) )  || 0;
 
   const staysRevenue =
     (filteredCharges
@@ -36,9 +32,7 @@ export const calculateAffiliateRevenue = (
         (acc: number, charge: Charge) =>
           acc + (charge.affiliateRevenue?.val || 0),
         0,
-      ) *
-      affiliateConfig.staysCommissionPercent) /
-      100 || 0;
+      )) || 0;
 
   const eventsRevenue =
     (filteredCharges
@@ -52,9 +46,7 @@ export const calculateAffiliateRevenue = (
         (acc: number, charge: Charge) =>
           acc + (charge.affiliateRevenue?.val || 0),
         0,
-      ) *
-      affiliateConfig.eventsCommissionPercent) /
-      100 || 0;
+      ) ) || 0;
 
   const tokenSaleRevenue =
     (filteredCharges
@@ -63,9 +55,7 @@ export const calculateAffiliateRevenue = (
         (acc: number, charge: Charge) =>
           acc + (charge.affiliateRevenue?.val || 0),
         0,
-      ) *
-      affiliateConfig.tokenSaleCommissionPercent) /
-      100 || 0;
+      ) ) || 0;
 
   const financedTokenRevenue =
     (filteredCharges
@@ -74,9 +64,7 @@ export const calculateAffiliateRevenue = (
         (acc: number, charge: Charge) =>
           acc + (charge.affiliateRevenue?.val || 0),
         0,
-      ) *
-      affiliateConfig.tokenSaleCommissionPercent) /
-      100 || 0;
+      )) || 0;
 
   const totalRevenue =
     subscriptionsRevenue +

@@ -470,11 +470,11 @@ export const calculateSubscriptionPrice = (plan, monthlyCredits) => {
   }
 
   if (!plan.tiersAvailable) {
-    return plan.price;
+    return Number(plan.price);
   }
 
   if (plan.tiersAvailable) {
-    return plan.price * monthlyCredits;
+    return Number(plan.price) * monthlyCredits;
   }
 
   throw new Error(
