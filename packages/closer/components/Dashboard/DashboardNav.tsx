@@ -14,48 +14,46 @@ const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
   const router = useRouter();
   const path = router.pathname;
 
-  const DASHBOARD_LINKS = [
-    ...(isBookingEnabled
-      ? [
-          {
-            label: t('navigation_dashboard'),
-            url: '/dashboard',
-          },
-          {
-            label: t('navigation_performance'),
-            url: '/dashboard/performance',
-          },
-          {
-            label: t('navigation_bookings'),
-            subsections: [
-              {
-                label: t('navigation_all_bookings'),
-                url: '/bookings/all',
-              },
-              {
-                label: t('navigation_booking_requests'),
-                url: '/bookings/requests',
-              },
-              {
-                label: t('navigation_current_bookings'),
-                url: '/bookings/current',
-              },
-              {
-                label: t('navigation_booking_calendar'),
-                url: '/bookings/calendar',
-              },
-            ],
-          },
-          {
-            label: t('navigation_edit_listings'),
-            url: '/listings',
-          },
-          {
-            label: t('navigation_food'),
-            url: '/food',
-          },
-        ]
-      : []),
+
+  const DASHBOARD_LINKS =  isBookingEnabled ? [
+    {
+      label: t('navigation_dashboard'),
+      url: '/dashboard',
+    },
+    {
+      label: t('navigation_performance'),
+      url: '/dashboard/performance',
+    },
+    {
+      label: t('navigation_bookings'),
+      subsections: [
+        {
+          label: t('navigation_all_bookings'),
+          url: '/bookings/all',
+        },
+        {
+          label: t('navigation_booking_requests'),
+          url: '/bookings/requests',
+        },
+        {
+          label: t('navigation_current_bookings'),
+          url: '/bookings/current',
+        },
+        {
+          label: t('navigation_booking_calendar'),
+          url: '/bookings/calendar',
+        },
+      ],
+    },
+
+    {
+      label: t('navigation_edit_listings'),
+      url: '/listings',
+    },
+    {
+      label: t('navigation_food'),
+      url: '/food',
+    },
     {
       label: t('navigation_user_list'),
       url: '/admin/manage-users',
@@ -72,6 +70,24 @@ const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
       label: t('navigation_affiliate_settings'),
       url: '/dashboard/affiliate',
     },
+  ] : [
+
+      {
+        label: t('navigation_user_list'),
+        url: '/admin/manage-users',
+      },
+      {
+        label: t('navigation_platform_settings'),
+        url: '/admin/config',
+      },
+      {
+        label: t('navigation_learn_settings'),
+        url: '/admin/learn',
+      },
+      {
+        label: t('navigation_affiliate_settings'),
+        url: '/dashboard/affiliate',
+      },
   ];
 
   const getIcon = (label: string) => {

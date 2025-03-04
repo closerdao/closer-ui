@@ -154,8 +154,8 @@
   "buttons_volunteer": "Join as a volunteer",
   "buttons_booking_request": "Submit request",
   "buttons_go_to_bookings": "< Back to Bookings",
-  "buttons_go_back": "<link Back",
-  "buttons_back_to_dates": "<link Back to Dates",
+  "buttons_go_back": "< Back",
+  "buttons_back_to_dates": "Back to Dates",
   "buttons_edit_profile": "Edit Profile",
 
   "cancel_booking_page_title": "Cancellation",
@@ -1509,7 +1509,7 @@
   "vouch_why_vouch": "Why do you want to vouch for this user?",
 
   "learn_heading": "Learning Hub",
-  "learn_subheading": "Dive into Lios Learning Hub and tap into a reservoir of actionable knowledge.",
+  "learn_subheading": "Dive into TDF Learning Hub and tap into a reservoir of actionable knowledge.",
   "learn_categories_heading": "Categories",
   "learn_courses": "courses",
   "learn_lesson_category": "Category",
