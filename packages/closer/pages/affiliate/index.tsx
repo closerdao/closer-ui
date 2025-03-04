@@ -25,24 +25,31 @@ const AffiliateLandingPage = ({
   affiliateConfig: AffiliateConfig;
 }) => {
   const t = useTranslations();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, refetchUser } = useAuth();
   const { platform }: any = usePlatform();
   const router = useRouter();
+
 
   const [isApiLoading, setIsApiLoading] = useState(false);
 
   const becomeAffiliate = async () => {
+    if (user?.affiliate) {
+      router.push('/settings/affiliate');
+      return;
+    }
     try {
       setIsApiLoading(true);
       await platform.user.patch(user?._id, {
         affiliate: new Date(),
       });
-      router.push('/settings/affiliate');
+      await refetchUser();
+      setTimeout(() => {
+        router.push('/settings/affiliate');
+        setIsApiLoading(false);
+      }, 1000);
     } catch (error) {
       console.error('error=', error);
-    } finally {
-      setIsApiLoading(false);
-    }
+    } 
   };
 
   if (!process.env.NEXT_PUBLIC_FEATURE_AFFILIATE) {
@@ -206,7 +213,7 @@ const AffiliateLandingPage = ({
               isLoading={isApiLoading}
               isEnabled={!isApiLoading}
             >
-              BECOME AN AFFILIATE
+              {user?.affiliate ? 'Go to Affiliate dashboard' : 'BECOME AN AFFILIATE'}
             </Button>
           </div>
         </section>

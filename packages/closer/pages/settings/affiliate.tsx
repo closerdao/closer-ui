@@ -109,7 +109,7 @@ const AffiliatePage = ({
     }
   }, [filters, user, platform]);
 
-  const referralLink = `${SEMANTIC_URL}/signup/?referral=${user?._id}`;
+  const referralLink = `${SEMANTIC_URL}?referral=${user?._id}`;
   const tokenFlowLink = `${SEMANTIC_URL}/token?referral=${user?._id}`;
   const subscriptionsFlowLink = `${SEMANTIC_URL}/subscriptions?referral=${user?._id}`;
   const staysFlowLink = `${SEMANTIC_URL}/stay?referral=${user?._id}`;
