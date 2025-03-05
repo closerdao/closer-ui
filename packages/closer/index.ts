@@ -140,7 +140,7 @@ export { default as PerformancePage } from './pages/dashboard/performance';
 export { default as LearnDashboardPage } from './pages/admin/learn';
 export { default as BankTransferPage } from './pages/token/bank-transfer';
 export { default as ChecklistCryptoPage } from './pages/token/checklist-crypto';
-
+export { default as SelectFlowCitizenPage } from './pages/subscriptions/citizen/select-flow';
 // Types
 export * from './types/';
 // Utils

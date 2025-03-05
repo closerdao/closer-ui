@@ -1,15 +1,19 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
+import Wallet from '../../components/Wallet';
 import {
   BackButton,
   Button,
+  Card,
   Heading,
   Input,
   ProgressBar,
 } from '../../components/ui';
+import { isValid } from 'iban-ts';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -22,6 +26,7 @@ import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
+import { WalletState } from '../../contexts/wallet';
 
 interface Props {
   generalConfig: GeneralConfig | null;
@@ -29,7 +34,7 @@ interface Props {
 
 const BankTransferPage = ({ generalConfig }: Props) => {
   const t = useTranslations();
-
+  const { isWalletConnected } = useContext(WalletState);
   const router = useRouter();
   const { totalFiat, tokens } = router.query;
 
@@ -52,11 +57,10 @@ const BankTransferPage = ({ generalConfig }: Props) => {
   };
 
   const handleNext = async () => {
-
     try {
       setIsApiLoading(true);
       await api.post('/token/bank-transfer-application', {
-        ibanNumber, 
+        ibanNumber,
         totalFiat,
         userId: user?._id,
         tokens,
@@ -99,7 +103,12 @@ const BankTransferPage = ({ generalConfig }: Props) => {
         <ProgressBar steps={TOKEN_SALE_STEPS_BANK_TRANSFER} />
 
         <main className="pt-14 pb-24">
-          <p>{t('token_sale_bank_transfer_intro', { tokens: tokens as string, totalFiat: totalFiat as string })}</p>
+          <p>
+            {t('token_sale_bank_transfer_intro', {
+              tokens: tokens as string,
+              totalFiat: totalFiat as string,
+            })}
+          </p>
           <Heading level={3} hasBorder={true}>
             💰 {t('token_sale_bank_transfer_next_steps')}
           </Heading>
@@ -114,8 +123,39 @@ const BankTransferPage = ({ generalConfig }: Props) => {
               placeholder={t('token_sale_bank_transfer_iban_placeholder')}
             />
 
-            <Button onClick={handleNext} isLoading={isApiLoading} isEnabled={ibanNumber.length > 0 && !isApiLoading}>
-              {t('token_sale_button_continue')} 
+            <div className=" space-y-6">
+              <strong>
+                {t('subscriptions_citizen_connect_wallet_to_continue')}
+              </strong>
+              <Card className="mb-4">
+                <ul>
+                  <li className="mb-1.5">
+                    <Link
+                      className="text-accent font-bold underline"
+                      href={t('token_sale_before_you_begin_guide_1_link')}
+                    >
+                      {t('token_sale_before_you_begin_guide_1')}
+                    </Link>
+                  </li>
+                  <li className="mb-1.5">
+                    <Link
+                      className="text-accent font-bold underline"
+                      href={t('token_sale_before_you_begin_guide_2_link')}
+                    >
+                      {t('token_sale_before_you_begin_guide_2')}
+                    </Link>
+                  </li>
+                </ul>
+              </Card>
+            <Wallet />
+            </div>
+
+            <Button
+              onClick={handleNext}
+              isLoading={isApiLoading}
+              isEnabled={isValid(ibanNumber) && !isApiLoading && user?.walletAddress && isWalletConnected}
+            >
+              {t('token_sale_button_continue')}
             </Button>
           </div>
         </main>

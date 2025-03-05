@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { Button, Card, Checkbox, Heading, Input, Spinner } from '../ui';
+import { isValid } from 'iban-ts';
 
 interface CitizenFinanceTokensProps {
   application: any;
@@ -265,7 +266,8 @@ const CitizenFinanceTokens = ({
             !loading &&
             Boolean(application?.iban) &&
             !isPending &&
-            Boolean(totalToPayInFiat)
+            Boolean(totalToPayInFiat) &&
+            isValid(application?.iban)
           }
           className="booking-btn"
           onClick={applyCitizen}

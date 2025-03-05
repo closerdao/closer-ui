@@ -43,6 +43,7 @@
     "firebase": "^10.12.2",
     "fs-extra": "^10.0.0",
     "html-to-text": "^9.0.5",
+    "iban-ts": "^0.10.0",
     "immutable": "^4.0.0-rc.12",
     "js-cookie": "^2.2.1",
     "lucide-react": "^0.469.0",
