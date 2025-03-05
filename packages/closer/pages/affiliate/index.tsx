@@ -52,7 +52,7 @@ const AffiliateLandingPage = ({
     } 
   };
 
-  if (!process.env.NEXT_PUBLIC_FEATURE_AFFILIATE) {
+  if (process.env.NEXT_PUBLIC_FEATURE_AFFILIATE !== 'true') {
     return <PageNotFound />;
   }
 
