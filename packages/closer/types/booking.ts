@@ -75,13 +75,19 @@ export type TokenSaleChargeMeta = {
 
 export type Charge = {
   id: string;
-  status: 'paid' | 'refunded' | 'pending-refund';
+  status:
+    | 'paid'
+    | 'refunded'
+    | 'pending-refund'
+    | 'pending-payment'
+    | 'canceled';
   method: 'stripe' | 'tokens' | 'credits' | 'crypto' | 'monerium' | 'manual';
   type:
     | 'booking'
     | 'subscription'
     | 'product'
     | 'tokenSale'
+    | 'fiatTokenSale'
     | 'financedToken'
     | 'citizenship'
     | 'affiliatePayout';

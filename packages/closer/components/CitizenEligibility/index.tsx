@@ -9,7 +9,7 @@ interface Props {
   minVouches: number;
 }
 
-const CitizenNotEligible = ({
+const CitizenEligibility = ({
   userReports,
   userSubscription,
   hasStayedForMinDuration,
@@ -40,7 +40,7 @@ const CitizenNotEligible = ({
           <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
             {t('subscriptions_citizen_on_way_to_30_tokens')}
           </li>
-        ) }
+        )}
         {hasStayedForMinDuration ? (
           <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
             {t('subscriptions_citizen_stayed_for_min_duration')}
@@ -68,7 +68,6 @@ const CitizenNotEligible = ({
             {t('subscriptions_citizen_owns_30_tokens')}
           </li>
         )}
-        {/* {!isMember && <li className='bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet-inactive.svg)] bg-no-repeat pl-6 mb-1.5'>{t('subscriptions_citizen_is_member')}</li>} */}
       </ul>
 
       <p className="">
@@ -84,4 +83,4 @@ const CitizenNotEligible = ({
   );
 };
 
-export default CitizenNotEligible;
+export default CitizenEligibility;
