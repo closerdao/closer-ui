@@ -133,7 +133,7 @@ export { default as CreateVolunteerOportunity } from './pages/volunteer/create';
 export { default as DashboardPage } from './pages/dashboard';
 export { default as ProjectApplicationPage } from './pages/projects/apply';
 export { default as VolunteerApplicationPage } from './pages/volunteer/apply';
-export { default as AffiliateDashboard } from './pages/affiliate/index';
+export { default as AffiliatePage } from './pages/settings/affiliate';
 export { default as LearnCheckout } from './pages/learn/checkout';
 export { default as LearnConfirmation } from './pages/learn/[slug]/confirmation';
 export { default as PerformancePage } from './pages/dashboard/performance';
@@ -141,6 +141,8 @@ export { default as LearnDashboardPage } from './pages/admin/learn';
 export { default as BankTransferPage } from './pages/token/bank-transfer';
 export { default as ChecklistCryptoPage } from './pages/token/checklist-crypto';
 export { default as SelectFlowCitizenPage } from './pages/subscriptions/citizen/select-flow';
+export { default as AffiliateDashboardPage } from './pages/dashboard/affiliate';
+export { default as AffiliateLandingPage } from './pages/affiliate/index';
 // Types
 export * from './types/';
 // Utils

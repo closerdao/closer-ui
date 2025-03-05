@@ -89,6 +89,7 @@ const FoodSelectionPage = ({
         foodOptionId:
           isFood && foodOption && isFoodAvailable ? foodOption._id : null,
         discountCode,
+        isDayTicket: booking?.isDayTicket,
       });
 
       if (event?.fields) {

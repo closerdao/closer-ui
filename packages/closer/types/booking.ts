@@ -81,7 +81,7 @@ export type Charge = {
     | 'pending-refund'
     | 'pending-payment'
     | 'canceled';
-  method: 'stripe' | 'tokens' | 'credits' | 'crypto' | 'monerium';
+  method: 'stripe' | 'tokens' | 'credits' | 'crypto' | 'monerium' | 'manual';
   type:
     | 'booking'
     | 'subscription'
@@ -89,7 +89,8 @@ export type Charge = {
     | 'tokenSale'
     | 'fiatTokenSale'
     | 'financedToken'
-    | 'citizenship';
+    | 'citizenship'
+    | 'affiliatePayout';
   date: Date;
   amount: {
     total: {

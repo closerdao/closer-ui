@@ -66,6 +66,10 @@ const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
       label: t('navigation_learn_settings'),
       url: '/admin/learn',
     },
+    {
+      label: t('navigation_affiliate_settings'),
+      url: '/dashboard/affiliate',
+    },
   ] : [
 
       {
@@ -79,6 +83,10 @@ const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
       {
         label: t('navigation_learn_settings'),
         url: '/admin/learn',
+      },
+      {
+        label: t('navigation_affiliate_settings'),
+        url: '/dashboard/affiliate',
       },
   ];
 
@@ -95,7 +103,7 @@ const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
       case t('navigation_platform_settings'):
         return <SettingsIcon />;
       default:
-        return <div className='w-[20px] h-[20px]'></div>;
+        return <div className="w-[20px] h-[20px]"></div>;
     }
   };
   return (

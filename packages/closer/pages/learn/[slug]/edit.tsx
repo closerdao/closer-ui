@@ -74,7 +74,7 @@ const EditLessonPage = ({ lesson, error, learningHubConfig }: Props) => {
           onSave={(lesson) => router.push(`/learn/${lesson.slug}`)}
           onUpdate={onUpdate}
           allowDelete
-          deleteButton="Delete lesson"
+          deleteButton="Delete Course"
           onDelete={() => router.push('/')}
         />
       </div>

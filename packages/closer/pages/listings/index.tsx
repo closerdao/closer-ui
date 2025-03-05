@@ -32,6 +32,11 @@ const Listings = ({ bookingConfig }: Props) => {
 
   const { platform }: any = usePlatform();
   const { user } = useAuth();
+
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+
   const isTeamMember = false;
   user?.roles.includes('space-host') ||
     user?.roles.includes('steward') ||
@@ -65,7 +70,7 @@ const Listings = ({ bookingConfig }: Props) => {
         <title>{t('listings_edit_title')}</title>
       </Head>
 
-      <AdminLayout>
+      <AdminLayout isBookingEnabled={isBookingEnabled}>
         {listings?.get('error') && (
           <div className="validation-error">{listings.get('error')}</div>
         )}

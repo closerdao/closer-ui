@@ -18,6 +18,7 @@ interface LessonListProps {
   onShowPreview: () => void;
   onShowFullVideo: () => void;
   onShowLesson: (lessonId: string) => void;
+  isLegacyFullAccessLesson: boolean;
 }
 
 const LessonList = ({
@@ -28,6 +29,7 @@ const LessonList = ({
   onShowPreview,
   onShowFullVideo,
   onShowLesson,
+  isLegacyFullAccessLesson,
 }: LessonListProps) => {
   const t = useTranslations();
 
@@ -83,7 +85,7 @@ const LessonList = ({
         </button>
       ) : null}
 
-      {lesson?.modules?.length && lesson?.modules?.length > 0 ? (
+      {lesson?.modules?.length && lesson?.modules?.length > 0 && !isLegacyFullAccessLesson ? (
         <div className="font-normal ">
           <Accordion
             type="single"

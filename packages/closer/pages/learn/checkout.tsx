@@ -28,6 +28,7 @@ interface Props {
 const LearnCheckout = ({ error, lesson, paymentConfig }: Props) => {
   const t = useTranslations();
 
+
   const { isAuthenticated } = useAuth();
 
   const vatRateFromConfig = Number(paymentConfig?.vatRate);

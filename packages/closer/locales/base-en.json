@@ -154,8 +154,8 @@
   "buttons_volunteer": "Join as a volunteer",
   "buttons_booking_request": "Submit request",
   "buttons_go_to_bookings": "< Back to Bookings",
-  "buttons_go_back": "<link Back",
-  "buttons_back_to_dates": "<link Back to Dates",
+  "buttons_go_back": "< Back",
+  "buttons_back_to_dates": "Back to Dates",
   "buttons_edit_profile": "Edit Profile",
 
   "cancel_booking_page_title": "Cancellation",
@@ -373,6 +373,7 @@
   "booking_card_pickup_needed": "Pickup needed",
   "booking_card_separate_beds_needed": "Single beds needed",
   "booking_card_edit_booking": "Edit booking",
+  "booking_card_set_booking_status": "Set booking status",
   "booking_card_save_booking": "Save booking",
   "booking_card_booking_updated": "Booking updated",
   "booking_card_room_number": "Room number:",
@@ -390,6 +391,7 @@
   "bookings_edit_slug_not_found": "Event_not_found",
   "bookings_checkout_title": "Confirm payment",
   "bookings_title_pending": "Your booking is pending approval.",
+  "bookings_title_refunded": "Your booking is refunded.",
   "bookings_title_confirmed": "Your booking is confirmed!",
   "bookings_title_paid": "Pack your bags!",
   "bookings_title_credits-paid": "Pack your bags!",
@@ -415,6 +417,7 @@
   "bookings_total": "Total:",
   "bookings_amount_due": "Amount due:",
   "bookings_amount_to_refund": "Amount to refund:",
+  "bookings_go_to_stripe_dashboard": "Go to Stripe dashboard",
   "bookings_utility_fee": "Utilities fee:",
 
   "bookings_rental_cost": "Cost of the accommodation:",
@@ -586,6 +589,8 @@
   "subscriptions_summary_tier": "Tier",
   "subscriptions_summary_stays_per_month": "Night credits per month",
   "subscriptions_summary_per_month": "per month",
+  "subscriptions_summary_per_year": "per year",
+  "subscriptions_upgrade_button": "Upgrade plan",
   "subscriptions_summary_subscription": "Subscription",
   "subscriptions_summary_edit_button": "Edit",
   "subscriptions_subscribe_button": "Subscribe",
@@ -614,7 +619,7 @@
   "subscriptions_pioneer_title": "Become a pioneer",
   "subscriptions_pioneer_intro_text": "With these subscription packages you can continuously support us and get some Carrots  in return. You can then use your Carrots to cover your Accommodation Fee at TDF. Wo oh! Experience living at TDF, with no specific dates or long-term commitment required. Come!",
   "subscriptions_credits_included": "night credits included",
-  
+
   "subscriptions_become_citizen_button": "Become citizen",
   "subscriptions_hold": "Hold",
   "subscriptions_from": "or finance it from",
@@ -656,7 +661,6 @@
   "subscriptions_citizen_you_are_on_your_way_finance": "Woohoo - you are on your way to financing $TDF tokens! ",
   "subscriptions_citizen_back_to_homepage": "Back to homepage",
 
-
   "subscriptions_citizen_finance_tokens": "💰 Finance your Tokens",
   "subscriptions_citizen_finance_tokens_details": "You can choose to finance 30, 60, 90 or 120 tokens. Here are a few details about it:",
   "subscriptions_citizen_finance_tokens_details_36_months": "Paid over 36 months via bank transfers",
@@ -686,7 +690,7 @@
   "subscriptions_citizen_finance_tokens_after_application": "Once we receive the payment, we will send you a confirmation of Citizenship within 48h. If you do not receive the email, please send us a proof of payment to <link>space@traditionaldreamfactory.com</link>",
   "subscriptions_citizen_finance_tokens_after_application_finance": "Once we receive the payment, we will send you a confirmation of of yor financed token plan within 48h. If you do not receive the email, please send us a proof of payment to <link>space@traditionaldreamfactory.com</link>",
   "subscriptions_citizen_finance_tokens_button": "Finance tokens",
-  
+
   "subscriptions_citizen_user_page_created": "Created at:",
   "subscriptions_citizen_user_page_iban": "Your IBAN:",
   "subscriptions_citizen_user_page_why": "Why do you want to become a member:",
@@ -697,9 +701,6 @@
   "subscriptions_citizen_progress": "🐑 Citizensheep progress",
   "subscriptions_citizen_monthly_payment": "Monthly payment:",
   "subscriptions_citizen_amount_due": "Amount due:",
-
-
-
 
   "referrals_heading": "Referrals",
 
@@ -1161,7 +1162,7 @@
   "config_label_tier": "Tier (number)",
   "config_label_monthlyCredits": "Monthly credits",
   "config_label_price": "Price",
-  "config_label_billingPeriod": "Billing period (monthly, early)",
+  "config_label_billingPeriod": "Billing period (monthly, yearly)",
   "config_label_perks": "Perks list (comma delimited)",
   "config_label_available": "Plan is available",
   "config_label_tiersAvailable": "Plan has tiers (variable amount of credits)",
@@ -1234,6 +1235,7 @@
   "config_label_staysCommissionPercent": "Stays commission percent",
   "config_label_eventsCommissionPercent": "Events commission percent",
   "config_label_financedTokenSaleCommissionPercent": "Financed token sale commission percent",
+  "config_label_productsCommissionPercent": "Product sale commission percent",
   "config_email_product_paid_guest": "Product paid, send to user immediately",
   "config_email_product_paid_admin": "Product paid, send to admins immediately",
 
@@ -1434,6 +1436,8 @@
   "dashboard_listing": "Listing",
   "dashboard_listing_booked": "Booked",
   "dashboard_listing_total": "Total",
+  "dashboard_affiliate_title": "Affiliate",
+  "dashboard_affiliate_promo_materials": "Affiliate promotional materials",
 
   "navigation_dashboard": "Dashboard",
   "navigation_bookings": "Bookings",
@@ -1453,6 +1457,7 @@
   "navigation_learning_hub": "Learning hub",
   "navigation_platform_settings": "Platform settings",
   "navigation_learn_settings": "Learning hub",
+  "navigation_affiliate_settings": "Affiliate",
   "navigation_performance": "Performance",
   "navigation_food": "Edit food",
   "navigation_affiliate_dashboard": "Affiliate dashboard",
@@ -1522,7 +1527,7 @@
   "vouch_why_vouch": "Why do you want to vouch for this user?",
 
   "learn_heading": "Learning Hub",
-  "learn_subheading": "Dive into Lios Learning Hub and tap into a reservoir of actionable knowledge.",
+  "learn_subheading": "Dive into TDF Learning Hub and tap into a reservoir of actionable knowledge.",
   "learn_categories_heading": "Categories",
   "learn_courses": "courses",
   "learn_lesson_category": "Category",
@@ -1558,14 +1563,59 @@
   "learn_confirmation_message": "Thank you for your purchase! 🌱",
   "learn_confirmation_message_2": "We will contact you soon with the course details.",
   "learn_buy_single_course": "Buy this course",
+  "learn_subscribe": "Subscribe for full access",
   "learn_course_price": "Course price:",
 
   "learn_live_course": "Live course",
   "learn_no_data": "No single course sale data",
 
-
   "learn_course_purchase_confirmation_message": "<p>Thank you for your purchase! 🌱</p><p>We will contact you soon with the course details.</p>",
 
+  "stats_total_earnings": "Total Earnings",
+  "stats_unpaid_earnings": "Unpaid Earnings",
+  "stats_earnings_subtext": "Selected period earnings",
+  "stats_total_referrals": "Total Referrals",
+  "stats_referrals_subtext": "Referred users",
+  "stats_active_subscriptions": "Active subscriptions",
+  "stats_subscriptions_subtext": "Monthly recurring",
+  "stats_token_sales": "Token sales",
+  "stats_tokens_subtext": "Token sale amount in EUR",
+  "overview": "Overview",
+  "token_sales": "Token Sales",
+  "affiliate_dashboard": "Affiliate Dashboard",
+  "earnings_breakdown": "Earnings breakdown",
+  "earnings": "Earnings",
+  "earnings_breakdown_events": "Events earnings",
+  "earnings_breakdown_stays": "Stays earnings",
+  "earnings_breakdown_subscriptions": "Subscriptions earnings",
+  "earnings_breakdown_token_sales": "Token sales earnings",
+  "earnings_breakdown_financed_token_sales": "Financed token sales earnings",
+  "affiliate_link": "Your personal affiliate link:",
+  "affiliate_commission": "commission",
+  "affiliate_select_timeframe": "Select time frame:",
+  "affiliate_token_flow": "Token sale affiliate link:",
+  "affiliate_subscriptions_flow": "Subscriptions affiliate link:",
+  "affiliate_stays_flow": "Stays affiliate link:",
+  "affiliate_events_flow": "Events affiliate link:",
+  "affiliate_links": "Your affiliate links",
+  "affiliate_earnings": "Earnings",
+  "affiliate_dashboard_num_affiliates": "Total Affiliates",
+  "affiliate_dashboard_total_revenue": "Total Affiliate Revenue",
+  "affiliate_dashboard_unpaid_balance": "Unpaid balance",
+  "affiliate_dashboard_affiliate_list": "Affiliate list",
+  "affiliate_dashboard_last_paid": "Last paid",
+  "affiliate_dashboard_name": "Name",
+  "affiliate_dashboard_email": "Email",
+  "affiliate_dashboard_actions": "Actions",
+  "affiliate_dashboard_payout_amount": "Payout amount:",
+  "affiliate_dashboard_record_payout": "Record payout",
+  "affiliate_dashboard_payout_success": "Successfully recorded payout",
+  "affiliate_dashboard_transactions": "Transactions",
+  "affiliate_dashboard_type": "Type",
+  "affiliate_dashboard_amount": "Amount",
+  "affiliate_dashboard_date": "Date",
+  "affiliate_dashboard_payouts": "Payouts",
+  "affiliate_dashboard_affiliate_revenue": "Affiliate revenue",
 
   "": ""
 }
