@@ -122,8 +122,6 @@ export { default as TokenSaleCheckoutPage } from './pages/token/checkout';
 export { default as PublicTokenSalePage } from './pages/token/index';
 export { default as NationalityPage } from './pages/token/nationality';
 export { default as TokenSaleSuccessPage } from './pages/token/success';
-export { default as TokenCounterPage } from './pages/token/token-counter';
-export { default as YourInfoPage } from './pages/token/your-info';
 export { default as VolunteerOpportunitiesPage } from './pages/volunteer/';
 export { default as VolunteerPage } from './pages/volunteer/[slug]/';
 export { default as ProjectsPage } from './pages/projects/index';
@@ -140,6 +138,9 @@ export { default as LearnCheckout } from './pages/learn/checkout';
 export { default as LearnConfirmation } from './pages/learn/[slug]/confirmation';
 export { default as PerformancePage } from './pages/dashboard/performance';
 export { default as LearnDashboardPage } from './pages/admin/learn';
+export { default as BankTransferPage } from './pages/token/bank-transfer';
+export { default as ChecklistCryptoPage } from './pages/token/checklist-crypto';
+export { default as SelectFlowCitizenPage } from './pages/subscriptions/citizen/select-flow';
 export { default as AffiliateDashboardPage } from './pages/dashboard/affiliate';
 export { default as AffiliateLandingPage } from './pages/affiliate/index';
 // Types

@@ -70,7 +70,7 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
   }, [user, isLoading]);
 
   const goBack = () => {
-    router.push('/subscriptions/citizen/validation');
+    router.push('/subscriptions/citizen/select-flow');
   };
 
   if (error) {

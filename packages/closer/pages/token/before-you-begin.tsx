@@ -1,30 +1,24 @@
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import Wallet from '../../components/Wallet';
-import {
-  BackButton,
-  Button,
-  Card,
-  Heading,
-  ProgressBar,
-} from '../../components/ui';
+import TokenBuyWidget from '../../components/TokenBuyWidget';
+import { BackButton, Button, Heading, ProgressBar } from '../../components/ui';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { TOKEN_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
-import { WalletState } from '../../contexts/wallet';
 import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
+
+const DEFAULT_TOKENS = 10;
 
 interface Props {
   generalConfig: GeneralConfig | null;
@@ -37,14 +31,17 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
     generalConfig?.platformName || defaultConfig.platformName;
   const router = useRouter();
 
-  const isWalletEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
-
   const { isLoading, user } = useAuth();
-  const { isWalletReady } = useContext(WalletState);
+
+  const { tokens } = router.query;
+
+  const [tokensToBuy, setTokensToBuy] = useState<number>(
+    tokens !== undefined ? Number(tokens) : DEFAULT_TOKENS,
+  );
+  const [tokensToSpend, setTokensToSpend] = useState(0);
+  const [tokenSaleType, setTokenSaleType] = useState<'fiat' | 'crypto'>('fiat');
 
   const hasComponentRendered = useRef(false);
-
 
   useEffect(() => {
     if (!hasComponentRendered.current) {
@@ -56,7 +53,6 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
             point: 0,
             category: 'engagement',
           });
-
         } catch (error) {
           console.error('Error logging page view:', error);
         }
@@ -72,10 +68,24 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
   }, [user, isLoading]);
 
   const handleNext = async () => {
-    if (user && user.kycPassed === true) {
-      router.push('/token/token-counter');
-    } else {
-      router.push('/token/nationality');
+    if (tokenSaleType === 'fiat') {
+      if (user && user.kycPassed === true) {
+        router.push(
+          `/token/bank-transfer?tokens=${encodeURIComponent(
+            tokensToBuy,
+          )}&totalFiat=${encodeURIComponent(tokensToSpend)}`,
+        );
+      } else {
+        router.push(
+          `/token/nationality?tokenSaleType=fiat&tokens=${encodeURIComponent(
+            tokensToBuy,
+          )}&totalFiat=${encodeURIComponent(tokensToSpend)}`,
+        );
+      }
+    } else if (tokenSaleType === 'crypto') {
+      router.push(
+        `/token/checklist-crypto?tokens=${encodeURIComponent(tokensToBuy)}`,
+      );
     }
   };
 
@@ -104,95 +114,60 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
 
         <ProgressBar steps={TOKEN_SALE_STEPS} />
 
-        <main className="pt-14 pb-24 flex flex-col gap-4">
-          <p>{t('token_sale_before_you_begin_text_1')}</p>
-          <p>{t('token_sale_before_you_begin_text_2')}</p>
-          <p>{t('token_sale_before_you_begin_text_3')}</p>
+        <main className=" pb-24 flex flex-col gap-4">
           <div>
             <Heading level={3} hasBorder={true}>
-              💰 {t('token_sale_before_you_begin_checklist_heading')}
+              💰 {t('token_sale_heading_token_counter')}
             </Heading>
-            <ul>
-              <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                {t('token_sale_before_you_begin_checklist_1')}
-              </li>
-              <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                {t('token_sale_before_you_begin_checklist_2')}
-              </li>
-              <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                {t('token_sale_before_you_begin_checklist_3')}
-              </li>
-              <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                {t('token_sale_before_you_begin_checklist_4')}
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <Heading level={3} hasBorder={true}>
-              💰 {t('token_sale_before_you_begin_need_help_heading')}
-            </Heading>
-            <ul>
-              <li className="mb-1.5">
-                <Card className="mb-4">
-                  <Link
-                    className="text-accent font-bold underline"
-                    href='/pdf/Token-Sale-Support.pdf'
-                  >
-                    📄 {t('token_sale_complete_guide')}
-                  </Link>
-                </Card>
-              </li>
-              <li className="mb-1.5">
-                <Link
-                  className="text-accent font-bold underline"
-                  href={t('token_sale_before_you_begin_guide_1_link')}
-                >
-                  {t('token_sale_before_you_begin_guide_1')}
-                </Link>
-              </li>
-              <li className="mb-1.5">
-                <Link
-                  className="text-accent font-bold underline"
-                  href={t('token_sale_before_you_begin_guide_2_link')}
-                >
-                  {t('token_sale_before_you_begin_guide_2')}
-                </Link>
-              </li>
-              <li className="mb-1.5">
-                <Link
-                  className="text-accent font-bold underline"
-                  href='https://ramp.network/buy'
-                >
-                  {t('token_sale_before_you_begin_guide_3')}
-                </Link>
-              </li>
-              <li className="mb-1.5">
-                <Link
-                  className="text-accent font-bold underline"
-                  href='https://v2.app.squidrouter.com/'
-                >
-                  {t('token_sale_before_you_begin_guide_5')}
-                </Link>
-              </li>
-              <li className="mb-1.5">
-                <Link
-                  className="text-accent font-bold underline"
-                  href={t('token_sale_before_you_begin_guide_link_contact')}
-                >
-                  {t('token_sale_before_you_begin_guide_4')}
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {isWalletEnabled && (
-            <div className="my-8">
-              <Wallet />
+            <fieldset className="flex flex-col gap-12 min-h-[250px]">
+              <TokenBuyWidget
+                tokensToBuy={tokensToBuy}
+                setTokensToBuy={setTokensToBuy}
+                tokensToSpend={tokensToSpend}
+                setTokensToSpend={setTokensToSpend}
+              />
+            </fieldset>
+            <div className="flex flex-col gap-4">
+              <p>{t('token_sale_before_you_begin_text_1')}</p>
+              <p>{t('token_sale_before_you_begin_text_2')}</p>
+              <p>{t('token_sale_before_you_begin_text_3')}</p>
             </div>
-          )}
+          </div>
+          <div className="pb-12">
+            <Heading level={3} hasBorder={true}>
+              💰 {t('token_sale_heading_how')}
+            </Heading>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  id="payFiat"
+                  name="tokenSaleType"
+                  className="w-4 h-4"
+                  checked={tokenSaleType === 'fiat'}
+                  onChange={() => setTokenSaleType('fiat')}
+                />
+                <label htmlFor="payFiat" className="whitespace-nowrap">
+                  {t('token_sale_heading_pay_bank_transfer')}
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  id="payCrypto"
+                  name="tokenSaleType"
+                  className="w-4 h-4"
+                  checked={tokenSaleType === 'crypto'}
+                  onChange={() => setTokenSaleType('crypto')}
+                />
+                <label htmlFor="payCrypto" className="whitespace-nowrap">
+                  {t('token_sale_heading_pay_bank_crypto')}
+                </label>
+              </div>
+            </div>
+          </div>
 
-          <Button onClick={handleNext} isEnabled={isWalletReady}>
+          <Button onClick={handleNext} isEnabled={Boolean(tokensToSpend)}>
             {t('token_sale_button_continue')}
           </Button>
         </main>
