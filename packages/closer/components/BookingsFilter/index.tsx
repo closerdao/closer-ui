@@ -68,7 +68,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
     arrivalToDate: '',
     departureFromDate: '',
     departureToDate: '',
-    sortBy: 'start',
+    sortBy: '-created',
   });
   const eventsFilter = {
     where: {
