@@ -11,7 +11,9 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
       <Navigation />
       <Prompts />
       <div className="p-4">{children}</div>
-      <Newsletter placement="footer" />
+      <div className='w-full flex justify-center'>
+            <Newsletter placement="Footer" />
+          </div>
       <Footer />
     </div>
   );

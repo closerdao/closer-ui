@@ -54,7 +54,7 @@ const Newsletter = ({ placement, ctaText, className, onSuccess }: Props) => {
   if (isAuthenticated || APP_NAME !== 'tdf' || !shouldShowForm) return null;
 
   return (
-    <div className={`Newsletter pt-12 pb-5 px-4 ${className}`}>
+    <div className={`Newsletter pt-8 pb-5  ${className}`}>
       {signupCompleted ? (
         <h3>{t('newsletter_success')}</h3>
       ) : (
@@ -85,9 +85,9 @@ const Newsletter = ({ placement, ctaText, className, onSuccess }: Props) => {
                 );
               })
           }
-          className="flex flex-col items-center  justify-center"
+          className="flex flex-col   justify-center"
         >
-          <div className="flex flex-col justify-start px-2 md:mt-0 gap-y-2">
+          <div className="flex flex-col justify-start w-auto sm:w-[280px] md:mt-0 gap-y-2 ">
             <Heading display level={4}>
               {t('newsletter_title')}
             </Heading>
@@ -104,7 +104,7 @@ const Newsletter = ({ placement, ctaText, className, onSuccess }: Props) => {
               </Button>
             </div>
           </div>
-          <div className="w-[290px]">
+          <div >
             {signupError && <ErrorMessage error={signupError} />}
           </div>
         </form>

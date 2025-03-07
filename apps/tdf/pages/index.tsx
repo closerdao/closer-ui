@@ -4,10 +4,12 @@ import Link from 'next/link';
 import { useContext, useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
+import ReportDownloadModal from '../components/ReportDownloadModal';
 import PhotoGallery from 'closer/components/PhotoGallery';
 import UpcomingEventsIntro from 'closer/components/UpcomingEventsIntro';
 
 import {
+  Button,
   Heading,
   LinkButton,
   Tag,
@@ -19,8 +21,8 @@ import { useBuyTokens } from 'closer/hooks/useBuyTokens';
 import api from 'closer/utils/api';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
-import { event } from 'nextjs-google-analytics';
 import { useTranslations } from 'next-intl';
+import { event } from 'nextjs-google-analytics';
 
 const HomePage = () => {
   const t = useTranslations();
@@ -30,6 +32,10 @@ const HomePage = () => {
   const { getTokensAvailableForPurchase } = useBuyTokens();
 
   const [tokensAvailable, setTokensAvailable] = useState<number | null>(null);
+  const [selectedReport, setSelectedReport] = useState<{
+    year: string;
+    url: string;
+  } | null>(null);
 
   useEffect(() => {
     if (isWalletReady) {
@@ -288,27 +294,41 @@ const HomePage = () => {
               Check out our yearly reports to see everything we have done so
               far!
             </p>
-            <Link
-              href="/pdf/2021-TDF-report.pdf"
-              target="_blank"
-              className="bg-accent-light px-5 py-2 rounded-full uppercase mr-4"
-            >
-              2021 report
-            </Link>
-            <Link
-              href="/pdf/2022-TDF-report.pdf"
-              target="_blank"
-              className="bg-accent-light px-5 py-2 rounded-full uppercase mr-4"
-            >
-              2022 report
-            </Link>
-            <Link
-              href="/pdf/2024-TDF-report.pdf"
-              target="_blank"
-              className="bg-accent-light px-5 py-2 rounded-full uppercase"
-            >
-              2024 report
-            </Link>
+            <div className="flex w-full justify-center gap-4">
+              <Button
+                className="w-fit"
+                onClick={() =>
+                  setSelectedReport({
+                    year: '2021',
+                    url: '/pdf/2021-TDF-report.pdf',
+                  })
+                }
+              >
+                2021 report
+              </Button>
+              <Button
+                className="w-fit"
+                onClick={() =>
+                  setSelectedReport({
+                    year: '2022',
+                    url: '/pdf/2022-TDF-report.pdf',
+                  })
+                }
+              >
+                2022 report
+              </Button>
+              <Button
+                className="w-fit"
+                onClick={() =>
+                  setSelectedReport({
+                    year: '2024',
+                    url: '/pdf/2024-TDF-report.pdf',
+                  })
+                }
+              >
+                2024 report
+              </Button>
+            </div>
           </div>
         </section>
 
@@ -509,8 +529,7 @@ const HomePage = () => {
 
         <section className="mb-12" id="how-to-play">
           <div>
-            <div className="max-w-prose mb-12 mx-auto" >
-
+            <div className="max-w-prose mb-12 mx-auto">
               <Heading
                 level={2}
                 className="text-center md:text-left mb-4 uppercase text-2xl font-black"
@@ -625,10 +644,7 @@ const HomePage = () => {
                     </ul>
                   </div>
                   <div className="mt-4 mb-4 flex justify-center align-center">
-                    <Link
-                      href="/projects"
-                      className="uppercase btn-primary"
-                    >
+                    <Link href="/projects" className="uppercase btn-primary">
                       Apply
                     </Link>
                   </div>
@@ -674,6 +690,13 @@ const HomePage = () => {
         {/* this is needed because video embed in the header causes layout to be cut off at the bottom of the page */}
         <section className="mb-[120vh]"></section>
       </div>
+      {selectedReport && (
+        <ReportDownloadModal
+          closeModal={() => setSelectedReport(null)}
+          reportYear={selectedReport.year}
+          reportUrl={selectedReport.url}
+        />
+      )}
     </>
   );
 };
