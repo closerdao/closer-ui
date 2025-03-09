@@ -78,7 +78,7 @@ const CheckoutPayment = ({
     try {
       const creditsAmount = isPartialCreditsPayment
         ? partialPriceInCredits
-        : rentalToken?.val;
+        : rentalToken;
       const res = await api.post(`/bookings/${bookingId}/credit-payment`, {
         startDate,
         creditsAmount,
