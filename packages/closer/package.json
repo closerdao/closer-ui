@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.2",
+    "@radix-ui/react-dialog": "^1.1.6",
     "@react-google-maps/api": "^2.19.2",
     "@react-icons/all-files": "^4.1.0",
     "@stripe/react-stripe-js": "^1.4.1",
@@ -77,6 +78,7 @@
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^11.0.4",
+    "vaul": "^1.1.2",
     "zod": "^3.23.8"
   },
   "devDependencies": {
