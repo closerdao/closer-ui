@@ -214,14 +214,14 @@ const getPromptToShow = (user: User | null, isAuthenticated: boolean) => {
   );
   const closedPrompts = getClosedPrompts();
 
-  if (
-    (!isAuthenticated && !closedPrompts.includes('AirdropPrompt')) ||
-    (isAuthenticated &&
-      daysUserCreated > 3 &&
-      !closedPrompts.includes('AirdropPrompt'))
-  ) {
-    return 'AirdropPrompt';
-  }
+  // if (
+  //   (!isAuthenticated && !closedPrompts.includes('AirdropPrompt')) ||
+  //   (isAuthenticated &&
+  //     daysUserCreated > 3 &&
+  //     !closedPrompts.includes('AirdropPrompt'))
+  // ) {
+  //   return 'AirdropPrompt';
+  // }
   if (
     isAuthenticated &&
     !user?.photo &&
@@ -229,14 +229,14 @@ const getPromptToShow = (user: User | null, isAuthenticated: boolean) => {
   ) {
     return 'AddPhotoPrompt';
   }
-  if (
-    (!isAuthenticated && !closedPrompts.includes('FundraiserPrompt')) ||
-    (isAuthenticated &&
-      daysUserCreated > 3 &&
-      !closedPrompts.includes('FundraiserPrompt'))
-  ) {
-    return 'FundraiserPrompt';
-  }
+  // if (
+  //   (!isAuthenticated && !closedPrompts.includes('FundraiserPrompt')) ||
+  //   (isAuthenticated &&
+  //     daysUserCreated > 3 &&
+  //     !closedPrompts.includes('FundraiserPrompt'))
+  // ) {
+  //   return 'FundraiserPrompt';
+  // }
   if (
     isAuthenticated &&
     (!user?.preferences || !hasUserFilledPreferences) &&

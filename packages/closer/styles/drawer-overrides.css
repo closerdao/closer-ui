@@ -1,0 +1,23 @@
+/* Remove blocking behaviors */
+[data-radix-dialog-overlay] {
+    pointer-events: none !important;
+    background: transparent !important; /* Remove overlay dim */
+  }
+  
+  [data-radix-dialog-content] {
+    pointer-events: auto !important;
+    box-shadow: none !important; /* Remove default shadow */
+  }
+  
+  /* Critical z-index fix */
+  [data-radix-dialog-overlay] {
+    z-index: 0 !important; /* Push overlay behind content */
+  }
+  
+  [data-radix-dialog-content] {
+    z-index: 50 !important; /* Keep drawer above page */
+  }
+  
+  body > :not([data-radix-dialog-overlay]) {
+    z-index: 1 !important; /* Force page content above overlay */
+  }
