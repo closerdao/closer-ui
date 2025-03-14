@@ -1,0 +1,15 @@
+@import '../../../packages/closer/public/styles.css';
+
+ body h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  button {
+    @apply text-accent font-accent;
+  }
+
+body :not(h1, h2, h3, h4, h5, h6, button) {
+  @apply font-body;
+}
