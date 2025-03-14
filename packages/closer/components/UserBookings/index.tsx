@@ -22,7 +22,6 @@ const UserBookingsComponent = ({ user, isSpaceHostView }: Props) => {
       where: {
         createdBy: user._id,
         status: [
-          'open',
           'pending',
           'confirmed',
           'tokens-staked',
