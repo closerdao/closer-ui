@@ -6,6 +6,8 @@ import { useEffect } from 'react';
 
 import Heading from '../components/ui/Heading';
 
+import { NextPageContext } from 'next';
+
 import { loadLocaleData } from '../utils/locale.helpers';
 
 const Page404 = ({ error }: { error?: string }) => {
@@ -38,15 +40,20 @@ const Page404 = ({ error }: { error?: string }) => {
   );
 };
 
-export async function getStaticProps() {
-  const messages = await loadLocaleData(
-    'en',
-    process.env.NEXT_PUBLIC_APP_NAME || 'tdf',
-  );
-  return {
-    props: { messages },
-    revalidate: 86400, // 24 hours
-  };
-}
+Page404.getInitialProps = async (context: NextPageContext) => {
+  try {
+    const messages = await loadLocaleData(
+      context?.locale || 'en',
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    return {
+      messages,
+    };
+  } catch (err: unknown) {
+    return {
+      messages: null,
+    };
+  }
+};
 
 export default Page404;

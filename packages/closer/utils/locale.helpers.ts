@@ -49,6 +49,11 @@ export async function loadLocaleData(
               import('../locales/per-auset/en.json'),
               import('../locales/base-en.json'),
             ]);
+          default:
+            return Promise.all([
+              import('../locales/per-auset/en.json'),
+              import('../locales/base-en.json'),
+            ]);
         }
 
       default:
