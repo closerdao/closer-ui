@@ -1,15 +1,11 @@
-import localFont from 'next/font/local';
+import { Alegreya_Sans } from 'next/font/google';
 
-export const hoover = localFont({
-  src: './Hoover/Hoover-Regular.woff2',
-  variable: '--font-hoover',
-});
-export const cabinet = localFont({
-  src: './Cabinet/CabinetGrotesk-Regular.woff2',
-  variable: '--font-cabinet',
+// Google fonts configuration
+export const alegreyaSans = Alegreya_Sans({
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-alegreya-sans',
 });
 
-export const sincopa = localFont({
-  src: './Sincopa/SincopaElla.woff2',
-  variable: '--font-sincopa',
-});
+

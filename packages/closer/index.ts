@@ -29,7 +29,8 @@ export { default as LinkButton } from './components/ui/LinkButton';
 export { default as ProgressBar } from './components/ui/ProgressBar';
 export { default as Row } from './components/ui/Row';
 export { default as Spinner } from './components/ui/Spinner';
-
+export { default as CustomSectionComponent } from './components/custom-pages/CustomSectionComponent';
+export { default as CustomSections } from './components/custom-pages/CustomSections';
 // Config
 export * from './config_blockchain';
 export * from './contexts/auth';
@@ -147,5 +148,6 @@ export { default as AffiliateLandingPage } from './pages/affiliate/index';
 export * from './types/';
 // Utils
 export { default as api } from './utils/api';
+export { cdn } from './utils/api';
 export * from './utils/blockchain';
 export * from './utils/helpers';

@@ -1,6 +1,6 @@
 @import '../../../packages/closer/public/styles.css';
 
- body h1,
+ /* body h1,
   h2,
   h3,
   h4,
@@ -12,4 +12,4 @@
 
 body :not(h1, h2, h3, h4, h5, h6, button) {
   @apply font-body;
-}
+} */

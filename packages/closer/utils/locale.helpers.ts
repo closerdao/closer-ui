@@ -42,6 +42,14 @@ export async function loadLocaleData(
               import('../locales/base-en.json'),
             ]);
         }
+      case 'per-auset':
+        switch (locale) {
+          case 'en':
+            return Promise.all([
+              import('../locales/per-auset/en.json'),
+              import('../locales/base-en.json'),
+            ]);
+        }
 
       default:
         throw new Error(`Unsupported app: ${appName}`);
