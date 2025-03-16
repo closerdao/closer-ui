@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 
 import Heading from '../components/ui/Heading';
 
-import { GetStaticProps, NextPageContext } from 'next';
+import { GetStaticProps } from 'next';
 
 import { loadLocaleData } from '../utils/locale.helpers';
 
@@ -45,7 +45,6 @@ const Page404 = ({ error }: Page404Props) => {
   );
 };
 
-// For static site generation
 export const getStaticProps: GetStaticProps<Page404Props> = async () => {
   try {
     const messages = await loadLocaleData(
@@ -57,25 +56,9 @@ export const getStaticProps: GetStaticProps<Page404Props> = async () => {
       revalidate: 86400, // 24 hours
     };
   } catch (err) {
+    console.error('Error loading locale data for 404 page:', err);
     return {
       props: { messages: {} },
-    };
-  }
-};
-
-// For client-side rendering
-Page404.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const messages = await loadLocaleData(
-      context?.locale || 'en',
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
-    return {
-      messages,
-    };
-  } catch (err: unknown) {
-    return {
-      messages: null,
     };
   }
 };
