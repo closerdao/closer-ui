@@ -6,11 +6,16 @@ import { useEffect } from 'react';
 
 import Heading from '../components/ui/Heading';
 
-import { NextPageContext } from 'next';
+import { GetStaticProps, NextPageContext } from 'next';
 
 import { loadLocaleData } from '../utils/locale.helpers';
 
-const Page404 = ({ error }: { error?: string }) => {
+interface Page404Props {
+  error?: string;
+  messages?: Record<string, string>;
+}
+
+const Page404 = ({ error }: Page404Props) => {
   const router = useRouter();
 
   useEffect(() => {
@@ -40,6 +45,25 @@ const Page404 = ({ error }: { error?: string }) => {
   );
 };
 
+// For static site generation
+export const getStaticProps: GetStaticProps<Page404Props> = async () => {
+  try {
+    const messages = await loadLocaleData(
+      'en',
+      process.env.NEXT_PUBLIC_APP_NAME || 'tdf',
+    );
+    return {
+      props: { messages },
+      revalidate: 86400, // 24 hours
+    };
+  } catch (err) {
+    return {
+      props: { messages: {} },
+    };
+  }
+};
+
+// For client-side rendering
 Page404.getInitialProps = async (context: NextPageContext) => {
   try {
     const messages = await loadLocaleData(
