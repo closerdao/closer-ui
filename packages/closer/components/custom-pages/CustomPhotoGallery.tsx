@@ -15,9 +15,11 @@ interface PhotoGalleryProps {
   };
   content: {
     title: string;
-    photos: {
+    items: {
       alt: string;
       imageUrl: string;
+      width: number;
+      height: number;
     }[];
   };
 }
@@ -27,20 +29,12 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
   settings,
 }) => {
   // Sample images with proper dimensions
-  const images: GalleryImage[] = [
-    {
-      src: 'https://cdn.oasa.co/custom-pages/per-auset/gallery/72124d1f-6314-4639-b3f7-e03199b10612.png',
-      width: 1504,
-      height: 2008,
-      alt: 'Gallery Image 1',
-    },
-    {
-      src: 'https://cdn.oasa.co/custom-pages/per-auset/gallery/Webversion-Per-Ausset-Jaqueline_Louan-35.png',
-      width: 3000,
-      height: 2008,
-      alt: 'Gallery Image 2',
-    },
-  ];
+  const images: GalleryImage[] = content.items.map((item) => ({
+    src: item.imageUrl,
+    width: item.width,
+    height: item.height,
+    alt: item.alt,
+  }));
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(
@@ -94,7 +88,6 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
 
   const openModal = (index: number) => {
     setSelectedIndex(index);
-    // Prevent scrolling when modal is open
     document.body.style.overflow = 'hidden';
   };
 
@@ -103,7 +96,6 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
     setSlideDirection(null);
     setNextIndex(null);
     setIsAnimating(false);
-    // Restore scrolling
     document.body.style.overflow = 'auto';
   };
 
@@ -112,13 +104,14 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
     let currentRow: GalleryImage[] = [];
     const rows: GalleryImage[][] = [];
     let rowWidth = 0;
-    const maxWidth = 768; // Maximum width for a row
+    const maxWidth = 1152; // Match max-w-6xl (72rem = 1152px)
 
     imgs.forEach((img) => {
       const scaledWidth = (img.width / img.height) * targetHeight;
 
       if (rowWidth + scaledWidth > maxWidth && currentRow.length > 0) {
-        // Start a new row if this would exceed max width
+        // Scale the row to fit the container width
+        const scale = maxWidth / rowWidth;
         rows.push([...currentRow]);
         currentRow = [img];
         rowWidth = scaledWidth;
@@ -141,17 +134,20 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
   const baseHeight = 200; // Base height for thumbnails
 
   return (
-    <section className="max-w-4xl px-4 mx-auto flex flex-col gap-[60px]">
+    <section className="max-w-6xl px-4 mx-auto flex flex-col gap-[60px] ">
       <div className="flex flex-col gap-4 text-center">
         <p
-          className="rich-text"
+          className="rich-text max-w-3xl mx-auto"
           dangerouslySetInnerHTML={{ __html: content?.title }}
         />
       </div>
 
-      <div className="gallery-container">
+      <div className="w-full">
         {rows.map((row, rowIndex) => (
-          <div key={`row-${rowIndex}`} className="flex mb-2 gallery-row">
+          <div
+            key={`row-${rowIndex}`}
+            className="flex flex-wrap md:flex-nowrap mb-2 w-full md:justify-center gap-2"
+          >
             {row.map((image, imgIndex) => {
               const aspectRatio = image.width / image.height;
               const thumbWidth = Math.round(baseHeight * aspectRatio);
@@ -166,11 +162,10 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
               return (
                 <div
                   key={`img-${rowIndex}-${imgIndex}`}
-                  className="relative mr-2 overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] duration-200"
+                  className="relative overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] duration-200 flex-grow-0 flex-shrink-0"
                   style={{
-                    width: thumbWidth,
+                    width: `min(${thumbWidth}px, calc(100% - 8px))`,
                     height: baseHeight,
-                    flexShrink: 0,
                   }}
                   onClick={() => openModal(absoluteIndex)}
                 >
@@ -179,7 +174,7 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
                     alt={image.alt || 'Gallery Image'}
                     fill
                     style={{ objectFit: 'cover' }}
-                    sizes={`${thumbWidth}px`}
+                    sizes="(max-width: 768px) 100vw, 33vw"
                   />
                 </div>
               );
@@ -191,12 +186,12 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
       {/* Enhanced Lightbox Modal with Synchronized Sliding Animation */}
       {selectedIndex !== null && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-90 z-50"
           onClick={closeModal}
         >
           {/* Content container - relative positioning for animation */}
           <div
-            className="relative max-w-4xl max-h-[80vh] w-full h-full flex items-center justify-center"
+            className="relative w-full h-full flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Current image */}
@@ -207,21 +202,18 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
                 pointerEvents: isAnimating ? 'none' : 'auto',
               }}
             >
-              <Image
-                src={images[selectedIndex].src}
-                alt={images[selectedIndex].alt || 'Gallery Image'}
-                width={images[selectedIndex].width}
-                height={images[selectedIndex].height}
-                style={{
-                  objectFit: 'contain',
-                  maxHeight: '80vh',
-                  maxWidth: '90vw',
-                  width: 'auto',
-                  height: 'auto',
-                }}
-                sizes="90vw"
-                priority
-              />
+              <div className="relative w-full h-[90vh] flex items-center justify-center">
+                <Image
+                  src={images[selectedIndex].src}
+                  alt={images[selectedIndex].alt || 'Gallery Image'}
+                  fill
+                  style={{
+                    objectFit: 'contain',
+                  }}
+                  sizes="90vw"
+                  priority
+                />
+              </div>
             </div>
 
             {/* Next image */}
@@ -233,27 +225,24 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
                   pointerEvents: isAnimating ? 'auto' : 'none',
                 }}
               >
-                <Image
-                  src={images[nextIndex].src}
-                  alt={images[nextIndex].alt || 'Gallery Image'}
-                  width={images[nextIndex].width}
-                  height={images[nextIndex].height}
-                  style={{
-                    objectFit: 'contain',
-                    maxHeight: '80vh',
-                    maxWidth: '90vw',
-                    width: 'auto',
-                    height: 'auto',
-                  }}
-                  sizes="90vw"
-                  priority
-                />
+                <div className="relative w-full h-[90vh] flex items-center justify-center">
+                  <Image
+                    src={images[nextIndex].src}
+                    alt={images[nextIndex].alt || 'Gallery Image'}
+                    fill
+                    style={{
+                      objectFit: 'contain',
+                    }}
+                    sizes="90vw"
+                    priority
+                  />
+                </div>
               </div>
             )}
 
             {/* Navigation arrows */}
             <button
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full w-12 h-12 flex items-center justify-center z-10 transition-all"
+              className="fixed left-4 md:left-8 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all"
               onClick={(e) => {
                 e.stopPropagation();
                 navigateToImage('prev');
@@ -277,7 +266,7 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
             </button>
 
             <button
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full w-12 h-12 flex items-center justify-center z-10 transition-all"
+              className="fixed right-4 md:right-8 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all"
               onClick={(e) => {
                 e.stopPropagation();
                 navigateToImage('next');
@@ -302,7 +291,7 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
 
             {/* Close button */}
             <button
-              className="absolute top-4 right-4 text-white text-4xl bg-black bg-opacity-50 hover:bg-opacity-70 rounded-full w-10 h-10 flex items-center justify-center z-20"
+              className="fixed top-4 right-4 md:top-8 md:right-8 text-white text-4xl bg-black bg-opacity-50 hover:bg-opacity-70 rounded-full w-10 h-10 flex items-center justify-center"
               onClick={(e) => {
                 e.stopPropagation();
                 closeModal();
@@ -312,7 +301,7 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
             </button>
 
             {/* Image counter */}
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-50 px-4 py-2 rounded-full">
+            <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-50 px-4 py-2 rounded-full">
               {selectedIndex + 1} / {images.length}
             </div>
           </div>

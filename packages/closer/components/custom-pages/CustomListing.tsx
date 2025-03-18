@@ -3,9 +3,10 @@ import Link from 'next/link';
 
 import React from 'react';
 
+import { priceFormat } from 'closer';
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 import { Button, Heading } from 'closer';
-
+import { useTranslations } from 'next-intl';
 const CustomListing: React.FC<{
   settings: {
     numColumns: number;
@@ -19,6 +20,7 @@ const CustomListing: React.FC<{
       title: string;
       text: string;
       imageUrl: string;
+      price: number;
       cta: {
         text: string;
         url: string;
@@ -26,6 +28,8 @@ const CustomListing: React.FC<{
     }[];
   };
 }> = ({ content, settings }) => {
+
+  const t = useTranslations();
   const getFirstParagraph = (text: string) => {
     const match = text.match(/<p[^>]*>(.*?)<\/p>/i);
     return match
@@ -75,7 +79,7 @@ const CustomListing: React.FC<{
                   'px-10 w-full aspect-auto flex-shrink-0 overflow-hidden'
                 }
               >
-                <div className="rounded-full overflow-hidden">
+                <div className="rounded-full overflow-hidden bg-white pt-2">
                   <FaUser className="text-neutral w-full h-full" />
                 </div>
               </div>
@@ -100,7 +104,8 @@ const CustomListing: React.FC<{
             )}
 
             {item.cta && (
-              <div className="mt-auto pt-4">
+              <div className="mt-auto pt-4 flex flex-col gap-6">
+                  {settings?.isAccommodations && <div>{`${priceFormat(item?.price)} ${t('listing_preview_per_daily')}`}</div>}
                 <Button className="w-full">
                   <Link href={item.cta.url}>{item.cta.text}</Link>
                 </Button>
