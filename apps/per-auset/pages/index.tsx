@@ -315,6 +315,19 @@ const getPage = ({
         },
       },
       {
+        type: 'events',
+        data: {
+          settings: {
+            alignImage: 'left',
+          },
+          content: {
+            title: '',
+            body: '<p>We are building a regenerative village on the sacred grounds of Auset, where ancient wisdom and the future come together. Inspired by the Auset and Ausar mysteries, we honor the eternal cycle of life, death, and renewal—restoring what was lost and creating a sustainable way forward. This is more than a village; it is a living testament to regeneration, balance, and the timeless knowledge of our ancestors. Through our gardens, temples, and communal spaces, we revive the traditions of sacred living and harmony with nature. Here, we remember, rebuild, and lay the foundations for a future rooted in the wisdom of the past—one that thrives in beauty, truth, and Maat/ Divine law . In doing so, we are doing our best to create a template for the New Earth, where humanity and nature exist in harmony, and the sacred is woven into everyday life.</p>',
+          
+          },
+        },
+      },
+      {
         type: 'text',
         data: {
           settings: {

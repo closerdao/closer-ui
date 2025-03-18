@@ -5,6 +5,7 @@ import CustomListing from './CustomListing';
 import CustomPhotoGallery from './CustomPhotoGallery';
 import CustomPromoCard from './CustomPromoCard';
 import CustomTextCard from './CustomTextCard';
+import UpcomingEventsIntro from '../UpcomingEventsIntro';
 
 const componentRegistry: Record<string, React.FC<any>> = {
   promoCard: CustomPromoCard,
@@ -12,6 +13,7 @@ const componentRegistry: Record<string, React.FC<any>> = {
   listing: CustomListing,
   hero: CustomHero,
   gallery: CustomPhotoGallery,
+  events: UpcomingEventsIntro
 };
 
 const CustomSectionComponent: React.FC<{ type: string; data: any }> = ({

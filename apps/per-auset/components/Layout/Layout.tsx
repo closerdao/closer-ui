@@ -6,12 +6,12 @@ import { Navigation } from 'closer';
 
 export const Layout: FC<PropsWithChildren> = ({ children }) => {
   return (
-    <div className="flex-1 flex flex-col relative mx-auto mt-20 w-full bg-dominant">
+    <div className="flex-1 flex flex-col relative mx-auto mt-20 w-full bg-dominant ">
       <div
         className={`${alegreyaSans.variable} font-sans`}
       >
         <Navigation />
-        <div>{children}</div>
+        <div className='pt-8'>{children}</div>
         <Footer />
       </div>
     </div>

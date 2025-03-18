@@ -48,11 +48,13 @@ export const Footer: FC = () => {
               <path d="M15 10l-4 4l6 6l4 -16l-18 7l4 2l2 6l3 -4" />
             </svg>
           </a>
-          <a
-            href={INSTAGRAM_URL}
-            target="_blank"
-            className="mr-2 p-2 transition ease-linear duration-1200 hover:scale-125"
-            rel="noreferrer"
+
+          {INSTAGRAM_URL && (
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              className="mr-2 p-2 transition ease-linear duration-1200 hover:scale-125"
+              rel="noreferrer"
           >
             <svg
               className="h-8 w-8 text-accent"
@@ -72,6 +74,7 @@ export const Footer: FC = () => {
               <line x1="16.5" y1="7.5" x2="16.5" y2="7.501" />
             </svg>
           </a>
+          )}
           {FACEBOOK_URL && (
             <a
               href={FACEBOOK_URL}

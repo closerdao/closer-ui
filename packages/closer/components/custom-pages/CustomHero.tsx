@@ -30,8 +30,8 @@ const CustomHero: React.FC<{
   const textStyle = getTextStyle();
 
   return (
-    <section className="relative h-[calc(100vh-75px)] w-full">
-      <div className="absolute inset-0">
+    <section className="relative h-[calc(100vh-75px)] w-full ">
+      <div className="absolute inset-0 top-[-32px]">
         <Image
           src={content.imageUrl}
           alt={content.title}

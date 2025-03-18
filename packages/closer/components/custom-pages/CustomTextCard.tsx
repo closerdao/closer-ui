@@ -21,7 +21,7 @@ const CustomTextCard: React.FC<{
       <Heading level={2} className="text-3xl text-foreground">
           {content?.title}
       </Heading>
-      <div className="rich-text" dangerouslySetInnerHTML={{ __html: content.body }} />
+      <div className="rich-text !text-lg" dangerouslySetInnerHTML={{ __html: content.body }} />
     </div>
   </section>
 );

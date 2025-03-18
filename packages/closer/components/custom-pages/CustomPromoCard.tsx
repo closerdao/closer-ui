@@ -15,7 +15,7 @@ const CustomPromoCard: React.FC<{
   };
 }> = ({ content, settings }) => (
   <section
-    className={`max-w-4xl px-4 mx-auto flex flex-col ${
+    className={`max-w-4xl px-4 mx-auto flex flex-col text-md ${
       settings?.alignImage === 'left' ? 'md:flex-row ' : 'md:flex-row-reverse'
     } gap-4 md:gap-10 md:min-h-[400px]`}
   >
@@ -36,7 +36,7 @@ const CustomPromoCard: React.FC<{
       <Heading level={2} className="text-3xl text-foreground">
           {content.title}
       </Heading>
-      <div className="rich-text" dangerouslySetInnerHTML={{ __html: content.body }} />
+      <div className="rich-text !text-lg" dangerouslySetInnerHTML={{ __html: content.body }} />
     </div>
   </section>
 );
