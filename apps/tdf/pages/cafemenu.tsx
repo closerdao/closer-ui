@@ -26,7 +26,7 @@ const ArtFaire = () => {
         <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 uppercase mb-6">CAFÉ MENU</h1>
 
         <div className="mb-16 text-gray-600 text-lg">
-          Enjoy our selection of beverages in the heart of our regenerative village. All donations support our community's mission.
+          Enjoy our selection of beverages in the heart of our regenerative village. All donations support our community&apos;s mission.
         </div>
         <div className="mb-16">
           <h2 className="text-2xl font-bold text-gray-800 mb-8">General</h2>
