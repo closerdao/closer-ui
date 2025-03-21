@@ -17,10 +17,16 @@ export async function loadLocaleData(
               import('../locales/lios/pl.json'),
               import('../locales/base-pl.json'),
             ]);
+          default:
+            return Promise.all([
+              import('../locales/lios/en.json'),
+              import('../locales/base-en.json'),
+            ]);
         }
       case 'tdf':
         switch (locale) {
           case 'en':
+          default:
             return Promise.all([
               import('../locales/tdf/en.json'),
               import('../locales/base-en.json'),
@@ -29,6 +35,7 @@ export async function loadLocaleData(
       case 'moos':
         switch (locale) {
           case 'en':
+          default:
             return Promise.all([
               import('../locales/moos/en.json'),
               import('../locales/base-en.json'),
@@ -37,23 +44,39 @@ export async function loadLocaleData(
       case 'foz':
         switch (locale) {
           case 'en':
+          default:
             return Promise.all([
               import('../locales/foz/en.json'),
               import('../locales/base-en.json'),
             ]);
         }
-
+      case 'per-auset':
+        switch (locale) {
+          case 'en':
+          default:
+            return Promise.all([
+              import('../locales/per-auset/en.json'),
+              import('../locales/base-en.json'),
+            ]);
+        }
       default:
-        throw new Error(`Unsupported app: ${appName}`);
+        console.warn(
+          `Unsupported app: ${appName}, falling back to base English locale`,
+        );
+        return Promise.all([
+          Promise.resolve({ default: {} }),
+          import('../locales/base-en.json'),
+        ]);
     }
   }
 
   if (!locale) {
-    throw new Error('Locale is undefined');
+    locale = 'en';
   }
 
   if (!appName) {
-    throw new Error('appName is undefined');
+    console.warn('appName is undefined, falling back to base English locale');
+    return import('../locales/base-en.json').then((res) => res.default || {});
   }
 
   const [messagesLocalRes, messagesBaseRes] = await importLocaleData(

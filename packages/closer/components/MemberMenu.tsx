@@ -76,7 +76,7 @@ const MemberMenu = () => {
       {
         label: t('navigation_residence'),
         url: '/projects',
-        enabled: isVolunteeringEnabled,
+        enabled: isVolunteeringEnabled && APP_NAME.toLowerCase() === 'tdf',
       },
       {
         label: t('navigation_dashboard'),

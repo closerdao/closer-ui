@@ -44,7 +44,7 @@ const SettingsPage = ({
     (volunteerConfig?.diet?.split(',')) || [];
 
   const { user: initialUser, isAuthenticated, refetchUser } = useAuth();
-
+  console.log('initialUser', initialUser);
   const initialDiet = Array.isArray(initialUser?.preferences?.diet)
     ? initialUser?.preferences?.diet
     : initialUser?.preferences?.diet?.split(',') || [];
