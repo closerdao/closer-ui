@@ -1,12 +1,8 @@
 import Head from 'next/head';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
 
-import { useEffect, useRef, useState } from 'react';
-import { isMobile } from 'react-device-detect';
+import { useEffect } from 'react';
 
 import {
-  BookingConfig,
   CustomSections,
   GeneralConfig,
   Listing,
@@ -17,19 +13,19 @@ import {
   usePlatform,
 } from 'closer';
 import { User } from 'closer/contexts/auth/types';
-import { useFaqs } from 'closer/hooks/useFaqs';
 import { Page } from 'closer/types/customPages';
 import { parseMessageFromError } from 'closer/utils/common';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
-import { useTranslations } from 'next-intl';
 
 const getPage = ({
   listings,
   hosts,
+  generalConfig,
 }: {
   listings: Listing[] | null;
   hosts: User[] | null;
+  generalConfig: GeneralConfig | null;
 }) => {
   const localPage: Page = {
     isHomePage: true,
@@ -69,7 +65,6 @@ const getPage = ({
           },
         },
       },
-    
 
       {
         type: 'listing',
@@ -242,76 +237,73 @@ const getPage = ({
                   'https://cdn.oasa.co/custom-pages/per-auset/gallery/2418d725-9d55-4dfb-9b6a-998c6cd8f33a.png',
                 alt: 'Per Auset',
                 width: 1573,
-                height: 1178
-
+                height: 1178,
               },
               {
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/per-auset/gallery/72124d1f-6314-4639-b3f7-e03199b10612.png',
                 alt: 'Per Auset',
                 width: 885,
-                height: 1180
+                height: 1180,
               },
               {
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/per-auset/gallery/ed582217-b00d-4265-a18b-aca6bc132176.png',
                 alt: 'Per Auset',
                 width: 885,
-                height: 1178
+                height: 1178,
               },
               {
                 imageUrl:
-                'https://cdn.oasa.co/custom-pages/per-auset/gallery/Per-Ausset-Food-Jaqueline_Louan-21%202.png',
+                  'https://cdn.oasa.co/custom-pages/per-auset/gallery/Per-Ausset-Food-Jaqueline_Louan-21%202.png',
                 alt: 'Per Auset ',
                 width: 2038,
-                height: 1360
+                height: 1360,
               },
               {
                 imageUrl:
-                'https://cdn.oasa.co/custom-pages/per-auset/gallery/Webversion-Per-Ausset-Jaqueline_Louan-10.png',
+                  'https://cdn.oasa.co/custom-pages/per-auset/gallery/Webversion-Per-Ausset-Jaqueline_Louan-10.png',
                 alt: 'Per Auset',
                 width: 1767,
-                height: 1180
+                height: 1180,
               },
               {
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/per-auset/gallery/Webversion-Per-Ausset-Jaqueline_Louan-11.png',
                 alt: 'Per Auset',
                 width: 787,
-                height: 1180
+                height: 1180,
               },
               {
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/per-auset/gallery/Webversion-Per-Ausset-Jaqueline_Louan-12.png',
                 alt: 'Per Auset',
                 width: 787,
-                height: 1176
+                height: 1176,
               },
               {
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/per-auset/gallery/Webversion-Per-Ausset-Jaqueline_Louan-28.png',
                 alt: 'Per Auset',
                 width: 1771,
-                height: 1178
+                height: 1178,
               },
               {
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/per-auset/gallery/Webversion-Per-Ausset-Jaqueline_Louan-31.png',
                 alt: 'Per Auset',
                 width: 1765,
-                height: 1178
+                height: 1178,
               },
               {
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/per-auset/gallery/Webversion-Per-Ausset-Jaqueline_Louan-35.png',
                 alt: 'Per Auset',
                 width: 1765,
-                height: 1180
+                height: 1180,
               },
-   
             ],
           },
-          
         },
       },
       {
@@ -323,7 +315,6 @@ const getPage = ({
           content: {
             title: '',
             body: '<p>We are building a regenerative village on the sacred grounds of Auset, where ancient wisdom and the future come together. Inspired by the Auset and Ausar mysteries, we honor the eternal cycle of life, death, and renewal—restoring what was lost and creating a sustainable way forward. This is more than a village; it is a living testament to regeneration, balance, and the timeless knowledge of our ancestors. Through our gardens, temples, and communal spaces, we revive the traditions of sacred living and harmony with nature. Here, we remember, rebuild, and lay the foundations for a future rooted in the wisdom of the past—one that thrives in beauty, truth, and Maat/ Divine law . In doing so, we are doing our best to create a template for the New Earth, where humanity and nature exist in harmony, and the sacred is woven into everyday life.</p>',
-          
           },
         },
       },
@@ -336,7 +327,14 @@ const getPage = ({
           content: {
             title: '',
             body: '<p>We are building a regenerative village on the sacred grounds of Auset, where ancient wisdom and the future come together. Inspired by the Auset and Ausar mysteries, we honor the eternal cycle of life, death, and renewal—restoring what was lost and creating a sustainable way forward. This is more than a village; it is a living testament to regeneration, balance, and the timeless knowledge of our ancestors. Through our gardens, temples, and communal spaces, we revive the traditions of sacred living and harmony with nature. Here, we remember, rebuild, and lay the foundations for a future rooted in the wisdom of the past—one that thrives in beauty, truth, and Maat/ Divine law . In doing so, we are doing our best to create a template for the New Earth, where humanity and nature exist in harmony, and the sacred is woven into everyday life.</p>',
-          
+          },
+        },
+      },
+      {
+        type: 'faqs',
+        data: {
+          content: {
+            googleSheetId: generalConfig?.faqsGoogleSheetId,
           },
         },
       },
@@ -347,39 +345,17 @@ const getPage = ({
 
 interface Props {
   generalConfig: GeneralConfig | null;
-  bookingSettings: BookingConfig | null;
   listings: Listing[] | null;
   hosts: User[] | null;
 }
 
-const HomePage = ({
-  generalConfig,
-  bookingSettings,
-  listings,
-  hosts,
-}: Props) => {
-  const t = useTranslations();
-  const { isAuthenticated } = useAuth();
-  const router = useRouter();
-
+const HomePage = ({ generalConfig, listings, hosts }: Props) => {
   const page = getPage({
     listings,
     hosts,
+    generalConfig,
   });
 
-  const { APP_NAME, FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
-
-  const { faqs, error } = useFaqs(FAQS_GOOGLE_SHEET_ID);
-  const appName = APP_NAME && APP_NAME.toLowerCase();
-
-  const config = useConfig();
-  const discounts = {
-    daily: bookingSettings?.discountsDaily,
-    weekly: bookingSettings?.discountsWeekly,
-    monthly: bookingSettings?.discountsMonthly,
-  };
-
-  const { TEAM_EMAIL } = config || {};
   const { platform }: any = usePlatform();
   const { user } = useAuth();
   const isTeamMember = user?.roles.some((roles) =>
@@ -397,10 +373,6 @@ const HomePage = ({
       roles: { $in: ['space-host', 'steward', 'team'].filter((e) => e) },
     },
   };
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-
-  const [isSmallScreen, setIsSmallScreen] = useState(false);
-  const [isAutoplaying, setIsAutoplaying] = useState(false);
 
   const loadData = async () => {
     await Promise.all([
@@ -412,37 +384,6 @@ const HomePage = ({
   useEffect(() => {
     loadData();
   }, [isTeamMember]);
-
-  useEffect(() => {
-    setIsSmallScreen(isMobile);
-
-    if (videoRef.current) {
-      videoRef.current
-        .play()
-        .then(() => {
-          console.log('can autoplay');
-          setIsAutoplaying(true);
-        })
-        .catch(() => {
-          console.log('cant autoplay');
-          setIsAutoplaying(false);
-        });
-    }
-  }, [videoRef.current]);
-
-  // const listings = platform.listing.find(listingFilter);
-
-  // const hosts = platform.user.find(hostsFilter);
-
-  const CTA = (
-    <Link
-      href="/learn/category/all"
-      type="submit"
-      className=" font-accent  lowercase bg-accent text-white rounded-full py-2.5 px-8 text-xl"
-    >
-      {t('navigation_see_courses')}
-    </Link>
-  );
 
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
@@ -456,10 +397,6 @@ const HomePage = ({
       </Head>
 
       <CustomSections page={page} />
-
-      {/* <div className="relative top-[440px] md:top-[calc(100vh-60px)] ">
-      <section className="mb-[120vh]"></section>
-      </div> */}
     </div>
   );
 };
@@ -470,47 +407,41 @@ HomePage.getInitialProps = async (context: NextPageContext) => {
       context?.locale,
       process.env.NEXT_PUBLIC_APP_NAME,
     );
-    const [bookingResponse, generalRes, listingsRes, hostsRes] =
-      await Promise.all([
-        api.get('/config/booking').catch((err) => {
-          console.error('Error fetching booking config:', err);
+    const [generalRes, listingsRes, hostsRes] = await Promise.all([
+      api.get('/config/general').catch(() => {
+        return null;
+      }),
+      api
+        .get('/listing', {
+          params: {
+            limit: 30,
+          },
+        })
+        .catch(() => {
           return null;
         }),
-        api.get('/config/general').catch(() => {
-          return null;
-        }),
-        api
-          .get('/listing', {
-            params: {
-              limit: 30,
-            },
-          })
-          .catch(() => {
-            return null;
-          }),
-        api
-          .get('/user', {
-            params: {
-              where: {
-                roles: {
-                  $in: ['space-host', 'steward', 'team'].filter((e) => e),
-                },
+      api
+        .get('/user', {
+          params: {
+            where: {
+              roles: {
+                $in: ['space-host', 'steward', 'team'].filter((e) => e),
               },
             },
-          })
-          .catch(() => {
-            return null;
-          }),
-      ]);
+          },
+        })
+        .catch(() => {
+          return null;
+        }),
+    ]);
 
-    const bookingSettings = bookingResponse?.data?.results?.value;
     const generalConfig = generalRes?.data?.results?.value;
 
     const listings = listingsRes?.data?.results;
     const hosts = hostsRes?.data?.results;
     return {
       generalConfig,
-      bookingSettings,
+
       messages,
       listings,
       hosts,
@@ -518,7 +449,7 @@ HomePage.getInitialProps = async (context: NextPageContext) => {
   } catch (err: unknown) {
     return {
       generalConfig: null,
-      bookingSettings: null,
+
       error: parseMessageFromError(err),
       messages: null,
       listings: null,

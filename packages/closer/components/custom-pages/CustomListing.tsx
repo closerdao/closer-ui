@@ -38,7 +38,7 @@ const CustomListing: React.FC<{
   };
 
   return (
-    <section className="max-w-4xl px-4 mx-auto flex flex-col gap-[60px]">
+    <section className="max-w-4xl mx-auto flex flex-col gap-[60px]">
       <div className="flex flex-col gap-4 text-center">
         <Heading level={2} className="text-4xl text-foreground">
           {content?.title}

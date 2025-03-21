@@ -15,7 +15,7 @@ const CustomPromoCard: React.FC<{
   };
 }> = ({ content, settings }) => (
   <section
-    className={`max-w-4xl px-4 mx-auto flex flex-col text-md ${
+    className={`max-w-4xl mx-auto flex flex-col text-md ${
       settings?.alignImage === 'left' ? 'md:flex-row ' : 'md:flex-row-reverse'
     } gap-4 md:gap-10 md:min-h-[400px]`}
   >

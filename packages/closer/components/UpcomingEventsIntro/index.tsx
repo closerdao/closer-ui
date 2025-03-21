@@ -17,7 +17,7 @@ const UpcomingEventsIntro = () => {
   return (
     <section className="mb-20 max-w-5xl mx-auto md:pt-20 text-center md:text-left md:flex md:space-x-12">
       <div className="md:max-w-lg w-full md:w-1/3">
-        <Heading display level={2} className="mb-6 text-3xl">
+        <Heading display level={2} className="mb-6 text-3xl normal-case ">
           {t('events_upcoming_heading', appName)}
         </Heading>
 

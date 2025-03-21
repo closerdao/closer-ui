@@ -134,7 +134,7 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
   const baseHeight = 200; // Base height for thumbnails
 
   return (
-    <section className="max-w-6xl px-4 mx-auto flex flex-col gap-[60px] ">
+    <section className="max-w-6xl mx-auto flex flex-col gap-[60px] ">
       <div className="flex flex-col gap-4 text-center">
         <p
           className="rich-text max-w-3xl mx-auto"

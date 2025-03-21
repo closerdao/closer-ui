@@ -5,7 +5,7 @@ import { Page } from 'closer/types/customPages';
 const CustomSections = ({ page }: { page: Page }) => {
     return (
         // <div className="max-w-3xl mx-auto py-10 flex flex-col gap-[120px]">
-        <div className="flex flex-col gap-[120px]">
+        <div className="flex flex-col gap-[120px] pb-[80px]">
         {page.sections.map((section, index) => (
           <CustomSectionComponent
             key={index}
