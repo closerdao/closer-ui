@@ -261,7 +261,7 @@ const ListingPage: NextPage<Props> = ({
       return {
         results: null,
         availability: null,
-        error: error.response.data.error || 'Unknown error',
+        error: error?.response?.data?.error || 'Unknown error',
       };
     }
   };
