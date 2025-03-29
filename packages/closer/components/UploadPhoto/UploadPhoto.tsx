@@ -12,12 +12,11 @@ import UploadPhotoButton from './UploadPhotoButton';
 interface Props {
   model?: string;
   id?: string;
-  onSave?: (photoIds: string[]) => void;
+  onSave?: (photoIds: string[] | string) => void;
   label?: string;
   isMinimal?: boolean;
   className?: string;
   isPrompt?: boolean;
-  isMultiple?: boolean;
 }
 
 const UploadPhoto: FC<Props> = ({
@@ -28,7 +27,6 @@ const UploadPhoto: FC<Props> = ({
   isMinimal = false,
   className,
   isPrompt = false,
-  isMultiple = false,
 }) => {
   const t = useTranslations();
   const { isAuthenticated, user, refetchUser } = useAuth();
@@ -60,12 +58,18 @@ const UploadPhoto: FC<Props> = ({
 
         if (model && id) {
           await api.patch(`/${model}/${id}`, {
-            photo: isMultiple ? photoIds : photoIds[0], // Single or multiple photo handling
+            photo: photoIds, // Single or multiple photo handling
           });
         }
 
         if (onSave) {
-          onSave(photoIds);
+          // For single-photo case (like user photos), pass the first ID string
+          // For multi-photo case, pass the whole array
+          if (isUserPhoto || photoIds.length === 1) {
+            onSave(photoIds[0]);
+          } else {
+            onSave(photoIds);
+          }
         }
 
         refetchUser();
@@ -76,12 +80,12 @@ const UploadPhoto: FC<Props> = ({
         setLoading(false);
       }
     },
-    [id, model, onSave, isMultiple]
+    [id, model, onSave, isUserPhoto, refetchUser],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    multiple: isMultiple,
+    multiple: isUserPhoto ? false : true,
   });
 
   if (!isAuthenticated) {
@@ -89,7 +93,10 @@ const UploadPhoto: FC<Props> = ({
   }
 
   return (
-    <div {...getRootProps()} className={`${isMinimal ? 'w-[120px]' : 'w-fit'} relative ${className}`}>
+    <div
+      {...getRootProps()}
+      className={`${isMinimal ? 'w-[120px]' : 'w-fit'} relative ${className}`}
+    >
       {/* User photo display */}
       {isUserPhoto && user?.photo && (
         <div>
@@ -99,38 +106,71 @@ const UploadPhoto: FC<Props> = ({
             alt={user.screenname}
             className="group w-32 md:w-44 rounded-full peer"
           />
-          <UploadPhotoButton isMinimal={isMinimal} isPrompt={isPrompt} label={label} getInputProps={getInputProps} />
+          <UploadPhotoButton
+            isMinimal={isMinimal}
+            isPrompt={isPrompt}
+            label={label}
+            getInputProps={getInputProps}
+          />
         </div>
       )}
 
       {/* Placeholder when no user photo */}
       {isUserPhoto && !user?.photo && !isPrompt && (
         <div className="group">
-          <FaUser className={`${isPrompt ? 'text-3xl text-gray-400' : 'text-gray-200 text-8xl'}`} />
-          <UploadPhotoButton isMinimal={isMinimal} isPrompt={isPrompt} label={label} getInputProps={getInputProps} />
+          <FaUser
+            className={`${
+              isPrompt ? 'text-3xl text-gray-400' : 'text-gray-200 text-8xl'
+            }`}
+          />
+          <UploadPhotoButton
+            isMinimal={isMinimal}
+            isPrompt={isPrompt}
+            label={label}
+            getInputProps={getInputProps}
+          />
         </div>
       )}
 
       {/* Upload button for event/volunteer */}
       {(model === 'event' || model === 'volunteer') && (
-        <UploadPhotoButton isMinimal={isMinimal} isPrompt={isPrompt} label={label} getInputProps={getInputProps} />
+        <UploadPhotoButton
+          isMinimal={isMinimal}
+          isPrompt={isPrompt}
+          label={label}
+          getInputProps={getInputProps}
+        />
       )}
 
       {/* Upload button for editor (excluding events/volunteers) */}
       {isEditor && (
-        <UploadPhotoButton isMinimal={isMinimal} isPrompt={isPrompt} label={label} getInputProps={getInputProps} />
+        <UploadPhotoButton
+          isMinimal={isMinimal}
+          isPrompt={isPrompt}
+          label={label}
+          getInputProps={getInputProps}
+        />
       )}
 
       {/* Upload button in prompt mode */}
       {isPrompt && (
         <div className="group">
           <FaUser className="text-3xl text-gray-400" />
-          <UploadPhotoButton isMinimal={isMinimal} isPrompt={isPrompt} label={label} getInputProps={getInputProps} />
+          <UploadPhotoButton
+            isMinimal={isMinimal}
+            isPrompt={isPrompt}
+            label={label}
+            getInputProps={getInputProps}
+          />
         </div>
       )}
 
       {error && <p className="text-red-500 mt-2">{error}</p>}
-      {loading && <p className="absolute top-[40px]">{t('upload_photo_loading_message')}</p>}
+      {loading && (
+        <p className="absolute top-[40px]">
+          {t('upload_photo_loading_message')}
+        </p>
+      )}
       {isDragActive && <p>{t('upload_photo_prompt_message')}</p>}
     </div>
   );

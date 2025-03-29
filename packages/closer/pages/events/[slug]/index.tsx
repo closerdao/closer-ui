@@ -8,7 +8,7 @@ import EventAttendees from '../../../components/EventAttendees';
 import EventDescription from '../../../components/EventDescription';
 import EventPhoto from '../../../components/EventPhoto';
 import Photo from '../../../components/Photo';
-import UploadPhoto from '../../../components/UploadPhoto/UploadPhoto';
+import UploadPhoto from '../../../components/UploadPhoto';
 import { Button, Card, ErrorMessage, LinkButton } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
@@ -274,7 +274,7 @@ const EventPage = ({
                       model="event"
                       isMinimal
                       id={event._id}
-                      onSave={(id) => setPhoto(id)}
+                      onSave={(ids) => setPhoto(ids[0])}
                       label={photo ? 'Change photo' : 'Add photo'}
                     />
                   )}
