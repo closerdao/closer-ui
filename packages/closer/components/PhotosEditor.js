@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import Photo from './Photo';
 import UploadPhoto from './UploadPhoto/UploadPhoto';
 
-const PhotosEditor = ({ value, onChange }) => {
+const PhotosEditor = ({ value, onChange, isMultiple = true }) => {
   const t = useTranslations();
 
   const hasMultiplePhotos = Array.isArray(value);
@@ -53,6 +53,7 @@ const PhotosEditor = ({ value, onChange }) => {
       </div>
       <div className="actions">
         <UploadPhoto
+          isMultiple={isMultiple}
           isMinimal
           onSave={(id) => addPhoto(id)}
           label="Add photo"
