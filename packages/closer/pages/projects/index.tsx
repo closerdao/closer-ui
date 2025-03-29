@@ -45,21 +45,25 @@ const ProjectsPage = ({
         <title>{`${t('projects_page_title')} - ${PLATFORM_NAME}`}</title>
       </Head>
       <main className=" pb-24">
-        <section className="w-full flex justify-center max-w-4xl mx-auto mb-4 relative">
-          {hasStewardRole && (
-            <LinkButton
-              href="/projects/create"
-              className="w-fit absolute bottom-6 right-6"
-            >
-              {t('projects_create_title')}
-            </LinkButton>
-          )}
+        <section
+          className="w-full flex justify-center max-w-4xl mx-auto mb-4 relative"
+          style={{ position: 'relative' }}
+        >
           <Image
             alt="Traditional Dream Factory Builders Residency"
             src="/images/builders-l.png"
             width={1344}
             height={600}
           />
+
+          {hasStewardRole && (
+            <LinkButton
+              href="/projects/create"
+              className="w-fit absolute bottom-6 right-6  z-10 "
+            >
+              {t('projects_create_title')}
+            </LinkButton>
+          )}
         </section>
         <section className=" w-full flex justify-center">
           <div className="max-w-4xl w-full ">

@@ -12,7 +12,8 @@
     "hooks/useAuth.js",
     "components/Pagination.js",
     "components/ListingCard.tsx",
-    "components/LearnEditor/index.tsx"
+    "components/LearnEditor/index.tsx",
+    "types/*.d.ts"
   ],
   "exclude": ["node_modules"],
   "compilerOptions": {

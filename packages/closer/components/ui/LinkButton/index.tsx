@@ -82,35 +82,35 @@ const LinkButton = ({
   const textRef = React.useRef<HTMLSpanElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => {
-    const adjustFontSize = () => {
-      if (textRef.current && containerRef.current) {
-        const container = containerRef.current;
-        const text = textRef.current;
-        const containerWidth = container.clientWidth - 22; // Account for px-2
+  // React.useEffect(() => {
+  //   const adjustFontSize = () => {
+  //     if (textRef.current && containerRef.current) {
+  //       const container = containerRef.current;
+  //       const text = textRef.current;
+  //       const containerWidth = container.clientWidth - 22; // Account for px-2
 
-        // Reset to default size first
-        text.style.removeProperty('--dynamic-font-size');
+  //       // Reset to default size first
+  //       text.style.removeProperty('--dynamic-font-size');
 
-        // Only adjust if text is actually overflowing
-        if (text.scrollWidth > containerWidth) {
-          const currentSize = parseFloat(
-            window.getComputedStyle(text).fontSize,
-          );
-          let fontSize = currentSize;
+  //       // Only adjust if text is actually overflowing
+  //       if (text.scrollWidth > containerWidth) {
+  //         const currentSize = parseFloat(
+  //           window.getComputedStyle(text).fontSize,
+  //         );
+  //         let fontSize = currentSize;
 
-          while (text.scrollWidth > containerWidth && fontSize > 8) {
-            fontSize -= 0.5;
-            text.style.setProperty('--dynamic-font-size', `${fontSize}px`);
-          }
-        }
-      }
-    };
+  //         while (text.scrollWidth > containerWidth && fontSize > 8) {
+  //           fontSize -= 0.5;
+  //           text.style.setProperty('--dynamic-font-size', `${fontSize}px`);
+  //         }
+  //       }
+  //     }
+  //   };
 
-    adjustFontSize();
-    window.addEventListener('resize', adjustFontSize);
-    return () => window.removeEventListener('resize', adjustFontSize);
-  }, [children]);
+  //   adjustFontSize();
+  //   window.addEventListener('resize', adjustFontSize);
+  //   return () => window.removeEventListener('resize', adjustFontSize);
+  // }, [children]);
 
   return (
     <>
