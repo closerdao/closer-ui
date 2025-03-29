@@ -535,10 +535,9 @@ const Checkout = ({
                 )}
                 {process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' &&
                 canApplyCredits &&
+                !useTokens &&
                 !booking?.volunteerId &&
-                rentalFiat &&
-                rentalFiat?.val > 0 &&
-                !useTokens ? (
+                ((rentalFiat && rentalFiat?.val > 0) || useCredits) ? (
                   <RedeemCredits
                     fiatPricePerNight={listing?.fiatPrice.val}
                     isPartialCreditsPayment={

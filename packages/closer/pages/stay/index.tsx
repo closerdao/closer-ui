@@ -60,6 +60,8 @@ const StayPage = ({
   const { TEAM_EMAIL } = config || {};
   const { platform }: any = usePlatform();
   const { user } = useAuth();
+
+  console.log('user=',user);
   const isTeamMember = user?.roles.some((roles) =>
     ['space-host', 'steward', 'land-manager', 'team'].includes(roles),
   );
@@ -102,7 +104,7 @@ const StayPage = ({
   });
 
   if (!bookingSettings) {
-    return <PageNotFound error="Booking is disabled" />;
+    return <PageNotFound error="Network error" />;
   }
 
   return (

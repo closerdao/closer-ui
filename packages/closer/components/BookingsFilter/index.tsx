@@ -127,10 +127,10 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
       where: {
         ...(filterValues.type === 'event' && { eventId: { $exists: true } }),
         ...(filterValues.type === 'volunteer' && {
-          $or: [
-            { volunteerId: { $exists: true } },
-            { volunteerInfo: { $exists: true } },
-          ],
+          'volunteerInfo.bookingType': 'volunteer'
+        }),
+        ...(filterValues.type === 'residency' && {
+          'volunteerInfo.bookingType': 'residence'
         }),
         ...(filterValues.type === 'stay' && {
           volunteerId: { $exists: false },
