@@ -5892,6 +5892,11 @@ human-signals@^2.1.0:
   resolved "https://registry.npmjs.org/human-signals/-/human-signals-2.1.0.tgz"
   integrity sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==
 
+iban-ts@^0.10.0:
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/iban-ts/-/iban-ts-0.10.0.tgz#d538e0d119e09f25d30bc1aa97dd281a28c21eb1"
+  integrity sha512-711JcpWYtKxbMB+zZANc6gWCRhCSPbTrVgUni2fWPrdPPYJWCtSYrp54QzWumEUv3MA3tQEiPnzR5zf3esWuOQ==
+
 iconv-lite@0.6.3:
   version "0.6.3"
   resolved "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.6.3.tgz"

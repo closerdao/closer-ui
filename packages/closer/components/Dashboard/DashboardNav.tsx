@@ -107,7 +107,7 @@ const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
     }
   };
   return (
-    <nav className="hidden xl:block w-0 xl:w-[220px] flex-shrink-0 px-4">
+    <nav className="hidden xl:block w-0 xl:w-[220px] flex-shrink-0 px-4 pt-6">
       {DASHBOARD_LINKS.map((link) => {
         return (
           <div key={link.label}>

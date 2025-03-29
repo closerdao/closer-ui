@@ -15,7 +15,7 @@ const UserBookingPreview = ({ user }) => {
   if (!user) return null;
 
   return (
-    <div className="sm:max-w-[330px] min-w-[220px] max-w-full w-full sm:w-1/3 bg-white rounded-lg p-4 shadow-xl flex-1  flex flex-col ">
+    <div className="sm:max-w-[330px] min-w-[220px] max-w-full w-full sm:w-1/3 bg-dominant rounded-lg p-4 shadow-xl flex-1  flex flex-col ">
       <Link passHref href={`/members/${user.get('slug')}`}>
         <div className="rounded-md flex items-center gap-2 justify-center">
           <div className="mb-2">

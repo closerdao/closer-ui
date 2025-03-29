@@ -9,7 +9,7 @@ module.exports = {
       secondary: '#1b3bc3',
       background: 'transparent',
       'background-dark': '#1c1c1c',
-      foreground: '#1c1c1c',
+      foreground: '#000000',
       'foreground-dark': '#dadada',
       card: '#ebf1f6',
       neutral: '#F0F0F0',

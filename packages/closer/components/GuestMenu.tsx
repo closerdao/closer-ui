@@ -67,7 +67,7 @@ const GuestMenu = () => {
         {isVolunteeringEnabled && (
           <div className="flex flex-col gap-3">
             <NavLink href="/volunteer">{t('navigation_volunteer')}</NavLink>
-            <NavLink href="/projects">{t('navigation_residence')}</NavLink>
+            {APP_NAME.toLowerCase() === 'tdf' && <NavLink href="/projects">{t('navigation_residence')}</NavLink>}
           </div>
         )}
 

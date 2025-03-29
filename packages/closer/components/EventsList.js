@@ -51,7 +51,7 @@ const EventsList = ({
   }, []);
 
   return (
-    <div className={card ? 'card' : ''}>
+    <div className={card ? 'card max-w-6xl' : 'max-w-6xl'}>
       {error && <p className="text-red-500">{error}</p>}
       {title && <h3 className={card ? 'card-title' : ''}>{title}</h3>}
       {events && events.count() > 0 ? (

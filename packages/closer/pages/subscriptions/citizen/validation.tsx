@@ -3,8 +3,7 @@ import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useState } from 'react';
 
-import CitizenGoodToBuy from '../../../components/CitizenGoodToBuy';
-import CitizenNotEligible from '../../../components/CitizenNotEligible';
+import CitizenEligibility from '../../../components/CitizenEligibility';
 import PageError from '../../../components/PageError';
 import Wallet from '../../../components/Wallet';
 import {
@@ -19,7 +18,6 @@ import { useTranslations } from 'next-intl';
 
 import { SUBSCRIPTION_CITIZEN_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
-
 import { WalletState } from '../../../contexts/wallet';
 import { useConfig } from '../../../hooks/useConfig';
 import { CitizenshipConfig } from '../../../types';
@@ -80,7 +78,7 @@ const ValidationCitizenPage: NextPage<Props> = ({
         if (application?.intent?.iWantToBuyTokens) {
           return t('navigation_buy_token');
         } else {
-          return t('booking_button_continue');
+          return t('navigation_buy_token');
         }
       case 'buy_more':
         if (application?.intent?.iWantToBuyTokens) {
@@ -88,7 +86,7 @@ const ValidationCitizenPage: NextPage<Props> = ({
         } else if (application?.intent?.iWantToApply) {
           return t('subscriptions_citizen_apply');
         } else {
-          return t('booking_button_continue');
+          return t('navigation_buy_token');
         }
       case 'not_eligible':
         return t('subscriptions_citizen_see_other_ways');
@@ -150,10 +148,6 @@ const ValidationCitizenPage: NextPage<Props> = ({
     }
   }, [user, isLoading]);
 
-  const updateApplication = (key: string, value: any) => {
-    setApplication((prev: any) => ({ ...prev, [key]: value }));
-  };
-
   const goBack = () => {
     router.push('/subscriptions/');
   };
@@ -169,30 +163,16 @@ const ValidationCitizenPage: NextPage<Props> = ({
   const handleNext = async () => {
     switch (eligibility) {
       case 'good_to_buy':
-        if (application?.intent?.iWantToBuyTokens) {
-          router.push('/token/before-you-begin?isCitizenApplication=true');
-          return;
-        } else {
-          router.push(
-            `/subscriptions/citizen/apply?intent=finance&why=${application?.why}`,
-          );
-          return;
-        }
+        router.push(
+          '/subscriptions/citizen/select-flow?isCitizenApplication=true',
+        );
+        return;
+
       case 'buy_more':
-        if (application?.intent?.iWantToBuyTokens) {
-          router.push('/token/before-you-begin?isCitizenApplication=true');
-          return;
-        } else if (application?.intent?.iWantToApply) {
-          router.push(
-            `/subscriptions/citizen/apply?intent=apply&why=${application?.why}`,
-          );
-          return;
-        } else {
-          router.push(
-            `/subscriptions/citizen/apply?intent=finance&why=${application?.why}`,
-          );
-          return;
-        }
+        router.push(
+          '/subscriptions/citizen/select-flow?isCitizenApplication=true',
+        );
+        return;
       case 'not_eligible':
         router.push('/#how-to-play');
         return;
@@ -202,7 +182,7 @@ const ValidationCitizenPage: NextPage<Props> = ({
   if (!user && !isLoading) {
     return <PageNotFound error="" />;
   }
-  
+
   if (process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP !== 'true') {
     return <PageNotFound error="" />;
   }
@@ -225,37 +205,20 @@ const ValidationCitizenPage: NextPage<Props> = ({
         <main className="pt-14 pb-24 space-y-6">
           <section className="mb-10 space-y-6">
             <Heading level={2} className="border-b pb-2 mb-6 text-xl">
-              {eligibility === 'good_to_buy' || eligibility === 'buy_more'
-                ? t('subscriptions_citizen_good_to_go')
-                : t('subscriptions_citizen_not_eligible')}
+              {eligibility === 'not_eligible'
+                ? t('subscriptions_citizen_not_eligible')
+                : t('subscriptions_citizen_eligible')}
             </Heading>
-            <p>{t('subscriptions_citizen_good_to_go_intro')}</p>
           </section>
-
           <section className="space-y-6">
-            {eligibility === 'not_eligible' && (
-              <CitizenNotEligible
-                userReports={user?.reports || []}
-                userSubscription={user?.subscription}
-                hasStayedForMinDuration={hasStayedForMinDuration}
-                isVouched={isVouched}
-                owns30Tokens={owns30Tokens}
-                minVouches={minVouches}
-              />
-            )}
-            {eligibility === 'good_to_buy' && (
-              <CitizenGoodToBuy
-                updateApplication={updateApplication}
-                application={application}
-              />
-            )}
-            {eligibility === 'buy_more' && (
-              <CitizenGoodToBuy
-                buyMore={true}
-                updateApplication={updateApplication}
-                application={application}
-              />
-            )}
+            <CitizenEligibility
+              userReports={user?.reports || []}
+              userSubscription={user?.subscription}
+              hasStayedForMinDuration={hasStayedForMinDuration}
+              isVouched={isVouched}
+              owns30Tokens={owns30Tokens}
+              minVouches={minVouches}
+            />
           </section>
 
           {isWalletEnabled &&
@@ -269,16 +232,7 @@ const ValidationCitizenPage: NextPage<Props> = ({
           ) : null}
 
           <div className="py-4">
-            <Button
-              isEnabled={
-                eligibility !== 'not_eligible'
-                  ? Boolean(application?.why)
-                  : true
-              }
-              onClick={handleNext}
-            >
-              {getCtaButtonText()}
-            </Button>
+            <Button onClick={handleNext}>{getCtaButtonText()}</Button>
           </div>
         </main>
       </div>

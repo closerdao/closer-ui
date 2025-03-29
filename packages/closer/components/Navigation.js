@@ -108,7 +108,7 @@ const Navigation = () => {
           {isAuthenticated &&
             APP_NAME &&
             (APP_NAME.toLowerCase() === 'moos' ||
-              APP_NAME.toLowerCase() === 'foz') && (
+              APP_NAME.toLowerCase() === 'foz' || APP_NAME.toLowerCase() === 'per-auset') && (
               <Button
                 onClick={() => router.push('/stay')}
                 size="small"
