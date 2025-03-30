@@ -95,10 +95,13 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
             }
             className="flex flex-col justify-center"
           >
-            <div className="flex flex-col justify-start md:mt-0 gap-y-2">
-              <Heading display level={4}>
-                {t('newsletter_title')}
-              </Heading>
+              <div className="flex flex-col justify-start md:mt-0 gap-y-2">
+                
+                {placement !== 'HomePagePrompt' && (
+                  <Heading display level={4}>
+                    {t('newsletter_title')}
+                  </Heading>
+                )}
               <div className="flex gap-4">
                 <Input
                   type="text"

@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
 import ReportDownloadModal from '../components/ReportDownloadModal';
@@ -12,7 +12,6 @@ import {
   Button,
   Heading,
   LinkButton,
-  Newsletter,
   Tag,
   WalletState,
   YoutubeEmbed,
@@ -37,34 +36,7 @@ const HomePage = () => {
     year: string;
     url: string;
   } | null>(null);
-  const [hasSubscribed, setHasSubscribed] = useState(false);
-  const [open, setOpen] = useState(false);
-  const closedByUser = useRef(false); 
 
-  useEffect(() => {
-    if (isLoading) {
-      return;
-    }
-    const isSubscriber = Boolean(localStorage.getItem('email'));
-    if (isSubscriber && !isAuthenticated && !isLoading) {
-      setHasSubscribed(true);
-      setOpen(false);
-    } else {
-      setOpen(true);
-    }
-  }, [isAuthenticated, isLoading]);
-
-  const handleDrawerClose = (isOpen: boolean) => {
-    setOpen(isOpen);
-    if (!isOpen) {
-      closedByUser.current = true;
-    }
-  };
-
-  const handleSubscriptionSuccess = (email: string) => {
-    setHasSubscribed(true);
-    localStorage.setItem('email', email);
-  };
 
   useEffect(() => {
     if (isWalletReady) {
@@ -120,7 +92,7 @@ const HomePage = () => {
         />
       </Head>
 
-      {open && !isAuthenticated && (
+      {/* {open && !isAuthenticated && (
         <section className="fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] bg-accent-light">
           <div className="mx-auto max-w-sm p-4">
             <Heading level={3} className="mb-4">
@@ -142,7 +114,7 @@ const HomePage = () => {
             </Button>
           </div>
         </section>
-      )}
+      )} */}
       <section className="md:absolute md:-top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-light mb-8 md:mb-[100vh]">
         <div className="md:h-[100vh]">
           {isMobile ? (
@@ -196,7 +168,6 @@ const HomePage = () => {
               Traditional Dream Factory
             </Heading>
 
-           
             <p className="text-center md:text-left mb-6">
               Our current project is a 5 hectare regenerative playground in
               Abela, where we have a reforestation, food forest, glamping
