@@ -7,7 +7,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import CitizenSubscriptionProgress from '../../components/CitizenSubscriptionProgress';
 import ConnectedWallet from '../../components/ConnectedWallet';
 import EventsList from '../../components/EventsList';
-import UploadPhoto from '../../components/UploadPhoto/UploadPhoto';
+import UploadPhoto from '../../components/UploadPhoto';
 import UserBookings from '../../components/UserBookings';
 import Vouching from '../../components/Vouching';
 import { Card } from '../../components/ui';

@@ -76,6 +76,9 @@ const ListingPage: NextPage<Props> = ({
   error,
   descriptionText,
 }) => {
+
+
+  console.log('listing=', listing);
   const t = useTranslations();
   const config = useConfig();
   const { LOCATION_LAT, LOCATION_LON, PLATFORM_LEGAL_ADDRESS } = config || {};

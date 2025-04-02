@@ -10,7 +10,7 @@ import { VolunteerOpportunity } from '../../types';
 import { cdn } from '../../utils/api';
 import EventDescription from '../EventDescription';
 import EventPhoto from '../EventPhoto';
-import UploadPhoto from '../UploadPhoto/UploadPhoto';
+import UploadPhoto from '../UploadPhoto';
 import { Card, LinkButton } from '../ui';
 import Heading from '../ui/Heading';
 
@@ -67,7 +67,7 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
               <UploadPhoto
                 model="volunteer"
                 id={volunteer._id}
-                onSave={(id) => setPhoto(id)}
+                onSave={(id) => setPhoto(id[0])}
                 label={photo ? 'Change photo' : 'Add photo'}
               />
             </div>
