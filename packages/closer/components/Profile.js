@@ -26,50 +26,59 @@ const Profile = ({ isDemo }) => {
   const isCreditsEnabled = process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true';
 
   return (
-    <div className="w-full">
-      <div className="py-4 px-2 shadow-xl relative rounded-lg w-full">
-        <div className="flex items-start">
-          <div className="flex justify-center items-center w-24 h-24 md:w-32 md:h-32 mx-auto mb-4">
-            <Link
-              href={`/members/${user?.slug}`}
-              passHref
-              title="View profile"
-              className="md:flex md:flex-row items-center cursor-pointer"
-            >
-              {user?.photo ? (
-                <img
-                  src={`${cdn}${user.photo}-profile-lg.jpg`}
-                  loading="lazy"
-                  alt={user.screenname}
-                  className="rounded-full "
-                />
-              ) : (
-                <FaUser className="text-gray-200 text-6xl" />
-              )}
-            </Link>
+    <div className="w-full ">
+      <div className="py-2  relative rounded-lg w-full ">
+        <div className="flex items-center">
+          <div className='flex gap-2 items-center'>
+            <div className="flex items-center md:w-10 md:h-10 mx-auto ">
+              <Link
+                href={`/members/${user?.slug}`}
+                passHref
+                title="View profile"
+                className="md:flex md:flex-row items-center cursor-pointer"
+              >
+                {user?.photo ? (
+                  <img
+                    src={`${cdn}${user.photo}-profile-lg.jpg`}
+                    loading="lazy"
+                    alt={user.screenname}
+                    className="rounded-full "
+                  />
+                ) : (
+                  <FaUser className="text-gray-200 text-6xl" />
+                )}
+              </Link>
+            </div>
+            <div>
+              <Heading level={2} className="text-sm">
+                {user?.screenname}
+              </Heading>
+              {isCreditsEnabled && (
+              <CreditsBalance className="text-sm" isDemo={isDemo} />
+                        )}
+            </div>
           </div>
 
-          <div className="w-1/3 absolute right-4">
+          <div className=" absolute right-0">
             <Button
               onClick={() => {
                 router.push('/settings');
               }}
               variant="secondary"
-              className="!w-[80px] !text-accent ml-auto"
+              size="sm"
+              className="text-sm normal-case !w-fit !text-accent ml-auto py-0 !h-8"
             >
-              {t('generic_edit_button')}
+              Edit profile
             </Button>
           </div>
         </div>
 
         <div className="text-center">
-          <Heading level={2} className="font-bold">
-            {user?.screenname}
-          </Heading>
+          
           <p>
             {user?.preferences?.superpower
               ? user?.preferences?.superpower
-              : t('navigation_member')}{' '}
+              : ''}
           </p>
           {/* <div className="mt-1 w-full">
             {user.roles && (
@@ -87,11 +96,7 @@ const Profile = ({ isDemo }) => {
             )}
           </div> */}
         </div>
-        <div className="flex space-between justify-center w-full">
-          {isCreditsEnabled && (
-            <CreditsBalance className="text-lg" isDemo={isDemo} />
-          )}
-        </div>
+     
       </div>
     </div>
   );

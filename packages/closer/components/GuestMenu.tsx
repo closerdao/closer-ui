@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl';
 import { useConfig } from '../hooks/useConfig';
 import api from '../utils/api';
 import ReportABug from './ReportABug';
-import QuestionMarkIcon from './icons/QuestionMarkIcon';
 import NavLink from './ui/NavLink';
 
 const GuestMenu = () => {
@@ -41,9 +40,8 @@ const GuestMenu = () => {
   }, []);
   return (
     <nav>
-      <div className="px-4 pb-6 shadow-xl relative rounded-lg border-3 flex flex-col gap-3">
-        <QuestionMarkIcon className="w-24 h-24 absolute left-0 right-0 mx-auto -translate-y-1/2" />
-        <p className="pt-16 mb-4 text-center">{t('navigation_sign_in_cta')}</p>
+      <div className=" pt-4 pb-6 relative rounded-lg border-3 flex flex-col gap-3">
+        <p className=" mb-4 text-center">{t('navigation_sign_in_cta')}</p>
 
         <NavLink href="/login">{t('navigation_sign_in')}</NavLink>
         <NavLink href="/signup">{t('navigation_signup')}</NavLink>
@@ -55,10 +53,17 @@ const GuestMenu = () => {
           </NavLink>
         )}
 
+        {APP_NAME && APP_NAME.toLowerCase() === 'earthbound' && (
+          <>
+            <NavLink href="/pages/invest">{t('header_nav_invest')}</NavLink>
+            <NavLink href="/stay">{t('header_nav_stay')}</NavLink>
+            <NavLink href="/members">{t('header_nav_community')}</NavLink>
+          </>
+        )}
+
         {APP_NAME.toLowerCase() !== 'lios' && (
           <NavLink href="/events">{t('navigation_events')}</NavLink>
         )}
-
 
         {isBookingEnabled && (
           <NavLink href="/stay">{t('navigation_stay')}</NavLink>
@@ -67,7 +72,9 @@ const GuestMenu = () => {
         {isVolunteeringEnabled && (
           <div className="flex flex-col gap-3">
             <NavLink href="/volunteer">{t('navigation_volunteer')}</NavLink>
-            {APP_NAME.toLowerCase() === 'tdf' && <NavLink href="/projects">{t('navigation_residence')}</NavLink>}
+            {APP_NAME.toLowerCase() === 'tdf' && (
+              <NavLink href="/projects">{t('navigation_residence')}</NavLink>
+            )}
           </div>
         )}
 

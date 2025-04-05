@@ -69,11 +69,11 @@ const MenuContainer = ({ isOpen, toggleNav, children }) => {
         >
           <div
             onClick={toggleNav}
-            className="absolute cursor-pointer text-gray-600 top-6 left-5 z-20"
+            className="absolute cursor-pointer text-gray-600 top-2 right-4 z-20"
           >
             <CloseIcon />
           </div>
-          <div className="pt-32 pb-12 px-8 relative w-full flex flex-col gap-4 z-10">
+          <div className="pt-8 pb-12 px-8 relative w-full flex flex-col gap-4 z-10">
             {children}
           </div>
         </div>

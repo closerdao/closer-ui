@@ -58,5 +58,11 @@
 
   "learn_course_purchase_confirmation_message": "<p>Thank you for your purchase! 🌱</p><p>We will contact you soon with the course details.</p>",
 
+  "header_nav_invest": "Invest",
+  "header_nav_stay": "Stay",
+  "header_nav_events": "Events",
+  "header_nav_community": "Community",
+  "header_nav_join_us": "Join us",
+  
   "buttons_apply_to_stay": "Apply to stay"
 }

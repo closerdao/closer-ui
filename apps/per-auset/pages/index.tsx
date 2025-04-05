@@ -205,7 +205,7 @@ const getPage = ({
         data: {
           settings: {
             numColumns: 3,
-            isHosts: true,
+            isSmallImage: true,
           },
           content: {
             title: 'Stewards Of The Land',

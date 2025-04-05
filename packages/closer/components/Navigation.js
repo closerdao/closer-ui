@@ -64,6 +64,33 @@ const Navigation = () => {
         <Logo />
 
         <div className="flex gap-2 w-auto justify-center items-center ">
+          {APP_NAME && APP_NAME.toLowerCase() === 'earthbound' && (
+            <div className="flex gap-4 items-center">
+              <ul className="gap-4 hidden sm:flex">
+                <li>
+                  <Link href="/pages/invest">{t('header_nav_invest')}</Link>
+                </li>
+                <li>
+                  <Link href="/stay">{t('header_nav_stay')}</Link>
+                </li>
+                <li>
+                  <Link href="/events">{t('header_nav_events')}</Link>
+                </li>
+                <li>
+                  <Link href="/members">{t('header_nav_community')}</Link>
+                </li>
+              </ul>
+              <Button
+                onClick={() => router.push('/pages/join')}
+                size="small"
+                variant="primary"
+                className={' bg-accent-alt border-accent-alt'}
+              >
+                {t('header_nav_join_us')}
+              </Button>
+            </div>
+          )}
+
           {router.locales?.length > 1 &&
           process.env.NEXT_PUBLIC_FEATURE_LOCALE_SWITCH === 'true' ? (
             <ul className="flex">
@@ -108,7 +135,8 @@ const Navigation = () => {
           {isAuthenticated &&
             APP_NAME &&
             (APP_NAME.toLowerCase() === 'moos' ||
-              APP_NAME.toLowerCase() === 'foz' || APP_NAME.toLowerCase() === 'per-auset') && (
+              APP_NAME.toLowerCase() === 'foz' ||
+              APP_NAME.toLowerCase() === 'per-auset') && (
               <Button
                 onClick={() => router.push('/stay')}
                 size="small"
@@ -150,7 +178,7 @@ const Navigation = () => {
               <ProfilePhoto user={user} size="10" />
             </Link>
           )}
-          <div className="ml-4">
+          <div className="ml-4 pr-4">
             <Menu isOpen={navOpen} toggleNav={toggleNav}>
               {isAuthenticated ? <MemberMenu /> : <GuestMenu />}
             </Menu>

@@ -4,6 +4,8 @@ export async function loadLocaleData(
 ) {
   // we have to hardcode all import paths because otherwise webpack wouldn't pick them up from variables
   async function importLocaleData(locale: string, appName: string) {
+
+    console.log('appName=', appName);
     switch (appName) {
       case 'lios':
         switch (locale) {
@@ -56,6 +58,15 @@ export async function loadLocaleData(
           default:
             return Promise.all([
               import('../locales/per-auset/en.json'),
+              import('../locales/base-en.json'),
+            ]);
+        }
+      case 'earthbound':
+        switch (locale) {
+          case 'en':
+          default:
+            return Promise.all([
+              import('../locales/earthbound/en.json'),
               import('../locales/base-en.json'),
             ]);
         }
