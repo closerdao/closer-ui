@@ -57,7 +57,20 @@ const MemberMenu = () => {
     isVolunteeringEnabled: boolean,
   ) => {
 
+
     const links = [
+    ...(APP_NAME && APP_NAME.toLowerCase() === 'earthbound' ? [
+      {
+        label: t('header_nav_invest'),
+        url: '/pages/invest',
+        enabled: true,
+      },
+      {
+        label: t('header_nav_community'),
+        url: '/members',
+        enabled: true,
+      },
+    ] : []),
       {
         label: t('navigation_subscriptions'),
         url: '/subscriptions',
@@ -291,11 +304,11 @@ const MemberMenu = () => {
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
   return (
-    <nav className="flex flex-col gap-4 ">
+    <nav className="flex flex-col gap-4">
       <Profile isDemo={false} />
       {isWalletEnabled && <Wallet />}
       {navOptions.length > 1 && (
-        <div className="mb-8 mt-4">
+        <div className="mt-2">
           <Switcher
             options={navOptions}
             selectedOption={selectedSwitcherOption}

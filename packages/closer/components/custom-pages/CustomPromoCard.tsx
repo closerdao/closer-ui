@@ -7,6 +7,8 @@ import { Heading } from 'closer';
 const CustomPromoCard: React.FC<{
   settings: {
     alignImage: 'left' | 'right';
+    isColorful?: boolean;
+    imageSize?: 'small' | 'medium' | 'large';
   };
   content: {
     title: string;
@@ -19,7 +21,7 @@ const CustomPromoCard: React.FC<{
       settings?.alignImage === 'left' ? 'md:flex-row ' : 'md:flex-row-reverse'
     } gap-4 md:gap-10 md:min-h-[400px]`}
   >
-    <div className="w-full md:w-2/5 relative">
+    <div className={`${settings?.imageSize === 'large' ? 'w-full md:w-3/5' : 'w-full md:w-2/5'} relative`}>
       <div className="relative w-full h-auto md:h-full ">
         {content?.imageUrl && <Image
           src={content.imageUrl}
@@ -32,8 +34,8 @@ const CustomPromoCard: React.FC<{
         
       </div>
     </div>
-    <div className="w-full md:w-3/5 flex flex-col gap-4 ">
-      <Heading level={2} className="text-3xl text-foreground">
+    <div className={`${settings?.imageSize === 'large' ? 'w-full md:w-2/5' : 'w-full md:w-3/5'} flex flex-col gap-4 `}>
+      <Heading level={2} className={`${settings?.isColorful ? 'text-accent' : 'text-foreground'} text-3xl`}>
           {content.title}
       </Heading>
       <div className="rich-text !text-lg" dangerouslySetInnerHTML={{ __html: content.body }} />

@@ -42,9 +42,6 @@ const tdfTheme = {
     },
     fontFamily: {
       sans: ['var(--font-alegreya-sans)'],
-      // body: ['var(--font-alegreya-sans)', ...defaultTheme.fontFamily.sans],
-      // accent: ['var(--font-alegreya-sans)', ...defaultTheme.fontFamily.sans],
-      // 'accent-alt': ['var(--font-sincopa)', ...defaultTheme.fontFamily.sans],
     },
   },
   plugins: [],

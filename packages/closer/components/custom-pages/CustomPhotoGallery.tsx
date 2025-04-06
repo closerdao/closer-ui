@@ -14,7 +14,7 @@ interface PhotoGalleryProps {
     galleryType: 'masonry';
   };
   content: {
-    title: string;
+    title?: string;
     items: {
       alt: string;
       imageUrl: string;
@@ -111,7 +111,6 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
 
       if (rowWidth + scaledWidth > maxWidth && currentRow.length > 0) {
         // Scale the row to fit the container width
-        const scale = maxWidth / rowWidth;
         rows.push([...currentRow]);
         currentRow = [img];
         rowWidth = scaledWidth;
@@ -134,19 +133,23 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
   const baseHeight = 200; // Base height for thumbnails
 
   return (
-    <section className="max-w-6xl mx-auto flex flex-col gap-[60px] ">
-      <div className="flex flex-col gap-4 text-center">
-        <p
-          className="rich-text max-w-3xl mx-auto"
-          dangerouslySetInnerHTML={{ __html: content?.title }}
-        />
-      </div>
+    <section className="w-full max-w-6xl mx-auto">
+      {/* Only render title container if title exists */}
+      {content?.title && (
+        <div className="flex flex-col gap-4 text-center w-full mb-[60px]">
+          <p
+            className="rich-text max-w-3xl mx-auto"
+            dangerouslySetInnerHTML={{ __html: content.title }}
+          />
+        </div>
+      )}
 
+      {/* Gallery always takes full width */}
       <div className="w-full">
         {rows.map((row, rowIndex) => (
           <div
             key={`row-${rowIndex}`}
-            className="flex flex-wrap md:flex-nowrap mb-2 w-full md:justify-center gap-2"
+            className="flex flex-wrap md:flex-nowrap mb-2 w-full justify-center gap-2"
           >
             {row.map((image, imgIndex) => {
               const aspectRatio = image.width / image.height;
@@ -174,7 +177,7 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
                     alt={image.alt || 'Gallery Image'}
                     fill
                     style={{ objectFit: 'cover' }}
-                    sizes="(max-width: 768px) 100vw, 33vw"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1152px) 50vw, 33vw"
                   />
                 </div>
               );
