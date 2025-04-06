@@ -58,13 +58,15 @@ const CustomHero: React.FC<{
               settings?.isInverted ? 'text-accent-light' : 'text-black'
             }`}
           >
-            {content.body}
+            {content?.body}
           </p>
-          <div className="mt-4">
+
+          {content.cta &&  <div className="mt-4">
             <LinkButton href={content.cta.url} className={`${settings?.isInverted ? 'text-dominant border-accent-alt bg-accent-alt' : ''} w-fit px-5`}>
               {content.cta.text}
             </LinkButton>
-          </div>
+          </div>}
+         
         </div>
       </div>
     </section>

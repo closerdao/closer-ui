@@ -10,8 +10,8 @@ export const Footer: FC = () => {
   
 
   return (
-    <footer className="w-full mt-8 mx-auto text-center max-w-prose">
-      <div className="p-6 text-gray-700 italic">
+    <footer className="w-full mt-8 mx-auto text-center max-w-prose ">
+      <div className="p-6  italic">
         <p>
           For any visits, bookings or enquiries you can contact us by email: 
           <a href={`mailto:${TEAM_EMAIL}`}>
