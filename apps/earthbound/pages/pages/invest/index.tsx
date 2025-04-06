@@ -106,7 +106,7 @@ const getPage = ({
             items: [
               {
                 title: 'CAMILLA ENGLYST (Denmark)',
-                text: "“I am proud to be part of the backing team for Earthbound because they are doing something right. The model has the potential to spread and create real impact. I believe in this project, its vision, and its approach to building a better future. I trust in the Earthbound initiators and their vision, just as I know others will trust in me when it's my turn to develop a similar project.Until then, I am proud to be part of this backing team and to witness Earthbound blossom.”",
+                text: '\“I am proud to be part of the backing team for Earthbound because they are doing something right. The model has the potential to spread and create real impact. I believe in this project, its vision, and its approach to building a better future. I trust in the Earthbound initiators and their vision, just as I know others will trust in me when it\'s my turn to develop a similar project.Until then, I am proud to be part of this backing team and to witness Earthbound blossom.\”',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/camilla.png',
               },
@@ -118,7 +118,7 @@ const getPage = ({
               },
               {
                 title: 'LEANN ERIKSSON (Sweden/USA)',
-                text: "“I'm an impact investor at Earthbound because it is aligned with what humans need the most now: conscious, heart-centered connection with each other and the rest of the natural world. The founders have meticulously put together the best model I’ve ever seen for a successful new community, where a new fusion of ancient and modern ways of humans being on Earth is midwifed in the next decade.“",
+                text: '\“I\'m an impact investor at Earthbound because it is aligned with what humans need the most now: conscious, heart-centered connection with each other and the rest of the natural world. The founders have meticulously put together the best model I’ve ever seen for a successful new community, where a new fusion of ancient and modern ways of humans being on Earth is midwifed in the next decade.\“',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/leann.png',
               },
