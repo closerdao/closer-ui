@@ -36,6 +36,7 @@ interface Props {
   generalConfig: GeneralConfig | null;
   opportunities: VolunteerOpportunity[] | null;
   volunteerConfig: VolunteerConfig;
+  error: string | null;
 }
 
 const StayPage = ({
@@ -44,6 +45,7 @@ const StayPage = ({
   generalConfig,
   opportunities,
   volunteerConfig,
+  error,
 }: Props) => {
   const t = useTranslations();
   const { APP_NAME } = useConfig();
@@ -103,7 +105,7 @@ const StayPage = ({
     );
   });
 
-  if (!bookingSettings) {
+  if (!bookingSettings || error) {
     return <PageNotFound error="Network error" />;
   }
 
@@ -263,6 +265,7 @@ StayPage.getInitialProps = async (context: NextPageContext) => {
       messages,
       opportunities,
       volunteerConfig,
+      error: null,
     };
   } catch (err) {
     return {
