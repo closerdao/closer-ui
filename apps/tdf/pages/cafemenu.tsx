@@ -148,6 +148,41 @@ const ArtFaire = () => {
                 <div className="inline-block bg-pink-50 text-pink-500 px-4 py-1 rounded-full font-medium">5.00€</div>
               </div>
             </a>
+            <a href="https://buy.stripe.com/cN2cPH24AfTJbMQ6ov?__prefilled_amount=1700" className="block group">
+              <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl text-center relative overflow-hidden hover:border-pink-200">
+                <div className="pink-gradient h-1 absolute top-0 left-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="font-semibold text-xl text-gray-800 mb-2">Organge wine bottle</div>
+                <div className="inline-block bg-pink-50 text-pink-500 px-4 py-1 rounded-full font-medium">17€</div>
+              </div>
+            </a>
+            <a href="https://buy.stripe.com/cN2cPH24AfTJbMQ6ov?__prefilled_amount=1300" className="block group">
+              <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl text-center relative overflow-hidden hover:border-pink-200">
+                <div className="pink-gradient h-1 absolute top-0 left-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="font-semibold text-xl text-gray-800 mb-2">Rose wine bottle</div>
+                <div className="inline-block bg-pink-50 text-pink-500 px-4 py-1 rounded-full font-medium">13€</div>
+              </div>
+            </a>
+            <a href="https://buy.stripe.com/cN2cPH24AfTJbMQ6ov?__prefilled_amount=1600" className="block group">
+              <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl text-center relative overflow-hidden hover:border-pink-200">
+                <div className="pink-gradient h-1 absolute top-0 left-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="font-semibold text-xl text-gray-800 mb-2">Soleira - Red wine bottle</div>
+                <div className="inline-block bg-pink-50 text-pink-500 px-4 py-1 rounded-full font-medium">16€</div>
+              </div>
+            </a>
+            <a href="https://buy.stripe.com/cN2cPH24AfTJbMQ6ov?__prefilled_amount=1100" className="block group">
+              <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl text-center relative overflow-hidden hover:border-pink-200">
+                <div className="pink-gradient h-1 absolute top-0 left-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="font-semibold text-xl text-gray-800 mb-2">Vale das Eguas - Red wine bottle</div>
+                <div className="inline-block bg-pink-50 text-pink-500 px-4 py-1 rounded-full font-medium">11€</div>
+              </div>
+            </a>
+            <a href="https://buy.stripe.com/cN2cPH24AfTJbMQ6ov?__prefilled_amount=1100" className="block group">
+              <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl text-center relative overflow-hidden hover:border-pink-200">
+                <div className="pink-gradient h-1 absolute top-0 left-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="font-semibold text-xl text-gray-800 mb-2">Vale das Eguas - White wine bottle</div>
+                <div className="inline-block bg-pink-50 text-pink-500 px-4 py-1 rounded-full font-medium">11€</div>
+              </div>
+            </a>
           </div>
         </div>
 
