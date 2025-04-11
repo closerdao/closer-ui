@@ -45,16 +45,18 @@ const Profile = ({ isDemo }) => {
                     className="rounded-full "
                   />
                 ) : (
-                  <FaUser className="text-gray-200 text-6xl" />
+                  <div className='flex items-center justify-center bg-gray-50 rounded-full overflow-hidden pt-1 h-10 w-10'>
+                    <FaUser className=" text-gray-200  w-10 h-10" />
+                  </div>
                 )}
               </Link>
             </div>
-            <div>
-              <Heading level={2} className="text-sm">
+            <div className='flex flex-col '>
+              <Heading level={2} className="text-md ">
                 {user?.screenname}
               </Heading>
               {isCreditsEnabled && (
-              <CreditsBalance className="text-sm" isDemo={isDemo} />
+              <CreditsBalance className="text-md" isDemo={isDemo} />
                         )}
             </div>
           </div>
@@ -75,11 +77,11 @@ const Profile = ({ isDemo }) => {
 
         <div className="text-center">
           
-          <p>
+          {/* <p>
             {user?.preferences?.superpower
               ? user?.preferences?.superpower
               : ''}
-          </p>
+          </p> */}
           {/* <div className="mt-1 w-full">
             {user.roles && (
               <div className="text-sm mt-1 tags">

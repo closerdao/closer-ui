@@ -32,7 +32,7 @@ const CreditsBalance = ({ isDemo, className = '' }) => {
   }, []);
 
   return (
-    <div className="flex flex-row items-center justify-center space-2">
+    <div className="flex flex-row items-center  space-2">
       {error && !isDemo && creditsBalance === undefined && isAuthenticated && (
         <div className="validation-error">{error}</div>
       )}
