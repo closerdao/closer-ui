@@ -35,11 +35,16 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
 
   const { tokens } = router.query;
 
+  const isFinanceTokenEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
+
   const [tokensToBuy, setTokensToBuy] = useState<number>(
     tokens !== undefined ? Number(tokens) : DEFAULT_TOKENS,
   );
   const [tokensToSpend, setTokensToSpend] = useState(0);
-  const [tokenSaleType, setTokenSaleType] = useState<'fiat' | 'crypto'>('fiat');
+  const [tokenSaleType, setTokenSaleType] = useState<'fiat' | 'crypto'>(
+    isFinanceTokenEnabled ? 'fiat' : 'crypto',
+  );
 
   const hasComponentRendered = useRef(false);
 
@@ -133,41 +138,44 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
               <p>{t('token_sale_before_you_begin_text_3')}</p>
             </div>
           </div>
-          <div className="pb-12">
-            <Heading level={3} hasBorder={true}>
-              💰 {t('token_sale_heading_how')}
-            </Heading>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  id="payFiat"
-                  name="tokenSaleType"
-                  className="w-4 h-4"
-                  checked={tokenSaleType === 'fiat'}
-                  onChange={() => setTokenSaleType('fiat')}
-                />
-                <label htmlFor="payFiat" className="whitespace-nowrap">
-                  {t('token_sale_heading_pay_bank_transfer')}
-                </label>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  id="payCrypto"
-                  name="tokenSaleType"
-                  className="w-4 h-4"
-                  checked={tokenSaleType === 'crypto'}
-                  onChange={() => setTokenSaleType('crypto')}
-                />
-                <label htmlFor="payCrypto" className="whitespace-nowrap">
-                  {t('token_sale_heading_pay_bank_crypto')}
-                </label>
+
+          {isFinanceTokenEnabled && (
+            <div >
+              <Heading level={3} hasBorder={true}>
+                💰 {t('token_sale_heading_how')}
+              </Heading>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    id="payFiat"
+                    name="tokenSaleType"
+                    className="w-4 h-4"
+                    checked={tokenSaleType === 'fiat'}
+                    onChange={() => setTokenSaleType('fiat')}
+                  />
+                  <label htmlFor="payFiat" className="whitespace-nowrap">
+                    {t('token_sale_heading_pay_bank_transfer')}
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    id="payCrypto"
+                    name="tokenSaleType"
+                    className="w-4 h-4"
+                    checked={tokenSaleType === 'crypto'}
+                    onChange={() => setTokenSaleType('crypto')}
+                  />
+                  <label htmlFor="payCrypto" className="whitespace-nowrap">
+                    {t('token_sale_heading_pay_bank_crypto')}
+                  </label>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          <Button onClick={handleNext} isEnabled={Boolean(tokensToSpend)}>
+          <Button className="mt-12" onClick={handleNext} isEnabled={Boolean(tokensToSpend)}>
             {t('token_sale_button_continue')}
           </Button>
         </main>
@@ -200,3 +208,4 @@ TokenSaleBeforeYouBeginPage.getInitialProps = async (
 };
 
 export default TokenSaleBeforeYouBeginPage;
+
