@@ -57,16 +57,23 @@ export const SUBSCRIPTION_STEPS = [
 
 export const SUBSCRIPTION_CITIZEN_STEPS = [
   'validation',
+  'select-flow',
   'apply',
   'success',
 ];
 
 export const TOKEN_SALE_STEPS = [
   'before-you-begin',
+  'checklist-crypto',
   'nationality',
-  'token-counter',
-  'your-info',
   'checkout',
+  'success',
+];
+
+export const TOKEN_SALE_STEPS_BANK_TRANSFER = [
+  'before-you-begin',
+  'nationality',
+  'bank-transfer',
   'success',
 ];
 

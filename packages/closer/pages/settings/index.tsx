@@ -2,7 +2,7 @@ import Head from 'next/head';
 
 import { useEffect, useState } from 'react';
 
-import UploadPhoto from '../../components/UploadPhoto/UploadPhoto';
+import UploadPhoto from '../../components/UploadPhoto';
 import { Button } from '../../components/ui';
 import Checkbox from '../../components/ui/Checkbox';
 import Heading from '../../components/ui/Heading';
@@ -38,13 +38,11 @@ const SettingsPage = ({
 }) => {
   const { APP_NAME } = useConfig();
 
-  const skillsOptions =
-    volunteerConfig?.skills?.split(',') || [];
-  const dietOptions =
-    (volunteerConfig?.diet?.split(',')) || [];
+  const skillsOptions = volunteerConfig?.skills?.split(',') || [];
+  const dietOptions = volunteerConfig?.diet?.split(',') || [];
 
   const { user: initialUser, isAuthenticated, refetchUser } = useAuth();
-
+  console.log('initialUser', initialUser);
   const initialDiet = Array.isArray(initialUser?.preferences?.diet)
     ? initialUser?.preferences?.diet
     : initialUser?.preferences?.diet?.split(',') || [];

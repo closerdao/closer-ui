@@ -1,9 +1,9 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect } from 'react';
+import { useEffect } from 'react';
 
-import { BackButton, Heading, ProgressBar } from '../../components/ui';
+import { BackButton, Button, Heading, ProgressBar } from '../../components/ui';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -11,7 +11,6 @@ import { event as gaEvent } from 'nextjs-google-analytics';
 
 import { TOKEN_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
-import { WalletState } from '../../contexts/wallet';
 import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
@@ -29,9 +28,14 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
   const router = useRouter();
-  const { amountOfTokensPurchased, transactionId } = router.query;
+  const {
+    tokenSaleType,
+    totalFiat,
+    ibanNumber,
+    amountOfTokensPurchased,
+    transactionId,
+  } = router.query;
   const { isAuthenticated, isLoading } = useAuth();
-  const { isWalletReady } = useContext(WalletState);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -46,11 +50,15 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
     });
   }, []);
 
+  const handleNext = () => {
+    router.push('/');
+  };
+
   const goBack = async () => {
     router.push('/token');
   };
 
-  if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true' || !isWalletReady) {
+  if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
     return <PageNotFound />;
   }
 
@@ -66,30 +74,54 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
         <BackButton handleClick={goBack}>{t('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-4">
-          🎊 {t('token_sale_heading_success')}
+          {tokenSaleType !== 'fiat' ? (
+            <>🤝🏼 {t('token_sale_success_message')}</>
+          ) : (
+            <>🤝🏼 {t('token_sale_bank_transfer_success_bank_transfer')}</>
+          )}
         </Heading>
-
         <ProgressBar steps={TOKEN_SALE_STEPS} />
 
         <main className="pt-14 pb-24 flex flex-col gap-12">
-          <div className="">
-            <Heading level={3} hasBorder={false}>
-              {t('token_sale_success_message')}
-            </Heading>
-          </div>
+          {tokenSaleType !== 'fiat' ? (
+            <div className=" flex flex-col gap-12">
+              <div className="">
+                <Heading level={3} hasBorder={false}>
+                  {t('token_sale_success_message')}
+                </Heading>
+              </div>
 
-          <div className='w-full h-[240px] bg-[url("/images/token-sale/token-success-artwork.jpg")] bg-no-repeat bg-center'>
-            <Heading
-              level={2}
-              className="text-accent text-center"
-            >{`${amountOfTokensPurchased} ${t(
-              'token_sale_token_symbol',
-            )}`}</Heading>
-          </div>
-          <Heading level={4} className="uppercase">
-            {`${t('token_sale_success_purchase_number')}`}
-            <p className="break-words">{transactionId}</p>
-          </Heading>
+              <div className='w-full h-[240px] bg-[url("/images/token-sale/token-success-artwork.jpg")] bg-no-repeat bg-center'>
+                <Heading
+                  level={2}
+                  className="text-accent text-center"
+                >{`${amountOfTokensPurchased} ${t(
+                  'token_sale_token_symbol',
+                )}`}</Heading>
+              </div>
+              <Heading level={4} className="uppercase">
+                {`${t('token_sale_success_purchase_number')}`}
+                <p className="break-words">{transactionId}</p>
+              </Heading>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-6">
+              <p>{t('token_sale_bank_transfer_success_intro')}</p>
+              <p>
+                {t('token_sale_bank_transfer_success_instructions_1', {
+                  totalFiat: `€${totalFiat as string}`,
+                })}{' '}
+                <b>{process.env.NEXT_PUBLIC_CLOSER_IBAN}</b>{' '}
+                {t('token_sale_bank_transfer_success_instructions_2')}{' '}
+                {ibanNumber?.slice(-4)}
+              </p>
+              <p>{t('token_sale_bank_transfer_success_info')}</p>
+
+              <Button onClick={handleNext} className='mt-6'>
+                {t('token_sale_bank_transfer_success_back_to_homepage')}
+              </Button>
+            </div>
+          )}
         </main>
       </div>
     </>
