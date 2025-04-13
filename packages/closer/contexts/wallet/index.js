@@ -121,11 +121,11 @@ export const WalletProvider = ({ children }) => {
     [
       activatedBookingYears
         ? activatedBookingYears.map(([year]) => [
-          BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
-          'getAccommodationBookings',
-          account,
-          year,
-        ])
+            BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
+            'getAccommodationBookings',
+            account,
+            year,
+          ])
         : null,
     ],
     {

@@ -11,7 +11,7 @@ import { cdn } from '../utils/api';
 import CreditsBalance from './CreditsBalance';
 import { Button, Heading } from './ui';
 
-const Profile = ({ isMenu, isDemo }) => {
+const Profile = ({ isMenu = false, isDemo }) => {
   const t = useTranslations();
 
   const { user, isAuthenticated } = useAuth();
@@ -29,13 +29,15 @@ const Profile = ({ isMenu, isDemo }) => {
     <div className="w-full ">
       <div className="py-2  relative rounded-lg w-full ">
         <div className="flex items-center">
-          <div className='flex gap-2 items-center'>
+          <div className="flex gap-2 items-center">
             <div className="flex items-center md:w-10 md:h-10 mx-auto ">
               <Link
                 href={`/members/${user?.slug}`}
                 passHref
                 title="View profile"
-                className={`${isMenu ? 'w-10 h-10 ':''} md:flex md:flex-row items-center cursor-pointer`}
+                className={`${
+                  isMenu ? 'w-10 h-10 ' : ''
+                } md:flex md:flex-row items-center cursor-pointer`}
               >
                 {user?.photo ? (
                   <img
@@ -45,19 +47,19 @@ const Profile = ({ isMenu, isDemo }) => {
                     className="rounded-full "
                   />
                 ) : (
-                  <div className='flex items-center justify-center bg-gray-50 rounded-full overflow-hidden pt-1 h-10 w-10'>
+                  <div className="flex items-center justify-center bg-gray-50 rounded-full overflow-hidden pt-1 h-10 w-10">
                     <FaUser className=" text-gray-200  w-10 h-10" />
                   </div>
                 )}
               </Link>
             </div>
-            <div className='flex flex-col '>
+            <div className="flex flex-col ">
               <Heading level={2} className="text-md ">
                 {user?.screenname}
               </Heading>
               {isCreditsEnabled && (
-              <CreditsBalance className="text-md" isDemo={isDemo} />
-                        )}
+                <CreditsBalance className="text-md" isDemo={isDemo} />
+              )}
             </div>
           </div>
 
@@ -76,7 +78,6 @@ const Profile = ({ isMenu, isDemo }) => {
         </div>
 
         <div className="text-center">
-          
           {/* <p>
             {user?.preferences?.superpower
               ? user?.preferences?.superpower
@@ -98,7 +99,6 @@ const Profile = ({ isMenu, isDemo }) => {
             )}
           </div> */}
         </div>
-     
       </div>
     </div>
   );
