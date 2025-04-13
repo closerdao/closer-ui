@@ -65,8 +65,11 @@ const Navigation = () => {
 
         <div className="flex gap-2 w-auto justify-center items-center ">
           {APP_NAME && APP_NAME.toLowerCase() === 'earthbound' && (
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-3 items-center">
               <ul className="gap-4 hidden sm:flex">
+                <li>
+                  <Link href="/pages/invest">{t('header_nav_home')}</Link>
+                </li>
                 <li>
                   <Link href="/pages/invest">{t('header_nav_invest')}</Link>
                 </li>
@@ -74,19 +77,19 @@ const Navigation = () => {
                   <Link href="/stay">{t('header_nav_stay')}</Link>
                 </li>
                 <li>
-                  <Link href="/events">{t('header_nav_events')}</Link>
+                  <Link href="/members">{t('header_nav_community')}</Link>
                 </li>
                 <li>
-                  <Link href="/members">{t('header_nav_community')}</Link>
+                  <Link href="/events">{t('header_nav_events')}</Link>
                 </li>
               </ul>
               <Button
-                onClick={() => router.push('/pages/join')}
+                // onClick={() => router.push('/pages/join')}
                 size="small"
                 variant="primary"
                 className={' bg-accent-alt border-accent-alt'}
               >
-                {t('header_nav_join_us')}
+                <Link href='#how-to-join'>{t('header_nav_join_us')}</Link>
               </Button>
             </div>
           )}

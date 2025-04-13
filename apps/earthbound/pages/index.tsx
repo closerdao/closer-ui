@@ -296,6 +296,7 @@ const getPage = ({
           settings: {
             numColumns: 4,
             isColorful: true,
+            id: 'how-to-join',
           },
           content: {
             title: 'HOW TO JOIN',

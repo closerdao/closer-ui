@@ -87,7 +87,7 @@ export const Footer: FC = () => {
             Platform developed by <a href="https://closer.earth">Closer</a>.
           </p>
           <p>
-            <Link href="https://drive.google.com/file/d/16vgG93MNQDcicHCHA7x0vWi9yo1up51j/view">
+            <Link href="/pdf/earthbound-pp.pdf">
               Privacy policy
             </Link>
           </p>
