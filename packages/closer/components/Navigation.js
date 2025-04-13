@@ -68,7 +68,7 @@ const Navigation = () => {
             <div className="flex gap-3 items-center">
               <ul className="gap-4 hidden sm:flex">
                 <li>
-                  <Link href="/pages/invest">{t('header_nav_home')}</Link>
+                  <Link href="/">{t('header_nav_home')}</Link>
                 </li>
                 <li>
                   <Link href="/pages/invest">{t('header_nav_invest')}</Link>
