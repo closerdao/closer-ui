@@ -11,7 +11,7 @@ import { cdn } from '../utils/api';
 import CreditsBalance from './CreditsBalance';
 import { Button, Heading } from './ui';
 
-const Profile = ({ isDemo }) => {
+const Profile = ({ isMenu, isDemo }) => {
   const t = useTranslations();
 
   const { user, isAuthenticated } = useAuth();
@@ -35,7 +35,7 @@ const Profile = ({ isDemo }) => {
                 href={`/members/${user?.slug}`}
                 passHref
                 title="View profile"
-                className="md:flex md:flex-row items-center cursor-pointer"
+                className={`${isMenu ? 'w-10 h-10 ':''} md:flex md:flex-row items-center cursor-pointer`}
               >
                 {user?.photo ? (
                   <img
