@@ -85,13 +85,13 @@ const getPage = ({
                   'https://cdn.oasa.co/custom-pages/earthbound/conscious-relationships.png',
               },
               {
-                title: 'Event Attendee',
+                title: 'Regenerative Living',
                 text: 'We embody a lifestyle that regenerates the land through traditional and novel land practices, building techniques, infrastructures and community-driven behavioural change. ',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/regenerative-living.png',
               },
               {
-                title: 'Volunteer',
+                title: 'Earth-Centered Awareness',
                 text: 'We base our daily rhythms, traditions and decisions on the land and a kincentric awareness, where humans and all other lifeforms are deeply interconnected.',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/earth-centered-awareness.png',
@@ -163,7 +163,7 @@ const getPage = ({
             body: `<ul>
               <li>7 well-maintained, solid wood (log) buildings and a large barn (45x10 m)</li>
               <li>3 buildings are renovated & ready-to-move-in houses with:
-                <ul>
+                <ul style="margin-bottom: 0">
                   <li>18 furnished bedrooms</li>
                   <li>25 - 30 beds</li>
                   <li>750 m² total area</li>
@@ -192,38 +192,38 @@ const getPage = ({
               {
                 title: 'Low-impact, Affordable and Non-speculative Housing',
                 imageUrl:
-                  'https://cdn.oasa.co/custom-pages/earthbound/Low-impact.%20Affordable%20and%20Non-speculative%20Housing.png',
+                  'https://cdn.oasa.co/custom-pages/earthbound/_0004_low-impact.png',
               },
               {
                 title: 'Local and Bioregional Changemakers',
                 imageUrl:
-                  'https://cdn.oasa.co/custom-pages/earthbound/Local%20and%20Bioregional%20Changemakers.png',
+                  'https://cdn.oasa.co/custom-pages/earthbound/_0003_Local-and-Bioregional-Changemakers.png',
               },
               {
                 title: 'Community Research',
                 imageUrl:
-                  'https://cdn.oasa.co/custom-pages/earthbound/Community%20Research.png',
+                  'https://cdn.oasa.co/custom-pages/earthbound/_0000_Community-Research.png',
               },
 
               {
                 title: 'Permaculture and Regenerative Agriculture',
 
                 imageUrl:
-                  'https://cdn.oasa.co/custom-pages/earthbound/Permaculture%20and%20Regenerative%20Agriculture.png',
+                  'https://cdn.oasa.co/custom-pages/earthbound/_0002_Permaculture-and-Regenerative-Agriculture.png',
               },
               {
                 title: 'Sustainable Micro-Business Hub',
 
                 imageUrl:
-                  'https://cdn.oasa.co/custom-pages/earthbound/Sustainable%20Micro-Business%20Hub.png',
+                  'https://cdn.oasa.co/custom-pages/earthbound/sustainable.png',
               },
               {
                 title: 'Land Stewardship',
                 imageUrl:
-                  'https://cdn.oasa.co/custom-pages/earthbound/Land%20Stewardship.png',
+                  'https://cdn.oasa.co/custom-pages/earthbound/_0001_Land-Stewardship.png',
               },
               {
-                title: 'Think Tank & Pilot',
+                title: 'Think Tank & Pilot Project',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/Think%20Thank%20&%20Pilot.png',
               },
@@ -271,19 +271,19 @@ const getPage = ({
               {
                 title: 'NON PROFIT, NON SPECULATIVE',
                 imageUrl:
-                  'https://cdn.oasa.co/custom-pages/earthbound/non%20profit,%20non%20speculative.png',
+                  'https://cdn.oasa.co/custom-pages/earthbound/_0002_non-profit.png',
               },
               {
                 title: 'SAFE, ETHICAL AND IMPACTFUL INVESTMENTS',
 
                 imageUrl:
-                  'https://cdn.oasa.co/custom-pages/earthbound/safe.png',
+                  'https://cdn.oasa.co/custom-pages/earthbound/_0000_safe.png',
               },
               {
                 title: 'SOCIOCRACY+',
 
                 imageUrl:
-                  'https://cdn.oasa.co/custom-pages/earthbound/socio.png',
+                  'https://cdn.oasa.co/custom-pages/earthbound/_0001_socio.png',
               },
             ],
           },
@@ -300,7 +300,8 @@ const getPage = ({
           },
           content: {
             title: 'HOW TO JOIN',
-            description: 'We are still growing and invite you to be a part of this exciting phase and the movement!',
+            description:
+              'We are still growing and invite you to be a part of this exciting phase and the movement!',
             items: [
               {
                 title: 'IMPACT INVESTOR',
@@ -315,7 +316,7 @@ const getPage = ({
               {
                 title: 'COMMUNITY MEMBER',
                 text: 'Do you want to live in a deep and intergenerational community and steward the land and vision of Earthbound?',
-imageUrl:
+                imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/comm-member.png',
                 cta: {
                   text: 'More info',
@@ -337,15 +338,12 @@ imageUrl:
                 text: 'We are planning to open up for volunteers in the future. Stay connected with us on our newsletter or telegram channel to be the first to hear about volunteering options.',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/volunteer.png',
-              
               },
             ],
           },
         },
       },
-     
-     
-     
+
       {
         type: 'gallery',
         data: {
@@ -353,68 +351,74 @@ imageUrl:
             type: 'masonry',
           },
           content: {
-       
             items: [
               {
-                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/gallery/0.png',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/gallery/0.png',
                 alt: 'EARTHBOUND ECOVILLAGE - A pilot project for regenerative & community living in Sweden',
                 width: 1573,
                 height: 1178,
               },
               {
-                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/gallery/1.png',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/gallery/1.png',
                 alt: 'EARTHBOUND ECOVILLAGE - A pilot project for regenerative & community living in Sweden',
                 width: 885,
                 height: 1180,
               },
               {
-                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/gallery/2.png',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/gallery/2.png',
                 alt: 'EARTHBOUND ECOVILLAGE - A pilot project for regenerative & community living in Sweden',
                 width: 885,
                 height: 1178,
               },
               {
-                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/gallery/3.png',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/gallery/3.png',
                 alt: 'EARTHBOUND ECOVILLAGE - A pilot project for regenerative & community living in Sweden',
                 width: 2038,
                 height: 1360,
               },
               {
-                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/gallery/4.png',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/gallery/4.png',
                 alt: 'EARTHBOUND ECOVILLAGE - A pilot project for regenerative & community living in Sweden',
                 width: 1767,
                 height: 1180,
               },
               {
-                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/gallery/5.png',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/gallery/5.png',
                 alt: 'EARTHBOUND ECOVILLAGE - A pilot project for regenerative & community living in Sweden',
                 width: 787,
                 height: 1180,
               },
               {
-                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/gallery/6.png',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/gallery/6.png',
                 alt: 'EARTHBOUND ECOVILLAGE - A pilot project for regenerative & community living in Sweden',
                 width: 787,
                 height: 1176,
               },
               {
-                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/gallery/7.png',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/gallery/7.png',
                 alt: 'EARTHBOUND ECOVILLAGE - A pilot project for regenerative & community living in Sweden',
                 width: 1771,
                 height: 1178,
               },
               {
-                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/gallery/8.png',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/gallery/8.png',
                 alt: 'EARTHBOUND ECOVILLAGE - A pilot project for regenerative & community living in Sweden',
                 width: 1765,
                 height: 1178,
               },
-            ]
-            ,
+            ],
           },
         },
       },
-     
     ],
   };
   return localPage;
