@@ -20,6 +20,12 @@ const alfajoresConfig = {
     symbol: 'fakeEUR',
     decimals: 18,
   },
+  BLOCKCHAIN_CELO_TOKEN: {
+    address: '0xF194afDf50B03e69Bd7D057c1Aa9e10c9954E4C9', // CELO token on Alfajores
+    name: 'Celo',
+    symbol: 'CELO',
+    decimals: 18,
+  },
   BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS:
     '0xB5A76b174C09962518838D32351Ce59955Fb6dc9',
   BLOCKCHAIN_DAO_DIAMOND_ADDRESS: '0x4928882f5152958cB8648D74aAd8Af24a90c6751',
@@ -46,6 +52,12 @@ const celoConfig = {
     address: '0xD8763CBa276a3738E6DE85b4b3bF5FDed6D6cA73',
     name: 'cEUR',
     symbol: 'cEUR',
+    decimals: 18,
+  },
+  BLOCKCHAIN_CELO_TOKEN: {
+    address: '0x471EcE3750Da237f93B8E339c536989b8978a438', // CELO token on mainnet
+    name: 'Celo',
+    symbol: 'CELO',
     decimals: 18,
   },
 

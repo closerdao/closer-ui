@@ -803,6 +803,7 @@
   "wallet_tdf_available": "$TDF (Available)",
   "wallet_pop": "Presence",
   "wallet_ceur": "cEUR",
+  "wallet_celo": "CELO",
   "wallet_booking_insufficient_balance": "Insufficient Balance",
   "wallet_booking_available_balance": "Available Balance",
   "wallet_booking_after_payment": "After Payment",

@@ -18,6 +18,7 @@ const Wallet = () => {
     isWalletConnected,
     isCorrectNetwork,
     balanceCeurAvailable,
+    balanceCeloAvailable,
   } = useContext(WalletState);
 
   return (
@@ -28,6 +29,10 @@ const Wallet = () => {
           <div className="flex justify-between items-center">
             <p>{t('wallet_ceur')}</p>
             <p className="font-bold">{balanceCeurAvailable?.toFixed(2)}</p>
+          </div>
+          <div className="flex justify-between items-center">
+            <p>{t('wallet_celo')}</p>
+            <p className="font-bold">{balanceCeloAvailable?.toFixed(2)}</p>
           </div>
           <div className="flex justify-between items-center">
             <p>{t('wallet_tdf')}</p>
