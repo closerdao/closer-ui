@@ -19,7 +19,8 @@ import LocalizedFormat from 'dayjs/plugin/localizedFormat';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { HeadingRow, Tag } from '../../..';
+import PageNotAllowed from '../../401';
+import { HeadingRow, Tag, useConfig } from '../../..';
 import { MAX_LISTINGS_TO_FETCH, STATUS_COLOR } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
@@ -46,8 +47,8 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
-import PageNotAllowed from '../../401';
 import PageNotFound from '../../not-found';
+
 
 dayjs.extend(LocalizedFormat);
 
@@ -91,8 +92,8 @@ const BookingPage = ({
 }: Props) => {
   const t = useTranslations();
 
-  const { timeZone } = generalConfig;
-
+  const config = useConfig();
+  const { timeZone } = generalConfig || { timeZone: config.DEFAULT_TIMEZONE };
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -128,7 +129,6 @@ const BookingPage = ({
     roomOrBedNumbers,
     volunteerInfo,
   } = booking || {};
-
 
   const userInfo = bookingCreatedBy && {
     name: bookingCreatedBy.screenname,
@@ -651,13 +651,13 @@ const BookingPage = ({
                   {' '}
                   <Link
                     className="font-bold"
-                  href={`https://dashboard.stripe.com/payments/${
-                    booking.charges?.at(-1)?.meta.stripePaymentIntentId
-                  }`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {t('bookings_go_to_stripe_dashboard')}
+                    href={`https://dashboard.stripe.com/payments/${
+                      booking.charges?.at(-1)?.meta.stripePaymentIntentId
+                    }`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {t('bookings_go_to_stripe_dashboard')}
                   </Link>
                 </p>
               )}
@@ -666,12 +666,20 @@ const BookingPage = ({
         </section>
 
         <section>
-          {isSpaceHost && (
+          {(booking.useCredits ||
+            booking.useTokens) && (
+              <div className="bg-yellow-100 rounded-md p-4 space-y-2 font-bold mb-8">
+                WARNING: this booking has been paid with credits or tokens. Updating and
+                cancelling booking not currently supported. Please handle these operations manually.
+              </div>
+            )}
+
+          {isSpaceHost  && (
             <div className="flex flex-col gap-4">
               <Button
                 isLoading={isLoading}
                 onClick={handleSaveBooking}
-                isEnabled={hasUpdatedBooking && !isLoading}
+                isEnabled={hasUpdatedBooking && !isLoading && !booking.useCredits && !booking.useTokens}
               >
                 {t('booking_card_save_booking')}
               </Button>
@@ -680,8 +688,8 @@ const BookingPage = ({
               )}
             </div>
           )}
-
           <BookingRequestButtons
+            isFiatBooking={!booking.useCredits && !booking.useTokens}
             _id={_id}
             status={status}
             createdBy={createdBy}

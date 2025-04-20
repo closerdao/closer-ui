@@ -76,6 +76,9 @@ const ListingPage: NextPage<Props> = ({
   error,
   descriptionText,
 }) => {
+
+
+  console.log('listing=', listing);
   const t = useTranslations();
   const config = useConfig();
   const { LOCATION_LAT, LOCATION_LON, PLATFORM_LEGAL_ADDRESS } = config || {};
@@ -261,7 +264,7 @@ const ListingPage: NextPage<Props> = ({
       return {
         results: null,
         availability: null,
-        error: error.response.data.error || 'Unknown error',
+        error: error?.response?.data?.error || 'Unknown error',
       };
     }
   };
@@ -458,8 +461,8 @@ const ListingPage: NextPage<Props> = ({
     setShowGuestsDropdown(false);
   }
 
-  if (!listing) {
-    return <PageNotFound />;
+  if (!listing || error) {
+    return <PageNotFound error={error || 'Network error'} />;
   }
 
   return (
@@ -915,13 +918,26 @@ ListingPage.getInitialProps = async (context: NextPageContext) => {
       messages,
     };
   } catch (err: unknown) {
+    let messages = null;
+    let error = null;
+
+    try {
+      messages = await loadLocaleData(
+        context?.locale,
+        process.env.NEXT_PUBLIC_APP_NAME,
+      );
+    } catch (err) {
+      error = parseMessageFromError(err);
+      console.error('Error fetching messages:', err);
+    }
+
     return {
-      error: parseMessageFromError(err),
+      error: error || parseMessageFromError(err),
       listing: null,
       settings: null,
       generalSettings: null,
       descriptionText: null,
-      messages: null,
+      messages,
     };
   }
 };

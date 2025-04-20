@@ -3,6 +3,8 @@ import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 
+const DEFAULT_TIMEZONE = 'Europe/Berlin';
+
 import {
   BOOKING_EXISTS_ERROR,
   CURRENCIES,
@@ -544,7 +546,8 @@ export const formatCheckinDate = (
   TIME_ZONE: string,
   checkinTime: number | undefined,
 ) => {
-  const localDate = dayjs.tz(date, TIME_ZONE);
+
+  const localDate = dayjs.tz(date || new Date(), TIME_ZONE || DEFAULT_TIMEZONE);
   const localTime = localDate
     .hour(Number(checkinTime) || 16)
     .minute(0)

@@ -95,6 +95,7 @@ export const BOOKING_STATUS_OPTIONS = [
 export const BOOKING_TYPE_OPTIONS = [
   { label: 'Any', value: 'any' },
   { label: 'Volunteering', value: 'volunteer' },
+  { label: 'Residency', value: 'residency' },
   { label: 'Event', value: 'event' },
   { label: 'Stay', value: 'stay' },
 ];

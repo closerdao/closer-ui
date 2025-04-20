@@ -36,6 +36,7 @@ interface Props {
   generalConfig: GeneralConfig | null;
   opportunities: VolunteerOpportunity[] | null;
   volunteerConfig: VolunteerConfig;
+  error: string | null;
 }
 
 const StayPage = ({
@@ -44,6 +45,7 @@ const StayPage = ({
   generalConfig,
   opportunities,
   volunteerConfig,
+  error,
 }: Props) => {
   const t = useTranslations();
   const { APP_NAME } = useConfig();
@@ -60,6 +62,8 @@ const StayPage = ({
   const { TEAM_EMAIL } = config || {};
   const { platform }: any = usePlatform();
   const { user } = useAuth();
+
+  console.log('user=',user);
   const isTeamMember = user?.roles.some((roles) =>
     ['space-host', 'steward', 'land-manager', 'team'].includes(roles),
   );
@@ -76,7 +80,7 @@ const StayPage = ({
   const hostsFilter = {
     where: {
       roles: { $in: ['space-host', 'steward', 'team'].filter((e) => e) },
-      email: { $ne: ADMIN_EMAIL },
+      // email: { $ne: ADMIN_EMAIL },
     },
   };
 
@@ -101,8 +105,8 @@ const StayPage = ({
     );
   });
 
-  if (!bookingSettings) {
-    return <PageNotFound error="Booking is disabled" />;
+  if (!bookingSettings || error) {
+    return <PageNotFound error="Network error" />;
   }
 
   return (
@@ -261,6 +265,7 @@ StayPage.getInitialProps = async (context: NextPageContext) => {
       messages,
       opportunities,
       volunteerConfig,
+      error: null,
     };
   } catch (err) {
     return {

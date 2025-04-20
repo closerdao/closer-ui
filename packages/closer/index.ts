@@ -1,5 +1,7 @@
 // Components
 export { default as CreateVolunteerView } from './components/CreateVolunteerView/';
+export { default as CustomSectionComponent } from './components/custom-pages/CustomSectionComponent';
+export { default as CustomSections } from './components/custom-pages/CustomSections';
 export { default as EventPreview } from './components/EventPreview';
 export { default as EventsList } from './components/EventsList';
 export { default as Footer } from './components/Footer';
@@ -148,6 +150,6 @@ export { default as CreateVolunteerOportunity } from './pages/volunteer/create';
 // Types
 export * from './types/';
 // Utils
-export { default as api } from './utils/api';
+export { default as api, cdn } from './utils/api';
 export * from './utils/blockchain';
 export * from './utils/helpers';

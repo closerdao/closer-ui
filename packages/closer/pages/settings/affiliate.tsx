@@ -34,7 +34,7 @@ const AffiliatePage = ({
   const config = useConfig();
   const { SEMANTIC_URL } = config || {};
 
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<null | number>(null);
   const router = useRouter();
   const { time_frame } = router.query;
 
@@ -109,7 +109,7 @@ const AffiliatePage = ({
     }
   }, [filters, user, platform]);
 
-  const referralLink = `${SEMANTIC_URL}/signup/?referral=${user?._id}`;
+  const referralLink = `${SEMANTIC_URL}?referral=${user?._id}`;
   const tokenFlowLink = `${SEMANTIC_URL}/token?referral=${user?._id}`;
   const subscriptionsFlowLink = `${SEMANTIC_URL}/subscriptions?referral=${user?._id}`;
   const staysFlowLink = `${SEMANTIC_URL}/stay?referral=${user?._id}`;
@@ -146,12 +146,12 @@ const AffiliatePage = ({
     financedTokenRevenue,
   } = calculateAffiliateRevenue(referralCharges);
 
-  const copyToClipboard = (link: string) => {
+  const copyToClipboard = (link: string, index:number) => {
     navigator.clipboard.writeText(link).then(
       () => {
-        setCopied(true);
+        setCopied(index);
         setTimeout(() => {
-          setCopied(false);
+          setCopied(null);
         }, 2000);
       },
       (err) => {
@@ -171,7 +171,7 @@ const AffiliatePage = ({
     ]);
   };
 
-  if (!process.env.NEXT_PUBLIC_FEATURE_AFFILIATE) {
+  if (process.env.NEXT_PUBLIC_FEATURE_AFFILIATE !== 'true') {
     return <PageNotFound />;
   }
 
@@ -223,9 +223,9 @@ const AffiliatePage = ({
                   {referralLink}
                 </div>
                 <div className="w-1/5 text-sm ">
-                  {copied ? t('referrals_link_copied') : ''}
+                  {copied === 0 ? t('referrals_link_copied') : ''}
                 </div>
-                <button onClick={() => copyToClipboard(referralLink)}>
+                <button onClick={() => copyToClipboard(referralLink, 0)}>
                   <Image
                     src="/images/icon-copy.svg"
                     alt="Copy"
@@ -246,9 +246,9 @@ const AffiliatePage = ({
                   {tokenFlowLink}
                 </div>
                 <div className="w-1/5 text-sm ">
-                  {copied ? t('referrals_link_copied') : ''}
+                  {copied === 1 ? t('referrals_link_copied') : ''}
                 </div>
-                <button onClick={() => copyToClipboard(tokenFlowLink)}>
+                <button onClick={() => copyToClipboard(tokenFlowLink, 1)}>
                   <Image
                     src="/images/icon-copy.svg"
                     alt="Copy"
@@ -269,9 +269,9 @@ const AffiliatePage = ({
                   {subscriptionsFlowLink}
                 </div>
                 <div className="w-1/5 text-sm ">
-                  {copied ? t('referrals_link_copied') : ''}
+                  {copied === 2 ? t('referrals_link_copied') : ''}
                 </div>
-                <button onClick={() => copyToClipboard(subscriptionsFlowLink)}>
+                  <button onClick={() => copyToClipboard(subscriptionsFlowLink, 2)}>
                   <Image
                     src="/images/icon-copy.svg"
                     alt="Copy"
@@ -292,9 +292,9 @@ const AffiliatePage = ({
                   {staysFlowLink}
                 </div>
                 <div className="w-1/5 text-sm ">
-                  {copied ? t('referrals_link_copied') : ''}
+                  {copied === 3 ? t('referrals_link_copied') : ''}
                 </div>
-                <button onClick={() => copyToClipboard(staysFlowLink)}>
+                <button onClick={() => copyToClipboard(staysFlowLink, 3)}>
                   <Image
                     src="/images/icon-copy.svg"
                     alt="Copy"
