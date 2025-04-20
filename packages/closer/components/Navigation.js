@@ -89,7 +89,7 @@ const Navigation = () => {
                 variant="primary"
                 className={' bg-accent-alt border-accent-alt'}
               >
-                <Link href='#how-to-join'>{t('header_nav_join_us')}</Link>
+                <Link href='/#how-to-join'>{t('header_nav_join_us')}</Link>
               </Button>
             </div>
           )}
