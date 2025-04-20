@@ -70,17 +70,17 @@ const JoinWebinarPrompt = ({
   return (
     <div>
       {
-        <section className="fixed inset-x-0 bottom-0 z-50 mt-24 flex h-[190px] flex-col  shadow-[0_0_5px_-1px_rgba(0,0,0,0.1),0_0_4px_-2px_rgba(0,0,0,0.1)] bg-white">
+        <section className="fixed inset-x-0 bottom-0 z-50 mt-24 flex h-[250px] sm:h-[190px] flex-col  shadow-[0_0_5px_-1px_rgba(0,0,0,0.1),0_0_4px_-2px_rgba(0,0,0,0.1)] bg-white">
           <div className="mx-auto max-w-sm p-4 flex flex-col gap-4">
             <div>
               <Heading level={3} className="">
                 Join webinar
               </Heading>
-              <p>Get an invite to our next monthly webinar</p>
+              <p className='pr-8'>Get an invite to our next monthly webinar</p>
             </div>
 
             <div className="flex flex-col gap-2">
-              <div className="flex flex-row gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   value={email}
                   onChange={handleEmailChange}

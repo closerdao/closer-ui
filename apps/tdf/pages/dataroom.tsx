@@ -84,12 +84,12 @@ const HomePage = () => {
                     expand our impact and issue ecosystem credits
                   </li>
                 </ul>
-                <ul className="my-8 flex items-center">
+                <ul className="my-8 flex items-center gap-1">
                   <li className="flex flex-col flex-start space-y-4 md:space-y-0 md:space-x-4 md:flex-row justify-start">
                     <Link
                       href="/pdf/deck.pdf"
                       target="_blank"
-                      className="bg-accent border-2 border-accent uppercase text-white rounded-full py-2 px-3 text-center md:text-left"
+                      className="whitespace-nowrap bg-accent border-2 border-accent uppercase text-white rounded-full py-2 px-3 text-center md:text-left"
                       onClick={() =>
                         event('click', {
                           category: 'Dataroom',
