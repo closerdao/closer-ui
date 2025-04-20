@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { api } from 'closer';
-// Import execHaloCmdWeb to interact with ARX chip via NFC
+import { api, Button, Heading } from 'closer';
 import { execHaloCmdWeb } from '@arx-research/libhalo/api/web';
 
 interface MenuItem {
     id: string;
     name: string;
-    price: number; // in credits
+    price: number;
 }
 
 const menuItems: MenuItem[] = [
@@ -20,121 +19,189 @@ const menuItems: MenuItem[] = [
     { id: 'doubleespresso', name: 'Double Espresso', price: 2.0 },
 ];
 
-const CafeMenuArx: React.FC = () => {
+const SalesTerminal: React.FC = () => {
     const router = useRouter();
-    const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+    const [selected, setSelected] = useState<MenuItem | null>(null);
     const [status, setStatus] = useState<string | null>(null);
-    const [txId, setTxId] = useState<string | null>(null);
     const [challenge, setChallenge] = useState<string | null>(null);
+    const [txId, setTxId] = useState<string | null>(null);
+    const [busy, setBusy] = useState(false);
 
-    // after prepare-payment, we set txId & challenge
+    // Reset function
+    const reset = () => {
+        setSelected(null);
+        setChallenge(null);
+        setTxId(null);
+    };
+
+    // Escape key closes modal
     useEffect(() => {
-        const doPrepare = async () => {
-            if (selectedItem) {
-                setStatus('Preparing payment...');
-                try {
-                    const { results } = await api.post('/arx/prepare-payment', {
-                        chipId: 'from-chip', // if your API needs a chipId, retrieve or encode it appropriately
-                        amount: selectedItem.price,
-                    });
-                    setTxId(results.txId);
-                    setChallenge(results.challenge);
-                    setStatus(
-                        `Ready: Tap to pay ${selectedItem.price.toFixed(2)} credits for ${selectedItem.name}`
-                    );
-                } catch (err: any) {
-                    setStatus(err.response?.data?.error || err.message);
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && selected) reset();
+        };
+        window.addEventListener('keydown', handleEscape);
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, [selected]);
+
+    // Prepare payment when selected
+    useEffect(() => {
+        if (!selected) return;
+        const prepare = async (chipId: string) => {
+            setStatus('Preparing payment...');
+            try {
+                // Check network
+                if (!navigator.onLine) {
+                    setStatus('Cannot prepare payment: offline');
+                    return reset();
                 }
+                // Prepare API call
+                const { results } = await api.post('/arx/prepare-payment', {
+                    chipId,
+                    amount: selected.price,
+                });
+                setTxId(results.txId);
+                setChallenge(results.challenge);
+                setStatus(`Tap & pay ${selected.price.toFixed(2)} credits for ${selected.name}`);
+            } catch (e: any) {
+                if (e.response?.status === 401) {
+                    setStatus('Session expired, redirecting to login...');
+                    return router.push(`/login?redirect=${encodeURIComponent(router.asPath)}`);
+                }
+                setStatus(`Error: ${e.response?.data?.error || e.message}`);
+                console.error('prepare error:', e);
+                reset();
+            } finally {
+                setBusy(false);
             }
         };
-        doPrepare();
-    }, [selectedItem]);
 
+        // IIFE to detect chip and prepare
+        (async () => {
+            setBusy(true);
+            setStatus('Waiting for badge tap...');
+            try {
+                // Auth check
+                if (!api.isAuthenticated?.()) {
+                    setStatus('Authentication required');
+                    return router.push(`/login?redirect=${encodeURIComponent(router.asPath)}`);
+                }
+                // NFC support
+                if (typeof NDEFReader === 'undefined') {
+                    throw new Error('NFC not supported on this device');
+                }
+                // Generate random challenge for chip identification
+                const randomMessage = Array.from(
+                    window.crypto.getRandomValues(new Uint8Array(16)),
+                )
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('');
+                // Use key slot 1 for payment signing
+                const res = await execHaloCmdWeb({ name: 'sign', keyNo: 1, message: randomMessage });
+                const chipId = res.tagUid || res.uid;
+                if (!chipId || !/^[A-Fa-f0-9]+$/.test(chipId)) {
+                    throw new Error('Invalid badge UID format');
+                }
+                await prepare(chipId);
+            } catch (e: any) {
+                setStatus(`Error: ${e.message}`);
+                console.error('chip detect error:', e);
+                reset();
+                setBusy(false);
+            }
+        })();
+    }, [selected]);
+
+    // Confirm and pay
     const handleSignAndPay = async () => {
-        if (!txId || !challenge) return;
-        setStatus('Waiting for chip signature...');
+        if (!challenge || !txId) return;
+        setBusy(true);
+        setStatus('Signing challenge...');
         try {
-            // Use execHaloCmdWeb to sign the challenge with key #1
+            // Use key slot 1 for payment signing
             const cmd = { name: 'sign', keyNo: 1, message: challenge };
-            const res = await execHaloCmdWeb(cmd);
-            const signature = res.signature; // base64 or hex per API
-            setStatus('Submitting payment...');
+            const { signature } = await execHaloCmdWeb(cmd);
+            setStatus('Completing payment...');
+            // Network check
+            if (!navigator.onLine) {
+                setStatus('Cannot complete payment: offline');
+                return reset();
+            }
             const { results } = await api.post('/arx/confirm-payment', { txId, signature });
             if (results.success) {
-                setStatus(`Payment successful! New balance: ${results.newBalance}`);
+                setStatus(`Success! New balance: ${results.newBalance}`);
             } else {
                 setStatus(`Payment failed: ${results.details}`);
             }
         } catch (e: any) {
-            setStatus(`Error: ${e.message || e}`);
+            setStatus(`Error: ${e.message}`);
+            console.error('confirm error:', e);
         } finally {
-            // reset state after a short delay
-            setTimeout(() => {
-                setSelectedItem(null);
-                setTxId(null);
-                setChallenge(null);
-                setStatus(null);
-            }, 3000);
+            setBusy(false);
+            setTimeout(() => reset(), 2000);
         }
     };
 
     return (
         <>
             <Head>
-                <title>Café Menu – ARX Tap to Pay</title>
+                <title>Café Sales Terminal</title>
             </Head>
-            <main className="relative max-w-4xl mx-auto p-6">
-                <h1 className="text-4xl font-bold mb-4">Café Menu (ARX)</h1>
-                {status && <div className="mb-4 text-lg">{status}</div>}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="p-6 max-w-4xl mx-auto">
+                <Heading>Café Menu</Heading>
+                {status && <p className="mt-4 text-lg">{status}</p>}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
                     {menuItems.map(item => (
                         <button
                             key={item.id}
-                            onClick={() => setSelectedItem(item)}
-                            className="bg-white rounded-xl p-6 shadow-md border border-gray-200 hover:shadow-lg transition"
+                            disabled={!!selected || busy}
+                            onClick={() => setSelected(item)}
+                            className="bg-white rounded-lg p-4 shadow hover:shadow-md transition disabled:opacity-50"
                         >
-                            <div className="text-2xl font-semibold mb-2">{item.name}</div>
-                            <div className="text-xl">{item.price.toFixed(2)} credits</div>
+                            <div className="text-xl font-semibold">{item.name}</div>
+                            <div className="mt-2 text-lg">{item.price.toFixed(2)} credits</div>
                         </button>
                     ))}
                 </div>
 
-                {/* Modal Overlay */}
-                {selectedItem && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-2xl p-8 shadow-lg max-w-sm w-full text-center">
-                            <h2 className="text-xl font-semibold mb-4">
+                {/* Modal overlay with accessibility */}
+                {selected && (
+                    <div
+                        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="payment-modal-title"
+                        onClick={reset}
+                    >
+                        <div
+                            className="bg-white rounded-2xl p-8 max-w-sm w-full text-center"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <h2 id="payment-modal-title" className="text-xl font-bold mb-4">
                                 {challenge
-                                    ? `Tap to pay ${selectedItem.price.toFixed(2)} credits for ${selectedItem.name}`
-                                    : 'Initializing transaction...'}
+                                    ? `Tap & Pay ${selected.price.toFixed(2)} for ${selected.name}`
+                                    : 'Initializing...'}
                             </h2>
-
-                            <button
+                            <Button
                                 onClick={handleSignAndPay}
-                                disabled={!challenge}
-                                className={`w-full mt-4 px-6 py-2 rounded-lg transition \${
-                  challenge ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-gray-300 text-gray-700 cursor-not-allowed'
-                }`}
+                                disabled={!challenge || busy}
+                                className="w-full"
                             >
                                 {challenge ? 'Tap & Pay' : 'Loading...'}
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setSelectedItem(null);
-                                    setStatus(null);
-                                    setTxId(null);
-                                    setChallenge(null);
-                                }}
-                                className="w-full mt-2 px-6 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition"
+                            </Button>
+                            <Button
+                                onClick={reset}
+                                variant="secondary"
+                                className="w-full mt-3"
                             >
                                 Cancel
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 )}
-            </main>
+            </div>
         </>
     );
 };
 
-export default CafeMenuArx;
+export default SalesTerminal;
