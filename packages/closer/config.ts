@@ -505,4 +505,41 @@ export const configDescription: ConfigType[] = [
       },
     },
   },
+  {
+    slug: 'webinar',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      isDayOfMonth: {
+        type: 'boolean',
+        default: false,
+      },
+      dayOfMonth: {
+        type: 'number',
+        default: 1,
+      },
+      weekDay: {
+        type: 'select',
+        enum: [
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+          'Sunday',
+        ],
+      },
+      weekPosition: {
+        type: 'select',
+        enum: ['First', 'Second', 'Third', 'Fourth', 'Last'],
+      },
+      time: {
+        type: 'time',
+        default: '10:00',
+      },
+    },
+  },
 ];

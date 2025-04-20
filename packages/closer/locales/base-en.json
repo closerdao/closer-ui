@@ -936,8 +936,8 @@
   "token_sale_peek_design_2": "Our dreams are translated in these   visualizations that depict the remarkable transformation of a 1300 sq m chicken farm into a visionary future.",
   "token_sale_food_heading": "Did we mention our food production Yet?",
   "token_sale_food_text": "Fun Fact - This summer (2023) we have harvested at least 150 kg of food from our garden.",
-  "token_sale_ama_heading": "Curious for More?",
-  "token_sale_ama_subheading": "Schedule a call with our team and discuss how you can be a part of this.",
+  "token_sale_ama_heading": "Curious for more?",
+  "token_sale_ama_subheading": "Join a webinar with our team and discuss how you can be a part of this.",
   "token_sale_tag_land": "Land",
   "token_sale_tag_oasa": "OASA",
   "token_sale_tag_operations": "Operations",
@@ -1170,6 +1170,7 @@
   "config_label_bookingPageTitle": "Booking page title",
   "config_label_bookingPageDescription": "Booking page description",
   "config_label_timeZone": "Timezone",
+  "config_label_time": "Time (local timezone)",
 
   "config_label_name": "Template name",
   "config_label_subject": "Subject",
@@ -1237,6 +1238,12 @@
   "config_label_eventsCommissionPercent": "Events commission percent",
   "config_label_financedTokenSaleCommissionPercent": "Financed token sale commission percent",
   "config_label_productsCommissionPercent": "Product sale commission percent",
+  "config_label_isDayOfMonth": "Fixed day of month",
+  "config_label_dayOfMonth": "Day of month",
+  "config_label_weekDay": "Select weekday",
+  "config_label_weekPosition": "Which week",
+
+
   "config_email_product_paid_guest": "Product paid, send to user immediately",
   "config_email_product_paid_admin": "Product paid, send to admins immediately",
 
@@ -1400,6 +1407,7 @@
   "token_sale_public_sale_governance": "Governance",
   "token_sale_public_sale_community": "Community",
   "token_sale_public_sale_button_book_a_call": "Book a call",
+  "token_sale_join_webinar": "Join our next webinar",
   "token_sale_public_sale_tokens_left": "tokens left",
 
   "dashboard_title": "Dashboard",

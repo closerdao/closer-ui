@@ -93,7 +93,9 @@ const Footer: FC = () => {
             </div>
           </div>
 
-          <Newsletter placement="Footer" />
+          <div className='w-full flex justify-center'>
+            <Newsletter placement="Footer" />
+          </div>
         </div>
       </footer>
     </div>
