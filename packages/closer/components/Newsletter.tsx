@@ -10,17 +10,7 @@ import api from '../utils/api';
 import { trackEvent } from './Analytics';
 import { Button, ErrorMessage, Heading, Input } from './ui';
 
-const attemptSignup = async (
-  event: FormEvent<HTMLFormElement>,
-  request: {
-    email: string;
-    screenname: string;
-    tags: [string | undefined, string, string];
-  },
-) => {
-  event.preventDefault();
-  await api.post('/subscribe', request);
-};
+
 
 interface Props {
   placement?: string;
@@ -43,6 +33,22 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
 
     const [shouldShowForm, setShouldShowForm] = useState(true);
     const router = useRouter();
+
+    const attemptSignup = async (
+      event: FormEvent<HTMLFormElement>,
+      request: {
+        email: string;
+        screenname: string;
+        tags: [string | undefined, string, string];
+      },
+    ) => {
+      try {
+        event.preventDefault();
+        await api.post('/subscribe', request);
+      } catch (error) {
+        console.error(error);
+      }
+    };
 
     useEffect(() => {
       if (typeof window !== 'undefined') {

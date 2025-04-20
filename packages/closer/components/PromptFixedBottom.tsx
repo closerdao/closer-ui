@@ -10,6 +10,8 @@ const PromptFixedBottom = () => {
 
   const [hasSubscribed, setHasSubscribed] = useState(false);
   const [open, setOpen] = useState(false);
+  const [shouldShowForm, setShouldShowForm] = useState(true);
+
 
   useEffect(() => {
     if (isLoading) {
@@ -24,6 +26,15 @@ const PromptFixedBottom = () => {
     }
   }, [isAuthenticated, isLoading]);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const completed = localStorage.getItem('signupCompleted') === 'true';
+      if (completed) {
+        setShouldShowForm(false);
+      }
+    }
+  }, []);
+
   const handleDrawerClose = (isOpen: boolean) => {
     setOpen(isOpen);
     if (!isOpen) {
@@ -37,8 +48,8 @@ const PromptFixedBottom = () => {
   };
   return (
     <div>
-      {open && !isAuthenticated && (
-        <section className="fixed inset-x-0 bottom-0 z-50 mt-24 flex h-[150px] flex-col rounded-t-[10px] bg-white border border-t-2">
+      {open && !isAuthenticated && shouldShowForm && (
+        <section className="fixed inset-x-0 bottom-0 z-50 mt-24 flex h-[150px] flex-col  shadow-[0_0_5px_-1px_rgba(0,0,0,0.1),0_0_4px_-2px_rgba(0,0,0,0.1)] bg-white">
           <div className="mx-auto max-w-sm p-4">
             <Heading level={3} className="mb-4">
               Stay in touch

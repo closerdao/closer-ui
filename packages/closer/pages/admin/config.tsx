@@ -60,6 +60,7 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
   const allConfigCategories = mergedConfigDescription
     .map((config: any) => config?.slug)
     .filter((config: any) => platformAllowedConfigs?.includes(config));
+  
 
   const [selectedConfig, setSelectedConfig] = useState('general');
   const [updatedConfigs, setUpdatedConfigs] = useState<Config[]>([]);
@@ -400,11 +401,14 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
                   const inputType = description?.[key]?.type;
                   const isSelect = inputType === 'select';
                   const selectOptions = description?.[key]?.enum;
+                  const isTime = inputType === 'time';
 
                   if (key === 'enabled') return null;
                   return (
                     <div key={key} className="flex flex-col gap-1">
                       <label>{t(`config_label_${key}`)}:</label>
+
+                      isTime={isTime}
 
                       {!isSelect && (
                         <input
@@ -412,6 +416,15 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
                           name={key}
                           onChange={handleChange}
                           type="text"
+                          value={String(currentValue)}
+                        />
+                      )}
+                      {isTime && (
+                        <input
+                          className="bg-neutral rounded-md p-1"
+                          name={key}
+                          onChange={handleChange}
+                          type="time"
                           value={String(currentValue)}
                         />
                       )}
@@ -475,6 +488,7 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
                       const inputType = description?.[key]?.type;
                       const isArray = Array.isArray(inputType);
                       const isSelect = inputType === 'select';
+                      const isTime = inputType === 'time';
                       const selectOptions = description?.[key]?.enum;
 
                       if (key === 'enabled') {
@@ -533,7 +547,7 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
                                       />
                                     </div>
                                   )}
-                                  {!isArray && !isSelect && (
+                                  {!isArray && !isSelect && !isTime && (
                                     <input
                                       className="bg-neutral rounded-md p-1"
                                       name={key}
@@ -541,8 +555,17 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
                                       type="text"
                                       value={String(currentValue)}
                                     />
-                                  )}
-
+                                    )}
+                                    
+                                    {isTime && (
+                                      <input
+                                        className="bg-neutral rounded-md p-1"
+                                        name={key}
+                                        onChange={handleChange}
+                                        type="time"
+                                        value={String(currentValue)}
+                                      />
+                                    )}
                                   {errors[key] && (
                                     <ErrorMessage
                                       error={errors[key].toString()}

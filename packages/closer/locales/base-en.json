@@ -1169,6 +1169,7 @@
   "config_label_bookingPageTitle": "Booking page title",
   "config_label_bookingPageDescription": "Booking page description",
   "config_label_timeZone": "Timezone",
+  "config_label_time": "Time (local timezone)",
 
   "config_label_name": "Template name",
   "config_label_subject": "Subject",
@@ -1236,6 +1237,12 @@
   "config_label_eventsCommissionPercent": "Events commission percent",
   "config_label_financedTokenSaleCommissionPercent": "Financed token sale commission percent",
   "config_label_productsCommissionPercent": "Product sale commission percent",
+  "config_label_isDayOfMonth": "Fixed day of month",
+  "config_label_dayOfMonth": "Day of month",
+  "config_label_weekDay": "Select weekday",
+  "config_label_weekPosition": "Which week",
+
+
   "config_email_product_paid_guest": "Product paid, send to user immediately",
   "config_email_product_paid_admin": "Product paid, send to admins immediately",
 

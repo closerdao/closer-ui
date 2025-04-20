@@ -1,12 +1,22 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import { Heading } from 'closer';
+import { useState } from 'react';
+
+import JoinWebinarPrompt from 'closer/components/JoinWebinarPrompt';
+
+import { Button, Heading } from 'closer';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { event } from 'nextjs-google-analytics';
 
 const HomePage = () => {
+  const [isPromptOpen, setIsPromptOpen] = useState(false);
+
+  const joinWebinar = () => {
+    setIsPromptOpen(true);
+  };
+
   return (
     <>
       <Head>
@@ -22,6 +32,9 @@ const HomePage = () => {
         />
       </Head>
       <section>
+        {isPromptOpen && (
+          <JoinWebinarPrompt setIsPromptOpen={setIsPromptOpen} />
+        )}
         <div className="bg-black text-white -m-4 h-full min-h-[100vh] flex justify-center">
           <div className="w-full h-auto overflow-scroll flex justify-start flex-col md:flex-row items-center">
             <div className="md:w-[50%]">
@@ -71,7 +84,7 @@ const HomePage = () => {
                     expand our impact and issue ecosystem credits
                   </li>
                 </ul>
-                <ul className="mt-8 flex flex-col space-y-4">
+                <ul className="my-8 flex items-center">
                   <li className="flex flex-col flex-start space-y-4 md:space-y-0 md:space-x-4 md:flex-row justify-start">
                     <Link
                       href="/pdf/deck.pdf"
@@ -86,45 +99,40 @@ const HomePage = () => {
                     >
                       Investment deck
                     </Link>
-                    <Link
-                      href="https://calendly.com/samueldelesque"
-                      target="_blank"
-                      className="bg-transparent md:ml-2 border-2 border-white uppercase text-white rounded-full py-2 px-3 text-center md:text-left"
-                      onClick={() =>
-                        event('click', {
-                          category: 'Dataroom',
-                          label: 'Book a callk',
-                        })
-                      }
-                    >
-                      Book a call
-                    </Link>
                   </li>
                   <li>
-                    📁 Documents:
-                    <Link
-                      href="/pdf/2021-TDF-report.pdf"
-                      target="_blank"
-                      className="ml-2 underline"
+                    <Button
+                      className="bg-transparent md:ml-2 border-2 border-white uppercase text-white rounded-full py-2 px-3 text-center md:text-left"
+                      onClick={joinWebinar}
                     >
-                      2021 report
-                    </Link>
-                    <Link
-                      href="/pdf/2022-TDF-report.pdf"
-                      target="_blank"
-                      className="ml-2 underline"
-                    >
-                      2022 report
-                    </Link>
-                    <Link
-                      href="/pdf/2024-TDF-report.pdf"
-                      target="_blank"
-                      className="ml-2 underline"
-                    >
-                      2024 report
-                    </Link>
+                      Join webinar
+                    </Button>
                   </li>
                 </ul>
+                <div className="mt-8">
+                  📁 Documents:
+                  <Link
+                    href="/pdf/2021-TDF-report.pdf"
+                    target="_blank"
+                    className="ml-2 underline"
+                  >
+                    2021 report
+                  </Link>
+                  <Link
+                    href="/pdf/2022-TDF-report.pdf"
+                    target="_blank"
+                    className="ml-2 underline"
+                  >
+                    2022 report
+                  </Link>
+                  <Link
+                    href="/pdf/2024-TDF-report.pdf"
+                    target="_blank"
+                    className="ml-2 underline"
+                  >
+                    2024 report
+                  </Link>
+                </div>
               </div>
             </div>
           </div>

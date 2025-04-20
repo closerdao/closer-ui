@@ -95,6 +95,13 @@ const Login = () => {
     }
   }, [isAuthenticated, hasSignedUp, back]);
 
+  useEffect(() => {
+    const localEmail = localStorage.getItem('email');
+    if (localEmail) {
+      setEmail(localEmail);
+    }
+  }, []);
+
   const signInWithWallet = async (walletAddress: string) => {
     setWeb3Error(null);
     setWeb3Loading(true);

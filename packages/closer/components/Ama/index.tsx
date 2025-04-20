@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import PromptJoinWebinar from '../PromptJoinWebinar';
+import JoinWebinarPrompt from '../JoinWebinarPrompt';
 import { Button, Heading } from '../ui';
 
 interface Props {
@@ -14,10 +14,15 @@ interface Props {
 const Ama = ({ id }: Props) => {
   const t = useTranslations();
 
-  const [open, setOpen] = useState(false);
+  const [isPromptOpen, setIsPromptOpen] = useState(false);
+
+  const joinWebinar = () => {
+    setIsPromptOpen(true);
+  };
+
   return (
     <section id={id} className="flex items-center flex-col py-24 ">
-      <PromptJoinWebinar open={open} setOpen={setOpen} />
+      {isPromptOpen && <JoinWebinarPrompt setIsPromptOpen={setIsPromptOpen} />}
       <div className="max-w-6xl ">
         <div className="text-center mb-8">
           <Heading level={2} className="mb-4 text-5xl font-bold">
@@ -31,12 +36,7 @@ const Ama = ({ id }: Props) => {
         </div>
 
         <div className="flex items-center">
-          <Button
-            className="text-[16px]"
-            onClick={() => {
-              setOpen(true);
-            }}
-          >
+          <Button className="text-[16px]" onClick={joinWebinar}>
             {t('token_sale_join_webinar')}
           </Button>
         </div>
