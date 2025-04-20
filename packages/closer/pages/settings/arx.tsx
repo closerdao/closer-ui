@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
 import { execHaloCmdWeb } from '@arx-research/libhalo/api/web';
-import { Button } from '../../components/ui/button';
+import Button from '../../components/ui/Button';
 import Heading from '../../components/ui/Heading';
 import PageNotFound from '../not-found';
 

@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
-import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/auth';
 import api from '../utils/api';
 import { execHaloCmdWeb } from '@arx-research/libhalo/api/web';
@@ -25,13 +24,7 @@ const menuItems: MenuItem[] = [
 ];
 
 const SalesTerminal: React.FC = () => {
-    const router = useRouter();
     const { user, isAuthenticated } = useAuth();
-
-    // Redirect or show not found if not authenticated
-    if (!isAuthenticated || !user) {
-        return <PageNotFound error="Please log in to access the sales terminal." />;
-    }
 
     const [selected, setSelected] = useState<MenuItem | null>(null);
     const [status, setStatus] = useState<string | null>(null);
@@ -44,6 +37,8 @@ const SalesTerminal: React.FC = () => {
         setSelected(null);
         setChallenge(null);
         setTxId(null);
+        setStatus(null);
+        setBusy(false);
     };
 
     // Close modal on Escape
@@ -126,6 +121,11 @@ const SalesTerminal: React.FC = () => {
             setTimeout(() => reset(), 2000);
         }
     };
+
+    // Redirect or show not found if not authenticated
+    if (!isAuthenticated || !user) {
+        return <PageNotFound error="Please log in to access the sales terminal." />;
+    }
 
     return (
         <>
