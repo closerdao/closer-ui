@@ -117,6 +117,7 @@ export { default as ProjectsPage } from './pages/projects/index';
 export { default as SettingsPage } from './pages/settings';
 export { default as AffiliatePage } from './pages/settings/affiliate';
 export { default as CreditsPage } from './pages/settings/credits';
+export { default as ARXConfig } from './pages/settings/arx';
 export { default as ReferralsPage } from './pages/settings/referrals';
 export { default as SignUpPage } from './pages/signup';
 export { default as StayPage } from './pages/stay/';
