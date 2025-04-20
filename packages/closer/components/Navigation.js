@@ -59,7 +59,7 @@ const Navigation = () => {
   }, [router]);
 
   return (
-    <div className="NavContainer h-20 md:pt-0 top-0 left-0 right-0 fixed z-20 bg-background shadow">
+    <div className="NavContainer h-20 md:pt-0 top-0 left-0 right-0 fixed z-20 bg-dominant shadow">
       <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
         <Logo />
 
