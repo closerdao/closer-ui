@@ -94,6 +94,7 @@ const LessonPage = ({
     new Date(user?.subscription?.validUntil || '') > new Date();
 
   const isAdmin = user?.roles.includes('admin');
+  const isContentCreator = user?.roles.includes('content-creator');
 
   const canViewLessons = Boolean(
     (isSubscriber && lesson?.access?.includes('subscription-any')) ||
@@ -214,7 +215,8 @@ const LessonPage = ({
             />
 
             {(user?._id === lesson.createdBy ||
-              user?.roles.includes('admin')) && (
+              user?.roles.includes('admin') ||
+              user?.roles.includes('content-creator')) && (
               <div className="absolute right-0 top-0 p-8 flex flex-col gap-4">
                 <LinkButton
                   size="small"

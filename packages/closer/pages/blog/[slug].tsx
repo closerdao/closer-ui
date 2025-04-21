@@ -39,7 +39,7 @@ const ArticlePage = ({ article, author, error, relatedArticles }: Props) => {
   const router = useRouter();
   const { user } = useAuth();
   const isAdmin = user && user?.roles.includes('admin');
-  const isModerator = user && user?.roles.includes('moderator');
+  const isContentCreator = user && user?.roles.includes('content-creator');
 
   const fullImageUrl =
     article &&
@@ -107,7 +107,7 @@ const ArticlePage = ({ article, author, error, relatedArticles }: Props) => {
               {article.title}
             </Heading>
           </div>
-          {(user?._id === article?.createdBy || isAdmin || isModerator) && (
+          {(user?._id === article?.createdBy || isAdmin || isContentCreator) && (
             <div className="flex gap-2">
               <Link href={`/blog/edit/${article.slug}`} className="btn-primary">
                 Edit
@@ -262,7 +262,7 @@ const ArticlePage = ({ article, author, error, relatedArticles }: Props) => {
         <section className="pl-8 pr-4 flex flex-col items-center gap-10 bg-complimentary-light -ml-4 w-[calc(100vw+16px)] pb-12">
           <div className="max-w-[900px] py-20">
             <div className="flex flex-col gap-8 items-center">
-              {(isAdmin || isModerator) && (
+              {(isAdmin || isContentCreator) && (
                 <div className="mb-4">
                   <LinkButton
                     size="small"

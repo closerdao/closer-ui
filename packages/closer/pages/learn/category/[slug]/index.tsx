@@ -50,6 +50,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
   const [page, setPage] = useState(1);
 
   const isAdmin = user?.roles.includes('admin');
+  const isContentCreator = user?.roles.includes('content-creator');
 
   const filter = {
     where: getCategoryWhere(),
@@ -144,7 +145,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
           </div>
 
           <div className="action">
-            {user && user.roles.includes('admin') && (
+            {user && (user.roles.includes('admin') || user.roles.includes('content-creator')) && (
               <Link
                 href="/learn/create"
                 className="mt-10 btn-primary inline-block"
@@ -178,7 +179,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
               <Heading level={1}>{t('generic_coming_soon')}</Heading>
             )}
 
-            <LessonsList lessons={isAdmin ? lessons : publicLessons} />
+            <LessonsList lessons={(isAdmin || isContentCreator) ? lessons : publicLessons} />
 
             {lessons && totalLessons > LESSONS_PER_PAGE && (
               <Pagination
@@ -187,7 +188,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
                 }}
                 page={page}
                 limit={LESSONS_PER_PAGE}
-                total={isAdmin ? totalLessons : totalPublicLessons}
+                total={(isAdmin || isContentCreator) ? totalLessons : totalPublicLessons}
               />
             )}
           </section>
