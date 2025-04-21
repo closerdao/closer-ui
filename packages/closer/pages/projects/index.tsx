@@ -134,18 +134,58 @@ const ProjectsPage = ({
                       practices, yoga, massage, and more 🥙💃🏽🔥🎶🎭
                     </p>
 
-                    <Heading level={2}>Build Projects 🛠🏡🛕</Heading>
+                    <Heading level={2}>{t('open_projects')} 🛠🏡🛕</Heading>
 
-                    {projects && projects.length > 0 && (
+                    {projects && projects.length > 0 && projects.some(project => project.status === 'open') ? (
                       <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-6">
-                        {projects.map((project) => (
-                          <ProjectCard
-                            key={project.slug}
-                            project={project}
-                            hasStewardRole={hasStewardRole || false}
-                          />
-                        ))}
+                        {projects
+                          .filter(project => project.status === 'open')
+                          .map((project) => (
+                            <ProjectCard
+                              key={project.slug}
+                              project={project}
+                              hasStewardRole={hasStewardRole || false}
+                            />
+                          ))}
                       </section>
+                    ) : (
+                      <p className="text-gray-500 italic mb-8">{t('no_open_projects')}</p>
+                    )}
+                    
+                    <Heading level={2} className="mt-12">{t('in_progress_projects')} 🔨</Heading>
+                    
+                    {projects && projects.some(project => project.status === 'in-progress') ? (
+                      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-6">
+                        {projects
+                          .filter(project => project.status === 'in-progress')
+                          .map((project) => (
+                            <ProjectCard
+                              key={project.slug}
+                              project={project}
+                              hasStewardRole={hasStewardRole || false}
+                            />
+                          ))}
+                      </section>
+                    ) : (
+                      <p className="text-gray-500 italic mb-8">{t('no_in_progress_projects')}</p>
+                    )}
+                    
+                    <Heading level={2} className="mt-12">{t('completed_projects')} ✅</Heading>
+                    
+                    {projects && projects.some(project => project.status === 'done') ? (
+                      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-6">
+                        {projects
+                          .filter(project => project.status === 'done')
+                          .map((project) => (
+                            <ProjectCard
+                              key={project.slug}
+                              project={project}
+                              hasStewardRole={hasStewardRole || false}
+                            />
+                          ))}
+                      </section>
+                    ) : (
+                      <p className="text-gray-500 italic mb-8">{t('no_completed_projects')}</p>
                     )}
 
                     <Heading level={2}>

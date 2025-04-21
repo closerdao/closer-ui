@@ -34,6 +34,9 @@ export type Project = VolunteerOpportunity & {
   estimate?: string;
   manager?: User;
   descriptionText?: string;
+  participants?: User[];
+  allocatedRewards?: { [userId: string]: { cur: CloserCurrencies, val: number } };
+  status?: 'open' | 'in-progress' | 'done';
 };
 
 export type Question = {

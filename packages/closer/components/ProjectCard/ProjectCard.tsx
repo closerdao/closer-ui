@@ -20,9 +20,19 @@ const ProjectCard = ({ project, hasStewardRole }: Props) => {
   return (
     <Card
       key={project?._id}
-      className="p-0 bg-white border border-gray-100 justify-start"
+      className={`p-0 bg-white border border-gray-100 justify-start ${project?.status === 'done' ? 'border-green-500 border-2' : project?.status === 'in-progress' ? 'border-yellow-500 border-2' : ''}`}
     >
       <div className="relative w-full h-[180px] border rounded-t-md overflow-hidden">
+        {project?.status === 'done' && (
+          <div className="absolute top-0 right-0 bg-green-500 text-white px-2 py-1 z-10 rounded-bl-md">
+            {t('project_status_completed')}
+          </div>
+        )}
+        {project?.status === 'in-progress' && (
+          <div className="absolute top-0 right-0 bg-yellow-500 text-white px-2 py-1 z-10 rounded-bl-md">
+            {t('project_status_in_progress')}
+          </div>
+        )}
         <Link className="hover:text-accent" href={`/projects/${project?.slug}`}>
           <Image
             src={`${cdn}${project?.photo}-post-md.jpg`}
