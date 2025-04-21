@@ -1,6 +1,7 @@
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 import UploadPhoto from '../../components/UploadPhoto';
 import { Button } from '../../components/ui';
@@ -24,6 +25,102 @@ import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 type UpdateUserFunction = (value: string | string[]) => Promise<void>;
+
+// Delete Account Section Component
+const DeleteAccountSection = ({ userId }: { userId: string }) => {
+  const router = useRouter();
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const handleDeleteAccount = async () => {
+    if (confirmText !== 'delete') {
+      setError('Please type "delete" to confirm account deletion');
+      return;
+    }
+    
+    try {
+      setIsDeleting(true);
+      await api.delete('/account');
+      
+      // Remove all cookies
+      document.cookie.split(';').forEach(cookie => {
+        const [name] = cookie.trim().split('=');
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      });
+      
+      // Log out user by clearing localStorage
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Redirect to home page after successful deletion
+      window.location.href = '/';
+    } catch (err) {
+      const errorMessage = parseMessageFromError(err);
+      setError(errorMessage);
+      setIsDeleting(false);
+    }
+  };
+  
+  return (
+    <div className="mt-4">
+      {!showConfirmation ? (
+        <Button 
+          onClick={() => setShowConfirmation(true)}
+          className="primary"
+        >
+          Delete Account
+        </Button>
+      ) : (
+        <div className="border border-red-300 rounded-md p-4 bg-red-50">
+          <h4 className="font-bold text-red-700 mb-2">Delete Account</h4>
+          <p className="mb-4 text-red-700">
+            This action cannot be undone. All your data will be permanently deleted.
+          </p>
+          
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+              <span className="block sm:inline">{error}</span>
+            </div>
+          )}
+          
+          <div className="mb-4">
+            <label className="block mb-2 text-sm font-medium text-red-700">
+              Type "delete" to confirm
+            </label>
+            <input
+              type="text"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="delete"
+            />
+          </div>
+          
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleDeleteAccount}
+              isEnabled={!isDeleting}
+              className="primary"
+            >
+              {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+            </Button>
+            <Button 
+              onClick={() => {
+                setShowConfirmation(false);
+                setConfirmText('');
+                setError(null);
+              }}
+              variant="secondary"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const SHARED_ACCOMODATION_PREFERENCES = [
   { label: 'Flexible', value: 'flexible' },
@@ -393,6 +490,17 @@ const SettingsPage = ({
             onChange={saveSettings('newsletter_weekly')}
           />
           <label>Weekly newsletter</label>
+        </div>
+
+        <Heading
+          level={3}
+          className="border-b border-divider pb-2.5 leading-9 mt-12"
+        >
+          ⚠️ Danger Zone
+        </Heading>
+        
+        <div className="mt-6">
+          <DeleteAccountSection userId={user._id} />
         </div>
       </div>
     </>
