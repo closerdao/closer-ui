@@ -18,7 +18,7 @@ import PageNotAllowed from '../../401';
 import PageNotFound from '../../not-found';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { formatThousands } from '../../../utils/dashboard.helpers';
+// (The unused import line has been removed)
 import { priceFormat } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import Loading from '../../../components/Loading';
@@ -58,7 +58,7 @@ const EventReport = ({ event, error }: Props) => {
   let dayTicketCount = 0;
   const ticketTypeMap = new Map();
 
-  tickets && tickets.forEach((ticket: any) => {
+  tickets?.forEach((ticket: any) => {
     const price = ticket.getIn(['price','val']) || 0;
     const quantity = ticket.get('quantity') || 1;
     const ticketType = ticket.getIn(['option', 'name']) || 'Standard';
@@ -92,7 +92,7 @@ const EventReport = ({ event, error }: Props) => {
 
   // Calculate total booking revenue
   let bookingRevenue = 0;
-  bookings && bookings.forEach((booking: any) => {
+  bookings?.forEach((booking: any) => {
     const total = booking.getIn(['total', 'val']) || 0;
     bookingRevenue += total;
   });
@@ -123,7 +123,7 @@ const EventReport = ({ event, error }: Props) => {
     if (event && canViewReport) {
       loadData();
     }
-  }, [event, user]);
+  }, [event, user, canViewReport]);
 
   if (isLoading) {
     return <Loading />;
@@ -142,8 +142,8 @@ const EventReport = ({ event, error }: Props) => {
   const vatAmount = eventRevenue * vatRate;
   const earningsAfterVAT = eventRevenue - vatAmount;
 
-  const start = event && event.start && dayjs(event.start);
-  const end = event && event.end && dayjs(event.end);
+  const start = event?.start && dayjs(event.start);
+  const end = event?.end && dayjs(event.end);
   const isThisYear = dayjs().isSame(start, 'year');
   const dateFormat = isThisYear ? 'MMM D' : 'YYYY MMMM';
 
@@ -309,7 +309,8 @@ EventReport.getInitialProps = async (context: NextPageContext) => {
         })
         .catch((err) => {
           console.error('Error fetching event:', err);
-          return { data: { results: null } };
+          const errorMessage = err.response?.data?.message || 'Failed to fetch event data';
+          return { data: { results: null, error: errorMessage } };
         }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
