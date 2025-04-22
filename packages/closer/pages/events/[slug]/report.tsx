@@ -142,8 +142,8 @@ const EventReport = ({ event, error }: Props) => {
   const vatAmount = eventRevenue * vatRate;
   const earningsAfterVAT = eventRevenue - vatAmount;
 
-  const start = event && event.start && dayjs(event.start);
-  const end = event && event.end && dayjs(event.end);
+  const start = event?.start && dayjs(event.start);
+  const end = event?.end && dayjs(event.end);
   const isThisYear = dayjs().isSame(start, 'year');
   const dateFormat = isThisYear ? 'MMM D' : 'YYYY MMMM';
 
