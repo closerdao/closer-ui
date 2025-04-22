@@ -123,7 +123,7 @@ const EventReport = ({ event, error }: Props) => {
     if (event && canViewReport) {
       loadData();
     }
-  }, [event, user]);
+  }, [event, user, canViewReport]);
 
   if (isLoading) {
     return <Loading />;
