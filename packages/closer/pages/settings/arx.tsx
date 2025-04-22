@@ -85,7 +85,7 @@ const SalesTerminal: React.FC = () => {
       setStatus('Waiting for badge tap...');
       try {
         if (typeof NDEFReader === 'undefined') {
-          throw new Error('NFC not supported on this device');
+          throw new Error('NFC not supported on this device. Please use a device with NFC capabilities.');
         }
         const randomMessage = Array.from(window.crypto.getRandomValues(new Uint8Array(16)))
           .map(b => b.toString(16).padStart(2, '0')).join('');
@@ -96,7 +96,16 @@ const SalesTerminal: React.FC = () => {
         }
         await prepare(chipId);
       } catch (e: any) {
-        setStatus(`Error: ${e.message}`);
+        // Provide more helpful error messages for common scenarios
+        let errorMessage = e.message || 'Unknown error';
+        if (errorMessage.includes('NFC not supported')) {
+          errorMessage = 'This device does not support NFC. Please try a different device.';
+        } else if (errorMessage.includes('user canceled')) {
+          errorMessage = 'NFC scanning was canceled. Please try again.';
+        } else if (errorMessage.includes('timeout')) {
+          errorMessage = 'NFC scan timed out. Please ensure your badge is properly placed on the device.';
+        }
+        setStatus(`Error: ${errorMessage}`);
         console.error('chip detect error:', e);
         reset();
         setBusy(false);
