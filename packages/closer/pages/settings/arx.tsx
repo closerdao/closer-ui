@@ -26,17 +26,18 @@ const menuItems: MenuItem[] = [
 const SalesTerminal: React.FC = () => {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
+  const [selected, setSelected] = useState<MenuItem | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
+  const [challenge, setChallenge] = useState<string | null>(null);
+  const [txId, setTxId] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   // Redirect or show not found if not authenticated
   if (!isAuthenticated || !user) {
     return <PageNotFound back="/login" error="Please log in to access the sales terminal." />;
   }
 
-  const [selected, setSelected] = useState<MenuItem | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
-  const [challenge, setChallenge] = useState<string | null>(null);
-  const [txId, setTxId] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  // …rest of your component logic…
 
   // Reset state
   const reset = () => {
