@@ -18,7 +18,6 @@ import PageNotAllowed from '../../401';
 import PageNotFound from '../../not-found';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-// (The unused import line has been removed)
 import { priceFormat } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import Loading from '../../../components/Loading';
