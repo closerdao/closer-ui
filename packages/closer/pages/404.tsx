@@ -11,9 +11,9 @@ import { loadLocaleData } from '../utils/locale.helpers';
 const Page404 = ({ error }: { error?: string }) => {
   const router = useRouter();
 
-  // useEffect(() => {
-  //   router.push('/404');
-  // }, []);
+  useEffect(() => {
+    router.push('/notfound');
+  }, []);
 
   return (
     <>
