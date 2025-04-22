@@ -309,7 +309,8 @@ EventReport.getInitialProps = async (context: NextPageContext) => {
         })
         .catch((err) => {
           console.error('Error fetching event:', err);
-          return { data: { results: null } };
+          const errorMessage = err.response?.data?.message || 'Failed to fetch event data';
+          return { data: { results: null, error: errorMessage } };
         }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
