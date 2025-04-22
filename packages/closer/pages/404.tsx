@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 import Heading from '../components/ui/Heading';
 
@@ -10,6 +11,7 @@ import { loadLocaleData } from '../utils/locale.helpers';
 
 const Page404 = ({ error }: { error?: string }) => {
   const router = useRouter();
+  const t = useTranslations();
 
   useEffect(() => {
     router.push('/notfound');
@@ -18,21 +20,16 @@ const Page404 = ({ error }: { error?: string }) => {
   return (
     <>
       <Head>
-        <title>Page not found</title>
+        <title>{t('page_not_found')}</title>
       </Head>
       <main className="main-content about intro page-not-found max-w-prose h-full flex flex-col flex-1 justify-center gap-4">
-        <Heading>Page not found</Heading>
+        <Heading>{t('page_not_found')}</Heading>
         {error && (
           <Heading level={2} className="font-light italic my-4">
             {' '}
             {error}
           </Heading>
         )}
-        <p>
-          <Link href="/" className="btn text-center">
-            Take me home
-          </Link>
-        </p>
       </main>
     </>
   );

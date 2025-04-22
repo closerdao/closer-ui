@@ -270,6 +270,7 @@
   "newsletter_signup": "Subscribe",
   "newsletter_title": "Subscribe to our newsletter",
   "page_error_title": "Error",
+  "page_not_found": "Page not found",
   "post_delete": "delete",
   "post_delete_message": "Post deleted.",
   "post_replies": "replies",
@@ -1643,7 +1644,5 @@
   "affiliate_dashboard_amount": "Amount",
   "affiliate_dashboard_date": "Date",
   "affiliate_dashboard_payouts": "Payouts",
-  "affiliate_dashboard_affiliate_revenue": "Affiliate revenue",
-
-  "": ""
+  "affiliate_dashboard_affiliate_revenue": "Affiliate revenue"
 }
