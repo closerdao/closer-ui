@@ -92,7 +92,7 @@ const EventReport = ({ event, error }: Props) => {
 
   // Calculate total booking revenue
   let bookingRevenue = 0;
-  bookings && bookings.forEach((booking: any) => {
+  bookings?.forEach((booking: any) => {
     const total = booking.getIn(['total', 'val']) || 0;
     bookingRevenue += total;
   });
