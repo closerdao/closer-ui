@@ -90,6 +90,7 @@ export { default as EventsPage } from './pages/events';
 export { default as EventPage } from './pages/events/[slug]';
 export { default as EditEventPage } from './pages/events/[slug]/edit';
 export { default as TicketsEventPage } from './pages/events/[slug]/tickets';
+export { default as EventReportPage } from './pages/events/[slug]/report';
 export { default as CreateEventPage } from './pages/events/create';
 export { default as FoodPage } from './pages/food';
 export { default as EditFoodPage } from './pages/food/[slug]/edit';

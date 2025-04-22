@@ -263,6 +263,12 @@ const EventPage = ({
                   </LinkButton>
                   <LinkButton
                     size="small"
+                    href={event.slug && `/events/${event.slug}/report`}
+                  >
+                    {t('event_view_report_button') || 'View Report'}
+                  </LinkButton>
+                  <LinkButton
+                    size="small"
                     href={event.slug && `/events/${event.slug}/edit`}
                     className="bg-accent text-white rounded-full px-4 py-2 text-center uppercase text-sm"
                   >
