@@ -58,7 +58,7 @@ const EventReport = ({ event, error }: Props) => {
   let dayTicketCount = 0;
   const ticketTypeMap = new Map();
 
-  tickets && tickets.forEach((ticket: any) => {
+  tickets?.forEach((ticket: any) => {
     const price = ticket.getIn(['price','val']) || 0;
     const quantity = ticket.get('quantity') || 1;
     const ticketType = ticket.getIn(['option', 'name']) || 'Standard';
