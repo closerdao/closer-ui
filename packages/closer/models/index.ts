@@ -803,7 +803,7 @@ const models = {
       ownerVisible: true,
       editable: true,
       enum: ['open', 'in-progress', 'done'],
-      default: 'public',
+      default: 'open',
       type: 'select',
       options: [
         { label: 'Open', value: 'open' },
