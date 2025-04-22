@@ -1626,5 +1626,27 @@
   "affiliate_dashboard_payouts": "Payouts",
   "affiliate_dashboard_affiliate_revenue": "Affiliate revenue",
 
-  "": ""
+  "projects_builders_residency_title": "Builders Residency Open Call",
+  "projects_intro_text": "We are looking for skilled builders who want to co-create this village with us ✨",
+  "projects_requirements_title": "Requirements",
+  "projects_requirements_text": "6 hours per day, 1 month minimum ✅. Free accommodation & food (glamping tents and dorms available, or bring your van)",
+  "projects_token_rewards_title": "Token rewards for completed projects!💰",
+  "projects_token_rewards_text": "We will be offering tokens to builders who take projects from start to completion. Rewards will be negotiated with the team.",
+  "projects_community_culture_title": "Community culture",
+  "projects_community_culture_text": "Experience co-living with fellow builders and the TDF team. We will have regular community activities, saunas, experiential dinners, music jams, music jams, embodiment practices, yoga, massage, and more 🥙💃🏽🔥🎶🎭",
+  "projects_completed_title": "Projects completed ✅",
+  "projects_no_active_projects": "There are no active projects currently.",
+  "projects_no_completed_projects": "There are no completed projects currently.",
+  "projects_skill_build": "Practical build skills",
+  "projects_skill_electrical": "Electrical",
+  "projects_skill_plumbing": "Plumbing",
+  "projects_skill_cement": "Cement & plastering",
+  "projects_skill_carpentry": "Carpentry",
+  "projects_skill_painting": "Painting & decorating",
+  "projects_skill_stoneworks": "Stoneworks",
+  "projects_skill_tools": "Tools & machinery operation",
+  "projects_skill_design": "Design & drawing skills",
+  "projects_timeframe_title": "Time frame",
+  "projects_timeframe_text": "Starting now 🗓.",
+  "projects_timeframe_description": "Building will be the main focus until at least mid 2026 - so come get your hands dirty!"
 }
