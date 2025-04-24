@@ -1,4 +1,6 @@
-[
+{
+  "address": "0x5Bc8e45E6c0019F12bE2979De614AF3cc63538e9",
+  "abi": [
     {
       "anonymous": false,
       "inputs": [
@@ -1129,3 +1131,4 @@
       "type": "constructor"
     }
   ]
+}
