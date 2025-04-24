@@ -95,11 +95,11 @@ const CreateProposal: React.FC<CreateProposalProps> = ({ onClose, onSubmit }) =>
         </div>
         
         {!isWalletReady ? (
-          <div className="p-4 bg-yellow-100 text-yellow-800 rounded-md">
+          <div className="p-4 bg-accent-light text-accent-dark rounded-md">
             <p>Please connect your wallet to create a proposal.</p>
           </div>
         ) : !isCitizen() ? (
-          <div className="p-4 bg-yellow-100 text-yellow-800 rounded-md">
+          <div className="p-4 bg-accent-light text-accent-dark rounded-md">
             <p>
               Only Citizens can create proposals. Please contact the DAO
               administrators for more information.
@@ -175,7 +175,7 @@ const CreateProposal: React.FC<CreateProposalProps> = ({ onClose, onSubmit }) =>
                 className={`py-2 px-4 rounded-md ${
                   isSubmitting
                     ? 'bg-gray-300 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-accent hover:bg-accent-dark text-white'
                 }`}
               >
                 {isSubmitting ? 'Submitting...' : 'Create Proposal'}
