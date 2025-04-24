@@ -4,7 +4,6 @@ import Head from 'next/head';
 import { Layout } from '@/components/Layout';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import {
-  ConnectWallet,
   ProposalList,
   VoteModal,
   CreateProposal,
@@ -12,6 +11,7 @@ import {
   PastVotes,
   Proposal,
 } from '../../components/Governance';
+import { ConnectWallet } from '../../components/Wallet';
 
 const GovernancePage: NextPage = () => {
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
@@ -76,7 +76,7 @@ const GovernancePage: NextPage = () => {
           </div>
           
           <div className="space-y-6">
-            <ConnectWallet />
+            <ConnectWallet variant="full" showVotingWeight={false} />
             <VotingWeight />
             <PastVotes />
           </div>

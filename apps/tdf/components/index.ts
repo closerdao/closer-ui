@@ -5,3 +5,6 @@ export * from './Timeline';
 export * from './Layout';
 export * from './Governance';
 export * from './TokenInteraction';
+export * from './Wallet';
+export { default as Navigation } from './Navigation';
+export { default as MemberMenu } from './MemberMenu';

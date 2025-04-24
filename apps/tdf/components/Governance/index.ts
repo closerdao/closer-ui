@@ -1,4 +1,4 @@
-export { default as ConnectWallet } from './ConnectWallet';
+export { default as GovernanceWallet } from './ConnectWallet';
 export { default as ProposalList } from './ProposalList';
 export { default as VoteModal } from './VoteModal';
 export { default as CreateProposal } from './CreateProposal';
