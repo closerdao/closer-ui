@@ -1,7 +1,8 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import { WalletState, WalletDispatch } from 'closer/contexts/wallet';
 import { useAuth } from 'closer/contexts/auth';
 import { Proposal } from './ProposalList';
+import { useVotingWeight } from '../../hooks/useVotingWeight';
 
 interface VoteModalProps {
   proposal: Proposal | null;
@@ -10,32 +11,14 @@ interface VoteModalProps {
 }
 
 const VoteModal: React.FC<VoteModalProps> = ({ proposal, onClose, onVote }) => {
-  const { isWalletReady, account, balanceAvailable: tdfBalance, proofOfPresence: presence } = useContext(WalletState);
+  const { isWalletReady, account } = useContext(WalletState);
   const { signMessage } = useContext(WalletDispatch);
   const { user } = useAuth();
+  const { votingWeight } = useVotingWeight();
   
   const [selectedVote, setSelectedVote] = useState<'yes' | 'no' | 'abstain' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sweatBalance, setSweatBalance] = useState<string>('0');
-  const [votingWeight, setVotingWeight] = useState<number>(0);
-  
-  // Calculate voting weight
-  useEffect(() => {
-    if (isWalletReady && account) {
-      // In a real implementation, this would fetch from a contract or API
-      // For now, we'll just use a mock value for sweat
-      setSweatBalance('0.4');
-      
-      const tdf = parseFloat(tdfBalance || '0');
-      const presenceValue = presence || 0;
-      const sweat = parseFloat(sweatBalance || '0');
-      
-      // totalVotingWeight = $TDF + $Presence + ($Sweat * 5)
-      const totalWeight = tdf + presenceValue + (sweat * 5);
-      setVotingWeight(totalWeight);
-    }
-  }, [isWalletReady, account, tdfBalance, presence, sweatBalance]);
   
   const isCitizen = (): boolean => {
     // Check if user has the "citizen" role

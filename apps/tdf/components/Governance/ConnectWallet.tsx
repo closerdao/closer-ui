@@ -1,6 +1,9 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useContext } from 'react';
 import { WalletState, WalletDispatch } from 'closer/contexts/wallet';
 import { useAuth } from 'closer/contexts/auth';
+import { usePresenceToken } from '../../hooks/usePresenceToken';
+import { useSweatToken } from '../../hooks/useSweatToken';
+import { useVotingWeight } from '../../hooks/useVotingWeight';
 
 interface ConnectWalletProps {
   className?: string;
@@ -12,37 +15,13 @@ const ConnectWallet: React.FC<ConnectWalletProps> = ({ className }) => {
     isWalletConnected,
     isWalletReady,
     balanceAvailable: tdfBalance,
-    proofOfPresence: presence,
   } = useContext(WalletState);
   
   const { user } = useAuth();
   const { connectWallet } = useContext(WalletDispatch);
-  
-  // This would be fetched from an API or contract in a real implementation
-  const [sweatBalance, setSweatBalance] = useState<string>('0');
-  
-  // Fetch Sweat token balance (mock implementation)
-  useEffect(() => {
-    if (isWalletReady && account) {
-      // In a real implementation, this would fetch from a contract or API
-      // For now, we'll just use a mock value
-      setSweatBalance('0.4');
-    }
-  }, [isWalletReady, account]);
-  
-  // Calculate voting weight
-  const calculateVotingWeight = (): string => {
-    if (!isWalletReady) return '0';
-    
-    const tdf = parseFloat(tdfBalance || '0');
-    const presenceValue = presence || 0;
-    const sweat = parseFloat(sweatBalance || '0');
-    
-    // totalVotingWeight = $TDF + $Presence + ($Sweat * 5)
-    const totalWeight = tdf + presenceValue + (sweat * 5);
-    
-    return totalWeight.toFixed(2);
-  };
+  const { presenceBalance } = usePresenceToken();
+  const { sweatBalance } = useSweatToken();
+  const { votingWeight } = useVotingWeight();
   
   const isCitizen = (): boolean => {
     // Check if user has the "citizen" role
@@ -84,7 +63,7 @@ const ConnectWallet: React.FC<ConnectWalletProps> = ({ className }) => {
           
           <div className="flex justify-between items-center mb-3">
             <span className="font-medium">Presence:</span>
-            <span>{presence || '0'}</span>
+            <span>{presenceBalance || '0'}</span>
           </div>
           
           <div className="flex justify-between items-center mb-3">
@@ -94,7 +73,7 @@ const ConnectWallet: React.FC<ConnectWalletProps> = ({ className }) => {
           
           <div className="flex justify-between items-center mb-3 font-bold">
             <span>Voting Weight:</span>
-            <span>{calculateVotingWeight()}</span>
+            <span>{votingWeight.toFixed(2)}</span>
           </div>
           
           {!isCitizen() && (
