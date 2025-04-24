@@ -4,3 +4,4 @@ export * from './Footer';
 export * from './Timeline';
 export * from './Layout';
 export * from './Governance';
+export * from './TokenInteraction';
