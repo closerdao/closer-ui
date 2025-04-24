@@ -1,4 +1,6 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React from 'react';
+import { useVotingWeight } from '../../hooks/useVotingWeight';
+import { useContext } from 'react';
 import { WalletState } from 'closer/contexts/wallet';
 
 interface VotingWeightProps {
@@ -6,26 +8,11 @@ interface VotingWeightProps {
 }
 
 const VotingWeight: React.FC<VotingWeightProps> = ({ className }) => {
-  const { isWalletReady, account, balanceAvailable: tdfBalance, proofOfPresence: presence } = useContext(WalletState);
-  const [sweatBalance, setSweatBalance] = useState<string>('0');
+  const { isWalletReady } = useContext(WalletState);
+  const { votingWeight, components, formula } = useVotingWeight();
   
-  // Fetch Sweat token balance (mock implementation)
-  useEffect(() => {
-    if (isWalletReady && account) {
-      // In a real implementation, this would fetch from a contract or API
-      // For now, we'll just use a mock value
-      setSweatBalance('0.4');
-    }
-  }, [isWalletReady, account]);
-  
-  // Calculate voting weight components
-  const tdfValue = parseFloat(tdfBalance || '0');
-  const presenceValue = presence || 0;
-  const sweatValue = parseFloat(sweatBalance || '0');
-  const sweatWeighted = sweatValue * 5;
-  
-  // Calculate total voting weight
-  const totalVotingWeight = tdfValue + presenceValue + sweatWeighted;
+  const { tdf: tdfValue, presence: presenceValue, sweat: sweatValue, sweatWeighted } = components;
+  const totalVotingWeight = votingWeight;
   
   if (!isWalletReady) {
     return (
