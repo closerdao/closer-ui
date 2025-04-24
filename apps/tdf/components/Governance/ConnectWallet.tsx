@@ -41,7 +41,7 @@ const ConnectWallet: React.FC<ConnectWalletProps> = ({ className }) => {
         <div>
           <button
             onClick={connectWallet}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            className="bg-accent hover:bg-accent-dark text-white font-bold py-2 px-4 rounded w-full"
           >
             Connect Wallet
           </button>

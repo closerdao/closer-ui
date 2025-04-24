@@ -172,7 +172,7 @@ export const WalletProvider = ({ children }) => {
       },
       false,
     );
-    if (!user?.walletAddress) {
+    if (user && !user.walletAddress) {
       const activated = await injected.activate();
       await linkWalletWithUser(activated?.account);
     }
@@ -191,7 +191,7 @@ export const WalletProvider = ({ children }) => {
         signedMessage,
         walletAddress: accountId,
         message,
-        userId: user._id,
+        userId: user?._id,
       });
       return userUpdated;
     } catch (error) {

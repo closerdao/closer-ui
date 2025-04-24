@@ -74,7 +74,7 @@ const VoteModal: React.FC<VoteModalProps> = ({ proposal, onClose, onVote }) => {
           <h3 className="text-lg font-semibold mb-2">{proposal.title}</h3>
           <p className="text-sm text-gray-600 mb-4">{proposal.description}</p>
           
-          <div className="p-3 bg-blue-50 rounded-md mb-4">
+          <div className="p-3 bg-accent-light rounded-md mb-4">
             <p className="text-sm font-medium">You have {votingWeight.toFixed(2)} voting weight</p>
           </div>
           
@@ -140,7 +140,7 @@ const VoteModal: React.FC<VoteModalProps> = ({ proposal, onClose, onVote }) => {
               className={`py-2 px-4 rounded-md ${
                 !selectedVote || isSubmitting || !isWalletReady
                   ? 'bg-gray-300 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-accent hover:bg-accent-dark text-white'
               }`}
             >
               {isSubmitting ? 'Submitting...' : 'Submit Vote'}

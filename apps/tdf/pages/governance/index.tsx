@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { NextPage } from 'next';
+import { NextPage, NextPageContext } from 'next';
 import Head from 'next/head';
 import { Layout } from '@/components/Layout';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
 import {
   ConnectWallet,
   ProposalList,
@@ -60,7 +61,7 @@ const GovernancePage: NextPage = () => {
           <h1 className="text-3xl font-bold">TDF Governance</h1>
           <button
             onClick={() => setIsCreateProposalModalOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            className="bg-accent hover:bg-accent-dark text-white font-bold py-2 px-4 rounded"
           >
             Create Proposal
           </button>
@@ -101,3 +102,17 @@ const GovernancePage: NextPage = () => {
 };
 
 export default GovernancePage;
+
+GovernancePage.getInitialProps = async (context: NextPageContext) => {
+  try {
+    const messages = await loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME);
+    return {
+      messages,
+    };
+  } catch (err) {
+    return {
+      error: err,
+      messages: null,
+    };
+  }
+};
