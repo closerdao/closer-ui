@@ -77,7 +77,7 @@ const Navigation = () => {
                   <Link href="/stay">{t('header_nav_stay')}</Link>
                 </li>
                 <li>
-                  <Link href="/members">{t('header_nav_community')}</Link>
+                  <Link href="/pages/community">{t('header_nav_community')}</Link>
                 </li>
                 <li>
                   <Link href="/events">{t('header_nav_events')}</Link>
