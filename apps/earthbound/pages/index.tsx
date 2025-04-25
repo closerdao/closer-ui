@@ -310,7 +310,7 @@ const getPage = ({
                   'https://cdn.oasa.co/custom-pages/earthbound/impact-investor.png',
                 cta: {
                   text: 'More info',
-                  url: '/',
+                  url: '/pages/invest',
                 },
               },
               {
@@ -320,7 +320,7 @@ const getPage = ({
                   'https://cdn.oasa.co/custom-pages/earthbound/comm-member.png',
                 cta: {
                   text: 'More info',
-                  url: '/',
+                  url: '/pages/community',
                 },
               },
               {

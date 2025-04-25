@@ -187,7 +187,7 @@ const MemberMenu = () => {
         enabled: true,
         roles: ['steward'],
       },
-      ...(APP_NAME !== 'foz'
+      ...((APP_NAME !== 'foz' && APP_NAME !== 'earthbound')
         ? [
             {
               label: t('navigation_resources'),
