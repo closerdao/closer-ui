@@ -77,7 +77,7 @@ const Navigation = () => {
                   <Link href="/stay">{t('header_nav_stay')}</Link>
                 </li>
                 <li>
-                  <Link href="/members">{t('header_nav_community')}</Link>
+                  <Link href="/pages/community">{t('header_nav_community')}</Link>
                 </li>
                 <li>
                   <Link href="/events">{t('header_nav_events')}</Link>
@@ -89,7 +89,7 @@ const Navigation = () => {
                 variant="primary"
                 className={' bg-accent-alt border-accent-alt'}
               >
-                <Link href='/#how-to-join'>{t('header_nav_join_us')}</Link>
+                <Link href="/#how-to-join">{t('header_nav_join_us')}</Link>
               </Button>
             </div>
           )}

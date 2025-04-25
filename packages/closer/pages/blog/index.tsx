@@ -45,7 +45,7 @@ const Search = ({
 
   const { user } = useAuth();
   const isAdmin = user?.roles.includes('admin');
-  const isModerator = user?.roles.includes('moderator');
+  const isContentCreator = user?.roles.includes('content-creator');
 
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
@@ -191,7 +191,7 @@ const Search = ({
 
         <section className="pl-8 pr-4 flex flex-col items-center gap-10 bg-complimentary-light -ml-4 w-[calc(100vw+16px)] pb-12">
           <div className="flex flex-col gap-8 items-center pt-20">
-            {(isAdmin || isModerator) && (
+            {(isAdmin || isContentCreator) && (
               <div className="mb-4">
                 <LinkButton
                   size="small"
