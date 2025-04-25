@@ -305,7 +305,7 @@ const MemberMenu = () => {
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
   return (
     <nav className="flex flex-col gap-4">
-      <Profile isDemo={false} />
+      <Profile isMenu={true} isDemo={false} />
       {isWalletEnabled && <Wallet />}
       {navOptions.length > 1 && (
         <div className="mt-2">
