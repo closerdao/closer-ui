@@ -41,16 +41,13 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
   const isLearningHubEnabled = learningHubConfig && learningHubConfig?.enabled;
 
   const defaultConfig = useConfig();
-  const PLATFORM_NAME =
-    generalConfig?.platformName || defaultConfig.platformName;
-  const { user } = useAuth();
+  const PLATFORM_NAME = generalConfig?.platformName || defaultConfig.platformName;
   const { platform }: any = usePlatform();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
 
-  const isAdmin = user?.roles.includes('admin');
   const { hasAccess } = useRBAC();
   const canCreateLesson = hasAccess('LearningHubCreate');
 
@@ -165,7 +162,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
             </Heading>
 
             <LearnCategoriesNav
-              categories={isAdmin ? categories : publicCategories}
+              categories={canCreateLesson ? categories : publicCategories}
               currentCategory={category as string}
             />
           </nav>
@@ -181,7 +178,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
               <Heading level={1}>{t('generic_coming_soon')}</Heading>
             )}
 
-            <LessonsList lessons={(isAdmin || isContentCreator) ? lessons : publicLessons} />
+            <LessonsList lessons={(canCreateLesson) ? lessons : publicLessons} />
 
             {lessons && totalLessons > LESSONS_PER_PAGE && (
               <Pagination
@@ -190,7 +187,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
                 }}
                 page={page}
                 limit={LESSONS_PER_PAGE}
-                total={(isAdmin || isContentCreator) ? totalLessons : totalPublicLessons}
+                total={(canCreateLesson) ? totalLessons : totalPublicLessons}
               />
             )}
           </section>
