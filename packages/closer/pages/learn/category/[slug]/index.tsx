@@ -17,6 +17,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../../../contexts/auth';
 import { usePlatform } from '../../../../contexts/platform';
 import { useConfig } from '../../../../hooks/useConfig';
+import useRBAC from '../../../../hooks/useRBAC';
 import { GeneralConfig } from '../../../../types';
 import { Lesson } from '../../../../types/lesson';
 import api from '../../../../utils/api';
@@ -50,6 +51,8 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
   const [page, setPage] = useState(1);
 
   const isAdmin = user?.roles.includes('admin');
+  const { hasAccess } = useRBAC();
+  const canCreateLesson = hasAccess('LearningHubCreate');
 
   const filter = {
     where: getCategoryWhere(),
@@ -144,7 +147,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
           </div>
 
           <div className="action">
-            {user && user.roles.includes('admin') && (
+            {canCreateLesson && (
               <Link
                 href="/learn/create"
                 className="mt-10 btn-primary inline-block"

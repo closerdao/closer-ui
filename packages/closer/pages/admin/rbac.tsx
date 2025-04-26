@@ -11,14 +11,16 @@ import PageNotFound from '../not-found';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import { BookingConfig } from '../../types/api';
 
 
 interface Props {
   loadConfig: RBACConfig;
+  bookingConfig: BookingConfig;
   error?: string;
 }
 
-const RBACPage = ({ loadConfig }: Props) => {
+const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
   // const t = useTranslations();
   const { user } = useAuth();
   const [config, setConfig] = useState(loadConfig);
@@ -31,7 +33,8 @@ const RBACPage = ({ loadConfig }: Props) => {
     'UserManagement',
     'PlatformSettings',
     'RBAC',
-    'LearnSettings',
+    'LearningHub',
+    'LearningHubCreate',
     'AffiliateSettings',
     'Invest',
     'Community',
@@ -61,6 +64,9 @@ const RBACPage = ({ loadConfig }: Props) => {
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasConfigUpdated, setHasConfigUpdated] = useState(false);
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   // Only admin can access this page
   if (!user || !user.roles.includes('admin')) {
@@ -112,7 +118,7 @@ const RBACPage = ({ loadConfig }: Props) => {
       <Head>
         <title>Role Based Access Control</title>
       </Head>
-      <AdminLayout>
+      <AdminLayout isBookingEnabled={ isBookingEnabled }>
         <div className="flex justify-between items-center mb-6">
           <Heading level={1}>Role Based Access Control</Heading>
         </div>
@@ -181,16 +187,20 @@ const RBACPage = ({ loadConfig }: Props) => {
 
 RBACPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [rbacConfigData] = await Promise.all([
+    const [rbacConfigData, bookingRes, messages] = await Promise.all([
       api.get('/config/rbac').catch(() => {
         return null;
       }),
+      api.get('/config/booking').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const loadConfig = deepmerge.all([rbacDefaultConfig, rbacConfigData?.data?.results?.value]);
+    const bookingConfig = bookingRes?.data?.results?.value;
 
     return {
       loadConfig,
+      bookingConfig,
+      messages
     };
   } catch (error) {
     return {
