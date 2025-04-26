@@ -102,7 +102,6 @@ const StayPage = ({
   });
 
   if (!bookingSettings) {
-    console.log('bookingSettings', bookingSettings)
     return <PageNotFound error="Booking is disabled" />;
   }
 
@@ -249,9 +248,6 @@ StayPage.getInitialProps = async (context: NextPageContext) => {
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const generalConfig = generalRes?.data?.results?.value;
-
-    console.log('bookingResponse', bookingResponse)
-
     const bookingSettings = bookingResponse?.data?.results?.value;
     const bookingRules = bookingRulesResponse?.data?.results?.value;
     const opportunities = volunteerRes?.data?.results;
