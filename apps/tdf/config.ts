@@ -14,7 +14,11 @@ const config = {
     'learningHub',
     'citizenship',
     'affiliate',
+<<<<<<< HEAD
     'rbac',
+=======
+    'webinar',
+>>>>>>> origin/main
   ],
   PORT: 14444,
   EXPOSE_STORE: true,

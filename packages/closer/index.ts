@@ -28,9 +28,10 @@ export { default as LinkButton } from './components/ui/LinkButton';
 export { default as ProgressBar } from './components/ui/ProgressBar';
 export { default as Row } from './components/ui/Row';
 export { default as Spinner } from './components/ui/Spinner';
-export { default as UploadPhoto } from './components/UploadPhoto';
+export { default as UploadPhoto } from './components/UploadPhoto/UploadPhoto';
 export { default as VolunteerEventView } from './components/VolunteerEventView/';
 export { default as YoutubeEmbed } from './components/YoutubeEmbed';
+
 // Config
 export * from './config_blockchain';
 export * from './contexts/auth';
@@ -46,8 +47,8 @@ export * from './hooks/useHasMounted';
 export * from './hooks/useRBAC';
 export { default as Page401 } from './pages/401';
 export {
-  default as Page404,
   getStaticProps as getStaticProps404,
+  default as Page404,
 } from './pages/404';
 export { default as AdminPage } from './pages/admin';
 export { default as ApplicationsPage } from './pages/applications';

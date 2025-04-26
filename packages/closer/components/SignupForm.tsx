@@ -101,6 +101,13 @@ const SignupForm = ({ app }: Props) => {
     }
   }, [isAuthenticated, back, user]);
 
+  useEffect(() => {
+    const localEmail = localStorage.getItem('email');
+    if (localEmail) {
+      setApplication({ ...application, email: localEmail });
+    }
+  }, []);
+
   const updateApplication = (update: any) => {
     setApplication((prevState) => ({ ...prevState, ...update }));
   };

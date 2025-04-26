@@ -131,6 +131,7 @@ const MemberMenu = () => {
       
       // Dashboard section
       {
+<<<<<<< HEAD
         label: t('menu_section_dashboard'),
         isOpen: false,
         items: [
@@ -157,6 +158,137 @@ const MemberMenu = () => {
             rbacPage: 'Governance',
           },
         ],
+=======
+        label: t('navigation_dashboard'),
+        url: '/dashboard',
+        enabled: true,
+        roles: ['admin'],
+      },
+      {
+        label: t('navigation_booking_requests'),
+        url: '/bookings/requests',
+        enabled: isBookingEnabled,
+        roles: ['space-host'],
+      },
+      {
+        label: t('navigation_current_bookings'),
+        url: '/bookings/current',
+        enabled: isBookingEnabled,
+        roles: ['space-host'],
+      },
+      {
+        label: t('navigation_all_bookings'),
+        url: '/bookings/all',
+        enabled: isBookingEnabled,
+        roles: ['space-host'],
+      },
+      {
+        label: t('navigation_booking_calendar'),
+        url: '/bookings/calendar',
+        enabled: isBookingEnabled,
+        roles: ['space-host'],
+      },
+      {
+        label: t('navigation_edit_listings'),
+        url: '/listings',
+        enabled: isBookingEnabled,
+        roles: ['space-host'],
+      },
+      {
+        label: 'Edit food',
+        url: '/food',
+        enabled: isBookingEnabled,
+        roles: ['space-host'],
+      },
+      {
+        label: t('navigation_stay'),
+        url: '/stay',
+        enabled: isBookingEnabled,
+      },
+      // {
+      //   label: t('navigation_invest'),
+      //   url: '/token',
+      //   enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
+      // },
+      {
+        label: t('navigation_my_bookings'),
+        url: '/bookings',
+        enabled: isBookingEnabled,
+      },
+      {
+        label: t('navigation_refer_a_friend'),
+        url: '/settings/referrals',
+        enabled: process.env.NEXT_PUBLIC_FEATURE_REFERRAL === 'true',
+      },
+      ...((process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true' && user?.affiliate) 
+        ? [
+            {
+              label: t('navigation_affiliate_dashboard'),
+              url: '/settings/affiliate',
+              enabled: true,
+            },
+          ]
+        : []),
+      {
+        label: t('navigation_governance'),
+        url: 'https://snapshot.org/#/traditionaldreamfactory.eth',
+        target: '_blank',
+        enabled: true,
+        roles: ['member'],
+      },
+      {
+        label: t('navigation_user_list'),
+        url: '/admin/manage-users',
+        enabled: true,
+        roles: ['admin'],
+      },
+      {
+        label: t('navigation_new_event'),
+        url: '/events/create',
+        enabled: true,
+        roles: ['event-creator'],
+      },
+      {
+        label: t('navigation_new_volunteer'),
+        url: '/volunteer/create',
+        enabled: true,
+        roles: ['steward'],
+      },
+      ...((APP_NAME !== 'foz' && APP_NAME !== 'earthbound')
+        ? [
+            {
+              label: t('navigation_resources'),
+              url: '/resources',
+              enabled: APP_NAME.toLowerCase() !== 'lios',
+            },
+          ]
+        : []),
+      {
+        label: t('navigation_support_us'),
+        url: '/support-us',
+        enabled: process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true',
+      },
+      {
+        label: t('navigation_learning_hub'),
+        url: '/learn/category/all',
+        enabled: process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true',
+      },
+      {
+        label: t('navigation_buy_token'),
+        url: '/token',
+        enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
+      },
+      {
+        label: t('navigation_blog'),
+        url: '/blog',
+        enabled: process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true',
+      },
+      {
+        label: t('navigation_platform_settings'),
+        url: '/admin/config',
+        enabled: true,
+        roles: ['admin'],
+>>>>>>> origin/main
       },
     ];
     

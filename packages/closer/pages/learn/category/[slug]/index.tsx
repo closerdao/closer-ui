@@ -181,7 +181,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
               <Heading level={1}>{t('generic_coming_soon')}</Heading>
             )}
 
-            <LessonsList lessons={isAdmin ? lessons : publicLessons} />
+            <LessonsList lessons={(isAdmin || isContentCreator) ? lessons : publicLessons} />
 
             {lessons && totalLessons > LESSONS_PER_PAGE && (
               <Pagination
@@ -190,7 +190,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
                 }}
                 page={page}
                 limit={LESSONS_PER_PAGE}
-                total={isAdmin ? totalLessons : totalPublicLessons}
+                total={(isAdmin || isContentCreator) ? totalLessons : totalPublicLessons}
               />
             )}
           </section>
