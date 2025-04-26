@@ -138,7 +138,6 @@ const ProjectsPage = ({
 
                     {projects && projects.length > 0 && (
                       <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-6">
-<<<<<<< Updated upstream
                         {projects.map((project) => (
                           <ProjectCard
                             key={project.slug}
@@ -146,17 +145,6 @@ const ProjectsPage = ({
                             hasStewardRole={hasStewardRole || false}
                           />
                         ))}
-=======
-                        {projects
-                          .filter(project => (project.status !== 'done' && project.status !== 'in-progress'))
-                          .map((project) => (
-                            <ProjectCard
-                              key={project.slug}
-                              project={project}
-                              hasStewardRole={hasStewardRole || false}
-                            />
-                          ))}
->>>>>>> Stashed changes
                       </section>
                     )}
 
