@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../hooks/useConfig';
+import useRBAC from '../hooks/useRBAC';
 import api from '../utils/api';
 import ReportABug from './ReportABug';
 import NavLink from './ui/NavLink';
@@ -10,6 +11,7 @@ import NavLink from './ui/NavLink';
 const GuestMenu = () => {
   const t = useTranslations();
   const { APP_NAME } = useConfig();
+  const { hasAccess } = useRBAC();
 
   const [isVolunteeringEnabled, setIsVolunteeringEnabled] = useState(false);
   const [isBookingEnabled, setIsBookingEnabled] = useState(false);
@@ -47,7 +49,7 @@ const GuestMenu = () => {
         <NavLink href="/signup">{t('navigation_signup')}</NavLink>
       </div>
       <div className="flex flex-col gap-3 mt-4">
-        {process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true' && (
+        {process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true' && hasAccess('Subscriptions') && (
           <NavLink href="/subscriptions">
             {t('navigation_subscriptions')}
           </NavLink>
@@ -55,47 +57,55 @@ const GuestMenu = () => {
 
         {APP_NAME && APP_NAME.toLowerCase() === 'earthbound' && (
           <>
-            <NavLink href="/pages/invest">{t('header_nav_invest')}</NavLink>
-            <NavLink href="/stay">{t('header_nav_stay')}</NavLink>
-            <NavLink href="/members">{t('header_nav_community')}</NavLink>
+            {hasAccess('Invest') && (
+              <NavLink href="/pages/invest">{t('header_nav_invest')}</NavLink>
+            )}
+            {hasAccess('Stay') && (
+              <NavLink href="/stay">{t('header_nav_stay')}</NavLink>
+            )}
+            {hasAccess('Community') && (
+              <NavLink href="/members">{t('header_nav_community')}</NavLink>
+            )}
           </>
         )}
 
-        {APP_NAME.toLowerCase() !== 'lios' && (
+        {APP_NAME.toLowerCase() !== 'lios' && hasAccess('Events') && (
           <NavLink href="/events">{t('navigation_events')}</NavLink>
         )}
 
-        {isBookingEnabled && (
+        {isBookingEnabled && hasAccess('Stay') && (
           <NavLink href="/stay">{t('navigation_stay')}</NavLink>
         )}
 
         {isVolunteeringEnabled && (
           <div className="flex flex-col gap-3">
-            <NavLink href="/volunteer">{t('navigation_volunteer')}</NavLink>
-            {APP_NAME.toLowerCase() === 'tdf' && (
+            {hasAccess('Volunteer') && (
+              <NavLink href="/volunteer">{t('navigation_volunteer')}</NavLink>
+            )}
+            {APP_NAME.toLowerCase() === 'tdf' && hasAccess('Residence') && (
               <NavLink href="/projects">{t('navigation_residence')}</NavLink>
             )}
           </div>
         )}
 
-        {APP_NAME !== 'foz' && APP_NAME.toLowerCase() !== 'lios' && APP_NAME.toLowerCase() !== 'earthbound' && (
+        {APP_NAME !== 'foz' && APP_NAME.toLowerCase() !== 'lios' && APP_NAME.toLowerCase() !== 'earthbound' && hasAccess('Resources') && (
           <NavLink href="/resources">{t('navigation_resources')}</NavLink>
         )}
 
-        {process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true' && (
+        {process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true' && hasAccess('SupportUs') && (
           <NavLink href="/support-us">{t('support_us_navigation')}</NavLink>
         )}
-        {process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true' && (
+        {process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true' && hasAccess('LearnSettings') && (
           <NavLink href="/learn/category/all">
             {t('navigation_online_courses')}
           </NavLink>
         )}
 
-        {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && (
+        {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && hasAccess('Token') && (
           <NavLink href="/token">{t('navigation_buy_token')}</NavLink>
         )}
 
-        {process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true' && (
+        {process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true' && hasAccess('Blog') && (
           <NavLink href="/blog">{t('navigation_blog')}</NavLink>
         )}
 

@@ -43,6 +43,7 @@ export * from './contexts/wallet/';
 // Hooks
 export * from './hooks/useConfig';
 export * from './hooks/useHasMounted';
+export * from './hooks/useRBAC';
 export { default as Page401 } from './pages/401';
 export {
   default as Page404,
@@ -79,6 +80,7 @@ export { default as EditChannelPage } from './pages/edit-channel/[slug]';
 export { default as ConfigPage } from './pages/admin/config';
 export { default as LearnDashboardPage } from './pages/admin/learn';
 export { default as ManageUsersPage } from './pages/admin/manage-users';
+export { default as RBACPage } from './pages/admin/rbac';
 export { default as AffiliateLandingPage } from './pages/affiliate/index';
 export { default as UnlockStaysPage } from './pages/bookings/unlock-stays';
 export { default as CreditCheckoutPage } from './pages/credits/checkout';

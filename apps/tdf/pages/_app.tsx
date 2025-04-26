@@ -30,6 +30,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import appConfig from '../config';
+import rbacDefaultConfig from '../../../admin/config/rbac';
 import '../styles/index.css';
 
 interface AppOwnProps extends AppProps {
@@ -62,6 +63,9 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
   const [config, setConfig] = useState<any>(
     prepareGeneralConfig(defaultGeneralConfig),
   );
+  const [rbacConfig, setRBACConfig] = useState<any>(
+    rbacDefaultConfig,
+  );
   const [isLocalhost, setIsLocalhost] = useState(true); // Default to true to prevent initial flash
   const [isEnvironmentChecked, setIsEnvironmentChecked] = useState(false);
 
@@ -88,10 +92,12 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
 
     (async () => {
       try {
-        const generalConfigRes = await api.get('config/general').catch(() => {
-          return;
-        });
+        const [generalConfigRes, rbacConfigRes] = await Promise.all([
+          api.get('config/general'),
+          api.get('config/rbac')
+        ]).catch(() => []);
         setConfig(prepareGeneralConfig(generalConfigRes?.data.results.value));
+        setRBACConfig(rbacConfigRes?.data.results.value);
       } catch (err) {
         console.error(err);
         return;
@@ -149,6 +155,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
           ...config,
           ...blockchainConfig,
           ...appConfig,
+          rbacConfig
         }}
       >
         <ErrorBoundary>

@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-// import { useTranslations } from 'next-intl';
 import { useAuth } from '../contexts/auth';
 import { useConfig } from '../hooks/useConfig';
+import useRBAC from '../hooks/useRBAC';
 import { NavigationLink } from '../types/nav';
 import api from '../utils/api';
 import Profile from './Profile';
@@ -13,37 +13,49 @@ import Wallet from './Wallet';
 import NavLink from './ui/NavLink';
 import Switcher from './ui/Switcher';
 
-const filterLinks = (links: any[], option: string, roles: string[]) => {
+const filterLinks = (links: any[], option: string, roles: string[], hasAccess: (page: string) => boolean) => {
   switch (option) {
     case 'Guest':
     case 'member':
       return links.filter((link: NavigationLink) => {
+        // Check if the link is enabled and the user has RBAC access to the page
+        if (!link.enabled || (link.rbacPage && !hasAccess(link.rbacPage))) {
+          return false;
+        }
+
         const hasRole =
-          link.enabled &&
           link.roles &&
           !['admin', 'member', 'steward', 'event-creator', 'space-host'].some(
             (role) => link?.roles?.includes(role),
           );
 
-        return hasRole || (!link.roles && link.enabled);
+        return hasRole || !link.roles;
       });
 
     case 'Admin':
       return links.filter((link: NavigationLink) => {
+        // Check if the link is enabled and the user has RBAC access to the page
+        if (!link.enabled || (link.rbacPage && !hasAccess(link.rbacPage))) {
+          return false;
+        }
+
         if (link.roles) {
           return (
             roles.includes(link.roles[0]) &&
-            link.roles[0] !== 'member' &&
-            link.enabled
+            link.roles[0] !== 'member'
           );
         }
+        return false;
       });
+    default:
+      return [];
   }
 };
 
 const MemberMenu = () => {
   const t = useTranslations();
   const { APP_NAME } = useConfig();
+  const { hasAccess } = useRBAC();
 
   const { user, logout } = useAuth();
   const [navOptions, setNavOptions] = useState(['guest']);
@@ -56,102 +68,118 @@ const MemberMenu = () => {
     areSubscriptionsEnabled: boolean,
     isVolunteeringEnabled: boolean,
   ) => {
-
-
     const links = [
     ...(APP_NAME && APP_NAME.toLowerCase() === 'earthbound' ? [
       {
         label: t('header_nav_invest'),
         url: '/pages/invest',
         enabled: true,
+        rbacPage: 'Invest',
       },
       {
         label: t('header_nav_community'),
         url: '/members',
         enabled: true,
+        rbacPage: 'Community',
       },
     ] : []),
       {
         label: t('navigation_subscriptions'),
         url: '/subscriptions',
         enabled: areSubscriptionsEnabled,
+        rbacPage: 'Subscriptions',
       },
       {
         label: t('navigation_events'),
         url: '/events',
         enabled: APP_NAME.toLowerCase() !== 'lios',
+        rbacPage: 'Events',
       },
       {
         label: t('navigation_volunteer'),
         url: '/volunteer',
         enabled: isVolunteeringEnabled,
+        rbacPage: 'Volunteer',
       },
       {
         label: t('navigation_residence'),
         url: '/projects',
         enabled: isVolunteeringEnabled && APP_NAME.toLowerCase() === 'tdf',
+        rbacPage: 'Residence',
       },
       {
         label: t('navigation_dashboard'),
         url: '/dashboard',
         enabled: true,
         roles: ['admin'],
+        rbacPage: 'Dashboard',
+      },
+      {
+        label: t('navigation_performance'),
+        url: '/dashboard/performance',
+        enabled: true,
+        roles: ['admin'],
+        rbacPage: 'Performance',
       },
       {
         label: t('navigation_booking_requests'),
         url: '/bookings/requests',
         enabled: isBookingEnabled,
         roles: ['space-host'],
+        rbacPage: 'Bookings',
       },
       {
         label: t('navigation_current_bookings'),
         url: '/bookings/current',
         enabled: isBookingEnabled,
         roles: ['space-host'],
+        rbacPage: 'Bookings',
       },
       {
         label: t('navigation_all_bookings'),
         url: '/bookings/all',
         enabled: isBookingEnabled,
         roles: ['space-host'],
+        rbacPage: 'Bookings',
       },
       {
         label: t('navigation_booking_calendar'),
         url: '/bookings/calendar',
         enabled: isBookingEnabled,
         roles: ['space-host'],
+        rbacPage: 'Bookings',
       },
       {
         label: t('navigation_edit_listings'),
         url: '/listings',
         enabled: isBookingEnabled,
         roles: ['space-host'],
+        rbacPage: 'Listings',
       },
       {
         label: 'Edit food',
         url: '/food',
         enabled: isBookingEnabled,
         roles: ['space-host'],
+        rbacPage: 'Food',
       },
       {
         label: t('navigation_stay'),
         url: '/stay',
         enabled: isBookingEnabled,
+        rbacPage: 'Stay',
       },
-      // {
-      //   label: t('navigation_invest'),
-      //   url: '/token',
-      //   enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
-      // },
       {
         label: t('navigation_my_bookings'),
         url: '/bookings',
         enabled: isBookingEnabled,
+        rbacPage: 'MyBookings',
       },
       {
         label: t('navigation_refer_a_friend'),
         url: '/settings/referrals',
         enabled: process.env.NEXT_PUBLIC_FEATURE_REFERRAL === 'true',
+        rbacPage: 'Referrals',
       },
       ...((process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true' && user?.affiliate) 
         ? [
@@ -159,6 +187,7 @@ const MemberMenu = () => {
               label: t('navigation_affiliate_dashboard'),
               url: '/settings/affiliate',
               enabled: true,
+              rbacPage: 'AffiliateSettings',
             },
           ]
         : []),
@@ -168,24 +197,28 @@ const MemberMenu = () => {
         target: '_blank',
         enabled: true,
         roles: ['member'],
+        rbacPage: 'Governance',
       },
       {
         label: t('navigation_user_list'),
         url: '/admin/manage-users',
         enabled: true,
         roles: ['admin'],
+        rbacPage: 'UserManagement',
       },
       {
         label: t('navigation_new_event'),
         url: '/events/create',
         enabled: true,
         roles: ['event-creator'],
+        rbacPage: 'EventCreation',
       },
       {
         label: t('navigation_new_volunteer'),
         url: '/volunteer/create',
         enabled: true,
         roles: ['steward'],
+        rbacPage: 'VolunteerCreation',
       },
       ...(APP_NAME !== 'foz'
         ? [
@@ -193,6 +226,7 @@ const MemberMenu = () => {
               label: t('navigation_resources'),
               url: '/resources',
               enabled: APP_NAME.toLowerCase() !== 'lios',
+              rbacPage: 'Resources',
             },
           ]
         : []),
@@ -200,27 +234,39 @@ const MemberMenu = () => {
         label: t('navigation_support_us'),
         url: '/support-us',
         enabled: process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true',
+        rbacPage: 'SupportUs',
       },
       {
         label: t('navigation_learning_hub'),
         url: '/learn/category/all',
         enabled: process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true',
+        rbacPage: 'LearnSettings',
       },
       {
         label: t('navigation_buy_token'),
         url: '/token',
         enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
+        rbacPage: 'Token',
       },
       {
         label: t('navigation_blog'),
         url: '/blog',
         enabled: process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true',
+        rbacPage: 'Blog',
       },
       {
         label: t('navigation_platform_settings'),
         url: '/admin/config',
         enabled: true,
         roles: ['admin'],
+        rbacPage: 'PlatformSettings',
+      },
+      {
+        label: t('navigation_rbac'),
+        url: '/admin/rbac',
+        enabled: true,
+        roles: ['admin'],
+        rbacPage: 'RBAC',
       },
     ];
     return links;
@@ -265,7 +311,7 @@ const MemberMenu = () => {
 
         setLinks(updatedLinks);
         setFilteredLinks(
-          filterLinks(updatedLinks, selectedSwitcherOption, user?.roles || []),
+          filterLinks(updatedLinks, selectedSwitcherOption, user?.roles || [], hasAccess),
         );
       } catch (err) {
         console.log('error');
@@ -297,9 +343,9 @@ const MemberMenu = () => {
 
   useEffect(() => {
     setFilteredLinks(
-      filterLinks(links, selectedSwitcherOption, user?.roles || []),
+      filterLinks(links, selectedSwitcherOption, user?.roles || [], hasAccess),
     );
-  }, [selectedSwitcherOption]);
+  }, [selectedSwitcherOption, links]);
 
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';

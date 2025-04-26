@@ -1,19 +1,13 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-
 import { useEffect, useState } from 'react';
-
-import AdminLayout from '../../components/Dashboard/AdminLayout';
-import DashboardBookings from '../../components/Dashboard/DashboardBookings';
-import DashboardMetrics from '../../components/Dashboard/DashboardMetrics';
-import DashboardRevenue from '../../components/Dashboard/DashboardRevenue';
-import DashboardSubscriptions from '../../components/Dashboard/DashboardSubscriptions';
-import TimeFrameSelector from '../../components/Dashboard/TimeFrameSelector';
-import { Heading } from '../../components/ui';
-
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import process from 'process';
+
+import AdminLayout from '../../components/Dashboard/AdminLayout';
+import TimeFrameSelector from '../../components/Dashboard/TimeFrameSelector';
+import { Heading, Card } from '../../components/ui';
 
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
@@ -30,7 +24,7 @@ interface Props {
   error?: string;
 }
 
-const DashboardPage = ({ generalConfig, bookingConfig }: Props) => {
+const PerformancePage = ({ generalConfig, bookingConfig }: Props) => {
   const t = useTranslations();
   const defaultConfig = useConfig();
   const { user } = useAuth();
@@ -53,7 +47,7 @@ const DashboardPage = ({ generalConfig, bookingConfig }: Props) => {
   useEffect(() => {
     if (isBookingEnabled) {
       router.push({
-        pathname: '/dashboard',
+        pathname: '/dashboard/performance',
         query: { time_frame: timeFrame },
       });
     }
@@ -73,23 +67,23 @@ const DashboardPage = ({ generalConfig, bookingConfig }: Props) => {
   }, [bookingConfig, isBookingEnabled, hasRedirected]);
 
   const { hasAccess } = useRBAC();
-  const hasAccessToDashboard = hasAccess('Dashboard');
+  const hasAccessToPerformance = hasAccess('Performance');
 
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
-  if (!user || !hasAccessToDashboard) {
+  if (!user || !hasAccessToPerformance) {
     return <PageNotFound error="User may not access" />;
   }
 
   return (
     <>
       <Head>
-        <title>{`${t('dashboard_title')} - ${PLATFORM_NAME}`}</title>
+        <title>{`${t('performance_title')} - ${PLATFORM_NAME}`}</title>
       </Head>
       <AdminLayout isBookingEnabled={isBookingEnabled}>
         <div className="flex justify-between flex-col md:flex-row gap-4">
-          <Heading level={2}>{t('dashboard_title')}</Heading>
+          <Heading level={2}>{t('performance_title') || 'Performance'}</Heading>
           <TimeFrameSelector
             timeFrame={timeFrame}
             setTimeFrame={setTimeFrame}
@@ -100,35 +94,16 @@ const DashboardPage = ({ generalConfig, bookingConfig }: Props) => {
           />
         </div>
 
-        <DashboardBookings
-          timeFrame={timeFrame}
-          fromDate={fromDate}
-          toDate={toDate}
-        />
-        <DashboardRevenue
-          timeFrame={timeFrame}
-          fromDate={fromDate}
-          toDate={toDate}
-        />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <DashboardMetrics
-            timeFrame={timeFrame}
-            fromDate={fromDate}
-            toDate={toDate}
-          />
-
-          <DashboardSubscriptions
-            timeFrame={timeFrame}
-            fromDate={fromDate}
-            toDate={toDate}
-          />
-        </div>
+        <Card className="p-6">
+          <Heading level={3}>Performance Metrics</Heading>
+          <p className="mt-4">Performance metrics will be displayed here.</p>
+        </Card>
       </AdminLayout>
     </>
   );
 };
 
-DashboardPage.getInitialProps = async (context: NextPageContext) => {
+PerformancePage.getInitialProps = async (context: NextPageContext) => {
   try {
     const [generalRes, bookingRes, messages] = await Promise.all([
       api.get('/config/general').catch(() => {
@@ -157,4 +132,4 @@ DashboardPage.getInitialProps = async (context: NextPageContext) => {
   }
 };
 
-export default DashboardPage;
+export default PerformancePage;
