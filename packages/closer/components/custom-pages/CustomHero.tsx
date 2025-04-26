@@ -22,7 +22,7 @@ const CustomHero: React.FC<{
   const getTextStyle = () => {
     switch (settings.alignText) {
       case 'top-left':
-        return 'pt-[calc(5vh)] md:pt-[calc(20vh)]';
+        return 'pt-[calc(5vh)] md:pt-[calc(8vh)]';
       case 'bottom-left':
         return 'absolute bottom-[calc(5vh)] md:bottom-[calc(20vh)] w-full sm:w-[300px]';
       default:
