@@ -12,7 +12,6 @@ import Profile from './Profile';
 import ReportABug from './ReportABug';
 import Wallet from './Wallet';
 import Button from './ui/Button';
-import NavLink from './ui/NavLink';
 
 interface MenuSection {
   label: string;
@@ -392,7 +391,7 @@ const MemberMenu = () => {
       {isTokenSaleEnabled && (
         <Button
           variant="primary"
-          onClick={() => window.location.href = "/token"}
+          onClick={() => window.location.href = '/token'}
         >
           {t('navigation_buy_token')}
         </Button>
