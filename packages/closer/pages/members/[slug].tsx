@@ -237,7 +237,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                         onSave={() => {
                           router.push(router.asPath);
                         }}
-                        label={member.photo ? 'Change photo' : 'Add photo'}
+                        label={member.photo ? t('members_slug_change_photo') : t('members_slug_add_photo')}
                       />
                     ) : member?.photo ? (
                       <img
@@ -324,7 +324,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                 {/* Connected Wallet Section */}
                 {isAuthenticated && member?._id === currentUser?._id && (
                   <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h4 className="font-medium text-xl mb-4">Wallet</h4>
+                    <h4 className="font-medium text-xl mb-4">{t('members_slug_wallet')}</h4>
                     <ConnectedWallet />
                   </div>
                 )}
@@ -408,7 +408,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                         );
                       })
                     ) : (
-                      <li className="text-gray-500 italic">No social links yet</li>
+                      <li className="text-gray-500 italic">{t('members_slug_no_social_links')}</li>
                     )}
                   </ul>
                 </div>
@@ -419,7 +419,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                 {/* Vouching Section */}
                 {(isMember || isAdmin || isSpaceHost) && !isOwnProfile && (
                   <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h4 className="font-medium text-xl mb-4">Vouching</h4>
+                    <h4 className="font-medium text-xl mb-4">{t('members_slug_vouching')}</h4>
                     <Vouching
                       vouchData={member?.vouched || []}
                       myId={currentUser?._id}
@@ -434,7 +434,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                 {/* Space Host View - User Data */}
                 {currentUser && currentUser.roles.includes('space-host') && (
                   <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h4 className="font-medium text-xl mb-4">User Information</h4>
+                    <h4 className="font-medium text-xl mb-4">{t('members_slug_user_information')}</h4>
                     <Card className="bg-accent-light">
                       {member?.email && (
                         <p className="mb-2">
@@ -517,7 +517,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                     currentUser?.roles?.includes('admin') ||
                     currentUser?.roles?.includes('community-curator')) && (
                   <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h4 className="font-medium text-xl mb-4">Citizenship</h4>
+                    <h4 className="font-medium text-xl mb-4">{t('members_slug_citizenship')}</h4>
                     <CitizenSubscriptionProgress member={member} />
                   </div>
                 )}
@@ -527,7 +527,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                   currentUser &&
                   currentUser.roles.includes('space-host') && (
                   <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h4 className="font-medium text-xl mb-4">Bookings</h4>
+                    <h4 className="font-medium text-xl mb-4">{t('members_slug_bookings')}</h4>
                     <UserBookings user={member} isSpaceHostView={true} />
                   </div>
                 )}
@@ -672,7 +672,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                         <span className="mr-2 text-lg w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full">
                           𝕏
                         </span>
-                        <span className="font-medium">Twitter/X</span>
+                        <span className="font-medium">{t('members_slug_twitter')}</span>
                       </div>
                       <div className="flex items-center">
                         <span className="text-sm text-gray-500 mr-1">twitter.com/</span>
@@ -691,7 +691,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                         <span className="mr-2 text-lg w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full">
                           📸
                         </span>
-                        <span className="font-medium">Instagram</span>
+                        <span className="font-medium">{t('members_slug_instagram')}</span>
                       </div>
                       <div className="flex items-center">
                         <span className="text-sm text-gray-500 mr-1">instagram.com/</span>
@@ -710,7 +710,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                         <span className="mr-2 text-lg w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full">
                           in
                         </span>
-                        <span className="font-medium">LinkedIn</span>
+                        <span className="font-medium">{t('members_slug_linkedin')}</span>
                       </div>
                       <div className="flex items-center">
                         <span className="text-sm text-gray-500 mr-1">linkedin.com/in/</span>
@@ -729,7 +729,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                         <span className="mr-2 text-lg w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full">
                           ƒ
                         </span>
-                        <span className="font-medium">Facebook</span>
+                        <span className="font-medium">{t('members_slug_facebook')}</span>
                       </div>
                       <div className="flex items-center">
                         <span className="text-sm text-gray-500 mr-1">facebook.com/</span>
@@ -748,7 +748,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                         <span className="mr-2 text-lg w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full">
                           🐙
                         </span>
-                        <span className="font-medium">GitHub</span>
+                        <span className="font-medium">{t('members_slug_github')}</span>
                       </div>
                       <div className="flex items-center">
                         <span className="text-sm text-gray-500 mr-1">github.com/</span>
@@ -767,7 +767,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                         <span className="mr-2 text-lg w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full">
                           ▶️
                         </span>
-                        <span className="font-medium">YouTube</span>
+                        <span className="font-medium">{t('members_slug_youtube')}</span>
                       </div>
                       <div className="flex items-center">
                         <span className="text-sm text-gray-500 mr-1">youtube.com/c/</span>
@@ -787,7 +787,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                       <span className="mr-2 text-lg w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full">
                         🌐
                       </span>
-                      <span className="font-medium">Website</span>
+                      <span className="font-medium">{t('members_slug_website')}</span>
                     </div>
                     <div className="flex items-center">
                       <input 
@@ -804,7 +804,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                       type="submit"
                       className="btn-primary px-6 py-2 mr-6"
                     >
-                      Save
+                      {t('members_slug_save')}
                     </button>
                     <button
                       type="button"
@@ -814,7 +814,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                         toggleShowForm(false);
                       }}
                     >
-                      Cancel
+                      {t('members_slug_cancel')}
                     </button>
                   </div>
                 </form>
