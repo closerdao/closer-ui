@@ -11,6 +11,7 @@ import api from '../utils/api';
 import Profile from './Profile';
 import ReportABug from './ReportABug';
 import Wallet from './Wallet';
+import Button from './ui/Button';
 import NavLink from './ui/NavLink';
 
 interface MenuSection {
@@ -389,12 +390,12 @@ const MemberMenu = () => {
       <Profile isMenu={true} isDemo={false} />
       {isWalletEnabled && <Wallet />}
       {isTokenSaleEnabled && (
-        <Link
-          href="/token"
-          className="block py-2 px-3 rounded text-white bg-accent hover:bg-accent-dark text-center font-medium"
+        <Button
+          variant="primary"
+          onClick={() => window.location.href = "/token"}
         >
           {t('navigation_buy_token')}
-        </Link>
+        </Button>
       )}
       
       {/* Render menu items */}
