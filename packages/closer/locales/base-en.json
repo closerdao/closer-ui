@@ -40,7 +40,7 @@
   "bookings_payment_utility": "Payment Food Cost",
   "booking_cancelation_policy_member": "Members can cancel their bookings at no cost, up to 7 days before check in. If you cancel within less than 7 days, you'll receive a 50% refund.",
   "booking_volunteering_details": "You will be supporting the efforts of the stewards on the ground by providing 3-4h of work each day.",
-  "booking_cancelation_policy": "In case the booking is declined for any reason you will receive a full refund. If you decide to cancel, you will receive a {lastmonth} refund up to 30 days prior and {lastweek} refund up to 7 days before the booking.",
+  "booking_cancelation_policy": "In case the booking is declined for any reason you will receive a full refund. If you decide to cancel, you will receive a {lastmonth} refund up to 30 days prior, {lastweek} refund up to 7 days before the booking, and {lastday} refund up until the last day.",
   "booking_cancel_button": "Cancel booking",
   "booking_confirm_button": "Approve",
   "booking_reject_button": "Reject",

@@ -105,6 +105,7 @@ const Conditions = ({
               {t('booking_cancelation_policy', {
                 lastweek: `${(cancellationPolicy?.lastweek || 1) * 100}%`,
                 lastmonth: `${(cancellationPolicy?.lastmonth || 1) * 100}%`,
+                lastday: `${(cancellationPolicy?.lastday || 1) * 100}%`,
               })}
             </p>
           </div>
