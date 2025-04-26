@@ -498,7 +498,7 @@ export const PlatformProvider = ({ children }) => {
         const filterKey = filterToKey(params);
         dispatch({ type: constants.GET_AGGREGATE_INIT, model, filterKey });
         if (
-          state.getIn([model, 'graph', filterKey, 'receivedAt']) >
+          state.getIn([model, 'aggregate', filterKey, 'receivedAt']) >
           Date.now() - config.CACHE_DURATION
         ) {
           return new Promise((resolve) =>
