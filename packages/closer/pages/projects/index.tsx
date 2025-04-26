@@ -180,9 +180,7 @@ const ProjectsPage = ({
                       Starting {volunteerConfig?.residenceTimeFrame} 🗓.
                     </p>
                     <p>
-                      We are ideally looking for people to join us from October
-                      and stay with the team over winter, but the build will
-                      continue to the end of next year.
+                      Please try to book your stay starting from the 1st or the 15th of each month so you arrive with other people and support our onboarding process.
                     </p>
                   </div>
                 </div>

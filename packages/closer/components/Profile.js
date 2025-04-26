@@ -11,7 +11,7 @@ import { cdn } from '../utils/api';
 import CreditsBalance from './CreditsBalance';
 import { Button, Heading } from './ui';
 
-const Profile = ({ isDemo }) => {
+const Profile = ({ isMenu = false, isDemo }) => {
   const t = useTranslations();
 
   const { user, isAuthenticated } = useAuth();
@@ -29,13 +29,15 @@ const Profile = ({ isDemo }) => {
     <div className="w-full ">
       <div className="py-2  relative rounded-lg w-full ">
         <div className="flex items-center">
-          <div className='flex gap-2 items-center'>
+          <div className="flex gap-2 items-center">
             <div className="flex items-center md:w-10 md:h-10 mx-auto ">
               <Link
                 href={`/members/${user?.slug}`}
                 passHref
                 title="View profile"
-                className="md:flex md:flex-row items-center cursor-pointer"
+                className={`${
+                  isMenu ? 'w-10 h-10 ' : ''
+                } md:flex md:flex-row items-center cursor-pointer`}
               >
                 {user?.photo ? (
                   <img
@@ -45,17 +47,19 @@ const Profile = ({ isDemo }) => {
                     className="rounded-full "
                   />
                 ) : (
-                  <FaUser className="text-gray-200 text-6xl" />
+                  <div className="flex items-center justify-center bg-gray-50 rounded-full overflow-hidden pt-1 h-10 w-10">
+                    <FaUser className=" text-gray-200  w-10 h-10" />
+                  </div>
                 )}
               </Link>
             </div>
-            <div>
-              <Heading level={2} className="text-sm">
+            <div className="flex flex-col ">
+              <Heading level={2} className="text-md ">
                 {user?.screenname}
               </Heading>
               {isCreditsEnabled && (
-              <CreditsBalance className="text-sm" isDemo={isDemo} />
-                        )}
+                <CreditsBalance className="text-md" isDemo={isDemo} />
+              )}
             </div>
           </div>
 
@@ -74,12 +78,11 @@ const Profile = ({ isDemo }) => {
         </div>
 
         <div className="text-center">
-          
-          <p>
+          {/* <p>
             {user?.preferences?.superpower
               ? user?.preferences?.superpower
               : ''}
-          </p>
+          </p> */}
           {/* <div className="mt-1 w-full">
             {user.roles && (
               <div className="text-sm mt-1 tags">
@@ -96,7 +99,6 @@ const Profile = ({ isDemo }) => {
             )}
           </div> */}
         </div>
-     
       </div>
     </div>
   );

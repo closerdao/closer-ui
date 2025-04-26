@@ -29,8 +29,8 @@ const AffiliatePage = ({
   affiliateConfig: AffiliateConfig;
 }) => {
   const t = useTranslations();
-  const { platform }: any = usePlatform();
-  const { user } = useAuth();
+  const { platform }: any = usePlatform() || {};
+  const { user } = useAuth() || {};
   const config = useConfig();
   const { SEMANTIC_URL } = config || {};
 
@@ -43,6 +43,8 @@ const AffiliatePage = ({
   );
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [dataLoaded, setDataLoaded] = useState<boolean>(false);
 
   // Handle timeframe changes
   const handleTimeFrameChange = (
@@ -103,16 +105,30 @@ const AffiliatePage = ({
     [user?._id, timeFrame, startDate, endDate],
   );
 
+  // Initial data loading
   useEffect(() => {
     if (user && platform) {
       loadData();
     }
-  }, [filters, user, platform]);
+  }, [user, platform]);
 
-  const referralLink = `${SEMANTIC_URL}?referral=${user?._id}`;
-  const tokenFlowLink = `${SEMANTIC_URL}/token?referral=${user?._id}`;
-  const subscriptionsFlowLink = `${SEMANTIC_URL}/subscriptions?referral=${user?._id}`;
-  const staysFlowLink = `${SEMANTIC_URL}/stay?referral=${user?._id}`;
+  // Handle timeframe changes
+  useEffect(() => {
+    if (dataLoaded && user && platform) {
+      loadData();
+    }
+  }, [filters, dataLoaded]);
+
+  const referralLink = `${SEMANTIC_URL || ''}?referral=${user?._id || ''}`;
+  const tokenFlowLink = `${SEMANTIC_URL || ''}/token?referral=${
+    user?._id || ''
+  }`;
+  const subscriptionsFlowLink = `${SEMANTIC_URL || ''}/subscriptions?referral=${
+    user?._id || ''
+  }`;
+  const staysFlowLink = `${SEMANTIC_URL || ''}/stay?referral=${
+    user?._id || ''
+  }`;
 
   const referralsCount =
     platform?.user?.findCount?.(filters.referralsFilter) || 0;
@@ -123,30 +139,38 @@ const AffiliatePage = ({
 
   const payoutCharges =
     platform?.charge?.find?.(filters.payoutsFilter)?.toJS?.() || [];
-  const userPayoutCharges = payoutCharges?.filter(
-    (charge: any) => charge.meta.affiliateId === user?._id,
-  );
+  const userPayoutCharges =
+    payoutCharges?.filter(
+      (charge: any) => charge?.meta?.affiliateId === user?._id,
+    ) || [];
 
-  const totalPayoutCharges = userPayoutCharges?.reduce(
-    (acc: number, charge: any) => acc + charge.amount.total.val,
-    0,
-  );
+  const totalPayoutCharges =
+    userPayoutCharges?.reduce(
+      (acc: number, charge: any) => acc + (charge?.amount?.total?.val || 0),
+      0,
+    ) || 0;
+
   const activeSubscriptionsCount =
     referrals?.filter(
       (user: User) =>
-        user.subscription && JSON.stringify(user.subscription) !== '{}',
+        user?.subscription && JSON.stringify(user?.subscription) !== '{}',
     )?.length || 0;
 
   const {
-    totalRevenue,
-    subscriptionsRevenue,
-    staysRevenue,
-    eventsRevenue,
-    tokenSaleRevenue,
-    financedTokenRevenue,
-  } = calculateAffiliateRevenue(referralCharges);
+    totalRevenue = 0,
+    subscriptionsRevenue = 0,
+    staysRevenue = 0,
+    eventsRevenue = 0,
+    tokenSaleRevenue = 0,
+    financedTokenRevenue = 0,
+  } = calculateAffiliateRevenue(referralCharges) || {};
 
-  const copyToClipboard = (link: string, index:number) => {
+  const copyToClipboard = (link: string, index: number) => {
+    if (!navigator?.clipboard) {
+      console.error('Clipboard API not available');
+      return;
+    }
+
     navigator.clipboard.writeText(link).then(
       () => {
         setCopied(index);
@@ -155,7 +179,7 @@ const AffiliatePage = ({
         }, 2000);
       },
       (err) => {
-        console.log('failed to copy', err.mesage);
+        console.error('Failed to copy', err?.message || 'Unknown error');
       },
     );
   };
@@ -163,12 +187,20 @@ const AffiliatePage = ({
   const loadData = async () => {
     if (!platform) return;
 
-    await Promise.all([
-      platform.user.getCount(filters.referralsFilter),
-      platform.user.get(filters.referralsFilter),
-      platform.charge.get(filters.referralChargesFilter),
-      platform.charge.get(filters.payoutsFilter),
-    ]);
+    setIsLoading(true);
+    try {
+      await Promise.all([
+        platform.user?.getCount?.(filters.referralsFilter),
+        platform.user?.get?.(filters.referralsFilter),
+        platform.charge?.get?.(filters.referralChargesFilter),
+        platform.charge?.get?.(filters.payoutsFilter),
+      ]);
+      setDataLoaded(true);
+    } catch (error) {
+      console.error('Error loading affiliate data:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (process.env.NEXT_PUBLIC_FEATURE_AFFILIATE !== 'true') {
@@ -179,8 +211,8 @@ const AffiliatePage = ({
     return <PageNotAllowed />;
   }
 
-  // Add loading state check
-  if (!platform) {
+  // Only show loading on initial render, not during data refreshes
+  if (!platform || (!dataLoaded && isLoading)) {
     return <div>Loading...</div>;
   }
 
@@ -271,7 +303,9 @@ const AffiliatePage = ({
                 <div className="w-1/5 text-sm ">
                   {copied === 2 ? t('referrals_link_copied') : ''}
                 </div>
-                  <button onClick={() => copyToClipboard(subscriptionsFlowLink, 2)}>
+                <button
+                  onClick={() => copyToClipboard(subscriptionsFlowLink, 2)}
+                >
                   <Image
                     src="/images/icon-copy.svg"
                     alt="Copy"
@@ -326,13 +360,13 @@ const AffiliatePage = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <StatsCard
               title={t('stats_total_earnings')}
-              value={`€${totalRevenue}`}
+              value={`€${totalRevenue.toFixed(2)}`}
               isAccent={true}
               subtext={t('stats_earnings_subtext')}
             />
             <StatsCard
               title={t('stats_unpaid_earnings')}
-              value={`€${totalRevenue - totalPayoutCharges}`}
+              value={`€${(totalRevenue - totalPayoutCharges).toFixed(2)}`}
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -348,7 +382,7 @@ const AffiliatePage = ({
             />
             <StatsCard
               title={t('stats_token_sales')}
-              value={`€${tokenSaleRevenue + financedTokenRevenue}`}
+              value={`€${(tokenSaleRevenue + financedTokenRevenue).toFixed(2)}`}
               subtext={t('stats_tokens_subtext')}
             />
           </div>
@@ -361,7 +395,7 @@ const AffiliatePage = ({
           <div className="space-y-1">
             <p>
               {t('earnings_breakdown_stays')} (
-              {affiliateConfig?.staysCommissionPercent}%{' '}
+              {affiliateConfig?.staysCommissionPercent || 0}%{' '}
               {t('affiliate_commission')})
             </p>
             <p className="font-bold">€{staysRevenue.toFixed(2)}</p>
@@ -374,7 +408,7 @@ const AffiliatePage = ({
           <div className="space-y-1">
             <p>
               {t('earnings_breakdown_events')} (
-              {affiliateConfig?.eventsCommissionPercent}%{' '}
+              {affiliateConfig?.eventsCommissionPercent || 0}%{' '}
               {t('affiliate_commission')})
             </p>
             <p className="font-bold">€{eventsRevenue.toFixed(2)}</p>
@@ -387,7 +421,7 @@ const AffiliatePage = ({
           <div className="space-y-1">
             <p>
               {t('earnings_breakdown_subscriptions')} (
-              {affiliateConfig?.subscriptionCommissionPercent}%{' '}
+              {affiliateConfig?.subscriptionCommissionPercent || 0}%{' '}
               {t('affiliate_commission')})
             </p>
             <p className="font-bold">€{subscriptionsRevenue.toFixed(2)}</p>
@@ -400,7 +434,7 @@ const AffiliatePage = ({
           <div className="space-y-1">
             <p>
               {t('earnings_breakdown_token_sales')} (
-              {affiliateConfig?.tokenSaleCommissionPercent}%{' '}
+              {affiliateConfig?.tokenSaleCommissionPercent || 0}%{' '}
               {t('affiliate_commission')})
             </p>
             <p className="font-bold">€{tokenSaleRevenue.toFixed(2)}</p>
@@ -413,7 +447,7 @@ const AffiliatePage = ({
           <div className="space-y-1">
             <p>
               {t('earnings_breakdown_financed_token_sales')} (
-              {affiliateConfig?.financedTokenSaleCommissionPercent}%{' '}
+              {affiliateConfig?.financedTokenSaleCommissionPercent || 0}%{' '}
               {t('affiliate_commission')})
             </p>
             <p className="font-bold">€{financedTokenRevenue.toFixed(2)}</p>
@@ -439,9 +473,9 @@ const AffiliatePage = ({
                 </div>
                 {userPayoutCharges.reverse().map((payout: any) => (
                   <div key={payout._id} className="grid grid-cols-2 gap-2 pt-1">
-                    <p>{payout.created.slice(0, 10)}</p>
+                    <p>{payout.created?.slice(0, 10) || ''}</p>
                     <p className="text-right">
-                      €{payout.amount.total.val.toLocaleString()}
+                      €{payout.amount?.total?.val?.toLocaleString() || '0'}
                     </p>
                   </div>
                 ))}
@@ -470,6 +504,7 @@ AffiliatePage.getInitialProps = async (context: NextPageContext) => {
       messages,
     };
   } catch (err: unknown) {
+    console.error('Error in getInitialProps:', err);
     return {
       affiliateConfig: null,
       messages: null,

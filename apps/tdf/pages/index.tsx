@@ -37,7 +37,6 @@ const HomePage = () => {
     url: string;
   } | null>(null);
 
-
   useEffect(() => {
     if (isWalletReady) {
       (async () => {

@@ -132,11 +132,11 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
                 setTokensToSpend={setTokensToSpend}
               />
             </fieldset>
-            <div className="flex flex-col gap-4">
+            {/* <div className="flex flex-col gap-4">
               <p>{t('token_sale_before_you_begin_text_1')}</p>
               <p>{t('token_sale_before_you_begin_text_2')}</p>
               <p>{t('token_sale_before_you_begin_text_3')}</p>
-            </div>
+            </div> */}
           </div>
 
           {isFinanceTokenEnabled && (

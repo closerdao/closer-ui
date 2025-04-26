@@ -1,0 +1,63 @@
+{
+  "events_upcoming_heading": "Próximos eventos",
+  "events_upcoming_intro": "A TDF reúne pensadores, artistas, agricultores, desenvolvedores, empreendedores, curadores, investidores. Venha para um evento onde poderá conhecer todas estas pessoas.",
+  "signup_title": "Registe-se e participe na construção da nossa aldeia",
+  "resources_heading": "Engenhoso por natureza",
+  "resources_subheading": "Bem-vindo ao nosso galpão de ferramentas TDF em constante evolução, atualizações da construção da aldeia, pacotes de subscrição, notícias sobre futuras reuniões mágicas, o funcionamento interno do nosso projeto e as letras pequenas, mas tão importantes, legais. Volte aqui regularmente para nos ver crescer!",
+  "volunteers_page_intro_text": "Experimente a vida em comunidade pondo as mãos na massa! Seja uma parte ativa da comunidade durante a sua estadia na TDF e ajude a manter o espaço, contribua com as suas habilidades ou traga algo completamente novo e fresco. Escolha uma opção abaixo que ressoe consigo.",
+  "volunteers_page_terms_1": "Tenha os seus custos de alojamento cobertos",
+  "volunteers_page_terms_2": "Pague apenas pela comida e utilidades",
+  "volunteers_page_terms_3": "~ 4 Horas de trabalho por dia",
+  "volunteers_page_terms_4": "Desbloqueie a possibilidade de se tornar membro após 14 dias",
+  "volunteers_page_terms_5": "",
+  "volunteers_page_terms_6": "",
+  "volunteers_page_more_info": "Para mais informações, consulte o nosso <a class='text-accent underline' href='https://docs.google.com/document/d/177JkHCy0AhplsaEEYpFHBsiI6d4uLk0TgURSKfBIewE/edit'>Pink Paper</a>, <a class='text-accent underline' href='https://docs.google.com/document/d/198vWYEQCC1lELQa8f76Jcw3l3UDiPcBKt04PGFKnUvg/edit'>Guia do Visitante</a>. Estamos ansiosos por recebê-lo em breve!",
+  "resources_resources_heading": "Ponha a chaleira ao lume e conheça-nos um pouco melhor",
+  "resources_resources_subheading": "Leia tudo sobre o nosso sonho: a missão, a visão e como chegámos até aqui, com os nossos documentos digitais",
+  "resources_faq_heading": "Perguntas frequentes",
+  "resources_faq_subheading": "Tem uma pergunta? Somos open source.",
+  "stay_title": "Experimente a vida regenerativa em ",
+  "stay_description": "Venha ficar na nossa aldeia regenerativa em desenvolvimento. Tenha a oportunidade de aprender sobre permacultura, bioconstrução, web3 - ou simplesmente venha relaxar rodeado pela bela natureza. Ainda não temos instalações de 5 estrelas, mas poderá experienciar a magia deste lugar durante os seus primeiros anos, e garantimos que conhecerá humanos inspiradores com os quais se tornará amigo.",
+  "stay_meet_your_hosts": "Conheça os seus anfitriões",
+  "stay_meet_your_hosts_description": "Venha ficar na nossa aldeia regenerativa em desenvolvimento. Tenha a oportunidade de aprender sobre permacultura, bioconstrução, web3 - ou simplesmente venha relaxar rodeado pela bela natureza. Ainda não temos instalações de 5 estrelas, mas poderá experienciar a magia deste lugar durante os seus primeiros anos, e garantimos que conhecerá humanos inspiradores com os quais se tornará amigo.",
+  "stay_chose_accommodation": "Escolha o seu alojamento",
+  "stay_chose_accommodation_description": "Desde trazer a sua própria van até ficar num dormitório partilhado, temos uma variedade de opções para atender às suas necessidades. Recomendamos ficar por 1 mês para obter a experiência completa da nossa comunidade, mas também pode vir apenas para um evento.",
+  "booking_rules_heading": "Regras do jogo",
+
+  "navigation_stay": "Reservar uma estadia",
+  "navigation_member_login": "Login de membro",
+
+  "signup_form_get_credits": "Receba 🥕 2 cenouras por se registar. ",
+
+  "carrots_heading": "Cenouras",
+  "carrots_balance": "🥕",
+  "carrots_subheading_what": "O que fazem as Cenouras?",
+  "carrots_what_1": "Gaste cenouras para obter um custo de alojamento com desconto.",
+  "carrots_what_2": "🥕 1 = 1 noite de desconto na taxa de alojamento para eventos ou estadias.",
+  "carrots_what_2_5": "",
+  "carrots_what_3": "Como voluntário, a sua taxa de alojamento já está coberta.",
+  "carrots_what_4": "Mas atenção... as cenouras só se mantêm frescas por um tempo limitado, expiram após 1 ano! Portanto, certifique-se de as usar!",
+  "carrots_heading_redeem": "Resgate as suas Cenouras",
+  "carrots_carrots_to_redeem": "Cenouras para resgatar",
+  "carrots_carrots_to_redeem_singular": "Cenoura para resgatar",
+  "carrots_how_to_use_1": "Sempre que reservar um evento ou estadia e tiver cenouras suficientes para cobrir o preço total do alojamento, encontrará este widget na página de checkout. Basta aplicar o desconto e pronto!",
+  "carrots_how_to_use_2": "10 cenouras - 10 noites - 100% de desconto",
+  "carrots_how_to_use_3": "10 cenouras - 5 noites - 100% de desconto",
+  "carrots_how_to_use_4": "10 cenouras - 14 noites - não podem ser usadas",
+  "carrots_success_message": "cenouras serão resgatadas! Custo do alojamento atualizado.",
+  "carrots_success_message_singular": "cenoura será resgatada! Custo do alojamento atualizado.",
+  "carrots_error_message": "Pagamento com cenouras falhou, por favor, tente novamente.",
+
+  "referrals_subheading": "Convide os seus amigos e ganhe 🥕 cenouras",
+  "referrals_description_text_1": "Convide os seus amigos para se juntarem à TDF usando o seu link de referência exclusivo abaixo e ambos serão recompensados!",
+  "referrals_description_text_2": "Você receberá 🥕 1 por amigo e eles receberão 🥕 2.",
+  "referrals_description_text_3": "Está restrito a um máximo de 🥕 6 por mês - que será renovado no dia 1 de cada mês.",
+  "referrals_credits_link": "Saiba mais sobre as 🥕 cenouras.",
+
+  "buttons_apply_to_stay": "Candidatar-se para ficar",
+
+  "bookings_checkout_step_visitors_guide": "Guia do Visitante",
+
+  "referrals": "Referências"
+
+}

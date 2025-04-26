@@ -112,8 +112,9 @@ const TokenBuyWidget: FC<Props> = ({
       // const price = res?.data?.results[0].tokenPrice.val || 1;
       const price = await getTotalCostWithoutWallet('1');
 
-      setNightsPerYear(tokensToBuy / price);
-      setNightsPerYear(tokensToBuy / price);
+      const nightlyPrice = res?.data?.results[0].tokenPrice.val;
+
+      setNightsPerYear(tokensToBuy / nightlyPrice);
       setAccommodationOptions({ labels, prices });
       setSelectedAccommodation({
         name: res?.data?.results[0].name,
