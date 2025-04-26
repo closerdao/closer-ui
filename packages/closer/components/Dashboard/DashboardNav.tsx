@@ -108,7 +108,7 @@ const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
     {
       label: t('navigation_learn_settings'),
       url: '/admin/learn',
-      rbacPage: 'LearnSettings',
+      rbacPage: 'LearningHubAdmin',
     },
     {
       label: t('navigation_affiliate_settings'),
@@ -119,9 +119,6 @@ const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
 
   // Filter links based on RBAC permissions
   const DASHBOARD_LINKS = allLinks.filter(link => {
-    // Admin always has access to everything
-    if (hasAccess('admin')) return true;
-    
     // Check if the user has access to this page
     return hasAccess(link.rbacPage);
   });
@@ -130,9 +127,6 @@ const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
   DASHBOARD_LINKS.forEach(link => {
     if (link.subsections) {
       link.subsections = link.subsections.filter(sublink => {
-        // Admin always has access to everything
-        if (hasAccess('admin')) return true;
-        
         // Check if the user has access to this page
         return hasAccess(sublink.rbacPage);
       });
