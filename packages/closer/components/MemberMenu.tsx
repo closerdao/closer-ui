@@ -413,7 +413,7 @@ const MemberMenu = () => {
             <>
               {/* Section header (clickable to toggle) */}
               <div 
-                className="flex items-center justify-between py-1 px-1 cursor-pointer font-medium"
+                className="flex items-center justify-between py-1 px-2 cursor-pointer font-medium"
                 onClick={() => toggleSection(index)}
               >
                 <span>{section.label}</span>

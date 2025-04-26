@@ -71,6 +71,20 @@ const GuestMenu = () => {
         ],
       },
       
+      // Subscriptions section (standalone)
+      {
+        label: t('navigation_subscriptions'),
+        isOpen: false,
+        items: [
+          {
+            label: t('navigation_subscriptions'),
+            url: '/subscriptions',
+            enabled: process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true',
+            rbacPage: 'Subscriptions',
+          },
+        ],
+      },
+      
       // Events section
       {
         label: t('menu_section_events'),
@@ -113,9 +127,9 @@ const GuestMenu = () => {
         ],
       },
       
-      // Other sections
+      // Learn more section
       {
-        label: t('menu_section_other'),
+        label: 'Learn more',
         isOpen: false,
         items: [
           ...(APP_NAME && APP_NAME.toLowerCase() === 'earthbound' ? [
@@ -133,26 +147,30 @@ const GuestMenu = () => {
             },
           ] : []),
           {
-            label: t('navigation_subscriptions'),
-            url: '/subscriptions',
-            enabled: process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true',
-            rbacPage: 'Subscriptions',
+            label: 'Invest',
+            url: '/dataroom',
+            enabled: true,
+            rbacPage: 'Dataroom',
           },
-          ...(APP_NAME !== 'foz'
-            ? [
-                {
-                  label: t('navigation_faq'),
-                  url: '/resources',
-                  enabled: APP_NAME.toLowerCase() !== 'lios',
-                  rbacPage: 'Resources',
-                },
-              ]
-            : []),
           {
-            label: t('navigation_buy_token'),
+            label: 'Learn about the $TDF token',
             url: '/token',
             enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
             rbacPage: 'Token',
+          },
+        ],
+      },
+      
+      // FAQ section (lowest item)
+      {
+        label: t('navigation_faq'),
+        isOpen: false,
+        items: [
+          {
+            label: t('navigation_faq'),
+            url: '/resources',
+            enabled: APP_NAME.toLowerCase() !== 'lios' && APP_NAME !== 'foz',
+            rbacPage: 'Resources',
           },
         ],
       },
@@ -225,8 +243,10 @@ const GuestMenu = () => {
       <div className="pt-4 pb-6 relative rounded-lg border-3 flex flex-col gap-3">
         <p className="mb-4 text-center">{t('navigation_sign_in_cta')}</p>
 
-        <NavLink href="/login">{t('navigation_sign_in')}</NavLink>
         <NavLink href="/signup">{t('navigation_signup')}</NavLink>
+        <Link href="/login" className="block py-1 hover:bg-accent-light px-2 rounded text-black text-center">
+          {t('navigation_sign_in')}
+        </Link>
       </div>
       
       {/* Render menu items with the same styling as MemberMenu */}
@@ -246,7 +266,7 @@ const GuestMenu = () => {
               <>
                 {/* Section header (clickable to toggle) */}
                 <div 
-                  className="flex items-center justify-between py-1 px-1 cursor-pointer font-medium"
+                  className="flex items-center justify-between py-1 px-2 cursor-pointer font-medium"
                   onClick={() => toggleSection(index)}
                 >
                   <span>{section.label}</span>
