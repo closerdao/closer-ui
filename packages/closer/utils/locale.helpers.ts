@@ -28,6 +28,15 @@ export async function loadLocaleData(
       case 'tdf':
         switch (locale) {
           case 'en':
+            return Promise.all([
+              import('../locales/tdf/en.json'),
+              import('../locales/base-en.json'),
+            ]);
+            case 'pt':
+              return Promise.all([
+                import('../locales/tdf/pt.json'),
+                import('../locales/base-pt.json'),
+              ]);
           default:
             return Promise.all([
               import('../locales/tdf/en.json'),

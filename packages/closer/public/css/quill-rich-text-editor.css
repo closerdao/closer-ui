@@ -4,47 +4,72 @@
   height: 337px;
 }
 
-.rich-text ul, .ql-editor ul {
+.rich-text ul,
+.ql-editor ul {
   list-style-type: disc;
   padding-left: 16px;
-  margin-bottom: 24px
+  margin-bottom: 24px;
 }
 
-.rich-text ol, .ql-editor ol {
+.rich-text ol,
+.ql-editor ol {
   list-style-type: decimal;
   padding-left: 16px;
-  margin-bottom: 24px
+  margin-bottom: 24px;
 }
 
-.rich-text a, .ql-editor a {
+.rich-text a,
+.ql-editor a {
   text-decoration: underline;
 }
 
-.rich-text h2, .ql-editor h2 {
+.rich-text h2,
+.ql-editor h2 {
   font-size: 1.4rem;
-  font-weight: medium;
+  font-weight: bold;
   margin-bottom: 24px;
   margin-top: 12px;
 }
 
-.rich-text p, .ql-editor p {
-  margin-bottom: 24px
+.rich-text p,
+.ql-editor p {
+  margin-bottom: 24px;
 }
 
 .rich-text p:empty {
   display: none;
 }
 
-.rich-text blockquote, .ql-editor blockquote {
+.rich-text blockquote,
+.ql-editor blockquote {
   text-align: center;
   font-size: 1.4rem;
   margin: 48px 0;
   padding: 0 16px;
 }
 
-/* TODO: take them colors to variables */
-.heading-alt-color h2 {
-  color: #205C66; 
+/* Text alignment classes */
+.rich-text .ql-align-center,
+.ql-editor .ql-align-center {
+  text-align: center;
 }
 
+.rich-text .ql-align-right,
+.ql-editor .ql-align-right {
+  text-align: right;
+}
 
+.rich-text .ql-align-justify,
+.ql-editor .ql-align-justify {
+  text-align: justify;
+}
+
+.rich-text .ql-align-left,
+.ql-editor .ql-align-left {
+  text-align: left;
+}
+
+/* TODO: take them colors to variables */
+.heading-alt-color h2 {
+  color: #205c66;
+}

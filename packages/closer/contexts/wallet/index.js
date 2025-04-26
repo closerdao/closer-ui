@@ -32,6 +32,7 @@ const {
   BLOCKCHAIN_NETWORK_ID,
   BLOCKCHAIN_RPC_URL,
   BLOCKCHAIN_CEUR_TOKEN,
+  BLOCKCHAIN_CELO_TOKEN,
 } = blockchainConfig;
 
 const injected = new InjectedConnector({
@@ -103,6 +104,14 @@ export const WalletProvider = ({ children }) => {
     },
   );
 
+  const { data: balanceCeloToken, mutate: updateCeloBalance } = useSWR(
+    [BLOCKCHAIN_CELO_TOKEN.address, 'balanceOf', account],
+    {
+      fetcher: fetcher(library, BLOCKCHAIN_DAO_TOKEN_ABI),
+      fallbackData: BigNumber.from(0),
+    },
+  );
+
   const { data: lockedStake } = useSWR(
     [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'lockedStake', account],
     {
@@ -121,11 +130,11 @@ export const WalletProvider = ({ children }) => {
     [
       activatedBookingYears
         ? activatedBookingYears.map(([year]) => [
-          BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
-          'getAccommodationBookings',
-          account,
-          year,
-        ])
+            BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
+            'getAccommodationBookings',
+            account,
+            year,
+          ])
         : null,
     ],
     {
@@ -148,6 +157,10 @@ export const WalletProvider = ({ children }) => {
   const balanceCeurAvailable = formatBigNumberForDisplay(
     balanceCeurToken,
     BLOCKCHAIN_CEUR_TOKEN.decimals,
+  );
+  const balanceCeloAvailable = formatBigNumberForDisplay(
+    balanceCeloToken,
+    BLOCKCHAIN_CELO_TOKEN.decimals,
   );
 
   const connectWallet = async () => {
@@ -250,28 +263,29 @@ export const WalletProvider = ({ children }) => {
   return (
     <WalletState.Provider
       value={{
-        account,
-        library,
-        injected,
+        isWalletConnected,
         isWalletReady,
+        isCorrectNetwork,
+        hasSameConnectedAccount,
+        account,
         balanceTotal,
         balanceAvailable,
-        proofOfPresence,
-        isCorrectNetwork,
-        isWalletConnected,
-        bookedDates: bookedDates?.flat(),
-        hasSameConnectedAccount,
         balanceCeurAvailable,
+        balanceCeloAvailable,
+        proofOfPresence,
+        error,
+        library,
+        chainId,
       }}
     >
       <WalletDispatch.Provider
         value={{
-          signMessage,
-          switchNetwork,
           connectWallet,
+          switchNetwork,
           updateWalletBalance,
-          refetchBookingDates,
           updateCeurBalance,
+          updateCeloBalance,
+          refetchBookingDates,
         }}
       >
         {children}

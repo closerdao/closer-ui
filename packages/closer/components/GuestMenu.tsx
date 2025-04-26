@@ -78,7 +78,7 @@ const GuestMenu = () => {
           </div>
         )}
 
-        {APP_NAME !== 'foz' && APP_NAME.toLowerCase() !== 'lios' && (
+        {APP_NAME !== 'foz' && APP_NAME.toLowerCase() !== 'lios' && APP_NAME.toLowerCase() !== 'earthbound' && (
           <NavLink href="/resources">{t('navigation_resources')}</NavLink>
         )}
 

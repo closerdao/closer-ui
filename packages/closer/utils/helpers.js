@@ -191,6 +191,8 @@ export const getSample = (field) => {
       ];
     case 'select':
       return field.options && field.options[0] && field.options[0].value;
+    case 'multi-select':
+      return [];
     case 'autocomplete':
     case 'currencies':
       return [

@@ -22,7 +22,7 @@ export const Footer: FC = () => {
 
         <div className="social mt-4 flex flex-row justify-center">
           <a
-            href="https://t.me/+zQ5J9ud7qZo5Njdk"
+            href="https://t.me/earthboundecovillage"
             target="_blank"
             className="mr-2 p-2 transition ease-linear duration-1200 hover:scale-125"
             rel="noreferrer"
@@ -87,7 +87,7 @@ export const Footer: FC = () => {
             Platform developed by <a href="https://closer.earth">Closer</a>.
           </p>
           <p>
-            <Link href="https://drive.google.com/file/d/16vgG93MNQDcicHCHA7x0vWi9yo1up51j/view">
+            <Link href="https://docs.google.com/document/d/1EL1fPVq0octTpe6mOZVREbX3CYtacILh88OQmTpjGDU/edit?tab=t.0#heading=h.51685m1645be">
               Privacy policy
             </Link>
           </p>
