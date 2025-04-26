@@ -1636,6 +1636,16 @@
   "affiliate_dashboard_affiliate_revenue": "Affiliate revenue",
 
   "generic_and": "and",
+  
+  "report_user_button": "Report",
+  "report_user_title": "Report User",
+  "report_user_question": "Do you think {name} is not inline with our Community Values? Please explain which values and why.",
+  "report_user_unsafe": "Are you feeling unsafe due to this person currently?",
+  "report_user_submit": "Submit report",
+  "report_user_pink_paper": "Please refer to our Pink Paper for more information on our community values.",
+  "report_user_success": "Report submitted successfully",
+  "report_user_delete": "Delete report",
+  "report_user_delete_success": "Report deleted successfully",
 
   "": ""
 }

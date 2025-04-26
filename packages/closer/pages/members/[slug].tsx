@@ -7,10 +7,12 @@ import { FormEvent, useEffect, useState } from 'react';
 import CitizenSubscriptionProgress from '../../components/CitizenSubscriptionProgress';
 import ConnectedWallet from '../../components/ConnectedWallet';
 import EventsList from '../../components/EventsList';
+import Modal from '../../components/Modal';
 import UploadPhoto from '../../components/UploadPhoto';
 import UserBookings from '../../components/UserBookings';
 import Vouching from '../../components/Vouching';
 import { Card } from '../../components/ui';
+import Button from '../../components/ui/Button';
 import Heading from '../../components/ui/Heading';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
@@ -53,6 +55,12 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
   const [links, setLinks] = useState<UserLink[]>(member?.links || []);
   const [showForm, toggleShowForm] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
+  const [openReportForm, setOpenReportForm] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [isUnsafe, setIsUnsafe] = useState(false);
+  const [reportSuccess, setReportSuccess] = useState(false);
+  const [hasReported, setHasReported] = useState(false);
+  const [deleteReportSuccess, setDeleteReportSuccess] = useState(false);
 
   useEffect(() => {
     if (hasSaved) {
@@ -105,6 +113,53 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
       setSendErrors(error);
     }
   };
+
+  const checkIfReported = async () => {
+    try {
+      const { data } = await api.get(`/report/user/${member._id}`);
+      setHasReported(!!data.results);
+    } catch (err) {
+      console.error('Error checking if user is reported:', err);
+    }
+  };
+
+  const reportUser = async () => {
+    try {
+      setReportSuccess(false);
+      setErrors(null);
+      await api.post(`/report/user/${member._id}`, {
+        reason: reportReason,
+        unsafe: isUnsafe
+      });
+      setReportSuccess(true);
+      setHasReported(true);
+      setTimeout(() => {
+        setOpenReportForm(false);
+      }, 2000);
+    } catch (err: unknown) {
+      const error = parseMessageFromError(err);
+      setErrors(error);
+    }
+  };
+
+  const deleteReport = async () => {
+    try {
+      setDeleteReportSuccess(false);
+      setErrors(null);
+      await api.delete(`/report/user/${member._id}`);
+      setDeleteReportSuccess(true);
+      setHasReported(false);
+    } catch (err: unknown) {
+      const error = parseMessageFromError(err);
+      setErrors(error);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated && member?._id !== currentUser?._id) {
+      checkIfReported();
+    }
+  }, [member?._id, currentUser?._id, isAuthenticated]);
 
   if (loadError) {
     return <PageNotFound error={loadError} />;
@@ -200,7 +255,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                     {member.screenname}
                   </h3>
                   {isAuthenticated && member?._id !== currentUser?._id && (
-                    <div className="my-3 space-y-2">
+                    <div className="my-3 flex flex-wrap gap-2">
                       <a
                         href="#"
                         onClick={(e) => {
@@ -211,6 +266,26 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                       >
                         {t('members_slug_get_introduced')}
                       </a>
+                      {hasReported ? (
+                        <button
+                          onClick={deleteReport}
+                          className="btn"
+                        >
+                          {t('report_user_delete')}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setOpenReportForm(true)}
+                          className="btn"
+                        >
+                          {t('report_user_button')}
+                        </button>
+                      )}
+                      {deleteReportSuccess && (
+                        <span className="ml-2">
+                          {t('report_user_delete_success')}
+                        </span>
+                      )}
                     </div>
                   )}
                   <div>
@@ -496,6 +571,49 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
           {error && <p className="validation-error">Error: {error}</p>}
         </div>
       </div>
+
+      {openReportForm && (
+        <Modal closeModal={() => setOpenReportForm(false)}>
+          <div className="flex flex-col gap-5 min-w-[160px] h-full justify-center">
+            <Heading level={2} className="text-lg">
+              {t('report_user_title')}
+            </Heading>
+            {reportSuccess ? (
+              <p className="text-green-500">{t('report_user_success')}</p>
+            ) : (
+              <>
+                <div>
+                  <label className="block mb-2">
+                    {t('report_user_question', { name: member.screenname })}
+                  </label>
+                  <textarea
+                    value={reportReason}
+                    onChange={(e) => setReportReason(e.target.value)}
+                    className="w-full h-22 p-2"
+                    required
+                  />
+                  </div>
+                  <div className="flex flex-row items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="unsafe"
+                      checked={isUnsafe}
+                      onChange={(e) => setIsUnsafe(e.target.checked)}
+                    />
+                    <label htmlFor="unsafe">{t('report_user_unsafe')}</label>
+                  </div>
+                <Button
+                  variant="primary"
+                  isEnabled={reportReason.length > 0}
+                  onClick={reportUser}
+                >
+                  {t('report_user_submit')}
+                </Button>
+              </>
+            )}
+          </div>
+        </Modal>
+      )}
     </>
   );
 };
