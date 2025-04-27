@@ -1,7 +1,6 @@
 import Head from 'next/head';
-import { useRouter } from 'next/router';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 
 import UploadPhoto from '../../components/UploadPhoto';
 import { Button } from '../../components/ui';
@@ -27,8 +26,7 @@ import PageNotFound from '../not-found';
 type UpdateUserFunction = (value: string | string[]) => Promise<void>;
 
 // Delete Account Section Component
-const DeleteAccountSection = ({ userId }: { userId: string }) => {
-  const router = useRouter();
+const DeleteAccountSection = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -64,7 +62,7 @@ const DeleteAccountSection = ({ userId }: { userId: string }) => {
   };
   
   return (
-    <div className="mt-4">
+    <div>
       {!showConfirmation ? (
         <Button 
           onClick={() => setShowConfirmation(true)}
@@ -87,7 +85,7 @@ const DeleteAccountSection = ({ userId }: { userId: string }) => {
           
           <div className="mb-4">
             <label className="block mb-2 text-sm font-medium text-red-700">
-              Type "delete" to confirm
+              Type &quot;delete&quot; to confirm
             </label>
             <input
               type="text"
@@ -499,8 +497,8 @@ const SettingsPage = ({
           ⚠️ Danger Zone
         </Heading>
         
-        <div className="mt-6">
-          <DeleteAccountSection userId={user._id} />
+        <div>
+          <DeleteAccountSection />
         </div>
       </div>
     </>
