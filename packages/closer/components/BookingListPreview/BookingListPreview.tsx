@@ -334,7 +334,7 @@ const BookingListPreview = ({
         </LinkButton>
       )}
       
-      {isOwnBooking && isNotPaidOrCheckedInOrCheckedOut && (
+      {isOwnBooking && status === 'confirmed' && (
         <Link href={`/bookings/${_id}/checkout`} passHref>
           <Button className="mt-6" variant="primary">
             {t('checkout_complete_payment')}
