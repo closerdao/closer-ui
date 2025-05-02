@@ -44,7 +44,7 @@ const config = {
     },
     {
       screenname: 'Charlotte',
-      copy: 'One of my favorite eco-village projects out there!',
+      copy: 'One of my favorite ecovillage projects out there!',
       photo: '/images/reviews/charlotte.png',
     },
     {

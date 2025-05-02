@@ -56,7 +56,7 @@ const CustomListing: React.FC<{
   return (
     <div>
       {settings?.id && <div className="h-[80px]" id={settings?.id}></div>}
-      <section className="max-w-4xl mx-auto flex flex-col gap-[60px] ">
+      <section className="max-w-4xl mx-auto flex flex-col gap-[60px]">
         <div className="flex flex-col gap-4 text-center">
           <Heading
             level={2}
@@ -66,7 +66,7 @@ const CustomListing: React.FC<{
           </Heading>
           <p className="text-foreground text-md">{content?.description}</p>
         </div>
-        <div className="flex flex-wrap justify-center gap-6">
+        <div className="flex flex-wrap justify-center gap-6  gap-y-[50px]">
           {content?.items?.map((item) => (
             <div
               key={item.title}

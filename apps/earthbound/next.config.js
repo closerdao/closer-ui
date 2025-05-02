@@ -39,6 +39,25 @@ const nextConfig = {
     };
     return config;
   },
+  async redirects() {
+    return [
+      {
+        source: '/invest',
+        destination: '/pages/invest',
+        permanent: true,
+      },
+      {
+        source: '/community',
+        destination: '/pages/community',
+        permanent: true,
+      },
+      {
+        source: '/visit',
+        destination: '/stay',
+        permanent: true,
+      },
+    ]
+  },
 };
 
 // Merge MDX config with Next.js config
