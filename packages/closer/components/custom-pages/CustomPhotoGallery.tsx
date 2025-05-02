@@ -1,3 +1,4 @@
+import { X } from 'lucide-react';
 import Image from 'next/image';
 
 import React, { useEffect, useState } from 'react';
@@ -46,7 +47,7 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (selectedIndex === null) return;
+      if (selectedIndex === null) return;  
 
       if (e.key === 'ArrowRight') {
         navigateToImage('next');
@@ -177,7 +178,7 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
                     alt={image.alt || 'Gallery Image'}
                     fill
                     style={{ objectFit: 'cover' }}
-                    sizes="(max-width: 768px) 100vw, (max-width: 1152px) 50vw, 33vw"
+                    sizes={`${thumbWidth}px`}
                   />
                 </div>
               );
@@ -300,7 +301,7 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
                 closeModal();
               }}
             >
-              ×
+              <X />
             </button>
 
             {/* Image counter */}

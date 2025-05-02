@@ -105,22 +105,47 @@ const getPage = ({
             title: 'VOICES OF OTHER IMPACT INVESTORS',
             items: [
               {
-                title: 'CAMILLA ENGLYST (Denmark)',
-                text: '\“I am proud to be part of the backing team for Earthbound because they are doing something right. The model has the potential to spread and create real impact. I believe in this project, its vision, and its approach to building a better future. I trust in the Earthbound initiators and their vision, just as I know others will trust in me when it\'s my turn to develop a similar project.Until then, I am proud to be part of this backing team and to witness Earthbound blossom.\”',
+                title: 'CAMILLA ENGLYST, Denmark',
+                text: '\“I am proud to be part of the backing team for Earthbound because they are doing something right. The model has the potential to spread and create real impact. I believe in this project, its vision, and its approach to building a better future. I trust in the Earthbound initiators and their vision, just as I know others will trust in me when it\'s my turn to develop a similar project. Until then, I am proud to be part of this backing team and to witness Earthbound blossom.\”',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/camilla.png',
               },
               {
-                title: 'PETER KÄMMERLING (Germany)',
+                title: 'PETER KÄMMERLING, Germany',
                 text: '“Being a small part of a wonderful new community-led sustainable housing project with wonderful people in a great place makes me dream of a bright, peaceful, engaged, shared future for (wo-)mankind and earth.”',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/peter.png',
               },
               {
-                title: 'LEANN ERIKSSON (Sweden/USA)',
+                title: 'LEANN ERIKSSON, Sweden/USA',
                 text: '\“I\'m an impact investor at Earthbound because it is aligned with what humans need the most now: conscious, heart-centered connection with each other and the rest of the natural world. The founders have meticulously put together the best model I’ve ever seen for a successful new community, where a new fusion of ancient and modern ways of humans being on Earth is midwifed in the next decade.\“',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/leann.png',
+              },
+              {
+                title: 'Stefan Taylor, UK',
+                text: '\“I\'m an impact investor at Earthbound because it is aligned with what humans need the most now: conscious, heart-centered connection with each other and the rest of the natural world. The founders have meticulously put together the best model I’ve ever seen for a successful new community, where a new fusion of ancient and modern ways of humans being on Earth is midwifed in the next decade.\“',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/Stefan%20Taylor.jpeg',
+              },
+              {
+                title: 'Hanna Morjan, Findhorn Ecovillage, Scotland',
+                text: '\“I\'m an impact investor at Earthbound because it is aligned with what humans need the most now: conscious, heart-centered connection with each other and the rest of the natural world. The founders have meticulously put together the best model I’ve ever seen for a successful new community, where a new fusion of ancient and modern ways of humans being on Earth is midwifed in the next decade.\“',
+                imageUrl:
+                'https://cdn.oasa.co/custom-pages/earthbound/Hanna%20Morjan.jpg',
+              },
+              {
+                title: 'Tasos Zembylas, Austria',
+                text: '\“I have invested in Earthbound to participate in a well-designed social experiment run by a number of creative people. I refer to motives that cannot be fully expressed by words. When I first heard about this project bright colours, warm sounds and pleasurable images emerged in my mind. Or to put it differently: Imagine a living world without some promising social experiments.\“',
+                
+                imageUrl:
+                'https://cdn.oasa.co/custom-pages/earthbound/Tasos%20Zembylas.jpg',
+              },
+              {
+                title: 'Enrico Ghidoni, Italy',
+                text: '\“I am happy to be one of the investors of Earthbound, as it feels like a beautiful community with the potential to bring regeneration and sustainable growth to our society. Knowing personally some of the founders gave me a good sense of trust in the development of the vision and that my investment will support a beautiful and solid project. I am excited to visit Earthbound soon, witness how this magic seed will germinate and contribute in the way I can to support it in flourishing 🌸.\“',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/Enrico%20Ghidoni.jpg',
               },
             ],
           },
