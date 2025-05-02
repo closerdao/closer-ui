@@ -38,7 +38,7 @@ const getPage = ({
             isInverted: true,
           },
           content: {
-            title: 'EARTHBOUND ECOVILLAGE',
+            title: 'EARTHBOUND ECO-VILLAGE',
             body: 'A pilot project for regenerative & community living in Sweden',
             imageUrl:
               'https://cdn.oasa.co/custom-pages/earthbound/earthbound-hero.png',
@@ -111,7 +111,7 @@ const getPage = ({
           },
           content: {
             title: 'THE PLACE',
-            body: `<ul><li>The historical 300-year old estate of ‘Grimsnäs Herrgard’ is the home of Earthbound Ecovillage. It is located in the creative rural area of ‘Glasriket’ in Southern Småland.</li>
+            body: `<ul><li>The historical 300-year old estate of ‘Grimsnäs Herrgard’ is the home of Earthbound eco-village. It is located in the creative rural area of ‘Glasriket’ in Southern Småland.</li>
             <li>We are both continuing the heritage of Grimsnäs and giving it new life and purpose.</li>
             </ul>`,
 
@@ -243,7 +243,7 @@ const getPage = ({
           content: {
             title: 'THE PEOPLE',
             description:
-              'In due time, Earthbound Ecovillage will be the home of 30 adults. We are currently 6 founders - all deeply inspired by communities and regenerative initiatives around the world. Meet the founding group here.',
+              'In due time, Earthbound eco-village will be the home of 30 adults. We are currently 6 founders - all deeply inspired by communities and regenerative initiatives around the world. Meet the founding group here.',
             items: hosts?.map((host) => ({
               title: host.screenname,
               text: host?.about || '',
@@ -266,7 +266,7 @@ const getPage = ({
           content: {
             title: 'OUR MODEL ',
             description:
-              'We\'re introducing a new model for communities in Scandinavia to own and govern together. Our format shapes a strong, ethical financial and legal structure based on “community logic”. Designed to be easy to replicate, it paves the way for future community-led initiatives. You can read about the key aspects of our model below.',
+              'We\'e introducing a new model for communities in Scandinavia to own and govern together. Our format shapes a strong, ethical financial and legal structure based on “community logic”. Designed to be easy to replicate, it paves the way for future community-led initiatives. You can read about the key aspects of our model below.',
             items: [
               {
                 title: 'NON PROFIT, NON SPECULATIVE',
@@ -354,63 +354,63 @@ const getPage = ({
               {
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/gallery/0.png',
-                alt: 'EARTHBOUND ECOVILLAGE - A pilot project for regenerative & community living in Sweden',
+                alt: 'EARTHBOUND eco-village - A pilot project for regenerative & community living in Sweden',
                 width: 1573,
                 height: 1178,
               },
               {
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/gallery/1.png',
-                alt: 'EARTHBOUND ECOVILLAGE - A pilot project for regenerative & community living in Sweden',
+                alt: 'EARTHBOUND eco-village - A pilot project for regenerative & community living in Sweden',
                 width: 885,
                 height: 1180,
               },
               {
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/gallery/2.png',
-                alt: 'EARTHBOUND ECOVILLAGE - A pilot project for regenerative & community living in Sweden',
+                alt: 'EARTHBOUND eco-village - A pilot project for regenerative & community living in Sweden',
                 width: 885,
                 height: 1178,
               },
               {
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/gallery/3.png',
-                alt: 'EARTHBOUND ECOVILLAGE - A pilot project for regenerative & community living in Sweden',
+                alt: 'EARTHBOUND eco-village - A pilot project for regenerative & community living in Sweden',
                 width: 2038,
                 height: 1360,
               },
               {
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/gallery/4.png',
-                alt: 'EARTHBOUND ECOVILLAGE - A pilot project for regenerative & community living in Sweden',
+                alt: 'EARTHBOUND eco-village - A pilot project for regenerative & community living in Sweden',
                 width: 1767,
                 height: 1180,
               },
               {
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/gallery/5.png',
-                alt: 'EARTHBOUND ECOVILLAGE - A pilot project for regenerative & community living in Sweden',
+                alt: 'EARTHBOUND eco-village - A pilot project for regenerative & community living in Sweden',
                 width: 787,
                 height: 1180,
               },
               {
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/gallery/6.png',
-                alt: 'EARTHBOUND ECOVILLAGE - A pilot project for regenerative & community living in Sweden',
+                alt: 'EARTHBOUND eco-village - A pilot project for regenerative & community living in Sweden',
                 width: 787,
                 height: 1176,
               },
               {
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/gallery/7.png',
-                alt: 'EARTHBOUND ECOVILLAGE - A pilot project for regenerative & community living in Sweden',
+                alt: 'EARTHBOUND eco-village - A pilot project for regenerative & community living in Sweden',
                 width: 1771,
                 height: 1178,
               },
               {
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/gallery/8.png',
-                alt: 'EARTHBOUND ECOVILLAGE - A pilot project for regenerative & community living in Sweden',
+                alt: 'EARTHBOUND eco-village - A pilot project for regenerative & community living in Sweden',
                 width: 1765,
                 height: 1178,
               },
