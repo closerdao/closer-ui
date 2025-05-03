@@ -79,9 +79,9 @@ const Navigation = () => {
                 <li>
                   <Link href="/pages/community">{t('header_nav_community')}</Link>
                 </li>
-                <li>
+                {/* <li>
                   <Link href="/events">{t('header_nav_events')}</Link>
-                </li>
+                </li> */}
               </ul>
               <Button
                 // onClick={() => router.push('/pages/join')}

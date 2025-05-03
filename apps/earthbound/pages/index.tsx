@@ -39,12 +39,12 @@ const getPage = ({
           },
           content: {
             title: 'EARTHBOUND ECOVILLAGE',
-            body: 'A pilot project for regenerative & community living in Sweden',
+            body: 'A pilot project for regenerative <br/> & community living in Sweden',
             imageUrl:
               'https://cdn.oasa.co/custom-pages/earthbound/earthbound-hero.png',
             cta: {
               text: 'Join us',
-              url: '/',
+              url: '/#how-to-join',
             },
           },
         },
@@ -60,7 +60,7 @@ const getPage = ({
           content: {
             title: 'WHAT IS EARTHBOUND',
             body: `<p>Earthbound is an upcoming ecovillage and think tank for rural community - and regenerative living in Southern Sweden. We are creating a community of 30 people stewarding 73 ha of land with a lake, ancient forest and 9 buildings. 
-            </p><p>We are hosting a Bed & Breakfast and a cultural center for a regenerative transformation. We play a key part in the transition to a future that is sustainable, local and holistic.</p>`,
+            </p><p>We are hosting a Bed & Breakfast and a cultural centre for a regenerative transformation. Our aim is to play a key part in the transition to a future that is sustainable, local and holistic.</p>`,
             imageUrl:
               'https://cdn.oasa.co/custom-pages/earthbound/Mask%20group.png',
           },
@@ -111,9 +111,11 @@ const getPage = ({
           },
           content: {
             title: 'THE PLACE',
-            body: `<ul><li>The historical 300-year old estate of 'Grimsnäs Herrgard' is the home of Earthbound ecovillage. It is located in the creative rural area of 'Glasriket' in Southern Småland.</li>
-            <li>We are both continuing the heritage of Grimsnäs and giving it new life and purpose.</li>
+            body: `<ul><li>Located in the creative rural area of ‘Glasriket’ in Southern Småland, the historical 300-year old estate of ‘Grimsnäs Herrgard’ is the home of Earthbound Ecovillage</li>
+            <li>EarthboundWe is continuing the heritage of Grimsnäs Herrgaard while giving it new life and purpose.</li>
             </ul>`,
+
+            
 
             imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/11.png',
           },
@@ -193,16 +195,42 @@ const getPage = ({
                 title: 'Low-impact, Affordable and Non-speculative Housing',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/_0004_low-impact.png',
+                text: `
+                <ul style="text-align: left;">
+                  <li>Natural and traditional building and restoration</li>
+                  <li>Water catchment and greywater systems</li>
+                  <li>Creating a renewable energy community</li>
+                </ul>
+                `
               },
               {
                 title: 'Local and Bioregional Changemakers',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/_0003_Local-and-Bioregional-Changemakers.png',
+                text: `
+                  
+                Engaging with the local community by addressing regional needs, such as:
+
+                
+                <ul style="text-align: left;">
+                  <li>Starting a local and organic shop with everyday necessities</li>
+                  <li>Establishing creative and “co-sustainability” open workshops (e.g., ceramics studio, tools library, and home-production machinery)</li>
+                  <li>Hosting community events and celebrations</li>
+                  </ul>
+                  `
               },
               {
                 title: 'Community Research',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/_0000_Community-Research.png',
+                text: `
+             
+                  <ul style="text-align: left;">
+                    <li>Integrating peaceful co-existence through community practices</li>
+                    <li>Common decision-making and ownership</li>
+                    <li>Community guidelines including conflict resolution</li>
+                  </ul>
+                  `
               },
 
               {
@@ -210,22 +238,52 @@ const getPage = ({
 
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/_0002_Permaculture-and-Regenerative-Agriculture.png',
+                  text: `
+                  <ul style="text-align: left;">
+                  <li>Serving as a test field for future regenerative farming techniques</li>
+                  <li>Providing food to the local region</li>
+
+                  
+                  </ul>
+                  `
               },
               {
                 title: 'Sustainable Micro-Business Hub',
 
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/sustainable.png',
+                  text: `
+                  <ul style="text-align: left;">
+                  <li>Renovating 600+ sqm of barn spaces to support sustainable micro-businesses</li>
+                  <li>Encouraging community and regional positive change</li>
+
+                   
+                  </ul>
+                  `
               },
               {
                 title: 'Land Stewardship',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/_0001_Land-Stewardship.png',
+                text: `
+                <ul style="text-align: left;">
+                  <li>Stewarding 73 hectares of diverse landscapes, including biodiverse forest, wetlands, lakes, production forests, and fields</li>
+                  <li>Maintaining grazing areas and restoring biodiverse forests</li>
+               
+                  </ul>
+                  `
               },
               {
                 title: 'Think Tank & Pilot Project',
                 imageUrl:
-                  'https://cdn.oasa.co/custom-pages/earthbound/Think%20Thank%20&%20Pilot.png',
+                  'https://cdn.oasa.co/custom-pages/earthbound/Think%20Thank%20&%20Pilot.png',   
+                  text: `
+                  <ul style="text-align: left;">
+                    <li>Tracking and gathering the successes and failures</li>
+                    <li>Communicating our results through publications, events and embodied experiences</li>
+                    <li>Collaborating with other actors in the field</li>
+                  </ul>
+                  `
               },
             ],
           },
@@ -266,24 +324,29 @@ const getPage = ({
           content: {
             title: 'OUR MODEL ',
             description:
-              'We\'e introducing a new model for communities in Scandinavia to own and govern together. Our format shapes a strong, ethical financial and legal structure based on "community logic". Designed to be easy to replicate, it paves the way for future community-led initiatives. You can read about the key aspects of our model below.',
+              'We\'re introducing a new model for communities in Scandinavia to own and govern together. Our format shapes a strong, ethical financial and legal structure based on “community logic”. Designed to be easy to replicate, it paves the way for future community-led initiatives. You can read about the key aspects of our model below.',
             items: [
               {
                 title: 'NON PROFIT, NON SPECULATIVE',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/_0002_non-profit.png',
+                text: 'All income is reinvested in the project, investments have a social and environmental return (rather than financial), and we have taken the real estate out of the speculative housing market.  '
+
               },
+              
               {
                 title: 'SAFE, ETHICAL AND IMPACTFUL INVESTMENTS',
 
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/_0000_safe.png',
+                text: 'Inspired and consulted by the French Les Pas-Sages model, Earthbound Ecovillage is owned by the community of individuals living in the ecovillage and impact investors who are aligned with our ethos. Read more about investing <a href="/pages/invest">here</a>.  '
               },
               {
                 title: 'SOCIOCRACY+',
 
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/_0001_socio.png',
+                text: 'Our decision making and organising structures are based on sociocracy. This means that we make decisions through the consent of all members ensuring inclusivity and collective intelligence'
               },
             ],
           },
@@ -305,7 +368,7 @@ const getPage = ({
             items: [
               {
                 title: 'IMPACT INVESTOR',
-                text: 'Invest in a truly human-scale regenerative project. As an impact investor you are part of making Earthbound a reality and of steering the greater vision and direction.',
+                text: '<p>Invest in a truly human-scale regenerative project. As an impact investor you are part of making Earthbound a reality and of steering the greater vision and direction.',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/impact-investor.png',
                 cta: {
@@ -330,7 +393,7 @@ const getPage = ({
                   'https://cdn.oasa.co/custom-pages/earthbound/visitor.png',
                 cta: {
                   text: 'Book a stay',
-                  url: '/',
+                  url: '/stay',
                 },
               },
               {
