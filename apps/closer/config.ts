@@ -6,12 +6,12 @@ const config = {
     'payment',
     'emails',
     'volunteering',
-    // 'learningHub',
-    // 'subscriptions',
+    'learningHub',
+    'subscriptions',
   ],
   PORT: 14444,
-  APP_NAME: 'earthbound',
-  DEFAULT_TIMEZONE: 'Europe/Stockholm',
+  APP_NAME: 'closer',
+  DEFAULT_TIMEZONE: 'Europe/Lisbon',
 
   EXPOSE_STORE: true,
   CACHE_DURATION: 300000, // 5min

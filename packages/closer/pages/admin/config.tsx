@@ -408,8 +408,6 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
                     <div key={key} className="flex flex-col gap-1">
                       <label>{t(`config_label_${key}`)}:</label>
 
-                      isTime={isTime}
-
                       {!isSelect && (
                         <input
                           className="bg-neutral rounded-md p-1"
