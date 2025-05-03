@@ -6,6 +6,7 @@ const config = {
     'payment',
     'emails',
     'volunteering',
+
     // 'learningHub',
     // 'subscriptions',
   ],

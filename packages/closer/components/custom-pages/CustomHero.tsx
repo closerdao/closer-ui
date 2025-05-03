@@ -6,7 +6,13 @@ import { Heading, LinkButton } from '../ui';
 
 const CustomHero: React.FC<{
   settings: {
-    alignText: 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+    alignText:
+      | 'left'
+      | 'right'
+      | 'top-left'
+      | 'top-right'
+      | 'bottom-left'
+      | 'bottom-right';
     isInverted?: boolean;
   };
   content: {
@@ -53,20 +59,28 @@ const CustomHero: React.FC<{
           >
             {content.title}
           </Heading>
-          <p
+
+          <div
             className={`${
               settings?.isInverted ? 'text-accent-light' : 'text-black'
             }`}
-          >
-            {content?.body}
-          </p>
+            dangerouslySetInnerHTML={{ __html: content.body }}
+          />
 
-          {content.cta &&  <div className="mt-4">
-            <LinkButton href={content.cta.url} className={`${settings?.isInverted ? 'text-dominant border-accent-alt bg-accent-alt' : ''} w-fit px-5`}>
-              {content.cta.text}
-            </LinkButton>
-          </div>}
-         
+          {content.cta && (
+            <div className="mt-4">
+              <LinkButton
+                href={content.cta.url}
+                className={`${
+                  settings?.isInverted
+                    ? 'text-dominant border-accent-alt bg-accent-alt'
+                    : ''
+                } w-fit px-5`}
+              >
+                {content.cta.text}
+              </LinkButton>
+            </div>
+          )}
         </div>
       </div>
     </section>

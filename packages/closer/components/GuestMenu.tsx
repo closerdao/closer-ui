@@ -55,6 +55,7 @@ const GuestMenu = () => {
 
         {APP_NAME && APP_NAME.toLowerCase() === 'earthbound' && (
           <>
+            <NavLink href="/">{t('header_nav_home')}</NavLink>
             <NavLink href="/pages/invest">{t('header_nav_invest')}</NavLink>
             <NavLink href="/stay">{t('header_nav_stay')}</NavLink>
             <NavLink href="/members">{t('header_nav_community')}</NavLink>

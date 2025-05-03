@@ -87,7 +87,10 @@ const getPage = ({
                         <p>
                           For more information please contact us:<br>
                           <strong>Email:</strong> <a href="mailto:contact@earthbound.eco">contact@earthbound.eco</a>
+                          <br/>
+                          <strong>Telegram:</strong> <a href="https://t.me/earthboundecovillage">@earthboundecovillage</a>
                         </p>
+                       
                         `,
           },
         },
@@ -124,13 +127,13 @@ const getPage = ({
               },
               {
                 title: 'Stefan Taylor, UK',
-                text: '\“I\'m an impact investor at Earthbound because it is aligned with what humans need the most now: conscious, heart-centered connection with each other and the rest of the natural world. The founders have meticulously put together the best model I’ve ever seen for a successful new community, where a new fusion of ancient and modern ways of humans being on Earth is midwifed in the next decade.\“',
+                text: '\“We are thrilled to contribute in a small way and be part of Earthbound Ecovillage. An incredibly hopeful project in an often dark world.\“',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/Stefan%20Taylor.jpeg',
               },
               {
                 title: 'Hanna Morjan, Findhorn Ecovillage, Scotland',
-                text: '\“I\'m an impact investor at Earthbound because it is aligned with what humans need the most now: conscious, heart-centered connection with each other and the rest of the natural world. The founders have meticulously put together the best model I’ve ever seen for a successful new community, where a new fusion of ancient and modern ways of humans being on Earth is midwifed in the next decade.\“',
+                text: '\“It feels like a privilege to be able to support this group of young people in their vision and dreams to make Earthbound Ecovillage a reality. I am impressed by their thorough research to create a sustainable community sharing a vision of a better future., including intergenerational families, community minded elders and young ecologically minded families using sociocracy, an inclusive decision making process. I am delighted to be part of their journey!\“',
                 imageUrl:
                 'https://cdn.oasa.co/custom-pages/earthbound/Hanna%20Morjan.jpg',
               },

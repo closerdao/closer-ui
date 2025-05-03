@@ -61,8 +61,18 @@ const MemberMenu = () => {
     const links = [
     ...(APP_NAME && APP_NAME.toLowerCase() === 'earthbound' ? [
       {
+        label: t('header_nav_home'),
+        url: '/',
+        enabled: true,
+      },
+      {
         label: t('header_nav_invest'),
         url: '/pages/invest',
+        enabled: true,
+      },
+      {
+        label: t('header_nav_stay'),
+        url: '/stay',
         enabled: true,
       },
       {
@@ -76,11 +86,11 @@ const MemberMenu = () => {
         url: '/subscriptions',
         enabled: areSubscriptionsEnabled,
       },
-      {
-        label: t('navigation_events'),
-        url: '/events',
-        enabled: APP_NAME.toLowerCase() !== 'lios',
-      },
+      // {
+      //   label: t('navigation_events'),
+      //   url: '/events',
+      //   enabled: APP_NAME.toLowerCase() !== 'lios' && APP_NAME.toLowerCase() !== 'earthbound',
+      // },
       {
         label: t('navigation_volunteer'),
         url: '/volunteer',
@@ -178,7 +188,7 @@ const MemberMenu = () => {
       {
         label: t('navigation_new_event'),
         url: '/events/create',
-        enabled: true,
+        enabled: APP_NAME.toLowerCase() !== 'lios' && APP_NAME.toLowerCase() !== 'earthbound',
         roles: ['event-creator'],
       },
       {

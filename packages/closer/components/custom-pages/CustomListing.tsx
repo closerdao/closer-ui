@@ -106,7 +106,7 @@ const CustomListing: React.FC<{
                 <Heading
                   display={false}
                   level={3}
-                  className="font-normal text-lg"
+                  className="font-bold text-md"
                 >
                   {item.title}
                 </Heading>
