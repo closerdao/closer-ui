@@ -324,7 +324,7 @@ const getPage = ({
           content: {
             title: 'OUR MODEL ',
             description:
-              'We\'re introducing a new model for communities in Scandinavia to own and govern together. Our format shapes a strong, ethical financial and legal structure based on “community logic”. Designed to be easy to replicate, it paves the way for future community-led initiatives. You can read about the key aspects of our model below.',
+              'We\'e introducing a new model for communities in Scandinavia to own and govern together. Our format shapes a strong, ethical financial and legal structure based on "community logic". Designed to be easy to replicate, it paves the way for future community-led initiatives. You can read about the key aspects of our model below.',
             items: [
               {
                 title: 'NON PROFIT, NON SPECULATIVE',
