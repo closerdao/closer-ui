@@ -1,12 +1,9 @@
-import { Raleway } from 'next/font/google';
+import { Inter } from 'next/font/google';
 
 // Google fonts configuration
 
-export const raleWay = Raleway({
-  weight: ['400', '700'],
+export const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-raleway',
+  variable: '--font-inter',
 });
-
-

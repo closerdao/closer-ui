@@ -15,7 +15,7 @@ const config = {
 
   EXPOSE_STORE: true,
   CACHE_DURATION: 300000, // 5min
-  LOGO_HEADER: '/images/earthbound-logo.png',
+  LOGO_HEADER: '',
   PERMISSIONS: {
     event: {
       create: 'event-creator',
