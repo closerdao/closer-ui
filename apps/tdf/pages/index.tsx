@@ -142,12 +142,11 @@ const HomePage = () => {
                 display
                 level={1}
               >
-                Ready to explore life in a regenerative village?
+                Experience the Future of Regenerative Living at Traditional Dream Factory ecovillage
               </Heading>
               <div className="my-4">
                 <p className="text-xl md:text-2xl max-w-3xl">
-                  We are building a climate resilient neighborhood of the future
-                  in Portugal - and you are invited to be a part of it.
+                  We&apos;re building a climate-resilient village in the heart of Portugal where community, creativity, and ecological stewardship meet. Join us for a stay, a residency, or become part of our growing movement.
                 </p>
               </div>
               <div>{CTA}</div>
