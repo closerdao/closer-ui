@@ -3,8 +3,8 @@ import { FC, PropsWithChildren } from 'react';
 import { Footer } from '@/components';
 
 import PromptFixedBottom from 'closer/components/PromptFixedBottom';
-
-import { Navigation, Newsletter, Prompts } from 'closer';
+import { Newsletter, Prompts } from 'closer';
+import Navigation from '../Navigation';
 
 export const Layout: FC<PropsWithChildren> = ({ children }) => {
   return (

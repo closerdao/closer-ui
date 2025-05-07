@@ -15,7 +15,7 @@
   "resources_resources_heading": "Put the kettle on and get to know us a little better",
   "resources_resources_subheading": "Read all about our dream: the mission, vision and how we got here, with our digital papers",
   "resources_faq_heading": "Frequently asked questions",
-  "resources_faq_subheading": "Got a question? We’re an open source.",
+  "resources_faq_subheading": "Got a question? We're an open source.",
   "stay_title": "Experience regenerative living at ",
   "stay_description": "Come and stay in our regenerative village under development. Get a chance to learn about permaculture, bio-construction, web3 - or just come and relax surrounded by beautiful nature. We don't have 5 star facilities just yet, but you get to experience the magic of this place during its early years, and we guarantee you'll meet some inspiring humans you'll become friends with.",
   "stay_meet_your_hosts": "Meet your hosts",
@@ -58,10 +58,12 @@
 
   "bookings_checkout_step_visitors_guide": "Visitors Guide",
 
-
-
-  "referrals": "Referrals"
-
-
-
+  "navigation_governance": "Governance",
+  
+  "navigation_resources": "Resources",
+  "newsletter_title": "Newsletter",
+  "newsletter_signup": "Sign up",
+  "cookie_consent_button": "Accept",
+  "cookie_consent_text": "This website uses cookies to ensure you get the best experience on our website.",
+  "cookie_consent_text_link": "Learn more"
 }
