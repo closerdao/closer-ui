@@ -209,7 +209,7 @@ const InvestPage = ({ generalConfig, listings, hosts }: Props) => {
     <div>
       <Head>
         <title>{`Welcome to ${PLATFORM_NAME}!`}</title>
-        <meta name="description" content="School of Ecological Imagination" />
+        <meta name="description" content="Become an impact investor" />
       </Head>
 
       <CustomSections page={page} />

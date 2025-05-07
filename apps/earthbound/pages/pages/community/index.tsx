@@ -133,7 +133,7 @@ const CommunityPage = ({ generalConfig, listings, hosts }: Props) => {
     <div>
       <Head>
         <title>{`Welcome to ${PLATFORM_NAME}!`}</title>
-        <meta name="description" content="School of Ecological Imagination" />
+        <meta name="description" content="JOIN EARTHBOUND AS PART OF THE LIVING COMMUNITY" />
       </Head>
 
       <main className="py-12">
