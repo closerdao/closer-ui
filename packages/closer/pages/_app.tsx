@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import Script from 'next/script';
 
 import { useEffect, useState } from 'react';
-import React from 'react';
 
 import {
   ExternalProvider,
@@ -69,10 +68,20 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
   useEffect(() => {
     (async () => {
       try {
-        const generalConfigRes = await api.get('config/general').catch(() => {
-          return;
-        });
-        setConfig(prepareGeneralConfig(generalConfigRes?.data.results.value));
+        const [generalConfigRes, rbacConfigRes] = await Promise.all([
+          api.get('config/general').catch(() => null),
+          api.get('config/rbac').catch(() => null),
+        ]);
+
+        const generalConfig = generalConfigRes?.data?.results?.value;
+        const rbacConfig = rbacConfigRes?.data?.results?.value;
+
+        setConfig(
+          prepareGeneralConfig({
+            ...generalConfig,
+            rbacConfig: rbacConfig || {},
+          }),
+        );
       } catch (err) {
         console.error(err);
         return;
@@ -108,7 +117,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         }}
       />
 
-<ConfigProvider
+      <ConfigProvider
         config={{
           ...config,
           ...blockchainConfig,
@@ -126,15 +135,12 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
                   <GoogleAnalytics trackPageViews />
                   <Component {...pageProps} config={config} />
                   {/* TODO: create cookie consent page with property-specific parameters #357  */}
-                  
                 </WalletProvider>
               </Web3ReactProvider>
             </PlatformProvider>
           </AuthProvider>
         </NextIntlClientProvider>
       </ConfigProvider>
-
-    
     </>
   );
 };
