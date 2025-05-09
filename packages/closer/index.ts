@@ -50,7 +50,6 @@ export {
   getStaticProps as getStaticProps404,
   default as Page404,
 } from './pages/404';
-export { default as AdminPage } from './pages/admin';
 export { default as ApplicationsPage } from './pages/applications';
 export { default as ArticlePage } from './pages/blog/[slug]';
 export { default as ArticleCreatePage } from './pages/blog/create';
