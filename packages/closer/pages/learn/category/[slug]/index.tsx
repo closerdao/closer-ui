@@ -14,7 +14,6 @@ import { Record } from 'immutable';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { useAuth } from '../../../../contexts/auth';
 import { usePlatform } from '../../../../contexts/platform';
 import { useConfig } from '../../../../hooks/useConfig';
 import useRBAC from '../../../../hooks/useRBAC';
