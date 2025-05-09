@@ -77,6 +77,15 @@ export async function loadLocaleData(
               import('../locales/base-en.json'),
             ]);
         }
+      case 'closer':
+        switch (locale) {
+          case 'en':
+          default:
+            return Promise.all([
+              import('../locales/closer/en.json'),
+              import('../locales/base-en.json'),
+            ]);
+        }
       default:
         console.warn(
           `Unsupported app: ${appName}, falling back to base English locale`,
