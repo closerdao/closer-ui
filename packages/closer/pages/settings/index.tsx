@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useEffect, useState, useRef } from 'react';
+
+import { useEffect, useRef, useState } from 'react';
 
 import UploadPhoto from '../../components/UploadPhoto';
 import { Button } from '../../components/ui';
@@ -35,7 +36,11 @@ interface Tab {
 }
 
 // Navigation sidebar component
-const SettingsSidebar = ({ activeTab, setActiveTab, tabs }: {
+const SettingsSidebar = ({
+  activeTab,
+  setActiveTab,
+  tabs,
+}: {
   activeTab: TabId;
   setActiveTab: (tab: TabId) => void;
   tabs: Tab[];
@@ -66,7 +71,11 @@ const SettingsSidebar = ({ activeTab, setActiveTab, tabs }: {
 };
 
 // Mobile tab selector component
-const MobileTabSelector = ({ activeTab, setActiveTab, tabs }: {
+const MobileTabSelector = ({
+  activeTab,
+  setActiveTab,
+  tabs,
+}: {
   activeTab: TabId;
   setActiveTab: (tab: TabId) => void;
   tabs: Tab[];
@@ -94,27 +103,27 @@ const DeleteAccountSection = () => {
   const [confirmText, setConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const handleDeleteAccount = async () => {
     if (confirmText !== 'delete') {
       setError('Please type "delete" to confirm account deletion');
       return;
     }
-    
+
     try {
       setIsDeleting(true);
       await api.delete('/account');
-      
+
       // Remove all cookies
-      document.cookie.split(';').forEach(cookie => {
+      document.cookie.split(';').forEach((cookie) => {
         const [name] = cookie.trim().split('=');
         document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
       });
-      
+
       // Log out user by clearing localStorage
       localStorage.clear();
       sessionStorage.clear();
-      
+
       // Redirect to home page after successful deletion
       window.location.href = '/';
     } catch (err) {
@@ -123,14 +132,14 @@ const DeleteAccountSection = () => {
       setIsDeleting(false);
     }
   };
-  
+
   return (
     <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
       {!showConfirmation ? (
         <div>
           <p className="mb-4 text-gray-600">
-            Deleting your account will permanently remove all your data from our systems.
-            This action cannot be undone.
+            Deleting your account will permanently remove all your data from our
+            systems. This action cannot be undone.
           </p>
           <Button
             onClick={() => setShowConfirmation(true)}
@@ -143,15 +152,16 @@ const DeleteAccountSection = () => {
         <div className="border border-red-300 rounded-md p-4 bg-red-50">
           <h4 className="font-bold text-red-700 mb-2">Delete Account</h4>
           <p className="mb-4 text-red-700">
-            This action cannot be undone. All your data will be permanently deleted.
+            This action cannot be undone. All your data will be permanently
+            deleted.
           </p>
-          
+
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
               <span className="block sm:inline">{error}</span>
             </div>
           )}
-          
+
           <div className="mb-4">
             <label className="block mb-2 text-sm font-medium text-red-700">
               Type &quot;delete&quot; to confirm
@@ -164,7 +174,7 @@ const DeleteAccountSection = () => {
               className="w-full p-2 border border-red-300 rounded-md focus:ring-red-500 focus:border-red-500"
             />
           </div>
-          
+
           <div className="flex gap-2">
             <Button
               onClick={handleDeleteAccount}
@@ -224,7 +234,7 @@ const SettingsPage = ({
   const [showSaveSuccess, setShowSaveSuccess] = useState(false); // For non-auto-saving inputs
   const [activeTab, setActiveTab] = useState<TabId>('profile');
   const { platform } = usePlatform() as any;
-  
+
   // Define tabs
   const tabs: Tab[] = [
     { id: 'profile', label: 'Profile', icon: '👤' },
@@ -236,7 +246,7 @@ const SettingsPage = ({
 
   // Scroll to top when changing tabs
   const contentRef = useRef<HTMLDivElement>(null);
-  
+
   useEffect(() => {
     if (contentRef.current) {
       contentRef.current.scrollTop = 0;
@@ -246,11 +256,11 @@ const SettingsPage = ({
   useEffect(() => {
     setUser(initialUser);
   }, [initialUser]);
-  
+
   // Handle tab change from URL hash
   useEffect(() => {
     const hash = router.asPath.split('#')[1] as TabId;
-    if (hash && tabs.some(tab => tab.id === hash)) {
+    if (hash && tabs.some((tab) => tab.id === hash)) {
       setActiveTab(hash);
     }
   }, [router.asPath]);
@@ -359,19 +369,19 @@ const SettingsPage = ({
       </Head>
       <div className="max-w-screen-xl mx-auto px-4 md:px-8 py-6">
         <Heading className="mb-6">⚙️ Settings</Heading>
-        
+
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md mb-6">
             <span className="block sm:inline">{error}</span>
           </div>
         )}
-        
+
         {showSaveSuccess && (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-md mb-6 animate-fade-out">
             <span className="block sm:inline">Changes saved successfully!</span>
           </div>
         )}
-        
+
         <div className="flex flex-col md:flex-row gap-8">
           {/* Sidebar navigation */}
           <SettingsSidebar
@@ -382,7 +392,7 @@ const SettingsPage = ({
             }}
             tabs={tabs}
           />
-          
+
           {/* Mobile tab selector */}
           <MobileTabSelector
             activeTab={activeTab}
@@ -392,15 +402,17 @@ const SettingsPage = ({
             }}
             tabs={tabs}
           />
-          
+
           {/* Main content area */}
           <div ref={contentRef} className="flex-1 overflow-hidden">
             {/* Profile Tab */}
             {activeTab === 'profile' && (
               <div className="space-y-6">
                 <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                  <h3 className="text-lg font-medium mb-4">👤 Profile Information</h3>
-                  
+                  <h3 className="text-lg font-medium mb-4">
+                    👤 Profile Information
+                  </h3>
+
                   <Input
                     label="About me"
                     additionalInfo={
@@ -415,12 +427,17 @@ const SettingsPage = ({
                     setHasSaved={setHasSaved}
                     className="mb-4"
                   />
-                  
+
                   <div className="mt-6">
-                    <label className="font-medium text-complimentary-light" htmlFor="">
+                    <label
+                      className="font-medium text-complimentary-light"
+                      htmlFor=""
+                    >
                       Profile Picture{' '}
                       {APP_NAME === 'moos' && (
-                        <span className="text-red-500">[Required to make bookings]*</span>
+                        <span className="text-red-500">
+                          [Required to make bookings]*
+                        </span>
                       )}
                     </label>
                     <UploadPhoto
@@ -433,13 +450,15 @@ const SettingsPage = ({
                 </div>
               </div>
             )}
-            
+
             {/* Account Tab */}
             {activeTab === 'account' && (
               <div className="space-y-6">
                 <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                  <h3 className="text-lg font-medium mb-4">🔑 Account Information</h3>
-                  
+                  <h3 className="text-lg font-medium mb-4">
+                    🔑 Account Information
+                  </h3>
+
                   <Input
                     label="Name"
                     placeholder="Your name"
@@ -450,13 +469,15 @@ const SettingsPage = ({
                     setHasSaved={setHasSaved}
                     className="mb-4"
                   />
-                  
+
                   <div className="mb-6">
                     <Input
                       label="Email"
                       value={user.email}
                       isDisabled={!updateEmail}
-                      onChange={(e) => setUser({ ...user, email: e.target.value })}
+                      onChange={(e) =>
+                        setUser({ ...user, email: e.target.value })
+                      }
                       successMessage={
                         emailSaved
                           ? 'You will receive a link to confirm via email.'
@@ -477,7 +498,10 @@ const SettingsPage = ({
                           </Button>
                           <Button
                             onClick={() => {
-                              setUser({ ...user, email: initialUser?.email || user.email });
+                              setUser({
+                                ...user,
+                                email: initialUser?.email || user.email,
+                              });
                               toggleUpdateEmail(false);
                             }}
                             variant="inline"
@@ -498,13 +522,15 @@ const SettingsPage = ({
                       )}
                     </div>
                   </div>
-                  
+
                   <div>
                     <Input
                       label="Phone"
                       isDisabled={!updatePhone}
                       value={user.phone}
-                      onChange={(e) => setUser({ ...user, phone: e.target.value })}
+                      onChange={(e) =>
+                        setUser({ ...user, phone: e.target.value })
+                      }
                       successMessage={
                         phoneSaved
                           ? 'You will receive a link to confirm via text.'
@@ -525,7 +551,10 @@ const SettingsPage = ({
                           </Button>
                           <Button
                             onClick={() => {
-                              setUser({ ...user, phone: initialUser?.phone || user.phone });
+                              setUser({
+                                ...user,
+                                phone: initialUser?.phone || user.phone,
+                              });
                               toggleUpdatePhone(false);
                             }}
                             variant="inline"
@@ -549,13 +578,15 @@ const SettingsPage = ({
                 </div>
               </div>
             )}
-            
+
             {/* Preferences Tab */}
             {activeTab === 'preferences' && (
               <div className="space-y-6">
                 <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                  <h3 className="text-lg font-medium mb-4">⭐ Recommended Preferences</h3>
-                  
+                  <h3 className="text-lg font-medium mb-4">
+                    ⭐ Recommended Preferences
+                  </h3>
+
                   <MultiSelect
                     label="Dietary Preferences?"
                     values={initialDiet}
@@ -564,7 +595,7 @@ const SettingsPage = ({
                     placeholder="Pick or create yours"
                     className="mb-4"
                   />
-                  
+
                   {APP_NAME && APP_NAME.toLowerCase() !== 'moos' && (
                     <Select
                       label="Shared Accommodation Preference"
@@ -575,7 +606,7 @@ const SettingsPage = ({
                       isRequired
                     />
                   )}
-                  
+
                   <Input
                     label="What is your superpower?"
                     placeholder="I am really good at ..."
@@ -586,7 +617,7 @@ const SettingsPage = ({
                     setHasSaved={setHasSaved}
                     className="mb-4"
                   />
-                  
+
                   <MultiSelect
                     label="What skills do you have?"
                     values={user?.preferences?.skills}
@@ -596,10 +627,12 @@ const SettingsPage = ({
                     className="mb-4"
                   />
                 </div>
-                
+
                 <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                  <h3 className="text-lg font-medium mb-4">🔰 Optional Information</h3>
-                  
+                  <h3 className="text-lg font-medium mb-4">
+                    🔰 Optional Information
+                  </h3>
+
                   <Input
                     label="What do you dream of creating?"
                     placeholder="I dream of creating ..."
@@ -610,7 +643,7 @@ const SettingsPage = ({
                     setHasSaved={setHasSaved}
                     className="mb-4"
                   />
-                  
+
                   <Input
                     label="What is one thing you currently need support with?"
                     placeholder=""
@@ -621,7 +654,7 @@ const SettingsPage = ({
                     setHasSaved={setHasSaved}
                     className="mb-4"
                   />
-                  
+
                   <Input
                     label="Anything we should know? Anything you would like to share?"
                     placeholder=""
@@ -634,33 +667,40 @@ const SettingsPage = ({
                 </div>
               </div>
             )}
-            
+
             {/* Notifications Tab */}
             {activeTab === 'notifications' && (
               <div className="space-y-6">
                 <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                  <h3 className="text-lg font-medium mb-4">🔔 Notification Preferences</h3>
-                  
+                  <h3 className="text-lg font-medium mb-4">
+                    🔔 Notification Preferences
+                  </h3>
+
                   <div className="flex items-center justify-start gap-2 p-3 hover:bg-gray-50 rounded-md">
                     <Checkbox
                       isChecked={user?.settings?.newsletter_weekly}
                       onChange={saveSettings('newsletter_weekly')}
                     />
-                    <label className="cursor-pointer flex-1">Weekly newsletter</label>
+                    <label className="cursor-pointer flex-1">
+                      Weekly newsletter
+                    </label>
                   </div>
                 </div>
               </div>
             )}
-            
+
             {/* Danger Zone Tab */}
             {activeTab === 'danger' && (
               <div className="space-y-6">
                 <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                  <h3 className="text-lg font-medium mb-4 text-red-600">⚠️ Danger Zone</h3>
+                  <h3 className="text-lg font-medium mb-4 text-red-600">
+                    ⚠️ Danger Zone
+                  </h3>
                   <p className="text-gray-600 mb-6">
-                    Actions in this section can result in permanent data loss. Please proceed with caution.
+                    Actions in this section can result in permanent data loss.
+                    Please proceed with caution.
                   </p>
-                  
+
                   <DeleteAccountSection />
                 </div>
               </div>
