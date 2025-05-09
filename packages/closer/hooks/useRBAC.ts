@@ -1,4 +1,4 @@
-import rbacDefaultConfig from '../../../admin/config/rbac';
+import rbacDefaultConfig from '../constants/rbac';
 import { useAuth } from '../contexts/auth';
 import { useConfig } from '../hooks/useConfig';
 

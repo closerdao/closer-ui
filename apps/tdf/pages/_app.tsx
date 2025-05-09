@@ -30,7 +30,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import appConfig from '../config';
-import rbacDefaultConfig from '../../../admin/config/rbac';
+import rbacDefaultConfig from 'closer/constants/rbac';
 import '../styles/index.css';
 
 interface AppOwnProps extends AppProps {
