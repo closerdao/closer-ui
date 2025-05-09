@@ -11,7 +11,7 @@ import { NextPageContext } from 'next';
 import rbacDefaultConfig, {
   PagePermissions,
   RBACConfig,
-} from '../../../../admin/config/rbac';
+} from 'closer/constants/rbac';
 import { useAuth } from '../../contexts/auth';
 import { BookingConfig } from '../../types/api';
 import api from '../../utils/api';
