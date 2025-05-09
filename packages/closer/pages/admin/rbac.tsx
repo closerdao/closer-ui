@@ -1,18 +1,23 @@
-import { useState } from 'react';
 import Head from 'next/head';
-import { NextPageContext } from 'next';
-import deepmerge from 'deepmerge';
+
+import { useState } from 'react';
 
 import AdminLayout from '../../components/Dashboard/AdminLayout';
-import { Heading, Card, Checkbox } from '../../components/ui';
+import { Card, Checkbox, Heading } from '../../components/ui';
+
+import deepmerge from 'deepmerge';
+import { NextPageContext } from 'next';
+
+import rbacDefaultConfig, {
+  PagePermissions,
+  RBACConfig,
+} from '../../../../admin/config/rbac';
 import { useAuth } from '../../contexts/auth';
-import rbacDefaultConfig, { RBACConfig } from '../../../../admin/config/rbac';
-import PageNotFound from '../not-found';
-import { loadLocaleData } from '../../utils/locale.helpers';
+import { BookingConfig } from '../../types/api';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { BookingConfig } from '../../types/api';
-
+import { loadLocaleData } from '../../utils/locale.helpers';
+import PageNotFound from '../not-found';
 
 interface Props {
   loadConfig: RBACConfig;
@@ -21,9 +26,13 @@ interface Props {
 }
 
 const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
-  // const t = useTranslations();
   const { user } = useAuth();
-  const [config, setConfig] = useState(loadConfig);
+  const [config, setConfig] = useState<RBACConfig>(
+    deepmerge.all(
+      [rbacDefaultConfig, loadConfig].filter(Boolean),
+    ) as RBACConfig,
+  );
+
   const [pages] = useState([
     'Dashboard',
     'Performance',
@@ -51,7 +60,7 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
     'Resources',
     'SupportUs',
     'Token',
-    'Blog'
+    'Blog',
   ]);
   const [roles] = useState([
     'default', // Add default as a "role" for the UI
@@ -74,17 +83,17 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
   }
 
   const handleToggle = (role: string, page: string, value: boolean) => {
-    // Create a deep copy of the current config, with fallback to empty object
-    const newConfig = config ? { ...config } : {};
-    
+    // Create a deep copy of the current config
+    const newConfig: RBACConfig = { ...config };
+
     // Ensure the role object exists
     if (!newConfig[role]) {
-      newConfig[role] = {};
+      newConfig[role] = {} as PagePermissions;
     }
-    
+
     // Set the new value
     newConfig[role][page] = value;
-    
+
     // Update the state
     setConfig(newConfig);
     saveConfig(newConfig);
@@ -93,7 +102,7 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
   const saveConfig = async (config: object) => {
     try {
       setIsLoading(true);
-      
+
       // Save the RBAC configuration to the server
       const res = await api.put('/config/rbac', {
         slug: 'rbac',
@@ -118,7 +127,7 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
       <Head>
         <title>Role Based Access Control</title>
       </Head>
-      <AdminLayout isBookingEnabled={ isBookingEnabled }>
+      <AdminLayout isBookingEnabled={isBookingEnabled}>
         <div className="flex justify-between items-center mb-6">
           <Heading level={1}>Role Based Access Control</Heading>
         </div>
@@ -133,10 +142,12 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
             <thead>
               <tr className="bg-gray-100">
                 <th className="px-4 py-2 text-left">Page / Role</th>
-                {roles.map(role => (
+                {roles.map((role) => (
                   <th
                     key={role}
-                    className={`px-4 py-2 text-center ${role === 'default' ? 'bg-blue-50' : ''}`}
+                    className={`px-4 py-2 text-center ${
+                      role === 'default' ? 'bg-blue-50' : ''
+                    }`}
                   >
                     {role === 'default' ? 'Default' : role}
                   </th>
@@ -144,24 +155,43 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
               </tr>
             </thead>
             <tbody>
-              {pages.map(page => (
-                <tr key={page} className="border-t">
-                  <td className="px-4 py-4 font-medium">{page}</td>
-                  {roles.map(role => (
-                    <td
-                      key={`${role}-${page}`}
-                      className={`px-4 py-4 text-center ${role === 'default' ? 'bg-blue-50' : ''}`}
-                    >
-                      <div className="flex justify-center">
-                        <Checkbox
-                          isChecked={config && config[role] && config[role]?.[page] || false}
-                          onChange={() => handleToggle(role, page, !(config && config[role] && config[role]?.[page] || false))}
-                        />
-                      </div>
-                    </td>
-                  ))}
-                </tr>
-              ))}
+              {pages.map((page) => {
+                const isRBACRow = page === 'RBAC';
+                return (
+                  <tr
+                    key={page}
+                    className={`border-t${
+                      isRBACRow
+                        ? ' bg-gray-200 opacity-60 pointer-events-none'
+                        : ''
+                    }`}
+                  >
+                    <td className="px-4 py-4 font-medium">{page}</td>
+                    {roles.map((role) => (
+                      <td
+                        key={`${role}-${page}`}
+                        className={`px-4 py-4 text-center ${
+                          role === 'default' ? 'bg-blue-50' : ''
+                        }`}
+                      >
+                        <div className="flex justify-center">
+                          <Checkbox
+                            isChecked={Boolean(config[role]?.[page])}
+                            onChange={() =>
+                              handleToggle(
+                                role,
+                                page,
+                                !Boolean(config[role]?.[page]),
+                              )
+                            }
+                            isEnabled={!isRBACRow}
+                          />
+                        </div>
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </Card>
@@ -169,15 +199,19 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
         <div className="mt-6">
           <Heading level={3}>How to use RBAC</Heading>
           <p className="mt-2 text-gray-700">
-            This configuration controls which roles have access to specific pages in the application.
-            Toggle the switches to grant or revoke access for each role to each page.
+            This configuration controls which roles have access to specific
+            pages in the application. Toggle the switches to grant or revoke
+            access for each role to each page.
           </p>
           <p className="mt-2 text-gray-700">
-            The <span className="bg-blue-50 px-1">Default</span> column represents the permissions that apply before checking user roles.
-            These default permissions are used when a user has no roles or when none of their roles grant access to a page.
+            The <span className="bg-blue-50 px-1">Default</span> column
+            represents the permissions that apply before checking user roles.
+            These default permissions are used when a user has no roles or when
+            none of their roles grant access to a page.
           </p>
           <p className="mt-2 text-gray-700">
-            To add more pages to the RBAC configuration, update the rbac.ts file in the admin/config directory.
+            To add more pages to the RBAC configuration, update the rbac.ts file
+            in the admin/config directory.
           </p>
         </div>
       </AdminLayout>
@@ -194,13 +228,14 @@ RBACPage.getInitialProps = async (context: NextPageContext) => {
       api.get('/config/booking').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
-    const loadConfig = deepmerge.all([rbacDefaultConfig, rbacConfigData?.data?.results?.value]);
+    // const loadConfig = deepmerge.all([rbacDefaultConfig, rbacConfigData?.data?.results?.value]);
+    const loadConfig = rbacConfigData?.data?.results?.value;
     const bookingConfig = bookingRes?.data?.results?.value;
 
     return {
       loadConfig,
       bookingConfig,
-      messages
+      messages,
     };
   } catch (error) {
     return {
