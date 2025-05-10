@@ -34,6 +34,7 @@ export type Project = VolunteerOpportunity & {
   estimate?: string;
   manager?: User;
   descriptionText?: string;
+  status?: 'open' | 'in-progress' | 'done';
 };
 
 export type Question = {
