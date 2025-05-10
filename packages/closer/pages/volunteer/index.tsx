@@ -8,6 +8,7 @@ import { Heading, LinkButton } from 'closer/components/ui';
 
 import { GeneralConfig, api } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
+import useRBAC from 'closer/hooks/useRBAC';
 import { parseMessageFromError } from 'closer/utils/common';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
@@ -22,8 +23,12 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
   const t = useTranslations();
 
   const defaultConfig = useConfig();
+  const { hasAccess } = useRBAC();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
+
+  // Check if user has permission to create volunteers
+  const canCreateVolunteer = hasAccess('VolunteerCreation');
 
   if (error) {
     return <PageError error={error} />;
@@ -72,10 +77,19 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
                     <Heading level={1} className="md:text-4xl  font-bold">
                       Volunteers Open Call
                     </Heading>
-                    <div className=" w-full sm:w-[250px]">
-                      <LinkButton href="/volunteer/apply">
-                        {t('apply_submit_button')}
-                      </LinkButton>
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                      {canCreateVolunteer && (
+                        <div className="w-full sm:w-[250px]">
+                          <LinkButton href="/volunteer/create">
+                            Create Volunteer
+                          </LinkButton>
+                        </div>
+                      )}
+                      <div className="w-full sm:w-[250px]">
+                        <LinkButton href="/volunteer/apply">
+                          {t('apply_submit_button')}
+                        </LinkButton>
+                      </div>
                     </div>
                   </div>
                   <div className="flex flex-col gap-6 max-w-2xl">
