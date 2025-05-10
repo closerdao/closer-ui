@@ -293,9 +293,15 @@ const SettingsPage = ({
           },
         };
       }
+      // Logging for debugging
+      console.log('[saveUserData] attribute:', attribute);
+      console.log('[saveUserData] value:', value);
+      console.log('[saveUserData] payload:', payload);
+      console.log('[saveUserData] user?._id:', user?._id);
       try {
         setHasSaved(false);
-        await platform.user.patch(user?._id, payload);
+        const result = await platform.user.patch(user?._id, payload);
+        console.log('[saveUserData] patch result:', result);
         await refetchUser();
         setError(null);
         setHasSaved(true);
@@ -303,6 +309,7 @@ const SettingsPage = ({
       } catch (err) {
         const errorMessage = parseMessageFromError(err);
         setError(errorMessage);
+        console.error('[saveUserData] error:', errorMessage, err);
       }
     };
   const saveSettings = (field: string) => async (event: any) => {

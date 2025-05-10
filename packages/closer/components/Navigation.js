@@ -18,6 +18,8 @@ import { Button } from './ui';
 const Navigation = () => {
   const t = useTranslations();
   const { APP_NAME } = useConfig() || {};
+
+  console.log('APP_NAME', APP_NAME);
   const { isAuthenticated, user } = useAuth();
 
   const [navOpen, setNavOpen] = useState(false);
@@ -90,6 +92,36 @@ const Navigation = () => {
                 className={' bg-accent-alt border-accent-alt'}
               >
                 <Link href="/#how-to-join">{t('header_nav_join_us')}</Link>
+              </Button>
+            </div>
+          )}
+          {APP_NAME && APP_NAME.toLowerCase() === 'closer' && (
+            <div className="flex gap-3 items-center">
+              <ul className="gap-4 hidden sm:flex">
+                <li>
+                  <Link href="/#features">{t('header_nav_features')}</Link>
+                </li>
+                <li>
+                  <Link href="/#communities">
+                    {t('header_nav_communities')}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/#the-journey" className="whitespace-nowrap">
+                    {t('header_nav_the_journey')}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/#pricing">{t('header_nav_pricing')}</Link>
+                </li>
+              </ul>
+              <Button
+                // onClick={() => router.push('/pages/join')}
+                size="small"
+                variant="primary"
+                className={' bg-foreground text-background border-foreground'}
+              >
+                <Link href="https://calendly.com/samueldelesque/30min">{t('header_nav_schedule_a_demo')}</Link>
               </Button>
             </div>
           )}

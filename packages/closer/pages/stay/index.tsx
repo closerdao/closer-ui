@@ -63,7 +63,6 @@ const StayPage = ({
   const { platform }: any = usePlatform();
   const { user } = useAuth();
 
-  console.log('user=',user);
   const isTeamMember = user?.roles.some((roles) =>
     ['space-host', 'steward', 'land-manager', 'team'].includes(roles),
   );
