@@ -426,14 +426,19 @@ const BookingPage = ({
             </Card>
           )}
 
-          <p
-            className={`bg-${STATUS_COLOR[status]}  mt-2 
-            capitalize opacity-100 text-base p-1 text-white text-center rounded-md`}
-          >
-            {status}
-          </p>
-          {isSpaceHost && (
-            <UserInfoButton userInfo={userInfo} createdBy={createdBy} />
+          {isNotPaid && user?._id === createdBy ? (
+            <Link href={`/bookings/${_id}/checkout`} passHref>
+              <Button variant="primary" className="w-full">
+                {t('checkout_complete_payment')}
+              </Button>
+            </Link>
+          ) : (
+            <p
+              className={`bg-${STATUS_COLOR[status]}  mt-2
+              capitalize opacity-100 text-base p-1 text-white text-center rounded-md`}
+            >
+              {status}
+            </p>
           )}
         </section>
 
@@ -553,6 +558,20 @@ const BookingPage = ({
             workingHoursEnd={listing?.workingHoursEnd}
             listingId={listing?._id}
           />
+          
+          <div className="flex flex-col gap-4">
+            <Heading level={3}>{t('bookings_dates_step_guests_title')}</Heading>
+            {userInfo && (
+              <UserInfoButton
+                userInfo={{
+                  ...userInfo,
+                  name: userInfo.name + ((adults > 1) ? ` +${adults - 1}` : '')
+                }}
+                createdBy={createdBy}
+                size="md"
+              />
+            )}
+          </div>
           <SummaryCosts
             rentalFiat={rentalFiat}
             rentalToken={rentalToken}

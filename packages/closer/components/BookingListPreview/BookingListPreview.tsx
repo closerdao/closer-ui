@@ -324,7 +324,7 @@ const BookingListPreview = ({
         </div>
       )}
 
-      {userInfo?.email && (
+      {userInfo?.email && !isOwnBooking && (
         <LinkButton
           className="mt-6"
           variant="secondary"
@@ -332,6 +332,14 @@ const BookingListPreview = ({
         >
           {t('booking_card_email_user')}
         </LinkButton>
+      )}
+      
+      {isOwnBooking && status === 'confirmed' && (
+        <Link href={`/bookings/${_id}/checkout`} passHref>
+          <Button className="mt-6" variant="primary">
+            {t('checkout_complete_payment')}
+          </Button>
+        </Link>
       )}
 
       {isPaidBooking &&
