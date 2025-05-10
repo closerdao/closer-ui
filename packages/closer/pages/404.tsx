@@ -1,11 +1,11 @@
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
-import { useTranslations } from 'next-intl';
 
 import Heading from '../components/ui/Heading';
+
+import { useTranslations } from 'next-intl';
 
 import { loadLocaleData } from '../utils/locale.helpers';
 
