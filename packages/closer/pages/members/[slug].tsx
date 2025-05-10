@@ -843,16 +843,17 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                   <textarea
                     value={reportReason}
                     onChange={(e) => setReportReason(e.target.value)}
-                    className="w-full h-22 p-2"
+                    className="w-full h-22 p-2 bg-neutral rounded-md"
                     required
                   />
                 </div>
-                <div className="flex flex-row items-center gap-2">
+                <div className="flex flex-row items-center gap-2 w-full">
                   <input
                     type="checkbox"
                     id="unsafe"
                     checked={isUnsafe}
-                    onChange={(e) => setIsUnsafe(e.target.checked)}
+                      onChange={(e) => setIsUnsafe(e.target.checked)}
+                      className='w-fit'
                   />
                   <label htmlFor="unsafe">{t('report_user_unsafe')}</label>
                 </div>
