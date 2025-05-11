@@ -1738,7 +1738,7 @@
   "settings_deleting": "Deleting...",
   "settings_delete_account_confirm_error": "Please type 'delete' to confirm account deletion",
   "settings_changes_saved_successfully": "Changes saved successfully!",
-  "settings_profile_informationsettings_profile_information": "Profile Information",
+  "settings_profile_information": "Profile Information",
   "settings_about_me": "About me",
   "settings_required_to_make_bookings": "Required to make bookings",
   "settings_tell_us_more_about_yourself": "Tell us more about yourself",
