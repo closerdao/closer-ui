@@ -100,7 +100,7 @@ const MobileTabSelector = ({
 
 // Delete Account Section Component
 interface DeleteAccountSectionProps {
-  t: ReturnType<typeof useTranslations>;
+  t: any;
 }
 const DeleteAccountSection = ({ t }: DeleteAccountSectionProps) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -217,7 +217,7 @@ const SettingsPage = ({
 }: {
   volunteerConfig: VolunteerConfig;
 }) => {
-  const t = useTranslations();
+  const t = useTranslations() as (key: string) => string;
   const { APP_NAME } = useConfig();
   const router = useRouter();
 
