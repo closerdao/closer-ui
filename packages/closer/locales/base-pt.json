@@ -617,7 +617,7 @@
   "subscriptions_citizen_perks_list": "Prova de presença, Prova de suor, Propostas no fórum, NFT de Membro, Página de Membros TDF, Grupo Telegram de Membros, Reserva instantânea",
   "subscriptions_citizen_good_to_go": "👋🏼 Está pronto para avançar!",
   "subscriptions_citizen_eligible": "👋🏼 É elegível para se tornar membro!",
-  "subscriptions_citizen_good_to_go_intro": "Ser um Membro da Fábrica de Sonhos Tradicional (TDF) significa que a TDF é uma das suas casas. Isso traz muitas vantagens e também certos deveres e responsabilidades - “com grande poder, vem grande responsabilidade”.",
+  "subscriptions_citizen_good_to_go_intro": "Ser um Membro da Fábrica de Sonhos Tradicional (TDF) significa que a TDF é uma das suas casas. Isso traz muitas vantagens e também certos deveres e responsabilidades - com grande poder, vem grande responsabilidade",
   "subscriptions_citizen_good_why": "Por que quer tornar-se membro? (obrigatório)",
   "subscriptions_citizen_good_how": "Como deseja contribuir para a TDF?",
   "subscriptions_citizen_i_own_tokens": "Possuo 30+ tokens",
@@ -904,7 +904,7 @@
   "token_sale_white_paper": "⭐ White Paper",
   "token_sale_pink_paper": "⭐ Pink Paper",
   "token_sale_oasa_website": "Website OASA",
-  "token_sale_terms": "T’s & C’s",
+  "token_sale_terms": "T's & C's",
   "token_sale_doc": "Doc. Venda $TDF",
   "token_sale_interior_design_report": "Relatório de Design de Interiores",
   "token_sale_smart_design_report": "Relatório de Design Inteligente",
@@ -1575,5 +1575,14 @@
   "affiliate_dashboard_date": "Data",
   "affiliate_dashboard_payouts": "Pagamentos",
   "affiliate_dashboard_affiliate_revenue": "Receita de afiliados",
-  "": ""
+  "menu_section_stay": "Estadia",
+  "menu_section_events": "Eventos",
+  "menu_section_blog": "Blog",
+  "menu_section_learning_hub": "Hub de aprendizagem",
+  "menu_section_dashboard": "Painel",
+  "menu_section_bookings": "Reservas",
+  "menu_section_user_management": "Gestão de utilizadores",
+  "menu_section_other": "Outros",
+  "menu_section_settings": "Configurações",
+  "navigation_faq": "FAQ"
 }
