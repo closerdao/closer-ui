@@ -716,7 +716,8 @@ const SettingsPage = ({
               <div className="space-y-6">
                 <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
                   <h3 className="text-lg font-medium mb-4 text-red-600">
-                    ⚠️ Danger Zone
+                    ⚠️
+                    {t('settings_danger_zone')}
                   </h3>
                   <p className="text-gray-600 mb-6">
                     {t('settings_danger_zone_warning')}
