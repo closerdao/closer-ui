@@ -110,7 +110,7 @@ const ProjectsPage = ({
                       {t('projects_requirements_value')}
                     </p>
                     <p>
-                      <strong className="uppercase">
+                    <strong className="uppercase">
                         {t('projects_token_rewards_label')}
                       </strong>{' '}
                       {t('projects_token_rewards_value')}
@@ -125,15 +125,40 @@ const ProjectsPage = ({
                       {t('projects_build_projects_title')}
                     </Heading>
 
+                    <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-6">
+                    {
+                      !projects ||
+                      projects.filter(project => (project.status !== 'done' && project.status !== 'in-progress')).length === 0 ?
+                      <p className="p-2">{t('projects_no_active_projects')}</p>:
+                      projects
+                      .filter(project => (project.status !== 'done' && project.status !== 'in-progress'))
+                      .map((project) => (
+                        <ProjectCard
+                          key={project.slug}
+                          project={project}
+                          hasStewardRole={hasStewardRole || false}
+                        />
+                      ))
+                    }
+                    </section>
+
+                    <Heading level={2}>{t('projects_completed_title')}</Heading>
+                    {projects && 
+                      projects.filter(project => (project.status === 'done')).length === 0 &&
+                      <p className="p-2">{t('projects_no_active_projects')}</p>
+                    }
+
                     {projects && projects.length > 0 && (
                       <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-6">
-                        {projects.map((project) => (
-                          <ProjectCard
-                            key={project.slug}
-                            project={project}
-                            hasStewardRole={hasStewardRole || false}
-                          />
-                        ))}
+                        {projects
+                          .filter(project => (project.status === 'done'))
+                          .map((project) => (
+                            <ProjectCard
+                              key={project.slug}
+                              project={project}
+                              hasStewardRole={hasStewardRole || false}
+                            />
+                          ))}
                       </section>
                     )}
 
