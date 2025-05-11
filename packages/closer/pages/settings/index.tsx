@@ -12,6 +12,7 @@ import Select from '../../components/ui/Select/Dropdown';
 import MultiSelect from '../../components/ui/Select/MultiSelect';
 
 import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 import process from 'process';
 
 import { useAuth } from '../../contexts/auth';
@@ -98,7 +99,10 @@ const MobileTabSelector = ({
 };
 
 // Delete Account Section Component
-const DeleteAccountSection = () => {
+interface DeleteAccountSectionProps {
+  t: any;
+}
+const DeleteAccountSection = ({ t }: DeleteAccountSectionProps) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -138,22 +142,22 @@ const DeleteAccountSection = () => {
       {!showConfirmation ? (
         <div>
           <p className="mb-4 text-gray-600">
-            Deleting your account will permanently remove all your data from our
-            systems. This action cannot be undone.
+            {t('settings_delete_account_warning')}
           </p>
           <Button
             onClick={() => setShowConfirmation(true)}
             className="bg-red-600 hover:bg-red-700 text-white"
           >
-            Delete Account
+            {t('settings_delete_account_button')}
           </Button>
         </div>
       ) : (
         <div className="border border-red-300 rounded-md p-4 bg-red-50">
-          <h4 className="font-bold text-red-700 mb-2">Delete Account</h4>
+          <h4 className="font-bold text-red-700 mb-2">
+            {t('settings_delete_account')}
+          </h4>
           <p className="mb-4 text-red-700">
-            This action cannot be undone. All your data will be permanently
-            deleted.
+            {t('settings_delete_account_action_warning')}
           </p>
 
           {error && (
@@ -164,7 +168,7 @@ const DeleteAccountSection = () => {
 
           <div className="mb-4">
             <label className="block mb-2 text-sm font-medium text-red-700">
-              Type &quot;delete&quot; to confirm
+              {t('settings_delete_account_type_to_confirm')}
             </label>
             <input
               type="text"
@@ -181,7 +185,9 @@ const DeleteAccountSection = () => {
               isEnabled={!isDeleting}
               className="bg-red-600 border-red-700 hover:bg-red-700 text-white"
             >
-              {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+              {isDeleting
+                ? t('settings_deleting')
+                : t('settings_delete_account_confirm_button')}
             </Button>
             <Button
               onClick={() => {
@@ -191,7 +197,7 @@ const DeleteAccountSection = () => {
               }}
               variant="secondary"
             >
-              Cancel
+              {t('settings_cancel')}
             </Button>
           </div>
         </div>
@@ -211,6 +217,7 @@ const SettingsPage = ({
 }: {
   volunteerConfig: VolunteerConfig;
 }) => {
+  const t = useTranslations() as (key: string) => string;
   const { APP_NAME } = useConfig();
   const router = useRouter();
 
@@ -237,11 +244,11 @@ const SettingsPage = ({
 
   // Define tabs
   const tabs: Tab[] = [
-    { id: 'profile', label: 'Profile', icon: '👤' },
-    { id: 'account', label: 'Account', icon: '🔑' },
-    { id: 'preferences', label: 'Preferences', icon: '⭐' },
-    { id: 'notifications', label: 'Notifications', icon: '🔔' },
-    { id: 'danger', label: 'Danger Zone', icon: '⚠️' },
+    { id: 'profile', label: t('settings_tab_profile'), icon: '👤' },
+    { id: 'account', label: t('settings_tab_account'), icon: '🔑' },
+    { id: 'preferences', label: t('settings_tab_preferences'), icon: '⭐' },
+    { id: 'notifications', label: t('settings_tab_notifications'), icon: '🔔' },
+    { id: 'danger', label: t('settings_tab_danger'), icon: '⚠️' },
   ];
 
   // Scroll to top when changing tabs
@@ -385,7 +392,9 @@ const SettingsPage = ({
 
         {showSaveSuccess && (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-md mb-6 animate-fade-out">
-            <span className="block sm:inline">Changes saved successfully!</span>
+            <span className="block sm:inline">
+              {t('settings_changes_saved_successfully')}
+            </span>
           </div>
         )}
 
@@ -417,16 +426,18 @@ const SettingsPage = ({
               <div className="space-y-6">
                 <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
                   <h3 className="text-lg font-medium mb-4">
-                    👤 Profile Information
+                    👤 {t('settings_profile_information')}
                   </h3>
 
                   <Input
-                    label="About me"
+                    label={t('settings_about_me')}
                     additionalInfo={
-                      APP_NAME === 'moos' ? 'Required to make bookings' : ''
+                      APP_NAME === 'moos'
+                        ? t('settings_required_to_make_bookings')
+                        : ''
                     }
                     isRequired={APP_NAME === 'moos' ? true : false}
-                    placeholder="Tell us more about yourself"
+                    placeholder={t('settings_tell_us_more_about_yourself')}
                     value={user.about}
                     onChange={saveUserData('about') as any}
                     isInstantSave={true}
@@ -440,17 +451,17 @@ const SettingsPage = ({
                       className="font-medium text-complimentary-light"
                       htmlFor=""
                     >
-                      Profile Picture{' '}
+                      {t('settings_profile_picture')}
                       {APP_NAME === 'moos' && (
                         <span className="text-red-500">
-                          [Required to make bookings]*
+                          {t('settings_required_to_make_bookings_star')}
                         </span>
                       )}
                     </label>
                     <UploadPhoto
                       model="user"
                       id={user._id}
-                      label={user.photo ? 'Change' : 'Add photo'}
+                      label={t('settings_change')}
                       className="my-4"
                     />
                   </div>
@@ -467,8 +478,8 @@ const SettingsPage = ({
                   </h3>
 
                   <Input
-                    label="Name"
-                    placeholder="Your name"
+                    label={t('settings_name')}
+                    placeholder={t('settings_your_name')}
                     value={user.screenname}
                     onChange={saveUserData('screenname') as any}
                     isInstantSave={true}
@@ -479,7 +490,7 @@ const SettingsPage = ({
 
                   <div className="mb-6">
                     <Input
-                      label="Email"
+                      label={t('settings_email')}
                       value={user.email}
                       isDisabled={!updateEmail}
                       onChange={(e) =>
@@ -487,7 +498,7 @@ const SettingsPage = ({
                       }
                       successMessage={
                         emailSaved
-                          ? 'You will receive a link to confirm via email.'
+                          ? t('settings_email_confirm_message')
                           : undefined
                       }
                       validation="email"
@@ -501,7 +512,9 @@ const SettingsPage = ({
                             isEnabled={!emailSaving}
                             variant="inline"
                           >
-                            {emailSaving ? 'Verifying...' : 'Verify Email'}
+                            {emailSaving
+                              ? t('settings_verifying')
+                              : t('settings_verify_email')}
                           </Button>
                           <Button
                             onClick={() => {
@@ -513,7 +526,7 @@ const SettingsPage = ({
                             }}
                             variant="inline"
                           >
-                            Cancel
+                            {t('settings_cancel')}
                           </Button>
                         </div>
                       ) : (
@@ -523,7 +536,7 @@ const SettingsPage = ({
                             variant="inline"
                             className="mt-2"
                           >
-                            Edit Email
+                            {t('settings_edit_email')}
                           </Button>
                         )
                       )}
@@ -532,7 +545,7 @@ const SettingsPage = ({
 
                   <div>
                     <Input
-                      label="Phone"
+                      label={t('settings_phone')}
                       isDisabled={!updatePhone}
                       value={user.phone}
                       onChange={(e) =>
@@ -540,7 +553,7 @@ const SettingsPage = ({
                       }
                       successMessage={
                         phoneSaved
-                          ? 'You will receive a link to confirm via text.'
+                          ? t('settings_phone_confirm_message')
                           : undefined
                       }
                       validation="phone"
@@ -554,7 +567,9 @@ const SettingsPage = ({
                             isEnabled={!phoneSaving}
                             variant="inline"
                           >
-                            {phoneSaving ? 'Verifying...' : 'Verify Phone'}
+                            {phoneSaving
+                              ? t('settings_verifying')
+                              : t('settings_verify_phone')}
                           </Button>
                           <Button
                             onClick={() => {
@@ -566,7 +581,7 @@ const SettingsPage = ({
                             }}
                             variant="inline"
                           >
-                            Cancel
+                            {t('settings_cancel')}
                           </Button>
                         </div>
                       ) : (
@@ -576,7 +591,7 @@ const SettingsPage = ({
                             variant="inline"
                             className="mt-2"
                           >
-                            Edit Phone
+                            {t('settings_edit_phone')}
                           </Button>
                         )
                       )}
@@ -595,17 +610,17 @@ const SettingsPage = ({
                   </h3>
 
                   <MultiSelect
-                    label="Dietary Preferences?"
+                    label={t('settings_dietary_preferences')}
                     values={initialDiet}
                     onChange={saveUserData('diet')}
                     options={dietOptions}
-                    placeholder="Pick or create yours"
+                    placeholder={t('settings_pick_or_create_yours')}
                     className="mb-4"
                   />
 
                   {APP_NAME && APP_NAME.toLowerCase() !== 'moos' && (
                     <Select
-                      label="Shared Accommodation Preference"
+                      label={t('settings_shared_accommodation_preference')}
                       value={user?.preferences?.sharedAccomodation}
                       options={SHARED_ACCOMODATION_PREFERENCES}
                       className="mb-4"
@@ -615,8 +630,8 @@ const SettingsPage = ({
                   )}
 
                   <Input
-                    label="What is your superpower?"
-                    placeholder="I am really good at ..."
+                    label={t('settings_superpower')}
+                    placeholder={t('settings_superpower_placeholder')}
                     value={user?.preferences?.superpower}
                     onChange={saveUserData('superpower') as any}
                     isInstantSave={true}
@@ -626,11 +641,11 @@ const SettingsPage = ({
                   />
 
                   <MultiSelect
-                    label="What skills do you have?"
+                    label={t('settings_skills')}
                     values={user?.preferences?.skills}
                     onChange={saveUserData('skills')}
                     options={skillsOptions}
-                    placeholder="Pick or create yours"
+                    placeholder={t('settings_pick_or_create_yours')}
                     className="mb-4"
                   />
                 </div>
@@ -641,8 +656,8 @@ const SettingsPage = ({
                   </h3>
 
                   <Input
-                    label="What do you dream of creating?"
-                    placeholder="I dream of creating ..."
+                    label={t('settings_dream')}
+                    placeholder={t('settings_dream_placeholder')}
                     value={user?.preferences?.dream}
                     onChange={saveUserData('dream') as any}
                     isInstantSave={true}
@@ -652,7 +667,7 @@ const SettingsPage = ({
                   />
 
                   <Input
-                    label="What is one thing you currently need support with?"
+                    label={t('settings_needs')}
                     placeholder=""
                     value={user?.preferences?.needs}
                     onChange={saveUserData('needs') as any}
@@ -663,7 +678,7 @@ const SettingsPage = ({
                   />
 
                   <Input
-                    label="Anything we should know? Anything you would like to share?"
+                    label={t('settings_more_info')}
                     placeholder=""
                     value={user?.preferences?.moreInfo}
                     onChange={saveUserData('moreInfo') as any}
@@ -689,7 +704,7 @@ const SettingsPage = ({
                       onChange={saveSettings('newsletter_weekly')}
                     />
                     <label className="cursor-pointer flex-1">
-                      Weekly newsletter
+                      {t('settings_weekly_newsletter')}
                     </label>
                   </div>
                 </div>
@@ -701,14 +716,14 @@ const SettingsPage = ({
               <div className="space-y-6">
                 <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
                   <h3 className="text-lg font-medium mb-4 text-red-600">
-                    ⚠️ Danger Zone
+                    ⚠️
+                    {t('settings_danger_zone')}
                   </h3>
                   <p className="text-gray-600 mb-6">
-                    Actions in this section can result in permanent data loss.
-                    Please proceed with caution.
+                    {t('settings_danger_zone_warning')}
                   </p>
 
-                  <DeleteAccountSection />
+                  <DeleteAccountSection t={t} />
                 </div>
               </div>
             )}

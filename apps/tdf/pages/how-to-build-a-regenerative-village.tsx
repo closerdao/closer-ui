@@ -4,20 +4,16 @@ import Link from 'next/link';
 import { Heading } from 'closer';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 import { event } from 'nextjs-google-analytics';
 
 const ArtFaire = () => {
+  const t = useTranslations();
   return (
     <>
       <Head>
-        <title>
-          How to Build A Regenerative Village - book co-authored at Traditional
-          Dream Factory
-        </title>
-        <meta
-          name="description"
-          content="The actionable manual accelerating the transition towards a regenerative way of living, on an individual and planetary scale."
-        />
+        <title>{t('reg_village_title')}</title>
+        <meta name="description" content={t('reg_village_meta_description')} />
         <link
           rel="canonical"
           href="https://www.traditionaldreamfactory.com/"
@@ -29,7 +25,7 @@ const ArtFaire = () => {
           <img
             src="/images/products/how-to-build-a-regenerative-village.jpg"
             className="mr-8 shadow rounded-lg w-[200px]"
-            alt="How to build a regenerative village book"
+            alt={t('reg_village_img_alt')}
           />
           <div className="max-w-prose">
             <Heading
@@ -38,13 +34,9 @@ const ArtFaire = () => {
               display
               level={1}
             >
-              How to Build A Regenerative Village
+              {t('reg_village_heading')}
             </Heading>
-            <p className="mb-6 text-2xl">
-              The actionable manual accelerating the transition towards a
-              regenerative way of living, on an individual and planetary scale.
-            </p>
-
+            <p className="mb-6 text-2xl">{t('reg_village_subheading')}</p>
             <Link
               href="https://payhip.com/buy?link=OxFHQ"
               target="_blank"
@@ -56,60 +48,42 @@ const ArtFaire = () => {
                 })
               }
             >
-              Buy the book
+              {t('reg_village_buy_cta')}
             </Link>
           </div>
         </div>
         <div className="text-lg max-w-prose">
-          <p className="mb-4">
-            &quot;How to Build a Regenerative Village&quot; is an actionable
-            manual co-authored by 22 regenerative practitioners and community
-            founders at TDF. This 174-page illustrated book serves as a
-            comprehensive guide for aspiring regenerative village builders,
-            offering a wealth of wisdom and practical experience from a global
-            tribe of village builders. It provides an actionable blueprint for
-            accelerating the transition towards a regenerative way of living on
-            both an individual and planetary scale.
-          </p>
+          <p className="mb-4">{t('reg_village_intro')}</p>
           <Heading className="mb-4" display level={3}>
-            Chapters
+            {t('reg_village_chapters_heading')}
           </Heading>
           <ul>
             <li className="mb-4">
-              <Heading level={4}>1. Personal Regeneration</Heading>
-              <p>
-                focuses on the individual, and the relationship between
-                individual and a community
-              </p>
+              <Heading level={4}>{t('reg_village_chapter_1_title')}</Heading>
+              <p>{t('reg_village_chapter_1_desc')}</p>
             </li>
             <li className="mb-4">
-              <Heading level={4}>2. Legal & Governance</Heading>
-              <p>explores processes for a cohesive and fruitful co-creation</p>
+              <Heading level={4}>{t('reg_village_chapter_2_title')}</Heading>
+              <p>{t('reg_village_chapter_2_desc')}</p>
             </li>
             <li className="mb-4">
-              <Heading level={4}>3. Funds & Capital</Heading>
-              <p>dives into acquiring and managing resources</p>
+              <Heading level={4}>{t('reg_village_chapter_3_title')}</Heading>
+              <p>{t('reg_village_chapter_3_desc')}</p>
             </li>
             <li className="mb-4">
-              <Heading level={4}>4. Infrastructure</Heading>
-              <p>outlines practical steps to actually build the village</p>
+              <Heading level={4}>{t('reg_village_chapter_4_title')}</Heading>
+              <p>{t('reg_village_chapter_4_desc')}</p>
             </li>
             <li className="mb-4">
-              <Heading level={4}>5. Regenerating Nature</Heading>
-              <p>
-                compiles regenerative frameworks to work together with nature
-              </p>
+              <Heading level={4}>{t('reg_village_chapter_5_title')}</Heading>
+              <p>{t('reg_village_chapter_5_desc')}</p>
             </li>
             <li className="mb-4">
-              <Heading level={4}>6. Beyond Your Village</Heading>
-              <p>
-                looks at the wider ecosystem of villages, and how to maximise
-                the impact of the global regenerative movement
-              </p>
+              <Heading level={4}>{t('reg_village_chapter_6_title')}</Heading>
+              <p>{t('reg_village_chapter_6_desc')}</p>
             </li>
           </ul>
-
-          <p className="mb-6 italic">You can buy the book for just €9.</p>
+          <p className="mb-6 italic">{t('reg_village_price_note')}</p>
         </div>
       </section>
     </>

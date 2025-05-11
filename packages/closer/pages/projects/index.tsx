@@ -92,7 +92,7 @@ const ProjectsPage = ({
                 <div className="flex flex-col gap-6 w-full ">
                   <div className="flex flex-col sm:flex-row justify-between gap-4 items-center pt-4">
                     <Heading level={1} className="md:text-4xl  font-bold">
-                      {t('projects_builders_residency_title')}
+                      {t('projects_builders_residency_open_call')}
                     </Heading>
                     <div className=" w-full sm:w-[250px]">
                       <LinkButton href="/projects/apply">
@@ -102,30 +102,30 @@ const ProjectsPage = ({
                   </div>
 
                   <div className="flex flex-col gap-6">
-                    <p>
-                      {t('projects_intro_text')}
-                    </p>
-
-                    <p>
-                      <strong className="uppercase">{t('projects_requirements_title')}: </strong> 
-                      {t('projects_requirements_text')}
-                    </p>
-
+                    <p>{t('projects_starting_to_build')}</p>
                     <p>
                       <strong className="uppercase">
-                        {t('projects_token_rewards_title')}
+                        {t('projects_requirements_label')}
                       </strong>{' '}
-                      {t('projects_token_rewards_text')}
+                      {t('projects_requirements_value')}
                     </p>
-
                     <p>
-                      <strong className="uppercase">{t('projects_community_culture_title')}: </strong>
-                      {t('projects_community_culture_text')}
+                    <strong className="uppercase">
+                        {t('projects_token_rewards_label')}
+                      </strong>{' '}
+                      {t('projects_token_rewards_value')}
                     </p>
+                    <p>
+                      <strong className="uppercase">
+                        {t('projects_community_culture_label')}
+                      </strong>{' '}
+                      {t('projects_community_culture_value')}
+                    </p>
+                    <Heading level={2}>
+                      {t('projects_build_projects_title')}
+                    </Heading>
 
-                    <Heading level={2}>{t('projects_build_title')}</Heading>
-
-                    <section>
+                    <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-6">
                     {
                       !projects ||
                       projects.filter(project => (project.status !== 'done' && project.status !== 'in-progress')).length === 0 ?
@@ -145,7 +145,7 @@ const ProjectsPage = ({
                     <Heading level={2}>{t('projects_completed_title')}</Heading>
                     {projects && 
                       projects.filter(project => (project.status === 'done')).length === 0 &&
-                      <p className="p-2">{t('projects_no_completed_projects')}</p>
+                      <p className="p-2">{t('projects_no_active_projects')}</p>
                     }
 
                     {projects && projects.length > 0 && (
@@ -166,24 +166,26 @@ const ProjectsPage = ({
                       {t('projects_skills_and_qualifications_title')}
                     </Heading>
                     <ul className="mb-4 list-disc pl-5">
-                      <li>{t('projects_skill_build')}</li>
+                      <li>{t('projects_skill_practical_build')}</li>
                       <li>{t('projects_skill_electrical')}</li>
                       <li>{t('projects_skill_plumbing')}</li>
-                      <li>{t('projects_skill_cement')}</li>
+                      <li>{t('projects_skill_cement_plastering')}</li>
                       <li>{t('projects_skill_carpentry')}</li>
-                      <li>{t('projects_skill_painting')}</li>
+                      <li>{t('projects_skill_painting_decorating')}</li>
                       <li>{t('projects_skill_stoneworks')}</li>
-                      <li>{t('projects_skill_tools')}</li>
-                      <li>{t('projects_skill_design')}</li>
+                      <li>{t('projects_skill_tools_machinery')}</li>
+                      <li>{t('projects_skill_design_drawing')}</li>
                     </ul>
 
                     <p>
-                      <strong className="uppercase">{t('projects_timeframe_title')}: </strong>{' '}
-                      {t('projects_timeframe_text', { timeFrame: volunteerConfig?.residenceTimeFrame })}
+                      <strong className="uppercase">
+                        {t('projects_time_frame_label')}
+                      </strong>{' '}
+                      {t('projects_time_frame_value', {
+                        time: volunteerConfig?.residenceTimeFrame,
+                      })}
                     </p>
-                    <p>
-                      {t('projects_timeframe_description')}
-                    </p>
+                    <p>{t('projects_booking_recommendation')}</p>
                   </div>
                 </div>
               </div>

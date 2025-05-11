@@ -8,10 +8,12 @@ import JoinWebinarPrompt from 'closer/components/JoinWebinarPrompt';
 import { Button, Heading } from 'closer';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 import { event } from 'nextjs-google-analytics';
 
 const HomePage = () => {
   const [isPromptOpen, setIsPromptOpen] = useState(false);
+  const t = useTranslations();
 
   const joinWebinar = () => {
     setIsPromptOpen(true);
@@ -20,11 +22,8 @@ const HomePage = () => {
   return (
     <>
       <Head>
-        <title>TDF Data Room - investment details</title>
-        <meta
-          name="description"
-          content="Traditional Dream Factory (TDF) is a regenerative playground in Abela, Portugal."
-        />
+        <title>{t('dataroom_title')}</title>
+        <meta name="description" content={t('dataroom_meta_description')} />
         <link
           rel="canonical"
           href="https://www.traditionaldreamfactory.com/"
@@ -41,7 +40,7 @@ const HomePage = () => {
               <img
                 src="/images/landing/top-view.jpeg"
                 className="md:rounded-r-2xl"
-                alt="Aerial view of Traditional Dream Factory"
+                alt={t('dataroom_img_alt')}
               />
             </div>
             <div className="md:w-[50%] max-w-prose">
@@ -52,36 +51,27 @@ const HomePage = () => {
                   display
                   level={1}
                 >
-                  Join us in developing a pioneering regenerative village in
-                  Portugal.
+                  {t('dataroom_heading')}
                 </Heading>
-                <p className="mb-4">
-                  We are raising €800k to kickstart the development of a village
-                  restoring the soils, improving the water cycle, growing food -
-                  and creating modern living and working spaces for 100+
-                  thriving humans. This initial funding enables us to:
-                </p>
-
+                <p className="mb-4">{t('dataroom_intro')}</p>
                 <ul>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    secure the real estate (25ha of land with approved
-                    construction plans)
+                    {t('dataroom_bullet_1')}
                   </li>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    develop the co-living (14 suites)
+                    {t('dataroom_bullet_2')}
                   </li>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    build 2 lakes and achieve water sovereignty
+                    {t('dataroom_bullet_3')}
                   </li>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    leverage EU funding
+                    {t('dataroom_bullet_4')}
                   </li>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    establish a cash flow positive hospitality and farming
-                    business
+                    {t('dataroom_bullet_5')}
                   </li>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    expand our impact and issue ecosystem credits
+                    {t('dataroom_bullet_6')}
                   </li>
                 </ul>
                 <ul className="my-8 flex items-center gap-1">
@@ -93,11 +83,11 @@ const HomePage = () => {
                       onClick={() =>
                         event('click', {
                           category: 'Dataroom',
-                          label: 'Investment deck',
+                          label: t('dataroom_investment_deck_label'),
                         })
                       }
                     >
-                      Investment deck
+                      {t('dataroom_investment_deck')}
                     </Link>
                   </li>
                   <li>
@@ -105,32 +95,32 @@ const HomePage = () => {
                       className="bg-transparent md:ml-2 border-2 border-white uppercase text-white rounded-full py-2 px-3 text-center md:text-left"
                       onClick={joinWebinar}
                     >
-                      Join webinar
+                      {t('dataroom_join_webinar')}
                     </Button>
                   </li>
                 </ul>
                 <div className="mt-8">
-                  📁 Documents:
+                  {t('dataroom_documents')}
                   <Link
                     href="/pdf/2021-TDF-report.pdf"
                     target="_blank"
                     className="ml-2 underline"
                   >
-                    2021 report
+                    {t('dataroom_report_2021')}
                   </Link>
                   <Link
                     href="/pdf/2022-TDF-report.pdf"
                     target="_blank"
                     className="ml-2 underline"
                   >
-                    2022 report
+                    {t('dataroom_report_2022')}
                   </Link>
                   <Link
                     href="/pdf/2024-TDF-report.pdf"
                     target="_blank"
                     className="ml-2 underline"
                   >
-                    2024 report
+                    {t('dataroom_report_2024')}
                   </Link>
                 </div>
               </div>

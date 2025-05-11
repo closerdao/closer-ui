@@ -1,7 +1,7 @@
 import { FC, PropsWithChildren } from 'react';
 
-import { Footer } from '@/components';
-
+import { Footer } from '@/components/Footer/Footer';
+// import { Footer } from '@/components';
 import PromptFixedBottom from 'closer/components/PromptFixedBottom';
 
 import { Navigation, Newsletter, Prompts } from 'closer';

@@ -3,31 +3,32 @@ import Link from 'next/link';
 import { FC } from 'react';
 
 import { useConfig } from 'closer';
+import { useTranslations } from 'next-intl';
 
 export const Footer: FC = () => {
   const { INSTAGRAM_URL, TWITTER_URL } = useConfig();
-
+  const t = useTranslations();
   return (
     <footer className="w-full mt-8 mx-auto text-center max-w-prose">
       <div className="p-6 text-gray-700 italic">
         <p>
-          Traditional Dream Factory is the first village in the{' '}
+          {t('footer_tdf_is_first_village')}{' '}
           <a href="https://oasa.earth" target="_blank" rel="noreferrer">
-            OASA network
+            {t('footer_oasa_network')}
           </a>{' '}
-          - it is located in Abela, Portugal. Logo designed by{' '}
+          {t('footer_located_in_abela')}{' '}
           <a
             href="https://www.instagram.com/braulioamado/"
             rel="noreferrer nofollow"
             target="_blank"
           >
-            braulioamado
+            {t('footer_braulioamado')}
           </a>
-          . Platform developed by <a href="https://closer.earth">Closer</a>.
+          {t('footer_platform_developed_by')}{' '}
+          <a href="https://closer.earth">{t('footer_closer')}</a>.
         </p>
-
         <p>
-          <Link href="/pdf/TDF-PP.pdf">Privacy policy</Link>
+          <Link href="/pdf/TDF-PP.pdf">{t('footer_privacy_policy')}</Link>
         </p>
         <div className="social mt-4 flex flex-row justify-center">
           <a

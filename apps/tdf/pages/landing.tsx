@@ -27,11 +27,8 @@ const HomePage = ({ subscriptionsConfig }: Props) => {
   return (
     <div>
       <Head>
-        <title>Traditional Dream Factory</title>
-        <meta
-          name="description"
-          content="Traditional Dream Factory (TDF) is a regenerative playground in Abela, Portugal."
-        />
+        <title>{t('landing_title')}</title>
+        <meta name="description" content={t('landing_meta_description')} />
         <link
           rel="canonical"
           href="https://www.traditionaldreamfactory.com/"
@@ -66,13 +63,10 @@ const HomePage = ({ subscriptionsConfig }: Props) => {
                 display
                 level={1}
               >
-                Discover <br />
-                the power of <br />
-                regenerative <br />
-                co-living.
+                {t.rich('landing_hero_heading', { br: () => <br /> })}
               </Heading>
               <p className="drop-shadow-lg md:mt-4 mb-6 md:mb-6 text-2xl md:text-4xl text-white font-bold">
-                Your home for the future.
+                {t('landing_hero_subheading')}
               </p>
               <div>
                 <Link
@@ -82,11 +76,11 @@ const HomePage = ({ subscriptionsConfig }: Props) => {
                   onClick={() =>
                     event('click', {
                       category: 'HomePage',
-                      label: 'Join the Dream',
+                      label: t('landing_join_dream_label'),
                     })
                   }
                 >
-                  JOIN THE DREAM
+                  {t('landing_join_dream_cta')}
                 </Link>
               </div>
             </div>
@@ -102,15 +96,13 @@ const HomePage = ({ subscriptionsConfig }: Props) => {
               display
               className="text-center md:text-left mb-6 md:text-6xl"
             >
-              Traditional Dream Factory
+              {t('landing_about_heading')}
             </Heading>
             <p className="text-center md:text-left mb-6">
-              Our co-living quarters will be home to 14 large suites with a
-              living room & kitchen, 4 loft studios with a music production
-              live-in studio, and a private house for families or friends.
+              {t('landing_about_intro')}
             </p>
             <p className="text-center md:text-left mb-6 uppercase font-bold">
-              The TDF village is made up of:
+              {t('landing_about_village_made_of')}
             </p>
             <div className="md:flex md:flex-cols-2 md:space-x-6">
               <ul className="space-y-6 md:w-1/2">
@@ -320,9 +312,7 @@ const HomePage = ({ subscriptionsConfig }: Props) => {
           <div className="text-center mb-20 w-full md:max-w-6xl">
             <div className="w-full flex items-center flex-col">
               <Heading level={2} className="text-2xl font-bold">
-                {`Meet your new home, way of life, and tribe. 
-                  Join a unique blend of solarpunks, web3 aficionados, holistic healers, permaculture pioneers, tree enthusiasts, tech wizards, and regenerative innovators. 
-                  Together, we're reshaping communal living.`}
+                {t.rich('landing_join_dreamers_heading', { br: () => <br /> })}
               </Heading>
             </div>
             <PhotoGallery className="mt-8" />
@@ -335,10 +325,7 @@ const HomePage = ({ subscriptionsConfig }: Props) => {
               className="text-2xl mb-6 max-w-3xl text-center mt-8 italic"
               level={2}
             >
-              TDF is a model for a regenerative economy. We are looking for 300
-              forward-thinking doer-dreamers to co-create a habitat where nature
-              thrives. No fleeting promises here, just a space designed for
-              regenerative living and deep connection. 🐑
+              {t.rich('landing_join_dreamers_subheading', { br: () => <br /> })}
             </Heading>
             <div>
               <Link
@@ -348,11 +335,11 @@ const HomePage = ({ subscriptionsConfig }: Props) => {
                 onClick={() =>
                   event('click', {
                     category: 'HomePage',
-                    label: 'Join the Dreamers',
+                    label: t('landing_join_dreamers_cta_label'),
                   })
                 }
               >
-                JOIN THE DREAMERS
+                {t('landing_join_dreamers_cta')}
               </Link>
             </div>
           </div>
@@ -421,11 +408,10 @@ const HomePage = ({ subscriptionsConfig }: Props) => {
           <div className="w-full flex justify-center">
             <div className="p-6 text-left w-full rounded-md max-w-6xl">
               <Heading className="mb-2 uppercase" level={4}>
-                Which path is for me?
+                {t('landing_compare_subscriptions_heading')}
               </Heading>
               <p className="text-md mb-4 max-w-3xl">
-                Want to see how the subscriptions compare to one another to
-                choose the best option is right for you?
+                {t('landing_compare_subscriptions_subheading')}
               </p>
               <Button
                 size="small"
@@ -434,7 +420,7 @@ const HomePage = ({ subscriptionsConfig }: Props) => {
                   router.push('/subscriptions');
                 }}
               >
-                Compare subscriptions
+                {t('landing_compare_subscriptions_cta')}
               </Button>
             </div>
           </div>
@@ -442,19 +428,13 @@ const HomePage = ({ subscriptionsConfig }: Props) => {
         <section className="flex justify-center mb-[120px] py-16 bg-accent-alt-light">
           <div className="max-w-6xl flex flex-wrap">
             <Heading level={3} className="mb-8">
-              TDF is part of the OASA network - transforming ownership into
-              stewardship. The TDF project is bound by the{' '}
-              <Link
-                href="https://docs.google.com/document/d/1Ocv9rtRkDxsJmeRxrL6mV07EyWcHc2YqfN8mHoylO2E/edit"
-                className="underline"
-              >
-                Regenerative Land Stewardship Principles
-              </Link>{' '}
-              set forth by OASA. By accessing TDF lands, our members and
-              visitors must abide by our regenerative ethos. OASA is on a bold
-              mission to conserve 100.000 ha of land globally - and TDF is its
-              first prototype in utilising real estate as a vehicle for
-              ecological restoration.
+              {t.rich('landing_oasa_heading', {
+                link: (chunks) => (
+                  <Link href="https://oasa.earth/" className="underline">
+                    {chunks}
+                  </Link>
+                ),
+              })}
             </Heading>
             <Button
               size="small"
@@ -464,7 +444,7 @@ const HomePage = ({ subscriptionsConfig }: Props) => {
               }}
               variant="secondary"
             >
-              Learn more about OASA
+              {t('landing_oasa_cta')}
             </Button>
           </div>
         </section>
@@ -474,7 +454,7 @@ const HomePage = ({ subscriptionsConfig }: Props) => {
             level={3}
             className="text-center font-bold py-12 px-4 mb-6"
           >
-            A prototype for regenerative living
+            {t('landing_prototype_heading')}
           </Heading>
           <Resources />
         </section>

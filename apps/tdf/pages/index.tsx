@@ -54,11 +54,11 @@ const HomePage = () => {
       onClick={() =>
         event('click', {
           category: 'HomePage',
-          label: 'Book a stay',
+          label: t('home_cta_book_a_stay_event'),
         })
       }
     >
-      Book a stay
+      {t('home_cta_book_a_stay')}
     </Link>
   ) : (
     <Link
@@ -68,22 +68,19 @@ const HomePage = () => {
       onClick={() =>
         event('click', {
           category: 'HomePage',
-          label: 'Join the Dream',
+          label: t('home_cta_join_the_dream_event'),
         })
       }
     >
-      JOIN THE DREAM
+      {t('home_cta_join_the_dream')}
     </Link>
   );
 
   return (
     <>
       <Head>
-        <title>Traditional Dream Factory</title>
-        <meta
-          name="description"
-          content="Traditional Dream Factory (TDF) is a regenerative playground in Abela, Portugal."
-        />
+        <title>{t('home_title')}</title>
+        <meta name="description" content={t('home_meta_description')} />
         <link
           rel="canonical"
           href="https://www.traditionaldreamfactory.com/"
@@ -91,29 +88,7 @@ const HomePage = () => {
         />
       </Head>
 
-      {/* {open && !isAuthenticated && (
-        <section className="fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] bg-accent-light">
-          <div className="mx-auto max-w-sm p-4">
-            <Heading level={3} className="mb-4">
-              Stay in touch
-            </Heading>
-            <Newsletter
-              placement="HomePagePrompt"
-              ctaText={hasSubscribed ? 'Thanks for subscribing!' : 'Subscribe'}
-              onSuccess={handleSubscriptionSuccess}
-              className="px-0 pt-0 pb-4 sm:w-full"
-            />
-            <Button
-              onClick={() => handleDrawerClose(false)}
-              variant="secondary"
-              size="small"
-              className="my-4"
-            >
-              Close
-            </Button>
-          </div>
-        </section>
-      )} */}
+     
       <section className="md:absolute md:-top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-light mb-8 md:mb-[100vh]">
         <div className="md:h-[100vh]">
           {isMobile ? (
@@ -142,12 +117,11 @@ const HomePage = () => {
                 display
                 level={1}
               >
-                Ready to explore life in a regenerative village?
+                {t('home_hero_title')}
               </Heading>
               <div className="my-4">
                 <p className="text-xl md:text-2xl max-w-3xl">
-                  We are building a climate resilient neighborhood of the future
-                  in Portugal - and you are invited to be a part of it.
+                  {t('home_hero_subtitle')}
                 </p>
               </div>
               <div>{CTA}</div>
@@ -164,13 +138,11 @@ const HomePage = () => {
               display
               className="text-center md:text-left mb-6 md:text-6xl"
             >
-              Traditional Dream Factory
+              {t('home_about_title')}
             </Heading>
 
             <p className="text-center md:text-left mb-6">
-              Our current project is a 5 hectare regenerative playground in
-              Abela, where we have a reforestation, food forest, glamping
-              accomodations, industrial kitchen, cafe, sauna and more:
+              {t('home_about_subtitle')}
             </p>
             <div className="md:flex md:flex-cols-2 md:space-x-6">
               <ul className="space-y-6 md:w-1/2">
@@ -181,7 +153,7 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    OPEN Coworking & STARLINK WIFI
+                    {t('home_about_coworking')}
                   </Heading>
                 </li>
                 <li className="flex justify-start items-center">
@@ -191,7 +163,7 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    6 Van parking areas
+                    {t('home_about_van_parking')}
                   </Heading>
                 </li>
                 <li className="flex justify-start items-center">
@@ -201,7 +173,7 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    10 Glamping Accommodations
+                    {t('home_about_glamping')}
                   </Heading>
                 </li>
                 <li className="flex justify-start items-center">
@@ -211,8 +183,10 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    Food Forest + REFORESTATION
-                    <p className="text-sm font-light">(w/ 2000+ trees)</p>
+                    {t('home_about_food_forest')}
+                    <p className="text-sm font-light">
+                      {t('home_about_food_forest_sub')}
+                    </p>
                   </Heading>
                 </li>
                 <li className="flex justify-start items-center">
@@ -222,9 +196,9 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    Market garden{' '}
+                    {t('home_about_market_garden')}
                     <small className="text-sm font-light">
-                      (producing vegetables for 30+ people)
+                      {t('home_about_market_garden_sub')}
                     </small>
                   </Heading>
                 </li>
@@ -235,9 +209,9 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    Mushroom farm{' '}
+                    {t('home_about_mushroom_farm')}
                     <Tag className="m-1" color="primary">
-                      Coming soon
+                      {t('home_about_coming_soon')}
                     </Tag>
                   </Heading>
                 </li>
@@ -250,7 +224,7 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    Pop-up event space
+                    {t('home_about_event_space')}
                   </Heading>
                 </li>
                 <li className="flex justify-start items-center">
@@ -260,7 +234,7 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    Sauna
+                    {t('home_about_sauna')}
                   </Heading>
                 </li>
                 <li className="flex justify-start items-center">
@@ -270,9 +244,9 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    Natural pool
+                    {t('home_about_natural_pool')}
                     <Tag className="m-1" color="primary">
-                      Coming soon
+                      {t('home_about_coming_soon')}
                     </Tag>
                   </Heading>
                 </li>
@@ -283,7 +257,7 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    Pizza oven
+                    {t('home_about_pizza_oven')}
                   </Heading>
                 </li>
                 <li className="flex justify-start items-center">
@@ -293,7 +267,7 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    Coffee shop
+                    {t('home_about_coffee_shop')}
                   </Heading>
                 </li>
                 <li className="flex justify-start items-center">
@@ -303,7 +277,7 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    Makerspace & workshop
+                    {t('home_about_makerspace')}
                   </Heading>
                 </li>
               </ul>
@@ -316,8 +290,7 @@ const HomePage = () => {
         <section>
           <div className="w-full flex justify-center flex-wrap mb-24">
             <p className="w-full font-bold uppercase text-center mb-6">
-              Check out our yearly reports to see everything we have done so
-              far!
+              {t('home_reports_title')}
             </p>
             <div className="flex w-full justify-center gap-4">
               <Button
@@ -329,7 +302,7 @@ const HomePage = () => {
                   })
                 }
               >
-                2021 report
+                {t('home_reports_2021')}
               </Button>
               <Button
                 className="w-fit"
@@ -340,7 +313,7 @@ const HomePage = () => {
                   })
                 }
               >
-                2022 report
+                {t('home_reports_2022')}
               </Button>
               <Button
                 className="w-fit"
@@ -351,7 +324,7 @@ const HomePage = () => {
                   })
                 }
               >
-                2024 report
+                {t('home_reports_2024')}
               </Button>
             </div>
           </div>
@@ -365,47 +338,30 @@ const HomePage = () => {
           </div>
           <div className="max-w-prose">
             <Heading className="text-center md:text-left mb-6 uppercase text-2xl font-black flex">
-              Co-living Development{' '}
+              {t('home_coliving_title')}
               <span className="justify-center align-center -mt-1 ml-4">
-                <Tag color="primary">Plans approved!</Tag>
+                <Tag color="primary">{t('home_coliving_plans_approved')}</Tag>
               </span>
             </Heading>
             <div className="md:flex md:flex-cols-2 md:space-x-2">
               <ul className="space-y-6">
                 <li className="">
                   <Heading className="uppercase bold" level={3}>
-                    Building 14 suites
+                    {t('home_coliving_building_14_suites')}
                   </Heading>
-                  <p>
-                    Each suite has over 20m2 of living space - giving ample
-                    space for resident to have a desk, private bathroom, a
-                    luxurious queen sized bed. We are tailoring the interior to
-                    fit the needs of digital nomads, young families, yogies, and
-                    other conscious individuals.
-                  </p>
+                  <p>{t('home_coliving_building_14_suites_desc')}</p>
                 </li>
                 <li className="">
                   <Heading className="uppercase bold" level={3}>
-                    Bioclimatic buildings
+                    {t('home_coliving_bioclimatic_buildings')}
                   </Heading>
-                  <p>
-                    The building is designed to be energy efficient, with
-                    passive solar design, natural ventilation, and a solar roof
-                    - making it a comfortable place to live year round while
-                    producing it&apos;s own energy.
-                  </p>
+                  <p>{t('home_coliving_bioclimatic_buildings_desc')}</p>
                 </li>
                 <li className="">
                   <Heading className="uppercase bold" level={3}>
-                    Mixed use co-living & hospitality
+                    {t('home_coliving_mixed_use')}
                   </Heading>
-                  <p>
-                    The property is ideal for hosting large events (up to 100
-                    people), and we are planning to use it for retreats,
-                    workshops, and other events for 3 months out of the year
-                    while running our own co-living community for 9 months out
-                    of the year.
-                  </p>
+                  <p>{t('home_coliving_mixed_use_desc')}</p>
                 </li>
               </ul>
             </div>
@@ -415,62 +371,34 @@ const HomePage = () => {
         <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2 space-x-4">
           <div className="max-w-prose">
             <Heading className="text-center md:text-left mb-6 uppercase text-2xl font-black">
-              Agroforestry and land developments
+              {t('home_agroforestry_title')}
             </Heading>
-            <p>
-              With over 3000 trees already planted on the land, and a plan to
-              create a productive agroforestry system with over 10 000 fruit
-              trees (including almonds, olives, citrus, berries etc) over the
-              next few years, TDF is committed to creating a regenerative
-              landscape that hydrates the land, sequesters carbon, and
-              nourrishes our village and the local community.
-            </p>
+            <p>{t('home_agroforestry_desc')}</p>
             <div className="md:flex md:flex-cols-2 mt-6">
               <ul className="space-y-6">
                 <li className="">
                   <Heading className="uppercase bold" level={3}>
-                    Creating a water retention landscape
+                    {t('home_agroforestry_water_retention')}
                   </Heading>
-                  <p>
-                    Our swales collect runoff waters from the landscape and will
-                    be storing it in our 2 planned lakes. This will ensure a
-                    steady water supply year round.
-                  </p>
+                  <p>{t('home_agroforestry_water_retention_desc')}</p>
                 </li>
 
                 <li className="">
                   <Heading className="uppercase bold" level={3}>
-                    Restorative Farming Practices
+                    {t('home_agroforestry_restorative_farming')}
                   </Heading>
-                  <p>
-                    TDF is committed to organic farming, avoiding synthetic
-                    fertilizers and pesticides. Organic practices are employed
-                    to maintain a balanced ecosystem, focusing on natural pest
-                    control and the use of compost for soil nutrition.
-                  </p>
+                  <p>{t('home_agroforestry_restorative_farming_desc')}</p>
                 </li>
 
                 <li className="">
                   <Heading className="uppercase bold" level={3}>
-                    Biochar Production
+                    {t('home_agroforestry_biochar')}
                   </Heading>
-                  <p>
-                    Using syntropic methods, our agroforestry landscape is set
-                    to produce excess biomass we can process into biochar.
-                    Biochar improves soil fertility, increase water retention
-                    and stimulates microbial activity, leading to healthier
-                    trees and better crop yields - all while capturing carbon
-                    from the atmosphere and producing excess energy in the
-                    process.
-                  </p>
+                  <p>{t('home_agroforestry_biochar_desc')}</p>
                 </li>
 
                 <li className="italic mt-6">
-                  Scalability and Future Prospects: TDF envisions this orchard
-                  as a scalable model for regenerative and profitable farming,
-                  demonstrating how environmental responsibility can align with
-                  commercial success. The project could serve as blueprint for
-                  future villages around the world.
+                  {t('home_agroforestry_scalability')}
                 </li>
               </ul>
             </div>
@@ -487,9 +415,7 @@ const HomePage = () => {
             <div className="w-full flex items-center flex-col">
               <div className="max-w-prose">
                 <p className="text-2xl max-w-prose">
-                  {`Meet your new home, way of life, and tribe. 
-                    Join a unique collective of creatives, digital nomads, solarpunks, web3 aficionados, permaculturists & entrepreneurs. 
-                    Together, we're reshaping communal living.`}
+                  {t('home_meet_your_tribe')}
                 </p>
               </div>
             </div>
@@ -502,13 +428,13 @@ const HomePage = () => {
             level={1}
             className="text-right  text-3xl md:text-6xl font-extrabold uppercase px-4 drop-shadow-lg mb-2 md:mb-8 md:text-center max-w-[700px] mt-1 md:mt-[100px] md:bg-[url('/images/token-sale/token-illy.png')] bg-no-repeat pt-[20px] md:pt-[130px] bg-top"
           >
-            Gain exclusive access to regenerative living
+            {t('home_token_hero_title')}
           </Heading>
           <Heading
             level={2}
             className="font-bold text-right uppercase md:text-center px-4 text-xl md:text-md max-w-[700px] mb-4"
           >
-            $TDF Unlocks access to housing in our village.
+            {t('home_token_hero_subtitle')}
           </Heading>
           <LinkButton
             className="!w-60 font-bold mb-3 md:mb-8 relative text-xl mx-4"
@@ -559,52 +485,39 @@ const HomePage = () => {
                 level={2}
                 className="text-center md:text-left mb-4 uppercase text-2xl font-black"
               >
-                How to play
+                {t('home_how_to_play_title')}
               </Heading>
-              <p>
-                While the village is in development we offer multiple ways to
-                come and visit. Whether you are looking for a short stay, a
-                longer term residency, or a work exchange - we have something
-                for you.
-              </p>
-              <p>
-                Once we get to know each other, and if there is mutual interest
-                - you&apos;ll be invited to become a full member of the village.
-                Members are returning residents who co-own the village together
-                and can participate in the decision making process, and can
-                apply for work opportunities.
-              </p>
+              <p>{t('home_how_to_play_desc_1')}</p>
+              <p>{t('home_how_to_play_desc_2')}</p>
             </div>
             <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-center align-center">
               <div className="p-4 border-2 border-primary rounded-xl md:w-[30%]">
                 <div className="flex justify-between flex-col h-full">
                   <div>
                     <Heading level={4} className="text-center">
-                      Guest
+                      {t('home_how_to_play_guest_title')}
                     </Heading>
                     <p className="my-2 italic">
-                      Come and enjoy the nature - work from our co-working
-                      space, connect with out community and enjoy our
-                      facilities.
+                      {t('home_how_to_play_guest_desc')}
                     </p>
                     <ul>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        Private or shared glamping or van
+                        {t('home_how_to_play_guest_bullet_1')}
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        Work on your own projects
+                        {t('home_how_to_play_guest_bullet_2')}
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        Get discounted rates if you book for a week or more
+                        {t('home_how_to_play_guest_bullet_3')}
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        1 day minimum stay
+                        {t('home_how_to_play_guest_bullet_4')}
                       </li>
                     </ul>
                   </div>
                   <div className="mt-4 mb-4 flex justify-center align-center">
                     <Link href="/stay" className="uppercase btn-primary">
-                      Book a stay
+                      {t('home_how_to_play_guest_cta')}
                     </Link>
                   </div>
                 </div>
@@ -613,27 +526,26 @@ const HomePage = () => {
                 <div className="flex justify-between flex-col h-full">
                   <div>
                     <Heading level={4} className="text-center">
-                      Volunteer
+                      {t('home_how_to_play_volunteer_title')}
                     </Heading>
                     <p className="my-2 italic">
-                      Learn about permaculture, bioconstruction & cooking while
-                      doing a work exchange.
+                      {t('home_how_to_play_volunteer_desc')}
                     </p>
                     <ul>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        Work 4h/day
+                        {t('home_how_to_play_volunteer_bullet_1')}
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        Free accomodation (dorm, shared glamper, or camping)
+                        {t('home_how_to_play_volunteer_bullet_2')}
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        2 week minimum stay
+                        {t('home_how_to_play_volunteer_bullet_3')}
                       </li>
                     </ul>
                   </div>
                   <div className="mt-4 mb-4 flex justify-center align-center">
                     <Link href="/volunteer" className="uppercase btn-primary">
-                      See opportunities
+                      {t('home_how_to_play_volunteer_cta')}
                     </Link>
                   </div>
                 </div>
@@ -642,35 +554,32 @@ const HomePage = () => {
                 <div className="flex justify-between flex-col h-full">
                   <div>
                     <Heading level={4} className="text-center">
-                      Resident
+                      {t('home_how_to_play_resident_title')}
                     </Heading>
                     <p className="my-2 italic">
-                      Apply for a 1+ month residency and leave a mark on our
-                      village - maybe you are an expert carpenter - or maybe you
-                      want to practice a new craft. Make a proposal for what
-                      you&apos;d like to build and we will have a conversation.
+                      {t('home_how_to_play_resident_desc')}
                     </p>
                     <ul>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        Work ~6h/day (project based)
+                        {t('home_how_to_play_resident_bullet_1')}
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        Free accomodation
+                        {t('home_how_to_play_resident_bullet_2')}
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        Free food
+                        {t('home_how_to_play_resident_bullet_3')}
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        Accrue real estate assets for completing work
+                        {t('home_how_to_play_resident_bullet_4')}
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        1 month minimum stay
+                        {t('home_how_to_play_resident_bullet_5')}
                       </li>
                     </ul>
                   </div>
                   <div className="mt-4 mb-4 flex justify-center align-center">
                     <Link href="/projects" className="uppercase btn-primary">
-                      Apply
+                      {t('home_how_to_play_resident_cta')}
                     </Link>
                   </div>
                 </div>
@@ -682,30 +591,24 @@ const HomePage = () => {
         <section className="flex justify-center my-20 -mx-4 p-4 py-12 bg-black text-white">
           <div className="max-w-prose flex flex-wrap">
             <Heading className="text-center md:text-left mb-6 uppercase text-2xl font-black">
-              Not just a co-living - become part of a movement conserving &
-              regenerating land
+              {t('home_movement_title')}
             </Heading>
             <p className="mb-8">
-              TDF is part of the OASA network - transforming ownership into
-              stewardship. The TDF project is bound by the{' '}
+              {t('home_movement_desc_1')}{' '}
               <Link
                 href="https://docs.google.com/document/d/1Ocv9rtRkDxsJmeRxrL6mV07EyWcHc2YqfN8mHoylO2E/edit"
                 className="underline"
               >
-                Regenerative Land Stewardship Principles
+                {t('home_movement_link')}
               </Link>{' '}
-              set forth by OASA. By accessing TDF lands, our members and
-              visitors must abide by our regenerative ethos. OASA is on a bold
-              mission to conserve 100.000 ha of land globally - and TDF is its
-              first prototype in utilising real estate as a vehicle for
-              ecological restoration.
+              {t('home_movement_desc_2')}
             </p>
             <Link
               href="https://oasa.earth/"
               target="_blank"
               className="underline"
             >
-              Learn more
+              {t('home_movement_learn_more')}
             </Link>
           </div>
         </section>
