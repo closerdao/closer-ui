@@ -75,13 +75,13 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
                 <div className="flex flex-col gap-6 w-full">
                   <div className="flex flex-col sm:flex-row justify-between gap-4 items-center pt-4">
                     <Heading level={1} className="md:text-4xl  font-bold">
-                      Volunteers Open Call
+                      {t('volunteers_open_call_title')}
                     </Heading>
                     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                       {canCreateVolunteer && (
                         <div className="w-full sm:w-[250px]">
                           <LinkButton href="/volunteer/create">
-                            Create Volunteer
+                            {t('volunteers_create_volunteer_button')}
                           </LinkButton>
                         </div>
                       )}
@@ -93,105 +93,76 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
                     </div>
                   </div>
                   <div className="flex flex-col gap-6 max-w-2xl">
+                    <p>{t('volunteers_intro_1')}</p>
+                    <p>{t('volunteers_intro_2')}</p>
                     <p>
-                      We are excited to extend an invitation to join us at the
-                      Traditional Dream Factory, a regenerative farm and
-                      co-living development in Abela, Alentejo, Portugal.
+                      <strong className="uppercase">
+                        {t('volunteers_requirements_label')}
+                      </strong>{' '}
+                      {t('volunteers_requirements_value')}
                     </p>
                     <p>
-                      We are looking for enthusiastic individuals who are
-                      interested in living, learning, and contributing to a
-                      vibrant and growing community based on respect for the
-                      land and each other. As a volunteer at TDF, you will have
-                      the chance to participate in a variety of activities:
-                    </p>
-                    <p>
-                      <strong className="uppercase">Requirements: </strong>4
-                      hours per day, 2 weeks minimum ✅ Free accommodation
-                      (glamping tents and dorms available, or bring your van)
-                    </p>
-                    <p>
-                      <strong className="uppercase">Community culture: </strong>
-                      To join us, you should align with our community&apos;s
-                      values, be open to learning, sharing, and working, and be
-                      excited to contribute to our collective efforts. Our
-                      community is about more than just work; it&apos;s about
-                      having fun, growing together, and sharing in the
-                      co-creation of our land and experiences. 🥙💃🏽🔥🎶🎭
+                      <strong className="uppercase">
+                        {t('volunteers_community_culture_label')}
+                      </strong>{' '}
+                      {t('volunteers_community_culture_value')}
                     </p>
                     <Heading level={2}>
-                      Skill & qualifications that can support us 👍🏼
+                      {t('volunteers_skills_and_qualifications_title')}
                     </Heading>
                     <ul className="mb-4 list-disc pl-5">
                       <li>
-                        <strong>Gardening:</strong> Experience hands-on
-                        regenerative agriculture, learn about permaculture, and
-                        contribute to our food production.
+                        <strong>{t('volunteers_skill_gardening_label')}</strong>{' '}
+                        {t('volunteers_skill_gardening_value')}
                       </li>
                       <li>
-                        <strong>Hospitality:</strong> Assist in maintaining a
-                        welcoming environment for all of our community members
-                        and visitors, including cleaning, bed dressing, and
-                        making people feel at home.
+                        <strong>
+                          {t('volunteers_skill_hospitality_label')}
+                        </strong>{' '}
+                        {t('volunteers_skill_hospitality_value')}
                       </li>
                       <li>
-                        <strong>Kitchen and Cooking:</strong> Help prepare
-                        delicious and nutritious meals using fresh produce from
-                        our garden.
+                        <strong>{t('volunteers_skill_kitchen_label')}</strong>{' '}
+                        {t('volunteers_skill_kitchen_value')}
                       </li>
                       <li>
-                        <strong>Building Projects:</strong> Use and develop your
-                        skills to contribute to various building projects around
-                        the property, from furniture to social areas, outdoor
-                        showers, or building smart systems like helophyte
-                        filters or biopools.
+                        <strong>{t('volunteers_skill_building_label')}</strong>{' '}
+                        {t('volunteers_skill_building_value')}
                       </li>
                       <li>
-                        <strong>Others:</strong> As part of a dynamic community,
-                        there will be many other opportunities to learn,
-                        contribute, and grow.
+                        <strong>{t('volunteers_skill_others_label')}</strong>{' '}
+                        {t('volunteers_skill_others_value')}
                       </li>
                     </ul>
+                    <p>{t('volunteers_commitment')}</p>
+                    <p>{t('volunteers_expectation')}</p>
                     <p>
-                      We ask for a minimum commitment of two weeks. In return,
-                      you&apos;ll be immersed in our community, gaining
-                      invaluable experience and insights, and contributing to a
-                      meaningful project.
-                    </p>
-                    <p>
-                      We expect volunteers to contribute four hours of work each
-                      day, five days a week. Before you apply, we recommend
-                      reading our{' '}
+                      {t('volunteers_recommend_read')}{' '}
                       <Link
                         href="https://docs.google.com/document/d/177JkHCy0AhplsaEEYpFHBsiI6d4uLk0TgURSKfBIewE/edit?tab=t.0"
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        pink paper
+                        {t('volunteers_pink_paper')}
                       </Link>
-                      , which details our community&apos;s culture and
-                      processes. If our vision resonates with you and
-                      you&apos;re eager to play, learn, and create with us,
-                      we&apos;d love to hear from you. Check our{' '}
+                      , {t('volunteers_pink_paper_details')}
+                    </p>
+                    <p>
+                      {t('volunteers_vision_resonates')}{' '}
                       <Link
                         target="_blank"
                         rel="noopener noreferrer"
                         href="https://docs.google.com/document/d/198vWYEQCC1lELQa8f76Jcw3l3UDiPcBKt04PGFKnUvg/edit?tab=t.0"
                       >
-                        Visitor&apos;s Guide
+                        {t('volunteers_visitors_guide')}
                       </Link>{' '}
-                      and let&apos;s schedule a call to know each other by
-                      sending an email to{' '}
+                      {t('volunteers_schedule_call')}{' '}
                       <Link href="mailto:space@traditionaldreamfactory.com">
                         space@traditionaldreamfactory.com
                       </Link>
                       .
                     </p>
-                    <p>
-                      The recommended stay is 1 month - and ideally coming in
-                      the beginning of the month so that we can have a good
-                      group dynamic.
-                    </p>
+                    <p>{t('volunteers_recommended_stay')}</p>
                   </div>
                 </div>
               </div>

@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 
 import { FaTimes } from '@react-icons/all-files/fa/FaTimes';
 import { Button, Heading, Newsletter, useAuth } from 'closer';
-
+import { useTranslations } from 'next-intl';
 const PromptFixedBottom = () => {
   const { isAuthenticated, isLoading } = useAuth();
+  const t = useTranslations();
 
   const closedByUser = useRef(false);
 
@@ -52,7 +53,7 @@ const PromptFixedBottom = () => {
         <section className="fixed inset-x-0 bottom-0 z-50 mt-24 flex h-[150px] flex-col  shadow-[0_0_5px_-1px_rgba(0,0,0,0.1),0_0_4px_-2px_rgba(0,0,0,0.1)] bg-white">
           <div className="mx-auto max-w-sm p-4">
             <Heading level={3} className="mb-4">
-              Stay in touch
+              {t('stay_in_touch')}
             </Heading>
             <Newsletter
               placement="HomePagePrompt"

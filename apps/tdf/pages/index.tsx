@@ -88,29 +88,7 @@ const HomePage = () => {
         />
       </Head>
 
-      {/* {open && !isAuthenticated && (
-        <section className="fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] bg-accent-light">
-          <div className="mx-auto max-w-sm p-4">
-            <Heading level={3} className="mb-4">
-              Stay in touch
-            </Heading>
-            <Newsletter
-              placement="HomePagePrompt"
-              ctaText={hasSubscribed ? 'Thanks for subscribing!' : 'Subscribe'}
-              onSuccess={handleSubscriptionSuccess}
-              className="px-0 pt-0 pb-4 sm:w-full"
-            />
-            <Button
-              onClick={() => handleDrawerClose(false)}
-              variant="secondary"
-              size="small"
-              className="my-4"
-            >
-              Close
-            </Button>
-          </div>
-        </section>
-      )} */}
+     
       <section className="md:absolute md:-top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-light mb-8 md:mb-[100vh]">
         <div className="md:h-[100vh]">
           {isMobile ? (

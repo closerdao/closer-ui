@@ -77,7 +77,7 @@ const Profile = ({ isMenu = false, isDemo }) => {
               size="sm"
               className="text-sm normal-case !w-fit !text-accent ml-auto py-0 !h-8"
             >
-              Edit profile
+              {t('buttons_edit_profile')}
             </Button>
           </div>
         </div>
