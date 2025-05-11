@@ -145,7 +145,7 @@ const ProjectsPage = ({
                     <Heading level={2}>{t('projects_completed_title')}</Heading>
                     {projects && 
                       projects.filter(project => (project.status === 'done')).length === 0 &&
-                      <p className="p-2">{t('projects_no_active_projects')}</p>
+                      <p className="p-2">{t('projects_no_completed_projects')}</p>
                     }
 
                     {projects && projects.length > 0 && (

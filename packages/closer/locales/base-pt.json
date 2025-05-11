@@ -1485,6 +1485,8 @@
   "projects_no_manager": "nenhum gerente",
   "projects_completed_title": "Projetos concluídos ✅",
   "projects_no_active_projects": "Não há projetos ativos no momento.",
+  "projects_no_completed_projects": "Não há projetos concluídos no momento.",
+  
   "bookings_dates_min_residence_stay_error": "A estadia mínima de residência é de {var} dias",
   "vouch_button": "Avaliar",
   "vouch_min_duration_not_met": "O convidado precisa de ficar pelo menos {var} dias para ser elegível para avaliação",
