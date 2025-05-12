@@ -97,8 +97,6 @@ const CreditsPage = () => {
             <div>
               <p className="mb-4">{t('carrots_how_to_use_1')}</p>
               <p className="mb-4">{t('carrots_how_to_use_2')}</p>
-              <p className="mb-4">{t('carrots_how_to_use_3')}</p>
-              <p className="mb-4">{t('carrots_how_to_use_4')}</p>
               {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
                 <>
                   <p className="mb-4">{t('carrots_how_to_use_5')}</p>
