@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+
+import { useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
@@ -23,18 +25,19 @@ const MemberMenu = () => {
   const t = useTranslations();
   const { APP_NAME } = useConfig();
   const { hasAccess } = useRBAC();
+  const router = useRouter();
 
   const { user, logout } = useAuth();
   const [menuSections, setMenuSections] = useState<MenuSection[]>([]);
 
   // Toggle a section's open/closed state
   const toggleSection = (sectionIndex: number) => {
-    setMenuSections(prevSections => 
-      prevSections.map((section, index) => 
-        index === sectionIndex 
-          ? { ...section, isOpen: !section.isOpen } 
-          : section
-      )
+    setMenuSections((prevSections) =>
+      prevSections.map((section, index) =>
+        index === sectionIndex
+          ? { ...section, isOpen: !section.isOpen }
+          : section,
+      ),
     );
   };
 
@@ -45,7 +48,6 @@ const MemberMenu = () => {
   ): MenuSection[] => {
     // Create all menu sections with their items
     const sections: MenuSection[] = [
-      
       // Stay section (open by default)
       {
         label: t('menu_section_stay'),
@@ -71,7 +73,7 @@ const MemberMenu = () => {
           },
         ],
       },
-      
+
       // Subscriptions section (standalone)
       {
         label: t('navigation_subscriptions'),
@@ -85,7 +87,7 @@ const MemberMenu = () => {
           },
         ],
       },
-      
+
       // Events section
       {
         label: t('menu_section_events'),
@@ -99,7 +101,7 @@ const MemberMenu = () => {
           },
         ],
       },
-      
+
       // Blog section
       {
         label: t('menu_section_blog'),
@@ -113,7 +115,7 @@ const MemberMenu = () => {
           },
         ],
       },
-      
+
       // Learning Hub section
       {
         label: t('menu_section_learning_hub'),
@@ -127,7 +129,7 @@ const MemberMenu = () => {
           },
         ],
       },
-      
+
       // Dashboard section
       {
         label: t('menu_section_dashboard'),
@@ -158,7 +160,7 @@ const MemberMenu = () => {
         ],
       },
     ];
-    
+
     // Bookings section (only if booking is enabled)
     if (isBookingEnabled) {
       sections.push({
@@ -216,7 +218,7 @@ const MemberMenu = () => {
         ],
       });
     }
-    
+
     // User Management section
     sections.push({
       label: t('menu_section_user_management'),
@@ -231,7 +233,7 @@ const MemberMenu = () => {
         },
       ],
     });
-    
+
     // FAQ section (standalone)
     sections.push({
       label: t('navigation_faq'),
@@ -245,27 +247,30 @@ const MemberMenu = () => {
         },
       ],
     });
-    
+
     // Other sections
     sections.push({
       label: t('menu_section_other'),
       isOpen: false,
       items: [
-        ...(APP_NAME && APP_NAME.toLowerCase() === 'earthbound' ? [
-          {
-            label: t('header_nav_invest'),
-            url: '/pages/invest',
-            enabled: true,
-            rbacPage: 'Invest',
-          },
-          {
-            label: t('header_nav_community'),
-            url: '/members',
-            enabled: true,
-            rbacPage: 'Community',
-          },
-        ] : []),
-        ...((process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true' && user?.affiliate)
+        ...(APP_NAME && APP_NAME.toLowerCase() === 'earthbound'
+          ? [
+              {
+                label: t('header_nav_invest'),
+                url: '/pages/invest',
+                enabled: true,
+                rbacPage: 'Invest',
+              },
+              {
+                label: t('header_nav_community'),
+                url: '/members',
+                enabled: true,
+                rbacPage: 'Community',
+              },
+            ]
+          : []),
+        ...(process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true' &&
+        user?.affiliate
           ? [
               {
                 label: t('navigation_affiliate_dashboard'),
@@ -277,7 +282,7 @@ const MemberMenu = () => {
           : []),
       ],
     });
-    
+
     // Settings section
     sections.push({
       label: t('menu_section_settings'),
@@ -299,35 +304,37 @@ const MemberMenu = () => {
         },
       ],
     });
-    
+
     return sections;
   };
 
   // Filter menu items based on RBAC permissions
   const filterMenuSections = (sections: MenuSection[], roles: string[]) => {
-    return sections.map(section => {
-      // Filter items in this section
-      const filteredItems = section.items.filter((item: NavigationLink) => {
-        // Check if the item is enabled and the user has RBAC access
-        if (!item.enabled || (item.rbacPage && !hasAccess(item.rbacPage))) {
-          return false;
-        }
+    return sections
+      .map((section) => {
+        // Filter items in this section
+        const filteredItems = section.items.filter((item: NavigationLink) => {
+          // Check if the item is enabled and the user has RBAC access
+          if (!item.enabled || (item.rbacPage && !hasAccess(item.rbacPage))) {
+            return false;
+          }
 
-        // If the item has specific roles, check if the user has one of those roles
-        if (item.roles && item.roles.length > 0) {
-          return item.roles.some(role => roles.includes(role));
-        }
+          // If the item has specific roles, check if the user has one of those roles
+          if (item.roles && item.roles.length > 0) {
+            return item.roles.some((role) => roles.includes(role));
+          }
 
-        // If no roles specified, show to everyone
-        return true;
-      });
+          // If no roles specified, show to everyone
+          return true;
+        });
 
-      // Return the section with filtered items
-      return {
-        ...section,
-        items: filteredItems
-      };
-    }).filter(section => section.items.length > 0); // Only keep sections with at least one item
+        // Return the section with filtered items
+        return {
+          ...section,
+          items: filteredItems,
+        };
+      })
+      .filter((section) => section.items.length > 0); // Only keep sections with at least one item
   };
 
   useEffect(() => {
@@ -370,20 +377,21 @@ const MemberMenu = () => {
 
         // Filter sections based on user roles and permissions
         const filteredSections = filterMenuSections(
-          sections, 
-          user?.roles || []
+          sections,
+          user?.roles || [],
         );
-        
+
         setMenuSections(filteredSections);
       } catch (err) {
         console.log('error');
       }
     })();
-  }, [user]);
+  }, [user, router.locale]);
 
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
-  const isTokenSaleEnabled = process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true';
+  const isTokenSaleEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true';
   return (
     <nav className="flex flex-col gap-4">
       <Profile isMenu={true} isDemo={false} />
@@ -391,12 +399,12 @@ const MemberMenu = () => {
       {isTokenSaleEnabled && (
         <Button
           variant="primary"
-          onClick={() => window.location.href = '/token'}
+          onClick={() => (window.location.href = '/token')}
         >
           {t('navigation_buy_token')}
         </Button>
       )}
-      
+
       {/* Render menu items */}
       {menuSections.map((section, index) => (
         <div key={section.label} className="mb-1">
@@ -412,14 +420,14 @@ const MemberMenu = () => {
           ) : (
             <>
               {/* Section header (clickable to toggle) */}
-              <div 
+              <div
                 className="flex items-center justify-between py-1 px-2 cursor-pointer font-medium"
                 onClick={() => toggleSection(index)}
               >
                 <span>{section.label}</span>
                 <span>{section.isOpen ? '▼' : '►'}</span>
               </div>
-              
+
               {/* Section items (only shown if section is open) */}
               {section.isOpen && (
                 <div className="pl-2 border-l border-gray-200 ml-2">
@@ -439,7 +447,7 @@ const MemberMenu = () => {
           )}
         </div>
       ))}
-      
+
       <div className="block mt-2">
         <button
           onClick={logout}

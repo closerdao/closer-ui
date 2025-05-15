@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+
+import { useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
@@ -25,17 +27,18 @@ const GuestMenu = () => {
   const t = useTranslations();
   const { APP_NAME } = useConfig();
   const { hasAccess } = useRBAC();
+  const router = useRouter();
 
   const [menuSections, setMenuSections] = useState<MenuSection[]>([]);
 
   // Toggle a section's open/closed state
   const toggleSection = (sectionIndex: number) => {
-    setMenuSections(prevSections => 
-      prevSections.map((section, index) => 
-        index === sectionIndex 
-          ? { ...section, isOpen: !section.isOpen } 
-          : section
-      )
+    setMenuSections((prevSections) =>
+      prevSections.map((section, index) =>
+        index === sectionIndex
+          ? { ...section, isOpen: !section.isOpen }
+          : section,
+      ),
     );
   };
 
@@ -70,7 +73,7 @@ const GuestMenu = () => {
           },
         ],
       },
-      
+
       // Subscriptions section (standalone)
       {
         label: t('navigation_subscriptions'),
@@ -84,7 +87,7 @@ const GuestMenu = () => {
           },
         ],
       },
-      
+
       // Events section
       {
         label: t('menu_section_events'),
@@ -98,7 +101,7 @@ const GuestMenu = () => {
           },
         ],
       },
-      
+
       // Blog section
       {
         label: t('menu_section_blog'),
@@ -112,7 +115,7 @@ const GuestMenu = () => {
           },
         ],
       },
-      
+
       // Learning Hub section
       {
         label: t('menu_section_learning_hub'),
@@ -126,26 +129,28 @@ const GuestMenu = () => {
           },
         ],
       },
-      
+
       // Learn more section
       {
         label: 'Learn more',
         isOpen: false,
         items: [
-          ...(APP_NAME && APP_NAME.toLowerCase() === 'earthbound' ? [
-            {
-              label: t('header_nav_invest'),
-              url: '/pages/invest',
-              enabled: true,
-              rbacPage: 'Invest',
-            },
-            {
-              label: t('header_nav_community'),
-              url: '/members',
-              enabled: true,
-              rbacPage: 'Community',
-            },
-          ] : []),
+          ...(APP_NAME && APP_NAME.toLowerCase() === 'earthbound'
+            ? [
+                {
+                  label: t('header_nav_invest'),
+                  url: '/pages/invest',
+                  enabled: true,
+                  rbacPage: 'Invest',
+                },
+                {
+                  label: t('header_nav_community'),
+                  url: '/members',
+                  enabled: true,
+                  rbacPage: 'Community',
+                },
+              ]
+            : []),
           {
             label: 'Invest',
             url: '/dataroom',
@@ -160,7 +165,7 @@ const GuestMenu = () => {
           },
         ],
       },
-      
+
       // FAQ section (lowest item)
       {
         label: t('navigation_faq'),
@@ -175,30 +180,32 @@ const GuestMenu = () => {
         ],
       },
     ];
-    
+
     return sections;
   };
 
   // Filter menu items based on RBAC permissions
   const filterMenuSections = (sections: MenuSection[]) => {
-    return sections.map(section => {
-      // Filter items in this section
-      const filteredItems = section.items.filter(item => {
-        // Check if the item is enabled and the user has RBAC access
-        if (!item.enabled || (item.rbacPage && !hasAccess(item.rbacPage))) {
-          return false;
-        }
+    return sections
+      .map((section) => {
+        // Filter items in this section
+        const filteredItems = section.items.filter((item) => {
+          // Check if the item is enabled and the user has RBAC access
+          if (!item.enabled || (item.rbacPage && !hasAccess(item.rbacPage))) {
+            return false;
+          }
 
-        // If no RBAC page specified, show to everyone
-        return true;
-      });
+          // If no RBAC page specified, show to everyone
+          return true;
+        });
 
-      // Return the section with filtered items
-      return {
-        ...section,
-        items: filteredItems
-      };
-    }).filter(section => section.items.length > 0); // Only keep sections with at least one item
+        // Return the section with filtered items
+        return {
+          ...section,
+          items: filteredItems,
+        };
+      })
+      .filter((section) => section.items.length > 0); // Only keep sections with at least one item
   };
 
   useEffect(() => {
@@ -229,13 +236,13 @@ const GuestMenu = () => {
 
         // Filter sections based on RBAC permissions
         const filteredSections = filterMenuSections(sections);
-        
+
         setMenuSections(filteredSections);
       } catch (err) {
         console.log('error');
       }
     })();
-  }, []);
+  }, [router.locale]);
 
   return (
     <nav>
@@ -244,11 +251,14 @@ const GuestMenu = () => {
         <p className="mb-4 text-center">{t('navigation_sign_in_cta')}</p>
 
         <NavLink href="/signup">{t('navigation_signup')}</NavLink>
-        <Link href="/login" className="block py-1 hover:bg-accent-light px-2 rounded text-black text-center">
+        <Link
+          href="/login"
+          className="block py-1 hover:bg-accent-light px-2 rounded text-black text-center"
+        >
           {t('navigation_sign_in')}
         </Link>
       </div>
-      
+
       {/* Render menu items with the same styling as MemberMenu */}
       <div className="flex flex-col gap-4 mt-4">
         {menuSections.map((section, index) => (
@@ -265,14 +275,14 @@ const GuestMenu = () => {
             ) : (
               <>
                 {/* Section header (clickable to toggle) */}
-                <div 
+                <div
                   className="flex items-center justify-between py-1 px-2 cursor-pointer font-medium"
                   onClick={() => toggleSection(index)}
                 >
                   <span>{section.label}</span>
                   <span>{section.isOpen ? '▼' : '►'}</span>
                 </div>
-                
+
                 {/* Section items (only shown if section is open) */}
                 {section.isOpen && (
                   <div className="pl-2 border-l border-gray-200 ml-2">
@@ -292,7 +302,7 @@ const GuestMenu = () => {
             )}
           </div>
         ))}
-        
+
         <ReportABug />
       </div>
     </nav>

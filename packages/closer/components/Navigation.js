@@ -138,8 +138,8 @@ const Navigation = () => {
                     <Link
                       className={`${
                         router.locale === locale
-                          ? 'text-gray-600 cursor-default'
-                          : 'text-accent'
+                          ? 'text-accent cursor-default'
+                          : 'text-gray-600 '
                       } font-accent`}
                       href={router.locale === locale ? '#' : router.asPath}
                       locale={locale}
