@@ -56,6 +56,11 @@ const nextConfig = {
         destination: '/stay',
         permanent: true,
       },
+      {
+        source: '/flyer',
+        destination: '/pages/community',
+        permanent: true, 
+      },
     ]
   },
 };

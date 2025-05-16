@@ -114,6 +114,7 @@ const StayPage = ({
     <>
       <Head>
         <title>{`${t('stay_title')} ${PLATFORM_NAME}`}</title>
+        <meta name="description" content={t('stay_meta_description')} />
       </Head>
       {listings && listings.get('error') && (
         <div className="validation-error">{listings.get('error')}</div>

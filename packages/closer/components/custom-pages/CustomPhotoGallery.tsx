@@ -1,7 +1,8 @@
-import { X } from 'lucide-react';
 import Image from 'next/image';
 
 import React, { useEffect, useState } from 'react';
+
+import { X } from 'lucide-react';
 
 interface GalleryImage {
   src: string;
@@ -13,6 +14,7 @@ interface GalleryImage {
 interface PhotoGalleryProps {
   settings: {
     galleryType: 'masonry';
+    isRandomized?: boolean;
   };
   content: {
     title?: string;
@@ -25,17 +27,39 @@ interface PhotoGalleryProps {
   };
 }
 
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+
 const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
   content,
   settings,
 }) => {
-  // Sample images with proper dimensions
-  const images: GalleryImage[] = content.items.map((item) => ({
+  // Prepare images in original order for SSR
+  const initialImages: GalleryImage[] = content.items.map((item) => ({
     src: item.imageUrl,
     width: item.width,
     height: item.height,
     alt: item.alt,
   }));
+
+  // State to hold randomized images (client only)
+  const [images, setImages] = useState<GalleryImage[]>(initialImages);
+
+  useEffect(() => {
+    // Randomize only on client after hydration
+    if (settings.isRandomized) {
+      setImages(shuffleArray(initialImages));
+    } else {
+      setImages(initialImages);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [content.items, settings.isRandomized]); // re-shuffle if items or randomization setting change
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(
@@ -47,7 +71,7 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (selectedIndex === null) return;  
+      if (selectedIndex === null) return;
 
       if (e.key === 'ArrowRight') {
         navigateToImage('next');
@@ -134,10 +158,10 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
   const baseHeight = 200; // Base height for thumbnails
 
   return (
-    <section className="w-full max-w-6xl mx-auto">
+    <section className="w-screen  bg-accent-dark py-10 -mx-4">
       {/* Only render title container if title exists */}
       {content?.title && (
-        <div className="flex flex-col gap-4 text-center w-full mb-[60px]">
+        <div className="max-w-6xl mx-auto flex flex-col gap-4 text-center w-full mb-[60px]">
           <p
             className="rich-text max-w-3xl mx-auto"
             dangerouslySetInnerHTML={{ __html: content.title }}
@@ -146,7 +170,7 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
       )}
 
       {/* Gallery always takes full width */}
-      <div className="w-full">
+      <div className="max-w-6xl mx-auto">
         {rows.map((row, rowIndex) => (
           <div
             key={`row-${rowIndex}`}

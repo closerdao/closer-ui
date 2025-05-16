@@ -126,26 +126,26 @@ const getPage = ({
                   'https://cdn.oasa.co/custom-pages/earthbound/leann.png',
               },
               {
-                title: 'Stefan Taylor, UK',
+                title: 'STEFAN TAYLOR, UK',
                 text: '\“We are thrilled to contribute in a small way and be part of Earthbound Ecovillage. An incredibly hopeful project in an often dark world.\“',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/Stefan%20Taylor.jpeg',
               },
               {
-                title: 'Hanna Morjan, Findhorn Ecovillage, Scotland',
+                title: 'HANNA MORJAN, Findhorn Ecovillage, Scotland',
                 text: '\“It feels like a privilege to be able to support this group of young people in their vision and dreams to make Earthbound Ecovillage a reality. I am impressed by their thorough research to create a sustainable community sharing a vision of a better future., including intergenerational families, community minded elders and young ecologically minded families using sociocracy, an inclusive decision making process. I am delighted to be part of their journey!\“',
                 imageUrl:
                 'https://cdn.oasa.co/custom-pages/earthbound/Hanna%20Morjan.jpg',
               },
               {
-                title: 'Tasos Zembylas, Austria',
+                title: 'TASOS ZEMBYLAS, Austria',
                 text: '\“I have invested in Earthbound to participate in a well-designed social experiment run by a number of creative people. I refer to motives that cannot be fully expressed by words. When I first heard about this project bright colours, warm sounds and pleasurable images emerged in my mind. Or to put it differently: Imagine a living world without some promising social experiments.\“',
                 
                 imageUrl:
                 'https://cdn.oasa.co/custom-pages/earthbound/Tasos%20Zembylas.jpg',
               },
               {
-                title: 'Enrico Ghidoni, Italy',
+                title: 'ENRICO GHIDONI, Italy',
                 text: '\“I am happy to be one of the investors of Earthbound, as it feels like a beautiful community with the potential to bring regeneration and sustainable growth to our society. Knowing personally some of the founders gave me a good sense of trust in the development of the vision and that my investment will support a beautiful and solid project. I am excited to visit Earthbound soon, witness how this magic seed will germinate and contribute in the way I can to support it in flourishing 🌸.\“',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/Enrico%20Ghidoni.jpg',
@@ -208,8 +208,8 @@ const InvestPage = ({ generalConfig, listings, hosts }: Props) => {
   return (
     <div>
       <Head>
-        <title>{`Welcome to ${PLATFORM_NAME}!`}</title>
-        <meta name="description" content="Become an impact investor" />
+        <title>Impact Investor - Earthbound Ecovillage & Community</title>
+        <meta name="description" content="Become one of our impact investors and support the creation of an ethical, regenerative project that lasts beyond our lifetime." />
       </Head>
 
       <CustomSections page={page} />

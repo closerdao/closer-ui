@@ -61,7 +61,7 @@ export default function MembershipTimeline() {
     },
     {
       id: 8,
-      title: 'Signing a &quot;parent-of-use&quot; contract',
+      title: 'Signing a "rent-of-use" contract',
       icon: <FileSignature className="h-5 w-5 text-accent" />,
       position: 'right',
     },

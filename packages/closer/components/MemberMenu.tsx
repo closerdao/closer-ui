@@ -77,7 +77,7 @@ const MemberMenu = () => {
       },
       {
         label: t('header_nav_community'),
-        url: '/members',
+        url: '/pages/community',
         enabled: true,
       },
     ] : []),

@@ -178,7 +178,7 @@ const SettingsPage = ({
         </Heading>
 
         <Input
-          label="About me"
+          label="About me (max 500 characters)"
           additionalInfo={
             APP_NAME === 'moos' ? 'Required to make bookings' : ''
           }
@@ -189,6 +189,7 @@ const SettingsPage = ({
           isInstantSave={true}
           hasSaved={hasSaved}
           setHasSaved={setHasSaved}
+          maxLength={500}
         />
 
         <div className="relative mt-8 flex flex-col gap-6 group">

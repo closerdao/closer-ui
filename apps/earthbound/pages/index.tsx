@@ -79,19 +79,19 @@ const getPage = ({
             title: 'OUR CORE VALUES',
             items: [
               {
-                title: 'Conscious Relationships',
+                title: 'CONSCIOUS RELATIONSHIPS',
                 text: 'A socially well-functioning community with common ownership, common decision making methods and community processes.',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/conscious-relationships.png',
               },
               {
-                title: 'Regenerative Living',
+                title: 'REGENERATIVE LIVING',
                 text: 'We embody a lifestyle that regenerates the land through traditional and novel land practices, building techniques, infrastructures and community-driven behavioural change. ',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/regenerative-living.png',
               },
               {
-                title: 'Earth-Centered Awareness',
+                title: 'EARTH-CENTERED AWARENESS',
                 text: 'We base our daily rhythms, traditions and decisions on the land and a kincentric awareness, where humans and all other lifeforms are deeply interconnected.',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/earth-centered-awareness.png',
@@ -111,11 +111,9 @@ const getPage = ({
           },
           content: {
             title: 'THE PLACE',
-            body: `<ul><li>Located in the creative rural area of ‘Glasriket’ in Southern Småland, the historical 300-year old estate of ‘Grimsnäs Herrgard’ is the home of Earthbound Ecovillage</li>
+            body: `<ul><li>Located in the creative rural area of 'Glasriket' in Southern Småland, the historical 300-year old estate of 'Grimsnäs Herrgard' is the home of Earthbound Ecovillage</li>
             <li>EarthboundWe is continuing the heritage of Grimsnäs Herrgaard while giving it new life and purpose.</li>
             </ul>`,
-
-            
 
             imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/11.png',
           },
@@ -192,99 +190,81 @@ const getPage = ({
             title: 'OUR IMPACT',
             items: [
               {
-                title: 'Low-impact, Affordable and Non-speculative Housing',
-                imageUrl:
-                  'https://cdn.oasa.co/custom-pages/earthbound/_0004_low-impact.png',
+                title: 'LOW-IMPACT, AFFORDABLE AND NON-SPECULATIVE HOUSING',
+                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/_0004_low-impact.png',
                 text: `
-                <ul style="text-align: left;">
-                  <li>Natural and traditional building and restoration</li>
-                  <li>Water catchment and greywater systems</li>
-                  <li>Creating a renewable energy community</li>
-                </ul>
-                `
-              },
-              {
-                title: 'Local and Bioregional Changemakers',
-                imageUrl:
-                  'https://cdn.oasa.co/custom-pages/earthbound/_0003_Local-and-Bioregional-Changemakers.png',
-                text: `
-                  
-                Engaging with the local community by addressing regional needs, such as:
-
-                
-                <ul style="text-align: left;">
-                  <li>Starting a local and organic shop with everyday necessities</li>
-                  <li>Establishing creative and “co-sustainability” open workshops (e.g., ceramics studio, tools library, and home-production machinery)</li>
-                  <li>Hosting community events and celebrations</li>
+                  <ul style="text-align: left;">
+                    <li>Natural and traditional building and restoration</li>
+                    <li>Water catchment and greywater systems</li>
+                    <li>Creating a renewable energy community</li>
                   </ul>
-                  `
+                `,
               },
               {
-                title: 'Community Research',
-                imageUrl:
-                  'https://cdn.oasa.co/custom-pages/earthbound/_0000_Community-Research.png',
+                title: 'LOCAL AND BIOREGIONAL CHANGEMAKERS',
+                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/_0003_Local-and-Bioregional-Changemakers.png',
                 text: `
-             
+                  Engaging with the local community by addressing regional needs, such as:
+                  <ul style="text-align: left;">
+                    <li>Starting a local and organic shop with everyday necessities</li>
+                    <li>Establishing creative and "co-sustainability" open workshops (e.g., ceramics studio, tools library, and home-production machinery)</li>
+                    <li>Hosting community events and celebrations</li>
+                  </ul>
+                `,
+              },
+              {
+                title: 'COMMUNITY RESEARCH',
+                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/_0000_Community-Research.png',
+                text: `
                   <ul style="text-align: left;">
                     <li>Integrating peaceful co-existence through community practices</li>
                     <li>Common decision-making and ownership</li>
                     <li>Community guidelines including conflict resolution</li>
                   </ul>
-                  `
-              },
-
-              {
-                title: 'Permaculture and Regenerative Agriculture',
-
-                imageUrl:
-                  'https://cdn.oasa.co/custom-pages/earthbound/_0002_Permaculture-and-Regenerative-Agriculture.png',
-                  text: `
-                  <ul style="text-align: left;">
-                  <li>Serving as a test field for future regenerative farming techniques</li>
-                  <li>Providing food to the local region</li>
-
-                  
-                  </ul>
-                  `
+                `,
               },
               {
-                title: 'Sustainable Micro-Business Hub',
-
-                imageUrl:
-                  'https://cdn.oasa.co/custom-pages/earthbound/sustainable.png',
-                  text: `
-                  <ul style="text-align: left;">
-                  <li>Renovating 600+ sqm of barn spaces to support sustainable micro-businesses</li>
-                  <li>Encouraging community and regional positive change</li>
-
-                   
-                  </ul>
-                  `
-              },
-              {
-                title: 'Land Stewardship',
-                imageUrl:
-                  'https://cdn.oasa.co/custom-pages/earthbound/_0001_Land-Stewardship.png',
+                title: 'PERMACULTURE AND REGENERATIVE AGRICULTURE',
+                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/_0002_Permaculture-and-Regenerative-Agriculture.png',
                 text: `
-                <ul style="text-align: left;">
-                  <li>Stewarding 73 hectares of diverse landscapes, including biodiverse forest, wetlands, lakes, production forests, and fields</li>
-                  <li>Maintaining grazing areas and restoring biodiverse forests</li>
-               
+                  <ul style="text-align: left;">
+                    <li>Serving as a test field for future regenerative farming techniques</li>
+                    <li>Providing food to the local region</li>
                   </ul>
-                  `
+                `,
               },
               {
-                title: 'Think Tank & Pilot Project',
-                imageUrl:
-                  'https://cdn.oasa.co/custom-pages/earthbound/Think%20Thank%20&%20Pilot.png',   
-                  text: `
+                title: 'SUSTAINABLE MICRO-BUSINESS HUB',
+                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/sustainable.png',
+                text: `
+                  <ul style="text-align: left;">
+                    <li>Renovating 600+ sqm of barn spaces to support sustainable micro-businesses</li>
+                    <li>Encouraging community and regional positive change</li>
+                  </ul>
+                `,
+              },
+              {
+                title: 'LAND STEWARDSHIP',
+                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/_0001_Land-Stewardship.png',
+                text: `
+                  <ul style="text-align: left;">
+                    <li>Stewarding 73 hectares of diverse landscapes, including biodiverse forest, wetlands, lakes, production forests, and fields</li>
+                    <li>Maintaining grazing areas and restoring biodiverse forests</li>
+                  </ul>
+                `,
+              },
+              {
+                title: 'THINK TANK & PILOT PROJECT',
+                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/Think%20Thank%20&%20Pilot.png',
+                text: `
                   <ul style="text-align: left;">
                     <li>Tracking and gathering the successes and failures</li>
                     <li>Communicating our results through publications, events and embodied experiences</li>
                     <li>Collaborating with other actors in the field</li>
                   </ul>
-                  `
+                `,
               },
+              
             ],
           },
         },
@@ -330,23 +310,22 @@ const getPage = ({
                 title: 'NON PROFIT, NON SPECULATIVE',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/_0002_non-profit.png',
-                text: 'All income is reinvested in the project, investments have a social and environmental return (rather than financial), and we have taken the real estate out of the speculative housing market.  '
-
+                text: 'All income is reinvested in the project, investments have a social and environmental return (rather than financial), and we have taken the real estate out of the speculative housing market.  ',
               },
-              
+
               {
                 title: 'SAFE, ETHICAL AND IMPACTFUL INVESTMENTS',
 
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/_0000_safe.png',
-                text: 'Inspired and consulted by the French Les Pas-Sages model, Earthbound Ecovillage is owned by the community of individuals living in the ecovillage and impact investors who are aligned with our ethos. Read more about investing <a href="/pages/invest">here</a>.  '
+                text: 'Inspired and consulted by the French Les Pas-Sages model, Earthbound Ecovillage is owned by the community of individuals living in the ecovillage and impact investors who are aligned with our ethos. Read more about investing <a href="/pages/invest">here</a>.  ',
               },
               {
                 title: 'SOCIOCRACY+',
 
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/_0001_socio.png',
-                text: 'Our decision making and organising structures are based on sociocracy. This means that we make decisions through the consent of all members ensuring inclusivity and collective intelligence'
+                text: 'Our decision making and organising structures are based on sociocracy. This means that we make decisions through the consent of all members ensuring inclusivity and collective intelligence',
               },
             ],
           },
@@ -360,6 +339,7 @@ const getPage = ({
             numColumns: 4,
             isColorful: true,
             id: 'how-to-join',
+            hasBorder: true,
           },
           content: {
             title: 'HOW TO JOIN',
@@ -411,6 +391,7 @@ const getPage = ({
         data: {
           settings: {
             type: 'masonry',
+            isRandomized: true,
           },
           content: {
             items: [
@@ -714,13 +695,48 @@ const HomePage = ({ generalConfig, listings, hosts }: Props) => {
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
+  const HEADER_OFFSET = 80; // px, matches h-20 in Navigation
+
+  const scrollToHash = () => {
+    if (typeof window === 'undefined') return;
+    const hash = window.location.hash;
+    if (hash) {
+      const id = hash.replace('#', '');
+      const el =
+        document.getElementById(id) || document.querySelector(`[id='${id}']`);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const scrollTop =
+          window.pageYOffset || document.documentElement.scrollTop;
+        const top = rect.top + scrollTop - HEADER_OFFSET;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!window.location.hash) return;
+
+    // Wait for images to load (in case anchor is below images)
+    const handleLoad = () => {
+      setTimeout(scrollToHash, 100); // slight delay for layout
+    };
+
+    if (document.readyState === 'complete') {
+      handleLoad();
+    } else {
+      window.addEventListener('load', handleLoad);
+      return () => window.removeEventListener('load', handleLoad);
+    }
+  }, []);
+
   return (
     <div>
       <Head>
-        <title>{`Welcome to ${PLATFORM_NAME}!`}</title>
-        <meta name="description" content="School of Ecological Imagination" />
+        <title>Earthbound Ecovillage & Community Sweden</title>
+        <meta name="description" content="Earthbound is an Ecovillage, Think-Tank & living Community, based on conscious relationships, earth-centered awareness and regenerative living." />
       </Head>
-
       <CustomSections page={page} />
     </div>
   );
@@ -761,12 +777,10 @@ HomePage.getInitialProps = async (context: NextPageContext) => {
     ]);
 
     const generalConfig = generalRes?.data?.results?.value;
-
     const listings = listingsRes?.data?.results;
     const hosts = hostsRes?.data?.results;
     return {
       generalConfig,
-
       messages,
       listings,
       hosts,
@@ -774,7 +788,6 @@ HomePage.getInitialProps = async (context: NextPageContext) => {
   } catch (err: unknown) {
     return {
       generalConfig: null,
-
       error: parseMessageFromError(err),
       messages: null,
       listings: null,

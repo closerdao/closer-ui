@@ -14,6 +14,7 @@ const CustomListing: React.FC<{
     isAccommodations?: boolean;
     isColorful?: boolean;
     id?: string;
+    hasBorder?: boolean;
   };
   content: {
     title: string;
@@ -54,7 +55,7 @@ const CustomListing: React.FC<{
   };
 
   return (
-    <div>
+    <div className=" py-10 ">
       {settings?.id && <div className="h-[80px]" id={settings?.id}></div>}
       <section className="max-w-4xl mx-auto flex flex-col gap-[60px]">
         <div className="flex flex-col gap-4 text-center">
@@ -70,7 +71,9 @@ const CustomListing: React.FC<{
           {content?.items?.map((item) => (
             <div
               key={item.title}
-              className="flex flex-col  gap-6 text-center"
+              className={`flex flex-col  gap-6 text-center ${
+                settings?.hasBorder ? 'border shadow-sm rounded-md p-3' : ''
+              }`}
               style={{
                 width: isSmallScreen
                   ? 'calc(100% - 30px)'
