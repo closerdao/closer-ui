@@ -34,7 +34,7 @@ const tdfTheme = {
       secondary: '#1b3bc3',
       background: '#FFFFFF',
       'background-dark': '#1c1c1c',
-      foreground: '#222222',
+      foreground: '#000000',
       'foreground-dark': '#dadada',
       card: '#ebf1f6',
       error: '#9f1f42',

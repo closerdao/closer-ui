@@ -65,7 +65,11 @@ const Navigation = () => {
       <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
         <Logo />
 
-        <div className="flex gap-2 w-auto justify-center items-center ">
+        <div
+          className={`${
+            APP_NAME === 'closer' ? ' w-full justify-between' : 'w-auto justify-center'
+          } flex gap-2  items-center `}
+        >
           {APP_NAME && APP_NAME.toLowerCase() === 'earthbound' && (
             <div className="flex gap-3 items-center">
               <ul className="gap-4 hidden sm:flex">
@@ -79,7 +83,9 @@ const Navigation = () => {
                   <Link href="/stay">{t('header_nav_stay')}</Link>
                 </li>
                 <li>
-                  <Link href="/pages/community">{t('header_nav_community')}</Link>
+                  <Link href="/pages/community">
+                    {t('header_nav_community')}
+                  </Link>
                 </li>
                 <li>
                   <Link href="/events">{t('header_nav_events')}</Link>
@@ -96,32 +102,39 @@ const Navigation = () => {
             </div>
           )}
           {APP_NAME && APP_NAME.toLowerCase() === 'closer' && (
-            <div className="flex gap-3 items-center">
-              <ul className="gap-4 hidden sm:flex">
-                <li>
-                  <Link href="/#features">{t('header_nav_features')}</Link>
-                </li>
-                <li>
-                  <Link href="/#communities">
-                    {t('header_nav_communities')}
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/#the-journey" className="whitespace-nowrap">
-                    {t('header_nav_the_journey')}
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/#pricing">{t('header_nav_pricing')}</Link>
-                </li>
-              </ul>
+            <div className="flex gap-3 items-center  w-full justify-between">
+              <div className="w-full flex justify-center">
+                <ul className="gap-4 hidden sm:flex text-sm font-medium">
+                  <li>
+                    <Link href="/#features">{t('header_nav_features')}</Link>
+                  </li>
+                  <li>
+                    <Link href="/#communities">
+                      {t('header_nav_communities')}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/#the-journey" className="whitespace-nowrap">
+                      {t('header_nav_the_journey')}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/#pricing">{t('header_nav_pricing')}</Link>
+                  </li>
+                  <li>
+                    <Link href="https://closer.gitbook.io/documentation">{t('header_nav_docs')}</Link>
+                  </li>
+                </ul>
+              </div>
               <Button
                 // onClick={() => router.push('/pages/join')}
                 size="small"
                 variant="primary"
-                className={' bg-foreground text-background border-foreground'}
+                className={'w-fit  bg-foreground text-background border-foreground'}
               >
-                <Link href="https://calendly.com/samueldelesque/30min">{t('header_nav_schedule_a_demo')}</Link>
+                <Link href="https://calendly.com/samueldelesque/30min">
+                  {t('header_nav_schedule_a_demo')}
+                </Link>
               </Button>
             </div>
           )}

@@ -6,6 +6,7 @@ import Tag from 'closer/components/Tag';
 import { Button } from 'closer/components/ui';
 import Card from 'closer/components/ui/Card';
 import Heading from 'closer/components/ui/Heading';
+import Image from 'next/image';
 
 import {
   GeneralConfig,
@@ -19,6 +20,14 @@ import {
 import { User } from 'closer/contexts/auth/types';
 import { parseMessageFromError } from 'closer/utils/common';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
+import {
+  BookOpenText,
+  Calendar,
+  Globe,
+  TicketCheck,
+  Users,
+  Wrench,
+} from 'lucide-react';
 import { NextPageContext } from 'next';
 
 // const getPage = ({
@@ -486,17 +495,17 @@ const HomePage = ({ generalConfig, listings, hosts }: Props) => {
       <Navigation />
 
       {/* Hero Section */}
-      <section className=" text-center py-[200px] bg-gradient-to-b from-white to-[#f8f9fa]">
+      <section className=" text-center py-[120px] ">
         <Heading
           level={1}
           className="mb-4 text-4xl sm:text-7xl font-bold bg-gradient-to-r from-[#5290DB] to-[#79FAC1] bg-clip-text text-transparent"
         >
           Build Communities That Thrive
         </Heading>
-        <p className="text-3xl font-semibold mb-4">
+        <p className="text-lg font-bold mb-4">
           Closer is the operating system for regenerative communities
         </p>
-        <p className="max-w-3xl mx-auto mb-8">
+        <p className="text-lg max-w-3xl mx-auto mb-8">
           Manage guests, spaces, events and resources through one intuitive
           platform designed specifically for land-based projects
         </p>
@@ -516,7 +525,6 @@ const HomePage = ({ generalConfig, listings, hosts }: Props) => {
               <path d="M5 3L19 12L5 21V3Z" fill="#333" />
             </svg>
           </button>
-       
         </div>
       </div>
 
@@ -531,50 +539,13 @@ const HomePage = ({ generalConfig, listings, hosts }: Props) => {
           </Heading>
           <div className="feature-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Feature Cards */}
-            <Card className="feature-card items-center text-center">
-              <div className="feature-icon mb-4">
+            <Card className="">
+              <div className=" mb-4 bg-neutral-light w-fit rounded-md p-4">
                 {/* Booking Icon */}
-                <svg
-                  width="32"
-                  height="32"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z"
-                    stroke="#4285F4"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                  <path
-                    d="M16 2V6"
-                    stroke="#4285F4"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                  <path
-                    d="M8 2V6"
-                    stroke="#4285F4"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                  <path
-                    d="M3 10H21"
-                    stroke="#4285F4"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                </svg>
+
+                <Calendar className="w-8 h-8 text-blue-500" />
               </div>
-              <Heading
-                level={3}
-                className="feature-title mb-2 text-xl font-semibold"
-              >
+              <Heading level={3} className=" mb-2 text-xl font-semibold">
                 Booking & Stay Management
               </Heading>
               <p className="feature-desc">
@@ -584,31 +555,11 @@ const HomePage = ({ generalConfig, listings, hosts }: Props) => {
                 calendar views and automated notifications.
               </p>
             </Card>
-            <Card className="feature-card items-center text-center">
-              <div className="feature-icon mb-4">
+            <Card className="">
+              <div className=" mb-4 bg-neutral-light w-fit rounded-md p-4">
                 {/* Event Icon */}
-                <svg
-                  width="32"
-                  height="32"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M18 8H19C20.1046 8 21 8.89543 21 10V18C21 19.1046 20.1046 20 19 20H5C3.89543 20 3 19.1046 3 18V10C3 8.89543 3.89543 8 5 8H6"
-                    stroke="#34A853"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                  <path
-                    d="M15 6H9C7.89543 6 7 6.89543 7 8V10C7 11.1046 7.89543 12 9 12H15C16.1046 12 17 11.1046 17 10V8C17 6.89543 16.1046 6 15 6Z"
-                    stroke="#34A853"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                </svg>
+
+                <TicketCheck className="w-8 h-8 text-green-500" />
               </div>
               <Heading
                 level={3}
@@ -623,24 +574,10 @@ const HomePage = ({ generalConfig, listings, hosts }: Props) => {
                 view for your community&apos;s activities.
               </p>
             </Card>
-            <Card className="feature-card items-center text-center">
-              <div className="feature-icon mb-4">
+            <Card className="">
+              <div className=" mb-4 bg-neutral-light w-fit rounded-md p-4">
                 {/* Resource Icon */}
-                <svg
-                  width="32"
-                  height="32"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
-                    stroke="#EA4335"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                </svg>
+                <Wrench className="w-8 h-8 text-yellow-500" />
               </div>
               <Heading
                 level={3}
@@ -655,45 +592,10 @@ const HomePage = ({ generalConfig, listings, hosts }: Props) => {
                 based on membership levels and pricing options.
               </p>
             </Card>
-            <Card className="feature-card items-center text-center">
-              <div className="feature-icon mb-4">
+            <Card className="">
+              <div className=" mb-4 bg-neutral-light w-fit rounded-md p-4">
                 {/* Membership Icon */}
-                <svg
-                  width="32"
-                  height="32"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21"
-                    stroke="#4285F4"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                  <path
-                    d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z"
-                    stroke="#4285F4"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                  <path
-                    d="M23 20.9999V18.9999C22.9993 18.1136 22.7044 17.2527 22.1614 16.5522C21.6184 15.8517 20.8581 15.3515 20 15.1299"
-                    stroke="#4285F4"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                  <path
-                    d="M16 3.12988C16.8604 3.35018 17.623 3.85058 18.1676 4.55219C18.7122 5.2538 19.0078 6.11671 19.0078 7.00488C19.0078 7.89305 18.7122 8.75596 18.1676 9.45757C17.623 10.1592 16.8604 10.6596 16 10.8799"
-                    stroke="#4285F4"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                </svg>
+                <Users className="w-8 h-8 text-red-500" />
               </div>
               <Heading
                 level={3}
@@ -708,87 +610,10 @@ const HomePage = ({ generalConfig, listings, hosts }: Props) => {
                 to build trust and belonging among members.
               </p>
             </Card>
-            <Card className="feature-card items-center text-center">
-              <div className="feature-icon mb-4">
+            <Card className="">
+              <div className=" mb-4 bg-neutral-light w-fit rounded-md p-4">
                 {/* Learning Icon */}
-                <svg
-                  width="32"
-                  height="32"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z"
-                    stroke="#EA4335"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                  <path
-                    d="M16 2V6"
-                    stroke="#EA4335"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                  <path
-                    d="M8 2V6"
-                    stroke="#EA4335"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                  <path
-                    d="M3 10H21"
-                    stroke="#EA4335"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                  <path
-                    d="M8 14H8.01"
-                    stroke="#EA4335"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                  <path
-                    d="M12 14H12.01"
-                    stroke="#EA4335"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                  <path
-                    d="M16 14H16.01"
-                    stroke="#EA4335"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                  <path
-                    d="M8 18H8.01"
-                    stroke="#EA4335"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                  <path
-                    d="M12 18H12.01"
-                    stroke="#EA4335"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                  <path
-                    d="M16 18H16.01"
-                    stroke="#EA4335"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                </svg>
+                <BookOpenText className="w-8 h-8 text-violet-500" />
               </div>
               <Heading
                 level={3}
@@ -804,37 +629,10 @@ const HomePage = ({ generalConfig, listings, hosts }: Props) => {
                 subscription access.
               </p>
             </Card>
-            <Card className="feature-card items-center text-center">
-              <div className="feature-icon mb-4">
+            <Card className="">
+              <div className=" mb-4 bg-neutral-light w-fit rounded-md p-4">
                 {/* Governance Icon */}
-                <svg
-                  width="32"
-                  height="32"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="#FBBC05"
-                    strokeWidth="2"
-                  ></circle>
-                  <path
-                    d="M12 6V12L16 14"
-                    stroke="#FBBC05"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  ></path>
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="3"
-                    stroke="#FBBC05"
-                    strokeWidth="2"
-                  ></circle>
-                </svg>
+                <Globe className="w-8 h-8 text-teal-500" />
               </div>
               <Heading
                 level={3}
@@ -870,7 +668,7 @@ const HomePage = ({ generalConfig, listings, hosts }: Props) => {
             {/* Project Cards - static for now, can be mapped from data */}
             <Card className="project-card flex flex-col md:flex-row">
               <div className="project-image w-full md:w-1/2 h-48 md:h-auto relative">
-                <img
+                <Image
                   src="/api/placeholder/600/400"
                   alt="Harmony Ecovillage"
                   className="object-cover w-full h-full rounded-t-md md:rounded-l-md md:rounded-t-none"
@@ -1084,9 +882,7 @@ const HomePage = ({ generalConfig, listings, hosts }: Props) => {
                   <span className="mr-2">✔️</span>Basic landing page
                 </li>
               </ul>
-              <p className="text-gray-600 text-sm">
-                Add legal package: +4,000 CHF
-              </p>
+           
             </Card>
             {/* Plant Plan */}
             <Card className="bg-white border-2 border-[#67F8C0] p-8 flex flex-col items-center relative shadow-lg">
@@ -1121,9 +917,7 @@ const HomePage = ({ generalConfig, listings, hosts }: Props) => {
                   <span className="mr-2">✔️</span>Custom landing page
                 </li>
               </ul>
-              <p className="text-gray-600 text-sm">
-                Add legal package: +20,000 CHF
-              </p>
+            
             </Card>
             {/* Forest Plan */}
             <Card className="bg-white border border-gray-100 p-8 flex flex-col items-center">
@@ -1155,9 +949,7 @@ const HomePage = ({ generalConfig, listings, hosts }: Props) => {
                   <span className="mr-2">✔️</span>Premium support
                 </li>
               </ul>
-              <p className="text-gray-600 text-sm">
-                Add legal package: +50,000 CHF
-              </p>
+            
             </Card>
           </div>
         </div>
@@ -1178,7 +970,7 @@ const HomePage = ({ generalConfig, listings, hosts }: Props) => {
             className="demo-button px-8 py-4 text-lg"
             variant="primary"
           >
-            Schedule a Demo
+            Get in touch
           </Button>
         </div>
       </section>

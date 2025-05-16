@@ -15,7 +15,7 @@ const config = {
 
   EXPOSE_STORE: true,
   CACHE_DURATION: 300000, // 5min
-  LOGO_HEADER: '',
+  LOGO_HEADER: '/images/closer-logo.png',
   PERMISSIONS: {
     event: {
       create: 'event-creator',
