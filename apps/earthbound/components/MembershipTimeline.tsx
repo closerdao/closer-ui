@@ -15,7 +15,7 @@ export default function MembershipTimeline() {
     {
       id: 1,
       title:
-        'Learning about Earthbound through our documents, information meetings etc.',
+        'Learning about Earthbound through our <a target="_blank" class="underline" href="https://drive.google.com/file/d/1h8UeDKukm58H5BDEIfDxh5lo_gy4IkgT/view?usp=drivesdk">documents</a>, information meetings etc.',
       icon: <FileText className="h-5 w-5 text-accent" />,
       position: 'left',
     },
@@ -97,7 +97,7 @@ export default function MembershipTimeline() {
               >
                 {step.position === 'left' ? (
                   <>
-                    <div className="pr-8 py-2">{step.title}</div>
+                    <div className="pr-8 py-2" dangerouslySetInnerHTML={{ __html: step.title }} />
                     <div></div>
                   </>
                 ) : (
@@ -111,9 +111,7 @@ export default function MembershipTimeline() {
           ))}
         </div>
       </div>
-      <p className="text-center mt-8">
-        We are looking forward to getting to know you &lt;3 
-      </p>
+
     </div>
   );
 }
