@@ -69,7 +69,11 @@ export const WalletProvider = ({ children }) => {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user && !isWalletConnected) {
+    if (
+      user &&
+      !isWalletConnected &&
+      process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true'
+    ) {
       injected.isAuthorized().then((isAuthorized) => {
         if (!isAuthorized) return;
         connectWallet();
