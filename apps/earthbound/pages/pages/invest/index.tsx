@@ -51,45 +51,63 @@ const getPage = ({
           },
           content: {
             html: `
-              <p>
-                Support the creation of an ethical and regenerative project and create impact beyond our lifetime. We are calling in impact investors who want to make the vision of Earthbound a reality with us and who are committed to creating a life-centred and regenerative future.              </p>
-              <blockquote>
-                You can put your money in Earthbound instead of the bank!
-                <br/>
-                We welcome impact investments from 120.000 SEK to 3.000.000 SEK.
-              </blockquote>
-           
+            <h2>
+            You can put your money in Earthbound instead of the bank!
+            <br/>
+            </h2>
+            <p>We welcome impact investments from 120.000 SEK to 3.000.000 SEK.</p>
+            
+            <p>
+Support the creation of an ethical and regenerative project and create impact beyond your lifetime. We are calling in impact investors who want to make the vision of Earthbound a reality with us and who are committed to creating a life-centred and regenerative future . 
+            </p>
 
-              <h2>HOW SAFE IS YOUR IMPACT INVESTMENT?</h2>
-              <ul>
-                <li>It is a long-term investment with a real estate collateral</li>
-                <li>It is bound by clear contractual agreements with each investor</li>
-                <li>You have freedom to withdraw your money at any time, with respect to the sustainability of the project</li>
-                <li>Earthbound is safeguarding your money by making economic, ecological and social investments on a human scale</li>
+              <h2>HOW TO BECOME AN IMPACT INVESTOR?</h2>
+              
+              
+              <ol>
+              <li>Reach out to us via Email, Telegram or WhatsApp</li>
+              <li>Have a conversation with us about your needs and desires to invest into the project</li>
+              <li>Together we shape your individual Impact Investor Agreement based on our templates and agree on the size of your investment</li>
+              <li>You become a shareholder of Earthbound Housing Cooperative AB, can attend the yearly General Assembly, visit us and become an advisor of the project</li>
+              </ol>
+              
+              <h2>WHAT ELSE DO WE OFFER?</h2>
+
+              <ul><li>Be part of shaping the project by voting at the general assembly</li>
+              <li>A voucher for a free extended weekend stay with us every year</li>
+              <li>Discount on the yearly Earthbound Gathering</li>
               </ul>
 
-              <h2>WHAT DO WE OFFER?</h2>
+                            <h2>HOW SAFE IS YOUR IMPACT INVESTMENT?</h2>
+
+                            It is a long-term investment with a real estate collateral
+              It is bound by clear contractual agreements with each investor
+              You have freedom to withdraw your money at any time, with respect to the sustainability of the project
+              We offer inflation evaluation 
+              Earthbound is safeguarding your money by making economic, ecological and social investments on a human scale
+
+
               <ul>
-                <li>Be part of shaping the project by voting at the general assembly</li>
-                          <li>A voucher for a free extended weekend stay with us every year</li>
-                          <li>Discount on the yearly Earthbound Gathering</li>
-                          <li>Interest rate based on inflation</li>
-                        </ul>
+              <li>It is a long-term investment with a real estate collateral</li>
+              <li>It is bound by clear contractual agreements with each investor</li>
+              <li>You have freedom to withdraw your money at any time, with respect to the sustainability of the project</li>
+              <li>Earthbound is safeguarding your money by making economic, ecological and social investments on a human scale</li>
+              </ul>
 
-                        <h2>HOW TO BECOME AN IMPACT INVESTOR?</h2>
-                        <ol>
-                          <li>Reach out to us via Email, Telegram or WhatsApp</li>
-                          <li>Have a conversation with us about your needs and desires to invest into the project</li>
-                          <li>Together we shape your individual Impact Investor Agreement based on our templates and agree on the size of your investment</li>
-                          <li>You become a shareholder of Earthbound Housing Cooperative AB, can attend the yearly General Assembly, visit us and become an advisor of the project</li>
-                        </ol>
-
+          
+             
                         <p>
-                          For more information please contact us:<br>
-                          <strong>Email:</strong> <a href="mailto:contact@earthbound.eco">contact@earthbound.eco</a>
-                          <br/>
-                          <strong>Telegram:</strong> <a href="https://t.me/earthboundecovillage">@earthboundecovillage</a>
-                        </p>
+                          For more information please contact us:
+                          </p>
+                          
+                          <ul>
+                            <li><strong>Email:</strong> <a href="mailto:contact@earthbound.eco">contact@earthbound.eco</a></li>
+                            <li>
+                            <strong>Telegram:</strong> <a href="https://t.me/earthboundecovillage">@earthboundecovillage</a>
+                            </li>
+                            <li><strong>WhatsApp (Samson):</strong> <a href="http://wa.me/+41786596490">http://wa.me/+41786596490</a></li>
+                           </ul>
+
                        
                         `,
           },
