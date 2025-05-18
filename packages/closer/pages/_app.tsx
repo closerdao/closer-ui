@@ -5,6 +5,8 @@ import Script from 'next/script';
 
 import { useEffect, useState } from 'react';
 
+import { PromptGetInTouchProvider } from '../components/PromptGetInTouchContext';
+
 import {
   ExternalProvider,
   JsonRpcFetchFunc,
@@ -133,7 +135,9 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
               <Web3ReactProvider getLibrary={getLibrary}>
                 <WalletProvider>
                   <GoogleAnalytics trackPageViews />
-                  <Component {...pageProps} config={config} />
+                  <PromptGetInTouchProvider>
+                    <Component {...pageProps} config={config} />
+                  </PromptGetInTouchProvider>
                   {/* TODO: create cookie consent page with property-specific parameters #357  */}
                 </WalletProvider>
               </Web3ReactProvider>

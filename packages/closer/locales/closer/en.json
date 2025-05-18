@@ -73,5 +73,12 @@
   "header_nav_the_journey": "The Journey",
   "header_nav_pricing": "Pricing",
   "header_nav_docs": "Docs",
-  "header_nav_schedule_a_demo": "Schedule a demo"
+  "header_nav_schedule_a_demo": "Get in touch",
+
+  "get_in_touch": "Get in touch",
+  "email": "Email",
+  "your_email": "Your email",
+  "invalid_email": "Invalid email",
+  "email_submitted_success": "Email submitted successfully. We will get back to you soon.",
+  "get_in_touch_submit": "Submit"
 }

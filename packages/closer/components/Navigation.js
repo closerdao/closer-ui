@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
@@ -13,6 +13,7 @@ import Logo from './Logo';
 import MemberMenu from './MemberMenu';
 import Menu from './MenuContainer';
 import ProfilePhoto from './ProfilePhoto';
+import { PromptGetInTouchContext } from './PromptGetInTouchContext';
 import { Button } from './ui';
 
 const Navigation = () => {
@@ -24,6 +25,10 @@ const Navigation = () => {
 
   const [navOpen, setNavOpen] = useState(false);
   const [isBookingEnabled, setIsBookingEnabled] = useState(false);
+
+  const { setIsOpen: setPromptGetInTouchOpen } = useContext(
+    PromptGetInTouchContext,
+  );
 
   useEffect(() => {
     (async () => {
@@ -67,7 +72,9 @@ const Navigation = () => {
 
         <div
           className={`${
-            APP_NAME === 'closer' ? ' w-full justify-between' : 'w-auto justify-center'
+            APP_NAME === 'closer'
+              ? ' w-full justify-between'
+              : 'w-auto justify-center'
           } flex gap-2  items-center `}
         >
           {APP_NAME && APP_NAME.toLowerCase() === 'earthbound' && (
@@ -114,7 +121,7 @@ const Navigation = () => {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/#the-journey" className="whitespace-nowrap">
+                    <Link href="/#journey" className="whitespace-nowrap">
                       {t('header_nav_the_journey')}
                     </Link>
                   </li>
@@ -122,19 +129,24 @@ const Navigation = () => {
                     <Link href="/#pricing">{t('header_nav_pricing')}</Link>
                   </li>
                   <li>
-                    <Link href="https://closer.gitbook.io/documentation">{t('header_nav_docs')}</Link>
+                    <Link href="https://closer.gitbook.io/documentation">
+                      {t('header_nav_docs')}
+                    </Link>
                   </li>
                 </ul>
               </div>
               <Button
-                // onClick={() => router.push('/pages/join')}
+                onClick={() => {
+
+                  setPromptGetInTouchOpen(true);
+                }}
                 size="small"
                 variant="primary"
-                className={'w-fit  bg-foreground text-background border-foreground'}
+                className={
+                  'w-fit  bg-foreground text-background border-foreground'
+                }
               >
-                <Link href="https://calendly.com/samueldelesque/30min">
-                  {t('header_nav_schedule_a_demo')}
-                </Link>
+                {t('header_nav_schedule_a_demo')}
               </Button>
             </div>
           )}

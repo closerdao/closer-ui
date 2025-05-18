@@ -38,7 +38,6 @@ const JoinWebinarPrompt = ({
         email,
       });
       setIsSuccess(true);
-
     } catch (error) {
       if (error instanceof z.ZodError) {
         setEmailError(error.errors[0].message);
@@ -76,7 +75,7 @@ const JoinWebinarPrompt = ({
               <Heading level={3} className="">
                 Join webinar
               </Heading>
-              <p className='pr-8'>Get an invite to our next monthly webinar</p>
+              <p className="pr-8">Get an invite to our next monthly webinar</p>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -88,12 +87,18 @@ const JoinWebinarPrompt = ({
                   placeholder="Email"
                   className="w-[200px]"
                 />
-                <Button isEnabled={!isLoading} onClick={sendInvite} className="w-fit">
+                <Button
+                  isEnabled={!isLoading}
+                  onClick={sendInvite}
+                  className="w-fit"
+                >
                   Join webinar
                 </Button>
               </div>
               {isSuccess && (
-                <p className="text-green-500 text-sm">Webinar invite sent! Please check your inbox.</p>
+                <p className="text-green-500 text-sm">
+                  Webinar invite sent! Please check your inbox.
+                </p>
               )}
               {emailError && (
                 <p className="text-red-500 text-sm">{emailError}</p>

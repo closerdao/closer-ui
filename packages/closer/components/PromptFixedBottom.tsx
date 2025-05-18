@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { FaTimes } from '@react-icons/all-files/fa/FaTimes';
 import { Button, Heading, Newsletter, useAuth } from 'closer';
 import { useTranslations } from 'next-intl';
+
 const PromptFixedBottom = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const t = useTranslations();

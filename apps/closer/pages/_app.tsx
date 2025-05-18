@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { ErrorBoundary, Layout } from '@/components';
 
 import AcceptCookies from 'closer/components/AcceptCookies';
+import { PromptGetInTouchProvider } from 'closer/components/PromptGetInTouchContext';
 
 import {
   ExternalProvider,
@@ -128,6 +129,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
             timeZone={config?.timeZone || appConfig.DEFAULT_TIMEZONE}
           >
             <AuthProvider>
+            <PromptGetInTouchProvider>
               <PlatformProvider>
                 <Web3ReactProvider getLibrary={getLibrary}>
                   <WalletProvider>
@@ -140,6 +142,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
                   </WalletProvider>
                 </Web3ReactProvider>
               </PlatformProvider>
+              </PromptGetInTouchProvider>
             </AuthProvider>
           </NextIntlClientProvider>
         </ErrorBoundary>
