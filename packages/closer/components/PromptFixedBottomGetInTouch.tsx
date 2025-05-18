@@ -1,6 +1,6 @@
 import React, { useContext, useRef, useState } from 'react';
 
-import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '@/constants';
+import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 
 import { FaTimes } from '@react-icons/all-files/fa/FaTimes';
 import { Button, Heading, Input, api } from 'closer';
