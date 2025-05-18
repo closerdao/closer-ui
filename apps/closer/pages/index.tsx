@@ -712,10 +712,6 @@ const HomePage = ({ generalConfig }: Props) => {
             className=" px-8 py-2 text-lg"
             variant="primary"
             onClick={() => {
-              console.log(
-                'Get in touch button (Email Collector) clicked',
-                setIsOpen,
-              );
               setIsOpen(true);
             }}
           >
