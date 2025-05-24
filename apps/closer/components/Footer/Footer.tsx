@@ -10,7 +10,7 @@ export const Footer: FC = () => {
   
 
   return (
-    <footer className="w-full mt-8 mx-auto text-center max-w-prose ">
+    <footer className="w-full mt-8 mx-auto text-center max-w-prose pb-20">
       <div className="p-6  italic">
         <p>
           For any visits, bookings or enquiries you can contact us by email: 

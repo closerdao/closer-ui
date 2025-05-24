@@ -96,7 +96,7 @@ const GuestMenu = () => {
           {
             label: t('navigation_events'),
             url: '/events',
-            enabled: APP_NAME.toLowerCase() !== 'lios',
+            enabled: APP_NAME.toLowerCase() !== 'lios' && APP_NAME.toLowerCase() !== 'closer',
             rbacPage: 'Events',
           },
         ],
@@ -174,7 +174,7 @@ const GuestMenu = () => {
           {
             label: t('navigation_faq'),
             url: '/resources',
-            enabled: APP_NAME.toLowerCase() !== 'lios' && APP_NAME !== 'foz',
+            enabled: APP_NAME.toLowerCase() !== 'lios' && APP_NAME !== 'foz'  && APP_NAME.toLowerCase() !== 'closer',
             rbacPage: 'Resources',
           },
         ],

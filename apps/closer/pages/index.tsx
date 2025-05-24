@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Image from 'next/image';
 
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 
 import PromptFixedBottomGetInTouch from 'closer/components/PromptFixedBottomGetInTouch';
 import { PromptGetInTouchContext } from 'closer/components/PromptGetInTouchContext';
@@ -10,7 +10,7 @@ import { Button, LinkButton } from 'closer/components/ui';
 import Card from 'closer/components/ui/Card';
 import Heading from 'closer/components/ui/Heading';
 
-import { GeneralConfig, api, useConfig } from 'closer';
+import { GeneralConfig, Modal, api, useConfig } from 'closer';
 import { parseMessageFromError } from 'closer/utils/common';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import {
@@ -22,6 +22,7 @@ import {
   Users,
 } from 'lucide-react';
 import { NextPageContext } from 'next';
+import HeroCloser from '@/components/HeroCloser';
 
 interface Props {
   generalConfig: GeneralConfig | null;
@@ -36,6 +37,13 @@ const HomePage = ({ generalConfig }: Props) => {
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
+  const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
+
+
+
+  const closeModal = () => {
+    setIsInfoModalOpened(false);
+  };
   return (
     <div>
       <Head>
@@ -45,11 +53,20 @@ const HomePage = ({ generalConfig }: Props) => {
           content="Manage guests, spaces, events and resources through one intuitive platform designed specifically for land-based projects"
         />
       </Head>
+      {isInfoModalOpened && (
+        <Modal closeModal={closeModal}>
+         dfdgfsfsdg
+        </Modal>
+      )}
 
       <PromptFixedBottomGetInTouch />
 
+      <HeroCloser/>
+
+
+
       {/* Hero Section */}
-      <section className=" text-center py-[100px] ">
+      {/* <section className=" text-center py-[100px] ">
         <Heading
           level={1}
           className="mb-4 text-4xl sm:text-6xl font-bold bg-gradient-to-r from-[#5290DB] to-[#79FAC1] bg-clip-text text-transparent"
@@ -63,10 +80,10 @@ const HomePage = ({ generalConfig }: Props) => {
           Manage guests, spaces, events and resources through one intuitive
           platform designed specifically for land-based projects
         </p>
-      </section>
+      </section> */}
 
       {/* Video Section */}
-      <div className="video-section flex justify-center py-8 max-w-4xl mx-auto">
+      {/* <div className="video-section flex justify-center py-8 max-w-4xl mx-auto">
         <div className="relative video-thumbnail w-full h-[640px] bg-[url('/images/video-placeholder.jpg')] bg-cover bg-center rounded-xl flex items-center justify-center shadow-lg">
           <button className="play-button absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-full p-4 shadow-md hover:scale-105 transition">
             <svg
@@ -80,7 +97,7 @@ const HomePage = ({ generalConfig }: Props) => {
             </svg>
           </button>
         </div>
-      </div>
+      </div> */}
 
       {/* Features Section */}
       <section id="features" className="features py-32  bg-white">
@@ -257,6 +274,7 @@ const HomePage = ({ generalConfig }: Props) => {
                 size="small"
                 className="project-link w-fit"
                 href="https://www.traditionaldreamfactory.com/"
+                target="_blank"
               >
                 Explore Community
               </LinkButton>
@@ -296,6 +314,7 @@ const HomePage = ({ generalConfig }: Props) => {
                 size="small"
                 className="project-link w-fit"
                 href="https://www.fozdacova.world"
+                target="_blank"
               >
                 Explore Community
               </LinkButton>
@@ -336,6 +355,7 @@ const HomePage = ({ generalConfig }: Props) => {
                 size="small"
                 className="project-link w-fit"
                 href="https://www.earthbound.eco"
+                target="_blank"
               >
                 Explore Community
               </LinkButton>
@@ -376,6 +396,7 @@ const HomePage = ({ generalConfig }: Props) => {
                 size="small"
                 className="project-link w-fit"
                 href="https://per-auset-git-develop-closerdao.vercel.app/"
+                target="_blank"
               >
                 Explore Community
               </LinkButton>
@@ -415,6 +436,7 @@ const HomePage = ({ generalConfig }: Props) => {
                 size="small"
                 className="project-link w-fit"
                 href="https://www.moos.garden"
+                target="_blank"
               >
                 Explore Community
               </LinkButton>
@@ -454,7 +476,8 @@ const HomePage = ({ generalConfig }: Props) => {
                 size="small"
                 className="project-link w-fit"
                 href="https://experience.lios.io/"
-              >
+                target="_blank"
+                >
                 Explore Community
               </LinkButton>
             </Card>

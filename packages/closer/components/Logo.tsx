@@ -15,14 +15,15 @@ const Logo: FC = () => {
         <>
           
           {APP_NAME === 'closer' && (
-            <div className="overflow-hidden w-[160px] sm:w-full">
+            <div className="w-[240px] sm:w-full flex items-center ">
               <Image
                 src={LOGO_HEADER}
                 alt={PLATFORM_NAME}
 
-                width={160}
+                width={60}
                 height={38}
               />
+              <div className='tracking-tight text-2xl mt-0.5 font-medium'>{PLATFORM_NAME }</div>
             </div>
           )}
           {APP_NAME === 'lios' && (

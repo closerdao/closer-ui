@@ -235,6 +235,7 @@ const MemberMenu = () => {
     });
 
     // FAQ section (standalone)
+    
     sections.push({
       label: t('navigation_faq'),
       isOpen: false,
@@ -242,7 +243,7 @@ const MemberMenu = () => {
         {
           label: t('navigation_faq'),
           url: '/resources',
-          enabled: APP_NAME.toLowerCase() !== 'lios' && APP_NAME !== 'foz',
+          enabled: APP_NAME.toLowerCase() !== 'lios' && APP_NAME !== 'foz' && APP_NAME.toLowerCase() !== 'closer',
           rbacPage: 'Resources',
         },
       ],

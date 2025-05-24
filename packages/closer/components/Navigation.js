@@ -99,7 +99,6 @@ const Navigation = () => {
                 </li>
               </ul>
               <Button
-                // onClick={() => router.push('/pages/join')}
                 size="small"
                 variant="primary"
                 className={' bg-accent-alt border-accent-alt'}
@@ -129,7 +128,10 @@ const Navigation = () => {
                     <Link href="/#pricing">{t('header_nav_pricing')}</Link>
                   </li>
                   <li>
-                    <Link href="https://closer.gitbook.io/documentation">
+                    <Link
+                      href="https://closer.gitbook.io/documentation"
+                      target="_blank"
+                    >
                       {t('header_nav_docs')}
                     </Link>
                   </li>
@@ -137,7 +139,6 @@ const Navigation = () => {
               </div>
               <Button
                 onClick={() => {
-
                   setPromptGetInTouchOpen(true);
                 }}
                 size="small"
