@@ -79,11 +79,11 @@ const PerformancePage = ({ generalConfig, bookingConfig }: Props) => {
   return (
     <>
       <Head>
-        <title>{`${t('performance_title')} - ${PLATFORM_NAME}`}</title>
+        <title>{`${t('dashboard_performance_title')} - ${PLATFORM_NAME}`}</title>
       </Head>
       <AdminLayout isBookingEnabled={isBookingEnabled}>
         <div className="flex justify-between flex-col md:flex-row gap-4">
-          <Heading level={2}>{t('performance_title') || 'Performance'}</Heading>
+          <Heading level={2}>{t('dashboard_performance_title') || 'Performance'}</Heading>
           <TimeFrameSelector
             timeFrame={timeFrame}
             setTimeFrame={setTimeFrame}
