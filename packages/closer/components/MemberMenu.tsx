@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+
 import { useAuth } from '../contexts/auth';
 import { useConfig } from '../hooks/useConfig';
 import useRBAC from '../hooks/useRBAC';
@@ -14,6 +15,7 @@ import Profile from './Profile';
 import ReportABug from './ReportABug';
 import Wallet from './Wallet';
 import Button from './ui/Button';
+import WalletInverter from './WalletInverter';
 
 interface MenuSection {
   label: string;
@@ -396,7 +398,10 @@ const MemberMenu = () => {
   return (
     <nav className="flex flex-col gap-4">
       <Profile isMenu={true} isDemo={false} />
+
       {isWalletEnabled && <Wallet />}
+
+      {APP_NAME.toLowerCase() === 'closer' && <WalletInverter />}
       {isTokenSaleEnabled && (
         <Button
           variant="primary"
