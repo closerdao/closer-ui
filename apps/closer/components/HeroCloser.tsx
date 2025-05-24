@@ -158,7 +158,7 @@ export default function HeroCloser() {
       // Handle chat completions response format
       const messageContent =
         data.choices?.[0]?.message?.content ||
-        "Here's a new vision for your community.";
+        'Here\'s a new vision for your community.';
 
       // Add to conversation history
       setConversation((prev) => [
