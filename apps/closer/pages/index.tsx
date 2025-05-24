@@ -3,6 +3,7 @@ import Image from 'next/image';
 
 import { useContext, useState } from 'react';
 
+import HeroCloser from '@/components/HeroCloser';
 import PromptFixedBottomGetInTouch from 'closer/components/PromptFixedBottomGetInTouch';
 import { PromptGetInTouchContext } from 'closer/components/PromptGetInTouchContext';
 import Tag from 'closer/components/Tag';
@@ -22,7 +23,6 @@ import {
   Users,
 } from 'lucide-react';
 import { NextPageContext } from 'next';
-import HeroCloser from '@/components/HeroCloser';
 
 interface Props {
   generalConfig: GeneralConfig | null;
@@ -39,8 +39,6 @@ const HomePage = ({ generalConfig }: Props) => {
 
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
 
-
-
   const closeModal = () => {
     setIsInfoModalOpened(false);
   };
@@ -53,17 +51,11 @@ const HomePage = ({ generalConfig }: Props) => {
           content="Manage guests, spaces, events and resources through one intuitive platform designed specifically for land-based projects"
         />
       </Head>
-      {isInfoModalOpened && (
-        <Modal closeModal={closeModal}>
-         dfdgfsfsdg
-        </Modal>
-      )}
+      {isInfoModalOpened && <Modal closeModal={closeModal}>dfdgfsfsdg</Modal>}
 
       <PromptFixedBottomGetInTouch />
 
-      <HeroCloser/>
-
-
+      <HeroCloser />
 
       {/* Hero Section */}
       {/* <section className=" text-center py-[100px] ">
@@ -477,7 +469,7 @@ const HomePage = ({ generalConfig }: Props) => {
                 className="project-link w-fit"
                 href="https://experience.lios.io/"
                 target="_blank"
-                >
+              >
                 Explore Community
               </LinkButton>
             </Card>
