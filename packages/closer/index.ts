@@ -86,7 +86,7 @@ export { default as UnlockStaysPage } from './pages/bookings/unlock-stays';
 export { default as CreditCheckoutPage } from './pages/credits/checkout';
 export { default as DashboardPage } from './pages/dashboard';
 export { default as AffiliateDashboardPage } from './pages/dashboard/affiliate';
-export { default as PerformancePage } from './pages/dashboard/performance';
+export { default as PerformancePage } from './pages/dashboard/performance/index';
 export { default as EventsPage } from './pages/events';
 export { default as EventPage } from './pages/events/[slug]';
 export { default as EditEventPage } from './pages/events/[slug]/edit';
