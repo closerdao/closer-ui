@@ -41,6 +41,8 @@ const ValidationCitizenPage: NextPage<Props> = ({
 }) => {
   const t = useTranslations();
   const { isLoading, user } = useAuth();
+
+  console.log('user=', user);
   const { PLATFORM_NAME } = useConfig();
 
   const router = useRouter();
@@ -122,6 +124,8 @@ const ValidationCitizenPage: NextPage<Props> = ({
         const isVouchedRes = await api.get(
           '/subscription/citizen/check-is-vouched',
         );
+
+        console.log('isVouchedRes=', isVouchedRes);
         const isVouchedLocal = isVouchedRes?.data?.isVouched;
 
         setIsVouched(isVouchedLocal);
