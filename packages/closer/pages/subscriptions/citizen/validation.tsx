@@ -72,6 +72,10 @@ const ValidationCitizenPage: NextPage<Props> = ({
     },
   });
 
+
+  const isSpaceHostVouchRequired = citizenshipConfig?.isSpaceHostVouchRequired
+
+
   const minVouches = citizenshipConfig?.minVouches || 3;
 
   const getCtaButtonText = () => {
@@ -222,6 +226,7 @@ const ValidationCitizenPage: NextPage<Props> = ({
               isVouched={isVouched}
               owns30Tokens={owns30Tokens}
               minVouches={minVouches}
+              isSpaceHostVouchRequired={isSpaceHostVouchRequired}
             />
           </section>
 

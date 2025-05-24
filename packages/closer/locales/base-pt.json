@@ -628,6 +628,7 @@
   "subscriptions_citizen_report_mistake": "Há algum erro? Por favor, informe-nos em",
   "subscriptions_citizen_stayed_for_min_duration": "Passou pelo menos 14 dias na TDF nos últimos dois anos",
   "subscriptions_citizen_vouched_by_n_members": "Foi recomendado por {var} outros membros",
+  "subscriptions_citizen_space_host_vouch_required": "e pelo menos um anfitrião de espaço",
   "subscriptions_citizen_created_account": "Criou uma conta",
   "subscriptions_citizen_no_reports": "Não foi reportado por outros membros",
   "subscriptions_citizen_owns_30_tokens": "Possui 30 tokens",
