@@ -41,7 +41,9 @@ const getPage = ({
           },
           content: {
             title: 'JOIN EARTHBOUND AS PART OF THE LIVING COMMUNITY',
-            body: '<p>We are opening up for new members in the late spring 2025 / once we have settled the buying of the property. However feel free to reach out to our membership contact point Zuzanna already now to receive more information about Earthbound including detailed values, profile and an introduction to Les Pas-Sages!</p>',
+            body: `<p>Are you interested in becoming part of the living community of Earthbound?</p>
+
+<p><b>We are now open for new members!</b> So if you want to explore what’s possible, read the information below and if you have any questions feel free to contact us on <a href="mailto:contact@earthbound.eco">contact@earthbound.eco</a>. </p>`,
             imageUrl:
               'https://cdn.oasa.co/custom-pages/earthbound/earthbound-community.jpg',
           },
