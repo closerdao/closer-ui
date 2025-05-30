@@ -15,13 +15,13 @@ export default function MembershipTimeline() {
     {
       id: 1,
       title:
-        'Learning about Earthbound through our <a target="_blank" class="underline" href="https://drive.google.com/file/d/1h8UeDKukm58H5BDEIfDxh5lo_gy4IkgT/view?usp=drivesdk">documents</a>, information meetings etc.',
+        'Learning about Earthbound through our <a target="_blank" class="underline" href="https://drive.google.com/file/d/13Q7KKuXWWYILZKAyrEVCvL0oe8Dnr67V/view?usp=sharing">documents</a>, information meetings etc.',
       icon: <FileText className="h-5 w-5 text-accent" />,
       position: 'left',
     },
     {
       id: 2,
-      title: 'Filling out the membership questionnaire',
+      title: 'Filling out the <a target="_blank" class="underline" href="https://qhtmijgonhi.typeform.com/to/VtYUkHBf">membership questionnaire</a>',
 
       icon: <FileQuestion className="h-5 w-5 text-accent" />,
       position: 'right',
@@ -41,7 +41,7 @@ export default function MembershipTimeline() {
     {
       id: 5,
       title:
-        '2 phases of long-term living with us; an initial 3 months and then another 6 months',
+        '2 phases of long-term living with us; an initial 3 months and then another 6 months integration',
       icon: <Clock className="h-5 w-5 text-accent" />,
       position: 'left',
     },
@@ -61,7 +61,7 @@ export default function MembershipTimeline() {
     },
     {
       id: 8,
-      title: 'Signing a "rent-of-use" contract',
+      title: 'Signing a "right-of-use" contract',
       icon: <FileSignature className="h-5 w-5 text-accent" />,
       position: 'right',
     },

@@ -360,7 +360,7 @@ const getPage = ({
                 title: 'COMMUNITY MEMBER',
                 text: 'Do you want to live in a deep and intergenerational community and steward the land and vision of Earthbound?',
                 imageUrl:
-                  'https://cdn.oasa.co/custom-pages/earthbound/comm-member.png',
+                  'https://cdn.oasa.co/custom-pages/earthbound/community-2.jpg',
                 cta: {
                   text: 'More info',
                   url: '/pages/community',

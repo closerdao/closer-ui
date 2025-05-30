@@ -38,6 +38,8 @@ const getPage = ({
           },
           content: {
             title: 'BECOME AN IMPACT INVESTOR',
+            videoEmbedId: 'kic4AFJxbho',
+            localVideoPath: '/videos/earthbound-hero.mp4',
             imageUrl:
               'https://cdn.oasa.co/custom-pages/earthbound/investor-hero.png',
           },
@@ -51,7 +53,7 @@ const getPage = ({
           },
           content: {
             html: `
-            <h2>
+            <h2 style="text-transform: uppercase;">
             You can put your money in Earthbound instead of the bank!
             <br/>
             </h2>
@@ -80,12 +82,7 @@ Support the creation of an ethical and regenerative project and create impact be
 
                             <h2>HOW SAFE IS YOUR IMPACT INVESTMENT?</h2>
 
-                            It is a long-term investment with a real estate collateral
-              It is bound by clear contractual agreements with each investor
-              You have freedom to withdraw your money at any time, with respect to the sustainability of the project
-              We offer inflation evaluation 
-              Earthbound is safeguarding your money by making economic, ecological and social investments on a human scale
-
+            
 
               <ul>
               <li>It is a long-term investment with a real estate collateral</li>
@@ -101,11 +98,11 @@ Support the creation of an ethical and regenerative project and create impact be
                           </p>
                           
                           <ul>
-                            <li><strong>Email:</strong> <a href="mailto:contact@earthbound.eco">contact@earthbound.eco</a></li>
+                            <li><strong>Email:</strong> <a href="mailto:earthboundecovillage@protonmail.com">earthboundecovillage@protonmail.com</a></li>
                             <li>
-                            <strong>Telegram:</strong> <a href="https://t.me/earthboundecovillage">@earthboundecovillage</a>
+                            <strong>Telegram (Dicte):</strong> <a href="https://t.me/Dicte_Frost">@Dicte_Frost</a>
                             </li>
-                            <li><strong>WhatsApp (Samson):</strong> <a href="http://wa.me/+41786596490">http://wa.me/+41786596490</a></li>
+                            <li><strong>WhatsApp (Dicte):</strong> <a href="http://wa.me/+4560661280">+4560661280</a></li>
                            </ul>
 
                        
@@ -113,6 +110,35 @@ Support the creation of an ethical and regenerative project and create impact be
           },
         },
       },
+
+      {
+        type: 'hero',
+        data: {
+          settings: {
+            alignText: 'top-left',
+            isInverted: true,
+            isCompact: true,
+          },
+          content: {
+            title: 'NEXT PROJECT: PURCHASING 71HA FOR NATURE CONSERVATION AND REGENERATIVE AGRICULTURE',
+            body: `
+            
+<p>The next impact investments will be used to buy the remaining 71ha of land around the property that we have already bought. The 71ha are reserved for us till September 2025.</p>
+
+<p>The land includes protected forest, agricultural fields, grazing lands, wetland, a production forest and part of a lake. The land will be dedicated to nature conservation, regenerative agriculture and the further development of Earthbound.</p>
+
+<p>We are raising 4 million SEK (approx. 400.000 €) to complete this project. </p>
+
+            `,
+            // videoEmbedId: 'kic4AFJxbho',
+            // localVideoPath: '/videos/earthbound-hero.mp4',
+            imageUrl:
+              'https://cdn.oasa.co/custom-pages/earthbound/investor-hero.png',
+          },
+        },
+      },
+
+      
 
       {
         type: 'listing',
@@ -171,18 +197,19 @@ Support the creation of an ethical and regenerative project and create impact be
               {
                 title: 'JANET BANKS & HUGH ANDREWS',
                 text: '\“We wanted to support the Earthbound initiative, because so many of its values resonate with our own. We love the development of shared facilities that allow all to live a richer life both physically and socially. As a demonstration project of how we can live in harmony with the natural world and each other, we want it to succeed and hopefully be replicated in many ways throughout the world.\"',
-                imageUrl: '',
-              },
-              {
-                title: 'NINA EWALD, Germany',
-                text: '\“I invest in Earthbound Ecovillage because I believe another way of life is possible – one that reconnects us with the Earth, with authentic relationships, and with a true sense of home. For me, Earthbound is a resounding YES to a future where we rethink what it means to have a home. I had the privilege of being involved in the development over many months – as an investor and as part of a growing community. Through this experience, I\'ve seen what\'s possible when vision, structure, and heart come together: A place where sustainability, community, and spiritual values align. Earthbound Ecovillage is more than just a sustainable project for me; it\'s an invitation to place the Earth back at the center of our lives. It\'s about more than ecological awareness – it\'s about a deeper connection to what truly nourishes us: nature, community, and authentic exchange. As an impact investor, I see that this project will bring lasting change – not just today, but for the generations to come. It invites others to join this vision and help shape a livable and just future together.\"',
-                imageUrl: '',
+                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/Janet-Banks-&-Hugh-Andrews2.jpg',
               },
               {
                 title: 'ANNEKE MUNS-KAANDORP, France',
                 text: '\“My partner and me were happy to invest some money in Earthbound Ecovillage. Why? Last year I met some of the ones that are now in the core group starting Earthbound. I was very impressed by the amount of experience, intelligence, knowledge, wisdom, warmth, connectedness, resilience and focus there was in the group. They had just "found" Grimsnäs and were determined that this would be the land where their dream-community would grow and flourish. I am convinced that this will be a beautiful place to share life in love and connection for many people and I\'m hopeful that one day I can be one of them.\"',
-                imageUrl: '',
+                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/Anneke2.jpg',
               },
+              {
+                title: 'NINA EWALD, Germany',
+                text: '\“I invest in Earthbound Ecovillage because I believe another way of life is possible – one that reconnects us with the Earth, with authentic relationships, and with a true sense of home. For me, Earthbound is a resounding YES to a future where we rethink what it means to have a home. I had the privilege of being involved in the development over many months – as an investor and as part of a growing community. Through this experience, I\'ve seen what\'s possible when vision, structure, and heart come together: A place where sustainability, community, and spiritual values align. Earthbound Ecovillage is more than just a sustainable project for me; it\'s an invitation to place the Earth back at the center of our lives. It\'s about more than ecological awareness – it\'s about a deeper connection to what truly nourishes us: nature, community, and authentic exchange. As an impact investor, I see that this project will bring lasting change – not just today, but for the generations to come. It invites others to join this vision and help shape a livable and just future together.\"',
+                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/Nina-Ewald2.jpg',
+              },
+
             ],
           },
         },

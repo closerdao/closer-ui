@@ -45,7 +45,7 @@ const getPage = ({
 
 <p><b>We are now open for new members!</b> So if you want to explore what’s possible, read the information below and if you have any questions feel free to contact us on <a href="mailto:contact@earthbound.eco">contact@earthbound.eco</a>. </p>`,
             imageUrl:
-              'https://cdn.oasa.co/custom-pages/earthbound/earthbound-community.jpg',
+              'https://cdn.oasa.co/custom-pages/earthbound/AWP04555.jpg',
           },
         },
       },
@@ -72,7 +72,7 @@ const getPage = ({
               </ul>
 
               <h2 class='ql-align-center'>WHAT IS THE PROCESS TO BECOMING A MEMBER?</h2>
-              <p>The social cohesion of the living community is essential to making Earthbound a reality and to realize its potentials and impacts. That is why we have designed a multi-step membership process where we, with time and slowness, can truly sense whether it is the right match on both sides.
+              <p>The social cohesion of the living community is essential to making Earthbound a reality and to realize its potentials and impacts. That is why we have designed a multi-step joining process where we, with time and slowness, can truly sense whether it is the right match on both sides.
 </p>
 
                         `,
