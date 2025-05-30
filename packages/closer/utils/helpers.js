@@ -483,3 +483,20 @@ export const calculateSubscriptionPrice = (plan, monthlyCredits) => {
     `Could not calculate subscription price for this amount of credits ${monthlyCredits}.`,
   );
 };
+
+export function withBoldStyle(phrase, boldPart) {
+  const startIndex = phrase.indexOf(boldPart);
+  const endIndex = startIndex + boldPart.length;
+  const preBold = phrase.slice(0, startIndex);
+  const bold = phrase.slice(startIndex, endIndex);
+  const postBold = phrase.slice(endIndex);
+  console.log('withBoldStyle', startIndex, `${preBold} *${bold}* ${postBold}`)
+  if (startIndex === -1) {
+    return phrase;
+  }
+  return [
+    preBold,
+    <b key="mid">{bold}</b>,
+    postBold,
+  ].filter(part => part !== '');
+}
