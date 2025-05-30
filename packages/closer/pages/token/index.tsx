@@ -222,12 +222,10 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 level={2}
                 className="text-center mt-12 max-w-[620px] mb-6 text-3xl font-extrabold md:font-bold md:text-5xl uppercase md:normal-case"
               >
-                $TDF Sale
+                {t('token_sale_sale_heading')}
               </Heading>
               <p className="text-center max-w-[660px] text-lg">
-                To fund the development of our regenerative village, we are
-                selling tokens that give the owners of those tokens a lifetime´s
-                access to TDF.
+                {t('token_sale_sale_description')}
               </p>
             </div>
             <div className="flex gap-10 justify-center items-center flex-col md:flex-row">
@@ -305,11 +303,10 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
               level={2}
               className="text-center mt-12 max-w-[620px] mb-6 text-3xl font-extrabold md:font-bold md:text-5xl uppercase md:normal-case"
             >
-              $TDF unlocks Access to Accommodation at TDF
+              {t('token_sale_accommodation_heading')}
             </Heading>
             <p className="text-center max-w-[660px] text-lg">
-              $TDF represents utility in the real world - in the forms of night
-              of stay at TDF
+              {t('token_sale_accommodation_description')}
             </p>
             <div className="mt-20 flex flex-col w-full md:w-[460px]">
               <Heading level={3} className="mb-6">
@@ -451,22 +448,18 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
             <div className="flex gap-10 justify-center items-center flex-col md:flex-row">
               <div className="text-sm flex flex-col gap-6 w-full md:w-1/3">
                 <p className="text-accent">
-                  1 $TDF = 1 night spent at utility cost per year, forever, in
-                  standard accommodation.
+                  {t('token_sale_token_night_value')}
                 </p>
 
                 <p className="text-accent">
-                  Your $TDF tokens give you access to your chosen accommodation.
-                  The utility fee includes energy, water, internet, taxes, food,
-                  salaries, maintenance etc.
+                  {t('token_sale_token_access_description')}
                 </p>
 
                 <p>
-                  Bookings must be approved by Space Host. Citizen get access to
-                  &quot;instant book&quot; (no approval).
+                  {t('token_sale_booking_approval')}
                 </p>
 
-                <p>$TDF tokens also give governance rights in the TDF DAO.</p>
+                <p>{t('token_sale_governance_rights')}</p>
               </div>
               <Image
                 className="w-full md:w-1/2 max-w-[430px] w-2/3"
@@ -478,7 +471,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
             </div>
           </div>
           <Button isFullWidth={false} variant="secondary" onClick={handleNext}>
-            UNLOCK ACCESS
+            {t('token_sale_unlock_access_button')}
           </Button>
         </section>
 
