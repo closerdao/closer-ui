@@ -103,7 +103,7 @@ export default function MembershipTimeline() {
                 ) : (
                   <>
                     <div></div>
-                    <div className="pl-8 py-2">{step.title}</div>
+                    <div className="pl-8 py-2" dangerouslySetInnerHTML={{ __html: step.title }} />
                   </>
                 )}
               </div>
