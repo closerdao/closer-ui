@@ -27,8 +27,8 @@ const loginOptions =
 
 const Login = () => {
   const t = useTranslations();
-  const { injected } = useContext(WalletState);
-  const { signMessage } = useContext(WalletDispatch);
+  const { account } = useContext(WalletState);
+  const { signMessage, connectWallet } = useContext(WalletDispatch);
 
   const router = useRouter();
   const {
@@ -103,6 +103,9 @@ const Login = () => {
   }, []);
 
   const signInWithWallet = async (walletAddress: string) => {
+    console.log('signInWithWallet');
+    console.log('walletAddress=', walletAddress);
+
     setWeb3Error(null);
     setWeb3Loading(true);
     try {
@@ -136,9 +139,9 @@ const Login = () => {
     event.preventDefault();
     setWeb3Error(null);
     try {
-      const activated = await injected.activate();
-      if (activated?.account) {
-        signInWithWallet(activated.account);
+      await connectWallet();
+      if (account) {
+        signInWithWallet(account);
       }
     } catch (error) {
       setWeb3Error(parseMessageFromError(error));
