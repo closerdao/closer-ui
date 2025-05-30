@@ -79,20 +79,24 @@ const ValidationCitizenPage: NextPage<Props> = ({
   const minVouches = citizenshipConfig?.minVouches || 3;
 
   const getCtaButtonText = () => {
+    if (isMember) {
+      return t('subscriptions_citizen_already_member');
+    }
+    
     switch (eligibility) {
       case 'good_to_buy':
         if (application?.intent?.iWantToBuyTokens) {
-          return t('navigation_buy_token');
+          return t('subscription_citizen_apply');
         } else {
-          return t('navigation_buy_token');
+          return t('subscription_citizen_apply');
         }
       case 'buy_more':
         if (application?.intent?.iWantToBuyTokens) {
-          return t('navigation_buy_token');
+          return t('subscription_citizen_apply');
         } else if (application?.intent?.iWantToApply) {
           return t('subscriptions_citizen_apply');
         } else {
-          return t('navigation_buy_token');
+          return t('subscription_citizen_apply');
         }
       case 'not_eligible':
         return t('subscriptions_citizen_see_other_ways');
@@ -213,10 +217,18 @@ const ValidationCitizenPage: NextPage<Props> = ({
         <main className="pt-14 pb-24 space-y-6">
           <section className="mb-10 space-y-6">
             <Heading level={2} className="border-b pb-2 mb-6 text-xl">
-              {eligibility === 'not_eligible'
+              {isMember 
+                ? t('subscriptions_citizen_already_member')
+                : eligibility === 'not_eligible'
                 ? t('subscriptions_citizen_not_eligible')
                 : t('subscriptions_citizen_eligible')}
             </Heading>
+            {isMember && (
+              <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
+                <p className="font-bold text-green-700 mb-2">{t('subscriptions_citizen_already_member_title')}</p>
+                <p>{t('subscriptions_citizen_already_member_description')}</p>
+              </div>
+            )}
           </section>
           <section className="space-y-6">
             <CitizenEligibility

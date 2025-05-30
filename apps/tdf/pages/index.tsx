@@ -373,8 +373,7 @@ const HomePage = () => {
         </section>
 
         <section
-          className="relative flex items-center justify-end h-screen my-20 w-full bg-cover bg-center"
-          style={{ backgroundImage: 'url(\'/images/landing/land-plan.png\')' }}
+          className="relative flex items-center justify-end h-screen my-20 w-full bg-cover bg-center bg-[url('/images/landing/land-plan.png')]"
         >
           <div className="w-1/2 bg-white bg-opacity-80 p-20">
           <Heading display level={2} className="mb-4">
