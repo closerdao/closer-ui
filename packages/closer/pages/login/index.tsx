@@ -54,7 +54,7 @@ const Login = () => {
   const [isWeb3Loading, setWeb3Loading] = useState(false);
   const [isLoginWithWallet, setisLoginWithWallet] = useState(false);
   const [selectedSwitcherOption, setSelectedSwitcherOption] = useState('Email');
-  const [web3Error, setWeb3Error] = useState<string | null>(null); // Allow string or null
+  const [web3Error, setWeb3Error] = useState<string | null>(null); 
 
   if (isAuthenticated && !hasSignedUp) {
     const redirectUrl = getRedirectUrl({
