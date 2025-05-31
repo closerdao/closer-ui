@@ -104,7 +104,7 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   }, [selectedPlan]);
 
   useEffect(() => {
-    if (user?.subscription && user?.subscription?.priceId) {
+    if (user?.subscription && user?.subscription?.priceId && new Date(user?.subscription?.validUntil || '') > new Date()) {
       router.push('/subscriptions');
     }
   }, []);
