@@ -54,7 +54,7 @@ const Login = () => {
   const [isWeb3Loading, setWeb3Loading] = useState(false);
   const [isLoginWithWallet, setisLoginWithWallet] = useState(false);
   const [selectedSwitcherOption, setSelectedSwitcherOption] = useState('Email');
-  const [web3Error, setWeb3Error] = useState(null);
+  const [web3Error, setWeb3Error] = useState<string | null>(null); // Allow string or null
 
   if (isAuthenticated && !hasSignedUp) {
     const redirectUrl = getRedirectUrl({
@@ -146,24 +146,27 @@ const Login = () => {
     setWeb3Error(null);
     try {
       console.log('[walletConnectAndSignInFlow] calling connectWallet');
-      await connectWallet();
+      const connectedAccount = await connectWallet(); // Get account directly from connectWallet
       console.log(
-        '[walletConnectAndSignInFlow] connectWallet finished, account:',
-        account,
+        '[walletConnectAndSignInFlow] connectWallet finished, returned account:',
+        connectedAccount,
       );
-      if (account) {
+      if (connectedAccount) {
         console.log(
           '[walletConnectAndSignInFlow] calling signInWithWallet with account:',
-          account,
+          connectedAccount,
         );
-        signInWithWallet(account);
+        // The account from WalletState might not be updated yet, so use connectedAccount
+        await signInWithWallet(connectedAccount); 
       } else {
         console.log(
-          '[walletConnectAndSignInFlow] account is not available after connectWallet',
+          '[walletConnectAndSignInFlow] No account returned from connectWallet or account is not available.',
         );
+        // Optionally, set an error message for the user if no account was connected
+        setWeb3Error(t('wallet_connection_failed_no_account')); 
       }
     } catch (error) {
-      console.log('[walletConnectAndSignInFlow] error:', error);
+      console.log('[walletConnectAndSignInFlow] error during flow:', error);
       setWeb3Error(parseMessageFromError(error));
     }
     console.log('[walletConnectAndSignInFlow] finished');

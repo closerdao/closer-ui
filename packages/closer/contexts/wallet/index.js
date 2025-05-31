@@ -196,36 +196,72 @@ export const WalletProvider = ({ children }) => {
         },
         false,
       );
-      console.log('[connectWallet] activate finished');
-      if (!user?.walletAddress) {
-        const activated = await injected.activate();
-        console.log('[connectWallet] injected.activate() result:', activated);
-        await linkWalletWithUser(activated?.account);
+      console.log('[connectWallet] main activate finished'); // Changed log message for clarity
+
+      // `user` is from useAuth(), `account` (from useWeb3React) should be updated after activation.
+      // The original code called `injected.activate()` again here.
+      // This is presumably to reliably get the account details immediately post-activation
+      // as useWeb3React state updates might not be synchronous.
+      const activatedConnection = await injected.activate();
+      const connectedAccount = activatedConnection?.account;
+      console.log('[connectWallet] secondary injected.activate() result:', activatedConnection);
+
+      if (user && user._id && !user.walletAddress && connectedAccount) {
+        // User is logged in, doesn't have a wallet linked, and a wallet is now connected.
+        console.log(`[connectWallet] User ${user._id} authenticated, no wallet linked. Wallet ${connectedAccount} connected. Attempting to link.`);
+        await linkWalletWithUser(connectedAccount, user); // Pass user explicitly
+      } else {
+        // Log reasons why linking is not happening
+        if (!user || !user._id) {
+          console.log('[connectWallet] No authenticated user (or user missing _id). Wallet may be connected, but not linking to a user profile at this stage.');
+        } else if (user && user.walletAddress) { // Check user exists before accessing walletAddress
+          console.log(`[connectWallet] User ${user._id} already has wallet ${user.walletAddress} linked.`);
+        } else if (!connectedAccount) {
+          console.log('[connectWallet] Wallet connection via secondary injected.activate() did not yield an account. Cannot link.');
+        }
       }
+      console.log('[connectWallet] finished, returning account:', connectedAccount);
+      return connectedAccount; // Return the connected account
     } catch (e) {
-      console.log('[connectWallet] Exception:', e);
+      console.log('[connectWallet] Exception during connectWallet process:', e);
+      console.log('[connectWallet] finished with error, returning null');
+      return null; // Return null in case of an error
     }
-    console.log('[connectWallet] finished');
   };
 
-  const linkWalletWithUser = async (accountId) => {
+  const linkWalletWithUser = async (accountId, currentUser) => { // Added currentUser parameter
+    if (!currentUser || !currentUser._id) { // Added check for currentUser and currentUser._id
+      console.error('[linkWalletWithUser] User object or user._id is not available. Cannot link wallet.');
+      return null;
+    }
+    if (!accountId) { // Added check for accountId
+      console.error('[linkWalletWithUser] accountId not provided. Cannot link wallet.');
+      return null;
+    }
+    console.log(`[linkWalletWithUser] Attempting to link account ${accountId} with user ${currentUser._id}`);
     try {
       const {
         data: { nonce },
       } = await api.post('/auth/web3/pre-sign', { walletAddress: accountId });
       const message = `Signing in with code ${nonce}`;
       const signedMessage = await signMessage(message, accountId);
+      if (!signedMessage) { // Added check for signedMessage
+        console.error('[linkWalletWithUser] Failed to sign message.');
+        return null;
+      }
       const {
         data: { results: userUpdated },
       } = await api.post('/auth/web3/connect', {
         signedMessage,
         walletAddress: accountId,
         message,
-        userId: user._id,
+        userId: currentUser._id, // Use currentUser._id
       });
+      console.log('[linkWalletWithUser] Wallet linked successfully. User data updated:', userUpdated);
+      // TODO: Consider if auth context needs explicit update here, e.g., by calling auth.updateUser(userUpdated);
       return userUpdated;
     } catch (error) {
-      console.error(error);
+      console.error('[linkWalletWithUser] Error during API call to link wallet:', error);
       return null;
     }
   };
@@ -303,6 +339,7 @@ export const WalletProvider = ({ children }) => {
           updateCeurBalance,
           updateCeloBalance,
           refetchBookingDates,
+          signMessage, // Add signMessage here
         }}
       >
         {children}
