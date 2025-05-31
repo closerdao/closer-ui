@@ -168,31 +168,44 @@ export const WalletProvider = ({ children }) => {
   );
 
   const connectWallet = async () => {
-    await activate(
-      injected,
-      async (error) => {
-        if (error instanceof UserRejectedRequestError) {
-          // ignore user rejected error
-        } else if (
-          error instanceof UnsupportedChainIdError &&
-          window.ethereum
-        ) {
-          //Unrecognized chain, provider not loaded, attempting hard forced chain change if metamask is injected
-          switchNetwork(window.ethereum);
-        } else if (error instanceof NoEthereumProviderError) {
-          alert(
-            'You need to install and activate an Ethereum compatible wallet',
-          );
-        } else {
-          setError(error);
-        }
-      },
-      false,
-    );
-    if (!user?.walletAddress) {
-      const activated = await injected.activate();
-      await linkWalletWithUser(activated?.account);
+    console.log('[connectWallet] called');
+    try {
+      await activate(
+        injected,
+        async (error) => {
+          if (error instanceof UserRejectedRequestError) {
+            console.log('[connectWallet] UserRejectedRequestError');
+            // ignore user rejected error
+          } else if (
+            error instanceof UnsupportedChainIdError &&
+            window.ethereum
+          ) {
+            console.log(
+              '[connectWallet] UnsupportedChainIdError, switching network',
+            );
+            switchNetwork(window.ethereum);
+          } else if (error instanceof NoEthereumProviderError) {
+            console.log('[connectWallet] NoEthereumProviderError');
+            alert(
+              'You need to install and activate an Ethereum compatible wallet',
+            );
+          } else {
+            console.log('[connectWallet] Other error:', error);
+            setError(error);
+          }
+        },
+        false,
+      );
+      console.log('[connectWallet] activate finished');
+      if (!user?.walletAddress) {
+        const activated = await injected.activate();
+        console.log('[connectWallet] injected.activate() result:', activated);
+        await linkWalletWithUser(activated?.account);
+      }
+    } catch (e) {
+      console.log('[connectWallet] Exception:', e);
     }
+    console.log('[connectWallet] finished');
   };
 
   const linkWalletWithUser = async (accountId) => {

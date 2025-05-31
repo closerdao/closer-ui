@@ -103,9 +103,7 @@ const Login = () => {
   }, []);
 
   const signInWithWallet = async (walletAddress: string) => {
-    console.log('signInWithWallet');
-    console.log('walletAddress=', walletAddress);
-
+    console.log('[signInWithWallet] called with walletAddress:', walletAddress);
     setWeb3Error(null);
     setWeb3Loading(true);
     try {
@@ -113,7 +111,9 @@ const Login = () => {
         data: { nonce },
       } = await api.post('/auth/web3/pre-sign', { walletAddress });
       const message = `Signing in with code ${nonce}`;
+      console.log('[signInWithWallet] signing message:', message);
       const signedMessage = await signMessage(message, walletAddress);
+      console.log('[signInWithWallet] signedMessage:', signedMessage);
       if (signedMessage) {
         const {
           data: { access_token: token, results: user },
@@ -122,30 +122,51 @@ const Login = () => {
           walletAddress,
           message,
         });
+        console.log('[signInWithWallet] setAuthentification with user:', user);
         setAuthentification(user, token);
+      } else {
+        console.log('[signInWithWallet] No signedMessage returned');
       }
     } catch (e: any) {
       if (e.response?.status === 401) {
         setWeb3Error(e.response.data.error);
+        console.log('[signInWithWallet] 401 error:', e.response.data.error);
         return;
       }
-      console.error(e);
+      console.error('[signInWithWallet] error:', e);
     } finally {
       setWeb3Loading(false);
+      console.log('[signInWithWallet] finished');
     }
   };
 
   const walletConnectAndSignInFlow = async (event: FormEvent) => {
+    console.log('[walletConnectAndSignInFlow] called');
     event.preventDefault();
     setWeb3Error(null);
     try {
+      console.log('[walletConnectAndSignInFlow] calling connectWallet');
       await connectWallet();
+      console.log(
+        '[walletConnectAndSignInFlow] connectWallet finished, account:',
+        account,
+      );
       if (account) {
+        console.log(
+          '[walletConnectAndSignInFlow] calling signInWithWallet with account:',
+          account,
+        );
         signInWithWallet(account);
+      } else {
+        console.log(
+          '[walletConnectAndSignInFlow] account is not available after connectWallet',
+        );
       }
     } catch (error) {
+      console.log('[walletConnectAndSignInFlow] error:', error);
       setWeb3Error(parseMessageFromError(error));
     }
+    console.log('[walletConnectAndSignInFlow] finished');
   };
 
   const onSubmit = async (event: FormEvent) => {
