@@ -2,17 +2,17 @@ import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 
 import HeroCloser from '@/components/HeroCloser';
-import PromptFixedBottomGetInTouch from 'closer/components/PromptFixedBottomGetInTouch';
+import CloserEmailCollector from 'closer/components/CloserEmailCollector';
 import { PromptGetInTouchContext } from 'closer/components/PromptGetInTouchContext';
 import Tag from 'closer/components/Tag';
 import { Button } from 'closer/components/ui';
 import Card from 'closer/components/ui/Card';
 import Heading from 'closer/components/ui/Heading';
 
-import { GeneralConfig, Modal, api, useConfig } from 'closer';
+import { GeneralConfig, api, useConfig } from 'closer';
 import { parseMessageFromError } from 'closer/utils/common';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import {
@@ -39,11 +39,6 @@ const HomePage = ({ generalConfig }: Props) => {
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
-  const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
-
-  const closeModal = () => {
-    setIsInfoModalOpened(false);
-  };
   return (
     <div>
       <Head>
@@ -53,9 +48,8 @@ const HomePage = ({ generalConfig }: Props) => {
           content="Manage guests, spaces, events and resources through one intuitive platform designed specifically for land-based projects"
         />
       </Head>
-      {isInfoModalOpened && <Modal closeModal={closeModal}>dfdgfsfsdg</Modal>}
 
-      <PromptFixedBottomGetInTouch />
+      <CloserEmailCollector />
 
       <HeroCloser />
 
@@ -587,8 +581,8 @@ const HomePage = ({ generalConfig }: Props) => {
                     Seed
                   </Heading>
                   <p className="text-gray-500 mb-4">
-                    Perfect for small co-living spaces and communities. Everything
-                    you need to run your community day-to-day
+                    Perfect for small co-living spaces and communities.
+                    Everything you need to run your community day-to-day
                   </p>
                 </div>
                 <div className="mb-4 space-y-2 h-[130px]">
@@ -599,8 +593,6 @@ const HomePage = ({ generalConfig }: Props) => {
                   </p>
                 </div>
               </div>
-
-
 
               <ul className="list-none p-0 mb-4 w-full">
                 <li className="flex mb-2 ">
@@ -638,15 +630,14 @@ const HomePage = ({ generalConfig }: Props) => {
               <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r to-accent-alt from-accent text-white px-6 py-2 rounded-full font-semibold text-sm">
                 Popular
               </div>
-             
-             
+
               <div className="flex flex-col border-b h-[280px] justify-between">
                 <div>
                   <Heading level={3} className="mb-2 text-2xl font-semibold">
-                  Plant
+                    Plant
                   </Heading>
                   <p className="text-gray-500 mb-4">
-                  Build transparent, participatory community governance
+                    Build transparent, participatory community governance
                   </p>
                 </div>
                 <div className="mb-4 space-y-2 h-[130px]">
@@ -657,9 +648,6 @@ const HomePage = ({ generalConfig }: Props) => {
                   </p>
                 </div>
               </div>
-             
-             
-             
 
               <ul className="list-none p-0 mb-4 w-full">
                 <li className="flex mb-2 ">
@@ -690,28 +678,22 @@ const HomePage = ({ generalConfig }: Props) => {
             </Card>
             {/* Forest Plan */}
             <Card className="bg-white border border-gray-100 p-8 flex flex-col justify-start">
-              
-              
-            <div className="flex flex-col border-b h-[280px] justify-between">
+              <div className="flex flex-col border-b h-[280px] justify-between">
                 <div>
                   <Heading level={3} className="mb-2 text-2xl font-semibold">
-                  Forest
+                    Forest
                   </Heading>
                   <p className="text-gray-500 mb-4">
-                  Scale your regenerative impact across multiple locations
+                    Scale your regenerative impact across multiple locations
                   </p>
                 </div>
                 <div className="mb-4 space-y-2 h-[130px]">
-                <p className="text-3xl font-bold ">Contact us</p>
-                <p className="text-gray-500 text-sm">
-                  Custom pricing based on your needs
-                </p>
+                  <p className="text-3xl font-bold ">Contact us</p>
+                  <p className="text-gray-500 text-sm">
+                    Custom pricing based on your needs
+                  </p>
                 </div>
               </div>
-
-
-              
-            
 
               <ul className="list-none p-0 mb-4 w-full">
                 <li className="flex mb-2 ">
@@ -735,6 +717,11 @@ const HomePage = ({ generalConfig }: Props) => {
               <p>Coming soon</p>
             </Card>
           </div>
+          <p className="text-xs text-gray-400 mt-8">
+            * Transaction fees can be reduced based on your community&apos;s
+            verified regenerative practices. The more regenerative impact you
+            create, the lower your fees become.
+          </p>
         </div>
       </section>
 
@@ -756,7 +743,7 @@ const HomePage = ({ generalConfig }: Props) => {
               setIsOpen(true);
             }}
           >
-            Get in touch
+            Schedule a demo
           </Button>
         </div>
       </section>

@@ -4,7 +4,7 @@ import { PromptGetInTouchContext } from 'closer/components/PromptGetInTouchConte
 
 import { Button } from 'closer';
 
-// import { Card, CardContent } from '@/components/ui/card';
+const SHOW_CHATBOT = false;
 
 function useCanvasNeuronNetwork(canvasRef: React.RefObject<HTMLCanvasElement>) {
   useEffect(() => {
@@ -78,9 +78,9 @@ function useCanvasNeuronNetwork(canvasRef: React.RefObject<HTMLCanvasElement>) {
 
 export default function HeroCloser() {
   const canvasRef = useRef(null);
-  const [heroText, setHeroText] = useState('Build Communities That Thrive');
+  const [heroText, setHeroText] = useState(' Community Management for Regenerative Villages');
   const [heroSubtext, setHeroSubtext] = useState(
-    'Closer is the operating system for regenerative communities. Manage guests, spaces, events and resources through one intuitive platform designed specifically for land-based projects.',
+    'Manage bookings, events, payments, and community knowledge in one platform. Built specifically for land-based projects.',
   );
   const [input, setInput] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -182,32 +182,32 @@ export default function HeroCloser() {
   const clearConversation = () => {
     setConversation([]);
     setIsExpanded(false);
-    setHeroText('Build Communities That Thrive');
+    setHeroText(' Community Management for Regenerative Villages');
     setHeroSubtext(
-      'Closer is the operating system for regenerative communities. Manage guests, spaces, events and resources through one intuitive platform designed specifically for land-based projects.',
+      'Manage bookings, events, payments, and community knowledge in one platform. Built specifically for land-based projects.',
     );
   };
 
   return (
-    <div className="bg-white text-black font-sans">
+    <div className='bg-white text-black font-sans'>
       {/* Modern LLM Prompt Input Fixed Top-Left */}
 
       {/* Hero Section */}
       <section
         ref={heroRef}
-        className="mt-[-32px] relative h-[calc(100vh-80px)]  flex flex-col items-center justify-center text-center"
+        className='mt-[-32px] relative h-[calc(100vh-80px)]  flex flex-col items-center justify-center text-center'
       >
         <canvas
           ref={canvasRef}
-          className="absolute top-0 left-0 w-full h-full z-0"
+          className='absolute top-0 left-0 w-full h-full z-0'
         />
 
-        <div className="relative z-10 px-6">
-          <h1 className="font-bold text-4xl md:text-6xl mb-8">{heroText}</h1>
-          <p className="text-lg max-w-2xl mx-auto mb-8 text-black">
+        <div className='relative z-10 px-6'>
+          <h1 className='font-bold text-4xl md:text-6xl mb-8'>{heroText}</h1>
+          <p className='text-lg max-w-2xl mx-auto mb-8 text-black'>
             {heroSubtext}
           </p>
-          <div className="flex flex-col md:flex-row gap-4 justify-center ">
+          <div className='flex flex-col md:flex-row gap-4 justify-center '>
             <Button
               onClick={() => {
                 setPromptGetInTouchOpen(true);
@@ -216,147 +216,147 @@ export default function HeroCloser() {
                 'px-8 w-fit  bg-foreground text-background border-foreground'
               }
             >
-              Launch your space on Closer
+              Schedule a demo
             </Button>
-            <Button
+            {/* <Button
               className={
                 'px-8 w-fit bg-gradient-to-r from-[#5290DB] to-[#79FAC1] border-none'
               }
             >
               Explore $closer
-            </Button>
+            </Button> */}
           </div>
-
-          {/* AI Chat Interface */}
-          <div
-            className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-white shadow-lg border border-zinc-400 transition-all duration-300 ${
-              isExpanded
-                ? 'w-[480px] max-h-[400px] rounded-xl'
-                : 'w-[320px] rounded-full'
-            }`}
-          >
-            {/* Header with controls - only show when expanded */}
-            {isExpanded && (
-              <div className="flex items-center justify-between p-3 border-b border-zinc-200">
-                <h3 className="text-sm font-medium text-zinc-700">
-                  Chat with Closer
-                </h3>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={clearConversation}
-                    className="text-xs text-zinc-500 hover:text-zinc-700 px-2 py-1 rounded"
-                    title="Clear conversation"
-                  >
-                    Clear
-                  </button>
-                  <button
-                    onClick={toggleExpanded}
-                    className="text-zinc-500 hover:text-zinc-700 p-1 rounded"
-                    title="Minimize"
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M6 9l6 6 6-6" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Conversation History - only show when expanded */}
-            {isExpanded && (
-              <div
-                ref={conversationRef}
-                className="max-h-[250px] overflow-y-auto p-3 space-y-3"
-              >
-                {conversation.length === 0 && !isLoading && (
-                  <div className="text-left text-zinc-500 text-sm py-4">
-                    Ask me anything about Closer!
-                  </div>
-                )}
-                {conversation.map((item, index) => (
-                  <div key={index} className="space-y-2">
-                    <div className="w-full flex justify-end">
-                      <div className="text-right bg-zinc-100 rounded-lg p-2 text-sm w-fit">
-                        <span className="font-medium text-zinc-600 mb-1">
-                          You:
-                        </span>{' '}
-                        {item.question}
-                      </div>
-                    </div>
-                    <div className="bg-accent-light rounded-lg p-2 text-sm">
-                      <div className="whitespace-pre-wrap text-left">
-                        <span className="font-medium text-accent ">
-                          Closer:
-                        </span>{' '}
-                        {item.answer}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {isLoading && (
-                  <div className=" rounded-lg p-2 text-sm">
-                    <div className="font-medium text-left text-accent mb-1">
-                      Closer:
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent"></div>
-                      <span>Thinking...</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Input Form */}
-            <form
-              onSubmit={handleSubmit}
-              className={`flex items-center space-x-2 ${
-                isExpanded ? 'p-3 border-t border-zinc-400' : 'px-4 py-2'
+          {SHOW_CHATBOT && (
+            <div
+              className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-white shadow-lg border border-zinc-400 transition-all duration-300 ${
+                isExpanded
+                  ? 'w-[480px] max-h-[400px] rounded-xl'
+                  : 'w-[320px] rounded-full'
               }`}
             >
-              <input
-                type="text"
-                placeholder="Ask Closer anything..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                className="border-none flex-1 bg-transparent text-sm text-black placeholder-zinc-400 focus:outline-none"
-                disabled={isLoading}
-              />
-              {!isExpanded && conversation.length > 0 && (
-                <button
-                  type="button"
-                  onClick={toggleExpanded}
-                  className="text-sm text-zinc-600 hover:text-black px-1"
-                  title="Expand chat"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M6 15l6-6 6 6" />
-                  </svg>
-                </button>
+              {/* Header with controls - only show when expanded */}
+              {isExpanded && (
+                <div className='flex items-center justify-between p-3 border-b border-zinc-200'>
+                  <h3 className='text-sm font-medium text-zinc-700'>
+                    Chat with Closer
+                  </h3>
+                  <div className='flex items-center space-x-2'>
+                    <button
+                      onClick={clearConversation}
+                      className='text-xs text-zinc-500 hover:text-zinc-700 px-2 py-1 rounded'
+                      title='Clear conversation'
+                    >
+                      Clear
+                    </button>
+                    <button
+                      onClick={toggleExpanded}
+                      className='text-zinc-500 hover:text-zinc-700 p-1 rounded'
+                      title='Minimize'
+                    >
+                      <svg
+                        width='16'
+                        height='16'
+                        viewBox='0 0 24 24'
+                        fill='none'
+                        stroke='currentColor'
+                        strokeWidth='2'
+                      >
+                        <path d='M6 9l6 6 6-6' />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               )}
-              <button
-                type="submit"
-                className="text-sm text-zinc-600 hover:text-black"
-                disabled={isLoading}
+
+              {/* Conversation History - only show when expanded */}
+              {isExpanded && (
+                <div
+                  ref={conversationRef}
+                  className='max-h-[250px] overflow-y-auto p-3 space-y-3'
+                >
+                  {conversation.length === 0 && !isLoading && (
+                    <div className='text-left text-zinc-500 text-sm py-4'>
+                      Ask me anything about Closer!
+                    </div>
+                  )}
+                  {conversation.map((item, index) => (
+                    <div key={index} className='space-y-2'>
+                      <div className='w-full flex justify-end'>
+                        <div className='text-right bg-zinc-100 rounded-lg p-2 text-sm w-fit'>
+                          <span className='font-medium text-zinc-600 mb-1'>
+                            You:
+                          </span>{' '}
+                          {item.question}
+                        </div>
+                      </div>
+                      <div className='bg-accent-light rounded-lg p-2 text-sm'>
+                        <div className='whitespace-pre-wrap text-left'>
+                          <span className='font-medium text-accent '>
+                            Closer:
+                          </span>{' '}
+                          {item.answer}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {isLoading && (
+                    <div className=' rounded-lg p-2 text-sm'>
+                      <div className='font-medium text-left text-accent mb-1'>
+                        Closer:
+                      </div>
+                      <div className='flex items-center space-x-2'>
+                        <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-accent'></div>
+                        <span>Thinking...</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Input Form */}
+              <form
+                onSubmit={handleSubmit}
+                className={`flex items-center space-x-2 ${
+                  isExpanded ? 'p-3 border-t border-zinc-400' : 'px-4 py-2'
+                }`}
               >
-                ↵
-              </button>
-            </form>
-          </div>
+                <input
+                  type='text'
+                  placeholder='Ask Closer anything...'
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  className='border-none flex-1 bg-transparent text-sm text-black placeholder-zinc-400 focus:outline-none'
+                  disabled={isLoading}
+                />
+                {!isExpanded && conversation.length > 0 && (
+                  <button
+                    type='button'
+                    onClick={toggleExpanded}
+                    className='text-sm text-zinc-600 hover:text-black px-1'
+                    title='Expand chat'
+                  >
+                    <svg
+                      width='16'
+                      height='16'
+                      viewBox='0 0 24 24'
+                      fill='none'
+                      stroke='currentColor'
+                      strokeWidth='2'
+                    >
+                      <path d='M6 15l6-6 6 6' />
+                    </svg>
+                  </button>
+                )}
+                <button
+                  type='submit'
+                  className='text-sm text-zinc-600 hover:text-black'
+                  disabled={isLoading}
+                >
+                  ↵
+                </button>
+              </form>
+            </div>
+          )}
         </div>
       </section>
     </div>
