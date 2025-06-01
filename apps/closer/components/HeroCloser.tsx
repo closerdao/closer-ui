@@ -203,7 +203,7 @@ export default function HeroCloser() {
         />
 
         <div className='relative z-10 px-6'>
-          <h1 className='font-bold text-4xl md:text-6xl mb-8'>{heroText}</h1>
+          <h1 className='font-bold text-4xl md:text-6xl mb-8  max-w-5xl mx-auto'>{heroText}</h1>
           <p className='text-lg max-w-2xl mx-auto mb-8 text-black'>
             {heroSubtext}
           </p>
