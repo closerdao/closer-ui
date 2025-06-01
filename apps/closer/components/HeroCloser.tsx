@@ -15,25 +15,8 @@ function useCanvasNeuronNetwork(canvasRef: React.RefObject<HTMLCanvasElement>) {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    // Convert hex to RGB
-    const hexToRgb = (hex: string) => {
-      const bigint = parseInt(hex.slice(1), 16);
-      return {
-        r: (bigint >> 16) & 255,
-        g: (bigint >> 8) & 255,
-        b: bigint & 255,
-      };
-    };
-
-    const startColor = hexToRgb('#5290DB');
-    const endColor = hexToRgb('#79FAC1');
-
     const neurons = Array.from({ length: 72 }).map(() => {
-      const t = Math.random();
-      const r = Math.round(startColor.r + t * (endColor.r - startColor.r));
-      const g = Math.round(startColor.g + t * (endColor.g - startColor.g));
-      const b = Math.round(startColor.b + t * (endColor.b - startColor.b));
-      const color = `rgb(${r}, ${g}, ${b})`;
+      const color = 'rgb(128, 128, 128)';
 
       return {
         x: Math.random() * canvas.width,
