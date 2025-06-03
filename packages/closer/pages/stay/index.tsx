@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
 
@@ -9,6 +10,7 @@ import ListingListPreview from '../../components/ListingListPreview';
 import Reviews from '../../components/Reviews';
 import UpcomingEventsIntro from '../../components/UpcomingEventsIntro';
 import Heading from '../../components/ui/Heading';
+import Button from '../../components/ui/Button';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -50,6 +52,7 @@ const StayPage = ({
   const t = useTranslations();
   const { APP_NAME } = useConfig();
   const config = useConfig();
+  const router = useRouter();
 
   const discounts = {
     daily: bookingSettings?.discountsDaily,
@@ -216,6 +219,137 @@ const StayPage = ({
         <div className="md:max-w-5xl">
           <UpcomingEventsIntro />
         </div>
+      </section>
+
+      <section>
+
+        {APP_NAME.toLowerCase() === 'tdf' && (
+          <>
+            <section className="flex items-center flex-col py-24">
+              <div className="w-full  ">
+                <div className="text-center mb-20 flex flex-wrap justify-center">
+                  <Heading
+                    level={2}
+                    className="mb-4 uppercase pt-60 w-full font-bold text-6xl bg-[url(/images/illy-token.png)] bg-no-repeat bg-[center_top]"
+                  >
+                    {t('pricing_and_product_heading_funding_your_stay')}
+                  </Heading>
+                  <p className="mb-4 w-full">
+                    {t('pricing_and_product_subheading_accommodation')}
+                  </p>
+                  <div
+                    className="mb-10"
+                    dangerouslySetInnerHTML={{
+                      __html: t.raw(
+                        'pricing_and_product_funding_your_stay_intro',
+                      ),
+                    }}
+                  />
+                  <div className="mb-10 w-full flex flex-wrap justify-center">
+                    <span className="mb-4 bg-black text-white rounded-full py-1 px-4 uppercase mx-2">
+                      {t('pricing_and_product_cost_of_events')}
+                    </span>{' '}
+                    =
+                    <span className="mb-4 bg-accent-light text-accent rounded-full py-1 px-4 uppercase mx-2">
+                      {t('pricing_and_product_event_fee')}
+                    </span>{' '}
+                    +
+                    <span className="mb-4 bg-accent-light text-accent rounded-full py-1 px-4 uppercase mx-2">
+                      {t('pricing_and_product_utility_fee_2')}
+                    </span>{' '}
+                    +
+                    <span className="mb-4 bg-accent-light text-accent rounded-full py-1 px-4 uppercase mx-2">
+                      {t('pricing_and_product_accommodation_fee')}
+                    </span>
+                  </div>
+                  <div className="mb-10 w-full flex flex-wrap justify-center">
+                    <span className="mb-4 bg-black text-white rounded-full py-1 px-4 uppercase mx-2">
+                      {t('pricing_and_product_cost_of_stays')}
+                    </span>{' '}
+                    =
+                    <span className="mb-4 bg-accent-light text-accent rounded-full py-1 px-4 uppercase mx-2">
+                      {t('pricing_and_product_utility_fee_2')}
+                    </span>{' '}
+                    +
+                    <span className="mb-4 bg-accent-light text-accent rounded-full py-1 px-4 uppercase mx-2">
+                      {t('pricing_and_product_accommodation_fee')}
+                    </span>
+                  </div>
+                  <div className="mb-10 w-full flex flex-wrap justify-center">
+                    <span className="mb-4 bg-black text-white rounded-full py-1 px-4 uppercase mx-2">
+                      {t('pricing_and_product_cost_of_volunteering')}
+                    </span>{' '}
+                    =
+                    <span className="mb-4 bg-accent-light text-accent rounded-full py-1 px-4 uppercase mx-2">
+                      {t('pricing_and_product_utility_fee_2')}
+                    </span>
+                  </div>
+                  <div
+                    className="mb-10"
+                    dangerouslySetInnerHTML={{
+                      __html: t.raw('pricing_and_product_costs_info'),
+                    }}
+                  />
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex flex-col justify-between w-[100%] sm:w-1/2 bg-[url(/images/subscriptions/funding-bg-1.jpg)] p-4 bg-cover">
+                    <div>
+                      <Heading level={2} className="uppercase text-4xl mb-6">
+                        {t('pricing_and_product_heading_carrots')}
+                      </Heading>
+                      <p className="text-sm mb-4">
+                        {t('pricing_and_product_carrots_text_1')}
+                      </p>
+                      <p className="text-sm mb-10">
+                        {t('pricing_and_product_carrots_text_2')}
+                      </p>
+                    </div>
+                    <div className="flex justify-end">
+                      <Button
+                        size="small"
+                        isFullWidth={false}
+                        onClick={() => {
+                          router.push('/settings/credits');
+                        }}
+                      >
+                        {t('pricing_and_product_learn_more_button')}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col justify-between w-[100%] sm:w-1/2 bg-[url(/images/subscriptions/funding-bg-2.jpg)] p-4 bg-cover">
+                    <div>
+                      <Heading level={2} className="uppercase text-4xl mb-6">
+                        {t('pricing_and_product_heading_tdf')}
+                      </Heading>
+                      <p className="text-sm mb-4">
+                        {t('pricing_and_product_tdf_text_1')}
+                      </p>
+                      <p className="text-sm mb-10">
+                        {t('pricing_and_product_tdf_text_2')}
+                      </p>
+                    </div>
+                    <div className="flex justify-end">
+                      {process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE ===
+                        'true' && (
+                          <Button
+                            size="small"
+                            isFullWidth={false}
+                            onClick={() => {
+                              router.push('/token');
+                            }}
+                          >
+                            {t('pricing_and_product_learn_more_button')}
+                          </Button>
+                        )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </>
+        )}
       </section>
     </>
   );

@@ -64,7 +64,7 @@
   "home_about_glamping": "10 Glamping Accommodations",
   "home_about_food_forest": "Food Forest + REFORESTATION",
   "home_land_development_title": "Regenerative Land Development",
-  "home_land_development_body": "4 000 trees rooted, 10 000 more on deck. Swales feed lakes; compost and biochar feed soil. Food forests that nourish people and planet.",
+  "home_land_development_body": "4 000+ trees are already rooting the soil, with 10 000 more fruit and nut trees—almonds, olives, citrus, berries—on the blueprint. Contour swales capture rain, feeding our existing and planned lakes and keeping the land lush year‑round. Our strictly organic methods rely on compost and natural pest control, turning excess biomass into biochar that locks away carbon while boosting fertility—so every harvest nourishes both the village and planet.",
   "home_land_development_body_bold": "10 000 more fruit and nut trees—almonds",
   "home_about_food_forest_sub": "(w/ 4000+ trees)",
   "home_about_market_garden": "Vegetable garden",
@@ -326,5 +326,22 @@
   "token_sale_whitepaper_description": "Complete technical details of the $TDF token, governance model, and OASA ecosystem",
   "subscriptions_citizen_already_member": "Purchase Additional Tokens",
   "subscriptions_citizen_already_member_title": "You are already a citizen!",
-  "subscriptions_citizen_already_member_description": "You can purchase additional tokens to increase your stake in the community and unlock more benefits."
+  "subscriptions_citizen_already_member_description": "You can purchase additional tokens to increase your stake in the community and unlock more benefits.",
+  
+  "subscriptions_title": "Subscriptions",
+  "subscriptions_intro": "Your subscription is the beginning of an epic journey for prototyping a new way of life. By subscribing, you provide ongoing funding for the project and join a community of dedicated and like-minded individuals.",
+  "subscriptions_compare_plans": "Compare Plans",
+  "subscriptions_benefits": "Benefits",
+  "subscriptions_monthly_price": "Monthly Price",
+  "subscriptions_yearly_price": "Yearly Price",
+  "subscriptions_select_plan": "Select Plan",
+  "subscriptions_current_plan": "Current Plan",
+  "subscriptions_upgrade": "Upgrade",
+  "subscriptions_downgrade": "Downgrade",
+  "subscriptions_cancel": "Cancel",
+  "subscriptions_renews_on": "Renews on",
+  "subscriptions_expires_on": "Expires on",
+  "subscriptions_night_credits": "Night Credits",
+  "subscriptions_per_month": "per month",
+  "subscriptions_per_year": "per year"
 }
