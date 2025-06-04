@@ -343,5 +343,10 @@
   "subscriptions_expires_on": "Expires on",
   "subscriptions_night_credits": "Night Credits",
   "subscriptions_per_month": "per month",
-  "subscriptions_per_year": "per year"
+  "subscriptions_per_year": "per year",
+  
+  "dashboard_performance_stays_funnel": "Stays Funnel",
+  "dashboard_performance_token_sales_funnel": "Token Sales Funnel",
+  "dashboard_performance_subscriptions_funnel": "Subscriptions Funnel",
+  "dashboard_performance_conversion_rate": "Conversion Rate"
 }
