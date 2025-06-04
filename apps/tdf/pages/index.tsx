@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useFeatureFlagVariantKey } from 'posthog-js/react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
@@ -20,11 +20,8 @@ import {
   useAuth,
 } from 'closer';
 import { useBuyTokens } from 'closer/hooks/useBuyTokens';
-<<<<<<< HEAD
 import api from 'closer/utils/api';
 import { withBoldStyle } from 'closer/utils/helpers';
-=======
->>>>>>> origin/ab-versions
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -36,8 +33,8 @@ const HomePage = () => {
   const { isAuthenticated } = useAuth();
   const { isWalletReady } = useContext(WalletState);
   const { getTokensAvailableForPurchase } = useBuyTokens();
-  const searchParams = useSearchParams();
-  const variant = searchParams.get('variant');
+  const router = useRouter();
+  const variant = router.query.variant as string;
   const featureFlag = useFeatureFlagVariantKey('uiVariant') || '1';
   const uiVariant = variant || featureFlag;
 
@@ -423,20 +420,46 @@ const HomePage = () => {
           </div>
         </section>
 
-        <section className="py-20 mt-12 bg-black text-white -mx-4">
-          <div className="text-center mb-20">
-            <div className="w-full flex items-center flex-col">
-              <div className="max-w-prose">
-                <p className="text-2xl max-w-prose">
-                  {t(`home_variant_${uiVariant}_meet_your_tribe`)}
-                </p>
-              </div>
-            </div>
-            <PhotoGallery className="mt-8" />
+
+        <section
+          className="relative flex items-center justify-end h-screen my-20 w-full bg-cover bg-center bg-[url('/images/landing/land-plan.png')]"
+        >
+          <div className="w-1/2 bg-white bg-opacity-80 p-20">
+            <Heading display level={2} className="mb-4">
+              {t('home_land_development_title')}
+            </Heading>
+            <p>{withBoldStyle(t('home_land_development_body'), t('home_land_development_body_bold'))}</p>
           </div>
         </section>
 
-        <section className="py-20 my-12 text-white -mx-4">
+<section className='max-w-4xl mx-auto flex text-center items-center flex-col'>
+  <Heading
+    level={1}
+    className="text-2xl md:text-4xl font-extrabold uppercase px-4 mt-1 md:mt-[100px] md:bg-[url('/images/token-sale/token-illy.png')] bg-no-repeat pt-[20px] md:pt-[130px] bg-top"
+  >
+    {t(`home_variant_${uiVariant}_token_access_title`)}
+  </Heading>
+  <p
+    className="text-xl text-center"
+  >
+    {t(`home_variant_${uiVariant}_token_access_tagline`)} <br />
+    {t(`home_variant_${uiVariant}_token_access_desc`)}
+  </p>
+  <ul className="m-6">
+    <li>{t(`home_variant_${uiVariant}_token_bullet_1`)}</li>
+    <li>{t(`home_variant_${uiVariant}_token_bullet_2`)}</li>
+    <li>{t(`home_variant_${uiVariant}_token_bullet_3`)}</li>
+  </ul>
+  <LinkButton
+    className="!w-60 font-bold mb-3 md:mb-8 relative text-xl mx-4"
+    href="/token"
+    size="small"
+  >
+    {t(`home_variant_${uiVariant}_token_cta`)}
+  </LinkButton>
+</section>
+
+        <section className="py-20 mt-12 text-white -mx-4">
           <div className="text-center mb-20">
             <PhotoGallery className="mt-8" />
           </div>
