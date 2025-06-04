@@ -33,7 +33,6 @@ const SubscriptionCards = ({
   const t = useTranslations();
   const { isAuthenticated, user } = useAuth();
 
-  console.log('plans=', plans);
 
   const { APP_NAME } = useConfig();
 
