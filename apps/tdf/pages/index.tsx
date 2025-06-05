@@ -110,7 +110,6 @@ const HomePage = () => {
         />
       </Head>
 
-     
       <section className="md:absolute md:-top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-light mb-8 md:mb-[100vh]">
         <div className="md:h-[100vh]">
           {isMobile ? (
@@ -145,7 +144,6 @@ const HomePage = () => {
                 <p className="text-xl md:text-2xl max-w-3xl">
                   {t(`home_variant_${uiVariant}_hero_subtitle`)}
                 </p>
-                <p>Website variant: {uiVariant}</p>
               </div>
               <div>{CTA}</div>
             </div>
@@ -432,32 +430,56 @@ const HomePage = () => {
           </div>
         </section>
 
-<section className='max-w-4xl mx-auto flex text-center items-center flex-col'>
-  <Heading
-    level={1}
-    className="text-2xl md:text-4xl font-extrabold uppercase px-4 mt-1 md:mt-[100px] md:bg-[url('/images/token-sale/token-illy.png')] bg-no-repeat pt-[20px] md:pt-[130px] bg-top"
-  >
-    {t(`home_variant_${uiVariant}_token_access_title`)}
-  </Heading>
-  <p
-    className="text-xl text-center"
-  >
-    {t(`home_variant_${uiVariant}_token_access_tagline`)} <br />
-    {t(`home_variant_${uiVariant}_token_access_desc`)}
-  </p>
-  <ul className="m-6">
-    <li>{t(`home_variant_${uiVariant}_token_bullet_1`)}</li>
-    <li>{t(`home_variant_${uiVariant}_token_bullet_2`)}</li>
-    <li>{t(`home_variant_${uiVariant}_token_bullet_3`)}</li>
-  </ul>
-  <LinkButton
-    className="!w-60 font-bold mb-3 md:mb-8 relative text-xl mx-4"
-    href="/token"
-    size="small"
-  >
-    {t(`home_variant_${uiVariant}_token_cta`)}
-  </LinkButton>
-</section>
+        <section className='max-w-4xl mx-auto py-16 md:py-24'>
+          <div className="bg-accent-light/20 rounded-2xl p-8 md:p-12 flex flex-col items-center text-center shadow-lg">
+            <Heading
+              level={1}
+              className="text-2xl md:text-4xl font-extrabold uppercase px-4 mb-8 md:mb-10 md:bg-[url('/images/token-sale/token-illy.png')] bg-no-repeat pt-[20px] md:pt-[130px] bg-top"
+            >
+              {t(`home_variant_${uiVariant}_token_access_title`)}
+            </Heading>
+            
+            <p className="text-xl md:text-2xl text-center max-w-2xl mb-10">
+              <span className="font-semibold">{t(`home_variant_${uiVariant}_token_access_tagline`)}</span> <br />
+              <span className="text-gray-700 mt-2 block">{t(`home_variant_${uiVariant}_token_access_desc`)}</span>
+            </p>
+            
+            <ul className="space-y-4 mb-10 max-w-2xl">
+              <li className="flex items-start">
+                <div className="bg-accent text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <span className="text-left text-lg">{t(`home_variant_${uiVariant}_token_bullet_1`)}</span>
+              </li>
+              <li className="flex items-start">
+                <div className="bg-accent text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <span className="text-left text-lg">{t(`home_variant_${uiVariant}_token_bullet_2`)}</span>
+              </li>
+              <li className="flex items-start">
+                <div className="bg-accent text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <span className="text-left text-lg">{t(`home_variant_${uiVariant}_token_bullet_3`)}</span>
+              </li>
+            </ul>
+            
+            <LinkButton
+              className="!w-64 font-bold text-xl py-4 relative transition-all duration-300 hover:scale-105 hover:shadow-xl"
+              href="/token"
+              size="small"
+            >
+              {t(`home_variant_${uiVariant}_token_cta`)}
+            </LinkButton>
+          </div>
+        </section>
 
         <section className="py-20 mt-12 text-white -mx-4">
           <div className="text-center mb-20">
