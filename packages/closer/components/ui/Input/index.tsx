@@ -48,6 +48,7 @@ interface InputProps extends VariantProps<typeof inputStyles> {
   hasSaved?: boolean;
   setHasSaved?: Dispatch<SetStateAction<boolean>>;
   additionalInfo?: string;
+  maxLength?: number;
 }
 
 const Input = React.memo(
@@ -70,6 +71,7 @@ const Input = React.memo(
     hasSaved,
     setHasSaved,
     additionalInfo,
+    maxLength,
   }: InputProps) => {
     const t = useTranslations();
 
@@ -173,6 +175,7 @@ const Input = React.memo(
         )}
         <div>
           <input
+            maxLength={maxLength}
             id={id}
             type={type}
             value={isInstantSave ? localValue : value}

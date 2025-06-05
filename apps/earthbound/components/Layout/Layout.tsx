@@ -11,7 +11,7 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
         className={`${raleWay.variable} font-sans`}
       >
         <Navigation />
-        <div className='pt-8 px-4'>{children}</div>
+        <div className='pt-8 px-4 overflow-x-hidden'>{children}</div>
         <Footer />
       </div>
     </div>

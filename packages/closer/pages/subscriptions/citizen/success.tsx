@@ -65,7 +65,7 @@ const SuccessCitizenPage: NextPage<Props> = ({
       (Number(user?.citizenship?.totalToPayInFiat) ?? 0) * 0.1
     ).toFixed(2) || 0;
 
-  const userIbanLast4 = user?.citizenship?.iban?.slice(-4) || '';
+  const userIbanLast4 = user?.citizenship?.iban?.replace(/\s/g, '').slice(-4) || '';
 
   useEffect(() => {
     if (!isLoading && !user) {

@@ -60,7 +60,7 @@ const BankTransferPage = ({ generalConfig }: Props) => {
     try {
       setIsApiLoading(true);
       await api.post('/token/bank-transfer-application', {
-        ibanNumber,
+        ibanNumber: ibanNumber.replace(/\s/g, ''),
         totalFiat,
         userId: user?._id,
         tokens,

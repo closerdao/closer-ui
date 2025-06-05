@@ -94,9 +94,9 @@ const Navigation = () => {
                     {t('header_nav_community')}
                   </Link>
                 </li>
-                <li>
+                {/* <li>
                   <Link href="/events">{t('header_nav_events')}</Link>
-                </li>
+                </li> */}
               </ul>
               <Button
                 size="small"
