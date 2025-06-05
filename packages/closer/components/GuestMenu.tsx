@@ -135,7 +135,7 @@ const GuestMenu = () => {
 
       // Learn more section
       {
-        label: 'Learn more',
+        label: 'General',
         isOpen: true,
         
         items: [
@@ -191,6 +191,7 @@ const GuestMenu = () => {
             enabled:
               APP_NAME.toLowerCase() !== 'lios' &&
               APP_NAME !== 'foz' &&
+              APP_NAME !== 'earthbound' &&
               APP_NAME.toLowerCase() !== 'closer',
             rbacPage: 'Resources',
           },
