@@ -78,9 +78,9 @@ function useCanvasNeuronNetwork(canvasRef: React.RefObject<HTMLCanvasElement>) {
 
 export default function HeroCloser() {
   const canvasRef = useRef(null);
-  const [heroText, setHeroText] = useState(' Community Management for Regenerative Villages');
+  const [heroText, setHeroText] = useState('Build Communities That Thrive');
   const [heroSubtext, setHeroSubtext] = useState(
-    'Manage bookings, events, payments, and community knowledge in one platform. Built specifically for land-based projects.',
+    'Closer is the operating system for regenerative communities. Manage guests, spaces, events and resources through one intuitive platform designed specifically for land-based projects.',
   );
   const [input, setInput] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -182,9 +182,9 @@ export default function HeroCloser() {
   const clearConversation = () => {
     setConversation([]);
     setIsExpanded(false);
-    setHeroText(' Community Management for Regenerative Villages');
+    setHeroText('Build Communities That Thrive');
     setHeroSubtext(
-      'Manage bookings, events, payments, and community knowledge in one platform. Built specifically for land-based projects.',
+      'Closer is the operating system for regenerative communities. Manage guests, spaces, events and resources through one intuitive platform designed specifically for land-based projects.',
     );
   };
 
@@ -207,7 +207,7 @@ export default function HeroCloser() {
           <p className='text-lg max-w-2xl mx-auto mb-8 text-black'>
             {heroSubtext}
           </p>
-          <div className='flex flex-col md:flex-row gap-4 justify-center '>
+          <div className='flex  gap-4 justify-center '>
             <Button
               onClick={() => {
                 setPromptGetInTouchOpen(true);

@@ -94,9 +94,7 @@ const Navigation = () => {
                     {t('header_nav_community')}
                   </Link>
                 </li>
-                {/* <li>
-                  <Link href="/events">{t('header_nav_events')}</Link>
-                </li> */}
+           
               </ul>
               <Button
                 size="small"
@@ -110,7 +108,7 @@ const Navigation = () => {
           {APP_NAME && APP_NAME.toLowerCase() === 'closer' && (
             <div className="flex gap-3 items-center  w-full justify-between">
               <div className="w-full flex justify-center">
-                <ul className="gap-4 hidden sm:flex text-sm font-medium">
+                <ul className="gap-4 text-sm md:text-md hidden md:flex font-medium">
                   <li>
                     <Link href="/#features">{t('header_nav_features')}</Link>
                   </li>
@@ -144,7 +142,7 @@ const Navigation = () => {
                 size="small"
                 variant="primary"
                 className={
-                  'w-fit  bg-foreground text-background border-foreground'
+                  'hidden sm:block w-fit  bg-accent text-background border-foreground'
                 }
               >
                 {t('header_nav_schedule_a_demo')}
