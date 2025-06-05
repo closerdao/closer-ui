@@ -41,6 +41,8 @@ const ValidationCitizenPage: NextPage<Props> = ({
 }) => {
   const t = useTranslations();
   const { isLoading, user } = useAuth();
+
+  console.log('user=', user);
   const { PLATFORM_NAME } = useConfig();
 
   const router = useRouter();
@@ -69,6 +71,10 @@ const ValidationCitizenPage: NextPage<Props> = ({
       iWantToFinanceTokens: true,
     },
   });
+
+
+  const isSpaceHostVouchRequired = citizenshipConfig?.isSpaceHostVouchRequired
+
 
   const minVouches = citizenshipConfig?.minVouches || 3;
 
@@ -122,6 +128,8 @@ const ValidationCitizenPage: NextPage<Props> = ({
         const isVouchedRes = await api.get(
           '/subscription/citizen/check-is-vouched',
         );
+
+        console.log('isVouchedRes=', isVouchedRes);
         const isVouchedLocal = isVouchedRes?.data?.isVouched;
 
         setIsVouched(isVouchedLocal);
@@ -218,6 +226,7 @@ const ValidationCitizenPage: NextPage<Props> = ({
               isVouched={isVouched}
               owns30Tokens={owns30Tokens}
               minVouches={minVouches}
+              isSpaceHostVouchRequired={isSpaceHostVouchRequired}
             />
           </section>
 

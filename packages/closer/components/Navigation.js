@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
@@ -13,15 +13,22 @@ import Logo from './Logo';
 import MemberMenu from './MemberMenu';
 import Menu from './MenuContainer';
 import ProfilePhoto from './ProfilePhoto';
+import { PromptGetInTouchContext } from './PromptGetInTouchContext';
 import { Button } from './ui';
 
 const Navigation = () => {
   const t = useTranslations();
   const { APP_NAME } = useConfig() || {};
+
+  console.log('APP_NAME', APP_NAME);
   const { isAuthenticated, user } = useAuth();
 
   const [navOpen, setNavOpen] = useState(false);
   const [isBookingEnabled, setIsBookingEnabled] = useState(false);
+
+  const { setIsOpen: setPromptGetInTouchOpen } = useContext(
+    PromptGetInTouchContext,
+  );
 
   useEffect(() => {
     (async () => {
@@ -63,7 +70,13 @@ const Navigation = () => {
       <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
         <Logo />
 
-        <div className="flex gap-2 w-auto justify-center items-center ">
+        <div
+          className={`${
+            APP_NAME === 'closer'
+              ? ' w-full justify-between'
+              : 'w-auto justify-center'
+          } flex gap-2  items-center `}
+        >
           {APP_NAME && APP_NAME.toLowerCase() === 'earthbound' && (
             <div className="flex gap-3 items-center">
               <ul className="gap-4 hidden sm:flex">
@@ -77,19 +90,62 @@ const Navigation = () => {
                   <Link href="/stay">{t('header_nav_stay')}</Link>
                 </li>
                 <li>
-                  <Link href="/pages/community">{t('header_nav_community')}</Link>
+                  <Link href="/pages/community">
+                    {t('header_nav_community')}
+                  </Link>
                 </li>
-                {/* <li>
-                  <Link href="/events">{t('header_nav_events')}</Link>
-                </li> */}
+           
               </ul>
               <Button
-                // onClick={() => router.push('/pages/join')}
                 size="small"
                 variant="primary"
                 className={' bg-accent-alt border-accent-alt'}
               >
                 <Link href="/#how-to-join">{t('header_nav_join_us')}</Link>
+              </Button>
+            </div>
+          )}
+          {APP_NAME && APP_NAME.toLowerCase() === 'closer' && (
+            <div className="flex gap-3 items-center  w-full justify-between">
+              <div className="w-full flex justify-center">
+                <ul className="gap-4 text-sm md:text-md hidden md:flex font-medium">
+                  <li>
+                    <Link href="/#features">{t('header_nav_features')}</Link>
+                  </li>
+                  <li>
+                    <Link href="/#communities">
+                      {t('header_nav_communities')}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/#journey" className="whitespace-nowrap">
+                      {t('header_nav_the_journey')}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/#pricing">{t('header_nav_pricing')}</Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="https://closer.gitbook.io/documentation"
+                      target="_blank"
+                    >
+                      {t('header_nav_docs')}
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+              <Button
+                onClick={() => {
+                  setPromptGetInTouchOpen(true);
+                }}
+                size="small"
+                variant="primary"
+                className={
+                  'hidden sm:block w-fit  bg-accent text-background border-foreground'
+                }
+              >
+                {t('header_nav_schedule_a_demo')}
               </Button>
             </div>
           )}
@@ -106,8 +162,8 @@ const Navigation = () => {
                     <Link
                       className={`${
                         router.locale === locale
-                          ? 'text-gray-600 cursor-default'
-                          : 'text-accent'
+                          ? 'text-accent cursor-default'
+                          : 'text-gray-600 '
                       } font-accent`}
                       href={router.locale === locale ? '#' : router.asPath}
                       locale={locale}

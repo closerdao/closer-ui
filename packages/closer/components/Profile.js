@@ -60,6 +60,11 @@ const Profile = ({ isMenu = false, isDemo }) => {
               {isCreditsEnabled && (
                 <CreditsBalance className="text-md" isDemo={isDemo} />
               )}
+              {process.env.NEXT_PUBLIC_FEATURE_REFERRAL === 'true' && (
+                <Link href="/settings/referrals" className="text-xs text-accent hover:underline">
+                  {t('navigation_refer_a_friend')}
+                </Link>
+              )}
             </div>
           </div>
 
@@ -72,7 +77,7 @@ const Profile = ({ isMenu = false, isDemo }) => {
               size="sm"
               className="text-sm normal-case !w-fit !text-accent ml-auto py-0 !h-8"
             >
-              Edit profile
+              {t('buttons_edit_profile')}
             </Button>
           </div>
         </div>

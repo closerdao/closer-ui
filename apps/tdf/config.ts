@@ -14,6 +14,7 @@ const config = {
     'learningHub',
     'citizenship',
     'affiliate',
+    'rbac',
     'webinar',
   ],
   PORT: 14444,

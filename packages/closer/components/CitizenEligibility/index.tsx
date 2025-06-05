@@ -7,6 +7,7 @@ interface Props {
   isVouched: boolean;
   owns30Tokens: boolean;
   minVouches: number;
+  isSpaceHostVouchRequired?: boolean;
 }
 
 const CitizenEligibility = ({
@@ -16,6 +17,7 @@ const CitizenEligibility = ({
   isVouched,
   owns30Tokens,
   minVouches,
+  isSpaceHostVouchRequired,
 }: Props) => {
   const t = useTranslations();
 
@@ -54,13 +56,14 @@ const CitizenEligibility = ({
           <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
             {t('subscriptions_citizen_vouched_by_n_members', {
               var: minVouches,
-            })}
+          })} {isSpaceHostVouchRequired && t('subscriptions_citizen_space_host_vouch_required')}
+
           </li>
         ) : (
           <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet-inactive.svg)] bg-no-repeat pl-6 mb-1.5">
             {t('subscriptions_citizen_vouched_by_n_members', {
               var: minVouches,
-            })}
+            })} {isSpaceHostVouchRequired && t('subscriptions_citizen_space_host_vouch_required')}
           </li>
         )}
         {owns30Tokens && (

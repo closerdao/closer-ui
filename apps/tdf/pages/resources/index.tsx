@@ -1,6 +1,5 @@
 import Head from 'next/head';
 
-import Ama from '../../components/Ama';
 // import { loadLocaleData } from 'closer/utils/locale.helpers';
 import Faqs from 'closer/components/Faqs';
 import PageError from 'closer/components/PageError';
@@ -76,7 +75,6 @@ const ResourcesPage = ({ generalConfig, error }: Props) => {
           </div>
           <Resources />
         </section>
-        <Ama id="ama" />
       </main>
     </div>
   );

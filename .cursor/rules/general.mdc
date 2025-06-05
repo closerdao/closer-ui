@@ -5,8 +5,6 @@ alwaysApply: true
 ---
 Key principles:
 
-1. In the context always include entire code of all the files referenced in the task with @ sign in addition to other relevant parts of the project.
-2. Always add extremely big and general context for every task and never try to save on context size.
-2. When task is not >95% clear, start with an answer: "The task is not fully clear. Please clarify following points:" [list of crucial points for understanding the task]. After the user replies, implement the solution
-3. When not in Ask mode, implement a solution straight away, except for the case in Rule 2
-
+1. In the context always include entire code of all the files explicitly referenced in the task with @ sign in addition to other relevant parts of the project. If the task from the user is related to current file only, use the current file full code as context.
+2. When task is not >95% clear, start with an question: "The task is not fully clear. Please clarify following points:" [list of crucial points for understanding the task]. After the user replies, implement the solution
+3. When not in Ask mode, implement solution straight away, except for the case in Rule 2

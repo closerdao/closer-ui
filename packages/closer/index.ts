@@ -44,12 +44,12 @@ export * from './contexts/wallet/';
 // Hooks
 export * from './hooks/useConfig';
 export * from './hooks/useHasMounted';
+export * from './hooks/useRBAC';
 export { default as Page401 } from './pages/401';
 export {
   getStaticProps as getStaticProps404,
   default as Page404,
 } from './pages/404';
-export { default as AdminPage } from './pages/admin';
 export { default as ApplicationsPage } from './pages/applications';
 export { default as ArticlePage } from './pages/blog/[slug]';
 export { default as ArticleCreatePage } from './pages/blog/create';
@@ -80,16 +80,18 @@ export { default as EditChannelPage } from './pages/edit-channel/[slug]';
 export { default as ConfigPage } from './pages/admin/config';
 export { default as LearnDashboardPage } from './pages/admin/learn';
 export { default as ManageUsersPage } from './pages/admin/manage-users';
+export { default as RBACPage } from './pages/admin/rbac';
 export { default as AffiliateLandingPage } from './pages/affiliate/index';
 export { default as UnlockStaysPage } from './pages/bookings/unlock-stays';
 export { default as CreditCheckoutPage } from './pages/credits/checkout';
 export { default as DashboardPage } from './pages/dashboard';
 export { default as AffiliateDashboardPage } from './pages/dashboard/affiliate';
-export { default as PerformancePage } from './pages/dashboard/performance';
+export { default as PerformancePage } from './pages/dashboard/performance/index';
 export { default as EventsPage } from './pages/events';
 export { default as EventPage } from './pages/events/[slug]';
 export { default as EditEventPage } from './pages/events/[slug]/edit';
 export { default as TicketsEventPage } from './pages/events/[slug]/tickets';
+export { default as EventReportPage } from './pages/events/[slug]/report';
 export { default as CreateEventPage } from './pages/events/create';
 export { default as FoodPage } from './pages/food';
 export { default as EditFoodPage } from './pages/food/[slug]/edit';

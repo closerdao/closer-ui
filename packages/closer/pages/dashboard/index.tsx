@@ -17,6 +17,7 @@ import process from 'process';
 
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import useRBAC from '../../hooks/useRBAC';
 import { BookingConfig, GeneralConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
@@ -71,12 +72,13 @@ const DashboardPage = ({ generalConfig, bookingConfig }: Props) => {
     }
   }, [bookingConfig, isBookingEnabled, hasRedirected]);
 
-  const isAdmin = user?.roles.includes('admin');
+  const { hasAccess } = useRBAC();
+  const hasAccessToDashboard = hasAccess('Dashboard');
 
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
-  if (!user || !isAdmin) {
+  if (!user || !hasAccessToDashboard) {
     return <PageNotFound error="User may not access" />;
   }
 

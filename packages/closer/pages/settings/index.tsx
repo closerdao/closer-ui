@@ -1,6 +1,7 @@
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import UploadPhoto from '../../components/UploadPhoto';
 import { Button } from '../../components/ui';
@@ -11,6 +12,7 @@ import Select from '../../components/ui/Select/Dropdown';
 import MultiSelect from '../../components/ui/Select/MultiSelect';
 
 import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 import process from 'process';
 
 import { useAuth } from '../../contexts/auth';
@@ -25,6 +27,185 @@ import PageNotFound from '../not-found';
 
 type UpdateUserFunction = (value: string | string[]) => Promise<void>;
 
+// Tab interface types
+type TabId = 'profile' | 'account' | 'preferences' | 'notifications' | 'danger';
+
+interface Tab {
+  id: TabId;
+  label: string;
+  icon: string;
+}
+
+// Navigation sidebar component
+const SettingsSidebar = ({
+  activeTab,
+  setActiveTab,
+  tabs,
+}: {
+  activeTab: TabId;
+  setActiveTab: (tab: TabId) => void;
+  tabs: Tab[];
+}) => {
+  return (
+    <div className="hidden md:block w-48 shrink-0">
+      <div className="sticky top-4">
+        <ul className="space-y-1">
+          {tabs.map((tab) => (
+            <li key={tab.id}>
+              <button
+                onClick={() => setActiveTab(tab.id)}
+                className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-primary-50 text-primary-700 font-medium'
+                    : 'hover:bg-gray-100'
+                }`}
+              >
+                <span>{tab.icon}</span>
+                <span>{tab.label}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
+
+// Mobile tab selector component
+const MobileTabSelector = ({
+  activeTab,
+  setActiveTab,
+  tabs,
+}: {
+  activeTab: TabId;
+  setActiveTab: (tab: TabId) => void;
+  tabs: Tab[];
+}) => {
+  return (
+    <div className="md:hidden mb-6">
+      <select
+        value={activeTab}
+        onChange={(e) => setActiveTab(e.target.value as TabId)}
+        className="w-full p-2 border border-gray-300 rounded-md"
+      >
+        {tabs.map((tab) => (
+          <option key={tab.id} value={tab.id}>
+            {tab.icon} {tab.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
+// Delete Account Section Component
+interface DeleteAccountSectionProps {
+  t: any;
+}
+const DeleteAccountSection = ({ t }: DeleteAccountSectionProps) => {
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleDeleteAccount = async () => {
+    if (confirmText !== 'delete') {
+      setError('Please type "delete" to confirm account deletion');
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      await api.delete('/account');
+
+      // Remove all cookies
+      document.cookie.split(';').forEach((cookie) => {
+        const [name] = cookie.trim().split('=');
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      });
+
+      // Log out user by clearing localStorage
+      localStorage.clear();
+      sessionStorage.clear();
+
+      // Redirect to home page after successful deletion
+      window.location.href = '/';
+    } catch (err) {
+      const errorMessage = parseMessageFromError(err);
+      setError(errorMessage);
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+      {!showConfirmation ? (
+        <div>
+          <p className="mb-4 text-gray-600">
+            {t('settings_delete_account_warning')}
+          </p>
+          <Button
+            onClick={() => setShowConfirmation(true)}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            {t('settings_delete_account_button')}
+          </Button>
+        </div>
+      ) : (
+        <div className="border border-red-300 rounded-md p-4 bg-red-50">
+          <h4 className="font-bold text-red-700 mb-2">
+            {t('settings_delete_account')}
+          </h4>
+          <p className="mb-4 text-red-700">
+            {t('settings_delete_account_action_warning')}
+          </p>
+
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+              <span className="block sm:inline">{error}</span>
+            </div>
+          )}
+
+          <div className="mb-4">
+            <label className="block mb-2 text-sm font-medium text-red-700">
+              {t('settings_delete_account_type_to_confirm')}
+            </label>
+            <input
+              type="text"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="delete"
+              className="w-full p-2 border border-red-300 rounded-md focus:ring-red-500 focus:border-red-500"
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              onClick={handleDeleteAccount}
+              isEnabled={!isDeleting}
+              className="bg-red-600 border-red-700 hover:bg-red-700 text-white"
+            >
+              {isDeleting
+                ? t('settings_deleting')
+                : t('settings_delete_account_confirm_button')}
+            </Button>
+            <Button
+              onClick={() => {
+                setShowConfirmation(false);
+                setConfirmText('');
+                setError(null);
+              }}
+              variant="secondary"
+            >
+              {t('settings_cancel')}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const SHARED_ACCOMODATION_PREFERENCES = [
   { label: 'Flexible', value: 'flexible' },
   { label: 'Male Only', value: 'male only' },
@@ -36,13 +217,14 @@ const SettingsPage = ({
 }: {
   volunteerConfig: VolunteerConfig;
 }) => {
+  const t = useTranslations() as (key: string) => string;
   const { APP_NAME } = useConfig();
+  const router = useRouter();
 
   const skillsOptions = volunteerConfig?.skills?.split(',') || [];
   const dietOptions = volunteerConfig?.diet?.split(',') || [];
 
   const { user: initialUser, isAuthenticated, refetchUser } = useAuth();
-  console.log('initialUser', initialUser);
   const initialDiet = Array.isArray(initialUser?.preferences?.diet)
     ? initialUser?.preferences?.diet
     : initialUser?.preferences?.diet?.split(',') || [];
@@ -56,11 +238,39 @@ const SettingsPage = ({
   const [phoneSaving, setPhoneSaving] = useState<boolean | null>(null);
   const [emailSaved, setEmailSaved] = useState<boolean | null>(null);
   const [hasSaved, setHasSaved] = useState(false);
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false); // For non-auto-saving inputs
+  const [activeTab, setActiveTab] = useState<TabId>('profile');
   const { platform } = usePlatform() as any;
+
+  // Define tabs
+  const tabs: Tab[] = [
+    { id: 'profile', label: t('settings_tab_profile'), icon: '👤' },
+    { id: 'account', label: t('settings_tab_account'), icon: '🔑' },
+    { id: 'preferences', label: t('settings_tab_preferences'), icon: '⭐' },
+    { id: 'notifications', label: t('settings_tab_notifications'), icon: '🔔' },
+    { id: 'danger', label: t('settings_tab_danger'), icon: '⚠️' },
+  ];
+
+  // Scroll to top when changing tabs
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     setUser(initialUser);
   }, [initialUser]);
+
+  // Handle tab change from URL hash
+  useEffect(() => {
+    const hash = router.asPath.split('#')[1] as TabId;
+    if (hash && tabs.some((tab) => tab.id === hash)) {
+      setActiveTab(hash);
+    }
+  }, [router.asPath]);
 
   const saveUserData =
     (
@@ -102,6 +312,7 @@ const SettingsPage = ({
         await refetchUser();
         setError(null);
         setHasSaved(true);
+        // Don't show global success message for auto-saving inputs
       } catch (err) {
         const errorMessage = parseMessageFromError(err);
         setError(errorMessage);
@@ -116,6 +327,9 @@ const SettingsPage = ({
       await refetchUser();
       setError(null);
       setHasSaved(true);
+      setShowSaveSuccess(true);
+      // Hide success message after 3 seconds
+      setTimeout(() => setShowSaveSuccess(false), 3000);
     } catch (err) {
       const errorMessage = parseMessageFromError(err);
       setError(errorMessage);
@@ -128,6 +342,9 @@ const SettingsPage = ({
       await api.post('/auth/phone/update', { phone });
       setError(null);
       setPhoneSaved(true);
+      setShowSaveSuccess(true);
+      // Hide success message after 3 seconds
+      setTimeout(() => setShowSaveSuccess(false), 3000);
     } catch (err) {
       const errorMessage = parseMessageFromError(err);
       setError(errorMessage);
@@ -142,6 +359,9 @@ const SettingsPage = ({
       await api.post('/auth/email/update', { email });
       setError(null);
       setEmailSaved(true);
+      setShowSaveSuccess(true);
+      // Hide success message after 3 seconds
+      setTimeout(() => setShowSaveSuccess(false), 3000);
     } catch (err) {
       const errorMessage = parseMessageFromError(err);
       setError(errorMessage);
@@ -159,18 +379,18 @@ const SettingsPage = ({
   return (
     <>
       <Head>
-        <title>{user.screenname} | About me</title>
+        <title>{user.screenname} | Settings</title>
       </Head>
-      <div className="max-w-screen-sm mx-auto md:p-8 h-full main-content w-full flex flex-col min-h-screen py-2 gap-10">
-        <Heading>🤓 Your Info</Heading>
+      <div className="max-w-screen-xl mx-auto px-4 md:px-8 py-6">
+        <Heading className="mb-6">⚙️ Settings</Heading>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-8">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md mb-6">
             <span className="block sm:inline">{error}</span>
           </div>
         )}
 
-        <Heading
+       <Heading
           level={3}
           className="border-b border-divider pb-2.5 leading-9 mt-12"
         >
@@ -192,7 +412,7 @@ const SettingsPage = ({
           maxLength={500}
         />
 
-        <div className="relative mt-8 flex flex-col gap-6 group">
+       <div className="relative mt-8 flex flex-col gap-6 group">
           <label className="font-medium text-complimentary-light" htmlFor="">
             Profile Picture{' '}
             {APP_NAME === 'moos' && (
@@ -214,7 +434,7 @@ const SettingsPage = ({
           ⭐ Account
         </Heading>
 
-        <Input
+       <Input
           label="Name"
           placeholder="Your name"
           value={user.screenname}
@@ -268,7 +488,7 @@ const SettingsPage = ({
           )}
         </div>
 
-        <Input
+       <Input
           label="Phone"
           isDisabled={!updatePhone}
           value={user.phone}
@@ -321,7 +541,7 @@ const SettingsPage = ({
           🔰 Recommended
         </Heading>
 
-        <MultiSelect
+       <MultiSelect
           label="Dietary Preferences?"
           values={initialDiet}
           onChange={saveUserData('diet')}
@@ -329,7 +549,7 @@ const SettingsPage = ({
           placeholder="Pick or create yours"
         />
 
-        {APP_NAME && APP_NAME.toLowerCase() !== 'moos' && (
+       {APP_NAME && APP_NAME.toLowerCase() !== 'moos' && (
           <Select
             label="Shared Accommodation Preference"
             value={user?.preferences?.sharedAccomodation}
@@ -340,67 +560,336 @@ const SettingsPage = ({
           />
         )}
 
-        <Input
-          label="What is your superpower?"
-          placeholder="I am really good at ..."
-          value={user?.preferences?.superpower}
-          onChange={saveUserData('superpower') as any}
-          isInstantSave={true}
-          hasSaved={hasSaved}
-          setHasSaved={setHasSaved}
-        />
-        <MultiSelect
-          label="What skills do you have?"
-          values={user?.preferences?.skills}
-          onChange={saveUserData('skills')}
-          options={skillsOptions}
-          placeholder="Pick or create yours"
-        />
-        <Heading
-          level={3}
-          className="border-b border-divider pb-2.5 leading-9 mt-12"
-        >
-          🔰 Optional
-        </Heading>
-        <Input
-          label="What do you dream of creating?"
-          placeholder="I dream of creating ..."
-          value={user?.preferences?.dream}
-          onChange={saveUserData('dream') as any}
-          isInstantSave={true}
-          hasSaved={hasSaved}
-          setHasSaved={setHasSaved}
-        />
-        <Input
-          label="What is one thing you currently need support with?"
-          placeholder=""
-          value={user?.preferences?.needs}
-          onChange={saveUserData('needs') as any}
-          isInstantSave={true}
-          hasSaved={hasSaved}
-          setHasSaved={setHasSaved}
-        />
-        <Input
-          label="Anything we should know? Anything you would like to share?"
-          placeholder=""
-          value={user?.preferences?.moreInfo}
-          onChange={saveUserData('moreInfo') as any}
-          isInstantSave={true}
-          hasSaved={hasSaved}
-          setHasSaved={setHasSaved}
-        />
-        <Heading
-          level={3}
-          className="border-b border-divider pb-2.5 leading-9 mt-12"
-        >
-          🔰 Notifications
-        </Heading>
-        <div className="flex items-center justify-start gap-2">
-          <Checkbox
-            isChecked={user?.settings?.newsletter_weekly}
-            onChange={saveSettings('newsletter_weekly')}
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Sidebar navigation */}
+          <SettingsSidebar
+            activeTab={activeTab}
+            setActiveTab={(tab) => {
+              setActiveTab(tab);
+              router.push(`/settings#${tab}`, undefined, { shallow: true });
+            }}
+            tabs={tabs}
           />
-          <label>Weekly newsletter</label>
+
+          {/* Mobile tab selector */}
+          <MobileTabSelector
+            activeTab={activeTab}
+            setActiveTab={(tab) => {
+              setActiveTab(tab);
+              router.push(`/settings#${tab}`, undefined, { shallow: true });
+            }}
+            tabs={tabs}
+          />
+
+          {/* Main content area */}
+          <div ref={contentRef} className="flex-1 overflow-hidden">
+            {/* Profile Tab */}
+            {activeTab === 'profile' && (
+              <div className="space-y-6">
+                <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                  <h3 className="text-lg font-medium mb-4">
+                    👤 {t('settings_profile_information')}
+                  </h3>
+
+                  <Input
+                    label={t('settings_about_me')}
+                    additionalInfo={
+                      APP_NAME === 'moos'
+                        ? t('settings_required_to_make_bookings')
+                        : ''
+                    }
+                    isRequired={APP_NAME === 'moos' ? true : false}
+                    placeholder={t('settings_tell_us_more_about_yourself')}
+                    value={user.about}
+                    onChange={saveUserData('about') as any}
+                    isInstantSave={true}
+                    hasSaved={hasSaved}
+                    setHasSaved={setHasSaved}
+                    className="mb-4"
+                  />
+
+                  <div className="mt-6">
+                    <label
+                      className="font-medium text-complimentary-light"
+                      htmlFor=""
+                    >
+                      {t('settings_profile_picture')}
+                      {APP_NAME === 'moos' && (
+                        <span className="text-red-500">
+                          {t('settings_required_to_make_bookings_star')}
+                        </span>
+                      )}
+                    </label>
+                    <UploadPhoto
+                      model="user"
+                      id={user._id}
+                      label={t('settings_change')}
+                      className="my-4"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Account Tab */}
+            {activeTab === 'account' && (
+              <div className="space-y-6">
+                <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                  <h3 className="text-lg font-medium mb-4">
+                    🔑 Account Information
+                  </h3>
+
+                  <Input
+                    label={t('settings_name')}
+                    placeholder={t('settings_your_name')}
+                    value={user.screenname}
+                    onChange={saveUserData('screenname') as any}
+                    isInstantSave={true}
+                    hasSaved={hasSaved}
+                    setHasSaved={setHasSaved}
+                    className="mb-4"
+                  />
+
+                  <div className="mb-6">
+                    <Input
+                      label={t('settings_email')}
+                      value={user.email}
+                      isDisabled={!updateEmail}
+                      onChange={(e) =>
+                        setUser({ ...user, email: e.target.value })
+                      }
+                      successMessage={
+                        emailSaved
+                          ? t('settings_email_confirm_message')
+                          : undefined
+                      }
+                      validation="email"
+                      className="mb-2"
+                    />
+                    <div>
+                      {updateEmail && !emailSaved ? (
+                        <div className="flex gap-2 mt-2">
+                          <Button
+                            onClick={() => saveEmail(user.email)}
+                            isEnabled={!emailSaving}
+                            variant="inline"
+                          >
+                            {emailSaving
+                              ? t('settings_verifying')
+                              : t('settings_verify_email')}
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setUser({
+                                ...user,
+                                email: initialUser?.email || user.email,
+                              });
+                              toggleUpdateEmail(false);
+                            }}
+                            variant="inline"
+                          >
+                            {t('settings_cancel')}
+                          </Button>
+                        </div>
+                      ) : (
+                        !emailSaved && (
+                          <Button
+                            onClick={() => toggleUpdateEmail(!updateEmail)}
+                            variant="inline"
+                            className="mt-2"
+                          >
+                            {t('settings_edit_email')}
+                          </Button>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Input
+                      label={t('settings_phone')}
+                      isDisabled={!updatePhone}
+                      value={user.phone}
+                      onChange={(e) =>
+                        setUser({ ...user, phone: e.target.value })
+                      }
+                      successMessage={
+                        phoneSaved
+                          ? t('settings_phone_confirm_message')
+                          : undefined
+                      }
+                      validation="phone"
+                      className="mb-2"
+                    />
+                    <div>
+                      {updatePhone && !phoneSaved ? (
+                        <div className="flex gap-2 mt-2">
+                          <Button
+                            onClick={() => savePhone(user.phone)}
+                            isEnabled={!phoneSaving}
+                            variant="inline"
+                          >
+                            {phoneSaving
+                              ? t('settings_verifying')
+                              : t('settings_verify_phone')}
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setUser({
+                                ...user,
+                                phone: initialUser?.phone || user.phone,
+                              });
+                              toggleUpdatePhone(false);
+                            }}
+                            variant="inline"
+                          >
+                            {t('settings_cancel')}
+                          </Button>
+                        </div>
+                      ) : (
+                        !phoneSaved && (
+                          <Button
+                            onClick={() => toggleUpdatePhone(!updatePhone)}
+                            variant="inline"
+                            className="mt-2"
+                          >
+                            {t('settings_edit_phone')}
+                          </Button>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Preferences Tab */}
+            {activeTab === 'preferences' && (
+              <div className="space-y-6">
+                <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                  <h3 className="text-lg font-medium mb-4">
+                    ⭐ Recommended Preferences
+                  </h3>
+
+                  <MultiSelect
+                    label={t('settings_dietary_preferences')}
+                    values={initialDiet}
+                    onChange={saveUserData('diet')}
+                    options={dietOptions}
+                    placeholder={t('settings_pick_or_create_yours')}
+                    className="mb-4"
+                  />
+
+                  {APP_NAME && APP_NAME.toLowerCase() !== 'moos' && (
+                    <Select
+                      label={t('settings_shared_accommodation_preference')}
+                      value={user?.preferences?.sharedAccomodation}
+                      options={SHARED_ACCOMODATION_PREFERENCES}
+                      className="mb-4"
+                      onChange={saveUserData('sharedAccomodation')}
+                      isRequired
+                    />
+                  )}
+
+                  <Input
+                    label={t('settings_superpower')}
+                    placeholder={t('settings_superpower_placeholder')}
+                    value={user?.preferences?.superpower}
+                    onChange={saveUserData('superpower') as any}
+                    isInstantSave={true}
+                    hasSaved={hasSaved}
+                    setHasSaved={setHasSaved}
+                    className="mb-4"
+                  />
+
+                  <MultiSelect
+                    label={t('settings_skills')}
+                    values={user?.preferences?.skills}
+                    onChange={saveUserData('skills')}
+                    options={skillsOptions}
+                    placeholder={t('settings_pick_or_create_yours')}
+                    className="mb-4"
+                  />
+                </div>
+
+                <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                  <h3 className="text-lg font-medium mb-4">
+                    🔰 Optional Information
+                  </h3>
+
+                  <Input
+                    label={t('settings_dream')}
+                    placeholder={t('settings_dream_placeholder')}
+                    value={user?.preferences?.dream}
+                    onChange={saveUserData('dream') as any}
+                    isInstantSave={true}
+                    hasSaved={hasSaved}
+                    setHasSaved={setHasSaved}
+                    className="mb-4"
+                  />
+
+                  <Input
+                    label={t('settings_needs')}
+                    placeholder=""
+                    value={user?.preferences?.needs}
+                    onChange={saveUserData('needs') as any}
+                    isInstantSave={true}
+                    hasSaved={hasSaved}
+                    setHasSaved={setHasSaved}
+                    className="mb-4"
+                  />
+
+                  <Input
+                    label={t('settings_more_info')}
+                    placeholder=""
+                    value={user?.preferences?.moreInfo}
+                    onChange={saveUserData('moreInfo') as any}
+                    isInstantSave={true}
+                    hasSaved={hasSaved}
+                    setHasSaved={setHasSaved}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Notifications Tab */}
+            {activeTab === 'notifications' && (
+              <div className="space-y-6">
+                <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                  <h3 className="text-lg font-medium mb-4">
+                    🔔 Notification Preferences
+                  </h3>
+
+                  <div className="flex items-center justify-start gap-2 p-3 hover:bg-gray-50 rounded-md">
+                    <Checkbox
+                      isChecked={user?.settings?.newsletter_weekly}
+                      onChange={saveSettings('newsletter_weekly')}
+                    />
+                    <label className="cursor-pointer flex-1">
+                      {t('settings_weekly_newsletter')}
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Danger Zone Tab */}
+            {activeTab === 'danger' && (
+              <div className="space-y-6">
+                <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                  <h3 className="text-lg font-medium mb-4 text-red-600">
+                    ⚠️
+                    {t('settings_danger_zone')}
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    {t('settings_danger_zone_warning')}
+                  </p>
+
+                  <DeleteAccountSection t={t} />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </>

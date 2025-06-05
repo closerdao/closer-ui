@@ -798,6 +798,20 @@ const models = {
       ],
     },
     {
+      name: 'status',
+      label: 'Status',
+      ownerVisible: true,
+      editable: true,
+      enum: ['open', 'in-progress', 'done'],
+      default: 'open',
+      type: 'select',
+      options: [
+        { label: 'Open', value: 'open' },
+        { label: 'In Progress', value: 'in-progress' },
+        { label: 'Done', value: 'done' },
+      ],
+    },
+    {
       name: 'skills',
       label: 'Skills',
       public: true,

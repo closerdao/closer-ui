@@ -21,10 +21,11 @@ const AcceptCookies = () => {
         background: '#ffffff',
         fontSize: '13px',
         border: '1px solid #000',
+        fontFamily: 'sans-serif',
       }}
 
     >
-      <div className="text-black text-sm">
+      <div className="text-black text-xs font-sans" style={{ fontFamily: 'sans-serif' }}>
         {t('cookie_consent_text')}{' '}
         <Link className="underline" href="/pdf/TDF-Cookies.pdf">
           {t('cookie_consent_text_link')}
