@@ -19,6 +19,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@divvi/referral-sdk": "^1.0.0",
     "@radix-ui/react-accordion": "^1.2.2",
     "@react-google-maps/api": "^2.19.2",
     "@react-icons/all-files": "^4.1.0",
