@@ -12,6 +12,7 @@ import UserInfoButton from '../../../components/UserInfoButton';
 import { Button, Card, Information } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 import Input from '../../../components/ui/Input';
+import Select from '../../../components/ui/Select/Dropdown';
 
 import dayjs from 'dayjs';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
@@ -19,7 +20,7 @@ import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
-import { HeadingRow, Tag } from '../../..';
+import { HeadingRow, Tag, useConfig } from '../../..';
 import { MAX_LISTINGS_TO_FETCH, STATUS_COLOR } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
@@ -45,11 +46,21 @@ import {
   getBookingPaymentType,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { priceFormat } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
+
 dayjs.extend(LocalizedFormat);
+
+const statusOptions = [
+  { label: 'Pending Payment', value: 'pending-payment' },
+  { label: 'Pending', value: 'pending' },
+  { label: 'Pending Refund', value: 'pending-refund' },
+  { label: 'Paid', value: 'paid' },
+  { label: 'Credits Paid', value: 'credits-paid' },
+  { label: 'Tokens Staked', value: 'tokens-staked' },
+  { label: 'Cancelled', value: 'cancelled' },
+];
 
 interface Props {
   booking: Booking;
@@ -81,8 +92,8 @@ const BookingPage = ({
 }: Props) => {
   const t = useTranslations();
 
-  const { timeZone } = generalConfig;
-
+  const config = useConfig();
+  const { timeZone } = generalConfig || { timeZone: config.DEFAULT_TIMEZONE };
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -147,6 +158,12 @@ const BookingPage = ({
   const [hasUpdated, setHasUpdated] = useState(false);
   const [updatedPrices, setUpdatedPrices] = useState<UpdatedPrices | null>(
     null,
+  );
+  const [updatedStatus, setUpdatedStatus] = useState<string | undefined>(
+    booking?.status,
+  );
+  const [amountToRefund, setAmountToRefund] = useState<number | undefined>(
+    Math.abs(booking?.paymentDelta?.fiat.val || 0),
   );
 
   const paymentType = getBookingPaymentType({
@@ -228,6 +245,15 @@ const BookingPage = ({
   const updatedFiatTotal = updatedPrices?.total?.val || 0;
 
   const updatedBookingValues = {
+    ...(updatedStatus &&
+      updatedStatus !== booking?.status && { overrideStatus: updatedStatus }),
+    ...(Math.abs(booking?.paymentDelta?.fiat.val || 0) !== amountToRefund && {
+      overridePaymentDelta: {
+        fiat: {
+          val: 0,
+        },
+      },
+    }),
     adults: updatedAdults,
     duration: updatedDuration,
     children: updatedChildren,
@@ -252,6 +278,14 @@ const BookingPage = ({
 
   const updatedBooking = {
     ...booking,
+    ...(updatedStatus !== booking?.status && { overrideStatus: updatedStatus }),
+    ...(Math.abs(booking?.paymentDelta?.fiat.val || 0) !== amountToRefund && {
+      overridePaymentDelta: {
+        fiat: {
+          val: 0,
+        },
+      },
+    }),
     start: formatCheckinDate(
       convertToDateString(updatedStartDate),
       timeZone,
@@ -292,8 +326,6 @@ const BookingPage = ({
     listing: updatedListingId,
     foodFiat: { val: updatedFoodTotal, cur: rentalFiat?.cur },
     total: { val: updatedFiatTotal, cur: rentalFiat?.cur },
-    // paymentDelta: paymentDelta ? paymentDelta : null,
-    // status: paymentDelta
   };
 
   const hasUpdatedBooking =
@@ -394,14 +426,19 @@ const BookingPage = ({
             </Card>
           )}
 
-          <p
-            className={`bg-${STATUS_COLOR[status]}  mt-2 
-            capitalize opacity-100 text-base p-1 text-white text-center rounded-md`}
-          >
-            {status}
-          </p>
-          {isSpaceHost && (
-            <UserInfoButton userInfo={userInfo} createdBy={createdBy} />
+          {isNotPaid && user?._id === createdBy ? (
+            <Link href={`/bookings/${_id}/checkout`} passHref>
+              <Button variant="primary" className="w-full">
+                {t('checkout_complete_payment')}
+              </Button>
+            </Link>
+          ) : (
+            <p
+              className={`bg-${STATUS_COLOR[status]}  mt-2
+              capitalize opacity-100 text-base p-1 text-white text-center rounded-md`}
+            >
+              {status}
+            </p>
           )}
         </section>
 
@@ -487,7 +524,7 @@ const BookingPage = ({
             </div>
             <Heading level={5}>{t('projects_suggestions_title')}</Heading>
             <p>
-              {(!booking.volunteerInfo.suggestions )
+              {!booking.volunteerInfo.suggestions
                 ? 'No suggestions'
                 : booking.volunteerInfo.suggestions}
             </p>
@@ -521,6 +558,20 @@ const BookingPage = ({
             workingHoursEnd={listing?.workingHoursEnd}
             listingId={listing?._id}
           />
+          
+          <div className="flex flex-col gap-4">
+            <Heading level={3}>{t('bookings_dates_step_guests_title')}</Heading>
+            {userInfo && (
+              <UserInfoButton
+                userInfo={{
+                  ...userInfo,
+                  name: userInfo.name + ((adults > 1) ? ` +${adults - 1}` : '')
+                }}
+                createdBy={createdBy}
+                size="md"
+              />
+            )}
+          </div>
           <SummaryCosts
             rentalFiat={rentalFiat}
             rentalToken={rentalToken}
@@ -570,34 +621,84 @@ const BookingPage = ({
             vatRate={vatRate}
             status={status}
           />
+
           {isSpaceHost && booking?.charges && booking.charges.length > 0 && (
             <Charges charges={booking.charges} />
           )}
 
+          <div className="bg-accent-light rounded-md p-4 space-y-2">
+            <label className=" font-bold">
+              {t('booking_card_set_booking_status')}
+            </label>
+            <Select
+              className="rounded-full  border-black"
+              value={updatedStatus}
+              options={statusOptions}
+              onChange={(value: string) => setUpdatedStatus(value)}
+              isRequired
+              placeholder={t('booking_card_set_booking_status')}
+            />
+          </div>
+
           {booking.paymentDelta?.fiat.val ? (
             <div className="flex justify-between gap-2 p-4 bg-accent-light rounded-md">
-              <p className="font-bold">
-                {booking.paymentDelta?.fiat.val >= 0
-                  ? t('bookings_amount_due')
-                  : t('bookings_amount_to_refund')}
-              </p>
-              <p className="font-bold">
-                {priceFormat(
-                  booking.paymentDelta?.fiat.val,
-                  booking.paymentDelta?.fiat.cur,
-                )}
-              </p>
+              <div className="font-bold space-y-4">
+                <p>
+                  {booking.paymentDelta?.fiat.val >= 0
+                    ? t('bookings_amount_due')
+                    : t('bookings_amount_to_refund')}
+                </p>
+
+                <div className="flex gap-2 items-center">
+                  <label htmlFor="amountToRefund" className="font-bold">
+                    {booking.paymentDelta?.fiat.cur}
+                  </label>
+                  <Input
+                    onChange={(e) => setAmountToRefund(Number(e.target.value))}
+                    placeholder={`€${Math.abs(
+                      booking.paymentDelta?.fiat.val || 0,
+                    ).toString()}`}
+                    id="amountToRefund"
+                    type="number"
+                    className="w-[100px] bg-white py-0.5 px-2"
+                    value={amountToRefund?.toString()}
+                  />
+                </div>
+              </div>
+              {booking.paymentDelta?.fiat.val < 0 && (
+                <p>
+                  {' '}
+                  <Link
+                    className="font-bold"
+                    href={`https://dashboard.stripe.com/payments/${
+                      booking.charges?.at(-1)?.meta.stripePaymentIntentId
+                    }`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {t('bookings_go_to_stripe_dashboard')}
+                  </Link>
+                </p>
+              )}
             </div>
           ) : null}
         </section>
 
         <section>
-          {isSpaceHost && (
+          {(booking.useCredits ||
+            booking.useTokens) && (
+              <div className="bg-yellow-100 rounded-md p-4 space-y-2 font-bold mb-8">
+                WARNING: this booking has been paid with credits or tokens. Updating and
+                cancelling booking not currently supported. Please handle these operations manually.
+              </div>
+            )}
+
+          {isSpaceHost  && (
             <div className="flex flex-col gap-4">
               <Button
                 isLoading={isLoading}
                 onClick={handleSaveBooking}
-                isEnabled={hasUpdatedBooking && !isLoading}
+                isEnabled={hasUpdatedBooking && !isLoading && !booking.useCredits && !booking.useTokens}
               >
                 {t('booking_card_save_booking')}
               </Button>
@@ -606,8 +707,8 @@ const BookingPage = ({
               )}
             </div>
           )}
-
           <BookingRequestButtons
+            isFiatBooking={!booking.useCredits && !booking.useTokens}
             _id={_id}
             status={status}
             createdBy={createdBy}

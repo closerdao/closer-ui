@@ -1,1 +1,16 @@
 @import '../../../packages/closer/public/styles.css';
+
+.custom-cookie-banner {
+  background: #eee !important;
+  border-top: 1px solid #f3f4f6 !important;
+  padding: 4px 10px !important;
+  font-family: sans-serif !important;
+}
+
+.custom-cookie-banner div {
+  margin: 0 !important;
+}
+
+#rcc-confirm-button {
+  margin: 0 !important;
+}

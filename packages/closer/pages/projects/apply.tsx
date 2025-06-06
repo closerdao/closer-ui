@@ -107,7 +107,9 @@ ProjectApplicationPage.getInitialProps = async (context: NextPageContext) => {
 
     const volunteerConfig = volunteerConfigRes?.data?.results?.value || null;
     const generalConfig = generalConfigRes?.data?.results?.value || null;
-    const projects = projectsRes?.data?.results || [];
+    const allProjects = projectsRes?.data?.results || [];
+    // Filter out projects with status 'done'
+    const projects = allProjects.filter((project: Project) => project.status !== 'done');
 
     return {
       volunteerConfig,

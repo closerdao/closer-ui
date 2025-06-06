@@ -143,7 +143,7 @@ const Vouching = ({
             ? t('vouch_already_vouched_by_users')
             : t('vouch_not_vouched_by_users')}
         </Heading>
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {vouchedUsers?.toJS().map((user: User) => (
             <div key={user._id}>
               <Link
@@ -155,12 +155,12 @@ const Vouching = ({
                     className="rounded-full"
                     src={`${cdn}${user.photo}-profile-sm.jpg`}
                     alt={user.screenname || ''}
-                    width={50}
-                    height={50}
+                    width={30}
+                    height={30}
                   />
                 ) : (
                   <div className="rounded-full overflow-hidden">
-                    <FaUser className="text-neutral w-[50px] h-[50px] " />
+                    <FaUser className="text-neutral w-[30px] h-[30px] " />
                   </div>
                 )}
                 <p className="text-accent">{user.screenname}</p>

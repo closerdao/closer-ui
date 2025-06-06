@@ -3,7 +3,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Script from 'next/script';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { ErrorBoundary, Layout } from '@/components';
 
@@ -30,6 +30,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import appConfig from '../config';
+import rbacDefaultConfig from 'closer/constants/rbac';
 import '../styles/index.css';
 
 interface AppOwnProps extends AppProps {
@@ -55,14 +56,18 @@ const prepareDefaultConfig = () => {
 
 const MyApp = ({ Component, pageProps }: AppOwnProps) => {
   const defaultGeneralConfig = prepareDefaultConfig();
-
   const router = useRouter();
   const { query } = router;
   const referral = query.referral;
-
+  const mountedRef = useRef(false);
   const [config, setConfig] = useState<any>(
     prepareGeneralConfig(defaultGeneralConfig),
   );
+  const [rbacConfig, setRBACConfig] = useState<any>(
+    rbacDefaultConfig,
+  );
+  const [isLocalhost, setIsLocalhost] = useState(true); // Default to true to prevent initial flash
+  const [isEnvironmentChecked, setIsEnvironmentChecked] = useState(false);
 
   const { FACEBOOK_PIXEL_ID } = config || {};
 
@@ -73,18 +78,34 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
   }, [referral]);
 
   useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+
+      const isRunningLocally =
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' ||
+          window.location.hostname === '127.0.0.1');
+
+      setIsLocalhost(isRunningLocally);
+      setIsEnvironmentChecked(true);
+    }
+
     (async () => {
       try {
-        const generalConfigRes = await api.get('config/general').catch(() => {
-          return;
-        });
+        const [generalConfigRes, rbacConfigRes] = await Promise.all([
+          api.get('config/general'),
+          api.get('config/rbac')
+        ]).catch(() => []);
         setConfig(prepareGeneralConfig(generalConfigRes?.data.results.value));
+        setRBACConfig(rbacConfigRes?.data.results.value);
       } catch (err) {
         console.error(err);
         return;
       }
     })();
   }, []);
+
+  const shouldShowWidget = !isLocalhost && isEnvironmentChecked;
 
   return (
     <>
@@ -115,21 +136,26 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
       />
 
       {/* TDF specific chatbot widget */}
-      <Script
-        id="gptconfig"
-        dangerouslySetInnerHTML={{
-          __html: `window.GPTTConfig = {
-              uuid: "a9d70d04c6b64f328acd966ad87e4fb4",
-            };`,
-        }}
-      />
-      <Script src="https://app.gpt-trainer.com/widget-asset.min.js" defer />
+      {shouldShowWidget && (
+        <>
+          <Script
+            id="gptconfig"
+            dangerouslySetInnerHTML={{
+              __html: `window.GPTTConfig = {
+                uuid: "a9d70d04c6b64f328acd966ad87e4fb4",
+              };`,
+            }}
+          />
+          <Script src="https://app.gpt-trainer.com/widget-asset.min.js" defer />
+        </>
+      )}
 
       <ConfigProvider
         config={{
           ...config,
           ...blockchainConfig,
           ...appConfig,
+          rbacConfig
         }}
       >
         <ErrorBoundary>

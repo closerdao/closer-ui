@@ -8,6 +8,7 @@ import {
   XAxis,
 } from 'recharts';
 
+import { formatThousands } from '../../../utils/dashboard.helpers';
 import { CHART_COLORS } from './chartColors';
 
 interface Props {
@@ -38,7 +39,7 @@ const CustomTooltipContent = ({ payload, label }: any) => {
 
 const LineCurvedChart = ({ data }: Props) => {
   return (
-    <div className="w-full h-[400px] py-4">
+    <div className="w-full h-[250px] py-4">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           width={500}
@@ -82,7 +83,7 @@ const LineCurvedChart = ({ data }: Props) => {
                     fill="#000000"
                     fontSize="12"
                   >
-                    {Math.floor(Number(value))}
+                    €{formatThousands(Math.floor(Number(value)))}
                   </text>
                 );
               }}

@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /dashboard
+Disallow: /admin
+
+Sitemap: https://earthbound.eco/sitemap.xml

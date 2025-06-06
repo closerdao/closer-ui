@@ -1,20 +1,29 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import { Heading } from 'closer';
+import { useState } from 'react';
+
+import JoinWebinarPrompt from 'closer/components/JoinWebinarPrompt';
+
+import { Button, Heading } from 'closer';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 import { event } from 'nextjs-google-analytics';
 
 const HomePage = () => {
+  const [isPromptOpen, setIsPromptOpen] = useState(false);
+  const t = useTranslations();
+
+  const joinWebinar = () => {
+    setIsPromptOpen(true);
+  };
+
   return (
     <>
       <Head>
-        <title>TDF Data Room - investment details</title>
-        <meta
-          name="description"
-          content="Traditional Dream Factory (TDF) is a regenerative playground in Abela, Portugal."
-        />
+        <title>{t('dataroom_title')}</title>
+        <meta name="description" content={t('dataroom_meta_description')} />
         <link
           rel="canonical"
           href="https://www.traditionaldreamfactory.com/"
@@ -22,13 +31,16 @@ const HomePage = () => {
         />
       </Head>
       <section>
+        {isPromptOpen && (
+          <JoinWebinarPrompt setIsPromptOpen={setIsPromptOpen} />
+        )}
         <div className="bg-black text-white -m-4 h-full min-h-[100vh] flex justify-center">
           <div className="w-full h-auto overflow-scroll flex justify-start flex-col md:flex-row items-center">
             <div className="md:w-[50%]">
               <img
                 src="/images/landing/top-view.jpeg"
                 className="md:rounded-r-2xl"
-                alt="Aerial view of Traditional Dream Factory"
+                alt={t('dataroom_img_alt')}
               />
             </div>
             <div className="md:w-[50%] max-w-prose">
@@ -39,92 +51,78 @@ const HomePage = () => {
                   display
                   level={1}
                 >
-                  Join us in developing a pioneering regenerative village in
-                  Portugal.
+                  {t('dataroom_heading')}
                 </Heading>
-                <p className="mb-4">
-                  We are raising €800k to kickstart the development of a village
-                  restoring the soils, improving the water cycle, growing food -
-                  and creating modern living and working spaces for 100+
-                  thriving humans. This initial funding enables us to:
-                </p>
-
+                <p className="mb-4">{t('dataroom_intro')}</p>
                 <ul>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    secure the real estate (25ha of land with approved
-                    construction plans)
+                    {t('dataroom_bullet_1')}
                   </li>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    develop the co-living (14 suites)
+                    {t('dataroom_bullet_2')}
                   </li>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    build 2 lakes and achieve water sovereignty
+                    {t('dataroom_bullet_3')}
                   </li>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    leverage EU funding
+                    {t('dataroom_bullet_4')}
                   </li>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    establish a cash flow positive hospitality and farming
-                    business
+                    {t('dataroom_bullet_5')}
                   </li>
                   <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                    expand our impact and issue ecosystem credits
+                    {t('dataroom_bullet_6')}
                   </li>
                 </ul>
-                <ul className="mt-8 flex flex-col space-y-4">
+                <ul className="my-8 flex items-center gap-1">
                   <li className="flex flex-col flex-start space-y-4 md:space-y-0 md:space-x-4 md:flex-row justify-start">
                     <Link
                       href="/pdf/deck.pdf"
                       target="_blank"
-                      className="bg-accent border-2 border-accent uppercase text-white rounded-full py-2 px-3 text-center md:text-left"
+                      className="whitespace-nowrap bg-accent border-2 border-accent uppercase text-white rounded-full py-2 px-3 text-center md:text-left"
                       onClick={() =>
                         event('click', {
                           category: 'Dataroom',
-                          label: 'Investment deck',
+                          label: t('dataroom_investment_deck_label'),
                         })
                       }
                     >
-                      Investment deck
-                    </Link>
-                    <Link
-                      href="https://calendly.com/samueldelesque"
-                      target="_blank"
-                      className="bg-transparent md:ml-2 border-2 border-white uppercase text-white rounded-full py-2 px-3 text-center md:text-left"
-                      onClick={() =>
-                        event('click', {
-                          category: 'Dataroom',
-                          label: 'Book a callk',
-                        })
-                      }
-                    >
-                      Book a call
+                      {t('dataroom_investment_deck')}
                     </Link>
                   </li>
                   <li>
-                    📁 Documents:
-                    <Link
-                      href="/pdf/2021-TDF-report.pdf"
-                      target="_blank"
-                      className="ml-2 underline"
+                    <Button
+                      className="bg-transparent md:ml-2 border-2 border-white uppercase text-white rounded-full py-2 px-3 text-center md:text-left"
+                      onClick={joinWebinar}
                     >
-                      2021 report
-                    </Link>
-                    <Link
-                      href="/pdf/2022-TDF-report.pdf"
-                      target="_blank"
-                      className="ml-2 underline"
-                    >
-                      2022 report
-                    </Link>
-                    <Link
-                      href="/pdf/2024-TDF-report.pdf"
-                      target="_blank"
-                      className="ml-2 underline"
-                    >
-                      2024 report
-                    </Link>
+                      {t('dataroom_join_webinar')}
+                    </Button>
                   </li>
                 </ul>
+                <div className="mt-8">
+                  {t('dataroom_documents')}
+                  <Link
+                    href="/pdf/2021-TDF-report.pdf"
+                    target="_blank"
+                    className="ml-2 underline"
+                  >
+                    {t('dataroom_report_2021')}
+                  </Link>
+                  <Link
+                    href="/pdf/2022-TDF-report.pdf"
+                    target="_blank"
+                    className="ml-2 underline"
+                  >
+                    {t('dataroom_report_2022')}
+                  </Link>
+                  <Link
+                    href="/pdf/2024-TDF-report.pdf"
+                    target="_blank"
+                    className="ml-2 underline"
+                  >
+                    {t('dataroom_report_2024')}
+                  </Link>
+                </div>
               </div>
             </div>
           </div>

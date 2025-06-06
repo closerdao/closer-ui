@@ -18,13 +18,13 @@
   "resources_faq_heading": "Frequently asked questions",
   "resources_faq_subheading": "Got a question? We’re an open source.",
 
-  "stay_description": "<p>Nestled in the picturesque landscapes of Portugal, Foz da Cova offers a unique opportunity to experience sustainable living. Join our community focused on permaculture, bio-construction and arts. </p><p>Enjoy a peaceful retreat in a developing eco-village. While our accommodations may be simple, you'll gain unparalleled access to a place in its early stages of transformation. Relax in the tranquility of nature, connect with like-minded individuals, and contribute to a sustainable future.</p><p>Ready to explore Foz da Cova? Register your stay today and be part of something truly special.</p>",
+  "stay_description": "<p>Nestled in the picturesque landscapes of Portugal, Foz da Cova offers a unique opportunity to experience sustainable living. Join our community focused on permaculture, bio-construction and arts. </p><p>Enjoy a peaceful retreat in a developing ecovillage. While our accommodations may be simple, you'll gain unparalleled access to a place in its early stages of transformation. Relax in the tranquility of nature, connect with like-minded individuals, and contribute to a sustainable future.</p><p>Ready to explore Foz da Cova? Register your stay today and be part of something truly special.</p>",
   "stay_meet_your_hosts": "Meet your hosts",
   "stay_meet_your_hosts_description": "Come and stay in our regenerative village under development. We don't have 5 star facilities just yet, but you get to experience the magic of this place during its early years, and we guarantee you'll meet some inspiring humans you'll become friends with.",
   "stay_chose_accommodation": "Chose your accommodation",
   "stay_chose_accommodation_description": "From bringing your own van to staying in a shared dorm, we have a range of options to fit your needs. We recommend staying for 1 month to get the full experience of our community, but you can also come just for an event.",
   "stay_title": "Discover Foz da Cova: A Regenerative Retreat",
-
+  "stay_meta_description": "Discover Foz da Cova: A Regenerative Retreat",
 
   "navigation_stay": "Book a stay",
   "navigation_member_login": "Member login",
@@ -56,6 +56,14 @@
   "referrals_description_text_3": "You  are restricted to a maximum of 🥕 6 per month - which will be refreshed on the 1st of every month.",
   "referrals_credits_link": "Find out more about 🥕 carrots.",
   "bookings_checkout_step_visitors_guide": "Visitors Guide",
+
+  "learn_course_purchase_confirmation_message": "<p>Thank you for your purchase! 🌱</p><p>We will contact you soon with the course details.</p>",
+
+  "header_nav_invest": "Invest",
+  "header_nav_stay": "Stay",
+  "header_nav_events": "Events",
+  "header_nav_community": "Community",
+  "header_nav_join_us": "Join us",
 
   "buttons_apply_to_stay": "Apply to stay"
 }

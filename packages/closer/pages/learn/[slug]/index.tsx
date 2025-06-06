@@ -10,11 +10,14 @@ import LessonVideo from '../../../components/LessonVideo';
 import Tag from '../../../components/Tag';
 import { Card, ErrorMessage, LinkButton } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
+import IconLocked from '../../../components/ui/IconLocked';
+import IconPlay from '../../../components/ui/IconPlay';
 
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../../contexts/auth';
+import { usePlatform } from '../../../contexts/platform';
 import { Lesson } from '../../../types/lesson';
 import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
@@ -27,12 +30,21 @@ import PageNotFound from '../../not-found';
 
 const MIN_SUBSCRIPTION_PLAN = 'Wanderer';
 
+const LEGACY_FULL_ACCESS_COURSE_IDS = [
+  '678d5acd79c088534adc9667',
+  '67a33969690568a3608cd6bb',
+];
+
+const CHARGES_LIMIT = 1000;
+
 interface Props {
   lesson: Lesson;
   error?: string;
   subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
   learningHubConfig: { enabled: boolean; value?: any } | null;
 }
+
+const LEGACY_FULL_ACCESS_LESSON_IDS = ['678110ca8883c8ad90e0983b'];
 
 const LessonPage = ({
   lesson,
@@ -46,11 +58,15 @@ const LessonPage = ({
     : null;
   const { asPath } = useRouter();
   const { user, refetchUser } = useAuth();
+  const { platform }: any = usePlatform();
 
   const isLearningHubEnabled = learningHubConfig && learningHubConfig?.enabled;
-  const learnVariant = lesson?.variant;
-
   const [hasRefetchedUser, setHasRefetchedUser] = useState(false);
+  const [hasBoughtCourse, setHasBoughtCourse] = useState(false);
+
+  const isLegacyFullAccessLesson = LEGACY_FULL_ACCESS_LESSON_IDS.includes(
+    lesson?._id,
+  );
 
   const subscriptionPriceId = subscriptions?.find(
     (subscription: SubscriptionPlan) => {
@@ -61,7 +77,7 @@ const LessonPage = ({
   )?.priceId;
 
   const getAccessUrl = () => {
-    if (lesson?.access === 'single-payment') {
+    if (lesson?.access?.includes('single-payment')) {
       return `/learn/checkout?lessonId=${
         lesson._id
       }&source=${encodeURIComponent(asPath)}`;
@@ -73,9 +89,18 @@ const LessonPage = ({
 
   const accessUrl = getAccessUrl();
 
+  const isSubscriber =
+    user?.subscription?.plan &&
+    new Date(user?.subscription?.validUntil || '') > new Date();
+
+  const isAdmin = user?.roles.includes('admin');
+  const isContentCreator = user?.roles.includes('content-creator');
+
   const canViewLessons = Boolean(
-    (user && (user?.subscription?.plan || !lesson?.paid)) || lesson?.access === 'free' ||
-      user?.roles.includes('admin'),
+    (isSubscriber && lesson?.access?.includes('subscription-any')) ||
+      lesson?.access?.includes('free') ||
+      isAdmin ||
+      hasBoughtCourse,
   );
 
   const [isVideoPreview, setIsVideoPreview] = useState(
@@ -89,6 +114,37 @@ const LessonPage = ({
       module.lessons.find((lesson) => lesson._id === currentLessonId),
     )
     ?.lessons.find((lesson) => lesson._id === currentLessonId);
+
+  const loadData = async () => {
+    const accessCourseIds = [...LEGACY_FULL_ACCESS_COURSE_IDS, lesson._id];
+
+    const chargeFilter = user &&
+      lesson && {
+        where: {
+          type: 'product',
+          'meta.productType': 'lesson',
+          createdBy: user?._id,
+          productId: { $in: accessCourseIds },
+        },
+        limit: CHARGES_LIMIT,
+      };
+
+    const [chargesRes] = await Promise.all([platform.charge.get(chargeFilter)]);
+
+    const charges = chargesRes?.results?.toJS();
+
+    if (charges?.length > 0) {
+      setHasBoughtCourse(true);
+    } else {
+      setHasBoughtCourse(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && lesson) {
+      loadData();
+    }
+  }, [user, lesson]);
 
   useEffect(() => {
     if (user && !hasRefetchedUser) {
@@ -140,19 +196,27 @@ const LessonPage = ({
           </Link>
           <div className="w-full relative">
             <LessonVideo
-              videoParams={getVideoParams(currentLessonId, lesson, isVideoPreview)}
-              isUnlocked={
-                canViewLessons ||
+              videoParams={getVideoParams(
+                currentLessonId,
+                lesson,
+                isVideoPreview,
+              )}
+              isUnlocked={canViewLessons}
+              canPreview={
                 isVideoPreview ||
-                Boolean(currentLesson?.isFree)
+                Boolean(currentLesson?.isFree) ||
+                !lesson.fullVideo
               }
+              isVideoPreview={isVideoPreview || Boolean(currentLesson?.isFree)}
               setIsVideoLoading={setIsVideoLoading}
               isVideoLoading={isVideoLoading}
               getAccessUrl={accessUrl}
+              imageUrl={lesson.photo}
             />
 
             {(user?._id === lesson.createdBy ||
-              user?.roles.includes('admin')) && (
+              user?.roles.includes('admin') ||
+              user?.roles.includes('content-creator')) && (
               <div className="absolute right-0 top-0 p-8 flex flex-col gap-4">
                 <LinkButton
                   size="small"
@@ -165,7 +229,6 @@ const LessonPage = ({
             )}
           </div>
         </section>
-
         <section className=" w-full flex justify-center">
           <div className="max-w-4xl w-full ">
             <div className="w-full py-2">
@@ -179,7 +242,6 @@ const LessonPage = ({
             </div>
           </div>
         </section>
-
         <section className=" w-full flex justify-center min-h-[400px] ">
           <div className="max-w-4xl w-full">
             <div className="flex-col-reverse sm:flex-row static flex items-start justify-between gap-6 w-full">
@@ -221,6 +283,50 @@ const LessonPage = ({
                 <Card className="bg-white border border-gray-100 gap-6">
                   <Heading level={2}>{t('learn_lessons_heading')}</Heading>
 
+                  {lesson?.fullVideo && (
+                    <section className="flex flex-col">
+                      {lesson.previewVideo && (
+                        <button
+                          onClick={handleShowPreview}
+                          disabled={isVideoPreview}
+                          className={`flex gap-2 py-1 px-2 rounded-md ${
+                            isVideoPreview
+                              ? 'bg-accent-light font-bold'
+                              : 'bg-transparent font-normal'
+                          }`}
+                        >
+                          <div className="border-accent border rounded-full flex justify-center items-center w-[21px] h-[21px]">
+                            <IconPlay />
+                          </div>
+                          {t('learn_introduction_heading')}
+                        </button>
+                      )}
+
+                      {lesson.fullVideo && (
+                        <button
+                          onClick={handleShowFullVideo}
+                          disabled={!isVideoPreview}
+                          className={`flex gap-2 py-1 px-2 rounded-md ${
+                            !isVideoPreview
+                              ? 'bg-accent-light font-bold'
+                              : 'bg-transparent font-normal'
+                          }`}
+                        >
+                          {canViewLessons ? (
+                            <div className="border-accent border rounded-full flex justify-center items-center w-[21px] h-[21px]">
+                              <IconPlay />
+                            </div>
+                          ) : (
+                            <div className=" flex justify-center items-center w-[21px] h-[21px]">
+                              <IconLocked />
+                            </div>
+                          )}
+                          {t('learn_full_lesson_heading')}
+                        </button>
+                      )}
+                    </section>
+                  )}
+
                   <LessonList
                     lesson={lesson}
                     isVideoPreview={isVideoPreview}
@@ -229,40 +335,38 @@ const LessonPage = ({
                     onShowFullVideo={handleShowFullVideo}
                     onShowLesson={handleShowLesson}
                     currentLessonId={currentLessonId || ''}
+                    isLegacyFullAccessLesson={isLegacyFullAccessLesson}
                   />
 
-                  {lesson.access === 'single-payment' && lesson.price && (
-                    <div className="">
-                      <p>{t('learn_course_price')}</p>
-                      <p className="text-xl font-bold">
-                        {priceFormat(lesson.price)}
-                      </p>
-                      {lesson?.variant === 'live-course' && (
-                        <p className="text-xs">
-                          Course format: {t('learn_live_course')}
-                        </p>
-                      )}
-                    </div>
-                  )}
+                  {!canViewLessons &&
+                    !isLegacyFullAccessLesson &&
+                    lesson.access?.includes('single-payment') &&
+                    lesson.price?.val &&
+                    !isSubscriber && (
+                      <div className="flex flex-col gap-4">
+                        <div className="">
+                          <p>{t('learn_course_price')}</p>
+                          <p className="text-xl font-bold">
+                            {priceFormat(lesson.price)}
+                          </p>
+                          {lesson?.variant === 'live-course' && (
+                            <p className="text-xs">
+                              Course format: {t('learn_live_course')}
+                            </p>
+                          )}
+                        </div>
+                        <LinkButton href={accessUrl}>
+                          {t('learn_buy_single_course')}
+                        </LinkButton>
+                      </div>
+                    )}
 
                   {!canViewLessons &&
-                    lesson.fullVideo &&
-                    lesson.access !== 'single-payment' && (
-                      <LinkButton href={accessUrl}>
+                    lesson.access?.includes('subscription-any') && (
+                      <LinkButton href="/subscriptions">
                         {t('learn_get_access_button')}
                       </LinkButton>
                     )}
-                  {lesson.access === 'single-payment' && (
-                    <LinkButton href={accessUrl}>
-                      {t('learn_buy_single_course')}
-                    </LinkButton>
-                  )}
-
-                  {lesson.access === 'single-payment' && !lesson.price && (
-                    <LinkButton href={accessUrl}>
-                      {t('learn_buy_single_course')}
-                    </LinkButton>
-                  )}
 
                   <Heading className="uppercase text-md" level={3}>
                     {t('learn_tags_heading')}

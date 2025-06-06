@@ -18,9 +18,9 @@ const Create = () => {
   const router = useRouter();
   const { user } = useAuth();
   const isAdmin = user?.roles.includes('admin');
-  const isModerator = user?.roles.includes('moderator');
+  const isContentCreator = user?.roles.includes('content-creator');
 
-  if (!isAdmin && !isModerator) {
+  if (!isAdmin && !isContentCreator) {
     return <PageNotFound error="User may not access" />;
   }
 

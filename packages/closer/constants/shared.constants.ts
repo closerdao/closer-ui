@@ -55,12 +55,25 @@ export const SUBSCRIPTION_STEPS = [
   'success',
 ];
 
+export const SUBSCRIPTION_CITIZEN_STEPS = [
+  'validation',
+  'select-flow',
+  'apply',
+  'success',
+];
+
 export const TOKEN_SALE_STEPS = [
   'before-you-begin',
+  'checklist-crypto',
   'nationality',
-  'token-counter',
-  'your-info',
   'checkout',
+  'success',
+];
+
+export const TOKEN_SALE_STEPS_BANK_TRANSFER = [
+  'before-you-begin',
+  'nationality',
+  'bank-transfer',
   'success',
 ];
 
@@ -82,6 +95,7 @@ export const BOOKING_STATUS_OPTIONS = [
 export const BOOKING_TYPE_OPTIONS = [
   { label: 'Any', value: 'any' },
   { label: 'Volunteering', value: 'volunteer' },
+  { label: 'Residency', value: 'residency' },
   { label: 'Event', value: 'event' },
   { label: 'Stay', value: 'stay' },
 ];
@@ -89,6 +103,7 @@ export const BOOKING_TYPE_OPTIONS = [
 export const USER_ROLE_OPTIONS = [
   { label: 'Any', value: 'any' },
   { label: 'Admin', value: 'admin' },
+  { label: 'Content-creator', value: 'content-creator' },
   { label: 'Event creator', value: 'event-creator' },
   { label: 'Space host', value: 'space-host' },
   { label: 'Steward', value: 'steward' },
@@ -264,7 +279,7 @@ export const MAX_CREDITS_PER_MONTH = 90;
 
 export const HOME_PAGE_CATEGORY = 'home page';
 
-export const MAX_USERS_TO_FETCH = 2000;
+export const MAX_USERS_TO_FETCH = 3000;
 
 export const MAX_LISTINGS_TO_FETCH = 100;
 
@@ -289,4 +304,3 @@ export const GNOSIS_SAFE_ADDRESS = '0x5E810b93c51981eccA16e030Ea1cE8D8b1DEB83b';
 export const BLOG_POSTS_PER_PAGE = 9;
 
 export const DEFAULT_BLOG_IMAGE_ID = '66a7da14aca528c59057785e';
-

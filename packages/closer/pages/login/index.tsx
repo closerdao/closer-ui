@@ -27,8 +27,8 @@ const loginOptions =
 
 const Login = () => {
   const t = useTranslations();
-  const { injected } = useContext(WalletState);
-  const { signMessage } = useContext(WalletDispatch);
+  const { account } = useContext(WalletState);
+  const { signMessage, connectWallet } = useContext(WalletDispatch);
 
   const router = useRouter();
   const {
@@ -54,7 +54,7 @@ const Login = () => {
   const [isWeb3Loading, setWeb3Loading] = useState(false);
   const [isLoginWithWallet, setisLoginWithWallet] = useState(false);
   const [selectedSwitcherOption, setSelectedSwitcherOption] = useState('Email');
-  const [web3Error, setWeb3Error] = useState(null);
+  const [web3Error, setWeb3Error] = useState<string | null>(null); 
 
   if (isAuthenticated && !hasSignedUp) {
     const redirectUrl = getRedirectUrl({
@@ -95,7 +95,15 @@ const Login = () => {
     }
   }, [isAuthenticated, hasSignedUp, back]);
 
+  useEffect(() => {
+    const localEmail = localStorage.getItem('email');
+    if (localEmail) {
+      setEmail(localEmail);
+    }
+  }, []);
+
   const signInWithWallet = async (walletAddress: string) => {
+    console.log('[signInWithWallet] called with walletAddress:', walletAddress);
     setWeb3Error(null);
     setWeb3Loading(true);
     try {
@@ -103,7 +111,9 @@ const Login = () => {
         data: { nonce },
       } = await api.post('/auth/web3/pre-sign', { walletAddress });
       const message = `Signing in with code ${nonce}`;
+      console.log('[signInWithWallet] signing message:', message);
       const signedMessage = await signMessage(message, walletAddress);
+      console.log('[signInWithWallet] signedMessage:', signedMessage);
       if (signedMessage) {
         const {
           data: { access_token: token, results: user },
@@ -112,30 +122,54 @@ const Login = () => {
           walletAddress,
           message,
         });
+        console.log('[signInWithWallet] setAuthentification with user:', user);
         setAuthentification(user, token);
+      } else {
+        console.log('[signInWithWallet] No signedMessage returned');
       }
     } catch (e: any) {
       if (e.response?.status === 401) {
         setWeb3Error(e.response.data.error);
+        console.log('[signInWithWallet] 401 error:', e.response.data.error);
         return;
       }
-      console.error(e);
+      console.error('[signInWithWallet] error:', e);
     } finally {
       setWeb3Loading(false);
+      console.log('[signInWithWallet] finished');
     }
   };
 
   const walletConnectAndSignInFlow = async (event: FormEvent) => {
+    console.log('[walletConnectAndSignInFlow] called');
     event.preventDefault();
     setWeb3Error(null);
     try {
-      const activated = await injected.activate();
-      if (activated?.account) {
-        signInWithWallet(activated.account);
+      console.log('[walletConnectAndSignInFlow] calling connectWallet');
+      const connectedAccount = await connectWallet(); // Get account directly from connectWallet
+      console.log(
+        '[walletConnectAndSignInFlow] connectWallet finished, returned account:',
+        connectedAccount,
+      );
+      if (connectedAccount) {
+        console.log(
+          '[walletConnectAndSignInFlow] calling signInWithWallet with account:',
+          connectedAccount,
+        );
+        // The account from WalletState might not be updated yet, so use connectedAccount
+        await signInWithWallet(connectedAccount); 
+      } else {
+        console.log(
+          '[walletConnectAndSignInFlow] No account returned from connectWallet or account is not available.',
+        );
+        // Optionally, set an error message for the user if no account was connected
+        setWeb3Error(t('wallet_connection_failed_no_account')); 
       }
     } catch (error) {
+      console.log('[walletConnectAndSignInFlow] error during flow:', error);
       setWeb3Error(parseMessageFromError(error));
     }
+    console.log('[walletConnectAndSignInFlow] finished');
   };
 
   const onSubmit = async (event: FormEvent) => {

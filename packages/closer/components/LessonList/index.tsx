@@ -18,6 +18,7 @@ interface LessonListProps {
   onShowPreview: () => void;
   onShowFullVideo: () => void;
   onShowLesson: (lessonId: string) => void;
+  isLegacyFullAccessLesson: boolean;
 }
 
 const LessonList = ({
@@ -28,8 +29,15 @@ const LessonList = ({
   onShowPreview,
   onShowFullVideo,
   onShowLesson,
+  isLegacyFullAccessLesson,
 }: LessonListProps) => {
   const t = useTranslations();
+
+  const doesHaveLessons =
+    lesson.modules &&
+    lesson.modules.some((module) => module.lessons.length > 0);
+
+  if (!doesHaveLessons) return null;
 
   return (
     <section className="flex flex-col gap-2">
@@ -77,7 +85,7 @@ const LessonList = ({
         </button>
       ) : null}
 
-      {lesson?.modules?.length && lesson?.modules?.length > 0 ? (
+      {lesson?.modules?.length && lesson?.modules?.length > 0 && !isLegacyFullAccessLesson ? (
         <div className="font-normal ">
           <Accordion
             type="single"

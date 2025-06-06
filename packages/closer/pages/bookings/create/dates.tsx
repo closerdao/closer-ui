@@ -306,7 +306,9 @@ const DatesSelector = ({
           isResidenceApplication,
           isVolunteerApplication,
         });
-        router.push(`/bookings/${newBooking._id}/questions`);
+
+        router.push(`/bookings/${newBooking._id}/food`);
+        return;
       } else {
         const urlParams = new URLSearchParams(data);
 

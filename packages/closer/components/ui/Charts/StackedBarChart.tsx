@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 
 import { useConfig } from '../../../hooks/useConfig';
+import { formatThousands } from '../../../utils/dashboard.helpers';
 import { CHART_COLORS } from './chartColors';
 
 interface Props {
@@ -61,6 +62,7 @@ const CustomTooltipContent = ({
 
 const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
   const { APP_NAME } = useConfig();
+
   return (
     <div className="w-full h-full py-4">
       <ResponsiveContainer width="100%" height="100%">
@@ -175,7 +177,7 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
                           fill="#000000"
                           fontSize="12"
                         >
-                          {value}
+                          €{formatThousands(Number(value))}
                         </text>
                       );
                     }}

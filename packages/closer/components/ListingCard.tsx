@@ -12,7 +12,7 @@ import Button from './ui/Button';
 import Heading from './ui/Heading';
 
 interface ListingCardProps {
-  listing: Listing;
+  listing: Listing & { available?: boolean };
   bookListing: (listingId: string) => void;
   useTokens: boolean;
   bookingCategory: string;
@@ -138,7 +138,7 @@ const ListingCard = ({
       <Button
         onClick={handleBooking}
         variant="secondary"
-        // isEnabled={available !== false}
+        isEnabled={listing?.available !== false}
       >
         {isAuthenticated
           ? t('listing_preview_book')

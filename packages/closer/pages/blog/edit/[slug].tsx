@@ -27,7 +27,7 @@ const Article = ({ article, error }: Props) => {
 
   const { user } = useAuth();
   const isAdmin = user?.roles.includes('admin');
-  const isModerator = user?.roles.includes('moderator');
+  const isContentCreator = user?.roles.includes('content-creator');
 
   const photo = article && article?.photo;
 
@@ -53,7 +53,7 @@ const Article = ({ article, error }: Props) => {
     return <PageNotFound error={error} />;
   }
 
-  if (!isAdmin && !isModerator && article.createdBy !== user?._id) {
+  if (!isAdmin && !isContentCreator && article.createdBy !== user?._id) {
     return <PageNotFound error="User may not access" />;
   }
 

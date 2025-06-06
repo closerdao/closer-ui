@@ -9,7 +9,7 @@ import {
   doAllKeysHaveValues,
 } from '../utils/helpers';
 import Modal from './Modal';
-import UploadPhoto from './UploadPhoto/UploadPhoto';
+import UploadPhoto from './UploadPhoto';
 import YoutubeEmbed from './YoutubeEmbed';
 import { LinkButton } from './ui';
 import IconPlay from './ui/IconPlay';
@@ -76,9 +76,11 @@ const AddPhotoPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
               isPrompt={true}
               model="user"
               id={user?._id}
-              onSave={(id: string) => {
-                setPhoto(id);
-                setTimeout(() => setUser({ ...user, photo: id } as User), 4000);
+              onSave={(id: string | string[]) => {
+                // Use the id regardless of type - most likely your logic already handles this
+                const photoId = Array.isArray(id) ? id[0] : id;
+                setPhoto(photoId);
+                setTimeout(() => setUser({ ...user, photo: photoId } as User), 4000);
               }}
               label={image ? 'Change photo' : 'Add photo'}
             />
@@ -178,7 +180,6 @@ const AirdropPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
           </LinkButton>
         </div>
         <div className="flex items-end justify-end sm:items-center gap-2 flex-col-reverse sm:flex-row">
-      
           <PromptCloseButton
             closePrompt={closePrompt}
             promptName="AirdropPrompt"
@@ -214,14 +215,14 @@ const getPromptToShow = (user: User | null, isAuthenticated: boolean) => {
   );
   const closedPrompts = getClosedPrompts();
 
-  if (
-    (!isAuthenticated && !closedPrompts.includes('AirdropPrompt')) ||
-    (isAuthenticated &&
-      daysUserCreated > 3 &&
-      !closedPrompts.includes('AirdropPrompt'))
-  ) {
-    return 'AirdropPrompt';
-  }
+  // if (
+  //   (!isAuthenticated && !closedPrompts.includes('AirdropPrompt')) ||
+  //   (isAuthenticated &&
+  //     daysUserCreated > 3 &&
+  //     !closedPrompts.includes('AirdropPrompt'))
+  // ) {
+  //   return 'AirdropPrompt';
+  // }
   if (
     isAuthenticated &&
     !user?.photo &&
@@ -229,14 +230,14 @@ const getPromptToShow = (user: User | null, isAuthenticated: boolean) => {
   ) {
     return 'AddPhotoPrompt';
   }
-  if (
-    (!isAuthenticated && !closedPrompts.includes('FundraiserPrompt')) ||
-    (isAuthenticated &&
-      daysUserCreated > 3 &&
-      !closedPrompts.includes('FundraiserPrompt'))
-  ) {
-    return 'FundraiserPrompt';
-  }
+  // if (
+  //   (!isAuthenticated && !closedPrompts.includes('FundraiserPrompt')) ||
+  //   (isAuthenticated &&
+  //     daysUserCreated > 3 &&
+  //     !closedPrompts.includes('FundraiserPrompt'))
+  // ) {
+  //   return 'FundraiserPrompt';
+  // }
   if (
     isAuthenticated &&
     (!user?.preferences || !hasUserFilledPreferences) &&

@@ -191,6 +191,8 @@ export const getSample = (field) => {
       ];
     case 'select':
       return field.options && field.options[0] && field.options[0].value;
+    case 'multi-select':
+      return [];
     case 'autocomplete':
     case 'currencies':
       return [
@@ -470,11 +472,11 @@ export const calculateSubscriptionPrice = (plan, monthlyCredits) => {
   }
 
   if (!plan.tiersAvailable) {
-    return plan.price;
+    return Number(plan.price);
   }
 
   if (plan.tiersAvailable) {
-    return plan.price * monthlyCredits;
+    return Number(plan.price) * monthlyCredits;
   }
 
   throw new Error(

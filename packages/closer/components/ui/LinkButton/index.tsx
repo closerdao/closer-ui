@@ -26,7 +26,8 @@ const buttonStyles = cva(
         false: '!w-auto',
       },
       variant: {
-        primary: 'w-full py-2 bg-accent border-accent text-white',
+        primary:
+          'w-full py-2 px-2 bg-accent border-accent text-white text-center [&_span]:block [&_span]:max-w-full [&_span]:text-[length:var(--dynamic-font-size,inherit)]',
         secondary: 'w-full enabled:bg-white border-accent text-accent py-2 ',
         instantSave:
           'w-auto absolute right-2 top-[45px] text-md pl-4 pr-5 py-0.5 bg-accent text-white',
@@ -78,23 +79,55 @@ const LinkButton = ({
   target,
   rel,
 }: ButtonProps) => {
+  const textRef = React.useRef<HTMLSpanElement>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  // React.useEffect(() => {
+  //   const adjustFontSize = () => {
+  //     if (textRef.current && containerRef.current) {
+  //       const container = containerRef.current;
+  //       const text = textRef.current;
+  //       const containerWidth = container.clientWidth - 22; // Account for px-2
+
+  //       // Reset to default size first
+  //       text.style.removeProperty('--dynamic-font-size');
+
+  //       // Only adjust if text is actually overflowing
+  //       if (text.scrollWidth > containerWidth) {
+  //         const currentSize = parseFloat(
+  //           window.getComputedStyle(text).fontSize,
+  //         );
+  //         let fontSize = currentSize;
+
+  //         while (text.scrollWidth > containerWidth && fontSize > 8) {
+  //           fontSize -= 0.5;
+  //           text.style.setProperty('--dynamic-font-size', `${fontSize}px`);
+  //         }
+  //       }
+  //     }
+  //   };
+
+  //   adjustFontSize();
+  //   window.addEventListener('resize', adjustFontSize);
+  //   return () => window.removeEventListener('resize', adjustFontSize);
+  // }, [children]);
+
   return (
     <>
-      <Link
-        href={href || ''}
-        className={` 
-        ${twMerge(
-          buttonStyles({ variant, color, isFullWidth, size, isEnabled }),
-          className,
-          'font-accent'
-        )}
-        `}
-        onClick={onClick}
-        target={target}
-        rel={rel}
-      >
-        {children}
-      </Link>
+      <div ref={containerRef} className="relative">
+        <Link
+          href={href || ''}
+          className={twMerge(
+            buttonStyles({ variant, color, isFullWidth, size, isEnabled }),
+            className,
+          )}
+          onClick={onClick}
+          target={target}
+          rel={rel}
+        >
+          <span ref={textRef}>{children}</span>
+        </Link>
+      </div>
       {infoText && <div className="text-sm text-center pt-2">{infoText}</div>}
     </>
   );

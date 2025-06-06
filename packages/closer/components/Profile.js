@@ -11,7 +11,7 @@ import { cdn } from '../utils/api';
 import CreditsBalance from './CreditsBalance';
 import { Button, Heading } from './ui';
 
-const Profile = ({ isDemo }) => {
+const Profile = ({ isMenu = false, isDemo }) => {
   const t = useTranslations();
 
   const { user, isAuthenticated } = useAuth();
@@ -26,51 +26,68 @@ const Profile = ({ isDemo }) => {
   const isCreditsEnabled = process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true';
 
   return (
-    <div className="w-full">
-      <div className="py-4 px-2 shadow-xl relative rounded-lg w-full">
-        <div className="flex items-start">
-          <div className="flex justify-center items-center w-24 h-24 md:w-32 md:h-32 mx-auto mb-4">
-            <Link
-              href={`/members/${user?.slug}`}
-              passHref
-              title="View profile"
-              className="md:flex md:flex-row items-center cursor-pointer"
-            >
-              {user?.photo ? (
-                <img
-                  src={`${cdn}${user.photo}-profile-lg.jpg`}
-                  loading="lazy"
-                  alt={user.screenname}
-                  className="rounded-full "
-                />
-              ) : (
-                <FaUser className="text-gray-200 text-6xl" />
+    <div className="w-full ">
+      <div className="py-2  relative rounded-lg w-full ">
+        <div className="flex items-center">
+          <div className="flex gap-2 items-center">
+            <div className="flex items-center md:w-10 md:h-10 mx-auto ">
+              <Link
+                href={`/members/${user?.slug}`}
+                passHref
+                title="View profile"
+                className={`${
+                  isMenu ? 'w-10 h-10 ' : ''
+                } md:flex md:flex-row items-center cursor-pointer`}
+              >
+                {user?.photo ? (
+                  <img
+                    src={`${cdn}${user.photo}-profile-lg.jpg`}
+                    loading="lazy"
+                    alt={user.screenname}
+                    className="rounded-full "
+                  />
+                ) : (
+                  <div className="flex items-center justify-center bg-gray-50 rounded-full overflow-hidden pt-1 h-10 w-10">
+                    <FaUser className=" text-gray-200  w-10 h-10" />
+                  </div>
+                )}
+              </Link>
+            </div>
+            <div className="flex flex-col ">
+              <Heading level={2} className="text-md ">
+                {user?.screenname}
+              </Heading>
+              {isCreditsEnabled && (
+                <CreditsBalance className="text-md" isDemo={isDemo} />
               )}
-            </Link>
+              {process.env.NEXT_PUBLIC_FEATURE_REFERRAL === 'true' && (
+                <Link href="/settings/referrals" className="text-xs text-accent hover:underline">
+                  {t('navigation_refer_a_friend')}
+                </Link>
+              )}
+            </div>
           </div>
 
-          <div className="w-1/3 absolute right-4">
+          <div className=" absolute right-0">
             <Button
               onClick={() => {
                 router.push('/settings');
               }}
               variant="secondary"
-              className="!w-[80px] !text-accent ml-auto"
+              size="sm"
+              className="text-sm normal-case !w-fit !text-accent ml-auto py-0 !h-8"
             >
-              {t('generic_edit_button')}
+              {t('buttons_edit_profile')}
             </Button>
           </div>
         </div>
 
         <div className="text-center">
-          <Heading level={2} className="font-bold">
-            {user?.screenname}
-          </Heading>
-          <p>
+          {/* <p>
             {user?.preferences?.superpower
               ? user?.preferences?.superpower
-              : t('navigation_member')}{' '}
-          </p>
+              : ''}
+          </p> */}
           {/* <div className="mt-1 w-full">
             {user.roles && (
               <div className="text-sm mt-1 tags">
@@ -86,11 +103,6 @@ const Profile = ({ isDemo }) => {
               </div>
             )}
           </div> */}
-        </div>
-        <div className="flex space-between justify-center w-full">
-          {isCreditsEnabled && (
-            <CreditsBalance className="text-lg" isDemo={isDemo} />
-          )}
         </div>
       </div>
     </div>

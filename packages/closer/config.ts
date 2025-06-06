@@ -39,6 +39,35 @@ export const configDescription: ConfigType[] = [
     These are all the configs that exist within the platform
      */
   {
+    slug: 'citizenship',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      isSpaceHostVouchRequired: {
+        type: 'boolean',
+        default: true,
+      },
+      downPaymentPercent: {
+        type: 'number',
+        default: 10,
+      },
+      tokenPriceModifierPercent: {
+        type: 'number',
+        default: 5,
+      },
+      minVouches: {
+        type: 'number',
+        default: 3,
+      },
+      minVouchingStayDuration: {
+        type: 'number',
+        default: 14,
+      },
+    },
+  },
+  {
     slug: 'booking',
     value: {
       enabled: {
@@ -221,6 +250,7 @@ export const configDescription: ConfigType[] = [
       },
     },
   },
+  
   {
     slug: 'volunteering',
     value: {
@@ -440,6 +470,76 @@ export const configDescription: ConfigType[] = [
       enabled: {
         type: 'boolean',
         default: true,
+      },
+    },
+  },
+  {
+    slug: 'affiliate',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      tokenSaleCommissionPercent: {
+        type: 'number',
+        default: 3,
+      },
+      financedTokenSaleCommissionPercent: {
+        type: 'number',
+        default: 3,
+      },
+      subscriptionCommissionPercent: {
+        type: 'number',
+        default: 30,
+      },
+      staysCommissionPercent: {
+        type: 'number',
+        default: 10,
+      },
+      eventsCommissionPercent: {
+        type: 'number',
+        default: 10,
+      },
+      productsCommissionPercent: {
+        type: 'number',
+        default: 10,
+      },
+    },
+  },
+  {
+    slug: 'webinar',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      isDayOfMonth: {
+        type: 'boolean',
+        default: false,
+      },
+      dayOfMonth: {
+        type: 'number',
+        default: 1,
+      },
+      weekDay: {
+        type: 'select',
+        enum: [
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+          'Sunday',
+        ],
+      },
+      weekPosition: {
+        type: 'select',
+        enum: ['First', 'Second', 'Third', 'Fourth', 'Last'],
+      },
+      time: {
+        type: 'time',
+        default: '10:00',
       },
     },
   },

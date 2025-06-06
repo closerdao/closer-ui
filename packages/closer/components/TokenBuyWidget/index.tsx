@@ -2,7 +2,6 @@ import React, {
   Dispatch,
   FC,
   SetStateAction,
-  useContext,
   useEffect,
   useState,
 } from 'react';
@@ -10,12 +9,10 @@ import React, {
 import { useTranslations } from 'next-intl';
 
 import { MAX_LISTINGS_TO_FETCH, SALES_CONFIG } from '../../constants';
-import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
 import { Listing } from '../../types';
 import api from '../../utils/api';
-import { getCurrentUnitPrice, getTotalPrice } from '../../utils/bondingCurve';
 import { Information } from '../ui';
 import Select from '../ui/Select/Dropdown';
 import { Item } from '../ui/Select/types';
@@ -25,12 +22,20 @@ const { MAX_TOKENS_PER_TRANSACTION, MAX_WALLET_BALANCE } = SALES_CONFIG;
 interface Props {
   tokensToBuy: number;
   setTokensToBuy: Dispatch<SetStateAction<number>>;
+  tokensToSpend: number;
+  setTokensToSpend: Dispatch<SetStateAction<number>>;
 }
 
-const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
+const TokenBuyWidget: FC<Props> = ({
+  tokensToBuy,
+  setTokensToBuy,
+  tokensToSpend,
+  setTokensToSpend,
+}) => {
   const t = useTranslations();
   const { SOURCE_TOKEN } = useConfig() || {};
-  const { getCurrentSupply, getUserTdfBalance } = useBuyTokens();
+  const { isPending, getTotalCostWithoutWallet } = useBuyTokens();
+
   const FUTURE_ACCOMMODATION_TYPES = [
     {
       name: `${t('token_sale_public_sale_shared_suite')} (${t(
@@ -59,9 +64,6 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
   ];
 
   const [tokenPrice, setTokenPrice] = useState<number>(0);
-  const [currentSupply, setCurrentSupply] = useState<number>(0);
-  const [userTdfBalance, setUserTdfBalance] = useState<number>(0);
-  const { isWalletReady } = useContext(WalletState);
   const [accommodationOptions, setAccommodationOptions] = useState<{
     labels: Item[];
     prices: number[];
@@ -70,7 +72,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
     name: '',
     price: 0,
   });
-  const [tokensToSpend, setTokensToSpend] = useState(0);
+
   const [nightsPerYear, setNightsPerYear] = useState(0);
 
   useEffect(() => {
@@ -107,37 +109,24 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
       labels.push(...labelsFuture);
       prices.push(...pricesFuture);
 
-      const price = res?.data?.results[0].tokenPrice.val || 1;
+      // const price = res?.data?.results[0].tokenPrice.val || 1;
+      const price = await getTotalCostWithoutWallet('1');
 
-      setNightsPerYear(tokensToBuy / price);
-      setNightsPerYear(tokensToBuy / price);
+      const nightlyPrice = res?.data?.results[0].tokenPrice.val;
+
+      setNightsPerYear(tokensToBuy / nightlyPrice);
       setAccommodationOptions({ labels, prices });
       setSelectedAccommodation({
         name: res?.data?.results[0].name,
         price: res?.data?.results[0].tokenPrice.val,
       });
+
+      const totalCost = await getTotalCostWithoutWallet(tokensToBuy.toString());
+      setTokensToSpend(totalCost);
+
+      setTokenPrice(price);
     })();
   }, []);
-
-  useEffect(() => {
-    if (isWalletReady) {
-      (async () => {
-        const supply = await getCurrentSupply();
-        const tdfBalance = await getUserTdfBalance();
-        setCurrentSupply(supply);
-        setUserTdfBalance(tdfBalance);
-      })();
-    }
-  }, [isWalletReady]);
-
-  useEffect(() => {
-    if (currentSupply) {
-      const price = getCurrentUnitPrice(currentSupply);
-      setTokenPrice(price);
-      const totalPrice = getTotalPrice(currentSupply, tokensToBuy);
-      setTokensToSpend(totalPrice);
-    }
-  }, [currentSupply]);
 
   const handleAccommodationSelect = (value: string) => {
     const index = accommodationOptions?.labels.findIndex((option: Item) => {
@@ -154,40 +143,20 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
     setSelectedAccommodation({ name: value, price });
   };
 
-  const handleTokensToBuyChange = (
+  const handleTokensToBuyChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    const index = accommodationOptions?.labels.findIndex((option: Item) => {
-      return option.label === selectedAccommodation.name;
-    });
-
-    const price =
-      index !== undefined &&
-      accommodationOptions &&
-      accommodationOptions.prices[index];
-
-    const value =
-      event.target.value === '' ? 0 : parseInt(event.target.value, 10);
-
-    const possibleAmount = calculatePossibleAmount(value);
-    const priceForTotalAmount = getTotalPrice(currentSupply, possibleAmount);
-
-    setTokensToBuy(possibleAmount);
-    setTokensToSpend(priceForTotalAmount);
-    if (price) {
-      setNightsPerYear(possibleAmount / selectedAccommodation.price || 0);
+    if (Number(event.target.value) > MAX_TOKENS_PER_TRANSACTION) {
+      setTokensToBuy(MAX_TOKENS_PER_TRANSACTION);
+    } else {
+      setTokensToBuy(Number(event.target.value));
     }
-  };
 
-  const calculatePossibleAmount = (desiredAmount: number) => {
-    let amount = desiredAmount;
-    if (amount > MAX_TOKENS_PER_TRANSACTION) {
-      amount = MAX_TOKENS_PER_TRANSACTION;
-    }
-    if (userTdfBalance + amount > MAX_WALLET_BALANCE) {
-      amount = MAX_WALLET_BALANCE - userTdfBalance;
-    }
-    return amount;
+    const totalCost = await getTotalCostWithoutWallet(
+      event.target.value.toString(),
+    );
+
+    setTokensToSpend(totalCost);
   };
 
   return (
@@ -205,7 +174,6 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
         </label>
         <div className="flex-1 relative">
           <input
-            max={10}
             id="tokensToBuy"
             value={tokensToBuy}
             onChange={handleTokensToBuyChange}
@@ -226,7 +194,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
           <input
             id="tokensToSpend"
             disabled={true}
-            value={tokensToSpend}
+            value={isPending ? 'calculating...' : tokensToSpend}
             className="h-14 px-4 pr-8 rounded-md text-xl bg-neutral text-black !border-none"
           />
           <p className="absolute right-3 top-4"> {t('token_sale_pay')}</p>
@@ -234,7 +202,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
       </div>
 
       <div className="flex flex-col sm:flex-row gap-2 items-left sm:items-center mb-8">
-        <p className=" whitespace-normal sm:whitespace-nowrap">
+        <p className=" whitespace-normal text-sm">
           This amount will give you right of staying{' '}
           <strong>{nightsPerYear}</strong> nights a year in a{' '}
         </p>
@@ -257,7 +225,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
         <Information>{t('token_sale_price_disclaimer')}</Information>
         <Information>
           {t('token_sale_max_wallet_balance')}
-          {Math.max(MAX_WALLET_BALANCE - userTdfBalance, 0)}
+          {Math.max(MAX_WALLET_BALANCE, 0)}
         </Information>
       </div>
     </div>

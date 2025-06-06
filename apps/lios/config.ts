@@ -7,6 +7,7 @@ const config = {
     'emails',
     'volunteering',
     'learningHub',
+    'subscriptions',
   ],
   PORT: 14444,
   APP_NAME: 'lios',
@@ -14,7 +15,7 @@ const config = {
 
   EXPOSE_STORE: true,
   CACHE_DURATION: 300000, // 5min
-  LOGO_HEADER: '/images/lios-dtl-logo.png',
+  LOGO_HEADER: '/images/lios-sei-logo.png',
   PERMISSIONS: {
     event: {
       create: 'event-creator',

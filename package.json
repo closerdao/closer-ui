@@ -6,6 +6,7 @@
     "apps/*",
     "packages/*"
   ],
+  "packageManager": "yarn@1.22.22",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -33,6 +34,7 @@
   "dependencies": {
     "@types/react-calendar-timeline": "^0.28.6",
     "axios": "1.7.7",
+    "deepmerge": "^4.3.1",
     "interactjs": "^1.10.26",
     "react-calendar-timeline": "^0.28.0"
   }

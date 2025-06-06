@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 
 import {
   BackButton,
@@ -26,6 +26,7 @@ import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
+import Wallet from '../../components/Wallet';
 
 interface Props {
   generalConfig: GeneralConfig | null;
@@ -38,6 +39,9 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     generalConfig?.platformName || defaultConfig.platformName;
   const router = useRouter();
   const { tokens } = router.query || { tokens: '33' };
+
+  const isWalletEnabled =
+  process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
 
   const { SOURCE_TOKEN } = useConfig() || {};
   const { buyTokens, getTotalCost, isCeurApproved, approveCeur, isPending } =
@@ -54,6 +58,29 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   const [isMetamaskLoading, setIsMetamaskLoading] = useState(false);
 
   const unitPrice = (total / parseInt(tokens as string)).toFixed(2);
+
+  const hasComponentRendered = useRef(false);
+
+
+  useEffect(() => {
+    if (!hasComponentRendered.current) {
+
+      (async () => {
+        try {
+          await api.post('/metric', {
+            event: 'checkout',
+            value: 'token-sale',
+            point: 0,
+            category: 'engagement',
+          });
+
+        } catch (error) {
+          console.error('Error logging page view:', error);
+        }
+      })();
+      hasComponentRendered.current = true;
+    }
+  }, []);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -73,9 +100,9 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
 
   const goBack = async () => {
     if (user && user.kycPassed) {
-      router.push(`/token/token-counter?tokens=${tokens}`);
+      router.push(`/token/before-you-begin?tokens=${tokens}`);
     } else {
-      router.push(`/token/your-info?tokens=${tokens}`);
+      router.push(`/token/nationality?tokens=${tokens}`);
     }
   };
 
@@ -83,9 +110,22 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     setWeb3Error(null);
     setApiError(null);
     setIsMetamaskLoading(true);
+
     const { success, error } = await approveCeur(total);
     if (success) {
       setIsApproved(true);
+      (async () => {
+        try {
+          await api.post('/metric', {
+            event: 'approve',
+            value: 'token-sale',
+            point: 0,
+            category: 'engagement',
+          });
+        } catch (error) {
+          console.error('Error logging page view:', error);
+        }
+      })();
     } else {
       setWeb3Error(t('token_sale_approval_error'));
     }
@@ -113,6 +153,19 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
           point: Number(tokens),
           category: 'revenue',
         });
+
+        (async () => {
+          try {
+            await api.post('/metric', {
+              event: 'success',
+              value: 'token-sale',
+              point: 0,
+              category: 'engagement',
+            });
+          } catch (error) {
+            console.error('Error logging page view:', error);
+          }
+        })();
       } catch (error: unknown) {
         setApiError(parseMessageFromError(error));
       } finally {
@@ -128,7 +181,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   };
 
   const handleEditAmount = () => {
-    router.push(`/token/token-counter?tokens=${tokens}`);
+    router.push(`/token/before-you-begin?tokens=${tokens}`);
   };
 
   if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
@@ -152,7 +205,14 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
 
         <ProgressBar steps={TOKEN_SALE_STEPS} />
 
-        <main className="pt-14 pb-24 flex flex-col gap-12">
+        {isWalletEnabled && (
+              <div className='mt-12'>
+                <Wallet />
+              </div>
+          )}
+          
+        <main className="pt- pb-24 flex flex-col gap-12">
+          
           <div className="">
             <Heading level={3} hasBorder={true}>
               🏡 {t('token_sale_checkout_your_purchse')}

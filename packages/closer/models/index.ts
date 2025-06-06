@@ -280,14 +280,8 @@ const models = {
     {
       name: 'access',
       label: 'Access',
-      type: 'select',
-      options: [
-        { label: 'Any subscription tier', value: 'subscription-any' },
-        { label: 'Free', value: 'free' },
-        { label: 'Single payment', value: 'single-payment' },
-        { label: 'Subscription tier 1', value: 'subscription-tier-1' },
-        { label: 'Subscription tier 2', value: 'subscription-tier-2' },
-      ],
+      type: 'multi-select',
+      options: ['subscription-any', 'free', 'single-payment'],
     },
     {
       name: 'modules',
@@ -801,6 +795,20 @@ const models = {
       options: [
         { label: 'Public', value: 'public' },
         { label: 'Private', value: 'private' },
+      ],
+    },
+    {
+      name: 'status',
+      label: 'Status',
+      ownerVisible: true,
+      editable: true,
+      enum: ['open', 'in-progress', 'done'],
+      default: 'open',
+      type: 'select',
+      options: [
+        { label: 'Open', value: 'open' },
+        { label: 'In Progress', value: 'in-progress' },
+        { label: 'Done', value: 'done' },
       ],
     },
     {

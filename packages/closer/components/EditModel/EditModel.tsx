@@ -11,7 +11,7 @@ import { trackEvent } from '../Analytics';
 import DateTimePicker from '../DateTimePicker';
 import FormField from '../FormField';
 import Tabs from '../Tabs';
-import { Spinner } from '../ui';
+import { Button, Spinner } from '../ui';
 
 const filterFields = (fields: any[], data: any) =>
   fields.filter((field) => {
@@ -254,7 +254,7 @@ const EditModel: FC<Props> = ({
               title: key,
               value: key,
               datePicker:
-                endpoint !== '/listing' && endpoint !== '/food' ? (
+                endpoint !== '/listing' && endpoint !== '/food' && endpoint !== '/lesson' ? (
                   <DateTimePicker
                     setStartDate={setStartDate}
                     setEndDate={setEndDate}
@@ -302,7 +302,7 @@ const EditModel: FC<Props> = ({
           </div>
         )}
 
-        <div className="py-6 flex items-center">
+        <div className="py-6 flex items-center gap-4" >
           <button type="submit" className="btn-primary">
             <div className="flex gap-2 items-center">
               {isLoading && <Spinner />}
@@ -310,16 +310,16 @@ const EditModel: FC<Props> = ({
             </div>
           </button>
           {allowDelete && (
-            <a
-              href="#"
-              className="text-pink-700 ml-4"
+            <Button
+
+              className="bg-red-600 text-white w-fit border-red-600"
               onClick={(e) => {
                 e.preventDefault();
                 deleteObject();
               }}
             >
               {deleteButton}
-            </a>
+            </Button>
           )}
         </div>
       </form>

@@ -25,6 +25,10 @@ const CreateEvent = ({ foodOptions }: Props) => {
       label: 'Allow guests to select',
       value: '',
     },
+    {
+      label: 'No food',
+      value: 'no_food',
+    },
     ...foodOptions?.map((option) => ({
       label: option.name,
       value: option._id,

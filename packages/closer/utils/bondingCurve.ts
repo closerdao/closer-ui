@@ -3,6 +3,8 @@ import { BONDING_CURVE } from '../constants';
 
 
 export const getCurrentUnitPrice = (currentSupply: number) => {
+
+  console.log('currentSupply=',currentSupply);
   const { a, b, c } = BONDING_CURVE.COEFFICIENTS;
   const currentPrice = c + a / currentSupply ** 2 + b / currentSupply ** 3;
   return parseFloat(currentPrice.toFixed(2));

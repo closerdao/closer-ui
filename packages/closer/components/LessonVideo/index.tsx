@@ -1,10 +1,13 @@
+import Image from 'next/image';
+
 import { Dispatch, SetStateAction } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { cdn } from '../../utils/api';
 import LearnVimeoEmbed from '../LearnVimeoEmbed';
 import LearnYoutubeEmbed from '../LearnYoutubeEmbed';
-import { Heading, LinkButton } from '../ui';
+// import { Heading, LinkButton } from '../ui';
 
 interface Props {
   videoParams: {
@@ -15,6 +18,9 @@ interface Props {
   setIsVideoLoading: Dispatch<SetStateAction<boolean>>;
   isVideoLoading: boolean;
   getAccessUrl: string;
+  imageUrl: string;
+  canPreview: boolean;
+  isVideoPreview: boolean;
 }
 
 const LessonVideo = ({
@@ -23,6 +29,9 @@ const LessonVideo = ({
   setIsVideoLoading,
   isVideoLoading,
   getAccessUrl,
+  canPreview,
+  imageUrl,
+  isVideoPreview,
 }: Props) => {
   const t = useTranslations();
   const { platform, embedId } = videoParams;
@@ -32,7 +41,16 @@ const LessonVideo = ({
   };
   return (
     <div className="rounded-md overflow-hidden h-[400px] w-full bg-accent-light flex justify-center items-center">
-      {isUnlocked ? (
+      {(!embedId && isUnlocked) && !(isVideoPreview && canPreview) && (
+        <Image
+          src={`${cdn}${imageUrl}-max-lg.jpg`}
+          alt="Lesson Image"
+          width={615}
+          height={503}
+          className="object-cover w-full h-full"
+        />
+      )}
+      {isUnlocked  || (isVideoPreview && canPreview) ? (
         <>
           {platform === 'vimeo' && (
             <LearnVimeoEmbed
@@ -50,13 +68,20 @@ const LessonVideo = ({
           )}
         </>
       ) : (
-        <div className="w-60 text-center flex flex-col gap-4 items-center">
-          <Heading level={2}>{t('learn_cta')}</Heading>
+        // <div className="w-60 text-center flex flex-col gap-4 items-center">
+        //   <Heading level={2}>{t('learn_cta')}</Heading>
 
-          <LinkButton href={getAccessUrl} className="w-[200px]">
-            {t('learn_get_access_button')}
-          </LinkButton>
-        </div>
+        //   <LinkButton href={getAccessUrl} className="w-[200px]">
+        //     {t('learn_get_access_button')}
+        //   </LinkButton>
+          // </div>
+          <Image
+          src={`${cdn}${imageUrl}-max-lg.jpg`}
+          alt="Lesson Image"
+          width={615}
+          height={503}
+          className="object-cover w-full h-full"
+        />
       )}
     </div>
   );

@@ -32,10 +32,10 @@ const TimeFrameSelector = ({
   const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
-    if (fromDate && toDate) {
+    if (fromDate && toDate && timeFrame !== 'custom') {
       setTimeFrame('custom');
     }
-  }, [fromDate, toDate]);
+  }, [fromDate, toDate, timeFrame]);
 
   function handleClickOutsideDropdown() {
     setShowDropdown(false);
@@ -46,22 +46,25 @@ const TimeFrameSelector = ({
     setToDate('');
   };
 
+  const handleTimeFrameClick = (frame: string) => {
+    if (frame === timeFrame) return;
+    setToDate('');
+    setFromDate('');
+    setTimeFrame(frame);
+  };
+
   return (
     <div>
       <div className="flex gap-x-1 gap-y-4 flex-wrap sm:flex-nowrap">
         {TIME_FRAMES.map((frame) => (
           <button
             key={frame}
-            onClick={() => {
-              setToDate('');
-              setFromDate('');
-              setTimeFrame(frame);
-            }}
+            onClick={() => handleTimeFrameClick(frame)}
             className={`${
               timeFrame === frame
                 ? 'bg-accent text-white'
                 : 'bg-neutral text-black'
-            } rounded-full  px-3 py-1 text-sm`}
+            } rounded-full px-3 py-1 text-sm`}
           >
             {t(`dashboard_${frame}`)}
           </button>

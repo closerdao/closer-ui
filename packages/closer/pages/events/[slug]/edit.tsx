@@ -27,6 +27,10 @@ const EditEvent = ({ event, error, foodOptions }: Props) => {
 
   const foodOptionsWithDefault = [
     {
+      label: 'No food',
+      value: 'no_food',
+    },
+    {
       label: 'Allow guests to select',
       value: '',
     },

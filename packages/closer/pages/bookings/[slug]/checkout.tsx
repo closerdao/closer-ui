@@ -535,10 +535,9 @@ const Checkout = ({
                 )}
                 {process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' &&
                 canApplyCredits &&
+                !useTokens &&
                 !booking?.volunteerId &&
-                rentalFiat &&
-                rentalFiat?.val > 0 &&
-                !useTokens ? (
+                ((rentalFiat && rentalFiat?.val > 0) || useCredits) ? (
                   <RedeemCredits
                     fiatPricePerNight={listing?.fiatPrice.val}
                     isPartialCreditsPayment={
@@ -575,15 +574,7 @@ const Checkout = ({
                         }
                         switchToFiat={() => setCurrency(DEFAULT_CURRENCY)}
                       />
-                      <Checkbox
-                        isChecked={hasAgreedToWalletDisclaimer}
-                        onChange={() =>
-                          setWalletDisclaimer(!hasAgreedToWalletDisclaimer)
-                        }
-                        className="mt-8"
-                      >
-                        {t('bookings_checkout_step_wallet_disclaimer')}
-                      </Checkbox>
+                
                     </div>
                   )}
               </div>
@@ -658,6 +649,20 @@ const Checkout = ({
               eventId={event?._id}
             />
           )}
+
+          {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' &&
+            rentalToken &&
+            rentalToken?.val > 0 &&
+            useTokens &&
+
+            <Checkbox
+              isChecked={hasAgreedToWalletDisclaimer}
+              onChange={() => setWalletDisclaimer(!hasAgreedToWalletDisclaimer)}
+              className="mt-8"
+            >
+              {t('bookings_checkout_step_wallet_disclaimer')}
+            </Checkbox>
+          }
           {isFreeBooking && (
             <Button
               isEnabled={!processing}

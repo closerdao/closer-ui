@@ -45,21 +45,25 @@ const ProjectsPage = ({
         <title>{`${t('projects_page_title')} - ${PLATFORM_NAME}`}</title>
       </Head>
       <main className=" pb-24">
-        <section className="w-full flex justify-center max-w-4xl mx-auto mb-4 relative">
-          {hasStewardRole && (
-            <LinkButton
-              href="/projects/create"
-              className="w-fit absolute bottom-6 right-6"
-            >
-              {t('projects_create_title')}
-            </LinkButton>
-          )}
+        <section
+          className="w-full flex justify-center max-w-4xl mx-auto mb-4 relative"
+          style={{ position: 'relative' }}
+        >
           <Image
             alt="Traditional Dream Factory Builders Residency"
             src="/images/builders-l.png"
             width={1344}
             height={600}
           />
+
+          {hasStewardRole && (
+            <LinkButton
+              href="/projects/create"
+              className="w-fit absolute bottom-6 right-6  z-10 "
+            >
+              {t('projects_create_title')}
+            </LinkButton>
+          )}
         </section>
         <section className=" w-full flex justify-center">
           <div className="max-w-4xl w-full ">
@@ -88,7 +92,7 @@ const ProjectsPage = ({
                 <div className="flex flex-col gap-6 w-full ">
                   <div className="flex flex-col sm:flex-row justify-between gap-4 items-center pt-4">
                     <Heading level={1} className="md:text-4xl  font-bold">
-                      Builders Residency Open Call
+                      {t('projects_builders_residency_open_call')}
                     </Heading>
                     <div className=" w-full sm:w-[250px]">
                       <LinkButton href="/projects/apply">
@@ -98,76 +102,90 @@ const ProjectsPage = ({
                   </div>
 
                   <div className="flex flex-col gap-6">
-                    <p>
-                      We are starting to build! TDF has secured funding to start
-                      major renovations. In Jan 2025, the first phase of
-                      accommodation will start with a professional contractor,
-                      and alongside that, we are self-building various projects
-                      to support the opening of TDF V2.
-                    </p>
-
-                    <p>
-                      <strong className="uppercase">Requirements: </strong> 6
-                      hours per day, 1 month minimum ✅. Free accommodation &
-                      food (glamping tents and dorms available, or bring your
-                      van)
-                    </p>
-
+                    <p>{t('projects_starting_to_build')}</p>
                     <p>
                       <strong className="uppercase">
-                        Token rewards for completed projects!💰
+                        {t('projects_requirements_label')}
                       </strong>{' '}
-                      We will be offering tokens to builders who take projects
-                      from start to completion. Rewards will be negotiated with
-                      the team.
+                      {t('projects_requirements_value')}
                     </p>
-
                     <p>
-                      <strong className="uppercase">Community culture: </strong>
-                      Experience co-living with fellow builders and the TDF
-                      team. We will have regular community activities, saunas,
-                      experiential dinners, music jams, music jams, embodiment
-                      practices, yoga, massage, and more 🥙💃🏽🔥🎶🎭
+                    <strong className="uppercase">
+                        {t('projects_token_rewards_label')}
+                      </strong>{' '}
+                      {t('projects_token_rewards_value')}
                     </p>
+                    <p>
+                      <strong className="uppercase">
+                        {t('projects_community_culture_label')}
+                      </strong>{' '}
+                      {t('projects_community_culture_value')}
+                    </p>
+                    <Heading level={2}>
+                      {t('projects_build_projects_title')}
+                    </Heading>
 
-                    <Heading level={2}>Build Projects 🛠🏡🛕</Heading>
+                    <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-6">
+                    {
+                      !projects ||
+                      projects.filter(project => (project.status !== 'done' && project.status !== 'in-progress')).length === 0 ?
+                      <p className="p-2">{t('projects_no_active_projects')}</p>:
+                      projects
+                      .filter(project => (project.status !== 'done' && project.status !== 'in-progress'))
+                      .map((project) => (
+                        <ProjectCard
+                          key={project.slug}
+                          project={project}
+                          hasStewardRole={hasStewardRole || false}
+                        />
+                      ))
+                    }
+                    </section>
+
+                    <Heading level={2}>{t('projects_completed_title')}</Heading>
+                    {projects && 
+                      projects.filter(project => (project.status === 'done')).length === 0 &&
+                      <p className="p-2">{t('projects_no_completed_projects')}</p>
+                    }
 
                     {projects && projects.length > 0 && (
                       <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-6">
-                        {projects.map((project) => (
-                          <ProjectCard
-                            key={project.slug}
-                            project={project}
-                            hasStewardRole={hasStewardRole || false}
-                          />
-                        ))}
+                        {projects
+                          .filter(project => (project.status === 'done'))
+                          .map((project) => (
+                            <ProjectCard
+                              key={project.slug}
+                              project={project}
+                              hasStewardRole={hasStewardRole || false}
+                            />
+                          ))}
                       </section>
                     )}
 
                     <Heading level={2}>
-                      Skill & qualifications that can support us 👍🏼
+                      {t('projects_skills_and_qualifications_title')}
                     </Heading>
                     <ul className="mb-4 list-disc pl-5">
-                      <li>Practical build skills</li>
-                      <li>Electrical</li>
-                      <li>Plumbing</li>
-                      <li>Cement & plastering</li>
-                      <li>Carpentry</li>
-                      <li>Painting & decorating</li>
-                      <li>Stoneworks</li>
-                      <li>Tools & machinery operation</li>
-                      <li>Design & drawing skills</li>
+                      <li>{t('projects_skill_practical_build')}</li>
+                      <li>{t('projects_skill_electrical')}</li>
+                      <li>{t('projects_skill_plumbing')}</li>
+                      <li>{t('projects_skill_cement_plastering')}</li>
+                      <li>{t('projects_skill_carpentry')}</li>
+                      <li>{t('projects_skill_painting_decorating')}</li>
+                      <li>{t('projects_skill_stoneworks')}</li>
+                      <li>{t('projects_skill_tools_machinery')}</li>
+                      <li>{t('projects_skill_design_drawing')}</li>
                     </ul>
 
                     <p>
-                      <strong className="uppercase">Time frame: </strong>{' '}
-                      Starting {volunteerConfig?.residenceTimeFrame} 🗓.
+                      <strong className="uppercase">
+                        {t('projects_time_frame_label')}
+                      </strong>{' '}
+                      {t('projects_time_frame_value', {
+                        time: volunteerConfig?.residenceTimeFrame,
+                      })}
                     </p>
-                    <p>
-                      We are ideally looking for people to join us from October
-                      and stay with the team over winter, but the build will
-                      continue to the end of next year.
-                    </p>
+                    <p>{t('projects_booking_recommendation')}</p>
                   </div>
                 </div>
               </div>

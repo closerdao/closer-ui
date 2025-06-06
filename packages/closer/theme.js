@@ -2,14 +2,14 @@ module.exports = {
   extend: {
     colors: {
       'accent-core': '#FE4FB7',
-      accent: '#FE4FB7',
+      accent: '#79FAC1',
       'accent-light': '#FFC8E9',
       primary: '#e4427d',
       'primary-light': '#FFEDF8',
       secondary: '#1b3bc3',
       background: 'transparent',
       'background-dark': '#1c1c1c',
-      foreground: '#1c1c1c',
+      foreground: '#000000',
       'foreground-dark': '#dadada',
       card: '#ebf1f6',
       neutral: '#F0F0F0',

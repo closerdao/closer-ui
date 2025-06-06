@@ -4,4 +4,5 @@ export interface NavigationLink {
   target?: string;
   enabled: boolean;
   roles?: string[];
+  rbacPage?: string;
 }

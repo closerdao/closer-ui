@@ -1,3 +1,4 @@
+import { Charge } from '../../types/booking';
 export interface UserLink {
   name: string;
   url: string;
@@ -7,11 +8,17 @@ export interface UserLink {
 export interface Vouched {
   vouchedBy: string;
   vouchedAt: Date;
-  message?: string;
 }
+export type Report = {
+  reportedBy: string;
+  reportedAt: Date;
+  report: { reason: string; unsafe: boolean };
+};
 
 export type User = {
   vouched?: Vouched[];
+  reports?: Report[];
+  message?: string;
   tagline?: string;
   about?: string;
   stats: any;
@@ -60,6 +67,17 @@ export type User = {
   attributes: string[];
   managedBy: string[];
   _id: string;
+  citizenship?: {
+    createdAt?: Date;
+    status?: 'pending-payment' | 'cancelled' | 'paid' | 'completed';
+    iban?: string;
+    why?: string;
+    tokensToFinance?: number;
+    totalToPayInFiat?: number;
+    monthlyPaymentAmount?: number;
+    charges: Charge[];
+    downPaymentAmount?: number;
+  };
   subscription: {
     plan: string;
     tier: string;
@@ -69,6 +87,7 @@ export type User = {
     monthlyPrice: { val: number; cur: string };
     monthlyCredits: number;
     stripeCustomerEmail: string;
+   
   };
   presence?: number;
   tokensBought?: number;
@@ -77,6 +96,7 @@ export type User = {
   socialShare?: boolean;
   referrals?: number;
   actions?: any;
+  affiliate?: Date
 };
 
 export type AuthenticationContext = {

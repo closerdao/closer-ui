@@ -14,9 +14,9 @@ import { Record } from 'immutable';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { useAuth } from '../../../../contexts/auth';
 import { usePlatform } from '../../../../contexts/platform';
 import { useConfig } from '../../../../hooks/useConfig';
+import useRBAC from '../../../../hooks/useRBAC';
 import { GeneralConfig } from '../../../../types';
 import { Lesson } from '../../../../types/lesson';
 import api from '../../../../utils/api';
@@ -40,16 +40,15 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
   const isLearningHubEnabled = learningHubConfig && learningHubConfig?.enabled;
 
   const defaultConfig = useConfig();
-  const PLATFORM_NAME =
-    generalConfig?.platformName || defaultConfig.platformName;
-  const { user } = useAuth();
+  const PLATFORM_NAME = generalConfig?.platformName || defaultConfig.platformName;
   const { platform }: any = usePlatform();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
 
-  const isAdmin = user?.roles.includes('admin');
+  const { hasAccess } = useRBAC();
+  const canCreateLesson = hasAccess('LearningHubCreate');
 
   const filter = {
     where: getCategoryWhere(),
@@ -144,7 +143,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
           </div>
 
           <div className="action">
-            {user && user.roles.includes('admin') && (
+            {canCreateLesson && (
               <Link
                 href="/learn/create"
                 className="mt-10 btn-primary inline-block"
@@ -162,7 +161,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
             </Heading>
 
             <LearnCategoriesNav
-              categories={isAdmin ? categories : publicCategories}
+              categories={canCreateLesson ? categories : publicCategories}
               currentCategory={category as string}
             />
           </nav>
@@ -178,7 +177,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
               <Heading level={1}>{t('generic_coming_soon')}</Heading>
             )}
 
-            <LessonsList lessons={isAdmin ? lessons : publicLessons} />
+            <LessonsList lessons={(canCreateLesson) ? lessons : publicLessons} />
 
             {lessons && totalLessons > LESSONS_PER_PAGE && (
               <Pagination
@@ -187,7 +186,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
                 }}
                 page={page}
                 limit={LESSONS_PER_PAGE}
-                total={isAdmin ? totalLessons : totalPublicLessons}
+                total={(canCreateLesson) ? totalLessons : totalPublicLessons}
               />
             )}
           </section>

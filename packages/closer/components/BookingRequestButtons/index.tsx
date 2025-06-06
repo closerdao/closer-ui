@@ -17,6 +17,7 @@ interface Props {
   start: string | Date;
   end: string | Date;
   rejectBooking: () => void;
+  isFiatBooking?: boolean;
 }
 
 const BookingRequestButtons = ({
@@ -27,6 +28,7 @@ const BookingRequestButtons = ({
   end,
   confirmBooking,
   rejectBooking,
+  isFiatBooking = true,
 }: Props) => {
   const t = useTranslations();
   const { user } = useAuth();
@@ -38,7 +40,8 @@ const BookingRequestButtons = ({
       status === 'pending' ||
       status === 'confirmed' ||
       status === 'paid') &&
-    dayjs().isBefore(dayjs(end));
+    dayjs().isBefore(dayjs(end)) &&
+    isFiatBooking;
 
   return (
     <div className="mt-4 flex flex-col gap-4">

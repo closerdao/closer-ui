@@ -64,12 +64,14 @@ const FoodSelectionPage = ({
   const { isAuthenticated } = useAuth();
 
   const eventFoodOptionSet = Boolean(event?.foodOptionId);
+  const isFoodAvailable = event?.foodOptionId !== 'no_food';
 
   const [apiError, setApiError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isFood, setIsFood] = useState(true);
 
   const foodOption = getFoodOption({ eventId, event, foodOptions });
+
   const foodPricePerNight =
     booking?.volunteerInfo?.bookingType === 'residence' ? 0 : foodOption?.price;
 
@@ -84,8 +86,10 @@ const FoodSelectionPage = ({
       setApiError(null);
       setIsLoading(true);
       await api.post(`/bookings/${booking?._id}/update-food`, {
-        foodOptionId: isFood && foodOption ? foodOption._id : null,
+        foodOptionId:
+          isFood && foodOption && isFoodAvailable ? foodOption._id : null,
         discountCode,
+        isDayTicket: booking?.isDayTicket,
       });
 
       if (event?.fields) {
@@ -159,53 +163,64 @@ const FoodSelectionPage = ({
       <ProgressBar steps={BOOKING_STEPS} />
 
       <section className="flex flex-col gap-12 py-12">
-        {foodOption && foodOption?.name !== 'no_food' && (
-          <div className="flex justify-between items-center">
-            <label htmlFor="food">
-              {eventFoodOptionSet
-                ? foodOption?.name
-                : t('booking_add_food') + ' ' + foodOption?.name}
-            </label>
-            {!eventFoodOptionSet && (
-              <Switch
-                disabled={false}
-                name="food"
-                onChange={() => setIsFood((oldValue) => !oldValue)}
-                checked={isFood}
-                label=""
-              />
-            )}
-          </div>
-        )}
+        {foodOption &&
+          foodOption?.name !== 'no_food' &&
+          !eventFoodOptionSet && (
+            <div className="flex justify-between items-center">
+              <label htmlFor="food">
+                {eventFoodOptionSet
+                  ? foodOption?.name
+                  : t('booking_add_food') + ' ' + foodOption?.name}
+              </label>
+              {!eventFoodOptionSet && (
+                <Switch
+                  disabled={false}
+                  name="food"
+                  onChange={() => setIsFood((oldValue) => !oldValue)}
+                  checked={isFood}
+                  label=""
+                />
+              )}
+            </div>
+          )}
 
-        <div>
-          <HeadingRow>
-            <span className="mr-2">💰</span>
-            <span>{t('bookings_checkout_step_food_cost')}</span>
-          </HeadingRow>
-          <div className="flex justify-between items-top mt-3">
-            <p> {t('bookings_summary_step_food_total')}</p>
-            <p className="font-bold text-right">
-              {booking?.isTeamBooking && 'Free for team members'}{' '}
-              {isFood && !booking?.isTeamBooking
-                ? priceFormat(foodPricePerNight || 0)
-                : priceFormat(0)}
+        {isFoodAvailable && (
+          <div>
+            <HeadingRow>
+              <span className="mr-2">💰</span>
+              <span>{t('bookings_checkout_step_food_cost')}</span>
+            </HeadingRow>
+            <div className="flex justify-between items-top mt-3">
+              <p> {t('bookings_summary_step_food_total')}</p>
+              <p className="font-bold text-right">
+                {booking?.isTeamBooking && 'Free for team members'}{' '}
+                {isFood && !booking?.isTeamBooking
+                  ? priceFormat(foodPricePerNight || 0)
+                  : priceFormat(0)}
+              </p>
+            </div>
+            <p className="text-right text-xs">
+              {t('booking_price_per_night_per_adult')}
             </p>
           </div>
-          <p className="text-right text-xs">
-            {t('booking_price_per_night_per_adult')}
-          </p>
-        </div>
+        )}
 
         <div className="flex items-start gap-2 sm:items-center font-bold mt-1 sm:mt-0">
-          <FoodDescription foodOption={foodOption} />
+          {isFoodAvailable ? (
+            <FoodDescription foodOption={foodOption} />
+          ) : (
+            <div>
+              <p>{t('food_no_food_available')}</p>
+            </div>
+          )}
         </div>
 
-        {!isFood && (
-          <Information className=" hidden sm:flex">
-            {t('food_no_food_disclaimer')}
-          </Information>
-        )}
+        {!isFood ||
+          (!isFoodAvailable && (
+            <Information className=" hidden sm:flex">
+              {t('food_no_food_disclaimer')}
+            </Information>
+          ))}
 
         <Button
           className="booking-btn"

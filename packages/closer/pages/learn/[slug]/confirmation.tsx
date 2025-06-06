@@ -25,7 +25,14 @@ const LearnConfirmation = ({ error, lesson }: Props) => {
   const t = useTranslations();
   const router = useRouter();
   const { slug } = router.query;
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+
+  const messageHtml = t.raw('learn_course_purchase_confirmation_message');
+
+  const messageWithName = messageHtml.replace(
+    '{screenname}',
+    `${user?.screenname}`,
+  );
 
   const goBack = () => {
     router.push(`/learn/${slug}`);
@@ -49,9 +56,12 @@ const LearnConfirmation = ({ error, lesson }: Props) => {
         <ProgressBar steps={PRODUCT_SALE_STEPS} />
 
         <div className="mt-16 flex flex-col gap-6">
-
-          <p>{t('learn_confirmation_message')}</p>
-          <p>{t('learn_confirmation_message_2')}</p>
+          <div
+            className="rich-text"
+            dangerouslySetInnerHTML={{
+              __html: messageWithName,
+            }}
+          />
         </div>
       </div>
     </>

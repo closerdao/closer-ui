@@ -12,7 +12,9 @@ import { NextPageContext } from 'next';
 
 const AirdropPage = () => {
   const { user } = useAuth();
-  const qualifiers = user && user.stats && user.stats.airdrop_20230621_20240630;
+  const qualifiers = user && user.stats && user.stats.all_time;
+
+  console.log('qualifiers', qualifiers);
 
   return (
     <>
@@ -31,12 +33,6 @@ const AirdropPage = () => {
                 className=" font-extrabold normal-case sm:uppercase text-4xl md:text-7xl px-4 drop-shadow-lg mb-2 md:mb-4 md:text-center max-w-[700px]"
               >
                 $TDF Airdrop
-              </Heading>
-              <Heading
-                level={2}
-                className="normal-case sm:uppercase  md:text-center px-4 text-lg md:text-md max-w-[700px] font-normal mb-4"
-              >
-                Summer solstice, 2024
               </Heading>
 
               {user && !user.walletAddress && (
@@ -66,20 +62,18 @@ const AirdropPage = () => {
                 </p>
               </Heading>
               <div className="max-w-[550px] text-sm flex flex-col gap-4 mb-20">
-                <p>
-                  TDF has applied for a non-refundable grant through the
-                  Portugal 2030 program that would cover 60% of the build costs
-                  of our co-living, including water works, 14 suites, a pool, a
-                  lake, and 2 agroforestry terraces; with a total budget of
-                  €914.805.{' '}
-                </p>
-                <p>
-                  To reach the 40% equity, we aim for €150K in new token sales.
-                  If you’re considering buying $TDF tokens, get ‘em by 31 July
-                  2024 to help qualify for the grant. It’s an ideal time since
-                  each token has more than double the impact thanks to the
-                  grant.
-                </p>
+                <p>🌱 Help Power TDF’s 12-Month Build Sprint</p>
+
+                <p>We’re heading into the final year of construction on TDF’s coliving hub, and the next phase is big:</p>
+                <ul>
+                  <li>14 eco-suites and a shared natural pool</li>
+                  <li>Rain-harvesting lake & expanded water-retention earthworks</li>
+                  <li>Two new agroforestry terraces 🌳</li>
+                  <li>Farm-to-table restaurant 🍽️</li>
+                  <li>Circular mushroom-production unit 🍄</li>
+                </ul>
+                <p>Support the build, accelerate regeneration, and own a piece of TDF’s future.</p>
+                <p>Grab your $TDF tokens, spread the word, and let’s cross the finish line together! 💚</p>
               </div>
               <LinkButton
                 href="/token"

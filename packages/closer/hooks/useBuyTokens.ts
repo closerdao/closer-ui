@@ -1,6 +1,6 @@
-import { useContext, useState } from 'react';
 import { getDataSuffix, submitReferral } from '@divvi/referral-sdk'
-import { Contract, utils } from 'ethers';
+import { useContext, useEffect, useState } from 'react';
+import { Contract, providers, utils } from 'ethers';
 import { WalletState } from '../contexts/wallet';
 import { useConfig } from './useConfig';
 
@@ -8,6 +8,38 @@ const dataSuffix = getDataSuffix({
   consumer: '0x9B5f6dF2C7A331697Cf2616CA884594F6afDC07d',
   providers: ['0x0423189886d7966f0dd7e7d256898daeee625dca','0xc95876688026be9d6fa7a7c33328bd013effa2bb','0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8'],
 })
+
+const RPC_ENDPOINTS = {
+  celo: [
+    'https://forno.celo.org',
+    'https://rpc.ankr.com/celo',
+    'https://celo-mainnet.public.blastapi.io',
+  ],
+  alfajores: [
+    'https://alfajores-forno.celo-testnet.org',
+    'https://celo-alfajores.infura.io',
+  ],
+};
+
+const getReadOnlyContractInstance = async (address: string, abi: any) => {
+  const network = process.env.NEXT_PUBLIC_NETWORK || 'alfajores';
+  const endpoints = RPC_ENDPOINTS[network as keyof typeof RPC_ENDPOINTS];
+
+  console.debug('Using network:', network);
+
+  for (const rpcUrl of endpoints) {
+    try {
+      const provider = new providers.JsonRpcProvider(rpcUrl);
+      // Test the connection
+      await provider.getNetwork();
+      return new Contract(address, abi, provider);
+    } catch (error) {
+      console.warn(`Failed to connect to ${rpcUrl}:`, error);
+      continue;
+    }
+  }
+  throw new Error(`Unable to connect to any ${network} RPC endpoint`);
+};
 
 export const useBuyTokens = () => {
   const { library, account } = useContext(WalletState);
@@ -19,6 +51,13 @@ export const useBuyTokens = () => {
     CEUR_TOKEN_ADDRESS,
   } = useConfig() || {};
   const [isPending, setPending] = useState(false);
+  const [isConfigReady, setIsConfigReady] = useState(false);
+
+  useEffect(() => {
+    if (BLOCKCHAIN_DAO_TOKEN?.address && BLOCKCHAIN_DAO_TOKEN_ABI) {
+      setIsConfigReady(true);
+    }
+  }, [BLOCKCHAIN_DAO_TOKEN?.address, BLOCKCHAIN_DAO_TOKEN_ABI]);
 
   const getContractInstances = () => ({
     DynamicSale: new Contract(
@@ -48,6 +87,71 @@ export const useBuyTokens = () => {
     } catch (error) {
       console.log(error);
       return 0;
+    }
+  };
+
+  const getCurrentSupplyWithoutWallet = async () => {
+    try {
+      setPending(true);
+
+      if (!BLOCKCHAIN_DAO_TOKEN?.address || !BLOCKCHAIN_DAO_TOKEN_ABI) {
+        console.debug('Config not yet initialized, retrying in 1s...');
+
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+
+        if (!BLOCKCHAIN_DAO_TOKEN?.address || !BLOCKCHAIN_DAO_TOKEN_ABI) {
+          console.error('Config initialization timeout');
+          return 0;
+        }
+      }
+
+      const readOnlyTdfToken = await getReadOnlyContractInstance(
+        BLOCKCHAIN_DAO_TOKEN.address,
+        BLOCKCHAIN_DAO_TOKEN_ABI,
+      );
+
+      // Debug contract details
+      console.debug('Contract details:', {
+        network: process.env.NEXT_PUBLIC_NETWORK,
+        address: BLOCKCHAIN_DAO_TOKEN.address,
+        provider: (readOnlyTdfToken.provider as providers.JsonRpcProvider)
+          .connection.url,
+      });
+
+      const code = await readOnlyTdfToken.provider.getCode(
+        BLOCKCHAIN_DAO_TOKEN.address,
+      );
+      if (code === '0x') {
+        console.warn('Token contract not found at specified address');
+        return 0;
+      }
+
+      try {
+        const name = await readOnlyTdfToken.name().catch(() => null);
+        const symbol = await readOnlyTdfToken.symbol().catch(() => null);
+        console.debug('Token details:', { name, symbol });
+
+        const supplyInWei = await readOnlyTdfToken.totalSupply();
+        const supply = parseInt(utils.formatEther(supplyInWei));
+        return supply;
+      } catch (contractError: any) {
+        console.error('Contract call failed:', contractError);
+        if (contractError?.error?.body) {
+          try {
+            const errorBody = JSON.parse(contractError.error.body);
+            console.debug('Detailed error:', errorBody);
+          } catch (e) {
+            console.debug('Raw error body:', contractError.error.body);
+          }
+        }
+        return 0;
+      }
+    } catch (error) {
+      console.error('Error in getCurrentSupplyWithoutWallet:', error);
+      return 0;
+    } finally {
+      setPending(false);
     }
   };
 
@@ -133,6 +237,30 @@ export const useBuyTokens = () => {
     return parseFloat(utils.formatEther(totalCost));
   };
 
+  const getTotalCostWithoutWallet = async (amount: string) => {
+    try {
+      setPending(true);
+      if (!BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS || !BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI) {
+        console.debug('Config not yet initialized for dynamic sale contract');
+        return 0;
+      }
+
+      const readOnlyDynamicSale = await getReadOnlyContractInstance(
+        BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS,
+        BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI
+      );
+
+      const amountInWei = utils.parseEther(amount);
+      const { totalCost } = await readOnlyDynamicSale.calculateTotalCost(amountInWei);
+      return parseFloat(utils.formatEther(totalCost));
+    } catch (error) {
+      console.error('Error in getTotalCostWithoutWallet:', error);
+      return 0;
+    } finally {
+      setPending(false);
+    }
+  };
+
   const isCeurApproved = async (tdfAmount: string) => {
     const amountInWei = utils.parseEther(tdfAmount);
     const { DynamicSale, Ceur } = getContractInstances();
@@ -185,12 +313,15 @@ export const useBuyTokens = () => {
 
   return {
     getCurrentSupply,
+    getCurrentSupplyWithoutWallet,
     buyTokens,
     getTokensAvailableForPurchase,
     getTotalCost,
+    getTotalCostWithoutWallet,
     getUserTdfBalance,
     isCeurApproved,
     approveCeur,
     isPending,
+    isConfigReady,
   };
 };
