@@ -102,11 +102,7 @@ const FoodSelectionPage = ({
       setIsLoading(false);
     }
 
-    router.push(
-      `/bookings/${booking?._id}/summary?back=stay/${
-        listing?.slug
-      }&${getUrlParams()}`,
-    );
+    router.push(`/bookings/${booking?._id}/rules`);
   };
 
   const getUrlParams = () => {
@@ -127,17 +123,13 @@ const FoodSelectionPage = ({
 
   const goBack = () => {
     const dateFormat = 'YYYY-MM-DD';
-    if (router.query.back) {
       router.push(
-        `/${router.query.back}?start=${dayjs(start).format(
+        `/bookings/create/accomodation?start=${dayjs(start).format(
           dateFormat,
         )}&end=${dayjs(end).format(
           dateFormat,
         )}&adults=${adults}&useTokens=${useTokens}`,
       );
-    } else {
-      router.push(`/bookings/${booking?._id}/questions?goBack=true`);
-    }
   };
 
   if (!isBookingEnabled) {

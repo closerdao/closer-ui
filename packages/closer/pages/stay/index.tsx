@@ -132,9 +132,6 @@ const StayPage = ({
               className="font-accent"
               dangerouslySetInnerHTML={{ __html: t.raw('stay_title') }}
             />
-
-            {`
-            ${APP_NAME && APP_NAME === 'tdf' ? PLATFORM_NAME : ''}`}
           </Heading>
 
           <div
@@ -144,9 +141,6 @@ const StayPage = ({
         </div>
       </section>
 
-      {bookingRules?.enabled && bookingRules?.elements[0].title && (
-        <BookingRules rules={bookingRules?.elements} />
-      )}
 
       <section className="max-w-6xl mx-auto mb-16 flex align-center">
         <Link
@@ -160,24 +154,15 @@ const StayPage = ({
         {process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING &&
           opportunities &&
           opportunities?.length > 0 &&
-          volunteerConfig.enabled === true &&
-          APP_NAME !== 'tdf' && (
+          volunteerConfig.enabled === true && (
             <Link
               href="/volunteer"
               className="text-xl px-8 py-3 text-accent italic underline"
             >
               {t('buttons_volunteer')}
             </Link>
-          )}
-
-        {APP_NAME && APP_NAME === 'tdf' && (
-          <Link
-            href="/#how-to-play"
-            className="text-xl px-8 py-3 text-accent italic underline"
-          >
-            {t('button_other_ways_to_join')}
-          </Link>
-        )}
+          )
+        }
       </section>
 
       <section className="max-w-6xl mx-auto mb-16">
@@ -221,7 +206,7 @@ const StayPage = ({
         </div>
       </section>
 
-      <section>
+      {/* <section>
 
         {APP_NAME.toLowerCase() === 'tdf' && (
           <>
@@ -350,7 +335,7 @@ const StayPage = ({
             </section>
           </>
         )}
-      </section>
+      </section> */}
     </>
   );
 };
