@@ -1,5 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import { useFeatureFlagVariantKey } from 'posthog-js/react';
+import { useSearchParams } from 'next/navigation';
 
 import { useContext, useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
@@ -18,7 +20,6 @@ import {
   useAuth,
 } from 'closer';
 import { useBuyTokens } from 'closer/hooks/useBuyTokens';
-import api from 'closer/utils/api';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -30,6 +31,10 @@ const HomePage = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const { isWalletReady } = useContext(WalletState);
   const { getTokensAvailableForPurchase } = useBuyTokens();
+  const searchParams = useSearchParams();
+  const variant = searchParams.get('variant');
+  const featureFlag = useFeatureFlagVariantKey('uiVariant') || '1';
+  const uiVariant = variant || featureFlag;
 
   const [tokensAvailable, setTokensAvailable] = useState<number | null>(null);
   const [selectedReport, setSelectedReport] = useState<{
@@ -54,11 +59,11 @@ const HomePage = () => {
       onClick={() =>
         event('click', {
           category: 'HomePage',
-          label: t('home_cta_book_a_stay_event'),
+          label: t(`home_variant_${uiVariant}_cta_book_a_stay_event`),
         })
       }
     >
-      {t('home_cta_book_a_stay')}
+      {t(`home_variant_${uiVariant}_cta_book_a_stay`)}
     </Link>
   ) : (
     <Link
@@ -68,19 +73,19 @@ const HomePage = () => {
       onClick={() =>
         event('click', {
           category: 'HomePage',
-          label: t('home_cta_join_the_dream_event'),
+          label: t(`home_variant_${uiVariant}_cta_join_the_dream_event`),
         })
       }
     >
-      {t('home_cta_join_the_dream')}
+      {t(`home_variant_${uiVariant}_cta_join_the_dream`)}
     </Link>
   );
 
   return (
     <>
       <Head>
-        <title>{t('home_title')}</title>
-        <meta name="description" content={t('home_meta_description')} />
+        <title>{t(`home_variant_${uiVariant}_title`)}</title>
+        <meta name="description" content={t(`home_variant_${uiVariant}_meta_description`)} />
         <link
           rel="canonical"
           href="https://www.traditionaldreamfactory.com/"
@@ -117,12 +122,13 @@ const HomePage = () => {
                 display
                 level={1}
               >
-                {t('home_hero_title')}
+                {t(`home_variant_${uiVariant}_hero_title`)}
               </Heading>
               <div className="my-4">
                 <p className="text-xl md:text-2xl max-w-3xl">
-                  {t('home_hero_subtitle')}
+                  {t(`home_variant_${uiVariant}_hero_subtitle`)}
                 </p>
+                <p>Website variant: {uiVariant}</p>
               </div>
               <div>{CTA}</div>
             </div>
@@ -138,11 +144,11 @@ const HomePage = () => {
               display
               className="text-center md:text-left mb-6 md:text-6xl"
             >
-              {t('home_about_title')}
+              {t(`home_variant_${uiVariant}_about_title`)}
             </Heading>
 
             <p className="text-center md:text-left mb-6">
-              {t('home_about_subtitle')}
+              {t(`home_variant_${uiVariant}_about_subtitle`)}
             </p>
             <div className="md:flex md:flex-cols-2 md:space-x-6">
               <ul className="space-y-6 md:w-1/2">
@@ -153,7 +159,7 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    {t('home_about_coworking')}
+                    {t(`home_variant_${uiVariant}_about_coworking`)}
                   </Heading>
                 </li>
                 <li className="flex justify-start items-center">
@@ -163,7 +169,7 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    {t('home_about_van_parking')}
+                    {t(`home_variant_${uiVariant}_about_van_parking`)}
                   </Heading>
                 </li>
                 <li className="flex justify-start items-center">
@@ -173,7 +179,7 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    {t('home_about_glamping')}
+                    {t(`home_variant_${uiVariant}_about_glamping`)}
                   </Heading>
                 </li>
                 <li className="flex justify-start items-center">
@@ -183,9 +189,9 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    {t('home_about_food_forest')}
+                    {t(`home_variant_${uiVariant}_about_food_forest`)}
                     <p className="text-sm font-light">
-                      {t('home_about_food_forest_sub')}
+                      {t(`home_variant_${uiVariant}_about_food_forest_sub`)}
                     </p>
                   </Heading>
                 </li>
@@ -196,9 +202,9 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    {t('home_about_market_garden')}
+                    {t(`home_variant_${uiVariant}_about_market_garden`)}
                     <small className="text-sm font-light">
-                      {t('home_about_market_garden_sub')}
+                      {t(`home_variant_${uiVariant}_about_market_garden_sub`)}
                     </small>
                   </Heading>
                 </li>
@@ -209,9 +215,9 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    {t('home_about_mushroom_farm')}
+                    {t(`home_variant_${uiVariant}_about_mushroom_farm`)}
                     <Tag className="m-1" color="primary">
-                      {t('home_about_coming_soon')}
+                      {t(`home_variant_${uiVariant}_about_coming_soon`)}
                     </Tag>
                   </Heading>
                 </li>
@@ -224,7 +230,7 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    {t('home_about_event_space')}
+                    {t(`home_variant_${uiVariant}_about_event_space`)}
                   </Heading>
                 </li>
                 <li className="flex justify-start items-center">
@@ -234,7 +240,7 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    {t('home_about_sauna')}
+                    {t(`home_variant_${uiVariant}_about_sauna`)}
                   </Heading>
                 </li>
                 <li className="flex justify-start items-center">
@@ -244,9 +250,9 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    {t('home_about_natural_pool')}
+                    {t(`home_variant_${uiVariant}_about_natural_pool`)}
                     <Tag className="m-1" color="primary">
-                      {t('home_about_coming_soon')}
+                      {t(`home_variant_${uiVariant}_about_coming_soon`)}
                     </Tag>
                   </Heading>
                 </li>
@@ -257,7 +263,7 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    {t('home_about_pizza_oven')}
+                    {t(`home_variant_${uiVariant}_about_pizza_oven`)}
                   </Heading>
                 </li>
                 <li className="flex justify-start items-center">
@@ -267,7 +273,7 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    {t('home_about_coffee_shop')}
+                    {t(`home_variant_${uiVariant}_about_coffee_shop`)}
                   </Heading>
                 </li>
                 <li className="flex justify-start items-center">
@@ -277,7 +283,7 @@ const HomePage = () => {
                     className="mr-1 w-12"
                   />
                   <Heading display level={4} className="md:text-sm">
-                    {t('home_about_makerspace')}
+                    {t(`home_variant_${uiVariant}_about_makerspace`)}
                   </Heading>
                 </li>
               </ul>
@@ -290,7 +296,7 @@ const HomePage = () => {
         <section>
           <div className="w-full flex justify-center flex-wrap mb-24">
             <p className="w-full font-bold uppercase text-center mb-6">
-              {t('home_reports_title')}
+              {t(`home_variant_${uiVariant}_reports_title`)}
             </p>
             <div className="flex w-full justify-center gap-4">
               <Button
@@ -302,7 +308,7 @@ const HomePage = () => {
                   })
                 }
               >
-                {t('home_reports_2021')}
+                {t(`home_variant_${uiVariant}_reports_2021`)}
               </Button>
               <Button
                 className="w-fit"
@@ -313,7 +319,7 @@ const HomePage = () => {
                   })
                 }
               >
-                {t('home_reports_2022')}
+                {t(`home_variant_${uiVariant}_reports_2022`)}
               </Button>
               <Button
                 className="w-fit"
@@ -324,7 +330,7 @@ const HomePage = () => {
                   })
                 }
               >
-                {t('home_reports_2024')}
+                {t(`home_variant_${uiVariant}_reports_2024`)}
               </Button>
             </div>
           </div>
@@ -338,30 +344,30 @@ const HomePage = () => {
           </div>
           <div className="max-w-prose">
             <Heading className="text-center md:text-left mb-6 uppercase text-2xl font-black flex">
-              {t('home_coliving_title')}
+              {t(`home_variant_${uiVariant}_coliving_title`)}
               <span className="justify-center align-center -mt-1 ml-4">
-                <Tag color="primary">{t('home_coliving_plans_approved')}</Tag>
+                <Tag color="primary">{t(`home_variant_${uiVariant}_coliving_plans_approved`)}</Tag>
               </span>
             </Heading>
             <div className="md:flex md:flex-cols-2 md:space-x-2">
               <ul className="space-y-6">
                 <li className="">
                   <Heading className="uppercase bold" level={3}>
-                    {t('home_coliving_building_14_suites')}
+                    {t(`home_variant_${uiVariant}_coliving_building_14_suites`)}
                   </Heading>
-                  <p>{t('home_coliving_building_14_suites_desc')}</p>
+                  <p>{t(`home_variant_${uiVariant}_coliving_building_14_suites_desc`)}</p>
                 </li>
                 <li className="">
                   <Heading className="uppercase bold" level={3}>
-                    {t('home_coliving_bioclimatic_buildings')}
+                    {t(`home_variant_${uiVariant}_coliving_bioclimatic_buildings`)}
                   </Heading>
-                  <p>{t('home_coliving_bioclimatic_buildings_desc')}</p>
+                  <p>{t(`home_variant_${uiVariant}_coliving_bioclimatic_buildings_desc`)}</p>
                 </li>
                 <li className="">
                   <Heading className="uppercase bold" level={3}>
-                    {t('home_coliving_mixed_use')}
+                    {t(`home_variant_${uiVariant}_coliving_mixed_use`)}
                   </Heading>
-                  <p>{t('home_coliving_mixed_use_desc')}</p>
+                  <p>{t(`home_variant_${uiVariant}_coliving_mixed_use_desc`)}</p>
                 </li>
               </ul>
             </div>
@@ -371,34 +377,34 @@ const HomePage = () => {
         <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2 space-x-4">
           <div className="max-w-prose">
             <Heading className="text-center md:text-left mb-6 uppercase text-2xl font-black">
-              {t('home_agroforestry_title')}
+              {t(`home_variant_${uiVariant}_agroforestry_title`)}
             </Heading>
-            <p>{t('home_agroforestry_desc')}</p>
+            <p>{t(`home_variant_${uiVariant}_agroforestry_desc`)}</p>
             <div className="md:flex md:flex-cols-2 mt-6">
               <ul className="space-y-6">
                 <li className="">
                   <Heading className="uppercase bold" level={3}>
-                    {t('home_agroforestry_water_retention')}
+                    {t(`home_variant_${uiVariant}_agroforestry_water_retention`)}
                   </Heading>
-                  <p>{t('home_agroforestry_water_retention_desc')}</p>
+                  <p>{t(`home_variant_${uiVariant}_agroforestry_water_retention_desc`)}</p>
                 </li>
 
                 <li className="">
                   <Heading className="uppercase bold" level={3}>
-                    {t('home_agroforestry_restorative_farming')}
+                    {t(`home_variant_${uiVariant}_agroforestry_restorative_farming`)}
                   </Heading>
-                  <p>{t('home_agroforestry_restorative_farming_desc')}</p>
+                  <p>{t(`home_variant_${uiVariant}_agroforestry_restorative_farming_desc`)}</p>
                 </li>
 
                 <li className="">
                   <Heading className="uppercase bold" level={3}>
-                    {t('home_agroforestry_biochar')}
+                    {t(`home_variant_${uiVariant}_agroforestry_biochar`)}
                   </Heading>
-                  <p>{t('home_agroforestry_biochar_desc')}</p>
+                  <p>{t(`home_variant_${uiVariant}_agroforestry_biochar_desc`)}</p>
                 </li>
 
                 <li className="italic mt-6">
-                  {t('home_agroforestry_scalability')}
+                  {t(`home_variant_${uiVariant}_agroforestry_scalability`)}
                 </li>
               </ul>
             </div>
@@ -410,12 +416,12 @@ const HomePage = () => {
           </div>
         </section>
 
-        <section className="py-20 my-12 bg-black text-white -mx-4">
+        <section className="py-20 mt-12 bg-black text-white -mx-4">
           <div className="text-center mb-20">
             <div className="w-full flex items-center flex-col">
               <div className="max-w-prose">
                 <p className="text-2xl max-w-prose">
-                  {t('home_meet_your_tribe')}
+                  {t(`home_variant_${uiVariant}_meet_your_tribe`)}
                 </p>
               </div>
             </div>
@@ -428,13 +434,13 @@ const HomePage = () => {
             level={1}
             className="text-right  text-3xl md:text-6xl font-extrabold uppercase px-4 drop-shadow-lg mb-2 md:mb-8 md:text-center max-w-[700px] mt-1 md:mt-[100px] md:bg-[url('/images/token-sale/token-illy.png')] bg-no-repeat pt-[20px] md:pt-[130px] bg-top"
           >
-            {t('home_token_hero_title')}
+            {t(`home_variant_${uiVariant}_token_hero_title`)}
           </Heading>
           <Heading
             level={2}
             className="font-bold text-right uppercase md:text-center px-4 text-xl md:text-md max-w-[700px] mb-4"
           >
-            {t('home_token_hero_subtitle')}
+            {t(`home_variant_${uiVariant}_token_hero_subtitle`)}
           </Heading>
           <LinkButton
             className="!w-60 font-bold mb-3 md:mb-8 relative text-xl mx-4"
@@ -485,39 +491,39 @@ const HomePage = () => {
                 level={2}
                 className="text-center md:text-left mb-4 uppercase text-2xl font-black"
               >
-                {t('home_how_to_play_title')}
+                {t(`home_variant_${uiVariant}_how_to_play_title`)}
               </Heading>
-              <p>{t('home_how_to_play_desc_1')}</p>
-              <p>{t('home_how_to_play_desc_2')}</p>
+              <p>{t(`home_variant_${uiVariant}_how_to_play_desc_1`)}</p>
+              <p>{t(`home_variant_${uiVariant}_how_to_play_desc_2`)}</p>
             </div>
             <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-center align-center">
               <div className="p-4 border-2 border-primary rounded-xl md:w-[30%]">
                 <div className="flex justify-between flex-col h-full">
                   <div>
                     <Heading level={4} className="text-center">
-                      {t('home_how_to_play_guest_title')}
+                      {t(`home_variant_${uiVariant}_how_to_play_guest_title`)}
                     </Heading>
                     <p className="my-2 italic">
-                      {t('home_how_to_play_guest_desc')}
+                      {t(`home_variant_${uiVariant}_how_to_play_guest_desc`)}
                     </p>
                     <ul>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t('home_how_to_play_guest_bullet_1')}
+                        {t(`home_variant_${uiVariant}_how_to_play_guest_bullet_1`)}
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t('home_how_to_play_guest_bullet_2')}
+                        {t(`home_variant_${uiVariant}_how_to_play_guest_bullet_2`)}
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t('home_how_to_play_guest_bullet_3')}
+                        {t(`home_variant_${uiVariant}_how_to_play_guest_bullet_3`)}
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t('home_how_to_play_guest_bullet_4')}
+                        {t(`home_variant_${uiVariant}_how_to_play_guest_bullet_4`)}
                       </li>
                     </ul>
                   </div>
                   <div className="mt-4 mb-4 flex justify-center align-center">
                     <Link href="/stay" className="uppercase btn-primary">
-                      {t('home_how_to_play_guest_cta')}
+                      {t(`home_variant_${uiVariant}_how_to_play_guest_cta`)}
                     </Link>
                   </div>
                 </div>
@@ -526,26 +532,26 @@ const HomePage = () => {
                 <div className="flex justify-between flex-col h-full">
                   <div>
                     <Heading level={4} className="text-center">
-                      {t('home_how_to_play_volunteer_title')}
+                      {t(`home_variant_${uiVariant}_how_to_play_volunteer_title`)}
                     </Heading>
                     <p className="my-2 italic">
-                      {t('home_how_to_play_volunteer_desc')}
+                      {t(`home_variant_${uiVariant}_how_to_play_volunteer_desc`)}
                     </p>
                     <ul>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t('home_how_to_play_volunteer_bullet_1')}
+                        {t(`home_variant_${uiVariant}_how_to_play_volunteer_bullet_1`)}
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t('home_how_to_play_volunteer_bullet_2')}
+                        {t(`home_variant_${uiVariant}_how_to_play_volunteer_bullet_2`)}
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t('home_how_to_play_volunteer_bullet_3')}
+                        {t(`home_variant_${uiVariant}_how_to_play_volunteer_bullet_3`)}
                       </li>
                     </ul>
                   </div>
                   <div className="mt-4 mb-4 flex justify-center align-center">
                     <Link href="/volunteer" className="uppercase btn-primary">
-                      {t('home_how_to_play_volunteer_cta')}
+                      {t(`home_variant_${uiVariant}_how_to_play_volunteer_cta`)}
                     </Link>
                   </div>
                 </div>
@@ -554,32 +560,32 @@ const HomePage = () => {
                 <div className="flex justify-between flex-col h-full">
                   <div>
                     <Heading level={4} className="text-center">
-                      {t('home_how_to_play_resident_title')}
+                      {t(`home_variant_${uiVariant}_how_to_play_resident_title`)}
                     </Heading>
                     <p className="my-2 italic">
-                      {t('home_how_to_play_resident_desc')}
+                      {t(`home_variant_${uiVariant}_how_to_play_resident_desc`)}
                     </p>
                     <ul>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t('home_how_to_play_resident_bullet_1')}
+                        {t(`home_variant_${uiVariant}_how_to_play_resident_bullet_1`)}
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t('home_how_to_play_resident_bullet_2')}
+                        {t(`home_variant_${uiVariant}_how_to_play_resident_bullet_2`)}
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t('home_how_to_play_resident_bullet_3')}
+                        {t(`home_variant_${uiVariant}_how_to_play_resident_bullet_3`)}
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t('home_how_to_play_resident_bullet_4')}
+                        {t(`home_variant_${uiVariant}_how_to_play_resident_bullet_4`)}
                       </li>
                       <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t('home_how_to_play_resident_bullet_5')}
+                        {t(`home_variant_${uiVariant}_how_to_play_resident_bullet_5`)}
                       </li>
                     </ul>
                   </div>
                   <div className="mt-4 mb-4 flex justify-center align-center">
                     <Link href="/projects" className="uppercase btn-primary">
-                      {t('home_how_to_play_resident_cta')}
+                      {t(`home_variant_${uiVariant}_how_to_play_resident_cta`)}
                     </Link>
                   </div>
                 </div>
@@ -591,24 +597,24 @@ const HomePage = () => {
         <section className="flex justify-center my-20 -mx-4 p-4 py-12 bg-black text-white">
           <div className="max-w-prose flex flex-wrap">
             <Heading className="text-center md:text-left mb-6 uppercase text-2xl font-black">
-              {t('home_movement_title')}
+              {t(`home_variant_${uiVariant}_movement_title`)}
             </Heading>
             <p className="mb-8">
-              {t('home_movement_desc_1')}{' '}
+              {t(`home_variant_${uiVariant}_movement_desc_1`)}{' '}
               <Link
                 href="https://docs.google.com/document/d/1Ocv9rtRkDxsJmeRxrL6mV07EyWcHc2YqfN8mHoylO2E/edit"
                 className="underline"
               >
-                {t('home_movement_link')}
+                {t(`home_variant_${uiVariant}_movement_link`)}
               </Link>{' '}
-              {t('home_movement_desc_2')}
+              {t(`home_variant_${uiVariant}_movement_desc_2`)}
             </p>
             <Link
               href="https://oasa.earth/"
               target="_blank"
               className="underline"
             >
-              {t('home_movement_learn_more')}
+              {t(`home_variant_${uiVariant}_movement_learn_more`)}
             </Link>
           </div>
         </section>
@@ -617,37 +623,25 @@ const HomePage = () => {
 
         {/* this is needed because video embed in the header causes layout to be cut off at the bottom of the page */}
         <section className="mb-[120vh]"></section>
+
+        {selectedReport && (
+          <ReportDownloadModal
+            closeModal={() => setSelectedReport(null)}
+            reportYear={selectedReport.year}
+            reportUrl={selectedReport.url}
+          />
+        )}
       </div>
-      {selectedReport && (
-        <ReportDownloadModal
-          closeModal={() => setSelectedReport(null)}
-          reportYear={selectedReport.year}
-          reportUrl={selectedReport.url}
-        />
-      )}
     </>
   );
 };
 
-HomePage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [subsRes, messages] = await Promise.all([
-      api.get('/config/subscriptions').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const subscriptionsConfig = subsRes?.data?.results?.value.plans;
-
-    return {
-      subscriptionsConfig,
-      messages,
-    };
-  } catch (err) {
-    return {
-      subscriptionsConfig: { enabled: false, plans: [] },
-      error: err,
-      messages: null,
-    };
-  }
-};
-
 export default HomePage;
+
+export async function getStaticProps({ locale }: NextPageContext) {
+  return {
+    props: {
+      messages: await loadLocaleData(locale, 'tdf'),
+    },
+  };
+}
