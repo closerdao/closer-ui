@@ -14,7 +14,7 @@ const tdfTheme = {
       'complimentary-medium': '#262626',
       'complimentary-light': '#333333',
       accent: '#205C66',
-      'accent-dark': '#4a770c',
+      'accent-dark': '#213427',
       'accent-medium': '#FFC8E9',
       'accent-light': '#f9d7c5',
       'accent-alt': '#AF8F2E',

@@ -24,13 +24,17 @@ const WalletActions = () => {
   }
 
   if (!isWalletConnected) {
+    console.log('[WalletActions] Rendering connect wallet button');
     return (
       <>
         <p className="my-4 text-xs">{t('wallet_not_connected_cta')}</p>
         <Button
           variant="secondary"
           className=" mt-4 w-full uppercase"
-          onClick={connectWallet}
+          onClick={() => {
+            console.log('[WalletActions] Connect wallet button clicked');
+            connectWallet();
+          }}
         >
           {t('wallet_not_connected_button')}
         </Button>

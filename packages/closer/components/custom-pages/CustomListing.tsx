@@ -14,6 +14,7 @@ const CustomListing: React.FC<{
     isAccommodations?: boolean;
     isColorful?: boolean;
     id?: string;
+    hasBorder?: boolean;
   };
   content: {
     title: string;
@@ -54,9 +55,9 @@ const CustomListing: React.FC<{
   };
 
   return (
-    <div>
+    <div className=" py-10 ">
       {settings?.id && <div className="h-[80px]" id={settings?.id}></div>}
-      <section className="max-w-4xl mx-auto flex flex-col gap-[60px] ">
+      <section className="max-w-4xl mx-auto flex flex-col gap-[60px]">
         <div className="flex flex-col gap-4 text-center">
           <Heading
             level={2}
@@ -66,11 +67,13 @@ const CustomListing: React.FC<{
           </Heading>
           <p className="text-foreground text-md">{content?.description}</p>
         </div>
-        <div className="flex flex-wrap justify-center gap-6">
+        <div className="flex flex-wrap justify-center gap-6  gap-y-[50px]">
           {content?.items?.map((item) => (
             <div
               key={item.title}
-              className="flex flex-col  gap-6 text-center"
+              className={`flex flex-col  gap-6 text-center ${
+                settings?.hasBorder ? 'border shadow-sm rounded-md p-3' : ''
+              }`}
               style={{
                 width: isSmallScreen
                   ? 'calc(100% - 30px)'
@@ -106,7 +109,7 @@ const CustomListing: React.FC<{
                 <Heading
                   display={false}
                   level={3}
-                  className="font-normal text-lg"
+                  className="font-bold text-md"
                 >
                   {item.title}
                 </Heading>

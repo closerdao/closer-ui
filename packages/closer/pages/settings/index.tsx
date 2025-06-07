@@ -390,12 +390,174 @@ const SettingsPage = ({
           </div>
         )}
 
-        {showSaveSuccess && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-md mb-6 animate-fade-out">
-            <span className="block sm:inline">
-              {t('settings_changes_saved_successfully')}
-            </span>
-          </div>
+       <Heading
+          level={3}
+          className="border-b border-divider pb-2.5 leading-9 mt-12"
+        >
+          ⭐ Profile
+        </Heading>
+
+        <Input
+          label="About me (max 500 characters)"
+          additionalInfo={
+            APP_NAME === 'moos' ? 'Required to make bookings' : ''
+          }
+          isRequired={APP_NAME === 'moos' ? true : false}
+          placeholder="Tell us more about yourself"
+          value={user.about}
+          onChange={saveUserData('about') as any}
+          isInstantSave={true}
+          hasSaved={hasSaved}
+          setHasSaved={setHasSaved}
+          maxLength={500}
+        />
+
+       <div className="relative mt-8 flex flex-col gap-6 group">
+          <label className="font-medium text-complimentary-light" htmlFor="">
+            Profile Picture{' '}
+            {APP_NAME === 'moos' && (
+              <span className="text-red-500">[Required to make bookings]*</span>
+            )}
+          </label>
+          <UploadPhoto
+            model="user"
+            id={user._id}
+            label={user.photo ? 'Change' : 'Add photo'}
+            className="my-4"
+          />
+        </div>
+
+        <Heading
+          level={3}
+          className="border-b border-divider pb-2.5 leading-9 mt-12"
+        >
+          ⭐ Account
+        </Heading>
+
+       <Input
+          label="Name"
+          placeholder="Your name"
+          value={user.screenname}
+          onChange={saveUserData('screenname') as any}
+          isInstantSave={true}
+          hasSaved={hasSaved}
+          setHasSaved={setHasSaved}
+        />
+        <Input
+          label="Email"
+          value={user.email}
+          isDisabled={!updateEmail}
+          onChange={(e) => setUser({ ...user, email: e.target.value })}
+          successMessage={
+            emailSaved
+              ? 'You will receive a link to confirm via email.'
+              : undefined
+          }
+          validation="email"
+        />
+        <div>
+          {updateEmail && !emailSaved ? (
+            <>
+              <Button
+                onClick={() => saveEmail(user.email)}
+                isEnabled={!emailSaving}
+                variant="inline"
+              >
+                {emailSaving ? 'Verifying...' : 'Verify Email'}
+              </Button>
+              <Button
+                onClick={() => {
+                  setUser({ ...user, email: initialUser?.email || user.email });
+                  toggleUpdateEmail(false);
+                }}
+                className="ml-4"
+                variant="inline"
+              >
+                Cancel
+              </Button>
+            </>
+          ) : (
+            !emailSaved && (
+              <Button
+                onClick={() => toggleUpdateEmail(!updateEmail)}
+                variant="inline"
+              >
+                Edit Email
+              </Button>
+            )
+          )}
+        </div>
+
+       <Input
+          label="Phone"
+          isDisabled={!updatePhone}
+          value={user.phone}
+          onChange={(e) => setUser({ ...user, phone: e.target.value })}
+          successMessage={
+            phoneSaved
+              ? 'You will receive a link to confirm via text.'
+              : undefined
+          }
+          validation="phone"
+        />
+        <div>
+          {updatePhone && !phoneSaved ? (
+            <>
+              <Button
+                onClick={() => savePhone(user.phone)}
+                isEnabled={!phoneSaving}
+                variant="inline"
+              >
+                {phoneSaving ? 'Verifying...' : 'Verify Phone'}
+              </Button>
+              <Button
+                onClick={() => {
+                  setUser({ ...user, phone: initialUser?.phone || user.phone });
+                  toggleUpdatePhone(false);
+                }}
+                className="ml-4"
+                variant="inline"
+              >
+                Cancel
+              </Button>
+            </>
+          ) : (
+            !phoneSaved && (
+              <Button
+                onClick={() => toggleUpdatePhone(!updatePhone)}
+                variant="inline"
+              >
+                Edit Phone
+              </Button>
+            )
+          )}
+        </div>
+
+        <div id="recommended"></div>
+        <Heading
+          level={3}
+          className="border-b border-divider pb-2.5 leading-9 mt-12"
+        >
+          🔰 Recommended
+        </Heading>
+
+       <MultiSelect
+          label="Dietary Preferences?"
+          values={initialDiet}
+          onChange={saveUserData('diet')}
+          options={dietOptions}
+          placeholder="Pick or create yours"
+        />
+
+       {APP_NAME && APP_NAME.toLowerCase() !== 'moos' && (
+          <Select
+            label="Shared Accommodation Preference"
+            value={user?.preferences?.sharedAccomodation}
+            options={SHARED_ACCOMODATION_PREFERENCES}
+            className="mt-8"
+            onChange={saveUserData('sharedAccomodation')}
+            isRequired
+          />
         )}
 
         <div className="flex flex-col md:flex-row gap-8">

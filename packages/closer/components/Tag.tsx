@@ -8,6 +8,7 @@ const colors = {
   white: 'bg-white-200 text-gray-700',
   primary: 'bg-accent-light text-accent',
   neutral: 'bg-neutral text-foreground',
+  dark: 'bg-accent-dark text-background',
 };
 
 const sizes = {

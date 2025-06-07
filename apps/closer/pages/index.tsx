@@ -42,12 +42,14 @@ const HomePage = ({ generalConfig }: Props) => {
   return (
     <div>
       <Head>
-        <title>{`Welcome to ${PLATFORM_NAME}!`}</title>
+        <title>Community Management for Regenerative Villages</title>
         <meta
           name="description"
-          content="Manage guests, spaces, events and resources through one intuitive platform designed specifically for land-based projects"
+          content="Streamline operations and build stronger community engagement. Manage bookings, events, payments, and community knowledge in one platform."
         />
       </Head>
+
+    
 
       <CloserEmailCollector />
 
@@ -486,13 +488,13 @@ const HomePage = ({ generalConfig }: Props) => {
                   community&apos;s core mission.
                 </p>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <Tag color="primary" size="small">
+                  <Tag color="dark" size="small">
                     Booking System
                   </Tag>
-                  <Tag color="primary" size="small">
+                  <Tag color="dark" size="small">
                     Event Management
                   </Tag>
-                  <Tag color="primary" size="small">
+                  <Tag color="dark" size="small">
                     Resource Tracking
                   </Tag>
                 </div>
@@ -514,13 +516,13 @@ const HomePage = ({ generalConfig }: Props) => {
                   resources that reinforce your community&apos;s values.
                 </p>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <Tag color="primary" size="small">
+                  <Tag color="dark" size="small">
                     Membership System
                   </Tag>
-                  <Tag color="primary" size="small">
+                  <Tag color="dark" size="small">
                     Learning Hub
                   </Tag>
-                  <Tag color="primary" size="small">
+                  <Tag color="dark" size="small">
                     Subscriptions
                   </Tag>
                 </div>
@@ -542,13 +544,13 @@ const HomePage = ({ generalConfig }: Props) => {
                   active participation and care for your shared resources.
                 </p>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <Tag color="primary" size="small">
+                  <Tag color="dark" size="small">
                     Community Tokens
                   </Tag>
-                  <Tag color="primary" size="small">
+                  <Tag color="dark" size="small">
                     Proof of Presence
                   </Tag>
-                  <Tag color="primary" size="small">
+                  <Tag color="dark" size="small">
                     Decentralized Governance
                   </Tag>
                 </div>
@@ -581,7 +583,6 @@ const HomePage = ({ generalConfig }: Props) => {
                     Seed
                   </Heading>
                   <p className="text-gray-500 mb-4">
-                    Perfect for small co-living spaces and communities.
                     Everything you need to run your community day-to-day
                   </p>
                 </div>
@@ -627,7 +628,7 @@ const HomePage = ({ generalConfig }: Props) => {
             </Card>
             {/* Plant Plan */}
             <Card className="bg-white border-2 border-accent-alt p-8 flex flex-col justify-start relative shadow-lg">
-              <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r to-accent-alt from-accent text-white px-6 py-2 rounded-full font-semibold text-sm">
+              <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r to-accent-alt from-accent-dark  text-white px-6 py-2 rounded-full font-semibold text-sm">
                 Popular
               </div>
 
@@ -688,7 +689,7 @@ const HomePage = ({ generalConfig }: Props) => {
                   </p>
                 </div>
                 <div className="mb-4 space-y-2 h-[130px]">
-                  <p className="text-3xl font-bold ">Contact us</p>
+                  <p className="text-5xl font-bold ">Contact us</p>
                   <p className="text-gray-500 text-sm">
                     Custom pricing based on your needs
                   </p>
@@ -714,10 +715,10 @@ const HomePage = ({ generalConfig }: Props) => {
                 </li>
               </ul>
 
-              <p>Coming soon</p>
+
             </Card>
           </div>
-          <p className="text-xs text-gray-400 mt-8">
+          <p className="text-xs text-gray-400 mt-8 px-2">
             * Transaction fees can be reduced based on your community&apos;s
             verified regenerative practices. The more regenerative impact you
             create, the lower your fees become.
