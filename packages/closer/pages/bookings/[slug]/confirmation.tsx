@@ -2,18 +2,14 @@ import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
 
-import BookingBackButton from '../../../components/BookingBackButton';
 import BookingResult from '../../../components/BookingResult';
 import PageError from '../../../components/PageError';
 import Button from '../../../components/ui/Button';
-import Heading from '../../../components/ui/Heading';
-import ProgressBar from '../../../components/ui/ProgressBar';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
-import { BOOKING_STEPS } from '../../../constants';
 import {
   BaseBookingParams,
   Booking,
