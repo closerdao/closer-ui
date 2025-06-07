@@ -20,7 +20,6 @@ import {
   useAuth,
 } from 'closer';
 import { useBuyTokens } from 'closer/hooks/useBuyTokens';
-import api from 'closer/utils/api';
 import { withBoldStyle } from 'closer/utils/helpers';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
@@ -258,16 +257,6 @@ const HomePage = () => {
                     </Tag>
                   </Heading>
                 </li>
-                {/* <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/restaurant.png"
-                    alt="Restaurant plate"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    {t(`home_variant_${uiVariant}_about_pizza_oven`)}
-                  </Heading>
-                </li> */}
                 <li className="flex justify-start items-center">
                   <img
                     src="/images/icons/cafe.png"
@@ -303,6 +292,7 @@ const HomePage = () => {
             <div className="flex w-full justify-center gap-4">
               <Button
                 className="w-fit"
+                variant="secondary"
                 onClick={() =>
                   setSelectedReport({
                     year: '2021',
@@ -314,6 +304,7 @@ const HomePage = () => {
               </Button>
               <Button
                 className="w-fit"
+                variant="secondary"
                 onClick={() =>
                   setSelectedReport({
                     year: '2022',
@@ -338,11 +329,9 @@ const HomePage = () => {
           </div>
         </section>
 
-        <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2 space-x-4">
-          <div>
-            <div className="md:pl-4 mt-5">
-              <img src="/images/maps/co-living.png" alt="TDF Orchard Map" />
-            </div>
+        <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2 items-center content-center space-x-8">
+          <div className="md:pl-4 mt-5">
+            <img src="/images/maps/co-living.png" alt="TDF Orchard Map" />
           </div>
           <div className="max-w-prose">
             <Heading className="text-center md:text-left mb-6 uppercase text-2xl font-black flex">
@@ -375,49 +364,6 @@ const HomePage = () => {
             </div>
           </div>
         </section>
-
-        <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2 space-x-4">
-          <div className="max-w-prose">
-            <Heading className="text-center md:text-left mb-6 uppercase text-2xl font-black">
-              {t(`home_variant_${uiVariant}_agroforestry_title`)}
-            </Heading>
-            <p>{t(`home_variant_${uiVariant}_agroforestry_desc`)}</p>
-            <div className="md:flex md:flex-cols-2 mt-6">
-              <ul className="space-y-6">
-                <li className="">
-                  <Heading className="uppercase bold" level={3}>
-                    {t(`home_variant_${uiVariant}_agroforestry_water_retention`)}
-                  </Heading>
-                  <p>{t(`home_variant_${uiVariant}_agroforestry_water_retention_desc`)}</p>
-                </li>
-
-                <li className="">
-                  <Heading className="uppercase bold" level={3}>
-                    {t(`home_variant_${uiVariant}_agroforestry_restorative_farming`)}
-                  </Heading>
-                  <p>{t(`home_variant_${uiVariant}_agroforestry_restorative_farming_desc`)}</p>
-                </li>
-
-                <li className="">
-                  <Heading className="uppercase bold" level={3}>
-                    {t(`home_variant_${uiVariant}_agroforestry_biochar`)}
-                  </Heading>
-                  <p>{t(`home_variant_${uiVariant}_agroforestry_biochar_desc`)}</p>
-                </li>
-
-                <li className="italic mt-6">
-                  {t(`home_variant_${uiVariant}_agroforestry_scalability`)}
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div>
-            <div className="md:pl-4 mt-5">
-              <img src="/images/maps/orchard.png" alt="TDF Orchard Map" />
-            </div>
-          </div>
-        </section>
-
 
         <section
           className="relative flex items-center justify-end h-screen my-20 w-full bg-cover bg-center bg-[url('/images/landing/land-plan.png')]"

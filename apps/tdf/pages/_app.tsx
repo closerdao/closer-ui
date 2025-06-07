@@ -179,7 +179,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         </>
       )}
 
-      {/* <PostHogProvider client={posthog}> */}
+      <PostHogProvider client={posthog}>
         <ConfigProvider
           config={{
             ...config,
@@ -214,7 +214,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
             </NextIntlClientProvider>
           </ErrorBoundary>
         </ConfigProvider>
-      {/* </PostHogProvider> */}
+      </PostHogProvider>
     </>
   );
 };
