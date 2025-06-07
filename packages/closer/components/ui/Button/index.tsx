@@ -17,7 +17,7 @@ import Spinner from '../Spinner';
 
 const buttonStyles = cva(
   // 'px-4 border-2 border-accent flex justify-center text-lg rounded-full uppercase tracking-wide ',
-  'whitespace-nowrap px-4 border-2 flex justify-center items-center text-lg rounded-full uppercase tracking-wide',
+  'whitespace-nowrap px-4 border-2 flex justify-center items-center text-lg rounded-full uppercase tracking-wide hover:scale-105 duration-150 ',
   {
     variants: {
       color: {

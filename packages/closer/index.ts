@@ -62,6 +62,7 @@ export { default as BookingConfirmationPage } from './pages/bookings/[slug]/conf
 export { default as FoodSelectionPage } from './pages/bookings/[slug]/food';
 export { default as BookingPage } from './pages/bookings/[slug]/index';
 export { default as BookingQuestionsPage } from './pages/bookings/[slug]/questions';
+export { default as BookingRulesPage } from './pages/bookings/[slug]/rules';
 export { default as BookingSummaryPage } from './pages/bookings/[slug]/summary';
 export { default as AllBookingsRequestsPage } from './pages/bookings/all';
 export { default as BookingsCalendarPage } from './pages/bookings/calendar';

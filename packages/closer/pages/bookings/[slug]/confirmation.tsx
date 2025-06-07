@@ -2,18 +2,14 @@ import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
 
-import BookingBackButton from '../../../components/BookingBackButton';
 import BookingResult from '../../../components/BookingResult';
 import PageError from '../../../components/PageError';
 import Button from '../../../components/ui/Button';
-import Heading from '../../../components/ui/Heading';
-import ProgressBar from '../../../components/ui/ProgressBar';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
-import { BOOKING_STEPS } from '../../../constants';
 import {
   BaseBookingParams,
   Booking,
@@ -85,15 +81,8 @@ const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
   return (
     <>
       <div className="max-w-screen-sm mx-auto p-8">
-        <BookingBackButton onClick={goBack} />
-        <Heading className="pb-4 mt-8">
-          <span className="mr-2">🎊</span>
-          <span>{t('bookings_confirmation_step_success')}</span>
-        </Heading>
-        <ProgressBar steps={BOOKING_STEPS} />
         <div className="mt-16 flex flex-col gap-16 flex-nowrap">
           <BookingResult booking={booking} eventName={event?.name || ''} />
-
           <Button onClick={() => viewBooking(_id)}>
             {eventId
               ? t('ticket_list_view_ticket')
