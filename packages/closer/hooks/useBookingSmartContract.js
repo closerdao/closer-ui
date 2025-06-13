@@ -90,10 +90,14 @@ export const useBookingSmartContract = ({ bookingNights }) => {
 
       // do not send Divvi referral on alfajores testnet
       if (chainId !== 44787) {
-        await submitReferral({
-          txHash: tx3.hash,
-          chainId,
-        })
+        try {
+          await submitReferral({
+            txHash: tx3.hash,
+            chainId,
+          })
+        } catch (error) {
+          console.error('submitReferral error:', error);
+        }
       }
 
       setPendingTransactions((pendingTransactions) =>

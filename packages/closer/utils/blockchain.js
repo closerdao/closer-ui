@@ -70,10 +70,14 @@ export async function sendDAOToken(library, toAddress, amount) {
   const chainId = await DAOTokenContract.signer.getChainId();
   // do not send Divvi referral on alfajores testnet
   if (chainId !== 44787) {
-    await submitReferral({
-      txHash: tx.hash,
-      chainId,
-    })
+    try {
+      await submitReferral({
+        txHash: tx.hash,
+        chainId,
+      })
+    } catch (error) {
+      console.error('submitReferral error:', error);
+    }
   }
 
   await tx.wait();

@@ -200,10 +200,14 @@ export const useBuyTokens = () => {
       const chainId = await DynamicSale.signer.getChainId();
       // do not send Divvi referral on alfajores testnet
       if (chainId !== 44787) {
-        await submitReferral({
-          txHash: tx.hash as `0x${string}`,
-          chainId,
-        })
+        try {
+          await submitReferral({
+            txHash: tx.hash as `0x${string}`,
+            chainId,
+          })
+        } catch (error) {
+          console.error('submitReferral error:', error);
+        }
       }
 
       console.log(receipt);
@@ -287,10 +291,14 @@ export const useBuyTokens = () => {
       const chainId = await Ceur.signer.getChainId();
       // do not send Divvi referral on alfajores testnet
       if (chainId !== 44787) {
+        try {
         await submitReferral({
           txHash: tx.hash as `0x${string}`,
-          chainId,
-        })
+            chainId,
+          })
+        } catch (error) {
+          console.error('submitReferral error:', error);
+        }
       }
       const success = receipt.status === 1;
       return {
