@@ -12,10 +12,11 @@ export const BOOKING_STEPS = [
   'dates',
   'accomodation',
   'food',
+  'rules',
   'questions',
   'summary',
   'checkout',
-  'confirmation',
+  // 'confirmation',
 ];
 export const PRODUCT_SALE_STEPS = [
   'learn',

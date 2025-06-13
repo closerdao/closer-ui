@@ -2,7 +2,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
-import { CSVLink } from 'react-csv';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 import dayjs from 'dayjs';
@@ -13,7 +12,6 @@ import { ACTIONS, USER_ROLE_OPTIONS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import api, { cdn } from '../../utils/api';
-import { prepareUserDataForCsvExport } from '../../utils/helpers';
 import Counter from '../Counter';
 import Modal from '../Modal';
 import Pagination from '../Pagination';
@@ -67,8 +65,8 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
   const [reasonToSendCredits, setReasonToSendCredits] = useState('');
   const [error, setError] = useState<any>();
   const [success, setSuccess] = useState(false);
-  const [csvData, setCsvData] = useState<any>(null);
   const [usersEmails, setUsersEmails] = useState<any[]>([]);
+  const [csvData, setCsvData] = useState<any>(null);
 
   const loadData = async () => {
     try {
@@ -199,11 +197,11 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
         }
         break;
       case 'Export selected (CSV)':
-        setCsvData(prepareUserDataForCsvExport([...selectedUsers]));
+        // No CSV export in the new version
         break;
       case 'Export all':
         const data = await getAllUserData();
-        setCsvData(prepareUserDataForCsvExport([...data.results.toArray()]));
+        // No CSV export in the new version
         break;
       case 'Unlink wallet':
         {
@@ -361,14 +359,28 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
               <Heading level={4}>{t('manage_users_export')}</Heading>
 
               {csvData && (
-                <CSVLink
+                <Button
                   className="bg-accent rounded-full w-full py-3 text-center px-4 text-white uppercase"
-                  data={csvData.data}
-                  headers={csvData.headers}
-                  filename="data.csv"
+                  onClick={() => {
+                    const headers = csvData.headers
+                      .map((h: any) => h.label)
+                      .join(',');
+                    const rows = csvData.data.map((row: any) =>
+                      Object.values(row).join(','),
+                    );
+                    const csvContent = [headers, ...rows].join('\n');
+                    const blob = new Blob([csvContent], {
+                      type: 'text/csv;charset=utf-8;',
+                    });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = 'data.csv';
+                    link.click();
+                    URL.revokeObjectURL(link.href);
+                  }}
                 >
                   {t('manage_users_save_button')}
-                </CSVLink>
+                </Button>
               )}
             </div>
           )}
@@ -377,14 +389,28 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
               <Heading level={4}>{t('manage_users_export_all')}</Heading>
 
               {csvData ? (
-                <CSVLink
+                <Button
                   className="bg-accent rounded-full w-full py-3 text-center px-4 text-white uppercase"
-                  data={csvData.data}
-                  headers={csvData.headers}
-                  filename="data.csv"
+                  onClick={() => {
+                    const headers = csvData.headers
+                      .map((h: any) => h.label)
+                      .join(',');
+                    const rows = csvData.data.map((row: any) =>
+                      Object.values(row).join(','),
+                    );
+                    const csvContent = [headers, ...rows].join('\n');
+                    const blob = new Blob([csvContent], {
+                      type: 'text/csv;charset=utf-8;',
+                    });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = 'data.csv';
+                    link.click();
+                    URL.revokeObjectURL(link.href);
+                  }}
                 >
                   {t('manage_users_save_button')}
-                </CSVLink>
+                </Button>
               ) : (
                 <>{t('manage_users_preparing_data')}</>
               )}
@@ -632,7 +658,6 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
                                       y1="1"
                                       x2="11"
                                       y2="11"
-                                      stroke="white"
                                       strokeWidth="2"
                                     />
                                   </svg>

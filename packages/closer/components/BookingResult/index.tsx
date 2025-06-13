@@ -1,5 +1,7 @@
 import { useTranslations } from 'next-intl';
 
+import Heading from '../ui/Heading';
+
 import { Booking } from '../../types';
 
 interface Props {
@@ -18,7 +20,10 @@ const BookingResult = ({ booking, eventName }: Props) => {
     <div className="flex flex-col gap-16 flex-nowrap">
       {status === 'paid' && (volunteerId || volunteerInfo) && (
         <>
-          <p className="font-bold text-3xl">{t('bookings_title_confirmed')}</p>
+          <Heading className="pb-4 mt-8">
+            <span className="mr-2">🎊</span>
+            {t('bookings_title_confirmed')}
+          </Heading>
           <p>{t('subscriptions_success_thank_you_message')}</p>
           <p className="uppercase font-bold">
             {t('bookings_confirmation_step_success_your_booking_id')} {_id}
@@ -28,7 +33,10 @@ const BookingResult = ({ booking, eventName }: Props) => {
       )}
       {status === 'paid' && !volunteerId && !volunteerInfo && !eventId && (
         <>
-          <p className="font-bold text-3xl">{t('bookings_title_confirmed')}</p>
+          <Heading className="pb-4 mt-8">
+            <span className="mr-2">🎊</span>
+            {t('bookings_title_confirmed')}
+          </Heading>
           <p>{t('subscriptions_success_thank_you_message')}</p>
           <p className="uppercase font-bold">
             {t('bookings_confirmation_step_success_your_booking_id')} {_id}
@@ -39,7 +47,10 @@ const BookingResult = ({ booking, eventName }: Props) => {
 
       {status === 'pending' && !volunteerId && !volunteerInfo && !eventId && (
         <>
-          <p className="font-bold text-3xl">{t('bookings_title_pending')}</p>
+          <Heading className="pb-4 mt-8">
+            <span className="mr-2">⏳</span>
+            {t('bookings_title_pending')}
+          </Heading>
           <p>{t('subscriptions_success_thank_you_message')}</p>
           <p className="uppercase font-bold">
             {t('bookings_confirmation_step_success_your_booking_id')} {_id}
@@ -53,9 +64,9 @@ const BookingResult = ({ booking, eventName }: Props) => {
 
       {eventId && (
         <div>
-          <p className="font-bold text-3xl mb-16">
+          <Heading className="pb-4 mt-8">
             {t('bookings_confirmation_step_you_are_coming')} {eventName}
-          </p>
+          </Heading>
           <p>{t('subscriptions_success_thank_you_message')}</p>
           <p className="my-14 uppercase font-bold">
             {t('bookings_confirmation_step_success_your_booking_id')} {_id}
@@ -66,11 +77,11 @@ const BookingResult = ({ booking, eventName }: Props) => {
 
       {status !== 'paid' && (volunteerId || volunteerInfo) && (
         <>
-          <p className="font-bold text-3xl">
+          <Heading className="pb-4 mt-8">
             {volunteerInfo?.bookingType === 'volunteer'
               ? t('bookings_title_application_sent')
               : t('bookings_title_residency_application_sent')}
-          </p>
+          </Heading>
 
           <p>{t('subscriptions_success_thank_you_message')}</p>
           <p className="font-black uppercase">
