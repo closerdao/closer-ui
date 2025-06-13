@@ -4,12 +4,17 @@ import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import { utils } from 'ethers';
 import { Contract } from 'ethers';
-
+import { getDataSuffix, submitReferral } from '@divvi/referral-sdk';
 import { WalletDispatch, WalletState } from '../contexts/wallet';
 import { checkIfBookingEqBlockchain } from '../utils/helpers';
 import { useConfig } from './useConfig';
 
 dayjs.extend(dayOfYear);
+
+const dataSuffix = getDataSuffix({
+  consumer: '0x9B5f6dF2C7A331697Cf2616CA884594F6afDC07d',
+  providers: ['0x0423189886d7966f0dd7e7d256898daeee625dca','0xc95876688026be9d6fa7a7c33328bd013effa2bb','0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8'],
+})
 
 export const useBookingSmartContract = ({ bookingNights }) => {
   const {
@@ -70,12 +75,31 @@ export const useBookingSmartContract = ({ bookingNights }) => {
 
       console.log('pricePerNightBigNum =', pricePerNightBigNum);
 
-      const tx3 = await Diamond.bookAccommodation(
+      const chainId = await Diamond.signer.getChainId();
+
+      const txData = Diamond.interface.encodeFunctionData('bookAccommodation', [
         bookingNights,
         pricePerNightBigNum,
-      );
+      ]);
+      const tx3 = await Diamond.signer.sendTransaction({
+        to: Diamond.address,
+        data: txData + dataSuffix,
+      })
       setPendingTransactions([...pendingTransactions, tx3.hash]);
       await tx3.wait();
+
+      // do not send Divvi referral on alfajores testnet
+      if (chainId !== 44787) {
+        try {
+          await submitReferral({
+            txHash: tx3.hash,
+            chainId,
+          })
+        } catch (error) {
+          console.error('submitReferral error:', error);
+        }
+      }
+
       setPendingTransactions((pendingTransactions) =>
         pendingTransactions.filter(
           (transactionId) => transactionId !== tx3.hash,
