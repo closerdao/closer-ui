@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
-import { LuCalendarSync } from 'react-icons/lu';
+import { CalendarSync } from 'lucide-react';
 
 import { useTranslations } from 'next-intl';
 
@@ -135,7 +135,7 @@ const DashboardSubscriptions = ({ timeFrame, fromDate, toDate }: Props) => {
   return (
     <section className="bg-white rounded-md px-0 sm:px-6 py-6 flex flex-col gap-6">
       <Heading level={3} className="uppercase text-md flex gap-3 items-center">
-        <LuCalendarSync size={22} /> {t('dashboard_subscriptions_title')}
+        <CalendarSync size={22} /> {t('dashboard_subscriptions_title')}
       </Heading>
 
       <div className=" gap-4">
