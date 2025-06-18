@@ -32,7 +32,7 @@ const Events = ({ generalConfig }: Props) => {
   return (
     <>
       <Head>
-        <title>{`${PLATFORM_NAME} - ${t('events_title')}`}</title>
+        <title>{`${t('events_title')} - ${PLATFORM_NAME}`}</title>
         <link
           rel="canonical"
           href="https://www.traditionaldreamfactory.com/events"

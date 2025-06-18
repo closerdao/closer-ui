@@ -390,14 +390,6 @@ const SettingsPage = ({
           </div>
         )}
 
-        {showSaveSuccess && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-md mb-6 animate-fade-out">
-            <span className="block sm:inline">
-              {t('settings_changes_saved_successfully')}
-            </span>
-          </div>
-        )}
-
         <div className="flex flex-col md:flex-row gap-8">
           {/* Sidebar navigation */}
           <SettingsSidebar

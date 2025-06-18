@@ -41,9 +41,11 @@ const getPage = ({
           },
           content: {
             title: 'JOIN EARTHBOUND AS PART OF THE LIVING COMMUNITY',
-            body: '<p>We are opening up for new members in the late spring 2025 / once we have settled the buying of the property. However feel free to reach out to our membership contact point Zuzanna already now to receive more information about Earthbound including detailed values, profile and an introduction to Les Pas-Sages!</p>',
+            body: `<p>Are you interested in becoming part of the living community of Earthbound?</p>
+
+<p><b>We are now open for new members!</b> So if you want to explore what’s possible, read the information below and if you have any questions feel free to contact us on <a href="mailto:contact@earthbound.eco">contact@earthbound.eco</a>. </p>`,
             imageUrl:
-              'https://cdn.oasa.co/custom-pages/earthbound/Mask%20group.png',
+              'https://cdn.oasa.co/custom-pages/earthbound/AWP04555.jpg',
           },
         },
       },
@@ -64,13 +66,14 @@ const getPage = ({
                 <li>Living in Earthbound as your permanent residency</li>
                 <li>Taking an active part in the community including decision making, working groups and community work</li>
                 <li>Encouraged to take part in community activities such as common dinners, community processes and events</li>
-                <li>Paying a monthly rent to the community</li>
+                <li>Paying a monthly fee to the community</li>
                 <li>Co-owning and stewarding Earthbound and the land</li>
                 <li>Dedicated to our mission and vision</li>
               </ul>
 
               <h2 class='ql-align-center'>WHAT IS THE PROCESS TO BECOMING A MEMBER?</h2>
-              <p>The social cohesion of the living community is essential to making Earthbound a reality and to realize its potentials and impacts. That is why we have designed a multi-step membership process where we, with time and slowness, can truly sense into whether it is the right match on both sides.</p>
+              <p>The social cohesion of the living community is essential to making Earthbound a reality and to realize its potentials and impacts. That is why we have designed a multi-step joining process where we, with time and slowness, can truly sense whether it is the right match on both sides.
+</p>
 
                         `,
           },
@@ -132,8 +135,8 @@ const CommunityPage = ({ generalConfig, listings, hosts }: Props) => {
   return (
     <div>
       <Head>
-        <title>{`Welcome to ${PLATFORM_NAME}!`}</title>
-        <meta name="description" content="School of Ecological Imagination" />
+        <title>Join the Community - Earthbound Ecovillage & Community</title>
+        <meta name="description" content="Join us at Earthbound Ecovillage, a community of 30 people stewarding 73 ha of land with a lake, ancient forest and 9 buildings in southern Sweden." />
       </Head>
 
       <main className="py-12">

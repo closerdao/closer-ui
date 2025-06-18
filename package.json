@@ -1,7 +1,8 @@
 {
-  "name": "closer-dao",
-  "version": "0.0.0",
+  "name": "closer-ui",
+  "version": "0.1.1",
   "private": true,
+  "packageManager": "yarn@1.22.22",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -35,6 +36,7 @@
     "axios": "1.7.7",
     "deepmerge": "^4.3.1",
     "interactjs": "^1.10.26",
+    "posthog-js": "^1.249.2",
     "react-calendar-timeline": "^0.28.0"
   }
 }

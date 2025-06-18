@@ -1,28 +1,30 @@
 import Head from 'next/head';
 import Image from 'next/image';
+import Link from 'next/link';
 
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 
-import PromptFixedBottomGetInTouch from 'closer/components/PromptFixedBottomGetInTouch';
+import HeroCloser from '@/components/HeroCloser';
+import CloserEmailCollector from 'closer/components/CloserEmailCollector';
 import { PromptGetInTouchContext } from 'closer/components/PromptGetInTouchContext';
 import Tag from 'closer/components/Tag';
-import { Button, LinkButton } from 'closer/components/ui';
+import { Button } from 'closer/components/ui';
 import Card from 'closer/components/ui/Card';
 import Heading from 'closer/components/ui/Heading';
 
-import { GeneralConfig, Modal, api, useConfig } from 'closer';
+import { GeneralConfig, api, useConfig } from 'closer';
 import { parseMessageFromError } from 'closer/utils/common';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import {
   BookOpenText,
   Calendar,
+  CircleCheckBig,
   Globe,
   House,
   TicketCheck,
   Users,
 } from 'lucide-react';
 import { NextPageContext } from 'next';
-import HeroCloser from '@/components/HeroCloser';
 
 interface Props {
   generalConfig: GeneralConfig | null;
@@ -37,33 +39,21 @@ const HomePage = ({ generalConfig }: Props) => {
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
-  const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
-
-
-
-  const closeModal = () => {
-    setIsInfoModalOpened(false);
-  };
   return (
     <div>
       <Head>
-        <title>{`Welcome to ${PLATFORM_NAME}!`}</title>
+        <title>Community Management for Regenerative Villages</title>
         <meta
           name="description"
-          content="Manage guests, spaces, events and resources through one intuitive platform designed specifically for land-based projects"
+          content="Streamline operations and build stronger community engagement. Manage bookings, events, payments, and community knowledge in one platform."
         />
       </Head>
-      {isInfoModalOpened && (
-        <Modal closeModal={closeModal}>
-         dfdgfsfsdg
-        </Modal>
-      )}
 
-      <PromptFixedBottomGetInTouch />
+    
 
-      <HeroCloser/>
+      <CloserEmailCollector />
 
-
+      <HeroCloser />
 
       {/* Hero Section */}
       {/* <section className=" text-center py-[100px] ">
@@ -235,251 +225,234 @@ const HomePage = ({ generalConfig }: Props) => {
             Explore how diverse communities are using Closer to create
             meaningful connection and impact
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Project Cards - static for now, can be mapped from data */}
-            <Card className="flex flex-col gap-4 w-full  justify-between">
-              <div className=" w-full">
-                <Image
-                  src="/images/communities/tdf.jpg"
-                  alt="Traditional Dream Factory community"
-                  width={600}
-                  height={400}
-                  className="object-cover w-full h-full "
-                />
-              </div>
-              <div className=" flex flex-col ">
-                <Heading
-                  level={3}
-                  className="project-title mb-2 text-xl font-semibold"
-                >
-                  Traditional Dream Factory
-                </Heading>
-                <p className="project-description mb-4">
-                  A regenerative community in Portugal pioneering innovations in
-                  governance and community living. Closer provides token based
-                  fundraising and governance systems, in addition to the
-                  management of guest stays, volunteer programs, and their
-                  vibrant events calendar.
-                </p>
-                <div className="project-tags flex flex-wrap gap-2 mb-4">
-                  <Tag color="neutral">Regenerative Living</Tag>
-                  <Tag color="neutral">Token Governance</Tag>
-                  <Tag color="neutral">Land Stewardship</Tag>
-                  <Tag color="neutral">Learning hub</Tag>
-                  <Tag color="neutral">Fundraising</Tag>
-                </div>
-              </div>
-              <LinkButton
-                variant="secondary"
-                size="small"
-                className="project-link w-fit"
+            <Card className="border border-transparent flex flex-col gap-4 w-full   hover:border-gray-400 hover:border">
+              <Link
                 href="https://www.traditionaldreamfactory.com/"
                 target="_blank"
+                className="w-full flex flex-col gap-4 "
               >
-                Explore Community
-              </LinkButton>
-            </Card>
-            <Card className="flex flex-col gap-4 w-full  justify-between">
-              <div className=" w-full">
-                <Image
-                  src="/images/communities/foz.jpg"
-                  alt="Foz Da Cova community"
-                  width={600}
-                  height={400}
-                  className="object-cover w-full h-full "
-                />
-              </div>
-              <div className=" flex flex-col ">
-                <Heading
-                  level={3}
-                  className="project-title mb-2 text-xl font-semibold"
-                >
-                  Foz Da Cova
-                </Heading>
-                <p className="project-description mb-4">
-                  A once-abandoned mountain hamlet near Coimbra, Portugal, Foz
-                  da Cova is being re-awakened into a self-sustaining haven of
-                  fresh spring water, creative studios, and ancient Roman
-                  terraces. Closer streamlines their guest bookings, and an
-                  ever-growing calendar of regenerative projects and events.
-                </p>
-                <div className="project-tags flex flex-wrap gap-2 mb-4">
-                  <Tag color="neutral">Regenerative Living</Tag>
-
-                  <Tag color="neutral">Land Stewardship</Tag>
+                <div className="w-full">
+                  <Image
+                    src="/images/communities/tdf.jpg"
+                    alt="Traditional Dream Factory community"
+                    width={600}
+                    height={400}
+                    className="object-cover w-full h-full "
+                  />
                 </div>
-              </div>
-              <LinkButton
-                variant="secondary"
-                size="small"
-                className="project-link w-fit"
+                <div className=" flex flex-col ">
+                  <Heading
+                    level={3}
+                    className="project-title mb-2 text-xl font-semibold"
+                  >
+                    Traditional Dream Factory
+                  </Heading>
+                  <p className="project-description mb-4">
+                    A regenerative community in Portugal pioneering innovations
+                    in governance and community living. Closer provides token
+                    based fundraising and governance systems, in addition to the
+                    management of guest stays, volunteer programs, and their
+                    vibrant events calendar.
+                  </p>
+                  <div className="project-tags flex flex-wrap gap-2 mb-4">
+                    <Tag color="neutral">Regenerative Living</Tag>
+                    <Tag color="neutral">Token Governance</Tag>
+                    <Tag color="neutral">Land Stewardship</Tag>
+                    <Tag color="neutral">Learning hub</Tag>
+                    <Tag color="neutral">Fundraising</Tag>
+                  </div>
+                </div>
+              </Link>
+            </Card>
+
+            <Card className="border border-transparent flex flex-col gap-4 w-full   hover:border-gray-400 hover:border">
+              <Link
                 href="https://www.fozdacova.world"
                 target="_blank"
+                className="w-full flex flex-col gap-4 "
               >
-                Explore Community
-              </LinkButton>
-            </Card>
-            <Card className="flex flex-col gap-4 w-full  justify-between">
-              <div className=" w-full">
-                <Image
-                  src="/images/communities/earthbound.jpg"
-                  alt="Earthbound community"
-                  width={600}
-                  height={400}
-                  className="object-cover w-full h-full "
-                />
-              </div>
-              <div className=" flex flex-col ">
-                <Heading
-                  level={3}
-                  className="project-title mb-2 text-xl font-semibold"
-                >
-                  Earthbound
-                </Heading>
-                <p className="project-description mb-4">
-                  Earthbound is a 30-person ecovillage and rural think-tank in
-                  southern Sweden, stewarding 73 ha of lake, ancient forest, and
-                  heritage buildings. Their B&B and cultural hub advance a
-                  holistic, locally rooted transition toward regenerative
-                  living. Closer provides tools for their B&B management,
-                  events, memberships and fundraising.
-                </p>
-                <div className="project-tags flex flex-wrap gap-2 mb-4">
-                  <Tag color="neutral">Regenerative Living</Tag>
-                  <Tag color="neutral">Land Stewardship</Tag>
-                  <Tag color="neutral">Fundraising</Tag>
+                <div className="w-full">
+                  <Image
+                    src="/images/communities/foz.jpg"
+                    alt="Foz Da Cova community"
+                    width={600}
+                    height={400}
+                    className="object-cover w-full h-full "
+                  />
                 </div>
-              </div>
-              <LinkButton
-                variant="secondary"
-                size="small"
-                className="project-link w-fit"
+                <div className=" flex flex-col ">
+                  <Heading
+                    level={3}
+                    className="project-title mb-2 text-xl font-semibold"
+                  >
+                    Foz Da Cova
+                  </Heading>
+                  <p className="project-description mb-4">
+                    A once-abandoned mountain hamlet near Coimbra, Portugal, Foz
+                    da Cova is being re-awakened into a self-sustaining haven of
+                    fresh spring water, creative studios, and ancient Roman
+                    terraces. Closer streamlines their guest bookings, and an
+                    ever-growing calendar of regenerative projects and events.
+                  </p>
+                  <div className="project-tags flex flex-wrap gap-2 mb-4">
+                    <Tag color="neutral">Regenerative Living</Tag>
+                    <Tag color="neutral">Land Stewardship</Tag>
+                  </div>
+                </div>
+              </Link>
+            </Card>
+            <Card className="border border-transparent flex flex-col gap-4 w-full   hover:border-gray-400 hover:border">
+              <Link
                 href="https://www.earthbound.eco"
                 target="_blank"
+                className="w-full flex flex-col gap-4 "
               >
-                Explore Community
-              </LinkButton>
-            </Card>
-            <Card className="flex flex-col gap-4 w-full  justify-between">
-              <div className=" w-full">
-                <Image
-                  src="/images/communities/per-auset.jpg"
-                  alt="Per Auset community"
-                  width={600}
-                  height={400}
-                  className="object-cover w-full h-full "
-                />
-              </div>
-              <div className=" flex flex-col ">
-                <Heading
-                  level={3}
-                  className="project-title mb-2 text-xl font-semibold"
-                >
-                  Per Auset
-                </Heading>
-                <p className="project-description mb-4">
-                  Per Auset is a temple village and land regeneration project on
-                  a sacred Nile island in southern Egypt, near the ancient
-                  Temple of Isis. Blending heritage revival with daily rituals,
-                  art, and eco-conscious living, it offers a space for healing,
-                  creativity, and sacred remembrance. Closer provides a platform
-                  for their space management, events, and subscription plans.
-                </p>
-                <div className="project-tags flex flex-wrap gap-2 mb-4">
-                  <Tag color="neutral">Regenerative Living</Tag>
-                  <Tag color="neutral">Fundraising</Tag>
-                  <Tag color="neutral">Land Stewardship</Tag>
+                <div className="w-full">
+                  <Image
+                    src="/images/communities/earthbound.jpg"
+                    alt="Earthbound community"
+                    width={600}
+                    height={400}
+                    className="object-cover w-full h-full "
+                  />
                 </div>
-              </div>
-              <LinkButton
-                variant="secondary"
-                size="small"
-                className="project-link w-fit"
+                <div className=" flex flex-col ">
+                  <Heading
+                    level={3}
+                    className="project-title mb-2 text-xl font-semibold"
+                  >
+                    Earthbound
+                  </Heading>
+                  <p className="project-description mb-4">
+                    Earthbound is a 30-person ecovillage and rural think-tank in
+                    southern Sweden, stewarding 73 ha of lake, ancient forest,
+                    and heritage buildings. Their B&B and cultural hub advance a
+                    holistic, locally rooted transition toward regenerative
+                    living. Closer provides tools for their B&B management,
+                    events, memberships and fundraising.
+                  </p>
+                  <div className="project-tags flex flex-wrap gap-2 mb-4">
+                    <Tag color="neutral">Regenerative Living</Tag>
+                    <Tag color="neutral">Land Stewardship</Tag>
+                    <Tag color="neutral">Fundraising</Tag>
+                  </div>
+                </div>
+              </Link>
+            </Card>
+            <Card className="border border-transparent flex flex-col gap-4 w-full  justify-between hover:border-gray-400 hover:border">
+              <Link
                 href="https://per-auset-git-develop-closerdao.vercel.app/"
                 target="_blank"
+                className="w-full flex flex-col gap-4 "
               >
-                Explore Community
-              </LinkButton>
-            </Card>
-            <Card className="flex flex-col gap-4 w-full  justify-between">
-              <div className=" w-full">
-                <Image
-                  src="/images/communities/moos.jpg"
-                  alt="Moos Berlin community"
-                  width={600}
-                  height={400}
-                  className="object-cover w-full h-full "
-                />
-              </div>
-              <div className=" flex flex-col ">
-                <Heading
-                  level={3}
-                  className="project-title mb-2 text-xl font-semibold"
-                >
-                  Moos
-                </Heading>
-                <p className="project-description mb-4">
-                  MOOS is a creative hub and community space across from
-                  Berlin&apos;s Treptower Park, where interdisciplinary ideas
-                  and people connect. With The Y Berlin as its design lab, it
-                  explores how technology and intentional community can shape
-                  more meaningful urban living. Closer helps them manage their
-                  space, events, and fundraising efforts.
-                </p>
-                <div className="project-tags flex flex-wrap gap-2 mb-4">
-                  <Tag color="neutral">Regenerative Living</Tag>
-                  <Tag color="neutral">Fundraising</Tag>
+                <div className="w-full">
+                  <Image
+                    src="/images/communities/per-auset.jpg"
+                    alt="Per Auset community"
+                    width={600}
+                    height={400}
+                    className="object-cover w-full h-full "
+                  />
                 </div>
-              </div>
-              <LinkButton
-                variant="secondary"
-                size="small"
-                className="project-link w-fit"
+                <div className=" flex flex-col ">
+                  <Heading
+                    level={3}
+                    className="project-title mb-2 text-xl font-semibold"
+                  >
+                    Per Auset
+                  </Heading>
+                  <p className="project-description mb-4">
+                    Per Auset is a temple village and land regeneration project
+                    on a sacred Nile island in southern Egypt, near the ancient
+                    Temple of Isis. Blending heritage revival with daily
+                    rituals, art, and eco-conscious living, it offers a space
+                    for healing, creativity, and sacred remembrance. Closer
+                    provides a platform for their space management, events, and
+                    subscription plans.
+                  </p>
+                  <div className="project-tags flex flex-wrap gap-2 mb-4">
+                    <Tag color="neutral">Regenerative Living</Tag>
+                    <Tag color="neutral">Fundraising</Tag>
+                    <Tag color="neutral">Land Stewardship</Tag>
+                  </div>
+                </div>
+              </Link>
+            </Card>
+            <Card className="border border-transparent flex flex-col gap-4 w-full  justify-between hover:border-gray-400 hover:border">
+              <Link
                 href="https://www.moos.garden"
                 target="_blank"
+                className="w-full flex flex-col gap-4 "
               >
-                Explore Community
-              </LinkButton>
-            </Card>
-            <Card className="flex flex-col gap-4 w-full  justify-between">
-              <div className=" w-full">
-                <Image
-                  src="/images/communities/lios.jpg"
-                  alt="Lios Labs community"
-                  width={600}
-                  height={400}
-                  className="object-cover w-full h-full "
-                />
-              </div>
-              <div className=" flex flex-col ">
-                <Heading
-                  level={3}
-                  className="project-title mb-2 text-xl font-semibold"
-                >
-                  Lios Labs
-                </Heading>
-                <p className="project-description mb-4">
-                  Rooted in biomimicry, this non-profit lab prototypes new
-                  models for culture and ecological learning—blending art,
-                  ancestral wisdom, healing, science, and tech to spread
-                  regenerative practices. Closer is a platform for hosting their
-                  learning programs, events, and fundraising efforts.
-                </p>
-                <div className="project-tags flex flex-wrap gap-2 mb-4">
-                  <Tag color="neutral">Regenerative Living</Tag>
-                  <Tag color="neutral">Learning hub</Tag>
-                  <Tag color="neutral">Fundraising</Tag>
+                <div className="w-full">
+                  <Image
+                    src="/images/communities/moos.jpg"
+                    alt="Moos Berlin community"
+                    width={600}
+                    height={400}
+                    className="object-cover w-full h-full "
+                  />
                 </div>
-              </div>
-              <LinkButton
-                variant="secondary"
-                size="small"
-                className="project-link w-fit"
+                <div className=" flex flex-col ">
+                  <Heading
+                    level={3}
+                    className="project-title mb-2 text-xl font-semibold"
+                  >
+                    Moos
+                  </Heading>
+                  <p className="project-description mb-4">
+                    MOOS is a creative hub and community space across from
+                    Berlin&apos;s Treptower Park, where interdisciplinary ideas
+                    and people connect. With The Y Berlin as its design lab, it
+                    explores how technology and intentional community can shape
+                    more meaningful urban living. Closer helps them manage their
+                    space, events, and fundraising efforts.
+                  </p>
+                  <div className="project-tags flex flex-wrap gap-2 mb-4">
+                    <Tag color="neutral">Regenerative Living</Tag>
+                    <Tag color="neutral">Fundraising</Tag>
+                  </div>
+                </div>
+              </Link>
+            </Card>
+            <Card className="border border-transparent flex flex-col gap-4 w-full  justify-between hover:border-gray-400 hover:border">
+              <Link
                 href="https://experience.lios.io/"
                 target="_blank"
-                >
-                Explore Community
-              </LinkButton>
+                className="w-full flex flex-col gap-4 "
+              >
+                <div className="w-full">
+                  <Image
+                    src="/images/communities/lios.jpg"
+                    alt="Lios Labs community"
+                    width={600}
+                    height={400}
+                    className="object-cover w-full h-full "
+                  />
+                </div>
+                <div className=" flex flex-col ">
+                  <Heading
+                    level={3}
+                    className="project-title mb-2 text-xl font-semibold"
+                  >
+                    Lios Labs
+                  </Heading>
+                  <p className="project-description mb-4">
+                    Rooted in biomimicry, this non-profit lab prototypes new
+                    models for culture and ecological learning—blending art,
+                    ancestral wisdom, healing, science, and tech to spread
+                    regenerative practices. Closer is a platform for hosting
+                    their learning programs, events, and fundraising efforts.
+                  </p>
+                  <div className="project-tags flex flex-wrap gap-2 mb-4">
+                    <Tag color="neutral">Regenerative Living</Tag>
+                    <Tag color="neutral">Learning hub</Tag>
+                    <Tag color="neutral">Fundraising</Tag>
+                  </div>
+                </div>
+              </Link>
             </Card>
           </div>
         </div>
@@ -515,13 +488,13 @@ const HomePage = ({ generalConfig }: Props) => {
                   community&apos;s core mission.
                 </p>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <Tag color="primary" size="small">
+                  <Tag color="dark" size="small">
                     Booking System
                   </Tag>
-                  <Tag color="primary" size="small">
+                  <Tag color="dark" size="small">
                     Event Management
                   </Tag>
-                  <Tag color="primary" size="small">
+                  <Tag color="dark" size="small">
                     Resource Tracking
                   </Tag>
                 </div>
@@ -543,13 +516,13 @@ const HomePage = ({ generalConfig }: Props) => {
                   resources that reinforce your community&apos;s values.
                 </p>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <Tag color="primary" size="small">
+                  <Tag color="dark" size="small">
                     Membership System
                   </Tag>
-                  <Tag color="primary" size="small">
+                  <Tag color="dark" size="small">
                     Learning Hub
                   </Tag>
-                  <Tag color="primary" size="small">
+                  <Tag color="dark" size="small">
                     Subscriptions
                   </Tag>
                 </div>
@@ -571,13 +544,13 @@ const HomePage = ({ generalConfig }: Props) => {
                   active participation and care for your shared resources.
                 </p>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <Tag color="primary" size="small">
+                  <Tag color="dark" size="small">
                     Community Tokens
                   </Tag>
-                  <Tag color="primary" size="small">
+                  <Tag color="dark" size="small">
                     Proof of Presence
                   </Tag>
-                  <Tag color="primary" size="small">
+                  <Tag color="dark" size="small">
                     Decentralized Governance
                   </Tag>
                 </div>
@@ -599,124 +572,157 @@ const HomePage = ({ generalConfig }: Props) => {
           <p className="section-subtitle text-center mb-20">
             Select the plan that best fits your community&apos;s size and needs
           </p>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
             {/* Seed Plan */}
-            <Card className="bg-white border border-gray-100 p-8 flex flex-col items-center">
-              <Heading level={3} className="mb-2 text-xl font-semibold">
-                Seed
-              </Heading>
-              <p className="text-gray-600 mb-4">
-                Perfect for small co-living spaces and communities
-              </p>
-              <div className="text-3xl font-bold mb-4">€990</div>
-              <div className="w-full h-px bg-gray-200 my-4"></div>
+
+            <Card className="bg-white border border-gray-100 p-8 flex flex-col justify-start">
+              <div className="flex flex-col border-b h-[280px] justify-between">
+                <div>
+                  <Heading level={3} className="mb-2 text-2xl font-semibold">
+                    Seed
+                  </Heading>
+                  <p className="text-gray-500 mb-4">
+                    Everything you need to run your community day-to-day
+                  </p>
+                </div>
+                <div className="mb-4 space-y-2 h-[130px]">
+                  <p className="text-5xl font-bold ">€990</p>
+                  <p className="text-gray-500 text-sm">One-time setup fee</p>
+                  <p className="text-gray-500 text-sm">
+                    5% transaction fee on bookings and purchases*
+                  </p>
+                </div>
+              </div>
+
               <ul className="list-none p-0 mb-4 w-full">
-                <li className="flex items-center mb-2">
-                  <span className="mr-2">✔️</span>Booking system
+                <li className="flex mb-2 ">
+                  <CircleCheckBig className="w-5 h-5 text-accent-alt  mr-2 mt-0.5" />
+                  Booking System & Calendar Management
                 </li>
-                <li className="flex items-center mb-2">
-                  <span className="mr-2">✔️</span>User management
+                <li className="flex mb-2 ">
+                  <CircleCheckBig className="w-5 h-5 text-accent-alt  mr-2 mt-0.5" />
+                  Event Management & Ticketing
                 </li>
-                <li className="flex items-center mb-2">
-                  <span className="mr-2">✔️</span>Payment integration
+                <li className="flex mb-2 ">
+                  <CircleCheckBig className="w-5 h-5 text-accent-alt  mr-2 mt-0.5" />
+                  User Management & Profiles
                 </li>
-                <li className="flex items-center mb-2">
-                  <span className="mr-2">✔️</span>AI assistance
+                <li className="flex mb-2 ">
+                  <CircleCheckBig className="w-5 h-5 text-accent-alt  mr-2 mt-0.5" />
+                  Payment Processing & Subscriptions
                 </li>
-                <li className="flex items-center mb-2">
-                  <span className="mr-2">✔️</span>Basic landing page
+                <li className="flex mb-2 ">
+                  <CircleCheckBig className="w-5 h-5 text-accent-alt  mr-2 mt-0.5" />
+                  Resource & Space Management
+                </li>
+                <li className="flex mb-2 ">
+                  <CircleCheckBig className="w-5 h-5 text-accent-alt  mr-2 mt-0.5" />
+                  Learning Hub & Knowledge Sharing
+                </li>
+                <li className="flex mb-2 ">
+                  <CircleCheckBig className="w-5 h-5 text-accent-alt  mr-2 mt-0.5" />
+                  Private API Access
                 </li>
               </ul>
-              <Button
-                size="small"
-                className=" px-8  text-lg"
-                variant="primary"
-                onClick={() => {
-                  console.log('Get in touch button (Seed) clicked', setIsOpen);
-                  setIsOpen(true);
-                }}
-              >
-                Get in touch
-              </Button>
             </Card>
             {/* Plant Plan */}
-            <Card className="bg-white border-2 border-[#67F8C0] p-8 flex flex-col items-center relative shadow-lg">
-              <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r to-[#67F8C0] from-[#3F91DD] text-white px-6 py-2 rounded-full font-semibold text-sm">
+            <Card className="bg-white border-2 border-accent-alt p-8 flex flex-col justify-start relative shadow-lg">
+              <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r to-accent-alt from-accent-dark  text-white px-6 py-2 rounded-full font-semibold text-sm">
                 Popular
               </div>
-              <Heading level={3} className="mb-2 text-xl font-semibold">
-                Plant
-              </Heading>
-              <p className="text-gray-600 mb-4">
-                For established communities ready to scale
-              </p>
-              <div className="text-3xl font-bold mb-4">€4,990</div>
-              <div className="w-full h-px bg-gray-200 my-4"></div>
+
+              <div className="flex flex-col border-b h-[280px] justify-between">
+                <div>
+                  <Heading level={3} className="mb-2 text-2xl font-semibold">
+                    Plant
+                  </Heading>
+                  <p className="text-gray-500 mb-4">
+                    Build transparent, participatory community governance
+                  </p>
+                </div>
+                <div className="mb-4 space-y-2 h-[130px]">
+                  <p className="text-5xl font-bold ">€4,950</p>
+                  <p className="text-gray-500 text-sm">One-time setup fee</p>
+                  <p className="text-gray-500 text-sm">
+                    5% transaction fee on bookings and purchases*
+                  </p>
+                </div>
+              </div>
+
               <ul className="list-none p-0 mb-4 w-full">
-                <li className="flex items-center mb-2">
-                  <span className="mr-2">✔️</span>Token deployment
+                <li className="flex mb-2 ">
+                  <CircleCheckBig className="w-5 h-5 text-accent-alt  mr-2 mt-0.5" />
+                  Native Community Tokens
                 </li>
-                <li className="flex items-center mb-2">
-                  <span className="mr-2">✔️</span>Advanced booking & events
+                <li className="flex mb-2 ">
+                  <CircleCheckBig className="w-5 h-5 text-accent-alt  mr-2 mt-0.5" />
+                  Proof of Presence Tracking
                 </li>
-                <li className="flex items-center mb-2">
-                  <span className="mr-2">✔️</span>Automated accounting
+                <li className="flex mb-2 ">
+                  <CircleCheckBig className="w-5 h-5 text-accent-alt  mr-2 mt-0.5" />
+                  Proof of Sweat Recognition
                 </li>
-                <li className="flex items-center mb-2">
-                  <span className="mr-2">✔️</span>Marketing tools
+                <li className="flex mb-2 ">
+                  <CircleCheckBig className="w-5 h-5 text-accent-alt  mr-2 mt-0.5" />
+                  Governance & Voting Systems
                 </li>
-                <li className="flex items-center mb-2">
-                  <span className="mr-2">✔️</span>Learning hub access
+                <li className="flex mb-2 ">
+                  <CircleCheckBig className="w-5 h-5 text-accent-alt  mr-2 mt-0.5" />
+                  Web3 Integrations (Snapshot, Safe)
                 </li>
-                <li className="flex items-center mb-2">
-                  <span className="mr-2">✔️</span>Custom landing page
+                <li className="flex mb-2 ">
+                  <CircleCheckBig className="w-5 h-5 text-accent-alt  mr-2 mt-0.5" />
+                  Citizenship Program & Vouching
                 </li>
               </ul>
-              <Button
-                size="small"
-                className=" px-8  text-lg"
-                variant="primary"
-                onClick={() => {
-                  setIsOpen(true);
-                }}
-              >
-                Get in touch
-              </Button>
             </Card>
             {/* Forest Plan */}
-            <Card className="bg-white border border-gray-100 p-8 flex flex-col items-center">
-              <Heading level={3} className="mb-2 text-xl font-semibold">
-                Forest
-              </Heading>
-              <p className="text-gray-600 mb-4">
-                Full-scale regenerative development hub
-              </p>
-              <div className="text-3xl font-bold mb-4">Contact us</div>
-              <div className="w-full h-px bg-gray-200 my-4"></div>
+            <Card className="bg-white border border-gray-100 p-8 flex flex-col justify-start">
+              <div className="flex flex-col border-b h-[280px] justify-between">
+                <div>
+                  <Heading level={3} className="mb-2 text-2xl font-semibold">
+                    Forest
+                  </Heading>
+                  <p className="text-gray-500 mb-4">
+                    Scale your regenerative impact across multiple locations
+                  </p>
+                </div>
+                <div className="mb-4 space-y-2 h-[130px]">
+                  <p className="text-5xl font-bold ">Contact us</p>
+                  <p className="text-gray-500 text-sm">
+                    Custom pricing based on your needs
+                  </p>
+                </div>
+              </div>
+
               <ul className="list-none p-0 mb-4 w-full">
-                <li className="flex items-center mb-2">
-                  <span className="mr-2">✔️</span>Multiple entity support
+                <li className="flex mb-2 ">
+                  <CircleCheckBig className="w-5 h-5 text-accent-alt  mr-2 mt-0.5" />
+                  Operate across multiple land projects
                 </li>
-                <li className="flex items-center mb-2">
-                  <span className="mr-2">✔️</span>Custom token economy
+                <li className="flex mb-2 ">
+                  <CircleCheckBig className="w-5 h-5 text-accent-alt  mr-2 mt-0.5" />
+                  Cross-Site Token Integration
                 </li>
-                <li className="flex items-center mb-2">
-                  <span className="mr-2">✔️</span>Advanced governance
+                <li className="flex mb-2 ">
+                  <CircleCheckBig className="w-5 h-5 text-accent-alt  mr-2 mt-0.5" />
+                  Network-Wide Analytics
                 </li>
-                <li className="flex items-center mb-2">
-                  <span className="mr-2">✔️</span>White-label AI
-                </li>
-                <li className="flex items-center mb-2">
-                  <span className="mr-2">✔️</span>Private API access
-                </li>
-                <li className="flex items-center mb-2">
-                  <span className="mr-2">✔️</span>Premium support
+                <li className="flex mb-2 ">
+                  <CircleCheckBig className="w-5 h-5 text-accent-alt  mr-2 mt-0.5" />
+                  Custom AI agent
                 </li>
               </ul>
 
-              <p>Coming soon</p>
+
             </Card>
           </div>
+          <p className="text-xs text-gray-400 mt-8 px-2">
+            * Transaction fees can be reduced based on your community&apos;s
+            verified regenerative practices. The more regenerative impact you
+            create, the lower your fees become.
+          </p>
         </div>
       </section>
 
@@ -738,7 +744,7 @@ const HomePage = ({ generalConfig }: Props) => {
               setIsOpen(true);
             }}
           >
-            Get in touch
+            Schedule a demo
           </Button>
         </div>
       </section>

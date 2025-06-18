@@ -104,6 +104,8 @@ const SubscriptionsPage: NextPage<Props> = ({
           `/subscriptions/summary?priceId=${priceId}`,
         )}`,
       );
+    } else if (!userActivePlan) {
+      router.push(`/subscriptions/summary?priceId=${priceId}`);
     } else if (userActivePlan?.priceId !== 'free') {
       // User has a subscription - must be managed in Stripe.
 

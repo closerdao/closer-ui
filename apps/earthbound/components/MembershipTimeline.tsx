@@ -15,13 +15,13 @@ export default function MembershipTimeline() {
     {
       id: 1,
       title:
-        'Learning about Earthbound through our documents, information meetings etc.',
+        'Learning about Earthbound through our <a target="_blank" class="underline" href="https://drive.google.com/file/d/13Q7KKuXWWYILZKAyrEVCvL0oe8Dnr67V/view?usp=sharing">documents</a>, information meetings etc.',
       icon: <FileText className="h-5 w-5 text-accent" />,
       position: 'left',
     },
     {
       id: 2,
-      title: 'Filling out the membership questionnaire',
+      title: 'Filling out the <a target="_blank" class="underline" href="https://qhtmijgonhi.typeform.com/to/VtYUkHBf">membership questionnaire</a>',
 
       icon: <FileQuestion className="h-5 w-5 text-accent" />,
       position: 'right',
@@ -41,7 +41,7 @@ export default function MembershipTimeline() {
     {
       id: 5,
       title:
-        '2 phases of long-term living with us; an initial 3 months and then another 6 months',
+        '2 phases of long-term living with us; an initial 3 months and then another 6 months integration',
       icon: <Clock className="h-5 w-5 text-accent" />,
       position: 'left',
     },
@@ -61,7 +61,7 @@ export default function MembershipTimeline() {
     },
     {
       id: 8,
-      title: 'Signing a &quot;parent-of-use&quot; contract',
+      title: 'Signing a "right-of-use" contract',
       icon: <FileSignature className="h-5 w-5 text-accent" />,
       position: 'right',
     },
@@ -97,13 +97,13 @@ export default function MembershipTimeline() {
               >
                 {step.position === 'left' ? (
                   <>
-                    <div className="pr-8 py-2">{step.title}</div>
+                    <div className="pr-8 py-2" dangerouslySetInnerHTML={{ __html: step.title }} />
                     <div></div>
                   </>
                 ) : (
                   <>
                     <div></div>
-                    <div className="pl-8 py-2">{step.title}</div>
+                    <div className="pl-8 py-2" dangerouslySetInnerHTML={{ __html: step.title }} />
                   </>
                 )}
               </div>
@@ -111,9 +111,7 @@ export default function MembershipTimeline() {
           ))}
         </div>
       </div>
-      <p className="text-center mt-8">
-        We are looking forward to getting to know you &lt;3 
-      </p>
+
     </div>
   );
 }

@@ -80,17 +80,17 @@ const Questionnaire = ({
     setSubmitDisabled(!allRequiredQuestionsCompleted);
   }, [answers]);
 
-  useEffect(() => {
-    //this is a temporary solution to redirect to summary page if there are no questions
-    //once we have questions from user profile integrated we should remove this
-    if (!questions?.length) {
-      if (goBack === 'true') {
-        resetBooking();
-        return;
-      }
-      router.push(`/bookings/${booking?._id}/summary`);
-    }
-  }, []);
+  // useEffect(() => {
+  //   //this is a temporary solution to redirect to summary page if there are no questions
+  //   //once we have questions from user profile integrated we should remove this
+  //   if (!questions?.length) {
+  //     if (goBack === 'true') {
+  //       resetBooking();
+  //       return;
+  //     }
+  //     router.push(`/bookings/${booking?._id}/summary`);
+  //   }
+  // }, []);
 
   const handleSubmit = async () => {
     try {
@@ -116,6 +116,10 @@ const Questionnaire = ({
   };
 
   const resetBooking = () => {
+    if (goBack === 'true') {
+      router.push(`/bookings/${booking?._id}/rules`);
+      return;
+    }
     if (booking?.eventId) {
       router.push(
         `/bookings/create/dates?eventId=${booking.eventId}&start=${dayjs(
@@ -173,7 +177,7 @@ const Questionnaire = ({
       <div className="w-full max-w-screen-sm mx-auto p-8">
         <BookingBackButton
           onClick={resetBooking}
-          name={t('buttons_back_to_dates')}
+          name={t('buttons_back')}
         />
 
         <Heading level={1} className="pb-4 mt-8">

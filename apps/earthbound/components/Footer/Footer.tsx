@@ -20,7 +20,7 @@ export const Footer: FC = () => {
         </p>
   
 
-        <div className="social mt-4 flex flex-row justify-center">
+        <div className=" mt-4 flex flex-row justify-center">
           <a
             href="https://t.me/earthboundecovillage"
             target="_blank"
@@ -28,7 +28,7 @@ export const Footer: FC = () => {
             rel="noreferrer"
           >
             <svg
-              className="h-8 w-8 text-accent"
+              className="h-10 w-10 text-accent"
               width="24"
               height="24"
               viewBox="0 0 24 24"
@@ -52,7 +52,7 @@ export const Footer: FC = () => {
               rel="noreferrer"
           >
             <svg
-              className="h-8 w-8 text-accent"
+              className="h-10 w-10 text-accent"
               width="24"
               height="24"
               viewBox="0 0 24 24"
@@ -76,7 +76,7 @@ export const Footer: FC = () => {
               target="_blank"
               rel="noreferrer nofollow"
               title="Follow us on Facebook"
-              className="text-2xl mr-2 rounded-full p-2 text-accent bg-transparent duration-300 hover:scale-110"
+              className="pt-[12px] text-[30px] mr-2 rounded-full p-2 text-accent bg-transparent duration-300 hover:scale-110"
             >
               <RiFacebookFill />
             </a>
@@ -92,6 +92,10 @@ export const Footer: FC = () => {
             </Link>
           </p>
         </div>
+        <p className='mt-6'>
+          Logo and icons designed by <a href="https://www.instagram.com/zu_sun_na/">Zuzanna Bączyk</a>
+        </p>
+
       </div>
     </footer>
   );

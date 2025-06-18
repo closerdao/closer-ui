@@ -1,14 +1,12 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
-import { CSVLink } from 'react-csv';
-
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
 import { BOOKINGS_PER_PAGE, MAX_BOOKINGS_TO_FETCH } from '../constants';
 import { usePlatform } from '../contexts/platform';
 import BookingListPreview from './BookingListPreview/BookingListPreview';
 import Pagination from './Pagination';
-import { Heading, Spinner } from './ui';
+import { Button, Heading, Spinner } from './ui';
 
 interface Props {
   filter: any;
@@ -106,50 +104,65 @@ const Bookings = ({ filter, page, setPage }: Props) => {
               </Heading>
 
               {bookings && (
-                <CSVLink
-                  className="underline  text-accent"
-                  data={bookings
-                    .map((booking: any) => {
-                      const user = platform.user.findOne(
-                        booking.get('createdBy'),
-                      );
-                      const listing = platform.listing.findOne(
-                        booking.get('listing'),
-                      );
-                      const bookingEvent = platform.event.findOne(
-                        booking.get('eventId'),
-                      );
+                <Button
+                  className="underline text-accent"
+                  onClick={() => {
+                    const headers = [
+                      { label: 'ID', key: 'id' },
+                      { label: 'Name', key: 'name' },
+                      { label: 'Listing', key: 'listing' },
+                      { label: 'Event', key: 'event' },
+                      { label: 'Guests', key: 'guests' },
+                      { label: 'Volunteer', key: 'volunteer' },
+                      { label: 'Arrival', key: 'arrival' },
+                      { label: 'Pickup', key: 'pickup' },
+                      { label: 'Total', key: 'total' },
+                    ];
+                    const data = bookings
+                      .map((booking: any) => {
+                        const user = platform.user.findOne(
+                          booking.get('createdBy'),
+                        );
+                        const listing = platform.listing.findOne(
+                          booking.get('listing'),
+                        );
+                        const bookingEvent = platform.event.findOne(
+                          booking.get('eventId'),
+                        );
 
-                      return {
-                        id: booking.get('_id'),
-                        name: user?.get('screenname'),
-                        listing: listing?.get('name'),
-                        event: bookingEvent?.get('name'),
-                        guests: booking.get('adults'),
-                        volunteer: booking.get('volunteerId'),
-                        arrival: booking.get('start'),
-                        pickup: booking.get('doesNeedPickup'),
-                        total: booking.getIn(['total', 'val']),
-                      };
-                    })
-                    .toJS()}
-                  headers={[
-                    { label: 'ID', key: 'id' },
-                    { label: 'Name', key: 'name' },
-                    { label: 'Listing', key: 'listing' },
-                    { label: 'Event', key: 'event' },
-                    { label: 'Guests', key: 'guests' },
-                    { label: 'Volunteer', key: 'volunteer' },
-                    { label: 'Arrival', key: 'arrival' },
-                    { label: 'Pickup', key: 'pickup' },
-                    { label: 'Total', key: 'total' },
-                  ]}
-                  filename={`bookings-${dayjs().format(
-                    'YYYY-MM-DD.HH:mm',
-                  )}.csv`}
+                        return {
+                          id: booking.get('_id'),
+                          name: user?.get('screenname'),
+                          listing: listing?.get('name'),
+                          event: bookingEvent?.get('name'),
+                          guests: booking.get('adults'),
+                          volunteer: booking.get('volunteerId'),
+                          arrival: booking.get('start'),
+                          pickup: booking.get('doesNeedPickup'),
+                          total: booking.getIn(['total', 'val']),
+                        };
+                      })
+                      .toJS();
+
+                    const csvContent = [
+                      headers.map((h) => h.label).join(','),
+                      ...data.map((row: Record<string, string | number>) =>
+                        Object.values(row).join(','),
+                      ),
+                    ].join('\n');
+
+                    const blob = new Blob([csvContent], {
+                      type: 'text/csv;charset=utf-8;',
+                    });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `bookings-${dayjs().format('YYYY-MM-DD.HH:mm')}.csv`;
+                    link.click();
+                    URL.revokeObjectURL(link.href);
+                  }}
                 >
                   {t('generic_export_csv')}
-                </CSVLink>
+                </Button>
               )}
             </div>
             <div className="bookings-list mt-8 flex flex-wrap gap-4">
@@ -197,7 +210,9 @@ const Bookings = ({ filter, page, setPage }: Props) => {
                       booking={platform.booking.findOne(booking.get('_id'))}
                       listingName={listingName}
                       isPrivate={listing && listing.get('private')}
-                      isHourly={listing && listing.get('priceDuration') === 'hour'}
+                      isHourly={
+                        listing && listing.get('priceDuration') === 'hour'
+                      }
                       userInfo={
                         user && {
                           name: user.screenname,

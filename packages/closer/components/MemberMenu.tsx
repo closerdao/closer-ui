@@ -48,6 +48,51 @@ const MemberMenu = () => {
   ): MenuSection[] => {
     // Create all menu sections with their items
     const sections: MenuSection[] = [
+      // General section
+      {
+        label: 'General',
+        isOpen: true,
+        items: [
+          ...(APP_NAME && APP_NAME.toLowerCase() === 'earthbound'
+            ? [
+                {
+                  label: t('header_nav_home'),
+                  url: '/',
+                  enabled: true,
+                },
+                {
+                  label: t('header_nav_invest'),
+                  url: '/pages/invest',
+                  enabled: true,
+                  rbacPage: 'Invest',
+                },
+                {
+                  label: t('header_nav_stay'),
+                  url: '/stay',
+                  enabled: true,
+                },
+                {
+                  label: t('header_nav_community'),
+                  url: '/pages/community',
+                  enabled: true,
+                  rbacPage: 'Community',
+                },
+              ]
+            : []),
+          {
+            label: 'Invest',
+            url: '/dataroom',
+            enabled: true,
+            rbacPage: 'Dataroom',
+          },
+          {
+            label: 'Learn about the $TDF token',
+            url: '/token',
+            enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
+            rbacPage: 'Token',
+          },
+        ],
+      },
       // Stay section (open by default)
       {
         label: t('menu_section_stay'),
@@ -96,7 +141,7 @@ const MemberMenu = () => {
           {
             label: t('navigation_events'),
             url: '/events',
-            enabled: APP_NAME.toLowerCase() !== 'lios',
+            enabled: APP_NAME.toLowerCase() !== 'lios' && APP_NAME.toLowerCase() !== 'earthbound' && APP_NAME.toLowerCase() !== 'closer' ,
             rbacPage: 'Events',
           },
         ],
@@ -235,7 +280,7 @@ const MemberMenu = () => {
     });
 
     // FAQ section (standalone)
-    
+
     sections.push({
       label: t('navigation_faq'),
       isOpen: false,
@@ -243,7 +288,11 @@ const MemberMenu = () => {
         {
           label: t('navigation_faq'),
           url: '/resources',
-          enabled: APP_NAME.toLowerCase() !== 'lios' && APP_NAME !== 'foz' && APP_NAME.toLowerCase() !== 'closer',
+          enabled:
+            APP_NAME.toLowerCase() !== 'lios' &&
+            APP_NAME !== 'foz' &&
+            APP_NAME !== 'earthbound' &&
+            APP_NAME.toLowerCase() !== 'closer',
           rbacPage: 'Resources',
         },
       ],
@@ -254,22 +303,6 @@ const MemberMenu = () => {
       label: t('menu_section_other'),
       isOpen: false,
       items: [
-        ...(APP_NAME && APP_NAME.toLowerCase() === 'earthbound'
-          ? [
-              {
-                label: t('header_nav_invest'),
-                url: '/pages/invest',
-                enabled: true,
-                rbacPage: 'Invest',
-              },
-              {
-                label: t('header_nav_community'),
-                url: '/members',
-                enabled: true,
-                rbacPage: 'Community',
-              },
-            ]
-          : []),
         ...(process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true' &&
         user?.affiliate
           ? [

@@ -28,6 +28,7 @@ const CustomPromoCard: React.FC<{
           alt={content.title}
           width={800}
           height={1000}
+          quality={90}
           className="w-full h-auto md:h-full object-contain md:object-cover"
           sizes="(max-width: 768px) 100vw, 40vw"
         />}
