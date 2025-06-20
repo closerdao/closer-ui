@@ -44,7 +44,7 @@ const SubscriptionsPage: NextPage<Props> = ({
   const { APP_NAME } = defaultConfig;
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
-  
+
   const router = useRouter();
 
   const areSubscriptionsEnabled =
@@ -54,7 +54,6 @@ const SubscriptionsPage: NextPage<Props> = ({
   const plans: any[] = prepareSubscriptions(subscriptionsConfig);
 
   const [userActivePlan, setUserActivePlan] = useState<SubscriptionPlan>();
-
 
   const hasComponentRendered = useRef(false);
 
@@ -77,8 +76,9 @@ const SubscriptionsPage: NextPage<Props> = ({
   }, []);
 
   useEffect(() => {
-
-    const isSubscriber = user?.subscription?.plan && new Date(user?.subscription?.validUntil || '') > new Date();
+    const isSubscriber =
+      user?.subscription?.plan &&
+      new Date(user?.subscription?.validUntil || '') > new Date();
     const selectedSubscription = plans?.find(
       (plan: any) => plan.priceId === (user?.subscription?.priceId || 'free'),
     );
@@ -116,7 +116,6 @@ const SubscriptionsPage: NextPage<Props> = ({
 
       const portalUrl = response.data.sessionUrl;
       router.push(portalUrl);
-
     } else {
       if (hasVariants) {
         // User does not yet have a subscription and subscription has avriants - redirect to variant selection page
@@ -152,7 +151,7 @@ const SubscriptionsPage: NextPage<Props> = ({
               level={1}
               className="font-extrabold mb-6 uppercase text-center"
             >
-              {APP_NAME.toLowerCase() === 'tdf' ? (
+              {APP_NAME?.toLowerCase() === 'tdf' ? (
                 <>
                   <div className="text-2xl sm:text-5xl">
                     {t('pricing_and_product_heading_1')}
@@ -173,7 +172,7 @@ const SubscriptionsPage: NextPage<Props> = ({
               )}
             </Heading>
 
-            {APP_NAME.toLowerCase() === 'tdf' ? (
+            {APP_NAME?.toLowerCase() === 'tdf' ? (
               <div className="flex justify-center flex-wrap ">
                 <p className="mb-4 max-w-[630px]">
                   {t('pricing_and_product_intro_1')}
@@ -198,7 +197,7 @@ const SubscriptionsPage: NextPage<Props> = ({
           currency={DEFAULT_CURRENCY}
         />
 
-        {APP_NAME.toLowerCase() === 'tdf' && (
+        {APP_NAME?.toLowerCase() === 'tdf' && (
           <>
             <section className="flex items-center flex-col py-24">
               <div className="w-full  ">

@@ -79,7 +79,7 @@ const Signup = ({ subscriptionsConfig }: Props) => {
         ) : (
           <div
             className={`${
-              APP_NAME && APP_NAME.toLowerCase() === 'tdf'
+              APP_NAME && APP_NAME?.toLowerCase() === 'tdf'
                 ? 'md:mt-[200px]'
                 : ' md:mt-[60px]'
             } flex flex-col md:flex-row gap-6 mt-0`}
@@ -94,7 +94,7 @@ const Signup = ({ subscriptionsConfig }: Props) => {
 
               {/* TODO: discuss free creidt distribution to new users */}
               {/* {APP_NAME &&
-                APP_NAME.toLowerCase() === 'moos' &&
+                APP_NAME?.toLowerCase() === 'moos' &&
                 process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' && (
                   <div>
                     <span
@@ -111,7 +111,7 @@ const Signup = ({ subscriptionsConfig }: Props) => {
                   </div>
                 )} */}
 
-              {APP_NAME && APP_NAME.toLowerCase() === 'moos' && (
+              {APP_NAME && APP_NAME?.toLowerCase() === 'moos' && (
                 <div className="flex flex-col gap-4">
                   <p> {t('signup_intro_1')}</p>
                   <p> {t('signup_intro_2')}</p>

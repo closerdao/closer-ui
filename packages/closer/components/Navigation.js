@@ -77,7 +77,7 @@ const Navigation = () => {
               : 'w-auto justify-center'
           } flex gap-2  items-center `}
         >
-          {APP_NAME && APP_NAME.toLowerCase() === 'earthbound' && (
+          {APP_NAME && APP_NAME?.toLowerCase() === 'earthbound' && (
             <div className="flex gap-3 items-center">
               <ul className="gap-4 hidden sm:flex">
                 <li>
@@ -94,7 +94,6 @@ const Navigation = () => {
                     {t('header_nav_community')}
                   </Link>
                 </li>
-           
               </ul>
               <Button
                 size="small"
@@ -105,7 +104,7 @@ const Navigation = () => {
               </Button>
             </div>
           )}
-          {APP_NAME && APP_NAME.toLowerCase() === 'closer' && (
+          {APP_NAME && APP_NAME?.toLowerCase() === 'closer' && (
             <div className="flex gap-3 items-center  w-full justify-between">
               <div className="w-full flex justify-center">
                 <ul className="gap-4 text-sm md:text-md hidden md:flex font-medium">
@@ -177,9 +176,9 @@ const Navigation = () => {
           ) : null}
           {!isAuthenticated &&
             APP_NAME &&
-            (APP_NAME.toLowerCase() === 'moos' ||
-              APP_NAME.toLowerCase() === 'lios' ||
-              APP_NAME.toLowerCase() === 'foz') && (
+            (APP_NAME?.toLowerCase() === 'moos' ||
+              APP_NAME?.toLowerCase() === 'lios' ||
+              APP_NAME?.toLowerCase() === 'foz') && (
               <Button
                 onClick={() => router.push('/login')}
                 size="small"
@@ -193,9 +192,9 @@ const Navigation = () => {
             )}
           {isAuthenticated &&
             APP_NAME &&
-            (APP_NAME.toLowerCase() === 'moos' ||
-              APP_NAME.toLowerCase() === 'foz' ||
-              APP_NAME.toLowerCase() === 'per-auset') && (
+            (APP_NAME?.toLowerCase() === 'moos' ||
+              APP_NAME?.toLowerCase() === 'foz' ||
+              APP_NAME?.toLowerCase() === 'per-auset') && (
               <Button
                 onClick={() => router.push('/stay')}
                 size="small"
@@ -207,25 +206,29 @@ const Navigation = () => {
                 {t('navigation_stay')}
               </Button>
             )}
-          {isAuthenticated && APP_NAME && APP_NAME.toLowerCase() === 'lios' && (
-            <Button
-              onClick={() => router.push('/learn/category/all')}
-              size="small"
-              variant="primary"
-            >
-              {t('navigation_see_courses')}
-            </Button>
-          )}
+          {isAuthenticated &&
+            APP_NAME &&
+            APP_NAME?.toLowerCase() === 'lios' && (
+              <Button
+                onClick={() => router.push('/learn/category/all')}
+                size="small"
+                variant="primary"
+              >
+                {t('navigation_see_courses')}
+              </Button>
+            )}
 
-          {isBookingEnabled && APP_NAME && APP_NAME.toLowerCase() === 'tdf' && (
-            <Button
-              onClick={() => router.push('/stay')}
-              size="small"
-              variant="primary"
-            >
-              {t('navigation_stay')}
-            </Button>
-          )}
+          {isBookingEnabled &&
+            APP_NAME &&
+            APP_NAME?.toLowerCase() === 'tdf' && (
+              <Button
+                onClick={() => router.push('/stay')}
+                size="small"
+                variant="primary"
+              >
+                {t('navigation_stay')}
+              </Button>
+            )}
 
           {isAuthenticated && (
             <Link

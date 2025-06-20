@@ -34,7 +34,6 @@ const RedeemCredits = ({
   creditsError,
   isDemo,
 }: Props) => {
-
   const t = useTranslations();
   const { APP_NAME } = useConfig();
 
@@ -83,13 +82,13 @@ const RedeemCredits = ({
                   <Heading level={4}>
                     {isDemo &&
                       priceFormat(
-                        APP_NAME && APP_NAME.toLowerCase() !== 'moos' ? 50 : 5,
+                        APP_NAME && APP_NAME?.toLowerCase() !== 'moos' ? 50 : 5,
                       )}
                     {!isDemo &&
                       priceFormat(
-                        (fiatPricePerNight || 0) * (maxNightsToPayWithCredits || 0),
+                        (fiatPricePerNight || 0) *
+                          (maxNightsToPayWithCredits || 0),
                       )}
-
                   </Heading>
                   <div className="text-xs">
                     {t('carrots_off_accommodation')}
