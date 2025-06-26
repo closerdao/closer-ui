@@ -8,7 +8,6 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import Ama from '../../components/Ama';
 import Modal from '../../components/Modal';
 import PeekIntoFuture from '../../components/PeekIntoFuture';
-import TokenCounterSimple from '../../components/TokenCounterSimple';
 import YoutubeEmbed from '../../components/YoutubeEmbed';
 import { Button, Card, Heading } from '../../components/ui';
 
@@ -141,29 +140,22 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
       <main className="pt-4 pb-24 md:flex-row flex-wrap">
         <section className="mb-10">
-          <div className='rounded-lg h-[500px] md:h-[700px] flex items-center flex-col bg-center bg-[#333333] bg-cover bg-no-repeat text-white bg-[url("/images/token-sale/token-sale-hero.webp")]'>
-            {/* <h1 className="drop-shadow-[1px_2px_2px_rgba(254,79,183,1)] px-4 mb-2 sm:mb-8 mt-[20px] sm:mt-[70px] md:mt-[190px] max-w-[700px] text-center font-extrabold text-5xl md:text-6xl uppercase">
-              {t('token_sale_public_sale_announcement')}
-            </h1> */}
+          <div className='rounded-lg md:h-[700px] flex items-center flex-col bg-center bg-[#333333] bg-cover bg-no-repeat text-white bg-black bg-[url("/images/token-sale/token-sale-hero.webp")]'>
             <Heading
               level={1}
-              className="text-right font-bold text-3xl md:text-6xl px-4 drop-shadow-lg mb-2 md:mb-8 md:text-center max-w-[700px] mt-1 md:mt-[100px] md:bg-[url('/images/token-sale/token-illy.png')] bg-no-repeat pt-[20px] md:pt-[130px] bg-top animate-pulse"
+              className="text-right font-bold text-3xl md:text-6xl px-4 drop-shadow-lg mb-2 md:mb-8 md:text-center max-w-[700px] mt-1 md:mt-[100px] md:bg-[url('/images/token-sale/token-illy.png')] bg-no-repeat pt-[20px] md:pt-[130px] bg-top"
             >
               {t('token_sale_hero_epic_heading')}
             </Heading>
             <Heading
               level={2}
-              className="text-right md:text-center px-4 text-xl md:text-2xl max-w-[600px] font-normal mb-6 text-accent-light"
+              className="text-right md:text-center px-4 text-xl md:text-2xl max-w-[600px] font-normal mb-6"
             >
               {t('token_sale_hero_epic_subheading')}
             </Heading>
 
             {isWalletReady ? (
               <div className="p-4">
-                <TokenCounterSimple
-                  tokensToBuy={tokensToBuy}
-                  setTokensToBuy={setTokensToBuy}
-                />
 
                 <Button
                   className="!w-60 font-bold mb-3 md:mb-8 relative"
@@ -190,44 +182,9 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
             )}
           </div>
         </section>
-        <section className="flex items-center flex-col mb-32">
-          <div className="w-full flex flex-col  gap-20">
-            <div className="w-full flex items-center flex-col">
-              <Heading
-                level={2}
-                className="text-center mt-12 max-w-[620px] mb-6 text-3xl font-extrabold md:font-bold md:text-5xl uppercase md:normal-case"
-              >
-                {t('token_sale_tdf_intro_title')}
-              </Heading>
-              {/* <p className="text-center max-w-[640px] text-lg">
-                {t('token_sale_tdf_subtitle')}
-              </p> */}
-            </div>
-            <div className="flex gap-10 justify-center items-center flex-col md:flex-row">
-              <Image
-                className="w-full md:w-1/2 max-w-[430px]"
-                src="/images/token-sale/tdf-token.png"
-                width={430}
-                height={465}
-                alt={t('token_sale_public_sale_heading')}
-              />
-            </div>
-          </div>
-        </section>
 
         <section className="flex items-center flex-col mb-32">
           <div className="w-full flex flex-col  gap-20">
-            <div className="w-full flex items-center flex-col">
-              <Heading
-                level={2}
-                className="text-center mt-12 max-w-[620px] mb-6 text-3xl font-extrabold md:font-bold md:text-5xl uppercase md:normal-case"
-              >
-                {t('token_sale_sale_heading')}
-              </Heading>
-              <p className="text-center max-w-[660px] text-lg">
-                {t('token_sale_sale_description')}
-              </p>
-            </div>
             <div className="flex gap-10 justify-center items-center flex-col md:flex-row">
               <div className="w-full md:w-1/2 flex flex-col gap-7 max-w-[430px] ">
                 <Heading className="text-xl uppercase text-center" level={3}>

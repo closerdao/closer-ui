@@ -52,7 +52,7 @@ const HomePage = () => {
     }
   }, [isWalletReady]);
 
-  const CTA = isAuthenticated ? (
+  const CTA = (
     <>
       <Link
         href="/stay"
@@ -65,7 +65,7 @@ const HomePage = () => {
           })
         }
       >
-        Support (10€/m)
+        {t(`home_variant_${uiVariant}_cta_support`)}
       </Link>
       <Link
         href="/stay"
@@ -81,20 +81,6 @@ const HomePage = () => {
         {t(`home_variant_${uiVariant}_cta_book_a_stay`)}
       </Link>
       </>
-  ) : (
-    <Link
-      href="/signup"
-      type="submit"
-      className="bg-accent text-white rounded-full py-2.5 px-8 text-xl uppercase"
-      onClick={() =>
-        event('click', {
-          category: 'HomePage',
-          label: t(`home_variant_${uiVariant}_cta_join_the_dream_event`),
-        })
-      }
-    >
-      {t(`home_variant_${uiVariant}_cta_join_the_dream`)}
-    </Link>
   );
 
   return (
@@ -151,184 +137,6 @@ const HomePage = () => {
       </section>
 
       <div className="relative md:top-[105vh]">
-        <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2">
-          <div className="md:max-w-xl">
-            <Heading
-              level={2}
-              display
-              className="text-center md:text-left mb-6 md:text-6xl"
-            >
-              {t(`home_variant_${uiVariant}_about_title`)}
-            </Heading>
-
-            <p className="text-center md:text-left mb-6">
-              {t(`home_variant_${uiVariant}_about_subtitle`)}
-            </p>
-            <div className="md:flex md:flex-cols-2 md:space-x-6">
-              <ul className="space-y-6 md:w-1/2">
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/cowork.png"
-                    alt="Coworking"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    {t(`home_variant_${uiVariant}_about_coworking`)}
-                  </Heading>
-                </li>
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/van.png"
-                    alt="Van"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    {t(`home_variant_${uiVariant}_about_van_parking`)}
-                  </Heading>
-                </li>
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/foodforest.png"
-                    alt="Syntropic food forest"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    {t(`home_variant_${uiVariant}_about_food_forest`)}
-                    <p className="text-sm font-light">
-                      {t(`home_variant_${uiVariant}_about_food_forest_sub`)}
-                    </p>
-                  </Heading>
-                </li>
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/veggies.png"
-                    alt="Veggetable production"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    {t('home_about_market_garden')}
-                  </Heading>
-                </li>
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/cafe.png"
-                    alt="TDF Cafe"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    {t(`home_variant_${uiVariant}_about_mushroom_farm`)}
-                    <Tag className="m-1" color="primary">
-                      {t(`home_variant_${uiVariant}_about_coming_soon`)}
-                    </Tag>
-                  </Heading>
-                </li>
-              </ul>
-              <ul className="space-y-6 md:w-1/2">
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/event.png"
-                    alt="Events"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    {t(`home_variant_${uiVariant}_about_event_space`)}
-                  </Heading>
-                </li>
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/event.png"
-                    alt="Events"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    {t(`home_variant_${uiVariant}_about_sauna`)}
-                  </Heading>
-                </li>
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/wellness.png"
-                    alt="Wellness candle"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    {t(`home_variant_${uiVariant}_about_natural_pool`)}
-                    <Tag className="m-1" color="primary">
-                      {t(`home_variant_${uiVariant}_about_coming_soon`)}
-                    </Tag>
-                  </Heading>
-                </li>
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/cafe.png"
-                    alt="TDF Cafe"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    {t(`home_variant_${uiVariant}_about_coffee_shop`)}
-                  </Heading>
-                </li>
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/makerspace.png"
-                    alt="Makerspace"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    {t(`home_variant_${uiVariant}_about_makerspace`)}
-                  </Heading>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="md:pl-16">
-            <img src="/images/landing/tdf-map.png" alt="TDF Map" />
-          </div>
-        </section>
-        <section>
-          <div className="w-full flex justify-center flex-wrap mb-24">
-            <p className="w-full font-bold uppercase text-center mb-6">
-              {t(`home_variant_${uiVariant}_reports_title`)}
-            </p>
-            <div className="flex w-full justify-center gap-4">
-              <Button
-                className="w-fit"
-                variant="secondary"
-                onClick={() =>
-                  setSelectedReport({
-                    year: '2021',
-                    url: '/pdf/2021-TDF-report.pdf',
-                  })
-                }
-              >
-                {t(`home_variant_${uiVariant}_reports_2021`)}
-              </Button>
-              <Button
-                className="w-fit"
-                variant="secondary"
-                onClick={() =>
-                  setSelectedReport({
-                    year: '2022',
-                    url: '/pdf/2022-TDF-report.pdf',
-                  })
-                }
-              >
-                {t(`home_variant_${uiVariant}_reports_2022`)}
-              </Button>
-              <Button
-                className="w-fit"
-                onClick={() =>
-                  setSelectedReport({
-                    year: '2024',
-                    url: '/pdf/2024-TDF-report.pdf',
-                  })
-                }
-              >
-                {t(`home_variant_${uiVariant}_reports_2024`)}
-              </Button>
-            </div>
-          </div>
-        </section>
-
         <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2 items-center content-center space-x-8">
           <div className="md:pl-4 mt-5">
             <img src="/images/maps/co-living.png" alt="TDF Orchard Map" />
@@ -430,6 +238,51 @@ const HomePage = () => {
         <section className="py-20 mt-12 text-white -mx-4">
           <div className="text-center mb-20">
             <PhotoGallery className="mt-8" />
+          </div>
+        </section>
+        
+        <section>
+          <div className="w-full flex justify-center flex-wrap mb-24">
+            <p className="w-full font-bold uppercase text-center mb-6">
+              {t(`home_variant_${uiVariant}_reports_title`)}
+            </p>
+            <div className="flex w-full justify-center gap-4">
+              <Button
+                className="w-fit"
+                variant="secondary"
+                onClick={() =>
+                  setSelectedReport({
+                    year: '2021',
+                    url: '/pdf/2021-TDF-report.pdf',
+                  })
+                }
+              >
+                {t(`home_variant_${uiVariant}_reports_2021`)}
+              </Button>
+              <Button
+                className="w-fit"
+                variant="secondary"
+                onClick={() =>
+                  setSelectedReport({
+                    year: '2022',
+                    url: '/pdf/2022-TDF-report.pdf',
+                  })
+                }
+              >
+                {t(`home_variant_${uiVariant}_reports_2022`)}
+              </Button>
+              <Button
+                className="w-fit"
+                onClick={() =>
+                  setSelectedReport({
+                    year: '2024',
+                    url: '/pdf/2024-TDF-report.pdf',
+                  })
+                }
+              >
+                {t(`home_variant_${uiVariant}_reports_2024`)}
+              </Button>
+            </div>
           </div>
         </section>
 

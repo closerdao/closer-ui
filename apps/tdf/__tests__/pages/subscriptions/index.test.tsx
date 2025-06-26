@@ -18,7 +18,7 @@ describe('Subscriptions', () => {
     );
 
     const title = screen.getByRole('heading', {
-      name: /ONE REGENERATIVE CO-LIVING/i,
+      name: /SUBSCRIBE TO THE PLACE YOUR HEART CALLS HOME/i,
     });
 
     expect(title).toBeInTheDocument();
