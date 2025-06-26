@@ -230,17 +230,19 @@ const ValidationCitizenPage: NextPage<Props> = ({
               </div>
             )}
           </section>
-          <section className="space-y-6">
-            <CitizenEligibility
-              userReports={user?.reports || []}
-              userSubscription={user?.subscription}
-              hasStayedForMinDuration={hasStayedForMinDuration}
-              isVouched={isVouched}
-              owns30Tokens={owns30Tokens}
-              minVouches={minVouches}
-              isSpaceHostVouchRequired={isSpaceHostVouchRequired}
-            />
-          </section>
+          {!isMember &&
+            <section className="space-y-6">
+              <CitizenEligibility
+                userReports={user?.reports || []}
+                userSubscription={user?.subscription}
+                hasStayedForMinDuration={hasStayedForMinDuration}
+                isVouched={isVouched}
+                owns30Tokens={owns30Tokens}
+                minVouches={minVouches}
+                isSpaceHostVouchRequired={isSpaceHostVouchRequired}
+              />
+            </section>
+          }
 
           {isWalletEnabled &&
           (eligibility === 'buy_more' || eligibility === 'not_eligible') ? (
