@@ -1,5 +1,4 @@
 import Head from 'next/head';
-import Link from 'next/link';
 import { useFeatureFlagVariantKey } from 'posthog-js/react';
 import { useRouter } from 'next/router';
 
@@ -14,7 +13,6 @@ import UpcomingEventsIntro from 'closer/components/UpcomingEventsIntro';
 import {
   Button,
   Heading,
-  Tag,
   WalletState,
   YoutubeEmbed,
   useAuth,
@@ -53,11 +51,10 @@ const HomePage = () => {
   }, [isWalletReady]);
 
   const CTA = (
-    <>
-      <Link
+    <div className="flex flex-wrap gap-2">
+      <LinkButton
         href="/stay"
-        type="submit"
-        className="border-accent border-2 mr-2 text-accent rounded-full py-2 px-8 text-xl uppercase hover:scale-105 duration-150"
+        variant='secondary'
         onClick={() =>
           event('click', {
             category: 'HomePage',
@@ -66,11 +63,10 @@ const HomePage = () => {
         }
       >
         {t(`home_variant_${uiVariant}_cta_support`)}
-      </Link>
-      <Link
+      </LinkButton>
+      <LinkButton
         href="/stay"
-        type="submit"
-        className="bg-accent text-white rounded-full py-2.5 px-8 text-xl uppercase"
+        variant="primary"
         onClick={() =>
           event('click', {
             category: 'HomePage',
@@ -79,8 +75,8 @@ const HomePage = () => {
         }
       >
         {t(`home_variant_${uiVariant}_cta_book_a_stay`)}
-      </Link>
-      </>
+      </LinkButton>
+    </div>
   );
 
   return (
@@ -95,8 +91,8 @@ const HomePage = () => {
         />
       </Head>
 
-      <section className="md:absolute md:-top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-light mb-8 md:mb-[100vh]">
-        <div className="md:h-[100vh]">
+      <section className="md:absolute -mt-4 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] mb-8 md:mb-[100vh] -mx-4 md:mx-0">
+        <div className="md:h-[100vh] md:opacity-40">
           {isMobile ? (
             <video
               loop={true}
@@ -114,11 +110,11 @@ const HomePage = () => {
             <YoutubeEmbed isBackgroundVideo={true} embedId="VkoqvPcaRpk" />
           )}
         </div>
-        <div className="md:absolute md:left-0 md:top-0 md:w-full md:h-full md:bg-white/60 flex justify-center ">
+        <div className="md:absolute md:left-0 md:top-0 mx-4 md:mx-0 md:w-full md:h-full flex justify-center ">
           <div className="w-full flex justify-center flex-col items-center">
             <div className=" max-w-4xl p-6 rounded-xl p-12">
               <Heading
-                className="mb-4 text-2xl md:text-4xl md:text-6xl"
+                className="mb-4 md:text-5xl"
                 data-testid="page-title"
                 display
                 level={1}
@@ -130,7 +126,7 @@ const HomePage = () => {
                   {t(`home_variant_${uiVariant}_hero_subtitle`)}
                 </p>
               </div>
-              <div>{CTA}</div>
+              {CTA}
             </div>
           </div>
         </div>
@@ -138,15 +134,12 @@ const HomePage = () => {
 
       <div className="relative md:top-[105vh]">
         <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2 items-center content-center space-x-8">
-          <div className="md:pl-4 mt-5">
+          <div className="md:pl-4 mt-5 -mx-4 md:mx-0">
             <img src="/images/maps/co-living.png" alt="TDF Orchard Map" />
           </div>
           <div className="max-w-prose">
-            <Heading className="text-center md:text-left mb-6 uppercase text-2xl font-black flex">
+            <Heading display level={2} className="mb-4 mt-4 md:mt-0">
               {t(`home_variant_${uiVariant}_coliving_title`)}
-              <span className="justify-center align-center -mt-1 ml-4">
-                <Tag color="primary">{t(`home_variant_${uiVariant}_coliving_plans_approved`)}</Tag>
-              </span>
             </Heading>
             <div className="md:flex md:flex-cols-2 md:space-x-2">
               <ul className="space-y-6">
@@ -174,17 +167,20 @@ const HomePage = () => {
         </section>
 
         <section
-          className="relative flex items-center justify-end h-screen my-20 w-full bg-cover bg-center bg-[url('/images/landing/land-plan.png')]"
+          className="relative flex items-center justify-end md:h-screen my-4 md:my-20 bg-cover bg-center md:bg-[url('/images/landing/land-plan.png')]"
         >
-          <div className="w-1/2 bg-white bg-opacity-80 p-20">
-            <Heading display level={2} className="mb-4">
+          <div className="md:w-1/2 bg-white md:bg-opacity-80 p-4 md:p-20">
+            <div className="md:hidden mt-5 mb-2 -mx-8">
+              <img src="/images/landing/land-plan.png" alt="TDF Orchard Map" />
+            </div>
+            <Heading display level={2} className="mb-4 mt-4 md:mt-0">
               {t('home_land_development_title')}
             </Heading>
             <p>{withBoldStyle(t('home_land_development_body'), t('home_land_development_body_bold'))}</p>
           </div>
         </section>
 
-        <section className='max-w-4xl mx-auto py-16 md:py-24'>
+        <section className='max-w-4xl mx-auto py-8 md:py-16'>
           <div className="bg-accent-light/20 rounded-2xl p-8 md:p-12 flex flex-col items-center text-center shadow-lg">
             <Heading
               level={1}
@@ -235,18 +231,18 @@ const HomePage = () => {
           </div>
         </section>
 
-        <section className="py-20 mt-12 text-white -mx-4">
-          <div className="text-center mb-20">
+        <section className="py-12 text-white -mx-4">
+          <div className="text-center">
             <PhotoGallery className="mt-8" />
           </div>
         </section>
-        
+
         <section>
           <div className="w-full flex justify-center flex-wrap mb-24">
-            <p className="w-full font-bold uppercase text-center mb-6">
+            <p className="font-bold uppercase text-center mb-6">
               {t(`home_variant_${uiVariant}_reports_title`)}
             </p>
-            <div className="flex w-full justify-center gap-4">
+            <div className="flex flex-wrap w-full justify-center gap-2">
               <Button
                 className="w-fit"
                 variant="secondary"
@@ -425,7 +421,7 @@ const HomePage = () => {
         <UpcomingEventsIntro />
 
         {/* this is needed because video embed in the header causes layout to be cut off at the bottom of the page */}
-        <section className="mb-[120vh]"></section>
+        <section className="md:mb-[120vh]"></section>
 
         {selectedReport && (
           <ReportDownloadModal

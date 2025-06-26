@@ -140,16 +140,17 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
       <main className="pt-4 pb-24 md:flex-row flex-wrap">
         <section className="mb-10">
-          <div className='rounded-lg md:h-[700px] flex items-center flex-col bg-center bg-[#333333] bg-cover bg-no-repeat text-white bg-black bg-[url("/images/token-sale/token-sale-hero.webp")]'>
+          <div className='rounded-lg md:h-[700px] flex items-center flex-col bg-center md:bg-black bg-cover bg-no-repeat md:text-white md:bg-[url("/images/token-sale/token-sale-hero.webp")]'>
             <Heading
               level={1}
-              className="text-right font-bold text-3xl md:text-6xl px-4 drop-shadow-lg mb-2 md:mb-8 md:text-center max-w-[700px] mt-1 md:mt-[100px] md:bg-[url('/images/token-sale/token-illy.png')] bg-no-repeat pt-[20px] md:pt-[130px] bg-top"
+              display
+              className="text-center md:text-right mb-2 md:mb-8 md:mt-[100px] md:bg-[url('/images/token-sale/token-illy.png')] bg-no-repeat pt-[20px] md:pt-[130px] bg-top"
             >
               {t('token_sale_hero_epic_heading')}
             </Heading>
             <Heading
               level={2}
-              className="text-right md:text-center px-4 text-xl md:text-2xl max-w-[600px] font-normal mb-6"
+              className="text-center px-4 text-xl md:text-2xl max-w-[600px] font-normal mb-6"
             >
               {t('token_sale_hero_epic_subheading')}
             </Heading>
@@ -183,8 +184,8 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
           </div>
         </section>
 
-        <section className="flex items-center flex-col mb-32">
-          <div className="w-full flex flex-col  gap-20">
+        <section className="flex items-center flex-col mb-16">
+          <div className="w-full flex flex-col gap-16">
             <div className="flex gap-10 justify-center items-center flex-col md:flex-row">
               <div className="w-full md:w-1/2 flex flex-col gap-7 max-w-[430px] ">
                 <Heading className="text-xl uppercase text-center" level={3}>
@@ -427,12 +428,12 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
               />
             </div>
           </div>
-          <Button isFullWidth={false} variant="secondary" onClick={handleNext}>
+          <Button onClick={handleNext}>
             {t('token_sale_secure_your_spot_button')}
           </Button>
         </section>
 
-        <section className="flex items-center flex-col mb-32 bg-gray-50 py-12 rounded-xl">
+        <section className="flex items-center flex-col mb-8 md:bg-gray-50 md:py-12 md:rounded-xl">
           <div className="w-full flex flex-col gap-8">
             <div className="w-full flex items-center flex-col">
               <Heading
