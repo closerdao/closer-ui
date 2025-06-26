@@ -63,6 +63,7 @@ const Events = ({ generalConfig }: Props) => {
               $gt: now,
             },
           }}
+          sort_by="start"
         />
       </div>
       <div className="main-content intro">

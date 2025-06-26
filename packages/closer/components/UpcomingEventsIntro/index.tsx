@@ -42,6 +42,7 @@ const UpcomingEventsIntro = () => {
               $gt: loadTime,
             },
           }}
+          sort_by="start"
         />
       </div>
     </section>
