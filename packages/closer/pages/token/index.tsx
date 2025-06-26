@@ -8,7 +8,6 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import Ama from '../../components/Ama';
 import Modal from '../../components/Modal';
 import PeekIntoFuture from '../../components/PeekIntoFuture';
-import TokenCounterSimple from '../../components/TokenCounterSimple';
 import YoutubeEmbed from '../../components/YoutubeEmbed';
 import { Button, Card, Heading } from '../../components/ui';
 
@@ -141,29 +140,22 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
       <main className="pt-4 pb-24 md:flex-row flex-wrap">
         <section className="mb-10">
-          <div className='rounded-lg h-[500px] md:h-[700px] flex items-center flex-col bg-center bg-[#333333] bg-cover bg-no-repeat text-white bg-[url("/images/token-sale/token-sale-hero.webp")]'>
-            {/* <h1 className="drop-shadow-[1px_2px_2px_rgba(254,79,183,1)] px-4 mb-2 sm:mb-8 mt-[20px] sm:mt-[70px] md:mt-[190px] max-w-[700px] text-center font-extrabold text-5xl md:text-6xl uppercase">
-              {t('token_sale_public_sale_announcement')}
-            </h1> */}
+          <div className='rounded-lg md:h-[700px] flex items-center flex-col bg-center bg-[#333333] bg-cover bg-no-repeat text-white bg-black bg-[url("/images/token-sale/token-sale-hero.webp")]'>
             <Heading
               level={1}
-              className="text-right font-bold text-2xl md:text-5xl px-4 drop-shadow-lg mb-2 md:mb-8 md:text-center max-w-[700px] mt-1 md:mt-[100px] md:bg-[url('/images/token-sale/token-illy.png')] bg-no-repeat pt-[20px] md:pt-[130px] bg-top"
+              className="text-right font-bold text-3xl md:text-6xl px-4 drop-shadow-lg mb-2 md:mb-8 md:text-center max-w-[700px] mt-1 md:mt-[100px] md:bg-[url('/images/token-sale/token-illy.png')] bg-no-repeat pt-[20px] md:pt-[130px] bg-top"
             >
-              {t('token_sale_hero_heading')}
+              {t('token_sale_hero_epic_heading')}
             </Heading>
             <Heading
               level={2}
-              className="text-right md:text-center px-4 text-lg md:text-md max-w-[500px] font-normal mb-4"
+              className="text-right md:text-center px-4 text-xl md:text-2xl max-w-[600px] font-normal mb-6"
             >
-              {t('token_sale_hero_subheading')}
+              {t('token_sale_hero_epic_subheading')}
             </Heading>
 
             {isWalletReady ? (
               <div className="p-4">
-                <TokenCounterSimple
-                  tokensToBuy={tokensToBuy}
-                  setTokensToBuy={setTokensToBuy}
-                />
 
                 <Button
                   className="!w-60 font-bold mb-3 md:mb-8 relative"
@@ -190,46 +182,9 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
             )}
           </div>
         </section>
-        <section className="flex items-center flex-col mb-32">
-          <div className="w-full flex flex-col  gap-20">
-            <div className="w-full flex items-center flex-col">
-              <Heading
-                level={2}
-                className="text-center mt-12 max-w-[620px] mb-6 text-3xl font-extrabold md:font-bold md:text-5xl uppercase md:normal-case"
-              >
-                {t('token_sale_tdf_intro_title')}
-              </Heading>
-              {/* <p className="text-center max-w-[640px] text-lg">
-                {t('token_sale_tdf_subtitle')}
-              </p> */}
-            </div>
-            <div className="flex gap-10 justify-center items-center flex-col md:flex-row">
-              <Image
-                className="w-full md:w-1/2 max-w-[430px]"
-                src="/images/token-sale/tdf-token.png"
-                width={430}
-                height={465}
-                alt={t('token_sale_public_sale_heading')}
-              />
-            </div>
-          </div>
-        </section>
 
         <section className="flex items-center flex-col mb-32">
           <div className="w-full flex flex-col  gap-20">
-            <div className="w-full flex items-center flex-col">
-              <Heading
-                level={2}
-                className="text-center mt-12 max-w-[620px] mb-6 text-3xl font-extrabold md:font-bold md:text-5xl uppercase md:normal-case"
-              >
-                $TDF Sale
-              </Heading>
-              <p className="text-center max-w-[660px] text-lg">
-                To fund the development of our regenerative village, we are
-                selling tokens that give the owners of those tokens a lifetime´s
-                access to TDF.
-              </p>
-            </div>
             <div className="flex gap-10 justify-center items-center flex-col md:flex-row">
               <div className="w-full md:w-1/2 flex flex-col gap-7 max-w-[430px] ">
                 <Heading className="text-xl uppercase text-center" level={3}>
@@ -288,9 +243,9 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 <Button
                   isFullWidth={false}
                   variant="secondary"
-                  onClick={handleNext}
+                  onClick={() => { router.push('/subscriptions/citizen/validation'); }}
                 >
-                  {t('token_sale_unlock_access')}
+                  {t('token_sale_become_member_button')}
                 </Button>
               </div>
             </div>
@@ -305,11 +260,10 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
               level={2}
               className="text-center mt-12 max-w-[620px] mb-6 text-3xl font-extrabold md:font-bold md:text-5xl uppercase md:normal-case"
             >
-              $TDF unlocks Access to Accommodation at TDF
+              {t('token_sale_accommodation_heading')}
             </Heading>
             <p className="text-center max-w-[660px] text-lg">
-              $TDF represents utility in the real world - in the forms of night
-              of stay at TDF
+              {t('token_sale_accommodation_description')}
             </p>
             <div className="mt-20 flex flex-col w-full md:w-[460px]">
               <Heading level={3} className="mb-6">
@@ -451,22 +405,18 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
             <div className="flex gap-10 justify-center items-center flex-col md:flex-row">
               <div className="text-sm flex flex-col gap-6 w-full md:w-1/3">
                 <p className="text-accent">
-                  1 $TDF = 1 night spent at utility cost per year, forever, in
-                  standard accommodation.
+                  {t('token_sale_token_night_value')}
                 </p>
 
                 <p className="text-accent">
-                  Your $TDF tokens give you access to your chosen accommodation.
-                  The utility fee includes energy, water, internet, taxes, food,
-                  salaries, maintenance etc.
+                  {t('token_sale_token_access_description')}
                 </p>
 
                 <p>
-                  Bookings must be approved by Space Host. Citizen get access to
-                  &quot;instant book&quot; (no approval).
+                  {t('token_sale_booking_approval')}
                 </p>
 
-                <p>$TDF tokens also give governance rights in the TDF DAO.</p>
+                <p>{t('token_sale_governance_rights')}</p>
               </div>
               <Image
                 className="w-full md:w-1/2 max-w-[430px] w-2/3"
@@ -478,47 +428,50 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
             </div>
           </div>
           <Button isFullWidth={false} variant="secondary" onClick={handleNext}>
-            UNLOCK ACCESS
+            {t('token_sale_secure_your_spot_button')}
           </Button>
         </section>
 
-        <section className="flex items-center flex-col mb-32 ">
-          <div className="w-full flex flex-col  gap-20">
-            <div className="flex gap-20 justify-center items-center flex-col md:flex-row">
-              <Image
-                className="w-full md:w-1/5 max-w-[413px]"
-                src="/images/token-sale/dive-deeper.png"
-                width={413}
-                height={548}
-                alt={t('token_sale_public_sale_heading')}
-              />
-              <div className="w-full md:w-4/5 flex flex-col gap-7 max-w-[430px] ">
-                <Heading
-                  level={2}
-                  className="text-3xl font-extrabold md:font-bold md:text-5xl uppercase md:normal-case"
-                >
-                  {t('token_sale_dive_deeper_heading')}
-                </Heading>
-                <div className="flex gap-8">
-                  <ul className="flex flex-col gap-5 ">
-                    <li>
-                      <Link
-                        className="text-accent underline font-bold"
-                        href="https://oasa.earth/papers/OASA-Whitepaper-V1.2.pdf"
-                        onClick={logDownloadWhitepaperAction}
-                      >
-                        {t('token_sale_white_paper')}
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        className="text-accent underline font-bold"
-                        href="https://docs.google.com/document/d/177JkHCy0AhplsaEEYpFHBsiI6d4uLk0TgURSKfBIewE/edit"
-                      >
-                        {t('token_sale_pink_paper')}
-                      </Link>
-                    </li>
-                  </ul>
+        <section className="flex items-center flex-col mb-32 bg-gray-50 py-12 rounded-xl">
+          <div className="w-full flex flex-col gap-8">
+            <div className="w-full flex items-center flex-col">
+              <Heading
+                level={2}
+                className="text-center mb-4 text-3xl font-extrabold md:font-bold md:text-4xl uppercase"
+              >
+                {t('token_sale_dive_deeper_heading')}
+              </Heading>
+              <p className="text-center max-w-[660px] text-lg mb-8">
+                {t('token_sale_dive_deeper_description')}
+              </p>
+            </div>
+            <div className="flex gap-10 justify-center items-center flex-col md:flex-row">
+              <div className="md:w-1/3">
+                <Image
+                  className="mx-auto"
+                  src="/images/token-sale/dive-deeper.png"
+                  width={250}
+                  height={330}
+                  alt={t('token_sale_public_sale_heading')}
+                />
+              </div>
+              <div className="md:w-2/3 flex flex-col gap-6 max-w-[500px]">
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 mb-6">
+                  <Heading level={3} className="mb-3 text-xl font-bold">
+                    {t('token_sale_whitepaper_title')}
+                  </Heading>
+                  <p className="mb-4">
+                    {t('token_sale_whitepaper_description')}
+                  </p>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      logDownloadWhitepaperAction();
+                      window.open('https://oasa.earth/papers/OASA-Whitepaper-V1.2.pdf', '_blank');
+                    }}
+                  >
+                    {t('token_sale_whitepaper')}
+                  </Button>
                 </div>
               </div>
             </div>
@@ -526,42 +479,6 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
         </section>
 
         <Ama />
-
-        <section className="flex items-center flex-col mb-32">
-          <div className="w-full flex flex-col  gap-20">
-            <div className="flex gap-20 justify-center items-center flex-col md:flex-row">
-              <Image
-                className="w-full md:w-1/5 max-w-[413px]"
-                src="/images/token-sale/dive-deeper.png"
-                width={413}
-                height={548}
-                alt={t('token_sale_public_sale_heading')}
-              />
-              <div className="w-full md:w-4/5 flex flex-col gap-7 max-w-[430px] ">
-                <Heading
-                  level={2}
-                  className="text-3xl font-extrabold md:font-bold md:text-5xl uppercase md:normal-case"
-                >
-                  {t('token_sale_unlocks_access_heading')}
-                </Heading>
-                <p className="text-center max-w-[660px] text-lg">
-                  {t('token_sale_unlocks_access_desc_1')}{' '}
-                  {t('token_sale_unlocks_access_desc_2')}
-                </p>
-                <div className="mt-20 flex flex-col w-full md:w-[460px]">
-                  <Heading level={3} className="mb-6">
-                    {t('token_sale_utility_fee')}
-                  </Heading>
-
-                  <div className="text-sm ">
-                    {t('token_sale_utility_fee_desc_1')}{' '}
-                    {t('token_sale_utility_fee_desc_2')}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
       </main>
     </div>
   );
