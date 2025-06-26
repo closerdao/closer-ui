@@ -37,7 +37,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
   const { APP_NAME, FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
 
   const { faqs, error } = useFaqs(FAQS_GOOGLE_SHEET_ID);
-  const appName = APP_NAME && APP_NAME.toLowerCase();
+  const appName = APP_NAME && APP_NAME?.toLowerCase();
 
   const config = useConfig();
   const discounts = {
@@ -107,7 +107,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
       type="submit"
       className=" font-accent  lowercase bg-accent text-white rounded-full py-2.5 px-8 text-xl"
     >
-       {t('navigation_see_courses')}
+      {t('navigation_see_courses')}
     </Link>
   );
 
@@ -179,7 +179,9 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                 A Desert school of ecological imagination.
               </Heading> */}
 
-               <div className="justify-center w-full flex  pb-[5vh] md:pb-[calc(20vh)]">{CTA}</div> 
+              <div className="justify-center w-full flex  pb-[5vh] md:pb-[calc(20vh)]">
+                {CTA}
+              </div>
             </div>
           </div>
         </div>
@@ -719,7 +721,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                 </Heading>
                 <p>
                   <strong className="font-bold">
-                    Verein Member - Annual - Standard Rate - €111 / year 
+                    Verein Member - Annual - Standard Rate - €111 / year
                   </strong>
                 </p>
                 <p>
@@ -733,7 +735,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                 </Heading>
                 <p>
                   <strong className="font-bold">
-                    Angel Rate - Verein Membership - € 222 / year 
+                    Angel Rate - Verein Membership - € 222 / year
                   </strong>
                 </p>
                 <p>

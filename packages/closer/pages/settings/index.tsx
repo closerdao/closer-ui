@@ -610,7 +610,7 @@ const SettingsPage = ({
                     className="mb-4"
                   />
 
-                  {APP_NAME && APP_NAME.toLowerCase() !== 'moos' && (
+                  {APP_NAME && APP_NAME?.toLowerCase() !== 'moos' && (
                     <Select
                       label={t('settings_shared_accommodation_preference')}
                       value={user?.preferences?.sharedAccomodation}

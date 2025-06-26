@@ -40,7 +40,7 @@ const SubscriptionsPage: NextPage<Props> = ({
   const { APP_NAME } = defaultConfig;
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
-  
+
   const router = useRouter();
 
   const areSubscriptionsEnabled =
@@ -50,7 +50,6 @@ const SubscriptionsPage: NextPage<Props> = ({
   const plans: any[] = prepareSubscriptions(subscriptionsConfig);
 
   const [userActivePlan, setUserActivePlan] = useState<SubscriptionPlan>();
-
 
   const hasComponentRendered = useRef(false);
 
@@ -73,8 +72,9 @@ const SubscriptionsPage: NextPage<Props> = ({
   }, []);
 
   useEffect(() => {
-
-    const isSubscriber = user?.subscription?.plan && new Date(user?.subscription?.validUntil || '') > new Date();
+    const isSubscriber =
+      user?.subscription?.plan &&
+      new Date(user?.subscription?.validUntil || '') > new Date();
     const selectedSubscription = plans?.find(
       (plan: any) => plan.priceId === (user?.subscription?.priceId || 'free'),
     );
@@ -87,7 +87,7 @@ const SubscriptionsPage: NextPage<Props> = ({
     slug: string,
   ) => {
     if (slug === 'citizen') {
-      router.push('/subscriptions/citizen/validation');
+      router.push('/subscriptions/citizen/validation`');
       return;
     }
     if (priceId?.includes(',')) {
@@ -112,7 +112,6 @@ const SubscriptionsPage: NextPage<Props> = ({
 
       const portalUrl = response.data.sessionUrl;
       router.push(portalUrl);
-
     } else {
       if (hasVariants) {
         // User does not yet have a subscription and subscription has avriants - redirect to variant selection page

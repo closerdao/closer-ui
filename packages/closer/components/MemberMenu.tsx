@@ -53,7 +53,7 @@ const MemberMenu = () => {
         label: 'General',
         isOpen: true,
         items: [
-          ...(APP_NAME && APP_NAME.toLowerCase() === 'earthbound'
+          ...(APP_NAME && APP_NAME?.toLowerCase() === 'earthbound'
             ? [
                 {
                   label: t('header_nav_home'),
@@ -113,7 +113,7 @@ const MemberMenu = () => {
           {
             label: t('navigation_residence'),
             url: '/projects',
-            enabled: isVolunteeringEnabled && APP_NAME.toLowerCase() === 'tdf',
+            enabled: isVolunteeringEnabled && APP_NAME?.toLowerCase() === 'tdf',
             rbacPage: 'Residence',
           },
         ],
@@ -141,7 +141,10 @@ const MemberMenu = () => {
           {
             label: t('navigation_events'),
             url: '/events',
-            enabled: APP_NAME.toLowerCase() !== 'lios' && APP_NAME.toLowerCase() !== 'earthbound' && APP_NAME.toLowerCase() !== 'closer' ,
+            enabled:
+              APP_NAME?.toLowerCase() !== 'lios' &&
+              APP_NAME?.toLowerCase() !== 'earthbound' &&
+              APP_NAME?.toLowerCase() !== 'closer',
             rbacPage: 'Events',
           },
         ],
@@ -289,10 +292,10 @@ const MemberMenu = () => {
           label: t('navigation_faq'),
           url: '/resources',
           enabled:
-            APP_NAME.toLowerCase() !== 'lios' &&
+            APP_NAME?.toLowerCase() !== 'lios' &&
             APP_NAME !== 'foz' &&
             APP_NAME !== 'earthbound' &&
-            APP_NAME.toLowerCase() !== 'closer',
+            APP_NAME?.toLowerCase() !== 'closer',
           rbacPage: 'Resources',
         },
       ],
