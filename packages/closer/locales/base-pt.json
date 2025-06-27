@@ -40,7 +40,7 @@
   "bookings_payment_utility": "Pagamento Custo Alimentação",
   "booking_cancelation_policy_member": "Os membros podem cancelar as suas reservas sem custo, até 7 dias antes do check-in. Se cancelar com menos de 7 dias de antecedência, receberá um reembolso de 50%.",
   "booking_volunteering_details": "Você apoiará os esforços dos anfitriões no local, fornecendo 3-4h de trabalho por dia.",
-  "booking_cancelation_policy": "Caso a reserva seja recusada por qualquer motivo, você receberá um reembolso total. Se decidir cancelar, receberá um reembolso de {lastmonth} até 30 dias antes, {lastweek} reembolso até 7 dias antes da reserva, e {lastday} reembolso até o último dia.",
+  "booking_cancelation_policy": "Caso a reserva seja recusada por qualquer motivo, você receberá um reembolso total. Se decidir cancelar, receberá um reembolso de {lastmonth} até 30 dias antes, {lastweek} reembolso até 7 dias antes da reserva.",
   "booking_cancel_button": "Cancelar reserva",
   "booking_confirm_button": "Aprovar",
   "booking_reject_button": "Rejeitar",
