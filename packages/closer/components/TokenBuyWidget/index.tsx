@@ -3,6 +3,7 @@ import React, {
   FC,
   SetStateAction,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 
@@ -24,6 +25,7 @@ interface Props {
   setTokensToBuy: Dispatch<SetStateAction<number>>;
   tokensToSpend: number;
   setTokensToSpend: Dispatch<SetStateAction<number>>;
+  setIsCalculationPending?: Dispatch<SetStateAction<boolean>>;
 }
 
 const TokenBuyWidget: FC<Props> = ({
@@ -31,6 +33,7 @@ const TokenBuyWidget: FC<Props> = ({
   setTokensToBuy,
   tokensToSpend,
   setTokensToSpend,
+  setIsCalculationPending,
 }) => {
   const t = useTranslations();
   const { SOURCE_TOKEN } = useConfig() || {};
@@ -74,6 +77,49 @@ const TokenBuyWidget: FC<Props> = ({
   });
 
   const [nightsPerYear, setNightsPerYear] = useState(0);
+  const calculationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Debounced calculation function to prevent race conditions
+  const debouncedCalculateTotalCost = (amount: number) => {
+    // Clear any existing timeout
+    if (calculationTimeoutRef.current) {
+      clearTimeout(calculationTimeoutRef.current);
+    }
+
+    // Cancel any ongoing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new abort controller for this request
+    abortControllerRef.current = new AbortController();
+
+    // Set calculation as pending
+    setIsCalculationPending?.(true);
+
+    // Debounce the calculation
+    calculationTimeoutRef.current = setTimeout(async () => {
+      try {
+        const totalCost = await getTotalCostWithoutWallet(amount.toString());
+
+        // Only update if the request wasn't aborted
+        if (!abortControllerRef.current?.signal.aborted) {
+          setTokensToSpend(totalCost);
+        }
+      } catch (error) {
+        if (!abortControllerRef.current?.signal.aborted) {
+          console.error('Error calculating total cost:', error);
+          setTokensToSpend(0);
+        }
+      } finally {
+        // Only clear pending state if the request wasn't aborted
+        if (!abortControllerRef.current?.signal.aborted) {
+          setIsCalculationPending?.(false);
+        }
+      }
+    }, 300); // 300ms debounce
+  };
 
   useEffect(() => {
     (async () => {
@@ -121,11 +167,23 @@ const TokenBuyWidget: FC<Props> = ({
         price: res?.data?.results[0].tokenPrice.val,
       });
 
-      const totalCost = await getTotalCostWithoutWallet(tokensToBuy.toString());
-      setTokensToSpend(totalCost);
+      // Calculate initial total cost
+      debouncedCalculateTotalCost(tokensToBuy);
 
       setTokenPrice(price);
     })();
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (calculationTimeoutRef.current) {
+        clearTimeout(calculationTimeoutRef.current);
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, []);
 
   const handleAccommodationSelect = (value: string) => {
@@ -146,17 +204,19 @@ const TokenBuyWidget: FC<Props> = ({
   const handleTokensToBuyChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    if (Number(event.target.value) > MAX_TOKENS_PER_TRANSACTION) {
-      setTokensToBuy(MAX_TOKENS_PER_TRANSACTION);
-    } else {
-      setTokensToBuy(Number(event.target.value));
-    }
+    const newValue = Number(event.target.value);
+    const clampedValue =
+      newValue > MAX_TOKENS_PER_TRANSACTION
+        ? MAX_TOKENS_PER_TRANSACTION
+        : newValue;
 
-    const totalCost = await getTotalCostWithoutWallet(
-      event.target.value.toString(),
-    );
+    setTokensToBuy(clampedValue);
 
-    setTokensToSpend(totalCost);
+    // Reset tokens to spend immediately to show loading state
+    setTokensToSpend(0);
+
+    // Trigger debounced calculation
+    debouncedCalculateTotalCost(clampedValue);
   };
 
   return (
@@ -194,7 +254,11 @@ const TokenBuyWidget: FC<Props> = ({
           <input
             id="tokensToSpend"
             disabled={true}
-            value={isPending ? 'calculating...' : tokensToSpend}
+            value={
+              isPending || (setIsCalculationPending && tokensToSpend === 0)
+                ? 'calculating...'
+                : tokensToSpend
+            }
             className="h-14 px-4 pr-8 rounded-md text-xl bg-neutral text-black !border-none"
           />
           <p className="absolute right-3 top-4"> {t('token_sale_pay')}</p>

@@ -619,7 +619,7 @@
   "subscriptions_citizen_perks_list": "Prova de presença, Prova de suor, Propostas no fórum, NFT de Membro, Página de Membros TDF, Grupo Telegram de Membros, Reserva instantânea",
   "subscriptions_citizen_good_to_go": "👋🏼 Está pronto para avançar!",
   "subscriptions_citizen_eligible": "👋🏼 É elegível para se tornar membro!",
-  "subscriptions_citizen_good_to_go_intro": "Ser um Membro da Fábrica de Sonhos Tradicional (TDF) significa que a TDF é uma das suas casas. Isso traz muitas vantagens e também certos deveres e responsabilidades - “com grande poder, grande responsabilidade”.",
+  "subscriptions_citizen_good_to_go_intro": "Ser um Membro da Fábrica de Sonhos Tradicional (TDF) significa que a TDF é uma das suas casas. Isso traz muitas vantagens e também certos deveres e responsabilidades - \"com grande poder, grande responsabilidade\".",
   "subscriptions_citizen_good_why": "Por que quer tornar-se membro? (obrigatório)",
   "subscriptions_citizen_good_how": "Como deseja contribuir para a TDF?",
   "subscriptions_citizen_i_own_tokens": "Possuo 30+ tokens",
@@ -829,10 +829,17 @@
   "token_sale_label_postal_code": "Código postal",
   "token_sale_label_city": "Cidade",
   "token_sale_button_continue": "Continuar",
+  "token_sale_button_calculating": "Calculating...",
   "token_sale_restricted_nationality_warning": "Infelizmente, não podemos processar cidadãos americanos/suíços neste momento. Desculpe!",
   "token_sale_heading_token_counter": "Quantos tokens $TDF gostaria de comprar?",
   "token_sale_heading_how": "Como gostaria de comprar os seus tokens $TDF?",
   "token_sale_heading_pay_bank_transfer": "Pagar por transferência bancária",
+
+  "token_sale_heading_pay_bank_transfer_no_wallet": "Ligar uma carteira à sua conta",
+  "token_sale_bank_transfer_no_wallet_intro": "Para receber os seus tokens $TDF, precisa de ligar uma carteira à sua conta.",
+  "token_sale_bank_transfer_no_wallet_step_1": "1. Descarregar Metamask - <link>Como configurar a metamask?</link>",
+  "token_sale_bank_transfer_no_wallet_step_2": "2. Ligar a metamask ",
+
   "token_sale_heading_pay_bank_crypto": "Pagar com cripto",
   "token_sale_heading_checkout": "Finalizar compra",
   "token_sale_checkout_your_purchse": "A sua compra",
@@ -1433,6 +1440,7 @@
   "navigation_food": "Editar comida",
   "navigation_affiliate_dashboard": "Painel de afiliados",
   "navigation_see_courses": "Ver cursos",
+  "navigation_token_sales": "Vendas de tokens",
   "blog_read_more": "Ler mais",
   "blog_title": "Blog",
   "blog_write_article": "Escrever um artigo",
@@ -1487,7 +1495,7 @@
   "projects_completed_title": "Projetos concluídos ✅",
   "projects_no_active_projects": "Não há projetos ativos no momento.",
   "projects_no_completed_projects": "Não há projetos concluídos no momento.",
-  
+
   "bookings_dates_min_residence_stay_error": "A estadia mínima de residência é de {var} dias",
   "vouch_button": "Avaliar",
   "vouch_min_duration_not_met": "O convidado precisa de ficar pelo menos {var} dias para ser elegível para avaliação",
