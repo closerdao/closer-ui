@@ -2,6 +2,8 @@ import Link from 'next/link';
 
 import { useEffect, useMemo, useState } from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import { useAuth } from '../../contexts/auth';
 import { TokenSale } from '../../types/api';
 import api from '../../utils/api';
@@ -28,6 +30,7 @@ const SalesDashboard = ({
   sales: TokenSale[] | null;
   onSuccess?: () => void;
 }) => {
+  const t = useTranslations();
   const { user: currentUser } = useAuth();
   const [statusFilter, setStatusFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -205,28 +208,44 @@ const SalesDashboard = ({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-muted-foreground font-bold">
-              {totalSales} {statusFilter === 'all' ? 'total' : statusFilter}{' '}
-              sales
+              {totalSales}{' '}
+              {statusFilter === 'all'
+                ? t('token_sales_dashboard_total_sales')
+                : statusFilter}{' '}
+              {t('token_sales_dashboard_sales')}
             </p>
             {totalPages > 1 && (
               <p className="text-sm text-muted-foreground">
-                Showing {startIndex + 1}-{Math.min(endIndex, totalSales)} of{' '}
-                {totalSales} sales
+                {t('token_sales_dashboard_showing')} {startIndex + 1}-
+                {Math.min(endIndex, totalSales)} {t('token_sales_dashboard_of')}{' '}
+                {totalSales} {t('token_sales_dashboard_sales')}
               </p>
             )}
           </div>
           <div className="flex items-center gap-2">
-            Select status:
+            {t('token_sales_dashboard_select_status')}
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by status" />
+                <SelectValue
+                  placeholder={t('token_sales_dashboard_filter_by_status')}
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="pending-payment">Pending Payment</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="paid">Paid</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-                <SelectItem value="all">All Sales</SelectItem>
+                <SelectItem value="pending-payment">
+                  {t('token_sales_dashboard_pending_payment')}
+                </SelectItem>
+                <SelectItem value="completed">
+                  {t('token_sales_dashboard_completed')}
+                </SelectItem>
+                <SelectItem value="paid">
+                  {t('token_sales_dashboard_paid')}
+                </SelectItem>
+                <SelectItem value="cancelled">
+                  {t('token_sales_dashboard_cancelled')}
+                </SelectItem>
+                <SelectItem value="all">
+                  {t('token_sales_dashboard_all_sales')}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -236,15 +255,23 @@ const SalesDashboard = ({
             <thead>
               <tr className="border-b border-border">
                 <th className="text-left p-4 font-medium align-top">
-                  Product Name
+                  {t('token_sales_dashboard_product_name')}
                 </th>
-                <th className="text-left p-4 font-medium align-top">Buyer</th>
                 <th className="text-left p-4 font-medium align-top">
-                  Quantity
+                  {t('token_sales_dashboard_buyer')}
                 </th>
-                <th className="text-left p-4 font-medium align-top">Price</th>
-                <th className="text-left p-4 font-medium align-top">Status</th>
-                <th className="text-left p-4 font-medium align-top">Created</th>
+                <th className="text-left p-4 font-medium align-top">
+                  {t('token_sales_dashboard_quantity')}
+                </th>
+                <th className="text-left p-4 font-medium align-top">
+                  {t('token_sales_dashboard_price')}
+                </th>
+                <th className="text-left p-4 font-medium align-top">
+                  {t('token_sales_dashboard_status')}
+                </th>
+                <th className="text-left p-4 font-medium align-top">
+                  {t('token_sales_dashboard_created')}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -257,7 +284,9 @@ const SalesDashboard = ({
                     <div className="flex flex-col gap-1">
                       <div>{sale.name}</div>
                       <div className="text-xs text-muted-foreground">
-                        {isFiatTokenSale(sale) ? 'Fiat' : 'Crypto'}
+                        {isFiatTokenSale(sale)
+                          ? t('token_sales_dashboard_fiat')
+                          : t('token_sales_dashboard_crypto')}
                       </div>
                     </div>
                   </td>
@@ -275,12 +304,12 @@ const SalesDashboard = ({
                         <div className="text-sm text-muted-foreground">
                           {isAdmin && sale.buyer.email
                             ? sale.buyer.email
-                            : 'No email provided'}
+                            : t('token_sales_dashboard_no_email_provided')}
                         </div>
                         <div className="text-xs text-muted-foreground font-mono">
                           {isAdmin && sale.buyer.walletAddress
                             ? sale.buyer.walletAddress
-                            : 'No wallet address'}
+                            : t('token_sales_dashboard_no_wallet_address')}
                         </div>
                         {isAdmin && sale.buyer.email && (
                           <LinkButton
@@ -289,13 +318,13 @@ const SalesDashboard = ({
                             className="w-fit text-xs h-fit px-2 py-0.5 rounded-full"
                             href={`mailto:${sale.buyer.email}`}
                           >
-                            Send email to user
+                            {t('token_sales_dashboard_send_email_to_user')}
                           </LinkButton>
                         )}
                       </div>
                     ) : (
                       <span className="text-muted-foreground">
-                        Unknown buyer
+                        {t('token_sales_dashboard_unknown_buyer')}
                       </span>
                     )}
                   </td>
@@ -313,7 +342,7 @@ const SalesDashboard = ({
                             onClick={() => handleDistributeTokens(sale._id)}
                             className="w-fit rounded-full text-background py-1 h-fit"
                           >
-                            Distribute Tokens
+                            {t('token_sales_dashboard_distribute_tokens')}
                           </Button>
                         )}
                     </div>
@@ -329,7 +358,7 @@ const SalesDashboard = ({
 
         {currentSales.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
-            No sales found with status: {statusFilter}
+            {t('token_sales_dashboard_no_sales_found')} {statusFilter}
           </div>
         )}
 
@@ -351,9 +380,11 @@ const SalesDashboard = ({
         <Modal closeModal={handleCloseModal}>
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-semibold mb-2">Distribute Tokens</h2>
+              <h2 className="text-xl font-semibold mb-2">
+                {t('token_sales_dashboard_distribute_tokens_modal_title')}
+              </h2>
               <p className="text-muted-foreground">
-                Enter the transaction ID to distribute tokens to user:{' '}
+                {t('token_sales_dashboard_enter_transaction_id')}{' '}
               </p>
               <p>
                 {
@@ -368,14 +399,16 @@ const SalesDashboard = ({
                 htmlFor="transactionId"
                 className="block text-sm font-medium"
               >
-                Transaction ID
+                {t('token_sales_dashboard_transaction_id')}
               </label>
               <Input
                 id="transactionId"
                 type="text"
                 value={transactionId}
                 onChange={(e) => setTransactionId(e.target.value)}
-                placeholder="Enter transaction ID"
+                placeholder={t(
+                  'token_sales_dashboard_enter_transaction_id_placeholder',
+                )}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
               />
             </div>
@@ -386,19 +419,23 @@ const SalesDashboard = ({
                 onClick={handleCloseModal}
                 isEnabled={!isLoading}
               >
-                Cancel
+                {t('token_sales_dashboard_cancel')}
               </Button>
               <Button
                 onClick={handleSubmitTransaction}
-                isEnabled={Boolean(transactionId.trim()) && !isLoading  && !isSuccess}
+                isEnabled={
+                  Boolean(transactionId.trim()) && !isLoading && !isSuccess
+                }
                 isLoading={isLoading}
               >
-                {isLoading ? 'Distributing...' : 'Distribute Tokens'}
+                {isLoading
+                  ? t('token_sales_dashboard_distributing')
+                  : t('token_sales_dashboard_distribute_tokens_button')}
               </Button>
             </div>
             {isSuccess && (
               <div className="text-green-500">
-                Token distribution confirmation submitted successfully
+                {t('token_sales_dashboard_success_message')}
               </div>
             )}
           </div>

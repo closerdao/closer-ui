@@ -85,12 +85,12 @@ const TokenSalesDashboardPage = ({
   return (
     <>
       <Head>
-        <title>{t('dashboard_affiliate_title')}</title>
+        <title>{t('token_sales_dashboard_title')}</title>
       </Head>
       <AdminLayout isBookingEnabled={isBookingEnabled}>
         <div className="max-w-screen-lg flex flex-col gap-6">
           <Heading level={1}>
-            Token sales
+            {t('token_sales_dashboard_title')}
             {/* {t('dashboard_affiliate_title')} */}
           </Heading>
 
