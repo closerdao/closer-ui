@@ -61,6 +61,7 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
     'SupportUs',
     'Token',
     'Blog',
+    'TokenSales',
   ]);
   const [roles] = useState([
     'default', // Add default as a "role" for the UI

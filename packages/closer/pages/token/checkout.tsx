@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useRef, useState } from 'react';
 
+import Wallet from '../../components/Wallet';
 import {
   BackButton,
   Button,
@@ -26,7 +27,6 @@ import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
-import Wallet from '../../components/Wallet';
 
 interface Props {
   generalConfig: GeneralConfig | null;
@@ -41,7 +41,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   const { tokens } = router.query || { tokens: '33' };
 
   const isWalletEnabled =
-  process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
+    process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
 
   const { SOURCE_TOKEN } = useConfig() || {};
   const { buyTokens, getTotalCost, isCeurApproved, approveCeur, isPending } =
@@ -61,10 +61,8 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
 
   const hasComponentRendered = useRef(false);
 
-
   useEffect(() => {
     if (!hasComponentRendered.current) {
-
       (async () => {
         try {
           await api.post('/metric', {
@@ -73,7 +71,6 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
             point: 0,
             category: 'engagement',
           });
-
         } catch (error) {
           console.error('Error logging page view:', error);
         }
@@ -146,14 +143,34 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
           total,
           userId: user?._id,
         });
+      } catch (error) {
+        console.error('Error logging page view:', error);
+        setApiError(parseMessageFromError(error));
+      }
 
+      try {
         await api.post('/metric', {
           event: 'token-sale',
           value: Number(tokens),
           point: Number(tokens),
           category: 'revenue',
         });
+      } catch (error) {
+        console.error('Error logging metric:', error);
+      }
+      try {
+        await api.post('/token-sale', {
+          totalStablecoin: total,
+          tokens,
+          txHash,
+          userId: user?._id,
+        });
+      } catch (error) {
+        console.error('Error logging metric:', error);
 
+      }
+
+      try {
         (async () => {
           try {
             await api.post('/metric', {
@@ -206,13 +223,12 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
         <ProgressBar steps={TOKEN_SALE_STEPS} />
 
         {isWalletEnabled && (
-              <div className='mt-12'>
-                <Wallet />
-              </div>
-          )}
-          
+          <div className="mt-12">
+            <Wallet />
+          </div>
+        )}
+
         <main className="pt- pb-24 flex flex-col gap-12">
-          
           <div className="">
             <Heading level={3} hasBorder={true}>
               🏡 {t('token_sale_checkout_your_purchse')}

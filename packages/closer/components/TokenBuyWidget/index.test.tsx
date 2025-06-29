@@ -1,10 +1,11 @@
 import { screen, waitFor } from '@testing-library/react';
-import { renderWithProviders } from '../../test/utils';
 
 import TokenBuyWidget from '.';
+import { renderWithProviders } from '../../test/utils';
 
 describe('TokenBuyWidget', () => {
   const defaultTokensToBuy = 15;
+  const defaultTokensToSpend = 100;
   const defaultAccommodationPrice = 1;
 
   it('should have correct inputs', () => {
@@ -12,6 +13,8 @@ describe('TokenBuyWidget', () => {
       <TokenBuyWidget
         tokensToBuy={defaultTokensToBuy}
         setTokensToBuy={jest.fn()}
+        tokensToSpend={defaultTokensToSpend}
+        setTokensToSpend={jest.fn()}
       />,
     );
 
@@ -26,6 +29,8 @@ describe('TokenBuyWidget', () => {
       <TokenBuyWidget
         tokensToBuy={defaultTokensToBuy}
         setTokensToBuy={jest.fn()}
+        tokensToSpend={defaultTokensToSpend}
+        setTokensToSpend={jest.fn()}
       />,
     );
 

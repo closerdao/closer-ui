@@ -192,3 +192,30 @@ export type FundraisingConfig = {
   creditPrice90Credits: number;
   creditPrice180Credits: number;
 };
+
+export type TokenSale = {
+  name: string;
+  total_price: number;
+  product_type: 'token';
+  quantity?: number;
+  tx_hash?: string;
+  meta?: {
+    normalizedSenderIban?: string;
+    [key: string]: any;
+  };
+  visibility: 'public' | 'private';
+  visibleBy: string[];
+  createdBy: string;
+  updated: string;
+  created: string;
+  attributes: any[];
+  managedBy: string[];
+  _id: string;
+  status: 'pending-payment' | 'completed' | 'paid' | 'cancelled';
+  buyer?: {
+    email: string;
+    screenname: string;
+    walletAddress: string;
+    _id: string;
+  } | null;
+};
