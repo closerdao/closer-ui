@@ -22,7 +22,7 @@ const BookingResult = ({ booking, eventName }: Props) => {
         <>
           <Heading className="pb-4 mt-8">
             <span className="mr-2">🎊</span>
-            {t('bookings_title_confirmed')}
+            {t('bookings_title_paid')}
           </Heading>
           <p>{t('subscriptions_success_thank_you_message')}</p>
           <p className="uppercase font-bold">
@@ -35,7 +35,7 @@ const BookingResult = ({ booking, eventName }: Props) => {
         <>
           <Heading className="pb-4 mt-8">
             <span className="mr-2">🎊</span>
-            {t('bookings_title_confirmed')}
+            {t('bookings_title_paid')}
           </Heading>
           <p>{t('subscriptions_success_thank_you_message')}</p>
           <p className="uppercase font-bold">
