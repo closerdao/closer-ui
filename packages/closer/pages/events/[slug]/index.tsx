@@ -538,7 +538,7 @@ const EventPage = ({
                               {end &&
                                 end.isAfter(dayjs()) &&
                                 (event.stripePub ||
-                                  process.env.NEXT_PUBLIC_STRIPE_PUB_KEY) && (
+                                  process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) && (
                                   <LinkButton
                                     href={`/bookings/create/dates/?eventId=${
                                       event._id

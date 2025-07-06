@@ -71,7 +71,7 @@ const EditEvent = ({ event, error, foodOptions }: Props) => {
         <Heading level={2} className="flex justify-start items-center">
           {t('events_slug_edit_link')} <i>{event.name}</i>
         </Heading>
-        {!process.env.NEXT_PUBLIC_STRIPE_PUB_KEY && (
+        {!process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY && (
           <div className="my-4 error-box italic">
             {t('events_no_stripe_integration')}
           </div>
