@@ -574,7 +574,6 @@ const Checkout = ({
                         }
                         switchToFiat={() => setCurrency(DEFAULT_CURRENCY)}
                       />
-                
                     </div>
                   )}
               </div>
@@ -625,44 +624,47 @@ const Checkout = ({
             </>
           )}
 
-          {isStripeBooking && (
-            <CheckoutPayment
-              cancellationPolicy={cancellationPolicy}
-              isPartialCreditsPayment={
-                paymentType === PaymentType.PARTIAL_CREDITS
-              }
-              partialPriceInCredits={partialPriceInCredits}
-              bookingId={booking?._id || ''}
-              buttonDisabled={
-                (useTokens &&
-                  (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)) ||
-                false
-              }
-              useTokens={useTokens || false}
-              useCredits={useCredits}
-              totalToPayInFiat={totalToPayInFiat}
-              dailyTokenValue={dailyRentalToken?.val || 0}
-              startDate={start}
-              rentalToken={dailyRentalToken?.val || 0 * (duration || 0)}
-              totalNights={duration || 0}
-              user={user}
-              eventId={event?._id}
-            />
-          )}
-
-          {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' &&
-            rentalToken &&
-            rentalToken?.val > 0 &&
-            useTokens &&
-
-            <Checkbox
-              isChecked={hasAgreedToWalletDisclaimer}
-              onChange={() => setWalletDisclaimer(!hasAgreedToWalletDisclaimer)}
-              className="mt-8"
-            >
-              {t('bookings_checkout_step_wallet_disclaimer')}
-            </Checkbox>
-          }
+          <div className="flex flex-col gap-2">
+            {isStripeBooking && (
+              <CheckoutPayment
+                cancellationPolicy={cancellationPolicy}
+                isPartialCreditsPayment={
+                  paymentType === PaymentType.PARTIAL_CREDITS
+                }
+                partialPriceInCredits={partialPriceInCredits}
+                bookingId={booking?._id || ''}
+                buttonDisabled={
+                  (useTokens &&
+                    (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)) ||
+                  false
+                }
+                useTokens={useTokens || false}
+                useCredits={useCredits}
+                totalToPayInFiat={totalToPayInFiat}
+                dailyTokenValue={dailyRentalToken?.val || 0}
+                startDate={start}
+                rentalToken={dailyRentalToken?.val || 0 * (duration || 0)}
+                totalNights={duration || 0}
+                user={user}
+                eventId={event?._id}
+                status={booking?.status}
+              />
+            )}
+            {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' &&
+              rentalToken &&
+              rentalToken?.val > 0 &&
+              useTokens && (
+                <Checkbox
+                  isChecked={hasAgreedToWalletDisclaimer}
+                  onChange={() =>
+                    setWalletDisclaimer(!hasAgreedToWalletDisclaimer)
+                  }
+                  className="mt-8"
+                >
+                  {t('bookings_checkout_step_wallet_disclaimer')}
+                </Checkbox>
+              )}
+          </div>
           {isFreeBooking && (
             <Button
               isEnabled={!processing}
