@@ -3,8 +3,10 @@ import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
 
+import Wallet from '../../components/Wallet';
 import { BackButton, Button, Heading, ProgressBar } from '../../components/ui';
 
+import { Info } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
@@ -28,6 +30,7 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
   const router = useRouter();
+  const { user } = useAuth();
   const {
     tokenSaleType,
     totalFiat,
@@ -117,7 +120,36 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
               </p>
               <p>{t('token_sale_bank_transfer_success_info')}</p>
 
-              <Button onClick={handleNext} className='mt-6'>
+              {!user?.walletAddress && (
+                <div className="flex  gap-4 bg-neutral p-6 pb-8 rounded-lg">
+                  <Info  className="flex-shrink-0 w-8 h-8  text-gray-400" />
+                  <div className="flex flex-col gap-4 pt-0.5">
+                    <p>{t('token_sale_bank_transfer_no_wallet_intro')}</p>
+
+
+                    <p>
+                      {' '}
+                      {t.rich('token_sale_bank_transfer_no_wallet_step_1', {
+                      
+                        link: (chunks) => (
+                          <a
+                            href="https://grimsnas.se"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-accent underline"
+                          >
+                            {chunks}
+                          </a>
+                        ),
+                      })}
+                    </p>
+                    <p>{t('token_sale_bank_transfer_no_wallet_step_2')}</p>
+                    <Wallet />
+                  </div>
+                </div>
+              )}
+
+              <Button onClick={handleNext} className="mt-6">
                 {t('token_sale_bank_transfer_success_back_to_homepage')}
               </Button>
             </div>
