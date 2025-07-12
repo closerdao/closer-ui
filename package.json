@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@types/react-calendar-timeline": "^0.28.6",
-    "axios": "1.7.7",
+    "axios": "0.30.0",
     "deepmerge": "^4.3.1",
     "interactjs": "^1.10.26",
     "posthog-js": "^1.249.2",
