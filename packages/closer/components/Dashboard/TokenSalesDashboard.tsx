@@ -22,6 +22,7 @@ import {
 } from '../ui/select';
 
 const SALES_PER_PAGE = 20;
+const DEFAULT_STATUS_TO_SHOW = 'paid'
 
 const SalesDashboard = ({
   sales,
@@ -32,7 +33,7 @@ const SalesDashboard = ({
 }) => {
   const t = useTranslations();
   const { user: currentUser } = useAuth();
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState(DEFAULT_STATUS_TO_SHOW);
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSaleId, setSelectedSaleId] = useState<string>('');

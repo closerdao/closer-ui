@@ -34,6 +34,7 @@ const TokenSalesDashboardPage = ({
 
   const refetchSales = async () => {
     try {
+
       const [saleRes, buyersRes] = await Promise.all([
         api.get('/sale').catch(() => null),
         api
