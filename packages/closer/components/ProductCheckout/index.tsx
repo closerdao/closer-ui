@@ -35,7 +35,12 @@ const ProductCheckout = ({
     throw new Error('NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY is not set');
   }
 
-  const stripe = loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY);
+  const stripe = loadStripe(
+    process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY,
+    {
+      stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
+    },
+  );
 
   const onSuccess = () => {
     router.push(`/learn/${productId}/confirmation`);

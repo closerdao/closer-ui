@@ -23,6 +23,7 @@ import { GeneralConfig, Listing } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
+import { useAuth } from '../../contexts/auth';
 
 const ACCOMMODATION_ICONS = ['van.png', 'camping.png', 'hotel.png'];
 const DEFAULT_TOKENS = 10;
@@ -41,6 +42,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
     generalConfig?.platformName || defaultConfig.platformName;
   const { getTokensAvailableForPurchase } = useBuyTokens();
   const { isWalletReady } = useContext(WalletState);
+  const { user } = useAuth();
 
   const router = useRouter();
   const { tokens } = router.query;
@@ -48,6 +50,20 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
   const [tokensToBuy, setTokensToBuy] = useState<number>(
     tokens !== undefined ? Number(tokens) : DEFAULT_TOKENS,
   );
+
+  const test = async () => {
+    try {
+      await api.post('/token-sale', {
+        totalStablecoin: 237.65,
+        tokens: 1,
+        txHash: '0xccb21dbfb80dfaaa5d4c4927939a0b74e76ca7b117406d734c4188f8b4c58622',
+        userId: user?._id,
+      });
+    } catch (error) {
+      console.error('Error logging metric:', error);
+
+    }
+  }
 
   const [tokensAvailable, setTokensAvailable] = useState<number | null>(null);
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
