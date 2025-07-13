@@ -1,0 +1,81 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+<keyPrinciples>
+1. When task is not >95% clear, start with a question (both in plan and act modes): "The task is not fully clear. Please clarify following points:" [list of crucial points for understanding the task]. After the user replies, implement the solution. 
+</keyPrinciples>
+<implementationOrActMode>
+    <programmingPrinciples>
+      - algorithm_efficiency: use the most efficient algorithms and data structures
+      - modularity: write modular code, break complex logic into smaller atomic parts. Whenever possible break into classes, files, directories, modules, functions, etc.
+      - file_management: break long files into smaller, more manageable files with smaller functions.
+      - import_statements: prefer importing functions from other files instead of modifying those files directly.
+      - file_organization: organize files into directories and folders.
+      - reuse: prefer to reuse existing code instead of writing it from scratch. 
+      - code_preservation: Preserve What Works. Don't modify working components without necessity.
+      - systematic_sequence: Complete one step completely before starting another. Keep systematic sequence of functionalities.
+      - design_patterns: apply appropriate design patterns for maintainability. Plan for future changes, extendable flexible, scalable, and maintainable code.
+    </programmingPrinciples>
+    <systematicCodeProtocol>
+      <step1>
+        <analyzeCode>
+          <dependencyAnalysis>
+            - Which components will be affected?
+            - What dependencies exist?
+            - Is this local or does it affect core logic?
+            - Which functionalities will be affected and how?
+            - What cascading effects will this change have?
+          </dependencyAnalysis>
+          <flowAnalysis>
+            - Before proposing any changes, conduct a complete end-to-end flow analysis of the relevant use case from the entry point (e.g., function call, variable initialization) to the execution of all affected code. 
+            - Track the flow of data and logic throughout all components involved to understand its full scope.
+          </flowAnalysis>
+        </analyzeCode>
+      </step1>
+      <step2>
+        <planCode>
+          - If needed initiate &lt;clarification&gt; process.
+          - Use &lt;stepByStepReasoning&gt; to outline a detailed plan including component dependencies, architectural considerations before coding.
+          - Use &lt;reasoningPresentation&gt; to explain all code changes, what each part does, and how it affects other areas.
+          <structuredProposals>
+            - Provide a proposal that specifies: 
+              1. what files, functions, or lines of code are being changed;
+              2. why the change is necessary (i.e. bug fix, improvement or new feature);
+              3. all of the directly impacted modules or files;
+              4. potential side effects;
+              5. a detailed explanation of any tradeoffs.
+          </structuredProposals>
+        </planCode>
+      </step2>
+      <step3>
+        <makeChanges>
+          <incrementalRollouts>
+            - One logical feature at a time
+            - But fully resolve this one change by accommodating appropriate changes in other parts of the code.
+            - Adjust all existing dependencies and issues created by this change.
+            - architecture_preservation: Ensure that all new code integrates seamlessly with existing project structure and architecture before committing changes. Do not make changes that disrupt existing code organization or files.
+          </incrementalRollouts>
+          <simulationTesting>
+            <simulationAnalysis>
+              - Simulate user interactions and behaviors by performing dry runs, trace calls, or other appropriate methods to rigorously analyze the impact of proposed changes on both expected and edge-case scenarios. 
+              - Generate feedback on all potential side effects.
+            </simulationAnalysis>
+            <simulationValidation>
+              - Do not propose a change unless the simulation passes and verifies that all existing functionality is preserved, and if a simulation breaks, provide fixes immediately before proceeding.
+              - If Simulation Testing Passes, do the actual implementation.
+            </simulationValidation>
+          </simulationTesting>
+        </makeChanges>
+      </step3>
+      <step4>
+        - Loop step1 to step3 and implement all changes
+        - Incorporate all the changes systematically, one by one.
+        - Verify the changes and test them one by one.
+      </step4>
+      <step5>
+        - Optimize the implemented code, after all changes are tested and verified.
+      </step5>
+    </systematicCodeProtocol>
+  </implementationOrActMode>

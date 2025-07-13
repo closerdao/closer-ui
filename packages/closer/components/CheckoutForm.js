@@ -53,6 +53,7 @@ const CheckoutForm = ({
   useCredits,
   dailyTokenValue,
   bookingNights,
+  status,
 }) => {
   const t = useTranslations();
 
@@ -80,7 +81,7 @@ const CheckoutForm = ({
       }
     }
 
-    if (prePayInTokens) {
+    if (prePayInTokens && status !== 'tokens-staked') {
       const res = await prePayInTokens(
         _id,
         dailyTokenValue,
@@ -143,7 +144,9 @@ const CheckoutForm = ({
           volunteer,
           paymentMethod: createdPaymentMethod?.paymentMethod.id,
         },
-      );
+        );
+      
+      console.log('payment====', payment);
 
       // 3d secure required for this payment
       if (payment.paymentIntent.status === 'requires_action') {
@@ -233,6 +236,7 @@ const CheckoutForm = ({
 
   return (
     <form onSubmit={handleSubmit}>
+
       {error && <ErrorMessage error={error} />}
       <div className="card-element-container">
         <CardElement

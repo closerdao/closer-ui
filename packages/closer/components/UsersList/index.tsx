@@ -659,6 +659,7 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
                                       x2="11"
                                       y2="11"
                                       strokeWidth="2"
+                                      stroke="white"
                                     />
                                   </svg>
                                 </Button>
