@@ -87,7 +87,7 @@ const SubscriptionsPage: NextPage<Props> = ({
     slug: string,
   ) => {
     if (slug === 'citizen') {
-      router.push('/subscriptions/citizen/validation`');
+      router.push('/subscriptions/citizen/validation');
       return;
     }
     if (priceId?.includes(',')) {
