@@ -2,6 +2,9 @@
   "name": "moos",
   "version": "0.0.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "dotenv -e .env next dev --turbo",
     "build": "next build",

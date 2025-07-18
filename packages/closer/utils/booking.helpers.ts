@@ -3,8 +3,6 @@ import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 
-const DEFAULT_TIMEZONE = 'Europe/Berlin';
-
 import {
   BOOKING_EXISTS_ERROR,
   CURRENCIES,
@@ -26,6 +24,8 @@ import {
 import { FoodOption } from '../types/food';
 import api from './api';
 import { priceFormat } from './helpers';
+
+const DEFAULT_TIMEZONE = 'Europe/Berlin';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -486,10 +486,16 @@ export const payTokens = async (
       }
     | undefined
   >,
+  bookingStatus?: string,
 ) => {
   if (!dailyRentalTokenVal)
     return { error: 'No daily rental token value provided', success: null };
   if (!bookingId) return { error: 'No bookingId provided', success: null };
+
+  // If booking status is already 'tokens-staked', skip token payment
+  if (bookingStatus === 'tokens-staked') {
+    return { success: true, error: null };
+  }
 
   const { success: stakingSuccess, error: stakingError } = (await stakeTokens(
     dailyRentalTokenVal,
@@ -546,7 +552,6 @@ export const formatCheckinDate = (
   TIME_ZONE: string,
   checkinTime: number | undefined,
 ) => {
-
   const localDate = dayjs.tz(date || new Date(), TIME_ZONE || DEFAULT_TIMEZONE);
   const localTime = localDate
     .hour(Number(checkinTime) || 16)

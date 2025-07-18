@@ -313,7 +313,7 @@ const Questionnaire = ({
           </section>
 
           <Button onClick={handleSubmit} isEnabled={!isSubmitDisabled}>
-            {t('buttons_submit')}
+            {t('booking_button_continue')}
           </Button>
         </div>
       </div>

@@ -102,6 +102,7 @@
   "bookings_checkout_step_payment_button": "Pagar",
   "bookings_checkout_step_wallet_disclaimer": "Reconheço que: (1) os meus tokens serão colocados em staking por 1 ano após o pagamento, (2) o reembolso de tokens não está atualmente disponível.",
   "bookings_checkout_step_accomodation_not_enough_balance": "Não tem tokens suficientes para pagar o seu alojamento.",
+  "bookings_checkout_tokens_staked_message": "Fez staking de {tokens} para esta reserva, agora por favor faça o pagamento em fiat.",
   "bookings_summary_step_title": "Resumo",
   "bookings_food_step_title": "Alimentação",
   "bookings_summary_step_dates_title": "A Sua Estadia",
