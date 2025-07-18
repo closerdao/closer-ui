@@ -28,9 +28,6 @@
     "prettier": "latest",
     "turbo": "latest"
   },
-  "engines": {
-    "node": ">=18.0.0"
-  },
   "dependencies": {
     "@types/react-calendar-timeline": "^0.28.6",
     "axios": "1.7.7",

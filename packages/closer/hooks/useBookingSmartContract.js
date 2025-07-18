@@ -27,6 +27,16 @@ export const useBookingSmartContract = ({ bookingNights }) => {
     useContext(WalletDispatch);
   const [pendingTransactions, setPendingTransactions] = useState([]);
   const [isPending, setPending] = useState(false);
+  
+  // Safety check for bookingNights
+  if (!bookingNights || !Array.isArray(bookingNights) || bookingNights.length === 0) {
+    return {
+      stakeTokens: async () => ({ error: 'No booking nights available', success: null }),
+      isStaking: false,
+      checkContract: async () => ({ success: false, error: 'No booking nights available' }),
+    };
+  }
+  
   const [[bookingYear]] = bookingNights;
 
   const Diamond = new Contract(

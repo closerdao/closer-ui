@@ -1,6 +1,12 @@
 import { blockchainConfig } from '../config_blockchain';
 import { CloserCurrencies } from '../types/currency';
 
+export const SHARED_ACCOMMODATION_PREFERENCES = [
+  { label: 'Flexible', value: 'flexible' },
+  { label: 'Male Only', value: 'male only' },
+  { label: 'Female Only', value: 'female only' },
+];
+
 export const REFUND_PERIODS = {
   MONTH: 30,
   WEEK: 7,

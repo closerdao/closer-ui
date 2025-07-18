@@ -54,6 +54,7 @@ const CheckoutForm = ({
   dailyTokenValue,
   bookingNights,
   status,
+  refetchBooking,
 }) => {
   const t = useTranslations();
 
@@ -72,6 +73,8 @@ const CheckoutForm = ({
     setProcessing(true);
     setError(null);
 
+    let tokenPaymentSuccessful = false;
+
     if (useCredits) {
       try {
         await payWithCredits();
@@ -82,19 +85,36 @@ const CheckoutForm = ({
     }
 
     if (prePayInTokens && status !== 'tokens-staked') {
-      const res = await prePayInTokens(
-        _id,
-        dailyTokenValue,
-        stakeTokens,
-        checkContract,
-      );
+      // If we're about to attempt token payment and we have a refetch function,
+      // refetch the booking first to get the latest status
+      let currentStatus = status;
+      if (refetchBooking) {
+        const updatedBooking = await refetchBooking();
+        if (updatedBooking) {
+          currentStatus = updatedBooking.status;
+        }
+      }
 
-      const { error } = res || {};
-      if (error) {
-        setProcessing(false);
-        setError(error);
-        console.error(error);
-        return;
+      // Check if the status is now 'tokens-staked' after refetching
+      if (currentStatus === 'tokens-staked') {
+        tokenPaymentSuccessful = true;
+      } else {
+        const res = await prePayInTokens(
+          _id,
+          dailyTokenValue,
+          stakeTokens,
+          checkContract,
+          currentStatus,
+        );
+
+        const { error } = res || {};
+        if (error) {
+          setProcessing(false);
+          setError(error);
+          console.error(error);
+          return;
+        }
+        tokenPaymentSuccessful = true;
       }
     }
 
@@ -144,9 +164,9 @@ const CheckoutForm = ({
           volunteer,
           paymentMethod: createdPaymentMethod?.paymentMethod.id,
         },
-        );
-      
-      console.log('payment====', payment);
+      );
+
+
 
       // 3d secure required for this payment
       if (payment.paymentIntent.status === 'requires_action') {
@@ -156,6 +176,9 @@ const CheckoutForm = ({
           );
           if (confirmationResult?.error) {
             setError(confirmationResult?.error);
+            if (tokenPaymentSuccessful && refetchBooking) {
+              await refetchBooking();
+            }
           }
           if (confirmationResult?.paymentIntent?.status === 'succeeded') {
             const confirmationResponse = await api.post(
@@ -177,10 +200,13 @@ const CheckoutForm = ({
           }
         } catch (err) {
           setError(err);
+          if (tokenPaymentSuccessful && refetchBooking) {
+            await refetchBooking();
+          }
         }
       }
 
-      console.log('payment====', payment);
+
 
       // 3d secure NOT required for this payment
       if (payment.paymentIntent.status === 'succeeded') {
@@ -208,6 +234,9 @@ const CheckoutForm = ({
           ? err.response.data.error
           : err.message;
       setError(errorMessage);
+      if (tokenPaymentSuccessful && refetchBooking) {
+        await refetchBooking();
+      }
     } finally {
       setProcessing(false);
     }
@@ -236,7 +265,6 @@ const CheckoutForm = ({
 
   return (
     <form onSubmit={handleSubmit}>
-
       {error && <ErrorMessage error={error} />}
       <div className="card-element-container">
         <CardElement

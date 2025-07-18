@@ -102,6 +102,7 @@
   "bookings_checkout_step_payment_button": "Pay",
   "bookings_checkout_step_wallet_disclaimer": "I acknowledge that: (1) my tokens are being staked for 1 year upon payment, (2) token refund is not currently available.",
   "bookings_checkout_step_accomodation_not_enough_balance": "You don't have enough token to pay for your accommodation.",
+  "bookings_checkout_tokens_staked_message": "You staked {tokens} towards this booking, now please make the fiat payment.",
   "bookings_summary_step_title": "Summary",
   "bookings_food_step_title": "Food",
 

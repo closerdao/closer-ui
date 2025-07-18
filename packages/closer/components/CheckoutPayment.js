@@ -17,14 +17,12 @@ import { parseMessageFromError } from '../utils/common';
 import CheckoutForm from './CheckoutForm';
 import Conditions from './Conditions';
 import { ErrorMessage } from './ui';
+import Checkbox from './ui/Checkbox';
 import HeadingRow from './ui/HeadingRow';
 
-const stripe = loadStripe(
-  process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY,
-  {
-    stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
-  },
-);
+const stripe = loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY, {
+  stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
+});
 
 const CheckoutPayment = ({
   partialPriceInCredits,
@@ -42,6 +40,10 @@ const CheckoutPayment = ({
   eventId,
   cancellationPolicy,
   status,
+  shouldShowTokenDisclaimer,
+  hasAgreedToWalletDisclaimer,
+  setWalletDisclaimer,
+  refetchBooking,
 }) => {
   const t = useTranslations();
 
@@ -95,6 +97,21 @@ const CheckoutPayment = ({
     }
   };
 
+  const payTokensWithStatus = async (
+    bookingId,
+    dailyTokenValue,
+    stakeTokens,
+    checkContract,
+  ) => {
+    return payTokens(
+      bookingId,
+      dailyTokenValue,
+      stakeTokens,
+      checkContract,
+      status,
+    );
+  };
+
   return (
     <div>
       <HeadingRow>
@@ -114,7 +131,7 @@ const CheckoutPayment = ({
           submitButtonClassName="booking-btn mt-8"
           cardElementClassName="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-4"
           buttonDisabled={buttonDisabled}
-          prePayInTokens={useTokens && payTokens}
+          prePayInTokens={useTokens && payTokensWithStatus}
           useCredits={useCredits}
           payWithCredits={payWithCredits}
           isProcessingTokenPayment={isStaking}
@@ -124,8 +141,21 @@ const CheckoutPayment = ({
           dailyTokenValue={dailyTokenValue}
           bookingNights={bookingNights}
           status={status}
+          refetchBooking={refetchBooking}
         >
-          <Conditions cancellationPolicy={cancellationPolicy} setComply={onComply} visitorsGuide={VISITORS_GUIDE} />
+          <Conditions
+            cancellationPolicy={cancellationPolicy}
+            setComply={onComply}
+            visitorsGuide={VISITORS_GUIDE}
+          />
+          {shouldShowTokenDisclaimer && (
+            <Checkbox
+              isChecked={hasAgreedToWalletDisclaimer}
+              onChange={() => setWalletDisclaimer(!hasAgreedToWalletDisclaimer)}
+            >
+              <p>{t('bookings_checkout_step_wallet_disclaimer')}</p>
+            </Checkbox>
+          )}
         </CheckoutForm>
       </Elements>
     </div>
@@ -140,6 +170,7 @@ CheckoutPayment.propTypes = {
   dailyTokenValue: PropTypes.number.isRequired,
   start: PropTypes.string,
   totalNights: PropTypes.number.isRequired,
+  refetchBooking: PropTypes.func,
 };
 
 export default CheckoutPayment;

@@ -2,6 +2,7 @@
   "name": "moos",
   "version": "0.0.0",
   "private": true,
+
   "scripts": {
     "dev": "dotenv -e .env next dev --turbo",
     "build": "next build",

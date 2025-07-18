@@ -114,7 +114,8 @@ export const priceFormat = (price, currency = DEFAULT_CURRENCY) => {
         currency: BLOCKCHAIN_DAO_TOKEN.symbol,
       })
         .formatToParts(priceValue)
-        .map((v, i) => (i === 0 ? '$' + v.value : v.value));
+        .map((v, i) => (i === 0 ? '$' + v.value : v.value))
+        .join('');
     }
     return priceValue.toLocaleString('en-US', {
       style: 'currency',
