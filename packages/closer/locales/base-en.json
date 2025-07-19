@@ -1044,6 +1044,7 @@
   "cookie_consent_text_link": "Read cookie policy",
   "cookie_consent_button": "Accept and close",
   "user_data_email": "Email:",
+  "user_data_walletAddress": "Wallet Address:",
   "user_data_phone": "Phone:",
   "user_data_diet": "Diet:",
   "user_data_shared_accommodation": "Shared accommodation:",
