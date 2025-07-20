@@ -269,6 +269,7 @@
   "navigation_edit_food": "Edit food options",
   "navigation_blog": "Blog",
   "navigation_rbac": "Access Control",
+  "navigation_expense_tracking": "Expense Tracking",
   "newsletter_success": "Thanks, we will be in touch soon!",
   "newsletter_body": "Keep in the loop, subscribe:",
   "newsletter_signup": "Subscribe",
@@ -1860,5 +1861,7 @@
   "token_sales_dashboard_cancel": "Cancel",
   "token_sales_dashboard_distributing": "Distributing...",
   "token_sales_dashboard_distribute_tokens_button": "Distribute Tokens",
-  "token_sales_dashboard_success_message": "Token distribution confirmation submitted successfully"
+  "token_sales_dashboard_success_message": "Token distribution confirmation submitted successfully",
+
+  "expense_tracking_dashboard_title": "Expense Tracking"
 }
