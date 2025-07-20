@@ -2,7 +2,7 @@ import Head from 'next/head';
 
 import React, { useState } from 'react';
 
-import { Charge } from '@/types/booking';
+import { Charge } from 'closer/types/booking';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import { Button, Card } from '../../../components/ui';
