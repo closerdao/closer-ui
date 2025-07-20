@@ -151,6 +151,7 @@ export { default as EditVolunteerOportunity } from './pages/volunteer/[slug]/edi
 export { default as VolunteerApplicationPage } from './pages/volunteer/apply';
 export { default as CreateVolunteerOportunity } from './pages/volunteer/create';
 export { default as TokenSalesDashboardPage } from './pages/dashboard/token-sales';
+export { default as ExpenseTrackingDashboardPage } from './pages/dashboard/expense-tracking';
 // Types
 export * from './types/';
 // Utils
