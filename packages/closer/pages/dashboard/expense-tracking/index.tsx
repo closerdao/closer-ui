@@ -2,13 +2,13 @@ import Head from 'next/head';
 
 import React, { useState } from 'react';
 
-import { Charge } from 'closer/types/booking';
-
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import { Button, Card } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
+import Input from '../../../components/ui/Input';
 
-import { Upload } from 'lucide-react';
+import { Charge } from 'closer/types/booking';
+import { Loader2, Plus, Trash2, Upload } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import process from 'process';
@@ -20,71 +20,47 @@ import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 
 type ReceiptData = {
-  document_type: string;
   supplier_business_name: string;
-  lines: {
+  items: {
     description: string;
-    quantity: number;
-    unit_price: number;
+    item_total: number;
+    vat_rate_id?: number;
+    vat_percentage: number;
   }[];
+  vat_summary: {
+    vat_percentage: number;
+    description: string;
+    total_with_vat: number;
+  }[];
+  receipt_total: number;
 };
 
-const mockResult = {
-  document_type: 'FC',
-  supplier_business_name: 'REAL PORTUGUESE CUISINE',
-  lines: [
+const mockResult = `\`\`\`json
+{
+  "supplier_business_name": "O CANTINHO MAGICO",
+  "items": [
     {
-      description: 'PAO',
-      quantity: 2,
-      unit_price: 0.8,
+      "description": "TINTEIRO HP 305 COR",
+      "item_total": 17.99,
+      "vat_percentage": 23.00
     },
     {
-      description: 'COUVERT COMPLETO',
-      quantity: 1,
-      unit_price: 6.2,
-    },
-    {
-      description: 'COGUMELOS RECHEADOS',
-      quantity: 1,
-      unit_price: 8.2,
-    },
-    {
-      description: 'VIEIRAS GRELHADAS',
-      quantity: 1,
-      unit_price: 9.2,
-    },
-    {
-      description: 'CORNEDO C/MOLHO PIME',
-      quantity: 1,
-      unit_price: 19.5,
-    },
-    {
-      description: 'BUCHECHAS PORCO IBER',
-      quantity: 1,
-      unit_price: 16.9,
-    },
-    {
-      description: 'AGUA S/GAS 1LT',
-      quantity: 1,
-      unit_price: 2.0,
-    },
-    {
-      description: 'ALVOR REGIONAL',
-      quantity: 1,
-      unit_price: 16.0,
-    },
-    {
-      description: 'MUSSE LIMA',
-      quantity: 1,
-      unit_price: 3.9,
-    },
-    {
-      description: 'CREME BRULEE',
-      quantity: 1,
-      unit_price: 3.9,
-    },
+      "description": "FOTOCÓPIAS",
+      "item_total": 0.60,
+      "vat_percentage": 23.00
+    }
   ],
-};
+  "vat_summary": [
+    {
+      "vat_percentage": 23.00,
+      "description": "Bens e Serviços",
+      "total_with_vat": 18.59
+    }
+  ],
+  "receipt_total": 18.59
+}
+\`\`\``;
+
 const ExpenseTrackingDashboardPage = ({
   charges,
   error,
@@ -102,17 +78,111 @@ const ExpenseTrackingDashboardPage = ({
   const [photo, setPhoto] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [editableData, setEditableData] = useState<ReceiptData | null>(null);
+  const [toconlineData, setToconlineData] = useState<any>(null);
+  const [hasLoggedExpense, setHasLoggedExpense] = useState(false);
 
   // Validate test data on mount
   React.useEffect(() => {
     if (parsedData) {
       const errors = validateReceiptData(parsedData);
       setValidationErrors(errors);
+      setEditableData(parsedData);
     }
   }, [parsedData]);
 
+  // Validate editable data when it changes
+  React.useEffect(() => {
+    if (editableData) {
+      const errors = validateReceiptData(editableData);
+      setValidationErrors(errors);
+
+      console.log('editableData=', editableData);
+
+      // Transform editableData to toconlineData format
+      const toconlineFormattedData = {
+        document_type: 'FC',
+        supplier_business_name: editableData.supplier_business_name,
+        lines: editableData.vat_summary.map((summary) => ({
+          description: Number(summary?.description),
+          quantity: 1, // always 1 for a tax group
+          unit_price: Number(summary?.total_with_vat), // match total_with_vat of a tax group
+          tax_percentage: Number(summary?.vat_percentage), // match vat_percentage of a tax group
+        })),
+      };
+
+      console.log('toconlineFormattedData=', toconlineFormattedData);
+
+      setToconlineData(toconlineFormattedData);
+    }
+  }, [editableData]);
+
+  // Parse initial mock data if result is set to mockResult
+  React.useEffect(() => {
+    if (result === mockResult) {
+      try {
+        // Extract JSON from markdown code blocks if present
+        let jsonText = mockResult;
+        if (jsonText.includes('```json')) {
+          const jsonMatch = jsonText.match(/```json\s*([\s\S]*?)\s*```/);
+          if (jsonMatch) {
+            jsonText = jsonMatch[1];
+          }
+        } else if (jsonText.includes('```')) {
+          const jsonMatch = jsonText.match(/```\s*([\s\S]*?)\s*```/);
+          if (jsonMatch) {
+            jsonText = jsonMatch[1];
+          }
+        }
+
+        const parsed = JSON.parse(jsonText);
+        const formattedData: ReceiptData = {
+          supplier_business_name: parsed.supplier_business_name || '',
+          items: Array.isArray(parsed.items)
+            ? parsed.items.map((item: any) => ({
+                description: item.description || '',
+                item_total:
+                  typeof item.item_total === 'number' ? item.item_total : 0,
+                vat_rate_id: item.vat_rate_id,
+                vat_percentage:
+                  typeof item.vat_percentage === 'number'
+                    ? item.vat_percentage
+                    : 0,
+              }))
+            : [],
+          vat_summary: Array.isArray(parsed.vat_summary)
+            ? parsed.vat_summary.map((summary: any) => ({
+                vat_percentage:
+                  typeof summary.vat_percentage === 'number'
+                    ? summary.vat_percentage
+                    : 0,
+                description: summary.description || '',
+                total_with_vat:
+                  typeof summary.total_with_vat === 'number'
+                    ? summary.total_with_vat
+                    : 0,
+              }))
+            : [],
+          receipt_total:
+            typeof parsed.receipt_total === 'number' ? parsed.receipt_total : 0,
+        };
+
+        setParsedData(formattedData);
+        setEditableData(formattedData);
+        const errors = validateReceiptData(formattedData);
+        setValidationErrors(errors);
+      } catch (e) {
+        console.log('Failed to parse initial mock data:', e);
+      }
+    }
+  }, [result]);
+
   const handleFileSelect = (selectedFile: File | null) => {
-    if (selectedFile && selectedFile.type.startsWith('image/')) {
+    if (
+      selectedFile &&
+      (selectedFile.type.startsWith('image/') ||
+        selectedFile.type === 'application/pdf')
+    ) {
       setFile(selectedFile);
       // Create preview
       const reader = new FileReader();
@@ -121,7 +191,7 @@ const ExpenseTrackingDashboardPage = ({
       };
       reader.readAsDataURL(selectedFile);
     } else if (selectedFile) {
-      setResult('Error: Please select a valid image file');
+      setResult('Error: Please select a valid image or PDF file');
     }
   };
 
@@ -145,10 +215,6 @@ const ExpenseTrackingDashboardPage = ({
     }
 
     // Check required fields
-    if (!data.document_type || data.document_type !== 'FC') {
-      errors.push('Invalid document type. Must be "FC"');
-    }
-
     if (
       !data.supplier_business_name ||
       data.supplier_business_name.trim() === ''
@@ -156,32 +222,74 @@ const ExpenseTrackingDashboardPage = ({
       errors.push('Supplier business name is required');
     }
 
-    // Check lines array
-    if (!data.lines || !Array.isArray(data.lines) || data.lines.length === 0) {
-      errors.push('Receipt must have at least one line item');
+    // Check items array (since we're focusing on vat_summary)
+    if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
+      errors.push('Receipt must have at least one item');
       return errors;
     }
 
-    // Validate each line
-    data.lines.forEach((line: any, index: number) => {
-      if (!line.description || line.description.trim() === '') {
-        errors.push(`Line ${index + 1}: Description is required`);
+    // Check vat_summary array
+    if (
+      !data.vat_summary ||
+      !Array.isArray(data.vat_summary) ||
+      data.vat_summary.length === 0
+    ) {
+      errors.push('Receipt must have VAT summary');
+      return errors;
+    }
+
+    // Check receipt_total
+    if (!data.receipt_total || data.receipt_total <= 0) {
+      errors.push('Receipt total must be greater than 0');
+    }
+
+    // Validate each item
+    data.items.forEach((item: any, index: number) => {
+      if (!item.description || item.description.trim() === '') {
+        errors.push(`Item ${index + 1}: Description is required`);
       }
 
       if (
-        line.quantity === undefined ||
-        line.quantity === null ||
-        line.quantity <= 0
+        item.item_total === undefined ||
+        item.item_total === null ||
+        item.item_total <= 0
       ) {
-        errors.push(`Line ${index + 1}: Quantity must be greater than 0`);
+        errors.push(`Item ${index + 1}: Item total must be greater than 0`);
       }
 
       if (
-        line.unit_price === undefined ||
-        line.unit_price === null ||
-        line.unit_price <= 0
+        item.vat_percentage === undefined ||
+        item.vat_percentage === null ||
+        item.vat_percentage < 0
       ) {
-        errors.push(`Line ${index + 1}: Unit price must be greater than 0`);
+        errors.push(`Item ${index + 1}: VAT percentage is required`);
+      }
+    });
+
+    // Validate vat_summary entries
+    data.vat_summary.forEach((summary: any, index: number) => {
+      if (!summary.description || summary.description.trim() === '') {
+        errors.push(`VAT Group ${index + 1}: Description is required`);
+      }
+
+      if (
+        summary.vat_percentage === undefined ||
+        summary.vat_percentage === null ||
+        summary.vat_percentage < 0
+      ) {
+        errors.push(`VAT Group ${index + 1}: VAT percentage is required`);
+      }
+
+      if (
+        summary.total_with_vat === undefined ||
+        summary.total_with_vat === null ||
+        summary.total_with_vat < 0
+      ) {
+        errors.push(
+          `VAT Group ${
+            index + 1
+          }: Total with VAT must be greater than or equal to 0`,
+        );
       }
     });
 
@@ -200,13 +308,86 @@ const ExpenseTrackingDashboardPage = ({
 
   const handleUploadToToconline = async () => {
     try {
+      setHasLoggedExpense(false);
       setLoading(true);
+      const res = await api.post('/toconline/expense', { toconlineData });
+      if (res.status === 200) {
+        console.log('res=', res);
+        setHasLoggedExpense(true);
+      } else {
+        console.error('Upload error:', res);
+      }
     } catch (error) {
       console.error('Upload error:', error);
     } finally {
       setLoading(false);
     }
     console.log('Uploading to Toconline API');
+  };
+
+  const handleSupplierChange = (value: string) => {
+    if (editableData) {
+      setEditableData({
+        ...editableData,
+        supplier_business_name: value,
+      });
+    }
+  };
+
+  const handleReceiptTotalChange = (value: number) => {
+    if (editableData) {
+      setEditableData({
+        ...editableData,
+        receipt_total: value,
+      });
+    }
+  };
+
+  const handleVatSummaryChange = (
+    index: number,
+    field: string,
+    value: string | number,
+  ) => {
+    if (editableData) {
+      const updatedVatSummary = [...editableData.vat_summary];
+      updatedVatSummary[index] = {
+        ...updatedVatSummary[index],
+        [field]:
+          field === 'vat_percentage' || field === 'total_with_vat'
+            ? Number(value)
+            : value,
+      };
+      setEditableData({
+        ...editableData,
+        vat_summary: updatedVatSummary,
+      });
+    }
+  };
+
+  const handleAddVatSummaryRow = () => {
+    if (editableData) {
+      const newRow = {
+        vat_percentage: 0,
+        description: '',
+        total_with_vat: 0,
+      };
+      setEditableData({
+        ...editableData,
+        vat_summary: [...editableData.vat_summary, newRow],
+      });
+    }
+  };
+
+  const handleDeleteVatSummaryRow = (index: number) => {
+    if (editableData && editableData.vat_summary.length > 1) {
+      const updatedVatSummary = editableData.vat_summary.filter(
+        (_, i) => i !== index,
+      );
+      setEditableData({
+        ...editableData,
+        vat_summary: updatedVatSummary,
+      });
+    }
   };
 
   const handleParseWithLLM = async () => {
@@ -240,11 +421,68 @@ const ExpenseTrackingDashboardPage = ({
       }
 
       const data = await res.json();
-      console.log('Response data:', data);
+      console.log('Response data text:', data.text);
+
+      // Set the extracted text for display
       setResult(data.text || data.error || 'No output');
 
-      // Try to parse the result as JSON for display
-      if (data.text) {
+      // Handle structured data from the API
+      if (data.structuredData) {
+        try {
+          const parsed = data.structuredData;
+
+          console.log('parsed=', parsed);
+
+          // Ensure the parsed data matches the exact format of ReceiptData
+          const formattedData: ReceiptData = {
+            supplier_business_name: parsed.supplier_business_name || '',
+            items: Array.isArray(parsed.items)
+              ? parsed.items.map((item: any) => ({
+                  description: item.description || '',
+                  item_total:
+                    typeof item.item_total === 'number' ? item.item_total : 0,
+                  vat_rate_id: item.vat_rate_id,
+                  vat_percentage:
+                    typeof item.vat_percentage === 'number'
+                      ? item.vat_percentage
+                      : 0,
+                }))
+              : [],
+            vat_summary: Array.isArray(parsed.vat_summary)
+              ? parsed.vat_summary.map((summary: any) => ({
+                  vat_percentage:
+                    typeof summary.vat_percentage === 'number'
+                      ? summary.vat_percentage
+                      : 0,
+                  description: summary.description || '',
+                  total_with_vat:
+                    typeof summary.total_with_vat === 'number'
+                      ? summary.total_with_vat
+                      : 0,
+                }))
+              : [],
+            receipt_total:
+              typeof parsed.receipt_total === 'number'
+                ? parsed.receipt_total
+                : 0,
+          };
+
+          console.log('formattedData=', formattedData);
+
+          setParsedData(formattedData);
+
+          // Validate the formatted data
+          const errors = validateReceiptData(formattedData);
+          setValidationErrors(errors);
+        } catch (e) {
+          console.log('Structured data parsing error:', e);
+          setParsedData(null);
+          setValidationErrors([
+            'Invalid structured data format received from AI',
+          ]);
+        }
+      } else if (data.text) {
+        // Fallback: try to parse the text as JSON (for backward compatibility)
         try {
           // Extract JSON from markdown code blocks if present
           let jsonText = data.text;
@@ -257,19 +495,38 @@ const ExpenseTrackingDashboardPage = ({
 
           const parsed = JSON.parse(jsonText);
 
-          // Ensure the parsed data matches the exact format of mockResult
+          // Ensure the parsed data matches the exact format of ReceiptData
           const formattedData: ReceiptData = {
-            document_type: parsed.document_type || 'FC',
             supplier_business_name: parsed.supplier_business_name || '',
-            lines: Array.isArray(parsed.lines)
-              ? parsed.lines.map((line: any) => ({
-                  description: line.description || '',
-                  quantity:
-                    typeof line.quantity === 'number' ? line.quantity : 1,
-                  unit_price:
-                    typeof line.unit_price === 'number' ? line.unit_price : 0,
+            items: Array.isArray(parsed.items)
+              ? parsed.items.map((item: any) => ({
+                  description: item.description || '',
+                  item_total:
+                    typeof item.item_total === 'number' ? item.item_total : 0,
+                  vat_rate_id: item.vat_rate_id,
+                  vat_percentage:
+                    typeof item.vat_percentage === 'number'
+                      ? item.vat_percentage
+                      : 0,
                 }))
               : [],
+            vat_summary: Array.isArray(parsed.vat_summary)
+              ? parsed.vat_summary.map((summary: any) => ({
+                  vat_percentage:
+                    typeof summary.vat_percentage === 'number'
+                      ? summary.vat_percentage
+                      : 0,
+                  description: summary.description || '',
+                  total_with_vat:
+                    typeof summary.total_with_vat === 'number'
+                      ? summary.total_with_vat
+                      : 0,
+                }))
+              : [],
+            receipt_total:
+              typeof parsed.receipt_total === 'number'
+                ? parsed.receipt_total
+                : 0,
           };
 
           setParsedData(formattedData);
@@ -310,7 +567,7 @@ const ExpenseTrackingDashboardPage = ({
 
           <section className="flex flex-col gap-4">
             <Card className="bg-background w-full sm:w-[400px]">
-              <Heading level={3}>Upload Receipt</Heading>
+              <Heading level={3}>Upload purchase document</Heading>
 
               <div
                 onDragOver={handleDragOver}
@@ -328,15 +585,65 @@ const ExpenseTrackingDashboardPage = ({
                 {file ? (
                   <div className="space-y-2">
                     <span className="text-sm font-medium text-gray-700">
-                      {file.name}
+                      {file.name.length > 33
+                        ? (() => {
+                            const lastDotIndex = file.name.lastIndexOf('.');
+                            if (lastDotIndex === -1) {
+                              return `${file.name.substring(0, 30)}...`;
+                            }
+                            const extension = file.name.substring(lastDotIndex);
+                            const nameWithoutExt = file.name.substring(
+                              0,
+                              lastDotIndex,
+                            );
+                            const maxNameLength = 33 - extension.length - 3; // 3 for "..."
+                            return `${nameWithoutExt.substring(
+                              0,
+                              maxNameLength,
+                            )}...${extension}`;
+                          })()
+                        : file.name}
                     </span>
-                    {photo && (
-                      <img
-                        src={photo}
-                        alt="Receipt preview"
-                        className="max-w-full h-32 object-contain mx-auto rounded"
-                      />
-                    )}
+                    {photo &&
+                      (file?.type === 'application/pdf' ? (
+                        <div className="max-w-full h-32 flex items-center justify-center mx-auto rounded border border-gray-300 bg-gray-50">
+                          <div className="text-center">
+                            <div className="text-2xl mb-1">📄</div>
+                            <div className="text-xs text-gray-600">
+                              {file.name.length > 33
+                                ? (() => {
+                                    const lastDotIndex =
+                                      file.name.lastIndexOf('.');
+                                    if (lastDotIndex === -1) {
+                                      return `${file.name.substring(0, 30)}...`;
+                                    }
+                                    const extension =
+                                      file.name.substring(lastDotIndex);
+                                    const nameWithoutExt = file.name.substring(
+                                      0,
+                                      lastDotIndex,
+                                    );
+                                    const maxNameLength =
+                                      33 - extension.length - 3; // 3 for "..."
+                                    return `${nameWithoutExt.substring(
+                                      0,
+                                      maxNameLength,
+                                    )}...${extension}`;
+                                  })()
+                                : file.name}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              PDF Document
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <img
+                          src={photo}
+                          alt="Receipt preview"
+                          className="max-w-full h-32 object-contain mx-auto rounded"
+                        />
+                      ))}
                   </div>
                 ) : (
                   <>
@@ -345,14 +652,14 @@ const ExpenseTrackingDashboardPage = ({
                       Click to upload or drag and drop a receipt image
                     </span>
                     <span className="text-xs text-gray-400 mt-1">
-                      Supports JPG, PNG, GIF
+                      Supports JPG, PNG, GIF, PDF
                     </span>
                   </>
                 )}
                 <input
                   id="file-upload"
                   type="file"
-                  accept="image/*"
+                  accept="image/*,.pdf"
                   onChange={(e) =>
                     handleFileSelect(e.target.files?.[0] || null)
                   }
@@ -364,130 +671,211 @@ const ExpenseTrackingDashboardPage = ({
                 onClick={handleParseWithLLM}
                 isEnabled={Boolean(file && !loading)}
               >
-                {loading ? 'Processing...' : 'Parse receipt'}
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Processing...</span>
+                  </div>
+                ) : (
+                  'Parse purchase document'
+                )}
               </Button>
             </Card>
 
             <div>
+      
               {parsedData && (
                 <div className="space-y-4">
-                  {/* Items Table */}
-                  {parsedData.lines && parsedData.lines.length > 0 && (
-                    <Card className="bg-background">
-                      <Heading level={3}>Extracted Receipt Details</Heading>
+                  {/* VAT Summary Table */}
+                  {parsedData.vat_summary &&
+                    parsedData.vat_summary.length > 0 && (
+                      <Card className="bg-background p-0 sm:p-4 shadow-none sm:shadow-md">
+                        <div className="flex justify-between items-center mb-4">
+                          <Heading level={3}>Extracted document data</Heading>
+                        </div>
 
-                      <div>
-                        <div className="text-sm text-gray-500">Supplier:</div>
-                        <p className="text-md font-semibold text-gray-900">
-                          {parsedData.supplier_business_name || 'N/A'}
-                        </p>
-                      </div>
+                        <div className="mb-4">
+                          <div className="text-sm text-gray-500 mb-1">
+                            Supplier:
+                          </div>
+                          <Input
+                            type="text"
+                            value={editableData?.supplier_business_name || ''}
+                            onChange={(e: any) =>
+                              handleSupplierChange(e.target.value)
+                            }
+                          />
+                        </div>
 
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead className="border-b">
-                            <tr>
-                              <th className="px-2  py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Description
-                              </th>
-                              <th className="px-2 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Qty
-                              </th>
-                              <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Unit Price
-                              </th>
-                              <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Total
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {parsedData.lines.map(
-                              (line: any, index: number) => (
-                                <tr key={index} className="hover:bg-gray-50">
-                                  <td className="px-2 py-1 text-sm text-gray-900 font-medium">
-                                    {line.description || 'N/A'}
-                                  </td>
-                                  <td className="px-2 py-1 text-sm text-gray-900 text-center">
-                                    {line.quantity || 1}
-                                  </td>
-                                  <td className="px-2 py-1 text-sm text-gray-900 text-right">
-                                    {line.unit_price
-                                      ? `€${parseFloat(line.unit_price).toFixed(
-                                          2,
-                                        )}`
-                                      : 'N/A'}
-                                  </td>
-                                  <td className="px-2 py-1 text-sm font-semibold text-gray-900 text-right">
-                                    {line.quantity && line.unit_price
-                                      ? `€${(
-                                          parseFloat(line.quantity) *
-                                          parseFloat(line.unit_price)
-                                        ).toFixed(2)}`
-                                      : 'N/A'}
-                                  </td>
-                                </tr>
-                              ),
-                            )}
-                          </tbody>
-                          <tfoot className="bg-gray-100">
-                            <tr>
-                              <td
-                                colSpan={3}
-                                className="px-2 py-2 text-sm font-bold text-gray-700 text-right"
-                              >
-                                Total:
-                              </td>
-                              <td className="px-2 py-2 text-lg font-bold text-gray-900 text-right">
-                                €
-                                {parsedData.lines
-                                  .reduce((sum: number, line: any) => {
-                                    const quantity =
-                                      parseFloat(line.quantity) || 1;
-                                    const unitPrice =
-                                      parseFloat(line.unit_price) || 0;
-                                    return sum + quantity * unitPrice;
-                                  }, 0)
-                                  .toFixed(2)}
-                              </td>
-                            </tr>
-                          </tfoot>
-                        </table>
-                      </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead className="border-b">
+                              <tr>
+                                <th className="pr-1 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  VAT Group description
+                                </th>
+                                <th className="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  VAT %
+                                </th>
+                                <th className="px-1 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Total with VAT
+                                </th>
+                                <th className="pl-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-[80px]">
+                                  Actions
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {editableData?.vat_summary?.map(
+                                (summary: any, index: number) => (
+                                  <tr key={index}>
+                                    <td className="pr-1 py-1 text-sm text-gray-900 font-medium">
+                                      <Input
+                                        type="text"
+                                        value={summary.description || ''}
+                                        onChange={(e) =>
+                                          handleVatSummaryChange(
+                                            index,
+                                            'description',
+                                            e.target.value,
+                                          )
+                                        }
+                                        className="py-2 px-0.5"
+                                      />
+                                    </td>
+                                    <td className="px-1 py-1 text-sm text-gray-900 text-center">
+                                      <Input
+                                        type="number"
+                                        value={String(
+                                          summary.vat_percentage || 0,
+                                        )}
+                                        onChange={(e) =>
+                                          handleVatSummaryChange(
+                                            index,
+                                            'vat_percentage',
+                                            parseFloat(e.target.value) || 0,
+                                          )
+                                        }
+                                      />
+                                    </td>
+                                    <td className="px-1 py-1 text-sm font-semibold text-gray-900 text-right">
+                                      <Input
+                                        type="number"
+                                        value={String(
+                                          summary.total_with_vat || 0,
+                                        )}
+                                        onChange={(e) =>
+                                          handleVatSummaryChange(
+                                            index,
+                                            'total_with_vat',
+                                            parseFloat(e.target.value) || 0,
+                                          )
+                                        }
+                                      />
+                                    </td>
+                                    <td className="pl-1 py-1 text-center                                     Бев сдфыыТфьу=Эзд-1 зн-1 еуче-сутеук ищквукЭЮ
+">
+                                      <div className="flex justify-center gap-1">
+                                        <button
+                                          onClick={() =>
+                                            handleDeleteVatSummaryRow(index)
+                                          }
+                                          disabled={
+                                            editableData?.vat_summary.length ===
+                                            1
+                                          }
+                                          className="text-red-600 hover:text-red-800 disabled:text-gray-400 p-1"
+                                          title="Delete row"
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                          onClick={() =>
+                                            handleAddVatSummaryRow()
+                                          }
+                                          className="text-blue-600 hover:text-blue-800 p-1"
+                                          title="Add row"
+                                        >
+                                          <Plus className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ),
+                              )}
+                            </tbody>
+                            <tfoot className="border-t">
+                              <tr>
+                                <td
+                                  colSpan={3}
+                                  className="px-2 py-2 text-sm font-bold  text-right"
+                                >
+                                  Receipt Total:
+                                </td>
+                                <td className="px-2 py-2 text-lg font-bold text-gray-900 text-right">
+                                  <Input
+                                    type="number"
+                                    value={String(
+                                      editableData?.receipt_total || 0,
+                                    )}
+                                    onChange={(e) =>
+                                      handleReceiptTotalChange(
+                                        parseFloat(e.target.value) || 0,
+                                      )
+                                    }
+                                    className="w-full p-1 border border-gray-300 rounded text-lg font-bold text-right"
+                                  />
+                                </td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        </div>
 
-                      {/* Validation Errors */}
-                      {validationErrors.length > 0 && (
-                        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                          <h4 className="text-sm font-medium text-red-800 mb-2">
-                            Validation Errors:
-                          </h4>
-                          <ul className="text-sm text-red-700 space-y-1">
-                            {validationErrors.map((error, index) => (
-                              <li key={index} className="flex items-start">
-                                <span className="text-red-500 mr-2">•</span>
-                                {error}
-                              </li>
-                            ))}
-                          </ul>
+                        {/* Validation Errors */}
+                        {validationErrors.length > 0 && (
+                          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                            <h4 className="text-sm font-medium text-red-800 mb-2">
+                              Validation Errors:
+                            </h4>
+                            <ul className="text-sm text-red-700 space-y-1">
+                              {validationErrors.map((error, index) => (
+                                <li key={index} className="flex items-start">
+                                  <span className="text-red-500 mr-2">•</span>
+                                  {error}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        <div className="text-sm text-red-500">
+                          WARNING: this action is not reversible. Please
+                          carefully review the extracted receipt data before
+                          proceeding.
+                        </div>
+                        <Button
+                          onClick={handleUploadToToconline}
+                          isEnabled={Boolean(
+                            !loading && validationErrors.length === 0,
+                          )}
+                        >
+                          {loading ? (
+                            <div className="flex items-center gap-2">
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <span>Processing...</span>
+                            </div>
+                          ) : (
+                            'Upload to Toconline'
+                          )}
+                      </Button>
+                      
+                      {hasLoggedExpense && (
+                        <div className="text-sm text-green-500 bg-green-100 p-2 rounded-md">
+                          Purchase logged successfully to Toconline API
                         </div>
                       )}
-
-                      <div className="text-sm text-red-500">
-                        WARNING: this action is not reversible. Please carefully
-                        review the extracted receipt data before proceeding.
-                      </div>
-                      <Button
-                        onClick={handleUploadToToconline}
-                        isEnabled={Boolean(
-                          !loading && validationErrors.length === 0,
-                        )}
-                      >
-                        {loading
-                          ? 'Processing...'
-                          : 'Upload receipt to Toconline API'}
-                      </Button>
-                    </Card>
-                  )}
+                      </Card>
+                    )}
                 </div>
               )}
             </div>

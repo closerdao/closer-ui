@@ -205,9 +205,25 @@ const MemberMenu = () => {
             roles: ['member'],
             rbacPage: 'Governance',
           },
+          {
+            label: t('navigation_token_sales'),
+            url: '/dashboard/token-sales',
+            enabled: true,
+            roles: ['admin'],
+            rbacPage: 'TokenSales',
+          },
+          {
+            label: t('navigation_expense_tracking'),
+            url: '/dashboard/expense-tracking',
+            enabled: true,
+            roles: ['admin'],
+            rbacPage: 'ExpenseTracking',
+          },
         ],
       },
     ];
+
+
 
     // Bookings section (only if booking is enabled)
     if (isBookingEnabled) {
