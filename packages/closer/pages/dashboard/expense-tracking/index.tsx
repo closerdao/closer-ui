@@ -8,6 +8,7 @@ import Heading from '../../../components/ui/Heading';
 import Input from '../../../components/ui/Input';
 
 import { Charge } from 'closer/types/booking';
+import Cookies from 'js-cookie';
 import { Loader2, Plus, Trash2, Upload } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -81,6 +82,9 @@ const ExpenseTrackingDashboardPage = ({
   const [editableData, setEditableData] = useState<ReceiptData | null>(null);
   const [toconlineData, setToconlineData] = useState<any>(null);
   const [hasLoggedExpense, setHasLoggedExpense] = useState(false);
+  const [uploadedDocumentUrl, setUploadedDocumentUrl] = useState<string | null>(
+    null,
+  );
 
   // Validate test data on mount
   React.useEffect(() => {
@@ -310,7 +314,7 @@ const ExpenseTrackingDashboardPage = ({
     try {
       setHasLoggedExpense(false);
       setLoading(true);
-      const res = await api.post('/toconline/expense', { toconlineData });
+      const res = await api.post('/toconline/expense', { toconlineData, uploadedDocumentUrl });
       if (res.status === 200) {
         console.log('res=', res);
         setHasLoggedExpense(true);
@@ -401,9 +405,13 @@ const ExpenseTrackingDashboardPage = ({
       formData.append('file', file);
 
       console.log('Making request to /api/parse-receipt');
+      const token = Cookies.get('access_token');
       const res = await fetch('/api/parse-receipt', {
         method: 'POST',
         body: formData,
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
       });
 
       console.log('Response status:', res.status);
@@ -425,6 +433,15 @@ const ExpenseTrackingDashboardPage = ({
 
       // Set the extracted text for display
       setResult(data.text || data.error || 'No output');
+
+      // Store the uploaded document URL if available
+      if (data.documentUrl) {
+        setUploadedDocumentUrl(data.documentUrl);
+        console.log('Document uploaded to CDN:', data.documentUrl);
+      } else {
+        setUploadedDocumentUrl(null);
+        console.log('No document URL returned (may be PDF or upload failed)');
+      }
 
       // Handle structured data from the API
       if (data.structuredData) {
@@ -569,6 +586,11 @@ const ExpenseTrackingDashboardPage = ({
             <Card className="bg-background w-full sm:w-[400px]">
               <Heading level={3}>Upload purchase document</Heading>
 
+              <p className="text-sm text-gray-500">
+                The photo/scan must include all the items purchased and be fully
+                legible. JPG, PNG, GIF, PDF formats are supported.
+              </p>
+
               <div
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -683,7 +705,6 @@ const ExpenseTrackingDashboardPage = ({
             </Card>
 
             <div>
-      
               {parsedData && (
                 <div className="space-y-4">
                   {/* VAT Summary Table */}
@@ -773,8 +794,10 @@ const ExpenseTrackingDashboardPage = ({
                                         }
                                       />
                                     </td>
-                                    <td className="pl-1 py-1 text-center                                     Бев сдфыыТфьу=Эзд-1 зн-1 еуче-сутеук ищквукЭЮ
-">
+                                    <td
+                                      className="pl-1 py-1 text-center                                     Бев сдфыыТфьу=Эзд-1 зн-1 еуче-сутеук ищквукЭЮ
+"
+                                    >
                                       <div className="flex justify-center gap-1">
                                         <button
                                           onClick={() =>
@@ -867,13 +890,34 @@ const ExpenseTrackingDashboardPage = ({
                           ) : (
                             'Upload to Toconline'
                           )}
-                      </Button>
-                      
-                      {hasLoggedExpense && (
-                        <div className="text-sm text-green-500 bg-green-100 p-2 rounded-md">
-                          Purchase logged successfully to Toconline API
-                        </div>
-                      )}
+                        </Button>
+
+                        {hasLoggedExpense && (
+                          <div className="text-sm text-green-500 bg-green-100 p-2 rounded-md">
+                            Purchase logged successfully to Toconline API
+                          </div>
+                        )}
+
+                        {uploadedDocumentUrl && (
+                          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                            <h4 className="text-sm font-medium text-blue-800 mb-2">
+                              Uploaded Document:
+                            </h4>
+                            <div className="flex items-center gap-2">
+                              <a
+                                href={uploadedDocumentUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 text-sm underline"
+                              >
+                                View uploaded document
+                              </a>
+                              <span className="text-xs text-gray-500">
+                                (opens in new tab)
+                              </span>
+                            </div>
+                          </div>
+                        )}
                       </Card>
                     )}
                 </div>

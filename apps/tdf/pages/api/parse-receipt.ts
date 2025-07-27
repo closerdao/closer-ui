@@ -7,6 +7,92 @@ const genai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY || '',
 });
 
+async function uploadToCDN(
+  processedBuffer: Buffer,
+  fileName: string,
+  mimeType: string,
+  authToken?: string,
+): Promise<string | null> {
+  try {
+    console.log('Uploading document to CDN...');
+    const uploadStartTime = Date.now();
+
+    // Create FormData-like structure for server-side upload
+    const boundary = `----WebKitFormBoundary${Math.random()
+      .toString(16)
+      .substr(2)}`;
+
+    // Build multipart form data manually
+    const header = `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${fileName}"\r\nContent-Type: ${mimeType}\r\n\r\n`;
+    const footer = `\r\n--${boundary}--\r\n`;
+
+    const headerBuffer = Buffer.from(header, 'utf8');
+    const footerBuffer = Buffer.from(footer, 'utf8');
+    const multipartData = Buffer.alloc(
+      headerBuffer.length + processedBuffer.length + footerBuffer.length,
+    );
+    (headerBuffer as any).copy(multipartData, 0);
+    (processedBuffer as any).copy(multipartData, headerBuffer.length);
+    (footerBuffer as any).copy(
+      multipartData,
+      headerBuffer.length + processedBuffer.length,
+    );
+
+    // Prepare headers with authentication
+    const headers: Record<string, string> = {
+      'Content-Type': `multipart/form-data; boundary=${boundary}`,
+    };
+
+    // Add authentication header if provided
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+
+    // Upload to CDN using the same endpoint and structure as UploadPhoto component
+    const uploadResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/upload/photo`,
+      {
+        method: 'POST',
+        body: multipartData,
+        headers,
+      },
+    );
+
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
+      throw new Error(
+        `Upload failed with status: ${uploadResponse.status}, message: ${errorText}`,
+      );
+    }
+
+    const uploadData = await uploadResponse.json();
+    const documentId = uploadData.results._id;
+
+    // Construct CDN URL based on file type
+    let uploadedDocumentUrl: string;
+
+    if (mimeType === 'application/pdf') {
+      // For PDFs, use the 'original' URL from the backend response
+      uploadedDocumentUrl = uploadData.results.urls.original;
+    } else {
+      // For images, use the existing pattern: {id}-max-lg.jpg
+      const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
+      uploadedDocumentUrl = `${cdnUrl}${documentId}-max-lg.jpg`;
+    }
+
+    const uploadEndTime = Date.now();
+    console.log(
+      `Document uploaded to CDN in ${uploadEndTime - uploadStartTime}ms`,
+    );
+    console.log('Uploaded document URL:', uploadedDocumentUrl);
+    console.log('Document ID:', documentId);
+
+    return uploadedDocumentUrl;
+  } catch (uploadError) {
+    console.error('CDN upload error:', uploadError);
+    return null;
+  }
+}
 
 export const config = {
   api: {
@@ -349,9 +435,26 @@ export default async function handler(
     console.log(`Text extraction cost: $${textCost.toFixed(6)}`);
     console.log('==========================================');
 
+    // Upload document to CDN
+    let uploadedDocumentUrl: string | null = null;
+    try {
+      // Upload both images and PDFs to CDN
+      uploadedDocumentUrl = await uploadToCDN(
+        fileBuffer, // Use original file buffer for both images and PDFs
+        isPdf ? 'receipt.pdf' : 'receipt.jpg',
+        mimeType,
+        req.headers['authorization']?.split('Bearer ')[1], // Pass the user's auth token
+      );
+    } catch (uploadError) {
+      console.error('CDN upload error:', uploadError);
+      // Don't fail the entire request if upload fails, just log the error
+      uploadedDocumentUrl = null;
+    }
+
     res.status(200).json({
       text: extractedText,
       structuredData: parsedData,
+      documentUrl: uploadedDocumentUrl,
     });
   } catch (error: any) {
     console.error('Parse receipt error:', error);
