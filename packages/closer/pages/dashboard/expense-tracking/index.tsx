@@ -720,7 +720,7 @@ const ExpenseTrackingDashboardPage = ({
                                 <th className="px-1 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                   Total with VAT
                                 </th>
-                                <th className="pl-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-[80px]">
+                                <th className="pl-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-[90px]">
                                   Actions
                                 </th>
                               </tr>
@@ -810,7 +810,7 @@ const ExpenseTrackingDashboardPage = ({
                                   colSpan={3}
                                   className="px-2 py-2 text-sm font-bold  text-right"
                                 >
-                                  Receipt Total:
+                                  Document Total:
                                 </td>
                                 <td className="px-2 py-2 text-lg font-bold text-gray-900 text-right">
                                   <Input
@@ -823,7 +823,7 @@ const ExpenseTrackingDashboardPage = ({
                                         parseFloat(e.target.value) || 0,
                                       )
                                     }
-                                    className="w-full p-1 border border-gray-300 rounded text-lg font-bold text-right"
+                                    className="w-full p-1 pl-0.5 border border-gray-300 rounded text-sm font-bold text-right"
                                   />
                                 </td>
                               </tr>
