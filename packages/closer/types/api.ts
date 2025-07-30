@@ -3,10 +3,12 @@ import { User } from 'closer/contexts/auth/types';
 import { CloserCurrencies, Price } from './currency';
 
 export type BookingConditions = {
+  minDuration: number | undefined;
+  maxDuration: number | undefined;
+  maxBookingHorizon: number | undefined;
+  memberMinDuration: number | undefined;
   memberMaxDuration: number | undefined;
   memberMaxBookingHorizon: number | undefined;
-  guestMaxDuration: number | undefined;
-  guestMaxBookingHorizon: number | undefined;
 };
 
 export type VolunteerOpportunity = {
@@ -54,11 +56,11 @@ export type BookingSettings = {
   checkoutTime: number;
   maxDuration: number;
   minDuration: number;
+  maxBookingHorizon: number;
   volunteerCommitment: string;
+  memberMinDuration: number;
   memberMaxDuration: number;
   memberMaxBookingHorizon: number;
-  guestMaxDuration: number;
-  guestMaxBookingHorizon: number;
   discountsDaily: number;
   discountsWeekly: number;
   discountsMonthly: number;
@@ -128,7 +130,6 @@ export type AffiliateConfig = {
 };
 
 export type BookingConfig = {
-  guestMaxDuration: number;
   enabled: boolean;
   minDuration: number;
   discountsDaily: number;
@@ -136,7 +137,7 @@ export type BookingConfig = {
   seasonsHighEnd: string;
   cancellationPolicyDefault: number;
   memberMaxBookingHorizon: number;
-  guestMaxBookingHorizon: number;
+  maxBookingHorizon: number;
   seasonsHighStart: string;
   cancellationPolicyLastday: number;
   checkoutTime: number;

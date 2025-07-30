@@ -118,6 +118,10 @@ export const configDescription: ConfigType[] = [
         type: 'number',
         default: 1,
       },
+      maxBookingHorizon: {
+        type: 'number',
+        default: 180,
+      },
       volunteerCommitment: {
         type: 'text',
         default: '4h/day',
@@ -129,14 +133,6 @@ export const configDescription: ConfigType[] = [
       memberMaxBookingHorizon: {
         type: 'number',
         default: 365,
-      },
-      guestMaxDuration: {
-        type: 'number',
-        default: 31,
-      },
-      guestMaxBookingHorizon: {
-        type: 'number',
-        default: 90,
       },
       discountsDaily: {
         type: 'number',
