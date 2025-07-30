@@ -132,12 +132,15 @@ export type AffiliateConfig = {
 export type BookingConfig = {
   enabled: boolean;
   minDuration: number;
+  maxDuration: number;
+  maxBookingHorizon: number;
+  memberMinDuration: number;
+  memberMaxDuration: number;
+  memberMaxBookingHorizon: number;
   discountsDaily: number;
   seasonsHighModifier: number;
   seasonsHighEnd: string;
   cancellationPolicyDefault: number;
-  memberMaxBookingHorizon: number;
-  maxBookingHorizon: number;
   seasonsHighStart: string;
   cancellationPolicyLastday: number;
   checkoutTime: number;
@@ -145,11 +148,9 @@ export type BookingConfig = {
   utilityTokenCur: string;
   utilityTokenVal: number;
   cancellationPolicyLastmonth: number;
-  maxDuration: number;
   checkinTime: number;
   discountsMonthly: number;
   utilityDayFiatVal: number;
-  memberMaxDuration: number;
   utilityFiatCur: string;
   volunteerCommitment: string;
   cancellationPolicyLastweek: number;

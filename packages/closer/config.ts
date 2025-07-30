@@ -126,6 +126,10 @@ export const configDescription: ConfigType[] = [
         type: 'text',
         default: '4h/day',
       },
+      memberMinDuration: {
+        type: 'number',
+        default: 3,
+      },
       memberMaxDuration: {
         type: 'number',
         default: 180,
