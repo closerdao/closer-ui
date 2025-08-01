@@ -139,9 +139,9 @@ const Events = ({ generalConfig }: Props) => {
     const isSameDay = startDate.isSame(endDate, 'day');
     
     if (isSameDay) {
-      return `${startDate.format('MMM D')} • ${startDate.format('HH:mm')}`;
+      return `${startDate.format('MMM D')}`;
     } else {
-      return `${startDate.format('MMM D')} - ${endDate.format('MMM D')} • ${startDate.format('HH:mm')}`;
+      return `${startDate.format('MMM D')} - ${endDate.format('MMM D')}`;
     }
   };
 
@@ -242,7 +242,7 @@ const Events = ({ generalConfig }: Props) => {
                               />
                             ) : (
                               <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                                <span className="text-gray-400 text-xs">No image</span>
+                                <span className="text-gray-400 text-xs">{t('events_no_image')}</span>
                               </div>
                             )}
                           </div>
@@ -338,7 +338,7 @@ const Events = ({ generalConfig }: Props) => {
                               />
                             ) : (
                               <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                                <span className="text-gray-400 text-xs">No image</span>
+                                <span className="text-gray-400 text-xs">{t('events_no_image')}</span>
                               </div>
                             )}
                           </div>
