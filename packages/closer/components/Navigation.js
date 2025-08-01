@@ -125,6 +125,9 @@ const Navigation = () => {
                     <Link href="/#pricing">{t('header_nav_pricing')}</Link>
                   </li>
                   <li>
+                    <Link href="/roles">{t('header_nav_work_with_us')}</Link>
+                  </li>
+                  <li>
                     <Link
                       href="https://closer.gitbook.io/documentation"
                       target="_blank"
