@@ -1739,5 +1739,20 @@
   "token_sales_dashboard_cancel": "Cancelar",
   "token_sales_dashboard_distributing": "A distribuir...",
   "token_sales_dashboard_distribute_tokens_button": "Distribuir Tokens",
-  "token_sales_dashboard_success_message": "Confirmação de distribuição de tokens enviada com sucesso"
+  "token_sales_dashboard_success_message": "Confirmação de distribuição de tokens enviada com sucesso",
+
+  "roles_page_title": "Funções Disponíveis",
+  "roles_add_role_button": "Adicionar Função",
+  "roles_no_roles_available": "Não há funções disponíveis no momento.",
+  "roles_compensation_label": "Compensação:",
+  "roles_hours_per_week_label": "Horas por Semana:",
+  "roles_skills_required_label": "Competências Necessárias:",
+  "roles_responsibilities_label": "Responsabilidades:",
+  "roles_apply_now_button": "Candidatar-se Agora",
+  "roles_create_page_title": "Criar Nova Função",
+  "roles_delete_role_button": "Eliminar Função",
+  "roles_edit_role_button": "Editar Função",
+  "roles_edit_page_title": "Editar Função",
+  "roles_page_description_1": "Junte-se à nossa vibrante comunidade regenerativa onde o trabalho e a vida se misturam perfeitamente. Estamos à procura de indivíduos apaixonados que queiram contribuir para um futuro sustentável enquanto vivem em harmonia com a natureza e pessoas com ideias semelhantes. Os nossos papéis oferecem mais do que apenas emprego - proporcionam uma oportunidade de fazer parte de um ecossistema em crescimento que valoriza a colaboração, a aprendizagem e a gestão ambiental.",
+  "roles_page_description_2": "Quer seja especialista em jardinagem, construção, hospitalidade, ou tenha outros talentos para partilhar, damos as boas-vindas a perspectivas e capacidades diversas. Em troca, irá experimentar a vida em comunidade, aprender práticas regenerativas e contribuir para projectos significativos que fazem a diferença."
 }

@@ -1860,5 +1860,20 @@
   "token_sales_dashboard_cancel": "Cancel",
   "token_sales_dashboard_distributing": "Distributing...",
   "token_sales_dashboard_distribute_tokens_button": "Distribute Tokens",
-  "token_sales_dashboard_success_message": "Token distribution confirmation submitted successfully"
+  "token_sales_dashboard_success_message": "Token distribution confirmation submitted successfully",
+
+  "roles_page_title": "Available Roles",
+  "roles_add_role_button": "Add Role",
+  "roles_no_roles_available": "No roles available at the moment.",
+  "roles_compensation_label": "Compensation:",
+  "roles_hours_per_week_label": "Hours per Week:",
+  "roles_skills_required_label": "Skills Required:",
+  "roles_responsibilities_label": "Responsibilities:",
+  "roles_apply_now_button": "Apply Now",
+  "roles_create_page_title": "Create New Role",
+  "roles_delete_role_button": "Delete Role",
+  "roles_edit_role_button": "Edit Role",
+  "roles_edit_page_title": "Edit Role",
+  "roles_page_description_1": "Join our vibrant regenerative community where work and life blend seamlessly. We're looking for passionate individuals who want to contribute to a sustainable future while living in harmony with nature and like-minded people. Our roles offer more than just employment - they provide an opportunity to be part of a growing ecosystem that values collaboration, learning, and environmental stewardship.",
+  "roles_page_description_2": "Whether you're skilled in gardening, building, hospitality, or have other talents to share, we welcome diverse perspectives and abilities. In return, you'll experience community living, learn regenerative practices, and contribute to meaningful projects that make a difference."
 }
