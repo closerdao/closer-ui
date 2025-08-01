@@ -15,6 +15,7 @@ import { isInputValid } from '../utils/helpers';
 import GoogleButton from './GoogleButton';
 import { Button, Card, Checkbox, ErrorMessage, Input } from './ui';
 import Heading from './ui/Heading';
+import api from '../utils/api';
 
 interface Props {
   app: string | undefined;
@@ -37,6 +38,10 @@ const SignupForm = ({ app }: Props) => {
     signup,
   } = useAuth();
 
+  const [step, setStep] = useState(1);
+  const [email, setEmail] = useState('');
+  const [newsletterError, setNewsletterError] = useState<string | null>(null);
+  const [newsletterSuccess, setNewsletterSuccess] = useState(false);
   const [application, setApplication] = useState({
     screenname: '',
     phone: '',
@@ -44,6 +49,11 @@ const SignupForm = ({ app }: Props) => {
     password: '',
     fields: {},
     source: typeof window !== 'undefined' && window.location.href,
+  });
+  const [preferences, setPreferences] = useState({
+    about: '',
+    superpower: '',
+    dream: '',
   });
   const [isLogin, setIsLogin] = useState(false);
 
@@ -104,6 +114,7 @@ const SignupForm = ({ app }: Props) => {
   useEffect(() => {
     const localEmail = localStorage.getItem('email');
     if (localEmail) {
+      setEmail(localEmail);
       setApplication({ ...application, email: localEmail });
     }
   }, []);
@@ -112,12 +123,54 @@ const SignupForm = ({ app }: Props) => {
     setApplication((prevState) => ({ ...prevState, ...update }));
   };
 
+  const updatePreferences = (update: any) => {
+    setPreferences((prevState) => ({ ...prevState, ...update }));
+  };
+
   const isSignupDisabled =
     !application.password ||
     !application.screenname ||
     !isInputValid(application.email, 'email');
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleEmailSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!email || !isInputValid(email, 'email')) {
+      return;
+    }
+
+    try {
+      const referrer = typeof localStorage !== 'undefined' && localStorage.getItem('referrer');
+      await api.post('/subscribe', {
+        email,
+        screenname: '',
+        tags: ['signup', router.asPath, `ref:${referrer}`],
+      });
+      
+      setNewsletterSuccess(true);
+      setNewsletterError(null);
+      setApplication({ ...application, email });
+      localStorage.setItem('email', email);
+      
+      setTimeout(() => {
+        setStep(2);
+      }, 1000);
+    } catch (err: any) {
+      setNewsletterError(
+        (err.response && err.response.data && err.response.data.error) ||
+        err.message
+      );
+    }
+  };
+
+  const handleAccountSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!application.screenname || !application.password) {
+      return;
+    }
+    setStep(3);
+  };
+
+  const handlePreferencesSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!application.email) {
       return;
@@ -125,6 +178,7 @@ const SignupForm = ({ app }: Props) => {
     const referredBy = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
     await signup({
       ...application,
+      preferences,
       ...(referredBy && { referredBy }),
     });
   };
@@ -142,7 +196,6 @@ const SignupForm = ({ app }: Props) => {
     if (authRes.result === 'signup') {
       gaEvent('sign_up', {
         category: 'signing',
-        // label: 'success',
       });
     }
   };
@@ -161,7 +214,7 @@ const SignupForm = ({ app }: Props) => {
             src="/images/subscriptions/explorer.png"
             width={200}
             height={354}
-          />{' '}
+          />
         </div>
       )}
       {hasSignedUp && !error ? (
@@ -171,8 +224,65 @@ const SignupForm = ({ app }: Props) => {
           </Heading>
           <p>{t('signup_success_cta')}</p>
         </>
-      ) : (
-        <form className=" flex flex-col gap-4" onSubmit={handleSubmit}>
+      ) : step === 1 ? (
+        <form className="flex flex-col gap-4" onSubmit={handleEmailSubmit}>
+          <Heading level={2} className="mb-4">
+            {t('signup_step1_title')}
+          </Heading>
+          <p className="text-gray-600 mb-4">
+            {t('signup_step1_description')}
+          </p>
+          
+          <Input
+            label={t('signup_form_email')}
+            placeholder={t('signup_form_email_placeholder')}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            validation="email"
+          />
+          
+          {newsletterError && <ErrorMessage error={newsletterError} />}
+          {newsletterSuccess && (
+            <div className="text-green-600 text-sm">
+              {t('signup_step1_success')}
+            </div>
+          )}
+          
+          <Checkbox
+            className="my-4"
+            id="emailConsent"
+            isChecked={isEmailConsent}
+            onChange={() => setIsEmailConsent(!isEmailConsent)}
+          >
+            {t('signup_form_email_consent')}
+          </Checkbox>
+          
+          <div className="w-full flex flex-col gap-4">
+            <Button
+              isEnabled={!!email && isInputValid(email, 'email') && !newsletterSuccess && isEmailConsent}
+              isLoading={false}
+              type="submit"
+            >
+              {t('signup_step1_continue')}
+            </Button>
+
+            {process.env.NEXT_PUBLIC_FIREBASE_CONFIG && (
+              <GoogleButton
+                isLoading={isGoogleLoading}
+                onClick={authUserWithGoogle}
+              />
+            )}
+          </div>
+        </form>
+      ) : step === 2 ? (
+        <form className="flex flex-col gap-4" onSubmit={handleAccountSubmit}>
+          <Heading level={2} className="mb-4">
+            {t('signup_step2_title')}
+          </Heading>
+          <p className="text-gray-600 mb-4">
+            {t('signup_step2_description')}
+          </p>
+          
           <input
             type="hidden"
             name="backurl"
@@ -190,16 +300,6 @@ const SignupForm = ({ app }: Props) => {
             }
           />
           <Input
-            label={t('signup_form_email')}
-            placeholder={t('signup_form_email_placeholder')}
-            value={application.email}
-            onChange={(e) =>
-              updateApplication({
-                email: e.target.value,
-              })
-            }
-          />
-          <Input
             type="password"
             placeholder={t('signup_form_password_placeholder')}
             label={t('signup_form_password')}
@@ -210,30 +310,15 @@ const SignupForm = ({ app }: Props) => {
               })
             }
           />
-          <Checkbox
-            className="my-4"
-            id="emailConsent"
-            isChecked={isEmailConsent}
-            onChange={() => setIsEmailConsent(!isEmailConsent)}
-          >
-            {t('signup_form_email_consent')}
-          </Checkbox>
 
           {error && <ErrorMessage error={error} />}
           <div className="w-full my-4 flex flex-col gap-6">
             <Button
-              isEnabled={!isSignupDisabled && !isLoading && isEmailConsent}
+              isEnabled={!!application.screenname && !!application.password && !isLoading}
               isLoading={isLoading}
             >
-              {t('signup_form_create')}
+              {t('signup_step2_continue')}
             </Button>
-
-            {process.env.NEXT_PUBLIC_FIREBASE_CONFIG && (
-              <GoogleButton
-                isLoading={isGoogleLoading}
-                onClick={authUserWithGoogle}
-              />
-            )}
           </div>
           <div className="text-center text-sm">
             {t('signup_form_have_account')}{' '}
@@ -244,6 +329,46 @@ const SignupForm = ({ app }: Props) => {
             >
               {t('login_title')}{' '}
             </Link>
+          </div>
+        </form>
+      ) : (
+        <form className="flex flex-col gap-4" onSubmit={handlePreferencesSubmit}>
+          <Heading level={2} className="mb-4">
+            {t('signup_step3_title')}
+          </Heading>
+          <p className="text-gray-600 mb-4">
+            {t('signup_step3_description')}
+          </p>
+          
+          <Input
+            label={t('settings_about_you')}
+            placeholder={t('settings_tell_us_more_about_yourself')}
+            value={preferences.about}
+            onChange={(e) => updatePreferences({ about: e.target.value })}
+          />
+
+          <Input
+            label={t('settings_superpower')}
+            placeholder={t('settings_superpower_placeholder')}
+            value={preferences.superpower}
+            onChange={(e) => updatePreferences({ superpower: e.target.value })}
+          />
+
+          <Input
+            label={t('settings_dream')}
+            placeholder={t('settings_dream_placeholder')}
+            value={preferences.dream}
+            onChange={(e) => updatePreferences({ dream: e.target.value })}
+          />
+
+          {error && <ErrorMessage error={error} />}
+          <div className="w-full my-4 flex flex-col gap-6">
+            <Button
+              isEnabled={!isLoading}
+              isLoading={isLoading}
+            >
+              {t('signup_form_create')}
+            </Button>
           </div>
         </form>
       )}

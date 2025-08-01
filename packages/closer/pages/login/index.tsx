@@ -14,6 +14,7 @@ import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
 import { useAuth } from '../../contexts/auth';
+import { useNewsletter } from '../../contexts/newsletter';
 import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import api from '../../utils/api';
 import { getRedirectUrl } from '../../utils/auth.helpers';
@@ -29,6 +30,15 @@ const Login = () => {
   const t = useTranslations();
   const { account } = useContext(WalletState);
   const { signMessage, connectWallet } = useContext(WalletDispatch);
+  
+  // Safely use newsletter context
+  let setHideFooterNewsletter: ((hide: boolean) => void) | undefined;
+  try {
+    const newsletterContext = useNewsletter();
+    setHideFooterNewsletter = newsletterContext.setHideFooterNewsletter;
+  } catch (error) {
+    // Context not available during SSR, that's okay
+  }
 
   const router = useRouter();
   const {
@@ -101,6 +111,15 @@ const Login = () => {
       setEmail(localEmail);
     }
   }, []);
+
+  useEffect(() => {
+    if (setHideFooterNewsletter) {
+      setHideFooterNewsletter(true);
+      return () => {
+        setHideFooterNewsletter(false);
+      };
+    }
+  }, [setHideFooterNewsletter]);
 
   const signInWithWallet = async (walletAddress: string) => {
     console.log('[signInWithWallet] called with walletAddress:', walletAddress);

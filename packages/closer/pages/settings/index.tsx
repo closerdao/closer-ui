@@ -419,7 +419,7 @@ const SettingsPage = ({
                   </h3>
 
                   <Input
-                    label={t('settings_about_me')}
+                    label={t('settings_about_you')}
                     additionalInfo={
                       APP_NAME === 'moos'
                         ? t('settings_required_to_make_bookings')

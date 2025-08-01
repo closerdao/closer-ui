@@ -15,30 +15,34 @@ import { useTranslations } from 'next-intl';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
+import { useNewsletter } from '../../contexts/newsletter';
 import { useConfig } from '../../hooks/useConfig';
 import { SubscriptionPlan } from '../../types/subscriptions';
 import api, { cdn } from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
-import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';  
 
 interface Props {
   subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
 }
 
-const Signup = ({ subscriptionsConfig }: Props) => {
+const Signup = () => {
   const t = useTranslations();
-  const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
   const config = useConfig();
   const { APP_NAME } = config || {};
+  
+  // Safely use newsletter context
+  let setHideFooterNewsletter: ((hide: boolean) => void) | undefined;
+  try {
+    const newsletterContext = useNewsletter();
+    setHideFooterNewsletter = newsletterContext.setHideFooterNewsletter;
+  } catch (error) {
+    // Context not available during SSR, that's okay
+  }
 
   const { platform }: any = usePlatform();
 
   const [error, setError] = useState(false);
-
-  const defaultSubscriptionPlan =
-    subscriptionPlans &&
-    subscriptionPlans.find((plan: SubscriptionPlan) => plan.priceId === 'free');
 
   const router = useRouter();
   const { referral } = router.query || {};
@@ -68,6 +72,15 @@ const Signup = ({ subscriptionsConfig }: Props) => {
     loadData();
   }, []);
 
+  useEffect(() => {
+    if (setHideFooterNewsletter) {
+      setHideFooterNewsletter(true);
+      return () => {
+        setHideFooterNewsletter(false);
+      };
+    }
+  }, [setHideFooterNewsletter]);
+
   return (
     <>
       <Head>
@@ -89,67 +102,21 @@ const Signup = ({ subscriptionsConfig }: Props) => {
                 level={1}
                 className="uppercase text-5xl sm:text-5xl font-extrabold"
               >
-                {t('signup_title')}
+                Join our regenerative village
               </Heading>
+              <p className="text-lg text-gray-600">
+                Co-create a new way of living and earn your spot under the Portuguese sun.
+              </p>
 
-              {/* TODO: discuss free creidt distribution to new users */}
-              {/* {APP_NAME &&
-                APP_NAME?.toLowerCase() === 'moos' &&
-                process.env.NEXT_PUBLIC_FEATURE_CARROTS === 'true' && (
-                  <div>
-                    <span
-                      dangerouslySetInnerHTML={{
-                        __html: t.raw('signup_form_get_credits'),
-                      }}
-                    />{' '}
-                    <Link
-                      href="/settings/credits"
-                      className="font-bold text-accent underline"
-                    >
-                      {t('signup_form_credit_learn_more')}
-                    </Link>
-                  </div>
-                )} */}
-
-              {APP_NAME && APP_NAME?.toLowerCase() === 'moos' && (
-                <div className="flex flex-col gap-4">
-                  <p> {t('signup_intro_1')}</p>
-                  <p> {t('signup_intro_2')}</p>
-                  <p> {t('signup_intro_3')}</p>
-                  <p> {t('signup_intro_4')}</p>
-                </div>
-              )}
+              <ul className="space-y-1 text-xs text-gray-600 pt-2">
+                <li>🌱 Restore <strong>24 ha</strong> of land with every stay</li>
+                <li>🫂 Co‑live with <strong>60+ purpose‑driven</strong> citizens</li>
+                <li>💎 Earn on‑chain <strong>$TDF</strong> for your skills</li>
+                <li>🛠 Makers’ lab, wood‑shop &amp; industrial kitchen on site</li>
+                <li>🏄 Surf‑ready beaches just <strong>35 min</strong> away</li>
+              </ul>
 
               <div>
-                {process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true' && (
-                  <>
-                    <Heading level={4} className="mb-4 text-sm uppercase">
-                      {defaultSubscriptionPlan?.description}
-                    </Heading>
-                    <ul className="mb-4">
-                      {defaultSubscriptionPlan?.perks
-                        ?.split(',')
-                        .map((perk) => {
-                          return (
-                            <li
-                              key={perk}
-                              className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5"
-                            >
-                              <span className="block">
-                                {perk.includes('<') ? (
-                                  <span
-                                    dangerouslySetInnerHTML={{ __html: perk }}
-                                  />
-                                ) : (
-                                  perk
-                                )}
-                              </span>
-                            </li>
-                          );
-                        })}
-                    </ul>
-                  </>
-                )}
                 {error && <ErrorMessage error={error} />}
                 {referrer && (
                   <div>

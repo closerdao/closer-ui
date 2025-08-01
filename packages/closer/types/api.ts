@@ -26,6 +26,22 @@ export type VolunteerOpportunity = {
   _id: string;
 };
 
+export type Role = {
+  title: string;
+  description: string;
+  compensation: string;
+  hoursPerWeek: number;
+  skillsRequired: string[];
+  responsibilities: string[];
+  visibleBy: any[];
+  createdBy: string;
+  updated: string;
+  created: string;
+  attributes: any[];
+  managedBy: any[];
+  _id: string;
+};
+
 export type Project = VolunteerOpportunity & {
   budget?: number;
   documentUrl?: string;

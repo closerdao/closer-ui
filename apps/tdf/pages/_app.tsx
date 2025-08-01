@@ -2,8 +2,6 @@ import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Script from 'next/script';
-import posthog from 'posthog-js'
-import { PostHogProvider } from 'posthog-js/react'
 
 import { useEffect, useRef, useState } from 'react';
 
@@ -27,6 +25,7 @@ import {
 } from 'closer';
 import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
+import { NewsletterProvider } from 'closer/contexts/newsletter';
 import { prepareGeneralConfig } from 'closer/utils/app.helpers';
 import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
@@ -72,31 +71,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
   const [isEnvironmentChecked, setIsEnvironmentChecked] = useState(false);
 
 
-  useEffect(() => {
-    posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY as string, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://eu.i.posthog.com',
-      person_profiles: 'identified_only', // or 'always' to create profiles for anonymous users as well
-      // Enable debug mode in development
-      loaded: (posthog) => {
-        // Check if we're in development by checking hostname instead of NODE_ENV
-        const isDevelopment = typeof window !== 'undefined' && 
-          (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-        if (isDevelopment) posthog.debug();
-      }
-    })
 
-    const handleRouteChange = () => posthog?.capture('$pageview')
-
-    router.events.on('routeChangeComplete', handleRouteChange);
-
-    return () => {
-      router.events.off('routeChangeComplete', handleRouteChange);
-    }
-  }, [])
-
-  useEffect(() => {
-    posthog.featureFlags.overrideFeatureFlags({ flags: { 'uiVariant': '1' } });
-  }, [])
 
   const { FACEBOOK_PIXEL_ID } = config || {};
 
@@ -179,42 +154,42 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         </>
       )}
 
-      <PostHogProvider client={posthog}>
-        <ConfigProvider
-          config={{
-            ...config,
-            ...blockchainConfig,
-            ...appConfig,
-            rbacConfig
-          }}
-        >
-          <ErrorBoundary>
-            <NextIntlClientProvider
-              locale={router.locale || 'en'}
-              messages={pageProps.messages || {}}
-              timeZone={config?.timeZone || appConfig.DEFAULT_TIMEZONE}
-              onError={(error) => {
-                console.error('Error in NextIntlClientProvider', error);
-              }}
-            >
-              <AuthProvider>
-                <PlatformProvider>
-                  <Web3ReactProvider getLibrary={getLibrary}>
-                    <WalletProvider>
-                      <Layout>
-                        <GoogleAnalytics trackPageViews />
+      <ConfigProvider
+        config={{
+          ...config,
+          ...blockchainConfig,
+          ...appConfig,
+          rbacConfig
+        }}
+      >
+        <ErrorBoundary>
+          <NextIntlClientProvider
+            locale={router.locale || 'en'}
+            messages={pageProps.messages || {}}
+            timeZone={config?.timeZone || appConfig.DEFAULT_TIMEZONE}
+            onError={(error) => {
+              console.error('Error in NextIntlClientProvider', error);
+            }}
+          >
+            <AuthProvider>
+              <PlatformProvider>
+                <Web3ReactProvider getLibrary={getLibrary}>
+                  <WalletProvider>
+                    <Layout>
+                      <GoogleAnalytics trackPageViews />
+                      <NewsletterProvider>
                         <Component {...pageProps} config={config} />
-                      </Layout>
-                      {/* TODO: create cookie consent page with property-specific parameters #357  */}
-                      <AcceptCookies />
-                    </WalletProvider>
-                  </Web3ReactProvider>
-                </PlatformProvider>
-              </AuthProvider>
-            </NextIntlClientProvider>
-          </ErrorBoundary>
-        </ConfigProvider>
-      </PostHogProvider>
+                      </NewsletterProvider>
+                    </Layout>
+                    {/* TODO: create cookie consent page with property-specific parameters #357  */}
+                    <AcceptCookies />
+                  </WalletProvider>
+                </Web3ReactProvider>
+              </PlatformProvider>
+            </AuthProvider>
+          </NextIntlClientProvider>
+        </ErrorBoundary>
+      </ConfigProvider>
     </>
   );
 };
