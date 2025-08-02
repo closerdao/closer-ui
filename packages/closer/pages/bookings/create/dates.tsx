@@ -168,7 +168,9 @@ const DatesSelector = ({
     diffInDays >= (volunteerConfig?.residenceMinStay || 1);
 
   const isMinDurationMatched = Boolean(
-    (bookingConfig && diffInDays >= bookingConfig?.minDuration) || eventId,
+    (bookingConfig && diffInDays >= bookingConfig?.minDuration) ||
+      eventId ||
+      isMember,
   );
 
   const canProceed = !!(
