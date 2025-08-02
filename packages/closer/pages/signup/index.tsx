@@ -14,13 +14,13 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
-import { usePlatform } from '../../contexts/platform';
 import { useNewsletter } from '../../contexts/newsletter';
+import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { SubscriptionPlan } from '../../types/subscriptions';
 import api, { cdn } from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';  
+import { loadLocaleData } from '../../utils/locale.helpers';
 
 interface Props {
   subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
@@ -30,15 +30,10 @@ const Signup = () => {
   const t = useTranslations();
   const config = useConfig();
   const { APP_NAME } = config || {};
-  
-  // Safely use newsletter context
-  let setHideFooterNewsletter: ((hide: boolean) => void) | undefined;
-  try {
-    const newsletterContext = useNewsletter();
-    setHideFooterNewsletter = newsletterContext.setHideFooterNewsletter;
-  } catch (error) {
-    // Context not available during SSR, that's okay
-  }
+
+  // Use newsletter context at top level - hooks must be called unconditionally
+  const newsletterContext = useNewsletter();
+  const setHideFooterNewsletter = newsletterContext?.setHideFooterNewsletter;
 
   const { platform }: any = usePlatform();
 
@@ -76,7 +71,9 @@ const Signup = () => {
     if (setHideFooterNewsletter) {
       setHideFooterNewsletter(true);
       return () => {
-        setHideFooterNewsletter(false);
+        if (setHideFooterNewsletter) {
+          setHideFooterNewsletter(false);
+        }
       };
     }
   }, [setHideFooterNewsletter]);
@@ -105,15 +102,26 @@ const Signup = () => {
                 Join our regenerative village
               </Heading>
               <p className="text-lg text-gray-600">
-                Co-create a new way of living and earn your spot under the Portuguese sun.
+                Co-create a new way of living and earn your spot under the
+                Portuguese sun.
               </p>
 
               <ul className="space-y-1 text-xs text-gray-600 pt-2">
-                <li>🌱 Restore <strong>24 ha</strong> of land with every stay</li>
-                <li>🫂 Co‑live with <strong>60+ purpose‑driven</strong> citizens</li>
-                <li>💎 Earn on‑chain <strong>$TDF</strong> for your skills</li>
-                <li>🛠 Makers’ lab, wood‑shop &amp; industrial kitchen on site</li>
-                <li>🏄 Surf‑ready beaches just <strong>35 min</strong> away</li>
+                <li>
+                  🌱 Restore <strong>24 ha</strong> of land with every stay
+                </li>
+                <li>
+                  🫂 Co‑live with <strong>60+ purpose‑driven</strong> citizens
+                </li>
+                <li>
+                  💎 Earn on‑chain <strong>$TDF</strong> for your skills
+                </li>
+                <li>
+                  🛠 Makers’ lab, wood‑shop &amp; industrial kitchen on site
+                </li>
+                <li>
+                  🏄 Surf‑ready beaches just <strong>35 min</strong> away
+                </li>
               </ul>
 
               <div>
