@@ -57,10 +57,10 @@ const BookingDates: FC<Props> = ({
         t(
           'bookings_dates_step_guest_book_horizon'
           ,
-          { var: conditions?.guestMaxBookingHorizon },
+          { var: conditions?.maxBookingHorizon },
         ) +
         ', ' +
-        t('bookings_dates_step_book_duration', { var: conditions?.guestMaxDuration })
+        t('bookings_dates_step_book_duration', { var: conditions?.maxDuration })
       );
     }
   };

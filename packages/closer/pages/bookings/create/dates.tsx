@@ -60,10 +60,12 @@ const DatesSelector = ({
   const router = useRouter();
 
   const conditions = {
+    memberMinDuration: bookingConfig?.memberMinDuration,
     memberMaxDuration: bookingConfig?.memberMaxDuration,
     memberMaxBookingHorizon: bookingConfig?.memberMaxBookingHorizon,
-    guestMaxDuration: bookingConfig?.guestMaxDuration,
-    guestMaxBookingHorizon: bookingConfig?.guestMaxBookingHorizon,
+    maxDuration: bookingConfig?.maxDuration,
+    minDuration: bookingConfig?.minDuration,
+    maxBookingHorizon: bookingConfig?.maxBookingHorizon,
   };
   const { user, isAuthenticated } = useAuth();
   const isMember = user?.roles.includes('member');
@@ -166,7 +168,9 @@ const DatesSelector = ({
     diffInDays >= (volunteerConfig?.residenceMinStay || 1);
 
   const isMinDurationMatched = Boolean(
-    (bookingConfig && diffInDays >= bookingConfig?.minDuration) || eventId,
+    (bookingConfig && diffInDays >= bookingConfig?.minDuration) ||
+      eventId ||
+      isMember,
   );
 
   const canProceed = !!(
