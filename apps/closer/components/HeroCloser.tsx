@@ -10,7 +10,7 @@ const SHOW_CHATBOT = true;
 function useCanvasNeuronNetwork(canvasRef: React.RefObject<HTMLCanvasElement>) {
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || typeof window === 'undefined') return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     canvas.width = window.innerWidth;
@@ -79,6 +79,7 @@ function useCanvasNeuronNetwork(canvasRef: React.RefObject<HTMLCanvasElement>) {
 
 export default function HeroCloser() {
   const canvasRef = useRef(null);
+  const [isClient, setIsClient] = useState(false);
   const [heroText, setHeroText] = useState('Build Communities That Thrive');
   const [heroSubtext, setHeroSubtext] = useState(
     'Closer is the operating system for regenerative communities. Manage guests, spaces, events and resources through one intuitive platform designed specifically for land-based projects.',
@@ -95,6 +96,10 @@ export default function HeroCloser() {
     // },
   ]);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const { setIsOpen: setPromptGetInTouchOpen } = useContext(
     PromptGetInTouchContext,
@@ -224,10 +229,12 @@ export default function HeroCloser() {
         ref={heroRef}
         className="mt-[-32px] relative h-[calc(100vh-80px)]  flex flex-col items-center justify-center text-center"
       >
-        <canvas
-          ref={canvasRef}
-          className="absolute top-0 left-0 w-full h-full z-0"
-        />
+        {isClient && (
+          <canvas
+            ref={canvasRef}
+            className='absolute top-0 left-0 w-full h-full z-0'
+          />
+        )}
 
         <div className="relative z-10 px-6">
           <h1 className="font-bold text-4xl md:text-6xl mb-8  max-w-5xl mx-auto">
