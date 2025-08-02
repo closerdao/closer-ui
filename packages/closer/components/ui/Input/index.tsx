@@ -194,11 +194,6 @@ const Input = React.memo(
             aria-invalid={!isValidValue(localValue)}
             ref={inputRef}
             onKeyDown={isInstantSave ? handleKeyDown : undefined}
-            pattern={
-              validation
-                ? validationPatterns[validation].toString().slice(1, -1)
-                : undefined
-            }
             disabled={isDisabled}
             aria-labelledby={label}
           />
