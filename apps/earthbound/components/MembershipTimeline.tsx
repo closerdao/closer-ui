@@ -15,7 +15,7 @@ export default function MembershipTimeline() {
     {
       id: 1,
       title:
-        'Learning about Earthbound through our <a target="_blank" class="underline" href="https://drive.google.com/file/d/13Q7KKuXWWYILZKAyrEVCvL0oe8Dnr67V/view?usp=sharing">documents</a>, information meetings etc.',
+        'Learning about Earthbound through our <a target="_blank" class="underline" href="https://docs.google.com/document/d/1BG-p8vUO78FXtT34cTca5aSiZRw8gtBu/edit?usp=drivesdk&ouid=106312022063837634874&rtpof=true&sd=true">documents</a>, information meetings etc.',
       icon: <FileText className="h-5 w-5 text-accent" />,
       position: 'left',
     },

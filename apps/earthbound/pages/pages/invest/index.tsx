@@ -98,7 +98,7 @@ Support the creation of an ethical and regenerative project and create impact be
                           </p>
                           
                           <ul>
-                            <li><strong>Email:</strong> <a href="mailto:earthboundecovillage@protonmail.com">earthboundecovillage@protonmail.com</a></li>
+                            <li><strong>Email:</strong> <a href="mailto:contact@earthbound.eco">contact@earthbound.eco</a></li>
                             <li>
                             <strong>Telegram (Dicte):</strong> <a href="https://t.me/Dicte_Frost">@Dicte_Frost</a>
                             </li>

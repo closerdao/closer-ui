@@ -426,7 +426,7 @@ const BookingPage = ({
             </Card>
           )}
 
-          {isNotPaid && user?._id === createdBy ? (
+          {booking?.status !== 'pending' && isNotPaid && user?._id === createdBy ? (
             <Link href={`/bookings/${_id}/checkout`} passHref>
               <Button variant="primary" className="w-full">
                 {t('checkout_complete_payment')}

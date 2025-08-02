@@ -71,7 +71,7 @@ const Checkout = ({
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   const [updatedBooking, setUpdatedBooking] = useState<Booking | null>(null);
-
+console.log('booking=', booking);
   const {
     utilityFiat,
     foodFiat,
@@ -91,6 +91,8 @@ const Checkout = ({
     eventId,
     adults,
   } = updatedBooking ?? booking ?? {};
+
+  console.log('total=', total);
 
   const cancellationPolicy = bookingConfig
     ? {
@@ -394,7 +396,6 @@ const Checkout = ({
         useCredits,
         useTokens,
         isHourlyBooking,
-        maxNightsToPayWithCredits,
         paymentType,
         partialTokenPaymentNights,
         partialPriceInTokens,
@@ -559,7 +560,6 @@ const Checkout = ({
                 !booking?.volunteerId &&
                 ((rentalFiat && rentalFiat?.val > 0) || useCredits) ? (
                   <RedeemCredits
-                    fiatPricePerNight={listing?.fiatPrice.val}
                     isPartialCreditsPayment={
                       paymentType === PaymentType.PARTIAL_CREDITS
                     }
@@ -577,10 +577,12 @@ const Checkout = ({
                     }}
                     applyCredits={applyCredits}
                     hasAppliedCredits={useCredits || status === 'credits-paid'}
-                    creditsError={creditsError}
+                        creditsError={creditsError}
                     className="my-12"
                   />
-                ) : null}
+                  ) : null}
+                  
+                
                 {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' &&
                   rentalToken &&
                   rentalToken?.val > 0 &&

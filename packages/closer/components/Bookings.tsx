@@ -96,16 +96,17 @@ const Bookings = ({ filter, page, setPage }: Props) => {
         ) : (
           <div className="columns mt-8">
             <div className="flex flex-start items-center border-b pb-4">
-              <Heading level={2} className="mr-4">
+              <Heading level={2} className="mr-4 whitespace-nowrap">
                 {allBookings ? allBookings.size : 0}{' '}
                 {bookings && bookings.count() === 1
                   ? t('booking_requests_result')
                   : t('booking_requests_results')}
-              </Heading>
+                </Heading>
+                
 
               {bookings && (
                 <Button
-                  className="underline text-accent"
+                  className=" text-background"
                   onClick={() => {
                     const headers = [
                       { label: 'ID', key: 'id' },

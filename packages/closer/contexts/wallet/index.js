@@ -116,8 +116,16 @@ export const WalletProvider = ({ children }) => {
     },
   );
 
-  const { data: lockedStake } = useSWR(
-    [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'lockedStake', account],
+  const { data: stakedBalanceOf } = useSWR(
+    [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'stakedBalanceOf', account],
+    {
+      fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
+      fallbackData: BigNumber.from(0),
+    },
+  );
+
+  const { data: unlockedStake } = useSWR(
+    [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'unlockedStake', account],
     {
       fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
       fallbackData: BigNumber.from(0),
@@ -151,11 +159,11 @@ export const WalletProvider = ({ children }) => {
     .filter((date) => date.status === 2).length;
 
   const balanceTotal = formatBigNumberForDisplay(
-    (balanceDAOToken || BigNumber.from(0)).add(lockedStake),
+    (balanceDAOToken || BigNumber.from(0)).add(stakedBalanceOf),
     BLOCKCHAIN_DAO_TOKEN.decimals,
   );
   const balanceAvailable = formatBigNumberForDisplay(
-    balanceDAOToken,
+    (balanceDAOToken || BigNumber.from(0)).add(unlockedStake),
     BLOCKCHAIN_DAO_TOKEN.decimals,
   );
   const balanceCeurAvailable = formatBigNumberForDisplay(
