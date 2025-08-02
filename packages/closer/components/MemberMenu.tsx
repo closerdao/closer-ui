@@ -91,6 +91,12 @@ const MemberMenu = () => {
             enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
             rbacPage: 'Token',
           },
+          {
+            label: t('navigation_work_with_us'),
+            url: '/roles',
+            enabled: process.env.NEXT_PUBLIC_FEATURE_ROLES === 'true',
+            rbacPage: 'Roles',
+          },
         ],
       },
       // Stay section (open by default)

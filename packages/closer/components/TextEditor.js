@@ -53,19 +53,27 @@ const TextEditor = ({ onChange, value }) => {
   // };
 
   const dynamicImportFunc = async () => {
-    const { default: htmlToDraft } = await import('html-to-draftjs');
-    const blocksFromHtml = htmlToDraft(value);
-    const { contentBlocks, entityMap } = blocksFromHtml;
-    const contentState = ContentState.createFromBlockArray(
-      contentBlocks,
-      entityMap,
-    );
-    const editorState = EditorState.createWithContent(contentState);
-    setEditorState(editorState);
+    try {
+      const { default: htmlToDraft } = await import('html-to-draftjs');
+      const blocksFromHtml = htmlToDraft(value);
+      const { contentBlocks, entityMap } = blocksFromHtml;
+      const contentState = ContentState.createFromBlockArray(
+        contentBlocks,
+        entityMap,
+      );
+      const editorState = EditorState.createWithContent(contentState);
+      setEditorState(editorState);
+    } catch (error) {
+      console.error('Error loading html-to-draftjs:', error);
+      // Fallback to empty editor state
+      setEditorState(EditorState.createEmpty());
+    }
   };
 
   useEffect(() => {
-    dynamicImportFunc();
+    if (value) {
+      dynamicImportFunc();
+    }
   }, [value]);
 
   const onEditorStateChange = (update) => {
