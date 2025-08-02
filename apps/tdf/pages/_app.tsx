@@ -175,12 +175,12 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
               <PlatformProvider>
                 <Web3ReactProvider getLibrary={getLibrary}>
                   <WalletProvider>
-                    <Layout>
-                      <GoogleAnalytics trackPageViews />
-                      <NewsletterProvider>
+                    <NewsletterProvider>
+                      <Layout>
+                        <GoogleAnalytics trackPageViews />
                         <Component {...pageProps} config={config} />
-                      </NewsletterProvider>
-                    </Layout>
+                      </Layout>
+                    </NewsletterProvider>
                     {/* TODO: create cookie consent page with property-specific parameters #357  */}
                     <AcceptCookies />
                   </WalletProvider>

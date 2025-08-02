@@ -28,9 +28,13 @@ const PromptFixedBottom = () => {
   const [open, setOpen] = useState(false);
   const [shouldShowForm, setShouldShowForm] = useState(true);
   const [hasScrolled, setHasScrolled] = useState(false);
+  const [timeElapsed, setTimeElapsed] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
-  // Check if we're on the signup page
+  // Check if we're on pages where we don't want to show the prompt
   const isSignupPage = router.pathname === '/signup';
+  const isSubscriptionsPage = router.pathname === '/subscriptions';
+  const shouldHidePrompt = isSignupPage || isSubscriptionsPage;
 
   useEffect(() => {
     if (isLoading) {
@@ -45,6 +49,19 @@ const PromptFixedBottom = () => {
     }
   }, [isAuthenticated, isLoading]);
 
+  // 5-second timer
+  useEffect(() => {
+    if (typeof window === 'undefined' || shouldHidePrompt) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setTimeElapsed(true);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [shouldHidePrompt]);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const completed = localStorage.getItem('signupCompleted') === 'true';
@@ -56,7 +73,7 @@ const PromptFixedBottom = () => {
 
   // Scroll detection
   useEffect(() => {
-    if (typeof window === 'undefined' || isSignupPage) {
+    if (typeof window === 'undefined' || shouldHidePrompt) {
       return;
     }
 
@@ -73,15 +90,28 @@ const PromptFixedBottom = () => {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasScrolled, isSignupPage]);
+  }, [hasScrolled, shouldHidePrompt]);
 
+  // Control visibility with animation
   useEffect(() => {
+    const shouldShow = open && !isAuthenticated && shouldShowForm && (hasScrolled || timeElapsed) && !shouldHidePrompt;
+    
+    if (shouldShow && !isVisible) {
+      // Show the prompt
+      setIsVisible(true);
+    } else if (!shouldShow && isVisible) {
+      // Hide the prompt
+      setIsVisible(false);
+    }
+
+    // Update context state
     if (setFloatingNewsletterActive && setHideFooterNewsletter) {
-      const shouldShow = open && !isAuthenticated && shouldShowForm && hasScrolled && !isSignupPage;
       setFloatingNewsletterActive(shouldShow);
       setHideFooterNewsletter(shouldShow);
     }
-  }, [open, isAuthenticated, shouldShowForm, hasScrolled, isSignupPage, setFloatingNewsletterActive, setHideFooterNewsletter]);
+  }, [open, isAuthenticated, shouldShowForm, hasScrolled, timeElapsed, shouldHidePrompt, isVisible, setFloatingNewsletterActive, setHideFooterNewsletter]);
+
+
 
   const handleDrawerClose = (isOpen: boolean) => {
     setOpen(isOpen);
@@ -97,8 +127,7 @@ const PromptFixedBottom = () => {
 
   return (
     <div>
-      {open && !isAuthenticated && shouldShowForm && hasScrolled && !isSignupPage && (
-        <section className="fixed inset-x-0 bottom-0 z-50 mt-24 flex h-[150px] flex-col  shadow-[0_0_5px_-1px_rgba(0,0,0,0.1),0_0_4px_-2px_rgba(0,0,0,0.1)] bg-white">
+      <section className={`fixed inset-x-0 bottom-0 z-50 mt-24 flex h-[150px] flex-col shadow-[0_0_5px_-1px_rgba(0,0,0,0.1),0_0_4px_-2px_rgba(0,0,0,0.1)] bg-white transition-transform duration-300 ease-out ${isVisible ? 'translate-y-0' : 'translate-y-full'}`}>
           <div className="mx-auto max-w-sm p-4">
             <Heading level={3} className="mb-4">
               {t('stay_in_touch')}
@@ -117,10 +146,9 @@ const PromptFixedBottom = () => {
             >
               <FaTimes className="w-4 h-4" />
             </Button>
-          </div>
-        </section>
-      )}
-    </div>
+                      </div>
+          </section>
+      </div>
   );
 };
 
