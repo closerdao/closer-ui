@@ -38,6 +38,7 @@ const Login = () => {
     setHideFooterNewsletter = newsletterContext.setHideFooterNewsletter;
   } catch (error) {
     // Context not available during SSR, that's okay
+    setHideFooterNewsletter = undefined;
   }
 
   const router = useRouter();
@@ -116,7 +117,9 @@ const Login = () => {
     if (setHideFooterNewsletter) {
       setHideFooterNewsletter(true);
       return () => {
-        setHideFooterNewsletter(false);
+        if (setHideFooterNewsletter) {
+          setHideFooterNewsletter(false);
+        }
       };
     }
   }, [setHideFooterNewsletter]);
