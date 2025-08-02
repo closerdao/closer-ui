@@ -22,6 +22,7 @@ const Navigation = () => {
 
   console.log('APP_NAME', APP_NAME);
   const { isAuthenticated, user } = useAuth();
+  const isMember = user?.roles?.includes('member');
 
   const [navOpen, setNavOpen] = useState(false);
   const [isBookingEnabled, setIsBookingEnabled] = useState(false);
@@ -221,13 +222,33 @@ const Navigation = () => {
           {isBookingEnabled &&
             APP_NAME &&
             APP_NAME?.toLowerCase() === 'tdf' && (
-              <Button
-                onClick={() => router.push('/stay')}
-                size="small"
-                variant="primary"
-              >
-                {t('navigation_stay')}
-              </Button>
+              <>
+                {!isAuthenticated ? (
+                  <Button
+                    onClick={() => router.push('/signup')}
+                    size="small"
+                    variant="primary"
+                  >
+                    {t('navigation_join_now')}
+                  </Button>
+                ) : !isMember ? (
+                  <Button
+                    onClick={() => router.push('/events')}
+                    size="small"
+                    variant="primary"
+                  >
+                    {t('navigation_come_visit')}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => router.push('/stay')}
+                    size="small"
+                    variant="primary"
+                  >
+                    {t('navigation_stay')}
+                  </Button>
+                )}
+              </>
             )}
 
           {isAuthenticated && (

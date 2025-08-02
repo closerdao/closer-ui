@@ -57,6 +57,7 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
     'Governance',
     'EventCreation',
     'VolunteerCreation',
+    'RoleCreation',
     'Resources',
     'SupportUs',
     'Token',
