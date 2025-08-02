@@ -12,6 +12,7 @@ import {
   WalletProvider,
   blockchainConfig,
 } from 'closer';
+import { NewsletterProvider } from 'closer/contexts/newsletter';
 import messagesBase from 'closer/locales/base-en.json';
 import messagesLocal from 'closer/locales/tdf/en.json';
 import { NextIntlClientProvider } from 'next-intl';
@@ -50,7 +51,9 @@ export const renderWithAuth = (ui: React.ReactElement, options = {}) => {
           messages={{ ...messagesBase, ...messagesLocal }}
           timeZone={'Europe/Lisbon'}
         >
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <NewsletterProvider>{children}</NewsletterProvider>
+          </AuthProvider>
         </NextIntlClientProvider>
       </ConfigProvider>
     );
