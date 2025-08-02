@@ -103,7 +103,7 @@ describe('Events', () => {
 
     // Simple existence check
     expect(titleUpcoming).toBeTruthy();
- tests   expect(titlePast).toBeTruthy();
+    expect(titlePast).toBeTruthy();
 
     const eventCards = await screen.findAllByRole('listitem');
     expect(eventCards).toHaveLength(eventsMock.length);
