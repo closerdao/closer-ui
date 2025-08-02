@@ -4,7 +4,7 @@ import { Footer } from '@/components/Footer/Footer';
 // import { Footer } from '@/components';
 import PromptFixedBottom from 'closer/components/PromptFixedBottom';
 
-import { Navigation, Newsletter, Prompts } from 'closer';
+import { Navigation, Prompts } from 'closer';
 
 export const Layout: FC<PropsWithChildren> = ({ children }) => {
   return (
@@ -13,9 +13,6 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
       <Navigation />
       <Prompts />
       <div className="p-4">{children}</div>
-      <div className="w-full flex justify-center">
-        <Newsletter placement="Footer" />
-      </div>
       <Footer />
     </div>
   );

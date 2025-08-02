@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 
 import dayjs from 'dayjs';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { useTranslations } from 'next-intl';
 
 import { STATUS_COLOR } from '../../constants';
@@ -18,6 +19,8 @@ import { priceFormat } from '../../utils/helpers';
 import BookingRequestButtons from '../BookingRequestButtons';
 import UserInfoButton from '../UserInfoButton';
 import { Button, Card, LinkButton, Spinner } from '../ui';
+
+dayjs.extend(isSameOrBefore);
 
 interface Props {
   booking: any;
@@ -333,7 +336,7 @@ const BookingListPreview = ({
           {t('booking_card_email_user')}
         </LinkButton>
       )}
-      
+
       {isOwnBooking && status === 'confirmed' && (
         <Link href={`/bookings/${_id}/checkout`} passHref>
           <Button className="mt-6" variant="primary">
@@ -345,7 +348,7 @@ const BookingListPreview = ({
       {isPaidBooking &&
         isSpaceHost &&
         dayjs(bookingMapItem.get('end')).isAfter(dayjs()) &&
-        dayjs(bookingMapItem.get('start')).isBefore(dayjs()) &&
+        dayjs(bookingMapItem.get('start')).isSameOrBefore(dayjs(), 'day') &&
         status !== 'checked-in' && (
           <Button
             className="mt-6 flex gap-1"

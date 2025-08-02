@@ -137,7 +137,7 @@ const StayPage = ({
               ),
               link: (chunks) => (
                 <a
-                  href="https://www.youtube.com/watch?v=-HTubEJ61zU"
+                  href="https://grimsnas.se/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-accent underline"

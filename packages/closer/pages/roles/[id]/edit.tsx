@@ -8,9 +8,10 @@ import { useTranslations } from 'next-intl';
 
 import Page401 from '../../401';
 import { useAuth } from '../../../contexts/auth';
-import { loadLocaleData } from '../../../utils/locale.helpers';
-import { api, Role } from 'closer';
+import { Role } from '../../../types/api';
+import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
+import { loadLocaleData } from '../../../utils/locale.helpers';
 
 interface Props {
   role: Role | null;
@@ -51,10 +52,7 @@ EditRole.getInitialProps = async (context: NextPageContext) => {
   try {
     const { id } = context.query;
     const [messages, roleRes] = await Promise.all([
-      loadLocaleData(
-        context?.locale,
-        process.env.NEXT_PUBLIC_APP_NAME,
-      ),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       api.get(`/role/${id}`).catch(() => null),
     ]);
 
@@ -70,4 +68,4 @@ EditRole.getInitialProps = async (context: NextPageContext) => {
   }
 };
 
-export default EditRole; 
+export default EditRole;

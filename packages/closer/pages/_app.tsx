@@ -23,6 +23,7 @@ import {
 } from 'closer';
 import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
+import { NewsletterProvider } from '../contexts/newsletter';
 import { prepareGeneralConfig } from 'closer/utils/app.helpers';
 import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
@@ -136,7 +137,9 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
                 <WalletProvider>
                   <GoogleAnalytics trackPageViews />
                   <PromptGetInTouchProvider>
-                    <Component {...pageProps} config={config} />
+                    <NewsletterProvider>
+                      <Component {...pageProps} config={config} />
+                    </NewsletterProvider>
                   </PromptGetInTouchProvider>
                   {/* TODO: create cookie consent page with property-specific parameters #357  */}
                 </WalletProvider>

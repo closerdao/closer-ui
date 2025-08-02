@@ -442,6 +442,12 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                           <span>{member.email}</span>
                         </p>
                       )}
+                      {member?.walletAddress && (
+                        <p className="mb-2">
+                          <span className="font-medium">{t('user_data_walletAddress')}</span>{' '}
+                          <span>{member.walletAddress}</span>
+                        </p>
+                      )}
                       {member?.phone && (
                         <p className="mb-2">
                           <span className="font-medium">{t('user_data_phone')}</span>{' '}

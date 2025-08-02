@@ -206,8 +206,6 @@ const CheckoutForm = ({
         }
       }
 
-
-
       // 3d secure NOT required for this payment
       if (payment.paymentIntent.status === 'succeeded') {
         const confirmationResponse = await api.post(
