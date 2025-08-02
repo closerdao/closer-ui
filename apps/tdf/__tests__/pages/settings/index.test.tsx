@@ -18,7 +18,7 @@ describe('SettingsPage', () => {
     expect(await screen.findByText(/Profile Information/)).toBeInTheDocument();
   });
 
-  const fields = ['About me'];
+  const fields = ['About you'];
   it.each(fields)('should render {var} field', async (field) => {
     renderWithAuth(<SettingsPage />);
     expect(await screen.findByLabelText(field)).toBeInTheDocument();

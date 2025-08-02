@@ -45,6 +45,7 @@ const rbacDefaultConfig: RBACConfig = {
     Token: true,
     Blog: true,
     TokenSales: false,
+    RoleCreation: false,
   },
   
   // Steward role permissions
@@ -78,6 +79,7 @@ const rbacDefaultConfig: RBACConfig = {
     Token: true,
     Blog: true,
     TokenSales: false,
+    RoleCreation: true,
   },
   
   // Space host role permissions
@@ -111,6 +113,7 @@ const rbacDefaultConfig: RBACConfig = {
     Token: true,
     Blog: true,
     TokenSales: false,
+    RoleCreation: true,
   },
   
   // Community curator role permissions
@@ -144,6 +147,7 @@ const rbacDefaultConfig: RBACConfig = {
     Token: true,
     Blog: true,
     TokenSales: false,
+    RoleCreation: false,
   },
   
   // Member role permissions
@@ -177,6 +181,7 @@ const rbacDefaultConfig: RBACConfig = {
     Token: true,
     Blog: true,
     TokenSales: false,
+    RoleCreation: false,
   },
   
   // Content creator role permissions
@@ -209,6 +214,7 @@ const rbacDefaultConfig: RBACConfig = {
     Token: true,
     Blog: true,
     TokenSales: false,
+    RoleCreation: false,
   },
   
   // Admin role permissions (has access to everything)
@@ -242,6 +248,7 @@ const rbacDefaultConfig: RBACConfig = {
     Token: true,
     Blog: true,
     TokenSales: true,
+    RoleCreation: true,
   },
 };
 

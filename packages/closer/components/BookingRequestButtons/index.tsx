@@ -77,6 +77,13 @@ const BookingRequestButtons = ({
               </Button>
             </Link>
           )}
+          {status === 'tokens-staked' && user && user._id === createdBy && (
+            <Link passHref href={`/bookings/${_id}/checkout`}>
+              <Button variant="secondary">
+                💰 {t('booking_card_checkout_button')}
+              </Button>
+            </Link>
+          )}
           {status === 'pending-payment' && user && user._id === createdBy && (
             <Link passHref href={`/bookings/${_id}/checkout`}>
               <Button variant="secondary">

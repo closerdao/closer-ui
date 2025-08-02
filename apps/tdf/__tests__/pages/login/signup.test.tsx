@@ -3,20 +3,18 @@ import { renderWithAuth } from '@/test/utils';
 
 import { screen } from '@testing-library/react';
 
-import { subscriptionsConfig } from '../../mocks/subscriptions';
-
 describe('Signup', () => {
   it('should have proper heading', () => {
-    renderWithAuth(<Signup subscriptionsConfig={subscriptionsConfig} />);
+    renderWithAuth(<Signup />);
 
     const title = screen.getByRole('heading', { level: 1 });
-    expect(title).toHaveTextContent(/sign up/i);
+    expect(title).toHaveTextContent(/join our regenerative village/i);
   });
 
-  it('should have a Create account button disabled by default', () => {
-    renderWithAuth(<Signup subscriptionsConfig={subscriptionsConfig} />);
+  it('should have a Continue button disabled by default', () => {
+    renderWithAuth(<Signup />);
 
-    const button = screen.getByRole('button', { name: /sign up/i });
+    const button = screen.getByRole('button', { name: /^continue$/i });
 
     expect(button).toBeDisabled();
   });

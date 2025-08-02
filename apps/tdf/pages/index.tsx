@@ -1,5 +1,4 @@
 import Head from 'next/head';
-import { useFeatureFlagVariantKey } from 'posthog-js/react';
 import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useState } from 'react';
@@ -27,13 +26,12 @@ import { event } from 'nextjs-google-analytics';
 const HomePage = () => {
   const t = useTranslations();
 
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { isWalletReady } = useContext(WalletState);
   const { getTokensAvailableForPurchase } = useBuyTokens();
   const router = useRouter();
   const variant = router.query.variant as string;
-  const featureFlag = useFeatureFlagVariantKey('uiVariant') || '1';
-  const uiVariant = variant || featureFlag;
+  const uiVariant = variant || '1';
 
   const [tokensAvailable, setTokensAvailable] = useState<number | null>(null);
   const [selectedReport, setSelectedReport] = useState<{
@@ -50,32 +48,50 @@ const HomePage = () => {
     }
   }, [isWalletReady]);
 
+  const isMember = user?.roles?.includes('member');
+
   const CTA = (
     <div className="flex flex-wrap gap-2">
-      <LinkButton
-        href="/stay"
-        variant='secondary'
-        onClick={() =>
-          event('click', {
-            category: 'HomePage',
-            label: t('home_cta_book_a_stay_event'),
-          })
-        }
-      >
-        {t(`home_variant_${uiVariant}_cta_support`)}
-      </LinkButton>
-      <LinkButton
-        href="/stay"
-        variant="primary"
-        onClick={() =>
-          event('click', {
-            category: 'HomePage',
-            label: t(`home_variant_${uiVariant}_cta_book_a_stay_event`),
-          })
-        }
-      >
-        {t(`home_variant_${uiVariant}_cta_book_a_stay`)}
-      </LinkButton>
+      {!isAuthenticated ? (
+        <LinkButton
+          href="/signup"
+          variant="primary"
+          onClick={() =>
+            event('click', {
+              category: 'HomePage',
+              label: 'join_now_button',
+            })
+          }
+        >
+          {t(`home_variant_${uiVariant}_cta_join_now`)}
+        </LinkButton>
+      ) : !isMember ? (
+        <LinkButton
+          href="/events"
+          variant="primary"
+          onClick={() =>
+            event('click', {
+              category: 'HomePage',
+              label: 'come_visit_button',
+            })
+          }
+        >
+          {t(`home_variant_${uiVariant}_cta_come_visit`)}
+        </LinkButton>
+      ) : (
+        <LinkButton
+          href="/stay"
+          variant="primary"
+          onClick={() =>
+            event('click', {
+              category: 'HomePage',
+              label: t(`home_variant_${uiVariant}_cta_book_a_stay_event`),
+            })
+          }
+        >
+          {t(`home_variant_${uiVariant}_cta_book_a_stay`)}
+        </LinkButton>
+      )}
     </div>
   );
 

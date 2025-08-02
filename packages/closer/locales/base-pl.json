@@ -102,6 +102,7 @@
   "bookings_checkout_step_payment_button": "Pay",
   "bookings_checkout_step_wallet_disclaimer": "I acknowledge that: (1) my tokens are being staked for 1 year upon payment, (2) token refund is not currently available.",
   "bookings_checkout_step_accomodation_not_enough_balance": "You don't have enough token to pay for your accommodation.",
+  "bookings_checkout_tokens_staked_message": "You staked {tokens} towards this booking, now please make the fiat payment.",
   "bookings_summary_step_title": "Summary",
   "bookings_food_step_title": "Food",
 
@@ -1562,5 +1563,18 @@
   "token_sales_dashboard_distribute_tokens_button": "Dystrybuuj tokeny",
   "token_sales_dashboard_success_message": "Potwierdzenie dystrybucji tokenów zostało pomyślnie przesłane",
 
-  "": ""
+  "roles_page_title": "Dostępne Role",
+  "roles_add_role_button": "Dodaj Rolę",
+  "roles_no_roles_available": "Brak dostępnych ról w tej chwili.",
+  "roles_compensation_label": "Wynagrodzenie:",
+  "roles_hours_per_week_label": "Godziny tygodniowo:",
+  "roles_skills_required_label": "Wymagane umiejętności:",
+  "roles_responsibilities_label": "Odpowiedzialności:",
+  "roles_apply_now_button": "Aplikuj Teraz",
+  "roles_create_page_title": "Utwórz Nową Rolę",
+  "roles_delete_role_button": "Usuń Rolę",
+  "roles_edit_role_button": "Edytuj Rolę",
+  "roles_edit_page_title": "Edytuj Rolę",
+  "roles_page_description_1": "Dołącz do naszej tętniącej życiem społeczności regeneracyjnej, gdzie praca i życie łączą się płynnie. Poszukujemy pasjonatów, którzy chcą przyczynić się do zrównoważonej przyszłości, żyjąc w harmonii z naturą i podobnie myślącymi ludźmi. Nasze role oferują więcej niż tylko zatrudnienie - zapewniają możliwość bycia częścią rosnącego ekosystemu, który ceni współpracę, naukę i zarządzanie środowiskiem.",
+  "roles_page_description_2": "Niezależnie od tego, czy jesteś doświadczony w ogrodnictwie, budownictwie, gościnności, czy masz inne talenty do podzielenia się, witamy różnorodne perspektywy i umiejętności. W zamian doświadczysz życia w społeczności, nauczysz się praktyk regeneracyjnych i przyczynisz się do znaczących projektów, które mają wpływ."
 }

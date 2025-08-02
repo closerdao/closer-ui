@@ -179,6 +179,12 @@ console.log('booking=', booking);
     }),
   );
 
+  const shouldShowTokenDisclaimer =
+    process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' &&
+    rentalToken &&
+    rentalToken?.val > 0 &&
+    useTokens;
+
   useEffect(() => {
     const type = getPaymentType({
       useCredits: useCredits || false,
@@ -424,6 +430,20 @@ console.log('booking=', booking);
     setUpdatedBooking(localUpdatedBooking);
   };
 
+  const refetchBooking = async () => {
+    try {
+      // Add a small delay to allow the backend to update the booking status
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const response = await api.get(`/booking/${_id}`);
+      const updatedBookingData = response.data.results;
+      setUpdatedBooking(updatedBookingData);
+      return updatedBookingData;
+    } catch (error) {
+      console.error('Failed to refetch booking:', error);
+      return null;
+    }
+  };
+
   if (!isAuthenticated) {
     return <PageNotAllowed />;
   }
@@ -566,7 +586,8 @@ console.log('booking=', booking);
                 {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' &&
                   rentalToken &&
                   rentalToken?.val > 0 &&
-                  useTokens && (
+                  useTokens &&
+                  status !== 'tokens-staked' && (
                     <div className="mt-4">
                       <BookingWallet
                         toPay={
@@ -627,6 +648,26 @@ console.log('booking=', booking);
           )}
 
           <div className="flex flex-col gap-2">
+            {status === 'tokens-staked' && useTokens && rentalToken && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <div className="flex ">
+                  <span className="text-green-600 mr-2">✅</span>
+                  <p className="text-green-800 font-medium">
+                    {t.rich('bookings_checkout_tokens_staked_message', {
+                      tokens: String(
+                        priceFormat({
+                          val:
+                            paymentType === PaymentType.PARTIAL_TOKENS
+                              ? partialPriceInTokens
+                              : rentalToken.val,
+                          cur: rentalToken.cur,
+                        }),
+                      ),
+                    })}
+                  </p>
+                </div>
+              </div>
+            )}
             {isStripeBooking && (
               <CheckoutPayment
                 cancellationPolicy={cancellationPolicy}
@@ -650,22 +691,12 @@ console.log('booking=', booking);
                 user={user}
                 eventId={event?._id}
                 status={booking?.status}
+                shouldShowTokenDisclaimer={shouldShowTokenDisclaimer}
+                hasAgreedToWalletDisclaimer={hasAgreedToWalletDisclaimer}
+                setWalletDisclaimer={setWalletDisclaimer}
+                refetchBooking={refetchBooking}
               />
             )}
-            {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' &&
-              rentalToken &&
-              rentalToken?.val > 0 &&
-              useTokens && (
-                <Checkbox
-                  isChecked={hasAgreedToWalletDisclaimer}
-                  onChange={() =>
-                    setWalletDisclaimer(!hasAgreedToWalletDisclaimer)
-                  }
-                  className="mt-8"
-                >
-                  {t('bookings_checkout_step_wallet_disclaimer')}
-                </Checkbox>
-              )}
           </div>
           {isFreeBooking && (
             <Button
@@ -679,15 +710,26 @@ console.log('booking=', booking);
             </Button>
           )}
           {isTokenOnlyBooking && (
-            <Button
-              isEnabled={
-                !processing && !isStaking && hasAgreedToWalletDisclaimer
-              }
-              className="booking-btn"
-              onClick={handleTokenOnlyBooking}
-            >
-              {renderButtonText()}
-            </Button>
+            <div>
+              <Checkbox
+                isChecked={hasAgreedToWalletDisclaimer}
+                onChange={() =>
+                  setWalletDisclaimer(!hasAgreedToWalletDisclaimer)
+                }
+                className="mt-8"
+              >
+                {t('bookings_checkout_step_wallet_disclaimer')}
+              </Checkbox>
+              <Button
+                isEnabled={
+                  !processing && !isStaking && hasAgreedToWalletDisclaimer
+                }
+                className="booking-btn"
+                onClick={handleTokenOnlyBooking}
+              >
+                {renderButtonText()}
+              </Button>
+            </div>
           )}
           {paymentError && <ErrorMessage error={paymentError} />}
         </div>
