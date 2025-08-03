@@ -2,10 +2,234 @@ import { GoogleGenAI } from '@google/genai';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import sharp from 'sharp';
 
-console.log('process.env.GEMINI_API_KEY =', process.env.GEMINI_API_KEY);
 const genai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY || '',
 });
+
+const taxExemptionReasons = [
+  {
+    id: '1',
+    description: 'Artigo 16.º, n.º 6 do CIVA',
+    law: 'Artigo 16.º, n.º 6, alíneas a) a d) do CIVA',
+  },
+  {
+    id: '2',
+    description: 'Artigo 6.º do Decreto-Lei n.º 198/90, de 19 de junho',
+    law: 'Artigo 6.º do Decreto-Lei n.º 198/90, de 19 de  junho',
+  },
+  {
+    id: '3',
+    description: 'Exigibilidade de caixa',
+    law: 'Decreto-Lei n.º 204/97, de 9 de agosto',
+  },
+  {
+    id: '4',
+    description: 'Exigibilidade de caixa',
+    law: 'Decreto-Lei n.º 418/99, de 21 de outubro',
+  },
+  {
+    id: '5',
+    description: 'Exigibilidade de caixa',
+    law: 'Lei n.º 15/2009, de 1 de abril',
+  },
+  {
+    id: '6',
+    description: 'Isento artigo 13.º do CIVA',
+    law: 'Artigo 13.º do CIVA',
+  },
+  {
+    id: '7',
+    description: 'Isento artigo 14.º do CIVA',
+    law: 'Artigo 14.º do CIVA',
+  },
+  {
+    id: '8',
+    description: 'Isento artigo 15.º do CIVA',
+    law: 'Artigo 15.º do CIVA',
+  },
+  {
+    id: '9',
+    description: 'Isento artigo 9.º do CIVA',
+    law: 'Artigo 9.º do CIVA',
+  },
+  {
+    id: '10',
+    description: 'IVA - autoliquidação',
+    law: 'Artigo 2.º n.º 1 alínea i), j) ou l) do CIVA',
+  },
+  {
+    id: '11',
+    description: 'IVA - autoliquidação',
+    law: 'Artigo 2.º n.º 1 alínea j) do CIVA',
+  },
+  {
+    id: '12',
+    description: 'IVA - autoliquidação',
+    law: 'Artigo 6.º do CIVA',
+  },
+  {
+    id: '13',
+    description: 'IVA - autoliquidação',
+    law: 'Artigo 2.º n.º 1 alínea l) do CIVA',
+  },
+  {
+    id: '14',
+    description: 'IVA - autoliquidação',
+    law: 'Decreto-Lei n.º 21/2007, de 29 de janeiro',
+  },
+  {
+    id: '15',
+    description: 'IVA - autoliquidação',
+    law: 'Decreto-Lei n.º 362/99, de 16 de setembro',
+  },
+  {
+    id: '17',
+    description: 'IVA - não confere direito a dedução',
+    law: 'Artigo 62.º alínea b) do CIVA',
+  },
+  {
+    id: '18',
+    description: 'IVA - regime de isenção',
+    law: 'Artigo 57.º do CIVA',
+  },
+  {
+    id: '19',
+    description: 'Regime particular do tabaco',
+    law: 'Decreto-Lei n.º 346/85, de 23 de agosto',
+  },
+  {
+    id: '20',
+    description: 'Regime da margem de lucro - Agências de viagens',
+    law: 'Decreto-Lei n.º 221/85, de 3 de julho',
+  },
+  {
+    id: '21',
+    description: 'Regime da margem de lucro - Bens em segunda mão',
+    law: 'Decreto-Lei n.º 199/96, de 18 de outubro',
+  },
+  {
+    id: '22',
+    description: 'Regime da margem de lucro - Objetos de arte',
+    law: 'Decreto-Lei n.º 199/96, de 18 de outubro',
+  },
+  {
+    id: '23',
+    description:
+      'Regime da margem de lucro - Objetos de coleção e antiguidades',
+    law: 'Decreto-Lei n.º 199/96, de 18 de outubro',
+  },
+  {
+    id: '24',
+    description: 'IVA - autoliquidação',
+    law: 'Artigo 6.º n.º 6 alínea a) do CIVA',
+  },
+  {
+    id: '25',
+    description: 'IVA - autoliquidação',
+    law: 'Artigo 6.º n.º 11 do CIVA',
+  },
+  {
+    id: '26',
+    description: 'Isento artigo 14.º do RITI',
+    law: 'Artigo 14.º do RITI',
+  },
+  {
+    id: '28',
+    description: 'Não sujeito ou não tributado',
+    law: 'Outras situações de não liquidação do imposto (Exemplos: artigo 2.º, n.º 2 ; artigo 3.º, n.ºs 4, 6 e 7; artigo 4.º, n.º 5, todos do CIVA)',
+  },
+  {
+    id: '29',
+    description: 'IVA - autoliquidação',
+    law: 'Artigo 8.º do RITI',
+  },
+  {
+    id: '63',
+    description: 'IVA - regime forfetário',
+    law: 'Artigo 59.º-D n.º2 do CIVA',
+  },
+  {
+    id: '64',
+    description: 'IVA - autoliquidação',
+    law: 'Artigo 2.º n.º 1 alínea m) do CIVA',
+  },
+  {
+    id: '65',
+    description: 'IVA – Isenção prevista na Lei n.º 13/2020, de 7 de maio',
+    law: 'Lei n.º 13/2020 de 7 de Maio 2020',
+  },
+  {
+    id: '66',
+    description:
+      'IVA - Isenção no nº 1 do art. 4º da Lei nº 10A/2022, de 28 de abril',
+    law: 'Lei nº 10A/2022 de 28 de abril',
+  },
+  {
+    id: '143',
+    description: 'IVA - autoliquidação',
+    law: 'Decreto-Lei n.º 362/99, de 16 de setembro',
+  },
+  {
+    id: '132',
+    description: 'IVA - autoliquidação',
+    law: 'Artigo 2.º n.º 1 alínea l) do CIVA',
+  },
+  {
+    id: '131',
+    description: 'IVA - autoliquidação',
+    law: 'Artigo 2.º n.º 1 alínea j) do CIVA',
+  },
+  {
+    id: '130',
+    description: 'IVA - autoliquidação',
+    law: 'Artigo 2.º n.º 1 alínea i) do CIVA',
+  },
+  {
+    id: '125',
+    description: 'Mercadorias à consignação',
+    law: 'Artigo 38.º n.º 1 alínea a)',
+  },
+  {
+    id: '121',
+    description: 'IVA - não confere direito à dedução (ou expressão similar)',
+    law: 'Artigo 72.º n.º 4 do CIVA',
+  },
+  {
+    id: '119',
+    description: 'Outras isenções',
+    law: 'Isenções temporárias determinadas em diploma próprio',
+  },
+  {
+    id: '140',
+    description: 'IVA - autoliquidação',
+    law: 'Artigo 6.º n.º 6 alínea a) do CIVA, a contrário',
+  },
+  {
+    id: '141',
+    description: 'IVA - autoliquidação',
+    law: 'Artigo 8.º n.º 3 do RITI',
+  },
+  {
+    id: '142',
+    description: 'IVA - autoliquidação',
+    law: 'Decreto-Lei n.º 21/2007, de 29 de janeiro',
+  },
+  {
+    id: '133',
+    description: 'IVA - autoliquidação',
+    law: 'Artigo 2.º n.º 1 alínea m) do CIVA',
+  },
+  {
+    id: '152',
+    description: 'IVA - autoliquidação',
+    law: 'Artigo 2.º n.º 1 alínea n) do CIVA',
+  },
+  {
+    id: '151',
+    description: 'Isenção de IVA com direito à dedução no cabaz alimentar',
+    law: 'Lei n.º 17/2023, de 14 de abril',
+  },
+];
 
 async function uploadToCDN(
   processedBuffer: Buffer,
@@ -275,54 +499,69 @@ export default async function handler(
       Output the text in a structured, easy-to-read format that preserves all the important details.
       
       CRITICAL INSTRUCTIONS:
-      - IMPORTANT: never reorder data in  items, output in exact order it is present in the receipt
+      - IMPORTANT: never reorder data in items, output in exact order it is present in the receipt
       - Carefully go item by item, do not miss any items and match precisely description, item_total, vat_rate_id, vat_percentage
       - include receipt_total field which shows the total price for the receipt
-      For each  item include following fields:
+      
+      For each item include following fields:
       - description: the product/service/item name
       - item_total: the total price for the item
       - vat_rate_id (optional, if this column is present in items - 1,2,3, or A, B,C)
       - vat_percentage (either extract from the relevant field in each item or infer based on rules below)
+      
       Rules for inferring vat_percentage:
         vat_rate_id 1 (or A) -> tax_percentage 6
-        vat_rate_id2 (or B) -> tax_percentage 13
+        vat_rate_id 2 (or B) -> tax_percentage 13
         vat_rate_id 3 (or C) -> tax_percentage 23
       - If vat_rate_id is not found, infer the tax_percentage based on the data in the document.
-      - if vat rate can't be reliably extracted, use 23 per cent as default for a sinle vat group.
+      - if vat rate can't be reliably extracted, use 23 per cent as default for a single vat group.
       - Zero tax is also possible in rare cases - it will be explicitly shown in the document. 
 
       - add vat_summary field which shows total values for each vat percentage group and description.
       Description is a general name of the group of items with the same tax_percentage in Portuguese.
       If the document contains one item only, the description should be the name of the item.
       
+      MANDATORY TAX EXEMPTION REASON ID EXTRACTION:
+      - CRITICAL: If ANY item in the receipt has vat_percentage=0, you MUST add the "tax_exemption_reason_id" field to the output
+      - Search the receipt text for any tax exemption reason codes or descriptions that match the provided list
+      - Match the found exemption reason with the corresponding ID from this list: ${JSON.stringify(
+        taxExemptionReasons,
+      )}
+      - If no specific exemption reason is found in the document, use ID "28" (Não sujeito ou não tributado) as default
+      - The tax_exemption_reason_id field should be a string containing the ID number
+      
       Example of complete output:
-      "supplier_business_name": "Supermercado do João",
-      "items": [
-        {
-          "description": "Ovos",
-          "item_total": 3,
-          "vat_rate_id": 1,
-          "vat_percentage": 6.00
-        },
+      {
+        "supplier_business_name": "Supermercado do João",
+        "tax_exemption_reason_id": "1", // MANDATORY field when any item has vat_percentage=0
+        "items": [
+          {
+            "description": "Ovos",
+            "item_total": 3,
+            "vat_rate_id": 1,
+            "vat_percentage": 6.00
+          }
+        ],
         "vat_summary": [
-        {
-
-          "vat_percentage": 6.00,
-          "description": "Serviços de fotocópia",
-
-          "total_with_vat": 92.88
-        },
-        {
-          "vat_percentage": 23.00,
-          "description": "Mantimentos",
-
-          "total_with_vat": 28.01
-        },
+          {
+            "vat_percentage": 6.00,
+            "description": "Serviços de fotocópia",
+            "total_with_vat": 92.88
+          },
+          {
+            "vat_percentage": 23.00,
+            "description": "Mantimentos",
+            "total_with_vat": 28.01
+          }
+        ],
         "receipt_total": 120.89
-      ],
+      }
+      
+      IMPORTANT OUTPUT RULES:
       - Do not include any other fields not present in this example
-
-      - output in valid JSON format without any comments or explanations
+      - Output in valid JSON format without any comments or explanations
+      - If ANY item has vat_percentage=0, the tax_exemption_reason_id field MUST be included
+      - If no items have vat_percentage=0, do NOT include the tax_exemption_reason_id field
      
               `,
               },

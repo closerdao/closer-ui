@@ -22,6 +22,7 @@ import { loadLocaleData } from '../../../utils/locale.helpers';
 
 type ReceiptData = {
   supplier_business_name: string;
+  tax_exemption_reason_id?: string;
   items: {
     description: string;
     item_total: number;
@@ -106,6 +107,7 @@ const ExpenseTrackingDashboardPage = ({
       // Transform editableData to toconlineData format
       const toconlineFormattedData = {
         document_type: 'FC',
+        ...(editableData?.tax_exemption_reason_id && { tax_exemption_reason_id: editableData.tax_exemption_reason_id }),
         supplier_business_name: editableData.supplier_business_name,
         lines: editableData.vat_summary.map((summary) => ({
           description: Number(summary?.description),
