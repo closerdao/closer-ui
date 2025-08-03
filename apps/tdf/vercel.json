@@ -8,5 +8,6 @@
     "env": {
       "SHARP_IGNORE_GLOBAL_LIBVIPS": "1"
     }
-  }
+  },
+  "installCommand": "yarn install --ignore-optional"
 }

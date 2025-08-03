@@ -8,8 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
-    "test:watch": "jest --watch",
-    "postinstall": "sharp --install"
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@mdx-js/loader": "^2.3.0",
@@ -27,7 +26,7 @@
     "react-ga": "^3.3.1",
     "react-gtm-module": "^2.0.11",
     "react-icons": "^5.4.0",
-    "sharp": "^0.33.0",
+    "sharp": "^0.34.3",
     "ui": "*"
   },
   "devDependencies": {
