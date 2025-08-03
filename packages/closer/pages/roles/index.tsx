@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import { useEffect, useState } from 'react';
 
 import PageError from 'closer/components/PageError';
 import { Heading, LinkButton, Button } from 'closer/components/ui';
@@ -20,12 +21,17 @@ interface Props {
 
 const RolesPage = ({ generalConfig, roles, error }: Props) => {
   const t = useTranslations();
+  const [initialRenderComplete, setInitialRenderComplete] = useState(false);
 
   const defaultConfig = useConfig();
   const { hasAccess } = useRBAC();
   const { user } = useAuth();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
+
+  useEffect(() => {
+    setInitialRenderComplete(true);
+  }, []);
 
   // Check if user has permission to create roles
   const canCreateRole = hasAccess('RoleCreation');
@@ -95,7 +101,9 @@ const RolesPage = ({ generalConfig, roles, error }: Props) => {
                                 {role.title}
                               </h3>
                               <p className="text-gray-600 mb-4">
-                                <span dangerouslySetInnerHTML={{ __html: role.description || '' }} />
+                                {initialRenderComplete && (
+                                  <span dangerouslySetInnerHTML={{ __html: role.description || '' }} />
+                                )}
                               </p>
                               
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
