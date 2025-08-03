@@ -33,6 +33,7 @@ type ReceiptData = {
     vat_percentage: number;
     description: string;
     total_with_vat: number;
+    tax_code: string;
   }[];
   receipt_total: number;
 };
@@ -107,13 +108,24 @@ const ExpenseTrackingDashboardPage = ({
       // Transform editableData to toconlineData format
       const toconlineFormattedData = {
         document_type: 'FC',
-        ...(editableData?.tax_exemption_reason_id && { tax_exemption_reason_id: editableData.tax_exemption_reason_id }),
+        ...(editableData?.tax_exemption_reason_id && {
+          tax_exemption_reason_id: editableData.tax_exemption_reason_id,
+        }),
         supplier_business_name: editableData.supplier_business_name,
         lines: editableData.vat_summary.map((summary) => ({
-          description: Number(summary?.description),
+          description: summary?.description || '',
           quantity: 1, // always 1 for a tax group
           unit_price: Number(summary?.total_with_vat), // match total_with_vat of a tax group
           tax_percentage: Number(summary?.vat_percentage), // match vat_percentage of a tax group
+          tax_code:
+            summary?.tax_code ||
+            (summary?.vat_percentage === 0
+              ? 'ISE'
+              : summary?.vat_percentage === 6
+              ? 'RED'
+              : summary?.vat_percentage === 13
+              ? 'INT'
+              : 'NOR'), // infer tax_code if missing
         })),
       };
 
@@ -316,7 +328,10 @@ const ExpenseTrackingDashboardPage = ({
     try {
       setHasLoggedExpense(false);
       setLoading(true);
-      const res = await api.post('/toconline/expense', { toconlineData, uploadedDocumentUrl });
+      const res = await api.post('/toconline/expense', {
+        toconlineData,
+        uploadedDocumentUrl,
+      });
       if (res.status === 200) {
         console.log('res=', res);
         setHasLoggedExpense(true);
@@ -349,6 +364,15 @@ const ExpenseTrackingDashboardPage = ({
     }
   };
 
+  const handleTaxExemptionReasonChange = (value: string) => {
+    if (editableData) {
+      setEditableData({
+        ...editableData,
+        tax_exemption_reason_id: value || undefined,
+      });
+    }
+  };
+
   const handleVatSummaryChange = (
     index: number,
     field: string,
@@ -376,6 +400,7 @@ const ExpenseTrackingDashboardPage = ({
         vat_percentage: 0,
         description: '',
         total_with_vat: 0,
+        tax_code: 'ISE',
       };
       setEditableData({
         ...editableData,
@@ -455,6 +480,9 @@ const ExpenseTrackingDashboardPage = ({
           // Ensure the parsed data matches the exact format of ReceiptData
           const formattedData: ReceiptData = {
             supplier_business_name: parsed.supplier_business_name || '',
+            ...(parsed.tax_exemption_reason_id && {
+              tax_exemption_reason_id: parsed.tax_exemption_reason_id,
+            }),
             items: Array.isArray(parsed.items)
               ? parsed.items.map((item: any) => ({
                   description: item.description || '',
@@ -478,6 +506,7 @@ const ExpenseTrackingDashboardPage = ({
                     typeof summary.total_with_vat === 'number'
                       ? summary.total_with_vat
                       : 0,
+                  tax_code: summary.tax_code || 'NOR',
                 }))
               : [],
             receipt_total:
@@ -517,6 +546,9 @@ const ExpenseTrackingDashboardPage = ({
           // Ensure the parsed data matches the exact format of ReceiptData
           const formattedData: ReceiptData = {
             supplier_business_name: parsed.supplier_business_name || '',
+            ...(parsed.tax_exemption_reason_id && {
+              tax_exemption_reason_id: parsed.tax_exemption_reason_id,
+            }),
             items: Array.isArray(parsed.items)
               ? parsed.items.map((item: any) => ({
                   description: item.description || '',
@@ -540,6 +572,7 @@ const ExpenseTrackingDashboardPage = ({
                     typeof summary.total_with_vat === 'number'
                       ? summary.total_with_vat
                       : 0,
+                  tax_code: summary.tax_code || 'NOR',
                 }))
               : [],
             receipt_total:
@@ -740,6 +773,9 @@ const ExpenseTrackingDashboardPage = ({
                                 <th className="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                   VAT %
                                 </th>
+                                <th className="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Tax Code
+                                </th>
                                 <th className="px-1 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                   Total with VAT
                                 </th>
@@ -763,7 +799,7 @@ const ExpenseTrackingDashboardPage = ({
                                             e.target.value,
                                           )
                                         }
-                                        className="py-2 px-0.5"
+                                        className="py-2 px-1"
                                       />
                                     </td>
                                     <td className="px-1 py-1 text-sm text-gray-900 text-center">
@@ -779,6 +815,21 @@ const ExpenseTrackingDashboardPage = ({
                                             parseFloat(e.target.value) || 0,
                                           )
                                         }
+                                        className="py-2 px-1 bo"
+                                      />
+                                    </td>
+                                    <td className="px-1 py-1 text-sm text-gray-900 text-center">
+                                      <Input
+                                        type="text"
+                                        value={summary.tax_code || ''}
+                                        onChange={(e) =>
+                                          handleVatSummaryChange(
+                                            index,
+                                            'tax_code',
+                                            e.target.value,
+                                          )
+                                        }
+                                        className="py-2 px-1"
                                       />
                                     </td>
                                     <td className="px-1 py-1 text-sm font-semibold text-gray-900 text-right">
@@ -794,6 +845,8 @@ const ExpenseTrackingDashboardPage = ({
                                             parseFloat(e.target.value) || 0,
                                           )
                                         }
+                                        className="py-2 px-1 border-none"
+
                                       />
                                     </td>
                                     <td
@@ -848,13 +901,30 @@ const ExpenseTrackingDashboardPage = ({
                                         parseFloat(e.target.value) || 0,
                                       )
                                     }
-                                    className="w-full p-1 pl-0.5 border border-gray-300 rounded text-sm font-bold text-right"
+                                    className="w-full p-1  border-none  rounded text-sm font-bold text-right"
                                   />
                                 </td>
                               </tr>
                             </tfoot>
                           </table>
                         </div>
+
+                        {/* Tax Exemption Reason ID */}
+                        {editableData?.tax_exemption_reason_id && (
+                          <div className="mt-4">
+                            <div className="text-sm text-gray-500 mb-1">
+                              Tax Exemption Reason ID:
+                            </div>
+                            <Input
+                              type="text"
+                              value={editableData.tax_exemption_reason_id}
+                              onChange={(e: any) =>
+                                handleTaxExemptionReasonChange(e.target.value)
+                              }
+                              className="py-2 px-1"
+                            />
+                          </div>
+                        )}
 
                         {/* Validation Errors */}
                         {validationErrors.length > 0 && (

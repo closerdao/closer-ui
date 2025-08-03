@@ -510,16 +510,23 @@ export default async function handler(
       - vat_percentage (either extract from the relevant field in each item or infer based on rules below)
       
       Rules for inferring vat_percentage:
-        vat_rate_id 1 (or A) -> tax_percentage 6
-        vat_rate_id 2 (or B) -> tax_percentage 13
-        vat_rate_id 3 (or C) -> tax_percentage 23
-      - If vat_rate_id is not found, infer the tax_percentage based on the data in the document.
+        vat_rate_id 1 (or A) -> vat_percentage 6
+        vat_rate_id 2 (or B) -> vat_percentage 13
+        vat_rate_id 3 (or C) -> vat_percentage 23
+      - If vat_rate_id is not found, infer the vat_percentage based on the data in the document.
       - if vat rate can't be reliably extracted, use 23 per cent as default for a single vat group.
       - Zero tax is also possible in rare cases - it will be explicitly shown in the document. 
 
+      VAT_SUMMARY REQUIREMENTS:
       - add vat_summary field which shows total values for each vat percentage group and description.
-      Description is a general name of the group of items with the same tax_percentage in Portuguese.
-      If the document contains one item only, the description should be the name of the item.
+      - Description is a general name of the group of items with the same tax_percentage in Portuguese.
+      - If the document contains one item only, the description should be the name of the item.
+      - MANDATORY: Each vat_summary entry MUST include the "tax_code" field based on vat_percentage:
+        * vat_percentage = 23% -> tax_code = "NOR" (Normal rate)
+        * vat_percentage = 13% -> tax_code = "INT" (Intermediate rate)
+        * vat_percentage = 6% -> tax_code = "RED" (Reduced rate)
+        * vat_percentage = 0% -> tax_code = "ISE" (Exempt/Zero rate)
+      - NEVER omit the tax_code field from any vat_summary entry
       
       MANDATORY TAX EXEMPTION REASON ID EXTRACTION:
       - CRITICAL: If ANY item in the receipt has vat_percentage=0, you MUST add the "tax_exemption_reason_id" field to the output
@@ -546,12 +553,14 @@ export default async function handler(
           {
             "vat_percentage": 6.00,
             "description": "Serviços de fotocópia",
-            "total_with_vat": 92.88
+            "total_with_vat": 92.88,
+            "tax_code": "RED"
           },
           {
             "vat_percentage": 23.00,
             "description": "Mantimentos",
-            "total_with_vat": 28.01
+            "total_with_vat": 28.01,
+            "tax_code": "NOR"
           }
         ],
         "receipt_total": 120.89
@@ -562,6 +571,8 @@ export default async function handler(
       - Output in valid JSON format without any comments or explanations
       - If ANY item has vat_percentage=0, the tax_exemption_reason_id field MUST be included
       - If no items have vat_percentage=0, do NOT include the tax_exemption_reason_id field
+      - MANDATORY: Every vat_summary entry MUST include the tax_code field
+      - NEVER omit tax_code from vat_summary entries - it is required for all tax groups
      
               `,
               },
