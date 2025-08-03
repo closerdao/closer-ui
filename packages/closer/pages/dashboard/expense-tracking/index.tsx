@@ -22,6 +22,7 @@ import { loadLocaleData } from '../../../utils/locale.helpers';
 
 type ReceiptData = {
   supplier_business_name: string;
+  document_date: string;
   tax_exemption_reason_id?: string;
   items: {
     description: string;
@@ -41,6 +42,7 @@ type ReceiptData = {
 const mockResult = `\`\`\`json
 {
   "supplier_business_name": "O CANTINHO MAGICO",
+  "document_date": "2025-01-01",
   "items": [
     {
       "description": "TINTEIRO HP 305 COR",
@@ -112,6 +114,7 @@ const ExpenseTrackingDashboardPage = ({
           tax_exemption_reason_id: editableData.tax_exemption_reason_id,
         }),
         supplier_business_name: editableData.supplier_business_name,
+        document_date: editableData.document_date,
         lines: editableData.vat_summary.map((summary) => ({
           description: summary?.description || '',
           quantity: 1, // always 1 for a tax group
@@ -156,6 +159,7 @@ const ExpenseTrackingDashboardPage = ({
         const parsed = JSON.parse(jsonText);
         const formattedData: ReceiptData = {
           supplier_business_name: parsed.supplier_business_name || '',
+          document_date: parsed.document_date || '',
           items: Array.isArray(parsed.items)
             ? parsed.items.map((item: any) => ({
                 description: item.description || '',
@@ -238,6 +242,10 @@ const ExpenseTrackingDashboardPage = ({
       data.supplier_business_name.trim() === ''
     ) {
       errors.push('Supplier business name is required');
+    }
+
+    if (!data.document_date || data.document_date.trim() === '') {
+      errors.push('Document date is required');
     }
 
     // Check items array (since we're focusing on vat_summary)
@@ -351,6 +359,15 @@ const ExpenseTrackingDashboardPage = ({
       setEditableData({
         ...editableData,
         supplier_business_name: value,
+      });
+    }
+  };
+
+  const handleDocumentDateChange = (value: string) => {
+    if (editableData) {
+      setEditableData({
+        ...editableData,
+        document_date: value,
       });
     }
   };
@@ -480,6 +497,7 @@ const ExpenseTrackingDashboardPage = ({
           // Ensure the parsed data matches the exact format of ReceiptData
           const formattedData: ReceiptData = {
             supplier_business_name: parsed.supplier_business_name || '',
+            document_date: parsed.document_date || '',
             ...(parsed.tax_exemption_reason_id && {
               tax_exemption_reason_id: parsed.tax_exemption_reason_id,
             }),
@@ -546,6 +564,7 @@ const ExpenseTrackingDashboardPage = ({
           // Ensure the parsed data matches the exact format of ReceiptData
           const formattedData: ReceiptData = {
             supplier_business_name: parsed.supplier_business_name || '',
+            document_date: parsed.document_date || '',
             ...(parsed.tax_exemption_reason_id && {
               tax_exemption_reason_id: parsed.tax_exemption_reason_id,
             }),
@@ -761,7 +780,19 @@ const ExpenseTrackingDashboardPage = ({
                               handleSupplierChange(e.target.value)
                             }
                           />
+                      </div>
+                      <div className="mb-4">
+                        <div className="text-sm text-gray-500 mb-1">
+                          Document date:
                         </div>
+                        <Input
+                          type="text"
+                          value={editableData?.document_date || ''}
+                          onChange={(e: any) =>
+                            handleDocumentDateChange(e.target.value)
+                          }
+                        />
+                      </div>
 
                         <div className="overflow-x-auto">
                           <table className="w-full">

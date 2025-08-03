@@ -539,7 +539,8 @@ export default async function handler(
       
       Example of complete output:
       {
-        "supplier_business_name": "Supermercado do João",
+        "supplier_business_name": "Supermercado do João", // MANDATORY field
+        "document_date": "2025-01-01", // MANDATORY field document date in string format YYYY-MM-DD
         "tax_exemption_reason_id": "1", // MANDATORY field when any item has vat_percentage=0
         "items": [
           {
