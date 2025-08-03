@@ -19,6 +19,8 @@ import { useAuth } from '../../../contexts/auth';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
+// import { taxExemptionReasons } from '../../../constants/shared.constants';
+
 
 type ReceiptData = {
   supplier_business_name: string;
@@ -84,11 +86,12 @@ const ExpenseTrackingDashboardPage = ({
   const [isDragOver, setIsDragOver] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [editableData, setEditableData] = useState<ReceiptData | null>(null);
-  const [toconlineData, setToconlineData] = useState<any>(null);
+  const [expenseData, setExpenseData] = useState<any>(null);
   const [hasLoggedExpense, setHasLoggedExpense] = useState(false);
   const [uploadedDocumentUrl, setUploadedDocumentUrl] = useState<string | null>(
     null,
   );
+  // const [showReasons, setShowReasons] = useState(false);
 
   // Validate test data on mount
   React.useEffect(() => {
@@ -107,7 +110,7 @@ const ExpenseTrackingDashboardPage = ({
 
       console.log('editableData=', editableData);
 
-      // Transform editableData to toconlineData format
+      // Transform editableData to expenseData format
       const toconlineFormattedData = {
         document_type: 'FC',
         ...(editableData?.tax_exemption_reason_id && {
@@ -134,7 +137,7 @@ const ExpenseTrackingDashboardPage = ({
 
       console.log('toconlineFormattedData=', toconlineFormattedData);
 
-      setToconlineData(toconlineFormattedData);
+      setExpenseData(toconlineFormattedData);
     }
   }, [editableData]);
 
@@ -337,7 +340,7 @@ const ExpenseTrackingDashboardPage = ({
       setHasLoggedExpense(false);
       setLoading(true);
       const res = await api.post('/toconline/expense', {
-        toconlineData,
+        expenseData,
         uploadedDocumentUrl,
       });
       if (res.status === 200) {
@@ -805,7 +808,7 @@ const ExpenseTrackingDashboardPage = ({
                                   VAT %
                                 </th>
                                 <th className="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Tax Code
+                                  Tax Code (NOR / INT / RED / ISE)
                                 </th>
                                 <th className="px-1 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                   Total with VAT
@@ -944,7 +947,7 @@ const ExpenseTrackingDashboardPage = ({
                         {editableData?.tax_exemption_reason_id && (
                           <div className="mt-4">
                             <div className="text-sm text-gray-500 mb-1">
-                              Tax Exemption Reason ID:
+                              Tax Exemption Reason ID: 
                             </div>
                             <Input
                               type="text"
