@@ -19,8 +19,8 @@ import { useAuth } from '../../../contexts/auth';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
-// import { taxExemptionReasons } from '../../../constants/shared.constants';
 
+// import { taxExemptionReasons } from '../../../constants/shared.constants';
 
 type ReceiptData = {
   supplier_business_name: string;
@@ -202,19 +202,83 @@ const ExpenseTrackingDashboardPage = ({
     }
   }, [result]);
 
-  const handleFileSelect = (selectedFile: File | null) => {
+  const handleFileSelect = async (selectedFile: File | null) => {
     if (
       selectedFile &&
       (selectedFile.type.startsWith('image/') ||
         selectedFile.type === 'application/pdf')
     ) {
       setFile(selectedFile);
+
       // Create preview
       const reader = new FileReader();
       reader.onload = (e) => {
         setPhoto(e.target?.result as string);
       };
       reader.readAsDataURL(selectedFile);
+
+      // For images, resize them on the frontend before sending to API
+      if (selectedFile.type.startsWith('image/')) {
+        try {
+          const reader = new FileReader();
+
+          reader.onload = async (e) => {
+            try {
+              if (!e.target?.result) {
+                throw new Error('Failed to read file');
+              }
+
+              // Dynamic import of Jimp
+              const { Jimp } = await import('jimp');
+              const image = await Jimp.read(e.target.result);
+
+              console.log('Original image dimensions:', {
+                width: image.width,
+                height: image.height,
+              });
+
+              // Resize to 1500px on longest side while maintaining aspect ratio
+              const maxDimension = 1500;
+              const width = image.width;
+              const height = image.height;
+
+              if (width > maxDimension || height > maxDimension) {
+                if (width > height) {
+                  image.resize({ w: maxDimension });
+                } else {
+                  image.resize({ h: maxDimension });
+                }
+              }
+
+              console.log('Resized image dimensions:', {
+                width: image.width,
+                height: image.height,
+              });
+
+              // Convert back to File object
+              const base64 = await image.getBase64('image/jpeg');
+              const base64Data = base64.split(',')[1]; // Remove data URL prefix
+              const resizedBuffer = Buffer.from(base64Data, 'base64');
+              const resizedFile = new File([resizedBuffer], selectedFile.name, {
+                type: 'image/jpeg',
+              });
+
+              setFile(resizedFile);
+              console.log('Image resized successfully on frontend');
+            } catch (error) {
+              console.error('Error resizing image:', error);
+              // Fallback to original file if resize fails
+              setFile(selectedFile);
+            }
+          };
+
+          reader.readAsArrayBuffer(selectedFile);
+        } catch (error) {
+          console.error('Error reading file:', error);
+          // Fallback to original file if read fails
+          setFile(selectedFile);
+        }
+      }
     } else if (selectedFile) {
       setResult('Error: Please select a valid image or PDF file');
     }
@@ -325,13 +389,13 @@ const ExpenseTrackingDashboardPage = ({
     return errors;
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
 
     const droppedFiles = Array.from(e.dataTransfer.files);
     if (droppedFiles.length > 0) {
-      handleFileSelect(droppedFiles[0]);
+      await handleFileSelect(droppedFiles[0]);
     }
   };
 
@@ -739,8 +803,8 @@ const ExpenseTrackingDashboardPage = ({
                   id="file-upload"
                   type="file"
                   accept="image/*,.pdf"
-                  onChange={(e) =>
-                    handleFileSelect(e.target.files?.[0] || null)
+                  onChange={async (e) =>
+                    await handleFileSelect(e.target.files?.[0] || null)
                   }
                   className="hidden"
                 />
@@ -783,19 +847,19 @@ const ExpenseTrackingDashboardPage = ({
                               handleSupplierChange(e.target.value)
                             }
                           />
-                      </div>
-                      <div className="mb-4">
-                        <div className="text-sm text-gray-500 mb-1">
-                          Document date:
                         </div>
-                        <Input
-                          type="text"
-                          value={editableData?.document_date || ''}
-                          onChange={(e: any) =>
-                            handleDocumentDateChange(e.target.value)
-                          }
-                        />
-                      </div>
+                        <div className="mb-4">
+                          <div className="text-sm text-gray-500 mb-1">
+                            Document date:
+                          </div>
+                          <Input
+                            type="text"
+                            value={editableData?.document_date || ''}
+                            onChange={(e: any) =>
+                              handleDocumentDateChange(e.target.value)
+                            }
+                          />
+                        </div>
 
                         <div className="overflow-x-auto">
                           <table className="w-full">
@@ -880,7 +944,6 @@ const ExpenseTrackingDashboardPage = ({
                                           )
                                         }
                                         className="py-2 px-1 border-none"
-
                                       />
                                     </td>
                                     <td
@@ -947,7 +1010,7 @@ const ExpenseTrackingDashboardPage = ({
                         {editableData?.tax_exemption_reason_id && (
                           <div className="mt-4">
                             <div className="text-sm text-gray-500 mb-1">
-                              Tax Exemption Reason ID: 
+                              Tax Exemption Reason ID:
                             </div>
                             <Input
                               type="text"

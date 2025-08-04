@@ -1,12 +1,10 @@
 import { GoogleGenAI } from '@google/genai';
-import type { NextApiRequest, NextApiResponse } from 'next';
-import sharp from 'sharp';
 import { taxExemptionReasons } from 'closer/constants/shared.constants';
+import type { NextApiRequest, NextApiResponse } from 'next';
 
 const genai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY || '',
 });
-
 
 async function uploadToCDN(
   processedBuffer: Buffer,
@@ -198,8 +196,6 @@ export default async function handler(
     let processedImageBuffer: Buffer;
     let base64Data: string;
     const mimeType: string = contentType;
-    let resizeStartTime: number | undefined = undefined;
-    let resizeEndTime: number | undefined = undefined;
 
     if (isPdf) {
       // For PDF, skip image processing
@@ -207,42 +203,10 @@ export default async function handler(
       base64Data = processedImageBuffer.toString('base64');
       console.log('PDF file detected, skipping image processing.');
     } else {
-      // Resize image to 1500px on longest side while maintaining aspect ratio
-      resizeStartTime = Date.now();
-      try {
-        const image = sharp(fileBuffer);
-        const metadata = await image.metadata();
-
-        console.log('Original image dimensions:', {
-          width: metadata.width,
-          height: metadata.height,
-          format: metadata.format,
-        });
-
-        // Resize to 1500px on longest side
-        const resizedImage = image.resize(1500, 1500, {
-          fit: 'inside', // Maintain aspect ratio
-          withoutEnlargement: true, // Don't enlarge if image is smaller than 1500px
-        });
-
-        processedImageBuffer = await resizedImage.toBuffer();
-
-        const resizedMetadata = await sharp(processedImageBuffer).metadata();
-        console.log('Resized image dimensions:', {
-          width: resizedMetadata.width,
-          height: resizedMetadata.height,
-          format: resizedMetadata.format,
-        });
-      } catch (resizeError) {
-        console.error('Image resize error:', resizeError);
-        // Fallback to original image if resize fails
-        processedImageBuffer = fileBuffer;
-      }
-      resizeEndTime = Date.now();
-      console.log(
-        `Image resize completed in ${resizeEndTime - resizeStartTime}ms`,
-      );
+      // Images are already resized on the frontend, just use as-is
+      processedImageBuffer = fileBuffer;
       base64Data = processedImageBuffer.toString('base64');
+      console.log('Image already resized on frontend, using as-is.');
     }
 
     console.log('Image/PDF processing summary:', {
@@ -449,9 +413,6 @@ export default async function handler(
 
     console.log('=== RECEIPT PROCESSING TIMING SUMMARY ===');
     console.log(`Total processing time: ${totalTime}ms`);
-    if (resizeStartTime !== undefined && resizeEndTime !== undefined) {
-      console.log(`Image resize: ${resizeEndTime - resizeStartTime}ms`);
-    }
     console.log(
       `Text extraction: ${textExtractionEndTime - textExtractionStartTime}ms`,
     );
