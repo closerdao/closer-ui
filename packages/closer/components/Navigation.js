@@ -248,7 +248,7 @@ const Navigation = () => {
                   </Button>
                 ) : (
                   <Button
-                    onClick={() => router.push('/stay')}
+                    onClick={() => router.push('/bookings/create/dates')}
                     size="small"
                     variant="primary"
                   >

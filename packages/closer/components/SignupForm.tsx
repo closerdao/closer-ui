@@ -273,6 +273,17 @@ const SignupForm = ({ app }: Props) => {
               />
             )}
           </div>
+          
+          <div className="text-center text-sm mt-4">
+            {t('signup_form_have_account')}{' '}
+            <Link
+              data-testid="login-link"
+              className="text-accent underline font-bold"
+              href={`/login${signupQuery}`}
+            >
+              {t('login_title')}{' '}
+            </Link>
+          </div>
         </form>
       ) : step === 2 ? (
         <form className="flex flex-col gap-4" onSubmit={handleAccountSubmit}>
@@ -319,16 +330,6 @@ const SignupForm = ({ app }: Props) => {
             >
               {t('signup_step2_continue')}
             </Button>
-          </div>
-          <div className="text-center text-sm">
-            {t('signup_form_have_account')}{' '}
-            <Link
-              data-testid="login-link"
-              className="text-accent underline font-bold"
-              href={`/login${signupQuery}`}
-            >
-              {t('login_title')}{' '}
-            </Link>
           </div>
         </form>
       ) : (
