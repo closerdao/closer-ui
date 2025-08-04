@@ -99,28 +99,27 @@ const Signup = () => {
                 level={1}
                 className="uppercase text-5xl sm:text-5xl font-extrabold"
               >
-                Join our regenerative village
+                {t('signup_hero_title')}
               </Heading>
               <p className="text-lg text-gray-600">
-                Co-create a new way of living and earn your spot under the
-                Portuguese sun.
+                {t('signup_hero_subtitle')}
               </p>
 
               <ul className="space-y-1 text-xs text-gray-600 pt-2">
                 <li>
-                  🌱 Restore <strong>24 ha</strong> of land with every stay
+                  {t('signup_feature_restore')}
                 </li>
                 <li>
-                  🫂 Co‑live with <strong>60+ purpose‑driven</strong> citizens
+                  {t('signup_feature_colive')}
                 </li>
                 <li>
-                  💎 Earn on‑chain <strong>$TDF</strong> for your skills
+                  {t('signup_feature_earn')}
                 </li>
                 <li>
-                  🛠 Makers’ lab, wood‑shop &amp; industrial kitchen on site
+                  {t('signup_feature_makers')}
                 </li>
                 <li>
-                  🏄 Surf‑ready beaches just <strong>35 min</strong> away
+                  {t('signup_feature_surf')}
                 </li>
               </ul>
 
