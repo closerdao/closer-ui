@@ -204,6 +204,13 @@ const DatesSelector = ({
   }, []);
 
   useEffect(() => {
+    if (event && eventId && event.canSelectDates === false) {
+      setStartDate(event.start);
+      setEndDate(event.end);
+    }
+  }, [event, eventId]);
+
+  useEffect(() => {
     setBookingError(null);
     if (start && end) {
       if (!isMinDurationMatched) {
@@ -396,6 +403,7 @@ const DatesSelector = ({
                 savedEndDate={savedEndDate as string}
                 eventStartDate={event?.start && event?.start}
                 eventEndDate={event?.end && event?.end}
+                canSelectDates={event?.canSelectDates}
               />
               {bookingError && <ErrorMessage error={bookingError} />}
               {isTodayAndToken && (

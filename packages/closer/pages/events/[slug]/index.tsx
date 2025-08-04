@@ -539,18 +539,25 @@ const EventPage = ({
                                 end.isAfter(dayjs()) &&
                                 (event.stripePub ||
                                   process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) && (
-                                  <LinkButton
-                                    href={`/bookings/create/dates/?eventId=${
-                                      event._id
-                                    }&start=${
-                                      start ? start.format('YYYY-MM-DD') : ''
-                                    }&end=${
-                                      end ? end.format('YYYY-MM-DD') : ''
-                                    }`}
-                                    className=""
-                                  >
-                                    {t('events_buy_ticket_button')}
-                                  </LinkButton>
+                                  <>
+                                    {event.requireApproval && (
+                                      <p className="text-sm text-gray-600 mb-2">
+                                        {t('bookings_event_requires_approval')}
+                                      </p>
+                                    )}
+                                    <LinkButton
+                                      href={`/bookings/create/dates/?eventId=${
+                                        event._id
+                                      }&start=${
+                                        start ? start.format('YYYY-MM-DD') : ''
+                                      }&end=${
+                                        end ? end.format('YYYY-MM-DD') : ''
+                                      }`}
+                                      className=""
+                                    >
+                                      {t('events_buy_ticket_button')}
+                                    </LinkButton>
+                                  </>
                                 )}
                             </>
                           ) : (

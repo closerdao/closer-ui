@@ -100,6 +100,20 @@ const models = {
       tab: 'general',
     },
     {
+      name: 'canSelectDates',
+      label: 'Allow guests to select dates during checkout?',
+      type: 'switch',
+      defaultValue: true,
+      tab: 'general',
+    },
+    {
+      name: 'requireApproval',
+      label: 'Require space-host approval for event bookings?',
+      type: 'switch',
+      defaultValue: false,
+      tab: 'general',
+    },
+    {
       name: 'location',
       label: 'Event URL',
       defaultValue: '',
