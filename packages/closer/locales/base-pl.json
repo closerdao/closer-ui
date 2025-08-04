@@ -1183,6 +1183,8 @@
   "config_label_tokenPriceModifierPercent": "Token price modifier in percent",
   "config_label_minVouches": "Minimum number of vouches",
   "config_label_minVouchingStayDuration": "Minimum stay duration to be eligible for vouching (days)",
+  "config_label_expenseCategories": "Expense categories (comma delimited)",
+
 
   "config_features_heading": "Platform features",
   "generic_delete_button": "Delete",

@@ -3,16 +3,20 @@ import Head from 'next/head';
 import React, { useState } from 'react';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
-import { Button, Card } from '../../../components/ui';
+import {
+  ExpenseChargesListing,
+  ExtractedDataForm,
+  UploadForm,
+} from '../../../components/expense-tracking';
 import Heading from '../../../components/ui/Heading';
-import Input from '../../../components/ui/Input';
 
+import { GeneralConfig } from 'closer/types/api';
 import { Charge } from 'closer/types/booking';
 import Cookies from 'js-cookie';
-import { Loader2, Plus, Trash2, Upload } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import process from 'process';
+import { z } from 'zod';
 
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
@@ -20,12 +24,13 @@ import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 
-// import { taxExemptionReasons } from '../../../constants/shared.constants';
-
 type ReceiptData = {
   supplier_business_name: string;
   document_date: string;
   tax_exemption_reason_id?: string;
+  description?: string;
+  category?: string;
+  comment?: string;
   items: {
     description: string;
     item_total: number;
@@ -41,10 +46,20 @@ type ReceiptData = {
   receipt_total: number;
 };
 
+const expenseFormSchema = z.object({
+  supplier_business_name: z
+    .string()
+    .min(1, 'Supplier business name is required'),
+  document_date: z.string().min(1, 'Document date is required'),
+  category: z.string().min(1, 'Category is required'),
+  description: z.string().min(1, 'Description is required'),
+});
+
 const mockResult = `\`\`\`json
 {
   "supplier_business_name": "O CANTINHO MAGICO",
   "document_date": "2025-01-01",
+  "tax_exemption_reason_id": "1",
   "items": [
     {
       "description": "TINTEIRO HP 305 COR",
@@ -62,6 +77,11 @@ const mockResult = `\`\`\`json
       "vat_percentage": 23.00,
       "description": "Bens e Serviços",
       "total_with_vat": 18.59
+    },
+    {
+      "vat_percentage": 0,
+      "description": "Bens e Serviços Exentos",
+      "total_with_vat": 12.00
     }
   ],
   "receipt_total": 18.59
@@ -71,19 +91,24 @@ const mockResult = `\`\`\`json
 const ExpenseTrackingDashboardPage = ({
   charges,
   error,
+  generalConfig,
 }: {
   charges: Charge[] | null;
   error?: string | null;
+  generalConfig: GeneralConfig | null;
 }) => {
   const t = useTranslations();
   const { user } = useAuth();
 
+  console.log('charges=', charges);
+
+  const expenseCategories = generalConfig?.expenseCategories?.split(',');
+
   const [file, setFile] = useState<File | null>(null);
-  const [result, setResult] = useState('');
+  const [result, setResult] = useState(mockResult);
   const [parsedData, setParsedData] = useState<ReceiptData | null>(null);
   const [loading, setLoading] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
-  const [isDragOver, setIsDragOver] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [editableData, setEditableData] = useState<ReceiptData | null>(null);
   const [expenseData, setExpenseData] = useState<any>(null);
@@ -91,7 +116,11 @@ const ExpenseTrackingDashboardPage = ({
   const [uploadedDocumentUrl, setUploadedDocumentUrl] = useState<string | null>(
     null,
   );
-  // const [showReasons, setShowReasons] = useState(false);
+  const [description, setDescription] = useState<string>('');
+  const [category, setCategory] = useState<string>('');
+  const [comment, setComment] = useState<string>('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
   // Validate test data on mount
   React.useEffect(() => {
@@ -116,6 +145,9 @@ const ExpenseTrackingDashboardPage = ({
         ...(editableData?.tax_exemption_reason_id && {
           tax_exemption_reason_id: editableData.tax_exemption_reason_id,
         }),
+        ...(description && { description }),
+        ...(category && { category }),
+        ...(comment && { comment }),
         supplier_business_name: editableData.supplier_business_name,
         document_date: editableData.document_date,
         lines: editableData.vat_summary.map((summary) => ({
@@ -139,7 +171,20 @@ const ExpenseTrackingDashboardPage = ({
 
       setExpenseData(toconlineFormattedData);
     }
-  }, [editableData]);
+  }, [editableData, description, category, comment]);
+
+  // Validate required fields when they change (only after submission attempt)
+  React.useEffect(() => {
+    if (editableData && hasAttemptedSubmit) {
+      validateRequiredFields();
+    }
+  }, [
+    description,
+    category,
+    editableData?.supplier_business_name,
+    editableData?.document_date,
+    hasAttemptedSubmit,
+  ]);
 
   // Parse initial mock data if result is set to mockResult
   React.useEffect(() => {
@@ -163,6 +208,9 @@ const ExpenseTrackingDashboardPage = ({
         const formattedData: ReceiptData = {
           supplier_business_name: parsed.supplier_business_name || '',
           document_date: parsed.document_date || '',
+          ...(parsed.tax_exemption_reason_id && {
+            tax_exemption_reason_id: parsed.tax_exemption_reason_id,
+          }),
           items: Array.isArray(parsed.items)
             ? parsed.items.map((item: any) => ({
                 description: item.description || '',
@@ -284,14 +332,43 @@ const ExpenseTrackingDashboardPage = ({
     }
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(true);
+  const validateRequiredFields = () => {
+    const formData = {
+      supplier_business_name: editableData?.supplier_business_name || '',
+      document_date: editableData?.document_date || '',
+      category,
+      description,
+    };
+
+    const result = expenseFormSchema.safeParse(formData);
+
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.errors.forEach((error) => {
+        if (error.path[0]) {
+          errors[error.path[0] as string] = error.message;
+        }
+      });
+      setFieldErrors(errors);
+      return false;
+    } else {
+      setFieldErrors({});
+      return true;
+    }
   };
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
+  const validateAndShowErrors = () => {
+    setHasAttemptedSubmit(true);
+    return validateRequiredFields();
+  };
+
+  const areAllRequiredFieldsFilled = () => {
+    return (
+      editableData?.supplier_business_name?.trim() !== '' &&
+      editableData?.document_date?.trim() !== '' &&
+      description?.trim() !== '' &&
+      category?.trim() !== ''
+    );
   };
 
   const validateReceiptData = (data: any): string[] => {
@@ -389,22 +466,28 @@ const ExpenseTrackingDashboardPage = ({
     return errors;
   };
 
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    if (droppedFiles.length > 0) {
-      await handleFileSelect(droppedFiles[0]);
-    }
-  };
-
   const handleUploadToToconline = async () => {
+    if (!validateAndShowErrors()) {
+      return;
+    }
+
     try {
       setHasLoggedExpense(false);
       setLoading(true);
+
+      // Add the manual fields to expenseData
+      const updatedExpenseData = {
+        ...expenseData,
+        description,
+        category,
+        comment,
+      };
+
+      console.log('expenseData=', updatedExpenseData);
+      console.log('uploadedDocumentUrl=', uploadedDocumentUrl);
+
       const res = await api.post('/toconline/expense', {
-        expenseData,
+        expenseData: updatedExpenseData,
         uploadedDocumentUrl,
       });
       if (res.status === 200) {
@@ -690,6 +773,7 @@ const ExpenseTrackingDashboardPage = ({
       setLoading(false);
     }
   };
+
   if (!user?.roles.includes('admin')) {
     return <PageNotAllowed />;
   }
@@ -704,395 +788,52 @@ const ExpenseTrackingDashboardPage = ({
           <Heading level={1}>{t('expense_tracking_dashboard_title')}</Heading>
 
           <section className="flex flex-col gap-4">
-            <Card className="bg-background w-full sm:w-[400px]">
-              <Heading level={3}>Upload purchase document</Heading>
-
-              <p className="text-sm text-gray-500">
-                The photo/scan must include all the items purchased and be fully
-                legible. JPG, PNG, GIF, PDF formats are supported.
-              </p>
-
-              <div
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={() => document.getElementById('file-upload')?.click()}
-                className={`block w-full cursor-pointer border-2 border-dashed p-6 rounded-xl text-center transition-colors ${
-                  isDragOver
-                    ? 'border-blue-500 bg-blue-50 text-blue-500'
-                    : file
-                    ? 'border-green-500 text-green-500'
-                    : 'border-gray-300 text-gray-500 hover:border-blue-500 hover:text-blue-500'
-                }`}
-              >
-                {file ? (
-                  <div className="space-y-2">
-                    <span className="text-sm font-medium text-gray-700">
-                      {file.name.length > 33
-                        ? (() => {
-                            const lastDotIndex = file.name.lastIndexOf('.');
-                            if (lastDotIndex === -1) {
-                              return `${file.name.substring(0, 30)}...`;
-                            }
-                            const extension = file.name.substring(lastDotIndex);
-                            const nameWithoutExt = file.name.substring(
-                              0,
-                              lastDotIndex,
-                            );
-                            const maxNameLength = 33 - extension.length - 3; // 3 for "..."
-                            return `${nameWithoutExt.substring(
-                              0,
-                              maxNameLength,
-                            )}...${extension}`;
-                          })()
-                        : file.name}
-                    </span>
-                    {photo &&
-                      (file?.type === 'application/pdf' ? (
-                        <div className="max-w-full h-32 flex items-center justify-center mx-auto rounded border border-gray-300 bg-gray-50">
-                          <div className="text-center">
-                            <div className="text-2xl mb-1">📄</div>
-                            <div className="text-xs text-gray-600">
-                              {file.name.length > 33
-                                ? (() => {
-                                    const lastDotIndex =
-                                      file.name.lastIndexOf('.');
-                                    if (lastDotIndex === -1) {
-                                      return `${file.name.substring(0, 30)}...`;
-                                    }
-                                    const extension =
-                                      file.name.substring(lastDotIndex);
-                                    const nameWithoutExt = file.name.substring(
-                                      0,
-                                      lastDotIndex,
-                                    );
-                                    const maxNameLength =
-                                      33 - extension.length - 3; // 3 for "..."
-                                    return `${nameWithoutExt.substring(
-                                      0,
-                                      maxNameLength,
-                                    )}...${extension}`;
-                                  })()
-                                : file.name}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              PDF Document
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <img
-                          src={photo}
-                          alt="Receipt preview"
-                          className="max-w-full h-32 object-contain mx-auto rounded"
-                        />
-                      ))}
-                  </div>
-                ) : (
-                  <>
-                    <Upload className="w-10 h-10 mx-auto mb-2" />
-                    <span className="text-sm block">
-                      Click to upload or drag and drop a receipt image
-                    </span>
-                    <span className="text-xs text-gray-400 mt-1">
-                      Supports JPG, PNG, GIF, PDF
-                    </span>
-                  </>
-                )}
-                <input
-                  id="file-upload"
-                  type="file"
-                  accept="image/*,.pdf"
-                  onChange={async (e) =>
-                    await handleFileSelect(e.target.files?.[0] || null)
-                  }
-                  className="hidden"
-                />
-              </div>
-
-              <Button
-                onClick={handleParseWithLLM}
-                isEnabled={Boolean(file && !loading)}
-              >
-                {loading ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Processing...</span>
-                  </div>
-                ) : (
-                  'Parse purchase document'
-                )}
-              </Button>
-            </Card>
+            <UploadForm
+              onFileSelect={handleFileSelect}
+              onParseWithLLM={handleParseWithLLM}
+              file={file}
+              photo={photo}
+              loading={loading}
+            />
 
             <div>
               {parsedData && (
                 <div className="space-y-4">
-                  {/* VAT Summary Table */}
                   {parsedData.vat_summary &&
                     parsedData.vat_summary.length > 0 && (
-                      <Card className="bg-background p-0 sm:p-4 shadow-none sm:shadow-md">
-                        <div className="flex justify-between items-center mb-4">
-                          <Heading level={3}>Extracted document data</Heading>
-                        </div>
-
-                        <div className="mb-4">
-                          <div className="text-sm text-gray-500 mb-1">
-                            Supplier:
-                          </div>
-                          <Input
-                            type="text"
-                            value={editableData?.supplier_business_name || ''}
-                            onChange={(e: any) =>
-                              handleSupplierChange(e.target.value)
-                            }
-                          />
-                        </div>
-                        <div className="mb-4">
-                          <div className="text-sm text-gray-500 mb-1">
-                            Document date:
-                          </div>
-                          <Input
-                            type="text"
-                            value={editableData?.document_date || ''}
-                            onChange={(e: any) =>
-                              handleDocumentDateChange(e.target.value)
-                            }
-                          />
-                        </div>
-
-                        <div className="overflow-x-auto">
-                          <table className="w-full">
-                            <thead className="border-b">
-                              <tr>
-                                <th className="pr-1 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  VAT Group description
-                                </th>
-                                <th className="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  VAT %
-                                </th>
-                                <th className="px-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Tax Code (NOR / INT / RED / ISE)
-                                </th>
-                                <th className="px-1 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Total with VAT
-                                </th>
-                                <th className="pl-1 py-1 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-[90px]">
-                                  Actions
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                              {editableData?.vat_summary?.map(
-                                (summary: any, index: number) => (
-                                  <tr key={index}>
-                                    <td className="pr-1 py-1 text-sm text-gray-900 font-medium">
-                                      <Input
-                                        type="text"
-                                        value={summary.description || ''}
-                                        onChange={(e) =>
-                                          handleVatSummaryChange(
-                                            index,
-                                            'description',
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="py-2 px-1"
-                                      />
-                                    </td>
-                                    <td className="px-1 py-1 text-sm text-gray-900 text-center">
-                                      <Input
-                                        type="number"
-                                        value={String(
-                                          summary.vat_percentage || 0,
-                                        )}
-                                        onChange={(e) =>
-                                          handleVatSummaryChange(
-                                            index,
-                                            'vat_percentage',
-                                            parseFloat(e.target.value) || 0,
-                                          )
-                                        }
-                                        className="py-2 px-1 bo"
-                                      />
-                                    </td>
-                                    <td className="px-1 py-1 text-sm text-gray-900 text-center">
-                                      <Input
-                                        type="text"
-                                        value={summary.tax_code || ''}
-                                        onChange={(e) =>
-                                          handleVatSummaryChange(
-                                            index,
-                                            'tax_code',
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="py-2 px-1"
-                                      />
-                                    </td>
-                                    <td className="px-1 py-1 text-sm font-semibold text-gray-900 text-right">
-                                      <Input
-                                        type="number"
-                                        value={String(
-                                          summary.total_with_vat || 0,
-                                        )}
-                                        onChange={(e) =>
-                                          handleVatSummaryChange(
-                                            index,
-                                            'total_with_vat',
-                                            parseFloat(e.target.value) || 0,
-                                          )
-                                        }
-                                        className="py-2 px-1 border-none"
-                                      />
-                                    </td>
-                                    <td
-                                      className="pl-1 py-1 text-center                                     Бев сдфыыТфьу=Эзд-1 зн-1 еуче-сутеук ищквукЭЮ
-"
-                                    >
-                                      <div className="flex justify-center gap-1">
-                                        <button
-                                          onClick={() =>
-                                            handleDeleteVatSummaryRow(index)
-                                          }
-                                          disabled={
-                                            editableData?.vat_summary.length ===
-                                            1
-                                          }
-                                          className="text-red-600 hover:text-red-800 disabled:text-gray-400 p-1"
-                                          title="Delete row"
-                                        >
-                                          <Trash2 className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                          onClick={() =>
-                                            handleAddVatSummaryRow()
-                                          }
-                                          className="text-blue-600 hover:text-blue-800 p-1"
-                                          title="Add row"
-                                        >
-                                          <Plus className="w-4 h-4" />
-                                        </button>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ),
-                              )}
-                            </tbody>
-                            <tfoot className="border-t">
-                              <tr>
-                                <td
-                                  colSpan={3}
-                                  className="px-2 py-2 text-sm font-bold  text-right"
-                                >
-                                  Document Total:
-                                </td>
-                                <td className="px-2 py-2 text-lg font-bold text-gray-900 text-right">
-                                  <Input
-                                    type="number"
-                                    value={String(
-                                      editableData?.receipt_total || 0,
-                                    )}
-                                    onChange={(e) =>
-                                      handleReceiptTotalChange(
-                                        parseFloat(e.target.value) || 0,
-                                      )
-                                    }
-                                    className="w-full p-1  border-none  rounded text-sm font-bold text-right"
-                                  />
-                                </td>
-                              </tr>
-                            </tfoot>
-                          </table>
-                        </div>
-
-                        {/* Tax Exemption Reason ID */}
-                        {editableData?.tax_exemption_reason_id && (
-                          <div className="mt-4">
-                            <div className="text-sm text-gray-500 mb-1">
-                              Tax Exemption Reason ID:
-                            </div>
-                            <Input
-                              type="text"
-                              value={editableData.tax_exemption_reason_id}
-                              onChange={(e: any) =>
-                                handleTaxExemptionReasonChange(e.target.value)
-                              }
-                              className="py-2 px-1"
-                            />
-                          </div>
-                        )}
-
-                        {/* Validation Errors */}
-                        {validationErrors.length > 0 && (
-                          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                            <h4 className="text-sm font-medium text-red-800 mb-2">
-                              Validation Errors:
-                            </h4>
-                            <ul className="text-sm text-red-700 space-y-1">
-                              {validationErrors.map((error, index) => (
-                                <li key={index} className="flex items-start">
-                                  <span className="text-red-500 mr-2">•</span>
-                                  {error}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-
-                        <div className="text-sm text-red-500">
-                          WARNING: this action is not reversible. Please
-                          carefully review the extracted receipt data before
-                          proceeding.
-                        </div>
-                        <Button
-                          onClick={handleUploadToToconline}
-                          isEnabled={Boolean(
-                            !loading && validationErrors.length === 0,
-                          )}
-                        >
-                          {loading ? (
-                            <div className="flex items-center gap-2">
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                              <span>Processing...</span>
-                            </div>
-                          ) : (
-                            'Upload to Toconline'
-                          )}
-                        </Button>
-
-                        {hasLoggedExpense && (
-                          <div className="text-sm text-green-500 bg-green-100 p-2 rounded-md">
-                            Purchase logged successfully to Toconline API
-                          </div>
-                        )}
-
-                        {uploadedDocumentUrl && (
-                          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                            <h4 className="text-sm font-medium text-blue-800 mb-2">
-                              Uploaded Document:
-                            </h4>
-                            <div className="flex items-center gap-2">
-                              <a
-                                href={uploadedDocumentUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-800 text-sm underline"
-                              >
-                                View uploaded document
-                              </a>
-                              <span className="text-xs text-gray-500">
-                                (opens in new tab)
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                      </Card>
+                      <ExtractedDataForm
+                        editableData={editableData}
+                        description={description}
+                        category={category}
+                        comment={comment}
+                        expenseCategories={expenseCategories}
+                        fieldErrors={fieldErrors}
+                        hasAttemptedSubmit={hasAttemptedSubmit}
+                        validationErrors={validationErrors}
+                        loading={loading}
+                        hasLoggedExpense={hasLoggedExpense}
+                        uploadedDocumentUrl={uploadedDocumentUrl}
+                        onSupplierChange={handleSupplierChange}
+                        onDocumentDateChange={handleDocumentDateChange}
+                        onReceiptTotalChange={handleReceiptTotalChange}
+                        onTaxExemptionReasonChange={
+                          handleTaxExemptionReasonChange
+                        }
+                        onDescriptionChange={setDescription}
+                        onCategoryChange={setCategory}
+                        onCommentChange={setComment}
+                        onVatSummaryChange={handleVatSummaryChange}
+                        onAddVatSummaryRow={handleAddVatSummaryRow}
+                        onDeleteVatSummaryRow={handleDeleteVatSummaryRow}
+                        onUploadToToconline={handleUploadToToconline}
+                      />
                     )}
                 </div>
               )}
             </div>
           </section>
+
+          <ExpenseChargesListing charges={(charges as any) || []} />
         </div>
       </AdminLayout>
     </>
@@ -1103,7 +844,7 @@ ExpenseTrackingDashboardPage.getInitialProps = async (
   context: NextPageContext,
 ) => {
   try {
-    const [chargesRes, messages] = await Promise.all([
+    const [chargesRes, generalConfigRes, messages] = await Promise.all([
       api
         .get('/charge', {
           params: {
@@ -1111,25 +852,32 @@ ExpenseTrackingDashboardPage.getInitialProps = async (
               type: 'expense',
             },
             sort_by: '-created',
-            limit: 1000,
+            limit: 3000,
           },
         })
         .catch(() => {
           return null;
         }),
+      api.get('/config/general').catch(() => {
+        return null;
+      }),
 
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
+
+    const generalConfig = generalConfigRes?.data?.results?.value;
     const charges = chargesRes?.data?.results;
 
     return {
       charges,
+      generalConfig,
       messages,
     };
   } catch (error) {
     return {
       error: parseMessageFromError(error),
       charges: null,
+      generalConfig: null,
       messages: null,
     };
   }

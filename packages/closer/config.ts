@@ -433,6 +433,10 @@ export const configDescription: ConfigType[] = [
         type: 'number',
         default: 14,
       },
+      expenseCategories: {
+        type: 'text',
+        default: 'Legal & business, Land Infrastructure, Forestry, Tools & Machines, Maintenance, Operations, Energy, Factory, Miscellaneous, Lease, Equipment, Furniture, Water, Buildings Renovations, Shares, Experiment, Donations, Food, Salaries, Events, Stays, Internal op',
+      },
     },
   },
   {

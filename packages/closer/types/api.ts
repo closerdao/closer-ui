@@ -108,6 +108,7 @@ export type GeneralConfig = {
   faqsGoogleSheetId: string;
   timeZone: string;
   minVouchingStayDuration?: number;
+  expenseCategories?: string;
 };
 export type CitizenshipConfig = {
   enabled: boolean;
