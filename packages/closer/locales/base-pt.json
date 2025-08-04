@@ -75,6 +75,8 @@
   "bookings_dates_step_guests_pets": "Animais de estimação",
   "bookings_dates_step_title": "A Sua Estadia",
   "bookings_dates_step_subtitle": "Datas",
+  "bookings_event_single_day": "O evento é no dia {date} às {startTime} até às {endTime}",
+  "bookings_event_multi_day": "O evento começa no dia {startDate} às {startTime}, até ao dia {endDate} às {endTime}",
   "bookings_dates_step_guest_book_horizon": "Como hóspede, pode reservar com até {var} dias de antecedência",
   "bookings_dates_step_book_duration": "e reservar até {var} dias de estadia.",
   "bookings_stay_duration": "Duração da estadia (dias)",

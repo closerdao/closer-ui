@@ -75,6 +75,8 @@
   "bookings_dates_step_guests_pets": "Pets",
   "bookings_dates_step_title": "Your Stay",
   "bookings_dates_step_subtitle": "Dates",
+  "bookings_event_single_day": "Event is {date} at {startTime} until {endTime}",
+  "bookings_event_multi_day": "Event starts {startDate} at {startTime}, until {endDate} at {endTime}",
   "bookings_dates_step_guest_book_horizon": "As a guest, you can book up to {var} days in advance",
   "bookings_dates_step_book_duration": "and book up to {var} days of stay.",
   "bookings_stay_duration": "Stay duration (days)",
