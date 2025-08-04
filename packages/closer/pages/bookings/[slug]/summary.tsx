@@ -7,7 +7,6 @@ import Conditions from '../../../components/Conditions';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
-import { ErrorMessage } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
@@ -292,6 +291,17 @@ const Summary = ({
         </Button>
       </section>
     );
+  } else if (eventId && event?.requireApproval) {
+    buttonContent = (
+      <div>
+        <Button
+          className="booking-btn"
+          onClick={handleNext}
+        >
+          {t('buttons_booking_request')}
+        </Button>
+      </div>
+    );
   } else if (eventId || (user && isMember)) {
     buttonContent = (
       <Button className="booking-btn" onClick={handleNext}>
@@ -302,15 +312,11 @@ const Summary = ({
     buttonContent = (
       <div>
         <Button
-          isEnabled={APP_NAME === 'moos' ? hasFilledProfile : true}
           className="booking-btn"
           onClick={handleNext}
         >
           {t('buttons_booking_request')}
         </Button>
-        {APP_NAME === 'moos' && !hasFilledProfile && (
-          <ErrorMessage error="Please add description and photo to your profile to book spaces" />
-        )}
       </div>
     );
   }
