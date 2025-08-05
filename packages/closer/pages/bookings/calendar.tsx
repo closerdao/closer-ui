@@ -1,12 +1,12 @@
 import Head from 'next/head';
 
 import { useEffect, useRef, useState } from 'react';
-import Timeline, {
+import TimelineWrapper, {
   CustomMarker,
   DateHeader,
   SidebarHeader,
   TimelineHeaders,
-} from 'react-calendar-timeline';
+} from '../../components/Timeline/TimelineWrapper';
 
 import AdminLayout from '../../components/Dashboard/AdminLayout';
 import SpaceHostBooking from '../../components/SpaceHostBooking';
@@ -28,6 +28,7 @@ import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { useDebounce } from '../../hooks/useDebounce';
 import { BookingConfig, Listing } from '../../types';
+import api from '../../utils/api';
 import {
   formatListings,
   generateBookingItems,
@@ -37,11 +38,14 @@ import {
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
-import api from '../../utils/api';
 
 const loadTime = Date.now();
 
-const BookingsCalendarPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
+const BookingsCalendarPage = ({
+  bookingConfig,
+}: {
+  bookingConfig: BookingConfig;
+}) => {
   const t = useTranslations();
   const { enabledConfigs, TIME_ZONE } = useConfig();
   const { user } = useAuth();
@@ -247,7 +251,7 @@ const BookingsCalendarPage = ({ bookingConfig }: { bookingConfig: BookingConfig 
           </section>
 
           <div className="min-h-[600px] w-full">
-            <Timeline
+            <TimelineWrapper
               sidebarWidth={220}
               groups={(lastNonEmptyUnits || defaultAccommodationUnits).map(
                 (unit, index) => ({
@@ -289,7 +293,7 @@ const BookingsCalendarPage = ({ bookingConfig }: { bookingConfig: BookingConfig 
                   return <div style={customStyles} />;
                 }}
               </CustomMarker>
-            </Timeline>
+            </TimelineWrapper>
             {error && <ErrorMessage error={parseMessageFromError(error)} />}
           </div>
         </main>
