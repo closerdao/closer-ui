@@ -36,6 +36,7 @@
     "@types/react-dom": "^18.0.7",
     "autoprefixer": "10.4.5",
     "config": "*",
+    "dotenv-cli": "^10.0.0",
     "eslint-config-custom": "*",
     "jest": "^29.5.0",
     "jest-environment-jsdom": "^29.5.0",

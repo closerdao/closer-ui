@@ -52,7 +52,7 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
       <section className="flex flex-col gap-4">
         <Card className="bg-background p-0 sm:p-4 shadow-none sm:shadow-md">
           <div className="flex justify-between items-center mb-4">
-            <Heading level={3}>Historic Changes</Heading>
+            <Heading level={3}>Historic expenses</Heading>
           </div>
 
           <div className="overflow-x-auto">
@@ -86,25 +86,31 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
 
                   return (
                     <tr key={charge._id} className="hover:bg-gray-50">
-                      <td className="px-2 py-3 text-sm text-gray-900">
+                      <td className="px-2 py-1 text-sm text-gray-900">
                         {date}
                       </td>
-                      <td className="px-2 py-3 text-sm font-medium text-gray-900">
-                        €{amount.toFixed(2)}
+                      <td className="px-2 py-1 text-sm font-medium text-gray-900">
+                        €
+                        {amount.toLocaleString('en-US', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </td>
-                      <td className="px-2 py-3 text-sm text-gray-900">
+                      <td className="px-2 py-1 text-sm text-gray-900">
                         {expenseData?.description || 'N/A'}
                       </td>
-                      <td className="px-2 py-3 text-sm text-gray-900">
+                      <td className="px-2 py-1 text-sm text-gray-900">
                         {expenseData?.category || 'N/A'}
                       </td>
-                      <td className="px-2 py-3 text-sm text-gray-900 text-center">
+                      <td className="px-2 py-1 text-sm text-gray-900 text-center">
                         <Button
                           onClick={() => {
                             setSelectedCharge(charge);
                             setIsDialogOpen(true);
                           }}
-                          className="text-xs"
+                          variant="secondary"
+                          size="small"
+                          className="text-xs py-1"
                         >
                           View Details
                         </Button>
@@ -121,7 +127,7 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
       {/* Detail Modal */}
       {isDialogOpen && selectedCharge && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="pb-8 bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <Heading level={3}>Expense Details</Heading>
@@ -130,27 +136,18 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                     setIsDialogOpen(false);
                     setSelectedCharge(null);
                   }}
-                  className="text-gray-500 hover:text-gray-700"
+                  variant="secondary"
+                  className=" w-12 h-12"
                 >
                   ✕
                 </Button>
               </div>
 
-              <div className="space-y-4">
-                {/* Comment */}
-                {selectedCharge.meta?.expenseData?.comment && (
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">Comment:</div>
-                    <div className="text-sm text-gray-900 p-2 bg-gray-50 rounded">
-                      {selectedCharge.meta.expenseData.comment}
-                    </div>
-                  </div>
-                )}
-
+              <div className="space-y-6">
                 {/* Document URL */}
                 {selectedCharge.meta?.uploadedDocumentUrl && (
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">Document:</div>
+                  <div className="flex  gap-2">
+                    <div className="text-sm font-bold">Document:</div>
                     <a
                       href={selectedCharge.meta.uploadedDocumentUrl}
                       target="_blank"
@@ -165,15 +162,7 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                 {/* Extracted Data */}
                 {selectedCharge.meta?.expenseData && (
                   <div>
-                    <div className="text-sm text-gray-500 mb-2">
-                      Extracted Data:
-                    </div>
                     <div className="space-y-2 text-sm">
-                      <div>
-                        <strong>Supplier:</strong>{' '}
-                        {selectedCharge.meta.expenseData
-                          .supplier_business_name || 'N/A'}
-                      </div>
                       <div>
                         <strong>Document Date:</strong>{' '}
                         {selectedCharge.meta.expenseData.document_date || 'N/A'}
@@ -181,6 +170,17 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                       <div>
                         <strong>Description:</strong>{' '}
                         {selectedCharge.meta.expenseData.description || 'N/A'}
+                      </div>
+                      {selectedCharge.meta?.expenseData?.comment && (
+                        <div>
+                          <strong>Comment:</strong>{' '}
+                          {selectedCharge.meta.expenseData.comment}
+                        </div>
+                      )}
+                      <div>
+                        <strong>Supplier:</strong>{' '}
+                        {selectedCharge.meta.expenseData
+                          .supplier_business_name || 'N/A'}
                       </div>
                       <div>
                         <strong>Category:</strong>{' '}
@@ -198,7 +198,13 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                       )}
                       <div>
                         <strong>Receipt Total:</strong> €
-                        {selectedCharge.amount?.total?.val?.toFixed(2) || 'N/A'}
+                        {selectedCharge.amount?.total?.val?.toLocaleString(
+                          'en-US',
+                          {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          },
+                        ) || 'N/A'}
                       </div>
                     </div>
                   </div>
@@ -239,7 +245,11 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                                     {line.tax_code}
                                   </td>
                                   <td className="px-2 py-1 text-right">
-                                    €{line.unit_price?.toFixed(2)}
+                                    €
+                                    {line.unit_price?.toLocaleString('en-US', {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })}
                                   </td>
                                 </tr>
                               ),
