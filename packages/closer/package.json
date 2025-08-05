@@ -36,7 +36,7 @@
     "@tailwindcss/line-clamp": "^0.4.4",
     "@tinymce/tinymce-react": "^4.3.0",
     "@types/react-calendar-timeline": "patch:@types/react-calendar-timeline@npm%3A0.28.6#~/.yarn/patches/@types-react-calendar-timeline-npm-0.28.6-8945b490ca.patch",
-<div className='text-xs whitespace-pre-wrap'>{JSON.stringify(    "@u-wave/react-vimeo": "^0.9.10, null, 2)}</div>",
+    "@u-wave/react-vimeo": "^0.9.10",
     "@web3-react/core": "^6.1.9",
     "@web3-react/injected-connector": "^6.0.7",
     "axios": "^0.21.1",
