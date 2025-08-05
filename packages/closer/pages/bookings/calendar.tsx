@@ -1,12 +1,12 @@
 import Head from 'next/head';
 
 import { useEffect, useRef, useState } from 'react';
-import TimelineWrapper, {
+import Timeline, {
   CustomMarker,
   DateHeader,
   SidebarHeader,
   TimelineHeaders,
-} from '../../components/Timeline/TimelineWrapper';
+} from 'react-calendar-timeline';
 
 import AdminLayout from '../../components/Dashboard/AdminLayout';
 import SpaceHostBooking from '../../components/SpaceHostBooking';
@@ -251,7 +251,7 @@ const BookingsCalendarPage = ({
           </section>
 
           <div className="min-h-[600px] w-full">
-            <TimelineWrapper
+            <Timeline
               sidebarWidth={220}
               groups={(lastNonEmptyUnits || defaultAccommodationUnits).map(
                 (unit, index) => ({
@@ -293,7 +293,7 @@ const BookingsCalendarPage = ({
                   return <div style={customStyles} />;
                 }}
               </CustomMarker>
-            </TimelineWrapper>
+            </Timeline>
             {error && <ErrorMessage error={parseMessageFromError(error)} />}
           </div>
         </main>
