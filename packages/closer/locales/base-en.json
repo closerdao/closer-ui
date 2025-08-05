@@ -1864,5 +1864,25 @@
   "token_sales_dashboard_distribute_tokens_button": "Distribute Tokens",
   "token_sales_dashboard_success_message": "Token distribution confirmation submitted successfully",
 
-  "expense_tracking_dashboard_title": "Expense Tracking"
+  "expense_tracking_dashboard_title": "Expense Tracking",
+  "expense_tracking_add_new_expense": "Add New Expense",
+  "expense_tracking_historic_expenses": "Historic expenses",
+  "expense_tracking_no_expenses_found": "No expenses found",
+  "expense_tracking_no_expenses_filter_criteria": "No expense charges match the current filter criteria.",
+  "expense_tracking_view_details": "View Details",
+  "expense_tracking_expense_details": "Expense Details",
+  "expense_tracking_document_date": "Document Date",
+  "expense_tracking_description": "Description",
+  "expense_tracking_comment": "Comment",
+  "expense_tracking_supplier": "Supplier",
+  "expense_tracking_category": "Category",
+  "expense_tracking_tax_exemption_reason_id": "Tax Exemption Reason ID",
+  "expense_tracking_receipt_total": "Receipt Total",
+  "expense_tracking_vat_summary": "VAT Summary",
+  "expense_tracking_vat_percentage": "VAT %",
+  "expense_tracking_tax_code": "Tax Code",
+  "expense_tracking_total": "Total",
+  "expense_tracking_date": "Date",
+  "expense_tracking_amount": "Amount",
+  "expense_tracking_actions": "Actions"
 }

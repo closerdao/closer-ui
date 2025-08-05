@@ -1742,5 +1742,27 @@
   "token_sales_dashboard_cancel": "Cancelar",
   "token_sales_dashboard_distributing": "A distribuir...",
   "token_sales_dashboard_distribute_tokens_button": "Distribuir Tokens",
-  "token_sales_dashboard_success_message": "Confirmação de distribuição de tokens enviada com sucesso"
+  "token_sales_dashboard_success_message": "Confirmação de distribuição de tokens enviada com sucesso",
+
+  "expense_tracking_dashboard_title": "Controle de Despesas",
+  "expense_tracking_add_new_expense": "Adicionar Nova Despesa",
+  "expense_tracking_historic_expenses": "Despesas históricas",
+  "expense_tracking_no_expenses_found": "Nenhuma despesa encontrada",
+  "expense_tracking_no_expenses_filter_criteria": "Nenhuma despesa corresponde aos critérios de filtro atuais.",
+  "expense_tracking_view_details": "Ver Detalhes",
+  "expense_tracking_expense_details": "Detalhes da Despesa",
+  "expense_tracking_document_date": "Data do Documento",
+  "expense_tracking_description": "Descrição",
+  "expense_tracking_comment": "Comentário",
+  "expense_tracking_supplier": "Fornecedor",
+  "expense_tracking_category": "Categoria",
+  "expense_tracking_tax_exemption_reason_id": "ID do Motivo de Isenção Fiscal",
+  "expense_tracking_receipt_total": "Total do Recibo",
+  "expense_tracking_vat_summary": "Resumo do IVA",
+  "expense_tracking_vat_percentage": "IVA %",
+  "expense_tracking_tax_code": "Código Fiscal",
+  "expense_tracking_total": "Total",
+  "expense_tracking_date": "Data",
+  "expense_tracking_amount": "Montante",
+  "expense_tracking_actions": "Ações"
 }

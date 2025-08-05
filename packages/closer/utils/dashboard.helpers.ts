@@ -77,7 +77,9 @@ export const getDateRange = ({
     case 'allTime':
       return {
         start:
-          fromDate && toDate ? toStartOfDay(fromDate, timeZone) : new Date(),
+          fromDate && toDate
+            ? toStartOfDay(fromDate, timeZone)
+            : new Date('1970-01-01'),
         end: toEndOfDay(new Date(), timeZone),
       };
     case 'custom':

@@ -1185,7 +1185,6 @@
   "config_label_minVouchingStayDuration": "Minimum stay duration to be eligible for vouching (days)",
   "config_label_expenseCategories": "Expense categories (comma delimited)",
 
-
   "config_features_heading": "Platform features",
   "generic_delete_button": "Delete",
   "generic_export_csv": "Export CSV",
@@ -1566,5 +1565,25 @@
   "token_sales_dashboard_distribute_tokens_button": "Dystrybuuj tokeny",
   "token_sales_dashboard_success_message": "Potwierdzenie dystrybucji tokenów zostało pomyślnie przesłane",
 
-  "": ""
+  "expense_tracking_dashboard_title": "Śledzenie wydatków",
+  "expense_tracking_add_new_expense": "Dodaj nowy wydatek",
+  "expense_tracking_historic_expenses": "Historia wydatków",
+  "expense_tracking_no_expenses_found": "Nie znaleziono wydatków",
+  "expense_tracking_no_expenses_filter_criteria": "Żadne wydatki nie pasują do obecnych kryteriów filtrowania.",
+  "expense_tracking_view_details": "Zobacz szczegóły",
+  "expense_tracking_expense_details": "Szczegóły wydatku",
+  "expense_tracking_document_date": "Data dokumentu",
+  "expense_tracking_description": "Opis",
+  "expense_tracking_comment": "Komentarz",
+  "expense_tracking_supplier": "Dostawca",
+  "expense_tracking_category": "Kategoria",
+  "expense_tracking_tax_exemption_reason_id": "ID powodu zwolnienia z podatku",
+  "expense_tracking_receipt_total": "Suma rachunku",
+  "expense_tracking_vat_summary": "Podsumowanie VAT",
+  "expense_tracking_vat_percentage": "VAT %",
+  "expense_tracking_tax_code": "Kod podatkowy",
+  "expense_tracking_total": "Suma",
+  "expense_tracking_date": "Data",
+  "expense_tracking_amount": "Kwota",
+  "expense_tracking_actions": "Akcje"
 }

@@ -196,8 +196,8 @@ const ExtractedDataForm: React.FC<ExtractedDataFormProps> = ({
                 </td>
                 <td className="px-1 py-1 text-sm font-semibold text-gray-900 text-right">
                   <Input
-                    type="number"
-                    value={String(summary.total_with_vat || 0)}
+                    type="text"
+                    value={(summary.total_with_vat || 0).toFixed(2)}
                     onChange={(e) =>
                       onVatSummaryChange(
                         index,
@@ -240,8 +240,8 @@ const ExtractedDataForm: React.FC<ExtractedDataFormProps> = ({
               </td>
               <td className="px-2 py-2 text-lg font-bold text-gray-900 text-right">
                 <Input
-                  type="number"
-                  value={String(editableData?.receipt_total || 0)}
+                  type="text"
+                  value={(editableData?.receipt_total || 0).toFixed(2)}
                   onChange={(e) =>
                     onReceiptTotalChange(parseFloat(e.target.value) || 0)
                   }

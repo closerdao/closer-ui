@@ -132,7 +132,7 @@ const ExpenseTrackingDashboardPage = ({
               className="flex items-center gap-2 w-fit"
             >
               <Plus className="w-4 h-4" />
-              Add New Expense
+              {t('expense_tracking_add_new_expense')}
             </Button>
           </div>
 

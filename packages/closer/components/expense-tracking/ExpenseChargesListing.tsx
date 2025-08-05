@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 
+import { useTranslations } from 'next-intl';
 import { Button, Card } from '../ui';
 import Heading from '../ui/Heading';
 
@@ -40,19 +41,42 @@ interface ExpenseChargesListingProps {
 const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
   charges,
 }) => {
+  const t = useTranslations();
   const [selectedCharge, setSelectedCharge] = useState<ExpenseCharge | null>(
     null,
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  if (!charges || charges.length === 0) return null;
+  if (!charges || charges.length === 0) {
+    return (
+      <section className="flex flex-col gap-4">
+        <Card className="bg-background p-0 sm:p-4 shadow-none sm:shadow-md">
+          <div className="flex justify-between items-center mb-4">
+            <Heading level={3}>
+              {t('expense_tracking_historic_expenses')}
+            </Heading>
+          </div>
+          <div className="p-8 text-center">
+            <div className="text-gray-500 text-lg mb-2">
+              {t('expense_tracking_no_expenses_found')}
+            </div>
+            <div className="text-gray-400 text-sm">
+              {t('expense_tracking_no_expenses_filter_criteria')}
+            </div>
+          </div>
+        </Card>
+      </section>
+    );
+  }
 
   return (
     <>
       <section className="flex flex-col gap-4">
         <Card className="bg-background p-0 sm:p-4 shadow-none sm:shadow-md">
           <div className="flex justify-between items-center mb-4">
-            <Heading level={3}>Historic expenses</Heading>
+            <Heading level={3}>
+              {t('expense_tracking_historic_expenses')}
+            </Heading>
           </div>
 
           <div className="overflow-x-auto">
@@ -60,19 +84,19 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
               <thead className="border-b">
                 <tr>
                   <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
+                    {t('expense_tracking_date')}
                   </th>
                   <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
+                    {t('expense_tracking_amount')}
                   </th>
                   <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Description
+                    {t('expense_tracking_description')}
                   </th>
                   <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
+                    {t('expense_tracking_category')}
                   </th>
                   <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    {t('expense_tracking_actions')}
                   </th>
                 </tr>
               </thead>
@@ -90,11 +114,7 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                         {date}
                       </td>
                       <td className="px-2 py-1 text-sm font-medium text-gray-900">
-                        €
-                        {amount.toLocaleString('en-US', {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                        €{amount.toFixed(2)}
                       </td>
                       <td className="px-2 py-1 text-sm text-gray-900">
                         {expenseData?.description || 'N/A'}
@@ -112,7 +132,7 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                           size="small"
                           className="text-xs py-1"
                         >
-                          View Details
+                          {t('expense_tracking_view_details')}
                         </Button>
                       </td>
                     </tr>
@@ -130,7 +150,9 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
           <div className="pb-8 bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <Heading level={3}>Expense Details</Heading>
+                <Heading level={3}>
+                  {t('expense_tracking_expense_details')}
+                </Heading>
                 <Button
                   onClick={() => {
                     setIsDialogOpen(false);
@@ -164,32 +186,34 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                   <div>
                     <div className="space-y-2 text-sm">
                       <div>
-                        <strong>Document Date:</strong>{' '}
+                        <strong>{t('expense_tracking_document_date')}:</strong>{' '}
                         {selectedCharge.meta.expenseData.document_date || 'N/A'}
                       </div>
                       <div>
-                        <strong>Description:</strong>{' '}
+                        <strong>{t('expense_tracking_description')}:</strong>{' '}
                         {selectedCharge.meta.expenseData.description || 'N/A'}
                       </div>
                       {selectedCharge.meta?.expenseData?.comment && (
                         <div>
-                          <strong>Comment:</strong>{' '}
+                          <strong>{t('expense_tracking_comment')}:</strong>{' '}
                           {selectedCharge.meta.expenseData.comment}
                         </div>
                       )}
                       <div>
-                        <strong>Supplier:</strong>{' '}
+                        <strong>{t('expense_tracking_supplier')}:</strong>{' '}
                         {selectedCharge.meta.expenseData
                           .supplier_business_name || 'N/A'}
                       </div>
                       <div>
-                        <strong>Category:</strong>{' '}
+                        <strong>{t('expense_tracking_category')}:</strong>{' '}
                         {selectedCharge.meta.expenseData.category || 'N/A'}
                       </div>
                       {selectedCharge.meta.expenseData
                         .tax_exemption_reason_id && (
                         <div>
-                          <strong>Tax Exemption Reason ID:</strong>{' '}
+                          <strong>
+                            {t('expense_tracking_tax_exemption_reason_id')}:
+                          </strong>{' '}
                           {
                             selectedCharge.meta.expenseData
                               .tax_exemption_reason_id
@@ -197,14 +221,9 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                         </div>
                       )}
                       <div>
-                        <strong>Receipt Total:</strong> €
-                        {selectedCharge.amount?.total?.val?.toLocaleString(
-                          'en-US',
-                          {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          },
-                        ) || 'N/A'}
+                        <strong>{t('expense_tracking_receipt_total')}:</strong>{' '}
+                        €
+                        {selectedCharge.amount?.total?.val?.toFixed(2) || 'N/A'}
                       </div>
                     </div>
                   </div>
@@ -215,20 +234,24 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                   selectedCharge.meta.expenseData.lines.length > 0 && (
                     <div>
                       <div className="text-sm text-gray-500 mb-2">
-                        VAT Summary:
+                        {t('expense_tracking_vat_summary')}:
                       </div>
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead className="border-b">
                             <tr>
                               <th className="px-2 py-1 text-left">
-                                Description
+                                {t('expense_tracking_description')}
                               </th>
-                              <th className="px-2 py-1 text-center">VAT %</th>
                               <th className="px-2 py-1 text-center">
-                                Tax Code
+                                {t('expense_tracking_vat_percentage')}
                               </th>
-                              <th className="px-2 py-1 text-right">Total</th>
+                              <th className="px-2 py-1 text-center">
+                                {t('expense_tracking_tax_code')}
+                              </th>
+                              <th className="px-2 py-1 text-right">
+                                {t('expense_tracking_total')}
+                              </th>
                             </tr>
                           </thead>
                           <tbody>
@@ -245,11 +268,7 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                                     {line.tax_code}
                                   </td>
                                   <td className="px-2 py-1 text-right">
-                                    €
-                                    {line.unit_price?.toLocaleString('en-US', {
-                                      minimumFractionDigits: 2,
-                                      maximumFractionDigits: 2,
-                                    })}
+                                    €{line.unit_price?.toFixed(2)}
                                   </td>
                                 </tr>
                               ),
