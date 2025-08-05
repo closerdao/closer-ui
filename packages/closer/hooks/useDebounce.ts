@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 
-export function useDebounce(value, delay) {
+export function useDebounce<T>(value: T, delay: number): T {
   // State and setters for debounced value
-  const [debouncedValue, setDebouncedValue] = useState(value);
-  const timeoutRef = useRef(null);
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
 
   useEffect(() => {
@@ -33,4 +33,4 @@ export function useDebounce(value, delay) {
   }, [value, delay]); // Only re-call effect if value or delay changes
 
   return debouncedValue;
-}
+} 

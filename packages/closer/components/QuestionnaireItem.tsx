@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
@@ -19,17 +19,61 @@ const QuestionnaireItem = ({
 }: Props) => {
   const t = useTranslations();
   const [answer, setAnswer] = React.useState(savedAnswer || '');
-  const debouncedAnswer = useDebounce(answer, 500);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSavedAnswer, setLastSavedAnswer] = useState(savedAnswer || '');
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const debouncedAnswer = useDebounce(answer, 300); // Reduced from 500ms to 300ms
+
+  // Track when we're in the middle of saving
+  const isCurrentlySaving = useRef(false);
 
   useEffect(() => {
-    handleAnswer(name, debouncedAnswer);
-  }, [debouncedAnswer]);
+    // Only save if the answer has actually changed and we're not already saving
+    if (debouncedAnswer !== lastSavedAnswer && !isCurrentlySaving.current) {
+      setIsSaving(true);
+      isCurrentlySaving.current = true;
+      
+      // Clear any existing timeout
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+
+      // Add a small delay to ensure we don't have race conditions
+      saveTimeoutRef.current = setTimeout(() => {
+        handleAnswer(name, debouncedAnswer);
+        setLastSavedAnswer(debouncedAnswer);
+        setIsSaving(false);
+        isCurrentlySaving.current = false;
+      }, 100);
+    }
+  }, [debouncedAnswer, lastSavedAnswer, handleAnswer, name]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Update local state when savedAnswer prop changes (from parent)
+  useEffect(() => {
+    if (savedAnswer !== lastSavedAnswer) {
+      setAnswer(savedAnswer || '');
+      setLastSavedAnswer(savedAnswer || '');
+    }
+  }, [savedAnswer, lastSavedAnswer]);
 
   if (!type || !name) {
     return null;
   }
 
   const onChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setAnswer(e.target.value);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAnswer(e.target.value);
   };
 
@@ -50,25 +94,37 @@ const QuestionnaireItem = ({
             placeholder={t('generic_input_placeholder')}
             className="" // TO DO how to resolve class clash with forms.css?
             value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
+            onChange={handleInputChange}
             isRequired={required}
           />
+          {isSaving && (
+            <div className="text-sm text-gray-500 mt-1">
+              {t('saving') || 'Saving...'}
+            </div>
+          )}
         </>
       )}
       {type === 'select' && options && (
-        <select
-          className="rounded-md border-none bg-neutral-dark px-4 py-2 block w-full appearance-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent invalid:border-accent"
-          value={answer || ''}
-          onChange={onChange}
-          required={required}
-        >
-          <option value="">{t('generic_select_placeholder')}</option>
-          {options.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            className="rounded-md border-none bg-neutral-dark px-4 py-2 block w-full appearance-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent invalid:border-accent"
+            value={answer || ''}
+            onChange={onChange}
+            required={required}
+          >
+            <option value="">{t('generic_select_placeholder')}</option>
+            {options.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+          {isSaving && (
+            <div className="text-sm text-gray-500 mt-1">
+              {t('saving') || 'Saving...'}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
