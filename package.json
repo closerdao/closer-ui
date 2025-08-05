@@ -26,17 +26,17 @@
     "msw": "^1.2.1",
     "next-router-mock": "^0.9.3",
     "prettier": "latest",
-    "turbo": "^1.12.4"
+    "turbo": "latest"
   },
   "dependencies": {
-    "@google/genai": "^1.10.0",
-    "@types/react-calendar-timeline": "patch:@types/react-calendar-timeline@npm%3A0.28.6#~/.yarn/patches/@types-react-calendar-timeline-npm-0.28.6-8945b490ca.patch",
+    "@google/genai": "^1.12.0",
+    "@types/react-calendar-timeline": "^0.28.6",
     "axios": "1.7.7",
     "deepmerge": "^4.3.1",
     "interactjs": "^1.10.26",
     "jimp": "^1.6.0",
-    "openai": "^5.10.1",
-    "posthog-js": "^1.249.2",
-    "react-calendar-timeline": "0.28.0"
+    "openai": "^5.11.0",
+    "posthog-js": "^1.258.5",
+    "react-calendar-timeline": "^0.28.0"
   }
 }
