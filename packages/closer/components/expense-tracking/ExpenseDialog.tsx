@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 
-import { X } from 'lucide-react';
 
 import Cookies from 'js-cookie';
 import { z } from 'zod';
