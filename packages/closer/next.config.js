@@ -14,6 +14,9 @@ const nextConfig = {
   experimental: {
     forceSwcTransforms: false,
   },
+  compiler: {
+    removeConsole: false,
+  },
   images: {
     remotePatterns: [
       {

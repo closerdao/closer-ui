@@ -15,7 +15,6 @@ import { ErrorMessage, Spinner } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
 import dayjs from 'dayjs';
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -308,7 +307,7 @@ const BookingsCalendarPage = ({
   );
 };
 
-BookingsCalendarPage.getInitialProps = async (context: NextPageContext) => {
+BookingsCalendarPage.getInitialProps = async (context: any) => {
   try {
     const [bookingRes, messages] = await Promise.all([
       api.get('/config/booking').catch(() => null),
