@@ -32,7 +32,7 @@ const QuestionnaireItem = ({
     if (debouncedAnswer !== lastSavedAnswer && !isCurrentlySaving.current) {
       setIsSaving(true);
       isCurrentlySaving.current = true;
-      
+
       // Clear any existing timeout
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);

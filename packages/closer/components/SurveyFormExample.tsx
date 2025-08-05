@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import React, { useState } from 'react';
 
 import { api } from 'closer';
 import SurveyForm from './SurveyForm';
@@ -59,10 +59,11 @@ const SurveyFormExample: React.FC<SurveyFormExampleProps> = ({
           folder,
         });
       }
-      
+
       onSuccess?.();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      const errorMessage =
+        error instanceof Error ? error.message : 'An error occurred';
       onError?.(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -72,16 +73,20 @@ const SurveyFormExample: React.FC<SurveyFormExampleProps> = ({
   return (
     <div className="max-w-2xl mx-auto p-6">
       <h2 className="text-2xl font-bold mb-6">
-        {surveyId ? t('edit_survey') || 'Edit Survey' : t('create_survey') || 'Create Survey'}
+        {surveyId
+          ? t('edit_survey') || 'Edit Survey'
+          : t('create_survey') || 'Create Survey'}
       </h2>
-      
+
       <SurveyForm
         onSave={handleAutoSave}
         onSubmit={handleSubmit}
         submitButtonText={
-          isSubmitting 
-            ? (t('saving') || 'Saving...') 
-            : (surveyId ? t('update_survey') || 'Update Survey' : t('create_survey') || 'Create Survey')
+          isSubmitting
+            ? t('saving') || 'Saving...'
+            : surveyId
+              ? t('update_survey') || 'Update Survey'
+              : t('create_survey') || 'Create Survey'
         }
         titleLabel={t('survey_title') || 'Survey Title'}
         folderLabel={t('survey_folder') || 'Survey Folder'}
@@ -92,4 +97,4 @@ const SurveyFormExample: React.FC<SurveyFormExampleProps> = ({
   );
 };
 
-export default SurveyFormExample; 
+export default SurveyFormExample;

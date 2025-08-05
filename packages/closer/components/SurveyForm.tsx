@@ -1,5 +1,5 @@
-import React from 'react';
 import { useTranslations } from 'next-intl';
+import React from 'react';
 
 import { Button, Input } from 'closer';
 import { useFormValidation } from '../hooks/useFormValidation';
@@ -76,7 +76,11 @@ const SurveyForm: React.FC<SurveyFormProps> = ({
           label={titleLabel || t('survey_title') || 'Survey Title'}
           value={title}
           onChange={handleTitleInputChange}
-          placeholder={titlePlaceholder || t('survey_title_placeholder') || 'Enter survey title'}
+          placeholder={
+            titlePlaceholder ||
+            t('survey_title_placeholder') ||
+            'Enter survey title'
+          }
           isRequired={true}
           isDisabled={isSaving}
         />
@@ -86,7 +90,11 @@ const SurveyForm: React.FC<SurveyFormProps> = ({
           label={folderLabel || t('survey_folder') || 'Survey Folder'}
           value={folder}
           onChange={handleFolderInputChange}
-          placeholder={folderPlaceholder || t('survey_folder_placeholder') || 'Select folder'}
+          placeholder={
+            folderPlaceholder ||
+            t('survey_folder_placeholder') ||
+            'Select folder'
+          }
           isRequired={true}
           isDisabled={isSaving}
         />
@@ -112,4 +120,4 @@ const SurveyForm: React.FC<SurveyFormProps> = ({
   );
 };
 
-export default SurveyForm; 
+export default SurveyForm;

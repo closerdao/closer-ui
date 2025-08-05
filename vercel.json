@@ -4,7 +4,9 @@
   "framework": null,
   "build": {
     "env": {
-      "SHARP_IGNORE_GLOBAL_LIBVIPS": "1"
+      "SHARP_IGNORE_GLOBAL_LIBVIPS": "1",
+      "NEXT_DISABLE_SWC": "1",
+      "NEXT_TELEMETRY_DISABLED": "1"
     }
   }
 }
