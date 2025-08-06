@@ -176,16 +176,18 @@ const EventPage = ({
     if (!isAuthenticated) {
       setIsSignupModalOpen(true);
     } else {
-      if (event._id) {
-        attendEvent(event._id as any, !attendees?.includes(user?._id));
+      const eventId = event._id;
+      if (eventId) {
+        attendEvent(eventId as string, !attendees?.includes(user?._id));
       }
     }
   };
 
   const handleSignupSuccess = () => {
     setIsSignupModalOpen(false);
-    if (event._id) {
-      attendEvent(event._id as any, true);
+    const eventId = event._id;
+    if (eventId) {
+      attendEvent(eventId as string, true);
     }
   };
 
@@ -702,7 +704,7 @@ const EventPage = ({
         isOpen={isSignupModalOpen}
         onClose={() => setIsSignupModalOpen(false)}
         onSuccess={handleSignupSuccess}
-        eventId={event._id}
+        eventId={event._id || ''}
       />
     </>
   );
