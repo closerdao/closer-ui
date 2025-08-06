@@ -16,7 +16,7 @@ import HeadingRow from '../../../components/ui/HeadingRow';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import dayjs from 'dayjs';
-import { NextPageContext } from 'next';
+import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -25,6 +25,7 @@ import {
   DEFAULT_CURRENCY,
 } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import { usePlatform } from '../../../contexts/platform';
 import { Event, TicketOption } from '../../../types';
 import { BookingConfig, VolunteerConfig } from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
@@ -42,6 +43,7 @@ interface Props {
   bookingConfig: BookingConfig | null;
   messages?: any;
   volunteerConfig: VolunteerConfig | null;
+  isFriendsBooking?: boolean;
 }
 
 const DatesSelector = ({
@@ -68,7 +70,10 @@ const DatesSelector = ({
     maxBookingHorizon: bookingConfig?.maxBookingHorizon,
   };
   const { user, isAuthenticated } = useAuth();
+  const { platform }: any = usePlatform();
   const isMember = user?.roles.includes('member');
+
+  // Step 1: Extract URL data
   const {
     start: savedStartDate,
     end: savedEndDate,
@@ -84,11 +89,16 @@ const DatesSelector = ({
     suggestions,
     bookingType,
     projectId,
+    isFriendsBooking,
+    friendEmails,
   } = router.query || {};
 
   const isHourlyBooking = false;
 
+  // Step 2: Initialize state
   const [blockedDateRanges, setBlockedDateRanges] = useState<any[]>([]);
+  const [userBookings, setUserBookings] = useState<any>(null);
+  const [isLoadingUserBookings, setIsLoadingUserBookings] = useState(false);
 
   const [start, setStartDate] = useState<string | null | Date>(
     (savedStartDate as string) || null,
@@ -122,8 +132,51 @@ const DatesSelector = ({
   const isResidenceApplication = decodedBookingType === 'residence';
   const isVolunteerApplication = decodedBookingType === 'volunteer';
 
+  // Step 3: Load user bookings when user is available and it's a friends booking
+  useEffect(() => {
+    if (isFriendsBooking && user?._id && !userBookings) {
+      setIsLoadingUserBookings(true);
+      
+      const userBookingsFilter = {
+        where: {
+          createdBy: user._id,
+          status: ['paid', 'checked-in'],
+          end: { $gt: new Date() },
+        },
+        limit: 50,
+      };
+
+      platform.booking.get(userBookingsFilter)
+        .then((bookings: any) => {
+          setUserBookings(bookings);
+          console.log('Loaded user bookings:', bookings);
+        })
+        .catch((err: any) => {
+          console.error('Error loading user bookings:', err);
+        })
+        .finally(() => {
+          setIsLoadingUserBookings(false);
+        });
+    }
+  }, [isFriendsBooking, user?._id, userBookings]);
+
+  // Step 4: Calculate blocked date ranges
   function getBlockedDateRanges() {
     const dateRanges: any[] = [];
+    
+    // Block past dates
+    dateRanges.push({ before: new Date() });
+    
+    // Block future dates beyond booking horizon (for non-friends bookings)
+    if (!isFriendsBooking && !isVolunteerApplication && !isResidenceApplication) {
+      dateRanges.push({
+        after: new Date().setDate(
+          new Date().getDate() + getMaxBookingHorizon(bookingConfig, isMember)[0],
+        ),
+      });
+    }
+    
+    // Block event dates
     futureEvents?.forEach((event: Event) => {
       if (event.blocksBookingCalendar) {
         dateRanges.push({
@@ -132,21 +185,64 @@ const DatesSelector = ({
         });
       }
     });
-    dateRanges.push({ before: new Date() });
-    !isVolunteerApplication &&
-      !isResidenceApplication &&
-      dateRanges.push({
-        after: new Date().setDate(
-          new Date().getDate() +
-            getMaxBookingHorizon(bookingConfig, isMember)[0],
-        ),
-      });
+
+    // For friends bookings, restrict to active booking periods
+    if (isFriendsBooking && user?._id) {
+      if (isLoadingUserBookings) {
+        // Still loading - block all dates
+        dateRanges.push({
+          before: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        });
+      } else if (userBookings && userBookings.size > 0) {
+        // Block dates outside active booking periods
+        const activeRanges = userBookings.map((booking: any) => ({
+          from: new Date(booking.get('start')),
+          to: new Date(booking.get('end')),
+        })).toArray();
+
+        // Sort by start date
+        activeRanges.sort((a: { from: Date; to: Date }, b: { from: Date; to: Date }) => 
+          a.from.getTime() - b.from.getTime()
+        );
+
+        // Block before first booking
+        const firstStart = activeRanges[0].from;
+        if (firstStart > new Date()) {
+          dateRanges.push({ before: firstStart });
+        }
+
+        // Block after last booking
+        const lastEnd = activeRanges[activeRanges.length - 1].to;
+        dateRanges.push({ after: lastEnd });
+
+        // Block gaps between bookings
+        for (let i = 0; i < activeRanges.length - 1; i++) {
+          const currentEnd = activeRanges[i].to;
+          const nextStart = activeRanges[i + 1].from;
+          
+          if (nextStart > currentEnd) {
+            dateRanges.push({
+              from: currentEnd,
+              to: nextStart,
+            });
+          }
+        }
+      } else {
+        // No active bookings - block all dates
+        dateRanges.push({
+          before: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        });
+      }
+    }
+
     return dateRanges;
   }
 
-  const memoizedBlockedDateRanges = useMemo(() => {
-    return getBlockedDateRanges();
-  }, [futureEvents, savedStartDate, savedEndDate]);
+  // Step 5: Calculate and set blocked date ranges
+  useEffect(() => {
+    const ranges = getBlockedDateRanges();
+    setBlockedDateRanges(ranges);
+  }, [userBookings, isLoadingUserBookings, isFriendsBooking, user?._id, futureEvents]);
 
   const hasValidDates =
     Boolean(start && end) || Boolean(savedStartDate && savedEndDate);
@@ -185,23 +281,6 @@ const DatesSelector = ({
   const isTokenPaymentSelected = currency === CURRENCIES[1];
   const isStartToday = start && dayjs(start).isSame(dayjs(), 'day');
   const isTodayAndToken = Boolean(isStartToday && isTokenPaymentSelected);
-
-  useEffect(() => {
-    if (eventId) {
-      setBlockedDateRanges((ranges) => [
-        ...ranges,
-        { before: new Date(event?.start as string) },
-        { after: new Date(event?.end as string) },
-      ]);
-    }
-    if (isVolunteerApplication || isResidenceApplication) {
-      setBlockedDateRanges((ranges) => [...ranges, { before: new Date() }]);
-    }
-
-    if (!eventId && !isVolunteerApplication && !isResidenceApplication) {
-      setBlockedDateRanges(memoizedBlockedDateRanges);
-    }
-  }, []);
 
   useEffect(() => {
     if (event && eventId && event.canSelectDates === false) {
@@ -258,6 +337,8 @@ const DatesSelector = ({
       ...((isVolunteerApplication || isResidenceApplication) && {
         suggestions: suggestions as string,
       }),
+      ...(isFriendsBooking && { isFriendsBooking: isFriendsBooking as string }),
+      ...(friendEmails && { friendEmails: friendEmails as string }),
     };
     const urlParams = new URLSearchParams(params);
 
@@ -289,6 +370,8 @@ const DatesSelector = ({
         ...(projectId && { projectId: projectId as string }),
         ...(suggestions && { suggestions: suggestions as string }),
         bookingType: (bookingType as string) || '',
+        ...(isFriendsBooking && { isFriendsBooking: isFriendsBooking as string }),
+        ...(friendEmails && { friendEmails: friendEmails as string }),
       };
 
       if (selectedTicketOption?.isDayTicket) {
@@ -393,6 +476,11 @@ const DatesSelector = ({
           )}
           {selectedTicketOption?.isDayTicket !== true && (
             <>
+              {isFriendsBooking && isLoadingUserBookings && (
+                <div className="text-center py-4">
+                  <p className="text-gray-600">Loading your active bookings...</p>
+                </div>
+              )}
               <BookingDates
                 conditions={conditions}
                 setStartDate={setStartDate}
@@ -471,7 +559,7 @@ DatesSelector.getInitialProps = async (
 ): Promise<Props> => {
   try {
     const { query } = context;
-    const { eventId, volunteerId, bookingType } = query;
+    const { eventId, volunteerId, bookingType, isFriendsBooking } = query;
 
     const [bookingConfigRes, volunteerConfigRes, messages] = await Promise.all([
       api.get('/config/booking').catch(() => null),
@@ -490,6 +578,7 @@ DatesSelector.getInitialProps = async (
         bookingConfig,
         volunteerConfig,
         ticketOptions: ticketsAvailable?.data?.ticketOptions,
+        isFriendsBooking: isFriendsBooking === 'true',
         event: event?.data?.results,
         messages,
       };

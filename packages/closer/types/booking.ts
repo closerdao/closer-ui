@@ -27,6 +27,8 @@ export interface BaseBookingParams {
   projectId?: string | undefined;
   suggestions?: string | undefined;
   bookingType?: 'volunteer' | 'residence' | undefined;
+  isFriendsBooking?: string | undefined;
+  friendEmails?: string | undefined;
 }
 
 export type Listing = {
@@ -189,6 +191,9 @@ export type Booking = {
   roomOrBedNumbers?: number[];
   charges?: Charge[];
   volunteerInfo?: VolunteerInfo;
+  isFriendsBooking?: string;
+  friendEmails?: string;
+  paidByMember?: boolean;
 };
 
 export interface StatusColor {

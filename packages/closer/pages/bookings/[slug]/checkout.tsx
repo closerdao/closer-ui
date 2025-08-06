@@ -246,7 +246,6 @@ console.log('booking=', booking);
     duration,
   ]);
 
-  const isStripeBooking = total && total.val > 0;
   const isFreeBooking = total && total.val === 0 && !useTokens;
   const isTokenOnlyBooking =
     useTokens &&
@@ -254,6 +253,8 @@ console.log('booking=', booking);
     rentalToken?.val > 0 &&
     total &&
     total.val === 0;
+  const isFriendsBooking = booking?.isFriendsBooking === 'true';
+  const isStripeBooking = !isTokenOnlyBooking && !isFreeBooking;
 
   useEffect(() => {
     if (user) {
@@ -356,6 +357,62 @@ console.log('booking=', booking);
       onSuccess();
     } catch (error) {
       console.log('error=', error);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleFriendsBookingPayNow = async () => {
+    try {
+      setProcessing(true);
+      setPaymentError(null);
+      
+      // Process payment normally
+      if (useTokens && rentalToken && rentalToken?.val > 0) {
+        const tokenStakingResult = await payTokens(
+          _id,
+          dailyRentalToken?.val,
+          stakeTokens,
+          checkContract,
+        );
+
+        const { error } = tokenStakingResult || {};
+        if (error) {
+          setProcessing(false);
+          setPaymentError(error);
+          return;
+        }
+      }
+
+      // Update booking to mark as paid by member
+      await api.post(`/bookings/${_id}/friends-payment`, {
+        paidByMember: true,
+      });
+
+      onSuccess();
+    } catch (error) {
+      setPaymentError(parseMessageFromError(error));
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleFriendsBookingSendToFriend = async () => {
+    try {
+      setProcessing(true);
+      setPaymentError(null);
+      
+      // Send checkout link to friend
+      await api.post(`/bookings/${_id}/send-to-friend`, {
+        friendEmails: booking?.friendEmails,
+      });
+
+      // Show success message and redirect
+      router.push(`/bookings/${_id}?checkoutSent=true`);
+    } catch (error) {
+      setPaymentError(parseMessageFromError(error));
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -698,7 +755,37 @@ console.log('booking=', booking);
               />
             )}
           </div>
-          {isFreeBooking && (
+          {isFriendsBooking && (
+            <div className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-blue-800 mb-2">
+                  {t('friends_booking_summary_title')}
+                </h3>
+                <p className="text-blue-700 text-sm">
+                  {t('friends_booking_summary_subtitle')}
+                </p>
+              </div>
+              
+              <div className="flex flex-col gap-3">
+                <Button
+                  isEnabled={!processing}
+                  className="booking-btn bg-green-600 hover:bg-green-700"
+                  onClick={handleFriendsBookingPayNow}
+                >
+                  {t('friends_booking_pay_now')}
+                </Button>
+                
+                <Button
+                  isEnabled={!processing}
+                  className="booking-btn bg-blue-600 hover:bg-blue-700"
+                  onClick={handleFriendsBookingSendToFriend}
+                >
+                  {t('friends_booking_send_to_friend')}
+                </Button>
+              </div>
+            </div>
+          )}
+          {isFreeBooking && !isFriendsBooking && (
             <Button
               isEnabled={!processing}
               className="booking-btn"
@@ -709,7 +796,7 @@ console.log('booking=', booking);
                 : t('buttons_booking_request')}
             </Button>
           )}
-          {isTokenOnlyBooking && (
+          {isTokenOnlyBooking && !isFriendsBooking && (
             <div>
               <Checkbox
                 isChecked={hasAgreedToWalletDisclaimer}

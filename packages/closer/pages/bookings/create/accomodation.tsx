@@ -63,6 +63,8 @@ const AccomodationSelector = ({
   bookingType,
   projectId,
   volunteerId,
+  isFriendsBooking,
+  friendEmails,
 }: Props) => {
   const t = useTranslations();
 
@@ -136,7 +138,9 @@ const AccomodationSelector = ({
         doesNeedPickup,
         doesNeedSeparateBeds,
         foodOption,
+        isFriendsBooking,
         ...(volunteerInfo && { volunteerInfo }),
+        ...(friendEmails && { friendEmails }),
       });
       if (bookingConfig?.foodOptionEnabled) {
         router.push(
@@ -177,6 +181,8 @@ const AccomodationSelector = ({
       ...(skills && { skills }),
       ...(diet && { diet }),
       ...(suggestions && { suggestions }),
+      ...(isFriendsBooking && { isFriendsBooking }),
+      ...(friendEmails && { friendEmails }),
     };
     const urlParams = new URLSearchParams(params);
     router.push(`/bookings/create/dates?${urlParams}`);
@@ -196,6 +202,7 @@ const AccomodationSelector = ({
           endDate={end}
           totalGuests={adults}
           savedCurrency={currency}
+          useTokens={Boolean(useTokens)}
           backToDates={backToDates}
         />
         {bookingError && (
@@ -252,6 +259,8 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       discountCode,
       doesNeedPickup,
       doesNeedSeparateBeds,
+      isFriendsBooking,
+      friendEmails,
       foodOption,
       skills,
       diet,
@@ -273,6 +282,7 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
           infants,
           pets,
           useTokens,
+          isFriendsBooking,
           discountCode,
           ...(eventId && { eventId, ticketOption }),
         })
@@ -308,6 +318,8 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       discountCode,
       doesNeedPickup,
       doesNeedSeparateBeds,
+      isFriendsBooking,
+      friendEmails,
       bookingConfig,
       bookingError,
       messages,

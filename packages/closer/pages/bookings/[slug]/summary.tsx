@@ -75,7 +75,7 @@ const Summary = ({
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
-  const { STAY_BOOKING_ALLOWED_PLANS, APP_NAME, VISITORS_GUIDE } = useConfig();
+  const { STAY_BOOKING_ALLOWED_PLANS, VISITORS_GUIDE, PLATFORM_NAME } = useConfig();
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
 
@@ -111,6 +111,7 @@ const Summary = ({
     eventFiat,
     total,
     dailyRentalToken,
+    isFriendsBooking,
     duration,
     volunteerInfo,
   } = updatedBooking || booking || {};
@@ -260,6 +261,30 @@ const Summary = ({
     }
   };
 
+  const handleSendToFriend = () => {
+    const checkoutUrl = `${window.location.origin}/bookings/${booking?._id}/checkout`;
+    const platformName = PLATFORM_NAME || 'Closer';
+    const subject = `Congratulations on your upcoming stay at ${platformName}!`;
+    const body = `Hi there!
+
+Congratulations on your upcoming stay at ${platformName}! 
+
+We're excited to have you join us. To complete your booking, please click the link below to proceed with payment:
+
+${checkoutUrl}
+
+If you have any questions, please don't hesitate to reach out to us.
+
+Best regards,
+The ${platformName} Team`;
+    
+    const mailtoLink = `mailto:${booking?.friendEmails || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(mailtoLink);
+  };
+  console.log('booking?.friendEmails=', booking?.friendEmails);
+  console.log('booking?.isFriendsBooking=', booking?.isFriendsBooking);
+
+
   if (!isBookingEnabled) {
     return <PageNotFound />;
   }
@@ -300,6 +325,35 @@ const Summary = ({
         >
           {t('buttons_booking_request')}
         </Button>
+      </div>
+    );
+  } else if (booking?.isFriendsBooking) {
+    buttonContent = (
+      <div className="space-y-4">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="text-lg font-semibold text-blue-800 mb-2">
+            {t('friends_booking_summary_title')}
+          </h3>
+          <p className="text-blue-700 text-sm">
+            {t('friends_booking_summary_subtitle')}
+          </p>
+        </div>
+        
+        <div className="flex flex-col gap-3">
+          <Button
+            onClick={handleNext}
+            isEnabled={!loading}
+          >
+            💰 {t('friends_booking_pay_now_summary')}
+          </Button>
+          
+          <Button
+            onClick={handleSendToFriend}
+            isEnabled={!loading}
+          >
+            📧 Send to friend for payment
+          </Button>
+        </div>
       </div>
     );
   } else if (eventId || (user && isMember)) {
