@@ -1,7 +1,8 @@
 import { MouseEvent, useState } from 'react';
 
-import { Heading, Modal, Newsletter } from 'closer';
-import { useConfig } from 'closer';
+import { Heading, Modal, Newsletter, Button } from 'closer';
+import { useConfig, useAuth } from 'closer';
+import { useTranslations } from 'next-intl';
 
 interface ReportDownloadModalProps {
   closeModal: (event: MouseEvent<HTMLButtonElement>) => void;
@@ -14,11 +15,17 @@ const ReportDownloadModal = ({
   reportYear,
   reportUrl,
 }: ReportDownloadModalProps) => {
+  const t = useTranslations();
   const { LOGO_HEADER, PLATFORM_NAME } = useConfig();
+  const { isAuthenticated } = useAuth();
   const [hasSubscribed, setHasSubscribed] = useState(false);
 
   const handleSubscriptionSuccess = () => {
     setHasSubscribed(true);
+    window.open(reportUrl, '_blank');
+  };
+
+  const handleDirectDownload = () => {
     window.open(reportUrl, '_blank');
   };
 
@@ -33,19 +40,34 @@ const ReportDownloadModal = ({
           height={110}
         />
         <Heading level={2} className="text-2xl font-bold ">
-          Download TDF {reportYear} Report
+          {t('report_download_modal_title', { year: reportYear })}
         </Heading>
 
-        <p className=" max-w-md">
-          Subscribe to our newsletter to stay updated with our progress and get
-          instant access to the {reportYear} report.
-        </p>
-        <Newsletter
-          placement={`Report${reportYear}Download`}
-          ctaText={hasSubscribed ? 'Thanks for subscribing!' : 'Get the report'}
-          onSuccess={handleSubscriptionSuccess}
-          className="px-0 py-4"
-        />
+        {isAuthenticated ? (
+          <>
+            <p className=" max-w-md">
+              {t('report_download_modal_authenticated_message', { year: reportYear })}
+            </p>
+            <Button
+              onClick={handleDirectDownload}
+              className="w-full"
+            >
+              {t('report_download_modal_download_button', { year: reportYear })}
+            </Button>
+          </>
+        ) : (
+          <>
+            <p className=" max-w-md">
+              {t('report_download_modal_subscription_message', { year: reportYear })}
+            </p>
+            <Newsletter
+              placement={`Report${reportYear}Download`}
+              ctaText={hasSubscribed ? t('report_download_modal_thanks_subscribing') : t('report_download_modal_get_report')}
+              onSuccess={handleSubscriptionSuccess}
+              className="px-0 py-4"
+            />
+          </>
+        )}
       </div>
     </Modal>
   );

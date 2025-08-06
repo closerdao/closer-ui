@@ -8,6 +8,7 @@ import EventAttendees from '../../../components/EventAttendees';
 import EventDescription from '../../../components/EventDescription';
 import EventPhoto from '../../../components/EventPhoto';
 import Photo from '../../../components/Photo';
+import SignupModal from '../../../components/SignupModal';
 import UploadPhoto from '../../../components/UploadPhoto';
 import { Button, Card, ErrorMessage, LinkButton } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
@@ -62,6 +63,7 @@ const EventPage = ({
   const [attendees, setAttendees] = useState(event && (event.attendees || []));
   const [isShowingEvent, setIsShowingEvent] = useState(true);
   const [passwordError, setPasswordError] = useState<null | string>(null);
+  const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
 
   const canEditEvent = user
     ? user?._id === event?.createdBy || user?.roles.includes('admin')
@@ -167,12 +169,24 @@ const EventPage = ({
   };
 
   const showEvent = () => {
-    if (password !== event.password) {
-      setPasswordError(t('incorrect_event_password_error'));
-      return;
-    }
-    localStorage.setItem('eventPassword', password as string);
     setIsShowingEvent(true);
+  };
+
+  const handleRegisterClick = () => {
+    if (!isAuthenticated) {
+      setIsSignupModalOpen(true);
+    } else {
+      if (event._id) {
+        attendEvent(event._id as any, !attendees?.includes(user?._id));
+      }
+    }
+  };
+
+  const handleSignupSuccess = () => {
+    setIsSignupModalOpen(false);
+    if (event._id) {
+      attendEvent(event._id as any, true);
+    }
   };
 
   if (!event) {
@@ -596,15 +610,12 @@ const EventPage = ({
                                     <p className="text-sm text-gray-600 mb-2">
                                       {t('events_virtual_welcome')}
                                     </p>
-                                    <Link
-                                      as={`/signup?back=${encodeURIComponent(
-                                        `/events/${event.slug}`,
-                                      )}`}
-                                      href="/signup"
+                                    <button
+                                      onClick={handleRegisterClick}
                                       className="btn-primary mr-2"
                                     >
                                       {t('events_register')}
-                                    </Link>
+                                    </button>
                                   </div>
                               ) : end &&
                                 end.isBefore(dayjs()) &&
@@ -687,6 +698,12 @@ const EventPage = ({
           </section>
         </div>
       )}
+      <SignupModal
+        isOpen={isSignupModalOpen}
+        onClose={() => setIsSignupModalOpen(false)}
+        onSuccess={handleSignupSuccess}
+        eventId={event._id}
+      />
     </>
   );
 };

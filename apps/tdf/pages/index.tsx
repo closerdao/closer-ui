@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useState } from 'react';
@@ -294,6 +295,14 @@ const HomePage = () => {
               >
                 {t('home_reports_2024')}
               </Button>
+            </div>
+            <div className="w-full text-center mt-8">
+              <p className="text-lg mb-4">
+                See our complete journey and future plans in our{' '}
+                <Link href="/roadmap" className="text-accent underline hover:text-accent-dark">
+                  detailed roadmap
+                </Link>
+              </p>
             </div>
           </div>
         </section>
