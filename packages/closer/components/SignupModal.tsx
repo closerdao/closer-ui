@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 
 import { useAuth } from '../contexts/auth';
 import { isInputValid } from '../utils/helpers';
@@ -151,6 +152,16 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
               >
                 {t('signup_step1_continue')}
               </Button>
+              
+              <div className="text-center text-sm mt-4">
+                {t('signup_form_have_account')}{' '}
+                <Link
+                  className="text-accent underline font-bold"
+                  href={`/login?back=${encodeURIComponent(window.location.pathname)}`}
+                >
+                  {t('login_title')}
+                </Link>
+              </div>
             </form>
           ) : (
             <form className="flex flex-col gap-4" onSubmit={handleAccountSubmit}>
@@ -188,6 +199,16 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
               >
                 {t('signup_form_create')}
               </Button>
+              
+              <div className="text-center text-sm mt-4">
+                {t('signup_form_have_account')}{' '}
+                <Link
+                  className="text-accent underline font-bold"
+                  href={`/login?back=${encodeURIComponent(window.location.pathname)}`}
+                >
+                  {t('login_title')}
+                </Link>
+              </div>
             </form>
           )}
         </div>
