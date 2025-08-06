@@ -176,7 +176,7 @@ const EventPage = ({
     if (!isAuthenticated) {
       setIsSignupModalOpen(true);
     } else {
-      attendEvent(event?._id, !attendees?.includes(user?._id || ''));
+      attendEvent(event?._id, !attendees?.includes(user?._id || 'notsignedin'));
     }
   };
 
