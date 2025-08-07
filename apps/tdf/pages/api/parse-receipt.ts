@@ -243,6 +243,7 @@ export default async function handler(
       - IMPORTANT: never reorder data in items, output in exact order it is present in the receipt
       - Carefully go item by item, do not miss any items and match precisely description, item_total, vat_rate_id, vat_percentage
       - include receipt_total field which shows the total price for the receipt
+      - include currency_iso_code field which shows the currency of the document
       
       For each item include following fields:
       - description: the product/service/item name
@@ -268,9 +269,11 @@ export default async function handler(
         * vat_percentage = 6% -> tax_code = "RED" (Reduced rate)
         * vat_percentage = 0% -> tax_code = "ISE" (Exempt/Zero rate)
       - NEVER omit the tax_code field from any vat_summary entry
+      - If the vendor is outside of Portugal, set the tax_code "ISE" (Exempt/Zero rate)
       
       MANDATORY TAX EXEMPTION REASON ID EXTRACTION:
       - CRITICAL: If ANY item in the receipt has vat_percentage=0, you MUST add the "tax_exemption_reason_id" field to the output
+      - If the vendor is outside of Portugal, set the tax_exemption_reason_id "12"
       - Search the receipt text for any tax exemption reason codes or descriptions that match the provided list
       - Match the found exemption reason with the corresponding ID from this list: ${JSON.stringify(
         taxExemptionReasons,
@@ -283,6 +286,7 @@ export default async function handler(
         "supplier_business_name": "Supermercado do João", // MANDATORY field
         "document_date": "2025-01-01", // MANDATORY field document date in string format YYYY-MM-DD
         "tax_exemption_reason_id": "1", // MANDATORY field when any item has vat_percentage=0
+        "currency_iso_code": "EUR" | "USD", // MANDATORY field for the currency of the document
         "items": [
           {
             "description": "Ovos",

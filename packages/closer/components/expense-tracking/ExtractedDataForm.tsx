@@ -20,6 +20,7 @@ interface ReceiptData {
   description?: string;
   category?: string;
   comment?: string;
+  currency_iso_code?: string;
   items: {
     description: string;
     item_total: number;
@@ -40,6 +41,7 @@ interface ExtractedDataFormProps {
   description: string;
   category: string;
   comment: string;
+  currency: string;
   expenseCategories?: string[];
   fieldErrors: Record<string, string>;
   hasAttemptedSubmit: boolean;
@@ -54,6 +56,7 @@ interface ExtractedDataFormProps {
   onDescriptionChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
   onCommentChange: (value: string) => void;
+  onCurrencyChange: (value: string) => void;
   onVatSummaryChange: (
     index: number,
     field: string,
@@ -69,6 +72,7 @@ const ExtractedDataForm: React.FC<ExtractedDataFormProps> = ({
   description,
   category,
   comment,
+  currency,
   expenseCategories,
   fieldErrors,
   hasAttemptedSubmit,
@@ -83,6 +87,7 @@ const ExtractedDataForm: React.FC<ExtractedDataFormProps> = ({
   onDescriptionChange,
   onCategoryChange,
   onCommentChange,
+  onCurrencyChange,
   onVatSummaryChange,
   onAddVatSummaryRow,
   onDeleteVatSummaryRow,
@@ -134,6 +139,17 @@ const ExtractedDataForm: React.FC<ExtractedDataFormProps> = ({
             {fieldErrors.document_date}
           </div>
         )}
+      </div>
+
+      <div className="mb-4">
+        <div className="text-sm text-gray-500 mb-1">Currency (ISO Code):</div>
+        <Input
+          type="text"
+          value={currency || editableData?.currency_iso_code || ''}
+          onChange={(e: any) => onCurrencyChange(e.target.value)}
+          className="py-2 px-2"
+          placeholder="e.g., EUR, USD, GBP"
+        />
       </div>
 
       <div className="overflow-x-auto">

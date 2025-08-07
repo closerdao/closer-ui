@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 
-import { X } from 'lucide-react';
-
 import Cookies from 'js-cookie';
 import { z } from 'zod';
+
 import api from '../../utils/api';
 import { Button } from '../ui';
 import Heading from '../ui/Heading';
@@ -25,6 +24,7 @@ interface ReceiptData {
   description?: string;
   category?: string;
   comment?: string;
+  currency_iso_code?: string;
   items: {
     description: string;
     item_total: number;
@@ -65,6 +65,7 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
   const [description, setDescription] = useState<string>('');
   const [category, setCategory] = useState<string>('');
   const [comment, setComment] = useState<string>('');
+  const [currency, setCurrency] = useState<string>('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
@@ -89,6 +90,7 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
         ...(description && { description }),
         ...(category && { category }),
         ...(comment && { comment }),
+        ...(currency && { currency_iso_code: currency }),
         supplier_business_name: editableData.supplier_business_name,
         document_date: editableData.document_date,
         lines: editableData.vat_summary.map((summary) => ({
@@ -101,16 +103,16 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
             (summary?.vat_percentage === 0
               ? 'ISE'
               : summary?.vat_percentage === 6
-                ? 'RED'
-                : summary?.vat_percentage === 13
-                  ? 'INT'
-                  : 'NOR'),
+              ? 'RED'
+              : summary?.vat_percentage === 13
+              ? 'INT'
+              : 'NOR'),
         })),
       };
 
       setExpenseData(toconlineFormattedData);
     }
-  }, [editableData, description, category, comment]);
+  }, [editableData, description, category, comment, currency]);
 
   React.useEffect(() => {
     if (editableData && hasAttemptedSubmit) {
@@ -296,7 +298,9 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
         summary.total_with_vat < 0
       ) {
         errors.push(
-          `VAT Group ${index + 1}: Total with VAT must be greater than or equal to 0`,
+          `VAT Group ${
+            index + 1
+          }: Total with VAT must be greater than or equal to 0`,
         );
       }
     });
@@ -346,6 +350,9 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
             ...(parsed.tax_exemption_reason_id && {
               tax_exemption_reason_id: parsed.tax_exemption_reason_id,
             }),
+            ...(parsed.currency_iso_code && {
+              currency_iso_code: parsed.currency_iso_code,
+            }),
             items: Array.isArray(parsed.items)
               ? parsed.items.map((item: any) => ({
                   description: item.description || '',
@@ -380,6 +387,10 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
 
           setParsedData(formattedData);
           setEditableData(formattedData);
+          // Set the currency state from parsed data
+          if (parsed.currency_iso_code) {
+            setCurrency(parsed.currency_iso_code);
+          }
           const errors = validateReceiptData(formattedData);
           setValidationErrors(errors);
         } catch (e) {
@@ -434,6 +445,10 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
         tax_exemption_reason_id: value || undefined,
       });
     }
+  };
+
+  const handleCurrencyChange = (value: string) => {
+    setCurrency(value);
   };
 
   const handleVatSummaryChange = (
@@ -498,8 +513,11 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
         description,
         category,
         comment,
+        currency_iso_code: currency,
       };
 
+      console.log('updatedExpenseData=', updatedExpenseData);
+      return;
       const res = await api.post('/toconline/expense', {
         expenseData: updatedExpenseData,
         uploadedDocumentUrl,
@@ -531,6 +549,7 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
     setDescription('');
     setCategory('');
     setComment('');
+    setCurrency('');
     setFieldErrors({});
     setHasAttemptedSubmit(false);
     onClose();
@@ -547,12 +566,10 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
             <Button
               onClick={handleClose}
               variant="secondary"
-                  className=" w-12 h-12"
+              className=" w-12 h-12"
             >
               ✕
             </Button>
-
-          
           </div>
 
           <div className="space-y-6">
@@ -570,6 +587,7 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
                 description={description}
                 category={category}
                 comment={comment}
+                currency={currency}
                 expenseCategories={expenseCategories}
                 fieldErrors={fieldErrors}
                 hasAttemptedSubmit={hasAttemptedSubmit}
@@ -584,6 +602,7 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
                 onDescriptionChange={setDescription}
                 onCategoryChange={setCategory}
                 onCommentChange={setComment}
+                onCurrencyChange={handleCurrencyChange}
                 onVatSummaryChange={handleVatSummaryChange}
                 onAddVatSummaryRow={handleAddVatSummaryRow}
                 onDeleteVatSummaryRow={handleDeleteVatSummaryRow}
