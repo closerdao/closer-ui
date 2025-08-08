@@ -509,15 +509,14 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
       setLoading(true);
 
       const updatedExpenseData = {
-        ...expenseData,
+        toconlineData: expenseData,
         description,
         category,
         comment,
-        currency_iso_code: currency,
       };
 
       console.log('updatedExpenseData=', updatedExpenseData);
-      return;
+
       const res = await api.post('/toconline/expense', {
         expenseData: updatedExpenseData,
         uploadedDocumentUrl,
