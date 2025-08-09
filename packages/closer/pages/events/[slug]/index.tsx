@@ -8,6 +8,7 @@ import EventAttendees from '../../../components/EventAttendees';
 import EventDescription from '../../../components/EventDescription';
 import EventPhoto from '../../../components/EventPhoto';
 import Photo from '../../../components/Photo';
+import SignupModal from '../../../components/SignupModal';
 import UploadPhoto from '../../../components/UploadPhoto';
 import { Button, Card, ErrorMessage, LinkButton } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
@@ -54,7 +55,7 @@ const EventPage = ({
 }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, refetchUser } = useAuth();
   const { APP_NAME } = useConfig() || {};
 
   const [photo, setPhoto] = useState(event && event.photo);
@@ -62,6 +63,8 @@ const EventPage = ({
   const [attendees, setAttendees] = useState(event && (event.attendees || []));
   const [isShowingEvent, setIsShowingEvent] = useState(true);
   const [passwordError, setPasswordError] = useState<null | string>(null);
+  const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
+  const [apiError, setApiError] = useState(null);
 
   const canEditEvent = user
     ? user?._id === event?.createdBy || user?.roles.includes('admin')
@@ -143,18 +146,46 @@ const EventPage = ({
     }
   };
 
+  const refreshAttendeeStatus = async () => {
+    try {
+      // Wait a bit for the user context to be updated after signup
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Refresh the user context to ensure we have the latest user data
+      await refetchUser();
+
+      // Fetch the latest event data to get updated attendees
+      const {
+        data: { results: updatedEvent },
+      } = await api.get(`/event/${event.slug || event._id}`);
+
+      if (updatedEvent && updatedEvent.attendees) {
+        setAttendees(updatedEvent.attendees);
+      }
+    } catch (error) {
+      console.error('Error refreshing attendee status:', error);
+    }
+  };
+
   const attendEvent = async (_id: any, attend: any) => {
     try {
       const {
         data: { results: event },
       } = await api.post(`/attend/event/${_id}`, { attend });
+
+      const res = await api.post(`/events/${_id}/notifications`, {
+        userId: user?._id,
+      });
+      console.log('res===', res);
+
       setAttendees(
         attend
           ? event.attendees.concat(user?._id)
           : event.attendees.filter((a: string) => a !== user?._id),
       );
     } catch (err) {
-      alert(`Could not RSVP: ${err}`);
+      setApiError(parseMessageFromError(err));
+      console.log('err===', err);
     }
   };
 
@@ -167,12 +198,23 @@ const EventPage = ({
   };
 
   const showEvent = () => {
-    if (password !== event.password) {
-      setPasswordError(t('incorrect_event_password_error'));
-      return;
-    }
-    localStorage.setItem('eventPassword', password as string);
     setIsShowingEvent(true);
+  };
+
+  const handleRegisterClick = () => {
+    if (!isAuthenticated) {
+      setIsSignupModalOpen(true);
+    } else {
+      attendEvent(event?._id, !attendees?.includes(user?._id || 'notsignedin'));
+    }
+  };
+
+  const handleSignupSuccess = async () => {
+    setIsSignupModalOpen(false);
+    // The SignupModal already handles event registration and notification sending
+    // so we don't need to call attendEvent here
+    // Refresh the attendee status to show the updated UI
+    await refreshAttendeeStatus();
   };
 
   if (!event) {
@@ -289,8 +331,6 @@ const EventPage = ({
             </div>
           </section>
 
-
-
           <section className=" w-full flex justify-center">
             <div className="max-w-4xl w-full">
               <div className="flex flex-col sm:flex-row">
@@ -332,8 +372,6 @@ const EventPage = ({
                         </div>
                       </section>
                     )}
-
-
                   </div>
                   <div className="h-auto fixed z-10 bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px] space-y-4">
                     <Card className="bg-white border border-gray-100 p-4">
@@ -381,7 +419,9 @@ const EventPage = ({
                         )}
 
                         <div className="flex gap-2 items-center">
-                          <p className="text-sm font-medium">{t('event_organiser')}</p>
+                          <p className="text-sm font-medium">
+                            {t('event_organiser')}
+                          </p>
                           {eventCreator.photo ? (
                             <Image
                               src={`${cdn}${eventCreator?.photo}-profile-lg.jpg`}
@@ -394,7 +434,9 @@ const EventPage = ({
                           ) : (
                             <FaUser className="text-gray-300 w-[20px] h-[20px] rounded-full" />
                           )}
-                          <p className="text-sm font-medium">{eventCreator?.screenname}</p>
+                          <p className="text-sm font-medium">
+                            {eventCreator?.screenname}
+                          </p>
                         </div>
                       </div>
                     </Card>
@@ -537,7 +579,8 @@ const EventPage = ({
                               {end &&
                                 end.isAfter(dayjs()) &&
                                 (event.stripePub ||
-                                  process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) && (
+                                  process.env
+                                    .NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) && (
                                   <>
                                     {event.requireApproval && (
                                       <p className="text-sm text-gray-600 mb-2">
@@ -578,7 +621,9 @@ const EventPage = ({
                                 end &&
                                 end.isAfter(dayjs()) ? (
                                 // <span className="p3 mr-2" href={event.location}>
-                                <span className="p3 mr-2">{t('events_ongoing')}</span>
+                                <span className="p3 mr-2">
+                                  {t('events_ongoing')}
+                                </span>
                               ) : !isAuthenticated && event.recording ? (
                                 <Link
                                   as={`/signup?back=${encodeURIComponent(
@@ -592,20 +637,17 @@ const EventPage = ({
                               ) : !isAuthenticated &&
                                 start &&
                                 start.isAfter(dayjs()) ? (
-                                  <div>
-                                    <p className="text-sm text-gray-600 mb-2">
-                                      {t('events_virtual_welcome')}
-                                    </p>
-                                    <Link
-                                      as={`/signup?back=${encodeURIComponent(
-                                        `/events/${event.slug}`,
-                                      )}`}
-                                      href="/signup"
-                                      className="btn-primary mr-2"
-                                    >
-                                      {t('events_register')}
-                                    </Link>
-                                  </div>
+                                <div>
+                                  <p className="text-sm text-gray-600 mb-2">
+                                    {t('events_virtual_welcome')}
+                                  </p>
+                                  <button
+                                    onClick={handleRegisterClick}
+                                    className="btn-primary mr-2"
+                                  >
+                                    {t('events_register')}
+                                  </button>
+                                </div>
                               ) : end &&
                                 end.isBefore(dayjs()) &&
                                 user &&
@@ -658,6 +700,9 @@ const EventPage = ({
                                         <p className="text-sm text-gray-500 mb-2">
                                           {t('events_virtual_welcome')}
                                         </p>
+                                        {apiError && (
+                                          <ErrorMessage error={apiError} />
+                                        )}
                                         <button
                                           onClick={(e) => {
                                             e.preventDefault();
@@ -687,6 +732,12 @@ const EventPage = ({
           </section>
         </div>
       )}
+      <SignupModal
+        isOpen={isSignupModalOpen}
+        onClose={() => setIsSignupModalOpen(false)}
+        onSuccess={handleSignupSuccess}
+        eventId={event._id || ''}
+      />
     </>
   );
 };

@@ -37,6 +37,17 @@ const monthNameOptional = z
     message: 'Must be a valid month name in English',
   });
 
+export const passwordSchema = z
+  .string()
+  .min(1, { message: 'Password is required' })
+  .min(5, { message: 'Password must be at least 5 characters long' })
+  .refine((val) => /\d/.test(val), {
+    message: 'Password must contain at least one number (0-9)',
+  })
+  .refine((val) => /[a-zA-Z]/.test(val), {
+    message: 'Password must contain at least one letter (a-z or A-Z)',
+  });
+
 export const configFormSchema = z.object({
   appName: stringRequired,
   platformName: stringRequired,
