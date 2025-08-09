@@ -3,11 +3,12 @@ import Link from 'next/link';
 import React from 'react';
 
 import dayjs from 'dayjs';
+import { useTranslations } from 'next-intl';
 
 import ProfilePhoto from './ProfilePhoto';
 
 const TicketCounter = ({ count }) => (
-  <div className="z-10 w-9 h-9 inline-flex justify-center items-center text-center rounded-full overflow-hidden bg-black text-white text-sm">
+  <div className="z-10 w-7 h-7 inline-flex justify-center items-center text-center rounded-full overflow-hidden bg-black text-white text-xs">
     +{Math.min(count, 99)}
   </div>
 );
@@ -19,13 +20,15 @@ const EventAttendees = ({
   platform,
   ticketsCount,
 }) => {
+  const t = useTranslations();
+  
   return (
-    <section className="attendees card-body mb-6">
-      <h3 className="text-2xl font-bold">
-        {start && start.isAfter(dayjs()) ? 'Who`s coming?' : 'Who attended?'}
+    <section className="attendees">
+      <h3 className="text-lg font-bold mb-3">
+        {start && start.isAfter(dayjs()) ? t('events_attendees_coming') : t('events_attendees_attended')}
       </h3>
       {event.ticketOptions ? (
-        <div className="-space-x-3 flex flex-row flex-wrap">
+        <div className="-space-x-2 flex flex-row flex-wrap">
           {Array.from(new Set(attendees)).map((_id) => {
             const attendee = platform.user.findOne(_id);
 
@@ -38,9 +41,9 @@ const EventAttendees = ({
                 key={attendee.get('_id')}
                 as={`/members/${attendee.get('slug')}`}
                 href="/members/[slug]"
-                className="from user-preview z-10"t
+                className="from user-preview z-10"
               >
-                <ProfilePhoto size="9" user={attendee.toJS()} />
+                <ProfilePhoto size="8" user={attendee.toJS()} />
               </Link>
             );
           })}
@@ -63,14 +66,14 @@ const EventAttendees = ({
                 className="from user-preview"
               >
                 <ProfilePhoto size="sm" user={attendee.toJS()} />
-                <span className="name">{attendee.get('screenname')}</span>
+                <span className="name text-sm">{attendee.get('screenname')}</span>
               </Link>
             );
           })}
           {ticketsCount > 0 && <TicketCounter count={ticketsCount} />}
         </div>
       ) : (
-        'No results'
+        t('events_attendees_no_results')
       )}
     </section>
   );

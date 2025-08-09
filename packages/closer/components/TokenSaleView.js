@@ -46,6 +46,14 @@ const TokenSaleView = () => {
           <div className="max-w-screen-sm w-full mt-4">
             <AccomodationPriceInfo />
           </div>
+          <div className="text-center mt-8">
+            <p className="text-lg mb-4">
+              See our complete journey and future plans in our{' '}
+              <a href="/roadmap" className="text-accent underline hover:text-accent-dark">
+                detailed roadmap
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </>

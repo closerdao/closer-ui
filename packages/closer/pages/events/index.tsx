@@ -256,7 +256,9 @@ const Events = ({ generalConfig }: Props) => {
                                 </h4>
                                 
                                 <p className="text-sm text-gray-600 mb-2">
-                                  {formatEventDate(event)}
+                                  <span>{formatEventDate(event)}</span> 
+                                  <span className="mx-2">•</span> 
+                                  <span>{formatEventTime(event)}</span>
                                 </p>
                                 
                                 {(event.address || event.location) && !event.virtual && (
@@ -272,11 +274,6 @@ const Events = ({ generalConfig }: Props) => {
                                     <span>{t('events_online')}</span>
                                   </div>
                                 )}
-                              </div>
-                              
-                              {/* Time details */}
-                              <div className="text-right text-sm text-gray-600 ml-4">
-                                <div>{formatEventTime(event)}</div>
                               </div>
                             </div>
                           </div>
@@ -368,11 +365,6 @@ const Events = ({ generalConfig }: Props) => {
                                     <span>{t('events_online')}</span>
                                   </div>
                                 )}
-                              </div>
-                              
-                              {/* Time details */}
-                              <div className="text-right text-sm text-gray-500 ml-4">
-                                <div>{formatEventTime(event)}</div>
                               </div>
                             </div>
                           </div>

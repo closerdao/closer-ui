@@ -8,6 +8,7 @@ import EventAttendees from '../../../components/EventAttendees';
 import EventDescription from '../../../components/EventDescription';
 import EventPhoto from '../../../components/EventPhoto';
 import Photo from '../../../components/Photo';
+import SignupModal from '../../../components/SignupModal';
 import UploadPhoto from '../../../components/UploadPhoto';
 import { Button, Card, ErrorMessage, LinkButton } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
@@ -54,7 +55,7 @@ const EventPage = ({
 }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, refetchUser } = useAuth();
   const { APP_NAME } = useConfig() || {};
 
   const [photo, setPhoto] = useState(event && event.photo);
@@ -62,6 +63,8 @@ const EventPage = ({
   const [attendees, setAttendees] = useState(event && (event.attendees || []));
   const [isShowingEvent, setIsShowingEvent] = useState(true);
   const [passwordError, setPasswordError] = useState<null | string>(null);
+  const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
+  const [apiError, setApiError] = useState(null);
 
   const canEditEvent = user
     ? user?._id === event?.createdBy || user?.roles.includes('admin')
@@ -143,18 +146,46 @@ const EventPage = ({
     }
   };
 
+  const refreshAttendeeStatus = async () => {
+    try {
+      // Wait a bit for the user context to be updated after signup
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Refresh the user context to ensure we have the latest user data
+      await refetchUser();
+
+      // Fetch the latest event data to get updated attendees
+      const {
+        data: { results: updatedEvent },
+      } = await api.get(`/event/${event.slug || event._id}`);
+
+      if (updatedEvent && updatedEvent.attendees) {
+        setAttendees(updatedEvent.attendees);
+      }
+    } catch (error) {
+      console.error('Error refreshing attendee status:', error);
+    }
+  };
+
   const attendEvent = async (_id: any, attend: any) => {
     try {
       const {
         data: { results: event },
       } = await api.post(`/attend/event/${_id}`, { attend });
+
+      const res = await api.post(`/events/${_id}/notifications`, {
+        userId: user?._id,
+      });
+      console.log('res===', res);
+
       setAttendees(
         attend
           ? event.attendees.concat(user?._id)
           : event.attendees.filter((a: string) => a !== user?._id),
       );
     } catch (err) {
-      alert(`Could not RSVP: ${err}`);
+      setApiError(parseMessageFromError(err));
+      console.log('err===', err);
     }
   };
 
@@ -167,12 +198,23 @@ const EventPage = ({
   };
 
   const showEvent = () => {
-    if (password !== event.password) {
-      setPasswordError(t('incorrect_event_password_error'));
-      return;
-    }
-    localStorage.setItem('eventPassword', password as string);
     setIsShowingEvent(true);
+  };
+
+  const handleRegisterClick = () => {
+    if (!isAuthenticated) {
+      setIsSignupModalOpen(true);
+    } else {
+      attendEvent(event?._id, !attendees?.includes(user?._id || 'notsignedin'));
+    }
+  };
+
+  const handleSignupSuccess = async () => {
+    setIsSignupModalOpen(false);
+    // The SignupModal already handles event registration and notification sending
+    // so we don't need to call attendEvent here
+    // Refresh the attendee status to show the updated UI
+    await refreshAttendeeStatus();
   };
 
   if (!event) {
@@ -290,74 +332,6 @@ const EventPage = ({
           </section>
 
           <section className=" w-full flex justify-center">
-            <div className="max-w-4xl w-full ">
-              <div className="w-full py-2">
-                <div className="w-full flex flex-col sm:flex-row gap-4 sm:gap-8">
-                  <div className="flex gap-1 items-center min-w-[140px]">
-                    <Image
-                      alt="calendar icon"
-                      src="/images/icons/calendar-icon.svg"
-                      width={20}
-                      height={20}
-                    />
-                    <label className="text-sm uppercase font-bold flex gap-1">
-                      {start && dayjs(start).format(dateFormat)}
-                      {end &&
-                        Number(duration) <= 24 &&
-                        ` ${dayjs(start).format('HH:mm')}`}{' '}
-                      {end &&
-                        Number(duration) <= 24 &&
-                        ` ${dayjs(start).format('HH:mm')}`}{' '}
-                      {end &&
-                        Number(duration) > 24 &&
-                        ` - ${dayjs(end).format(dateFormat)}`}
-                      {end &&
-                        Number(duration) <= 24 &&
-                        ` - ${dayjs(end).format('HH:mm')}`}{' '}
-                      {end && end.isBefore(dayjs()) && (
-                        <p className="text-disabled">
-                          {t('event_event_ended')}
-                        </p>
-                      )}
-                    </label>
-                  </div>
-                  {event.address && (
-                    <div className="flex gap-1 items-center">
-                      <Image
-                        alt="location icon"
-                        src="/images/icons/pin-icon.svg"
-                        width={20}
-                        height={20}
-                      />
-                      <p className="text-sm uppercase font-bold">
-                        {event.address}
-                      </p>
-                    </div>
-                  )}
-                  <div className="flex items-center text-sm uppercase font-bold gap-1">
-                    <p className="">{t('event_organiser')}</p>
-
-                    {eventCreator.photo ? (
-                      <Image
-                        src={`${cdn}${eventCreator?.photo}-profile-lg.jpg`}
-                        loading="lazy"
-                        alt={eventCreator?.screenname}
-                        className=" rounded-full"
-                        width={25}
-                        height={25}
-                      />
-                    ) : (
-                      <FaUser className="text-gray-300 w-[30px] h-[30px] rounded-full" />
-                    )}
-
-                    <p>{eventCreator?.screenname}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className=" w-full flex justify-center">
             <div className="max-w-4xl w-full">
               <div className="flex flex-col sm:flex-row">
                 <div className="flex items-start justify-between gap-6 w-full">
@@ -398,9 +372,77 @@ const EventPage = ({
                         </div>
                       </section>
                     )}
+                  </div>
+                  <div className="h-auto fixed z-10 bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px] space-y-4">
+                    <Card className="bg-white border border-gray-100 p-4">
+                      <div className="space-y-4">
+                        <div className="flex gap-2 items-center">
+                          <Image
+                            alt="calendar icon"
+                            src="/images/icons/calendar-icon.svg"
+                            width={16}
+                            height={16}
+                          />
+                          <div className="text-sm">
+                            <div className="font-semibold">
+                              {start && dayjs(start).format(dateFormat)}
+                              {end &&
+                                Number(duration) <= 24 &&
+                                ` ${dayjs(start).format('HH:mm')}`}
+                              {end &&
+                                Number(duration) > 24 &&
+                                ` - ${dayjs(end).format(dateFormat)}`}
+                              {end &&
+                                Number(duration) <= 24 &&
+                                ` - ${dayjs(end).format('HH:mm')}`}
+                            </div>
+                            {end && end.isBefore(dayjs()) && (
+                              <div className="text-red-500 text-xs">
+                                {t('event_event_ended')}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {event.address && (
+                          <div className="flex gap-2 items-center">
+                            <Image
+                              alt="location icon"
+                              src="/images/icons/pin-icon.svg"
+                              width={16}
+                              height={16}
+                            />
+                            <p className="text-sm font-medium">
+                              {event.address}
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="flex gap-2 items-center">
+                          <p className="text-sm font-medium">
+                            {t('event_organiser')}
+                          </p>
+                          {eventCreator.photo ? (
+                            <Image
+                              src={`${cdn}${eventCreator?.photo}-profile-lg.jpg`}
+                              loading="lazy"
+                              alt={eventCreator?.screenname}
+                              className="rounded-full"
+                              width={20}
+                              height={20}
+                            />
+                          ) : (
+                            <FaUser className="text-gray-300 w-[20px] h-[20px] rounded-full" />
+                          )}
+                          <p className="text-sm font-medium">
+                            {eventCreator?.screenname}
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
 
                     {attendees && attendees.length > 0 && (
-                      <div>
+                      <Card className="bg-white border border-gray-100 p-4">
                         <EventAttendees
                           event={event}
                           start={start}
@@ -408,10 +450,9 @@ const EventPage = ({
                           ticketsCount={ticketsCount}
                           platform={platform}
                         />
-                      </div>
+                      </Card>
                     )}
-                  </div>
-                  <div className="h-auto fixed z-10 bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px]">
+
                     {end && !end.isBefore(dayjs()) && (
                       <Card className="bg-white border border-gray-100 gap-1 sm:gap-4">
                         {event.paid &&
@@ -504,7 +545,7 @@ const EventPage = ({
                               </div>
                             </>
                           )}
-                        <div className="mt-4">
+                        <div>
                           {/* Event uses an external ticketing system */}
                           {event.ticket && start && start.isAfter(dayjs()) ? (
                             <Link
@@ -538,19 +579,27 @@ const EventPage = ({
                               {end &&
                                 end.isAfter(dayjs()) &&
                                 (event.stripePub ||
-                                  process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) && (
-                                  <LinkButton
-                                    href={`/bookings/create/dates/?eventId=${
-                                      event._id
-                                    }&start=${
-                                      start ? start.format('YYYY-MM-DD') : ''
-                                    }&end=${
-                                      end ? end.format('YYYY-MM-DD') : ''
-                                    }`}
-                                    className=""
-                                  >
-                                    {t('events_buy_ticket_button')}
-                                  </LinkButton>
+                                  process.env
+                                    .NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) && (
+                                  <>
+                                    {event.requireApproval && (
+                                      <p className="text-sm text-gray-600 mb-2">
+                                        {t('bookings_event_requires_approval')}
+                                      </p>
+                                    )}
+                                    <LinkButton
+                                      href={`/bookings/create/dates/?eventId=${
+                                        event._id
+                                      }&start=${
+                                        start ? start.format('YYYY-MM-DD') : ''
+                                      }&end=${
+                                        end ? end.format('YYYY-MM-DD') : ''
+                                      }`}
+                                      className=""
+                                    >
+                                      {t('events_buy_ticket_button')}
+                                    </LinkButton>
+                                  </>
                                 )}
                             </>
                           ) : (
@@ -565,14 +614,16 @@ const EventPage = ({
                                   className="btn-primary mr-2"
                                   href={event.location}
                                 >
-                                  Join call
+                                  {t('events_join_call')}
                                 </a>
                               ) : start &&
                                 start.isBefore(dayjs()) &&
                                 end &&
                                 end.isAfter(dayjs()) ? (
                                 // <span className="p3 mr-2" href={event.location}>
-                                <span className="p3 mr-2">ONGOING</span>
+                                <span className="p3 mr-2">
+                                  {t('events_ongoing')}
+                                </span>
                               ) : !isAuthenticated && event.recording ? (
                                 <Link
                                   as={`/signup?back=${encodeURIComponent(
@@ -581,43 +632,33 @@ const EventPage = ({
                                   href="/signup"
                                   className="btn-primary mr-2"
                                 >
-                                  Signup to watch recording
+                                  {t('events_signup_watch_recording')}
                                 </Link>
                               ) : !isAuthenticated &&
                                 start &&
                                 start.isAfter(dayjs()) ? (
-                                <Link
-                                  as={`/signup?back=${encodeURIComponent(
-                                    `/events/${event.slug}`,
-                                  )}`}
-                                  href="/signup"
-                                  className="btn-primary mr-2"
-                                >
-                                  Signup to RSVP
-                                </Link>
+                                <div>
+                                  <p className="text-sm text-gray-600 mb-2">
+                                    {t('events_virtual_welcome')}
+                                  </p>
+                                  <button
+                                    onClick={handleRegisterClick}
+                                    className="btn-primary mr-2"
+                                  >
+                                    {t('events_register')}
+                                  </button>
+                                </div>
                               ) : end &&
                                 end.isBefore(dayjs()) &&
                                 user &&
                                 attendees?.includes(user._id) ? (
-                                <a
-                                  href="#"
-                                  className="btn-primary mr-2"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    attendEvent(
-                                      event._id,
-                                      !attendees?.includes(user._id),
-                                    );
-                                  }}
-                                >
-                                  Cancel RSVP
-                                </a>
-                              ) : (
-                                end &&
-                                user &&
-                                event.virtual &&
-                                end.isAfter(dayjs()) && (
-                                  <button
+                                <div className="text-center">
+                                  <p className="text-sm text-gray-600 mb-2">
+                                    {t('events_virtual_enjoyed')}
+                                  </p>
+                                  <a
+                                    href="#"
+                                    className="text-sm text-accent underline"
                                     onClick={(e) => {
                                       e.preventDefault();
                                       attendEvent(
@@ -625,10 +666,58 @@ const EventPage = ({
                                         !attendees?.includes(user._id),
                                       );
                                     }}
-                                    className="btn-primary mr-2"
                                   >
-                                    Attend
-                                  </button>
+                                    {t('events_cancel_rsvp')}
+                                  </a>
+                                </div>
+                              ) : (
+                                end &&
+                                user &&
+                                event.virtual &&
+                                end.isAfter(dayjs()) && (
+                                  <div className="text-center">
+                                    {attendees?.includes(user._id) ? (
+                                      <>
+                                        <p className="text-sm text-gray-600 mb-2">
+                                          {t('events_virtual_looking_forward')}
+                                        </p>
+                                        <a
+                                          href="#"
+                                          className="text-sm text-accent underline"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            attendEvent(
+                                              event._id,
+                                              !attendees?.includes(user._id),
+                                            );
+                                          }}
+                                        >
+                                          {t('events_cancel_rsvp')}
+                                        </a>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <p className="text-sm text-gray-500 mb-2">
+                                          {t('events_virtual_welcome')}
+                                        </p>
+                                        {apiError && (
+                                          <ErrorMessage error={apiError} />
+                                        )}
+                                        <button
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            attendEvent(
+                                              event._id,
+                                              !attendees?.includes(user._id),
+                                            );
+                                          }}
+                                          className="btn-primary mr-2"
+                                        >
+                                          {t('events_register')}
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
                                 )
                               )}
                             </>
@@ -643,6 +732,12 @@ const EventPage = ({
           </section>
         </div>
       )}
+      <SignupModal
+        isOpen={isSignupModalOpen}
+        onClose={() => setIsSignupModalOpen(false)}
+        onSuccess={handleSignupSuccess}
+        eventId={event._id || ''}
+      />
     </>
   );
 };

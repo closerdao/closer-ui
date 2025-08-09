@@ -97,7 +97,7 @@ const AccomodationSelector = ({
   const filteredListings =
     listings &&
     listings?.filter((listing: Listing) => {
-      if (isTeamMember) {
+      if (isTeamMember && listing.availableFor?.includes('team')) {
         return listing.availableFor?.includes('team');
       } else if (bookingType) {
         return listing.availableFor?.includes('volunteer');
