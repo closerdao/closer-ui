@@ -10,12 +10,14 @@ import { event as gaEvent } from 'nextjs-google-analytics';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import { useAuth } from '../contexts/auth';
+import { usePlatform } from '../contexts/platform';
+import api from '../utils/api';
 import { getRedirectUrl } from '../utils/auth.helpers';
-import { isInputValid } from '../utils/helpers';
+import { parseMessageFromError, slugify } from '../utils/common';
+import { isInputValid, validatePassword } from '../utils/helpers';
 import GoogleButton from './GoogleButton';
 import { Button, Card, Checkbox, ErrorMessage, Input } from './ui';
 import Heading from './ui/Heading';
-import api from '../utils/api';
 
 interface Props {
   app: string | undefined;
@@ -24,13 +26,14 @@ interface Props {
 const SignupForm = ({ app }: Props) => {
   const t = useTranslations();
   const router = useRouter();
+  const { platform } = usePlatform() as any;
   const { back, source, start, end, adults, useTokens, eventId, volunteerId } =
     router.query || {};
 
   const {
     isAuthenticated,
     user,
-    error,
+    error: authError,
     isLoading,
     hasSignedUp,
     isGoogleLoading,
@@ -38,7 +41,13 @@ const SignupForm = ({ app }: Props) => {
     signup,
   } = useAuth();
 
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState<number | null>(() => {
+    if (typeof window !== 'undefined') {
+      const savedStep = sessionStorage.getItem('signup_step');
+      return savedStep ? parseInt(savedStep, 10) : 1;
+    }
+    return 1;
+  });
   const [email, setEmail] = useState('');
   const [newsletterError, setNewsletterError] = useState<string | null>(null);
   const [newsletterSuccess, setNewsletterSuccess] = useState(false);
@@ -56,6 +65,10 @@ const SignupForm = ({ app }: Props) => {
     dream: '',
   });
   const [isLogin, setIsLogin] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+  const [preferencesSuccess, setPreferencesSuccess] = useState(false);
+  const [isEmailConsent, setIsEmailConsent] = useState(true);
+  const [isSignupLoading, setIsSignupLoading] = useState(false);
 
   const dateFormat = 'YYYY-MM-DD';
 
@@ -79,8 +92,6 @@ const SignupForm = ({ app }: Props) => {
 
   const signupQuery = getSignupQuery();
 
-  const [isEmailConsent, setIsEmailConsent] = useState(true);
-
   const redirectAfterSignup = () => {
     if (source) {
       router.push(
@@ -92,10 +103,18 @@ const SignupForm = ({ app }: Props) => {
   };
 
   useEffect(() => {
-    if (isAuthenticated && user) {
+    // Don't redirect if user is in the middle of signup process (steps 1, 2, or 3)
+    if (step && step >= 1 && step <= 3) {
+      return;
+    }
+
+    // If user is authenticated and has completed signup (step is null), redirect
+    if (isAuthenticated && user && step === null) {
       redirectAfterSignup();
     }
-    if (isAuthenticated && isLogin) {
+
+    // If user is authenticated and came from login (not signup), redirect
+    if (isAuthenticated && isLogin && step === null) {
       const redirectUrl = getRedirectUrl({
         back,
         source,
@@ -109,7 +128,26 @@ const SignupForm = ({ app }: Props) => {
       });
       redirectTo(redirectUrl);
     }
-  }, [isAuthenticated, back, user]);
+
+    // If user is authenticated and reloaded the page, check if they should be redirected
+    // (only if they're not in the middle of signup)
+    if (isAuthenticated && user && !step && !isLogin) {
+      const savedStep = sessionStorage.getItem('signup_step');
+      if (!savedStep) {
+        // User is authenticated but not in signup process, redirect
+        redirectAfterSignup();
+      }
+    }
+  }, [isAuthenticated, back, user, step, isLogin]);
+
+  // Cleanup session storage when component unmounts or user completes signup
+  useEffect(() => {
+    return () => {
+      if (step === null) {
+        sessionStorage.removeItem('signup_step');
+      }
+    };
+  }, [step]);
 
   useEffect(() => {
     const localEmail = localStorage.getItem('email');
@@ -124,13 +162,9 @@ const SignupForm = ({ app }: Props) => {
   };
 
   const updatePreferences = (update: any) => {
+
     setPreferences((prevState) => ({ ...prevState, ...update }));
   };
-
-  const isSignupDisabled =
-    !application.password ||
-    !application.screenname ||
-    !isInputValid(application.email, 'email');
 
   const handleEmailSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -139,35 +173,80 @@ const SignupForm = ({ app }: Props) => {
     }
 
     try {
-      const referrer = typeof localStorage !== 'undefined' && localStorage.getItem('referrer');
+      const res = await api.post('/check-user-exists', {
+        email,
+      });
+      const doesUserExist = res?.data?.doesUserExist;
+
+      if (doesUserExist) {
+        setNewsletterError(t('signup_form_email_exists'));
+        return;
+      }
+
+      const referrer =
+        typeof localStorage !== 'undefined' && localStorage.getItem('referrer');
       await api.post('/subscribe', {
         email,
         screenname: '',
         tags: ['signup', router.asPath, `ref:${referrer}`],
       });
-      
+
       setNewsletterSuccess(true);
       setNewsletterError(null);
       setApplication({ ...application, email });
       localStorage.setItem('email', email);
-      
+
       setTimeout(() => {
         setStep(2);
+        sessionStorage.setItem('signup_step', '2');
       }, 1000);
     } catch (err: any) {
       setNewsletterError(
         (err.response && err.response.data && err.response.data.error) ||
-        err.message
+          err.message,
       );
     }
   };
 
-  const handleAccountSubmit = async (e: FormEvent) => {
+  const handleSignUp = async (e: FormEvent) => {
     e.preventDefault();
     if (!application.screenname || !application.password) {
       return;
     }
-    setStep(3);
+
+    // Validate password before submitting
+    const passwordValidation = validatePassword(application.password);
+    if (!passwordValidation.isValid) {
+      setLocalError(passwordValidation.error);
+      return;
+    }
+
+    setIsSignupLoading(true);
+    setLocalError(null);
+
+    try {
+      const referredBy = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
+
+      const res = await signup({
+        ...application,
+        slug: slugify(application.screenname),
+        ...(referredBy && { referredBy }),
+      });
+
+
+      if (res && res.result === 'signup') {
+        setStep(3);
+        sessionStorage.setItem('signup_step', '3');
+      } else {
+        // Error is already set by the auth context, so we don't need to set it here
+        // The user will stay on step 2 and see the error message
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      // Error is handled by the auth context
+    } finally {
+      setIsSignupLoading(false);
+    }
   };
 
   const handlePreferencesSubmit = async (e: FormEvent) => {
@@ -175,12 +254,25 @@ const SignupForm = ({ app }: Props) => {
     if (!application.email) {
       return;
     }
-    const referredBy = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
-    await signup({
-      ...application,
-      preferences,
-      ...(referredBy && { referredBy }),
-    });
+
+    try {
+      const res = await platform.user.patch(user?._id, {
+        preferences,
+        about: preferences?.about,
+      });
+
+      setPreferencesSuccess(true);
+
+      setTimeout(() => {
+        setStep(null);
+        sessionStorage.removeItem('signup_step');
+      }, 1000);
+
+
+    } catch (error) {
+      console.error('error=', error);
+      setLocalError(parseMessageFromError(error));
+    }
   };
 
   const redirectTo = (url: string) => {
@@ -197,6 +289,9 @@ const SignupForm = ({ app }: Props) => {
       gaEvent('sign_up', {
         category: 'signing',
       });
+      // If user signed up with Google, move them to step 3 to collect preferences
+      setStep(3);
+      sessionStorage.setItem('signup_step', '3');
     }
   };
 
@@ -217,7 +312,7 @@ const SignupForm = ({ app }: Props) => {
           />
         </div>
       )}
-      {hasSignedUp && !error ? (
+      {hasSignedUp && !authError && step !== 3 ? (
         <>
           <Heading level={2} className="my-4">
             {t('signup_success')}
@@ -229,10 +324,8 @@ const SignupForm = ({ app }: Props) => {
           <Heading level={2} className="mb-4">
             {t('signup_step1_title')}
           </Heading>
-          <p className="text-gray-600 mb-4">
-            {t('signup_step1_description')}
-          </p>
-          
+          <p className="text-gray-600 mb-4">{t('signup_step1_description')}</p>
+
           <Input
             label={t('signup_form_email')}
             placeholder={t('signup_form_email_placeholder')}
@@ -240,14 +333,14 @@ const SignupForm = ({ app }: Props) => {
             onChange={(e) => setEmail(e.target.value)}
             validation="email"
           />
-          
+
           {newsletterError && <ErrorMessage error={newsletterError} />}
           {newsletterSuccess && (
             <div className="text-green-600 text-sm">
               {t('signup_step1_success')}
             </div>
           )}
-          
+
           <Checkbox
             className="my-4"
             id="emailConsent"
@@ -256,10 +349,15 @@ const SignupForm = ({ app }: Props) => {
           >
             {t('signup_form_email_consent')}
           </Checkbox>
-          
+
           <div className="w-full flex flex-col gap-4">
             <Button
-              isEnabled={!!email && isInputValid(email, 'email') && !newsletterSuccess && isEmailConsent}
+              isEnabled={
+                !!email &&
+                isInputValid(email, 'email') &&
+                !newsletterSuccess &&
+                isEmailConsent
+              }
               isLoading={false}
               type="submit"
             >
@@ -273,7 +371,7 @@ const SignupForm = ({ app }: Props) => {
               />
             )}
           </div>
-          
+
           <div className="text-center text-sm mt-4">
             {t('signup_form_have_account')}{' '}
             <Link
@@ -286,14 +384,12 @@ const SignupForm = ({ app }: Props) => {
           </div>
         </form>
       ) : step === 2 ? (
-        <form className="flex flex-col gap-4" onSubmit={handleAccountSubmit}>
+        <form className="flex flex-col gap-4" onSubmit={handleSignUp}>
           <Heading level={2} className="mb-4">
             {t('signup_step2_title')}
           </Heading>
-          <p className="text-gray-600 mb-4">
-            {t('signup_step2_description')}
-          </p>
-          
+          <p className="text-gray-600 mb-4">{t('signup_step2_description')}</p>
+
           <input
             type="hidden"
             name="backurl"
@@ -315,32 +411,45 @@ const SignupForm = ({ app }: Props) => {
             placeholder={t('signup_form_password_placeholder')}
             label={t('signup_form_password')}
             value={application.password}
-            onChange={(e) =>
+            onChange={(e) => {
               updateApplication({
                 password: e.target.value,
-              })
-            }
+              });
+              // Clear local error when user starts typing
+              if (localError) {
+                setLocalError(null);
+              }
+            }}
           />
 
-          {error && <ErrorMessage error={error} />}
+          {(localError || authError) && (
+            <ErrorMessage error={localError || authError} />
+          )}
           <div className="w-full my-4 flex flex-col gap-6">
             <Button
-              isEnabled={!!application.screenname && !!application.password && !isLoading}
-              isLoading={isLoading}
+              isEnabled={
+                !!application.screenname &&
+                !!application.password &&
+                !isSignupLoading
+              }
+              isLoading={isSignupLoading}
             >
-              {t('signup_step2_continue')}
+              {isSignupLoading
+                ? 'Creating account...'
+                : t('signup_step2_continue')}
             </Button>
           </div>
         </form>
       ) : (
-        <form className="flex flex-col gap-4" onSubmit={handlePreferencesSubmit}>
+        <form
+          className="flex flex-col gap-4"
+          onSubmit={handlePreferencesSubmit}
+        >
           <Heading level={2} className="mb-4">
             {t('signup_step3_title')}
           </Heading>
-          <p className="text-gray-600 mb-4">
-            {t('signup_step3_description')}
-          </p>
-          
+          <p className="text-gray-600 mb-4">{t('signup_step3_description')}</p>
+
           <Input
             label={t('settings_about_you')}
             placeholder={t('settings_tell_us_more_about_yourself')}
@@ -362,13 +471,15 @@ const SignupForm = ({ app }: Props) => {
             onChange={(e) => updatePreferences({ dream: e.target.value })}
           />
 
-          {error && <ErrorMessage error={error} />}
+          {(localError || authError) && (
+            <ErrorMessage error={localError || authError} />
+          )}
+          {preferencesSuccess && (
+            <div className="text-green-600 text-sm">{t('settings_saved')}</div>
+          )}
           <div className="w-full my-4 flex flex-col gap-6">
-            <Button
-              isEnabled={!isLoading}
-              isLoading={isLoading}
-            >
-              {t('signup_form_create')}
+            <Button isEnabled={!isLoading} isLoading={isLoading}>
+              {t('generic_save_button')}
             </Button>
           </div>
         </form>

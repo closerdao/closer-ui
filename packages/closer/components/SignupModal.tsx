@@ -1,13 +1,15 @@
+import Link from 'next/link';
+
 import { FormEvent, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
 
 import { useAuth } from '../contexts/auth';
-import { isInputValid } from '../utils/helpers';
+import api from '../utils/api';
+import { parseMessageFromError, slugify } from '../utils/common';
+import { isInputValid, validatePassword } from '../utils/helpers';
 import { Button, Checkbox, ErrorMessage, Input } from './ui';
 import Heading from './ui/Heading';
-import api from '../utils/api';
 
 interface Props {
   isOpen: boolean;
@@ -18,13 +20,15 @@ interface Props {
 
 const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
   const t = useTranslations();
-  const { signup, error, isLoading } = useAuth();
+  const { signup, error, isLoading, user, refetchUser } = useAuth();
 
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
   const [newsletterError, setNewsletterError] = useState<string | null>(null);
   const [newsletterSuccess, setNewsletterSuccess] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+  const [isSignupLoading, setIsSignupLoading] = useState(false);
   const [application, setApplication] = useState({
     screenname: '',
     email: '',
@@ -44,23 +48,33 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
     }
 
     try {
+      const res = await api.post('/check-user-exists', {
+        email,
+      });
+      const doesUserExist = res?.data?.doesUserExist;
+
+      if (doesUserExist) {
+        setNewsletterError(t('signup_form_email_exists'));
+        return;
+      }
+
       await api.post('/subscribe', {
         email,
         screenname: '',
         tags: ['signup', 'modal', eventId ? `event:${eventId}` : ''],
       });
-      
+
       setNewsletterSuccess(true);
       setNewsletterError(null);
       setApplication({ ...application, email });
-      
+
       setTimeout(() => {
         setStep(2);
       }, 1000);
     } catch (err: any) {
       setNewsletterError(
         (err.response && err.response.data && err.response.data.error) ||
-        err.message
+          err.message,
       );
     }
   };
@@ -71,19 +85,80 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
       return;
     }
 
+    // Validate password before submitting
+    const passwordValidation = validatePassword(application.password);
+    if (!passwordValidation.isValid) {
+      setLocalError(passwordValidation.error);
+      return;
+    }
+
+    setIsSignupLoading(true);
+    setLocalError(null);
+
     try {
-      await signup({
+      const res = await signup({
         ...application,
+        slug: slugify(application.screenname),
         preferences: {},
       });
-      
-      setRegistrationSuccess(true);
-      
-      setTimeout(() => {
-        onSuccess();
-      }, 2000);
-    } catch (err) {
-      // Error is handled by useAuth
+
+      if (res && res.result === 'signup') {
+        setRegistrationSuccess(true);
+
+        // If eventId is provided, register the user for the event and send notification
+        if (eventId) {
+          try {
+            // Register user for the event
+            const {
+              data: { results: event },
+            } = await api.post(`/attend/event/${eventId}`, { attend: true });
+
+            // Send event notification - try to get user from context first, then refetch if needed
+            let currentUser = user;
+            if (!currentUser?._id) {
+              try {
+                // Wait a bit for the context to update, then refetch user
+                await new Promise((resolve) => setTimeout(resolve, 100));
+                await refetchUser();
+                // Get the updated user from context after refetch
+                const userResponse = await api.get('/mine/user');
+                currentUser = userResponse.data.results;
+              } catch (userError) {
+                console.error('Error fetching user:', userError);
+              }
+            }
+
+            // Access the _id field directly and ensure it's a string
+            const userId = currentUser?._id;
+
+            if (userId) {
+              const userIdString =
+                typeof userId === 'string' ? userId : String(userId);
+              await api.post(`/events/${eventId}/notifications`, {
+                userId: userIdString,
+              });
+            } else {
+              console.error('No user ID found for notification');
+            }
+          } catch (eventError) {
+            console.error('Event registration error:', eventError);
+            // Don't fail the signup if event registration fails
+            // The error is logged but not shown to user to avoid confusion
+          }
+        }
+
+        setTimeout(() => {
+          onSuccess();
+        }, 2000);
+      } else {
+        // Error is already set by the auth context, so we don't need to set it here
+        // The user will stay on step 2 and see the error message
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      setLocalError(parseMessageFromError(error));
+    } finally {
+      setIsSignupLoading(false);
     }
   };
 
@@ -120,7 +195,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
               <p className="text-gray-600 text-sm">
                 {t('signup_step1_description')}
               </p>
-              
+
               <Input
                 label={t('signup_form_email')}
                 placeholder={t('signup_form_email_placeholder')}
@@ -128,14 +203,14 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
                 onChange={(e) => setEmail(e.target.value)}
                 validation="email"
               />
-              
+
               {newsletterError && <ErrorMessage error={newsletterError} />}
               {newsletterSuccess && (
                 <div className="text-green-600 text-sm">
                   {t('signup_step1_success')}
                 </div>
               )}
-              
+
               <Checkbox
                 className="my-2"
                 id="emailConsent"
@@ -144,27 +219,37 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
               >
                 {t('signup_form_email_consent')}
               </Checkbox>
-              
+
               <Button
-                isEnabled={!!email && isInputValid(email, 'email') && !newsletterSuccess && isEmailConsent}
+                isEnabled={
+                  !!email &&
+                  isInputValid(email, 'email') &&
+                  !newsletterSuccess &&
+                  isEmailConsent
+                }
                 isLoading={false}
                 type="submit"
               >
                 {t('signup_step1_continue')}
               </Button>
-              
+
               <div className="text-center text-sm mt-4">
                 {t('signup_form_have_account')}{' '}
                 <Link
                   className="text-accent underline font-bold"
-                  href={`/login?back=${encodeURIComponent(window.location.pathname)}`}
+                  href={`/login?back=${encodeURIComponent(
+                    window.location.pathname,
+                  )}`}
                 >
                   {t('login_title')}
                 </Link>
               </div>
             </form>
           ) : (
-            <form className="flex flex-col gap-4" onSubmit={handleAccountSubmit}>
+            <form
+              className="flex flex-col gap-4"
+              onSubmit={handleAccountSubmit}
+            >
               <p className="text-gray-600 text-sm">
                 {t('signup_step2_description')}
               </p>
@@ -184,27 +269,41 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
                 placeholder={t('signup_form_password_placeholder')}
                 label={t('signup_form_password')}
                 value={application.password}
-                onChange={(e) =>
+                onChange={(e) => {
                   updateApplication({
                     password: e.target.value,
-                  })
-                }
+                  });
+                  // Clear local error when user starts typing
+                  if (localError) {
+                    setLocalError(null);
+                  }
+                }}
               />
 
-              {error && <ErrorMessage error={error} />}
-              
+              {(localError || error) && (
+                <ErrorMessage error={localError || error} />
+              )}
+
               <Button
-                isEnabled={!!application.screenname && !!application.password && !isLoading}
-                isLoading={isLoading}
+                isEnabled={
+                  !!application.screenname &&
+                  !!application.password &&
+                  !isSignupLoading
+                }
+                isLoading={isSignupLoading}
               >
-                {t('signup_form_create')}
+                {isSignupLoading
+                  ? 'Creating account...'
+                  : t('signup_form_create')}
               </Button>
-              
+
               <div className="text-center text-sm mt-4">
                 {t('signup_form_have_account')}{' '}
                 <Link
                   className="text-accent underline font-bold"
-                  href={`/login?back=${encodeURIComponent(window.location.pathname)}`}
+                  href={`/login?back=${encodeURIComponent(
+                    window.location.pathname,
+                  )}`}
                 >
                   {t('login_title')}
                 </Link>
@@ -217,4 +316,4 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
   );
 };
 
-export default SignupModal; 
+export default SignupModal;

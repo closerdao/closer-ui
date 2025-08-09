@@ -318,6 +318,7 @@
   "signup_step2_continue": "Continue",
   "signup_step3_title": "Tell us about yourself",
   "signup_step3_description": "Help us personalize your experience and connect you with the right opportunities.",
+  "signup_form_email_exists": "This email is already registered. Please log in to continue.",
   "task_list_empty_message": "No tasks yet.",
   "ticket_list_id": "Ticket ID:",
   "ticket_list_holder": "Ticket holder:",

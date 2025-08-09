@@ -299,6 +299,7 @@
   "signup_form_name_placeholder": "João Ninguém",
   "signup_form_email_placeholder": "joao@ninguem.com",
   "signup_form_password_placeholder": "senha sup3r s3cr3ta",
+  "signup_form_email_exists": "Este email já está registado. Por favor, faça login para continuar.",
   "task_list_empty_message": "Nenhuma tarefa ainda.",
   "ticket_list_id": "ID do Bilhete:",
   "ticket_list_holder": "Titular do bilhete:",
