@@ -53,6 +53,7 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
     'Residence',
     'Stay',
     'MyBookings',
+    'FriendsBooking',
     'Referrals',
     'Governance',
     'EventCreation',

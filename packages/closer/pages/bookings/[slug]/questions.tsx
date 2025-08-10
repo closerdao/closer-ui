@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
+import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
 import QuestionnaireItem from '../../../components/QuestionnaireItem';
 import { Heading } from '../../../components/ui';
@@ -11,7 +12,6 @@ import Input from '../../../components/ui/Input';
 import ProgressBar from '../../../components/ui/ProgressBar';
 import Select from '../../../components/ui/Select/Dropdown';
 import MultiSelect from '../../../components/ui/Select/MultiSelect';
-import { SHARED_ACCOMMODATION_PREFERENCES } from '../../../constants/shared.constants';
 
 import dayjs from 'dayjs';
 import { NextPageContext } from 'next';
@@ -19,6 +19,7 @@ import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
 import { BOOKING_STEPS } from '../../../constants';
+import { SHARED_ACCOMMODATION_PREFERENCES } from '../../../constants/shared.constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
@@ -33,8 +34,6 @@ import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
-
-
 
 const prepareQuestions = (eventQuestions: any) => {
   const preparedQuestions = eventQuestions?.map((question: any) => {
@@ -228,6 +227,7 @@ const Questionnaire = ({
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
         <BookingBackButton onClick={resetBooking} name={t('buttons_back')} />
+        <FriendsBookingBlock isFriendsBooking={booking?.isFriendsBooking} />
 
         <Heading level={1} className="pb-4 mt-8">
           <span className="mr-4">📄</span>

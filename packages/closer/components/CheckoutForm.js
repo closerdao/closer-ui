@@ -166,8 +166,6 @@ const CheckoutForm = ({
         },
       );
 
-
-
       // 3d secure required for this payment
       if (payment.paymentIntent.status === 'requires_action') {
         try {

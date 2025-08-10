@@ -72,6 +72,8 @@ const BookingListPreview = ({
     foodFiat,
     volunteerInfo,
     volunteerId,
+    paidBy,
+    isFriendsBooking,
   } = bookingMapItem.toJS();
 
   const router = useRouter();
@@ -87,7 +89,8 @@ const BookingListPreview = ({
     status === 'tokens-staked';
 
   const isSpaceHost = user?.roles.includes('space-host');
-  const isOwnBooking = createdBy === user?._id;
+  const isOwnBooking =
+    createdBy === user?._id || bookingMapItem.get('paidBy') === user?._id;
 
   const flagPickup =
     doesNeedPickup && start > new Date(Date.now() - 12 * 60 * 60 * 1000);
@@ -192,9 +195,19 @@ const BookingListPreview = ({
             ? t('booking_status_confirmed_title')
             : status}
         </p>
+
+        {isFriendsBooking && (
+          <div className="bg-blue-500 rounded-md p-1 text-white text-center text-xs mt-1.5">
+            {t('friends_booking_title')}
+          </div>
+        )}
       </div>
 
-      <UserInfoButton size="md" userInfo={userInfo} createdBy={createdBy} />
+      <UserInfoButton
+        size="md"
+        userInfo={userInfo}
+        createdBy={paidBy || createdBy}
+      />
 
       {link ? (
         <Link
@@ -374,6 +387,7 @@ const BookingListPreview = ({
         _id={_id}
         status={status}
         createdBy={createdBy}
+        paidBy={bookingMapItem.get('paidBy')}
         end={end}
         start={start}
         confirmBooking={confirmBooking}

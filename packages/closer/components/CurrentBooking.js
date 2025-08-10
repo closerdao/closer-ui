@@ -78,11 +78,21 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
         const user =
           allUsers && allUsers.toJS().find((user) => user._id === userId);
 
-        const userInfo = user && {
-          name: user.screenname,
-          photo: user.photo,
-          preferences: user.preferences,
-          email: user.email,
+        // Check if there's a paidBy field and fetch payer information
+        const paidBy = b.get('paidBy');
+        const payer =
+          paidBy &&
+          allUsers &&
+          allUsers.toJS().find((user) => user._id === paidBy);
+
+        // Use payer information if available, otherwise fall back to creator
+        const userToShow = payer || user;
+
+        const userInfo = userToShow && {
+          name: userToShow.screenname,
+          photo: userToShow.photo,
+          preferences: userToShow.preferences,
+          email: userToShow.email,
         };
 
         return {
