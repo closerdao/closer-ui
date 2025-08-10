@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingStepsInfo from '../../../components/BookingStepsInfo';
+import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import ListingCard from '../../../components/ListingCard';
 import { ErrorMessage } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
@@ -114,13 +115,13 @@ const AccomodationSelector = ({
 
   const bookListing = async (listingId: string) => {
     try {
-      const volunteerInfo =
-        (bookingType === 'volunteer' || bookingType === 'residence') && {
-          skills: parsedSkills,
-          diet: parsedDiet,
-          projectId: parsedProjectId,
-          suggestions: suggestions || '',
-          bookingType,
+      const volunteerInfo = (bookingType === 'volunteer' ||
+        bookingType === 'residence') && {
+        skills: parsedSkills,
+        diet: parsedDiet,
+        projectId: parsedProjectId,
+        suggestions: suggestions || '',
+        bookingType,
       };
       const {
         data: { results: newBooking },
@@ -181,7 +182,7 @@ const AccomodationSelector = ({
       ...(skills && { skills }),
       ...(diet && { diet }),
       ...(suggestions && { suggestions }),
-      ...(isFriendsBooking && { isFriendsBooking }),
+      ...(isFriendsBooking && { isFriendsBooking: String(isFriendsBooking) }),
       ...(friendEmails && { friendEmails }),
     };
     const urlParams = new URLSearchParams(params);
@@ -192,6 +193,7 @@ const AccomodationSelector = ({
     <>
       <div className="max-w-screen-sm mx-auto md:first-letter:p-8">
         <BookingBackButton onClick={backToDates} name={t('buttons_back')} />
+        <FriendsBookingBlock isFriendsBooking={isFriendsBooking} />
         <Heading className="pb-4 mt-8">
           <span className="mr-2">🏡</span>
           <span>{t('bookings_accomodation_step_title')}</span>
@@ -342,4 +344,3 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
 };
 
 export default AccomodationSelector;
-

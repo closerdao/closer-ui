@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import FoodDescription from '../../../components/FoodDescription';
+import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
 import Switch from '../../../components/Switch';
 import { Button, Information } from '../../../components/ui';
@@ -57,8 +58,17 @@ const FoodSelectionPage = ({
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
-  const { useTokens, start, end, adults, children, pets, infants, eventId, isFriendsBooking } =
-    booking || {};
+  const {
+    useTokens,
+    start,
+    end,
+    adults,
+    children,
+    pets,
+    infants,
+    eventId,
+    isFriendsBooking,
+  } = booking || {};
 
   const router = useRouter();
   const { isAuthenticated } = useAuth();
@@ -123,13 +133,15 @@ const FoodSelectionPage = ({
 
   const goBack = () => {
     const dateFormat = 'YYYY-MM-DD';
-      router.push(
-        `/bookings/create/accomodation?start=${dayjs(start).format(
-          dateFormat,
-        )}&end=${dayjs(end).format(
-          dateFormat,
-        )}&adults=${adults}&useTokens=${useTokens}&isFriendsBooking=${isFriendsBooking}`,
-      );
+    router.push(
+      `/bookings/create/accomodation?start=${dayjs(start).format(
+        dateFormat,
+      )}&end=${dayjs(end).format(
+        dateFormat,
+      )}&adults=${adults}&useTokens=${useTokens}&isFriendsBooking=${String(
+        isFriendsBooking,
+      )}`,
+    );
   };
 
   if (!isBookingEnabled) {
@@ -147,6 +159,7 @@ const FoodSelectionPage = ({
   return (
     <div className="w-full max-w-screen-sm mx-auto p-8">
       <BookingBackButton onClick={goBack} name={t('buttons_back')} />
+      <FriendsBookingBlock isFriendsBooking={isFriendsBooking} />
       <Heading level={1} className="pb-4 mt-8">
         <span className="mr-4">🥦</span>
         <span>{t('bookings_food_step_title')}</span>

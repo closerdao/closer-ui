@@ -20,12 +20,9 @@ import { ErrorMessage } from './ui';
 import Checkbox from './ui/Checkbox';
 import HeadingRow from './ui/HeadingRow';
 
-const stripe = loadStripe(
-  process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY,
-  {
-    stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
-  },
-);
+const stripe = loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY, {
+  stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
+});
 
 const CheckoutPayment = ({
   partialPriceInCredits,

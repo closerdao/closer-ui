@@ -49,7 +49,6 @@ import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
-
 dayjs.extend(LocalizedFormat);
 
 const statusOptions = [
@@ -135,6 +134,11 @@ const BookingPage = ({
     photo: bookingCreatedBy.photo,
   };
 
+  const [payerInfo, setPayerInfo] = useState<{
+    name: string;
+    photo: string;
+  } | null>(null);
+
   const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
   const vatRateFromConfig = Number(paymentConfig?.vatRate);
   const vatRate = vatRateFromConfig || defaultVatRate;
@@ -213,27 +217,58 @@ const BookingPage = ({
       try {
         const res = await api.post('/bookings/calculate-totals', {
           bookingId: booking._id,
-          updatedListingId,
-          updatedAdults,
-          updatedDuration,
-          paymentType,
-          isBookingEdit: true,
+          adults: updatedAdults,
+          children: updatedChildren,
+          infants: updatedInfants,
+          pets: updatedPets,
+          start: updatedStartDate,
+          end: updatedEndDate,
+          listing: updatedListingId,
         });
         setUpdatedPrices(res.data.results);
       } catch (error) {
-        console.error('Failed to fetch updated prices:', error);
+        console.error('Error fetching updated prices:', error);
       }
     };
-    (async () => {
-      await fetchUpdatedPrice();
-    })();
+
+    if (isSpaceHost && isEditMode) {
+      fetchUpdatedPrice();
+    }
   }, [
-    updatedDuration,
     updatedAdults,
+    updatedChildren,
+    updatedInfants,
+    updatedPets,
     updatedStartDate,
     updatedEndDate,
     updatedListingId,
+    isSpaceHost,
+    isEditMode,
   ]);
+
+  useEffect(() => {
+    const fetchPayerInfo = async () => {
+      if (!booking?.paidBy) {
+        setPayerInfo(null);
+        return;
+      }
+
+      try {
+        const {
+          data: { results },
+        } = await api.get(`/user/${booking.paidBy}`);
+        setPayerInfo({
+          name: results.screenname || results.name || '',
+          photo: results.photo || '',
+        });
+      } catch (error) {
+        console.error('Error fetching payer info:', error);
+        setPayerInfo(null);
+      }
+    };
+
+    fetchPayerInfo();
+  }, [booking?.paidBy]);
 
   const updatedAccomodationTotal =
     useTokens || useCredits
@@ -385,7 +420,9 @@ const BookingPage = ({
   if (
     !booking ||
     !isBookingEnabled ||
-    (user?._id !== booking.createdBy && !isSpaceHost)
+    (user?._id !== booking.createdBy &&
+      user?._id !== booking.paidBy &&
+      !isSpaceHost)
   ) {
     return <PageNotFound />;
   }
@@ -426,7 +463,9 @@ const BookingPage = ({
             </Card>
           )}
 
-          {booking?.status !== 'pending' && isNotPaid && user?._id === createdBy ? (
+          {booking?.status !== 'pending' &&
+          isNotPaid &&
+          (user?._id === createdBy || user?._id === booking?.paidBy) ? (
             <Link href={`/bookings/${_id}/checkout`} passHref>
               <Button variant="primary" className="w-full">
                 {t('checkout_complete_payment')}
@@ -558,16 +597,18 @@ const BookingPage = ({
             workingHoursEnd={listing?.workingHoursEnd}
             listingId={listing?._id}
           />
-          
+
           <div className="flex flex-col gap-4">
             <Heading level={3}>{t('bookings_dates_step_guests_title')}</Heading>
-            {userInfo && (
+            {(payerInfo || userInfo) && (
               <UserInfoButton
                 userInfo={{
-                  ...userInfo,
-                  name: userInfo.name + ((adults > 1) ? ` +${adults - 1}` : '')
+                  ...(payerInfo || userInfo),
+                  name:
+                    (payerInfo || userInfo)?.name +
+                    (adults > 1 ? ` +${adults - 1}` : ''),
                 }}
-                createdBy={createdBy}
+                createdBy={payerInfo ? booking?.paidBy || '' : createdBy}
                 size="md"
               />
             )}
@@ -685,20 +726,25 @@ const BookingPage = ({
         </section>
 
         <section>
-          {(booking.useCredits ||
-            booking.useTokens) && (
-              <div className="bg-yellow-100 rounded-md p-4 space-y-2 font-bold mb-8">
-                WARNING: this booking has been paid with credits or tokens. Updating and
-                cancelling booking not currently supported. Please handle these operations manually.
-              </div>
-            )}
+          {(booking.useCredits || booking.useTokens) && (
+            <div className="bg-yellow-100 rounded-md p-4 space-y-2 font-bold mb-8">
+              WARNING: this booking has been paid with credits or tokens.
+              Updating and cancelling booking not currently supported. Please
+              handle these operations manually.
+            </div>
+          )}
 
-          {isSpaceHost  && (
+          {isSpaceHost && (
             <div className="flex flex-col gap-4">
               <Button
                 isLoading={isLoading}
                 onClick={handleSaveBooking}
-                isEnabled={hasUpdatedBooking && !isLoading && !booking.useCredits && !booking.useTokens}
+                isEnabled={
+                  hasUpdatedBooking &&
+                  !isLoading &&
+                  !booking.useCredits &&
+                  !booking.useTokens
+                }
               >
                 {t('booking_card_save_booking')}
               </Button>
@@ -712,6 +758,7 @@ const BookingPage = ({
             _id={_id}
             status={status}
             createdBy={createdBy}
+            paidBy={booking?.paidBy}
             end={bookingEnd}
             start={bookingStart}
             confirmBooking={confirmBooking}

@@ -4,6 +4,7 @@ import { useContext, useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import Conditions from '../../../components/Conditions';
+import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
@@ -75,7 +76,8 @@ const Summary = ({
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
-  const { STAY_BOOKING_ALLOWED_PLANS, VISITORS_GUIDE, PLATFORM_NAME } = useConfig();
+  const { STAY_BOOKING_ALLOWED_PLANS, VISITORS_GUIDE, PLATFORM_NAME } =
+    useConfig();
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
 
@@ -83,13 +85,14 @@ const Summary = ({
   const vatRateFromConfig = Number(paymentConfig?.vatRate);
   const vatRate = vatRateFromConfig || defaultVatRate;
 
-  const hasFilledProfile = Boolean(user?.about && user?.photo);
-
   const [handleNextError, setHandleNextError] = useState<string | null>(null);
   const [hasComplied, setCompliance] = useState(false);
   const [isMember, setIsMember] = useState(false);
   const [updatedBooking, setUpdatedBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(false);
+  const [emailSuccess, setEmailSuccess] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [apiLoading, setApiLoading] = useState(false);
 
   const onComply = (isComplete: boolean) => setCompliance(isComplete);
 
@@ -261,29 +264,31 @@ const Summary = ({
     }
   };
 
-  const handleSendToFriend = () => {
-    const checkoutUrl = `${window.location.origin}/bookings/${booking?._id}/checkout`;
-    const platformName = PLATFORM_NAME || 'Closer';
-    const subject = `Congratulations on your upcoming stay at ${platformName}!`;
-    const body = `Hi there!
+  const handleSendToFriends = async () => {
+    setEmailError(null);
+    setApiLoading(true);
 
-Congratulations on your upcoming stay at ${platformName}! 
+    try {
+      const res = await api.post(`/bookings/${booking?._id}/send-to-friend`, {
+        friendEmails: booking?.friendEmails,
+      });
 
-We're excited to have you join us. To complete your booking, please click the link below to proceed with payment:
+      if (res.status === 200) {
+        setEmailSuccess(true);
+      } else {
+        setEmailSuccess(false);
+        setEmailError(res.data.error);
+      }
+    } catch (error) {
+      setEmailSuccess(false);
+      setEmailError(parseMessageFromError(error));
+    } finally {
+      setApiLoading(false);
+    }
 
-${checkoutUrl}
-
-If you have any questions, please don't hesitate to reach out to us.
-
-Best regards,
-The ${platformName} Team`;
-    
-    const mailtoLink = `mailto:${booking?.friendEmails || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.open(mailtoLink);
+    console.log('booking?.friendEmails=', booking?.friendEmails);
+    console.log('booking?.isFriendsBooking=', booking?.isFriendsBooking);
   };
-  console.log('booking?.friendEmails=', booking?.friendEmails);
-  console.log('booking?.isFriendsBooking=', booking?.isFriendsBooking);
-
 
   if (!isBookingEnabled) {
     return <PageNotFound />;
@@ -319,10 +324,7 @@ The ${platformName} Team`;
   } else if (eventId && event?.requireApproval) {
     buttonContent = (
       <div>
-        <Button
-          className="booking-btn"
-          onClick={handleNext}
-        >
+        <Button className="booking-btn" onClick={handleNext}>
           {t('buttons_booking_request')}
         </Button>
       </div>
@@ -330,28 +332,16 @@ The ${platformName} Team`;
   } else if (booking?.isFriendsBooking) {
     buttonContent = (
       <div className="space-y-4">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-blue-800 mb-2">
-            {t('friends_booking_summary_title')}
-          </h3>
-          <p className="text-blue-700 text-sm">
-            {t('friends_booking_summary_subtitle')}
-          </p>
-        </div>
-        
         <div className="flex flex-col gap-3">
-          <Button
-            onClick={handleNext}
-            isEnabled={!loading}
-          >
+          <Button onClick={handleNext} isEnabled={!loading}>
             💰 {t('friends_booking_pay_now_summary')}
           </Button>
-          
+
           <Button
-            onClick={handleSendToFriend}
-            isEnabled={!loading}
+            onClick={handleSendToFriends}
+            isEnabled={!loading && !apiLoading}
           >
-            📧 Send to friend for payment
+            {apiLoading ? 'Sending...' : '📧 Send to friends for payment'}
           </Button>
         </div>
       </div>
@@ -365,10 +355,7 @@ The ${platformName} Team`;
   } else {
     buttonContent = (
       <div>
-        <Button
-          className="booking-btn"
-          onClick={handleNext}
-        >
+        <Button className="booking-btn" onClick={handleNext}>
           {t('buttons_booking_request')}
         </Button>
       </div>
@@ -378,6 +365,7 @@ The ${platformName} Team`;
   return (
     <div className="w-full max-w-screen-sm mx-auto p-8">
       <BookingBackButton onClick={goBack} name={t('buttons_back')} />
+      <FriendsBookingBlock isFriendsBooking={booking?.isFriendsBooking} />
       <Heading level={1} className="pb-4 mt-8">
         <span className="mr-4">📑</span>
         <span>{t('bookings_summary_step_title')}</span>
