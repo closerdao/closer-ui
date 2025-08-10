@@ -335,6 +335,13 @@ const DatesSelector = ({
   }, [event, eventId]);
 
   useEffect(() => {
+    if (event && eventId && event.canSelectDates === false) {
+      setStartDate(event.start);
+      setEndDate(event.end);
+    }
+  }, [event, eventId]);
+
+  useEffect(() => {
     setBookingError(null);
     if (start && end) {
       if (!isMinDurationMatched) {
