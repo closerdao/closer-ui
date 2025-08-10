@@ -222,6 +222,7 @@ const SettingsPage = ({
   const dietOptions = volunteerConfig?.diet?.split(',') || [];
 
   const { user: initialUser, isAuthenticated, refetchUser } = useAuth();
+
   const initialDiet = Array.isArray(initialUser?.preferences?.diet)
     ? initialUser?.preferences?.diet
     : initialUser?.preferences?.diet?.split(',') || [];
@@ -297,15 +298,10 @@ const SettingsPage = ({
           },
         };
       }
-      // Logging for debugging
-      console.log('[saveUserData] attribute:', attribute);
-      console.log('[saveUserData] value:', value);
-      console.log('[saveUserData] payload:', payload);
-      console.log('[saveUserData] user?._id:', user?._id);
+     
       try {
         setHasSaved(false);
         const result = await platform.user.patch(user?._id, payload);
-        console.log('[saveUserData] patch result:', result);
         await refetchUser();
         setError(null);
         setHasSaved(true);
