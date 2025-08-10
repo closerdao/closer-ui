@@ -1,13 +1,13 @@
 import { useRouter } from 'next/router';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Button, Card, ErrorMessage, Input } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
 import { FaPlus } from '@react-icons/all-files/fa/FaPlus';
 import { FaTrash } from '@react-icons/all-files/fa/FaTrash';
-import { NextApiRequest, NextPageContext } from 'next';
+import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
@@ -17,7 +17,6 @@ import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
-import { useEffect } from 'react';
 
 interface Props {
   bookingConfig: BookingConfig | null;
@@ -30,7 +29,7 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const { platform }: any = usePlatform();
-  
+
   const [emails, setEmails] = useState<string[]>(['']);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,7 +44,7 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
     },
     limit: 50,
   };
-  
+
   const userBookings = platform.booking.find(userBookingsFilter);
   const hasActiveBookings = userBookings && userBookings.size > 0;
 
@@ -56,7 +55,9 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
         await platform.booking.get(userBookingsFilter);
       } catch (err: any) {
         console.error('Error loading user bookings:', err);
-        setLoadError(err.message || 'Failed to load your bookings. Please try again.');
+        setLoadError(
+          err.message || 'Failed to load your bookings. Please try again.',
+        );
       }
     }
   };
@@ -76,55 +77,59 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
   }
 
   if (!isAuthenticated || !isMember) {
-    return <div className="main-content mt-12 px-4 max-w-4xl mx-auto">
-      <div className="text-center py-12">
-        <p className="text-red-500">This feature is only available for members.</p>
+    return (
+      <div className="main-content mt-12 px-4 max-w-4xl mx-auto">
+        <div className="text-center py-12">
+          <p className="text-red-500">
+            This feature is only available for members.
+          </p>
+        </div>
       </div>
-    </div>;
+    );
   }
 
   if (loadError) {
-    return <div className="main-content mt-12 px-4 max-w-4xl mx-auto">
-      <div className="text-center py-12">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-red-800 mb-4">
-            Error Loading Bookings
-          </h2>
-          <p className="text-red-700 mb-6">
-            {loadError}
-          </p>
-          <Button
-            className="bg-red-600 hover:bg-red-700 text-white"
-            onClick={() => {
-              setLoadError(null);
-              loadData();
-            }}
-          >
-            Try Again
-          </Button>
+    return (
+      <div className="main-content mt-12 px-4 max-w-4xl mx-auto">
+        <div className="text-center py-12">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-red-800 mb-4">
+              Error Loading Bookings
+            </h2>
+            <p className="text-red-700 mb-6">{loadError}</p>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => {
+                setLoadError(null);
+                loadData();
+              }}
+            >
+              Try Again
+            </Button>
+          </div>
         </div>
       </div>
-    </div>;
+    );
   }
-  
+
   if (!hasActiveBookings) {
-    return <div className="main-content mt-12 px-4 max-w-4xl mx-auto">
-      <div className="text-center py-12">
-        <div>
-          <h2 className="text-xl font-semibold mb-4">
-            {t('friends_booking_no_active_booking_title')}
-          </h2>
-          <p className="mb-6">
-            {t('friends_booking_no_active_booking_message')}
-          </p>
-          <Button
-            onClick={() => router.push('/bookings/create/dates')}
-          >
-            {t('friends_booking_book_stay_button')}
-          </Button>
+    return (
+      <div className="main-content mt-12 px-4 max-w-4xl mx-auto">
+        <div className="text-center py-12">
+          <div>
+            <h2 className="text-xl font-semibold mb-4">
+              {t('friends_booking_no_active_booking_title')}
+            </h2>
+            <p className="mb-6">
+              {t('friends_booking_no_active_booking_message')}
+            </p>
+            <Button onClick={() => router.push('/bookings/create/dates')}>
+              {t('friends_booking_book_stay_button')}
+            </Button>
+          </div>
         </div>
       </div>
-    </div>;
+    );
   }
 
   const addEmail = () => {
@@ -145,12 +150,12 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
   };
 
   const validateEmails = () => {
-    const validEmails = emails.filter(email => email.trim() !== '');
+    const validEmails = emails.filter((email) => email.trim() !== '');
     if (validEmails.length === 0) {
       setError(t('friends_booking_emails_required'));
       return false;
     }
-    
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     for (const email of validEmails) {
       if (!emailRegex.test(email)) {
@@ -158,25 +163,29 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
         return false;
       }
     }
-    
+
     return true;
   };
 
   const handleContinue = async () => {
     setError(null);
-    
+
     if (!validateEmails()) {
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
-      const validEmails = emails.filter(email => email.trim() !== '');
+      const validEmails = emails.filter((email) => email.trim() !== '');
       const emailParam = validEmails.join(',');
-      
+
       // Redirect to booking flow with isFriendsBooking=true and friend emails
-      router.push(`/bookings/create/dates?isFriendsBooking=true&friendEmails=${encodeURIComponent(emailParam)}`);
+      router.push(
+        `/bookings/create/dates?isFriendsBooking=true&friendEmails=${encodeURIComponent(
+          emailParam,
+        )}`,
+      );
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -190,9 +199,7 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
         <Heading level={1} className="text-3xl font-bold mb-4">
           {t('friends_booking_title')}
         </Heading>
-        <p className="text-gray-600">
-          {t('friends_booking_subtitle')}
-        </p>
+        <p className="text-gray-600">{t('friends_booking_subtitle')}</p>
       </div>
 
       <Card className="p-6">
@@ -201,7 +208,11 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
             <div key={index} className="flex gap-3 items-start">
               <div className="flex-1">
                 <Input
-                  label={index === 0 ? t('friends_booking_email_label') : `${t('friends_booking_email_label')} ${index + 1}`}
+                  label={
+                    index === 0
+                      ? t('friends_booking_email_label')
+                      : `${t('friends_booking_email_label')} ${index + 1}`
+                  }
                   placeholder={t('friends_booking_email_placeholder')}
                   value={email}
                   onChange={(e) => updateEmail(index, e.target.value)}
@@ -237,7 +248,7 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
             <Button
               onClick={handleContinue}
               isLoading={isLoading}
-              isEnabled={emails.some(email => email.trim() !== '')}
+              isEnabled={emails.some((email) => email.trim() !== '')}
               className="w-full"
             >
               {t('friends_booking_continue')}
@@ -268,4 +279,4 @@ FriendsBooking.getInitialProps = async (context: NextPageContext) => {
   }
 };
 
-export default FriendsBooking; 
+export default FriendsBooking;
