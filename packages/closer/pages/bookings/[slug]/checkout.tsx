@@ -7,6 +7,7 @@ import BookingWallet from '../../../components/BookingWallet';
 import CheckoutPayment from '../../../components/CheckoutPayment';
 import CheckoutTotal from '../../../components/CheckoutTotal';
 import CurrencySwitcher from '../../../components/CurrencySwitcher';
+import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
 import RedeemCredits from '../../../components/RedeemCredits';
 import { ErrorMessage } from '../../../components/ui';
@@ -71,7 +72,7 @@ const Checkout = ({
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   const [updatedBooking, setUpdatedBooking] = useState<Booking | null>(null);
-console.log('booking=', booking);
+  console.log('booking=', booking);
   const {
     utilityFiat,
     foodFiat,
@@ -92,7 +93,7 @@ console.log('booking=', booking);
     adults,
   } = updatedBooking ?? booking ?? {};
 
-  console.log('total=', total);
+  console.log('booking=', booking);
 
   const cancellationPolicy = bookingConfig
     ? {
@@ -124,6 +125,9 @@ console.log('booking=', booking);
     bookingNights,
   });
   const router = useRouter();
+
+  // Check if this is a friend accessing the checkout page
+  const isFriend = router.query.isFriend === 'true';
 
   const isNotEnoughBalance = rentalToken?.val
     ? tokenBalanceAvailable < rentalToken?.val
@@ -246,7 +250,6 @@ console.log('booking=', booking);
     duration,
   ]);
 
-  const isStripeBooking = total && total.val > 0;
   const isFreeBooking = total && total.val === 0 && !useTokens;
   const isTokenOnlyBooking =
     useTokens &&
@@ -254,6 +257,8 @@ console.log('booking=', booking);
     rentalToken?.val > 0 &&
     total &&
     total.val === 0;
+  const isFriendsBooking = Boolean(booking?.isFriendsBooking);
+  const isStripeBooking = !isTokenOnlyBooking && !isFreeBooking;
 
   useEffect(() => {
     if (user) {
@@ -356,6 +361,62 @@ console.log('booking=', booking);
       onSuccess();
     } catch (error) {
       console.log('error=', error);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleFriendsBookingPayNow = async () => {
+    try {
+      setProcessing(true);
+      setPaymentError(null);
+
+      // Process payment normally
+      if (useTokens && rentalToken && rentalToken?.val > 0) {
+        const tokenStakingResult = await payTokens(
+          _id,
+          dailyRentalToken?.val,
+          stakeTokens,
+          checkContract,
+        );
+
+        const { error } = tokenStakingResult || {};
+        if (error) {
+          setProcessing(false);
+          setPaymentError(error);
+          return;
+        }
+      }
+
+      // Update booking to mark as paid by member
+      await api.post(`/bookings/${_id}/friends-payment`, {
+        paidByMember: true,
+      });
+
+      onSuccess();
+    } catch (error) {
+      setPaymentError(parseMessageFromError(error));
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleFriendsBookingSendToFriend = async () => {
+    try {
+      setProcessing(true);
+      setPaymentError(null);
+
+      // Send checkout link to friend
+      await api.post(`/bookings/${_id}/send-to-friend`, {
+        friendEmails: booking?.friendEmails,
+      });
+
+      // Show success message and redirect
+      router.push(`/bookings/${_id}?checkoutSent=true`);
+    } catch (error) {
+      setPaymentError(parseMessageFromError(error));
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -460,6 +521,9 @@ console.log('booking=', booking);
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
         <BookingBackButton onClick={goBack} name={t('buttons_back')} />
+        {isFriend ? null : (
+          <FriendsBookingBlock isFriendsBooking={booking?.isFriendsBooking} />
+        )}
         <Heading level={1} className="pb-4 mt-8">
           <span className="mr-1">💰</span>
           <span>{t('bookings_checkout_step_title')}</span>
@@ -577,12 +641,11 @@ console.log('booking=', booking);
                     }}
                     applyCredits={applyCredits}
                     hasAppliedCredits={useCredits || status === 'credits-paid'}
-                        creditsError={creditsError}
+                    creditsError={creditsError}
                     className="my-12"
                   />
-                  ) : null}
-                  
-                
+                ) : null}
+
                 {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' &&
                   rentalToken &&
                   rentalToken?.val > 0 &&
@@ -698,7 +761,21 @@ console.log('booking=', booking);
               />
             )}
           </div>
-          {isFreeBooking && (
+          {isFriendsBooking && (
+            <div className="space-y-4">
+              <div className="flex flex-col gap-3">
+                {!isFriend && (
+                  <Button
+                    isEnabled={!processing}
+                    onClick={handleFriendsBookingSendToFriend}
+                  >
+                    📧 {t('friends_booking_send_to_friend')}
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+          {isFreeBooking && !isFriendsBooking && (
             <Button
               isEnabled={!processing}
               className="booking-btn"
@@ -709,7 +786,7 @@ console.log('booking=', booking);
                 : t('buttons_booking_request')}
             </Button>
           )}
-          {isTokenOnlyBooking && (
+          {isTokenOnlyBooking && !isFriendsBooking && (
             <div>
               <Checkbox
                 isChecked={hasAgreedToWalletDisclaimer}

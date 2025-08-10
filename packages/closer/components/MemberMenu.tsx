@@ -276,6 +276,12 @@ const MemberMenu = () => {
             enabled: isBookingEnabled,
             rbacPage: 'MyBookings',
           },
+          {
+            label: t('navigation_book_friend'),
+            url: '/bookings/friends',
+            enabled: isBookingEnabled,
+            rbacPage: 'FriendsBooking',
+          },
         ],
       });
     }
