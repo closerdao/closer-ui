@@ -343,7 +343,7 @@ const HomePage = ({ generalConfig }: Props) => {
             </Card>
             <Card className="border border-transparent flex flex-col gap-4 w-full  justify-between hover:border-gray-400 hover:border">
               <Link
-                href="https://per-auset-git-develop-closerdao.vercel.app/"
+                href="https://perauset.com/"
                 target="_blank"
                 className="w-full flex flex-col gap-4 "
               >
@@ -382,7 +382,7 @@ const HomePage = ({ generalConfig }: Props) => {
             </Card>
             <Card className="border border-transparent flex flex-col gap-4 w-full  justify-between hover:border-gray-400 hover:border">
               <Link
-                href="https://www.moos.garden"
+                href="#"
                 target="_blank"
                 className="w-full flex flex-col gap-4 "
               >
