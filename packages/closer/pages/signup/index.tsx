@@ -102,26 +102,31 @@ const Signup = () => {
                 {t('signup_hero_title')}
               </Heading>
               <p className="text-lg text-gray-600">
-                {t('signup_hero_subtitle')}
+                {APP_NAME?.toLowerCase() === 'tdf' 
+                  ? t('signup_hero_subtitle_tdf')
+                  : t('signup_hero_subtitle_generic')
+                }
               </p>
 
-              <ul className="space-y-1 text-xs text-gray-600 pt-2">
-                <li>
-                  {t('signup_feature_restore')}
-                </li>
-                <li>
-                  {t('signup_feature_colive')}
-                </li>
-                <li>
-                  {t('signup_feature_earn')}
-                </li>
-                <li>
-                  {t('signup_feature_makers')}
-                </li>
-                <li>
-                  {t('signup_feature_surf')}
-                </li>
-              </ul>
+              {APP_NAME?.toLowerCase() === 'tdf' && (
+                <ul className="space-y-1 text-xs text-gray-600 pt-2">
+                  <li>
+                    {t('signup_feature_restore')}
+                  </li>
+                  <li>
+                    {t('signup_feature_colive')}
+                  </li>
+                  <li>
+                    {t('signup_feature_earn')}
+                  </li>
+                  <li>
+                    {t('signup_feature_makers')}
+                  </li>
+                  <li>
+                    {t('signup_feature_surf')}
+                  </li>
+                </ul>
+              )}
 
               <div>
                 {error && <ErrorMessage error={error} />}
