@@ -58,12 +58,6 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
         return;
       }
 
-      await api.post('/subscribe', {
-        email,
-        screenname: '',
-        tags: ['signup', 'modal', eventId ? `event:${eventId}` : ''],
-      });
-
       setNewsletterSuccess(true);
       setNewsletterError(null);
       setApplication({ ...application, email });

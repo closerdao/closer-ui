@@ -1333,6 +1333,11 @@
   "config_label_dayOfMonth": "Day of month",
   "config_label_weekDay": "Select weekday",
   "config_label_weekPosition": "Which week",
+  "config_label_text": "Email body",
+  "config_label_lowerText": "Additional text",
+  "config_label_substackUrl": "Substack URL",
+  "config_label_mailchimpApiKey": "Mailchimp API key",
+  "config_label_mailchimpListId": "Mailchimp list ID",
 
   "config_email_product_paid_guest": "Product paid, send to user immediately",
   "config_email_product_paid_admin": "Product paid, send to admins immediately",

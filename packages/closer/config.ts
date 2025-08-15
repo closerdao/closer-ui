@@ -543,4 +543,25 @@ export const configDescription: ConfigType[] = [
       },
     },
   },
+  {
+    slug: 'newsletter',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: true,
+      },
+      substackUrl: {
+        type: 'text',
+        default: '',
+      },
+      mailchimpApiKey: {
+        type: 'text',
+        default: '',
+      },
+      mailchimpListId: {
+        type: 'text',
+        default: '',
+      },
+    },
+  },
 ];

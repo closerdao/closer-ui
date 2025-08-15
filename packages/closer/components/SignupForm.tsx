@@ -185,11 +185,6 @@ const SignupForm = ({ app }: Props) => {
 
       const referrer =
         typeof localStorage !== 'undefined' && localStorage.getItem('referrer');
-      await api.post('/subscribe', {
-        email,
-        screenname: '',
-        tags: ['signup', router.asPath, `ref:${referrer}`],
-      });
 
       setNewsletterSuccess(true);
       setNewsletterError(null);
