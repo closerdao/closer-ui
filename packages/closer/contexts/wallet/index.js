@@ -134,7 +134,7 @@ export const WalletProvider = ({ children }) => {
   );
 
   const { data: balancePresence } = useSWR(
-    [BLOCKCHAIN_PRESENCE_TOKEN, 'balanceOf', account],
+    [BLOCKCHAIN_PRESENCE_TOKEN.address, 'balanceOf', account],
     {
       fetcher: fetcher(library, BLOCKCHAIN_PRESENCE_ABI),
       fallbackData: BigNumber.from(0),
