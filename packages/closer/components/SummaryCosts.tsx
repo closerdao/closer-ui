@@ -114,35 +114,22 @@ const SummaryCosts = ({
         <>
           <div className="flex justify-between items-center mt-3">
             <p>{t('bookings_summary_step_dates_accomodation_type')}</p>
+
             <div className="flex items-center gap-2">
               {isEditMode &&
-                updatedAccomodationTotal?.val !== accomodationCost?.val &&
+                (updatedRentalFiat?.val !== rentalFiat?.val ||
+                  updatedRentalToken?.val !== rentalToken?.val) &&
                 status !== 'cancelled' && (
                   <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
                     {t('bookings_updated_price')}:{' '}
                     <DisplayPrice
                       paymentType={paymentType}
-                      isEditMode={false}
+                      isEditMode={true}
                       rentalFiat={updatedRentalFiat}
                       rentalToken={updatedRentalToken}
                       totalFiat={updatedFiatTotal}
+                      isAccommodationPrice={true}
                     />
-                    {/* {useCredits &&
-                      priceFormat({
-                        val: updatedAccomodationTotal?.val,
-                        cur: 'credits',
-                      })}
-                    {useTokens &&
-                      priceFormat({
-                        val: updatedAccomodationTotal?.val,
-                        cur: updatedAccomodationTotal?.cur,
-                      })}
-                    {!useTokens &&
-                      !useCredits &&
-                      priceFormat({
-                        val: updatedAccomodationTotal?.val,
-                        cur: updatedAccomodationTotal?.cur,
-                      })} */}
                   </div>
                 )}
 
