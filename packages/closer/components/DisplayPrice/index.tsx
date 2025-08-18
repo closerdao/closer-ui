@@ -15,11 +15,11 @@ interface Props {
 const DisplayPrice = ({
   paymentType,
   rentalFiat,
-  isEditMode=false,
+  isEditMode = false,
   totalFiat,
   rentalToken,
-  isTotalPrice=false,
-  isAccommodationPrice=false,
+  isTotalPrice = false,
+  isAccommodationPrice = false,
   price,
 }: Props) => {
   switch (paymentType) {
@@ -32,7 +32,7 @@ const DisplayPrice = ({
             </span>
           ) : (
             <span>
-              {priceFormat({ val: rentalToken?.val, cur: 'credits' })} {' '}+{' '}
+              {priceFormat({ val: rentalToken?.val, cur: 'credits' })} +{' '}
               {priceFormat({ val: rentalFiat?.val, cur: rentalFiat?.cur })}
             </span>
           )}
@@ -40,33 +40,31 @@ const DisplayPrice = ({
       );
 
     case PaymentType.FULL_CREDITS:
-
-      
-      if(isEditMode && (isTotalPrice)){
+      if (isEditMode && isTotalPrice) {
         return (
           <span>
             isTotalPrice={isTotalPrice}
-            {priceFormat({ val: rentalToken?.val, cur: 'credits' })}{' '}+{' '}
+            {priceFormat({ val: rentalToken?.val, cur: 'credits' })} +{' '}
             {priceFormat({ val: totalFiat?.val, cur: totalFiat?.cur })}
           </span>
-        )
+        );
       }
 
-      if(isEditMode && (isAccommodationPrice)){
+      if (isEditMode && isAccommodationPrice) {
         return (
           <span>
             isAccommodationPrice={isAccommodationPrice}
-            {priceFormat({ val: rentalToken?.val, cur: 'credits' })}{' '}+{' '}
+            {priceFormat({ val: rentalToken?.val, cur: 'credits' })} +{' '}
             {priceFormat({ val: totalFiat?.val, cur: totalFiat?.cur })}
           </span>
-        )
+        );
       }
       return (
         <span>
-          {priceFormat({ val: rentalToken?.val, cur: 'credits' })}{' '}+{' '}
+          {priceFormat({ val: rentalToken?.val, cur: 'credits' })} +{' '}
           {priceFormat({ val: totalFiat?.val, cur: totalFiat?.cur })}
-        </span>)
-      
+        </span>
+      );
 
     case PaymentType.PARTIAL_TOKENS:
       return isEditMode ? (
@@ -75,34 +73,45 @@ const DisplayPrice = ({
         </span>
       ) : (
         <span>
-          {priceFormat({ val: rentalToken?.val, cur: rentalToken?.cur })} {' '}+{' '}
+          {priceFormat({ val: rentalToken?.val, cur: rentalToken?.cur })} +{' '}
           {priceFormat({ val: rentalFiat?.val, cur: rentalFiat?.cur })}
         </span>
       );
     case PaymentType.FULL_TOKENS:
-      if(isEditMode && (isTotalPrice)){
+      if (isEditMode && isTotalPrice) {
         return (
           <span>
-            {priceFormat({ val: rentalToken?.val, cur: rentalToken?.cur})}{' '}+{' '}
+            {priceFormat({ val: rentalToken?.val, cur: rentalToken?.cur })} +{' '}
             {priceFormat({ val: totalFiat?.val, cur: totalFiat?.cur })}
           </span>
-        )
+        );
       }
 
-      if(isEditMode && (isAccommodationPrice)){
+      if (isEditMode && isAccommodationPrice) {
         return (
           <span>
             {priceFormat({ val: rentalToken?.val, cur: rentalToken?.cur })}
-            {rentalFiat?.val ? <div>{' '}+{' '}{priceFormat({ val: rentalFiat?.val, cur: rentalFiat?.cur })}</div>: null}
+            {rentalFiat?.val ? (
+              <div>
+                {' '}
+                + {priceFormat({ val: rentalFiat?.val, cur: rentalFiat?.cur })}
+              </div>
+            ) : null}
           </span>
-        )
+        );
       }
       return (
         <span>
           {priceFormat({ val: rentalToken?.val, cur: rentalToken?.cur })}{' '}
-          {rentalFiat?.val ? <div>{' '}+{' '} {priceFormat({ val: totalFiat?.val, cur: totalFiat?.cur })}</div> : null}
-        </span>)
-      
+          {rentalFiat?.val ? (
+            <div>
+              {' '}
+              + {priceFormat({ val: totalFiat?.val, cur: totalFiat?.cur })}
+            </div>
+          ) : null}
+        </span>
+      );
+
     case PaymentType.FIAT:
       return isEditMode && isTotalPrice ? (
         <span>{priceFormat({ val: totalFiat?.val, cur: totalFiat?.cur })}</span>
