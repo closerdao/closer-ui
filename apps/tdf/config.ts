@@ -16,6 +16,7 @@ const config = {
     'affiliate',
     'rbac',
     'webinar',
+    'newsletter',
   ],
   PORT: 14444,
   EXPOSE_STORE: true,
