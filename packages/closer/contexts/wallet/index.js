@@ -14,7 +14,6 @@ import api from '../../utils/api';
 import {
   fetcher,
   formatBigNumberForDisplay,
-  multiFetcher,
 } from '../../utils/blockchain';
 import { useAuth } from '../auth';
 
@@ -33,6 +32,8 @@ const {
   BLOCKCHAIN_RPC_URL,
   BLOCKCHAIN_CEUR_TOKEN,
   BLOCKCHAIN_CELO_TOKEN,
+  BLOCKCHAIN_PRESENCE_ABI,
+  BLOCKCHAIN_PRESENCE_TOKEN,
 } = blockchainConfig;
 
 const injected = new InjectedConnector({
@@ -132,31 +133,39 @@ export const WalletProvider = ({ children }) => {
     },
   );
 
-  const { data: activatedBookingYears } = useSWR(
-    [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'getAccommodationYears'],
+  const { data: balancePresence } = useSWR(
+    [BLOCKCHAIN_PRESENCE_TOKEN.address, 'balanceOf', account],
     {
-      fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
-    },
-  );
-  const { data: bookedDates, mutate: refetchBookingDates } = useSWR(
-    [
-      activatedBookingYears
-        ? activatedBookingYears.map(([year]) => [
-            BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
-            'getAccommodationBookings',
-            account,
-            year,
-          ])
-        : null,
-    ],
-    {
-      fetcher: multiFetcher(library, BLOCKCHAIN_DIAMOND_ABI),
+      fetcher: fetcher(library, BLOCKCHAIN_PRESENCE_ABI),
+      fallbackData: BigNumber.from(0),
     },
   );
 
-  const proofOfPresence = bookedDates
-    ?.flat()
-    .filter((date) => date.status === 2).length;
+  // const { data: activatedBookingYears } = useSWR(
+  //   [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'getAccommodationYears'],
+  //   {
+  //     fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
+  //   },
+  // );
+  // const { data: bookedDates, mutate: refetchBookingDates } = useSWR(
+  //   [
+  //     activatedBookingYears
+  //       ? activatedBookingYears.map(([year]) => [
+  //           BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
+  //           'getAccommodationBookings',
+  //           account,
+  //           year,
+  //         ])
+  //       : null,
+  //   ],
+  //   {
+  //     fetcher: multiFetcher(library, BLOCKCHAIN_DIAMOND_ABI),
+  //   },
+  // );
+
+  // const proofOfPresence = bookedDates
+  //   ?.flat()
+  //   .filter((date) => date.status === 2).length;
 
   const balanceTotal = formatBigNumberForDisplay(
     (balanceDAOToken || BigNumber.from(0)).add(stakedBalanceOf),
@@ -173,6 +182,10 @@ export const WalletProvider = ({ children }) => {
   const balanceCeloAvailable = formatBigNumberForDisplay(
     balanceCeloToken,
     BLOCKCHAIN_CELO_TOKEN.decimals,
+  );
+  const proofOfPresence = formatBigNumberForDisplay(
+    balancePresence,
+    BLOCKCHAIN_PRESENCE_TOKEN.decimals,
   );
 
   const connectWallet = async () => {
@@ -346,7 +359,7 @@ export const WalletProvider = ({ children }) => {
           updateWalletBalance,
           updateCeurBalance,
           updateCeloBalance,
-          refetchBookingDates,
+          // refetchBookingDates,
           signMessage, // Add signMessage here
         }}
       >
