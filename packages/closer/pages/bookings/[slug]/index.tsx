@@ -710,7 +710,7 @@ const BookingPage = ({
             />
           </div>
 
-          {booking.paymentDelta?.token?.val ? (
+          {booking.paymentDelta?.token?.val && (paymentType === 'fullTokens' || paymentType === 'partialTokens') ? (
             <div className="flex justify-between gap-2 p-4 bg-accent-light rounded-md">
               <div className="font-bold space-y-4">
                 <p>
@@ -769,6 +769,7 @@ const BookingPage = ({
                   </Link>
                 </p>
               )}
+              
             </div>
           ) : null}
         </section>
