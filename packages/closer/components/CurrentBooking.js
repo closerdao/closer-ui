@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
 
 import dayjs from 'dayjs';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { BOOKINGS_PER_PAGE, MAX_LISTINGS_TO_FETCH } from '../constants';
+import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
 import { cdn } from '../utils/api';
 import { priceFormat } from '../utils/helpers';
 import Pagination from './Pagination';
 import {
+  Button,
   Heading,
   Spinner,
   Table,
@@ -20,17 +23,21 @@ import {
   TableRow,
 } from './ui';
 
+dayjs.extend(isSameOrBefore);
+
 const MAX_USERS_TO_FETCH = 2000;
 
 const CurrentBooking = ({ leftAfter, arriveBefore }) => {
   const t = useTranslations();
 
   const { platform } = usePlatform();
+  const { user } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [isHerePage, setIsHerePage] = useState(1);
   const [willArrivePage, setWillArrivePage] = useState(1);
   const [justLeftPage, setJustLeftPage] = useState(1);
+  const [loadingBookings, setLoadingBookings] = useState({});
   const filter = {
     where: {
       status: { $in: ['paid', 'checked-in', 'checked-out'] },
@@ -109,9 +116,9 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
             };
 
             const rentalFiat = b.get('rentalFiat');
-            const utilityFiat = b.get('utilityFiat');
-            const foodFiat = b.get('foodFiat');
-            const eventFiat = b.get('eventFiat');
+            // const utilityFiat = b.get('utilityFiat');
+            // const foodFiat = b.get('foodFiat');
+            // const eventFiat = b.get('eventFiat');
 
             const totalAmount = b.get('total');
 
@@ -128,6 +135,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
               listingName,
               userInfo,
               userId,
+              paidBy,
               doesNeedPickup,
               doesNeedSeparateBeds,
               status,
@@ -204,6 +212,28 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
     );
   };
 
+  const checkInBooking = async (bookingId) => {
+    try {
+      setLoadingBookings((prev) => ({ ...prev, [bookingId]: true }));
+      await platform.bookings.checkIn(bookingId);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoadingBookings((prev) => ({ ...prev, [bookingId]: false }));
+    }
+  };
+
+  const checkOutBooking = async (bookingId) => {
+    try {
+      setLoadingBookings((prev) => ({ ...prev, [bookingId]: true }));
+      await platform.bookings.checkOut(bookingId);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoadingBookings((prev) => ({ ...prev, [bookingId]: false }));
+    }
+  };
+
   const renderBookingsTable = (bookings, title, count) => (
     <div className="mb-8">
       <Heading level={2} className="border-b pb-4 mb-4">
@@ -236,8 +266,28 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                   b.volunteerId,
                 );
 
+                const isSpaceHost = user?.roles.includes('space-host');
+                const isOwnBooking =
+                  b.userId === user?._id || b.paidBy === user?._id;
+                const isPaidBooking =
+                  b.status === 'paid' ||
+                  b.status === 'credits-paid' ||
+                  b.status === 'tokens-staked';
+                const isLoading = loadingBookings[b._id];
+
                 return (
-                  <TableRow key={b._id}>
+                  <TableRow
+                    key={b._id}
+                    className={`${
+                      title === t('current_bookings_people_here') &&
+                      b?.status !== 'checked-in'
+                        ? 'bg-red-100'
+                        : title === t('current_bookings_just_left') &&
+                          b?.status !== 'checked-out'
+                        ? 'bg-red-100'
+                        : ''
+                    }`}
+                  >
                     <TableCell className="whitespace-nowrap">
                       <div className="flex items-center gap-1">
                         {b.userInfo?.photo && (
@@ -339,7 +389,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                       </div>
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
-                      <div className="text-center">
+                      <div className="flex flex gap-1 items-center">
                         <a
                           href={`/bookings/${b._id}`}
                           target="_blank"
@@ -348,6 +398,76 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                         >
                           <ExternalLink size={16} />
                         </a>
+
+                        {/* Check-in button for "being here" section */}
+                        {title === t('current_bookings_people_here') &&
+                          isPaidBooking &&
+                          isSpaceHost &&
+                          dayjs(b.end).isAfter(dayjs()) &&
+                          dayjs(b.start).isSameOrBefore(dayjs(), 'day') &&
+                          b.status !== 'checked-in' && (
+                            <Button
+                              className="text-xs py-1 px-1 w-fit border-none enabled:bg-transparent bg-transparent"
+                              variant="secondary"
+                              onClick={() => checkInBooking(b._id)}
+                              isEnabled={!isLoading}
+                              size="small"
+                            >
+                              ➡️ {t('booking_card_checkin')}{' '}
+                              {isLoading && <Spinner />}
+                            </Button>
+                          )}
+
+                        {/* Check-out button for "being here" section */}
+                        {title === t('current_bookings_people_here') &&
+                          b.status === 'checked-in' &&
+                          (isSpaceHost || isOwnBooking) && (
+                            <Button
+                              className="text-xs py-1 px-1 w-fit border-none enabled:bg-transparent bg-transparent"
+                              variant="secondary"
+                              onClick={() => checkOutBooking(b._id)}
+                              isEnabled={!isLoading}
+                              size="small"
+                            >
+                              ⬅️ {t('booking_card_checkout')}{' '}
+                              {isLoading && <Spinner />}
+                            </Button>
+                          )}
+
+                        {/* Check-in button for "will arrive" section */}
+                        {title === t('current_bookings_will_arrive') &&
+                          isPaidBooking &&
+                          isSpaceHost &&
+                          dayjs(b.end).isAfter(dayjs()) &&
+                          dayjs(b.start).isSameOrBefore(dayjs(), 'day') &&
+                          b.status !== 'checked-in' && (
+                            <Button
+                              className="text-xs py-1 px-1 w-fit border-none enabled:bg-transparent bg-transparent"
+                              variant="secondary"
+                              onClick={() => checkInBooking(b._id)}
+                              isEnabled={!isLoading}
+                              size="small"
+                            >
+                              ➡️ {t('booking_card_checkin')}{' '}
+                              {isLoading && <Spinner />}
+                            </Button>
+                          )}
+
+                        {/* Check-out button for "just left" section */}
+                        {title === t('current_bookings_just_left') &&
+                          b.status === 'checked-in' &&
+                          (isSpaceHost || isOwnBooking) && (
+                            <Button
+                              className="text-xs py-1 px-1 w-fit border-none enabled:bg-transparent bg-transparent"
+                              variant="secondary"
+                              onClick={() => checkOutBooking(b._id)}
+                              isEnabled={!isLoading}
+                              size="small"
+                            >
+                              ⬅️ {t('booking_card_checkout')}{' '}
+                              {isLoading && <Spinner />}
+                            </Button>
+                          )}
                       </div>
                     </TableCell>
                   </TableRow>

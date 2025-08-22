@@ -489,7 +489,8 @@ const BookingPage = ({
             </Card>
           )}
 
-          {booking?.status !== 'pending' && booking?.status !== 'pending-refund' &&
+          {booking?.status !== 'pending' &&
+          booking?.status !== 'pending-refund' &&
           isNotPaid &&
           (user?._id === createdBy || user?._id === booking?.paidBy) ? (
             <Link href={`/bookings/${_id}/checkout`} passHref>
@@ -708,6 +709,25 @@ const BookingPage = ({
               placeholder={t('booking_card_set_booking_status')}
             />
           </div>
+
+          {booking.paymentDelta?.token?.val ? (
+            <div className="flex justify-between gap-2 p-4 bg-accent-light rounded-md">
+              <div className="font-bold space-y-4">
+                <p>
+                  {booking.paymentDelta?.token.val >= 0
+                    ? t('bookings_amount_due')
+                    : t('bookings_amount_to_refund')}
+                </p>
+
+                <div className="flex gap-2 items-center">
+                  <p className="font-bold">
+                    {booking.paymentDelta?.token.cur}
+                    {Math.abs(booking.paymentDelta?.token?.val || 0)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           {booking.paymentDelta?.fiat.val ? (
             <div className="flex justify-between gap-2 p-4 bg-accent-light rounded-md">
