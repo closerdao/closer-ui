@@ -165,6 +165,7 @@ export const getSample = (field) => {
     case 'switch':
       return false;
     case 'datetime':
+    case 'photo':
       return null;
     case 'ticketOptions':
       return [
