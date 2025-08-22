@@ -741,7 +741,9 @@ const Checkout = ({
                 bookingId={booking?._id || ''}
                 buttonDisabled={
                   (useTokens &&
-                    (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)) ||
+                    (!hasAgreedToWalletDisclaimer ||
+                      (isNotEnoughBalance &&
+                        booking?.status !== 'tokens-staked'))) ||
                   false
                 }
                 useTokens={useTokens || false}
