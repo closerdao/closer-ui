@@ -1250,6 +1250,7 @@
   "config_label_dayOfMonth": "Dia do mês",
   "config_label_weekDay": "Selecionar dia da semana",
   "config_label_weekPosition": "Que semana",
+  "config_label_telegramUrl": "Link do Telegram",
   "config_email_product_paid_guest": "Produto pago, enviar ao utilizador imediatamente",
   "config_email_product_paid_admin": "Produto pago, enviar aos administradores imediatamente",
   "edit_homepage_button": "Editar página de Histórico",

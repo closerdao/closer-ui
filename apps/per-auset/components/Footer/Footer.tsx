@@ -6,7 +6,7 @@ import { RiFacebookFill } from '@react-icons/all-files/ri/RiFacebookFill';
 import { useConfig } from 'closer';
 
 export const Footer: FC = () => {
-  const { INSTAGRAM_URL, FACEBOOK_URL } = useConfig() || {};
+  const { INSTAGRAM_URL, FACEBOOK_URL, TELEGRAM_URL } = useConfig() || {};
 
   return (
     <footer className="w-full mt-8 mx-auto text-center max-w-prose">
@@ -26,8 +26,10 @@ export const Footer: FC = () => {
           </Link>
         </p>
         <div className="social mt-4 flex flex-row justify-center">
+
+          {TELEGRAM_URL && (
           <a
-            href="https://t.me/+zQ5J9ud7qZo5Njdk"
+            href={TELEGRAM_URL}
             target="_blank"
             className="mr-2 p-2 transition ease-linear duration-1200 hover:scale-125"
             rel="noreferrer"
@@ -47,7 +49,8 @@ export const Footer: FC = () => {
               <path stroke="none" d="M0 0h24v24H0z" />{' '}
               <path d="M15 10l-4 4l6 6l4 -16l-18 7l4 2l2 6l3 -4" />
             </svg>
-          </a>
+            </a>
+          )}
 
           {INSTAGRAM_URL && (
             <a
