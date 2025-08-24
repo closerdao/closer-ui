@@ -289,6 +289,9 @@ const BookingPage = ({
     fetchPayerInfo();
   }, [booking?.paidBy]);
 
+  console.log('--------------------------------');
+  console.log('updatedPrices==>', updatedPrices);
+
   const updatedAccomodationTotal =
     useTokens || useCredits
       ? updatedPrices?.rentalToken?.val || 0
@@ -300,6 +303,14 @@ const BookingPage = ({
   const updatedFoodTotal = updatedPrices?.foodFiat?.val || 0;
   const updatedEventTotal = updatedPrices?.eventFiat?.val || 0;
   const updatedFiatTotal = updatedPrices?.total?.val || 0;
+
+  console.log('updatedRentalFiat==>', updatedRentalFiat);
+  console.log('updatedRentalToken==>', updatedRentalToken);
+
+  console.log('booking==>', booking);
+
+  // TODO:update paymentDelta, dailyrentaltoken, total, rentalfiat !!!!!!!!! don't update rentalfiat
+  // when the price of token booking updated, but payment delta is not zero, rentalFiAt should match paymentdelta
 
   const updatedBookingValues = {
     ...(updatedStatus &&
