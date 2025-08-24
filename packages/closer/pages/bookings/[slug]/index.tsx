@@ -25,6 +25,7 @@ import { MAX_LISTINGS_TO_FETCH, STATUS_COLOR } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
+import { PaymentType } from '../../../types';
 import {
   Booking,
   BookingConfig,
@@ -176,7 +177,12 @@ const BookingPage = ({
     rentalFiat,
   });
 
-  const canEditBooking = paymentType === 'fullTokens' || paymentType === 'fiat';
+  const canEditBooking =
+    paymentType === PaymentType.FULL_TOKENS ||
+    paymentType === PaymentType.PARTIAL_TOKENS ||
+    paymentType === PaymentType.FULL_CREDITS ||
+    paymentType === PaymentType.PARTIAL_CREDITS ||
+    paymentType === 'fiat';
 
   const checkInTime = bookingConfig?.checkinTime || 14;
   const checkOutTime = bookingConfig?.checkoutTime || 11;
@@ -238,7 +244,6 @@ const BookingPage = ({
           paymentType,
         });
 
-        console.log('res.data.results=', res.data.results);
         setUpdatedPrices(res.data.results);
       } catch (error) {
         console.error('Error fetching updated prices:', error);
@@ -489,7 +494,8 @@ const BookingPage = ({
             </Card>
           )}
 
-          {booking?.status !== 'pending' && booking?.status !== 'pending-refund' &&
+          {booking?.status !== 'pending' &&
+          booking?.status !== 'pending-refund' &&
           isNotPaid &&
           (user?._id === createdBy || user?._id === booking?.paidBy) ? (
             <Link href={`/bookings/${_id}/checkout`} passHref>
@@ -708,6 +714,27 @@ const BookingPage = ({
               placeholder={t('booking_card_set_booking_status')}
             />
           </div>
+
+          {booking.paymentDelta?.token?.val &&
+          (paymentType === PaymentType.FULL_TOKENS ||
+            paymentType === PaymentType.PARTIAL_TOKENS) ? (
+            <div className="flex justify-between gap-2 p-4 bg-accent-light rounded-md">
+              <div className="font-bold space-y-4">
+                <p>
+                  {booking.paymentDelta?.token.val >= 0
+                    ? t('bookings_amount_due')
+                    : t('bookings_amount_to_refund')}
+                </p>
+
+                <div className="flex gap-2 items-center">
+                  <p className="font-bold">
+                    {booking.paymentDelta?.token.cur}
+                    {Math.abs(booking.paymentDelta?.token?.val || 0)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           {booking.paymentDelta?.fiat.val ? (
             <div className="flex justify-between gap-2 p-4 bg-accent-light rounded-md">

@@ -55,6 +55,7 @@ const CheckoutForm = ({
   bookingNights,
   status,
   refetchBooking,
+  isAdditionalFiatPayment,
 }) => {
   const t = useTranslations();
 
@@ -75,7 +76,7 @@ const CheckoutForm = ({
 
     let tokenPaymentSuccessful = false;
 
-    if (useCredits) {
+    if (useCredits && !isAdditionalFiatPayment) {
       try {
         await payWithCredits();
       } catch (error) {
@@ -84,7 +85,11 @@ const CheckoutForm = ({
       }
     }
 
-    if (prePayInTokens && status !== 'tokens-staked') {
+    if (
+      prePayInTokens &&
+      status !== 'tokens-staked' &&
+      !isAdditionalFiatPayment
+    ) {
       // If we're about to attempt token payment and we have a refetch function,
       // refetch the booking first to get the latest status
       let currentStatus = status;
