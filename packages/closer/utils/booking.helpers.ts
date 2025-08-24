@@ -636,14 +636,20 @@ export const getPaymentType = ({
   currency,
   maxNightsToPayWithTokens,
   maxNightsToPayWithCredits,
+  isAdditionalFiatPayment = false,
 }: {
   useCredits: boolean;
   duration: number;
   currency: CloserCurrencies;
   maxNightsToPayWithTokens: number;
   maxNightsToPayWithCredits: number;
+  isAdditionalFiatPayment?: boolean;
 }): PaymentType => {
   let localPaymentType: PaymentType = PaymentType.FIAT;
+
+  if (isAdditionalFiatPayment) {
+    return PaymentType.FIAT;
+  }
 
   if (currency === CURRENCIES[0]) {
     if (

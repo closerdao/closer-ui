@@ -139,6 +139,7 @@ const SummaryCosts = ({
                   isEditMode={false}
                   rentalFiat={rentalFiat}
                   rentalToken={rentalToken}
+                  isAccommodationPrice={true}
                 />
 
                 {isNotPaid && (

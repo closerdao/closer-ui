@@ -25,6 +25,7 @@ import { MAX_LISTINGS_TO_FETCH, STATUS_COLOR } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
+import { PaymentType } from '../../../types';
 import {
   Booking,
   BookingConfig,
@@ -176,7 +177,12 @@ const BookingPage = ({
     rentalFiat,
   });
 
-  const canEditBooking = paymentType === 'fullTokens' || paymentType === 'fiat';
+  const canEditBooking =
+    paymentType === PaymentType.FULL_TOKENS ||
+    paymentType === PaymentType.PARTIAL_TOKENS ||
+    paymentType === PaymentType.FULL_CREDITS ||
+    paymentType === PaymentType.PARTIAL_CREDITS ||
+    paymentType === 'fiat';
 
   const checkInTime = bookingConfig?.checkinTime || 14;
   const checkOutTime = bookingConfig?.checkoutTime || 11;
@@ -238,7 +244,6 @@ const BookingPage = ({
           paymentType,
         });
 
-        console.log('res.data.results=', res.data.results);
         setUpdatedPrices(res.data.results);
       } catch (error) {
         console.error('Error fetching updated prices:', error);
@@ -284,9 +289,6 @@ const BookingPage = ({
     fetchPayerInfo();
   }, [booking?.paidBy]);
 
-  console.log('--------------------------------');
-  console.log('updatedPrices==>', updatedPrices);
-
   const updatedAccomodationTotal =
     useTokens || useCredits
       ? updatedPrices?.rentalToken?.val || 0
@@ -298,14 +300,6 @@ const BookingPage = ({
   const updatedFoodTotal = updatedPrices?.foodFiat?.val || 0;
   const updatedEventTotal = updatedPrices?.eventFiat?.val || 0;
   const updatedFiatTotal = updatedPrices?.total?.val || 0;
-
-  console.log('updatedRentalFiat==>', updatedRentalFiat);
-  console.log('updatedRentalToken==>', updatedRentalToken);
-
-  console.log('booking==>', booking);
-
-  // TODO:update paymentDelta, dailyrentaltoken, total, rentalfiat !!!!!!!!! don't update rentalfiat
-  // when the price of token booking updated, but payment delta is not zero, rentalFiAt should match paymentdelta
 
   const updatedBookingValues = {
     ...(updatedStatus &&
@@ -710,7 +704,9 @@ const BookingPage = ({
             />
           </div>
 
-          {booking.paymentDelta?.token?.val && (paymentType === 'fullTokens' || paymentType === 'partialTokens') ? (
+          {booking.paymentDelta?.token?.val &&
+          (paymentType === PaymentType.FULL_TOKENS ||
+            paymentType === PaymentType.PARTIAL_TOKENS) ? (
             <div className="flex justify-between gap-2 p-4 bg-accent-light rounded-md">
               <div className="font-bold space-y-4">
                 <p>
@@ -769,7 +765,6 @@ const BookingPage = ({
                   </Link>
                 </p>
               )}
-              
             </div>
           ) : null}
         </section>

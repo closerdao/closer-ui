@@ -44,6 +44,7 @@ const CheckoutPayment = ({
   hasAgreedToWalletDisclaimer,
   setWalletDisclaimer,
   refetchBooking,
+  isAdditionalFiatPayment,
 }) => {
   const t = useTranslations();
 
@@ -142,6 +143,7 @@ const CheckoutPayment = ({
           bookingNights={bookingNights}
           status={status}
           refetchBooking={refetchBooking}
+          isAdditionalFiatPayment={isAdditionalFiatPayment}
         >
           <Conditions
             cancellationPolicy={cancellationPolicy}
