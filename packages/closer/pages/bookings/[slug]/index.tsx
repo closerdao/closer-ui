@@ -646,6 +646,8 @@ const BookingPage = ({
             )}
           </div>
 
+          paymentType={paymentType}
+
           <SummaryCosts
             rentalFiat={rentalFiat}
             rentalToken={rentalToken}
@@ -746,19 +748,10 @@ const BookingPage = ({
                 </p>
 
                 <div className="flex gap-2 items-center">
-                  <label htmlFor="amountToRefund" className="font-bold">
-                    {booking.paymentDelta?.fiat.cur}
-                  </label>
-                  <Input
-                    onChange={(e) => setAmountToRefund(Number(e.target.value))}
-                    placeholder={`€${Math.abs(
-                      booking.paymentDelta?.fiat.val || 0,
-                    ).toString()}`}
-                    id="amountToRefund"
-                    type="number"
-                    className="w-[100px] bg-white py-0.5 px-2"
-                    value={amountToRefund?.toString()}
-                  />
+                  <div className="font-bold">
+                    {booking.paymentDelta?.fiat.cur} {amountToRefund?.toString()}
+                  </div>
+           
                 </div>
               </div>
               {booking.paymentDelta?.fiat.val < 0 && (
