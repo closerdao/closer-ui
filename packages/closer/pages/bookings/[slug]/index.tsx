@@ -646,8 +646,6 @@ const BookingPage = ({
             )}
           </div>
 
-          paymentType={paymentType}
-
           <SummaryCosts
             rentalFiat={rentalFiat}
             rentalToken={rentalToken}
