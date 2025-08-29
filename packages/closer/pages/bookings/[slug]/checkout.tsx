@@ -677,10 +677,17 @@ const Checkout = ({
                         rentalFiat={rentalFiat}
                         rentalToken={{
                           val: listing?.private
-                            ? (dailyRentalToken?.val || 0) * (duration || 0)
-                            : (dailyRentalToken?.val || 0) *
-                              (duration || 0) *
-                              (adults || 0),
+                            ? Math.round(
+                                (dailyRentalToken?.val || 0) *
+                                  (duration || 0) *
+                                  (adults || 0) *
+                                  100,
+                              ) / 100
+                            : Math.round(
+                                (dailyRentalToken?.val || 0) *
+                                  (duration || 0) *
+                                  (adults || 0) * 100,
+                              ) / 100,
                           cur: CloserCurrencies.TDF,
                         }}
                         applyCredits={applyCredits}
