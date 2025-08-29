@@ -309,10 +309,17 @@ const DatesSelector = ({
     diffInDays >= (volunteerConfig?.residenceMinStay || 1);
 
   const isMinDurationMatched = Boolean(
-    (bookingConfig && diffInDays >= bookingConfig?.minDuration) ||
+    (bookingConfig &&
+      diffInDays >= bookingConfig?.minDuration &&
+      !isVolunteerApplication &&
+      !isResidenceApplication) ||
       eventId ||
-      isMember,
+      isMember ||
+      (isVolunteerApplication && isMinVolunteeringStayMatched) ||
+      (isResidenceApplication && isMinResidenceStayMatched),
   );
+
+  console.log('isMinDurationMatched', isMinDurationMatched);
 
   const canProceed = !!(
     ((hasEventIdAndValidTicket && hasValidDates) ||
