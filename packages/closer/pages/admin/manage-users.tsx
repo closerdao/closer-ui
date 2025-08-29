@@ -38,7 +38,7 @@ const ManageUsersPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) =>
       </Head>
 
       <AdminLayout isBookingEnabled={isBookingEnabled}>
-        <div className="max-w-screen-lg flex flex-col gap-10">
+        <div className="max-w-screen-lg flex flex-col gap-2">
           <Heading level={1}>{t('manage_users_heading')}</Heading>
           <UsersFilter
             page={page}
@@ -52,6 +52,7 @@ const ManageUsersPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) =>
             page={page}
             setPage={setPage}
             sortBy={sortBy}
+            setSortBy={setSortBy}
           />
         </div>
       </AdminLayout>
