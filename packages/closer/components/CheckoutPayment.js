@@ -44,6 +44,7 @@ const CheckoutPayment = ({
   hasAgreedToWalletDisclaimer,
   setWalletDisclaimer,
   refetchBooking,
+  isAdditionalFiatPayment,
 }) => {
   const t = useTranslations();
 
@@ -64,7 +65,7 @@ const CheckoutPayment = ({
     bookingYear,
     bookingStartDayOfYear + i,
   ]);
-  const { isStaking } = useBookingSmartContract({
+  const { isStaking, stakeTokens, checkContract } = useBookingSmartContract({
     bookingNights,
   });
 
@@ -142,6 +143,9 @@ const CheckoutPayment = ({
           bookingNights={bookingNights}
           status={status}
           refetchBooking={refetchBooking}
+          isAdditionalFiatPayment={isAdditionalFiatPayment}
+          stakeTokens={stakeTokens}
+          checkContract={checkContract}
         >
           <Conditions
             cancellationPolicy={cancellationPolicy}

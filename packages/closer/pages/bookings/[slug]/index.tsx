@@ -25,6 +25,7 @@ import { MAX_LISTINGS_TO_FETCH, STATUS_COLOR } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
+import { PaymentType } from '../../../types';
 import {
   Booking,
   BookingConfig,
@@ -176,6 +177,13 @@ const BookingPage = ({
     rentalFiat,
   });
 
+  const canEditBooking =
+    paymentType === PaymentType.FULL_TOKENS ||
+    paymentType === PaymentType.PARTIAL_TOKENS ||
+    paymentType === PaymentType.FULL_CREDITS ||
+    paymentType === PaymentType.PARTIAL_CREDITS ||
+    paymentType === 'fiat';
+
   const checkInTime = bookingConfig?.checkinTime || 14;
   const checkOutTime = bookingConfig?.checkoutTime || 11;
 
@@ -193,7 +201,9 @@ const BookingPage = ({
     status !== 'credits-paid' &&
     status !== 'tokens-staked' &&
     status !== 'checked-in' &&
-    status !== 'checked-out';
+    status !== 'checked-out' &&
+    status !== 'cancelled' &&
+    status !== 'pending-refund';
 
   let updatedDuration = 0;
 
@@ -214,17 +224,27 @@ const BookingPage = ({
 
   useEffect(() => {
     const fetchUpdatedPrice = async () => {
+      const paymentType = getBookingPaymentType({
+        useCredits,
+        useTokens,
+        rentalFiat,
+      });
       try {
         const res = await api.post('/bookings/calculate-totals', {
           bookingId: booking._id,
-          adults: updatedAdults,
-          children: updatedChildren,
-          infants: updatedInfants,
-          pets: updatedPets,
-          start: updatedStartDate,
-          end: updatedEndDate,
-          listing: updatedListingId,
+          
+          updatedAdults,
+          updatedDuration,
+          updatedChildren,
+          updatedInfants,
+          updatedPets,
+          updatedStart: updatedStartDate,
+          updatedEnd: updatedEndDate,
+          updatedListingId,
+          isBookingEdit: true,
+          paymentType,
         });
+
         setUpdatedPrices(res.data.results);
       } catch (error) {
         console.error('Error fetching updated prices:', error);
@@ -274,10 +294,21 @@ const BookingPage = ({
     useTokens || useCredits
       ? updatedPrices?.rentalToken?.val || 0
       : updatedPrices?.rentalFiat?.val || 0;
+
+  const updatedRentalFiat = updatedPrices?.rentalFiat || 0;
+  const updatedRentalToken = updatedPrices?.rentalToken || 0;
   const updatedUtilityTotal = updatedPrices?.utilityFiat?.val || 0;
   const updatedFoodTotal = updatedPrices?.foodFiat?.val || 0;
   const updatedEventTotal = updatedPrices?.eventFiat?.val || 0;
   const updatedFiatTotal = updatedPrices?.total?.val || 0;
+
+  console.log('updatedRentalFiat==>', updatedRentalFiat);
+  console.log('updatedRentalToken==>', updatedRentalToken);
+
+  console.log('booking==>', booking);
+
+  // TODO:update paymentDelta, dailyrentaltoken, total, rentalfiat !!!!!!!!! don't update rentalfiat
+  // when the price of token booking updated, but payment delta is not zero, rentalFiAt should match paymentdelta
 
   const updatedBookingValues = {
     ...(updatedStatus &&
@@ -341,13 +372,10 @@ const BookingPage = ({
         ? updatedRoomNumbers?.slice(0, updatedAdults)
         : updatedRoomNumbers,
     utilityFiat: { val: updatedUtilityTotal, cur: rentalFiat?.cur },
-    rentalFiat:
-      useTokens || useCredits
-        ? rentalFiat
-        : { val: updatedAccomodationTotal, cur: rentalFiat?.cur },
+    rentalFiat: updatedRentalFiat,
     rentalToken:
       useTokens || useCredits
-        ? { val: updatedAccomodationTotal, cur: rentalToken?.cur }
+        ? { val: updatedRentalToken, cur: rentalToken?.cur }
         : booking?.rentalToken,
     ...(eventFiat
       ? {
@@ -358,6 +386,7 @@ const BookingPage = ({
           },
         }
       : null),
+    dailyRentalToken: updatedRentalToken,
     listing: updatedListingId,
     foodFiat: { val: updatedFoodTotal, cur: rentalFiat?.cur },
     total: { val: updatedFiatTotal, cur: rentalFiat?.cur },
@@ -613,6 +642,7 @@ const BookingPage = ({
               />
             )}
           </div>
+
           <SummaryCosts
             rentalFiat={rentalFiat}
             rentalToken={rentalToken}
@@ -653,11 +683,12 @@ const BookingPage = ({
               val: updatedEventTotal,
               cur: eventFiat?.cur,
             }}
-            updatedRentalFiat={{
-              val: updatedAccomodationTotal,
-              cur: rentalFiat?.cur,
-            }}
-            updatedRentalToken={updatedPrices?.rentalToken}
+            updatedRentalFiat={
+              updatedRentalFiat || { val: 0, cur: rentalFiat?.cur }
+            }
+            updatedRentalToken={
+              updatedRentalToken || { val: 0, cur: rentalToken?.cur }
+            }
             priceDuration={listing?.priceDuration}
             vatRate={vatRate}
             status={status}
@@ -681,6 +712,27 @@ const BookingPage = ({
             />
           </div>
 
+          {booking.paymentDelta?.token?.val &&
+          (paymentType === PaymentType.FULL_TOKENS ||
+            paymentType === PaymentType.PARTIAL_TOKENS) ? (
+            <div className="flex justify-between gap-2 p-4 bg-accent-light rounded-md">
+              <div className="font-bold space-y-4">
+                <p>
+                  {booking.paymentDelta?.token.val >= 0
+                    ? t('bookings_amount_due')
+                    : t('bookings_amount_to_refund')}
+                </p>
+
+                <div className="flex gap-2 items-center">
+                  <p className="font-bold">
+                    {booking.paymentDelta?.token.cur}
+                    {Math.abs(booking.paymentDelta?.token?.val || 0)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           {booking.paymentDelta?.fiat.val ? (
             <div className="flex justify-between gap-2 p-4 bg-accent-light rounded-md">
               <div className="font-bold space-y-4">
@@ -691,19 +743,10 @@ const BookingPage = ({
                 </p>
 
                 <div className="flex gap-2 items-center">
-                  <label htmlFor="amountToRefund" className="font-bold">
-                    {booking.paymentDelta?.fiat.cur}
-                  </label>
-                  <Input
-                    onChange={(e) => setAmountToRefund(Number(e.target.value))}
-                    placeholder={`€${Math.abs(
-                      booking.paymentDelta?.fiat.val || 0,
-                    ).toString()}`}
-                    id="amountToRefund"
-                    type="number"
-                    className="w-[100px] bg-white py-0.5 px-2"
-                    value={amountToRefund?.toString()}
-                  />
+                  <div className="font-bold">
+                    {booking.paymentDelta?.fiat.cur} {amountToRefund?.toString()}
+                  </div>
+           
                 </div>
               </div>
               {booking.paymentDelta?.fiat.val < 0 && (
@@ -726,11 +769,10 @@ const BookingPage = ({
         </section>
 
         <section>
-          {(booking.useCredits || booking.useTokens) && (
+          {!canEditBooking && (
             <div className="bg-yellow-100 rounded-md p-4 space-y-2 font-bold mb-8">
-              WARNING: this booking has been paid with credits or tokens.
-              Updating and cancelling booking not currently supported. Please
-              handle these operations manually.
+              WARNING: editing this type of booking is not currently supported.
+              Please handle these operations manually.
             </div>
           )}
 
@@ -739,12 +781,7 @@ const BookingPage = ({
               <Button
                 isLoading={isLoading}
                 onClick={handleSaveBooking}
-                isEnabled={
-                  hasUpdatedBooking &&
-                  !isLoading &&
-                  !booking.useCredits &&
-                  !booking.useTokens
-                }
+                isEnabled={hasUpdatedBooking && !isLoading && canEditBooking}
               >
                 {t('booking_card_save_booking')}
               </Button>

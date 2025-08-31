@@ -527,11 +527,11 @@ export const payTokens = async (
   console.log('nightsRejected=', nightsRejected);
   console.log('error reason=', error?.reason);
 
-  if (error?.reason.trim() === USER_REJECTED_TRANSACTION_ERROR) {
+  if (error?.reason?.trim() === USER_REJECTED_TRANSACTION_ERROR) {
     console.log('User rejected transaction!!!!!');
     return { error: 'User rejected transaction', success: null };
   }
-  if (error?.reason.trim() === BOOKING_EXISTS_ERROR) {
+  if (error?.reason?.trim() === BOOKING_EXISTS_ERROR) {
     return { error: 'Booking for these dates already exists', success: null };
   }
   if (error) {
@@ -636,14 +636,20 @@ export const getPaymentType = ({
   currency,
   maxNightsToPayWithTokens,
   maxNightsToPayWithCredits,
+  isAdditionalFiatPayment = false,
 }: {
   useCredits: boolean;
   duration: number;
   currency: CloserCurrencies;
   maxNightsToPayWithTokens: number;
   maxNightsToPayWithCredits: number;
+  isAdditionalFiatPayment?: boolean;
 }): PaymentType => {
   let localPaymentType: PaymentType = PaymentType.FIAT;
+
+  if (isAdditionalFiatPayment) {
+    return PaymentType.FIAT;
+  }
 
   if (currency === CURRENCIES[0]) {
     if (

@@ -94,6 +94,13 @@ const models = {
       tab: 'general',
     },
     {
+      name: 'chatLink',
+      label: 'Guest support chat link',
+      type: 'text',
+      defaultValue: '',
+      tab: 'general',
+    },
+    {
       name: 'virtual',
       label: 'Is this a virtual event?',
       type: 'switch',
