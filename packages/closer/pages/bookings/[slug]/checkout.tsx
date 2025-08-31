@@ -686,7 +686,8 @@ const Checkout = ({
                             : Math.round(
                                 (dailyRentalToken?.val || 0) *
                                   (duration || 0) *
-                                  (adults || 0) * 100,
+                                  (adults || 0) *
+                                  100,
                               ) / 100,
                           cur: CloserCurrencies.TDF,
                         }}
@@ -848,6 +849,7 @@ const Checkout = ({
                 : t('buttons_booking_request')}
             </Button>
           )}
+
           {isTokenOnlyBooking && !isFriendsBooking && (
             <div>
               <Checkbox

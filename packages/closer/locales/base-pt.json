@@ -376,6 +376,8 @@
   "booking_card_unpaid": "Não pago",
   "booking_card_checkout_button": "Pagar",
   "booking_card_join_chat_button": "Entrar no chat TDF Today",
+  "booking_card_open_event_chat": "Abrir chat do evento",
+  "booking_card_open_chat": "Abrir chat",
   "booking_card_feedback_button": "Dê-nos o seu feedback",
   "booking_card_payment_utility": "Taxa de custos fixos",
   "booking_card_payment_event": "Custo do Evento",
@@ -1249,6 +1251,7 @@
   "config_label_dayOfMonth": "Dia do mês",
   "config_label_weekDay": "Selecionar dia da semana",
   "config_label_weekPosition": "Que semana",
+  "config_label_chatLink": "Link do chat de suporte ao convidado",
   "config_email_product_paid_guest": "Produto pago, enviar ao utilizador imediatamente",
   "config_email_product_paid_admin": "Produto pago, enviar aos administradores imediatamente",
   "edit_homepage_button": "Editar página de Histórico",
@@ -1804,5 +1807,13 @@
   "roles_edit_role_button": "Editar Função",
   "roles_edit_page_title": "Editar Função",
   "roles_page_description_1": "Junte-se à nossa vibrante comunidade regenerativa onde o trabalho e a vida se misturam perfeitamente. Estamos à procura de indivíduos apaixonados que queiram contribuir para um futuro sustentável enquanto vivem em harmonia com a natureza e pessoas com ideias semelhantes. Os nossos papéis oferecem mais do que apenas emprego - proporcionam uma oportunidade de fazer parte de um ecossistema em crescimento que valoriza a colaboração, a aprendizagem e a gestão ambiental.",
-  "roles_page_description_2": "Quer seja especialista em jardinagem, construção, hospitalidade, ou tenha outros talentos para partilhar, damos as boas-vindas a perspectivas e capacidades diversas. Em troca, irá experimentar a vida em comunidade, aprender práticas regenerativas e contribuir para projectos significativos que fazem a diferença."
+  "roles_page_description_2": "Quer seja especialista em jardinagem, construção, hospitalidade, ou tenha outros talentos para partilhar, damos as boas-vindas a perspectivas e capacidades diversas. Em troca, irá experimentar a vida em comunidade, aprender práticas regenerativas e contribuir para projectos significativos que fazem a diferença.",
+
+  "space_host_notes": "Notas do Anfitrião do Espaço",
+  "enter_notes_placeholder": "Introduza notas sobre este hóspede...",
+  "notes_saved_successfully": "Notas guardadas com sucesso!",
+  "error_saving_notes": "Erro ao guardar notas. Por favor, tente novamente.",
+  "saving": "A guardar...",
+  "save": "Guardar",
+  "cancel": "Cancelar"
 }

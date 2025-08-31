@@ -182,6 +182,10 @@ export const configDescription: ConfigType[] = [
         type: 'boolean',
         default: false,
       },
+      chatLink: {
+        type: 'text',
+        default: '',
+      },
     },
   },
   {

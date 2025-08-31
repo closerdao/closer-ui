@@ -2,6 +2,15 @@ export { default as BackButton } from './BackButton';
 export { default as Button } from './Button';
 export { default as Card } from './Card';
 export { default as Checkbox } from './Checkbox';
+export {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from './dialog';
 export { default as ErrorMessage } from './ErrorMessage';
 export { default as Heading } from './Heading';
 export { default as Information } from './Information';
@@ -20,3 +29,4 @@ export {
   TableHeader,
   TableRow,
 } from './table';
+export { Textarea } from './textarea';

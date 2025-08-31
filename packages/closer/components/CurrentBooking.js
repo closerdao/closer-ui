@@ -11,6 +11,7 @@ import { usePlatform } from '../contexts/platform';
 import { cdn } from '../utils/api';
 import { priceFormat } from '../utils/helpers';
 import Pagination from './Pagination';
+import SpaceHostNotesDialog from './SpaceHostNotesDialog';
 import {
   Button,
   Heading,
@@ -22,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from './ui';
+import LinkButton from './ui/LinkButton';
 
 dayjs.extend(isSameOrBefore);
 
@@ -75,7 +77,6 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
     bookings && bookings.size > 0
       ? bookings
           .map((b) => {
-            console.log('booking=', b.toJS());
             const adults = b.get('adults') ?? 0;
             const children = b.get('children') ?? 0;
             const infants = b.get('infants') ?? 0;
@@ -113,6 +114,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
               photo: userToShow.get('photo'),
               preferences: userToShow.get('preferences'),
               email: userToShow.get('email'),
+              _id: userToShow.get('_id'),
             };
 
             const rentalFiat = b.get('rentalFiat');
@@ -121,8 +123,8 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
             // const eventFiat = b.get('eventFiat');
 
             const totalAmount = b.get('total');
+            const spaceHostNotes = b.get('spaceHostNotes') || '';
 
-            console.log('b.get(total)=', b.get('total'));
             const totalCurrency = rentalFiat?.cur || 'EUR';
 
             return {
@@ -146,6 +148,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
               isHourly,
               totalAmount,
               totalCurrency,
+              spaceHostNotes,
             };
           })
           .toJS()
@@ -280,7 +283,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                     key={b._id}
                     className={`${
                       title === t('current_bookings_people_here') &&
-                      b?.status !== 'checked-in'
+                      b?.status == 'paid'
                         ? 'bg-red-100'
                         : title === t('current_bookings_just_left') &&
                           b?.status !== 'checked-out'
@@ -288,6 +291,8 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                         : ''
                     }`}
                   >
+
+
                     <TableCell className="whitespace-nowrap">
                       <div className="flex items-center gap-1">
                         {b.userInfo?.photo && (
@@ -299,7 +304,13 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                         )}
                         <div className="min-w-0">
                           <div className="font-medium truncate">
-                            {b.userInfo?.name || 'Unknown'}
+                            <LinkButton
+                              target="_blank"
+                              className="w-fit h-fit py-0 px-1 text-xs min-h-0"
+                              href={`/members/${b.userInfo?._id}`}
+                            >
+                              {b.userInfo?.name || 'Unknown'}
+                            </LinkButton>
                           </div>
                           {b.userInfo?.email && (
                             <div className="text-xs text-gray-500 truncate">
@@ -390,14 +401,21 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       <div className="flex flex gap-1 items-center">
-                        <a
+                        <LinkButton
+                          className="text-xs py-1 px-1 w-fit border-none enabled:bg-transparent bg-transparent"
+                          variant="secondary"
+                          size="small"
                           href={`/bookings/${b._id}`}
                           target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center w-6 h-6 text-gray-500 hover:text-gray-700 transition-colors"
                         >
                           <ExternalLink size={16} />
-                        </a>
+                        </LinkButton>
+
+                        <SpaceHostNotesDialog
+                          bookingId={b._id}
+                          currentNotes={b.spaceHostNotes}
+                          guestName={b.userInfo?.name || 'Unknown'}
+                        />
 
                         {/* Check-in button for "being here" section */}
                         {title === t('current_bookings_people_here') &&
