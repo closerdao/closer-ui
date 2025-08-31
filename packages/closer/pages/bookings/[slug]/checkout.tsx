@@ -72,7 +72,6 @@ const Checkout = ({
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   const [updatedBooking, setUpdatedBooking] = useState<Booking | null>(null);
-
   const {
     utilityFiat,
     foodFiat,
@@ -803,7 +802,9 @@ const Checkout = ({
                 bookingId={booking?._id || ''}
                 buttonDisabled={
                   (useTokens &&
-                    (!hasAgreedToWalletDisclaimer || isNotEnoughBalance)) ||
+                    (!hasAgreedToWalletDisclaimer ||
+                      (isNotEnoughBalance &&
+                        booking?.status !== 'tokens-staked'))) ||
                   false
                 }
                 useTokens={useTokens || false}
@@ -849,7 +850,6 @@ const Checkout = ({
                 : t('buttons_booking_request')}
             </Button>
           )}
-
           {isTokenOnlyBooking && !isFriendsBooking && (
             <div>
               <Checkbox

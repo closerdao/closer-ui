@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { getSample } from '../../utils/helpers';
+import { slugify } from '../../utils/common';
 import { trackEvent } from '../Analytics';
 import DateTimePicker from '../DateTimePicker';
 import FormField from '../FormField';
@@ -84,6 +85,20 @@ const EditModel: FC<Props> = ({
   const [startDate, setStartDate] = useState<string | null | Date>(data.start);
   const [endDate, setEndDate] = useState<string | null | Date>(data.end);
   const [isLoading, setIsLoading] = useState(false);
+  // Check if the model has a slug field
+  const hasSlugField = fields.some(field => field.name === 'slug');
+  
+  // Generate slug from title/name for models with slug fields
+  const generateSlug = (titleOrName: string) => {
+    if (!titleOrName || typeof titleOrName !== 'string' || titleOrName.trim().length === 0) return '';
+    return slugify(titleOrName.trim());
+  };
+
+  // Get the title/name field value for slug generation
+  const getTitleValue = () => {
+    const value = data.title || data.name || '';
+    return value && value.trim() ? value : '';
+  };
 
   useEffect(() => {
     setData({ ...data, start: startDate, end: endDate });
@@ -215,6 +230,18 @@ const EditModel: FC<Props> = ({
     }
   }, [endpoint, id, initialData, fields]);
 
+  // Auto-generate slug on each character typed in title field
+  useEffect(() => {
+    const titleValue = getTitleValue();
+    
+    if (hasSlugField && titleValue && titleValue.length > 0) {
+      const newSlug = generateSlug(titleValue);
+      if (newSlug && newSlug !== data.slug) {
+        update('slug', newSlug);
+      }
+    }
+  }, [data.title, data.name, hasSlugField]);
+
   if (!isPublic && !isAuthenticated) {
     return (
       <div className="validation-error card">
@@ -264,29 +291,41 @@ const EditModel: FC<Props> = ({
                     defaultMonth={new Date()}
                   />
                 ) : null,
-              content: filterFields(fieldsByTab[key], data).map((field) => (
-                <FormField
-                  dynamicField={dynamicField}
-                  {...field}
-                  key={field.name}
-                  data={data}
-                  update={update}
-                />
-              )),
+              content: (
+                <>
+                  {filterFields(fieldsByTab[key], data).map((field) => (
+                    <FormField
+                      dynamicField={dynamicField}
+                      {...field}
+                      key={field.name}
+                      data={data}
+                      update={update}
+                    />
+                  ))}
+                  
+                  
+                </>
+              ),
             }))}
           />
         ) : (
-          fields &&
-          filterFields(fields, data).map((field) => (
-            <FormField
-              {...field}
-              dynamicField={dynamicField}
-              key={field.name}
-              data={data}
-              update={update}
-              step={field.step || 1}
-            />
-          ))
+          <>
+            {fields &&
+              filterFields(fields, data).map((field) => (
+                <FormField
+                  {...field}
+                  dynamicField={dynamicField}
+                  key={field.name}
+                  data={data}
+                  update={update}
+                  step={field.step || 1}
+                />
+              ))}
+            
+
+            
+
+          </>
         )}
 
         {(endpoint === '/volunteer' || endpoint === '/projects') && (

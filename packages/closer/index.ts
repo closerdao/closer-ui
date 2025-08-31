@@ -30,6 +30,7 @@ export { default as ProgressBar } from './components/ui/ProgressBar';
 export { default as Row } from './components/ui/Row';
 export { default as Spinner } from './components/ui/Spinner';
 export { default as UploadPhoto } from './components/UploadPhoto/UploadPhoto';
+export { default as PhotoEditor } from './components/PhotoEditor';
 export { default as VolunteerEventView } from './components/VolunteerEventView/';
 export { default as YoutubeEmbed } from './components/YoutubeEmbed';
 

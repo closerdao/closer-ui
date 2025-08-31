@@ -54,7 +54,7 @@ export const subscriptionsConfig: {
       title: 'Sheep',
       emoji: '',
       description:
-        'BE THE DREAM. MAKE TDF ONE OF YOUR HOMES. GET YOUR $TDF AND MAKE SURE TO GET YOUR MEMBERSHEEP',
+        'BE THE DREAM. MAKE TDF ONE OF YOUR HOMES. GET YOUR $TDF AND MAKE SURE TO GET YOUR CITIZENSHIP',
       priceId: '',
       tier: 4,
       monthlyCredits: 0,

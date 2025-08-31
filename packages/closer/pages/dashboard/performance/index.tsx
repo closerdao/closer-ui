@@ -27,6 +27,10 @@ const PerformancePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) =>
   const router = useRouter();
   const { time_frame } = router.query;
 
+  const isTokenEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
+
+  const areSubscriptionsEnabled = process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
+
   const isBookingEnabled =
   bookingConfig?.enabled &&
   process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -92,16 +96,20 @@ const PerformancePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) =>
               fromDate={fromDate}
               toDate={toDate}
             />
+            {isTokenEnabled && (
             <TokenSalesFunnel
               timeFrame={timeFrame}
-              fromDate={fromDate}
-              toDate={toDate}
-            />
+                fromDate={fromDate}
+                toDate={toDate}
+              />
+            )}
+            {areSubscriptionsEnabled && (
             <SubscriptionsFunnel
               timeFrame={timeFrame}
-              fromDate={fromDate}
-              toDate={toDate}
-            />
+                fromDate={fromDate}
+                toDate={toDate}
+              />
+            )}
           </section>
         </div>
       </AdminLayout>

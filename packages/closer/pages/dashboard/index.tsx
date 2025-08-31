@@ -46,6 +46,9 @@ const DashboardPage = ({ generalConfig, bookingConfig }: Props) => {
     time_frame?.toString() || 'month',
   );
 
+  const areSubscriptionsEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
+
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -117,11 +120,13 @@ const DashboardPage = ({ generalConfig, bookingConfig }: Props) => {
             toDate={toDate}
           />
 
-          <DashboardSubscriptions
-            timeFrame={timeFrame}
-            fromDate={fromDate}
-            toDate={toDate}
-          />
+          {areSubscriptionsEnabled && (
+            <DashboardSubscriptions
+              timeFrame={timeFrame}
+              fromDate={fromDate}
+              toDate={toDate}
+            />
+          )}
         </div>
       </AdminLayout>
     </>

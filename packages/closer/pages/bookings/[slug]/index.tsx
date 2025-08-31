@@ -232,6 +232,7 @@ const BookingPage = ({
       try {
         const res = await api.post('/bookings/calculate-totals', {
           bookingId: booking._id,
+          
           updatedAdults,
           updatedDuration,
           updatedChildren,
@@ -288,9 +289,6 @@ const BookingPage = ({
 
     fetchPayerInfo();
   }, [booking?.paidBy]);
-
-  console.log('--------------------------------');
-  console.log('updatedPrices==>', updatedPrices);
 
   const updatedAccomodationTotal =
     useTokens || useCredits
@@ -495,7 +493,6 @@ const BookingPage = ({
           )}
 
           {booking?.status !== 'pending' &&
-          booking?.status !== 'pending-refund' &&
           isNotPaid &&
           (user?._id === createdBy || user?._id === booking?.paidBy) ? (
             <Link href={`/bookings/${_id}/checkout`} passHref>
