@@ -249,17 +249,19 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
           <Table className="w-full min-w-max">
             <TableHeader>
               <TableRow>
-                <TableHead>Guest</TableHead>
-                <TableHead>Listing</TableHead>
-                <TableHead>Check-in</TableHead>
-                <TableHead>Check-out</TableHead>
-                <TableHead>Guests</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Pickup</TableHead>
-                <TableHead>Separate Beds</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>{t('current_booking_table_guest')}</TableHead>
+                <TableHead>{t('current_booking_table_listing')}</TableHead>
+                <TableHead>{t('current_booking_table_check_in')}</TableHead>
+                <TableHead>{t('current_booking_table_check_out')}</TableHead>
+                <TableHead>{t('current_booking_table_guests')}</TableHead>
+                <TableHead>{t('current_booking_table_duration')}</TableHead>
+                <TableHead>{t('current_booking_table_status')}</TableHead>
+                <TableHead>{t('current_booking_table_total')}</TableHead>
+                <TableHead>{t('current_booking_table_pickup')}</TableHead>
+                <TableHead>
+                  {t('current_booking_table_separate_beds')}
+                </TableHead>
+                <TableHead>{t('current_booking_table_actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -291,8 +293,6 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                         : ''
                     }`}
                   >
-
-
                     <TableCell className="whitespace-nowrap">
                       <div className="flex items-center gap-1">
                         {b.userInfo?.photo && (
@@ -309,7 +309,8 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                               className="w-fit h-fit py-0 px-1 text-xs min-h-0"
                               href={`/members/${b.userInfo?._id}`}
                             >
-                              {b.userInfo?.name || 'Unknown'}
+                              {b.userInfo?.name ||
+                                t('current_booking_unknown_user')}
                             </LinkButton>
                           </div>
                           {b.userInfo?.email && (
@@ -327,12 +328,14 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                         </div>
                         {currentEvent && (
                           <div className="text-xs text-gray-500 truncate">
-                            Event: {currentEvent.get('name')}
+                            {t('current_booking_event_label')}{' '}
+                            {currentEvent.get('name')}
                           </div>
                         )}
                         {currentVolunteer && (
                           <div className="text-xs text-gray-500 truncate">
-                            Volunteer: {currentVolunteer.get('name')}
+                            {t('current_booking_volunteer_label')}{' '}
+                            {currentVolunteer.get('name')}
                           </div>
                         )}
                       </div>
@@ -361,7 +364,11 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       <div className="text-center">
-                        {b.isHourly ? '-' : `${b.duration} nights`}
+                        {b.isHourly
+                          ? '-'
+                          : `${b.duration} ${t(
+                              'current_booking_duration_nights',
+                            )}`}
                       </div>
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
@@ -377,7 +384,9 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                             })}
                           </div>
                         ) : (
-                          <div className="text-gray-500">Free</div>
+                          <div className="text-gray-500">
+                            {t('current_booking_free')}
+                          </div>
                         )}
                       </div>
                     </TableCell>
@@ -414,7 +423,10 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                         <SpaceHostNotesDialog
                           bookingId={b._id}
                           currentNotes={b.spaceHostNotes}
-                          guestName={b.userInfo?.name || 'Unknown'}
+                          guestName={
+                            b.userInfo?.name ||
+                            t('current_booking_unknown_user')
+                          }
                         />
 
                         {/* Check-in button for "being here" section */}

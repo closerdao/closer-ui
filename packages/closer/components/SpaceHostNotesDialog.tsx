@@ -81,7 +81,13 @@ const SpaceHostNotesDialog = ({
           variant="secondary"
           size="small"
         >
-          <NotebookPen size={16} />
+          {currentNotes ? (
+            <div className="bg-accent  p-1 rounded-full">
+              <NotebookPen size={16} className="text-background " />
+            </div>
+          ) : (
+            <NotebookPen size={16} />
+          )}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
