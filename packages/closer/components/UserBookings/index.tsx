@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { User } from '../../contexts/auth/types';
 import Bookings from '../Bookings';
 import Tabs from '../Tabs';
-import { BookingConfig } from '@/types/api';
+import { BookingConfig } from '../../types/api';
 
 interface Props {
   user: User;

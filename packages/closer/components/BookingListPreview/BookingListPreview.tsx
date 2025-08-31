@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 
 import { useState } from 'react';
 
-import { BookingConfig } from '@/types/api';
+import { BookingConfig } from '../../types/api';
 
 import dayjs from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';

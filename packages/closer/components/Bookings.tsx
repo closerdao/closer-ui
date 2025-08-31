@@ -8,7 +8,7 @@ import { usePlatform } from '../contexts/platform';
 import BookingListPreview from './BookingListPreview/BookingListPreview';
 import Pagination from './Pagination';
 import { Button, Heading, Spinner } from './ui';
-import { BookingConfig } from '@/types/api';
+import { BookingConfig } from '../types/api';
 
 interface Props {
   filter: any;
