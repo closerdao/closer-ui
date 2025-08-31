@@ -8,16 +8,18 @@ import { usePlatform } from '../contexts/platform';
 import BookingListPreview from './BookingListPreview/BookingListPreview';
 import Pagination from './Pagination';
 import { Button, Heading, Spinner } from './ui';
+import { BookingConfig } from '@/types/api';
 
 interface Props {
   filter: any;
   page: number;
   setPage: Dispatch<SetStateAction<number>>;
+  bookingConfig?: BookingConfig;
 }
 
 const MAX_USERS_TO_FETCH = 2000;
 
-const Bookings = ({ filter, page, setPage }: Props) => {
+const Bookings = ({ filter, page, setPage, bookingConfig }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
 
@@ -235,10 +237,12 @@ const Bookings = ({ filter, page, setPage }: Props) => {
                         }
                       }
                       eventName={currentEvent && currentEvent.get('name')}
+                      eventChatLink={currentEvent && currentEvent.get('chatLink')}
                       volunteerName={
                         currentVolunteer && currentVolunteer.get('name')
                       }
                       link={link}
+                      bookingConfig={bookingConfig}
                     />
                   );
                 })

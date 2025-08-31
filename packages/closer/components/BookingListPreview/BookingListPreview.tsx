@@ -3,8 +3,11 @@ import { useRouter } from 'next/router';
 
 import { useState } from 'react';
 
+import { BookingConfig } from '@/types/api';
+
 import dayjs from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import { MessageSquareMore } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { STATUS_COLOR } from '../../constants';
@@ -32,6 +35,8 @@ interface Props {
   isAdmin?: boolean;
   isPrivate?: boolean;
   isHourly?: boolean;
+  eventChatLink?: string;
+  bookingConfig?: BookingConfig;
 }
 
 const BookingListPreview = ({
@@ -44,10 +49,15 @@ const BookingListPreview = ({
   isAdmin,
   isPrivate,
   isHourly,
+  eventChatLink,
+  bookingConfig,
 }: Props) => {
   const t = useTranslations();
 
   const { TIME_ZONE } = useConfig();
+
+  const chatLink = eventChatLink || bookingConfig?.chatLink || '';
+
   const {
     _id,
     start,
@@ -224,6 +234,25 @@ const BookingListPreview = ({
           {eventName && ` — ${eventName}`}
           {volunteerName && ` — ${volunteerName}`}
         </p>
+      )}
+
+      {chatLink && (
+        <LinkButton
+          size="small"
+          className="py-0.5"
+          href={chatLink}
+          variant="secondary"
+          isFullWidth={false}
+        >
+          <div className="flex items-center gap-2 ">
+            <MessageSquareMore className="w-4 h-4" />{' '}
+            {eventName ? (
+              <span>{t('booking_card_open_event_chat')}</span>
+            ) : (
+              <span>{t('booking_card_open_chat')}</span>
+            )}
+          </div>
+        </LinkButton>
       )}
 
       <div className="flex gap-4">

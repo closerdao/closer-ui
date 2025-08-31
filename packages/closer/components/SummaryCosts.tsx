@@ -118,7 +118,8 @@ const SummaryCosts = ({
             <div className="flex items-center gap-2">
               {isEditMode &&
                 (updatedRentalFiat?.val !== rentalFiat?.val ||
-                  updatedRentalToken?.val !== rentalToken?.val) &&
+                  updatedRentalToken?.val.toFixed(2) !==
+                    rentalToken?.val.toFixed(2)) &&
                 status !== 'cancelled' && (
                   <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
                     {t('bookings_updated_price')}:{' '}

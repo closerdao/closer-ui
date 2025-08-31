@@ -176,6 +176,7 @@ export type BookingConfig = {
   utilityOptionEnabled: boolean;
   foodPriceBasic: number;
   foodPriceChef: number;
+  chatLink: string;
 };
 
 export type PaymentConfig = {

@@ -65,7 +65,7 @@ const CheckoutPayment = ({
     bookingYear,
     bookingStartDayOfYear + i,
   ]);
-  const { isStaking } = useBookingSmartContract({
+  const { isStaking, stakeTokens, checkContract } = useBookingSmartContract({
     bookingNights,
   });
 
@@ -144,6 +144,8 @@ const CheckoutPayment = ({
           status={status}
           refetchBooking={refetchBooking}
           isAdditionalFiatPayment={isAdditionalFiatPayment}
+          stakeTokens={stakeTokens}
+          checkContract={checkContract}
         >
           <Conditions
             cancellationPolicy={cancellationPolicy}
