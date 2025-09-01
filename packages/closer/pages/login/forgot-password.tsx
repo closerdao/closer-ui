@@ -49,6 +49,7 @@ const ForgotPasswordScreen = () => {
             >
               <Input
                 label={t('login_forgot_password_email')}
+                placeholder={t('signup_form_email_placeholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />

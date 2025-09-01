@@ -340,6 +340,27 @@ const EventPage = ({
                       {event.name}
                     </Heading>
 
+                    <div className="flex gap-2 my-4 items-center">
+                      <p className="text-sm font-medium">
+                        {t('event_organiser')}
+                      </p>
+                      {eventCreator.photo ? (
+                        <Image
+                          src={`${cdn}${eventCreator?.photo}-profile-lg.jpg`}
+                          loading="lazy"
+                          alt={eventCreator?.screenname}
+                          className="rounded-full"
+                          width={20}
+                          height={20}
+                        />
+                      ) : (
+                        <FaUser className="text-gray-300 w-[20px] h-[20px] rounded-full" />
+                      )}
+                      <p className="text-sm font-medium">
+                        {eventCreator?.screenname}
+                      </p>
+                    </div>
+
                     <div>
                       {event.description && <EventDescription event={event} />}
                     </div>
@@ -418,97 +439,73 @@ const EventPage = ({
                           </div>
                         )}
 
-                        <div className="flex gap-2 items-center">
-                          <p className="text-sm font-medium">
-                            {t('event_organiser')}
-                          </p>
-                          {eventCreator.photo ? (
-                            <Image
-                              src={`${cdn}${eventCreator?.photo}-profile-lg.jpg`}
-                              loading="lazy"
-                              alt={eventCreator?.screenname}
-                              className="rounded-full"
-                              width={20}
-                              height={20}
-                            />
-                          ) : (
-                            <FaUser className="text-gray-300 w-[20px] h-[20px] rounded-full" />
-                          )}
-                          <p className="text-sm font-medium">
-                            {eventCreator?.screenname}
-                          </p>
-                        </div>
+                        {attendees && attendees.length > 0 && (
+                          <EventAttendees
+                            event={event}
+                            start={start}
+                            attendees={attendees}
+                            ticketsCount={ticketsCount}
+                            platform={platform}
+                          />
+                        )}
                       </div>
-                    </Card>
 
-                    {attendees && attendees.length > 0 && (
-                      <Card className="bg-white border border-gray-100 p-4">
-                        <EventAttendees
-                          event={event}
-                          start={start}
-                          attendees={attendees}
-                          ticketsCount={ticketsCount}
-                          platform={platform}
-                        />
-                      </Card>
-                    )}
+                        {end && !end.isBefore(dayjs()) && (
+                          <div className="">
+                            {event.paid &&
+                              event.ticketOptions.map((ticketOption: any) => {
+                                const availableTickets =
+                                  soldTickets &&
+                                  ticketOption.limit -
+                                  soldTickets.filter(
+                                    (ticket: any) =>
+                                      ticket.option.name === ticketOption.name,
+                                  ).length;
+                                const areTicketsAvailable =
+                                  availableTickets > 9 || ticketOption.limit === 0;
+                                const areTicketsEnding =
+                                  availableTickets > 1 &&
+                                  availableTickets < 10 &&
+                                  ticketOption.limit !== 0;
+                                const areTicketsSoldOut =
+                                  availableTickets === 0 &&
+                                  ticketOption.limit !== 0;
+                                return (
+                                  <div
+                                    key={ticketOption.name}
+                                    className="flex flex-col gap-1"
+                                  >
+                                    <div className="gap-2 sm:gap-0 flex-row flex sm:flex-col bg-accent-light rounded-md px-2 p-0 sm:p-2 items-center ">
+                                      <p className="text-md text-center">
+                                        {ticketOption.name}
+                                      </p>
+                                      <p className="text-md font-bold">
+                                        {priceFormat(ticketOption.price)}
+                                      </p>
+                                      <div>
+                                        <div className="hidden sm:flex">
+                                          {areTicketsSoldOut && (
+                                            <span className="text-xs text-error">
+                                              {t('event_tickets_sold')}
+                                            </span>
+                                          )}
+                                          {areTicketsAvailable && (
+                                            <>
+                                              <span className="text-xs text-success">
+                                                {t('event_tickets_available')}{' '}
+                                                {getDaysTo(end)}{' '}
+                                                {t('event_tickets_available_days')}
+                                              </span>
+                                            </>
+                                          )}
+                                          {areTicketsEnding && (
+                                            <span className="text-xs text-pending">
+                                              {t('event_tickets_last')}
+                                            </span>
+                                          )}
+                                        </div>
 
-                    {end && !end.isBefore(dayjs()) && (
-                      <Card className="bg-white border border-gray-100 gap-1 sm:gap-4">
-                        {event.paid &&
-                          event.ticketOptions.map((ticketOption: any) => {
-                            const availableTickets =
-                              soldTickets &&
-                              ticketOption.limit -
-                                soldTickets.filter(
-                                  (ticket: any) =>
-                                    ticket.option.name === ticketOption.name,
-                                ).length;
-                            const areTicketsAvailable =
-                              availableTickets > 9 || ticketOption.limit === 0;
-                            const areTicketsEnding =
-                              availableTickets > 1 &&
-                              availableTickets < 10 &&
-                              ticketOption.limit !== 0;
-                            const areTicketsSoldOut =
-                              availableTickets === 0 &&
-                              ticketOption.limit !== 0;
-                            return (
-                              <div
-                                key={ticketOption.name}
-                                className="flex flex-col gap-1"
-                              >
-                                <div className="gap-2 sm:gap-0 flex-row flex sm:flex-col bg-accent-light rounded-md px-2 p-0 sm:p-2 items-center ">
-                                  <p className="text-md text-center">
-                                    {ticketOption.name}
-                                  </p>
-                                  <p className="text-md font-bold">
-                                    {priceFormat(ticketOption.price)}
-                                  </p>
-                                  <div>
-                                    <div className="hidden sm:flex">
-                                      {areTicketsSoldOut && (
-                                        <span className="text-xs text-error">
-                                          {t('event_tickets_sold')}
-                                        </span>
-                                      )}
-                                      {areTicketsAvailable && (
-                                        <>
-                                          <span className="text-xs text-success">
-                                            {t('event_tickets_available')}{' '}
-                                            {getDaysTo(end)}{' '}
-                                            {t('event_tickets_available_days')}
-                                          </span>
-                                        </>
-                                      )}
-                                      {areTicketsEnding && (
-                                        <span className="text-xs text-pending">
-                                          {t('event_tickets_last')}
-                                        </span>
-                                      )}
-                                    </div>
-
-                                    {/* {availableTickets === 0 &&
+                                        {/* {availableTickets === 0 &&
                                     ticket.limit !== 0 ? (
                                       <span className="text-xs text-error">
                                         {t('event_tickets_sold')}
@@ -522,209 +519,207 @@ const EventPage = ({
                                         {t('event_tickets_last')}
                                       </span>
                                     )} */}
+                                      </div>
+                                    </div>
                                   </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        {durationInDays > 0 &&
-                          APP_NAME &&
-                          APP_NAME !== 'lios' && (
-                            <>
-                              <div className="text-sm">
-                                {t('events_accommodation')}{' '}
-                                <strong>
-                                  {priceFormat(
-                                    minAccommodationPrice * discountRate,
-                                  )}{' '}
-                                  -{' '}
-                                  {priceFormat(
-                                    maxAccommodationPrice * discountRate,
-                                  )}
-                                </strong>
-                              </div>
-                            </>
-                          )}
-                        <div>
-                          {/* Event uses an external ticketing system */}
-                          {event.ticket && start && start.isAfter(dayjs()) ? (
-                            <Link
-                              href={prependHttp(event.ticket)}
-                              className="btn-primary mr-2"
-                              target="_blank"
-                              rel="noreferrer nofollow"
-                            >
-                              {t('events_buy_ticket_button')}
-                            </Link>
-                          ) : event.paid || durationInDays > 0 ? (
-                            <>
-                              {myTickets && (
-                                <div>
-                                  <Heading level={4}>Tickets</Heading>
-                                  <ul className="space-y-2 divide-y mb-3">
-                                    {myTickets.map((ticket: any) => (
-                                      <li key={ticket.get('_id')}>
-                                        <Link
-                                          href={`/tickets/${ticket.get('_id')}`}
-                                          className="text-accent"
-                                        >
-                                          {ticket.get('name')} x{' '}
-                                          {ticket.get('quantity') || 1}
-                                        </Link>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
+                                );
+                              })}
+                            {durationInDays > 0 &&
+                              APP_NAME &&
+                              APP_NAME !== 'lios' && (
+                                <>
+                                  <div className="text-sm">
+                                    {t('events_accommodation')}{' '}
+                                    <strong>
+                                      {priceFormat(
+                                        minAccommodationPrice * discountRate,
+                                      )}{' '}
+                                      -{' '}
+                                      {priceFormat(
+                                        maxAccommodationPrice * discountRate,
+                                      )}
+                                    </strong>
+                                  </div>
+                                </>
                               )}
-                              {end &&
-                                end.isAfter(dayjs()) &&
-                                (event.stripePub ||
-                                  process.env
-                                    .NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) && (
-                                  <>
-                                    {event.requireApproval && (
-                                      <p className="text-sm text-gray-600 mb-2">
-                                        {t('bookings_event_requires_approval')}
-                                      </p>
-                                    )}
-                                    <LinkButton
-                                      href={`/bookings/create/dates/?eventId=${
-                                        event._id
-                                      }&start=${
-                                        start ? start.format('YYYY-MM-DD') : ''
-                                      }&end=${
-                                        end ? end.format('YYYY-MM-DD') : ''
-                                      }`}
-                                      className=""
-                                    >
-                                      {t('events_buy_ticket_button')}
-                                    </LinkButton>
-                                  </>
-                                )}
-                            </>
-                          ) : (
-                            <>
-                              {start &&
-                              start.isBefore(dayjs().subtract(15, 'minutes')) &&
-                              end &&
-                              end.isAfter(dayjs()) &&
-                              event.virtual &&
-                              event.location ? (
-                                <a
-                                  className="btn-primary mr-2"
-                                  href={event.location}
-                                >
-                                  {t('events_join_call')}
-                                </a>
-                              ) : start &&
-                                start.isBefore(dayjs()) &&
-                                end &&
-                                end.isAfter(dayjs()) ? (
-                                // <span className="p3 mr-2" href={event.location}>
-                                <span className="p3 mr-2">
-                                  {t('events_ongoing')}
-                                </span>
-                              ) : !isAuthenticated && event.recording ? (
+                            <div>
+                              {/* Event uses an external ticketing system */}
+                              {event.ticket && start && start.isAfter(dayjs()) ? (
                                 <Link
-                                  as={`/signup?back=${encodeURIComponent(
-                                    `/events/${event.slug}`,
-                                  )}`}
-                                  href="/signup"
+                                  href={prependHttp(event.ticket)}
                                   className="btn-primary mr-2"
+                                  target="_blank"
+                                  rel="noreferrer nofollow"
                                 >
-                                  {t('events_signup_watch_recording')}
+                                  {t('events_buy_ticket_button')}
                                 </Link>
-                              ) : !isAuthenticated &&
-                                start &&
-                                start.isAfter(dayjs()) ? (
-                                <div>
-                                  <p className="text-sm text-gray-600 mb-2">
-                                    {t('events_virtual_welcome')}
-                                  </p>
-                                  <button
-                                    onClick={handleRegisterClick}
-                                    className="btn-primary mr-2"
-                                  >
-                                    {t('events_register')}
-                                  </button>
-                                </div>
-                              ) : end &&
-                                end.isBefore(dayjs()) &&
-                                user &&
-                                attendees?.includes(user._id) ? (
-                                <div className="text-center">
-                                  <p className="text-sm text-gray-600 mb-2">
-                                    {t('events_virtual_enjoyed')}
-                                  </p>
-                                  <a
-                                    href="#"
-                                    className="text-sm text-accent underline"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      attendEvent(
-                                        event._id,
-                                        !attendees?.includes(user._id),
-                                      );
-                                    }}
-                                  >
-                                    {t('events_cancel_rsvp')}
-                                  </a>
-                                </div>
-                              ) : (
-                                end &&
-                                user &&
-                                event.virtual &&
-                                end.isAfter(dayjs()) && (
-                                  <div className="text-center">
-                                    {attendees?.includes(user._id) ? (
+                              ) : event.paid || durationInDays > 0 ? (
+                                <>
+                                  {myTickets && (
+                                    <div>
+                                      <Heading level={4}>Tickets</Heading>
+                                      <ul className="space-y-2 divide-y mb-3">
+                                        {myTickets.map((ticket: any) => (
+                                          <li key={ticket.get('_id')}>
+                                            <Link
+                                              href={`/tickets/${ticket.get('_id')}`}
+                                              className="text-accent"
+                                            >
+                                              {ticket.get('name')} x{' '}
+                                              {ticket.get('quantity') || 1}
+                                            </Link>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                  {end &&
+                                    end.isAfter(dayjs()) &&
+                                    (event.stripePub ||
+                                      process.env
+                                        .NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) && (
                                       <>
-                                        <p className="text-sm text-gray-600 mb-2">
-                                          {t('events_virtual_looking_forward')}
-                                        </p>
-                                        <a
-                                          href="#"
-                                          className="text-sm text-accent underline"
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            attendEvent(
-                                              event._id,
-                                              !attendees?.includes(user._id),
-                                            );
-                                          }}
-                                        >
-                                          {t('events_cancel_rsvp')}
-                                        </a>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <p className="text-sm text-gray-500 mb-2">
-                                          {t('events_virtual_welcome')}
-                                        </p>
-                                        {apiError && (
-                                          <ErrorMessage error={apiError} />
+                                        {event.requireApproval && (
+                                          <p className="text-sm text-gray-600 mb-2">
+                                            {t('bookings_event_requires_approval')}
+                                          </p>
                                         )}
-                                        <button
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            attendEvent(
-                                              event._id,
-                                              !attendees?.includes(user._id),
-                                            );
-                                          }}
-                                          className="btn-primary mr-2"
+                                        <LinkButton
+                                          href={`/bookings/create/dates/?eventId=${event._id
+                                            }&start=${start ? start.format('YYYY-MM-DD') : ''
+                                            }&end=${end ? end.format('YYYY-MM-DD') : ''
+                                            }`}
+                                          className=""
                                         >
-                                          {t('events_register')}
-                                        </button>
+                                          {t('events_buy_ticket_button')}
+                                        </LinkButton>
                                       </>
                                     )}
-                                  </div>
-                                )
+                                </>
+                              ) : (
+                                <>
+                                  {start &&
+                                    start.isBefore(dayjs().subtract(15, 'minutes')) &&
+                                    end &&
+                                    end.isAfter(dayjs()) &&
+                                    event.virtual &&
+                                    event.location ? (
+                                    <a
+                                      className="btn-primary mr-2"
+                                      href={event.location}
+                                    >
+                                      {t('events_join_call')}
+                                    </a>
+                                  ) : start &&
+                                    start.isBefore(dayjs()) &&
+                                    end &&
+                                    end.isAfter(dayjs()) ? (
+                                    // <span className="p3 mr-2" href={event.location}>
+                                    <span className="p3 mr-2">
+                                      {t('events_ongoing')}
+                                    </span>
+                                  ) : !isAuthenticated && event.recording ? (
+                                    <Link
+                                      as={`/signup?back=${encodeURIComponent(
+                                        `/events/${event.slug}`,
+                                      )}`}
+                                      href="/signup"
+                                      className="btn-primary mr-2"
+                                    >
+                                      {t('events_signup_watch_recording')}
+                                    </Link>
+                                  ) : !isAuthenticated &&
+                                    start &&
+                                    start.isAfter(dayjs()) ? (
+                                    <div>
+                                      <p className="text-sm text-gray-600 mb-2">
+                                        {t('events_virtual_welcome')}
+                                      </p>
+                                      <button
+                                        onClick={handleRegisterClick}
+                                        className="btn-primary mr-2"
+                                      >
+                                        {t('events_register')}
+                                      </button>
+                                    </div>
+                                  ) : end &&
+                                    end.isBefore(dayjs()) &&
+                                    user &&
+                                    attendees?.includes(user._id) ? (
+                                    <div className="text-center">
+                                      <p className="text-sm text-gray-600 mb-2">
+                                        {t('events_virtual_enjoyed')}
+                                      </p>
+                                      <a
+                                        href="#"
+                                        className="text-sm text-accent underline"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          attendEvent(
+                                            event._id,
+                                            !attendees?.includes(user._id),
+                                          );
+                                        }}
+                                      >
+                                        {t('events_cancel_rsvp')}
+                                      </a>
+                                    </div>
+                                  ) : (
+                                    end &&
+                                    user &&
+                                    event.virtual &&
+                                    end.isAfter(dayjs()) && (
+                                      <div className="text-center">
+                                        {attendees?.includes(user._id) ? (
+                                          <>
+                                            <p className="text-sm text-gray-600 mb-2">
+                                              {t('events_virtual_looking_forward')}
+                                            </p>
+                                            <a
+                                              href="#"
+                                              className="text-sm text-accent underline"
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                attendEvent(
+                                                  event._id,
+                                                  !attendees?.includes(user._id),
+                                                );
+                                              }}
+                                            >
+                                              {t('events_cancel_rsvp')}
+                                            </a>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <p className="text-sm text-gray-800 mb-2">
+                                              {t('events_virtual_welcome')}
+                                            </p>
+                                            {apiError && (
+                                              <ErrorMessage error={apiError} />
+                                            )}
+                                            <button
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                attendEvent(
+                                                  event._id,
+                                                  !attendees?.includes(user._id),
+                                                );
+                                              }}
+                                              className="btn-primary mr-2"
+                                            >
+                                              {t('events_register')}
+                                            </button>
+                                          </>
+                                        )}
+                                      </div>
+                                    )
+                                  )}
+                                </>
                               )}
-                            </>
-                          )}
-                        </div>
-                      </Card>
-                    )}
+                            </div>
+                          </div>
+                        )}
+                    </Card>
                   </div>
                 </div>
               </div>
