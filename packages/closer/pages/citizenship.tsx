@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 
 import { Check, ArrowRight, Sprout, Handshake, Users, Wallet, ShieldCheck, Calendar, Trees, Home, Hammer, Droplets, ChevronRight, Clock, HeartHandshake, Info } from 'lucide-react';
 import { Button } from '../components/ui/shadcn-button';
@@ -31,8 +32,6 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
   const { getTotalCostWithoutWallet, isConfigReady } = useBuyTokens();
 
   const citizenTarget = customConfig.citizenTarget || CITIZEN_TARGET;
-  const apiEndpoint = customConfig.apiEndpoint || '/users?roles=member';
-
 
   useEffect(() => {
     const fetchMemberCount = async () => {
@@ -150,12 +149,12 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button asChild size="lg" className="rounded-2xl px-6">
-              <a href="/subscriptions/citizen/select-flow">
+              <Link href="/subscriptions/citizen/select-flow">
                 {t('citizenship_become_citizen_button')} <ArrowRight className="ml-2 h-4 w-4" />
-              </a>
+              </Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="rounded-2xl px-6">
-              <a href="/token">{t('citizenship_learn_tdf_button')}</a>
+              <Link href="/token">{t('citizenship_learn_tdf_button')}</Link>
             </Button>
             <Button asChild variant="ghost" size="lg" className="rounded-2xl px-6">
               <a href="https://traditionaldreamfactory.gitbook.io/game-guide/02_roles-and-stakeholders/citizenship" target="_blank" rel="noreferrer">{t('citizenship_read_game_guide_button')}</a>
@@ -271,7 +270,7 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
                 
                 <div className="pt-3">
                   <Button asChild size="lg" className="rounded-2xl px-6 w-full sm:w-auto">
-                    <a href="/subscriptions/citizen/select-flow">{t('citizenship_start_financed_plan')}</a>
+                    <Link href="/subscriptions/citizen/select-flow">{t('citizenship_start_financed_plan')}</Link>
                   </Button>
                 </div>
               </CardContent>
@@ -309,7 +308,7 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
             </div>
             <div className="flex gap-3">
               <Button asChild size="lg" className="rounded-2xl bg-background text-accent hover:bg-background/90">
-                <a href="/subscriptions/citizen/select-flow">{t('citizenship_cta_become_citizen')}</a>
+                <Link href="/subscriptions/citizen/select-flow">{t('citizenship_cta_become_citizen')}</Link>
               </Button>
             </div>
           </div>
