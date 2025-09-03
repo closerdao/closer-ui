@@ -14,6 +14,7 @@ import api from '../../utils/api';
 import {
   fetcher,
   formatBigNumberForDisplay,
+  multiFetcher,
 } from '../../utils/blockchain';
 import { useAuth } from '../auth';
 
@@ -94,7 +95,9 @@ export const WalletProvider = ({ children }) => {
   }, [chainId, isWalletConnected, account, error, user?.walletAddress]);
 
   const { data: balanceDAOToken, mutate: updateWalletBalance } = useSWR(
-    [BLOCKCHAIN_DAO_TOKEN.address, 'balanceOf', account],
+    library && account
+      ? [BLOCKCHAIN_DAO_TOKEN.address, 'balanceOf', account]
+      : null,
     {
       fetcher: fetcher(library, BLOCKCHAIN_DAO_TOKEN_ABI),
       fallbackData: null,
@@ -102,7 +105,9 @@ export const WalletProvider = ({ children }) => {
   );
 
   const { data: balanceCeurToken, mutate: updateCeurBalance } = useSWR(
-    [BLOCKCHAIN_CEUR_TOKEN.address, 'balanceOf', account],
+    library && account
+      ? [BLOCKCHAIN_CEUR_TOKEN.address, 'balanceOf', account]
+      : null,
     {
       fetcher: fetcher(library, BLOCKCHAIN_DAO_TOKEN_ABI),
       fallbackData: BigNumber.from(0),
@@ -110,7 +115,9 @@ export const WalletProvider = ({ children }) => {
   );
 
   const { data: balanceCeloToken, mutate: updateCeloBalance } = useSWR(
-    [BLOCKCHAIN_CELO_TOKEN.address, 'balanceOf', account],
+    library && account
+      ? [BLOCKCHAIN_CELO_TOKEN.address, 'balanceOf', account]
+      : null,
     {
       fetcher: fetcher(library, BLOCKCHAIN_DAO_TOKEN_ABI),
       fallbackData: BigNumber.from(0),
@@ -118,7 +125,9 @@ export const WalletProvider = ({ children }) => {
   );
 
   const { data: stakedBalanceOf } = useSWR(
-    [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'stakedBalanceOf', account],
+    library && account
+      ? [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'stakedBalanceOf', account]
+      : null,
     {
       fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
       fallbackData: BigNumber.from(0),
@@ -126,7 +135,9 @@ export const WalletProvider = ({ children }) => {
   );
 
   const { data: unlockedStake } = useSWR(
-    [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'unlockedStake', account],
+    library && account
+      ? [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'unlockedStake', account]
+      : null,
     {
       fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
       fallbackData: BigNumber.from(0),
@@ -134,7 +145,9 @@ export const WalletProvider = ({ children }) => {
   );
 
   const { data: balancePresence } = useSWR(
-    [BLOCKCHAIN_PRESENCE_TOKEN.address, 'balanceOf', account],
+    library && account
+      ? [BLOCKCHAIN_PRESENCE_TOKEN.address, 'balanceOf', account]
+      : null,
     {
       fetcher: fetcher(library, BLOCKCHAIN_PRESENCE_ABI),
       fallbackData: BigNumber.from(0),
@@ -147,25 +160,41 @@ export const WalletProvider = ({ children }) => {
   //     fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
   //   },
   // );
-  // const { data: bookedDates, mutate: refetchBookingDates } = useSWR(
-  //   [
-  //     activatedBookingYears
-  //       ? activatedBookingYears.map(([year]) => [
-  //           BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
-  //           'getAccommodationBookings',
-  //           account,
-  //           year,
-  //         ])
-  //       : null,
-  //   ],
-  //   {
-  //     fetcher: multiFetcher(library, BLOCKCHAIN_DIAMOND_ABI),
-  //   },
-  // );
+  const { data: activatedBookingYears, error: activatedBookingYearsError } =
+    useSWR(
+      library
+        ? [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'getAccommodationYears']
+        : null,
+      {
+        fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
+      },
+    );
+  const {
+    data: bookedDates,
+    mutate: refetchBookingDates,
+    error: bookedDatesError,
+  } = useSWR(
+    library && activatedBookingYears && account
+      ? [
+          activatedBookingYears.map(([year]) => [
+            BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
+            'getAccommodationBookings',
+            account,
+            year,
+          ]),
+        ]
+      : null,
+    {
+      fetcher: multiFetcher(library, BLOCKCHAIN_DIAMOND_ABI),
+    },
+  );
 
-  // const proofOfPresence = bookedDates
-  //   ?.flat()
-  //   .filter((date) => date.status === 2).length;
+  // Ensure refetchBookingDates is always a function
+  const safeRefetchBookingDates = refetchBookingDates || (() => {});
+
+  const proofOfPresenceFromBookings = bookedDates
+    ?.flat()
+    .filter((date) => date.status === 2).length;
 
   const balanceTotal = formatBigNumberForDisplay(
     (balanceDAOToken || BigNumber.from(0)).add(stakedBalanceOf),
@@ -225,23 +254,38 @@ export const WalletProvider = ({ children }) => {
       // as useWeb3React state updates might not be synchronous.
       const activatedConnection = await injected.activate();
       const connectedAccount = activatedConnection?.account;
-      console.log('[connectWallet] secondary injected.activate() result:', activatedConnection);
+      console.log(
+        '[connectWallet] secondary injected.activate() result:',
+        activatedConnection,
+      );
 
       if (user && user._id && !user.walletAddress && connectedAccount) {
         // User is logged in, doesn't have a wallet linked, and a wallet is now connected.
-        console.log(`[connectWallet] User ${user._id} authenticated, no wallet linked. Wallet ${connectedAccount} connected. Attempting to link.`);
+        console.log(
+          `[connectWallet] User ${user._id} authenticated, no wallet linked. Wallet ${connectedAccount} connected. Attempting to link.`,
+        );
         await linkWalletWithUser(connectedAccount, user); // Pass user explicitly
       } else {
         // Log reasons why linking is not happening
         if (!user || !user._id) {
-          console.log('[connectWallet] No authenticated user (or user missing _id). Wallet may be connected, but not linking to a user profile at this stage.');
-        } else if (user && user.walletAddress) { // Check user exists before accessing walletAddress
-          console.log(`[connectWallet] User ${user._id} already has wallet ${user.walletAddress} linked.`);
+          console.log(
+            '[connectWallet] No authenticated user (or user missing _id). Wallet may be connected, but not linking to a user profile at this stage.',
+          );
+        } else if (user && user.walletAddress) {
+          // Check user exists before accessing walletAddress
+          console.log(
+            `[connectWallet] User ${user._id} already has wallet ${user.walletAddress} linked.`,
+          );
         } else if (!connectedAccount) {
-          console.log('[connectWallet] Wallet connection via secondary injected.activate() did not yield an account. Cannot link.');
+          console.log(
+            '[connectWallet] Wallet connection via secondary injected.activate() did not yield an account. Cannot link.',
+          );
         }
       }
-      console.log('[connectWallet] finished, returning account:', connectedAccount);
+      console.log(
+        '[connectWallet] finished, returning account:',
+        connectedAccount,
+      );
       return connectedAccount; // Return the connected account
     } catch (e) {
       console.log('[connectWallet] Exception during connectWallet process:', e);
@@ -250,23 +294,33 @@ export const WalletProvider = ({ children }) => {
     }
   };
 
-  const linkWalletWithUser = async (accountId, currentUser) => { // Added currentUser parameter
-    if (!currentUser || !currentUser._id) { // Added check for currentUser and currentUser._id
-      console.error('[linkWalletWithUser] User object or user._id is not available. Cannot link wallet.');
+  const linkWalletWithUser = async (accountId, currentUser) => {
+    // Added currentUser parameter
+    if (!currentUser || !currentUser._id) {
+      // Added check for currentUser and currentUser._id
+      console.error(
+        '[linkWalletWithUser] User object or user._id is not available. Cannot link wallet.',
+      );
       return null;
     }
-    if (!accountId) { // Added check for accountId
-      console.error('[linkWalletWithUser] accountId not provided. Cannot link wallet.');
+    if (!accountId) {
+      // Added check for accountId
+      console.error(
+        '[linkWalletWithUser] accountId not provided. Cannot link wallet.',
+      );
       return null;
     }
-    console.log(`[linkWalletWithUser] Attempting to link account ${accountId} with user ${currentUser._id}`);
+    console.log(
+      `[linkWalletWithUser] Attempting to link account ${accountId} with user ${currentUser._id}`,
+    );
     try {
       const {
         data: { nonce },
       } = await api.post('/auth/web3/pre-sign', { walletAddress: accountId });
       const message = `Signing in with code ${nonce}`;
       const signedMessage = await signMessage(message, accountId);
-      if (!signedMessage) { // Added check for signedMessage
+      if (!signedMessage) {
+        // Added check for signedMessage
         console.error('[linkWalletWithUser] Failed to sign message.');
         return null;
       }
@@ -278,11 +332,17 @@ export const WalletProvider = ({ children }) => {
         message,
         userId: currentUser._id, // Use currentUser._id
       });
-      console.log('[linkWalletWithUser] Wallet linked successfully. User data updated:', userUpdated);
+      console.log(
+        '[linkWalletWithUser] Wallet linked successfully. User data updated:',
+        userUpdated,
+      );
       // TODO: Consider if auth context needs explicit update here, e.g., by calling auth.updateUser(userUpdated);
       return userUpdated;
     } catch (error) {
-      console.error('[linkWalletWithUser] Error during API call to link wallet:', error);
+      console.error(
+        '[linkWalletWithUser] Error during API call to link wallet:',
+        error,
+      );
       return null;
     }
   };
@@ -347,6 +407,7 @@ export const WalletProvider = ({ children }) => {
         balanceCeurAvailable,
         balanceCeloAvailable,
         proofOfPresence,
+        bookedDates,
         error,
         library,
         chainId,
@@ -359,7 +420,7 @@ export const WalletProvider = ({ children }) => {
           updateWalletBalance,
           updateCeurBalance,
           updateCeloBalance,
-          // refetchBookingDates,
+          refetchBookingDates: safeRefetchBookingDates,
           signMessage, // Add signMessage here
         }}
       >

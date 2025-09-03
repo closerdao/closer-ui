@@ -1,5 +1,4 @@
 /* eslint-disable no-unused-vars */
-import { InjectedConnector } from '@web3-react/injected-connector';
 
 export interface Token {
   address?: string;
@@ -16,15 +15,20 @@ export interface WalletStateContext {
   proofOfPresence: number;
   balanceAvailable: string;
   balanceTotal: string;
+  balanceCeurAvailable: string;
+  balanceCeloAvailable: string;
   account?: string | null;
   library: any;
-  injected: InjectedConnector;
+  chainId?: number;
+  error?: any;
   bookedDates: any;
 }
 
 export interface WalletActionsContext {
   connectWallet: () => void;
   updateWalletBalance: () => void;
+  updateCeurBalance: () => void;
+  updateCeloBalance: () => void;
   refetchBookingDates: () => void;
   signMessage: (msg: string, accountId: string) => Promise<string>;
   switchNetwork: () => void;
