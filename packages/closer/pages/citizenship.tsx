@@ -9,6 +9,8 @@ import { Badge } from '../components/ui/badge';
 import { Progress } from '../components/ui/progress';
 import { useBuyTokens } from '../hooks/useBuyTokens';
 import api from '../utils/api';
+import { NextPageContext } from 'next';
+import { CitizenshipConfig } from '@/types/api';
 
 const CITIZEN_TARGET = 300;
 
@@ -18,10 +20,12 @@ interface CitizenshipPageProps {
     citizenTarget?: number;
     apiEndpoint?: string;
   };
+  citizenshipConfig?: CitizenshipConfig;
 }
 
 const CitizenshipPage: React.FC<CitizenshipPageProps> = ({ 
   appName = 'Traditional Dream Factory',
+  citizenshipConfig = {},
   customConfig = {}
 }) => {
   const t = useTranslations();
@@ -80,7 +84,8 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
   // Calculate financed token prices
   const calculateFinancedPrice = (tokens: number) => {
     if (!tokenPrice) return 0;
-    const totalCost = tokenPrice * tokens;
+    const priceModifier = citizenshipConfig?.tokenPriceModifierPercent || 1;
+    const totalCost = tokenPrice * priceModifier * tokens;
     const downPayment = totalCost * 0.1;
     const monthlyPayment = (totalCost - downPayment) / 36;
     return Math.round(monthlyPayment * 100) / 100;
@@ -335,6 +340,28 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
       </section>
     </div>
   );
+};
+
+CitizenshipPage.getInitialProps = async (
+  context: NextPageContext,
+) => {
+  try {
+    const [citizenshipRes] =
+      await Promise.all([
+        api.get('/config/citizenship').catch(() => {
+          return null;
+        })
+      ]);
+
+    const citizenshipConfig = citizenshipRes?.data?.results?.value;
+    return {
+      citizenshipConfig,
+    };
+  } catch (err: unknown) {
+    return {
+      citizenshipConfig: null,
+    };
+  }
 };
 
 export default CitizenshipPage;
