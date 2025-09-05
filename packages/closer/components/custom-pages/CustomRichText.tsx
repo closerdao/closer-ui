@@ -10,7 +10,7 @@ const CustomRichText: React.FC<{
 }> = ({ content, settings }) => (
   <section
     className={
-      'max-w-4xl mx-auto flex flex-col text-md  gap-4 md:gap-10 md:min-h-[400px]'
+      'max-w-4xl mx-auto flex flex-col text-md  gap-4 md:gap-10 '
     }
   >
     <div

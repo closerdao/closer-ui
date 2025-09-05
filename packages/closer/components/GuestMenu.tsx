@@ -163,6 +163,12 @@ const GuestMenu = () => {
                   enabled: true,
                   rbacPage: 'Community',
                 },
+                {
+                  label: t('header_nav_events'),
+                  url: '/pages/events',
+                  enabled: true,
+                  rbacPage: 'Events',
+                },
               ]
             : []),
           {

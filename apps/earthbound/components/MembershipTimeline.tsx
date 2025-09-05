@@ -21,7 +21,7 @@ export default function MembershipTimeline() {
     },
     {
       id: 2,
-      title: 'Filling out the <a target="_blank" class="underline" href="https://qhtmijgonhi.typeform.com/to/VtYUkHBf">membership questionnaire</a>',
+      title: 'Filling out the membership questionnaire (closed for now)',
 
       icon: <FileQuestion className="h-5 w-5 text-accent" />,
       position: 'right',
@@ -34,7 +34,7 @@ export default function MembershipTimeline() {
     },
     {
       id: 4,
-      title: 'A visit to Earthbound',
+      title: 'A visit to Earthbound for Community Days',
       icon: <MapPin className="h-5 w-5 text-accent" />,
       position: 'right',
     },
