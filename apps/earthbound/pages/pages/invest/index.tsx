@@ -238,7 +238,7 @@ Support the creation of an ethical and regenerative project and create impact be
               },
               {
                 title: 'LEANN ERIKSSON, Sweden/USA',
-                text: "“I'm an impact investor at Earthbound because it is aligned with what humans need the most now: conscious, heart-centered connection with each other and the rest of the natural world. The founders have meticulously put together the best model I've ever seen for a successful new community, where a new fusion of ancient and modern ways of humans being on Earth is midwifed in the next decade.\"",
+                text: '“I\'m an impact investor at Earthbound because it is aligned with what humans need the most now: conscious, heart-centered connection with each other and the rest of the natural world. The founders have meticulously put together the best model I\'ve ever seen for a successful new community, where a new fusion of ancient and modern ways of humans being on Earth is midwifed in the next decade.\"',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/leann.png',
               },
