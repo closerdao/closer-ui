@@ -39,7 +39,8 @@ const getPage = ({
           content: {
             title: 'BECOME AN IMPACT INVESTOR',
             videoEmbedId: 'kic4AFJxbho',
-            mobileVideoUrl: 'https://cdn.oasa.co/custom-pages/earthbound/video/Earthbound_header_LQ2.mp4',
+            mobileVideoUrl:
+              'https://cdn.oasa.co/custom-pages/earthbound/video/Earthbound_header_LQ2.mp4',
             imageUrl:
               'https://cdn.oasa.co/custom-pages/earthbound/investor-hero.png',
           },
@@ -205,7 +206,7 @@ Support the creation of an ethical and regenerative project and create impact be
 <p>We are raising 4 million SEK (approx. 400.000 €) to complete this project. </p>
 
             `,
-            
+
             imageUrl:
               'https://cdn.oasa.co/custom-pages/earthbound/investor-hero.png',
           },
@@ -225,7 +226,7 @@ Support the creation of an ethical and regenerative project and create impact be
             items: [
               {
                 title: 'CAMILLA ENGLYST, Denmark',
-                text: "“I am proud to be part of the backing team for Earthbound because they are doing something right. The model has the potential to spread and create real impact. I believe in this project, its vision, and its approach to building a better future. I trust in the Earthbound initiators and their vision, just as I know others will trust in me when it's my turn to develop a similar project. Until then, I am proud to be part of this backing team and to witness Earthbound blossom.”",
+                text: '"I am proud to be part of the backing team for Earthbound because they are doing something right. The model has the potential to spread and create real impact. I believe in this project, its vision, and its approach to building a better future. I trust in the Earthbound initiators and their vision, just as I know others will trust in me when it\'s my turn to develop a similar project. Until then, I am proud to be part of this backing team and to witness Earthbound blossom."',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/camilla.png',
               },
