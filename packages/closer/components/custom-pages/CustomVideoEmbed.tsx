@@ -8,7 +8,7 @@ const CustomVideoEmbed: React.FC<{
   };
 }> = ({ content }) => (
   <section className={`w-full flex  justify-center  text-md`}>
-    <div className="w-full max-w-4xl  aspect-video mx-auto">
+    <div className='w-full max-w-4xl  aspect-video mx-auto'>
       {content.embedId && <GenericYoutubeEmbed embedId={content.embedId} />}
     </div>
   </section>
