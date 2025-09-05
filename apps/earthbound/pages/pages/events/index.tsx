@@ -215,7 +215,6 @@ Pricing details        </h2>
         data: {
           settings: {
             type: 'masonry',
-            isRandomized: true,
           },
           content: {
             items: [
@@ -228,180 +227,133 @@ Pricing details        </h2>
               },
               {
                 imageUrl:
-                  `
-                 https://cdn.oasa.co/custom-pages/earthbound/events-gallery/50490c7cc25566eea3c820cb257e73b3_MEDDD7B9165159A4011B6F015556452420D.jpeg
-                  `,
+                  'https://cdn.oasa.co/custom-pages/earthbound/events-gallery/50490c7cc25566eea3c820cb257e73b3_MEDDD7B9165159A4011B6F015556452420D.jpeg',
                 alt: 'Host an event at Earthbound Ecovillage',
                 width: 1573,
                 height: 1178,
               },
               {
                 imageUrl:
-                  `
-https://cdn.oasa.co/custom-pages/earthbound/events-gallery/ae1404fdf1605246d788fb223e369131_MED4307D29EE72A4D53A97F26223402E5D2.jpeg                  `,
+                  'https://cdn.oasa.co/custom-pages/earthbound/events-gallery/ae1404fdf1605246d788fb223e369131_MED4307D29EE72A4D53A97F26223402E5D2.jpeg',
                 alt: 'Host an event at Earthbound Ecovillage',
                 width: 1573,
                 height: 1178,
               },
               {
                 imageUrl:
-                  `
-https://cdn.oasa.co/custom-pages/earthbound/events-gallery/d8986b42bb620e28bf5b31667b7e948d_MED842AC2F98F6A467DBACF5FBDFA193293.jpeg
-
-`,
+                  'https://cdn.oasa.co/custom-pages/earthbound/events-gallery/d8986b42bb620e28bf5b31667b7e948d_MED842AC2F98F6A467DBACF5FBDFA193293.jpeg',
                 alt: 'Host an event at Earthbound Ecovillage',
                 width: 1573,
                 height: 1178,
               },
               {
                 imageUrl:
-                  `
-https://cdn.oasa.co/custom-pages/earthbound/events-gallery/DSCF0895.JPG
-
-`,
+                  'https://cdn.oasa.co/custom-pages/earthbound/events-gallery/DSCF0895.JPG',
                 alt: 'Host an event at Earthbound Ecovillage',
                 width: 1573,
                 height: 1178,
               },
               {
                 imageUrl:
-                  `
-https://cdn.oasa.co/custom-pages/earthbound/events-gallery/DSCF1013.JPG
-
-`,
+                  'https://cdn.oasa.co/custom-pages/earthbound/events-gallery/DSCF1013.JPG',
                 alt: 'Host an event at Earthbound Ecovillage',
                 width: 1573,
                 height: 1178,
               },
               {
                 imageUrl:
-                  `
-https://cdn.oasa.co/custom-pages/earthbound/events-gallery/DSCF1065.JPG
-
-`,
+                  'https://cdn.oasa.co/custom-pages/earthbound/events-gallery/DSCF1065.JPG',
                 alt: 'Host an event at Earthbound Ecovillage',
                 width: 1573,
                 height: 1178,
               },
               {
                 imageUrl:
-                  `
-https://cdn.oasa.co/custom-pages/earthbound/events-gallery/DSCF1153.JPG
-`,
+                  'https://cdn.oasa.co/custom-pages/earthbound/events-gallery/DSCF1153.JPG',
                 alt: 'Host an event at Earthbound Ecovillage',
                 width: 1573,
                 height: 1178,
               },
               {
                 imageUrl:
-                  `
-https://cdn.oasa.co/custom-pages/earthbound/events-gallery/DSCF6373.jpg
-`,
+                  'https://cdn.oasa.co/custom-pages/earthbound/events-gallery/DSCF6373.jpg',
                 alt: 'Host an event at Earthbound Ecovillage',
                 width: 1573,
                 height: 1178,
               },
               {
                 imageUrl:
-                  `
-https://cdn.oasa.co/custom-pages/earthbound/events-gallery/DSCF6390.JPG
-`,
+                  'https://cdn.oasa.co/custom-pages/earthbound/events-gallery/DSCF6390.JPG',
                 alt: 'Host an event at Earthbound Ecovillage',
                 width: 1573,
                 height: 1178,
               },
               {
                 imageUrl:
-                  `
-https://cdn.oasa.co/custom-pages/earthbound/events-gallery/DSCF6434.jpg
-`,
+                  'https://cdn.oasa.co/custom-pages/earthbound/events-gallery/DSCF6434.jpg',
                 alt: 'Host an event at Earthbound Ecovillage',
                 width: 1573,
                 height: 1178,
               },
               {
                 imageUrl:
-                  `
-https://cdn.oasa.co/custom-pages/earthbound/events-gallery/DSCF6451.jpg
-`,
+                  'https://cdn.oasa.co/custom-pages/earthbound/events-gallery/DSCF6451.jpg',
                 alt: 'Host an event at Earthbound Ecovillage',
                 width: 1573,
                 height: 1178,
               },
               {
                 imageUrl:
-                  `
-https://cdn.oasa.co/custom-pages/earthbound/events-gallery/DSCF6491.jpg
-`,
+                  'https://cdn.oasa.co/custom-pages/earthbound/events-gallery/DSCF6491.jpg',
                 alt: 'Host an event at Earthbound Ecovillage',
                 width: 1573,
                 height: 1178,
               },
               {
                 imageUrl:
-                  `
-https://cdn.oasa.co/custom-pages/earthbound/events-gallery/e5f0c79bb6dd7db302a227bc1a6a2209_MEDC5DCED52BB724D26A11FFEE261905295.jpeg
-`,
+                  'https://cdn.oasa.co/custom-pages/earthbound/events-gallery/e5f0c79bb6dd7db302a227bc1a6a2209_MEDC5DCED52BB724D26A11FFEE261905295.jpeg',
                 alt: 'Host an event at Earthbound Ecovillage',
                 width: 1573,
                 height: 1178,
               },
               {
                 imageUrl:
-                  `
-https://cdn.oasa.co/custom-pages/earthbound/events-gallery/ea3afa715f87b004531151efd640a25c_MED46F20D33CF184645B62BB640649D2D0B.jpeg
-
-`,
+                  'https://cdn.oasa.co/custom-pages/earthbound/events-gallery/ea3afa715f87b004531151efd640a25c_MED46F20D33CF184645B62BB640649D2D0B.jpeg',
                 alt: 'Host an event at Earthbound Ecovillage',
                 width: 1573,
                 height: 1178,
               },
               {
                 imageUrl:
-                  `
-https://cdn.oasa.co/custom-pages/earthbound/events-gallery/feed8f0dea2efa3923d06e8f9f4640d4_MED2D7B6AD36F9249599C0DE8C1A559199E.jpeg
-
-`,
+                  'https://cdn.oasa.co/custom-pages/earthbound/events-gallery/feed8f0dea2efa3923d06e8f9f4640d4_MED2D7B6AD36F9249599C0DE8C1A559199E.jpeg',
                 alt: 'Host an event at Earthbound Ecovillage',
                 width: 1573,
                 height: 1178,
               },
               {
                 imageUrl:
-                  `
-https://cdn.oasa.co/custom-pages/earthbound/events-gallery/grimsnas066.jpeg
-
-`,
+                  'https://cdn.oasa.co/custom-pages/earthbound/events-gallery/grimsnas066.jpeg',
                 alt: 'Host an event at Earthbound Ecovillage',
                 width: 1573,
                 height: 1178,
               },
               {
                 imageUrl:
-                  `
-https://cdn.oasa.co/custom-pages/earthbound/events-gallery/grimsnas077.jpeg
-
-`,
+                  'https://cdn.oasa.co/custom-pages/earthbound/events-gallery/grimsnas077.jpeg',
                 alt: 'Host an event at Earthbound Ecovillage',
                 width: 1573,
                 height: 1178,
               },
               {
                 imageUrl:
-                  `
-https://cdn.oasa.co/custom-pages/earthbound/events-gallery/grimsnas079.jpeg
-
-`,
+                  'https://cdn.oasa.co/custom-pages/earthbound/events-gallery/grimsnas079.jpeg',
                 alt: 'Host an event at Earthbound Ecovillage',
                 width: 1573,
                 height: 1178,
               },
               {
                 imageUrl:
-                  `
-https://cdn.oasa.co/custom-pages/earthbound/events-gallery/grimsnas080.jpeg
-
-`,
+                  'https://cdn.oasa.co/custom-pages/earthbound/events-gallery/grimsnas080.jpeg',
                 alt: 'Host an event at Earthbound Ecovillage',
                 width: 1573,
                 height: 1178,
