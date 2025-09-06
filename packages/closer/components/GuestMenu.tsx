@@ -183,6 +183,11 @@ const GuestMenu = () => {
             enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
             rbacPage: 'Token',
           },
+          {
+            label: 'Become a Citizen',
+            url: '/citizenship',
+            enabled: APP_NAME?.toLowerCase() === 'tdf',
+          },
         ],
       },
 

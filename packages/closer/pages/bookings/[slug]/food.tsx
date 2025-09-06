@@ -138,9 +138,7 @@ const FoodSelectionPage = ({
         dateFormat,
       )}&end=${dayjs(end).format(
         dateFormat,
-      )}&adults=${adults}&useTokens=${useTokens}&isFriendsBooking=${String(
-        isFriendsBooking,
-      )}`,
+      )}&adults=${adults}&useTokens=${useTokens}${isFriendsBooking?'&isFriendsBooking=true':''}`,
     );
   };
 

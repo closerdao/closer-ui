@@ -248,8 +248,8 @@ const EventPage = ({
         />
       </Head>
 
-      {isShowingEvent === false ||
-      (event.password && event.password !== password) ? (
+      {(isShowingEvent === false ||
+      (event.password && event.password !== password)) ? (
         <div className="flex flex-col justify-center items-center my-20 ">
           <div className="w-34 flex flex-col gap-4">
             <Heading>This event is password protected</Heading>
@@ -451,9 +451,22 @@ const EventPage = ({
                       </div>
 
                         {end && !end.isBefore(dayjs()) && (
-                          <div className="">
-                            {event.paid &&
-                              event.ticketOptions.map((ticketOption: any) => {
+                          <div className="space-y-3">
+                            {(() => {
+                              // Check if all tickets are sold out
+                              const allTicketsSoldOut = event.paid && event.ticketOptions.every((ticketOption: any) => {
+                                const availableTickets = soldTickets && ticketOption.limit - soldTickets.filter((ticket: any) => ticket.option.name === ticketOption.name).length;
+                                return availableTickets === 0 && ticketOption.limit !== 0;
+                              });
+                              
+                              return allTicketsSoldOut ? (
+                                <div className="text-center py-6 px-3">
+                                  <p className="font-bold text-lg">{t('events_no_tickets_available')}</p>
+                                  <p className="text-sm mt-1">{t('events_completely_sold_out')}</p>
+                                </div>
+                              ) : (
+                                event.paid &&
+                                event.ticketOptions.map((ticketOption: any) => {
                                 const availableTickets =
                                   soldTickets &&
                                   ticketOption.limit -
@@ -523,10 +536,16 @@ const EventPage = ({
                                     </div>
                                   </div>
                                 );
-                              })}
+                              })
+                              );
+                            })()}
                             {durationInDays > 0 &&
                               APP_NAME &&
-                              APP_NAME !== 'lios' && (
+                              APP_NAME !== 'lios' &&
+                              !(event.paid && event.ticketOptions.every((ticketOption: any) => {
+                                const availableTickets = soldTickets && ticketOption.limit - soldTickets.filter((ticket: any) => ticket.option.name === ticketOption.name).length;
+                                return availableTickets === 0 && ticketOption.limit !== 0;
+                              })) && (
                                 <>
                                   <div className="text-sm">
                                     {t('events_accommodation')}{' '}
@@ -577,7 +596,11 @@ const EventPage = ({
                                     end.isAfter(dayjs()) &&
                                     (event.stripePub ||
                                       process.env
-                                        .NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) && (
+                                        .NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) &&
+                                    !(event.paid && event.ticketOptions.every((ticketOption: any) => {
+                                      const availableTickets = soldTickets && ticketOption.limit - soldTickets.filter((ticket: any) => ticket.option.name === ticketOption.name).length;
+                                      return availableTickets === 0 && ticketOption.limit !== 0;
+                                    })) && (
                                       <>
                                         {event.requireApproval && (
                                           <p className="text-sm text-gray-600 mb-2">

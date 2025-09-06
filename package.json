@@ -29,6 +29,7 @@
     "turbo": "latest"
   },
   "dependencies": {
+    "@radix-ui/react-progress": "^1.1.7",
     "@types/react-calendar-timeline": "^0.28.6",
     "axios": "1.7.7",
     "deepmerge": "^4.3.1",
