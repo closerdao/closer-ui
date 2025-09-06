@@ -28,6 +28,13 @@ import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
+interface PlatformContext {
+  user: {
+    patch: (id: string, data: any) => Promise<any>;
+  };
+  [key: string]: any;
+}
+
 interface Props {
   subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
 
@@ -38,7 +45,7 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
   const t = useTranslations();
   const { isLoading, user } = useAuth();
   const { PLATFORM_NAME } = useConfig();
-  const { platform }: any = usePlatform();
+  const { platform } = usePlatform() as { platform: PlatformContext };
 
   const router = useRouter();
 
@@ -59,9 +66,16 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
 
   // const currentCitizenshipStatus = user?.citizenship?.status;
 
-  const [apiError, setApiError] = useState('');
   const [eligibility, setEligibility] = useState<null | string>(null);
-  const [application, setApplication] = useState<any>({
+  const [application, setApplication] = useState<{
+    owns30Tokens: boolean;
+    why: string;
+    intent: {
+      iWantToApply: boolean;
+      iWantToBuyTokens: boolean;
+      iWantToFinanceTokens: boolean;
+    };
+  }>({
     owns30Tokens,
     why: userCitizenshipWhy || '',
     intent: {
@@ -109,7 +123,7 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
 
   useEffect(() => {
     if (owns30Tokens) {
-      setApplication((prev: any) => ({
+      setApplication((prev) => ({
         ...prev,
         owns30Tokens,
         intent: {
@@ -122,7 +136,6 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
     }
     (async () => {
       try {
-        setApiError('');
         const hasStayedRes = await api.get(
           '/subscription/citizen/check-has-stayed-for-min-duration',
         );
@@ -145,9 +158,7 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
         } else {
           setEligibility('not_eligible');
         }
-      } catch (error) {
-        setApiError(parseMessageFromError(error));
-      }
+      } catch (error) {}
     })();
   }, [owns30Tokens, isMember]);
 
@@ -161,7 +172,7 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
       !userCitizenshipWhy &&
       !user?.citizenship?.appliedAt
     ) {
-      platform.user.patch(user?._id, {
+      platform.user.patch(user?._id || '', {
         citizenship: {
           ...user?.citizenship,
           appliedAt: new Date(),
@@ -172,15 +183,25 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
 
   useEffect(() => {
     if (userCitizenshipWhy && !application.why) {
-      setApplication((prev: any) => ({
+      setApplication((prev) => ({
         ...prev,
         why: userCitizenshipWhy,
       }));
     }
   }, [userCitizenshipWhy]);
 
-  const updateApplication = (key: string, value: any) => {
-    setApplication((prev: any) => ({ ...prev, [key]: value }));
+  const updateApplication = (
+    key: string,
+    value:
+      | string
+      | boolean
+      | {
+          iWantToApply: boolean;
+          iWantToBuyTokens: boolean;
+          iWantToFinanceTokens: boolean;
+        },
+  ) => {
+    setApplication((prev) => ({ ...prev, [key]: value }));
   };
 
   const goBack = () => {
@@ -189,7 +210,7 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
 
   const handleNext = async () => {
     try {
-      await platform.user.patch(user?._id, {
+      await platform.user.patch(user?._id || '', {
         citizenship: {
           ...user?.citizenship,
           why: application?.why,
@@ -204,11 +225,11 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
         router.push('/token/before-you-begin?isCitizenApplication=true');
         return;
       } else if (application?.intent?.iWantToApply) {
-        router.push(`/subscriptions/citizen/apply?intent=apply`);
+        router.push('/subscriptions/citizen/apply?intent=apply');
         return;
       }
     }
-    router.push(`/subscriptions/citizen/validation?intent=apply`);
+    router.push('/subscriptions/citizen/validation?intent=apply');
   };
 
   if (error) {
@@ -261,7 +282,6 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
               </>
             )}
           </section>
-
 
           {!isMember && (
             <CitizenWhy

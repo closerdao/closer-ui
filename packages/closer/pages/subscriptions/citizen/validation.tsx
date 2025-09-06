@@ -61,9 +61,15 @@ const ValidationCitizenPage: NextPage<Props> = ({
 
   const [isVouched, setIsVouched] = useState(false);
   const [hasStayedForMinDuration, setHasStayedForMinDuration] = useState(false);
-  const [apiError, setApiError] = useState('');
   const [eligibility, setEligibility] = useState<null | string>(null);
-  const [application, setApplication] = useState<any>({
+  const [application, setApplication] = useState<{
+    owns30Tokens: boolean;
+    intent: {
+      iWantToApply: boolean;
+      iWantToBuyTokens: boolean;
+      iWantToFinanceTokens: boolean;
+    };
+  }>({
     owns30Tokens,
     intent: {
       iWantToApply: Boolean(owns30Tokens) && !isMember,
@@ -105,7 +111,7 @@ const ValidationCitizenPage: NextPage<Props> = ({
 
   useEffect(() => {
     if (owns30Tokens) {
-      setApplication((prev: any) => ({
+      setApplication((prev) => ({
         ...prev,
         owns30Tokens,
         intent: {
@@ -118,7 +124,6 @@ const ValidationCitizenPage: NextPage<Props> = ({
     }
     (async () => {
       try {
-        setApiError('');
         const hasStayedRes = await api.get(
           '/subscription/citizen/check-has-stayed-for-min-duration',
         );
@@ -145,9 +150,7 @@ const ValidationCitizenPage: NextPage<Props> = ({
         } else {
           setEligibility('not_eligible');
         }
-      } catch (error) {
-        setApiError(parseMessageFromError(error));
-      }
+      } catch (error) {}
     })();
   }, [owns30Tokens, isMember]);
 
@@ -173,13 +176,13 @@ const ValidationCitizenPage: NextPage<Props> = ({
     switch (eligibility) {
       case 'good_to_buy':
         router.push(
-          `/subscriptions/citizen/select-flow?isCitizenApplication=true`,
+          '/subscriptions/citizen/select-flow?isCitizenApplication=true',
         );
         return;
 
       case 'buy_more':
         router.push(
-          `/subscriptions/citizen/select-flow?isCitizenApplication=true`,
+          '/subscriptions/citizen/select-flow?isCitizenApplication=true',
         );
         return;
       case 'not_eligible':
