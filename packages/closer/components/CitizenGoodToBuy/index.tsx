@@ -1,7 +1,6 @@
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
-import { Input } from '../ui';
 
 interface Props {
   updateApplication: (key: string, value: any) => void;
@@ -19,13 +18,7 @@ const CitizenGoodToBuy = ({
   const isMember = user?.roles?.includes('member');
 
   return (
-    <>
-      <Input
-        label={t('subscriptions_citizen_good_why')}
-        value={application?.why || ''}
-        onChange={(e) => updateApplication('why', e.target.value)}
-        placeholder={t('generic_input_placeholder')}
-      />
+    <div className="space-y-4">
       <p>{t('subscriptions_citizen_good_how')}</p>
       <div className="space-y-2">
         {buyMore && !isMember && (
@@ -95,7 +88,7 @@ const CitizenGoodToBuy = ({
           </label>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

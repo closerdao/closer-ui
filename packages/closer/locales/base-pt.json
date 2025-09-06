@@ -1299,6 +1299,10 @@
   "config_label_weekPosition": "Que semana",
   "config_label_chatLink": "Link do chat de suporte ao convidado",
   "config_label_telegramUrl": "Link do Telegram",
+  "config_label_discordUrl": "Link do Discord",
+  "subscriptions_citizen_introduce_yourself_in_discord": "Introduza-se no Discord para ser votado por outros membros:",
+  "subscription_citizen_apply": "Aplicar para cidadania",
+
   "config_email_product_paid_guest": "Produto pago, enviar ao utilizador imediatamente",
   "config_email_product_paid_admin": "Produto pago, enviar aos administradores imediatamente",
   "edit_homepage_button": "Editar página de Histórico",

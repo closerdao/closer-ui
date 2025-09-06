@@ -1,16 +1,42 @@
-import React, { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 
-import { Check, ArrowRight, Sprout, Handshake, Users, Wallet, ShieldCheck, Calendar, Trees, Home, Hammer, Droplets, ChevronRight, Clock, HeartHandshake, Info } from 'lucide-react';
-import { Button } from '../components/ui/shadcn-button';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/shadcn-card';
+import { useEffect, useState } from 'react';
+
+import { CitizenshipConfig } from '../types/api';
+
 import { Badge } from '../components/ui/badge';
 import { Progress } from '../components/ui/progress';
+import { Button } from '../components/ui/shadcn-button';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '../components/ui/shadcn-card';
+
+import {
+  ArrowRight,
+  Calendar,
+  Check,
+  ChevronRight,
+  Clock,
+  Droplets,
+  Hammer,
+  Handshake,
+  HeartHandshake,
+  Home,
+  Info,
+  ShieldCheck,
+  Sprout,
+  Trees,
+  Users,
+  Wallet,
+} from 'lucide-react';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
 import { useBuyTokens } from '../hooks/useBuyTokens';
 import api from '../utils/api';
-import { NextPageContext } from 'next';
-import { CitizenshipConfig } from '@/types/api';
 
 const CITIZEN_TARGET = 300;
 
@@ -23,11 +49,11 @@ interface CitizenshipPageProps {
   citizenshipConfig?: CitizenshipConfig;
 }
 
-const CitizenshipPage: React.FC<CitizenshipPageProps> = ({ 
+const CitizenshipPage = ({
   appName = 'Traditional Dream Factory',
-  citizenshipConfig = {},
-  customConfig = {}
-}) => {
+  citizenshipConfig = {} as CitizenshipConfig,
+  customConfig = {} as { citizenTarget?: number; apiEndpoint?: string },
+}: CitizenshipPageProps) => {
   const t = useTranslations();
   const [citizenCurrent, setCitizenCurrent] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,7 +61,7 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
   const [isTokenPriceLoading, setIsTokenPriceLoading] = useState(true);
   const { getTotalCostWithoutWallet, isConfigReady } = useBuyTokens();
 
-  const citizenTarget = customConfig.citizenTarget || CITIZEN_TARGET;
+  const citizenTarget = customConfig?.citizenTarget || CITIZEN_TARGET;
 
   useEffect(() => {
     const fetchMemberCount = async () => {
@@ -45,7 +71,9 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
             $in: ['member', 'citizen'],
           },
         };
-        const response = await api.get(`/user?where=${encodeURIComponent(JSON.stringify(where))}`);
+        const response = await api.get(
+          `/user?where=${encodeURIComponent(JSON.stringify(where))}`,
+        );
         const memberCount = response.data?.results?.length || 0;
         setCitizenCurrent(memberCount);
       } catch (error) {
@@ -61,7 +89,7 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
   useEffect(() => {
     const fetchTokenPrice = async () => {
       if (!isConfigReady) return;
-      
+
       try {
         setIsTokenPriceLoading(true);
         // Calculate price for 1 token to get the base price
@@ -75,11 +103,14 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
     };
 
     if (!tokenPrice) {
-        fetchTokenPrice();
+      fetchTokenPrice();
     }
   }, [isConfigReady]);
 
-  const progress = Math.min(100, Math.round((citizenCurrent / citizenTarget) * 100));
+  const progress = Math.min(
+    100,
+    Math.round((citizenCurrent / citizenTarget) * 100),
+  );
 
   // Calculate financed token prices
   const calculateFinancedPrice = (tokens: number) => {
@@ -99,21 +130,69 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
   ];
 
   const benefits = [
-    { icon: ShieldCheck, title: t('citizenship_benefits_belonging_title'), desc: t('citizenship_benefits_belonging_desc') },
-    { icon: Users, title: t('citizenship_benefits_governance_title'), desc: t('citizenship_benefits_governance_desc') },
-    { icon: Home, title: t('citizenship_benefits_housing_title'), desc: t('citizenship_benefits_housing_desc') },
-    { icon: Calendar, title: t('citizenship_benefits_booking_title'), desc: t('citizenship_benefits_booking_desc') },
-    { icon: Hammer, title: t('citizenship_benefits_projects_title'), desc: t('citizenship_benefits_projects_desc') },
-    { icon: Droplets, title: t('citizenship_benefits_impact_title'), desc: t('citizenship_benefits_impact_desc') },
+    {
+      icon: ShieldCheck,
+      title: t('citizenship_benefits_belonging_title'),
+      desc: t('citizenship_benefits_belonging_desc'),
+    },
+    {
+      icon: Users,
+      title: t('citizenship_benefits_governance_title'),
+      desc: t('citizenship_benefits_governance_desc'),
+    },
+    {
+      icon: Home,
+      title: t('citizenship_benefits_housing_title'),
+      desc: t('citizenship_benefits_housing_desc'),
+    },
+    {
+      icon: Calendar,
+      title: t('citizenship_benefits_booking_title'),
+      desc: t('citizenship_benefits_booking_desc'),
+    },
+    {
+      icon: Hammer,
+      title: t('citizenship_benefits_projects_title'),
+      desc: t('citizenship_benefits_projects_desc'),
+    },
+    {
+      icon: Droplets,
+      title: t('citizenship_benefits_impact_title'),
+      desc: t('citizenship_benefits_impact_desc'),
+    },
   ];
 
   const pathway = [
-    { title: t('citizenship_pathway_onboarding_title'), desc: t('citizenship_pathway_onboarding_desc'), icon: Sprout },
-    { title: t('citizenship_pathway_presence_title'), desc: t('citizenship_pathway_presence_desc'), icon: Trees },
-    { title: t('citizenship_pathway_tokens_title'), desc: t('citizenship_pathway_tokens_desc'), icon: Wallet },
-    { title: t('citizenship_pathway_vouching_title'), desc: t('citizenship_pathway_vouching_desc'), icon: HeartHandshake },
-    { title: t('citizenship_pathway_agreement_title'), desc: t('citizenship_pathway_agreement_desc'), icon: Handshake },
-    { title: t('citizenship_pathway_governance_title'), desc: t('citizenship_pathway_governance_desc'), icon: Users },
+    {
+      title: t('citizenship_pathway_onboarding_title'),
+      desc: t('citizenship_pathway_onboarding_desc'),
+      icon: Sprout,
+    },
+    {
+      title: t('citizenship_pathway_presence_title'),
+      desc: t('citizenship_pathway_presence_desc'),
+      icon: Trees,
+    },
+    {
+      title: t('citizenship_pathway_tokens_title'),
+      desc: t('citizenship_pathway_tokens_desc'),
+      icon: Wallet,
+    },
+    {
+      title: t('citizenship_pathway_vouching_title'),
+      desc: t('citizenship_pathway_vouching_desc'),
+      icon: HeartHandshake,
+    },
+    {
+      title: t('citizenship_pathway_agreement_title'),
+      desc: t('citizenship_pathway_agreement_desc'),
+      icon: Handshake,
+    },
+    {
+      title: t('citizenship_pathway_governance_title'),
+      desc: t('citizenship_pathway_governance_desc'),
+      icon: Users,
+    },
   ];
 
   const faqs = [
@@ -144,9 +223,12 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
       {/* Hero */}
       <section className="relative isolate overflow-hidden">
         <div className="mx-auto max-w-6xl px-6 pt-16 pb-10">
-          <Badge className="mb-4 bg-accent-light text-accent hover:bg-accent-light">{t('citizenship_founding_cohort_badge')}</Badge>
+          <Badge className="mb-4 bg-accent-light text-accent hover:bg-accent-light">
+            {t('citizenship_founding_cohort_badge')}
+          </Badge>
           <h1 className="text-4xl md:text-6xl font-semibold tracking-tight leading-tight">
-            {t('citizenship_hero_title')} <span className="text-accent">{appName}</span>
+            {t('citizenship_hero_title')}{' '}
+            <span className="text-accent">{appName}</span>
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-foreground">
             {t('citizenship_hero_subtitle')}
@@ -154,15 +236,32 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button asChild size="lg" className="rounded-2xl px-6">
-              <Link href="/subscriptions/citizen/select-flow">
-                {t('citizenship_become_citizen_button')} <ArrowRight className="ml-2 h-4 w-4" />
+              <Link href="/subscriptions/citizen/why">
+                {t('citizenship_become_citizen_button')}{' '}
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="rounded-2xl px-6">
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="rounded-2xl px-6"
+            >
               <Link href="/token">{t('citizenship_learn_tdf_button')}</Link>
             </Button>
-            <Button asChild variant="ghost" size="lg" className="rounded-2xl px-6">
-              <a href="https://traditionaldreamfactory.gitbook.io/game-guide/02_roles-and-stakeholders/citizenship" target="_blank" rel="noreferrer">{t('citizenship_read_game_guide_button')}</a>
+            <Button
+              asChild
+              variant="ghost"
+              size="lg"
+              className="rounded-2xl px-6"
+            >
+              <a
+                href="https://traditionaldreamfactory.gitbook.io/game-guide/02_roles-and-stakeholders/citizenship"
+                target="_blank"
+                rel="noreferrer"
+              >
+                {t('citizenship_read_game_guide_button')}
+              </a>
             </Button>
           </div>
 
@@ -170,7 +269,9 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
           <div className="mt-10 max-w-xl">
             <div className="flex items-center justify-between text-sm text-foreground">
               <span>{t('citizenship_citizens_joined')}</span>
-              <span>{isLoading ? '...' : citizenCurrent} / {citizenTarget}</span>
+              <span>
+                {isLoading ? '...' : citizenCurrent} / {citizenTarget}
+              </span>
             </div>
             <Progress value={progress} className="mt-2 h-2" />
           </div>
@@ -182,27 +283,63 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
         <div className="grid gap-6 md:grid-cols-2">
           <Card className="rounded-2xl">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-2xl"><Sprout className="h-6 w-6"/>{t('citizenship_whats_here_today_title')}</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <Sprout className="h-6 w-6" />
+                {t('citizenship_whats_here_today_title')}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-foreground">
-              <p className="flex items-start gap-2"><Check className="mt-1 h-5 w-5 text-accent"/>{t('citizenship_whats_here_today_1')}</p>
-              <p className="flex items-start gap-2"><Check className="mt-1 h-5 w-5 text-accent"/>{t('citizenship_whats_here_today_2')}</p>
-              <p className="flex items-start gap-2"><Check className="mt-1 h-5 w-5 text-accent"/>{t('citizenship_whats_here_today_3')}</p>
-              <p className="flex items-start gap-2"><Check className="mt-1 h-5 w-5 text-accent"/>{t('citizenship_whats_here_today_4')}</p>
-              <p className="flex items-start gap-2"><Check className="mt-1 h-5 w-5 text-accent"/>{t('citizenship_whats_here_today_5')}</p>
+              <p className="flex items-start gap-2">
+                <Check className="mt-1 h-5 w-5 text-accent" />
+                {t('citizenship_whats_here_today_1')}
+              </p>
+              <p className="flex items-start gap-2">
+                <Check className="mt-1 h-5 w-5 text-accent" />
+                {t('citizenship_whats_here_today_2')}
+              </p>
+              <p className="flex items-start gap-2">
+                <Check className="mt-1 h-5 w-5 text-accent" />
+                {t('citizenship_whats_here_today_3')}
+              </p>
+              <p className="flex items-start gap-2">
+                <Check className="mt-1 h-5 w-5 text-accent" />
+                {t('citizenship_whats_here_today_4')}
+              </p>
+              <p className="flex items-start gap-2">
+                <Check className="mt-1 h-5 w-5 text-accent" />
+                {t('citizenship_whats_here_today_5')}
+              </p>
             </CardContent>
           </Card>
 
           <Card className="rounded-2xl">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-2xl"><Hammer className="h-6 w-6"/>{t('citizenship_roadmap_title')}</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <Hammer className="h-6 w-6" />
+                {t('citizenship_roadmap_title')}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-foreground">
-              <p className="flex items-start gap-2"><ChevronRight className="mt-1 h-5 w-5 text-accent"/>{t('citizenship_roadmap_1')}</p>
-              <p className="flex items-start gap-2"><ChevronRight className="mt-1 h-5 w-5 text-accent"/>{t('citizenship_roadmap_2')}</p>
-              <p className="flex items-start gap-2"><ChevronRight className="mt-1 h-5 w-5 text-accent"/>{t('citizenship_roadmap_3')}</p>
-              <p className="flex items-start gap-2"><ChevronRight className="mt-1 h-5 w-5 text-accent"/>{t('citizenship_roadmap_4')}</p>
-              <p className="flex items-start gap-2"><Clock className="mt-1 h-5 w-5 text-accent"/>{t('citizenship_roadmap_5')}</p>
+              <p className="flex items-start gap-2">
+                <ChevronRight className="mt-1 h-5 w-5 text-accent" />
+                {t('citizenship_roadmap_1')}
+              </p>
+              <p className="flex items-start gap-2">
+                <ChevronRight className="mt-1 h-5 w-5 text-accent" />
+                {t('citizenship_roadmap_2')}
+              </p>
+              <p className="flex items-start gap-2">
+                <ChevronRight className="mt-1 h-5 w-5 text-accent" />
+                {t('citizenship_roadmap_3')}
+              </p>
+              <p className="flex items-start gap-2">
+                <ChevronRight className="mt-1 h-5 w-5 text-accent" />
+                {t('citizenship_roadmap_4')}
+              </p>
+              <p className="flex items-start gap-2">
+                <Clock className="mt-1 h-5 w-5 text-accent" />
+                {t('citizenship_roadmap_5')}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -211,13 +348,16 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
       {/* Benefits */}
       <section className="bg-background">
         <div className="mx-auto max-w-6xl px-6 py-14">
-          <h2 className="text-3xl font-semibold">{t('citizenship_benefits_title')}</h2>
+          <h2 className="text-3xl font-semibold">
+            {t('citizenship_benefits_title')}
+          </h2>
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {benefits.map((b) => (
               <Card key={b.title} className="rounded-2xl">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-xl">
-                    <b.icon className="h-6 w-6 text-accent"/>{b.title}
+                    <b.icon className="h-6 w-6 text-accent" />
+                    {b.title}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -231,14 +371,32 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
 
       {/* Pathway */}
       <section className="mx-auto max-w-6xl px-6 py-14">
-        <h2 className="text-3xl font-semibold">{t('citizenship_pathway_title')}</h2>
-        <p className="mt-2 max-w-2xl text-foreground">{t('citizenship_pathway_subtitle')} <a className="underline" href="https://traditionaldreamfactory.gitbook.io/game-guide/02_roles-and-stakeholders/citizenship" target="_blank" rel="noreferrer">Game Guide</a>.</p>
+        <h2 className="text-3xl font-semibold">
+          {t('citizenship_pathway_title')}
+        </h2>
+        <p className="mt-2 max-w-2xl text-foreground">
+          {t('citizenship_pathway_subtitle')}{' '}
+          <a
+            className="underline"
+            href="https://traditionaldreamfactory.gitbook.io/game-guide/02_roles-and-stakeholders/citizenship"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Game Guide
+          </a>
+          .
+        </p>
         <div className="mt-8 grid gap-6 md:grid-cols-3">
           {pathway.map((s, i) => (
             <Card key={s.title} className="rounded-2xl">
               <CardHeader className="pb-3">
-                <Badge variant="secondary" className="w-fit">{t('citizenship_pathway_step')} {i + 1}</Badge>
-                <CardTitle className="mt-2 flex items-center gap-2 text-xl"><s.icon className="h-6 w-6 text-accent"/>{s.title}</CardTitle>
+                <Badge variant="secondary" className="w-fit">
+                  {t('citizenship_pathway_step')} {i + 1}
+                </Badge>
+                <CardTitle className="mt-2 flex items-center gap-2 text-xl">
+                  <s.icon className="h-6 w-6 text-accent" />
+                  {s.title}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-foreground">{s.desc}</p>
@@ -254,28 +412,56 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
           <div className="grid gap-6 lg:grid-cols-2">
             <Card className="rounded-2xl">
               <CardHeader>
-                <CardTitle className="text-2xl">{t('citizenship_financed_tokens_title')}</CardTitle>
+                <CardTitle className="text-2xl">
+                  {t('citizenship_financed_tokens_title')}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-foreground">
-                <p className="flex items-start gap-2"><Check className="mt-1 h-5 w-5 text-accent"/>{t('citizenship_financed_tokens_1')}</p>
-                <p className="flex items-start gap-2"><Check className="mt-1 h-5 w-5 text-accent"/>{t('citizenship_financed_tokens_2')}</p>
-                <p className="flex items-start gap-2"><Check className="mt-1 h-5 w-5 text-accent"/>{t('citizenship_financed_tokens_3')}</p>
-                
+                <p className="flex items-start gap-2">
+                  <Check className="mt-1 h-5 w-5 text-accent" />
+                  {t('citizenship_financed_tokens_1')}
+                </p>
+                <p className="flex items-start gap-2">
+                  <Check className="mt-1 h-5 w-5 text-accent" />
+                  {t('citizenship_financed_tokens_2')}
+                </p>
+                <p className="flex items-start gap-2">
+                  <Check className="mt-1 h-5 w-5 text-accent" />
+                  {t('citizenship_financed_tokens_3')}
+                </p>
+
                 {isTokenPriceLoading ? (
                   <div className="mt-4 rounded-xl border p-4">
-                    <div className="text-sm text-foreground">{t('citizenship_loading_token_prices')}</div>
+                    <div className="text-sm text-foreground">
+                      {t('citizenship_loading_token_prices')}
+                    </div>
                   </div>
                 ) : (
                   <div className="mt-4 rounded-xl border p-4">
-                    <div className="text-sm text-foreground">{t('citizenship_from')}</div>
-                    <div className="text-4xl font-semibold leading-tight">€{tokenPlans[0]?.monthlyPayment || 0}<span className="text-base font-normal">{t('citizenship_per_month')}</span></div>
-                    <div className="text-sm text-foreground">{t('citizenship_for_3_years')}</div>
+                    <div className="text-sm text-foreground">
+                      {t('citizenship_from')}
+                    </div>
+                    <div className="text-4xl font-semibold leading-tight">
+                      €{tokenPlans[0]?.monthlyPayment || 0}
+                      <span className="text-base font-normal">
+                        {t('citizenship_per_month')}
+                      </span>
+                    </div>
+                    <div className="text-sm text-foreground">
+                      {t('citizenship_for_3_years')}
+                    </div>
                   </div>
                 )}
-                
+
                 <div className="pt-3">
-                  <Button asChild size="lg" className="rounded-2xl px-6 w-full sm:w-auto">
-                    <Link href="/subscriptions/citizen/select-flow">{t('citizenship_start_financed_plan')}</Link>
+                  <Button
+                    asChild
+                    size="lg"
+                    className="rounded-2xl px-6 w-full sm:w-auto"
+                  >
+                    <Link href="/subscriptions/citizen/why">
+                      {t('citizenship_start_financed_plan')}
+                    </Link>
                   </Button>
                 </div>
               </CardContent>
@@ -283,18 +469,51 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
 
             <Card className="rounded-2xl">
               <CardHeader>
-                <CardTitle className="text-2xl">{t('citizenship_responsibilities_title')}</CardTitle>
+                <CardTitle className="text-2xl">
+                  {t('citizenship_responsibilities_title')}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-foreground">
-                <p className="flex items-start gap-2"><Info className="mt-1 h-5 w-5 text-accent"/>{t('citizenship_responsibilities_summary')} <a className="underline" href="https://traditionaldreamfactory.gitbook.io/game-guide/02_roles-and-stakeholders/citizenship" target="_blank" rel="noreferrer">Game Guide: Citizenship</a>.</p>
+                <p className="flex items-start gap-2">
+                  <Info className="mt-1 h-5 w-5 text-accent" />
+                  {t('citizenship_responsibilities_summary')}{' '}
+                  <a
+                    className="underline"
+                    href="https://traditionaldreamfactory.gitbook.io/game-guide/02_roles-and-stakeholders/citizenship"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Game Guide: Citizenship
+                  </a>
+                  .
+                </p>
                 <ul className="space-y-2">
-                  <li className="flex items-start gap-2"><Check className="mt-1 h-5 w-5 text-accent"/>{t('citizenship_responsibilities_1')}</li>
-                  <li className="flex items-start gap-2"><Check className="mt-1 h-5 w-5 text-accent"/>{t('citizenship_responsibilities_2')}</li>
-                  <li className="flex items-start gap-2"><Check className="mt-1 h-5 w-5 text-accent"/>{t('citizenship_responsibilities_3')}</li>
+                  <li className="flex items-start gap-2">
+                    <Check className="mt-1 h-5 w-5 text-accent" />
+                    {t('citizenship_responsibilities_1')}
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="mt-1 h-5 w-5 text-accent" />
+                    {t('citizenship_responsibilities_2')}
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="mt-1 h-5 w-5 text-accent" />
+                    {t('citizenship_responsibilities_3')}
+                  </li>
                 </ul>
                 <div className="pt-3">
-                  <Button asChild variant="outline" className="rounded-2xl px-6">
-                    <a href="https://traditionaldreamfactory.gitbook.io/game-guide/02_roles-and-stakeholders/citizenship" target="_blank" rel="noreferrer">{t('citizenship_read_full_responsibilities')}</a>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="rounded-2xl px-6"
+                  >
+                    <a
+                      href="https://traditionaldreamfactory.gitbook.io/game-guide/02_roles-and-stakeholders/citizenship"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {t('citizenship_read_full_responsibilities')}
+                    </a>
                   </Button>
                 </div>
               </CardContent>
@@ -308,12 +527,22 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
         <div className="rounded-3xl bg-accent p-8 text-background shadow-lg">
           <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
             <div>
-              <h3 className="text-2xl font-semibold">{t('citizenship_cta_heading')}</h3>
-              <p className="mt-1 text-accent-light">{t('citizenship_cta_subtitle')}</p>
+              <h3 className="text-2xl font-semibold">
+                {t('citizenship_cta_heading')}
+              </h3>
+              <p className="mt-1 text-accent-light">
+                {t('citizenship_cta_subtitle')}
+              </p>
             </div>
             <div className="flex gap-3">
-              <Button asChild size="lg" className="rounded-2xl bg-background text-accent hover:bg-background/90">
-                <Link href="/subscriptions/citizen/select-flow">{t('citizenship_cta_become_citizen')}</Link>
+              <Button
+                asChild
+                size="lg"
+                className="rounded-2xl bg-background text-accent hover:bg-background/90"
+              >
+                <Link href="/subscriptions/citizen/why">
+                  {t('citizenship_cta_become_citizen')}
+                </Link>
               </Button>
             </div>
           </div>
@@ -323,7 +552,9 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
       {/* FAQ */}
       <section className="bg-background">
         <div className="mx-auto max-w-6xl px-6 py-14">
-          <h2 className="text-3xl font-semibold">{t('citizenship_faq_title')}</h2>
+          <h2 className="text-3xl font-semibold">
+            {t('citizenship_faq_title')}
+          </h2>
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             {faqs.map((f) => (
               <Card key={f.q} className="rounded-2xl">
@@ -342,16 +573,13 @@ const CitizenshipPage: React.FC<CitizenshipPageProps> = ({
   );
 };
 
-CitizenshipPage.getInitialProps = async (
-  context: NextPageContext,
-) => {
+CitizenshipPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [citizenshipRes] =
-      await Promise.all([
-        api.get('/config/citizenship').catch(() => {
-          return null;
-        })
-      ]);
+    const [citizenshipRes] = await Promise.all([
+      api.get('/config/citizenship').catch(() => {
+        return null;
+      }),
+    ]);
 
     const citizenshipConfig = citizenshipRes?.data?.results?.value;
     return {

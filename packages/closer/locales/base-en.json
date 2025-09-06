@@ -730,7 +730,7 @@
   "subscriptions_citizen_vouched_by_n_members": "You have been vouched for by {var} other members",
   "subscriptions_citizen_space_host_vouch_required": "and at least one space host",
   "subscriptions_citizen_created_account": "You created an account",
-  "subscriptions_citizen_no_reports": "You have not been reported my other members",
+  "subscriptions_citizen_no_reports": "You have not been reported by other members",
   "subscriptions_citizen_owns_30_tokens": "You own 30 tokens",
   "subscriptions_citizen_on_way_to_30_tokens": "You are on your way to owning at least 30 tokens",
   "subscriptions_citizen_see_other_ways": "See other ways to be part of TDF",
@@ -790,6 +790,11 @@
   "subscriptions_citizen_progress": "🐑 Citizensheep progress",
   "subscriptions_citizen_monthly_payment": "Monthly payment:",
   "subscriptions_citizen_amount_due": "Amount due:",
+  "subscription_citizen_apply": "Apply for citizenship",
+  "subscriptions_citizen_pending_payment": "You have already applied for citizenship, and you have a pending payment",
+  "subscriptions_citizen_cancelled": "You have already applied for citizenship, but your application has been cancelled.",
+  "subscriptions_citizen_paid": "You have already applied for citizenship, and you have made the latest payment.",
+  "subscriptions_citizen_completed": "You have successfully completed your citizenship application.",
 
   "referrals_heading": "Referrals",
 
@@ -1383,6 +1388,9 @@
   "config_label_weekPosition": "Which week",
   "config_label_chatLink": "Guest support chat link",
   "config_label_telegramUrl": "Telegram link",
+  "config_label_discordUrl": "Discord link",
+
+  "subscriptions_citizen_introduce_yourself_in_discord": "Introduce yourself in discord to get vouched by other members:",
 
   "config_email_product_paid_guest": "Product paid, send to user immediately",
   "config_email_product_paid_admin": "Product paid, send to admins immediately",

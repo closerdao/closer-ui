@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useState } from 'react';
@@ -10,6 +11,7 @@ import {
   BackButton,
   Button,
   Heading,
+  LinkButton,
   ProgressBar,
 } from '../../../components/ui';
 
@@ -42,8 +44,7 @@ const ValidationCitizenPage: NextPage<Props> = ({
   const t = useTranslations();
   const { isLoading, user } = useAuth();
 
-  console.log('user=', user);
-  const { PLATFORM_NAME } = useConfig();
+  const { PLATFORM_NAME, DISCORD_URL } = useConfig();
 
   const router = useRouter();
 
@@ -64,7 +65,6 @@ const ValidationCitizenPage: NextPage<Props> = ({
   const [eligibility, setEligibility] = useState<null | string>(null);
   const [application, setApplication] = useState<any>({
     owns30Tokens,
-    why: '',
     intent: {
       iWantToApply: Boolean(owns30Tokens) && !isMember,
       iWantToBuyTokens: false,
@@ -72,9 +72,7 @@ const ValidationCitizenPage: NextPage<Props> = ({
     },
   });
 
-
-  const isSpaceHostVouchRequired = citizenshipConfig?.isSpaceHostVouchRequired
-
+  const isSpaceHostVouchRequired = citizenshipConfig?.isSpaceHostVouchRequired;
 
   const minVouches = citizenshipConfig?.minVouches || 3;
 
@@ -82,7 +80,7 @@ const ValidationCitizenPage: NextPage<Props> = ({
     if (isMember) {
       return t('subscriptions_citizen_already_member');
     }
-    
+
     switch (eligibility) {
       case 'good_to_buy':
         if (application?.intent?.iWantToBuyTokens) {
@@ -133,7 +131,6 @@ const ValidationCitizenPage: NextPage<Props> = ({
           '/subscription/citizen/check-is-vouched',
         );
 
-        console.log('isVouchedRes=', isVouchedRes);
         const isVouchedLocal = isVouchedRes?.data?.isVouched;
 
         setIsVouched(isVouchedLocal);
@@ -176,13 +173,13 @@ const ValidationCitizenPage: NextPage<Props> = ({
     switch (eligibility) {
       case 'good_to_buy':
         router.push(
-          '/subscriptions/citizen/select-flow?isCitizenApplication=true',
+          `/subscriptions/citizen/select-flow?isCitizenApplication=true`,
         );
         return;
 
       case 'buy_more':
         router.push(
-          '/subscriptions/citizen/select-flow?isCitizenApplication=true',
+          `/subscriptions/citizen/select-flow?isCitizenApplication=true`,
         );
         return;
       case 'not_eligible':
@@ -217,7 +214,7 @@ const ValidationCitizenPage: NextPage<Props> = ({
         <main className="pt-14 pb-24 space-y-6">
           <section className="mb-10 space-y-6">
             <Heading level={2} className="border-b pb-2 mb-6 text-xl">
-              {isMember 
+              {isMember
                 ? t('subscriptions_citizen_already_member')
                 : eligibility === 'not_eligible'
                 ? t('subscriptions_citizen_not_eligible')
@@ -225,12 +222,14 @@ const ValidationCitizenPage: NextPage<Props> = ({
             </Heading>
             {isMember && (
               <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
-                <p className="font-bold text-green-700 mb-2">{t('subscriptions_citizen_already_member_title')}</p>
+                <p className="font-bold text-green-700 mb-2">
+                  {t('subscriptions_citizen_already_member_title')}
+                </p>
                 <p>{t('subscriptions_citizen_already_member_description')}</p>
               </div>
             )}
           </section>
-          {!isMember &&
+          {!isMember && (
             <section className="space-y-6">
               <CitizenEligibility
                 userReports={user?.reports || []}
@@ -242,7 +241,28 @@ const ValidationCitizenPage: NextPage<Props> = ({
                 isSpaceHostVouchRequired={isSpaceHostVouchRequired}
               />
             </section>
-          }
+          )}
+
+          {!isVouched && DISCORD_URL && (
+            <div>
+              {t('subscriptions_citizen_introduce_yourself_in_discord')}
+              <Link
+                className="text-primary underline"
+                href={DISCORD_URL || ''}
+                target="_blank"
+              >
+                {' '}
+                {DISCORD_URL || ''}
+              </Link>
+            </div>
+          )}
+          {!hasStayedForMinDuration && (
+            <div>
+              <LinkButton variant="secondary" href="/stay" target="_blank">
+                {t('navigation_stay')}
+              </LinkButton>
+            </div>
+          )}
 
           {isWalletEnabled &&
           (eligibility === 'buy_more' || eligibility === 'not_eligible') ? (
