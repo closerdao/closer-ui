@@ -36,7 +36,6 @@ interface Props {
 
 const SelectFlowCitizenPage: NextPage<Props> = ({
   subscriptionsConfig,
-  citizenshipConfig,
   error,
 }) => {
   const t = useTranslations();
@@ -56,9 +55,15 @@ const SelectFlowCitizenPage: NextPage<Props> = ({
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
   const isMember = user?.roles?.includes('member');
 
-  const [apiError, setApiError] = useState('');
   const [eligibility, setEligibility] = useState<null | string>(null);
-  const [application, setApplication] = useState<any>({
+  const [application, setApplication] = useState<{
+    owns30Tokens: boolean;
+    intent: {
+      iWantToApply: boolean;
+      iWantToBuyTokens: boolean;
+      iWantToFinanceTokens: boolean;
+    };
+  }>({
     owns30Tokens,
     intent: {
       iWantToApply: Boolean(owns30Tokens) && !isMember,
@@ -92,7 +97,7 @@ const SelectFlowCitizenPage: NextPage<Props> = ({
 
   useEffect(() => {
     if (owns30Tokens) {
-      setApplication((prev: any) => ({
+      setApplication((prev) => ({
         ...prev,
         owns30Tokens,
         intent: {
@@ -105,7 +110,6 @@ const SelectFlowCitizenPage: NextPage<Props> = ({
     }
     (async () => {
       try {
-        setApiError('');
         const hasStayedRes = await api.get(
           '/subscription/citizen/check-has-stayed-for-min-duration',
         );
@@ -128,9 +132,7 @@ const SelectFlowCitizenPage: NextPage<Props> = ({
         } else {
           setEligibility('not_eligible');
         }
-      } catch (error) {
-        setApiError(parseMessageFromError(error));
-      }
+      } catch (error) {}
     })();
   }, [owns30Tokens, isMember]);
 
@@ -140,8 +142,18 @@ const SelectFlowCitizenPage: NextPage<Props> = ({
     }
   }, [user, isLoading]);
 
-  const updateApplication = (key: string, value: any) => {
-    setApplication((prev: any) => ({ ...prev, [key]: value }));
+  const updateApplication = (
+    key: string,
+    value:
+      | string
+      | boolean
+      | {
+          iWantToApply: boolean;
+          iWantToBuyTokens: boolean;
+          iWantToFinanceTokens: boolean;
+        },
+  ) => {
+    setApplication((prev) => ({ ...prev, [key]: value }));
   };
 
   const goBack = () => {
@@ -163,9 +175,7 @@ const SelectFlowCitizenPage: NextPage<Props> = ({
           router.push('/token/before-you-begin?isCitizenApplication=true');
           return;
         } else {
-          router.push(
-            `/subscriptions/citizen/apply?intent=finance`,
-          );
+          router.push('/subscriptions/citizen/apply?intent=finance');
           return;
         }
       case 'buy_more':
@@ -173,14 +183,10 @@ const SelectFlowCitizenPage: NextPage<Props> = ({
           router.push('/token/before-you-begin?isCitizenApplication=true');
           return;
         } else if (application?.intent?.iWantToApply) {
-          router.push(
-            `/subscriptions/citizen/apply?intent=apply`,
-          );
+          router.push('/subscriptions/citizen/apply?intent=apply');
           return;
         } else {
-          router.push(
-            `/subscriptions/citizen/apply?intent=finance`,
-          );
+          router.push('/subscriptions/citizen/apply?intent=finance');
           return;
         }
       case 'not_eligible':
@@ -204,7 +210,6 @@ const SelectFlowCitizenPage: NextPage<Props> = ({
           'subscriptions_title',
         )} - ${PLATFORM_NAME}`}</title>
       </Head>
-
 
       <div className="w-full max-w-screen-sm mx-auto p-8">
         <BackButton handleClick={goBack}>{t('buttons_back')}</BackButton>
