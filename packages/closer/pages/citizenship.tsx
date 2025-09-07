@@ -2,10 +2,7 @@ import Link from 'next/link';
 
 import { useEffect, useState } from 'react';
 
-import { CitizenshipConfig } from '../types/api';
-
 import { Badge } from '../components/ui/badge';
-import { Progress } from '../components/ui/progress';
 import { Button } from '../components/ui/shadcn-button';
 import {
   Card,
@@ -36,6 +33,7 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useBuyTokens } from '../hooks/useBuyTokens';
+import { CitizenshipConfig } from '../types/api';
 import api from '../utils/api';
 
 const CITIZEN_TARGET = 300;
@@ -273,7 +271,12 @@ const CitizenshipPage = ({
                 {isLoading ? '...' : citizenCurrent} / {citizenTarget}
               </span>
             </div>
-            <Progress value={progress} className="mt-2 h-2" />
+            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-neutral">
+              <div
+                className="h-full bg-accent transition-all duration-300 ease-in-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
         </div>
       </section>
