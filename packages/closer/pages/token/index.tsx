@@ -260,7 +260,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 <Button
                   isFullWidth={false}
                   variant="secondary"
-                  onClick={() => { router.push('/subscriptions/citizen/validation'); }}
+                  onClick={() => { router.push('/citizenship'); }}
                 >
                   {t('token_sale_become_member_button')}
                 </Button>

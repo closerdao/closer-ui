@@ -416,6 +416,10 @@ export const configDescription: ConfigType[] = [
         type: 'text',
         default: '',
       },
+      discordUrl: {
+        type: 'text',
+        default: '',
+      },
       locationLat: {
         type: 'text',
         default: '38.003164469592555',

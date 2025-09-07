@@ -45,12 +45,11 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
 
   const { isLoading, user } = useAuth();
   const router = useRouter();
-  const { intent, why } = router.query;
+  const { intent } = router.query;
 
   const [isAgreementAccepted, setIsAgreementAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [application, setApplication] = useState<any>({
-    why: why || '',
     iban: '',
     tokensToFinance: MIN_TOKENS_TO_FINANCE,
   });
@@ -93,7 +92,6 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
         try {
           const res = await api.post('/subscription/citizen/apply', {
             owns30Tokens,
-            why,
             intent,
           });
 
@@ -109,7 +107,6 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
         try {
           const res = await api.post('/subscription/citizen/apply', {
             owns30Tokens,
-            why,
             intent,
             iban: application?.iban,
             tokensToFinance: application?.tokensToFinance,
