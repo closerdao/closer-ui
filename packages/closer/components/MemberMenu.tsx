@@ -77,19 +77,28 @@ const MemberMenu = () => {
                   enabled: true,
                   rbacPage: 'Community',
                 },
+                {
+                  label: t('header_nav_events'),
+                  url: '/pages/events',
+                  enabled: true,
+                  rbacPage: 'Events',
+                },
               ]
             : []),
           {
             label: 'Invest',
             url: '/dataroom',
-            enabled: true,
-            rbacPage: 'Dataroom',
+            enabled: APP_NAME?.toLowerCase() === 'tdf',
           },
           {
             label: 'Learn about the $TDF token',
             url: '/token',
             enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
-            rbacPage: 'Token',
+          },
+          {
+            label: 'Become a Citizen',
+            url: '/citizenship',
+            enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && APP_NAME?.toLowerCase() === 'tdf',
           },
           {
             label: t('navigation_work_with_us'),

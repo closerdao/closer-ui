@@ -24,6 +24,7 @@ import {
 import { FoodOption } from '../types/food';
 import api from './api';
 import { priceFormat } from './helpers';
+import { reportIssue } from './reporting.utils';
 
 const DEFAULT_TIMEZONE = 'Europe/Berlin';
 
@@ -486,11 +487,23 @@ export const payTokens = async (
       }
     | undefined
   >,
+  userEmail?: string | null | undefined,
   bookingStatus?: string,
 ) => {
-  if (!dailyRentalTokenVal)
+  if (!dailyRentalTokenVal) {
+    await reportIssue(
+      `MISSING_DAILY_RENTAL_TOKEN_VALUE: bookingId=${bookingId}, error=No daily rental token value provided, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
+      userEmail,
+    );
     return { error: 'No daily rental token value provided', success: null };
-  if (!bookingId) return { error: 'No bookingId provided', success: null };
+  }
+  if (!bookingId) {
+    await reportIssue(
+      `MISSING_BOOKING_ID: bookingId=${bookingId}, error=No bookingId provided, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
+      userEmail,
+    );
+    return { error: 'No bookingId provided', success: null };
+  }
 
   // If booking status is already 'tokens-staked', skip token payment
   if (bookingStatus === 'tokens-staked') {
@@ -529,21 +542,50 @@ export const payTokens = async (
 
   if (error?.reason?.trim() === USER_REJECTED_TRANSACTION_ERROR) {
     console.log('User rejected transaction!!!!!');
+    await reportIssue(
+      `USER_REJECTED_TRANSACTION: bookingId=${bookingId}, error=User rejected transaction, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
+      userEmail,
+    );
     return { error: 'User rejected transaction', success: null };
   }
   if (error?.reason?.trim() === BOOKING_EXISTS_ERROR) {
+    await reportIssue(
+      `BOOKING_EXISTS_ERROR: bookingId=${bookingId}, error=Booking for these dates already exists, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
+      userEmail,
+    );
     return { error: 'Booking for these dates already exists', success: null };
   }
   if (error) {
     console.log('TOKEN PAYMENT ERROR=', error);
+    await reportIssue(
+      `TOKEN_PAYMENT_FAILED: bookingId=${bookingId}, error=${JSON.stringify(
+        error,
+      )}, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
+      userEmail,
+    );
     return { error: 'Token payment failed.', success: null };
   }
 
   if (stakingSuccess?.transactionId && isBookingMatchContract) {
-    await api.post(`/bookings/${bookingId}/token-payment`, {
-      transactionId: stakingSuccess.transactionId,
-    });
-    return { success: true, error: null };
+    try {
+      await api.post(`/bookings/${bookingId}/token-payment`, {
+        transactionId: stakingSuccess.transactionId,
+      });
+      return { success: true, error: null };
+    } catch (apiError) {
+      await reportIssue(
+        `TOKEN_PAYMENT_API_ERROR: bookingId=${bookingId}, error=${JSON.stringify(
+          apiError,
+        )}, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}, transactionId=${
+          stakingSuccess.transactionId
+        }`,
+        userEmail,
+      );
+      return {
+        error: 'Failed to confirm token payment with server',
+        success: null,
+      };
+    }
   }
 };
 

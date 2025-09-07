@@ -32,6 +32,24 @@ export const useBookingSmartContract = ({ bookingNights }) => {
   const [pendingTransactions, setPendingTransactions] = useState([]);
   const [isPending, setPending] = useState(false);
 
+  // Safety check for required functions
+  if (!updateWalletBalance || !refetchBookingDates) {
+    console.warn(
+      'useBookingSmartContract: Required wallet functions not available',
+    );
+    return {
+      stakeTokens: async () => ({
+        error: 'Wallet functions not available',
+        success: null,
+      }),
+      isStaking: false,
+      checkContract: async () => ({
+        success: false,
+        error: 'Wallet functions not available',
+      }),
+    };
+  }
+
   // Safety check for bookingNights
   if (
     !bookingNights ||
@@ -129,8 +147,12 @@ export const useBookingSmartContract = ({ bookingNights }) => {
           (transactionId) => transactionId !== tx3.hash,
         ),
       );
-      refetchBookingDates();
-      updateWalletBalance();
+      if (refetchBookingDates) {
+        refetchBookingDates();
+      }
+      if (updateWalletBalance) {
+        updateWalletBalance();
+      }
       return { error: null, success: { transactionId: tx3.hash } };
     } catch (error) {
       //User rejected transaction

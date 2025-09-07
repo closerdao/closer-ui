@@ -23,7 +23,7 @@ const CustomHero: React.FC<{
     body: string;
     imageUrl: string;
     videoEmbedId?: string;
-    localVideoPath?: string;
+    mobileVideoUrl?: string;
     cta: {
       text: string;
       url: string;
@@ -45,7 +45,7 @@ const CustomHero: React.FC<{
   const [isClientMobile, setIsClientMobile] = useState(false);
 
   const renderHeaderMedia = () => {
-    if (isClientMobile && content?.localVideoPath) {
+    if (isClientMobile && content?.mobileVideoUrl) {
       return (
         <video
           loop
@@ -55,7 +55,7 @@ const CustomHero: React.FC<{
           className="w-full h-full object-cover"
         >
           <source
-            src="https://cdn.oasa.co/custom-pages/earthbound/video/Earthbound_header_LQ2.mp4"
+            src={content.mobileVideoUrl}
             type="video/mp4"
           />
         </video>
@@ -92,13 +92,17 @@ const CustomHero: React.FC<{
             level={1}
             className={`${
               settings?.isInverted ? 'text-dominant' : 'text-black'
-            } ${settings?.isCompact ? 'text-xl sm:text-2xl max-w-xl' : 'text-4xl'}`}
+            } ${
+              settings?.isCompact ? 'text-xl sm:text-2xl max-w-xl' : 'text-4xl'
+            }`}
           >
             {content.title}
           </Heading>
 
           <div
-            className={`${settings?.isCompact ? 'text-sm sm:text-lg max-w-xl' : 'text-2xl'} rich-text ${
+            className={`${
+              settings?.isCompact ? 'text-sm sm:text-lg max-w-xl' : 'text-2xl'
+            } rich-text ${
               settings?.isInverted ? 'text-accent-light' : 'text-black'
             }`}
             dangerouslySetInnerHTML={{ __html: content.body }}
