@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import { FaCheckCircle } from '@react-icons/all-files/fa/FaCheckCircle';
+import { FaClock } from '@react-icons/all-files/fa/FaClock';
+import { FaUserCheck } from '@react-icons/all-files/fa/FaUserCheck';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useTranslations } from 'next-intl';
@@ -36,9 +39,10 @@ interface Props {
   page: number;
   setPage: Dispatch<SetStateAction<number>>;
   sortBy: string;
+  setSortBy: Dispatch<SetStateAction<string>>;
 }
 
-const UsersList = ({ where, page, setPage, sortBy }: Props) => {
+const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
   const { user: currentUser } = useAuth();
@@ -458,12 +462,34 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
         </div>
       ) : (
         <>
-          <Heading level={2} className="border-b pb-2">
-            {totalUsers ? totalUsers.toString() : 0}{' '}
-            {totalUsers === 1
-              ? t('manage_users_user')
-              : t('manage_users_users')}
-          </Heading>
+          <div className="flex justify-between items-center border-b pb-2">
+            <Heading level={2}>
+              {totalUsers ? totalUsers.toString() : 0}{' '}
+              {totalUsers === 1
+                ? t('manage_users_user')
+                : t('manage_users_users')}
+            </Heading>
+            
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-medium text-gray-600 min-w-[80px]">{t('manage_users_sort_by')}</label>
+              <Select
+                className="min-w-[200px] border-gray-300 rounded-lg"
+                value={sortBy}
+                options={[
+                  { value: '-created', label: t('manage_users_sort_by_created_desc') },
+                  { value: 'created', label: t('manage_users_sort_by_created_asc') },
+                  { value: '-screenname', label: t('manage_users_sort_by_name_desc') },
+                  { value: 'screenname', label: t('manage_users_sort_by_name_asc') },
+                  { value: '-lastactive', label: t('manage_users_sort_by_lastactive_desc') },
+                  { value: 'lastactive', label: t('manage_users_sort_by_lastactive_asc') },
+                  { value: '-email', label: t('manage_users_sort_by_email_desc') },
+                  { value: 'email', label: t('manage_users_sort_by_email_asc') },
+                ]}
+                onChange={setSortBy}
+                isRequired
+              />
+            </div>
+          </div>
 
           <div className="flex gap-3 justify-between my-4 flex-col sm:flex-row">
             <div className="flex">
@@ -552,6 +578,29 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
                         </div>
                       </div>
 
+                      <div className="flex flex-col gap-1">
+                        {user.get('vouched') && user.get('vouched').length > 0 ? (
+                          <div className="bg-green-100 flex border px-2 py-1 gap-1 border-green-500 rounded-md items-center">
+                            <FaUserCheck className="text-green-600 w-3 h-3" />
+                            <span className="text-xs text-green-700">
+                              {t('manage_users_vouched_by')} {user.get('vouched').length}
+                            </span>
+                            <div className="ml-1 text-xs text-green-600 cursor-help" title={
+                              user.get('vouched').map((vouch: any) => 
+                                `${vouch.vouchedBy} (${dayjs(vouch.vouchedAt).format('MMM YYYY')})`
+                              ).join(', ')
+                            }>
+                              ℹ️
+                            </div>
+                          </div>
+                        ) : null}
+                        
+                        {user.get('kycPassed') && (
+                          <div className="flex items-center gap-1" title={t('manage_users_kyc_passed')}>
+                            <FaCheckCircle className="text-blue-600 w-4 h-4" />
+                          </div>
+                        )}
+                      </div>
                       <div>
                         {user.get('roles').includes('member') ? (
                           <div className="bg-white flex border px-2 py-1 gap-1 border-accent rounded-md">
@@ -619,6 +668,15 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
                               height={20}
                             />
                             {t('manage_users_subscription_explorer')}
+                          </div>
+                        )}
+                        
+                        {user.get('lastactive') && (
+                          <div className="bg-orange-100 flex border px-2 py-1 gap-1 border-orange-500 rounded-md items-center mt-1">
+                            <FaClock className="text-orange-600 w-3 h-3" />
+                            <span className="text-xs text-orange-700">
+                              {t('manage_users_last_active')}: {dayjs(user.get('lastactive')).fromNow()}
+                            </span>
                           </div>
                         )}
                       </div>

@@ -13,19 +13,17 @@ import {
   USER_CREATED_OPTIONS,
   USER_MEMBER_STATUS_OPTIONS,
   USER_ROLE_OPTIONS,
-  USER_SORT_OPTIONS,
-  USER_SORT_TITLE_OPTIONS,
 } from '../../constants';
 import { getCreatedPeriodFilter } from '../../utils/helpers';
-import { Button, Input } from '../ui';
+import { Input } from '../ui';
 import Select from '../ui/Select/Dropdown';
-import Switcher from '../ui/Switcher';
 
 const initialWhereValues = {
   userRole: 'any',
   subscriptionTier: 'any',
   userCreated: 'any',
   memberStatus: 'any',
+  kycStatus: 'any',
   userName: '',
   userEmail: '',
 };
@@ -46,6 +44,7 @@ const UsersFilter = ({ setWhere, setPage, page, sortBy, setSortBy }: Props) => {
   const [userName, setUsername] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [memberStatus, setMemberStatus] = useState('any');
+  const [kycStatus, setKycStatus] = useState('any');
 
   const [whereValues, setWhereValues] = useState(initialWhereValues);
 
@@ -74,10 +73,13 @@ const UsersFilter = ({ setWhere, setPage, page, sortBy, setSortBy }: Props) => {
         created: getCreatedPeriodFilter(userCreated),
       }),
       ...(whereValues.userEmail !== '' && {
-        email: { $regex: whereValues.userEmail },
+        email: { $regex: whereValues.userEmail, $options: 'i' },
       }),
       ...(whereValues.userName !== '' && {
         screenname: { $regex: whereValues.userName, $options: 'i' },
+      }),
+      ...(whereValues.kycStatus !== 'any' && {
+        kycPassed: whereValues.kycStatus === 'passed',
       }),
     };
     setWhere(getWhere);
@@ -118,6 +120,14 @@ const UsersFilter = ({ setWhere, setPage, page, sortBy, setSortBy }: Props) => {
     });
   };
 
+  const handleKycStatus = (value: string) => {
+    setKycStatus(value);
+    setWhereValues({
+      ...whereValues,
+      kycStatus: value,
+    });
+  };
+
   const handleUserEmail = (e: ChangeEvent<HTMLInputElement>) => {
     setUserEmail(e.target.value);
     setWhereValues({
@@ -140,96 +150,110 @@ const UsersFilter = ({ setWhere, setPage, page, sortBy, setSortBy }: Props) => {
     setMemberStatus('any');
     setUsername('');
     setUserEmail('');
+    setKycStatus('any');
     setWhereValues(initialWhereValues);
   };
 
   return (
-    <section className="flex gap-2 flex-wrap">
-      <div className="md:flex-1 flex-wrap md:flex-nowrap flex gap-2 flex-col md:flex-row w-full md:w-auto mb-4">
-        <div className="flex-1 min-w-full md:min-w-[160px]">
-          <label className="block my-2">{t('manage_users_role')}</label>
-          <Select
-            className="rounded-full border-black "
-            value={userRole}
-            options={USER_ROLE_OPTIONS}
-            onChange={handleUserRole}
-            isRequired
-          />
-        </div>
-        <div className="flex-1 min-w-full md:min-w-[160px]">
-          <label className="block my-2">{t('manage_users_tier')}</label>
-          <Select
-            className="rounded-full border-black "
-            value={subscriptionTier}
-            options={SUBSCRIPTION_TIER_OPTIONS}
-            onChange={handleSubscriptionTier}
-            isRequired
-          />
-        </div>
-        <div className="flex-1 min-w-full md:min-w-[160px]">
-          <label className="block my-2">
-            {t('manage_users_member_status')}
-          </label>
-          <Select
-            className="rounded-full border-black "
-            value={memberStatus}
-            options={USER_MEMBER_STATUS_OPTIONS}
-            onChange={handleMemberStatus}
-            isRequired
-          />
+    <section className="space-y-2 mb-2">
+      {/* Header with Clear Button */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold text-gray-800">{t('manage_users_filters')}</h2>
+        <button
+          onClick={handleClearFilters}
+          className="text-primary underline hover:text-primary/80 text-sm cursor-pointer"
+        >
+          {t('manage_users_clear_filters')}
+        </button>
+      </div>
+
+      {/* User Identity Filters */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('manage_users_identity_filters')}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">{t('manage_users_name')}</label>
+            <Input
+              value={userName}
+              onChange={handleUserName as any}
+              type="text"
+              placeholder={t('manage_users_name')}
+              className="w-full border-gray-300 rounded-lg py-1.5 px-3 focus:ring-2 focus:ring-accent focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">{t('manage_users_email')}</label>
+            <Input
+              value={userEmail}
+              onChange={handleUserEmail as any}
+              type="text"
+              placeholder={t('manage_users_email')}
+              className="w-full border-gray-300 rounded-lg py-1.5 px-3 focus:ring-2 focus:ring-accent focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">{t('manage_users_created')}</label>
+            <Select
+              className="w-full border-gray-300 rounded-lg"
+              value={userCreated}
+              options={USER_CREATED_OPTIONS}
+              onChange={handleUserCreated}
+              isRequired
+            />
+          </div>
         </div>
       </div>
 
-      <div className="md:flex-1 flex-wrap md:flex-nowrap flex gap-2 flex-col md:flex-row w-full md:w-auto mb-4">
-        <div className="flex-1 min-w-full md:min-w-[160px]">
-          <label className="block my-2">{t('manage_users_created')}</label>
-          <Select
-            className="rounded-full border-black "
-            value={userCreated}
-            options={USER_CREATED_OPTIONS}
-            onChange={handleUserCreated}
-            isRequired
-          />
-        </div>{' '}
-        <div className="flex-1 min-w-[160px]">
-          <label className="block my-2">{t('manage_users_name')}</label>
-          <Input
-            value={userName}
-            onChange={handleUserName as any}
-            type="text"
-            placeholder={t('manage_users_name')}
-            className="m-0 border-black border-2 rounded-full py-1.5 bg-white"
-          />
-        </div>
-        <div className="flex-1 min-w-[160px]">
-          <label className="block my-2">{t('manage_users_email')}</label>
-          <Input
-            value={userEmail}
-            onChange={handleUserEmail as any}
-            type="text"
-            placeholder={t('manage_users_email')}
-            className="m-0 border-black border-2 rounded-full py-1.5 bg-white"
-          />
+      {/* Status & Permissions Filters */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('manage_users_status_filters')}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">{t('manage_users_role')}</label>
+            <Select
+              className="w-full border-gray-300 rounded-lg min-w-[120px]"
+              value={userRole}
+              options={USER_ROLE_OPTIONS}
+              onChange={handleUserRole}
+              isRequired
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">{t('manage_users_tier')}</label>
+            <Select
+              className="w-full border-gray-300 rounded-lg min-w-[120px]"
+              value={subscriptionTier}
+              options={SUBSCRIPTION_TIER_OPTIONS}
+              onChange={handleSubscriptionTier}
+              isRequired
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">{t('manage_users_member_status')}</label>
+            <Select
+              className="w-full border-gray-300 rounded-lg min-w-[120px]"
+              value={memberStatus}
+              options={USER_MEMBER_STATUS_OPTIONS}
+              onChange={handleMemberStatus}
+              isRequired
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">{t('manage_users_kyc_status')}</label>
+            <Select
+              className="w-full border-gray-300 rounded-lg min-w-[120px]"
+              value={kycStatus}
+              options={[
+                { value: 'any', label: t('manage_users_kyc_status_any') },
+                { value: 'passed', label: t('manage_users_kyc_status_passed') },
+                { value: 'not_passed', label: t('manage_users_kyc_status_not_passed') },
+              ]}
+              onChange={handleKycStatus}
+              isRequired
+            />
+          </div>
         </div>
       </div>
-
-      <div className="w-full"> {t('booking_requests_sort_by')}</div>
-
-      <Switcher
-        options={USER_SORT_OPTIONS}
-        optionsTitles={USER_SORT_TITLE_OPTIONS}
-        selectedOption={sortBy}
-        setSelectedOption={setSortBy}
-      />
-
-      <Button
-        onClick={handleClearFilters}
-        isFullWidth={false}
-        className="my-6"
-        variant="secondary"
-      >
-        {t('manage_users_lear_filters_button')}
-      </Button>
     </section>
   );
 };

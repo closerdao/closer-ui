@@ -4,7 +4,6 @@ import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 
 import { useTranslations } from 'next-intl';
 
-import { useBookingSmartContract } from '../hooks/useBookingSmartContract';
 import api from '../utils/api';
 import { ErrorMessage } from './ui';
 import Button from './ui/Button';
@@ -46,7 +45,7 @@ const CheckoutForm = ({
   cardElementClassName = '',
   prePayInTokens,
   payWithCredits,
-  isProcessingTokenPayment = false,
+  isProcessingTokenPayment,
   children: conditions,
   hasComplied,
   buttonDisabled,
@@ -55,14 +54,14 @@ const CheckoutForm = ({
   bookingNights,
   status,
   refetchBooking,
+  isAdditionalFiatPayment,
+  stakeTokens,
+  checkContract,
 }) => {
   const t = useTranslations();
 
   const stripe = useStripe();
   const elements = useElements();
-  const { stakeTokens, checkContract } = useBookingSmartContract({
-    bookingNights,
-  });
 
   const [error, setError] = useState(null);
   const [submitDisabled, setSubmitDisabled] = useState(true);
@@ -75,7 +74,7 @@ const CheckoutForm = ({
 
     let tokenPaymentSuccessful = false;
 
-    if (useCredits) {
+    if (useCredits && !isAdditionalFiatPayment) {
       try {
         await payWithCredits();
       } catch (error) {
@@ -84,7 +83,11 @@ const CheckoutForm = ({
       }
     }
 
-    if (prePayInTokens && status !== 'tokens-staked') {
+    if (
+      prePayInTokens &&
+      status !== 'tokens-staked' &&
+      !isAdditionalFiatPayment
+    ) {
       // If we're about to attempt token payment and we have a refetch function,
       // refetch the booking first to get the latest status
       let currentStatus = status;
@@ -250,12 +253,22 @@ const CheckoutForm = ({
   };
 
   const renderButtonText = () => {
+    console.log('[CheckoutForm] renderButtonText called with:', {
+      isProcessingTokenPayment,
+      type: typeof isProcessingTokenPayment,
+      processing,
+      buttonText,
+    });
+
     if (isProcessingTokenPayment) {
+      console.log('[CheckoutForm] Returning token payment processing text');
       return t('checkout_processing_token_payment');
     }
     if (processing) {
+      console.log('[CheckoutForm] Returning payment processing text');
       return t('checkout_processing_payment');
     }
+    console.log('[CheckoutForm] Returning default button text');
     return buttonText || t('checkout_pay');
   };
 

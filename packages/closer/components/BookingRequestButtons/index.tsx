@@ -88,6 +88,13 @@ const BookingRequestButtons = ({
               </Button>
             </Link>
           )}
+          {status === 'credits-paid' && user && isOwnBooking && (
+            <Link passHref href={`/bookings/${_id}/checkout`}>
+              <Button variant="secondary">
+                💰 {t('booking_card_checkout_button')}
+              </Button>
+            </Link>
+          )}
           {status === 'pending-payment' && user && isOwnBooking && (
             <Link passHref href={`/bookings/${_id}/checkout`}>
               <Button variant="secondary">

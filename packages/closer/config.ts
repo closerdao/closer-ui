@@ -182,6 +182,10 @@ export const configDescription: ConfigType[] = [
         type: 'boolean',
         default: false,
       },
+      chatLink: {
+        type: 'text',
+        default: '',
+      },
     },
   },
   {
@@ -407,6 +411,14 @@ export const configDescription: ConfigType[] = [
       twitterUrl: {
         type: 'text',
         default: 'https://twitter.com/traditionaldreamfactory',
+      },
+      telegramUrl: {
+        type: 'text',
+        default: '',
+      },
+      discordUrl: {
+        type: 'text',
+        default: '',
       },
       locationLat: {
         type: 'text',

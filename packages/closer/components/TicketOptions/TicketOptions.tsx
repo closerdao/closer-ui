@@ -32,6 +32,7 @@ const Ticket = ({
   selectedTicketOption,
   isVolunteer,
   isDayTicket,
+  t,
 }: {
   name: string;
   price?: number;
@@ -42,14 +43,15 @@ const Ticket = ({
   selectedTicketOption?: TicketOption;
   isVolunteer?: boolean;
   isDayTicket?: boolean;
+  t: any;
 }) => {
   return (
     <button
-      className={`border-2 flex flex-col justify-center rounded-md shadow-lg mr-3 mb-3 p-4 hover:border-accent ${
+      className={`border-2 flex flex-col justify-center rounded-md shadow-lg p-4 ${
         name === selectedTicketOption?.name
           ? 'border-accent'
           : 'border-gray-100'
-      } ${available > 0 ? 'available' : 'unavailable'}`}
+      } ${available > 0 ? 'hover:border-accent' : 'text-gray-500'}`}
       onClick={() =>
         selectTicketOption({ name, isDayTicket, price, currency, disclaimer })
       }
@@ -57,15 +59,15 @@ const Ticket = ({
     >
       <h4 title={disclaimer}>{name.split('_').join(' ')}</h4>
       {isDayTicket ? (
-        <p className="text-gray-500 italic">Day ticket.</p>
+        <p className="text-gray-500 italic">{t('ticket_day_ticket')}</p>
       ) : (
-        <p className="text-gray-500 italic">Overnight ticket.</p>
+        <p className="text-gray-500 italic">{t('ticket_overnight_ticket')}</p>
       )}
       <p className="price text-gray-500">
-        {isVolunteer ? 'Volunteering' : priceFormat(price, currency)}
+        {isVolunteer ? t('ticket_volunteering') : priceFormat(price, currency)}
       </p>
       <p className="availability text-xs uppercase text-accent">
-        {available > 0 ? `${available} available` : 'not available'}
+        {available > 0 ? `${available} ${t('ticket_available')}` : t('ticket_not_available')}
       </p>
       {name === selectedTicketOption?.name ? <p>{disclaimer}</p> : ''}
     </button>
@@ -87,7 +89,7 @@ const TicketOptions: FC<Props> = ({
         <span className="mr-2">🎟</span>
         <span>{t('bookings_dates_step_tickets_title')}</span>
       </HeadingRow>
-      <div className="ticket-options my-4 flex flex-row flex-wrap">
+      <div className="ticket-options my-4 flex flex-row flex-wrap gap-3">
         {items?.map(
           ({ name, price, currency, disclaimer, available, isDayTicket }) => (
             <Ticket
@@ -100,6 +102,7 @@ const TicketOptions: FC<Props> = ({
               isDayTicket={isDayTicket}
               selectTicketOption={selectTicketOption}
               selectedTicketOption={selectedTicketOption}
+              t={t}
             />
           ),
         )}

@@ -69,6 +69,7 @@ export type User = {
   _id: string;
   citizenship?: {
     createdAt?: Date;
+    appliedAt?: Date;
     status?: 'pending-payment' | 'cancelled' | 'paid' | 'completed';
     iban?: string;
     why?: string;

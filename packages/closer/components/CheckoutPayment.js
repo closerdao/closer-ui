@@ -14,6 +14,7 @@ import { useConfig } from '../hooks/useConfig';
 import api from '../utils/api';
 import { payTokens } from '../utils/booking.helpers';
 import { parseMessageFromError } from '../utils/common';
+import { reportIssue } from '../utils/reporting.utils';
 import CheckoutForm from './CheckoutForm';
 import Conditions from './Conditions';
 import { ErrorMessage } from './ui';
@@ -44,13 +45,19 @@ const CheckoutPayment = ({
   hasAgreedToWalletDisclaimer,
   setWalletDisclaimer,
   refetchBooking,
+  isAdditionalFiatPayment,
 }) => {
   const t = useTranslations();
 
   const { VISITORS_GUIDE } = useConfig() || {};
 
   if (!process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) {
-    throw new Error('stripe key is undefined');
+    const error = 'Stripe key is undefined';
+    reportIssue(
+      `STRIPE_CONFIGURATION_ERROR: bookingId=${bookingId}, error=${error}`,
+      user?.email,
+    );
+    throw new Error(error);
   }
 
   const bookingYear = dayjs(startDate).year();
@@ -64,7 +71,7 @@ const CheckoutPayment = ({
     bookingYear,
     bookingStartDayOfYear + i,
   ]);
-  const { isStaking } = useBookingSmartContract({
+  const { isStaking, stakeTokens, checkContract } = useBookingSmartContract({
     bookingNights,
   });
 
@@ -75,11 +82,22 @@ const CheckoutPayment = ({
   const onComply = (isComplete) => setCompliance(isComplete);
 
   const onSuccess = () => {
-    router.push(
-      `/bookings/${bookingId}/confirmation${
-        eventId ? `?eventId=${eventId}` : ''
-      }`,
-    );
+    try {
+      router.push(
+        `/bookings/${bookingId}/confirmation${
+          eventId ? `?eventId=${eventId}` : ''
+        }`,
+      );
+    } catch (error) {
+      reportIssue(
+        `NAVIGATION_ERROR: bookingId=${bookingId}, error=${JSON.stringify(
+          error,
+        )}, eventId=${eventId}, path=/bookings/${bookingId}/confirmation${
+          eventId ? `?eventId=${eventId}` : ''
+        }`,
+        user?.email,
+      );
+    }
   };
 
   const payWithCredits = async () => {
@@ -93,7 +111,14 @@ const CheckoutPayment = ({
       });
       return res;
     } catch (error) {
-      setError(parseMessageFromError(error));
+      const errorMessage = parseMessageFromError(error);
+      setError(errorMessage);
+      await reportIssue(
+        `CREDIT_PAYMENT_ERROR: bookingId=${bookingId}, error=${errorMessage}, creditsAmount=${
+          isPartialCreditsPayment ? partialPriceInCredits : rentalToken
+        }, startDate=${startDate}`,
+        user?.email,
+      );
     }
   };
 
@@ -103,13 +128,32 @@ const CheckoutPayment = ({
     stakeTokens,
     checkContract,
   ) => {
-    return payTokens(
-      bookingId,
-      dailyTokenValue,
-      stakeTokens,
-      checkContract,
-      status,
-    );
+    try {
+      const result = await payTokens(
+        bookingId,
+        dailyTokenValue,
+        stakeTokens,
+        checkContract,
+        user?.email,
+        status,
+      );
+
+      if (result?.error) {
+        await reportIssue(
+          `TOKEN_PAYMENT_ERROR: bookingId=${bookingId}, error=${result.error}, dailyTokenValue=${dailyTokenValue}, status=${status}`,
+          user?.email,
+        );
+      }
+
+      return result;
+    } catch (error) {
+      const errorMessage = parseMessageFromError(error);
+      await reportIssue(
+        `TOKEN_PAYMENT_EXCEPTION: bookingId=${bookingId}, error=${errorMessage}, dailyTokenValue=${dailyTokenValue}, status=${status}`,
+        user?.email,
+      );
+      throw error;
+    }
   };
 
   return (
@@ -142,6 +186,9 @@ const CheckoutPayment = ({
           bookingNights={bookingNights}
           status={status}
           refetchBooking={refetchBooking}
+          isAdditionalFiatPayment={isAdditionalFiatPayment}
+          stakeTokens={stakeTokens}
+          checkContract={checkContract}
         >
           <Conditions
             cancellationPolicy={cancellationPolicy}

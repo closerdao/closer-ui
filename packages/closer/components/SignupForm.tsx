@@ -39,6 +39,7 @@ const SignupForm = ({ app }: Props) => {
     isGoogleLoading,
     authGoogle,
     signup,
+    refetchUser,
   } = useAuth();
 
   const [step, setStep] = useState<number | null>(() => {
@@ -185,6 +186,14 @@ const SignupForm = ({ app }: Props) => {
 
       const referrer =
         typeof localStorage !== 'undefined' && localStorage.getItem('referrer');
+      
+      if (process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true' && isEmailConsent) {
+        await api.post('/subscribe', {
+          email,
+          screenname: '',
+          tags: ['signup', router.asPath, `ref:${referrer}`],
+        });
+      }
 
       setNewsletterSuccess(true);
       setNewsletterError(null);
@@ -209,6 +218,7 @@ const SignupForm = ({ app }: Props) => {
       return;
     }
 
+
     // Validate password before submitting
     const passwordValidation = validatePassword(application.password);
     if (!passwordValidation.isValid) {
@@ -226,6 +236,7 @@ const SignupForm = ({ app }: Props) => {
         ...application,
         slug: slugify(application.screenname),
         ...(referredBy && { referredBy }),
+        emailConsent: isEmailConsent,
       });
 
 
@@ -246,27 +257,40 @@ const SignupForm = ({ app }: Props) => {
 
   const handlePreferencesSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!application.email) {
+    if (!user) {
+      setLocalError('User not found. Please try again.');
       return;
     }
 
-    try {
-      const res = await platform.user.patch(user?._id, {
-        preferences,
-        about: preferences?.about,
-      });
+    setIsSignupLoading(true);
+    setLocalError(null);
 
+    try {
+      // Update user preferences
+      const payload = {
+        preferences: {
+          ...user?.preferences,
+          about: preferences.about,
+          superpower: preferences.superpower,
+          dream: preferences.dream,
+        },
+      };
+
+      await platform.user.patch(user._id, payload);
+      await refetchUser();
       setPreferencesSuccess(true);
 
+      // Clear the signup step and redirect after success
       setTimeout(() => {
-        setStep(null);
         sessionStorage.removeItem('signup_step');
-      }, 1000);
-
-
+        setStep(null);
+        redirectAfterSignup();
+      }, 1500);
     } catch (error) {
-      console.error('error=', error);
+      console.error('Preferences update error:', error);
       setLocalError(parseMessageFromError(error));
+    } finally {
+      setIsSignupLoading(false);
     }
   };
 

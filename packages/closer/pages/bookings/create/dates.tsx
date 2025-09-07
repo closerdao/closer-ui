@@ -115,7 +115,7 @@ const DatesSelector = ({
     (savedCurrency as CloserCurrencies) || DEFAULT_CURRENCY,
   );
   const [selectedTicketOption, selectTicketOption] = useState<any>(
-    ticketOptions?.[0],
+    ticketOptions?.filter((option: TicketOption) => option.available > 0)?.[0],
   );
   const [discountCode, setDiscountCode] = useState('');
   const [doesNeedPickup, setDoesNeedPickup] = useState(false);
@@ -309,10 +309,17 @@ const DatesSelector = ({
     diffInDays >= (volunteerConfig?.residenceMinStay || 1);
 
   const isMinDurationMatched = Boolean(
-    (bookingConfig && diffInDays >= bookingConfig?.minDuration) ||
+    (bookingConfig &&
+      diffInDays >= bookingConfig?.minDuration &&
+      !isVolunteerApplication &&
+      !isResidenceApplication) ||
       eventId ||
-      isMember,
+      isMember ||
+      (isVolunteerApplication && isMinVolunteeringStayMatched) ||
+      (isResidenceApplication && isMinResidenceStayMatched),
   );
+
+  console.log('isMinDurationMatched', isMinDurationMatched);
 
   const canProceed = !!(
     ((hasEventIdAndValidTicket && hasValidDates) ||

@@ -24,9 +24,9 @@ const EventAttendees = ({
   
   return (
     <section className="attendees">
-      <h3 className="text-lg font-bold mb-3">
+      <h4 className="text-md font-bold mb-3">
         {start && start.isAfter(dayjs()) ? t('events_attendees_coming') : t('events_attendees_attended')}
-      </h3>
+      </h4>
       {event.ticketOptions ? (
         <div className="-space-x-2 flex flex-row flex-wrap">
           {Array.from(new Set(attendees)).map((_id) => {

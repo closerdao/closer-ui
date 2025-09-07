@@ -238,13 +238,23 @@ const HomePage = () => {
               </li>
             </ul>
             
-            <LinkButton
-              className="!w-64 font-bold text-xl py-4 relative transition-all duration-300 hover:scale-105 hover:shadow-xl"
-              href="/token"
-              size="small"
-            >
-              {t('home_token_cta')}
-            </LinkButton>
+            <div className="flex flex-col sm:flex-row gap-4 items-center">
+              <LinkButton
+                className="!w-64 font-bold text-xl py-4 relative transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                href="/token"
+                size="small"
+              >
+                {t('home_token_cta')}
+              </LinkButton>
+              <LinkButton
+                className="!w-64 font-bold text-xl py-4 relative transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                href="/citizenship"
+                variant="secondary"
+                size="small"
+              >
+                Become a Citizen
+              </LinkButton>
+            </div>
           </div>
         </section>
 

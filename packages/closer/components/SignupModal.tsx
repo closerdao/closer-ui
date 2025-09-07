@@ -58,6 +58,14 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
         return;
       }
 
+      if (process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true' && isEmailConsent) {
+        await api.post('/subscribe', {
+          email,
+          screenname: '',
+          tags: ['signup', 'modal', eventId ? `event:${eventId}` : ''],
+        });
+      }
+
       setNewsletterSuccess(true);
       setNewsletterError(null);
       setApplication({ ...application, email });
@@ -94,6 +102,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
         ...application,
         slug: slugify(application.screenname),
         preferences: {},
+        emailConsent: isEmailConsent,
       });
 
       if (res && res.result === 'signup') {

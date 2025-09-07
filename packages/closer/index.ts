@@ -30,6 +30,7 @@ export { default as ProgressBar } from './components/ui/ProgressBar';
 export { default as Row } from './components/ui/Row';
 export { default as Spinner } from './components/ui/Spinner';
 export { default as UploadPhoto } from './components/UploadPhoto/UploadPhoto';
+export { default as PhotoEditor } from './components/PhotoEditor';
 export { default as VolunteerEventView } from './components/VolunteerEventView/';
 export { default as YoutubeEmbed } from './components/YoutubeEmbed';
 
@@ -156,6 +157,7 @@ export { default as RolesPage } from './pages/roles/';
 export { default as CreateRole } from './pages/roles/create';
 export { default as EditRole } from './pages/roles/[id]/edit';
 export { default as TokenSalesDashboardPage } from './pages/dashboard/token-sales';
+export { default as CitizenWhyPage } from './pages/subscriptions/citizen/why';
 // Types
 export * from './types/';
 // Utils

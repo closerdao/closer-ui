@@ -90,6 +90,7 @@ const reducer = (state, action) => {
         }),
       );
     case constants.PATCH_SUCCESS:
+
       return state.withMutations((map) => {
         if (action.filterKey && action.resultIndex) {
           map.setIn(
@@ -108,6 +109,7 @@ const reducer = (state, action) => {
             }),
           );
         }
+
         map.setIn(
           [action.model, 'byId', action._id],
           Map({
@@ -117,6 +119,23 @@ const reducer = (state, action) => {
             receivedAt: Date.now(),
           }),
         );
+
+        map
+          .getIn([action.model, 'byFilter'])
+          .forEach((filterData, filterKey) => {
+            const data = filterData.get('data');
+            if (data) {
+              const updatedIndex = data.findIndex(
+                (item) => item.get('_id') === action._id,
+              );
+              if (updatedIndex !== -1) {
+                map.setIn(
+                  [action.model, 'byFilter', filterKey, 'data', updatedIndex],
+                  action.results,
+                );
+              }
+            }
+          });
       });
     case constants.GET_INIT:
       return state.setIn(

@@ -66,6 +66,28 @@ const Navigation = () => {
     };
   }, [router]);
 
+  useEffect(() => {
+    const updateActivity = async () => {
+      try {
+        if (isAuthenticated) {
+          await api.post('/update-activity');
+        }
+      } catch (error) {
+        // Silently fail - non-blocking
+        console.debug('Activity update failed:', error);
+      }
+    };
+
+    // Call immediately on mount
+    updateActivity();
+
+    // Set up interval for every 5 minutes
+    const interval = setInterval(updateActivity, 5 * 60 * 1000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
+
   return (
     <div className="NavContainer h-20 md:pt-0 top-0 left-0 right-0 fixed z-20 bg-dominant shadow">
       <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
@@ -93,6 +115,11 @@ const Navigation = () => {
                 <li>
                   <Link href="/pages/community">
                     {t('header_nav_community')}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/pages/events">
+                    {t('header_nav_events')}
                   </Link>
                 </li>
               </ul>

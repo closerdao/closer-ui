@@ -163,6 +163,12 @@ const GuestMenu = () => {
                   enabled: true,
                   rbacPage: 'Community',
                 },
+                {
+                  label: t('header_nav_events'),
+                  url: '/pages/events',
+                  enabled: true,
+                  rbacPage: 'Events',
+                },
               ]
             : []),
           {
@@ -176,6 +182,11 @@ const GuestMenu = () => {
             url: '/token',
             enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
             rbacPage: 'Token',
+          },
+          {
+            label: 'Become a Citizen',
+            url: '/citizenship',
+            enabled: APP_NAME?.toLowerCase() === 'tdf',
           },
         ],
       },
