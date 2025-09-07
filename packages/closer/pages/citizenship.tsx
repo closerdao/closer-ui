@@ -26,11 +26,14 @@ import {
   HeartHandshake,
   Home,
   Info,
+  MessageSquare,
   ShieldCheck,
   Sprout,
+  Star,
   Trees,
   Users,
   Wallet,
+  CreditCard,
 } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -65,7 +68,7 @@ const CitizenshipPage = ({
   const [citizenCurrent, setCitizenCurrent] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [tokenPrice, setTokenPrice] = useState(0);
-  const [isTokenPriceLoading, setIsTokenPriceLoading] = useState(true);
+  const [isTokenPriceLoading, setIsTokenPriceLoading] = useState(false);
   const { getTotalCostWithoutWallet, isConfigReady } = useBuyTokens();
   const { platform }: any = usePlatform();
 
@@ -147,22 +150,22 @@ const CitizenshipPage = ({
       desc: t('citizenship_benefits_governance_desc'),
     },
     {
-      icon: Home,
-      title: t('citizenship_benefits_housing_title'),
-      desc: t('citizenship_benefits_housing_desc'),
-    },
-    {
       icon: Calendar,
       title: t('citizenship_benefits_booking_title'),
       desc: t('citizenship_benefits_booking_desc'),
     },
     {
-      icon: Hammer,
-      title: t('citizenship_benefits_projects_title'),
-      desc: t('citizenship_benefits_projects_desc'),
+      icon: Star,
+      title: t('citizenship_benefits_priority_title'),
+      desc: t('citizenship_benefits_priority_desc'),
     },
     {
-      icon: Droplets,
+      icon: CreditCard,
+      title: t('citizenship_benefits_financial_title'),
+      desc: t('citizenship_benefits_financial_desc'),
+    },
+    {
+      icon: Hammer,
       title: t('citizenship_benefits_impact_title'),
       desc: t('citizenship_benefits_impact_desc'),
     },
@@ -193,11 +196,6 @@ const CitizenshipPage = ({
       title: t('citizenship_pathway_agreement_title'),
       desc: t('citizenship_pathway_agreement_desc'),
       icon: Handshake,
-    },
-    {
-      title: t('citizenship_pathway_governance_title'),
-      desc: t('citizenship_pathway_governance_desc'),
-      icon: Users,
     },
   ];
 
@@ -381,34 +379,39 @@ const CitizenshipPage = ({
           {t('citizenship_pathway_title')}
         </h2>
         <p className="mt-2 max-w-2xl text-foreground">
-          {t('citizenship_pathway_subtitle')}{' '}
-          <a
-            className="underline"
-            href="https://traditionaldreamfactory.gitbook.io/game-guide/02_roles-and-stakeholders/citizenship"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Game Guide
-          </a>
-          .
+          {t('citizenship_pathway_subtitle')}
         </p>
-        <div className="mt-8 grid gap-6 md:grid-cols-3">
-          {pathway.map((s, i) => (
-            <Card key={s.title} className="rounded-2xl">
-              <CardHeader className="pb-3">
-                <Badge variant="secondary" className="w-fit">
-                  {t('citizenship_pathway_step')} {i + 1}
-                </Badge>
-                <CardTitle className="mt-2 flex items-center gap-2 text-xl">
-                  <s.icon className="h-6 w-6 text-accent" />
-                  {s.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-foreground">{s.desc}</p>
-              </CardContent>
-            </Card>
-          ))}
+
+        {/* Visual Timeline */}
+        <div className="mt-12 relative">
+          {/* Timeline Line */}
+          <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-accent/20"></div>
+
+          <div className="space-y-8">
+            {pathway.map((s, i) => (
+              <div key={s.title} className="relative flex items-start gap-6">
+                {/* Timeline Dot */}
+                <div className="relative z-10 flex-shrink-0 w-16 h-16 bg-accent rounded-full flex items-center justify-center border-4 border-background shadow-lg">
+                  <s.icon className="h-6 w-6 text-background" />
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 pt-2">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Badge variant="secondary" className="text-sm">
+                      {t('citizenship_pathway_step')} {i + 1}
+                    </Badge>
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                    {s.title}
+                  </h3>
+                  <p className="text-foreground leading-relaxed">
+                    {s.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -479,21 +482,8 @@ const CitizenshipPage = ({
                   {t('citizenship_responsibilities_title')}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 text-foreground">
-                <p className="flex items-start gap-2">
-                  <Info className="mt-1 h-5 w-5 text-accent" />
-                  {t('citizenship_responsibilities_summary')}{' '}
-                  <a
-                    className="underline"
-                    href="https://traditionaldreamfactory.gitbook.io/game-guide/02_roles-and-stakeholders/citizenship"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Game Guide: Citizenship
-                  </a>
-                  .
-                </p>
-                <ul className="space-y-2">
+                <CardContent className="space-y-3 text-foreground">
+                  <ul className="space-y-2">
                   <li className="flex items-start gap-2">
                     <Check className="mt-1 h-5 w-5 text-accent" />
                     {t('citizenship_responsibilities_1')}
