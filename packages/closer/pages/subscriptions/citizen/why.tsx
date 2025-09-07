@@ -43,7 +43,7 @@ interface Props {
 
 const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
   const t = useTranslations();
-  const { isLoading, user } = useAuth();
+  const { isLoading, user, refetchUser } = useAuth();
   const { PLATFORM_NAME } = useConfig();
   const { platform } = usePlatform() as { platform: PlatformContext };
 
@@ -170,16 +170,21 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
     if (
       !citizenshipStatus &&
       !userCitizenshipWhy &&
-      !user?.citizenship?.appliedAt
+      !user?.citizenship?.appliedAt &&
+      !user?.citizenship?.why
     ) {
-      platform.user.patch(user?._id || '', {
-        citizenship: {
-          ...user?.citizenship,
-          appliedAt: new Date(),
-        },
-      });
+      platform.user
+        .patch(user?._id || '', {
+          citizenship: {
+            ...user?.citizenship,
+            appliedAt: new Date(),
+          },
+        })
+        .then(() => {
+          refetchUser();
+        });
     }
-  }, [user, isLoading]);
+  }, [user, isLoading, refetchUser]);
 
   useEffect(() => {
     if (userCitizenshipWhy && !application.why) {
@@ -205,10 +210,11 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
   };
 
   const goBack = () => {
-    router.push('/subscriptions/');
+    router.push('/citizenship/');
   };
 
   const handleNext = async () => {
+    console.log('user?.citizenship=', user?.citizenship);
     try {
       await platform.user.patch(user?._id || '', {
         citizenship: {
