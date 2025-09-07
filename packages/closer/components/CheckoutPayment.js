@@ -55,6 +55,7 @@ const CheckoutPayment = ({
     const error = 'Stripe key is undefined';
     reportIssue(
       `STRIPE_CONFIGURATION_ERROR: bookingId=${bookingId}, error=${error}`,
+      user?.email,
     );
     throw new Error(error);
   }
@@ -94,6 +95,7 @@ const CheckoutPayment = ({
         )}, eventId=${eventId}, path=/bookings/${bookingId}/confirmation${
           eventId ? `?eventId=${eventId}` : ''
         }`,
+        user?.email,
       );
     }
   };
@@ -115,6 +117,7 @@ const CheckoutPayment = ({
         `CREDIT_PAYMENT_ERROR: bookingId=${bookingId}, error=${errorMessage}, creditsAmount=${
           isPartialCreditsPayment ? partialPriceInCredits : rentalToken
         }, startDate=${startDate}`,
+        user?.email,
       );
     }
   };
@@ -131,12 +134,14 @@ const CheckoutPayment = ({
         dailyTokenValue,
         stakeTokens,
         checkContract,
+        user?.email,
         status,
       );
 
       if (result?.error) {
         await reportIssue(
           `TOKEN_PAYMENT_ERROR: bookingId=${bookingId}, error=${result.error}, dailyTokenValue=${dailyTokenValue}, status=${status}`,
+          user?.email,
         );
       }
 
@@ -145,6 +150,7 @@ const CheckoutPayment = ({
       const errorMessage = parseMessageFromError(error);
       await reportIssue(
         `TOKEN_PAYMENT_EXCEPTION: bookingId=${bookingId}, error=${errorMessage}, dailyTokenValue=${dailyTokenValue}, status=${status}`,
+        user?.email,
       );
       throw error;
     }

@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+import api from './api';
 import { parseMessageFromError } from './common';
 
 export const formatMessage = (message: any) => {
@@ -49,13 +50,17 @@ export const formatMessage = (message: any) => {
   }
 };
 
-export const reportIssue = async (message: string) => {
+export const reportIssue = async (
+  message: string,
+  userEmail: string | null | undefined,
+) => {
   try {
     const formattedMessage = formatMessage(message);
-    await sendTelegramNotification(formattedMessage);
+    // await sendTelegramNotification(formattedMessage);
+
+    await api.post('/report-issue', { message: formattedMessage, userEmail });
   } catch (error) {
     console.error('Error in reportIssue:', error);
-    // Don't throw the error to prevent crashing the calling code
   }
 };
 

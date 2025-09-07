@@ -487,17 +487,20 @@ export const payTokens = async (
       }
     | undefined
   >,
+  userEmail?: string | null | undefined,
   bookingStatus?: string,
 ) => {
   if (!dailyRentalTokenVal) {
     await reportIssue(
       `MISSING_DAILY_RENTAL_TOKEN_VALUE: bookingId=${bookingId}, error=No daily rental token value provided, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
+      userEmail,
     );
     return { error: 'No daily rental token value provided', success: null };
   }
   if (!bookingId) {
     await reportIssue(
       `MISSING_BOOKING_ID: bookingId=${bookingId}, error=No bookingId provided, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
+      userEmail,
     );
     return { error: 'No bookingId provided', success: null };
   }
@@ -541,12 +544,14 @@ export const payTokens = async (
     console.log('User rejected transaction!!!!!');
     await reportIssue(
       `USER_REJECTED_TRANSACTION: bookingId=${bookingId}, error=User rejected transaction, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
+      userEmail,
     );
     return { error: 'User rejected transaction', success: null };
   }
   if (error?.reason?.trim() === BOOKING_EXISTS_ERROR) {
     await reportIssue(
       `BOOKING_EXISTS_ERROR: bookingId=${bookingId}, error=Booking for these dates already exists, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
+      userEmail,
     );
     return { error: 'Booking for these dates already exists', success: null };
   }
@@ -556,6 +561,7 @@ export const payTokens = async (
       `TOKEN_PAYMENT_FAILED: bookingId=${bookingId}, error=${JSON.stringify(
         error,
       )}, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
+      userEmail,
     );
     return { error: 'Token payment failed.', success: null };
   }
@@ -573,6 +579,7 @@ export const payTokens = async (
         )}, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}, transactionId=${
           stakingSuccess.transactionId
         }`,
+        userEmail,
       );
       return {
         error: 'Failed to confirm token payment with server',

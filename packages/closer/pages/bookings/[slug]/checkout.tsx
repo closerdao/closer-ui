@@ -368,6 +368,7 @@ const Checkout = ({
       dailyRentalToken?.val,
       stakeTokens,
       checkContract,
+      user?.email,
     );
 
     const { error } = tokenStakingResult || {};
@@ -403,6 +404,7 @@ const Checkout = ({
           dailyRentalToken?.val,
           stakeTokens,
           checkContract,
+          user?.email,
         );
 
         const { error } = tokenStakingResult || {};
