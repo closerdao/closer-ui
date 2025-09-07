@@ -36,6 +36,7 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useBuyTokens } from '../hooks/useBuyTokens';
+import { usePlatform } from '../contexts/platform';
 import api from '../utils/api';
 
 const CITIZEN_TARGET = 300;
@@ -49,6 +50,12 @@ interface CitizenshipPageProps {
   citizenshipConfig?: CitizenshipConfig;
 }
 
+const citizenFilter = {
+  roles: {
+    $in: ['member', 'citizen'],
+  },
+};
+
 const CitizenshipPage = ({
   appName = 'Traditional Dream Factory',
   citizenshipConfig = {} as CitizenshipConfig,
@@ -56,35 +63,34 @@ const CitizenshipPage = ({
 }: CitizenshipPageProps) => {
   const t = useTranslations();
   const [citizenCurrent, setCitizenCurrent] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [tokenPrice, setTokenPrice] = useState(0);
   const [isTokenPriceLoading, setIsTokenPriceLoading] = useState(true);
   const { getTotalCostWithoutWallet, isConfigReady } = useBuyTokens();
+  const { platform }: any = usePlatform();
 
   const citizenTarget = customConfig?.citizenTarget || CITIZEN_TARGET;
 
+
+  const fetchMemberCount = async () => {
+    console.log('fetchMemberCount');
+    setIsLoading(true);
+    try {
+      const response = await platform.user.getCount({ where: citizenFilter });
+      const memberCount = response?.results || 0;
+      setCitizenCurrent(memberCount);
+    } catch (error) {
+      console.error('Failed to fetch member count:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchMemberCount = async () => {
-      try {
-        const where = {
-          roles: {
-            $in: ['member', 'citizen'],
-          },
-        };
-        const response = await api.get(
-          `/user?where=${encodeURIComponent(JSON.stringify(where))}`,
-        );
-        const memberCount = response.data?.results?.length || 0;
-        setCitizenCurrent(memberCount);
-      } catch (error) {
-        console.error('Failed to fetch member count:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    console.log('useEffect: citizenFilter', citizenFilter);
 
     fetchMemberCount();
-  }, []);
+  }, [platform, citizenFilter]);
 
   useEffect(() => {
     const fetchTokenPrice = async () => {

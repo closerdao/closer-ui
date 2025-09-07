@@ -542,7 +542,7 @@
   "citizenship_faq_land_stewardship_q": "What if I'm new to land stewardship?",
   "citizenship_faq_land_stewardship_a": "Great. We have cultural onboarding, hands-on workdays, and an education program so you can learn by doing.",
   "citizenship_faq_resell_q": "Can I resell or transfer $TDF?",
-  "citizenship_faq_resell_a": "$TDF is transferable. See the token page for mechanics, bonding curve, and current pricing.",
+  "citizenship_faq_resell_a": "$TDF tokens are locked until Go-Live event. See the token page for mechanics, bonding curve, and current pricing.",
   "citizenship_faq_responsibilities_q": "Where can I read the full responsibilities/rights?",
   "citizenship_faq_responsibilities_a": "See the Game Guide (Citizenship) for detailed roles, expectations, rituals, and governance processes."
 }
