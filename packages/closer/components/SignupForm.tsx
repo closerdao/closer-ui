@@ -18,6 +18,7 @@ import { isInputValid, validatePassword } from '../utils/helpers';
 import GoogleButton from './GoogleButton';
 import { Button, Card, Checkbox, ErrorMessage, Input } from './ui';
 import Heading from './ui/Heading';
+import { reportIssue } from '../utils/reporting.utils';
 
 interface Props {
   app: string | undefined;
@@ -188,11 +189,17 @@ const SignupForm = ({ app }: Props) => {
         typeof localStorage !== 'undefined' && localStorage.getItem('referrer');
       
       if (process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true' && isEmailConsent) {
-        await api.post('/subscribe', {
-          email,
-          screenname: '',
-          tags: ['signup', router.asPath, `ref:${referrer}`],
-        });
+        
+        try {
+          await api.post('/subscribe', {
+            email,
+            screenname: '',
+            tags: ['signup', router.asPath, `ref:${referrer}`],
+          });
+        } catch (error) {
+          console.error('error with subscribe:', error);
+          await reportIssue(`error with subscription: ${error}`, user?.email);
+        }
       }
 
       setNewsletterSuccess(true);
