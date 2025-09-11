@@ -65,6 +65,20 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
   useEffect(() => {
     if (referral) {
       localStorage.setItem(REFERRAL_ID_LOCAL_STORAGE_KEY, referral as string);
+
+      (async () => {
+        try {
+          await api.post('/metric', {
+            event: 'referral-view',
+            value: referral,
+            number: 1,
+            point: 1,
+            category: 'engagement',
+          });
+        } catch (error) {
+          console.error('Error tracking referral view:', error);
+        }
+      })();
     }
   }, [referral]);
 

@@ -1,5 +1,4 @@
 import Head from 'next/head';
-import Image from 'next/image';
 import { useRouter } from 'next/router';
 
 import { useEffect, useMemo, useState } from 'react';
@@ -8,6 +7,7 @@ import StatsCard from '../../components/Affiliate';
 import TimeFrameSelector from '../../components/Dashboard/TimeFrameSelector';
 import PercentageBar from '../../components/PercentageBar';
 import RevenueIcon from '../../components/icons/RevenueIcon';
+import LinkBuilderTool from '../../components/LinkBuilderTool';
 import { Card, Heading, LinkButton } from 'closer/components/ui';
 
 import { FaLink } from '@react-icons/all-files/fa/FaLink';
@@ -101,6 +101,18 @@ const AffiliatePage = ({
           type: 'affiliatePayout',
         },
       },
+      trafficFilter: {
+        where: {
+          event: 'referral-view',
+          value: user?._id,
+          ...(timeFrame !== 'allTime' && {
+            created: {
+              $gte: startDate,
+              $lte: endDate,
+            },
+          }),
+        },
+      },
     }),
     [user?._id, timeFrame, startDate, endDate],
   );
@@ -143,6 +155,8 @@ const AffiliatePage = ({
     payoutCharges?.filter(
       (charge: any) => charge?.meta?.affiliateId === user?._id,
     ) || [];
+
+  const trafficCount = platform?.metric?.findCount?.(filters.trafficFilter) || 0;
 
   const totalPayoutCharges =
     userPayoutCharges?.reduce(
@@ -194,6 +208,7 @@ const AffiliatePage = ({
         platform.user?.get?.(filters.referralsFilter),
         platform.charge?.get?.(filters.referralChargesFilter),
         platform.charge?.get?.(filters.payoutsFilter),
+        platform.metric?.getCount?.(filters.trafficFilter),
       ]);
       setDataLoaded(true);
     } catch (error) {
@@ -245,109 +260,38 @@ const AffiliatePage = ({
             {<FaLink />}
             {t('affiliate_links')}
           </Heading>
-          <div className="flex gap-4 flex-col sm:flex-row items-start sm:items-center">
-            <Heading level={3} className="text-sm font-bold uppercase">
-              {t('affiliate_link')}
-            </Heading>
-            <Card className=" flex-1 py-1.5">
-              <div className="flex justify-between flex-col gap-1 sm:flex-row items-start sm:items-center">
-                <div className="w-2/3 sm:w-4/5 break-words select-all text-sm ">
-                  {referralLink}
-                </div>
-                <div className="w-1/5 text-sm ">
-                  {copied === 0 ? t('referrals_link_copied') : ''}
-                </div>
-                <button onClick={() => copyToClipboard(referralLink, 0)}>
-                  <Image
-                    src="/images/icon-copy.svg"
-                    alt="Copy"
-                    width={18}
-                    height={18}
-                  />
-                </button>
-              </div>
-            </Card>
-          </div>
-          <div className="flex gap-4 flex-col sm:flex-row items-start sm:items-center">
-            <Heading level={3} className="text-sm font-bold uppercase">
-              {t('affiliate_token_flow')}
-            </Heading>
-            <Card className=" flex-1 py-1.5">
-              <div className="flex justify-between flex-col gap-1 sm:flex-row items-start sm:items-center">
-                <div className="w-2/3 sm:w-4/5 break-words select-all text-sm ">
-                  {tokenFlowLink}
-                </div>
-                <div className="w-1/5 text-sm ">
-                  {copied === 1 ? t('referrals_link_copied') : ''}
-                </div>
-                <button onClick={() => copyToClipboard(tokenFlowLink, 1)}>
-                  <Image
-                    src="/images/icon-copy.svg"
-                    alt="Copy"
-                    width={18}
-                    height={18}
-                  />
-                </button>
-              </div>
-            </Card>
-          </div>
-          <div className="flex gap-4 flex-col sm:flex-row items-start sm:items-center">
-            <Heading level={3} className="text-sm font-bold uppercase">
-              {t('affiliate_subscriptions_flow')}
-            </Heading>
-            <Card className=" flex-1 py-1.5">
-              <div className="flex justify-between flex-col gap-1 sm:flex-row items-start sm:items-center">
-                <div className="w-2/3 sm:w-4/5 break-words select-all text-sm ">
-                  {subscriptionsFlowLink}
-                </div>
-                <div className="w-1/5 text-sm ">
-                  {copied === 2 ? t('referrals_link_copied') : ''}
-                </div>
-                <button
-                  onClick={() => copyToClipboard(subscriptionsFlowLink, 2)}
+          
+          <LinkBuilderTool
+            userId={user?._id || ''}
+            onLinkGenerated={(link) => {
+              // Track link generation
+              api.post('/metric', {
+                event: 'affiliate-link-generated',
+                value: user?._id,
+                number: 1,
+                point: 1,
+                category: 'engagement',
+              }).catch(error => console.error('Error tracking link generation:', error));
+            }}
+          />
+          <div className="flex flex-col gap-4">
+            <Card className=" rounded-md bg-accent-light">
+              <LinkButton
+                target="_blank"
+                className=" px-4  w-fit"
+                href="https://drive.google.com/drive/folders/11i6UBGqEyC8aw0ufJybnbjueSpE3s8f-"
+              >
+                {t('dashboard_affiliate_promo_materials')}
+              </LinkButton>
+
+                <LinkButton
+                  className=" px-4  w-fit"
+                  href="/affiliate"
                 >
-                  <Image
-                    src="/images/icon-copy.svg"
-                    alt="Copy"
-                    width={18}
-                    height={18}
-                  />
-                </button>
-              </div>
+                  📋 {t('affiliate_dashboard_program_rules_faq')}
+                </LinkButton>
             </Card>
           </div>
-          <div className="flex gap-4 flex-col sm:flex-row items-start sm:items-center">
-            <Heading level={3} className="text-sm font-bold uppercase">
-              {t('affiliate_stays_flow')}
-            </Heading>
-            <Card className=" flex-1 py-1.5">
-              <div className="flex justify-between flex-col gap-1 sm:flex-row items-start sm:items-center">
-                <div className="w-2/3 sm:w-4/5 break-words select-all text-sm ">
-                  {staysFlowLink}
-                </div>
-                <div className="w-1/5 text-sm ">
-                  {copied === 3 ? t('referrals_link_copied') : ''}
-                </div>
-                <button onClick={() => copyToClipboard(staysFlowLink, 3)}>
-                  <Image
-                    src="/images/icon-copy.svg"
-                    alt="Copy"
-                    width={18}
-                    height={18}
-                  />
-                </button>
-              </div>
-            </Card>
-          </div>
-          <Card className=" rounded-md bg-accent-light">
-            <LinkButton
-              target="_blank"
-              className=" px-4  w-fit"
-              href="https://drive.google.com/drive/folders/11i6UBGqEyC8aw0ufJybnbjueSpE3s8f-"
-            >
-              {t('dashboard_affiliate_promo_materials')}
-            </LinkButton>
-          </Card>
         </section>
 
         <section className="flex flex-col gap-6">
@@ -369,11 +313,16 @@ const AffiliatePage = ({
               value={`€${(totalRevenue - totalPayoutCharges).toFixed(2)}`}
             />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatsCard
               title={t('stats_total_referrals')}
               value={referralsCount}
               subtext={t('stats_referrals_subtext')}
+            />
+            <StatsCard
+              title={t('affiliate_dashboard_link_clicks')}
+              value={trafficCount}
+              subtext={t('affiliate_dashboard_link_clicks_subtext')}
             />
             <StatsCard
               title={t('stats_active_subscriptions')}
@@ -386,6 +335,34 @@ const AffiliatePage = ({
               subtext={t('stats_tokens_subtext')}
             />
           </div>
+        </section>
+
+        <section className="flex flex-col gap-4">
+          <Heading
+            level={2}
+            className="text-lg flex gap-2 items-center uppercase"
+          >
+            💬 {t('affiliate_dashboard_support_contact')}
+          </Heading>
+          <Card className="p-6 bg-gray-50">
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">
+                {t('affiliate_dashboard_support_intro')}
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{t('affiliate_dashboard_support_email_label')}</span>
+                <a 
+                  href="mailto:affiliates@traditionaldreamfactory.com"
+                  className="text-accent hover:text-accent-dark font-medium"
+                >
+                  affiliates@traditionaldreamfactory.com
+                </a>
+              </div>
+              <p className="text-xs text-gray-500">
+                {t('affiliate_dashboard_support_response_time')}
+              </p>
+            </div>
+          </Card>
         </section>
 
         <Card className="space-y-4">
