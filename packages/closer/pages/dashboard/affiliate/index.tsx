@@ -47,7 +47,7 @@ const AffiliateDashboardPage = ({
   const [selectedAffiliate, setSelectedAffiliate] = useState<any>(null);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const affiliateFilter = { where: { affiliate: true } };
+  const affiliateFilter = { where: { affiliate: { $ne: null, $exists: true } } };
   const affiliateCount = platform.user.findCount(affiliateFilter);
 
   const affiliatePageViewFilter = { 
@@ -101,10 +101,14 @@ const AffiliateDashboardPage = ({
   useEffect(() => {
     if (user) {
       (async () => {
-        const affiliateDataRes = await api.get('/charges/affiliate');
-        const { affiliateData, payoutData } = affiliateDataRes.data.results;
+        try {
+          const affiliateDataRes = await api.get('/charges/affiliate');
+          const { affiliateData, payoutData } = affiliateDataRes.data.results;
 
-        setData({ affiliateData, payoutData });
+          setData({ affiliateData, payoutData });
+        } catch (error) {
+          setError(parseMessageFromError(error));
+        }
       })();
     }
   }, [user]);
@@ -146,14 +150,12 @@ const AffiliateDashboardPage = ({
                 value={`€${totalUnpaidBalance?.toLocaleString() || '0'} `}
               />
               <StatsCard
-                title="Affiliate Page Views"
+                title={t('affiliate_dashboard_page_views')}
                 value={affiliatePageViewCount || 0}
-                subtext="Total page visits"
               />
               <StatsCard
-                title="Links Generated"
+                title={t('affiliate_dashboard_links_generated')}
                 value={affiliateLinkGeneratedCount || 0}
-                subtext="Custom links created"
               />
             </div>
           </section>
