@@ -79,7 +79,7 @@ const LinkBuilderTool = ({ userId, onLinkGenerated }: LinkBuilderToolProps) => {
             Enter any URL from traditionaldreamfactory.com:
           </label>
           <Input
-            type="url"
+            type="text"
             placeholder="https://traditionaldreamfactory.com/events/example"
             value={inputUrl}
             onChange={(e) => setInputUrl(e.target.value)}
