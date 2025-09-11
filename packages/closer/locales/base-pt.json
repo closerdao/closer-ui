@@ -515,6 +515,7 @@
   "events_attendees_coming": "Quem vem?",
   "events_attendees_attended": "Quem participou?",
   "events_attendees_no_results": "Sem resultados",
+  "events_attendees_and_others": "e mais {count}.",
   "incorrect_event_password_error": "Por favor, insira a senha correta do evento",
   "generic_back": "Voltar",
   "generic_cancel": "Cancelar",
