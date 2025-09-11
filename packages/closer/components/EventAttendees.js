@@ -22,7 +22,7 @@ const EventAttendees = ({
 }) => {
   const t = useTranslations();
   
-  const MAX_PREVIEW_ATTENDEES = 1;
+  const MAX_PREVIEW_ATTENDEES = 6;
   const uniqueAttendees = Array.from(new Set(attendees));
   const showPreview = uniqueAttendees.length > MAX_PREVIEW_ATTENDEES;
   const previewAttendees = showPreview ? uniqueAttendees.slice(0, MAX_PREVIEW_ATTENDEES) : uniqueAttendees;
