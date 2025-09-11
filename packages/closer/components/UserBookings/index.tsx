@@ -11,9 +11,10 @@ interface Props {
   user: User;
   isSpaceHostView?: boolean;
   bookingConfig?: BookingConfig;
+  hideExportCsv?: boolean;
 }
 
-const UserBookingsComponent = ({ user, isSpaceHostView, bookingConfig }: Props) => {
+const UserBookingsComponent = ({ user, isSpaceHostView, bookingConfig, hideExportCsv = false }: Props) => {
   const t = useTranslations();
   const bookingsToShowLimit = 50;
 
@@ -62,6 +63,7 @@ const UserBookingsComponent = ({ user, isSpaceHostView, bookingConfig }: Props) 
                 setPage={setPage}
                 filter={filters.myBookings}
                 bookingConfig={bookingConfig}
+                hideExportCsv={hideExportCsv}
               />
             ),
           },
@@ -73,6 +75,7 @@ const UserBookingsComponent = ({ user, isSpaceHostView, bookingConfig }: Props) 
                 page={page}
                 setPage={setPage}
                 filter={filters.pastBookings}
+                hideExportCsv={hideExportCsv}
               />
             ),
           },
