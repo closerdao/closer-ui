@@ -27,7 +27,7 @@ import { loadLocaleData } from '../../utils/locale.helpers';
 const AffiliateLandingPage = () => {
   const t = useTranslations();
   const { user, isLoading, refetchUser } = useAuth();
-  const { platform } = usePlatform();
+  const { platform } = usePlatform() as { platform: any };
   const router = useRouter();
 
 
