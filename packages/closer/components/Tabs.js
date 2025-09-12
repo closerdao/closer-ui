@@ -47,7 +47,7 @@ const Tabs = ({ tabs, onChange, initialCurrentTab }) => {
             ))}
         </ul>
       </div>
-      <div className="tab-content mt-4 mb-8 py-4">
+      <div className="tab-content mt-4 mb-4 py-4">
         {tabs && tabs[currentTab] && tabs[currentTab].content}
         {tabs[currentTab].datePicker &&
           tabs[currentTab].title === 'general' &&

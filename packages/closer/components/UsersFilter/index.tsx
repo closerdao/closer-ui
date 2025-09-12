@@ -170,7 +170,7 @@ const UsersFilter = ({ setWhere, setPage, page, sortBy, setSortBy }: Props) => {
       {/* User Identity Filters */}
       <div>
         <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('manage_users_identity_filters')}</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">{t('manage_users_name')}</label>
             <Input
