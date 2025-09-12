@@ -25,7 +25,6 @@ import { MAX_LISTINGS_TO_FETCH, STATUS_COLOR } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
-import { PaymentType } from '../../../types';
 import {
   Booking,
   BookingConfig,
@@ -33,6 +32,7 @@ import {
   GeneralConfig,
   Listing,
   PaymentConfig,
+  PaymentType,
   Project,
   UpdatedPrices,
   VolunteerOpportunity,
@@ -232,7 +232,7 @@ const BookingPage = ({
       try {
         const res = await api.post('/bookings/calculate-totals', {
           bookingId: booking._id,
-          
+
           updatedAdults,
           updatedDuration,
           updatedChildren,
@@ -698,19 +698,21 @@ const BookingPage = ({
             <Charges charges={booking.charges} />
           )}
 
-          <div className="bg-accent-light rounded-md p-4 space-y-2">
-            <label className=" font-bold">
-              {t('booking_card_set_booking_status')}
-            </label>
-            <Select
-              className="rounded-full  border-black"
-              value={updatedStatus}
-              options={statusOptions}
-              onChange={(value: string) => setUpdatedStatus(value)}
-              isRequired
-              placeholder={t('booking_card_set_booking_status')}
-            />
-          </div>
+          {isSpaceHost && (
+            <div className="bg-accent-light rounded-md p-4 space-y-2">
+              <label className=" font-bold">
+                {t('booking_card_set_booking_status')}
+              </label>
+              <Select
+                className="rounded-full  border-black"
+                value={updatedStatus}
+                options={statusOptions}
+                onChange={(value: string) => setUpdatedStatus(value)}
+                isRequired
+                placeholder={t('booking_card_set_booking_status')}
+              />
+            </div>
+          )}
 
           {booking.paymentDelta?.token?.val &&
           (paymentType === PaymentType.FULL_TOKENS ||
@@ -744,9 +746,9 @@ const BookingPage = ({
 
                 <div className="flex gap-2 items-center">
                   <div className="font-bold">
-                    {booking.paymentDelta?.fiat.cur} {amountToRefund?.toString()}
+                    {booking.paymentDelta?.fiat.cur}{' '}
+                    {amountToRefund?.toString()}
                   </div>
-           
                 </div>
               </div>
               {booking.paymentDelta?.fiat.val < 0 && (

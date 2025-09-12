@@ -49,9 +49,10 @@ const BookingRequestButtons = ({
 
   return (
     <div className="mt-4 flex flex-col gap-4">
+
       {/* Hide buttons if start date is in the past: */}
-      {new Date(start) > new Date() && (
-        <>
+
+
           {/* TODO: add links for checked in and checked out guests */}
           {/* {status === 'checked-in' && (
             <Link passHref href="">
@@ -81,6 +82,9 @@ const BookingRequestButtons = ({
               </Button>
             </Link>
           )}
+
+          
+
           {status === 'tokens-staked' && user && isOwnBooking && (
             <Link passHref href={`/bookings/${_id}/checkout`}>
               <Button variant="secondary">
@@ -109,8 +113,10 @@ const BookingRequestButtons = ({
               </Button>
             </Link>
           )}
-        </>
-      )}
+
+
+
+
       {isSpaceHost && Boolean(user && isBookingCancelable && isOwnBooking) && (
         <Link passHref href={`/bookings/${_id}/cancel`}>
           <Button variant="secondary">⭕ {t('booking_cancel_button')}</Button>

@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
 
 import { useState } from 'react';
+import { useContext } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
@@ -20,6 +21,7 @@ import Conditions from './Conditions';
 import { ErrorMessage } from './ui';
 import Checkbox from './ui/Checkbox';
 import HeadingRow from './ui/HeadingRow';
+import { WalletState } from '../contexts/wallet';
 
 const stripe = loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY, {
   stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
@@ -74,6 +76,15 @@ const CheckoutPayment = ({
   const { isStaking, stakeTokens, checkContract } = useBookingSmartContract({
     bookingNights,
   });
+
+  const {
+    balanceTotal,
+    balanceAvailable,
+    hasSameConnectedAccount,
+    isWalletConnected,
+    isCorrectNetwork,
+    balanceCeloAvailable,
+  } = useContext(WalletState);
 
   const router = useRouter();
   const [hasComplied, setCompliance] = useState(false);
@@ -140,7 +151,21 @@ const CheckoutPayment = ({
 
       if (result?.error) {
         await reportIssue(
-          `TOKEN_PAYMENT_ERROR: bookingId=${bookingId}, error=${result.error}, dailyTokenValue=${dailyTokenValue}, status=${status}`,
+          `TOKEN PAYMENT ERROR:
+          BOOKING ID=${bookingId}, 
+          TOKEN PRICE=${rentalToken?.val},
+          TDF BALANCE TOTAL=${balanceTotal},
+          TDF BALANCE AVAILABLE=${balanceAvailable},
+          USER EMAIL=${user?.email},
+          HAS SAME CONNECTED ACCOUNT=${hasSameConnectedAccount},
+          IS WALLET CONNECTED=${isWalletConnected},
+          IS CORRECT NETWORK=${isCorrectNetwork},
+          BALANCE CELO AVAILABLE=${balanceCeloAvailable},
+          bookingId=${bookingId}, 
+          DAILY TOKEN VALUE=${dailyTokenValue}, 
+          STATUS=${status},
+          ERROR=${result.error}
+          `,
           user?.email,
         );
       }
