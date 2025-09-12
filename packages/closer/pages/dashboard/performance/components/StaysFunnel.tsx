@@ -14,8 +14,6 @@ interface BookingStats {
   confirmedCount: number;
   pendingCount: number;
   paidCount: number;
-  checkedInCount: number;
-  checkedOutCount: number;
   totalCount: number;
 }
 interface Platform {
@@ -73,22 +71,6 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
           status: 'paid',
         },
       }),
-      checkedInBookingsFilter: generateBookingFilter({
-        fromDate,
-        toDate,
-        timeFrame,
-        options: {
-          status: 'checked-in',
-        },
-      }),
-      checkedOutBookingsFilter: generateBookingFilter({
-        fromDate,
-        toDate,
-        timeFrame,
-        options: {
-          status: 'checked-out',
-        },
-      }),
     }),
     [fromDate, toDate, timeFrame],
   );
@@ -102,32 +84,22 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
       platform.booking.findCount(filters.pendingBookingsFilter) || 0;
     const paidBookings =
       platform.booking.findCount(filters.paidBookingsFilter) || 0;
-    const checkedInBookings =
-      platform.booking.findCount(filters.checkedInBookingsFilter) || 0;
-    const checkedOutBookings =
-      platform.booking.findCount(filters.checkedOutBookingsFilter) || 0;
 
     const openCount = openBookings || 0;
     const confirmedCount = confirmedBookings || 0;
     const pendingCount = pendingBookings || 0;
     const paidCount = paidBookings || 0;
-    const checkedInCount = checkedInBookings || 0;
-    const checkedOutCount = checkedOutBookings || 0;
 
     return {
       openCount,
       confirmedCount,
       pendingCount,
       paidCount,
-      checkedInCount,
-      checkedOutCount,
       totalCount:
         openCount +
         confirmedCount +
         pendingCount +
-        paidCount +
-        checkedInCount +
-        checkedOutCount,
+        paidCount,
     };
   }, [platform, filters]);
 
@@ -139,8 +111,6 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
         platform.booking.getCount(filters.confirmedBookingsFilter),
         platform.booking.getCount(filters.pendingBookingsFilter),
         platform.booking.getCount(filters.paidBookingsFilter),
-        platform.booking.getCount(filters.checkedInBookingsFilter),
-        platform.booking.getCount(filters.checkedOutBookingsFilter),
       ]);
     } catch (error) {
       setError(parseMessageFromError(error));
@@ -159,8 +129,6 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
       bookingStats.confirmedCount,
       bookingStats.pendingCount,
       bookingStats.paidCount,
-      bookingStats.checkedInCount,
-      bookingStats.checkedOutCount,
       1,
     );
     const calculateStats = (count: number) => ({
@@ -173,8 +141,6 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
       confirmed: calculateStats(bookingStats.confirmedCount),
       pending: calculateStats(bookingStats.pendingCount),
       paid: calculateStats(bookingStats.paidCount),
-      checkedIn: calculateStats(bookingStats.checkedInCount),
-      checkedOut: calculateStats(bookingStats.checkedOutCount),
       conversionRate: {
         count: `${bookingStats.paidCount} / ${bookingStats.openCount}`,
         percentage: Number(
@@ -217,18 +183,8 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
               color="bg-accent"
             />
             <FunnelBar
-              label="Paid"
+              label="Paid (includes Checked-in & Checked-out)"
               stats={funnelStats.paid}
-              color="bg-accent"
-            />
-            <FunnelBar
-              label="Checked-in"
-              stats={funnelStats.checkedIn}
-              color="bg-accent"
-            />
-            <FunnelBar
-              label="Checked-out"
-              stats={funnelStats.checkedOut}
               color="bg-accent"
             />
           </div>

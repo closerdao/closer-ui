@@ -79,6 +79,24 @@ const SuccessCitizenPage: NextPage<Props> = ({
     }
   }, [isLoading]);
 
+  // Track when someone becomes a citizen
+  useEffect(() => {
+    if (user?.citizenship?.status === 'completed' && user?.roles?.includes('citizen')) {
+      (async () => {
+        try {
+          await api.post('/metric', {
+            event: 'citizen-qualified',
+            value: 'citizenship',
+            point: 0,
+            category: 'engagement',
+          });
+        } catch (error) {
+          console.error('Error tracking citizen qualification:', error);
+        }
+      })();
+    }
+  }, [user?.citizenship?.status, user?.roles]);
+
   const goBack = () => {
     router.push(`/subscriptions/citizen/apply?intent=${intent}`);
   };

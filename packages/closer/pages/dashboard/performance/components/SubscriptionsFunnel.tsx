@@ -105,13 +105,13 @@ const SubscriptionsFunnel = ({
       }),
       activeSubscribersCountFilter: {
         where: {
-          'subscription.createdAt': { $exists: true, $gte: startDate },
+          'subscription.subscribeDate': { $exists: true, $gte: startDate },
         },
         limit: 10000,
       },
       threeMonthCountFilter: {
         where: {
-          'subscription.createdAt': {
+          'subscription.subscribeDate': {
             $exists: true,
             $gte: startDate,
             $lte: threeMonthsAgo,
@@ -191,7 +191,6 @@ const SubscriptionsFunnel = ({
       subscriptionsStats.tier1PaymentCount,
       subscriptionsStats.tier2PaymentCount,
       subscriptionsStats.activeSubscribersCount,
-
       1,
     ); // Prevent division by zero
 
@@ -199,6 +198,11 @@ const SubscriptionsFunnel = ({
       count,
       percentage: Math.round((count / total) * 100),
     });
+
+    // Combine tier metrics for simplified display
+    const totalViewCount = subscriptionsStats.tier1ViewCount + subscriptionsStats.tier2ViewCount;
+    const totalCheckoutCount = subscriptionsStats.tier1CheckoutCount + subscriptionsStats.tier2CheckoutCount;
+    const totalPaymentCount = subscriptionsStats.tier1PaymentCount + subscriptionsStats.tier2PaymentCount;
 
     return {
       pageView: calculateStats(subscriptionsStats.pageViewCount),
@@ -214,16 +218,15 @@ const SubscriptionsFunnel = ({
       threeMonthSubscribers: calculateStats(
         subscriptionsStats.threeMonthSubscribersCount,
       ),
+      // Simplified combined metrics
+      totalView: calculateStats(totalViewCount),
+      totalCheckout: calculateStats(totalCheckoutCount),
+      totalPayment: calculateStats(totalPaymentCount),
       conversionRate: {
-        count: `${
-          subscriptionsStats.tier1PaymentCount +
-          subscriptionsStats.tier2PaymentCount
-        } / ${subscriptionsStats.pageViewCount}`,
+        count: `${totalPaymentCount} / ${subscriptionsStats.pageViewCount}`,
         percentage: Number(
           (
-            ((subscriptionsStats.tier1PaymentCount +
-              subscriptionsStats.tier2PaymentCount) /
-              subscriptionsStats.pageViewCount) *
+            (totalPaymentCount / subscriptionsStats.pageViewCount) *
             100
           ).toFixed(2) || 0,
         ),
@@ -245,7 +248,7 @@ const SubscriptionsFunnel = ({
                 {t('dashboard_performance_conversion_rate')}
               </Heading>
               <FunnelBar
-                label="First payments / page views"
+                label="Total payments / page views"
                 stats={funnelStats.conversionRate}
                 color="bg-accent-dark"
               />
@@ -256,33 +259,18 @@ const SubscriptionsFunnel = ({
               color="bg-accent-dark"
             />
             <FunnelBar
-              label="Tier 1 page views"
-              stats={funnelStats.tier1View}
+              label="Total tier views"
+              stats={funnelStats.totalView}
               color="bg-accent-dark"
             />
             <FunnelBar
-              label="Tier 2 page views"
-              stats={funnelStats.tier2View}
+              label="Total checkout"
+              stats={funnelStats.totalCheckout}
               color="bg-accent-dark"
             />
             <FunnelBar
-              label="Tier 1 checkout"
-              stats={funnelStats.tier1Checkout}
-              color="bg-accent-dark"
-            />
-            <FunnelBar
-              label="Tier 2 checkout"
-              stats={funnelStats.tier2Checkout}
-              color="bg-accent-dark"
-            />
-            <FunnelBar
-              label="Tier 1 payment"
-              stats={funnelStats.tier1Payment}
-              color="bg-accent-dark"
-            />
-            <FunnelBar
-              label="Tier 2 payment"
-              stats={funnelStats.tier2Payment}
+              label="Total payments"
+              stats={funnelStats.totalPayment}
               color="bg-accent-dark"
             />
             <FunnelBar

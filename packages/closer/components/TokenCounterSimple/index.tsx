@@ -12,6 +12,7 @@ import { SALES_CONFIG } from '../../constants';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { getTotalPrice } from '../../utils/bondingCurve';
+import { api } from '../../utils/api';
 
 const { MAX_TOKENS_PER_TRANSACTION, MAX_WALLET_BALANCE } = SALES_CONFIG;
 
@@ -69,6 +70,20 @@ const TokenCounterSimple = ({ tokensToBuy, setTokensToBuy }: Props) => {
 
     setTokensToBuy(possibleAmount);
     setTokensToSpend(priceForTotalAmount);
+
+    // Track calculator usage
+    (async () => {
+      try {
+        await api.post('/metric', {
+          event: 'use-calculator',
+          value: 'token-sale',
+          point: 0,
+          category: 'engagement',
+        });
+      } catch (error) {
+        console.error('Error logging calculator usage:', error);
+      }
+    })();
   };
 
   const handleTokensToBuyChange = (
@@ -82,6 +97,20 @@ const TokenCounterSimple = ({ tokensToBuy, setTokensToBuy }: Props) => {
 
     setTokensToBuy(possibleAmount);
     setTokensToSpend(priceForTotalAmount);
+
+    // Track calculator usage
+    (async () => {
+      try {
+        await api.post('/metric', {
+          event: 'use-calculator',
+          value: 'token-sale',
+          point: 0,
+          category: 'engagement',
+        });
+      } catch (error) {
+        console.error('Error logging calculator usage:', error);
+      }
+    })();
   };
 
   return (

@@ -1568,6 +1568,7 @@
   "dashboard_performance_token_sales_funnel": "Token sales funnel",
   "dashboard_performance_token_sales_funnel_select_timeframe": "Select time frame:",
   "dashboard_performance_subscriptions_funnel": "Subscriptions funnel",
+  "dashboard_performance_citizenship_funnel": "Citizenship funnel",
   "dashboard_performance_conversion_rate": "Conversion rate",
 
   "dashboard_bookings_title": "Bookings",

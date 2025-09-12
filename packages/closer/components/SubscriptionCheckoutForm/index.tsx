@@ -117,6 +117,19 @@ function SubscriptionCheckoutForm({
 
             if (validationResponse.data.results.status === 'succeeded') {
               await refetchUser();
+              
+              // Track subscription payment
+              try {
+                await api.post('/metric', {
+                  event: 'tier-1-first-payment',
+                  value: 'subscriptions',
+                  point: 0,
+                  category: 'engagement',
+                });
+              } catch (error) {
+                console.error('Error tracking subscription payment:', error);
+              }
+              
               redirect(subscriptionId);
             }
           }
@@ -135,6 +148,19 @@ function SubscriptionCheckoutForm({
 
         if (validationResponse.data.results.status === 'succeeded') {
           await refetchUser();
+          
+          // Track subscription payment
+          try {
+            await api.post('/metric', {
+              event: 'tier-1-first-payment',
+              value: 'subscriptions',
+              point: 0,
+              category: 'engagement',
+            });
+          } catch (error) {
+            console.error('Error tracking subscription payment:', error);
+          }
+          
           redirect(subscriptionId);
         }
       }

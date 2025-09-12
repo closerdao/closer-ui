@@ -19,6 +19,7 @@ import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import SubscriptionsFunnel from './components/SubscriptionsFunnel';
+import CitizenshipFunnel from './components/CitizenshipFunnel';
 import { BookingConfig } from '../../../types/api';
 
 const PerformancePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
@@ -30,6 +31,8 @@ const PerformancePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) =>
   const isTokenEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
 
   const areSubscriptionsEnabled = process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
+
+  const isCitizenshipEnabled = process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
 
   const isBookingEnabled =
   bookingConfig?.enabled &&
@@ -90,7 +93,7 @@ const PerformancePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) =>
             </div>
           </div>
 
-          <section className="flex gap-4 w-full flex-col md:flex-row">
+          <section className="flex gap-4 w-full flex-col md:flex-row flex-wrap">
             <StaysFunnel
               timeFrame={timeFrame}
               fromDate={fromDate}
@@ -105,6 +108,13 @@ const PerformancePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) =>
             )}
             {areSubscriptionsEnabled && (
             <SubscriptionsFunnel
+              timeFrame={timeFrame}
+                fromDate={fromDate}
+                toDate={toDate}
+              />
+            )}
+            {isCitizenshipEnabled && (
+            <CitizenshipFunnel
               timeFrame={timeFrame}
                 fromDate={fromDate}
                 toDate={toDate}

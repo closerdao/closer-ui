@@ -222,6 +222,18 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
           why: application?.why,
         },
       });
+
+      // Track citizen application
+      try {
+        await api.post('/metric', {
+          event: 'citizen-applied',
+          value: 'citizenship',
+          point: 0,
+          category: 'engagement',
+        });
+      } catch (error) {
+        console.error('Error tracking citizen application:', error);
+      }
     } catch (error) {
       console.error('error with citizen application:', error);
     }

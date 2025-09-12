@@ -88,7 +88,7 @@ export type User = {
     monthlyPrice: { val: number; cur: string };
     monthlyCredits: number;
     stripeCustomerEmail: string;
-   
+    subscribeDate?: Date;
   };
   presence?: number;
   tokensBought?: number;

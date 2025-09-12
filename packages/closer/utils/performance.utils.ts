@@ -99,7 +99,12 @@ export const generateBookingFilter = ({
 
   const filter = {
     where: {
-      ...(status && { status }),
+      ...(status && { 
+        ...(status === 'paid' 
+          ? { status: { $in: ['paid', 'checked-in', 'checked-out'] } }
+          : { status }
+        )
+      }),
       ...(timeFrame !== 'allTime' && {
         created: {
           $gte: startDate,
@@ -172,6 +177,43 @@ export const generateSubscriptionsFilter = ({
     where: {
       category: { $in: ['engagement'] },
       value: { $in: ['subscriptions'] },
+      event: { $in: [event] },
+
+      ...(timeFrame !== 'allTime' && {
+        created: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      }),
+    },
+    ...(limit && { limit }),
+  };
+
+  return filter;
+};
+
+export const generateCitizenshipFilter = ({
+  fromDate,
+  toDate,
+  timeFrame,
+  event,
+}: {
+  fromDate: string;
+  toDate: string;
+  timeFrame: string;
+  event: string;
+}) => {
+  const limit = 100000;
+  const { startDate, endDate } = getStartAndEndDate(
+    timeFrame,
+    fromDate,
+    toDate,
+  );
+
+  const filter = {
+    where: {
+      category: { $in: ['engagement'] },
+      value: { $in: ['citizenship'] },
       event: { $in: [event] },
 
       ...(timeFrame !== 'allTime' && {

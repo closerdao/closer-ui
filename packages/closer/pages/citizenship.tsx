@@ -63,6 +63,22 @@ const CitizenshipPage = ({
   const [tokenPrice, setTokenPrice] = useState(0);
   const [isTokenPriceLoading, setIsTokenPriceLoading] = useState(false);
   const { getTotalCostWithoutWallet, isConfigReady } = useBuyTokens();
+
+  // Track citizenship page view
+  useEffect(() => {
+    (async () => {
+      try {
+        await api.post('/metric', {
+          event: 'page-view',
+          value: 'citizenship',
+          point: 0,
+          category: 'engagement',
+        });
+      } catch (error) {
+        console.error('Error tracking citizenship page view:', error);
+      }
+    })();
+  }, []);
   const { platform }: any = usePlatform();
 
   const citizenTarget = customConfig?.citizenTarget || CITIZEN_TARGET;
