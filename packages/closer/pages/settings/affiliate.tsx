@@ -131,17 +131,6 @@ const AffiliatePage = ({
     }
   }, [filters, dataLoaded]);
 
-  const referralLink = `${SEMANTIC_URL || ''}?referral=${user?._id || ''}`;
-  const tokenFlowLink = `${SEMANTIC_URL || ''}/token?referral=${
-    user?._id || ''
-  }`;
-  const subscriptionsFlowLink = `${SEMANTIC_URL || ''}/subscriptions?referral=${
-    user?._id || ''
-  }`;
-  const staysFlowLink = `${SEMANTIC_URL || ''}/stay?referral=${
-    user?._id || ''
-  }`;
-
   const referralsCount =
     platform?.user?.findCount?.(filters.referralsFilter) || 0;
   const referrals =

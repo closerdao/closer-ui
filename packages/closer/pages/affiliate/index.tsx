@@ -21,7 +21,6 @@ import {
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import PageNotAllowed from '../401';
 import { loadLocaleData } from '../../utils/locale.helpers';
 
 const AffiliateLandingPage = () => {
@@ -113,9 +112,6 @@ const AffiliateLandingPage = () => {
     return <PageNotFound />;
   }
 
-  if (!user && !isLoading) {
-    return <PageNotAllowed />;
-  }
   return (
     <>
       <Head>
