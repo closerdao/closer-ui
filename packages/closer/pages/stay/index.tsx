@@ -93,6 +93,15 @@ const StayPage = ({
     loadData();
   }, [isTeamMember]);
 
+  useEffect(() => {
+    api.post('/metric', {
+      event: 'page-view',
+      value: 'stay',
+      point: 0,
+      category: 'engagement',
+    });
+  }, []);
+
   const listings = platform.listing.find(listingFilter);
 
   const hosts = platform.user.find(hostsFilter);

@@ -79,6 +79,18 @@ const SuccessCitizenPage: NextPage<Props> = ({
     }
   }, [isLoading]);
 
+  useEffect(() => {
+    // Track financed token purchase completion
+    if (intent === 'finance' && user?.citizenship?.tokensToFinance) {
+      api.post('/metric', {
+        event: 'financed-token-purchase-completed',
+        value: 'citizenship',
+        point: user.citizenship.tokensToFinance,
+        category: 'engagement',
+      });
+    }
+  }, [intent, user?.citizenship?.tokensToFinance]);
+
   // Track when someone becomes a citizen
   useEffect(() => {
     if (user?.citizenship?.status === 'completed' && user?.roles?.includes('citizen')) {

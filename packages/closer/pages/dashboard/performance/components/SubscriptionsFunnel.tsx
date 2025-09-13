@@ -8,12 +8,14 @@ import { usePlatform } from '../../../../contexts/platform';
 import { parseMessageFromError } from '../../../../utils/common';
 import {
   generateSubscriptionsFilter,
+  generateSubscribeButtonClickFilter,
   getStartAndEndDate,
 } from '../../../../utils/performance.utils';
 import FunnelBar from './FunnelBar';
 
 interface SubscriptionStats {
   pageViewCount: number;
+  subscribeButtonClickCount: number;
   tier1ViewCount: number;
   tier2ViewCount: number;
   tier1CheckoutCount: number;
@@ -66,6 +68,11 @@ const SubscriptionsFunnel = ({
         toDate,
         timeFrame,
         event: 'page-view',
+      }),
+      subscribeButtonClickFilter: generateSubscribeButtonClickFilter({
+        fromDate,
+        toDate,
+        timeFrame,
       }),
       tier1ViewFilter: generateSubscriptionsFilter({
         fromDate,
@@ -126,6 +133,8 @@ const SubscriptionsFunnel = ({
   const subscriptionsStats = useMemo<SubscriptionStats>(() => {
     const pageViewCount =
       platform.metric.findCount(filters.subscriptionsPageVisitsFilter) || 0;
+    const subscribeButtonClickCount =
+      platform.metric.findCount(filters.subscribeButtonClickFilter) || 0;
     const tier1ViewCount =
       platform.metric.findCount(filters.tier1ViewFilter) || 0;
     const tier2ViewCount =
@@ -145,6 +154,7 @@ const SubscriptionsFunnel = ({
 
     return {
       pageViewCount,
+      subscribeButtonClickCount,
       tier1ViewCount,
       tier2ViewCount,
       tier1CheckoutCount,
@@ -182,111 +192,142 @@ const SubscriptionsFunnel = ({
   }, [loadData]);
 
   const funnelStats = useMemo(() => {
-    const total = Math.max(
-      subscriptionsStats.pageViewCount,
-      subscriptionsStats.tier1ViewCount,
-      subscriptionsStats.tier2ViewCount,
-      subscriptionsStats.tier1CheckoutCount,
-      subscriptionsStats.tier2CheckoutCount,
-      subscriptionsStats.tier1PaymentCount,
-      subscriptionsStats.tier2PaymentCount,
+    // Combine tier metrics for simplified display
+    const totalViewCount = subscriptionsStats.tier1ViewCount + subscriptionsStats.tier2ViewCount;
+    const totalCheckoutCount = subscriptionsStats.tier1CheckoutCount + subscriptionsStats.tier2CheckoutCount;
+    const totalPaymentCount = subscriptionsStats.tier1PaymentCount + subscriptionsStats.tier2PaymentCount;
+
+    const maxFunnelCount = Math.max(
+      totalViewCount,
+      totalCheckoutCount,
+      totalPaymentCount,
       subscriptionsStats.activeSubscribersCount,
       1,
     ); // Prevent division by zero
 
     const calculateStats = (count: number) => ({
       count,
-      percentage: Math.round((count / total) * 100),
+      percentage: Math.round((count / maxFunnelCount) * 100),
     });
 
-    // Combine tier metrics for simplified display
-    const totalViewCount = subscriptionsStats.tier1ViewCount + subscriptionsStats.tier2ViewCount;
-    const totalCheckoutCount = subscriptionsStats.tier1CheckoutCount + subscriptionsStats.tier2CheckoutCount;
-    const totalPaymentCount = subscriptionsStats.tier1PaymentCount + subscriptionsStats.tier2PaymentCount;
-
     return {
-      pageView: calculateStats(subscriptionsStats.pageViewCount),
-      tier1View: calculateStats(subscriptionsStats.tier1ViewCount),
-      tier2View: calculateStats(subscriptionsStats.tier2ViewCount),
-      tier1Checkout: calculateStats(subscriptionsStats.tier1CheckoutCount),
-      tier2Checkout: calculateStats(subscriptionsStats.tier2CheckoutCount),
-      tier1Payment: calculateStats(subscriptionsStats.tier1PaymentCount),
-      tier2Payment: calculateStats(subscriptionsStats.tier2PaymentCount),
+      // Simplified combined metrics
+      totalView: calculateStats(totalViewCount),
+      totalCheckout: calculateStats(totalCheckoutCount),
+      totalPayment: calculateStats(totalPaymentCount),
       activeSubscribers: calculateStats(
         subscriptionsStats.activeSubscribersCount,
       ),
       threeMonthSubscribers: calculateStats(
         subscriptionsStats.threeMonthSubscribersCount,
       ),
-      // Simplified combined metrics
-      totalView: calculateStats(totalViewCount),
-      totalCheckout: calculateStats(totalCheckoutCount),
-      totalPayment: calculateStats(totalPaymentCount),
       conversionRate: {
-        count: `${totalPaymentCount} / ${subscriptionsStats.pageViewCount}`,
-        percentage: Number(
-          (
-            (totalPaymentCount / subscriptionsStats.pageViewCount) *
-            100
-          ).toFixed(2) || 0,
-        ),
+        count: `${totalPaymentCount} / ${subscriptionsStats.subscribeButtonClickCount}`,
+        percentage: subscriptionsStats.subscribeButtonClickCount
+          ? Number(
+              (
+                (totalPaymentCount / subscriptionsStats.subscribeButtonClickCount) *
+                100
+              ).toFixed(2) || 0,
+            )
+          : 0,
       },
     };
   }, [subscriptionsStats]);
   return (
-    <section className="w-full md:w-1/3 min-h-fit md:min-h-[600px]">
-      <Card className="h-full flex flex-col justify-start">
-        <Heading level={2}>
-          {t('dashboard_performance_subscriptions_funnel')}
-        </Heading>
+    <div className="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-xl font-bold text-gray-900">
+              {t('dashboard_performance_subscriptions_funnel')}
+            </h3>
+            <p className="text-gray-600 text-sm">{t('dashboard_performance_subscription_conversion_funnel')}</p>
+          </div>
+          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+            <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        </div>
+        
         {loading ? (
-          <Spinner />
+          <div className="flex items-center justify-center py-8">
+            <Spinner />
+          </div>
         ) : (
-          <div className="flex flex-col gap-4">
-            <div className="border-2 rounded-lg space-y-4 p-2 pb-4">
-              <Heading level={3}>
-                {t('dashboard_performance_conversion_rate')}
-              </Heading>
-              <FunnelBar
-                label="Total payments / page views"
-                stats={funnelStats.conversionRate}
-                color="bg-accent-dark"
-              />
+          <div className="space-y-4">
+            {/* Activity Indicator */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-700 text-sm font-medium">{t('dashboard_performance_page_views')}</span>
+                <span className="text-2xl font-bold text-gray-900">
+                  {subscriptionsStats.pageViewCount}
+                </span>
+              </div>
             </div>
-            <FunnelBar
-              label="Subscriptions page views"
-              stats={funnelStats.pageView}
-              color="bg-accent-dark"
-            />
-            <FunnelBar
-              label="Total tier views"
-              stats={funnelStats.totalView}
-              color="bg-accent-dark"
-            />
-            <FunnelBar
-              label="Total checkout"
-              stats={funnelStats.totalCheckout}
-              color="bg-accent-dark"
-            />
-            <FunnelBar
-              label="Total payments"
-              stats={funnelStats.totalPayment}
-              color="bg-accent-dark"
-            />
-            <FunnelBar
-              label="Active subscribers"
-              stats={funnelStats.activeSubscribers}
-              color="bg-accent-dark"
-            />
-            <FunnelBar
-              label="3+ months"
-              stats={funnelStats.threeMonthSubscribers}
-              color="bg-accent-dark"
-            />
+
+            {/* Conversion Rate */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-700 text-sm font-medium">{t('dashboard_performance_conversion_rate_label')}</span>
+                <span className="text-2xl font-bold text-primary">
+                  {funnelStats.conversionRate.percentage}%
+                </span>
+              </div>
+              <div className="text-gray-600 text-xs mt-1">
+                {funnelStats.conversionRate.count} {t('dashboard_performance_total_subscriptions')}
+              </div>
+            </div>
+
+            {/* Funnel Steps - Single Card Design */}
+            <div className="bg-white/90 rounded-lg p-4 border border-gray-200">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center text-gray-900">
+                  <span className="text-sm font-medium">{t('dashboard_performance_tier_views')}</span>
+                  <span className="font-bold">{funnelStats.totalView.count}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="bg-primary h-3 rounded-full" style={{ width: '100%' }} />
+                </div>
+                
+                <div className="flex justify-between items-center text-gray-900">
+                  <span className="text-sm font-medium">{t('dashboard_performance_checkout')}</span>
+                  <span className="font-bold">{funnelStats.totalCheckout.count}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.totalCheckout.percentage}%` }} />
+                </div>
+                
+                <div className="flex justify-between items-center text-gray-900">
+                  <span className="text-sm font-medium">{t('dashboard_performance_payments')}</span>
+                  <span className="font-bold">{funnelStats.totalPayment.count}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.totalPayment.percentage}%` }} />
+                </div>
+                
+                <div className="flex justify-between items-center text-gray-900">
+                  <span className="text-sm font-medium">{t('dashboard_performance_active_subscribers')}</span>
+                  <span className="font-bold">{funnelStats.activeSubscribers.count}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.activeSubscribers.percentage}%` }} />
+                </div>
+                
+                <div className="flex justify-between items-center text-gray-900">
+                  <span className="text-sm font-medium">{t('dashboard_performance_3_plus_months')}</span>
+                  <span className="font-bold">{funnelStats.threeMonthSubscribers.count}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.threeMonthSubscribers.percentage}%` }} />
+                </div>
+              </div>
+            </div>
           </div>
         )}
-      </Card>
-    </section>
+      </div>
+    </div>
   );
 };
 

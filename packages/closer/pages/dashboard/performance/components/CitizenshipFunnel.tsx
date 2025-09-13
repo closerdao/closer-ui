@@ -8,12 +8,13 @@ import { usePlatform } from '../../../../contexts/platform';
 import { parseMessageFromError } from '../../../../utils/common';
 import {
   generateCitizenshipFilter,
+  generateButtonClickFilter,
   getStartAndEndDate,
 } from '../../../../utils/performance.utils';
-import FunnelBar from './FunnelBar';
 
 interface CitizenshipStats {
   pageViewCount: number;
+  becomeCitizenButtonClickCount: number;
   appliedCount: number;
   qualifiedCount: number;
   bought30TokensCount: number;
@@ -61,6 +62,12 @@ const CitizenshipFunnel = ({
         timeFrame,
         event: 'page-view',
       }),
+      becomeCitizenButtonClickFilter: generateButtonClickFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+        buttonType: 'citizenship',
+      }),
       appliedFilter: generateCitizenshipFilter({
         fromDate,
         toDate,
@@ -98,6 +105,8 @@ const CitizenshipFunnel = ({
   const citizenshipStats = useMemo<CitizenshipStats>(() => {
     const pageViewCount =
       platform.metric.findCount(filters.citizenshipPageVisitsFilter) || 0;
+    const becomeCitizenButtonClickCount =
+      platform.metric.findCount(filters.becomeCitizenButtonClickFilter) || 0;
     const appliedCount =
       platform.metric.findCount(filters.appliedFilter) || 0;
     const qualifiedCount =
@@ -109,6 +118,7 @@ const CitizenshipFunnel = ({
 
     return {
       pageViewCount,
+      becomeCitizenButtonClickCount,
       appliedCount,
       qualifiedCount,
       bought30TokensCount,
@@ -139,8 +149,7 @@ const CitizenshipFunnel = ({
   }, [loadData]);
 
   const funnelStats = useMemo(() => {
-    const total = Math.max(
-      citizenshipStats.pageViewCount,
+    const maxFunnelCount = Math.max(
       citizenshipStats.appliedCount,
       citizenshipStats.qualifiedCount,
       citizenshipStats.bought30TokensCount,
@@ -150,77 +159,115 @@ const CitizenshipFunnel = ({
 
     const calculateStats = (count: number) => ({
       count,
-      percentage: Math.round((count / total) * 100),
+      percentage: Math.round((count / maxFunnelCount) * 100),
     });
 
     return {
-      pageView: calculateStats(citizenshipStats.pageViewCount),
       applied: calculateStats(citizenshipStats.appliedCount),
       qualified: calculateStats(citizenshipStats.qualifiedCount),
       bought30Tokens: calculateStats(citizenshipStats.bought30TokensCount),
       becameCitizen: calculateStats(citizenshipStats.becameCitizenCount),
       conversionRate: {
-        count: `${citizenshipStats.becameCitizenCount} / ${citizenshipStats.pageViewCount}`,
-        percentage: Number(
-          (
-            (citizenshipStats.becameCitizenCount /
-              citizenshipStats.pageViewCount) *
-            100
-          ).toFixed(2) || 0,
-        ),
+        count: `${citizenshipStats.becameCitizenCount} / ${citizenshipStats.becomeCitizenButtonClickCount}`,
+        percentage: citizenshipStats.becomeCitizenButtonClickCount
+          ? Number(
+              (
+                (citizenshipStats.becameCitizenCount /
+                  citizenshipStats.becomeCitizenButtonClickCount) *
+                100
+              ).toFixed(2) || 0,
+            )
+          : 0,
       },
     };
   }, [citizenshipStats]);
 
   return (
-    <section className="w-full md:w-1/3 min-h-fit md:min-h-[600px]">
-      <Card className="h-full flex flex-col justify-start">
-        <Heading level={2}>
-          {t('dashboard_performance_citizenship_funnel')}
-        </Heading>
+    <div className="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-xl font-bold text-gray-900">
+              {t('dashboard_performance_citizenship_funnel')}
+            </h3>
+            <p className="text-gray-600 text-sm">{t('dashboard_performance_citizenship_application_journey')}</p>
+          </div>
+          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+            <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+        </div>
+        
         {loading ? (
-          <Spinner />
+          <div className="flex items-center justify-center py-8">
+            <Spinner />
+          </div>
         ) : (
-          <div className="flex flex-col gap-4">
-            <div className="border-2 rounded-lg space-y-4 p-2 pb-4">
-              <Heading level={3}>
-                {t('dashboard_performance_conversion_rate')}
-              </Heading>
-              <FunnelBar
-                label="Citizens / page views"
-                stats={funnelStats.conversionRate}
-                color="bg-accent-light"
-              />
+          <div className="space-y-4">
+            {/* Activity Indicator */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-700 text-sm font-medium">{t('dashboard_performance_page_views')}</span>
+                <span className="text-2xl font-bold text-gray-900">
+                  {citizenshipStats.pageViewCount}
+                </span>
+              </div>
             </div>
-            <FunnelBar
-              label="Citizenship page views"
-              stats={funnelStats.pageView}
-              color="bg-accent-light"
-            />
-            <FunnelBar
-              label="Applied"
-              stats={funnelStats.applied}
-              color="bg-accent-light"
-            />
-            <FunnelBar
-              label="Qualified"
-              stats={funnelStats.qualified}
-              color="bg-accent-light"
-            />
-            <FunnelBar
-              label="Bought 30+ tokens"
-              stats={funnelStats.bought30Tokens}
-              color="bg-accent-light"
-            />
-            <FunnelBar
-              label="Became citizen"
-              stats={funnelStats.becameCitizen}
-              color="bg-accent-light"
-            />
+
+            {/* Conversion Rate */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-700 text-sm font-medium">{t('dashboard_performance_conversion_rate_label')}</span>
+                <span className="text-2xl font-bold text-primary">
+                  {funnelStats.conversionRate.percentage}%
+                </span>
+              </div>
+              <div className="text-gray-600 text-xs mt-1">
+                {funnelStats.conversionRate.count} {t('dashboard_performance_citizens_converted')}
+              </div>
+            </div>
+
+            {/* Funnel Steps - Single Card Design */}
+            <div className="bg-white/90 rounded-lg p-4 border border-gray-200">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center text-gray-900">
+                  <span className="text-sm font-medium">{t('dashboard_performance_applied')}</span>
+                  <span className="font-bold">{funnelStats.applied.count}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="bg-primary h-3 rounded-full" style={{ width: '100%' }} />
+                </div>
+                
+                <div className="flex justify-between items-center text-gray-900">
+                  <span className="text-sm font-medium">{t('dashboard_performance_qualified')}</span>
+                  <span className="font-bold">{funnelStats.qualified.count}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.qualified.percentage}%` }} />
+                </div>
+                
+                <div className="flex justify-between items-center text-gray-900">
+                  <span className="text-sm font-medium">{t('dashboard_performance_bought_30_plus_tokens')}</span>
+                  <span className="font-bold">{funnelStats.bought30Tokens.count}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.bought30Tokens.percentage}%` }} />
+                </div>
+                
+                <div className="flex justify-between items-center text-gray-900">
+                  <span className="text-sm font-medium">{t('dashboard_performance_became_citizen')}</span>
+                  <span className="font-bold">{funnelStats.becameCitizen.count}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.becameCitizen.percentage}%` }} />
+                </div>
+              </div>
+            </div>
           </div>
         )}
-      </Card>
-    </section>
+      </div>
+    </div>
   );
 };
 

@@ -78,22 +78,37 @@ const PerformancePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) =>
         <title>{t('dashboard_performance_title')}</title>
       </Head>
       <AdminLayout isBookingEnabled={isBookingEnabled}>
-        <div className="max-w-screen-lg  px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex justify-between items-start md:items-center gap-4 mb-8 w-full flex-col md:flex-row">
-            <Heading level={1}>{t('dashboard_performance_title')}</Heading>
-            <div className="flex gap-2 flex-col sm:flex-row items-start sm:items-center ">
-              <TimeFrameSelector
-                timeFrame={timeFrame}
-                setTimeFrame={handleTimeFrameChange}
-                fromDate={fromDate}
-                setFromDate={setFromDate}
-                toDate={toDate}
-                setToDate={setToDate}
-              />
+        <div className="min-h-screen bg-gray-50">
+          {/* Header Section */}
+          <div className="bg-white border-b border-gray-200">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center py-6">
+                <div>
+                  <Heading level={1} className="text-2xl font-bold text-gray-900">
+                    {t('dashboard_performance_title')}
+                  </Heading>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Track user engagement and conversion metrics across all platforms
+                  </p>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <TimeFrameSelector
+                    timeFrame={timeFrame}
+                    setTimeFrame={handleTimeFrameChange}
+                    fromDate={fromDate}
+                    setFromDate={setFromDate}
+                    toDate={toDate}
+                    setToDate={setToDate}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
-          <section className="flex gap-4 w-full flex-col md:flex-row flex-wrap">
+          {/* Main Content */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
             <StaysFunnel
               timeFrame={timeFrame}
               fromDate={fromDate}
@@ -120,7 +135,8 @@ const PerformancePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) =>
                 toDate={toDate}
               />
             )}
-          </section>
+            </div>
+          </div>
         </div>
       </AdminLayout>
     </>
