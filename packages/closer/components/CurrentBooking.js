@@ -40,6 +40,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
   const [willArrivePage, setWillArrivePage] = useState(1);
   const [justLeftPage, setJustLeftPage] = useState(1);
   const [loadingBookings, setLoadingBookings] = useState({});
+  const [users, setUsers] = useState(null);
   const filter = {
     where: {
       status: { $in: ['paid', 'checked-in', 'checked-out'] },
@@ -70,7 +71,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
     where: {},
     limit: MAX_LISTINGS_TO_FETCH,
   });
-  const allUsers = platform.user.find({ limit: MAX_USERS_TO_FETCH });
+
   const error = bookings && bookings.get('error');
 
   const booked =
@@ -98,24 +99,30 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
             const isListingPrivate = listing?.get('private') || true;
 
             const userId = b.get('createdBy');
-            const user =
-              allUsers && allUsers.find((user) => user.get('_id') === userId);
 
-            const paidBy = b.get('paidBy');
-            const payer =
-              paidBy &&
-              allUsers &&
-              allUsers.find((user) => user.get('_id') === paidBy);
+            // let user =
+            //   allUsers && allUsers.find((user) => user.get('_id') === userId);
 
-            const userToShow = payer || user;
+            // const paidBy = b.get('paidBy');
 
-            const userInfo = userToShow && {
-              name: userToShow.get('screenname'),
-              photo: userToShow.get('photo'),
-              preferences: userToShow.get('preferences'),
-              email: userToShow.get('email'),
-              _id: userToShow.get('_id'),
-            };
+            // let payer =
+            //   paidBy &&
+            //   allUsers &&
+            //   allUsers.find((user) => user.get('_id') === paidBy);
+
+            // const userToShow = payer || user;
+
+            // const userInfo = userToShow && {
+            //   name:
+            //     userToShow.get('screenname') ||
+            //     userToShow.get('name') ||
+            //     userToShow.get('email') ||
+            //     'User',
+            //   photo: userToShow.get('photo'),
+            //   preferences: userToShow.get('preferences'),
+            //   email: userToShow.get('email'),
+            //   _id: userToShow.get('_id'),
+            // };
 
             const rentalFiat = b.get('rentalFiat');
             // const utilityFiat = b.get('utilityFiat');
@@ -135,9 +142,9 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
               children,
               infants,
               listingName,
-              userInfo,
+              // userInfo,
               userId,
-              paidBy,
+              // paidBy,
               doesNeedPickup,
               doesNeedSeparateBeds,
               status,
@@ -165,13 +172,42 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
     try {
       setLoading(true);
 
+      // First load bookings to get user IDs
+      const bookingsResult = await platform.booking.get(filter);
+
+      const bookingResultObj = bookingsResult?.results?.toJS();
+
+      const userIds = new Set();
+      if (bookingResultObj) {
+        bookingResultObj.forEach((booking) => {
+          const createdBy = booking.createdBy;
+          const paidBy = booking.paidBy;
+          if (createdBy) userIds.add(createdBy);
+          if (paidBy) userIds.add(paidBy);
+        });
+      }
+
+      // Create user filter for specific users
+      const userFilter =
+        userIds.size > 0
+          ? {
+              where: {
+                _id: { $in: Array.from(userIds) },
+              },
+              limit: MAX_USERS_TO_FETCH,
+            }
+          : { limit: MAX_USERS_TO_FETCH };
+
+      const res = await platform.user.get(userFilter);
+
+      setUsers(res?.results?.toJS());
+
       await Promise.all([
-        platform.booking.get(filter),
         platform.listing.get({
           where: {},
           limit: MAX_LISTINGS_TO_FETCH,
         }),
-        platform.user.get({ limit: MAX_USERS_TO_FETCH }),
+        platform.user.get(userFilter),
         platform.event.get(eventsFilter),
         platform.volunteer.get(volunteerFilter),
       ]);
@@ -242,6 +278,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
       <Heading level={2} className="border-b pb-4 mb-4">
         {count} {title}
       </Heading>
+
       {!count ? (
         <p className="mt-4">{t('no_bookings')}</p>
       ) : (
@@ -280,6 +317,12 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                   b.status === 'tokens-staked';
                 const isLoading = loadingBookings[b._id];
 
+                const userInfo = users?.find(
+                  (user) => user._id.toString() === b.userId,
+                );
+
+
+
                 return (
                   <TableRow
                     key={b._id}
@@ -295,10 +338,10 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                   >
                     <TableCell className="whitespace-nowrap">
                       <div className="flex items-center gap-1">
-                        {b.userInfo?.photo && (
+                        {userInfo?.photo && (
                           <img
-                            src={`${cdn}${b.userInfo.photo}-profile-sm.jpg`}
-                            alt={b.userInfo.name}
+                            src={`${cdn}${userInfo.photo}-profile-sm.jpg`}
+                            alt={userInfo.screenname}
                             className="w-6 h-6 rounded-full flex-shrink-0"
                           />
                         )}
@@ -307,15 +350,15 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                             <LinkButton
                               target="_blank"
                               className="w-fit h-fit py-0 px-1 text-xs min-h-0"
-                              href={`/members/${b.userInfo?._id}`}
+                              href={`/members/${userInfo?._id}`}
                             >
-                              {b.userInfo?.name ||
+                              {userInfo?.screenname ||
                                 t('current_booking_unknown_user')}
                             </LinkButton>
                           </div>
-                          {b.userInfo?.email && (
+                          {userInfo?.email && (
                             <div className="text-xs text-gray-500 truncate">
-                              {b.userInfo.email}
+                              {userInfo.email}
                             </div>
                           )}
                         </div>
@@ -514,7 +557,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
     return <div className="validation-error">{JSON.stringify(error)}</div>;
   }
 
-  const isLoading = loading || !bookings || !listings || !allUsers;
+  const isLoading = loading || !bookings || !listings;
 
   return (
     <section className="min-h-[100vh]">

@@ -22,59 +22,75 @@ const EventAttendees = ({
 }) => {
   const t = useTranslations();
   
+  const MAX_PREVIEW_ATTENDEES = 6;
+  const uniqueAttendees = Array.from(new Set(attendees));
+  const showPreview = uniqueAttendees.length > MAX_PREVIEW_ATTENDEES;
+  const previewAttendees = showPreview ? uniqueAttendees.slice(0, MAX_PREVIEW_ATTENDEES) : uniqueAttendees;
+  const remainingCount = uniqueAttendees.length - MAX_PREVIEW_ATTENDEES;
+  
   return (
     <section className="attendees">
       <h4 className="text-md font-bold mb-3">
         {start && start.isAfter(dayjs()) ? t('events_attendees_coming') : t('events_attendees_attended')}
       </h4>
-      {event.ticketOptions ? (
-        <div className="-space-x-2 flex flex-row flex-wrap">
-          {Array.from(new Set(attendees)).map((_id) => {
-            const attendee = platform.user.findOne(_id);
+      <div className="-space-x-2 flex flex-row flex-wrap">
+        {event.ticketOptions ? (
+          <>
+            {previewAttendees.map((_id) => {
+              const attendee = platform.user.findOne(_id);
 
-            if (!attendee) {
-              return null;
-            }
+              if (!attendee) {
+                return null;
+              }
 
-            return (
-              <Link
-                key={attendee.get('_id')}
-                as={`/members/${attendee.get('slug')}`}
-                href="/members/[slug]"
-                className="from user-preview z-10"
-              >
-                <ProfilePhoto size="8" user={attendee.toJS()} />
-              </Link>
-            );
-          })}
-          {ticketsCount > 0 && <TicketCounter count={ticketsCount} />}
-        </div>
-      ) : platform && attendees.length > 0 ? (
-        <div>
-          {attendees.map((uid) => {
-            const attendee = platform.user.findOne(uid);
+              return (
+                <Link
+                  key={attendee.get('_id')}
+                  as={`/members/${attendee.get('slug')}`}
+                  href="/members/[slug]"
+                  className="from user-preview z-10"
+                >
+                  <ProfilePhoto size="8" user={attendee.toJS()} />
+                </Link>
+              );
+            })}
+            {ticketsCount > 0 && <TicketCounter count={ticketsCount} />}
+          </>
+        ) : platform && attendees.length > 0 ? (
+          <>
+            {previewAttendees.map((uid) => {
+              const attendee = platform.user.findOne(uid);
 
-            if (!attendee) {
-              return null;
-            }
+              if (!attendee) {
+                return null;
+              }
 
-            return (
-              <Link
-                key={uid}
-                as={`/members/${attendee.get('slug')}`}
-                href="/members/[slug]"
-                className="from user-preview"
-              >
-                <ProfilePhoto size="sm" user={attendee.toJS()} />
-                <span className="name text-sm">{attendee.get('screenname')}</span>
-              </Link>
-            );
-          })}
-          {ticketsCount > 0 && <TicketCounter count={ticketsCount} />}
-        </div>
-      ) : (
-        t('events_attendees_no_results')
-      )}
+              return (
+                <Link
+                  key={uid}
+                  as={`/members/${attendee.get('slug')}`}
+                  href="/members/[slug]"
+                  className="from user-preview"
+                >
+                  <ProfilePhoto size="sm" user={attendee.toJS()} />
+                  <span className="name text-sm">{attendee.get('screenname')}</span>
+                </Link>
+              );
+            })}
+            {ticketsCount > 0 && <TicketCounter count={ticketsCount} />}
+          </>
+        ) : (
+          t('events_attendees_no_results')
+        )}
+
+        {showPreview && (
+          <div className="pl-4">
+              <span className="text-xs text-gray-600 font-medium">
+                {t('events_attendees_and_others', { count: remainingCount })}
+              </span>
+          </div>
+        )}
+      </div>
     </section>
   );
 };

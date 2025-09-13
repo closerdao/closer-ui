@@ -276,7 +276,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                   .join(', ')}
               </div>
               <Select
-                className="rounded-full text-accent border-accent "
+                className="rounded-full text-accent border-accent text-xs py-0.5 px-1.5"
                 value={t('manage_users_add_role_button')}
                 options={USER_ROLE_OPTIONS.slice(1)}
                 onChange={(value: string) => handleAddRole(value)}
@@ -484,6 +484,8 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                   { value: 'lastactive', label: t('manage_users_sort_by_lastactive_asc') },
                   { value: '-email', label: t('manage_users_sort_by_email_desc') },
                   { value: 'email', label: t('manage_users_sort_by_email_asc') },
+                  { value: '-stats.wallet.tdf', label: t('manage_users_sort_by_token_balance_desc') },
+                  { value: 'stats.wallet.tdf', label: t('manage_users_sort_by_token_balance_asc') },
                 ]}
                 onChange={setSortBy}
                 isRequired
@@ -539,8 +541,9 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                   key={user.get('email')}
                 >
                   <div className="flex items-center gap-4 sm:gap-2 justify-between flex-col sm:flex-row">
-                    <div className="w-full sm:w-[50%] flex gap-2 items-center flex-wrap">
-                      <div className="flex items-center">
+                    <div className="w-full sm:w-[50%] flex gap-3 items-start flex-wrap">
+                      {/* User Info Section */}
+                      <div className="flex items-center gap-2">
                         <div>
                           <Checkbox
                             isChecked={selectedUsers.some(
@@ -572,14 +575,15 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                               {user.get('screenname')}
                             </Link>
                           </div>
-                          <div className="text-xs px-1">
+                          <div className="text-xs px-1 text-gray-500">
                             {dayjs(new Date()).from(user.get('created'), true)}
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-1">
-                        {user.get('vouched') && user.get('vouched').length > 0 ? (
+                      {/* Status & Verification Badges */}
+                      <div className="flex flex-wrap gap-2">
+                        {user.get('vouched') && user.get('vouched').length > 0 && (
                           <div className="bg-green-100 flex border px-2 py-1 gap-1 border-green-500 rounded-md items-center">
                             <FaUserCheck className="text-green-600 w-3 h-3" />
                             <span className="text-xs text-green-700">
@@ -593,93 +597,106 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                               ℹ️
                             </div>
                           </div>
-                        ) : null}
+                        )}
                         
                         {user.get('kycPassed') && (
-                          <div className="flex items-center gap-1" title={t('manage_users_kyc_passed')}>
-                            <FaCheckCircle className="text-blue-600 w-4 h-4" />
+                          <div className="bg-blue-100 flex border px-2 py-1 gap-1 border-blue-500 rounded-md items-center" title={t('manage_users_kyc_passed')}>
+                            <FaCheckCircle className="text-blue-600 w-3 h-3" />
+                            <span className="text-xs text-blue-700">KYC</span>
+                          </div>
+                        )}
+
+                        {user.getIn(['stats', 'wallet', 'tdf']) && (
+                          <div className="bg-purple-100 flex border px-2 py-1 gap-1 border-purple-500 rounded-md items-center">
+                            <span className="text-xs text-purple-700 font-medium">
+                              {parseFloat(user.getIn(['stats', 'wallet', 'tdf']) || 0).toFixed(2)} $TDF
+                            </span>
+                          </div>
+                        )}
+
+                        {user.get('lastactive') && (
+                          <div className="bg-orange-100 flex border px-2 py-1 gap-1 border-orange-500 rounded-md items-center">
+                            <FaClock className="text-orange-600 w-3 h-3" />
+                            <span className="text-xs text-orange-700">
+                              {dayjs(user.get('lastactive')).fromNow()}
+                            </span>
                           </div>
                         )}
                       </div>
-                      <div>
-                        {user.get('roles').includes('member') ? (
-                          <div className="bg-white flex border px-2 py-1 gap-1 border-accent rounded-md">
-                            <Image
-                              src={'/images/admin/icon-sheep.png'}
-                              alt={'member'}
-                              width={18}
-                              height={17}
-                              className="rounded-full"
-                            />
-                            {t('manage_users_role_member')}
-                            <Button
-                              onClick={() => handleRemoveRole('member', user)}
-                              className="p-0 min-h-min bg-white border-none text-black"
-                            >
-                              <svg
-                                viewBox="0 0 12 12"
-                                version="1.1"
-                                className="w-2.5 h-2.5 stroke-accent"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <line
-                                  x1="1"
-                                  y1="11"
-                                  x2="11"
-                                  y2="1"
-                                  strokeWidth="2"
-                                />
-                                <line
-                                  x1="1"
-                                  y1="1"
-                                  x2="11"
-                                  y2="11"
-                                  strokeWidth="2"
-                                />
-                              </svg>
-                            </Button>
-                          </div>
-                        ) : null}
-                      </div>
-                      <div>
+
+                      {/* Subscription Badge */}
+                      <div className="flex">
                         {user.get('subscription').get('plan') ? (
-                          <div className="bg-white flex border px-2 py-1 border-gray-500 rounded-md gap-1">
+                          <div className="bg-white flex border px-2 py-1 border-gray-500 rounded-md gap-1 items-center">
                             <Image
                               src={`/images/admin/icon-${user
                                 .get('subscription')
                                 .get('plan')}.png`}
                               alt={user.get('subscription').get('plan')}
-                              width={20}
-                              height={20}
+                              width={16}
+                              height={16}
                             />
-                            {user
-                              .get('subscription')
-                              .get('plan')
-                              .slice(0, 1)
-                              .toUpperCase() +
-                              user.get('subscription').get('plan').slice(1)}
+                            <span className="text-xs text-gray-700">
+                              {user
+                                .get('subscription')
+                                .get('plan')
+                                .slice(0, 1)
+                                .toUpperCase() +
+                                user.get('subscription').get('plan').slice(1)}
+                            </span>
                           </div>
                         ) : (
-                          <div className="bg-white flex border px-3 py-1 border-gray-500 rounded-md gap-1">
+                          <div className="bg-white flex border px-2 py-1 border-gray-500 rounded-md gap-1 items-center">
                             <Image
                               src={'/images/admin/icon-explorer.png'}
                               alt={'member'}
-                              width={20}
-                              height={20}
+                              width={16}
+                              height={16}
                             />
-                            {t('manage_users_subscription_explorer')}
-                          </div>
-                        )}
-                        
-                        {user.get('lastactive') && (
-                          <div className="bg-orange-100 flex border px-2 py-1 gap-1 border-orange-500 rounded-md items-center mt-1">
-                            <FaClock className="text-orange-600 w-3 h-3" />
-                            <span className="text-xs text-orange-700">
-                              {t('manage_users_last_active')}: {dayjs(user.get('lastactive')).fromNow()}
+                            <span className="text-xs text-gray-700">
+                              {t('manage_users_subscription_explorer')}
                             </span>
                           </div>
                         )}
                       </div>
+
+                      {/* Member Role Badge */}
+                      {user.get('roles').includes('member') && (
+                        <div className="bg-accent flex border px-2 py-1 gap-1 border-accent rounded-md items-center">
+                          <span className="text-xs text-white">🐑</span>
+                          <span className="text-xs text-white">
+                            {t('manage_users_role_member')}
+                          </span>
+                          <Button
+                            onClick={() => handleRemoveRole('member', user)}
+                            className="p-0 min-h-min bg-transparent border-none text-white hover:bg-white hover:bg-opacity-20 rounded"
+                          >
+                            <svg
+                              viewBox="0 0 12 12"
+                              version="1.1"
+                              className="w-2.5 h-2.5 fill-current"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <line
+                                x1="1"
+                                y1="11"
+                                x2="11"
+                                y2="1"
+                                stroke="white"
+                                strokeWidth="2"
+                              />
+                              <line
+                                x1="1"
+                                y1="1"
+                                x2="11"
+                                y2="11"
+                                strokeWidth="2"
+                                stroke="white"
+                              />
+                            </svg>
+                          </Button>
+                        </div>
+                      )}
                     </div>
                     <div className="w-full sm:w-[50%] flex-col sm:flex-row flex gap-1 justify-end flex-wrap">
                       <div className="flex gap-1 flex-wrap justify-start sm:justify-end">
@@ -688,19 +705,19 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                             return (
                               <div
                                 key={role}
-                                className=" py-[3px] text-xs bg-accent text-white rounded-full pl-4 pr-2 flex gap-[2px]"
+                                className="px-2 py-1 text-xs bg-gray-500 text-white rounded-full flex items-center gap-1"
                               >
-                                <div className="whitespace-nowrap pt-[7px] pb-[8px]">
+                                <span className="whitespace-nowrap">
                                   {role}
-                                </div>
+                                </span>
                                 <Button
                                   onClick={() => handleRemoveRole(role, user)}
-                                  className="p-0 min-h-min"
+                                  className="p-0 min-h-min hover:bg-white hover:bg-opacity-20 rounded"
                                 >
                                   <svg
                                     viewBox="0 0 12 12"
                                     version="1.1"
-                                    className="w-2.5 h-2.5 fill-current "
+                                    className="w-2 h-2 fill-current"
                                     xmlns="http://www.w3.org/2000/svg"
                                   >
                                     <line
@@ -729,7 +746,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
 
                       <div>
                         <Select
-                          className="rounded-full text-accent border-accent"
+                          className="rounded-full text-accent border-accent text-xs py-0.5 px-1.5"
                           value={t('manage_users_add_role_button')}
                           options={USER_ROLE_OPTIONS.slice(1)}
                           onChange={(value: string) =>

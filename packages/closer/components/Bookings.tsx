@@ -15,11 +15,12 @@ interface Props {
   page: number;
   setPage: Dispatch<SetStateAction<number>>;
   bookingConfig?: BookingConfig;
+  hideExportCsv?: boolean;
 }
 
 const MAX_USERS_TO_FETCH = 2000;
 
-const Bookings = ({ filter, page, setPage, bookingConfig }: Props) => {
+const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
 
@@ -97,7 +98,7 @@ const Bookings = ({ filter, page, setPage, bookingConfig }: Props) => {
             <Spinner /> {t('generic_loading')}
           </div>
         ) : (
-          <div className="columns mt-8">
+          <div className="columns">
             <div className="flex flex-start items-center border-b pb-4">
               <Heading level={2} className="mr-4 whitespace-nowrap">
                 {allBookings ? allBookings.size : 0}{' '}
@@ -106,7 +107,7 @@ const Bookings = ({ filter, page, setPage, bookingConfig }: Props) => {
                   : t('booking_requests_results')}
               </Heading>
 
-              {bookings && (
+              {bookings && !hideExportCsv && (
                 <Button
                   className=" text-background"
                   onClick={() => {

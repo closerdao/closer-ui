@@ -25,6 +25,7 @@ import { FoodOption } from '../types/food';
 import api from './api';
 import { priceFormat } from './helpers';
 import { reportIssue } from './reporting.utils';
+import { parseMessageFromError } from './common';
 
 const DEFAULT_TIMEZONE = 'Europe/Berlin';
 
@@ -563,7 +564,7 @@ export const payTokens = async (
       )}, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
       userEmail,
     );
-    return { error: 'Token payment failed.', success: null };
+    return { error: parseMessageFromError(error), success: null };
   }
 
   if (stakingSuccess?.transactionId && isBookingMatchContract) {
