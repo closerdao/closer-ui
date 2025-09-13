@@ -105,6 +105,14 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
       } else {
         // user wants to finance tokens
         try {
+          // Track financed token purchase start
+          api.post('/metric', {
+            event: 'financed-token-purchase-started',
+            value: 'citizenship',
+            point: application?.tokensToFinance || 0,
+            category: 'engagement',
+          });
+
           const res = await api.post('/subscription/citizen/apply', {
             owns30Tokens,
             intent,

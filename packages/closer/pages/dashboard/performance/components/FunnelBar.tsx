@@ -12,20 +12,21 @@ interface FunnelBarProps {
 }
 
 const FunnelBar = memo(
-  ({ label, stats, color = 'bg-accent-light' }: FunnelBarProps) => (
-    <div className="relative">
-      <div className="flex justify-between items-center mb-1">
-        <span className="text-sm font-medium">{label}</span>
-        <div className="text-sm ">
-          <span className="font-medium">{stats?.count || 0}</span>
-          <span className="mx-1">-</span>
-          <span>{stats?.percentage || 0}%</span>
+  ({ label, stats, color = 'bg-blue-500' }: FunnelBarProps) => (
+    <div className="space-y-2">
+      <div className="flex justify-between items-center">
+        <span className="text-sm font-medium text-gray-700">{label}</span>
+        <div className="flex items-center space-x-2">
+          <span className="text-sm font-semibold text-gray-900">{stats?.count || 0}</span>
+          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+            {stats?.percentage || 0}%
+          </span>
         </div>
       </div>
-      <div className="w-full bg-gray-100 rounded-full h-2.5">
+      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
         <div
-          className={`${color} h-2.5 rounded-full transition-all duration-500`}
-          style={{ width: `${stats?.percentage || 0}%`, maxWidth: '100%' }}
+          className={`${color} h-full rounded-full transition-all duration-700 ease-out`}
+          style={{ width: `${Math.min(stats?.percentage || 0, 100)}%` }}
         />
       </div>
     </div>

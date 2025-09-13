@@ -51,7 +51,17 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
       category: 'sales',
       label: 'token',
     });
-  }, []);
+    
+    // Track token basket size
+    if (amountOfTokensPurchased) {
+      api.post('/metric', {
+        event: 'token-sale-success',
+        value: 'token-sale',
+        point: Number(amountOfTokensPurchased),
+        category: 'engagement',
+      });
+    }
+  }, [amountOfTokensPurchased]);
 
   const handleNext = () => {
     router.push('/');
