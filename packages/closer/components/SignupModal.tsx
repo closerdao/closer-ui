@@ -9,6 +9,8 @@ import api from '../utils/api';
 import { parseMessageFromError, slugify } from '../utils/common';
 import { isInputValid, validatePassword } from '../utils/helpers';
 import { Button, Checkbox, ErrorMessage, Input } from './ui';
+import { X } from 'lucide-react';
+
 import Heading from './ui/Heading';
 
 interface Props {
@@ -178,7 +180,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 text-2xl"
           >
-            ×
+            <X className="h-6 w-6" />
           </button>
         </div>
 
