@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Card, Heading, Spinner } from '../../../../components/ui';
+import { Spinner } from '../../../../components/ui';
 
 import { useTranslations } from 'next-intl';
 

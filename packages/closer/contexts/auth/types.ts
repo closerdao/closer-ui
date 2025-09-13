@@ -82,7 +82,7 @@ export type User = {
   subscription: {
     plan: string;
     tier: string;
-    created?: Date;
+    createdAt?: Date;
     validUntil?: Date;
     cancelledAt?: Date;
     priceId: string;

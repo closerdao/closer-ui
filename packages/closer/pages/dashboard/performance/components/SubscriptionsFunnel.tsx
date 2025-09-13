@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Card, Heading, Spinner } from '../../../../components/ui';
+import { Spinner } from '../../../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
@@ -11,7 +11,6 @@ import {
   generateSubscribeButtonClickFilter,
   getStartAndEndDate,
 } from '../../../../utils/performance.utils';
-import FunnelBar from './FunnelBar';
 
 interface SubscriptionStats {
   pageViewCount: number;
