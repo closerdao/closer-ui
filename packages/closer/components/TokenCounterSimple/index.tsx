@@ -12,7 +12,7 @@ import { SALES_CONFIG } from '../../constants';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { getTotalPrice } from '../../utils/bondingCurve';
-import { api } from '../../utils/api';
+import api from '../../utils/api';
 
 const { MAX_TOKENS_PER_TRANSACTION, MAX_WALLET_BALANCE } = SALES_CONFIG;
 
