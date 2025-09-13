@@ -1394,8 +1394,6 @@
   "config_label_text": "Email body",
   "config_label_lowerText": "Additional text",
   "config_label_substackUrl": "Substack URL",
-  "config_label_mailchimpApiKey": "Mailchimp API key",
-  "config_label_mailchimpListId": "Mailchimp list ID",
   "config_label_chatLink": "Guest support chat link",
   "config_label_telegramUrl": "Telegram link",
   "config_label_discordUrl": "Discord link",

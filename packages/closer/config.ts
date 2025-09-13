@@ -566,14 +566,6 @@ export const configDescription: ConfigType[] = [
         type: 'text',
         default: '',
       },
-      mailchimpApiKey: {
-        type: 'text',
-        default: '',
-      },
-      mailchimpListId: {
-        type: 'text',
-        default: '',
-      },
     },
   },
 ];
