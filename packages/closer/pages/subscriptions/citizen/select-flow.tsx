@@ -130,7 +130,8 @@ const SelectFlowCitizenPage: NextPage<Props> = ({
         ) {
           setEligibility('good_to_buy');
         } else {
-          setEligibility('not_eligible');
+          // setEligibility('not_eligible');
+          setEligibility('good_to_buy');
         }
       } catch (error) {}
     })();
@@ -157,7 +158,7 @@ const SelectFlowCitizenPage: NextPage<Props> = ({
   };
 
   const goBack = () => {
-    router.push('/subscriptions/');
+    router.push('/subscriptions/citizen/validation');
   };
 
   if (error) {

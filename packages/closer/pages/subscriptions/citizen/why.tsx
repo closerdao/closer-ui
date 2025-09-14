@@ -10,6 +10,7 @@ import Wallet from '../../../components/Wallet';
 import {
   BackButton,
   Button,
+  Card,
   Heading,
   ProgressBar,
 } from '../../../components/ui';
@@ -49,7 +50,7 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
 
   const router = useRouter();
 
-  const { balanceTotal } = useContext(WalletState);
+  const { balanceTotal, isWalletConnected } = useContext(WalletState);
 
   const owns30Tokens = balanceTotal >= 30;
 
@@ -215,6 +216,16 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
 
   const handleNext = async () => {
     console.log('user?.citizenship=', user?.citizenship);
+
+    if (application?.intent?.iWantToBuyTokens) {
+      router.push(
+        `/token/before-you-begin?isCitizenApplication=true&tokens=${
+          30 - (balanceTotal || 0)
+        }`,
+      );
+      return;
+    }
+
     try {
       await platform.user.patch(user?._id || '', {
         citizenship: {
@@ -270,58 +281,95 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
         <ProgressBar steps={SUBSCRIPTION_CITIZEN_STEPS} />
 
         <main className="pt-14 pb-24 space-y-6">
-          <section className="mb-10 space-y-6">
-            {isMember && (
-              <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
-                <p className="font-bold text-green-700 mb-2">
-                  {t('subscriptions_citizen_already_member_title')}
-                </p>
-                <p>{t('subscriptions_citizen_already_member_description')}</p>
-              </div>
-            )}
+          {!isMember && <> {renderUserMessage()}</>}
 
-            {!isMember && (
-              <>
-                {' '}
-                {renderUserMessage()}
-                <p>{t('subscriptions_citizen_good_to_go_intro')}</p>
-              </>
-            )}
-          </section>
-
-          {!isMember && (
-            <CitizenWhy
-              updateApplication={updateApplication}
-              application={application}
-            />
-          )}
-
-          {eligibility === 'buy_more' && (
-            <CitizenGoodToBuy
-              buyMore={true}
-              updateApplication={updateApplication}
-              application={application}
-            />
-          )}
-          {isWalletEnabled &&
-          (eligibility === 'buy_more' || eligibility === 'not_eligible') ? (
-            <div className="my-8 space-y-6">
-              <p>
-                <strong>{t('subscriptions_citizen_connect_wallet')}</strong>
-              </p>
-              <Wallet />
+          {citizenshipStatus && (
+            <div>
+              {t.rich('subscriptions_citizen_buy_more', {
+                link: (chunks) => (
+                  <a
+                    href="/token"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ textDecoration: 'underline' }}
+                  >
+                    {chunks}
+                  </a>
+                ),
+              })}
             </div>
-          ) : null}
-          <div className="py-4">
-            <Button
-              isEnabled={
-                eligibility === 'buy_more' ? true : Boolean(application?.why)
-              }
-              onClick={handleNext}
-            >
-              {getCtaButtonText()}
-            </Button>
-          </div>
+          )}
+
+          {/* TODO: add a message if the user has a pending payment */}
+          {!citizenshipStatus && (
+            <>
+              <p>{t('subscriptions_citizen_good_to_go_intro')}</p>
+              <section className="mb-10 space-y-6">
+                {isMember && (
+                  <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
+                    <p className="font-bold text-green-700 mb-2">
+                      {t('subscriptions_citizen_already_member_title')}
+                    </p>
+                    <p>
+                      {t('subscriptions_citizen_already_member_description')}
+                    </p>
+                  </div>
+                )}
+              </section>
+
+              {!isMember && (
+                <CitizenWhy
+                  updateApplication={updateApplication}
+                  application={application}
+                />
+              )}
+
+              {/* {eligibility === 'buy_more' && (
+                <CitizenGoodToBuy
+                  buyMore={true}
+                  updateApplication={updateApplication}
+                  application={application}
+                />
+              )} */}
+
+              {/* TODO: balance check and options*/}
+              {isWalletConnected && (
+                <Card>
+                  {t('subscriptions_citizen_you_hold', {
+                    var: balanceTotal,
+                  })}
+
+                  <CitizenGoodToBuy
+                    updateApplication={updateApplication}
+                    application={application}
+                    balanceTotal={balanceTotal}
+                  />
+                </Card>
+              )}
+
+              {isWalletEnabled &&
+              (eligibility === 'buy_more' || eligibility === 'not_eligible') ? (
+                <div className="my-8 space-y-6">
+                  <p>
+                    <strong>{t('subscriptions_citizen_connect_wallet')}</strong>
+                  </p>
+                  <Wallet />
+                </div>
+              ) : null}
+              <div className="py-4">
+                <Button
+                  isEnabled={
+                    eligibility === 'buy_more'
+                      ? true
+                      : Boolean(application?.why)
+                  }
+                  onClick={handleNext}
+                >
+                  {getCtaButtonText()}
+                </Button>
+              </div>
+            </>
+          )}
         </main>
       </div>
     </>

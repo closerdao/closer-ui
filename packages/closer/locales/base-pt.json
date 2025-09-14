@@ -691,7 +691,8 @@
   "subscriptions_citizen_on_way_to_30_tokens": "Está a caminho de possuir pelo menos 30 tokens",
   "subscriptions_citizen_see_other_ways": "Veja outras formas de fazer parte da TDF",
   "subscriptions_citizen_i_wish_to_finance_tokens": "Desejo financiar 30+ tokens",
-  "subscriptions_citizen_i_wish_to_buy_now": "Gostaria de comprar 30+ tokens agora",
+  "subscriptions_citizen_i_wish_to_buy_now": "Gostaria de comprar {var} + tokens agora",
+  "subscriptions_citizen_you_hold": "Possui {var} tokens",
   "subscriptions_citizen_i_own_tokens_and_wish_to_buy_now": "Possuo 30+ tokens & desejo comprar 30+ tokens agora",
   "subscriptions_citizen_i_own_tokens_and_wish_to_finance_tokens": "Possuo 30+ tokens & desejo financiar 30+ tokens",
   "subscriptions_citizen_connect_wallet": "Por favor, conecte a sua carteira se desejar confirmar o seu saldo atual de tokens",
@@ -1311,6 +1312,7 @@
   "config_label_discordUrl": "Link do Discord",
   "subscriptions_citizen_introduce_yourself_in_discord": "Introduza-se no Discord para ser votado por outros membros:",
   "subscription_citizen_apply": "Aplicar para cidadania",
+  "subscriptions_citizen_pending_payment": "Você já solicitou a cidadania e tem um pagamento pendente",
 
   "config_email_product_paid_guest": "Produto pago, enviar ao utilizador imediatamente",
   "config_email_product_paid_admin": "Produto pago, enviar aos administradores imediatamente",

@@ -736,7 +736,10 @@
   "subscriptions_citizen_on_way_to_30_tokens": "You are on your way to owning at least 30 tokens",
   "subscriptions_citizen_see_other_ways": "See other ways to be part of TDF",
   "subscriptions_citizen_i_wish_to_finance_tokens": "I wish to finance 30+ tokens",
-  "subscriptions_citizen_i_wish_to_buy_now": "I would like to buy 30+ tokens now",
+  "subscriptions_citizen_i_wish_to_buy_now": "I would like to buy {var} + tokens now",
+  "subscriptions_citizen_you_hold": "You hold {var} tokens",
+
+
   "subscriptions_citizen_i_own_tokens_and_wish_to_buy_now": "I own 30+ tokens & I wish to buy 30+ tokens now",
   "subscriptions_citizen_i_own_tokens_and_wish_to_finance_tokens": "I own 30+ tokens & I wish to finance 30+ tokens",
   "subscriptions_citizen_connect_wallet": "Please connect your wallet if you wish to confirm your current token balance",
@@ -796,6 +799,7 @@
   "subscriptions_citizen_cancelled": "You have already applied for citizenship, but your application has been cancelled.",
   "subscriptions_citizen_paid": "You have already applied for citizenship, and you have made the latest payment.",
   "subscriptions_citizen_completed": "You have successfully completed your citizenship application.",
+  "subscriptions_citizen_buy_more": "You can buy more tokens <link>here</link>.",
 
   "referrals_heading": "Referrals",
 
