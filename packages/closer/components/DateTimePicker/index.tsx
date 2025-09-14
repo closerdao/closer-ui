@@ -35,6 +35,7 @@ interface Props {
   priceDuration?: string;
   timeOptions?: string[] | null;
   hourAvailability?: { hour: string; isAvailable: boolean }[] | [];
+  timeZone?: string;
   isDashboard?: boolean;
 }
 
@@ -51,8 +52,14 @@ const DateTimePicker = ({
   priceDuration = 'night',
   timeOptions,
   hourAvailability,
+  timeZone,
   isDashboard,
 }: Props) => {
+  // Store the original full dates for timezone conversion
+  const originalStartDate = savedStartDate;
+  const originalEndDate = savedEndDate;
+
+  // Convert to date-only for calendar display
   savedStartDate = getDateOnly(savedStartDate);
   savedEndDate = getDateOnly(savedEndDate);
 
@@ -63,8 +70,54 @@ const DateTimePicker = ({
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [dateError, setDateError] = useState<null | string>(null);
   const [isOneMonthCalendar, setIsOneMonthCalendar] = useState(false);
-  const [startTime, setStartTime] = useState('12:00');
-  const [endTime, setEndTime] = useState('12:00');
+  // Helper function to get time in the specified timezone
+  const getTimeInTimezone = (
+    date: Date | string | null | undefined,
+    tz?: string,
+  ) => {
+    if (!date) return null;
+
+    // Check if the date string has time information
+    const dateStr = date.toString();
+    const hasTime = dateStr.includes('T') || dateStr.includes(' ');
+
+    if (tz) {
+      if (hasTime) {
+        // Full datetime - convert timezone
+        return dayjs.utc(date).tz(tz).format('HH:mm');
+      } else {
+        // Date-only - return null so we can use default time
+        return null;
+      }
+    }
+    return dayjs(date).format('HH:mm');
+  };
+
+  const [startTime, setStartTime] = useState(() => {
+    const initialTime =
+      getTimeInTimezone(originalStartDate, timeZone) || '12:00';
+    console.log(
+      'DateTimePicker initial state: originalStartDate=',
+      originalStartDate,
+      'timeZone=',
+      timeZone,
+      'initialTime=',
+      initialTime,
+    );
+    return initialTime;
+  });
+  const [endTime, setEndTime] = useState(() => {
+    const initialTime = getTimeInTimezone(originalEndDate, timeZone) || '12:00';
+    console.log(
+      'DateTimePicker initial state: originalEndDate=',
+      originalEndDate,
+      'timeZone=',
+      timeZone,
+      'initialTime=',
+      initialTime,
+    );
+    return initialTime;
+  });
 
   const [isDateRangeSet, setIsDateRangeSet] = useState(false);
 
@@ -88,6 +141,30 @@ const DateTimePicker = ({
       window.removeEventListener('resize', handleWindowResize);
     };
   }, []);
+
+  // Update time values when saved dates or timezone change
+  useEffect(() => {
+    const newStartTime = getTimeInTimezone(originalStartDate, timeZone);
+    const newEndTime = getTimeInTimezone(originalEndDate, timeZone);
+
+    console.log(
+      'DateTimePicker: originalStartDate=',
+      originalStartDate,
+      'timeZone=',
+      timeZone,
+      'newStartTime=',
+      newStartTime,
+    );
+
+    if (newStartTime) {
+      console.log('Setting startTime to:', newStartTime);
+      setStartTime(newStartTime);
+    }
+    if (newEndTime) {
+      console.log('Setting endTime to:', newEndTime);
+      setEndTime(newEndTime);
+    }
+  }, [originalStartDate, originalEndDate, timeZone]);
 
   const checkDefaultDatesAreAvailable = (
     blockedDateRanges: Date[],
@@ -137,12 +214,32 @@ const DateTimePicker = ({
           to: savedEndDate ? new Date(savedEndDate) : undefined,
         });
         if (isAdmin) {
-          setEndTime(dayjs(savedEndDate).format('HH:mm'));
-          setStartTime(dayjs(savedStartDate).format('HH:mm'));
+          // Use timezone-aware conversion instead of direct formatting
+          const startTimeFromOriginal = getTimeInTimezone(
+            originalStartDate,
+            timeZone,
+          );
+          const endTimeFromOriginal = getTimeInTimezone(
+            originalEndDate,
+            timeZone,
+          );
+
+          if (startTimeFromOriginal) {
+            setStartTime(startTimeFromOriginal);
+          }
+          if (endTimeFromOriginal) {
+            setEndTime(endTimeFromOriginal);
+          }
         }
       }
     }
-  }, [savedStartDate, savedEndDate]);
+  }, [
+    savedStartDate,
+    savedEndDate,
+    originalStartDate,
+    originalEndDate,
+    timeZone,
+  ]);
 
   useEffect(() => {
     if (eventStartDate && eventEndDate) {
@@ -202,14 +299,20 @@ const DateTimePicker = ({
         savedStartDate as string,
         hours,
         minutes,
+        timeZone,
       );
       setStartDate(formattedDate);
-      setStartTime(dayjs(formattedDate).format('HH:mm'));
+      setStartTime(time); // Use the original input time, not the formatted date
     }
     if (event.target.id === 'endTime') {
-      const formattedDate = getDateTime(savedEndDate as string, hours, minutes);
+      const formattedDate = getDateTime(
+        savedEndDate as string,
+        hours,
+        minutes,
+        timeZone,
+      );
       setEndDate(formattedDate);
-      setEndTime(dayjs(formattedDate).format('HH:mm'));
+      setEndTime(time); // Use the original input time, not the formatted date
     }
   };
 
@@ -380,6 +483,17 @@ const DateTimePicker = ({
           <div>
             <div className="text-sm mb-2 flex">
               <div className="w-[136px] mr-2">
+                {(() => {
+                  console.log(
+                    'Rendering startTime input with value:',
+                    startTime,
+                    'dateRange?.from:',
+                    dateRange?.from,
+                    'isDisabled:',
+                    !Boolean(dateRange?.from),
+                  );
+                  return null;
+                })()}
                 <Input
                   label={t('events_event_start_time')}
                   value={startTime}
@@ -401,7 +515,7 @@ const DateTimePicker = ({
               </div>
             </div>
             <div className="text-sm mt-4">
-              {localTimezone} {t('events_time')}
+              {timeZone} {t('events_time')}
             </div>
           </div>
         )}
