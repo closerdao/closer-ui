@@ -4,13 +4,15 @@ import CustomSectionComponent from './CustomSectionComponent';
 
 const CustomSections = ({ page }: { page: Page }) => {
   return (
-    <div className=" flex flex-col gap-[120px] pb-[80px]">
+    <div className=" flex flex-col gap-[100px] pb-[40px]">
       {page.sections.map((section, index) => (
-        <CustomSectionComponent
-          key={index}
-          type={section.type}
-          data={section.data}
-        />
+        <div className=' '>
+          <CustomSectionComponent
+            key={index}
+            type={section.type}
+            data={section.data}
+          />
+        </div>
       ))}
     </div>
   );
