@@ -53,10 +53,10 @@
     @apply w-full;
   }
 
-  textarea,
+  /* textarea,
   .textarea {
-    @apply p-2 text-foreground block border-0 border-b-2 border-transparent focus:outline-none focus:border-accent;
-  }
+    @apply p-2 text-foreground block border-0 border-b-2 ;
+  } */
 
   input[type='email'],
   input[type='password']:not(.new-input),

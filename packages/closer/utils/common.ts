@@ -1,18 +1,28 @@
 export const parseMessageFromError = (err: any) => {
-  if (typeof err === 'string') {
-    return err;
-  }
-  if (err?.response?.data?.error) {
-    return err.response?.data?.error;
-  }
-  if (err instanceof Error) {
-    return err.message;
-  }
+  try {
+    if (typeof err === 'string') {
+      return err;
+    }
+    if (err?.response?.data?.error) {
+      return err.response?.data?.error;
+    }
+    if (err instanceof Error) {
+      return err.message;
+    }
 
-  if (typeof err === 'object' && err !== null && 'message' in err) {
-    return err.message;
+    if (typeof err === 'object' && err !== null && 'message' in err) {
+      return err.message;
+    }
+
+    // Handle circular references and other complex objects
+    try {
+      return JSON.stringify(err);
+    } catch (jsonError) {
+      return 'Complex object that could not be stringified';
+    }
+  } catch (error) {
+    return 'Error parsing error message';
   }
-  return 'Unknown error';
 };
 
 export const slugify = (str: string): string =>

@@ -1,22 +1,26 @@
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
 import { BOOKINGS_PER_PAGE, MAX_BOOKINGS_TO_FETCH } from '../constants';
 import { usePlatform } from '../contexts/platform';
 import BookingListPreview from './BookingListPreview/BookingListPreview';
 import Pagination from './Pagination';
 import { Button, Heading, Spinner } from './ui';
+import { BookingConfig } from '../types/api';
 
 interface Props {
   filter: any;
   page: number;
   setPage: Dispatch<SetStateAction<number>>;
+  bookingConfig?: BookingConfig;
+  hideExportCsv?: boolean;
 }
 
 const MAX_USERS_TO_FETCH = 2000;
 
-const Bookings = ({ filter, page, setPage }: Props) => {
+const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
 
@@ -94,18 +98,18 @@ const Bookings = ({ filter, page, setPage }: Props) => {
             <Spinner /> {t('generic_loading')}
           </div>
         ) : (
-          <div className="columns mt-8">
+          <div className="columns">
             <div className="flex flex-start items-center border-b pb-4">
-              <Heading level={2} className="mr-4">
+              <Heading level={2} className="mr-4 whitespace-nowrap">
                 {allBookings ? allBookings.size : 0}{' '}
                 {bookings && bookings.count() === 1
                   ? t('booking_requests_result')
                   : t('booking_requests_results')}
               </Heading>
 
-              {bookings && (
+              {bookings && !hideExportCsv && (
                 <Button
-                  className="underline text-accent"
+                  className=" text-background"
                   onClick={() => {
                     const headers = [
                       { label: 'ID', key: 'id' },
@@ -156,7 +160,9 @@ const Bookings = ({ filter, page, setPage }: Props) => {
                     });
                     const link = document.createElement('a');
                     link.href = URL.createObjectURL(blob);
-                    link.download = `bookings-${dayjs().format('YYYY-MM-DD.HH:mm')}.csv`;
+                    link.download = `bookings-${dayjs().format(
+                      'YYYY-MM-DD.HH:mm',
+                    )}.csv`;
                     link.click();
                     URL.revokeObjectURL(link.href);
                   }}
@@ -185,6 +191,13 @@ const Bookings = ({ filter, page, setPage }: Props) => {
                         (user: any) => user._id === booking.get('createdBy'),
                       );
 
+                  // Check if there's a paidBy field and fetch payer information
+                  const paidBy = booking.get('paidBy');
+                  const payer =
+                    paidBy &&
+                    allUsers &&
+                    allUsers.toJS().find((user: any) => user._id === paidBy);
+
                   const currentEvent = platform.event.findOne(
                     booking.get('eventId'),
                   );
@@ -203,6 +216,9 @@ const Bookings = ({ filter, page, setPage }: Props) => {
                       `/volunteer/${currentVolunteer.get('slug')}`;
                   }
 
+                  // Use payer information if available, otherwise fall back to creator
+                  const userToShow = payer || user;
+
                   return (
                     <BookingListPreview
                       isAdmin={true}
@@ -214,18 +230,20 @@ const Bookings = ({ filter, page, setPage }: Props) => {
                         listing && listing.get('priceDuration') === 'hour'
                       }
                       userInfo={
-                        user && {
-                          name: user.screenname,
-                          photo: user.photo,
-                          diet: user.preferences?.diet,
-                          email: user.email,
+                        userToShow && {
+                          name: userToShow.screenname,
+                          photo: userToShow.photo,
+                          diet: userToShow.preferences?.diet,
+                          email: userToShow.email,
                         }
                       }
                       eventName={currentEvent && currentEvent.get('name')}
+                      eventChatLink={currentEvent && currentEvent.get('chatLink')}
                       volunteerName={
                         currentVolunteer && currentVolunteer.get('name')
                       }
                       link={link}
+                      bookingConfig={bookingConfig}
                     />
                   );
                 })

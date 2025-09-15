@@ -22,7 +22,7 @@ const BookingResult = ({ booking, eventName }: Props) => {
         <>
           <Heading className="pb-4 mt-8">
             <span className="mr-2">🎊</span>
-            {t('bookings_title_confirmed')}
+            {t('bookings_title_paid')}
           </Heading>
           <p>{t('subscriptions_success_thank_you_message')}</p>
           <p className="uppercase font-bold">
@@ -35,7 +35,7 @@ const BookingResult = ({ booking, eventName }: Props) => {
         <>
           <Heading className="pb-4 mt-8">
             <span className="mr-2">🎊</span>
-            {t('bookings_title_confirmed')}
+            {t('bookings_title_paid')}
           </Heading>
           <p>{t('subscriptions_success_thank_you_message')}</p>
           <p className="uppercase font-bold">
@@ -62,7 +62,7 @@ const BookingResult = ({ booking, eventName }: Props) => {
         </>
       )}
 
-      {eventId && (
+      {eventId && status === 'paid' && (
         <div>
           <Heading className="pb-4 mt-8">
             {t('bookings_confirmation_step_you_are_coming')} {eventName}
@@ -72,6 +72,21 @@ const BookingResult = ({ booking, eventName }: Props) => {
             {t('bookings_confirmation_step_success_your_booking_id')} {_id}
           </p>
           <p>{t('bookings_event_confirmation_see_you_soon')}</p>
+        </div>
+      )}
+
+      {eventId && status === 'pending' && (
+        <div>
+          <Heading className="pb-4 mt-8">
+            <span className="mr-2">⏳</span>
+            {t('bookings_event_approval_pending')}
+          </Heading>
+          <p>{t('subscriptions_success_thank_you_message')}</p>
+          <p className="my-14 uppercase font-bold">
+            {t('bookings_confirmation_step_success_your_booking_id')} {_id}
+          </p>
+          <p>{t('bookings_confirmation_step_success_what_happen_next')}</p>
+          <p>{t('bookings_confirmation_step_success_when_payment_processed')}</p>
         </div>
       )}
 

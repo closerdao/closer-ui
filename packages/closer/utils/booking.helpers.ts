@@ -3,8 +3,6 @@ import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 
-const DEFAULT_TIMEZONE = 'Europe/Berlin';
-
 import {
   BOOKING_EXISTS_ERROR,
   CURRENCIES,
@@ -26,6 +24,10 @@ import {
 import { FoodOption } from '../types/food';
 import api from './api';
 import { priceFormat } from './helpers';
+import { reportIssue } from './reporting.utils';
+import { parseMessageFromError } from './common';
+
+const DEFAULT_TIMEZONE = 'Europe/Berlin';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -486,10 +488,28 @@ export const payTokens = async (
       }
     | undefined
   >,
+  userEmail?: string | null | undefined,
+  bookingStatus?: string,
 ) => {
-  if (!dailyRentalTokenVal)
+  if (!dailyRentalTokenVal) {
+    await reportIssue(
+      `MISSING_DAILY_RENTAL_TOKEN_VALUE: bookingId=${bookingId}, error=No daily rental token value provided, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
+      userEmail,
+    );
     return { error: 'No daily rental token value provided', success: null };
-  if (!bookingId) return { error: 'No bookingId provided', success: null };
+  }
+  if (!bookingId) {
+    await reportIssue(
+      `MISSING_BOOKING_ID: bookingId=${bookingId}, error=No bookingId provided, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
+      userEmail,
+    );
+    return { error: 'No bookingId provided', success: null };
+  }
+
+  // If booking status is already 'tokens-staked', skip token payment
+  if (bookingStatus === 'tokens-staked') {
+    return { success: true, error: null };
+  }
 
   const { success: stakingSuccess, error: stakingError } = (await stakeTokens(
     dailyRentalTokenVal,
@@ -521,23 +541,52 @@ export const payTokens = async (
   console.log('nightsRejected=', nightsRejected);
   console.log('error reason=', error?.reason);
 
-  if (error?.reason.trim() === USER_REJECTED_TRANSACTION_ERROR) {
+  if (error?.reason?.trim() === USER_REJECTED_TRANSACTION_ERROR) {
     console.log('User rejected transaction!!!!!');
+    await reportIssue(
+      `USER_REJECTED_TRANSACTION: bookingId=${bookingId}, error=User rejected transaction, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
+      userEmail,
+    );
     return { error: 'User rejected transaction', success: null };
   }
-  if (error?.reason.trim() === BOOKING_EXISTS_ERROR) {
+  if (error?.reason?.trim() === BOOKING_EXISTS_ERROR) {
+    await reportIssue(
+      `BOOKING_EXISTS_ERROR: bookingId=${bookingId}, error=Booking for these dates already exists, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
+      userEmail,
+    );
     return { error: 'Booking for these dates already exists', success: null };
   }
   if (error) {
     console.log('TOKEN PAYMENT ERROR=', error);
-    return { error: 'Token payment failed.', success: null };
+    await reportIssue(
+      `TOKEN_PAYMENT_FAILED: bookingId=${bookingId}, error=${JSON.stringify(
+        error,
+      )}, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
+      userEmail,
+    );
+    return { error: parseMessageFromError(error), success: null };
   }
 
   if (stakingSuccess?.transactionId && isBookingMatchContract) {
-    await api.post(`/bookings/${bookingId}/token-payment`, {
-      transactionId: stakingSuccess.transactionId,
-    });
-    return { success: true, error: null };
+    try {
+      await api.post(`/bookings/${bookingId}/token-payment`, {
+        transactionId: stakingSuccess.transactionId,
+      });
+      return { success: true, error: null };
+    } catch (apiError) {
+      await reportIssue(
+        `TOKEN_PAYMENT_API_ERROR: bookingId=${bookingId}, error=${JSON.stringify(
+          apiError,
+        )}, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}, transactionId=${
+          stakingSuccess.transactionId
+        }`,
+        userEmail,
+      );
+      return {
+        error: 'Failed to confirm token payment with server',
+        success: null,
+      };
+    }
   }
 };
 
@@ -546,7 +595,6 @@ export const formatCheckinDate = (
   TIME_ZONE: string,
   checkinTime: number | undefined,
 ) => {
-
   const localDate = dayjs.tz(date || new Date(), TIME_ZONE || DEFAULT_TIMEZONE);
   const localTime = localDate
     .hour(Number(checkinTime) || 16)
@@ -631,14 +679,20 @@ export const getPaymentType = ({
   currency,
   maxNightsToPayWithTokens,
   maxNightsToPayWithCredits,
+  isAdditionalFiatPayment = false,
 }: {
   useCredits: boolean;
   duration: number;
   currency: CloserCurrencies;
   maxNightsToPayWithTokens: number;
   maxNightsToPayWithCredits: number;
+  isAdditionalFiatPayment?: boolean;
 }): PaymentType => {
   let localPaymentType: PaymentType = PaymentType.FIAT;
+
+  if (isAdditionalFiatPayment) {
+    return PaymentType.FIAT;
+  }
 
   if (currency === CURRENCIES[0]) {
     if (

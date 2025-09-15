@@ -27,7 +27,7 @@ const buttonStyles = cva(
       },
       variant: {
         primary:
-          'w-full py-2 px-2 bg-accent border-accent text-white text-center [&_span]:block [&_span]:max-w-full [&_span]:text-[length:var(--dynamic-font-size,inherit)]',
+          'w-full py-2 px-4 bg-accent border-accent text-white text-center [&_span]:block [&_span]:max-w-full [&_span]:text-[length:var(--dynamic-font-size,inherit)]',
         secondary: 'w-full enabled:bg-white border-accent text-accent py-2 ',
         instantSave:
           'w-auto absolute right-2 top-[45px] text-md pl-4 pr-5 py-0.5 bg-accent text-white',

@@ -33,7 +33,6 @@ const SubscriptionCards = ({
   const t = useTranslations();
   const { isAuthenticated, user } = useAuth();
 
-
   const { APP_NAME } = useConfig();
 
   const isMember = user?.roles?.includes('member');
@@ -107,7 +106,7 @@ const SubscriptionCards = ({
               }`}
             >
               <div className="flex items-center gap-4 flex-col md:flex-row text-sm">
-                {APP_NAME.toLowerCase() === 'tdf' && (
+                {APP_NAME?.toLowerCase() === 'tdf' && (
                   <Image
                     alt={plan.slug || ''}
                     src={`/images/subscriptions/${plan.slug}.png`}
@@ -131,7 +130,7 @@ const SubscriptionCards = ({
                       >
                         {plan.price !== 0 &&
                           plan.available &&
-                          APP_NAME.toLowerCase() === 'tdf' &&
+                          APP_NAME?.toLowerCase() === 'tdf' &&
                           `everything on the ${
                             isAuthenticated
                               ? plans[i].title

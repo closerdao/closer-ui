@@ -36,6 +36,7 @@ const rbacDefaultConfig: RBACConfig = {
     Residence: true,
     Stay: true,
     MyBookings: true,
+    FriendsBooking: true,
     Referrals: true,
     Governance: true,
     EventCreation: false,
@@ -44,6 +45,9 @@ const rbacDefaultConfig: RBACConfig = {
     SupportUs: true,
     Token: true,
     Blog: true,
+    TokenSales: false,
+    RoleCreation: false,
+    Roles: true,
   },
   
   // Steward role permissions
@@ -68,6 +72,7 @@ const rbacDefaultConfig: RBACConfig = {
     Residence: true,
     Stay: true,
     MyBookings: true,
+    FriendsBooking: true,
     Referrals: true,
     Governance: true,
     EventCreation: true,
@@ -76,6 +81,9 @@ const rbacDefaultConfig: RBACConfig = {
     SupportUs: true,
     Token: true,
     Blog: true,
+    TokenSales: false,
+    RoleCreation: true,
+    Roles: true,
   },
   
   // Space host role permissions
@@ -100,6 +108,7 @@ const rbacDefaultConfig: RBACConfig = {
     Residence: true,
     Stay: true,
     MyBookings: true,
+    FriendsBooking: true,
     Referrals: true,
     Governance: true,
     EventCreation: false,
@@ -108,6 +117,9 @@ const rbacDefaultConfig: RBACConfig = {
     SupportUs: true,
     Token: true,
     Blog: true,
+    TokenSales: false,
+    RoleCreation: true,
+    Roles: true,
   },
   
   // Community curator role permissions
@@ -132,6 +144,7 @@ const rbacDefaultConfig: RBACConfig = {
     Residence: true,
     Stay: true,
     MyBookings: true,
+    FriendsBooking: true,
     Referrals: true,
     Governance: true,
     EventCreation: false,
@@ -140,6 +153,9 @@ const rbacDefaultConfig: RBACConfig = {
     SupportUs: true,
     Token: true,
     Blog: true,
+    TokenSales: false,
+    RoleCreation: false,
+    Roles: true,
   },
   
   // Member role permissions
@@ -164,6 +180,7 @@ const rbacDefaultConfig: RBACConfig = {
     Residence: true,
     Stay: true,
     MyBookings: true,
+    FriendsBooking: true,
     Referrals: true,
     Governance: true,
     EventCreation: false,
@@ -172,6 +189,9 @@ const rbacDefaultConfig: RBACConfig = {
     SupportUs: true,
     Token: true,
     Blog: true,
+    TokenSales: false,
+    RoleCreation: false,
+    Roles: true,
   },
   
   // Content creator role permissions
@@ -195,6 +215,7 @@ const rbacDefaultConfig: RBACConfig = {
     Residence: true,
     Stay: true,
     MyBookings: true,
+    FriendsBooking: true,
     Referrals: true,
     Governance: true,
     EventCreation: false,
@@ -203,6 +224,9 @@ const rbacDefaultConfig: RBACConfig = {
     SupportUs: true,
     Token: true,
     Blog: true,
+    TokenSales: false,
+    RoleCreation: false,
+    Roles: true,
   },
   
   // Admin role permissions (has access to everything)
@@ -227,6 +251,7 @@ const rbacDefaultConfig: RBACConfig = {
     Residence: true,
     Stay: true,
     MyBookings: true,
+    FriendsBooking: true,
     Referrals: true,
     Governance: true,
     EventCreation: true,
@@ -235,6 +260,9 @@ const rbacDefaultConfig: RBACConfig = {
     SupportUs: true,
     Token: true,
     Blog: true,
+    TokenSales: true,
+    RoleCreation: true,
+    Roles: true,
   },
 };
 

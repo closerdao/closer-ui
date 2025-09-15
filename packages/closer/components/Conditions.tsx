@@ -3,8 +3,8 @@ import { MouseEvent, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import PropTypes from 'prop-types';
 
-import Checkbox from './Checkbox';
 import Modal from './Modal';
+import Checkbox from './ui/Checkbox';
 import Heading from './ui/Heading';
 
 interface Props {
@@ -53,11 +53,10 @@ const Conditions = ({
   return (
     <div className="mt-8" onClick={stopPropagation}>
       <Checkbox
-        checked={doesUserAcceptTerms}
+        isChecked={doesUserAcceptTerms}
         onChange={() => setDoesUserAcceptTerms(!doesUserAcceptTerms)}
-        className="mb-4"
       >
-        <p>
+        <p className='text-md'>
           <span>{t('bookings_checkout_step_comply_with')}</span>
           <a
             className="border-b pb-1 border-neutral-400 border-dashed no-underline"

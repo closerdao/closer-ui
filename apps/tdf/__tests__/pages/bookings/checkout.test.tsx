@@ -16,7 +16,7 @@ describe('Checkout page', () => {
   });
 
   it.skip('should render No access by default', async () => {
-    process.env.NEXT_PUBLIC_STRIPE_PUB_KEY = '12345';
+    process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY = '12345';
     renderWithProviders(
       <Checkout
         booking={booking}

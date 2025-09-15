@@ -6,24 +6,64 @@ import EditModel from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
 
 import { FaArrowLeft } from '@react-icons/all-files/fa/FaArrowLeft';
+import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import models from '../../../models';
-import { Event } from '../../../types';
+import { Event, GeneralConfig } from '../../../types';
 import { FoodOption } from '../../../types/food';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+// Convert timezone-aware datetime to UTC for database storage
+const convertToUTC = (
+  dateTime: string | Date | null,
+  timeZone: string,
+): string | null => {
+  if (!dateTime || !timeZone) return null;
+
+  // Parse the datetime in the specified timezone and convert to UTC
+  const zonedDateTime = dayjs.tz(dateTime, timeZone);
+  return zonedDateTime.utc().toISOString();
+};
+
+// Convert UTC datetime to timezone-aware datetime for display
+const convertFromUTC = (
+  utcDateTime: string | Date | null,
+  timeZone: string,
+): string | null => {
+  if (!utcDateTime || !timeZone) return null;
+
+  // Parse UTC datetime and convert to the specified timezone
+  const utcDate = dayjs.utc(utcDateTime);
+  return utcDate.tz(timeZone).format('YYYY-MM-DDTHH:mm:ss');
+};
+
 interface Props {
   event: Event;
   foodOptions: FoodOption[];
   error?: string;
+  generalConfig: GeneralConfig;
 }
 
-const EditEvent = ({ event, error, foodOptions }: Props) => {
+const EditEvent = ({ event, error, foodOptions, generalConfig }: Props) => {
   const t = useTranslations();
+
+  console.log('generalConfig=', generalConfig);
+
+  const timeZone = generalConfig?.timeZone;
+
+  // Pass the original UTC dates to DateTimePicker - it will handle timezone conversion
+  const eventWithLocalTimes = event;
+
+  console.log('EditEvent: event.start=', event.start, 'timeZone=', timeZone);
 
   const foodOptionsWithDefault = [
     {
@@ -51,6 +91,23 @@ const EditEvent = ({ event, error, foodOptions }: Props) => {
       await api.post(`/moderator/event/${event._id}/add`, option);
     }
   };
+
+  // Custom onSave handler to convert timezone times to UTC before saving
+  const handleSave = (savedEvent: any) => {
+    router.push(`/events/${savedEvent.slug}`);
+  };
+
+  // Transform data before saving: convert timezone times to UTC
+  const transformDataBeforeSave = (data: any) => {
+    if (!timeZone) return data;
+
+    // The DateTimePicker now creates timezone-aware dates, so we need to convert them to UTC
+    return {
+      ...data,
+      start: data.start ? dayjs(data.start).utc().toISOString() : data.start,
+      end: data.end ? dayjs(data.end).utc().toISOString() : data.end,
+    };
+  };
   if (!event) {
     return <Heading>{t('events_slug_edit_error')}</Heading>;
   }
@@ -71,7 +128,7 @@ const EditEvent = ({ event, error, foodOptions }: Props) => {
         <Heading level={2} className="flex justify-start items-center">
           {t('events_slug_edit_link')} <i>{event.name}</i>
         </Heading>
-        {!process.env.NEXT_PUBLIC_STRIPE_PUB_KEY && (
+        {!process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY && (
           <div className="my-4 error-box italic">
             {t('events_no_stripe_integration')}
           </div>
@@ -84,12 +141,14 @@ const EditEvent = ({ event, error, foodOptions }: Props) => {
           }}
           id={event._id}
           fields={models.event}
-          initialData={event}
-          onSave={(event) => router.push(`/events/${event.slug}`)}
+          initialData={eventWithLocalTimes}
+          onSave={handleSave}
           onUpdate={onUpdate}
           allowDelete
           deleteButton="Delete Event"
           onDelete={() => router.push('/')}
+          transformDataBeforeSave={transformDataBeforeSave}
+          timeZone={timeZone}
         />
       </div>
     </>
@@ -103,7 +162,11 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No event');
     }
 
-    const [eventRes, foodRes, messages] = await Promise.all([
+    const [generalConfigRes, eventRes, foodRes, messages] = await Promise.all([
+      api.get('/config/general').catch((err) => {
+        console.error('Error fetching general config:', err);
+        return null;
+      }),
       api.get(`/event/${query.slug}`, {
         headers: (req as NextApiRequest)?.cookies?.access_token && {
           Authorization: `Bearer ${
@@ -118,14 +181,16 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
+    const generalConfig = generalConfigRes?.data?.results?.value;
     const event = eventRes?.data?.results;
     const foodOptions = foodRes?.data?.results;
 
-    return { event, foodOptions, messages };
+    return { event, foodOptions, messages, generalConfig };
   } catch (err) {
     console.log(err);
     return {
       error: parseMessageFromError(err),
+      generalConfig: null,
       messages: null,
       foodOptions: null,
     };

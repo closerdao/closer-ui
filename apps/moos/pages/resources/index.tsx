@@ -22,7 +22,7 @@ const ResourcesPage = ({ generalConfig }: Props) => {
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
   const { APP_NAME, FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
-  const appName = APP_NAME.toLowerCase();
+  const appName = APP_NAME?.toLowerCase();
   const { faqs, error } = useFaqs(FAQS_GOOGLE_SHEET_ID);
 
   return (

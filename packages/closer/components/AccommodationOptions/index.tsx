@@ -30,7 +30,7 @@ const AccommodationOptions = ({ listings }: Props) => {
             key={listing.slug}
             className="mb-8 px-4 py-6 text-center items-center flex flex-col justify-netween gap-4 w-full sm:w-[49%] lg:w-[23%]"
           >
-            {listing.name.toLowerCase().includes('private') && (
+            {listing?.name?.toLowerCase().includes('private') && (
               <>
                 <div
                   className="
@@ -60,7 +60,7 @@ const AccommodationOptions = ({ listings }: Props) => {
                 </div>
               </>
             )}
-            {listing.name.toLowerCase().includes('shared') && (
+            {listing?.name?.toLowerCase().includes('shared') && (
               <>
                 <div
                   className="
@@ -87,7 +87,7 @@ const AccommodationOptions = ({ listings }: Props) => {
                 </div>
               </>
             )}
-            {listing.name.toLowerCase().includes('camping') && (
+            {listing?.name?.toLowerCase().includes('camping') && (
               <>
                 {' '}
                 <div
@@ -115,7 +115,7 @@ const AccommodationOptions = ({ listings }: Props) => {
                 </div>
               </>
             )}
-            {listing.name.toLowerCase().includes('van') && (
+            {listing?.name?.toLowerCase().includes('van') && (
               <>
                 <div
                   className="

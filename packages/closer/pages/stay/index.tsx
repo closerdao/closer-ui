@@ -27,6 +27,7 @@ import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
+
 interface Props {
   bookingSettings: any;
   bookingRules: BookingRulesConfig | null;
@@ -77,7 +78,7 @@ const StayPage = ({
   const hostsFilter = {
     where: {
       roles: { $in: ['space-host', 'steward', 'team'].filter((e) => e) },
-      // email: { $ne: ADMIN_EMAIL },
+      email: { $ne: process.env.NEXT_PUBLIC_DEBUG_EMAIL },
     },
   };
 
@@ -95,6 +96,8 @@ const StayPage = ({
   const listings = platform.listing.find(listingFilter);
 
   const hosts = platform.user.find(hostsFilter);
+
+  console.log('hosts=', hosts?.toJS());
   const guestListings = listings?.filter((listing: any) => {
     return (
       listing.get('availableFor') !== 'team' &&
@@ -137,7 +140,7 @@ const StayPage = ({
               ),
               link: (chunks) => (
                 <a
-                  href="https://grimsnas.se"
+                  href="https://grimsnas.se/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-accent underline"

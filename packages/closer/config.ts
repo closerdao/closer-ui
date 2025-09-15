@@ -118,9 +118,17 @@ export const configDescription: ConfigType[] = [
         type: 'number',
         default: 1,
       },
+      maxBookingHorizon: {
+        type: 'number',
+        default: 180,
+      },
       volunteerCommitment: {
         type: 'text',
         default: '4h/day',
+      },
+      memberMinDuration: {
+        type: 'number',
+        default: 3,
       },
       memberMaxDuration: {
         type: 'number',
@@ -129,14 +137,6 @@ export const configDescription: ConfigType[] = [
       memberMaxBookingHorizon: {
         type: 'number',
         default: 365,
-      },
-      guestMaxDuration: {
-        type: 'number',
-        default: 31,
-      },
-      guestMaxBookingHorizon: {
-        type: 'number',
-        default: 90,
       },
       discountsDaily: {
         type: 'number',
@@ -181,6 +181,10 @@ export const configDescription: ConfigType[] = [
       pickUpEnabled: {
         type: 'boolean',
         default: false,
+      },
+      chatLink: {
+        type: 'text',
+        default: '',
       },
     },
   },
@@ -408,6 +412,14 @@ export const configDescription: ConfigType[] = [
         type: 'text',
         default: 'https://twitter.com/traditionaldreamfactory',
       },
+      telegramUrl: {
+        type: 'text',
+        default: '',
+      },
+      discordUrl: {
+        type: 'text',
+        default: '',
+      },
       locationLat: {
         type: 'text',
         default: '38.003164469592555',
@@ -540,6 +552,19 @@ export const configDescription: ConfigType[] = [
       time: {
         type: 'time',
         default: '10:00',
+      },
+    },
+  },
+  {
+    slug: 'newsletter',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: true,
+      },
+      substackUrl: {
+        type: 'text',
+        default: '',
       },
     },
   },

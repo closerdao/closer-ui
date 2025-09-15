@@ -1,0 +1,54 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+<productRequirements>
+The project exists to help offline communities to: 
+- manage their accommodations and bookings
+- manage volunteers and residents
+- allow web3 token sales and token bookings
+- manage events
+- manage a blog
+- manage subscriptions
+IMPORTANT: to understand the project holistically, look into docs.md file in the root dir
+</productRequirements>
+
+<technical>
+Project stack:
+- NextJS 12 with "pages" directory
+- Tailwind
+- Firebase auth (including Google login)
+- Yarn
+- Vercel
+- Turborepo with several apps
+- Stripe
+</technical>
+
+<codingGuide>
+- When asked to remove something - remove it completely, do not comment it
+- Name component files with camel case
+- You can read but not write .env file
+- Reuse existing ts types and interfaces. Save new types to relevant files in "types" dir, don't use inline except for component Props interface. When updating existing components, refactor to adhere to this principle
+- When styling elements, adhere to existing style system colors defined in tailwind.config.ts
+- When adding flex-col elements, prefer setting gap, rather than setting individual Y margin
+- IMPORTANT: Never add any comments, except for very rare cases when they bring great value in explaining the piece of code
+- Use .prettierrc.cjs, .eslintrc.json, eslint.config.mjs for linting rules to avoid extra edits 
+- Anticipate possible typescript errors
+- IMPORTANT: we import reusable pages, components, and other logic from /packages/closer dir and use in each app dir
+- We add app specific logic and ui in respective app folders
+- When adding next-intl t-strings, add transaltions to all available dictionaries (EN, PT)
+</codingGuide>
+
+<projectStructure>
+    /apps - dir with Turborepo apps
+    /packages/closer/utils - dir with util functions
+    /packages/closer/pages - NextJS pages dir
+    /packages/closer/components - add all components here. This dir has subdirs where components are grouped by feature
+    /packages/closer/models - mongoDB models
+    /packages/closer/context - global context - AuthProvider, etc.
+    /hooks - custom hooks
+    /packages/closer/constants - project wide constants
+    /packages/closer/types - ts types
+    /packages/closer/scripts - debugging and service scripts
+</projectStructure>

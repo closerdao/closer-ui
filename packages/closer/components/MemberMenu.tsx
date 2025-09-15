@@ -53,7 +53,7 @@ const MemberMenu = () => {
         label: 'General',
         isOpen: true,
         items: [
-          ...(APP_NAME && APP_NAME.toLowerCase() === 'earthbound'
+          ...(APP_NAME && APP_NAME?.toLowerCase() === 'earthbound'
             ? [
                 {
                   label: t('header_nav_home'),
@@ -77,19 +77,34 @@ const MemberMenu = () => {
                   enabled: true,
                   rbacPage: 'Community',
                 },
+                {
+                  label: t('header_nav_events'),
+                  url: '/pages/events',
+                  enabled: true,
+                  rbacPage: 'Events',
+                },
               ]
             : []),
           {
             label: 'Invest',
             url: '/dataroom',
-            enabled: true,
-            rbacPage: 'Dataroom',
+            enabled: APP_NAME?.toLowerCase() === 'tdf',
           },
           {
             label: 'Learn about the $TDF token',
             url: '/token',
             enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
-            rbacPage: 'Token',
+          },
+          {
+            label: 'Become a Citizen',
+            url: '/citizenship',
+            enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && APP_NAME?.toLowerCase() === 'tdf',
+          },
+          {
+            label: t('navigation_work_with_us'),
+            url: '/roles',
+            enabled: process.env.NEXT_PUBLIC_FEATURE_ROLES === 'true',
+            rbacPage: 'Roles',
           },
         ],
       },
@@ -113,7 +128,7 @@ const MemberMenu = () => {
           {
             label: t('navigation_residence'),
             url: '/projects',
-            enabled: isVolunteeringEnabled && APP_NAME.toLowerCase() === 'tdf',
+            enabled: isVolunteeringEnabled && APP_NAME?.toLowerCase() === 'tdf',
             rbacPage: 'Residence',
           },
         ],
@@ -141,7 +156,10 @@ const MemberMenu = () => {
           {
             label: t('navigation_events'),
             url: '/events',
-            enabled: APP_NAME.toLowerCase() !== 'lios' && APP_NAME.toLowerCase() !== 'earthbound' && APP_NAME.toLowerCase() !== 'closer' ,
+            enabled:
+              APP_NAME?.toLowerCase() !== 'lios' &&
+              APP_NAME?.toLowerCase() !== 'earthbound' &&
+              APP_NAME?.toLowerCase() !== 'closer',
             rbacPage: 'Events',
           },
         ],
@@ -202,6 +220,13 @@ const MemberMenu = () => {
             roles: ['member'],
             rbacPage: 'Governance',
           },
+          {
+            label: t('navigation_token_sales'),
+            url: '/dashboard/token-sales',
+            enabled: true,
+            roles: ['admin'],
+            rbacPage: 'TokenSales',
+          },
         ],
       },
     ];
@@ -260,6 +285,12 @@ const MemberMenu = () => {
             enabled: isBookingEnabled,
             rbacPage: 'MyBookings',
           },
+          {
+            label: t('navigation_book_friend'),
+            url: '/bookings/friends',
+            enabled: isBookingEnabled,
+            rbacPage: 'FriendsBooking',
+          },
         ],
       });
     }
@@ -289,10 +320,10 @@ const MemberMenu = () => {
           label: t('navigation_faq'),
           url: '/resources',
           enabled:
-            APP_NAME.toLowerCase() !== 'lios' &&
+            APP_NAME?.toLowerCase() !== 'lios' &&
             APP_NAME !== 'foz' &&
             APP_NAME !== 'earthbound' &&
-            APP_NAME.toLowerCase() !== 'closer',
+            APP_NAME?.toLowerCase() !== 'closer',
           rbacPage: 'Resources',
         },
       ],

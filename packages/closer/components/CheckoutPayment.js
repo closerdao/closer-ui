@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
 
 import { useState } from 'react';
+import { useContext } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
@@ -14,12 +15,17 @@ import { useConfig } from '../hooks/useConfig';
 import api from '../utils/api';
 import { payTokens } from '../utils/booking.helpers';
 import { parseMessageFromError } from '../utils/common';
+import { reportIssue } from '../utils/reporting.utils';
 import CheckoutForm from './CheckoutForm';
 import Conditions from './Conditions';
 import { ErrorMessage } from './ui';
+import Checkbox from './ui/Checkbox';
 import HeadingRow from './ui/HeadingRow';
+import { WalletState } from '../contexts/wallet';
 
-const stripe = loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY);
+const stripe = loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY, {
+  stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
+});
 
 const CheckoutPayment = ({
   partialPriceInCredits,
@@ -36,13 +42,24 @@ const CheckoutPayment = ({
   user,
   eventId,
   cancellationPolicy,
+  status,
+  shouldShowTokenDisclaimer,
+  hasAgreedToWalletDisclaimer,
+  setWalletDisclaimer,
+  refetchBooking,
+  isAdditionalFiatPayment,
 }) => {
   const t = useTranslations();
 
   const { VISITORS_GUIDE } = useConfig() || {};
 
   if (!process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) {
-    throw new Error('stripe key is undefined');
+    const error = 'Stripe key is undefined';
+    reportIssue(
+      `STRIPE_CONFIGURATION_ERROR: bookingId=${bookingId}, error=${error}`,
+      user?.email,
+    );
+    throw new Error(error);
   }
 
   const bookingYear = dayjs(startDate).year();
@@ -56,9 +73,18 @@ const CheckoutPayment = ({
     bookingYear,
     bookingStartDayOfYear + i,
   ]);
-  const { isStaking } = useBookingSmartContract({
+  const { isStaking, stakeTokens, checkContract } = useBookingSmartContract({
     bookingNights,
   });
+
+  const {
+    balanceTotal,
+    balanceAvailable,
+    hasSameConnectedAccount,
+    isWalletConnected,
+    isCorrectNetwork,
+    balanceCeloAvailable,
+  } = useContext(WalletState);
 
   const router = useRouter();
   const [hasComplied, setCompliance] = useState(false);
@@ -67,11 +93,22 @@ const CheckoutPayment = ({
   const onComply = (isComplete) => setCompliance(isComplete);
 
   const onSuccess = () => {
-    router.push(
-      `/bookings/${bookingId}/confirmation${
-        eventId ? `?eventId=${eventId}` : ''
-      }`,
-    );
+    try {
+      router.push(
+        `/bookings/${bookingId}/confirmation${
+          eventId ? `?eventId=${eventId}` : ''
+        }`,
+      );
+    } catch (error) {
+      reportIssue(
+        `NAVIGATION_ERROR: bookingId=${bookingId}, error=${JSON.stringify(
+          error,
+        )}, eventId=${eventId}, path=/bookings/${bookingId}/confirmation${
+          eventId ? `?eventId=${eventId}` : ''
+        }`,
+        user?.email,
+      );
+    }
   };
 
   const payWithCredits = async () => {
@@ -85,7 +122,62 @@ const CheckoutPayment = ({
       });
       return res;
     } catch (error) {
-      setError(parseMessageFromError(error));
+      const errorMessage = parseMessageFromError(error);
+      setError(errorMessage);
+      await reportIssue(
+        `CREDIT_PAYMENT_ERROR: bookingId=${bookingId}, error=${errorMessage}, creditsAmount=${
+          isPartialCreditsPayment ? partialPriceInCredits : rentalToken
+        }, startDate=${startDate}`,
+        user?.email,
+      );
+    }
+  };
+
+  const payTokensWithStatus = async (
+    bookingId,
+    dailyTokenValue,
+    stakeTokens,
+    checkContract,
+  ) => {
+    try {
+      const result = await payTokens(
+        bookingId,
+        dailyTokenValue,
+        stakeTokens,
+        checkContract,
+        user?.email,
+        status,
+      );
+
+      if (result?.error) {
+        await reportIssue(
+          `TOKEN PAYMENT ERROR:
+          BOOKING ID=${bookingId}, 
+          TOKEN PRICE=${rentalToken?.val},
+          TDF BALANCE TOTAL=${balanceTotal},
+          TDF BALANCE AVAILABLE=${balanceAvailable},
+          USER EMAIL=${user?.email},
+          HAS SAME CONNECTED ACCOUNT=${hasSameConnectedAccount},
+          IS WALLET CONNECTED=${isWalletConnected},
+          IS CORRECT NETWORK=${isCorrectNetwork},
+          BALANCE CELO AVAILABLE=${balanceCeloAvailable},
+          bookingId=${bookingId}, 
+          DAILY TOKEN VALUE=${dailyTokenValue}, 
+          STATUS=${status},
+          ERROR=${result.error}
+          `,
+          user?.email,
+        );
+      }
+
+      return result;
+    } catch (error) {
+      const errorMessage = parseMessageFromError(error);
+      await reportIssue(
+        `TOKEN_PAYMENT_EXCEPTION: bookingId=${bookingId}, error=${errorMessage}, dailyTokenValue=${dailyTokenValue}, status=${status}`,
+        user?.email,
+      );
+      throw error;
     }
   };
 
@@ -108,7 +200,7 @@ const CheckoutPayment = ({
           submitButtonClassName="booking-btn mt-8"
           cardElementClassName="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-4"
           buttonDisabled={buttonDisabled}
-          prePayInTokens={useTokens && payTokens}
+          prePayInTokens={useTokens && payTokensWithStatus}
           useCredits={useCredits}
           payWithCredits={payWithCredits}
           isProcessingTokenPayment={isStaking}
@@ -117,8 +209,25 @@ const CheckoutPayment = ({
           hasComplied={hasComplied}
           dailyTokenValue={dailyTokenValue}
           bookingNights={bookingNights}
+          status={status}
+          refetchBooking={refetchBooking}
+          isAdditionalFiatPayment={isAdditionalFiatPayment}
+          stakeTokens={stakeTokens}
+          checkContract={checkContract}
         >
-          <Conditions cancellationPolicy={cancellationPolicy} setComply={onComply} visitorsGuide={VISITORS_GUIDE} />
+          <Conditions
+            cancellationPolicy={cancellationPolicy}
+            setComply={onComply}
+            visitorsGuide={VISITORS_GUIDE}
+          />
+          {shouldShowTokenDisclaimer && (
+            <Checkbox
+              isChecked={hasAgreedToWalletDisclaimer}
+              onChange={() => setWalletDisclaimer(!hasAgreedToWalletDisclaimer)}
+            >
+              <p>{t('bookings_checkout_step_wallet_disclaimer')}</p>
+            </Checkbox>
+          )}
         </CheckoutForm>
       </Elements>
     </div>
@@ -133,6 +242,7 @@ CheckoutPayment.propTypes = {
   dailyTokenValue: PropTypes.number.isRequired,
   start: PropTypes.string,
   totalNights: PropTypes.number.isRequired,
+  refetchBooking: PropTypes.func,
 };
 
 export default CheckoutPayment;

@@ -13,6 +13,7 @@ interface Props {
   _id: string;
   status: string;
   createdBy: string;
+  paidBy?: string;
   confirmBooking: () => void;
   start: string | Date;
   end: string | Date;
@@ -24,6 +25,7 @@ const BookingRequestButtons = ({
   _id,
   status,
   createdBy,
+  paidBy,
   start,
   end,
   confirmBooking,
@@ -34,8 +36,10 @@ const BookingRequestButtons = ({
   const { user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
 
+  const isOwnBooking = user?._id === createdBy || user?._id === paidBy;
+
   const isBookingCancelable =
-    (createdBy === user?._id || isSpaceHost) &&
+    (isOwnBooking || isSpaceHost) &&
     (status === 'open' ||
       status === 'pending' ||
       status === 'confirmed' ||
@@ -45,9 +49,10 @@ const BookingRequestButtons = ({
 
   return (
     <div className="mt-4 flex flex-col gap-4">
+
       {/* Hide buttons if start date is in the past: */}
-      {new Date(start) > new Date() && (
-        <>
+
+
           {/* TODO: add links for checked in and checked out guests */}
           {/* {status === 'checked-in' && (
             <Link passHref href="">
@@ -70,38 +75,53 @@ const BookingRequestButtons = ({
               </Button>
             </Link>
           )}
-          {status === 'confirmed' && user && user._id === createdBy && (
+          {status === 'confirmed' && user && isOwnBooking && (
             <Link passHref href={`/bookings/${_id}/checkout`}>
               <Button variant="secondary">
                 💰 {t('booking_card_checkout_button')}
               </Button>
             </Link>
           )}
-          {status === 'pending-payment' && user && user._id === createdBy && (
+
+          
+
+          {status === 'tokens-staked' && user && isOwnBooking && (
             <Link passHref href={`/bookings/${_id}/checkout`}>
               <Button variant="secondary">
                 💰 {t('booking_card_checkout_button')}
               </Button>
             </Link>
           )}
-          {user &&
-            isBookingCancelable &&
-            user._id === createdBy &&
-            !isSpaceHost && (
-              <Link passHref href={`/bookings/${_id}/cancel`}>
-                <Button variant="secondary" className="  uppercase">
-                  ⭕ {t('booking_cancel_button')}
-                </Button>
-              </Link>
-            )}
-        </>
+          {status === 'credits-paid' && user && isOwnBooking && (
+            <Link passHref href={`/bookings/${_id}/checkout`}>
+              <Button variant="secondary">
+                💰 {t('booking_card_checkout_button')}
+              </Button>
+            </Link>
+          )}
+          {status === 'pending-payment' && user && isOwnBooking && (
+            <Link passHref href={`/bookings/${_id}/checkout`}>
+              <Button variant="secondary">
+                💰 {t('booking_card_checkout_button')}
+              </Button>
+            </Link>
+          )}
+          {user && isBookingCancelable && isOwnBooking && !isSpaceHost && (
+            <Link passHref href={`/bookings/${_id}/cancel`}>
+              <Button variant="secondary" className="  uppercase">
+                ⭕ {t('booking_cancel_button')}
+              </Button>
+            </Link>
+          )}
+
+
+
+
+      {isSpaceHost && Boolean(user && isBookingCancelable && isOwnBooking) && (
+        <Link passHref href={`/bookings/${_id}/cancel`}>
+          <Button variant="secondary">⭕ {t('booking_cancel_button')}</Button>
+        </Link>
       )}
-      {isSpaceHost &&
-        Boolean(user && isBookingCancelable && user._id === createdBy) && (
-          <Link passHref href={`/bookings/${_id}/cancel`}>
-            <Button variant="secondary">⭕ {t('booking_cancel_button')}</Button>
-          </Link>
-        )}
       {user && user.roles.includes('space-host') && (
         <>
           {status === 'pending' && (

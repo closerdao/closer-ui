@@ -21,6 +21,7 @@ const EventsList = ({
   limit,
   showPagination,
   cols,
+  sort_by='-created',
 }) => {
   const t = useTranslations();
   const { platform } = usePlatform();
@@ -28,7 +29,7 @@ const EventsList = ({
   const [page, setPage] = useState(1);
 
   const eventsFilter = useMemo(
-    () => ({ where, limit, page }),
+    () => ({ where, limit, page, sort_by }),
     [where, limit, page],
   );
   const events = platform.event.find(eventsFilter);

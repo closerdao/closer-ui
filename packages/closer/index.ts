@@ -1,5 +1,6 @@
 // Components
 export { default as CreateVolunteerView } from './components/CreateVolunteerView/';
+export { default as CreateRoleView } from './components/CreateRoleView/';
 export { default as CustomSectionComponent } from './components/custom-pages/CustomSectionComponent';
 export { default as CustomSections } from './components/custom-pages/CustomSections';
 export { default as EventPreview } from './components/EventPreview';
@@ -29,6 +30,7 @@ export { default as ProgressBar } from './components/ui/ProgressBar';
 export { default as Row } from './components/ui/Row';
 export { default as Spinner } from './components/ui/Spinner';
 export { default as UploadPhoto } from './components/UploadPhoto/UploadPhoto';
+export { default as PhotoEditor } from './components/PhotoEditor';
 export { default as VolunteerEventView } from './components/VolunteerEventView/';
 export { default as YoutubeEmbed } from './components/YoutubeEmbed';
 
@@ -73,6 +75,7 @@ export { default as CurrentBookingsPage } from './pages/bookings/current';
 export { default as EditBookingPage } from './pages/bookings/edit/[slug]';
 export { default as BookingsPage } from './pages/bookings/index';
 export { default as BookingsRequestsPage } from './pages/bookings/requests';
+export { default as FriendsBookingPage } from './pages/bookings/friends';
 export { default as ChannelPage } from './pages/channel/[channel]';
 export { default as CreateChannelPage } from './pages/channel/create';
 export { default as CommunityPage } from './pages/community';
@@ -150,6 +153,11 @@ export { default as VolunteerPage } from './pages/volunteer/[slug]/';
 export { default as EditVolunteerOportunity } from './pages/volunteer/[slug]/edit';
 export { default as VolunteerApplicationPage } from './pages/volunteer/apply';
 export { default as CreateVolunteerOportunity } from './pages/volunteer/create';
+export { default as RolesPage } from './pages/roles/';
+export { default as CreateRole } from './pages/roles/create';
+export { default as EditRole } from './pages/roles/[id]/edit';
+export { default as TokenSalesDashboardPage } from './pages/dashboard/token-sales';
+export { default as CitizenWhyPage } from './pages/subscriptions/citizen/why';
 // Types
 export * from './types/';
 // Utils

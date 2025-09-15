@@ -22,6 +22,7 @@ const Navigation = () => {
 
   console.log('APP_NAME', APP_NAME);
   const { isAuthenticated, user } = useAuth();
+  const isMember = user?.roles?.includes('member');
 
   const [navOpen, setNavOpen] = useState(false);
   const [isBookingEnabled, setIsBookingEnabled] = useState(false);
@@ -65,6 +66,28 @@ const Navigation = () => {
     };
   }, [router]);
 
+  useEffect(() => {
+    const updateActivity = async () => {
+      try {
+        if (isAuthenticated) {
+          await api.post('/update-activity');
+        }
+      } catch (error) {
+        // Silently fail - non-blocking
+        console.debug('Activity update failed:', error);
+      }
+    };
+
+    // Call immediately on mount
+    updateActivity();
+
+    // Set up interval for every 5 minutes
+    const interval = setInterval(updateActivity, 5 * 60 * 1000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
+
   return (
     <div className="NavContainer h-20 md:pt-0 top-0 left-0 right-0 fixed z-20 bg-dominant shadow">
       <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
@@ -77,7 +100,7 @@ const Navigation = () => {
               : 'w-auto justify-center'
           } flex gap-2  items-center `}
         >
-          {APP_NAME && APP_NAME.toLowerCase() === 'earthbound' && (
+          {APP_NAME && APP_NAME?.toLowerCase() === 'earthbound' && (
             <div className="flex gap-3 items-center">
               <ul className="gap-4 hidden sm:flex">
                 <li>
@@ -94,7 +117,11 @@ const Navigation = () => {
                     {t('header_nav_community')}
                   </Link>
                 </li>
-           
+                <li>
+                  <Link href="/pages/events">
+                    {t('header_nav_events')}
+                  </Link>
+                </li>
               </ul>
               <Button
                 size="small"
@@ -105,7 +132,7 @@ const Navigation = () => {
               </Button>
             </div>
           )}
-          {APP_NAME && APP_NAME.toLowerCase() === 'closer' && (
+          {APP_NAME && APP_NAME?.toLowerCase() === 'closer' && (
             <div className="flex gap-3 items-center  w-full justify-between">
               <div className="w-full flex justify-center">
                 <ul className="gap-4 text-sm md:text-md hidden md:flex font-medium">
@@ -125,6 +152,13 @@ const Navigation = () => {
                   <li>
                     <Link href="/#pricing">{t('header_nav_pricing')}</Link>
                   </li>
+                  {process.env.NEXT_PUBLIC_FEATURE_ROLES === 'true' && (
+                    <li>
+                      <Link href="/roles">
+                        {t('header_nav_work_with_us')}
+                      </Link>
+                    </li>
+                  )}
                   <li>
                     <Link
                       href="https://closer.gitbook.io/documentation"
@@ -177,9 +211,9 @@ const Navigation = () => {
           ) : null}
           {!isAuthenticated &&
             APP_NAME &&
-            (APP_NAME.toLowerCase() === 'moos' ||
-              APP_NAME.toLowerCase() === 'lios' ||
-              APP_NAME.toLowerCase() === 'foz') && (
+            (APP_NAME?.toLowerCase() === 'moos' ||
+              APP_NAME?.toLowerCase() === 'lios' ||
+              APP_NAME?.toLowerCase() === 'foz') && (
               <Button
                 onClick={() => router.push('/login')}
                 size="small"
@@ -193,9 +227,9 @@ const Navigation = () => {
             )}
           {isAuthenticated &&
             APP_NAME &&
-            (APP_NAME.toLowerCase() === 'moos' ||
-              APP_NAME.toLowerCase() === 'foz' ||
-              APP_NAME.toLowerCase() === 'per-auset') && (
+            (APP_NAME?.toLowerCase() === 'moos' ||
+              APP_NAME?.toLowerCase() === 'foz' ||
+              APP_NAME?.toLowerCase() === 'per-auset') && (
               <Button
                 onClick={() => router.push('/stay')}
                 size="small"
@@ -207,25 +241,49 @@ const Navigation = () => {
                 {t('navigation_stay')}
               </Button>
             )}
-          {isAuthenticated && APP_NAME && APP_NAME.toLowerCase() === 'lios' && (
-            <Button
-              onClick={() => router.push('/learn/category/all')}
-              size="small"
-              variant="primary"
-            >
-              {t('navigation_see_courses')}
-            </Button>
-          )}
+          {isAuthenticated &&
+            APP_NAME &&
+            APP_NAME?.toLowerCase() === 'lios' && (
+              <Button
+                onClick={() => router.push('/learn/category/all')}
+                size="small"
+                variant="primary"
+              >
+                {t('navigation_see_courses')}
+              </Button>
+            )}
 
-          {isBookingEnabled && APP_NAME && APP_NAME.toLowerCase() === 'tdf' && (
-            <Button
-              onClick={() => router.push('/stay')}
-              size="small"
-              variant="primary"
-            >
-              {t('navigation_stay')}
-            </Button>
-          )}
+          {isBookingEnabled &&
+            APP_NAME &&
+            APP_NAME?.toLowerCase() === 'tdf' && (
+              <>
+                {!isAuthenticated ? (
+                  <Button
+                    onClick={() => router.push('/signup')}
+                    size="small"
+                    variant="primary"
+                  >
+                    {t('navigation_join_now')}
+                  </Button>
+                ) : !isMember ? (
+                  <Button
+                    onClick={() => router.push('/events')}
+                    size="small"
+                    variant="primary"
+                  >
+                    {t('navigation_come_visit')}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => router.push('/bookings/create/dates')}
+                    size="small"
+                    variant="primary"
+                  >
+                    {t('navigation_stay')}
+                  </Button>
+                )}
+              </>
+            )}
 
           {isAuthenticated && (
             <Link

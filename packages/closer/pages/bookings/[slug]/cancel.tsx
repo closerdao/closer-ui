@@ -102,7 +102,8 @@ const BookingCancelPage = ({ booking, bookingConfig, error }: Props) => {
       {isCancelCompleted ? (
         <CancelCompleted />
       ) : (
-        <CancelBooking
+          <CancelBooking
+            bookingStatus={booking?.status}
           bookingId={bookingId as string}
           policy={policy}
           isMember={isMember || false}

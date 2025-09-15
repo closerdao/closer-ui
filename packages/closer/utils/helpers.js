@@ -114,7 +114,8 @@ export const priceFormat = (price, currency = DEFAULT_CURRENCY) => {
         currency: BLOCKCHAIN_DAO_TOKEN.symbol,
       })
         .formatToParts(priceValue)
-        .map((v, i) => (i === 0 ? '$' + v.value : v.value));
+        .map((v, i) => (i === 0 ? '$' + v.value : v.value))
+        .join('');
     }
     return priceValue.toLocaleString('en-US', {
       style: 'currency',
@@ -164,6 +165,7 @@ export const getSample = (field) => {
     case 'switch':
       return false;
     case 'datetime':
+    case 'photo':
       return null;
     case 'ticketOptions':
       return [
@@ -355,6 +357,35 @@ export const isInputValid = (value, validation) => {
   return doesRegexMatch(value, validation);
 };
 
+export const validatePassword = (password) => {
+  if (!password || typeof password !== 'string') {
+    return { isValid: false, error: 'Password must be a string' };
+  }
+
+  if (password.length < 5) {
+    return {
+      isValid: false,
+      error: 'Password must be at least 5 characters long',
+    };
+  }
+
+  if (!/\d/.test(password)) {
+    return {
+      isValid: false,
+      error: 'Password must contain at least one number (0-9)',
+    };
+  }
+
+  if (!/[a-zA-Z]/.test(password)) {
+    return {
+      isValid: false,
+      error: 'Password must contain at least one letter (a-z or A-Z)',
+    };
+  }
+
+  return { isValid: true, error: null };
+};
+
 export const doesAddressMatchPattern = (value, validation) => {
   return doesRegexMatch(value, validation);
 };
@@ -427,7 +458,7 @@ export const getMaxBookingHorizon = (settings, isMember) => {
     if (isMember) {
       return [settings.memberMaxBookingHorizon, settings.memberMaxDuration];
     }
-    return [settings.guestMaxBookingHorizon, settings.guestMaxDuration];
+    return [settings.maxBookingHorizon, settings.maxDuration];
   }
   return [0, 0];
 };
@@ -493,9 +524,7 @@ export function withBoldStyle(phrase, boldPart) {
   if (startIndex === -1) {
     return phrase;
   }
-  return [
-    preBold,
-    <b key="mid">{bold}</b>,
-    postBold,
-  ].filter(part => part !== '');
+  return [preBold, <b key="mid">{bold}</b>, postBold].filter(
+    (part) => part !== '',
+  );
 }

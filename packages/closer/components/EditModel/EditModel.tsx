@@ -5,7 +5,7 @@ import objectPath from 'object-path';
 
 import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
-import { parseMessageFromError } from '../../utils/common';
+import { parseMessageFromError, slugify } from '../../utils/common';
 import { getSample } from '../../utils/helpers';
 import { trackEvent } from '../Analytics';
 import DateTimePicker from '../DateTimePicker';
@@ -51,6 +51,8 @@ interface Props {
     name: string;
     options: any[];
   };
+  transformDataBeforeSave?: (data: any) => any;
+  timeZone?: string;
 }
 
 const EditModel: FC<Props> = ({
@@ -66,6 +68,8 @@ const EditModel: FC<Props> = ({
   deleteButton,
   isPublic,
   dynamicField,
+  transformDataBeforeSave,
+  timeZone,
 }) => {
   const t = useTranslations();
   const { isAuthenticated, user } = useAuth();
@@ -84,6 +88,25 @@ const EditModel: FC<Props> = ({
   const [startDate, setStartDate] = useState<string | null | Date>(data.start);
   const [endDate, setEndDate] = useState<string | null | Date>(data.end);
   const [isLoading, setIsLoading] = useState(false);
+  // Check if the model has a slug field
+  const hasSlugField = fields.some((field) => field.name === 'slug');
+
+  // Generate slug from title/name for models with slug fields
+  const generateSlug = (titleOrName: string) => {
+    if (
+      !titleOrName ||
+      typeof titleOrName !== 'string' ||
+      titleOrName.trim().length === 0
+    )
+      return '';
+    return slugify(titleOrName.trim());
+  };
+
+  // Get the title/name field value for slug generation
+  const getTitleValue = () => {
+    const value = data.title || data.name || '';
+    return value && value.trim() ? value : '';
+  };
 
   useEffect(() => {
     setData({ ...data, start: startDate, end: endDate });
@@ -141,12 +164,18 @@ const EditModel: FC<Props> = ({
     setErrors(null);
     try {
       validate(updatedData);
+
+      // Transform data before saving if transformDataBeforeSave is provided
+      const dataToSave = transformDataBeforeSave
+        ? transformDataBeforeSave(updatedData)
+        : updatedData;
+
       const method = id ? 'patch' : 'post';
       const route = id ? `${endpoint}/${id}` : endpoint;
       trackEvent(`EditModel:${endpoint}:${id ? id : 'new'}`, method);
       const {
         data: { results: savedData },
-      } = await api[method](route, updatedData);
+      } = await api[method](route, dataToSave);
       if (onSave) {
         onSave(savedData);
       }
@@ -215,6 +244,18 @@ const EditModel: FC<Props> = ({
     }
   }, [endpoint, id, initialData, fields]);
 
+  // Auto-generate slug on each character typed in title field
+  useEffect(() => {
+    const titleValue = getTitleValue();
+
+    if (hasSlugField && titleValue && titleValue.length > 0) {
+      const newSlug = generateSlug(titleValue);
+      if (newSlug && newSlug !== data.slug) {
+        update('slug', newSlug);
+      }
+    }
+  }, [data.title, data.name, hasSlugField]);
+
   if (!isPublic && !isAuthenticated) {
     return (
       <div className="validation-error card">
@@ -254,7 +295,9 @@ const EditModel: FC<Props> = ({
               title: key,
               value: key,
               datePicker:
-                endpoint !== '/listing' && endpoint !== '/food' && endpoint !== '/lesson' ? (
+                endpoint !== '/listing' &&
+                endpoint !== '/food' &&
+                endpoint !== '/lesson' ? (
                   <DateTimePicker
                     setStartDate={setStartDate}
                     setEndDate={setEndDate}
@@ -262,31 +305,38 @@ const EditModel: FC<Props> = ({
                     savedStartDate={data.start && data.start}
                     savedEndDate={data.end && data.end}
                     defaultMonth={new Date()}
+                    timeZone={timeZone}
                   />
                 ) : null,
-              content: filterFields(fieldsByTab[key], data).map((field) => (
-                <FormField
-                  dynamicField={dynamicField}
-                  {...field}
-                  key={field.name}
-                  data={data}
-                  update={update}
-                />
-              )),
+              content: (
+                <>
+                  {filterFields(fieldsByTab[key], data).map((field) => (
+                    <FormField
+                      dynamicField={dynamicField}
+                      {...field}
+                      key={field.name}
+                      data={data}
+                      update={update}
+                    />
+                  ))}
+                </>
+              ),
             }))}
           />
         ) : (
-          fields &&
-          filterFields(fields, data).map((field) => (
-            <FormField
-              {...field}
-              dynamicField={dynamicField}
-              key={field.name}
-              data={data}
-              update={update}
-              step={field.step || 1}
-            />
-          ))
+          <>
+            {fields &&
+              filterFields(fields, data).map((field) => (
+                <FormField
+                  {...field}
+                  dynamicField={dynamicField}
+                  key={field.name}
+                  data={data}
+                  update={update}
+                  step={field.step || 1}
+                />
+              ))}
+          </>
         )}
 
         {(endpoint === '/volunteer' || endpoint === '/projects') && (
@@ -298,11 +348,12 @@ const EditModel: FC<Props> = ({
               savedStartDate={data.start}
               savedEndDate={data.end}
               defaultMonth={new Date()}
+              timeZone={timeZone}
             />
           </div>
         )}
 
-        <div className="py-6 flex items-center gap-4" >
+        <div className="py-6 flex items-center gap-4">
           <button type="submit" className="btn-primary">
             <div className="flex gap-2 items-center">
               {isLoading && <Spinner />}
@@ -311,7 +362,6 @@ const EditModel: FC<Props> = ({
           </button>
           {allowDelete && (
             <Button
-
               className="bg-red-600 text-white w-fit border-red-600"
               onClick={(e) => {
                 e.preventDefault();

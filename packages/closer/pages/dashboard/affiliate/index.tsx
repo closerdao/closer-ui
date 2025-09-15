@@ -17,6 +17,7 @@ import { useTranslations } from 'next-intl';
 import process from 'process';
 
 import { useAuth } from '../../../contexts/auth';
+import { usePlatform } from '../../../contexts/platform';
 import PageNotAllowed from '../../../pages/401';
 import { BookingConfig } from '../../../types/api';
 import api from '../../../utils/api';
@@ -30,6 +31,7 @@ const AffiliateDashboardPage = ({
 }) => {
   const t = useTranslations();
   const { user } = useAuth();
+  const { platform }: any = usePlatform();
 
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -44,6 +46,23 @@ const AffiliateDashboardPage = ({
   const [isSuccess, setIsSuccess] = useState(false);
   const [selectedAffiliate, setSelectedAffiliate] = useState<any>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const affiliateFilter = { where: { affiliate: { $ne: null, $exists: true } } };
+  const affiliateCount = platform.user.findCount(affiliateFilter);
+
+  const affiliatePageViewFilter = { 
+    where: { 
+      event: 'affiliate-page-view'
+    } 
+  };
+  const affiliateLinkGeneratedFilter = { 
+    where: { 
+      event: 'affiliate-link-generated'
+    } 
+  };
+
+  const affiliatePageViewCount = platform.metric.findCount(affiliatePageViewFilter) || 0;
+  const affiliateLinkGeneratedCount = platform.metric.findCount(affiliateLinkGeneratedFilter) || 0;
 
   const totalRevenue = data?.affiliateData?.reduce(
     (acc: number, curr: any) => acc + curr.totalRevenue,
@@ -82,15 +101,27 @@ const AffiliateDashboardPage = ({
   useEffect(() => {
     if (user) {
       (async () => {
-        const affiliateDataRes = await api.get('/charges/affiliate');
-        const { affiliateData, payoutData } = affiliateDataRes.data.results;
+        try {
+          const affiliateDataRes = await api.get('/charges/affiliate');
+          const { affiliateData, payoutData } = affiliateDataRes.data.results;
 
-        setData({ affiliateData, payoutData });
+          setData({ affiliateData, payoutData });
+        } catch (error) {
+          setError(parseMessageFromError(error));
+        }
       })();
     }
   }, [user]);
 
-  if (!user?.roles.includes('admin')) {
+  useEffect(() => {
+    if (platform) {
+      platform.user.getCount(affiliateFilter);
+      platform.metric.getCount(affiliatePageViewFilter);
+      platform.metric.getCount(affiliateLinkGeneratedFilter);
+    }
+  }, [platform, affiliateFilter, affiliatePageViewFilter, affiliateLinkGeneratedFilter]);
+
+  if (!user?.roles.includes('admin') && !user?.roles.includes('affiliate-manager')) {
     return <PageNotAllowed />;
   }
 
@@ -105,10 +136,10 @@ const AffiliateDashboardPage = ({
 
           <section>
             {error && <ErrorMessage error={error} />}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
               <StatsCard
                 title={t('affiliate_dashboard_num_affiliates')}
-                value={data?.affiliateData?.length || 0}
+                value={affiliateCount || 0}
               />
               <StatsCard
                 title={t('affiliate_dashboard_total_revenue')}
@@ -117,6 +148,14 @@ const AffiliateDashboardPage = ({
               <StatsCard
                 title={t('affiliate_dashboard_unpaid_balance')}
                 value={`€${totalUnpaidBalance?.toLocaleString() || '0'} `}
+              />
+              <StatsCard
+                title={t('affiliate_dashboard_page_views')}
+                value={affiliatePageViewCount || 0}
+              />
+              <StatsCard
+                title={t('affiliate_dashboard_links_generated')}
+                value={affiliateLinkGeneratedCount || 0}
               />
             </div>
           </section>

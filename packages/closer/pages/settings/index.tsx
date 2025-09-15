@@ -10,6 +10,7 @@ import Heading from '../../components/ui/Heading';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select/Dropdown';
 import MultiSelect from '../../components/ui/Select/MultiSelect';
+import { SHARED_ACCOMMODATION_PREFERENCES } from '../../constants/shared.constants';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -206,11 +207,7 @@ const DeleteAccountSection = ({ t }: DeleteAccountSectionProps) => {
   );
 };
 
-const SHARED_ACCOMODATION_PREFERENCES = [
-  { label: 'Flexible', value: 'flexible' },
-  { label: 'Male Only', value: 'male only' },
-  { label: 'Female Only', value: 'female only' },
-];
+
 
 const SettingsPage = ({
   volunteerConfig,
@@ -225,6 +222,7 @@ const SettingsPage = ({
   const dietOptions = volunteerConfig?.diet?.split(',') || [];
 
   const { user: initialUser, isAuthenticated, refetchUser } = useAuth();
+
   const initialDiet = Array.isArray(initialUser?.preferences?.diet)
     ? initialUser?.preferences?.diet
     : initialUser?.preferences?.diet?.split(',') || [];
@@ -300,15 +298,10 @@ const SettingsPage = ({
           },
         };
       }
-      // Logging for debugging
-      console.log('[saveUserData] attribute:', attribute);
-      console.log('[saveUserData] value:', value);
-      console.log('[saveUserData] payload:', payload);
-      console.log('[saveUserData] user?._id:', user?._id);
+     
       try {
         setHasSaved(false);
         const result = await platform.user.patch(user?._id, payload);
-        console.log('[saveUserData] patch result:', result);
         await refetchUser();
         setError(null);
         setHasSaved(true);
@@ -422,7 +415,7 @@ const SettingsPage = ({
                   </h3>
 
                   <Input
-                    label={t('settings_about_me')}
+                    label={t('settings_about_you')}
                     additionalInfo={
                       APP_NAME === 'moos'
                         ? t('settings_required_to_make_bookings')
@@ -610,11 +603,11 @@ const SettingsPage = ({
                     className="mb-4"
                   />
 
-                  {APP_NAME && APP_NAME.toLowerCase() !== 'moos' && (
+                  {APP_NAME && APP_NAME?.toLowerCase() !== 'moos' && (
                     <Select
                       label={t('settings_shared_accommodation_preference')}
                       value={user?.preferences?.sharedAccomodation}
-                      options={SHARED_ACCOMODATION_PREFERENCES}
+                      options={SHARED_ACCOMMODATION_PREFERENCES}
                       className="mb-4"
                       onChange={saveUserData('sharedAccomodation')}
                       isRequired

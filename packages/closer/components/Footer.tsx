@@ -7,11 +7,17 @@ import { SiInstagram } from '@react-icons/all-files/si/SiInstagram';
 import { SiTwitter } from '@react-icons/all-files/si/SiTwitter';
 import { useTranslations } from 'next-intl';
 
+import { useNewsletter } from '../contexts/newsletter';
 import { useConfig } from '../hooks/useConfig';
 import Newsletter from './Newsletter';
 
 const Footer: FC = () => {
   const t = useTranslations();
+
+  // Use newsletter context at top level - hooks must be called unconditionally
+  const newsletterContext = useNewsletter();
+  const hideFooterNewsletter = newsletterContext?.hideFooterNewsletter || false;
+
   // TODO: switch to per-page config fetching if we ever need this page
   const config = useConfig();
   const {
@@ -93,9 +99,11 @@ const Footer: FC = () => {
             </div>
           </div>
 
-          <div className='w-full flex justify-center'>
-            <Newsletter placement="Footer" />
-          </div>
+          {!hideFooterNewsletter && (
+            <div className="w-full flex justify-center">
+              <Newsletter placement="Footer" />
+            </div>
+          )}
         </div>
       </footer>
     </div>

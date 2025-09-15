@@ -45,6 +45,7 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
   const [tokenSaleType, setTokenSaleType] = useState<'fiat' | 'crypto'>(
     isFinanceTokenEnabled ? 'fiat' : 'crypto',
   );
+  const [isCalculationPending, setIsCalculationPending] = useState(false);
 
   const hasComponentRendered = useRef(false);
 
@@ -98,6 +99,9 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
     router.push('/token');
   };
 
+  // Check if the form is ready to proceed
+  const isFormReady = tokensToSpend > 0 && !isCalculationPending;
+
   if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
     return <PageNotFound />;
   }
@@ -130,6 +134,7 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
                 setTokensToBuy={setTokensToBuy}
                 tokensToSpend={tokensToSpend}
                 setTokensToSpend={setTokensToSpend}
+                setIsCalculationPending={setIsCalculationPending}
               />
             </fieldset>
             {/* <div className="flex flex-col gap-4">
@@ -140,7 +145,7 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
           </div>
 
           {isFinanceTokenEnabled && (
-            <div >
+            <div>
               <Heading level={3} hasBorder={true}>
                 💰 {t('token_sale_heading_how')}
               </Heading>
@@ -175,8 +180,14 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
             </div>
           )}
 
-          <Button className="mt-12" onClick={handleNext} isEnabled={Boolean(tokensToSpend)}>
-            {t('token_sale_button_continue')}
+          <Button
+            className="mt-12"
+            onClick={handleNext}
+            isEnabled={isFormReady}
+          >
+            {isCalculationPending
+              ? t('token_sale_button_calculating') || 'Calculating...'
+              : t('token_sale_button_continue')}
           </Button>
         </main>
       </div>
@@ -208,4 +219,3 @@ TokenSaleBeforeYouBeginPage.getInitialProps = async (
 };
 
 export default TokenSaleBeforeYouBeginPage;
-

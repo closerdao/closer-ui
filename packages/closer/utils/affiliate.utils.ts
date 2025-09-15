@@ -1,28 +1,26 @@
 import { DateRange } from '../types/affiliate';
 import { Charge } from '../types/booking';
 
-export const calculateAffiliateRevenue = (
-  charges: Charge[],
-) => {
+export const calculateAffiliateRevenue = (charges: Charge[]) => {
   // we double check if affiliateRevenue currency is either EUR fiat or EUR stablecoin
   // events revenue is calculated based on ticket price only
   // stays revenue is calculated based on accommodation price only
 
   const filteredCharges = charges?.filter((charge: Charge) => {
-    return charge.affiliateRevenue?.cur.toLowerCase().includes('eur');
+    return charge.affiliateRevenue?.cur?.toLowerCase()?.includes('eur');
   });
 
   const subscriptionsRevenue =
-    (filteredCharges
+    filteredCharges
       ?.filter((charge: Charge) => charge.type === 'subscription')
       .reduce(
         (acc: number, charge: Charge) =>
           acc + (charge.affiliateRevenue?.val || 0),
         0,
-      ) )  || 0;
+      ) || 0;
 
   const staysRevenue =
-    (filteredCharges
+    filteredCharges
       ?.filter(
         (charge: Charge) =>
           charge.type === 'booking' &&
@@ -32,10 +30,10 @@ export const calculateAffiliateRevenue = (
         (acc: number, charge: Charge) =>
           acc + (charge.affiliateRevenue?.val || 0),
         0,
-      )) || 0;
+      ) || 0;
 
   const eventsRevenue =
-    (filteredCharges
+    filteredCharges
       ?.filter(
         (charge: Charge) =>
           charge.type === 'booking' &&
@@ -46,25 +44,25 @@ export const calculateAffiliateRevenue = (
         (acc: number, charge: Charge) =>
           acc + (charge.affiliateRevenue?.val || 0),
         0,
-      ) ) || 0;
+      ) || 0;
 
   const tokenSaleRevenue =
-    (filteredCharges
+    filteredCharges
       ?.filter((charge: Charge) => charge.type === 'tokenSale')
       .reduce(
         (acc: number, charge: Charge) =>
           acc + (charge.affiliateRevenue?.val || 0),
         0,
-      ) ) || 0;
+      ) || 0;
 
   const financedTokenRevenue =
-    (filteredCharges
+    filteredCharges
       ?.filter((charge: Charge) => charge.type === 'financedToken')
       .reduce(
         (acc: number, charge: Charge) =>
           acc + (charge.affiliateRevenue?.val || 0),
         0,
-      )) || 0;
+      ) || 0;
 
   const totalRevenue =
     subscriptionsRevenue +

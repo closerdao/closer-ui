@@ -30,6 +30,7 @@ const nextConfig = {
     remotePatterns: [
       {
         hostname: 'cdn.oasa.co',
+        pathname: '/**',
       },
     ],
   },

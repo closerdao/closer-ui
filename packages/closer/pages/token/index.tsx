@@ -8,7 +8,6 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import Ama from '../../components/Ama';
 import Modal from '../../components/Modal';
 import PeekIntoFuture from '../../components/PeekIntoFuture';
-import TokenCounterSimple from '../../components/TokenCounterSimple';
 import YoutubeEmbed from '../../components/YoutubeEmbed';
 import { Button, Card, Heading } from '../../components/ui';
 
@@ -24,6 +23,7 @@ import { GeneralConfig, Listing } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
+import { useAuth } from '../../contexts/auth';
 
 const ACCOMMODATION_ICONS = ['van.png', 'camping.png', 'hotel.png'];
 const DEFAULT_TOKENS = 10;
@@ -42,6 +42,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
     generalConfig?.platformName || defaultConfig.platformName;
   const { getTokensAvailableForPurchase } = useBuyTokens();
   const { isWalletReady } = useContext(WalletState);
+  const { user } = useAuth();
 
   const router = useRouter();
   const { tokens } = router.query;
@@ -49,6 +50,20 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
   const [tokensToBuy, setTokensToBuy] = useState<number>(
     tokens !== undefined ? Number(tokens) : DEFAULT_TOKENS,
   );
+
+  const test = async () => {
+    try {
+      await api.post('/token-sale', {
+        totalStablecoin: 237.65,
+        tokens: 1,
+        txHash: '0xccb21dbfb80dfaaa5d4c4927939a0b74e76ca7b117406d734c4188f8b4c58622',
+        userId: user?._id,
+      });
+    } catch (error) {
+      console.error('Error logging metric:', error);
+
+    }
+  }
 
   const [tokensAvailable, setTokensAvailable] = useState<number | null>(null);
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
@@ -117,7 +132,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
             {t('token_sale_public_sale_heading')}
           </Heading>
 
-          <Heading level={2}>Coming soon!</Heading>
+          <Heading level={2}>{t('generic_coming_soon')}!</Heading>
         </div>
       </>
     );
@@ -141,29 +156,23 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
       <main className="pt-4 pb-24 md:flex-row flex-wrap">
         <section className="mb-10">
-          <div className='rounded-lg h-[500px] md:h-[700px] flex items-center flex-col bg-center bg-[#333333] bg-cover bg-no-repeat text-white bg-[url("/images/token-sale/token-sale-hero.webp")]'>
-            {/* <h1 className="drop-shadow-[1px_2px_2px_rgba(254,79,183,1)] px-4 mb-2 sm:mb-8 mt-[20px] sm:mt-[70px] md:mt-[190px] max-w-[700px] text-center font-extrabold text-5xl md:text-6xl uppercase">
-              {t('token_sale_public_sale_announcement')}
-            </h1> */}
+          <div className='rounded-lg md:h-[700px] flex items-center flex-col bg-center md:bg-black bg-cover bg-no-repeat md:text-white md:bg-[url("/images/token-sale/token-sale-hero.webp")]'>
             <Heading
               level={1}
-              className="text-right font-bold text-3xl md:text-6xl px-4 drop-shadow-lg mb-2 md:mb-8 md:text-center max-w-[700px] mt-1 md:mt-[100px] md:bg-[url('/images/token-sale/token-illy.png')] bg-no-repeat pt-[20px] md:pt-[130px] bg-top animate-pulse"
+              display
+              className="text-center md:text-right mb-2 md:mb-8 md:mt-[100px] md:bg-[url('/images/token-sale/token-illy.png')] bg-no-repeat pt-[20px] md:pt-[130px] bg-top"
             >
               {t('token_sale_hero_epic_heading')}
             </Heading>
             <Heading
               level={2}
-              className="text-right md:text-center px-4 text-xl md:text-2xl max-w-[600px] font-normal mb-6 text-accent-light"
+              className="text-center px-4 text-xl md:text-2xl max-w-[600px] font-normal mb-6"
             >
               {t('token_sale_hero_epic_subheading')}
             </Heading>
 
             {isWalletReady ? (
               <div className="p-4">
-                <TokenCounterSimple
-                  tokensToBuy={tokensToBuy}
-                  setTokensToBuy={setTokensToBuy}
-                />
 
                 <Button
                   className="!w-60 font-bold mb-3 md:mb-8 relative"
@@ -190,44 +199,9 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
             )}
           </div>
         </section>
-        <section className="flex items-center flex-col mb-32">
-          <div className="w-full flex flex-col  gap-20">
-            <div className="w-full flex items-center flex-col">
-              <Heading
-                level={2}
-                className="text-center mt-12 max-w-[620px] mb-6 text-3xl font-extrabold md:font-bold md:text-5xl uppercase md:normal-case"
-              >
-                {t('token_sale_tdf_intro_title')}
-              </Heading>
-              {/* <p className="text-center max-w-[640px] text-lg">
-                {t('token_sale_tdf_subtitle')}
-              </p> */}
-            </div>
-            <div className="flex gap-10 justify-center items-center flex-col md:flex-row">
-              <Image
-                className="w-full md:w-1/2 max-w-[430px]"
-                src="/images/token-sale/tdf-token.png"
-                width={430}
-                height={465}
-                alt={t('token_sale_public_sale_heading')}
-              />
-            </div>
-          </div>
-        </section>
 
-        <section className="flex items-center flex-col mb-32">
-          <div className="w-full flex flex-col  gap-20">
-            <div className="w-full flex items-center flex-col">
-              <Heading
-                level={2}
-                className="text-center mt-12 max-w-[620px] mb-6 text-3xl font-extrabold md:font-bold md:text-5xl uppercase md:normal-case"
-              >
-                {t('token_sale_sale_heading')}
-              </Heading>
-              <p className="text-center max-w-[660px] text-lg">
-                {t('token_sale_sale_description')}
-              </p>
-            </div>
+        <section className="flex items-center flex-col mb-16">
+          <div className="w-full flex flex-col gap-16">
             <div className="flex gap-10 justify-center items-center flex-col md:flex-row">
               <div className="w-full md:w-1/2 flex flex-col gap-7 max-w-[430px] ">
                 <Heading className="text-xl uppercase text-center" level={3}>
@@ -286,7 +260,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 <Button
                   isFullWidth={false}
                   variant="secondary"
-                  onClick={() => { router.push('/subscriptions/citizen/validation'); }}
+                  onClick={() => { router.push('/citizenship'); }}
                 >
                   {t('token_sale_become_member_button')}
                 </Button>
@@ -317,7 +291,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                   {t('token_sale_public_sale_price_per_night')}
                 </div>
                 {listings &&
-                  listings.map((listing: any) => {
+                  listings.filter((listing: any) => listing.tokenPrice.val > 0).map((listing: any) => {
                     return (
                       <div key={listing.name}>
                         <div className="grid grid-cols-[55px_auto_65px]">
@@ -367,7 +341,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                   <p className="pt-1">
                     {t('token_sale_public_sale_shared_suite')}
                     <span className="block text-xs text-accent">
-                      {t('token_sale_public_sale_coming_2023')}
+                      {t('token_sale_public_sale_coming_soon')}
                     </span>
                   </p>
                   <p className="text-right text-accent pt-2">
@@ -386,7 +360,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                   <p className=" pt-1">
                     {t('token_sale_public_sale_private_suite')}
                     <span className="block text-xs text-accent">
-                      {t('token_sale_public_sale_coming_2023')}
+                      {t('token_sale_public_sale_coming_soon')}
                     </span>
                   </p>
                   <p className=" text-right text-accent pt-2">
@@ -405,7 +379,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                   <p className=" pt-1">
                     {t('token_sale_public_sale_studio')}
                     <span className="block text-xs text-accent">
-                      {t('token_sale_public_sale_coming_2024')}
+                      {t('token_sale_public_sale_coming_soon')}
                     </span>
                   </p>
                   <p className=" text-right text-accent pt-2">
@@ -421,12 +395,6 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                       height={38}
                     />
                   </p>
-                  <p className=" pt-1">
-                    {t('token_sale_public_sale_house')}
-                    <span className="block text-xs text-accent">
-                      {t('token_sale_public_sale_coming_2024')}
-                    </span>
-                  </p>
                   <p className=" text-right text-accent pt-2">
                     {t('token_sale_public_sale_token_symbol')} 5
                   </p>
@@ -434,7 +402,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
               </Card>
 
               <Heading level={3} className="mb-6">
-                + utility fee
+                {t('token_sale_utility_fee')}
               </Heading>
 
               <div className="text-sm ">
@@ -470,12 +438,12 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
               />
             </div>
           </div>
-          <Button isFullWidth={false} variant="secondary" onClick={handleNext}>
+          <Button onClick={handleNext}>
             {t('token_sale_secure_your_spot_button')}
           </Button>
         </section>
 
-        <section className="flex items-center flex-col mb-32 bg-gray-50 py-12 rounded-xl">
+        <section className="flex items-center flex-col mb-8 md:bg-gray-50 md:py-12 md:rounded-xl">
           <div className="w-full flex flex-col gap-8">
             <div className="w-full flex items-center flex-col">
               <Heading

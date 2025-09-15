@@ -42,8 +42,8 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
       <main className=" pb-24">
         <section className="w-full flex justify-center max-w-4xl mx-auto mb-4 relative">
           <Image
-            alt="Traditional Dream Factory Volunteers open call"
-            src="/images/tdf-volunteers-open-call.png"
+            alt="Volunteer open call"
+            src="/images/tdf-volunteers-open-call.jpg"
             width={1344}
             height={600}
           />
@@ -95,6 +95,7 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
                   <div className="flex flex-col gap-6 max-w-2xl">
                     <p>{t('volunteers_intro_1')}</p>
                     <p>{t('volunteers_intro_2')}</p>
+                    <p>{t('volunteers_intro_3')}</p>
                     <p>
                       <strong className="uppercase">
                         {t('volunteers_requirements_label')}
@@ -103,10 +104,18 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
                     </p>
                     <p>
                       <strong className="uppercase">
+                        {t('volunteers_community_meals_label')}
+                      </strong>{' '}
+                      {t('volunteers_community_meals_value')}
+                    </p>
+                    <p>
+                      <strong className="uppercase">
                         {t('volunteers_community_culture_label')}
                       </strong>{' '}
                       {t('volunteers_community_culture_value')}
                     </p>
+
+                    <p>{t('volunteers_intro_4')}</p>
                     <Heading level={2}>
                       {t('volunteers_skills_and_qualifications_title')}
                     </Heading>
@@ -162,7 +171,6 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
                       </Link>
                       .
                     </p>
-                    <p>{t('volunteers_recommended_stay')}</p>
                   </div>
                 </div>
               </div>

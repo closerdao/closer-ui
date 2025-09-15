@@ -9,6 +9,7 @@ import Autocomplete from './Autocomplete';
 import Checkbox from './Checkbox';
 import DiscountsEditor from './DiscountsEditor';
 import FieldsEditor from './FieldsEditor';
+import PhotoEditor from './PhotoEditor';
 import PhotosEditor from './PhotosEditor';
 import PriceEditor from './PriceEditor';
 import RichTextEditor from './RichTextEditor';
@@ -91,6 +92,13 @@ const FormField = ({
           )}
           {type === 'photos' && (
             <PhotosEditor
+              value={objectPath.get(data, name)}
+              onChange={(value) => update(name, value)}
+              required={required}
+            />
+          )}
+          {type === 'photo' && (
+            <PhotoEditor
               value={objectPath.get(data, name)}
               onChange={(value) => update(name, value)}
               required={required}
