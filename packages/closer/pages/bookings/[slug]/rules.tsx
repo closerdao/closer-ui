@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingRules from '../../../components/BookingRules';
@@ -57,6 +57,17 @@ const BookingRulesPage = ({
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
+  useEffect(() => {
+    if (
+      !bookingRules ||
+      !bookingRules?.elements ||
+      bookingRules?.elements?.length === 0 ||
+      !bookingRules?.elements?.[0]?.title
+    ) {
+      router.push(`/bookings/${booking?._id}/questions`);
+    }
+  }, [bookingRules, router, booking?._id]);
+
   const handleNext = async () => {
     setIsLoading(true);
 
@@ -72,15 +83,6 @@ const BookingRulesPage = ({
   const goBack = () => {
     router.push(`/bookings/${booking?._id}/food`);
   };
-
-  if (
-    !bookingRules ||
-    !bookingRules?.elements ||
-    bookingRules?.elements?.length === 0 ||
-    !bookingRules?.elements?.[0]?.title
-  ) {
-    router.push(`/bookings/${booking?._id}/questions`);
-  }
 
   if (!isBookingEnabled) {
     return <PageNotFound />;
