@@ -51,6 +51,8 @@ const BookingRulesPage = ({
   const { isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
+  console.log('bookingRules=', bookingRules);
+
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -70,6 +72,15 @@ const BookingRulesPage = ({
   const goBack = () => {
     router.push(`/bookings/${booking?._id}/food`);
   };
+
+  if (
+    !bookingRules ||
+    !bookingRules?.elements ||
+    bookingRules?.elements?.length === 0 ||
+    !bookingRules?.elements?.[0]?.title
+  ) {
+    router.push(`/bookings/${booking?._id}/questions`);
+  }
 
   if (!isBookingEnabled) {
     return <PageNotFound />;
