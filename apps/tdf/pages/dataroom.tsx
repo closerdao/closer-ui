@@ -76,7 +76,7 @@ const HomePage = () => {
         <div className="py-16 bg-white">
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-12">
-              <Heading level={2} className="text-3xl md:text-4xl mb-4">
+              <Heading level={2} className="text-3xl md:text-4xl mb-4 bg-gradient-to-r from-accent to-accent-alt bg-clip-text text-transparent">
                 {t('dataroom_investment_highlights_title')}
               </Heading>
               <p className="text-lg text-gray-600 max-w-3xl mx-auto">
@@ -146,10 +146,10 @@ const HomePage = () => {
 
 
         {/* Track Record & Development Status */}
-        <div className="py-16 bg-white">
+        <div className="py-16 bg-gray-50">
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-12">
-              <Heading level={2} className="text-3xl md:text-4xl mb-4">
+              <Heading level={2} className="text-3xl md:text-4xl mb-4 bg-gradient-to-r from-accent to-accent-alt bg-clip-text text-transparent">
                 {t('dataroom_track_record_title')}
               </Heading>
               <p className="text-lg text-gray-600 mb-8">
@@ -335,10 +335,10 @@ const HomePage = () => {
         </div>
 
         {/* Environmental Credits & Monitoring */}
-        <div className="py-16 bg-gray-50">
+        <div className="py-16 bg-white">
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-12">
-              <Heading level={2} className="text-3xl md:text-4xl mb-4">
+              <Heading level={2} className="text-3xl md:text-4xl mb-4 bg-gradient-to-r from-accent to-accent-alt bg-clip-text text-transparent">
                 {t('dataroom_environmental_credits_title')}
               </Heading>
             </div>
@@ -361,11 +361,11 @@ const HomePage = () => {
         </div>
 
         {/* Use of Funds */}
-        <div className="py-16 bg-white">
+        <div className="py-16 bg-gray-50">
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-12">
-              <Heading level={2} className="text-3xl md:text-4xl mb-4">
-                Use of Funds
+              <Heading level={2} className="text-3xl md:text-4xl mb-4 bg-gradient-to-r from-accent to-accent-alt bg-clip-text text-transparent">
+                {t('dataroom_use_of_funds_title')}
               </Heading>
               <p className="text-lg text-gray-600 max-w-4xl mx-auto mb-8">
                 Your investment directly funds regenerative community infrastructure: completing 14 co-living suites, establishing a farm-to-table restaurant, and acquiring 25ha of land for regenerative agriculture. Every euro invested creates measurable environmental and social impact.
@@ -492,10 +492,10 @@ const HomePage = () => {
 
 
         {/* Documents Section */}
-        <div className="py-16 bg-gray-50">
+        <div className="py-16 bg-white">
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-12">
-              <Heading level={2} className="text-3xl md:text-4xl mb-4">
+              <Heading level={2} className="text-3xl md:text-4xl mb-4 bg-gradient-to-r from-accent to-accent-alt bg-clip-text text-transparent">
                 {t('dataroom_documents_title')}
               </Heading>
               <p className="text-lg text-gray-600">
