@@ -22,8 +22,8 @@ const HomePage = () => {
   return (
     <>
       <Head>
-        <title>{t('dataroom_title')}</title>
-        <meta name="description" content={t('dataroom_meta_description')} />
+        <title>Invest in Portugal's Flagship Regenerative Village | TDF Data Room</title>
+        <meta name="description" content="From agroforestry to co-housing, your investment powers TDF 2.0 — a commons-based economy rooted in resilience. Explore our impact investment opportunity." />
         <link
           rel="canonical"
           href="https://www.traditionaldreamfactory.com/"
@@ -46,10 +46,10 @@ const HomePage = () => {
                   display
                   level={1}
                 >
-                  {t('dataroom_executive_summary_title')}
+                  Invest in Portugal's Flagship Regenerative Village
                 </Heading>
                 <p className="text-xl text-black mb-8 leading-relaxed">
-                  We're raising secured private loans at 5% fixed for 4 years to complete Europe's first DAO-governed regenerative village. Your investment directly funds the completion of 14 co-living suites, a farm-to-table restaurant, and the acquisition of 25ha of land for regenerative agriculture and community development.
+                  From agroforestry to co-housing and high-end hospitality, your investment powers TDF 2.0 — a commons-based economy rooted in resilience. We're raising secured private loans at 5% fixed for 4 years to complete Europe's first DAO-governed regenerative village.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <LinkButton
@@ -119,7 +119,7 @@ const HomePage = () => {
                 </div>
               </Card>
               <Card className="p-6">
-                <h3 className="text-xl font-bold mb-4 text-gray-800">Impact Investment Benefits</h3>
+                <h3 className="text-xl font-bold mb-4 text-gray-800">{t('dataroom_impact_investment_benefits_title')}</h3>
                 <ul className="space-y-3">
                   <li className="flex items-start">
                     <div className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
@@ -239,6 +239,97 @@ const HomePage = () => {
                   {t('dataroom_zoning_phase_content')}
                 </p>
               </Card>
+            </div>
+          </div>
+        </div>
+
+        {/* Development Timeline */}
+        <div className="py-16 bg-white">
+          <div className="max-w-4xl mx-auto px-6">
+            <div className="text-center mb-12">
+              <Heading level={2} className="text-3xl md:text-4xl mb-4 bg-gradient-to-r from-accent to-accent-alt bg-clip-text text-transparent">
+                {t('dataroom_timeline_title')}
+              </Heading>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                {t('dataroom_timeline_subtitle')}
+              </p>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Phase 1 */}
+              <div className="flex items-center space-x-6 p-6 bg-gradient-to-r from-green-50 to-green-100 border-l-4 border-green-500 shadow-sm">
+                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                  ✓
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-800">{t('dataroom_timeline_phase1_title')}</h3>
+                  <p className="text-gray-600 text-sm">{t('dataroom_timeline_phase1_desc')}</p>
+                  <p className="text-green-700 text-sm font-medium mt-1">{t('dataroom_timeline_phase1_status')}</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-medium text-green-600 bg-green-100 px-3 py-1 rounded-full">{t('dataroom_timeline_phase1_funded')}</div>
+                </div>
+              </div>
+
+              {/* Phase 2 */}
+              <div className="flex items-center space-x-6 p-6 bg-gradient-to-r from-accent-light/20 to-accent-alt-light/20 border-l-4 border-accent shadow-sm">
+                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-accent to-accent-alt flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                  2
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-800">{t('dataroom_timeline_phase2_title')}</h3>
+                  <p className="text-gray-600 text-sm">{t('dataroom_timeline_phase2_desc')}</p>
+                  <p className="text-accent text-sm font-medium mt-1">{t('dataroom_timeline_phase2_status')}</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-medium text-accent bg-gradient-to-r from-accent-light to-accent-alt-light px-3 py-1 rounded-full">{t('dataroom_timeline_phase2_needed')}</div>
+                </div>
+              </div>
+
+              {/* Phase 3 */}
+              <div className="flex items-center space-x-6 p-6 bg-gradient-to-r from-accent-light/20 to-accent-alt-light/20 border-l-4 border-accent shadow-sm">
+                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-accent to-accent-alt flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                  3
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-800">{t('dataroom_timeline_phase3_title')}</h3>
+                  <p className="text-gray-600 text-sm">{t('dataroom_timeline_phase3_desc')}</p>
+                  <p className="text-accent text-sm font-medium mt-1">{t('dataroom_timeline_phase3_status')}</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-medium text-accent bg-gradient-to-r from-accent-light to-accent-alt-light px-3 py-1 rounded-full">{t('dataroom_timeline_phase3_needed')}</div>
+                </div>
+              </div>
+
+              {/* Phase 4 */}
+              <div className="flex items-center space-x-6 p-6 bg-gradient-to-r from-accent-light/20 to-accent-alt-light/20 border-l-4 border-accent shadow-sm">
+                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-accent to-accent-alt flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                  4
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-800">{t('dataroom_timeline_phase4_title')}</h3>
+                  <p className="text-gray-600 text-sm">{t('dataroom_timeline_phase4_desc')}</p>
+                  <p className="text-accent text-sm font-medium mt-1">{t('dataroom_funding_required_1_1m')}</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-medium text-accent bg-gradient-to-r from-accent-light to-accent-alt-light px-3 py-1 rounded-full">{t('dataroom_timeline_phase4_needed')}</div>
+                </div>
+              </div>
+
+              {/* Phase 5 */}
+              <div className="flex items-center space-x-6 p-6 bg-gradient-to-r from-gray-50 to-gray-100 border-l-4 border-gray-400 shadow-sm">
+                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                  5
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-800">{t('dataroom_timeline_phase5_title')}</h3>
+                  <p className="text-gray-600 text-sm">{t('dataroom_timeline_phase5_desc')}</p>
+                  <p className="text-gray-700 text-sm font-medium mt-1">{t('dataroom_timeline_phase5_status')}</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-medium text-gray-600 bg-gray-200 px-3 py-1 rounded-full">{t('dataroom_timeline_phase5_future')}</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
