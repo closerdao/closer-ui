@@ -1,29 +1,19 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import { useState } from 'react';
-
-import JoinWebinarPrompt from 'closer/components/JoinWebinarPrompt';
-
-import { Button, Heading, Card, LinkButton } from 'closer';
+import {  Heading, Card, LinkButton } from 'closer';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
-import { event } from 'nextjs-google-analytics';
 
 const HomePage = () => {
-  const [isPromptOpen, setIsPromptOpen] = useState(false);
   const t = useTranslations();
-
-  const joinWebinar = () => {
-    setIsPromptOpen(true);
-  };
 
   return (
     <>
       <Head>
-        <title>Invest in Portugal's Flagship Regenerative Village | TDF Data Room</title>
-        <meta name="description" content="From agroforestry to co-housing, your investment powers TDF 2.0 — a commons-based economy rooted in resilience. Explore our impact investment opportunity." />
+        <title>{t('dataroom_page_title')}</title>
+        <meta name="description" content={t('dataroom_page_description')} />
         <link
           rel="canonical"
           href="https://www.traditionaldreamfactory.com/"
@@ -31,10 +21,6 @@ const HomePage = () => {
         />
       </Head>
       <section>
-        {isPromptOpen && (
-          <JoinWebinarPrompt setIsPromptOpen={setIsPromptOpen} />
-        )}
-        
         {/* Hero Section */}
         <div className="bg-gradient-to-br from-accent-light to-accent-alt-light min-h-[60vh] flex items-center">
           <div className="max-w-6xl mx-auto px-6 py-16">
@@ -46,10 +32,10 @@ const HomePage = () => {
                   display
                   level={1}
                 >
-                  Invest in Portugal's Flagship Regenerative Village
+                  {t('dataroom_hero_title')}
                 </Heading>
                 <p className="text-xl text-black mb-8 leading-relaxed">
-                  From agroforestry to co-housing and high-end hospitality, your investment powers TDF 2.0 — a commons-based economy rooted in resilience. We're raising secured private loans at 5% fixed for 4 years to complete Europe's first DAO-governed regenerative village.
+                  {t('dataroom_hero_subtitle')}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <LinkButton
@@ -86,17 +72,17 @@ const HomePage = () => {
             
             <div className="grid md:grid-cols-3 gap-8 mb-12">
               <Card className="p-6 text-center">
-                <div className="text-4xl mb-4">€400k</div>
+                <div className="text-4xl mb-4">{t('dataroom_private_debt_amount')}</div>
                 <h3 className="text-xl font-bold mb-2">{t('dataroom_private_debt_title')}</h3>
                 <p className="text-gray-600">{t('dataroom_private_debt_description')}</p>
               </Card>
               <Card className="p-6 text-center">
-                <div className="text-4xl mb-4">~€400k</div>
+                <div className="text-4xl mb-4">{t('dataroom_token_sales_amount')}</div>
                 <h3 className="text-xl font-bold mb-2">{t('dataroom_token_sales_title')}</h3>
                 <p className="text-gray-600">{t('dataroom_token_sales_description')}</p>
               </Card>
               <Card className="p-6 text-center">
-                <div className="text-4xl mb-4">25ha</div>
+                <div className="text-4xl mb-4">{t('dataroom_land_portfolio_amount')}</div>
                 <h3 className="text-xl font-bold mb-2">{t('dataroom_land_portfolio_title')}</h3>
                 <p className="text-gray-600">{t('dataroom_land_portfolio_description')}</p>
               </Card>
@@ -123,19 +109,19 @@ const HomePage = () => {
                 <ul className="space-y-3">
                   <li className="flex items-start">
                     <div className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                    <span>Measurable environmental impact through regenerative agriculture and carbon sequestration</span>
+                    <span>{t('dataroom_impact_benefit_1')}</span>
                   </li>
                   <li className="flex items-start">
                     <div className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                    <span>Social innovation through DAO governance and community-driven development</span>
+                    <span>{t('dataroom_impact_benefit_3')}</span>
                   </li>
                   <li className="flex items-start">
                     <div className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                    <span>Financial returns secured by real estate collateral and proven operational model</span>
+                    <span>{t('dataroom_impact_benefit_4')}</span>
                   </li>
                   <li className="flex items-start">
                     <div className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                    <span>Scalable model for replicating regenerative communities across Europe</span>
+                    <span>{t('dataroom_impact_benefit_2')}</span>
                   </li>
                 </ul>
               </Card>
@@ -368,7 +354,7 @@ const HomePage = () => {
                 {t('dataroom_use_of_funds_title')}
               </Heading>
               <p className="text-lg text-gray-600 max-w-4xl mx-auto mb-8">
-                Your investment directly funds regenerative community infrastructure: completing 14 co-living suites, establishing a farm-to-table restaurant, and acquiring 25ha of land for regenerative agriculture. Every euro invested creates measurable environmental and social impact.
+                {t('dataroom_use_of_funds_description')}
               </p>
             </div>
             
@@ -395,23 +381,23 @@ const HomePage = () => {
                       <tr className="border-b">
                         <td className="px-4 py-3">
                           <div className="font-semibold">{t('dataroom_source_bank_loans')}</div>
-                          <div className="text-xs text-gray-500 mt-1">75% of building + land, 10-year term at ~4%</div>
+                          <div className="text-xs text-gray-500 mt-1">{t('dataroom_bank_loans_note')}</div>
                         </td>
-                        <td className="px-4 py-3 text-right font-semibold">€562,500</td>
+                        <td className="px-4 py-3 text-right font-semibold">{t('dataroom_bank_loans_amount')}</td>
                       </tr>
                       <tr className="border-b">
                         <td className="px-4 py-3">
                           <div className="font-semibold">{t('dataroom_source_private_loans')}</div>
-                          <div className="text-xs text-gray-500 mt-1">Bridge land acquisition & construction</div>
+                          <div className="text-xs text-gray-500 mt-1">{t('dataroom_private_loans_note')}</div>
                         </td>
-                        <td className="px-4 py-3 text-right font-semibold">€375,000</td>
+                        <td className="px-4 py-3 text-right font-semibold">{t('dataroom_private_loans_amount')}</td>
                       </tr>
                       <tr className="border-b">
                         <td className="px-4 py-3">
                           <div className="font-semibold">{t('dataroom_source_cohousing_deposits')}</div>
-                          <div className="text-xs text-gray-500 mt-1">Convertible loans, may convert to tokens</div>
+                          <div className="text-xs text-gray-500 mt-1">{t('dataroom_cohousing_deposits_note')}</div>
                         </td>
-                        <td className="px-4 py-3 text-right font-semibold">€300,000</td>
+                        <td className="px-4 py-3 text-right font-semibold">{t('dataroom_cohousing_deposits_amount')}</td>
                       </tr>
                       <tr>
                         <td className="px-4 py-3">
@@ -446,30 +432,37 @@ const HomePage = () => {
                       <tr className="border-b">
                         <td className="px-4 py-3">
                           <div className="font-semibold">{t('dataroom_use_land_acquisition')}</div>
-                          <div className="text-xs text-gray-500 mt-1">€550k + 8% fees - €30k rents paid</div>
+                          <div className="text-xs text-gray-500 mt-1">{t('dataroom_land_acquisition_note')}</div>
                         </td>
-                        <td className="px-4 py-3 text-right font-semibold">€564,000</td>
+                        <td className="px-4 py-3 text-right font-semibold">{t('dataroom_land_acquisition_amount')}</td>
                       </tr>
                       <tr className="border-b">
                         <td className="px-4 py-3">
                           <div className="font-semibold">{t('dataroom_use_building_acquisition')}</div>
-                          <div className="text-xs text-gray-500 mt-1">€200k + 8% transaction fees</div>
+                          <div className="text-xs text-gray-500 mt-1">{t('dataroom_building_acquisition_note')}</div>
                         </td>
-                        <td className="px-4 py-3 text-right font-semibold">€216,000</td>
+                        <td className="px-4 py-3 text-right font-semibold">{t('dataroom_building_acquisition_amount')}</td>
                       </tr>
                       <tr className="border-b">
                         <td className="px-4 py-3">
-                          <div className="font-semibold">{t('dataroom_use_construction')}</div>
-                          <div className="text-xs text-gray-500 mt-1">14 rooms + restaurant, 55% grant covered</div>
+                          <div className="font-semibold">{t('dataroom_use_co_living_suites')}</div>
+                          <div className="text-xs text-gray-500 mt-1">{t('dataroom_co_living_suites_note')}</div>
                         </td>
-                        <td className="px-4 py-3 text-right font-semibold">€1,100,000</td>
+                        <td className="px-4 py-3 text-right font-semibold">{t('dataroom_co_living_suites_amount')}</td>
                       </tr>
                       <tr className="border-b">
                         <td className="px-4 py-3">
-                          <div className="font-semibold">Architecture & Engineering Fees</div>
-                          <div className="text-xs text-gray-500 mt-1">Land development and planning fees</div>
+                          <div className="font-semibold">{t('dataroom_use_restaurant')}</div>
+                          <div className="text-xs text-gray-500 mt-1">{t('dataroom_restaurant_note')}</div>
                         </td>
-                        <td className="px-4 py-3 text-right font-semibold">€50,000</td>
+                        <td className="px-4 py-3 text-right font-semibold">{t('dataroom_restaurant_amount')}</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="px-4 py-3">
+                          <div className="font-semibold">{t('dataroom_use_architecture_engineering')}</div>
+                          <div className="text-xs text-gray-500 mt-1">{t('dataroom_architecture_engineering_note')}</div>
+                        </td>
+                        <td className="px-4 py-3 text-right font-semibold">{t('dataroom_architecture_engineering_amount')}</td>
                       </tr>
                     </tbody>
                     <tfoot className="bg-gray-50 border-t-2 border-gray-200">
@@ -547,10 +540,10 @@ const HomePage = () => {
         <div className="py-16 bg-gradient-to-br from-accent-light to-accent-alt-light text-black">
           <div className="max-w-4xl mx-auto px-6 text-center">
             <Heading level={2} className="text-3xl md:text-4xl mb-6">
-              Ready to Drive Regenerative Impact in Europe?
+              {t('dataroom_cta_title')}
             </Heading>
             <p className="text-xl mb-8 opacity-90">
-              Join us in creating Europe's first DAO-governed regenerative village. Your investment delivers both competitive returns and measurable environmental and social impact.
+              {t('dataroom_cta_description')}
             </p>
             <div className="flex justify-center">
               <LinkButton
@@ -562,7 +555,7 @@ const HomePage = () => {
               </LinkButton>
             </div>
             <div className="mt-8 text-sm opacity-75">
-              <p>Secured by €1.0M+ in real estate collateral • 5% fixed returns • Measurable environmental impact • DAO governance innovation</p>
+              <p>{t('dataroom_cta_tagline')}</p>
             </div>
           </div>
         </div>
