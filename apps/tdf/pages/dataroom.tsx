@@ -99,7 +99,7 @@ const HomePage = () => {
                   </div>
                   <div className="border-l-4 border-accent pl-4">
                     <div className="font-semibold">{t('dataroom_land_acquisition_title')}</div>
-                    <div className="text-2xl font-bold text-gray-700">{t('dataroom_land_acquisition_amount')}</div>
+                    <div className="text-2xl font-bold text-gray-700">{t('dataroom_land_acquisition_amount_550k')}</div>
                     <div className="text-sm text-gray-600">{t('dataroom_land_acquisition_description')}</div>
                   </div>
                 </div>
@@ -231,89 +231,133 @@ const HomePage = () => {
 
         {/* Development Timeline */}
         <div className="py-16 bg-white">
-          <div className="max-w-4xl mx-auto px-6">
+          <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-12">
               <Heading level={2} className="text-3xl md:text-4xl mb-4 bg-gradient-to-r from-accent to-accent-alt bg-clip-text text-transparent">
                 {t('dataroom_timeline_title')}
               </Heading>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
                 {t('dataroom_timeline_subtitle')}
               </p>
             </div>
             
-            <div className="space-y-4">
-              {/* Phase 1 */}
-              <div className="flex items-center space-x-6 p-6 bg-gradient-to-r from-green-50 to-green-100 border-l-4 border-green-500 shadow-sm">
-                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-bold text-sm shadow-lg">
-                  ✓
+            <div className="grid lg:grid-cols-2 gap-12">
+              {/* Co-living Track */}
+              <div className="space-y-6">
+                <div className="text-center mb-8">
+                  <h3 className="text-2xl font-bold text-gray-800 mb-2">{t('dataroom_coliving_track_title')}</h3>
+                  <div className="w-20 h-0.5 bg-gray-300 mx-auto"></div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-800">{t('dataroom_timeline_phase1_title')}</h3>
-                  <p className="text-gray-600 text-sm">{t('dataroom_timeline_phase1_desc')}</p>
-                  <p className="text-green-700 text-sm font-medium mt-1">{t('dataroom_timeline_phase1_status')}</p>
+                
+                {/* Planning & Permits */}
+                <div className="flex items-start space-x-4 p-5 border-l-4 border-emerald-500 bg-gradient-to-r from-emerald-50 to-emerald-100/50 shadow-sm">
+                  <div className="flex-shrink-0 text-2xl">📋</div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-emerald-800">{t('dataroom_coliving_planning_title')}</h4>
+                    <p className="text-sm text-emerald-700 mt-1">{t('dataroom_coliving_planning_desc')}</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-sm font-medium text-green-600 bg-green-100 px-3 py-1 rounded-full">{t('dataroom_timeline_phase1_funded')}</div>
+
+                {/* Existing Facilities */}
+                <div className="flex items-start space-x-4 p-5 border-l-4 border-emerald-500 bg-gradient-to-r from-emerald-50 to-emerald-100/50 shadow-sm">
+                  <div className="flex-shrink-0 text-2xl">🏢</div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-emerald-800">{t('dataroom_coliving_existing_title')}</h4>
+                    <p className="text-sm text-emerald-700 mt-1">{t('dataroom_coliving_existing_desc')}</p>
+                  </div>
+                </div>
+
+                {/* In Progress */}
+                <div className="flex items-start space-x-4 p-5 border-l-4 border-blue-500 bg-gradient-to-r from-blue-50 to-blue-100/50 shadow-sm">
+                  <div className="flex-shrink-0 text-2xl">🔨</div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-blue-800">{t('dataroom_coliving_current_title')}</h4>
+                    <p className="text-sm text-blue-700 mt-1">{t('dataroom_coliving_current_desc')}</p>
+                  </div>
+                </div>
+
+                {/* Next Milestone */}
+                <div className="flex items-start space-x-4 p-5 border-l-4 border-amber-500 bg-gradient-to-r from-amber-50 to-amber-100/50 shadow-sm">
+                  <div className="flex-shrink-0 text-2xl">🍽️</div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-amber-800">{t('dataroom_coliving_next_title')}</h4>
+                    <p className="text-sm text-amber-700 mt-1">{t('dataroom_coliving_next_desc')}</p>
+                    <p className="text-sm font-medium text-amber-600 mt-1">{t('dataroom_coliving_next_funding')}</p>
+                  </div>
+                </div>
+
+                {/* Major Build Phase */}
+                <div className="flex items-start space-x-4 p-5 border-l-4 border-accent bg-gradient-to-r from-accent/10 to-accent/5 shadow-sm">
+                  <div className="flex-shrink-0 text-2xl">🏗️</div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-accent">{t('dataroom_coliving_major_title')}</h4>
+                    <p className="text-sm text-gray-700 mt-1">{t('dataroom_coliving_major_desc')}</p>
+                    <p className="text-sm font-medium text-accent mt-1">{t('dataroom_coliving_major_funding')}</p>
+                  </div>
+                </div>
+
+                {/* Completion */}
+                <div className="flex items-start space-x-4 p-5 border-l-4 border-purple-500 bg-gradient-to-r from-purple-50 to-purple-100/50 shadow-sm">
+                  <div className="flex-shrink-0 text-2xl">🎯</div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-purple-800">Full Hospitality Operation</h4>
+                    <p className="text-sm text-purple-700 mt-1">{t('dataroom_coliving_completion')}</p>
+                  </div>
                 </div>
               </div>
 
-              {/* Phase 2 */}
-              <div className="flex items-center space-x-6 p-6 bg-gradient-to-r from-accent-light/20 to-accent-alt-light/20 border-l-4 border-accent shadow-sm">
-                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-accent to-accent-alt flex items-center justify-center text-white font-bold text-sm shadow-lg">
-                  2
+              {/* Co-housing Track */}
+              <div className="space-y-6">
+                <div className="text-center mb-8">
+                  <h3 className="text-2xl font-bold text-gray-800 mb-2">{t('dataroom_cohousing_track_title')}</h3>
+                  <div className="w-20 h-0.5 bg-gray-300 mx-auto"></div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-800">{t('dataroom_timeline_phase2_title')}</h3>
-                  <p className="text-gray-600 text-sm">{t('dataroom_timeline_phase2_desc')}</p>
-                  <p className="text-accent text-sm font-medium mt-1">{t('dataroom_timeline_phase2_status')}</p>
+                
+                {/* Land Option Secured */}
+                <div className="flex items-start space-x-4 p-5 border-l-4 border-emerald-500 bg-gradient-to-r from-emerald-50 to-emerald-100/50 shadow-sm">
+                  <div className="flex-shrink-0 text-2xl">🏞️</div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-emerald-800">{t('dataroom_cohousing_land_title')}</h4>
+                    <p className="text-sm text-emerald-700 mt-1">{t('dataroom_cohousing_land_desc')}</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-sm font-medium text-accent bg-gradient-to-r from-accent-light to-accent-alt-light px-3 py-1 rounded-full">{t('dataroom_timeline_phase2_needed')}</div>
-                </div>
-              </div>
 
-              {/* Phase 3 */}
-              <div className="flex items-center space-x-6 p-6 bg-gradient-to-r from-accent-light/20 to-accent-alt-light/20 border-l-4 border-accent shadow-sm">
-                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-accent to-accent-alt flex items-center justify-center text-white font-bold text-sm shadow-lg">
-                  3
+                {/* PIP Submitted */}
+                <div className="flex items-start space-x-4 p-5 border-l-4 border-blue-500 bg-gradient-to-r from-blue-50 to-blue-100/50 shadow-sm">
+                  <div className="flex-shrink-0 text-2xl">📄</div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-blue-800">{t('dataroom_cohousing_pip_title')}</h4>
+                    <p className="text-sm text-blue-700 mt-1">{t('dataroom_cohousing_pip_desc')}</p>
+                    <p className="text-sm font-medium text-blue-600 mt-1">{t('dataroom_cohousing_response')}</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-800">{t('dataroom_timeline_phase3_title')}</h3>
-                  <p className="text-gray-600 text-sm">{t('dataroom_timeline_phase3_desc')}</p>
-                  <p className="text-accent text-sm font-medium mt-1">{t('dataroom_timeline_phase3_status')}</p>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-medium text-accent bg-gradient-to-r from-accent-light to-accent-alt-light px-3 py-1 rounded-full">{t('dataroom_timeline_phase3_needed')}</div>
-                </div>
-              </div>
 
-              {/* Phase 4 */}
-              <div className="flex items-center space-x-6 p-6 bg-gradient-to-r from-accent-light/20 to-accent-alt-light/20 border-l-4 border-accent shadow-sm">
-                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-accent to-accent-alt flex items-center justify-center text-white font-bold text-sm shadow-lg">
-                  4
+                {/* Land Closing */}
+                <div className="flex items-start space-x-4 p-5 border-l-4 border-amber-500 bg-gradient-to-r from-amber-50 to-amber-100/50 shadow-sm">
+                  <div className="flex-shrink-0 text-2xl">🤝</div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-amber-800">Land Closing</h4>
+                    <p className="text-sm text-amber-700 mt-1">{t('dataroom_cohousing_closing')}</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-800">{t('dataroom_timeline_phase4_title')}</h3>
-                  <p className="text-gray-600 text-sm">{t('dataroom_timeline_phase4_desc')}</p>
-                  <p className="text-accent text-sm font-medium mt-1">{t('dataroom_funding_required_1_1m')}</p>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-medium text-accent bg-gradient-to-r from-accent-light to-accent-alt-light px-3 py-1 rounded-full">{t('dataroom_timeline_phase4_needed')}</div>
-                </div>
-              </div>
 
-              {/* Phase 5 */}
-              <div className="flex items-center space-x-6 p-6 bg-gradient-to-r from-gray-50 to-gray-100 border-l-4 border-gray-400 shadow-sm">
-                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center text-white font-bold text-sm shadow-lg">
-                  5
+                {/* Infrastructure Phase */}
+                <div className="flex items-start space-x-4 p-5 border-l-4 border-accent bg-gradient-to-r from-accent/10 to-accent/5 shadow-sm">
+                  <div className="flex-shrink-0 text-2xl">🛣️</div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-accent">{t('dataroom_cohousing_infrastructure_title')}</h4>
+                    <p className="text-sm text-gray-700 mt-1">{t('dataroom_cohousing_infrastructure_desc')}</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-800">{t('dataroom_timeline_phase5_title')}</h3>
-                  <p className="text-gray-600 text-sm">{t('dataroom_timeline_phase5_desc')}</p>
-                  <p className="text-gray-700 text-sm font-medium mt-1">{t('dataroom_timeline_phase5_status')}</p>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-medium text-gray-600 bg-gray-200 px-3 py-1 rounded-full">{t('dataroom_timeline_phase5_future')}</div>
+
+                {/* Construction Phase */}
+                <div className="flex items-start space-x-4 p-5 border-l-4 border-purple-500 bg-gradient-to-r from-purple-50 to-purple-100/50 shadow-sm">
+                  <div className="flex-shrink-0 text-2xl">🏠</div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-purple-800">{t('dataroom_cohousing_construction_title')}</h4>
+                    <p className="text-sm text-purple-700 mt-1">{t('dataroom_cohousing_construction_desc')}</p>
+                    <p className="text-sm font-medium text-purple-600 mt-1">{t('dataroom_cohousing_first_houses')}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -402,7 +446,7 @@ const HomePage = () => {
                       <tr>
                         <td className="px-4 py-3">
                           <div className="font-semibold">{t('dataroom_source_token_sales')}</div>
-                          <div className="text-xs text-gray-500 mt-1">900 tokens to 30 new citizens</div>
+                          <div className="text-xs text-gray-500 mt-1">{t('dataroom_token_sales_note')}</div>
                         </td>
                         <td className="px-4 py-3 text-right font-semibold">€230,000</td>
                       </tr>
@@ -581,3 +625,4 @@ HomePage.getInitialProps = async (context: NextPageContext) => {
 };
 
 export default HomePage;
+
