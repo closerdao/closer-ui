@@ -63,9 +63,7 @@ export const SUBSCRIPTION_STEPS = [
 ];
 
 export const SUBSCRIPTION_CITIZEN_STEPS = [
-  'validation',
-  'select-flow',
-  'apply',
+  'why',
   'success',
 ];
 

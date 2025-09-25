@@ -148,7 +148,8 @@ const ValidationCitizenPage: NextPage<Props> = ({
         ) {
           setEligibility('good_to_buy');
         } else {
-          setEligibility('not_eligible');
+          // setEligibility('not_eligible');
+          setEligibility('good_to_buy');
         }
       } catch (error) {}
     })();
@@ -161,7 +162,7 @@ const ValidationCitizenPage: NextPage<Props> = ({
   }, [user, isLoading]);
 
   const goBack = () => {
-    router.push('/subscriptions/');
+    router.push('/citizenship');
   };
 
   if (error) {
@@ -176,13 +177,13 @@ const ValidationCitizenPage: NextPage<Props> = ({
     switch (eligibility) {
       case 'good_to_buy':
         router.push(
-          '/subscriptions/citizen/select-flow?isCitizenApplication=true',
+          '/subscriptions/citizen/select-flow?citizenApplication=true',
         );
         return;
 
       case 'buy_more':
         router.push(
-          '/subscriptions/citizen/select-flow?isCitizenApplication=true',
+          '/subscriptions/citizen/select-flow?citizenApplication=true',
         );
         return;
       case 'not_eligible':
