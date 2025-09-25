@@ -140,7 +140,6 @@ const ValidationCitizenPage: NextPage<Props> = ({
 
         setIsVouched(isVouchedLocal);
 
-
         if (isVouchedLocal && hasStayedForMinDurationLocal && owns30Tokens) {
           setEligibility('buy_more');
         } else if (
@@ -151,7 +150,6 @@ const ValidationCitizenPage: NextPage<Props> = ({
         } else {
           // setEligibility('not_eligible');
           setEligibility('good_to_buy');
-
         }
       } catch (error) {}
     })();
@@ -179,13 +177,13 @@ const ValidationCitizenPage: NextPage<Props> = ({
     switch (eligibility) {
       case 'good_to_buy':
         router.push(
-          '/subscriptions/citizen/select-flow?isCitizenApplication=true',
+          '/subscriptions/citizen/select-flow?citizenApplication=true',
         );
         return;
 
       case 'buy_more':
         router.push(
-          '/subscriptions/citizen/select-flow?isCitizenApplication=true',
+          '/subscriptions/citizen/select-flow?citizenApplication=true',
         );
         return;
       case 'not_eligible':

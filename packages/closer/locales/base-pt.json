@@ -734,6 +734,7 @@
   "subscriptions_citizen_finance_tokens_after_application": "Assim que recebermos o pagamento, enviaremos uma confirmação de Cidadania dentro de 48h. Se não receber o email, por favor envie-nos um comprovativo de pagamento para <link>space@traditionaldreamfactory.com</link>",
   "subscriptions_citizen_finance_tokens_after_application_finance": "Assim que recebermos o pagamento, enviaremos uma confirmação do seu plano de tokens financiados dentro de 48h. Se não receber o email, por favor envie-nos um comprovativo de pagamento para <link>space@traditionaldreamfactory.com</link>",
   "subscriptions_citizen_finance_tokens_button": "Financiar tokens",
+  "subscriptions_citizen_start_financed_plan": "Iniciar plano financiado",
   "subscriptions_citizen_user_page_created": "Criado em:",
   "subscriptions_citizen_user_page_iban": "O seu IBAN:",
   "subscriptions_citizen_user_page_why": "Por que quer tornar-se membro:",
@@ -1313,6 +1314,7 @@
   "subscriptions_citizen_introduce_yourself_in_discord": "Introduza-se no Discord para ser votado por outros membros:",
   "subscription_citizen_apply": "Aplicar para cidadania",
   "subscriptions_citizen_pending_payment": "Você já solicitou a cidadania e tem um pagamento pendente",
+  "subscriptions_citizen_active_applications": "Você já tem um plano de tokens financiados ativo",
 
   "config_email_product_paid_guest": "Produto pago, enviar ao utilizador imediatamente",
   "config_email_product_paid_admin": "Produto pago, enviar aos administradores imediatamente",
@@ -1776,7 +1778,6 @@
   "volunteers_vision_resonates": "Se a nossa visão ressoar consigo e estiver ansioso por brincar, aprender e criar connosco, adoraríamos ouvir de si. Veja o nosso",
   "volunteers_visitors_guide": "Guia do Visitante",
   "volunteers_schedule_call": "e vamos agendar uma chamada para nos conhecermos enviando um email para",
-  "volunteers_recommended_stay": "A estadia recomendada é de 1 mês - e idealmente chegando no início do mês para que possamos ter uma boa dinâmica de grupo.",
   "settings_tab_profile": "Perfil",
   "settings_tab_account": "Conta",
   "settings_tab_preferences": "Preferências",
@@ -1911,5 +1912,16 @@
   "token_sale_governance_rights": "Cada token carrega direitos de voto dentro do DAO TDF.",
   "token_sale_utility_fee": "+ taxa de utilidade",
   "token_sale_utility_fee_desc_1": "Suprimentos, seguro, energia,",
-  "token_sale_utility_fee_desc_2": "água, comida, manutenção."
+  "token_sale_utility_fee_desc_2": "água, comida, manutenção.",
+  "citizen_subscription_you_are_citizen": "Você é um cidadão!",
+  "members_slug_message_placeholder": "Digite sua mensagem",
+  "members_slug_username_placeholder": "nome de usuário",
+  "members_slug_channelname_placeholder": "nome do canal",
+  "members_slug_website_placeholder": "https://seusite.com",
+  "members_slug_error_prefix": "Erro:",
+  "subscriptions_citizen_user_page_down_payment": "Pagamento Inicial:",
+  "subscriptions_citizen_finance_tokens_title": "💰 Financie seus Tokens",
+  "subscriptions_citizen_payment_history": "Histórico de Pagamentos",
+  "subscriptions_citizen_payment_date": "Data",
+  "subscriptions_citizen_payment_amount": "Valor"
 }

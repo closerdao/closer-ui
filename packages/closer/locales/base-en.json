@@ -739,7 +739,6 @@
   "subscriptions_citizen_i_wish_to_buy_now": "I would like to buy {var} + tokens now",
   "subscriptions_citizen_you_hold": "You hold {var} tokens",
 
-
   "subscriptions_citizen_i_own_tokens_and_wish_to_buy_now": "I own 30+ tokens & I wish to buy 30+ tokens now",
   "subscriptions_citizen_i_own_tokens_and_wish_to_finance_tokens": "I own 30+ tokens & I wish to finance 30+ tokens",
   "subscriptions_citizen_connect_wallet": "Please connect your wallet if you wish to confirm your current token balance",
@@ -779,10 +778,12 @@
   "subscriptions_citizen_finance_tokens_disclaimer_1": "Make the initial down payment upon receiving the first invoice via email.",
   "subscriptions_citizen_finance_tokens_disclaimer_2": "Ensure timely monthly payments of €{var} for the duration of the plan.",
   "subscriptions_citizen_finance_tokens_calculating": "Please wait, calculating token price...",
-  "subscriptions_citizen_finance_tokens_payment_details": "Please make your €{downPayment} payment to: {closerIban} from your account ending in {userIbanLast4}.",
-  "subscriptions_citizen_finance_tokens_after_application": "Once we receive the payment, we will send you a confirmation of Citizenship within 48h. If you do not receive the email, please send us a proof of payment to <link>space@traditionaldreamfactory.com</link>",
+  "subscriptions_citizen_finance_tokens_payment_details": "Please make your €{downPayment} payment to IBAN: {closerIban} from your account ending in {userIbanLast4}. Beneficiary: {beneficiary}.",
+  "subscriptions_citizen_finance_tokens_after_application": "Your citizenship is pending. Once we receive your down payment, you'll be able to activate your citizenship. Once we receive the payment, we will send you a confirmation in 48 hours. If you do not receive the email, please send us a proof of payment to <link>space@traditionaldreamfactory.com</link>",
   "subscriptions_citizen_finance_tokens_after_application_finance": "Once we receive the payment, we will send you a confirmation of of yor financed token plan within 48h. If you do not receive the email, please send us a proof of payment to <link>space@traditionaldreamfactory.com</link>",
   "subscriptions_citizen_finance_tokens_button": "Finance tokens",
+
+  "subscriptions_citizen_start_financed_plan": "Start financed plan",
 
   "subscriptions_citizen_user_page_created": "Created at:",
   "subscriptions_citizen_user_page_iban": "Your IBAN:",
@@ -796,6 +797,7 @@
   "subscriptions_citizen_amount_due": "Amount due:",
   "subscription_citizen_apply": "Apply for citizenship",
   "subscriptions_citizen_pending_payment": "You have already applied for citizenship, and you have a pending payment",
+  "subscriptions_citizen_active_applications": "You already have an active financed token plan",
   "subscriptions_citizen_cancelled": "You have already applied for citizenship, but your application has been cancelled.",
   "subscriptions_citizen_paid": "You have already applied for citizenship, and you have made the latest payment.",
   "subscriptions_citizen_completed": "You have successfully completed your citizenship application.",
@@ -893,7 +895,7 @@
   "wallet_connected_title": "Wallet Balance",
   "wallet_different_saved_address_title": "Wrong Wallet Address",
   "wallet_not_connected_title": "Wallet Not Connected",
-  "wallet_different_saved_address": "Connected wallet address is different from the one saved in your profile. Please, contact our support",
+  "wallet_different_saved_address": "Connected wallet address is different from the one saved in your profile. Please switch to the correct wallet orcontact our support",
   "wallet_not_connected_cta": "Please connect your wallet to see your $TDF & POP Balance",
   "wallet_not_connected_button": "Connect Wallet",
   "wallet_not_connected_button_title": "Please connect your wallet to book with $TDF",
@@ -2055,5 +2057,16 @@
   "token_sale_governance_rights": "Each token carries voting rights within the TDF DAO.",
   "token_sale_utility_fee": "+ utility fee",
   "token_sale_utility_fee_desc_1": "Supplies, insurance, energy,",
-  "token_sale_utility_fee_desc_2": "water, food, maintenance."
+  "token_sale_utility_fee_desc_2": "water, food, maintenance.",
+  "citizen_subscription_you_are_citizen": "You are a citizen!",
+  "members_slug_message_placeholder": "Type your message",
+  "members_slug_username_placeholder": "username",
+  "members_slug_channelname_placeholder": "channelname",
+  "members_slug_website_placeholder": "https://yourwebsite.com",
+  "members_slug_error_prefix": "Error:",
+  "subscriptions_citizen_user_page_down_payment": "Down Payment:",
+  "subscriptions_citizen_finance_tokens_title": "💰 Finance your Tokens",
+  "subscriptions_citizen_payment_history": "Payment History",
+  "subscriptions_citizen_payment_date": "Date",
+  "subscriptions_citizen_payment_amount": "Amount"
 }

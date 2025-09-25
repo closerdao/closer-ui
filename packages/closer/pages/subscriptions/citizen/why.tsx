@@ -50,7 +50,12 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
 
   const router = useRouter();
 
-  const { balanceTotal, isWalletConnected } = useContext(WalletState);
+  const {
+    balanceTotal,
+    isWalletConnected,
+    isCorrectNetwork,
+    hasSameConnectedAccount,
+  } = useContext(WalletState);
 
   const owns30Tokens = balanceTotal >= 30;
 
@@ -62,6 +67,8 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
   const isMember = user?.roles?.includes('member');
 
   const citizenshipStatus = user?.citizenship?.status;
+
+  console.log('citizenshipStatus=', citizenshipStatus);
 
   const userCitizenshipWhy = user?.citizenship?.why;
 
@@ -110,16 +117,13 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
   };
 
   const getCtaButtonText = () => {
-    if (eligibility === 'buy_more') {
-      if (application?.intent?.iWantToBuyTokens) {
-        return t('navigation_buy_token');
-      } else if (application?.intent?.iWantToApply) {
-        return t('subscriptions_citizen_apply');
-      } else {
-        return t('booking_button_continue');
-      }
+    if (application?.intent?.iWantToBuyTokens) {
+      return t('token_sale_public_sale_buy_token');
+    } else if (application?.intent?.iWantToFinanceTokens) {
+      return t('subscriptions_citizen_start_financed_plan');
+    } else {
+      return t('booking_button_continue');
     }
-    return t('booking_button_continue');
   };
 
   useEffect(() => {
@@ -215,17 +219,6 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
   };
 
   const handleNext = async () => {
-    console.log('user?.citizenship=', user?.citizenship);
-
-    if (application?.intent?.iWantToBuyTokens) {
-      router.push(
-        `/token/before-you-begin?isCitizenApplication=true&tokens=${
-          30 - (balanceTotal || 0)
-        }`,
-      );
-      return;
-    }
-
     try {
       await platform.user.patch(user?._id || '', {
         citizenship: {
@@ -237,16 +230,20 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
       console.error('error with citizen application:', error);
     }
 
-    if (eligibility === 'buy_more') {
-      if (application?.intent?.iWantToBuyTokens) {
-        router.push('/token/before-you-begin?isCitizenApplication=true');
-        return;
-      } else if (application?.intent?.iWantToApply) {
-        router.push('/subscriptions/citizen/apply?intent=apply');
-        return;
-      }
+    if (application?.intent?.iWantToBuyTokens) {
+      router.push(
+        `/token/before-you-begin?citizenApplication=true&tokens=${
+          30 - (balanceTotal || 0)
+        }`,
+      );
+      return;
+    } else if (application?.intent?.iWantToFinanceTokens) {
+      router.push('/token/finance?citizenApplication=true');
+      return;
     }
+
     router.push('/subscriptions/citizen/validation?intent=apply');
+    return;
   };
 
   if (error) {
@@ -274,7 +271,7 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
       </Head>
 
       <div className="w-full max-w-screen-sm mx-auto p-8">
-        <BackButton handleClick={goBack}>{t('buttons_back')}</BackButton>
+
         <Heading level={1} className="mb-4">
           {t('subscriptions_citizen_apply_title')}
         </Heading>
@@ -316,7 +313,6 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
                   </div>
                 )}
               </section>
-
               {!isMember && (
                 <CitizenWhy
                   updateApplication={updateApplication}
@@ -324,29 +320,22 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
                 />
               )}
 
-              {/* {eligibility === 'buy_more' && (
+              <Card>
+                {isWalletConnected &&
+                  isCorrectNetwork &&
+                  hasSameConnectedAccount && (
+                    <>
+                      {t('subscriptions_citizen_you_hold', {
+                        var: balanceTotal,
+                      })}
+                    </>
+                  )}
                 <CitizenGoodToBuy
-                  buyMore={true}
                   updateApplication={updateApplication}
                   application={application}
+                  balanceTotal={balanceTotal}
                 />
-              )} */}
-
-              {/* TODO: balance check and options*/}
-              {isWalletConnected && (
-                <Card>
-                  {t('subscriptions_citizen_you_hold', {
-                    var: balanceTotal,
-                  })}
-
-                  <CitizenGoodToBuy
-                    updateApplication={updateApplication}
-                    application={application}
-                    balanceTotal={balanceTotal}
-                  />
-                </Card>
-              )}
-
+              </Card>
               {isWalletEnabled &&
               (eligibility === 'buy_more' || eligibility === 'not_eligible') ? (
                 <div className="my-8 space-y-6">
