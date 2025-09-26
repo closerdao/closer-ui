@@ -1,7 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useState } from 'react';
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
@@ -10,6 +9,7 @@ import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 import PropTypes from 'prop-types';
 
+import { WalletState } from '../contexts/wallet';
 import { useBookingSmartContract } from '../hooks/useBookingSmartContract';
 import { useConfig } from '../hooks/useConfig';
 import api from '../utils/api';
@@ -21,7 +21,6 @@ import Conditions from './Conditions';
 import { ErrorMessage } from './ui';
 import Checkbox from './ui/Checkbox';
 import HeadingRow from './ui/HeadingRow';
-import { WalletState } from '../contexts/wallet';
 
 const stripe = loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY, {
   stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
@@ -34,7 +33,7 @@ const CheckoutPayment = ({
   buttonDisabled,
   useTokens,
   useCredits,
-  rentalToken,
+  rentalTokenVal,
   totalToPayInFiat,
   dailyTokenValue,
   startDate,
@@ -115,7 +114,7 @@ const CheckoutPayment = ({
     try {
       const creditsAmount = isPartialCreditsPayment
         ? partialPriceInCredits
-        : rentalToken;
+        : rentalTokenVal;
       const res = await api.post(`/bookings/${bookingId}/credit-payment`, {
         startDate,
         creditsAmount,
@@ -126,7 +125,7 @@ const CheckoutPayment = ({
       setError(errorMessage);
       await reportIssue(
         `CREDIT_PAYMENT_ERROR: bookingId=${bookingId}, error=${errorMessage}, creditsAmount=${
-          isPartialCreditsPayment ? partialPriceInCredits : rentalToken
+          isPartialCreditsPayment ? partialPriceInCredits : rentalTokenVal
         }, startDate=${startDate}`,
         user?.email,
       );
@@ -153,7 +152,7 @@ const CheckoutPayment = ({
         await reportIssue(
           `TOKEN PAYMENT ERROR:
           BOOKING ID=${bookingId}, 
-          TOKEN PRICE=${rentalToken?.val},
+          TOKEN PRICE=${rentalTokenVal},
           TDF BALANCE TOTAL=${balanceTotal},
           TDF BALANCE AVAILABLE=${balanceAvailable},
           USER EMAIL=${user?.email},
@@ -187,10 +186,8 @@ const CheckoutPayment = ({
         <span className="mr-2">💲</span>
         <span>{t('bookings_checkout_step_payment_title')}</span>
       </HeadingRow>
-
       {error && <ErrorMessage error={error} />}
 
-      rentalToken?.val={rentalToken?.val}
       <Elements stripe={stripe}>
         <CheckoutForm
           type="booking"
