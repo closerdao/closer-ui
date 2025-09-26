@@ -150,19 +150,19 @@ const CheckoutPayment = ({
 
       if (result?.error) {
         await reportIssue(
-          `TOKEN PAYMENT ERROR:
-          BOOKING ID=${bookingId}, 
-          TOKEN PRICE=${rentalTokenVal},
-          TDF BALANCE TOTAL=${balanceTotal},
-          TDF BALANCE AVAILABLE=${balanceAvailable},
-          USER EMAIL=${user?.email},
-          HAS SAME CONNECTED ACCOUNT=${hasSameConnectedAccount},
-          IS WALLET CONNECTED=${isWalletConnected},
-          IS CORRECT NETWORK=${isCorrectNetwork},
-          BALANCE CELO AVAILABLE=${balanceCeloAvailable},
-          bookingId=${bookingId}, 
-          DAILY TOKEN VALUE=${dailyTokenValue}, 
-          STATUS=${status},
+          `TOKEN PAYMENT ERROR:<br/><br/>
+          BOOKING ID=${bookingId}, <br/><br/>
+          TOKEN PRICE=${rentalTokenVal},<br/><br/>
+          TDF BALANCE TOTAL=${balanceTotal},<br/><br/>
+          TDF BALANCE AVAILABLE=${balanceAvailable},<br/><br/>
+          USER EMAIL=${user?.email},<br/><br/>
+          HAS SAME CONNECTED ACCOUNT=${hasSameConnectedAccount},<br/><br/>
+          IS WALLET CONNECTED=${isWalletConnected},<br/><br/>
+          IS CORRECT NETWORK=${isCorrectNetwork},<br/><br/>
+          BALANCE CELO AVAILABLE=${balanceCeloAvailable},<br/><br/>
+          bookingId=${bookingId}, <br/><br/>
+          DAILY TOKEN VALUE=${dailyTokenValue}, <br/><br/>
+          STATUS=${status},<br/><br/>
           ERROR=${result.error}
           `,
           user?.email,
