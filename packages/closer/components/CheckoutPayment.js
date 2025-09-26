@@ -189,6 +189,8 @@ const CheckoutPayment = ({
       </HeadingRow>
 
       {error && <ErrorMessage error={error} />}
+
+      rentalToken?.val={rentalToken?.val}
       <Elements stripe={stripe}>
         <CheckoutForm
           type="booking"

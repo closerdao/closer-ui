@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingWallet from '../../../components/BookingWallet';
@@ -116,13 +116,6 @@ const Checkout = ({
 
   const bookingYear = dayjs(start).year();
   const bookingStartDayOfYear = dayjs(start).dayOfYear();
-  const bookingNights = Array.from({ length: duration || 0 }, (_, i) => [
-    bookingYear,
-    bookingStartDayOfYear + i,
-  ]);
-  const { stakeTokens, isStaking, checkContract } = useBookingSmartContract({
-    bookingNights,
-  });
   const router = useRouter();
 
   // Check if this is a friend accessing the checkout page
@@ -184,6 +177,24 @@ const Checkout = ({
       isAdditionalFiatPayment,
     }),
   );
+
+  // Calculate how many nights should be paid with tokens
+  const nightsToPayWithTokens = useMemo(() => {
+    return paymentType === PaymentType.PARTIAL_TOKENS
+      ? maxNightsToPayWithTokens
+      : duration || 0;
+  }, [paymentType, maxNightsToPayWithTokens, duration]);
+
+  const bookingNights = useMemo(() => {
+    return Array.from({ length: nightsToPayWithTokens }, (_, i) => [
+      bookingYear,
+      bookingStartDayOfYear + i,
+    ]);
+  }, [nightsToPayWithTokens, bookingYear, bookingStartDayOfYear]);
+
+  const { stakeTokens, isStaking, checkContract } = useBookingSmartContract({
+    bookingNights,
+  });
 
   const [priceInCredits, setPriceInCredits] = useState(
     paymentType === PaymentType.FULL_CREDITS
@@ -301,6 +312,9 @@ const Checkout = ({
               .get('/carrots/balance')
               .then((response) => response.data.results),
           ]);
+
+          console.log('areCreditsAvailable===========', areCreditsAvailable);
+          console.log('creditsBalance===========', creditsBalance);
           setCreditsBalance(creditsBalance);
           setCanApplyCredits(areCreditsAvailable && !useTokens);
         } catch (error) {
@@ -815,7 +829,7 @@ const Checkout = ({
                 dailyTokenValue={dailyRentalToken?.val || 0}
                 startDate={start}
                 rentalToken={dailyRentalToken?.val || 0 * (duration || 0)}
-                totalNights={duration || 0}
+                totalNights={nightsToPayWithTokens}
                 user={user}
                 eventId={event?._id}
                 status={booking?.status}
