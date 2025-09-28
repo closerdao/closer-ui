@@ -117,9 +117,30 @@ const SuccessCitizenPage: NextPage<Props> = ({
                 downPayment,
                 closerIban,
                 userIbanLast4,
-                beneficiary,
+
               })}
             </p>
+
+            <div className="bg-gray-100 p-4 rounded-lg space-y-2">
+              <div>
+                <span className="font-semibold">{t('oasa_beneficiary')}</span>
+                <span className="ml-2">{t('oasa_beneficiary_name')}</span>
+              </div>
+              <div>
+                <span className="font-semibold">{t('oasa_iban')}</span>
+                <span className="ml-2">{t('oasa_iban_value')}</span>
+              </div>
+              <div>
+                <span className="font-semibold">{t('oasa_bic')}</span>
+                <span className="ml-2">{t('oasa_bic_value')}</span>
+              </div>
+              <div>
+                <span className="font-semibold">{t('oasa_address')}</span>
+                <div className="">
+                  {t('oasa_address_value')}
+                </div>
+              </div>
+            </div>
 
             <p>
               {t.rich(

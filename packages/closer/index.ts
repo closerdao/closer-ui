@@ -161,6 +161,7 @@ export { default as VolunteerPage } from './pages/volunteer/[slug]/';
 export { default as EditVolunteerOportunity } from './pages/volunteer/[slug]/edit';
 export { default as VolunteerApplicationPage } from './pages/volunteer/apply';
 export { default as CreateVolunteerOportunity } from './pages/volunteer/create';
+export { default as CitizenshipPage } from './pages/citizenship';
 
 // Types
 export * from './types/';

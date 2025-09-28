@@ -16,6 +16,7 @@ import {
   Calendar,
   Check,
   ChevronRight,
+  CreditCard,
   Hammer,
   Handshake,
   HeartHandshake,
@@ -25,15 +26,15 @@ import {
   Trees,
   Users,
   Wallet,
-  CreditCard,
 } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { useBuyTokens } from '../hooks/useBuyTokens';
 import { usePlatform } from '../contexts/platform';
+import { useBuyTokens } from '../hooks/useBuyTokens';
 import { CitizenshipConfig } from '../types/api';
 import api from '../utils/api';
+import { loadLocaleData } from '../utils/locale.helpers';
 
 const CITIZEN_TARGET = 300;
 
@@ -62,11 +63,16 @@ const CitizenshipPage = ({
   const [isLoading, setIsLoading] = useState(false);
   const [tokenPrice, setTokenPrice] = useState(0);
   const [isTokenPriceLoading, setIsTokenPriceLoading] = useState(false);
+  const [tokenPlans, setTokenPlans] = useState([
+    { tokens: 30, monthlyPayment: 0 },
+    { tokens: 60, monthlyPayment: 0 },
+    { tokens: 90, monthlyPayment: 0 },
+    { tokens: 120, monthlyPayment: 0 },
+  ]);
   const { getTotalCostWithoutWallet, isConfigReady } = useBuyTokens();
   const { platform }: any = usePlatform();
 
   const citizenTarget = customConfig?.citizenTarget || CITIZEN_TARGET;
-
 
   const fetchMemberCount = async () => {
     console.log('fetchMemberCount');
@@ -107,27 +113,71 @@ const CitizenshipPage = ({
     }
   }, [isConfigReady]);
 
+  useEffect(() => {
+    const calculateTokenPlans = async () => {
+      if (!isConfigReady || !citizenshipConfig) return;
+
+      try {
+        setIsTokenPriceLoading(true);
+        const plans = await Promise.all([
+          calculateFinancedPrice(30),
+          calculateFinancedPrice(60),
+          calculateFinancedPrice(90),
+          calculateFinancedPrice(120),
+        ]);
+
+        setTokenPlans([
+          { tokens: 30, monthlyPayment: plans[0] },
+          { tokens: 60, monthlyPayment: plans[1] },
+          { tokens: 90, monthlyPayment: plans[2] },
+          { tokens: 120, monthlyPayment: plans[3] },
+        ]);
+      } catch (error) {
+        console.error('Failed to calculate token plans:', error);
+      } finally {
+        setIsTokenPriceLoading(false);
+      }
+    };
+
+    calculateTokenPlans();
+  }, [isConfigReady, citizenshipConfig?.tokenPriceModifierPercent]);
+
   const progress = Math.min(
     100,
     Math.round((citizenCurrent / citizenTarget) * 100),
   );
 
   // Calculate financed token prices
-  const calculateFinancedPrice = (tokens: number) => {
-    if (!tokenPrice) return 0;
-    const priceModifier = citizenshipConfig?.tokenPriceModifierPercent || 1;
-    const totalCost = tokenPrice * priceModifier * tokens;
-    const downPayment = totalCost * 0.1;
-    const monthlyPayment = (totalCost - downPayment) / 36;
-    return Math.round(monthlyPayment * 100) / 100;
-  };
+  const calculateFinancedPrice = async (tokens: number) => {
+    console.log('=== citizenshipConfig ===', citizenshipConfig);
+    if (!isConfigReady) return 0;
+    try {
+      const totalCost = await getTotalCostWithoutWallet(tokens.toString());
+      const priceModifier = citizenshipConfig?.tokenPriceModifierPercent || 0;
+      const totalToPayInFiat = Number(
+        (totalCost * (1 + priceModifier / 100)).toFixed(2),
+      );
+      const downPayment = Number((totalToPayInFiat * 0.1).toFixed(2));
+      const monthlyPayment = Number(
+        ((totalToPayInFiat - downPayment) / 36).toFixed(2),
+      );
 
-  const tokenPlans = [
-    { tokens: 30, monthlyPayment: calculateFinancedPrice(30) },
-    { tokens: 60, monthlyPayment: calculateFinancedPrice(60) },
-    { tokens: 90, monthlyPayment: calculateFinancedPrice(90) },
-    { tokens: 120, monthlyPayment: calculateFinancedPrice(120) },
-  ];
+      console.log(`Citizenship calculation for ${tokens} tokens:`, {
+        totalCost,
+        priceModifier,
+        priceModifierPercent: citizenshipConfig?.tokenPriceModifierPercent,
+        totalToPayInFiat,
+        downPayment,
+        monthlyPayment,
+        citizenshipConfig: citizenshipConfig,
+      });
+
+      return monthlyPayment;
+    } catch (error) {
+      console.error('Failed to calculate financed price:', error);
+      return 0;
+    }
+  };
 
   const benefits = [
     {
@@ -332,10 +382,10 @@ const CitizenshipPage = ({
                 <ChevronRight className="mt-1 h-5 w-5 text-accent" />
                 {t('citizenship_roadmap_3')}
               </p>
-                  <p className="flex items-start gap-2">
-                    <ChevronRight className="mt-1 h-5 w-5 text-accent" />
-                    {t('citizenship_roadmap_4')}
-                  </p>
+              <p className="flex items-start gap-2">
+                <ChevronRight className="mt-1 h-5 w-5 text-accent" />
+                {t('citizenship_roadmap_4')}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -397,16 +447,14 @@ const CitizenshipPage = ({
                   <h3 className="text-xl font-semibold text-foreground mb-2">
                     {s.title}
                   </h3>
-                  <p className="text-foreground leading-relaxed">
-                    {s.desc}
-                  </p>
+                  <p className="text-foreground leading-relaxed">{s.desc}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
       </section>
-
+      {/* tokenPriceModifierPercent={tokenPriceModifierPercent} */}
       {/* Financed tokens */}
       <section className="bg-background">
         <div className="mx-auto max-w-6xl px-6 py-14">
@@ -474,8 +522,8 @@ const CitizenshipPage = ({
                   {t('citizenship_responsibilities_title')}
                 </CardTitle>
               </CardHeader>
-                <CardContent className="space-y-3 text-foreground">
-                  <ul className="space-y-2">
+              <CardContent className="space-y-3 text-foreground">
+                <ul className="space-y-2">
                   <li className="flex items-start gap-2">
                     <Check className="mt-1 h-5 w-5 text-accent" />
                     {t('citizenship_responsibilities_1')}
@@ -563,15 +611,18 @@ const CitizenshipPage = ({
 
 CitizenshipPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [citizenshipRes] = await Promise.all([
+    const [citizenshipRes, messages] = await Promise.all([
       api.get('/config/citizenship').catch(() => {
         return null;
       }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const citizenshipConfig = citizenshipRes?.data?.results?.value;
+
     return {
       citizenshipConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {

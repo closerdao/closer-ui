@@ -174,6 +174,14 @@ const ValidationCitizenPage: NextPage<Props> = ({
   }
 
   const handleNext = async () => {
+    const res = await api.post('/subscription/citizen/apply', {
+      owns30Tokens,
+    });
+
+    if (res.data.status === 'success') {
+      router.push('/subscriptions/citizen/success?intent=apply');
+      return;
+    }
     switch (eligibility) {
       case 'good_to_buy':
         router.push(

@@ -54,6 +54,7 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
   const isCitizenApplication = citizenApplication === 'true';
 
   const [isAgreementAccepted, setIsAgreementAccepted] = useState(false);
+  const [isTokenTermsAccepted, setIsTokenTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [application, setApplication] = useState<
     Partial<FinanceApplicationCreateRequest>
@@ -92,7 +93,6 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
           (application: FinanceApplication) =>
             ['pending-payment', 'paid'].includes(application.status),
         );
-
 
         if (financeApplications) {
           setActiveApplications(activeApplications);
@@ -197,6 +197,8 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
               }
               isAgreementAccepted={isAgreementAccepted}
               setIsAgreementAccepted={setIsAgreementAccepted}
+              isTokenTermsAccepted={isTokenTermsAccepted}
+              setIsTokenTermsAccepted={setIsTokenTermsAccepted}
               handleNext={handleNext}
               loading={loading}
             />

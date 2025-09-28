@@ -21,6 +21,8 @@ interface CitizenFinanceTokensProps {
   loading: boolean;
   setIsAgreementAccepted: (value: boolean) => void;
   isCitizenApplication: boolean;
+  isTokenTermsAccepted: boolean;
+  setIsTokenTermsAccepted: (value: boolean) => void;
 }
 
 const CitizenFinanceTokens = ({
@@ -32,6 +34,8 @@ const CitizenFinanceTokens = ({
   loading,
   setIsAgreementAccepted,
   isCitizenApplication,
+  isTokenTermsAccepted,
+  setIsTokenTermsAccepted,
 }: CitizenFinanceTokensProps) => {
   const t = useTranslations();
 
@@ -266,9 +270,42 @@ const CitizenFinanceTokens = ({
           </div>
         )}
 
+        <div className="flex items-start gap-1">
+          <Checkbox
+            id="token-terms-agreement"
+            isChecked={isTokenTermsAccepted}
+            onChange={() => setIsTokenTermsAccepted(!isTokenTermsAccepted)}
+          />
+          <label htmlFor="token-terms-agreement">
+            {t.rich('subscriptions_citizen_agree_to_token_terms', {
+              link1: (chunks) => (
+                <a
+                  href="https://docs.google.com/document/d/1kz4SH1UVWhamniqUW4GWmFOU0nmXyhpAzUJwFTW0ybs/edit?tab=t.0"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ textDecoration: 'underline' }}
+                >
+                  {chunks}
+                </a>
+              ),
+              link2: (chunks) => (
+                <a
+                  href="https://oasa.earth/papers/OASA-Whitepaper-V1.2.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ textDecoration: 'underline' }}
+                >
+                  {chunks}
+                </a>
+              ),
+            })}
+          </label>
+        </div>
+
         <Button
           isEnabled={
             isAgreementAccepted === isCitizenApplication &&
+            isTokenTermsAccepted &&
             !loading &&
             Boolean(application?.iban) &&
             !isPending &&

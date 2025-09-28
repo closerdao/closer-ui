@@ -48,6 +48,7 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
   const { intent } = router.query;
 
   const [isAgreementAccepted, setIsAgreementAccepted] = useState(false);
+  const [isTokenTermsAccepted, setIsTokenTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [application, setApplication] = useState<any>({
     iban: '',
@@ -166,7 +167,10 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
               }
               isAgreementAccepted={isAgreementAccepted}
               setIsAgreementAccepted={setIsAgreementAccepted}
-              applyCitizen={applyCitizen}
+              isTokenTermsAccepted={isTokenTermsAccepted}
+              setIsTokenTermsAccepted={setIsTokenTermsAccepted}
+              isCitizenApplication={intent === 'finance'}
+              handleNext={applyCitizen}
               loading={loading}
             />
           )}

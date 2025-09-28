@@ -91,7 +91,7 @@ const MemberPage = ({
   useEffect(() => {
     if (currentUser && !isLoading) {
       (async () => {
-        const financeApplicationRes = await api.get('/financeApplications', {
+        const financeApplicationRes = await api.get('/financeApplication', {
           params: {
             where: {
               userId: currentUser?._id,
@@ -99,6 +99,8 @@ const MemberPage = ({
           },
         });
         const financeApplications = financeApplicationRes?.data?.results;
+
+        console.log('financeApplications===', financeApplications);
 
         const activeApplications = financeApplications.filter(
           (application: FinanceApplication) =>
@@ -626,10 +628,8 @@ const MemberPage = ({
                   (member._id === currentUser?._id ||
                     currentUser?.roles?.includes('admin') ||
                     currentUser?.roles?.includes('community-curator')) && (
-                    <div className="bg-white rounded-lg shadow-sm p-6 mb-6 space-y-6">
-                      <h4 className="font-medium text-xl mb-4">
-                        {t('members_slug_citizenship')}
-                      </h4>
+                    <div className="bg-white mb-6 space-y-6">
+                    
                       <CitizenSubscriptionProgress member={member} />
 
                       <div className="text-xs whitespace-pre-wrap">

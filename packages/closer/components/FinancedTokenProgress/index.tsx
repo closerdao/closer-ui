@@ -43,16 +43,18 @@ const FinancedTokenProgress = ({ member, activeApplications }: Props) => {
           <p>
             {' '}
             {t('subscriptions_citizen_user_page_total_to_pay')}{' '}
-            <strong>{application.totalToPayInFiat}</strong>
+            <strong>€
+            {application.totalToPayInFiat}</strong>
           </p>
           <p>
             {' '}
             {t('subscriptions_citizen_monthly_payment')}{' '}
-            <strong>{application.monthlyPaymentAmount}</strong>
+            <strong>€{application.monthlyPaymentAmount}</strong>
           </p>
           <p>
             {t('subscriptions_citizen_user_page_down_payment')}{' '}
-            <strong>{application.downPaymentAmount}</strong>
+            <strong>€
+            {application.downPaymentAmount}</strong>
           </p>
 
           <p>
