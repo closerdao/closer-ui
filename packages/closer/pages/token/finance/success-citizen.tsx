@@ -45,8 +45,6 @@ const SuccessCitizenPage: NextPage<Props> = ({
 
   const { isLoading, user, refetchUser } = useAuth();
 
-  const beneficiary = process.env.NEXT_PUBLIC_BENEFICIARY || '';
-
   const router = useRouter();
 
   const defaultConfig = useConfig();
@@ -78,7 +76,7 @@ const SuccessCitizenPage: NextPage<Props> = ({
   }, [isLoading]);
 
   const goBack = () => {
-    router.push(`/token/finance?citizenApplication=true`);
+    router.push('/token/finance?citizenApplication=true');
   };
 
   if (error) {
@@ -117,7 +115,6 @@ const SuccessCitizenPage: NextPage<Props> = ({
                 downPayment,
                 closerIban,
                 userIbanLast4,
-
               })}
             </p>
 
@@ -136,9 +133,7 @@ const SuccessCitizenPage: NextPage<Props> = ({
               </div>
               <div>
                 <span className="font-semibold">{t('oasa_address')}</span>
-                <div className="">
-                  {t('oasa_address_value')}
-                </div>
+                <div className="">{t('oasa_address_value')}</div>
               </div>
             </div>
 

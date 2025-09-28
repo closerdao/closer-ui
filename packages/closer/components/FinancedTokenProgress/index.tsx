@@ -1,4 +1,4 @@
-import { FinanceApplication } from '@/types';
+import { FinanceApplication } from '../../types';
 
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
