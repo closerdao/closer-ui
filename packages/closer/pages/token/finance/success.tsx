@@ -77,7 +77,7 @@ const SuccessFinancePage: NextPage<Props> = ({
   }, [isLoading]);
 
   const goBack = () => {
-    router.push(`/token/finance`);
+    router.push('/token/finance');
   };
 
   if (error) {
@@ -116,7 +116,6 @@ const SuccessFinancePage: NextPage<Props> = ({
                 downPayment,
                 closerIban,
                 userIbanLast4,
-
               })}
             </p>
 
@@ -135,9 +134,7 @@ const SuccessFinancePage: NextPage<Props> = ({
               </div>
               <div>
                 <span className="font-semibold">{t('oasa_address')}</span>
-                <div className="">
-                  {t('oasa_address_value')}
-                </div>
+                <div className="">{t('oasa_address_value')}</div>
               </div>
             </div>
 

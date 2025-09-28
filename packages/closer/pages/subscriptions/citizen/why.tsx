@@ -8,7 +8,6 @@ import CitizenWhy from '../../../components/CitizenWhy';
 import PageError from '../../../components/PageError';
 import Wallet from '../../../components/Wallet';
 import {
-  BackButton,
   Button,
   Card,
   Heading,
