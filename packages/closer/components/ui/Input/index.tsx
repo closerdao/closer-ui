@@ -107,13 +107,19 @@ const Input = React.memo(
       setLocalValue(newValue);
       setIsValid(isValidValue(newValue));
       if (onChange) {
-        onChange(newValue as any);
+        onChange(event);
       }
     };
 
     useEffect(() => {
       if (value) {
         setIsValid(isValidValue(value));
+      }
+    }, [value]);
+
+    useEffect(() => {
+      if (value !== undefined && value !== localValue) {
+        setLocalValue(value);
       }
     }, [value]);
 
@@ -149,7 +155,10 @@ const Input = React.memo(
 
     const handleSubmit = () => {
       if (onChangeRef.current && isValidValue(localValue)) {
-        onChangeRef.current(localValue as any);
+        const syntheticEvent = {
+          target: { value: localValue },
+        } as ChangeEvent<HTMLInputElement>;
+        onChangeRef.current(syntheticEvent);
         if (inputRef?.current) {
           (inputRef.current as HTMLInputElement).blur();
         }
