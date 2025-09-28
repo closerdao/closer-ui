@@ -2,14 +2,14 @@ import Link from 'next/link';
 
 import { useEffect, useState } from 'react';
 
-import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/shadcn-button';
+import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/shadcn-button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../components/ui/shadcn-card';
+} from '../../components/ui/shadcn-card';
 
 import {
   ArrowRight,
@@ -30,11 +30,11 @@ import {
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { usePlatform } from '../contexts/platform';
-import { useBuyTokens } from '../hooks/useBuyTokens';
-import { CitizenshipConfig } from '../types/api';
-import api from '../utils/api';
-import { loadLocaleData } from '../utils/locale.helpers';
+import { usePlatform } from '../../contexts/platform';
+import { useBuyTokens } from '../../hooks/useBuyTokens';
+import { CitizenshipConfig } from '../../types/api';
+import api from '../../utils/api';
+import { loadLocaleData } from '../../utils/locale.helpers';
 
 const CITIZEN_TARGET = 300;
 

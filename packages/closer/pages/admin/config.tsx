@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { ChangeEvent, useEffect, useMemo, useState } from 'react';
 
 import ArrayConfig from '../../components/ArrayConfig';
+import AdminLayout from '../../components/Dashboard/AdminLayout';
 import PlatformFeatureSelector from '../../components/PlatformConfig/PlatformFeatureSelector';
 import {
   Button,
@@ -22,6 +23,7 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { Config } from '../../types';
+import { BookingConfig } from '../../types/api';
 import { ConfigType } from '../../types/config';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
@@ -34,8 +36,7 @@ import {
 import { capitalizeFirstLetter } from '../../utils/learn.helpers';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
-import AdminLayout from '../../components/Dashboard/AdminLayout';
-import { BookingConfig } from '../../types/api';
+
 interface Props {
   defaultEmailsConfig: ConfigType;
   error: null | string;
@@ -43,6 +44,7 @@ interface Props {
 }
 
 const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
+  console.log('defaultEmailsConfig=', defaultEmailsConfig);
   const t = useTranslations();
   const { platform }: any = usePlatform();
   const { platformAllowedConfigs } = useConfig() || {};
@@ -60,7 +62,6 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
   const allConfigCategories = mergedConfigDescription
     .map((config: any) => config?.slug)
     .filter((config: any) => platformAllowedConfigs?.includes(config));
-  
 
   const [selectedConfig, setSelectedConfig] = useState('general');
   const [updatedConfigs, setUpdatedConfigs] = useState<Config[]>([]);
@@ -196,6 +197,22 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
         .toJS()
         .some((config: any) => config.slug === configCategoryToSave);
 
+      // Log specific email template being saved
+      if (configCategoryToSave === 'emails') {
+        const elements = updatedConfig?.value?.elements;
+        if (Array.isArray(elements)) {
+          const financedTokenTemplate = elements.find(
+            (element: any) => element.name === 'financedToken_decoupled_user',
+          );
+          if (financedTokenTemplate) {
+            console.log(
+              'Saving financedToken_decoupled_user template to database:',
+              JSON.stringify(financedTokenTemplate, null, 2),
+            );
+          }
+        }
+      }
+
       let res;
       if (configExists) {
         res = await api.patch(`/config/${configCategoryToSave}`, {
@@ -259,7 +276,6 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
 
           const preparedInputValue = getPreparedInputValue(inputValue);
 
-  
           if (isArray) {
             valueToUpdate = config.value[key];
             const updatedArray = getUpdatedArray(
@@ -300,7 +316,11 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
 
           const updatedElements = elements.map((element: any) => {
             if (element.name === name) {
-              return defaultValue;
+              // Create a new element with default values but explicitly set lowerText to empty
+              const resetElement = { ...defaultValue };
+              // Always ensure lowerText is empty for email templates
+              resetElement.lowerText = '';
+              return resetElement;
             }
             return element;
           });
@@ -367,8 +387,8 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
       </Head>
 
       <AdminLayout isBookingEnabled={isBookingEnabled}>
-      <div className="max-w-3xl mx-auto flex flex-col gap-10">
-        <Heading level={1}>{t('platform_configs')}</Heading>
+        <div className="max-w-3xl mx-auto flex flex-col gap-10">
+          <Heading level={1}>{t('platform_configs')}</Heading>
 
           {allConfigCategories.length > 1 && isGeneralConfigEnabled && (
             <PlatformFeatureSelector
@@ -553,17 +573,17 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
                                       type="text"
                                       value={String(currentValue)}
                                     />
-                                    )}
-                                    
-                                    {isTime && (
-                                      <input
-                                        className="bg-neutral rounded-md p-1"
-                                        name={key}
-                                        onChange={handleChange}
-                                        type="time"
-                                        value={String(currentValue)}
-                                      />
-                                    )}
+                                  )}
+
+                                  {isTime && (
+                                    <input
+                                      className="bg-neutral rounded-md p-1"
+                                      name={key}
+                                      onChange={handleChange}
+                                      type="time"
+                                      value={String(currentValue)}
+                                    />
+                                  )}
                                   {errors[key] && (
                                     <ErrorMessage
                                       error={errors[key].toString()}

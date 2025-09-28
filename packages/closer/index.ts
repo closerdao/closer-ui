@@ -132,8 +132,8 @@ export { default as SignUpPage } from './pages/signup';
 export { default as StayPage } from './pages/stay/';
 export { default as ListingPage } from './pages/stay/[slug]';
 export { default as SubscriptionsCheckoutPage } from './pages/subscriptions/checkout';
-export { default as SubscriptionsCitizenApplyPage } from './pages/subscriptions/citizen/apply';
-export { default as SelectFlowCitizenPage } from './pages/subscriptions/citizen/select-flow';
+
+export { default as CitizenshipPage } from './pages/citizenship/index';
 export { default as SubscriptionsCitizenSuccessPage } from './pages/subscriptions/citizen/success';
 export { default as SubscriptionsCitizenValidationPage } from './pages/subscriptions/citizen/validation';
 export { default as CitizenWhyPage } from './pages/subscriptions/citizen/why';
@@ -151,8 +151,8 @@ export { default as TokenSaleBeforeYouBeginPage } from './pages/token/before-you
 export { default as ChecklistCryptoPage } from './pages/token/checklist-crypto';
 export { default as TokenSaleCheckoutPage } from './pages/token/checkout';
 export { default as TokenFinancePage } from './pages/token/finance';
-export { default as TokenFinanceCitizenSuccessPage } from './pages/token/finance/success-citizen';
 export { default as TokenFinanceSuccessPage } from './pages/token/finance/success';
+export { default as TokenFinanceCitizenSuccessPage } from './pages/token/finance/success-citizen';
 export { default as PublicTokenSalePage } from './pages/token/index';
 export { default as NationalityPage } from './pages/token/nationality';
 export { default as TokenSaleSuccessPage } from './pages/token/success';
@@ -161,7 +161,6 @@ export { default as VolunteerPage } from './pages/volunteer/[slug]/';
 export { default as EditVolunteerOportunity } from './pages/volunteer/[slug]/edit';
 export { default as VolunteerApplicationPage } from './pages/volunteer/apply';
 export { default as CreateVolunteerOportunity } from './pages/volunteer/create';
-export { default as CitizenshipPage } from './pages/citizenship';
 
 // Types
 export * from './types/';

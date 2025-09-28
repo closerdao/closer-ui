@@ -80,7 +80,7 @@ const SuccessCitizenPage: NextPage<Props> = ({
   }, [isLoading]);
 
   const goBack = () => {
-    router.push(`/subscriptions/citizen/apply?intent=${intent}`);
+    router.push(`/subscriptions/citizen/validation`);
   };
 
   if (error) {
