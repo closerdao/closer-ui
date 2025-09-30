@@ -22,19 +22,27 @@ import {
 } from '../ui/select';
 
 const SALES_PER_PAGE = 20;
-const DEFAULT_STATUS_TO_SHOW = 'paid'
+const DEFAULT_STATUS_TO_SHOW = 'paid';
 
 const SalesDashboard = ({
   sales,
   onSuccess,
+  currentPage,
+  totalSales,
+  salesPerPage,
+  onPageChange,
 }: {
   sales: TokenSale[] | null;
   onSuccess?: () => void;
+  currentPage?: number;
+  totalSales?: number;
+  salesPerPage?: number;
+  onPageChange?: (page: number) => void;
 }) => {
   const t = useTranslations();
   const { user: currentUser } = useAuth();
   const [statusFilter, setStatusFilter] = useState(DEFAULT_STATUS_TO_SHOW);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [localCurrentPage, setLocalCurrentPage] = useState(currentPage || 1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSaleId, setSelectedSaleId] = useState<string>('');
   const [transactionId, setTransactionId] = useState('');
@@ -106,27 +114,46 @@ const SalesDashboard = ({
     });
   }, [statusFilter, enrichedSales]);
 
-  // Calculate pagination
-  const totalSales = filteredSales.length;
-  const totalPages = Math.ceil(totalSales / SALES_PER_PAGE);
-  const startIndex = (currentPage - 1) * SALES_PER_PAGE;
-  const endIndex = startIndex + SALES_PER_PAGE;
-  const currentSales = filteredSales.slice(startIndex, endIndex);
+  // Calculate pagination - use server-side if available, otherwise client-side
+  const isServerSidePagination =
+    totalSales !== undefined && salesPerPage !== undefined;
+  const totalSalesCount = isServerSidePagination
+    ? totalSales
+    : filteredSales.length;
+  const itemsPerPage = isServerSidePagination ? salesPerPage : SALES_PER_PAGE;
+  const totalPages = Math.ceil(totalSalesCount / itemsPerPage);
 
-  // Reset to page 1 when filter changes
+  const currentSales = isServerSidePagination
+    ? sales || []
+    : filteredSales.slice(
+        (localCurrentPage - 1) * itemsPerPage,
+        localCurrentPage * itemsPerPage,
+      );
+
+  // Reset to page 1 when filter changes (only for client-side pagination)
   useEffect(() => {
-    setCurrentPage(1);
-  }, [statusFilter]);
+    if (!isServerSidePagination) {
+      setLocalCurrentPage(1);
+    }
+  }, [statusFilter, isServerSidePagination]);
 
   // Ensure current page is valid when total pages changes
   useEffect(() => {
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(totalPages);
+    if (
+      !isServerSidePagination &&
+      localCurrentPage > totalPages &&
+      totalPages > 0
+    ) {
+      setLocalCurrentPage(totalPages);
     }
-  }, [totalPages, currentPage]);
+  }, [totalPages, localCurrentPage, isServerSidePagination]);
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    if (isServerSidePagination && onPageChange) {
+      onPageChange(page);
+    } else {
+      setLocalCurrentPage(page);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -209,7 +236,7 @@ const SalesDashboard = ({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-muted-foreground font-bold">
-              {totalSales}{' '}
+              {totalSalesCount}{' '}
               {statusFilter === 'all'
                 ? t('token_sales_dashboard_total_sales')
                 : statusFilter}{' '}
@@ -217,9 +244,11 @@ const SalesDashboard = ({
             </p>
             {totalPages > 1 && (
               <p className="text-sm text-muted-foreground">
-                {t('token_sales_dashboard_showing')} {startIndex + 1}-
-                {Math.min(endIndex, totalSales)} {t('token_sales_dashboard_of')}{' '}
-                {totalSales} {t('token_sales_dashboard_sales')}
+                {t('token_sales_dashboard_showing')}{' '}
+                {(localCurrentPage - 1) * itemsPerPage + 1}-
+                {Math.min(localCurrentPage * itemsPerPage, totalSalesCount)}{' '}
+                {t('token_sales_dashboard_of')} {totalSalesCount}{' '}
+                {t('token_sales_dashboard_sales')}
               </p>
             )}
           </div>
@@ -368,9 +397,11 @@ const SalesDashboard = ({
             <Pagination
               loadPage={handlePageChange}
               queryParam="page"
-              total={totalSales}
-              page={currentPage}
-              limit={SALES_PER_PAGE}
+              total={totalSalesCount}
+              page={
+                isServerSidePagination ? currentPage || 1 : localCurrentPage
+              }
+              limit={itemsPerPage}
               maxPages={5}
             />
           </div>

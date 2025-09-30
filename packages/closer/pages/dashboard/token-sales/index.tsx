@@ -18,25 +18,32 @@ import api, { formatSearch } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 
+const SALES_PER_PAGE = 10;
+
 const TokenSalesDashboardPage = ({
   sales: initialSales,
   buyers: initialBuyers,
   bookingConfig,
+  totalSales: initialTotalSales,
+  currentPage: initialPage,
 }: {
   sales: TokenSale[] | null;
   buyers: User[] | null;
   bookingConfig: BookingConfig;
+  totalSales: number;
+  currentPage: number;
 }) => {
   const t = useTranslations();
   const { user } = useAuth();
   const [sales, setSales] = useState<TokenSale[] | null>(initialSales);
   const [buyers, setBuyers] = useState<User[] | null>(initialBuyers);
+  const [currentPage, setCurrentPage] = useState(initialPage);
+  const [totalSales, setTotalSales] = useState(initialTotalSales);
 
-  const refetchSales = async () => {
+  const refetchSales = async (page: number = currentPage) => {
     try {
-
       const [saleRes, buyersRes] = await Promise.all([
-        api.get('/sale').catch(() => null),
+        api.get(`/sale?page=${page}&limit=${SALES_PER_PAGE}`).catch(() => null),
         api
           .get(
             '/user?where=' +
@@ -51,9 +58,12 @@ const TokenSalesDashboardPage = ({
 
       const newSales = saleRes?.data?.results;
       const newBuyers = buyersRes?.data?.results;
+      const newTotalSales = saleRes?.data?.total || 0;
 
       setSales(newSales);
       setBuyers(newBuyers);
+      setTotalSales(newTotalSales);
+      setCurrentPage(page);
     } catch (error) {
       console.error('Error refetching sales:', error);
     }
@@ -98,7 +108,11 @@ const TokenSalesDashboardPage = ({
           <section>
             <TokenSalesDashboard
               sales={salesWithBuyer || []}
-              onSuccess={refetchSales}
+              onSuccess={() => refetchSales()}
+              currentPage={currentPage}
+              totalSales={totalSales}
+              salesPerPage={SALES_PER_PAGE}
+              onPageChange={refetchSales}
             />
           </section>
         </div>
@@ -109,8 +123,9 @@ const TokenSalesDashboardPage = ({
 
 TokenSalesDashboardPage.getInitialProps = async (context: NextPageContext) => {
   try {
+    const page = parseInt(context.query.page as string) || 1;
     const [saleRes, bookingConfigRes, messages] = await Promise.all([
-      api.get('/sale').catch(() => {
+      api.get(`/sale?page=${page}&limit=${SALES_PER_PAGE}`).catch(() => {
         return null;
       }),
       api.get('/config/booking').catch(() => {
@@ -120,6 +135,7 @@ TokenSalesDashboardPage.getInitialProps = async (context: NextPageContext) => {
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const sales = saleRes?.data?.results;
+    const totalSales = saleRes?.data?.total || 0;
 
     const uniqueBuyerIds = [
       ...new Set(sales?.map((sale: TokenSale) => sale.createdBy)),
@@ -137,6 +153,8 @@ TokenSalesDashboardPage.getInitialProps = async (context: NextPageContext) => {
       sales,
       bookingConfig,
       buyers,
+      totalSales,
+      currentPage: page,
       messages,
     };
   } catch (error) {
@@ -145,6 +163,8 @@ TokenSalesDashboardPage.getInitialProps = async (context: NextPageContext) => {
       sales: null,
       bookingConfig: null,
       buyers: null,
+      totalSales: 0,
+      currentPage: 1,
       messages: null,
     };
   }
