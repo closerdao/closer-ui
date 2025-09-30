@@ -29,6 +29,7 @@ export const models = [
   'food',
   'metric',
   'charge',
+  'sale',
 ];
 
 const filterToKey = (filter) => JSON.stringify(filter) || '__';
@@ -90,7 +91,6 @@ const reducer = (state, action) => {
         }),
       );
     case constants.PATCH_SUCCESS:
-
       return state.withMutations((map) => {
         if (action.filterKey && action.resultIndex) {
           map.setIn(
