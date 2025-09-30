@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
@@ -22,19 +22,33 @@ import {
 } from '../ui/select';
 
 const SALES_PER_PAGE = 20;
-const DEFAULT_STATUS_TO_SHOW = 'paid'
+const DEFAULT_STATUS_TO_SHOW = 'paid';
 
 const SalesDashboard = ({
   sales,
   onSuccess,
+  currentPage,
+  totalSales,
+  salesPerPage,
+  onPageChange,
+  statusFilter: externalStatusFilter,
+  onFilterChange,
 }: {
   sales: TokenSale[] | null;
   onSuccess?: () => void;
+  currentPage?: number;
+  totalSales?: number;
+  salesPerPage?: number;
+  onPageChange?: (page: number) => void;
+  statusFilter?: string;
+  onFilterChange?: (filter: string) => void;
 }) => {
   const t = useTranslations();
   const { user: currentUser } = useAuth();
-  const [statusFilter, setStatusFilter] = useState(DEFAULT_STATUS_TO_SHOW);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState(
+    externalStatusFilter || DEFAULT_STATUS_TO_SHOW,
+  );
+  const [localCurrentPage, setLocalCurrentPage] = useState(currentPage || 1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSaleId, setSelectedSaleId] = useState<string>('');
   const [transactionId, setTransactionId] = useState('');
@@ -52,9 +66,25 @@ const SalesDashboard = ({
       }
 
       try {
+        // Convert platform data to plain objects if needed
+        const salesArray = Array.isArray(sales)
+          ? sales
+          : (sales as any).toJS
+          ? (sales as any).toJS()
+          : sales;
+
+        // Check if we already have enriched data for this length
+        const currentLength = salesArray.length;
+        if (
+          enrichedSales.length === currentLength &&
+          enrichedSales.length > 0
+        ) {
+          return;
+        }
+
         // Get unique buyer IDs
         const uniqueBuyerIds = [
-          ...new Set(sales.map((sale: TokenSale) => sale.createdBy)),
+          ...new Set(salesArray.map((sale: any) => sale.createdBy)),
         ];
 
         // Fetch users with private fields (admin only)
@@ -66,7 +96,7 @@ const SalesDashboard = ({
         const buyers = buyersRes.data.results;
 
         // Enrich sales with complete buyer data
-        const enriched = sales.map((sale: TokenSale) => {
+        const enriched = salesArray.map((sale: any) => {
           const buyer = buyers.find(
             (buyer: any) => buyer._id === sale.createdBy,
           );
@@ -93,40 +123,53 @@ const SalesDashboard = ({
     fetchEnrichedSales();
   }, [sales, isAdmin]);
 
-  const filteredSales = useMemo(() => {
-    if (!enrichedSales || enrichedSales.length === 0) {
-      return [];
+  // No client-side filtering needed - server handles it
+
+  // Calculate pagination - use server-side if available, otherwise client-side
+  const isServerSidePagination =
+    totalSales !== undefined && salesPerPage !== undefined;
+  const totalSalesCount = isServerSidePagination
+    ? totalSales
+    : enrichedSales.length;
+  const itemsPerPage = isServerSidePagination ? salesPerPage : SALES_PER_PAGE;
+  const totalPages = Math.ceil(totalSalesCount / itemsPerPage);
+
+  // For server-side pagination, use enriched sales directly (they're already paginated)
+  // For client-side pagination, slice the enriched sales
+  const currentSales = isServerSidePagination
+    ? enrichedSales || []
+    : enrichedSales.slice(
+        (localCurrentPage - 1) * itemsPerPage,
+        localCurrentPage * itemsPerPage,
+      );
+
+  // Handle filter changes
+  const handleStatusFilterChange = (newFilter: string) => {
+    setStatusFilter(newFilter);
+    if (onFilterChange) {
+      onFilterChange(newFilter);
+    } else if (!isServerSidePagination) {
+      setLocalCurrentPage(1);
     }
-
-    if (statusFilter === 'all') {
-      return enrichedSales;
-    }
-    return enrichedSales.filter((sale: TokenSale) => {
-      return sale.status === statusFilter;
-    });
-  }, [statusFilter, enrichedSales]);
-
-  // Calculate pagination
-  const totalSales = filteredSales.length;
-  const totalPages = Math.ceil(totalSales / SALES_PER_PAGE);
-  const startIndex = (currentPage - 1) * SALES_PER_PAGE;
-  const endIndex = startIndex + SALES_PER_PAGE;
-  const currentSales = filteredSales.slice(startIndex, endIndex);
-
-  // Reset to page 1 when filter changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [statusFilter]);
+  };
 
   // Ensure current page is valid when total pages changes
   useEffect(() => {
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(totalPages);
+    if (
+      !isServerSidePagination &&
+      localCurrentPage > totalPages &&
+      totalPages > 0
+    ) {
+      setLocalCurrentPage(totalPages);
     }
-  }, [totalPages, currentPage]);
+  }, [totalPages, localCurrentPage, isServerSidePagination]);
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    if (isServerSidePagination && onPageChange) {
+      onPageChange(page);
+    } else {
+      setLocalCurrentPage(page);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -209,7 +252,7 @@ const SalesDashboard = ({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-muted-foreground font-bold">
-              {totalSales}{' '}
+              {totalSalesCount}{' '}
               {statusFilter === 'all'
                 ? t('token_sales_dashboard_total_sales')
                 : statusFilter}{' '}
@@ -217,15 +260,20 @@ const SalesDashboard = ({
             </p>
             {totalPages > 1 && (
               <p className="text-sm text-muted-foreground">
-                {t('token_sales_dashboard_showing')} {startIndex + 1}-
-                {Math.min(endIndex, totalSales)} {t('token_sales_dashboard_of')}{' '}
-                {totalSales} {t('token_sales_dashboard_sales')}
+                {t('token_sales_dashboard_showing')}{' '}
+                {(localCurrentPage - 1) * itemsPerPage + 1}-
+                {Math.min(localCurrentPage * itemsPerPage, totalSalesCount)}{' '}
+                {t('token_sales_dashboard_of')} {totalSalesCount}{' '}
+                {t('token_sales_dashboard_sales')}
               </p>
             )}
           </div>
           <div className="flex items-center gap-2">
             {t('token_sales_dashboard_select_status')}
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select
+              value={statusFilter}
+              onValueChange={handleStatusFilterChange}
+            >
               <SelectTrigger className="w-48">
                 <SelectValue
                   placeholder={t('token_sales_dashboard_filter_by_status')}
@@ -368,9 +416,11 @@ const SalesDashboard = ({
             <Pagination
               loadPage={handlePageChange}
               queryParam="page"
-              total={totalSales}
-              page={currentPage}
-              limit={SALES_PER_PAGE}
+              total={totalSalesCount}
+              page={
+                isServerSidePagination ? currentPage || 1 : localCurrentPage
+              }
+              limit={itemsPerPage}
               maxPages={5}
             />
           </div>
