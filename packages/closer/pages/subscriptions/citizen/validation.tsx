@@ -4,6 +4,8 @@ import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useState } from 'react';
 
+import { reportIssue } from '@/utils/reporting.utils';
+
 import CitizenEligibility from '../../../components/CitizenEligibility';
 import PageError from '../../../components/PageError';
 import Wallet from '../../../components/Wallet';
@@ -192,10 +194,19 @@ const ValidationCitizenPage: NextPage<Props> = ({
   };
 
   if (!user && !isLoading) {
+    reportIssue(
+      `Issue with authentication on subscriptions/citizen/validation: ${error}`,
+      'N/A',
+    ).catch((err) => console.error('Failed to report issue:', err));
     return <PageNotFound error="" />;
   }
 
   if (process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP !== 'true') {
+    reportIssue(
+      `NEXT_PUBLIC_FEATURE_CITIZENSHIP not true in prod on subscriptions/citizen/validation: ${error}`,
+      user?.email,
+    ).catch((err) => console.error('Failed to report issue:', err));
+
     return <PageNotFound error="" />;
   }
 
