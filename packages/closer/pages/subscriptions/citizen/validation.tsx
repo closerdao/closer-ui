@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useState } from 'react';
 
-import { reportIssue } from '@/utils/reporting.utils';
+import { reportIssue } from '../../../utils/reporting.utils';
 
 import CitizenEligibility from '../../../components/CitizenEligibility';
 import PageError from '../../../components/PageError';
