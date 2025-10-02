@@ -18,6 +18,7 @@ export type Report = {
 export type User = {
   vouched?: Vouched[];
   reports?: Report[];
+  reportedBy?: string[];
   message?: string;
   tagline?: string;
   about?: string;

@@ -3,10 +3,9 @@ import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useState } from 'react';
 
-import CitizenApply from '../../../components/CitizenApply';
 import CitizenFinanceTokens from '../../../components/CitizenFinanceTokens';
 import PageError from '../../../components/PageError';
-import { BackButton, Heading, ProgressBar } from '../../../components/ui/';
+import { BackButton, Heading, ProgressBar } from '../../../components/ui';
 
 import { NextPage, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -16,7 +15,11 @@ import { useAuth } from '../../../contexts/auth';
 import { WalletState } from '../../../contexts/wallet';
 import { useConfig } from '../../../hooks/useConfig';
 import { CitizenshipConfig, GeneralConfig } from '../../../types';
-import { SubscriptionPlan } from '../../../types/subscriptions';
+import {
+  FinanceApplication,
+  FinanceApplicationCreateRequest,
+  SubscriptionPlan,
+} from '../../../types/subscriptions';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
@@ -45,14 +48,25 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
 
   const { isLoading, user } = useAuth();
   const router = useRouter();
-  const { intent } = router.query;
+
+  const { citizenApplication } = router.query;
+
+  const isCitizenApplication = citizenApplication === 'true';
 
   const [isAgreementAccepted, setIsAgreementAccepted] = useState(false);
+  const [isTokenTermsAccepted, setIsTokenTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [application, setApplication] = useState<any>({
+  const [application, setApplication] = useState<
+    Partial<FinanceApplicationCreateRequest>
+  >({
     iban: '',
     tokensToFinance: MIN_TOKENS_TO_FINANCE,
+    why: user?.citizenship?.why || '',
   });
+
+  const [activeApplications, setActiveApplications] = useState<
+    FinanceApplication[]
+  >([]);
 
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
@@ -60,16 +74,35 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
 
   const { balanceTotal } = useContext(WalletState);
 
-  const owns30Tokens = balanceTotal >= MIN_TOKENS_TO_FINANCE;
-
   useEffect(() => {
     if (!isLoading && !user) {
       router.push(`/signup?back=${router.asPath}`);
     }
+    if (user && !isLoading) {
+      (async () => {
+        const financeApplicationRes = await api.get('/financeApplication', {
+          params: {
+            where: {
+              userId: user?._id,
+            },
+          },
+        });
+        const financeApplications = financeApplicationRes?.data?.results;
+
+        const activeApplications = financeApplications.filter(
+          (application: FinanceApplication) =>
+            ['pending-payment', 'paid'].includes(application.status),
+        );
+
+        if (financeApplications) {
+          setActiveApplications(activeApplications);
+        }
+      })();
+    }
   }, [user, isLoading]);
 
   const goBack = () => {
-    router.push('/subscriptions/citizen/select-flow');
+    router.push('/citizenship/why');
   };
 
   if (error) {
@@ -80,51 +113,49 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
     return <PageNotFound error="" />;
   }
 
-  const updateApplication = (key: string, value: any) => {
-    setApplication((prev: any) => ({ ...prev, [key]: value }));
+  const updateApplication = (
+    key: keyof FinanceApplicationCreateRequest,
+    value: any,
+  ) => {
+    setApplication((prev) => ({ ...prev, [key]: value }));
   };
 
-  const applyCitizen = async () => {
+  const financedTokenApply = async (isCitizenApplication: boolean) => {
     try {
       setLoading(true);
-      if (intent === 'apply') {
-        // user meets all criteria for becoming a citizen
-        try {
-          const res = await api.post('/subscription/citizen/apply', {
-            owns30Tokens,
-            intent,
-          });
+      const res = await api.post('/token/finance-application', {
+        tokensToFinance: application.tokensToFinance!,
+        totalToPayInFiat: application.totalToPayInFiat!,
+        iban: application.iban!,
+        isCitizenApplication,
+        why: application?.why,
+      } as FinanceApplicationCreateRequest);
 
-          if (res.data.status === 'success') {
-            router.push('/subscriptions/citizen/success?intent=apply');
-            return;
-          }
-        } catch (error) {
-          console.error('error with citizen application:', error);
-        }
-      } else {
-        // user wants to finance tokens
-        try {
-          const res = await api.post('/subscription/citizen/apply', {
-            owns30Tokens,
-            intent,
-            iban: application?.iban,
-            tokensToFinance: application?.tokensToFinance,
-            totalToPayInFiat: application?.totalToPayInFiat,
-          });
-
-          if (res.data.status === 'success') {
-            router.push('/subscriptions/citizen/success?intent=finance');
-            return;
-          }
-        } catch (error) {
-          console.error('error with citizen application:', error);
-        }
+      if (res.data.status === 'success') {
+        return {
+          success: true,
+          error: null,
+        };
       }
     } catch (error) {
       console.error('error with citizen application:', error);
+      return {
+        success: false,
+        error,
+      };
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleNext = async () => {
+    const res = await financedTokenApply(isCitizenApplication);
+    if (res?.success) {
+      router.push(
+        isCitizenApplication
+          ? '/token/finance/success-citizen'
+          : '/token/finance/success',
+      );
     }
   };
 
@@ -144,21 +175,21 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
         <BackButton handleClick={goBack}>{t('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-4">
-          {t('subscriptions_citizen_apply_title')}
+          {isCitizenApplication
+            ? t('subscriptions_citizen_apply_title')
+            : t('subscriptions_citizen_finance_tokens')}
         </Heading>
 
         <ProgressBar steps={SUBSCRIPTION_CITIZEN_STEPS} />
 
         <main className="pt-14 pb-24 flex flex-col gap-8">
-          {intent === 'apply' ? (
-            <CitizenApply
-              isAgreementAccepted={isAgreementAccepted}
-              setIsAgreementAccepted={setIsAgreementAccepted}
-              applyCitizen={applyCitizen}
-              loading={loading}
-            />
+          {activeApplications.length > 0 ? (
+            <div className="bg-yellow-100 py-2 px-3 rounded-md">
+              {t('subscriptions_citizen_active_applications')}
+            </div>
           ) : (
             <CitizenFinanceTokens
+              isCitizenApplication={isCitizenApplication}
               application={application}
               updateApplication={updateApplication}
               tokenPriceModifierPercent={
@@ -166,7 +197,9 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
               }
               isAgreementAccepted={isAgreementAccepted}
               setIsAgreementAccepted={setIsAgreementAccepted}
-              applyCitizen={applyCitizen}
+              isTokenTermsAccepted={isTokenTermsAccepted}
+              setIsTokenTermsAccepted={setIsTokenTermsAccepted}
+              handleNext={handleNext}
               loading={loading}
             />
           )}
@@ -185,13 +218,13 @@ SubscriptionsCitizenApplyPage.getInitialProps = async (
         api.get('/config/subscriptions').catch(() => {
           return null;
         }),
-
         api.get('/config/general').catch(() => {
           return null;
         }),
         api.get('/config/citizenship').catch(() => {
           return null;
         }),
+
         loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       ]);
 

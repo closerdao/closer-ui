@@ -50,7 +50,8 @@
         "NEXT_PUBLIC_POSTHOG_KEY",
         "NEXT_PUBLIC_POSTHOG_HOST",
         "NEXT_PUBLIC_TELEGRAM_BOT_TOKEN",
-        "NEXT_PUBLIC_DEBUG_EMAIL"
+        "NEXT_PUBLIC_DEBUG_EMAIL",
+        "NEXT_PUBLIC_BENEFICIARY"
       ]
     },
     "lint": {

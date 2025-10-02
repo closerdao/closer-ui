@@ -9,7 +9,7 @@ import {
   Heading,
   LinkButton,
   ProgressBar,
-} from '../../../components/ui/';
+} from '../../../components/ui';
 
 import { NextPage, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -31,7 +31,7 @@ interface Props {
   error?: string;
 }
 
-const SuccessCitizenPage: NextPage<Props> = ({
+const SuccessFinancePage: NextPage<Props> = ({
   subscriptionsConfig,
 
   generalConfig,
@@ -44,10 +44,9 @@ const SuccessCitizenPage: NextPage<Props> = ({
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
 
   const { isLoading, user, refetchUser } = useAuth();
-  const isMember = user?.roles?.includes('member');
 
+  const beneficiary = process.env.NEXT_PUBLIC_BENEFICIARY;
   const router = useRouter();
-  const { intent } = router.query;
 
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
@@ -78,7 +77,7 @@ const SuccessCitizenPage: NextPage<Props> = ({
   }, [isLoading]);
 
   const goBack = () => {
-    router.push('/subscriptions/citizen/validation');
+    router.push('/token/finance');
   };
 
   if (error) {
@@ -105,75 +104,58 @@ const SuccessCitizenPage: NextPage<Props> = ({
         <BackButton handleClick={goBack}>{t('buttons_back')}</BackButton>
 
         <Heading level={1} className="mb-4">
-          {t('subscriptions_citizen_apply_title')}
+          {t('subscriptions_citizen_finance_tokens')}
         </Heading>
 
         <ProgressBar steps={SUBSCRIPTION_CITIZEN_STEPS} />
 
         <main className="pt-14 pb-24 flex flex-col gap-8">
-          {intent === 'apply' && (
-            <section className="space-y-6">
-              <Heading level={2} className="border-b pb-2 mb-6 text-xl">
-                {t('subscriptions_citizen_welcome')}
-              </Heading>
+          <section className="space-y-6">
+            <p>
+              {t('subscriptions_citizen_finance_tokens_payment_details', {
+                downPayment,
+                closerIban,
+                userIbanLast4,
+              })}
+            </p>
 
-              <p>{t('subscriptions_citizen_confirmation')}</p>
-            </section>
-          )}
-          {intent === 'finance' && (
-            <section className="space-y-6">
-              <Heading level={2} className="border-b pb-2 mb-6 text-xl">
-                {t('subscriptions_citizen_welcome')}
-              </Heading>
+            <div className="bg-gray-100 p-4 rounded-lg space-y-2">
+              <div>
+                <span className="font-semibold">{t('oasa_beneficiary')}</span>
+                <span className="ml-2">{t('oasa_beneficiary_name')}</span>
+              </div>
+              <div>
+                <span className="font-semibold">{t('oasa_iban')}</span>
+                <span className="ml-2">{t('oasa_iban_value')}</span>
+              </div>
+              <div>
+                <span className="font-semibold">{t('oasa_bic')}</span>
+                <span className="ml-2">{t('oasa_bic_value')}</span>
+              </div>
+              <div>
+                <span className="font-semibold">{t('oasa_address')}</span>
+                <div className="">{t('oasa_address_value')}</div>
+              </div>
+            </div>
 
-              <p>
-                {isMember
-                  ? t('subscriptions_citizen_you_are_on_your_way_finance')
-                  : t('subscriptions_citizen_you_are_on_your_way')}
-              </p>
-              <p>
-                {t('subscriptions_citizen_finance_tokens_payment_details', {
-                  downPayment,
-                  closerIban,
-                  userIbanLast4,
-                })}
-              </p>
-
-              <p>
-                {isMember
-                  ? t.rich(
-                      'subscriptions_citizen_finance_tokens_after_application_finance',
-                      {
-                        link: (chunks) => (
-                          <a
-                            href="mailto:space@traditionaldreamfactory.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ textDecoration: 'underline' }}
-                          >
-                            {chunks}
-                          </a>
-                        ),
-                      },
-                    )
-                  : t.rich(
-                      'subscriptions_citizen_finance_tokens_after_application',
-                      {
-                        link: (chunks) => (
-                          <a
-                            href="mailto:space@traditionaldreamfactory.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ textDecoration: 'underline' }}
-                          >
-                            {chunks}
-                          </a>
-                        ),
-                      },
-                    )}
-              </p>
-            </section>
-          )}
+            <p>
+              {t.rich(
+                'subscriptions_citizen_finance_tokens_after_application_finance',
+                {
+                  link: (chunks) => (
+                    <a
+                      href="mailto:space@traditionaldreamfactory.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: 'underline' }}
+                    >
+                      {chunks}
+                    </a>
+                  ),
+                },
+              )}
+            </p>
+          </section>
 
           <LinkButton href="/">
             {t('subscriptions_citizen_back_to_homepage')}
@@ -184,7 +166,7 @@ const SuccessCitizenPage: NextPage<Props> = ({
   );
 };
 
-SuccessCitizenPage.getInitialProps = async (context: NextPageContext) => {
+SuccessFinancePage.getInitialProps = async (context: NextPageContext) => {
   try {
     const [subscriptionsRes, generalRes, messages] = await Promise.all([
       api.get('/config/subscriptions').catch(() => {
@@ -201,7 +183,6 @@ SuccessCitizenPage.getInitialProps = async (context: NextPageContext) => {
     const generalConfig = generalRes?.data?.results?.value;
     return {
       subscriptionsConfig,
-
       generalConfig,
       messages,
     };
@@ -216,4 +197,4 @@ SuccessCitizenPage.getInitialProps = async (context: NextPageContext) => {
   }
 };
 
-export default SuccessCitizenPage;
+export default SuccessFinancePage;

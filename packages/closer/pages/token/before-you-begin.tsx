@@ -42,9 +42,9 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
     tokens !== undefined ? Number(tokens) : DEFAULT_TOKENS,
   );
   const [tokensToSpend, setTokensToSpend] = useState(0);
-  const [tokenSaleType, setTokenSaleType] = useState<'fiat' | 'crypto'>(
-    isFinanceTokenEnabled ? 'fiat' : 'crypto',
-  );
+  const [tokenSaleType, setTokenSaleType] = useState<
+    'fiat' | 'crypto' | 'finance'
+  >(isFinanceTokenEnabled ? 'fiat' : 'crypto');
   const [isCalculationPending, setIsCalculationPending] = useState(false);
 
   const hasComponentRendered = useRef(false);
@@ -92,6 +92,8 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
       router.push(
         `/token/checklist-crypto?tokens=${encodeURIComponent(tokensToBuy)}`,
       );
+    } else if (tokenSaleType === 'finance') {
+      router.push('/token/finance');
     }
   };
 
@@ -174,6 +176,19 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
                   />
                   <label htmlFor="payCrypto" className="whitespace-nowrap">
                     {t('token_sale_heading_pay_bank_crypto')}
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    id="payFinance"
+                    name="tokenSaleType"
+                    className="w-4 h-4"
+                    checked={tokenSaleType === 'finance'}
+                    onChange={() => setTokenSaleType('finance')}
+                  />
+                  <label htmlFor="payFinance" className="whitespace-nowrap">
+                    {t('token_sale_heading_pay_finance')}
                   </label>
                 </div>
               </div>

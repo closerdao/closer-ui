@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import {
   BackButton,
   Button,
+  Checkbox,
   Heading,
   Input,
   ProgressBar,
@@ -41,6 +42,7 @@ const BankTransferPage = ({ generalConfig }: Props) => {
 
   const [ibanNumber, setIbanNumber] = useState('');
   const [isApiLoading, setIsApiLoading] = useState(false);
+  const [isTokenTermsAccepted, setIsTokenTermsAccepted] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -53,7 +55,6 @@ const BankTransferPage = ({ generalConfig }: Props) => {
   };
 
   const handleNext = async () => {
-
     try {
       setIsApiLoading(true);
       await api.post('/token/bank-transfer-application', {
@@ -120,10 +121,44 @@ const BankTransferPage = ({ generalConfig }: Props) => {
               placeholder={t('token_sale_bank_transfer_iban_placeholder')}
             />
 
+            <div className="flex items-start gap-1">
+              <Checkbox
+                id="token-terms-agreement"
+                isChecked={isTokenTermsAccepted}
+                onChange={() => setIsTokenTermsAccepted(!isTokenTermsAccepted)}
+              />
+              <label htmlFor="token-terms-agreement">
+                {t.rich('subscriptions_citizen_agree_to_token_terms', {
+                  link1: (chunks) => (
+                    <a
+                      href="https://docs.google.com/document/d/1kz4SH1UVWhamniqUW4GWmFOU0nmXyhpAzUJwFTW0ybs/edit?tab=t.0"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: 'underline' }}
+                    >
+                      {chunks}
+                    </a>
+                  ),
+                  link2: (chunks) => (
+                    <a
+                      href="https://oasa.earth/papers/OASA-Whitepaper-V1.2.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: 'underline' }}
+                    >
+                      {chunks}
+                    </a>
+                  ),
+                })}
+              </label>
+            </div>
+
             <Button
               onClick={handleNext}
               isLoading={isApiLoading}
-              isEnabled={isValid(ibanNumber) && !isApiLoading}
+              isEnabled={
+                isValid(ibanNumber) && !isApiLoading && isTokenTermsAccepted
+              }
             >
               {t('token_sale_button_continue')}
             </Button>

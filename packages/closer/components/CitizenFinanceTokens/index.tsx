@@ -2,21 +2,27 @@ import Link from 'next/link';
 
 import { useEffect } from 'react';
 
+import { isValid } from 'iban-ts';
 import { useTranslations } from 'next-intl';
 
-import { useAuth } from '../../contexts/auth';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
+import { FinanceApplicationCreateRequest } from '../../types';
 import { Button, Card, Checkbox, Heading, Input, Spinner } from '../ui';
-import { isValid } from 'iban-ts';
 
 interface CitizenFinanceTokensProps {
-  application: any;
-  updateApplication: (key: string, value: any) => void;
+  application: Partial<FinanceApplicationCreateRequest>;
+  updateApplication: (
+    key: keyof FinanceApplicationCreateRequest,
+    value: any,
+  ) => void;
   tokenPriceModifierPercent: number;
   isAgreementAccepted: boolean;
-  applyCitizen: () => void;
+  handleNext: () => void;
   loading: boolean;
   setIsAgreementAccepted: (value: boolean) => void;
+  isCitizenApplication: boolean;
+  isTokenTermsAccepted: boolean;
+  setIsTokenTermsAccepted: (value: boolean) => void;
 }
 
 const CitizenFinanceTokens = ({
@@ -24,24 +30,24 @@ const CitizenFinanceTokens = ({
   updateApplication,
   tokenPriceModifierPercent,
   isAgreementAccepted,
-  applyCitizen,
+  handleNext,
   loading,
   setIsAgreementAccepted,
+  isCitizenApplication,
+  isTokenTermsAccepted,
+  setIsTokenTermsAccepted,
 }: CitizenFinanceTokensProps) => {
   const t = useTranslations();
-  const { user } = useAuth();
-  const isMember = user?.roles?.includes('member');
-  const {
-    getCurrentSupplyWithoutWallet,
-    isConfigReady,
-    getTotalCostWithoutWallet,
-    isPending,
-  } = useBuyTokens();
+
+  const { isConfigReady, getTotalCostWithoutWallet, isPending } =
+    useBuyTokens();
 
   const totalToPayInFiat = application?.totalToPayInFiat || 0;
 
   const averagePricePerToken =
-    Number((totalToPayInFiat / application?.tokensToFinance).toFixed(2)) || 0;
+    Number(
+      (totalToPayInFiat / (application?.tokensToFinance || 1)).toFixed(2),
+    ) || 0;
 
   const downPayment = Number((totalToPayInFiat * 0.1).toFixed(2)) || 0;
 
@@ -53,7 +59,7 @@ const CitizenFinanceTokens = ({
       (async () => {
         try {
           const totalCost = await getTotalCostWithoutWallet(
-            application?.tokensToFinance.toString(),
+            (application?.tokensToFinance || 0).toString(),
           );
 
           const calculatedTotalToPayInFiat =
@@ -61,7 +67,6 @@ const CitizenFinanceTokens = ({
               (totalCost * (1 + tokenPriceModifierPercent / 100)).toFixed(2),
             ) || 0;
           updateApplication('totalToPayInFiat', calculatedTotalToPayInFiat);
-
         } catch (error) {
           console.error('Error in supply/price calculation:', error);
         }
@@ -71,9 +76,12 @@ const CitizenFinanceTokens = ({
 
   return (
     <section className="space-y-6">
-      <Heading level={2} className="border-b pb-2 mb-6 text-xl">
-        {t('subscriptions_citizen_finance_tokens')}
-      </Heading>
+      {isCitizenApplication && (
+        <Heading level={2} className="border-b pb-2 mb-6 text-xl">
+          {t('subscriptions_citizen_finance_tokens')}
+        </Heading>
+      )}
+
       <p>{t('subscriptions_citizen_finance_tokens_details')}</p>
       <ul className="list-disc ml-4 font-bold">
         <li>{t('subscriptions_citizen_finance_tokens_details_36_months')}</li>
@@ -210,7 +218,7 @@ const CitizenFinanceTokens = ({
         <Link
           target="_blank"
           rel="noopener noreferrer"
-          href="/token/before-you-begin?isCitizenApplication=true"
+          href="/token/before-you-begin?citizenApplication=true"
           className=" underline"
         >
           {t('subscriptions_citizen_finance_tokens_hint_here')}
@@ -238,17 +246,51 @@ const CitizenFinanceTokens = ({
           </li>
         </ol>
 
+        {isCitizenApplication && (
+          <div className="flex items-start gap-1">
+            <Checkbox
+              id="citizen-agreement"
+              isChecked={isAgreementAccepted}
+              onChange={() => setIsAgreementAccepted(!isAgreementAccepted)}
+            />
+            <label htmlFor="citizen-agreement">
+              {t.rich('subscriptions_citizen_agree_to_terms', {
+                link: (chunks) => (
+                  <a
+                    href="https://docs.google.com/document/d/1mkWDWXIaf2ZuRu7NU1Xlr9leGYmjWd3HXRJDCzTSttY/edit?tab=t.0"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ textDecoration: 'underline' }}
+                  >
+                    {chunks}
+                  </a>
+                ),
+              })}
+            </label>
+          </div>
+        )}
+
         <div className="flex items-start gap-1">
           <Checkbox
-            id="citizen-agreement"
-            isChecked={isAgreementAccepted}
-            onChange={() => setIsAgreementAccepted(!isAgreementAccepted)}
+            id="token-terms-agreement"
+            isChecked={isTokenTermsAccepted}
+            onChange={() => setIsTokenTermsAccepted(!isTokenTermsAccepted)}
           />
-          <label htmlFor="citizen-agreement">
-            {t.rich('subscriptions_citizen_agree_to_terms', {
-              link: (chunks) => (
+          <label htmlFor="token-terms-agreement">
+            {t.rich('subscriptions_citizen_agree_to_token_terms', {
+              link1: (chunks) => (
                 <a
-                  href="https://docs.google.com/document/d/1mkWDWXIaf2ZuRu7NU1Xlr9leGYmjWd3HXRJDCzTSttY/edit?tab=t.0"
+                  href="https://docs.google.com/document/d/1kz4SH1UVWhamniqUW4GWmFOU0nmXyhpAzUJwFTW0ybs/edit?tab=t.0"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ textDecoration: 'underline' }}
+                >
+                  {chunks}
+                </a>
+              ),
+              link2: (chunks) => (
+                <a
+                  href="https://oasa.earth/papers/OASA-Whitepaper-V1.2.pdf"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ textDecoration: 'underline' }}
@@ -262,19 +304,20 @@ const CitizenFinanceTokens = ({
 
         <Button
           isEnabled={
-            isAgreementAccepted &&
+            isAgreementAccepted === isCitizenApplication &&
+            isTokenTermsAccepted &&
             !loading &&
             Boolean(application?.iban) &&
             !isPending &&
             Boolean(totalToPayInFiat) &&
-            isValid(application?.iban)
+            isValid(application?.iban || '')
           }
           className="booking-btn"
-          onClick={applyCitizen}
+          onClick={handleNext}
         >
-          {isMember
-            ? t('subscriptions_citizen_finance_tokens_button')
-            : t('subscriptions_citizen_become_citizen')}
+          {isCitizenApplication
+            ? t('subscriptions_citizen_become_citizen')
+            : t('subscriptions_citizen_finance_tokens_button')}
         </Button>
       </div>
     </section>
