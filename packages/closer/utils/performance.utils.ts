@@ -41,8 +41,39 @@ export const getStartAndEndDate = (
 ) => {
   let startDate: Date;
   let endDate: Date;
+  const now = new Date();
 
   switch (timeFrame) {
+    case 'currentMonth':
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      endDate.setHours(23, 59, 59, 999);
+      break;
+    case 'previousMonth':
+      startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+      endDate.setHours(23, 59, 59, 999);
+      break;
+    case 'last7Days':
+      startDate = new Date(new Date().setDate(new Date().getDate() - 7));
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date();
+      endDate.setHours(23, 59, 59, 999);
+      break;
+    case 'last4Weeks':
+      startDate = new Date(new Date().setDate(new Date().getDate() - 28));
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date();
+      endDate.setHours(23, 59, 59, 999);
+      break;
+    case 'currentYear':
+      startDate = new Date(now.getFullYear(), 0, 1);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(now.getFullYear(), 11, 31);
+      endDate.setHours(23, 59, 59, 999);
+      break;
     case 'month':
       startDate = new Date(new Date().setDate(new Date().getDate() - 30));
       endDate = new Date();
@@ -64,8 +95,8 @@ export const getStartAndEndDate = (
       endDate = new Date(new Date().setHours(23, 59, 59, 999));
       break;
     case 'custom':
-      startDate = new Date(fromDate);
-      endDate = new Date(toDate);
+      startDate = new Date(new Date(fromDate).setHours(0, 0, 0, 0));
+      endDate = new Date(new Date(toDate).setHours(23, 59, 59, 999));
       break;
     default:
       startDate = new Date(0);
@@ -95,11 +126,10 @@ export const generateBookingFilter = ({
 
   return {
     where: {
-      ...(options.status && { 
-        ...(Array.isArray(options.status) 
+      ...(options.status && {
+        ...(Array.isArray(options.status)
           ? { status: { $in: options.status } }
-          : { status: options.status }
-        )
+          : { status: options.status }),
       }),
       ...(timeFrame !== 'allTime' && {
         created: {

@@ -77,6 +77,7 @@ export type TokenSaleChargeMeta = {
 
 export type Charge = {
   id: string;
+  _id?: string;
   status:
     | 'paid'
     | 'refunded'

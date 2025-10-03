@@ -10,7 +10,6 @@ import NavBookingsIcon from '../icons/NavBookingsIcon';
 import SettingsIcon from './SettingsIcon';
 import UserListIcon from './UserListIcon';
 
-
 const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
   const t = useTranslations();
   const router = useRouter();
@@ -18,8 +17,8 @@ const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
   const { hasAccess } = useRBAC();
 
   const isTokenEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
-  const isAffiliateEnabled = process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true';
-
+  const isAffiliateEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true';
 
   // Define all possible links
   const allLinks = isBookingEnabled
@@ -33,6 +32,11 @@ const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
           label: t('navigation_performance'),
           url: '/dashboard/performance',
           rbacPage: 'Performance',
+        },
+        {
+          label: t('navigation_revenue'),
+          url: '/dashboard/revenue',
+          rbacPage: 'Revenue',
         },
         {
           label: t('navigation_bookings'),
@@ -90,16 +94,24 @@ const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
           url: '/admin/learn',
           rbacPage: 'LearnSettings',
         },
-        ...(isAffiliateEnabled ? [{
-          label: t('navigation_affiliate_settings'),
-          url: '/dashboard/affiliate',
-          rbacPage: 'AffiliateSettings',
-        }] : []),
-        ...(isTokenEnabled ? [{
-          label: t('navigation_token_sales'),
-          url: '/dashboard/token-sales',
-          rbacPage: 'TokenSales',
-        }] : []),
+        ...(isAffiliateEnabled
+          ? [
+              {
+                label: t('navigation_affiliate_settings'),
+                url: '/dashboard/affiliate',
+                rbacPage: 'AffiliateSettings',
+              },
+            ]
+          : []),
+        ...(isTokenEnabled
+          ? [
+              {
+                label: t('navigation_token_sales'),
+                url: '/dashboard/token-sales',
+                rbacPage: 'TokenSales',
+              },
+            ]
+          : []),
       ]
     : [
         {
@@ -122,16 +134,24 @@ const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
           url: '/admin/learn',
           rbacPage: 'LearningHubAdmin',
         },
-        ...(isAffiliateEnabled ? [{
-          label: t('navigation_affiliate_settings'),
-          url: '/dashboard/affiliate',
-          rbacPage: 'AffiliateSettings',
-        }] : []),
-        ...(isTokenEnabled ? [{
-          label: t('navigation_token_sales'),
-          url: '/dashboard/token-sales',
-          rbacPage: 'TokenSales',
-        }] : []),
+        ...(isAffiliateEnabled
+          ? [
+              {
+                label: t('navigation_affiliate_settings'),
+                url: '/dashboard/affiliate',
+                rbacPage: 'AffiliateSettings',
+              },
+            ]
+          : []),
+        ...(isTokenEnabled
+          ? [
+              {
+                label: t('navigation_token_sales'),
+                url: '/dashboard/token-sales',
+                rbacPage: 'TokenSales',
+              },
+            ]
+          : []),
       ];
 
   // Filter links based on RBAC permissions
