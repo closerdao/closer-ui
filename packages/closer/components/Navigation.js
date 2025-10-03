@@ -100,7 +100,7 @@ const Navigation = () => {
               : 'w-auto justify-center'
           } flex gap-2  items-center`}
         >
-          {APP_NAME && APP_NAME?.toLowerCase() === 'earthbound' && (
+          {APP_NAME && APP_NAME?.toLowerCase().includes('earthbound') && (
             <div className="flex gap-3 items-center">
               <ul className="gap-4 hidden sm:flex">
                 <li>
