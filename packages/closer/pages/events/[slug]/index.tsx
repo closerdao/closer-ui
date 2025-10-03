@@ -178,6 +178,11 @@ const EventPage = ({
       });
       console.log('res===', res);
 
+      // Ensure current user data is available in platform cache for immediate display
+      if (attend && user) {
+        platform.user.set(user);
+      }
+
       setAttendees(
         attend
           ? event.attendees.concat(user?._id)
