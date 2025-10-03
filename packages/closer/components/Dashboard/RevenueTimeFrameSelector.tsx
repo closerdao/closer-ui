@@ -124,8 +124,18 @@ const RevenueTimeFrameSelector = ({
           {showDropdown && (
             <div className="absolute z-10 right-0 bg-white shadow-md rounded-md p-4">
               <DateTimePicker
-                setStartDate={(date) => handleDateChange(date, toDate)}
-                setEndDate={(date) => handleDateChange(fromDate, date)}
+                setStartDate={(date) =>
+                  handleDateChange(
+                    date ? dayjs(date).format('YYYY-MM-DD') : '',
+                    toDate,
+                  )
+                }
+                setEndDate={(date) =>
+                  handleDateChange(
+                    fromDate,
+                    date ? dayjs(date).format('YYYY-MM-DD') : '',
+                  )
+                }
                 savedStartDate={fromDate}
                 savedEndDate={toDate}
                 defaultMonth={new Date()}
