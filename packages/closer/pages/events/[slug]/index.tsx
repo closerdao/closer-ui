@@ -176,7 +176,6 @@ const EventPage = ({
       const res = await api.post(`/events/${_id}/notifications`, {
         userId: user?._id,
       });
-      console.log('res===', res);
 
       // Ensure current user data is available in platform cache for immediate display
       if (attend && user) {
@@ -671,7 +670,7 @@ const EventPage = ({
                                       {user?._id && attendees?.includes(user._id) ? (
                                         <>
                                           <p className="text-sm text-gray-600 mb-2">
-                                            {t('events_virtual_looking_forward')}
+                                            {event.virtual ? t('events_virtual_looking_forward') : 'We look forward to seeing you.'}
                                           </p>
                                           <a
                                             href="#"
@@ -789,7 +788,7 @@ const EventPage = ({
                                         {attendees?.includes(user._id) ? (
                                           <>
                                             <p className="text-sm text-gray-600 mb-2">
-                                              {t('events_virtual_looking_forward')}
+                                              {event.virtual ? t('events_virtual_looking_forward') : 'We look forward to seeing you.'}
                                             </p>
                                             <a
                                               href="#"
