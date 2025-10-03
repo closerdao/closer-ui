@@ -176,7 +176,11 @@ const EventPage = ({
       const res = await api.post(`/events/${_id}/notifications`, {
         userId: user?._id,
       });
-      console.log('res===', res);
+
+      // Ensure current user data is available in platform cache for immediate display
+      if (attend && user) {
+        platform.user.set(user);
+      }
 
       setAttendees(
         attend
@@ -433,9 +437,45 @@ const EventPage = ({
                               width={16}
                               height={16}
                             />
-                            <p className="text-sm font-medium">
-                              {event.address}
-                            </p>
+                            {event.address.startsWith('http') ? (
+                              <a
+                                href={event.address}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm font-medium text-blue-600 hover:text-blue-800 underline truncate"
+                              >
+                                {event.address}
+                              </a>
+                            ) : (
+                              <p className="text-sm font-medium truncate">
+                                {event.address}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        {event.location && !event.address && (
+                          <div className="flex gap-2 items-center">
+                            <Image
+                              alt="location icon"
+                              src="/images/icons/pin-icon.svg"
+                              width={16}
+                              height={16}
+                            />
+                            {event.location.startsWith('http') ? (
+                              <a
+                                href={event.location}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm font-medium text-blue-600 hover:text-blue-800 underline truncate"
+                              >
+                                {event.location}
+                              </a>
+                            ) : (
+                              <p className="text-sm font-medium truncate">
+                                {event.location}
+                              </p>
+                            )}
                           </div>
                         )}
 
@@ -621,7 +661,59 @@ const EventPage = ({
                                 </>
                               ) : (
                                 <>
-                                  {start &&
+                                  {!event.paid && 
+                                    start && 
+                                    end && 
+                                    start.isSame(end, 'day') && 
+                                    start.isAfter(dayjs()) ? (
+                                    <div className="text-center">
+                                      {user?._id && attendees?.includes(user._id) ? (
+                                        <>
+                                          <p className="text-sm text-gray-600 mb-2">
+                                            {event.virtual ? t('events_virtual_looking_forward') : 'We look forward to seeing you.'}
+                                          </p>
+                                          <a
+                                            href="#"
+                                            className="text-sm text-accent underline"
+                                            onClick={(e) => {
+                                              e.preventDefault();
+                                              if (user?._id) {
+                                                attendEvent(
+                                                  event._id,
+                                                  !attendees?.includes(user._id),
+                                                );
+                                              }
+                                            }}
+                                          >
+                                            {t('events_cancel_rsvp')}
+                                          </a>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <p className="text-sm text-gray-800 mb-2">
+                                            {t('events_virtual_welcome')}
+                                          </p>
+                                          {apiError && (
+                                            <ErrorMessage error={apiError} />
+                                          )}
+                                          <button
+                                            onClick={(e) => {
+                                              e.preventDefault();
+                                              if (user?._id) {
+                                                attendEvent(
+                                                  event._id,
+                                                  !attendees?.includes(user._id),
+                                                );
+                                              }
+                                            }}
+                                            className="btn-primary mr-2"
+                                          >
+                                            {t('events_register')}
+                                          </button>
+                                        </>
+                                      )}
+                                    </div>
+                                  ) : start &&
                                     start.isBefore(dayjs().subtract(15, 'minutes')) &&
                                     end &&
                                     end.isAfter(dayjs()) &&
@@ -696,7 +788,7 @@ const EventPage = ({
                                         {attendees?.includes(user._id) ? (
                                           <>
                                             <p className="text-sm text-gray-600 mb-2">
-                                              {t('events_virtual_looking_forward')}
+                                              {event.virtual ? t('events_virtual_looking_forward') : 'We look forward to seeing you.'}
                                             </p>
                                             <a
                                               href="#"
