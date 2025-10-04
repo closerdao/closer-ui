@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
 import { List } from 'immutable';
@@ -12,6 +12,7 @@ import {
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { Filter } from '../../types';
+import { Charge } from '../../types/booking';
 import api from '../../utils/api';
 import {
   getDateRange,
@@ -19,6 +20,7 @@ import {
   getSubPeriodData,
   getTimePeriod,
 } from '../../utils/dashboard.helpers';
+import { getStartAndEndDate } from '../../utils/performance.utils';
 import RevenueIcon from '../icons/RevenueIcon';
 import { Card, Heading, Spinner } from '../ui';
 import DonutChart from '../ui/Charts/DonutChart';
@@ -45,79 +47,83 @@ interface SummaryRevenueParams {
 }
 
 const getSummaryRevenueData = ({
-  bookings,
-  tokenSales,
-  fromDate,
-  toDate,
-  stripeSubsPayments = [],
-  timeFrame,
-  firstBookingDate,
-  TIME_ZONE,
-  listings,
-  TOKEN_PRICE,
-}: SummaryRevenueParams) => {
-  if (!bookings || !tokenSales) return null;
+  charges,
+  moneriumCharges,
+  cryptoTokenCharges,
+}: {
+  charges: Charge[];
+  moneriumCharges: Charge[];
+  cryptoTokenCharges: Charge[];
+}) => {
+  // Calculate revenue totals from charges data
+  const tokenSales = moneriumCharges.reduce((sum, charge) => {
+    const val = charge.amount?.total?.val;
+    return sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0);
+  }, 0);
 
-  // Initialize all revenue types with 0
-  let totalHospitality = 0;
-  let totalSpaces = 0;
-  let totalEvents = 0;
-  let totalSubscriptions = 0;
-  let totalFood = 0;
-  let totalTokens = 0;
+  const events = charges
+    .filter((charge) => charge.status !== 'refunded')
+    .reduce((sum, charge) => {
+      const val = charge.amount?.event?.val;
+      return (
+        sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
+      );
+    }, 0);
 
-  // Get revenue data by subperiods first
-  const timePeriod = getTimePeriod(
-    timeFrame,
-    fromDate,
-    toDate,
-    firstBookingDate?.toString() || undefined,
-  );
+  const rental = charges
+    .filter((charge) => charge.status !== 'refunded')
+    .reduce((sum, charge) => {
+      const val = charge.amount?.rental?.val;
+      return (
+        sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
+      );
+    }, 0);
 
-  timePeriod.subPeriods.forEach((subPeriod: any) => {
-    const periodData = getSubPeriodData({
-      subPeriod,
-      bookings,
-      tokenSales,
-      timeFrame,
-      fromDate,
-      toDate,
-      firstBookingDate: firstBookingDate?.toString() || '',
-      TIME_ZONE,
-      stripeSubsPayments,
-      listings,
-      TOKEN_PRICE,
-    });
+  const food = charges
+    .filter((charge) => charge.status !== 'refunded')
+    .reduce((sum, charge) => {
+      const val = charge.amount?.food?.val;
+      return (
+        sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
+      );
+    }, 0);
 
-    // Sum up all values from each period
-    totalHospitality += periodData.hospitality || 0;
-    totalSpaces += periodData.spaces || 0;
-    totalEvents += periodData.events || 0;
-    totalSubscriptions += periodData.subscriptions || 0;
-    totalFood += periodData.food || 0;
-    totalTokens += periodData.tokens || 0;
-  });
+  const utilities = charges
+    .filter((charge) => charge.status !== 'refunded')
+    .reduce((sum, charge) => {
+      const val = charge.amount?.utilities?.val;
+      return (
+        sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
+      );
+    }, 0);
+
+  const subscriptions = charges
+    .filter(
+      (charge) =>
+        charge.status !== 'refunded' && charge.type === 'subscription',
+    )
+    .reduce((sum, charge) => {
+      const val = charge.amount?.total?.val;
+      return (
+        sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
+      );
+    }, 0);
+
+  const cryptoTokenSales = cryptoTokenCharges.reduce((sum, charge) => {
+    const val = charge.amount?.total?.val;
+    return sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0);
+  }, 0);
 
   const summaryData = [];
 
-  if (totalHospitality > 0) {
-    summaryData.push({ name: 'hospitality', value: totalHospitality });
-  }
-  if (totalSpaces > 0) {
-    summaryData.push({ name: 'spaces', value: totalSpaces });
-  }
-  if (totalEvents > 0) {
-    summaryData.push({ name: 'events', value: totalEvents });
-  }
-  if (totalSubscriptions > 0) {
-    summaryData.push({ name: 'subscriptions', value: totalSubscriptions });
-  }
-  if (totalFood > 0) {
-    summaryData.push({ name: 'food', value: totalFood });
-  }
-  if (totalTokens > 0) {
-    summaryData.push({ name: 'tokens', value: totalTokens });
-  }
+  // Always include all categories, even if 0, for consistent display
+  summaryData.push({ name: 'tokens', value: tokenSales });
+  summaryData.push({ name: 'cryptoTokens', value: cryptoTokenSales });
+  summaryData.push({ name: 'events', value: events });
+  summaryData.push({ name: 'spaces', value: rental });
+  summaryData.push({ name: 'food', value: food });
+  summaryData.push({ name: 'utilities', value: utilities });
+  summaryData.push({ name: 'subscriptions', value: subscriptions });
 
   return summaryData;
 };
@@ -131,6 +137,14 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
   const [isStripeLoading, setIsStripeLoading] = useState(false);
   const [bookingFilter, setBookingFilter] = useState<Filter | null>(null);
   const [stripeSubsPayments, setStripeSubsPayments] = useState<any[]>([]);
+  const [charges, setCharges] = useState<Charge[]>([]);
+  const [moneriumCharges, setMoneriumCharges] = useState<Charge[]>([]);
+  const [cryptoTokenCharges, setCryptoTokenCharges] = useState<Charge[]>([]);
+  const [chargesLoading, setChargesLoading] = useState<boolean>(false);
+  const [moneriumChargesLoading, setMoneriumChargesLoading] =
+    useState<boolean>(false);
+  const [cryptoTokenChargesLoading, setCryptoTokenChargesLoading] =
+    useState<boolean>(false);
 
   const listingFilter = {
     where: {},
@@ -147,6 +161,158 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
   const tokenSales =
     APP_NAME === 'tdf' ? platform.metrics.findTokenSales('metrics') : [];
 
+  const fetchCharges = useCallback(async () => {
+    setChargesLoading(true);
+    try {
+      const { startDate, endDate } = getStartAndEndDate(
+        timeFrame,
+        fromDate.toString(),
+        toDate.toString(),
+      );
+
+      const response = await api.get('/charge', {
+        params: {
+          where: {
+            date: {
+              $gte: startDate,
+              $lte: endDate,
+            },
+            method: 'stripe',
+          },
+          limit: 1000,
+          sort: '-date',
+        },
+      });
+
+      const sortedCharges = response.data.results.sort(
+        (a: Charge, b: Charge) => {
+          const dateA = new Date(a.date).getTime();
+          const dateB = new Date(b.date).getTime();
+          return dateB - dateA;
+        },
+      );
+      setCharges(sortedCharges);
+    } catch (error) {
+      console.error('Error fetching charges:', error);
+    } finally {
+      setChargesLoading(false);
+    }
+  }, [timeFrame, fromDate, toDate]);
+
+  const fetchMoneriumCharges = useCallback(async () => {
+    setMoneriumChargesLoading(true);
+    try {
+      const { startDate, endDate } = getStartAndEndDate(
+        timeFrame,
+        fromDate.toString(),
+        toDate.toString(),
+      );
+
+      const response = await api.get('/charge', {
+        params: {
+          where: {
+            date: {
+              $gte: startDate,
+              $lte: endDate,
+            },
+            method: 'monerium',
+            status: 'paid',
+          },
+          limit: 1000,
+          sort: '-date',
+        },
+      });
+
+      const sortedCharges = response.data.results.sort(
+        (a: Charge, b: Charge) => {
+          const dateA = new Date(a.date).getTime();
+          const dateB = new Date(b.date).getTime();
+          return dateB - dateA;
+        },
+      );
+
+      const processedCharges = sortedCharges.map((charge: any) => ({
+        ...charge,
+        amount: {
+          ...charge.amount,
+          total: {
+            ...charge.amount.total,
+            val: parseFloat(charge.amount.total.val) || 0,
+          },
+        },
+      }));
+
+      setMoneriumCharges(processedCharges);
+    } catch (error) {
+      console.error('Error fetching monerium charges:', error);
+    } finally {
+      setMoneriumChargesLoading(false);
+    }
+  }, [timeFrame, fromDate, toDate]);
+
+  const fetchCryptoTokenCharges = useCallback(async () => {
+    setCryptoTokenChargesLoading(true);
+    try {
+      const { startDate, endDate } = getStartAndEndDate(
+        timeFrame,
+        fromDate.toString(),
+        toDate.toString(),
+      );
+
+      console.log('Crypto token charges date range:', {
+        startDate,
+        endDate,
+        timeFrame,
+      });
+
+      const response = await api.get('/charge', {
+        params: {
+          where: {
+            date: {
+              $gte: startDate,
+              $lte: endDate,
+            },
+            method: 'crypto',
+            status: 'paid',
+          },
+          limit: 1000,
+          sort: '-date',
+        },
+      });
+
+      console.log('Crypto token charges response:', response.data);
+
+      const sortedCharges = response.data.results.sort(
+        (a: Charge, b: Charge) => {
+          const dateA = new Date(a.date).getTime();
+          const dateB = new Date(b.date).getTime();
+          return dateB - dateA;
+        },
+      );
+
+      const processedCharges = sortedCharges.map((charge: any) => ({
+        ...charge,
+        amount: {
+          ...charge.amount,
+          total: {
+            ...charge.amount.total,
+            val:
+              typeof charge.amount.total.val === 'number'
+                ? charge.amount.total.val
+                : parseFloat(charge.amount.total.val || '0') || 0,
+          },
+        },
+      }));
+
+      console.log('Processed crypto token charges:', processedCharges);
+      setCryptoTokenCharges(processedCharges);
+    } catch (error) {
+      console.error('Error fetching crypto token charges:', error);
+    } finally {
+      setCryptoTokenChargesLoading(false);
+    }
+  }, [timeFrame, fromDate, toDate]);
+
   const firstBooking =
     bookings &&
     bookings.find((booking: any) => {
@@ -157,15 +323,97 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
 
   const duration = getDuration(timeFrame, fromDate, toDate);
 
-  const getRevenueData = (
-    bookings: any,
-    tokenSales: any,
-    fromDate: Date | string,
-    toDate: Date | string,
-  ) => {
+  const getRevenueData = () => {
     if (timeFrame === 'custom' && !toDate) return [];
-    const data: any[] = [];
 
+    // For TDF, we'll create a data structure based on charges
+    if (APP_NAME === 'tdf') {
+      const totalTokenSales = moneriumCharges.reduce((sum, charge) => {
+        const val = charge.amount?.total?.val;
+        return (
+          sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
+        );
+      }, 0);
+
+      const events = charges
+        .filter((charge) => charge.status !== 'refunded')
+        .reduce((sum, charge) => {
+          const val = charge.amount?.event?.val;
+          return (
+            sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
+          );
+        }, 0);
+
+      const rental = charges
+        .filter((charge) => charge.status !== 'refunded')
+        .reduce((sum, charge) => {
+          const val = charge.amount?.rental?.val;
+          return (
+            sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
+          );
+        }, 0);
+
+      const food = charges
+        .filter((charge) => charge.status !== 'refunded')
+        .reduce((sum, charge) => {
+          const val = charge.amount?.food?.val;
+          return (
+            sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
+          );
+        }, 0);
+
+      const utilities = charges
+        .filter((charge) => charge.status !== 'refunded')
+        .reduce((sum, charge) => {
+          const val = charge.amount?.utilities?.val;
+          return (
+            sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
+          );
+        }, 0);
+
+      const subscriptions = charges
+        .filter(
+          (charge) =>
+            charge.status !== 'refunded' && charge.type === 'subscription',
+        )
+        .reduce((sum, charge) => {
+          const val = charge.amount?.total?.val;
+          return (
+            sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
+          );
+        }, 0);
+
+      const cryptoTokenSales = cryptoTokenCharges.reduce((sum, charge) => {
+        const val = charge.amount?.total?.val;
+        return (
+          sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
+        );
+      }, 0);
+
+      return [
+        {
+          name: 'Current Period',
+          hospitality: events + rental + food + utilities,
+          spaces: rental,
+          events: events,
+          subscriptions: subscriptions,
+          food: food,
+          tokens: totalTokenSales,
+          cryptoTokens: cryptoTokenSales,
+          totalOperations:
+            events +
+            rental +
+            food +
+            utilities +
+            subscriptions +
+            totalTokenSales +
+            cryptoTokenSales,
+        },
+      ];
+    }
+
+    // For other apps, use the original logic
+    const data: any[] = [];
     const timePeriod = getTimePeriod(
       timeFrame,
       fromDate,
@@ -195,24 +443,25 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
   };
 
   const summaryRevenueData = getSummaryRevenueData({
-    bookings,
-    tokenSales,
-    fromDate,
-    toDate,
-    stripeSubsPayments,
-    timeFrame,
-    firstBookingDate,
-    TIME_ZONE,
-    listings,
-    TOKEN_PRICE,
+    charges,
+    moneriumCharges,
+    cryptoTokenCharges,
   });
 
-  const revenueData =
-    bookings &&
-    duration &&
-    listings &&
-    tokenSales &&
-    getRevenueData(bookings, tokenSales, fromDate, toDate);
+  const revenueData = getRevenueData();
+
+  // Debug logging
+  console.log('DashboardRevenue Debug:', {
+    chargesCount: charges.length,
+    moneriumChargesCount: moneriumCharges.length,
+    cryptoTokenChargesCount: cryptoTokenCharges.length,
+    summaryRevenueData,
+    revenueData,
+    chargesLoading,
+    moneriumChargesLoading,
+    cryptoTokenChargesLoading,
+    APP_NAME,
+  });
 
   const loadData = async () => {
     try {
@@ -223,20 +472,29 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
         APP_NAME === 'tdf'
           ? platform.metrics.getTokenSales(tokenSalesFilter)
           : [],
+        fetchCharges(),
+        fetchMoneriumCharges(),
+        fetchCryptoTokenCharges(),
       ]);
     } catch (err) {
-      console.log('Error fetching  data:', err);
+      console.log('Error fetching data:', err);
     } finally {
       setIsLoading(false);
     }
   };
-
 
   useEffect(() => {
     if (bookingFilter) {
       loadData();
     }
   }, [bookingFilter]);
+
+  // Fetch charges when time frame changes
+  useEffect(() => {
+    fetchCharges();
+    fetchMoneriumCharges();
+    fetchCryptoTokenCharges();
+  }, [fetchCharges, fetchMoneriumCharges, fetchCryptoTokenCharges]);
 
   useEffect(() => {
     const { start, end } = getDateRange({
@@ -316,7 +574,14 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
               </div>
             )}
           </div>
-          {isLoading ? <Spinner /> : <StackedBarChart data={revenueData} />}
+          {isLoading ||
+          chargesLoading ||
+          moneriumChargesLoading ||
+          cryptoTokenChargesLoading ? (
+            <Spinner />
+          ) : (
+            <StackedBarChart data={revenueData} />
+          )}
         </Card>
       </div>
 
@@ -330,7 +595,10 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
               isMobile ? 'h-[280px]' : 'h-[220px]'
             } overflow-hidden`}
           >
-            {isLoading ? (
+            {isLoading ||
+            chargesLoading ||
+            moneriumChargesLoading ||
+            cryptoTokenChargesLoading ? (
               <Spinner />
             ) : (
               <DonutChart data={summaryRevenueData || []} isEur={true} />

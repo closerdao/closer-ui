@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Charge } from '../../types/booking';
+import { Heading } from '../ui';
+import MultiSelect from '../ui/Select/MultiSelect';
 
 interface ChargesTableProps {
   charges: Charge[];
@@ -11,14 +13,59 @@ const ChargesTable: React.FC<ChargesTableProps> = ({
   charges,
   loading = false,
 }) => {
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+
+  // Get unique charge types from the charges array
+  const availableTypes = useMemo(() => {
+    const types = [
+      ...new Set(charges.map((charge) => charge.type).filter(Boolean)),
+    ];
+    console.log('Available types:', types);
+    console.log(
+      'All charges types:',
+      charges.map((c) => ({ type: c.type, method: c.method })),
+    );
+    return types.sort();
+  }, [charges]);
+
+  // Filter charges based on selected types
+  const filteredCharges = useMemo(() => {
+    if (selectedTypes.length === 0) {
+      return charges;
+    }
+    const filtered = charges.filter((charge) => {
+      const chargeType = charge.type;
+      const isIncluded = selectedTypes.includes(chargeType);
+      console.log(
+        `Charge type: ${chargeType}, Selected: ${selectedTypes}, Included: ${isIncluded}`,
+      );
+      return isIncluded;
+    });
+    console.log(
+      `Filtered ${filtered.length} charges from ${charges.length} total`,
+    );
+    return filtered;
+  }, [charges, selectedTypes]);
   const formatCurrency = (amount: { val: number; cur: string }) => {
     if (!amount || !amount.cur || !amount.val) {
       return 'N/A';
     }
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: amount.cur.toUpperCase(),
-    }).format(amount.val);
+
+    // Handle special currency cases
+    let currencyCode = amount.cur.toUpperCase();
+    if (currencyCode === 'EUR STABLECOIN') {
+      currencyCode = 'EUR';
+    }
+
+    try {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currencyCode,
+      }).format(amount.val);
+    } catch (error) {
+      // Fallback for invalid currency codes
+      return `${amount.val.toFixed(2)} ${amount.cur}`;
+    }
   };
 
   const formatDate = (date: string | Date) => {
@@ -58,13 +105,15 @@ const ChargesTable: React.FC<ChargesTableProps> = ({
     if (!type) return 'bg-gray-100 text-gray-800';
     switch (type) {
       case 'booking':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-emerald-100 text-emerald-800';
       case 'subscription':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-fuchsia-100 text-fuchsia-800';
       case 'product':
         return 'bg-indigo-100 text-indigo-800';
       case 'tokenSale':
-        return 'bg-cyan-100 text-cyan-800';
+        return 'bg-red-100 text-red-800';
+      case 'fiatTokenSale':
+        return 'bg-blue-100 text-blue-800';
       case 'citizenship':
         return 'bg-emerald-100 text-emerald-800';
       default:
@@ -91,17 +140,33 @@ const ChargesTable: React.FC<ChargesTableProps> = ({
 
   return (
     <div className="bg-white shadow rounded-lg">
-      <div className="px-4 py-5 sm:p-6">
+      <div className="px-4 py-5 sm:p-6 space-y-6">
         <div className="sm:flex sm:items-center">
           <div className="sm:flex-auto">
-            <h3 className="text-lg font-medium text-gray-900">Charges</h3>
-           
+            <Heading level={3}>Charges</Heading>
           </div>
         </div>
 
-        {charges.length === 0 ? (
+        {availableTypes.length > 0 && (
+          <div className="mb-4">
+            <MultiSelect
+              // label="Filter by Type"
+              values={selectedTypes}
+              options={availableTypes}
+              onChange={setSelectedTypes}
+              placeholder="Select charge types to filter"
+              className="max-w-md"
+            />
+          </div>
+        )}
+
+        {filteredCharges.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-gray-500">No charges found</div>
+            <div className="text-gray-500">
+              {selectedTypes.length === 0
+                ? 'No charges found'
+                : 'No charges match the selected types'}
+            </div>
           </div>
         ) : (
           <div className="mt-8 flow-root">
@@ -144,21 +209,21 @@ const ChargesTable: React.FC<ChargesTableProps> = ({
                         Connect Fee
                       </th>
                       <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Processing Fee
+                        Stripe Fee
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {charges.map((charge) => (
+                    {filteredCharges.map((charge, index) => (
                       <tr
-                        key={charge.id || 'unknown'}
+                        key={charge._id || charge.id || `charge-${index}`}
                         className="hover:bg-gray-50"
                       >
                         <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-900">
                           {formatDate(charge.date)}
                         </td>
                         <td className=" px-2 py-2 text-xs text-gray-900">
-                          {charge._id ? charge._id  : 'N/A'}
+                          {charge._id ? charge._id : 'N/A'}
                         </td>
                         <td className="whitespace-nowrap px-2 py-2 text-xs">
                           <span
@@ -219,7 +284,9 @@ const ChargesTable: React.FC<ChargesTableProps> = ({
                           {charge.meta?.stripeProcessingFee &&
                           charge.amount?.total?.cur
                             ? formatCurrency({
-                                val: charge.meta.stripeProcessingFee,
+                                val:
+                                  charge.meta.stripeProcessingFee -
+                                  (charge.meta?.stripeConnectFee || 0),
                                 cur: charge.amount.total.cur,
                               })
                             : '-'}
