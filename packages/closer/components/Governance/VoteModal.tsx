@@ -36,14 +36,14 @@ const VoteModal: React.FC<VoteModalProps> = ({ proposal, onClose, onVote }) => {
     try {
       // In a real implementation, this would sign a message with the wallet
       // and submit the vote to Snapshot or a similar platform
-      const message = `I am voting ${selectedVote} on proposal ${proposal.id}`;
+      const message = `I am voting ${selectedVote} on proposal ${proposal._id}`;
       const signature = await signMessage(message, account);
       
       if (!signature) {
         throw new Error(t('governance_failed_sign_vote'));
       }
       
-      const success = await onVote(proposal.id, selectedVote);
+      const success = await onVote(proposal._id, selectedVote);
       
       if (success) {
         onClose();
