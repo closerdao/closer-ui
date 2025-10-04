@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from 'closer/contexts/auth';
 import { usePlatform } from 'closer/contexts/platform';
+import { useTranslations } from 'next-intl';
 import { Proposal } from 'closer/types';
 
 interface ProposalCommentsProps {
@@ -28,6 +29,7 @@ interface Comment {
 const ProposalComments: React.FC<ProposalCommentsProps> = ({ proposal, className = '' }) => {
   const { user } = useAuth();
   const { platform } = usePlatform() as any;
+  const t = useTranslations();
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
@@ -67,7 +69,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({ proposal, className
         // Fetch only the users needed for the displayed comments
         platform.user.get({ _id: { $in: userIds } });
       } catch (error) {
-        console.error('Error loading users:', error);
+        // Silently handle error - users will show as anonymous
       }
     }
   }, [commentsMap, platform?.user]);
@@ -137,7 +139,6 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({ proposal, className
       setNewComment('');
       platform.post.get(commentFilter); // Reload comments
     } catch (err) {
-      console.error('Error submitting comment:', err);
       setError('Failed to submit comment');
     } finally {
       setIsSubmitting(false);
@@ -170,7 +171,6 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({ proposal, className
       setReplyingTo(null);
       platform.post.get(commentFilter); // Reload comments
     } catch (err) {
-      console.error('Error submitting reply:', err);
       setError('Failed to submit reply');
     } finally {
       setIsSubmitting(false);
@@ -213,7 +213,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({ proposal, className
                 onClick={() => setReplyingTo(replyingTo === comment._id ? null : comment._id)}
                 className="mt-2 text-sm text-accent hover:text-accent-dark"
               >
-                Reply
+                {t('governance_reply')}
               </button>
             )}
           </div>
@@ -229,7 +229,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({ proposal, className
               onChange={(e) => setReplyContent(e.target.value)}
               className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
               rows={2}
-              placeholder="Write a reply..."
+              placeholder={t('governance_write_reply')}
             />
             <div className="flex flex-col space-y-1">
               <button
@@ -237,7 +237,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({ proposal, className
                 disabled={isSubmitting || !replyContent.trim()}
                 className="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent-dark disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Reply
+                {t('governance_reply')}
               </button>
               <button
                 type="button"
@@ -247,7 +247,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({ proposal, className
                 }}
                 className="px-4 py-2 text-gray-500 hover:text-gray-700"
               >
-                Cancel
+                {t('governance_cancel')}
               </button>
             </div>
           </div>
@@ -266,7 +266,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({ proposal, className
 
   return (
     <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
-      <h3 className="text-lg font-semibold mb-4">Comments ({commentsWithReplies.length})</h3>
+      <h3 className="text-lg font-semibold mb-4">{t('governance_comments')} ({commentsWithReplies.length})</h3>
       
       {/* New comment form */}
       {user && (
@@ -281,7 +281,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({ proposal, className
                 onChange={(e) => setNewComment(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
                 rows={3}
-                placeholder="Write a comment..."
+                placeholder={t('governance_write_comment')}
               />
               <div className="flex justify-end mt-2">
                 <button
@@ -289,7 +289,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({ proposal, className
                   disabled={isSubmitting || !newComment.trim()}
                   className="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent-dark disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? 'Posting...' : 'Post Comment'}
+                  {isSubmitting ? t('governance_posting') : t('governance_post_comment')}
                 </button>
               </div>
             </div>
@@ -299,7 +299,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({ proposal, className
       
       {!user && (
         <div className="mb-6 p-4 bg-gray-50 rounded-lg text-center">
-          <p className="text-gray-600">Please log in to post comments.</p>
+          <p className="text-gray-600">{t('governance_login_to_comment')}</p>
         </div>
       )}
       
@@ -312,11 +312,11 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({ proposal, className
       {/* Comments list */}
       {isLoading ? (
         <div className="text-center py-4">
-          <p className="text-gray-500">Loading comments...</p>
+          <p className="text-gray-500">{t('governance_loading_comments')}</p>
         </div>
       ) : commentsWithReplies.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-gray-500">No comments yet. Be the first to comment!</p>
+          <p className="text-gray-500">{t('governance_no_comments_yet')}</p>
         </div>
       ) : (
         <div className="space-y-4">

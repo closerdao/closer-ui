@@ -7,4 +7,3 @@ export { default as WalletAndVoting } from './WalletAndVoting';
 export { default as PastVotes } from './PastVotes';
 export { default as ProposalComments } from './ProposalComments';
 
-export type { Proposal } from './ProposalList';

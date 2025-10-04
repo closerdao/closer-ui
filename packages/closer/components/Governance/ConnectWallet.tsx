@@ -1,9 +1,9 @@
 import React, { useContext } from 'react';
 import { WalletState, WalletDispatch } from 'closer/contexts/wallet';
 import { useAuth } from 'closer/contexts/auth';
-import { usePresenceToken } from '../../hooks/usePresenceToken';
-import { useSweatToken } from '../../hooks/useSweatToken';
-import { useVotingWeight } from '../../hooks/useVotingWeight';
+import { usePresenceToken } from 'closer/hooks/usePresenceToken';
+import { useSweatToken } from 'closer/hooks/useSweatToken';
+import { useVotingWeight } from 'closer/hooks/useVotingWeight';
 
 interface ConnectWalletProps {
   className?: string;

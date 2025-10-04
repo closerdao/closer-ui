@@ -1,8 +1,9 @@
 import React, { useState, useContext } from 'react';
 import { WalletState, WalletDispatch } from 'closer/contexts/wallet';
 import { useAuth } from 'closer/contexts/auth';
-import { Proposal } from './ProposalList';
-import { useVotingWeight } from '../../hooks/useVotingWeight';
+import { Proposal } from 'closer/types';
+import { useVotingWeight } from 'closer/hooks/useVotingWeight';
+import { useTranslations } from 'next-intl';
 
 interface VoteModalProps {
   proposal: Proposal | null;
@@ -15,6 +16,7 @@ const VoteModal: React.FC<VoteModalProps> = ({ proposal, onClose, onVote }) => {
   const { signMessage } = useContext(WalletDispatch);
   const { user } = useAuth();
   const { votingWeight } = useVotingWeight();
+  const t = useTranslations();
   
   const [selectedVote, setSelectedVote] = useState<'yes' | 'no' | 'abstain' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,7 +40,7 @@ const VoteModal: React.FC<VoteModalProps> = ({ proposal, onClose, onVote }) => {
       const signature = await signMessage(message, account);
       
       if (!signature) {
-        throw new Error('Failed to sign vote message');
+        throw new Error(t('governance_failed_sign_vote'));
       }
       
       const success = await onVote(proposal.id, selectedVote);
@@ -46,10 +48,10 @@ const VoteModal: React.FC<VoteModalProps> = ({ proposal, onClose, onVote }) => {
       if (success) {
         onClose();
       } else {
-        throw new Error('Failed to submit vote');
+        throw new Error(t('governance_failed_submit_vote'));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setError(err instanceof Error ? err.message : t('governance_unknown_error'));
     } finally {
       setIsSubmitting(false);
     }
@@ -61,7 +63,7 @@ const VoteModal: React.FC<VoteModalProps> = ({ proposal, onClose, onVote }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-md w-full">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Vote on Proposal</h2>
+          <h2 className="text-xl font-bold">{t('governance_vote_on_proposal')}</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
@@ -75,14 +77,13 @@ const VoteModal: React.FC<VoteModalProps> = ({ proposal, onClose, onVote }) => {
           <p className="text-sm text-gray-600 mb-4">{proposal.description}</p>
           
           <div className="p-3 bg-accent-light rounded-md mb-4">
-            <p className="text-sm font-medium">You have {votingWeight.toFixed(2)} voting weight</p>
+            <p className="text-sm font-medium">{t('governance_voting_weight', { weight: votingWeight.toFixed(2) })}</p>
           </div>
           
           {!isCitizen() && (
             <div className="p-3 bg-yellow-100 text-yellow-800 rounded-md mb-4">
               <p className="text-sm">
-                <strong>Warning:</strong> You need to be a Citizen to vote on proposals.
-                Your vote may not be counted.
+                <strong>{t('governance_warning')}:</strong> {t('governance_need_citizen_to_vote')}
               </p>
             </div>
           )}
@@ -96,7 +97,7 @@ const VoteModal: React.FC<VoteModalProps> = ({ proposal, onClose, onVote }) => {
                   : 'bg-gray-100 hover:bg-gray-200'
               }`}
             >
-              Yes
+              {t('governance_yes')}
             </button>
             <button
               onClick={() => setSelectedVote('no')}
@@ -106,7 +107,7 @@ const VoteModal: React.FC<VoteModalProps> = ({ proposal, onClose, onVote }) => {
                   : 'bg-gray-100 hover:bg-gray-200'
               }`}
             >
-              No
+              {t('governance_no')}
             </button>
             <button
               onClick={() => setSelectedVote('abstain')}
@@ -116,7 +117,7 @@ const VoteModal: React.FC<VoteModalProps> = ({ proposal, onClose, onVote }) => {
                   : 'bg-gray-100 hover:bg-gray-200'
               }`}
             >
-              Abstain
+              {t('governance_abstain')}
             </button>
           </div>
           
@@ -132,7 +133,7 @@ const VoteModal: React.FC<VoteModalProps> = ({ proposal, onClose, onVote }) => {
               className="py-2 px-4 border rounded-md"
               disabled={isSubmitting}
             >
-              Cancel
+              {t('governance_cancel')}
             </button>
             <button
               onClick={handleVote}
@@ -143,7 +144,7 @@ const VoteModal: React.FC<VoteModalProps> = ({ proposal, onClose, onVote }) => {
                   : 'bg-accent hover:bg-accent-dark text-white'
               }`}
             >
-              {isSubmitting ? 'Submitting...' : 'Submit Vote'}
+              {isSubmitting ? t('governance_submitting') : t('governance_submit_vote')}
             </button>
           </div>
         </div>

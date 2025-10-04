@@ -3,7 +3,7 @@ import { WalletState, WalletDispatch } from 'closer/contexts/wallet';
 import { useAuth } from 'closer/contexts/auth';
 import { usePlatform } from 'closer/contexts/platform';
 import { createProposalSignatureHash } from 'closer/utils/crypto';
-import { api } from 'closer';
+import { useTranslations } from 'next-intl';
 
 interface CreateProposalProps {
   onClose: () => void;
@@ -19,6 +19,7 @@ const CreateProposal: React.FC<CreateProposalProps> = ({ onClose, onSubmit }) =>
   const { signMessage } = useContext(WalletDispatch);
   const { user } = useAuth();
   const { platform } = usePlatform() as any;
+  const t = useTranslations();
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -35,22 +36,22 @@ const CreateProposal: React.FC<CreateProposalProps> = ({ onClose, onSubmit }) =>
     e.preventDefault();
     
     if (!isWalletReady || !account) {
-      setError('Wallet not connected');
+      setError(t('governance_wallet_not_connected'));
       return;
     }
     
     if (!isCitizen()) {
-      setError('Only Citizens can create proposals');
+      setError(t('governance_only_citizens_can_create'));
       return;
     }
     
     if (!title.trim()) {
-      setError('Title is required');
+      setError(t('governance_title_required'));
       return;
     }
     
     if (!description.trim()) {
-      setError('Description is required');
+      setError(t('governance_description_required'));
       return;
     }
     
@@ -65,16 +66,16 @@ const CreateProposal: React.FC<CreateProposalProps> = ({ onClose, onSubmit }) =>
       const authorSignature = await signMessage(descriptionHash, account);
       
       if (!authorSignature) {
-        throw new Error('Failed to sign proposal description');
+        throw new Error(t('governance_failed_sign_proposal'));
       }
 
       // Validate required fields before sending
       if (!account) {
-        throw new Error('Wallet address is required');
+        throw new Error(t('governance_wallet_address_required'));
       }
       
       if (!authorSignature) {
-        throw new Error('Author signature is required');
+        throw new Error(t('governance_author_signature_required'));
       }
 
       // Create proposal data
@@ -100,24 +101,11 @@ const CreateProposal: React.FC<CreateProposalProps> = ({ onClose, onSubmit }) =>
         signatureHash: descriptionHash,
       };
 
-      // Debug: Log the proposal data being sent
-      console.log('Proposal data being sent:', proposalData);
-
       // Submit proposal to platform context
-      try {
-        const result = await platform.proposal.post(proposalData);
-        console.log('Proposal creation result:', result);
-        onClose();
-      } catch (platformError) {
-        console.warn('Platform context failed, trying direct API call:', platformError);
-        // Fallback to direct API call
-        const result = await api.post('/proposal', proposalData);
-        console.log('Direct API call result:', result);
-        onClose();
-      }
+      await platform.proposal.post(proposalData);
+      onClose();
     } catch (err) {
-      console.error('Proposal creation error:', err);
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setError(err instanceof Error ? err.message : t('governance_unknown_error'));
     } finally {
       setIsSubmitting(false);
     }
@@ -127,7 +115,7 @@ const CreateProposal: React.FC<CreateProposalProps> = ({ onClose, onSubmit }) =>
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-md w-full">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Create Proposal</h2>
+          <h2 className="text-xl font-bold">{t('governance_create_proposal')}</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
@@ -138,13 +126,12 @@ const CreateProposal: React.FC<CreateProposalProps> = ({ onClose, onSubmit }) =>
         
         {!isWalletReady ? (
           <div className="p-4 bg-accent-light text-accent-dark rounded-md">
-            <p>Please connect your wallet to create a proposal.</p>
+            <p>{t('governance_connect_wallet_to_create')}</p>
           </div>
         ) : !isCitizen() ? (
           <div className="p-4 bg-accent-light text-accent-dark rounded-md">
             <p>
-              Only Citizens can create proposals. Please contact the DAO
-              administrators for more information.
+              {t('governance_contact_dao_administrators')}
             </p>
           </div>
         ) : (
@@ -166,7 +153,7 @@ const CreateProposal: React.FC<CreateProposalProps> = ({ onClose, onSubmit }) =>
             
             <div className="mb-4">
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                Description
+                {t('governance_description_label')}
               </label>
               <textarea
                 id="description"
@@ -174,14 +161,14 @@ const CreateProposal: React.FC<CreateProposalProps> = ({ onClose, onSubmit }) =>
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full px-3 py-2 border rounded-md"
                 rows={5}
-                placeholder="Enter proposal description"
+                placeholder={t('governance_description_placeholder')}
                 required
               />
             </div>
             
             <div className="mb-4">
               <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-1">
-                Duration (days)
+                {t('governance_duration_label')}
               </label>
               <select
                 id="duration"
@@ -189,10 +176,10 @@ const CreateProposal: React.FC<CreateProposalProps> = ({ onClose, onSubmit }) =>
                 onChange={(e) => setDuration(parseInt(e.target.value))}
                 className="w-full px-3 py-2 border rounded-md"
               >
-                <option value={3}>3 days</option>
-                <option value={7}>7 days</option>
-                <option value={14}>14 days</option>
-                <option value={30}>30 days</option>
+                <option value={3}>{t('governance_duration_3_days')}</option>
+                <option value={7}>{t('governance_duration_7_days')}</option>
+                <option value={14}>{t('governance_duration_14_days')}</option>
+                <option value={30}>{t('governance_duration_30_days')}</option>
               </select>
             </div>
             
@@ -209,7 +196,7 @@ const CreateProposal: React.FC<CreateProposalProps> = ({ onClose, onSubmit }) =>
                 className="py-2 px-4 border rounded-md"
                 disabled={isSubmitting}
               >
-                Cancel
+                {t('governance_cancel')}
               </button>
               <button
                 type="submit"
@@ -220,7 +207,7 @@ const CreateProposal: React.FC<CreateProposalProps> = ({ onClose, onSubmit }) =>
                     : 'bg-accent hover:bg-accent-dark text-white'
                 }`}
               >
-                {isSubmitting ? 'Submitting...' : 'Create Proposal'}
+                {isSubmitting ? t('governance_submitting') : t('governance_create_proposal')}
               </button>
             </div>
           </form>

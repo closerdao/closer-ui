@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { WalletState } from 'closer/contexts/wallet';
 import { usePlatform } from 'closer/contexts/platform';
 import { useAuth } from 'closer/contexts/auth';
+import { useTranslations } from 'next-intl';
 
 interface ProposalListProps {
   className?: string;
@@ -14,6 +15,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
   const { isWalletReady, account } = useContext(WalletState);
   const { user } = useAuth();
   const { platform } = usePlatform() as any;
+  const t = useTranslations();
   const hasLoaded = useRef(false);
 
   // Get filter from URL query params
@@ -46,7 +48,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
       try {
         platform.proposal.get(query);
       } catch (error) {
-        console.error('Error loading proposals:', error);
+        // Silently handle error - proposals will show as empty
       }
     }
   }, [platform, query]);
@@ -70,7 +72,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
         // Fetch only the users needed for the displayed proposals
         platform.user.get({ _id: { $in: userIds } });
       } catch (error) {
-        console.error('Error loading users:', error);
+        // Silently handle error - users will show as anonymous
       }
     }
   }, [proposalsMap, platform?.user]);
@@ -110,7 +112,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
     return (
       <div className={`p-4 border rounded-lg shadow-sm ${className}`}>
         <div className="text-center py-8">
-          <p className="text-gray-500">Platform context not available. Please refresh the page.</p>
+          <p className="text-gray-500">{t('governance_platform_not_available')}</p>
         </div>
       </div>
     );
@@ -119,7 +121,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
   return (
     <div className={`p-4 border rounded-lg shadow-sm ${className}`}>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Proposals ({proposalsMap.size})</h2>
+        <h2 className="text-xl font-bold">{t('governance_proposals')} ({proposalsMap.size})</h2>
         <div className="flex space-x-2">
           <button
             onClick={() => handleFilterChange('all')}
@@ -127,7 +129,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
               filter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200'
             }`}
           >
-            All
+{t('governance_all')}
           </button>
           <button
             onClick={() => handleFilterChange('active')}
@@ -135,7 +137,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
               filter === 'active' ? 'bg-blue-600 text-white' : 'bg-gray-200'
             }`}
           >
-            Active
+{t('governance_active')}
           </button>
           <button
             onClick={() => handleFilterChange('closed')}
@@ -143,7 +145,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
               filter === 'closed' ? 'bg-blue-600 text-white' : 'bg-gray-200'
             }`}
           >
-            Closed
+{t('governance_closed')}
           </button>
           <button
             onClick={() => handleFilterChange('yours')}
@@ -151,18 +153,18 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
               filter === 'yours' ? 'bg-blue-600 text-white' : 'bg-gray-200'
             }`}
           >
-            Yours
+{t('governance_yours')}
           </button>
         </div>
       </div>
 
       {isLoading ? (
         <div className="flex justify-center items-center h-40">
-          <p>Loading proposals...</p>
+          <p>{t('governance_loading_proposals')}</p>
         </div>
       ) : proposalsMap.size === 0 ? (
         <div className="flex justify-center items-center h-40">
-          <p className="text-gray-500">No proposals found. Try refreshing the page.</p>
+          <p className="text-gray-500">{t('governance_no_proposals_found')}</p>
           <div className="mt-4 text-xs text-gray-400">
             <p>Debug info:</p>
             <p>Platform available: {platform?.proposal ? 'Yes' : 'No'}</p>
@@ -174,12 +176,8 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
       ) : (
         <div className="space-y-4">
           {Array.from(proposalsMap.values()).map((proposal: any) => {
-            // Debug logging
-            console.log('Proposal data:', proposal);
-            
             // Ensure we have the required fields
             if (!proposal.get('_id')) {
-              console.warn('Proposal missing _id:', proposal);
               return null;
             }
             

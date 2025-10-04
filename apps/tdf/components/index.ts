@@ -3,4 +3,4 @@ export * from './ErrorBoundary';
 export * from './Footer';
 export * from './Timeline';
 export * from './Layout';
-export * from './Governance';
+// Governance components are now in closer package

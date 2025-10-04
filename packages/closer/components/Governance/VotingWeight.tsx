@@ -1,5 +1,5 @@
 import React from 'react';
-import { useVotingWeight } from '../../hooks/useVotingWeight';
+import { useVotingWeight } from 'closer/hooks/useVotingWeight';
 import { useContext } from 'react';
 import { WalletState } from 'closer/contexts/wallet';
 
