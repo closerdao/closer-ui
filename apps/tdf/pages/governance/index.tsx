@@ -1,54 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { NextPage, NextPageContext } from 'next';
 import Head from 'next/head';
-import { Layout } from '@/components/Layout';
+import Link from 'next/link';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
-import {
-  ConnectWallet,
-  ProposalList,
-  VoteModal,
-  CreateProposal,
-  VotingWeight,
-  PastVotes,
-  Proposal,
-} from '../../components/Governance';
+import { ProposalList } from '../../components/Governance';
+import WalletAndVoting from '../../components/Governance/WalletAndVoting';
 
 const GovernancePage: NextPage = () => {
-  const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
-  const [isVoteModalOpen, setIsVoteModalOpen] = useState(false);
-  const [isCreateProposalModalOpen, setIsCreateProposalModalOpen] = useState(false);
-  
-  const handleSelectProposal = (proposal: Proposal) => {
-    setSelectedProposal(proposal);
-    setIsVoteModalOpen(true);
-  };
-  
-  const handleVote = async (proposalId: string, vote: 'yes' | 'no' | 'abstain'): Promise<boolean> => {
-    // In a real implementation, this would submit the vote to Snapshot or a similar platform
-    console.log(`Voting ${vote} on proposal ${proposalId}`);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    return true;
-  };
-  
-  const handleCreateProposal = async (proposal: {
-    title: string;
-    description: string;
-    duration: number;
-  }): Promise<boolean> => {
-    // In a real implementation, this would submit the proposal to Snapshot or IPFS
-    console.log('Creating proposal:', proposal);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    return true;
-  };
   
   return (
-    <Layout>
+    <>
       <Head>
         <title>TDF Governance</title>
         <meta
@@ -59,45 +20,25 @@ const GovernancePage: NextPage = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">TDF Governance</h1>
-          <button
-            onClick={() => setIsCreateProposalModalOpen(true)}
+          <Link
+            href="/governance/create"
             className="bg-accent hover:bg-accent-dark text-white font-bold py-2 px-4 rounded"
           >
             Create Proposal
-          </button>
+          </Link>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2">
-            <ProposalList
-              onSelectProposal={handleSelectProposal}
-              className="mb-6"
-            />
+            <ProposalList className="mb-6" />
           </div>
           
           <div className="space-y-6">
-            <ConnectWallet />
-            <VotingWeight />
-            <PastVotes />
+            <WalletAndVoting />
           </div>
         </div>
       </div>
-      
-      {isVoteModalOpen && selectedProposal && (
-        <VoteModal
-          proposal={selectedProposal}
-          onClose={() => setIsVoteModalOpen(false)}
-          onVote={handleVote}
-        />
-      )}
-      
-      {isCreateProposalModalOpen && (
-        <CreateProposal
-          onClose={() => setIsCreateProposalModalOpen(false)}
-          onSubmit={handleCreateProposal}
-        />
-      )}
-    </Layout>
+    </>
   );
 };
 

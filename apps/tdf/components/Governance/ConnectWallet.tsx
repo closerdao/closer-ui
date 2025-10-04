@@ -25,7 +25,7 @@ const ConnectWallet: React.FC<ConnectWalletProps> = ({ className }) => {
   
   const isCitizen = (): boolean => {
     // Check if user has the "citizen" role
-    return user?.roles?.includes('citizen') || false;
+    return user?.roles?.includes('member') || false;
   };
   
   const formatAddress = (address: string): string => {

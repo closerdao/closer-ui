@@ -1,6 +1,9 @@
 import React, { useState, useContext } from 'react';
 import { WalletState, WalletDispatch } from 'closer/contexts/wallet';
 import { useAuth } from 'closer/contexts/auth';
+import { usePlatform } from 'closer/contexts/platform';
+import { createProposalSignatureHash } from 'closer/utils/crypto';
+import { api } from 'closer';
 
 interface CreateProposalProps {
   onClose: () => void;
@@ -15,6 +18,7 @@ const CreateProposal: React.FC<CreateProposalProps> = ({ onClose, onSubmit }) =>
   const { isWalletReady, account } = useContext(WalletState);
   const { signMessage } = useContext(WalletDispatch);
   const { user } = useAuth();
+  const { platform } = usePlatform() as any;
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -23,8 +27,8 @@ const CreateProposal: React.FC<CreateProposalProps> = ({ onClose, onSubmit }) =>
   const [error, setError] = useState<string | null>(null);
   
   const isCitizen = (): boolean => {
-    // Check if user has the "citizen" role
-    return user?.roles?.includes('citizen') || false;
+    // Check if user has the "member" role (citizens in this system)
+    return user?.roles?.includes('member') || false;
   };
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,27 +58,65 @@ const CreateProposal: React.FC<CreateProposalProps> = ({ onClose, onSubmit }) =>
     setError(null);
     
     try {
-      // In a real implementation, this would sign a message with the wallet
-      // and submit the proposal to Snapshot or IPFS
-      const message = `I am creating a proposal titled "${title}"`;
-      const signature = await signMessage(message, account);
+      // Create proposal description hash
+      const descriptionHash = createProposalSignatureHash(description);
       
-      if (!signature) {
-        throw new Error('Failed to sign proposal message');
+      // Sign the proposal description hash for author verification
+      const authorSignature = await signMessage(descriptionHash, account);
+      
+      if (!authorSignature) {
+        throw new Error('Failed to sign proposal description');
+      }
+
+      // Validate required fields before sending
+      if (!account) {
+        throw new Error('Wallet address is required');
       }
       
-      const success = await onSubmit({
-        title,
-        description,
-        duration,
-      });
-      
-      if (success) {
+      if (!authorSignature) {
+        throw new Error('Author signature is required');
+      }
+
+      // Create proposal data
+      const proposalData = {
+        title: title.trim(),
+        description: description.trim(),
+        authorAddress: account,
+        authorSignature: authorSignature,
+        status: 'active',
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + duration * 24 * 60 * 60 * 1000).toISOString(),
+        votes: {
+          yes: 0,
+          no: 0,
+          abstain: 0,
+        },
+        visibleBy: [],
+        createdBy: user?._id || '',
+        updated: new Date().toISOString(),
+        created: new Date().toISOString(),
+        attributes: [],
+        managedBy: [],
+        signatureHash: descriptionHash,
+      };
+
+      // Debug: Log the proposal data being sent
+      console.log('Proposal data being sent:', proposalData);
+
+      // Submit proposal to platform context
+      try {
+        const result = await platform.proposal.post(proposalData);
+        console.log('Proposal creation result:', result);
         onClose();
-      } else {
-        throw new Error('Failed to submit proposal');
+      } catch (platformError) {
+        console.warn('Platform context failed, trying direct API call:', platformError);
+        // Fallback to direct API call
+        const result = await api.post('/proposal', proposalData);
+        console.log('Direct API call result:', result);
+        onClose();
       }
     } catch (err) {
+      console.error('Proposal creation error:', err);
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
     } finally {
       setIsSubmitting(false);

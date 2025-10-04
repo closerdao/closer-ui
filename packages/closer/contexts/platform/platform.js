@@ -20,6 +20,7 @@ export const models = [
   'product',
   'post',
   'photo',
+  'proposal',
   'resource',
   'session',
   'stay',

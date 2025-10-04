@@ -21,8 +21,8 @@ const VoteModal: React.FC<VoteModalProps> = ({ proposal, onClose, onVote }) => {
   const [error, setError] = useState<string | null>(null);
   
   const isCitizen = (): boolean => {
-    // Check if user has the "citizen" role
-    return user?.roles?.includes('citizen') || false;
+    // Check if user has the "member" role (citizens in this system)
+    return user?.roles?.includes('member') || false;
   };
   
   const handleVote = async () => {
