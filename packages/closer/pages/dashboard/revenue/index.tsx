@@ -70,15 +70,13 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
               $gte: startDate,
               $lte: endDate,
             },
-            // status: 'paid',
-            // type: 'product',
+
             method: 'stripe',
           },
-          limit: 1000,
+          limit: 3000,
           sort: '-date',
         },
       });
-      console.log('response.data=======', response.data);
       // Sort charges from newest to oldest (client-side backup)
       const sortedCharges = response.data.results.sort(
         (a: Charge, b: Charge) => {
@@ -114,7 +112,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
             method: 'monerium',
             status: 'paid',
           },
-          limit: 1000,
+          limit: 3000,
           sort: '-date',
         },
       });
@@ -168,7 +166,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
             method: 'crypto',
             status: 'paid',
           },
-          limit: 1000,
+          limit: 3000,
           sort: '-date',
         },
       });

@@ -176,31 +176,10 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
               </Bar>
               {APP_NAME === 'tdf' && (
                 <>
-                  <Bar dataKey="tokens" stackId="a" fill={CHART_COLORS[5]}>
-                    <LabelList
-                      dataKey="totalOperations"
-                      position="top"
-                      content={(props) => {
-                        const { x, y, width, value } = props;
-                        return (
-                          <text
-                            x={Number(x) + (Number(width) || 0) / 2}
-                            y={y}
-                            dy={-10}
-                            textAnchor="middle"
-                            fill="#000000"
-                            fontSize="12"
-                          >
-                            €{formatThousands(Number(value))}
-                          </text>
-                        );
-                      }}
-                    />
-                  </Bar>
                   <Bar
-                    dataKey="cryptoTokens"
+                    dataKey="fiat token sales"
                     stackId="a"
-                    fill={CHART_COLORS[6]}
+                    fill={CHART_COLORS[5]}
                   >
                     <LabelList
                       dataKey="totalOperations"
@@ -222,31 +201,16 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
                       }}
                     />
                   </Bar>
+                  <Bar
+                    dataKey="crypto token sales"
+                    stackId="a"
+                    fill={CHART_COLORS[6]}
+                  />
                   <Bar
                     dataKey="subscriptions"
                     stackId="a"
                     fill={CHART_COLORS[4]}
-                  >
-                    <LabelList
-                      dataKey="totalOperations"
-                      position="top"
-                      content={(props) => {
-                        const { x, y, width, value } = props;
-                        return (
-                          <text
-                            x={Number(x) + (Number(width) || 0) / 2}
-                            y={y}
-                            dy={-10}
-                            textAnchor="middle"
-                            fill="#000000"
-                            fontSize="12"
-                          >
-                            €{formatThousands(Number(value))}
-                          </text>
-                        );
-                      }}
-                    />
-                  </Bar>
+                  />
                 </>
               )}
             </>

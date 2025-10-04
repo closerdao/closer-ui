@@ -117,8 +117,8 @@ const getSummaryRevenueData = ({
   const summaryData = [];
 
   // Always include all categories, even if 0, for consistent display
-  summaryData.push({ name: 'tokens', value: tokenSales });
-  summaryData.push({ name: 'cryptoTokens', value: cryptoTokenSales });
+  summaryData.push({ name: 'fiat token sales', value: tokenSales }); // Fiat token sales (Monerium)
+  summaryData.push({ name: 'crypto token sales', value: cryptoTokenSales }); // Crypto token sales
   summaryData.push({ name: 'events', value: events });
   summaryData.push({ name: 'spaces', value: rental });
   summaryData.push({ name: 'food', value: food });
@@ -164,34 +164,65 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
   const fetchCharges = useCallback(async () => {
     setChargesLoading(true);
     try {
-      const { startDate, endDate } = getStartAndEndDate(
-        timeFrame,
-        fromDate.toString(),
-        toDate.toString(),
-      );
+      // For TDF, fetch data for the entire current year to show monthly breakdown
+      if (APP_NAME === 'tdf') {
+        const currentYear = new Date().getFullYear();
+        const yearStart = new Date(currentYear, 0, 1);
+        const yearEnd = new Date(currentYear, 11, 31, 23, 59, 59);
 
-      const response = await api.get('/charge', {
-        params: {
-          where: {
-            date: {
-              $gte: startDate,
-              $lte: endDate,
+        const response = await api.get('/charge', {
+          params: {
+            where: {
+              date: {
+                $gte: yearStart.toISOString(),
+                $lte: yearEnd.toISOString(),
+              },
+              method: 'stripe',
             },
-            method: 'stripe',
+            limit: 3000,
+            sort: '-date',
           },
-          limit: 1000,
-          sort: '-date',
-        },
-      });
+        });
 
-      const sortedCharges = response.data.results.sort(
-        (a: Charge, b: Charge) => {
-          const dateA = new Date(a.date).getTime();
-          const dateB = new Date(b.date).getTime();
-          return dateB - dateA;
-        },
-      );
-      setCharges(sortedCharges);
+        const sortedCharges = response.data.results.sort(
+          (a: Charge, b: Charge) => {
+            const dateA = new Date(a.date).getTime();
+            const dateB = new Date(b.date).getTime();
+            return dateB - dateA;
+          },
+        );
+        setCharges(sortedCharges);
+      } else {
+        // For other apps, use the original time frame logic
+        const { startDate, endDate } = getStartAndEndDate(
+          timeFrame,
+          fromDate.toString(),
+          toDate.toString(),
+        );
+
+        const response = await api.get('/charge', {
+          params: {
+            where: {
+              date: {
+                $gte: startDate,
+                $lte: endDate,
+              },
+              method: 'stripe',
+            },
+            limit: 1000,
+            sort: '-date',
+          },
+        });
+
+        const sortedCharges = response.data.results.sort(
+          (a: Charge, b: Charge) => {
+            const dateA = new Date(a.date).getTime();
+            const dateB = new Date(b.date).getTime();
+            return dateB - dateA;
+          },
+        );
+        setCharges(sortedCharges);
+      }
     } catch (error) {
       console.error('Error fetching charges:', error);
     } finally {
@@ -202,47 +233,91 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
   const fetchMoneriumCharges = useCallback(async () => {
     setMoneriumChargesLoading(true);
     try {
-      const { startDate, endDate } = getStartAndEndDate(
-        timeFrame,
-        fromDate.toString(),
-        toDate.toString(),
-      );
+      // For TDF, fetch data for the entire current year to show monthly breakdown
+      if (APP_NAME === 'tdf') {
+        const currentYear = new Date().getFullYear();
+        const yearStart = new Date(currentYear, 0, 1);
+        const yearEnd = new Date(currentYear, 11, 31, 23, 59, 59);
 
-      const response = await api.get('/charge', {
-        params: {
-          where: {
-            date: {
-              $gte: startDate,
-              $lte: endDate,
+        const response = await api.get('/charge', {
+          params: {
+            where: {
+              date: {
+                $gte: yearStart.toISOString(),
+                $lte: yearEnd.toISOString(),
+              },
+              method: 'monerium',
+              status: 'paid',
             },
-            method: 'monerium',
-            status: 'paid',
+            limit: 3000,
+            sort: '-date',
           },
-          limit: 1000,
-          sort: '-date',
-        },
-      });
+        });
 
-      const sortedCharges = response.data.results.sort(
-        (a: Charge, b: Charge) => {
-          const dateA = new Date(a.date).getTime();
-          const dateB = new Date(b.date).getTime();
-          return dateB - dateA;
-        },
-      );
-
-      const processedCharges = sortedCharges.map((charge: any) => ({
-        ...charge,
-        amount: {
-          ...charge.amount,
-          total: {
-            ...charge.amount.total,
-            val: parseFloat(charge.amount.total.val) || 0,
+        const sortedCharges = response.data.results.sort(
+          (a: Charge, b: Charge) => {
+            const dateA = new Date(a.date).getTime();
+            const dateB = new Date(b.date).getTime();
+            return dateB - dateA;
           },
-        },
-      }));
+        );
 
-      setMoneriumCharges(processedCharges);
+        const processedCharges = sortedCharges.map((charge: any) => ({
+          ...charge,
+          amount: {
+            ...charge.amount,
+            total: {
+              ...charge.amount.total,
+              val: parseFloat(charge.amount.total.val) || 0,
+            },
+          },
+        }));
+
+        setMoneriumCharges(processedCharges);
+      } else {
+        // For other apps, use the original time frame logic
+        const { startDate, endDate } = getStartAndEndDate(
+          timeFrame,
+          fromDate.toString(),
+          toDate.toString(),
+        );
+
+        const response = await api.get('/charge', {
+          params: {
+            where: {
+              date: {
+                $gte: startDate,
+                $lte: endDate,
+              },
+              method: 'monerium',
+              status: 'paid',
+            },
+            limit: 1000,
+            sort: '-date',
+          },
+        });
+
+        const sortedCharges = response.data.results.sort(
+          (a: Charge, b: Charge) => {
+            const dateA = new Date(a.date).getTime();
+            const dateB = new Date(b.date).getTime();
+            return dateB - dateA;
+          },
+        );
+
+        const processedCharges = sortedCharges.map((charge: any) => ({
+          ...charge,
+          amount: {
+            ...charge.amount,
+            total: {
+              ...charge.amount.total,
+              val: parseFloat(charge.amount.total.val) || 0,
+            },
+          },
+        }));
+
+        setMoneriumCharges(processedCharges);
+      }
     } catch (error) {
       console.error('Error fetching monerium charges:', error);
     } finally {
@@ -253,59 +328,97 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
   const fetchCryptoTokenCharges = useCallback(async () => {
     setCryptoTokenChargesLoading(true);
     try {
-      const { startDate, endDate } = getStartAndEndDate(
-        timeFrame,
-        fromDate.toString(),
-        toDate.toString(),
-      );
+      // For TDF, fetch data for the entire current year to show monthly breakdown
+      if (APP_NAME === 'tdf') {
+        const currentYear = new Date().getFullYear();
+        const yearStart = new Date(currentYear, 0, 1);
+        const yearEnd = new Date(currentYear, 11, 31, 23, 59, 59);
 
-      console.log('Crypto token charges date range:', {
-        startDate,
-        endDate,
-        timeFrame,
-      });
-
-      const response = await api.get('/charge', {
-        params: {
-          where: {
-            date: {
-              $gte: startDate,
-              $lte: endDate,
+        const response = await api.get('/charge', {
+          params: {
+            where: {
+              date: {
+                $gte: yearStart.toISOString(),
+                $lte: yearEnd.toISOString(),
+              },
+              method: 'crypto',
+              status: 'paid',
             },
-            method: 'crypto',
-            status: 'paid',
+            limit: 3000,
+            sort: '-date',
           },
-          limit: 1000,
-          sort: '-date',
-        },
-      });
+        });
 
-      console.log('Crypto token charges response:', response.data);
-
-      const sortedCharges = response.data.results.sort(
-        (a: Charge, b: Charge) => {
-          const dateA = new Date(a.date).getTime();
-          const dateB = new Date(b.date).getTime();
-          return dateB - dateA;
-        },
-      );
-
-      const processedCharges = sortedCharges.map((charge: any) => ({
-        ...charge,
-        amount: {
-          ...charge.amount,
-          total: {
-            ...charge.amount.total,
-            val:
-              typeof charge.amount.total.val === 'number'
-                ? charge.amount.total.val
-                : parseFloat(charge.amount.total.val || '0') || 0,
+        const sortedCharges = response.data.results.sort(
+          (a: Charge, b: Charge) => {
+            const dateA = new Date(a.date).getTime();
+            const dateB = new Date(b.date).getTime();
+            return dateB - dateA;
           },
-        },
-      }));
+        );
 
-      console.log('Processed crypto token charges:', processedCharges);
-      setCryptoTokenCharges(processedCharges);
+        const processedCharges = sortedCharges.map((charge: any) => ({
+          ...charge,
+          amount: {
+            ...charge.amount,
+            total: {
+              ...charge.amount.total,
+              val:
+                typeof charge.amount.total.val === 'number'
+                  ? charge.amount.total.val
+                  : parseFloat(charge.amount.total.val || '0') || 0,
+            },
+          },
+        }));
+
+        setCryptoTokenCharges(processedCharges);
+      } else {
+        // For other apps, use the original time frame logic
+        const { startDate, endDate } = getStartAndEndDate(
+          timeFrame,
+          fromDate.toString(),
+          toDate.toString(),
+        );
+
+        const response = await api.get('/charge', {
+          params: {
+            where: {
+              date: {
+                $gte: startDate,
+                $lte: endDate,
+              },
+              method: 'crypto',
+              status: 'paid',
+            },
+            limit: 1000,
+            sort: '-date',
+          },
+        });
+
+        const sortedCharges = response.data.results.sort(
+          (a: Charge, b: Charge) => {
+            const dateA = new Date(a.date).getTime();
+            const dateB = new Date(b.date).getTime();
+            return dateB - dateA;
+          },
+        );
+
+        const processedCharges = sortedCharges.map((charge: any) => ({
+          ...charge,
+          amount: {
+            ...charge.amount,
+            total: {
+              ...charge.amount.total,
+              val:
+                typeof charge.amount.total.val === 'number'
+                  ? charge.amount.total.val
+                  : parseFloat(charge.amount.total.val || '0') || 0,
+            },
+          },
+        }));
+
+        setCryptoTokenCharges(processedCharges);
+      }
     } catch (error) {
       console.error('Error fetching crypto token charges:', error);
     } finally {
@@ -326,80 +439,117 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
   const getRevenueData = () => {
     if (timeFrame === 'custom' && !toDate) return [];
 
-    // For TDF, we'll create a data structure based on charges
+    // For TDF, create monthly data for current year
     if (APP_NAME === 'tdf') {
-      const totalTokenSales = moneriumCharges.reduce((sum, charge) => {
-        const val = charge.amount?.total?.val;
-        return (
-          sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
-        );
-      }, 0);
+      const currentYear = new Date().getFullYear();
+      const monthlyData = [];
 
-      const events = charges
-        .filter((charge) => charge.status !== 'refunded')
-        .reduce((sum, charge) => {
-          const val = charge.amount?.event?.val;
-          return (
-            sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
-          );
-        }, 0);
+      // Create data for each month of the current year
+      for (let month = 0; month < 12; month++) {
+        const monthStart = new Date(currentYear, month, 1);
+        const monthEnd = new Date(currentYear, month + 1, 0, 23, 59, 59);
 
-      const rental = charges
-        .filter((charge) => charge.status !== 'refunded')
-        .reduce((sum, charge) => {
-          const val = charge.amount?.rental?.val;
-          return (
-            sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
-          );
-        }, 0);
+        // Filter charges for this month
+        const monthCharges = charges.filter((charge) => {
+          const chargeDate = new Date(charge.date);
+          return chargeDate >= monthStart && chargeDate <= monthEnd;
+        });
 
-      const food = charges
-        .filter((charge) => charge.status !== 'refunded')
-        .reduce((sum, charge) => {
-          const val = charge.amount?.food?.val;
-          return (
-            sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
-          );
-        }, 0);
+        const monthMoneriumCharges = moneriumCharges.filter((charge) => {
+          const chargeDate = new Date(charge.date);
+          return chargeDate >= monthStart && chargeDate <= monthEnd;
+        });
 
-      const utilities = charges
-        .filter((charge) => charge.status !== 'refunded')
-        .reduce((sum, charge) => {
-          const val = charge.amount?.utilities?.val;
-          return (
-            sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
-          );
-        }, 0);
+        const monthCryptoTokenCharges = cryptoTokenCharges.filter((charge) => {
+          const chargeDate = new Date(charge.date);
+          return chargeDate >= monthStart && chargeDate <= monthEnd;
+        });
 
-      const subscriptions = charges
-        .filter(
-          (charge) =>
-            charge.status !== 'refunded' && charge.type === 'subscription',
-        )
-        .reduce((sum, charge) => {
+        // Calculate totals for this month
+        const totalTokenSales = monthMoneriumCharges.reduce((sum, charge) => {
           const val = charge.amount?.total?.val;
           return (
             sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
           );
         }, 0);
 
-      const cryptoTokenSales = cryptoTokenCharges.reduce((sum, charge) => {
-        const val = charge.amount?.total?.val;
-        return (
-          sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
-        );
-      }, 0);
+        const events = monthCharges
+          .filter((charge) => charge.status !== 'refunded')
+          .reduce((sum, charge) => {
+            const val = charge.amount?.event?.val;
+            return (
+              sum +
+              (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
+            );
+          }, 0);
 
-      return [
-        {
-          name: 'Current Period',
+        const rental = monthCharges
+          .filter((charge) => charge.status !== 'refunded')
+          .reduce((sum, charge) => {
+            const val = charge.amount?.rental?.val;
+            return (
+              sum +
+              (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
+            );
+          }, 0);
+
+        const food = monthCharges
+          .filter((charge) => charge.status !== 'refunded')
+          .reduce((sum, charge) => {
+            const val = charge.amount?.food?.val;
+            return (
+              sum +
+              (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
+            );
+          }, 0);
+
+        const utilities = monthCharges
+          .filter((charge) => charge.status !== 'refunded')
+          .reduce((sum, charge) => {
+            const val = charge.amount?.utilities?.val;
+            return (
+              sum +
+              (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
+            );
+          }, 0);
+
+        const subscriptions = monthCharges
+          .filter(
+            (charge) =>
+              charge.status !== 'refunded' && charge.type === 'subscription',
+          )
+          .reduce((sum, charge) => {
+            const val = charge.amount?.total?.val;
+            return (
+              sum +
+              (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
+            );
+          }, 0);
+
+        const cryptoTokenSales = monthCryptoTokenCharges.reduce(
+          (sum, charge) => {
+            const val = charge.amount?.total?.val;
+            return (
+              sum +
+              (typeof val === 'number' ? val : parseFloat(val || '0') || 0)
+            );
+          },
+          0,
+        );
+
+        const monthName = monthStart.toLocaleDateString('en-US', {
+          month: 'short',
+        });
+
+        monthlyData.push({
+          name: monthName,
           hospitality: events + rental + food + utilities,
           spaces: rental,
           events: events,
           subscriptions: subscriptions,
           food: food,
-          tokens: totalTokenSales,
-          cryptoTokens: cryptoTokenSales,
+          'fiat token sales': totalTokenSales, // Fiat token sales (Monerium)
+          'crypto token sales': cryptoTokenSales, // Crypto token sales
           totalOperations:
             events +
             rental +
@@ -408,8 +558,11 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
             subscriptions +
             totalTokenSales +
             cryptoTokenSales,
-        },
-      ];
+        });
+      }
+
+      console.log('Monthly data for TDF:', monthlyData);
+      return monthlyData;
     }
 
     // For other apps, use the original logic
@@ -449,6 +602,20 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
   });
 
   const revenueData = getRevenueData();
+
+  // For TDF, create combined token sales data for the LineChart
+  const getCombinedTokenSalesData = () => {
+    if (APP_NAME !== 'tdf') return revenueData;
+
+    return revenueData.map((monthData) => ({
+      ...monthData,
+      tokens:
+        (monthData['fiat token sales'] || 0) +
+        (monthData['crypto token sales'] || 0), // Combined fiat + crypto for LineChart
+    }));
+  };
+
+  const combinedTokenSalesData = getCombinedTokenSalesData();
 
   // Debug logging
   console.log('DashboardRevenue Debug:', {
@@ -612,7 +779,7 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
               {t('dashboard_token_revenue')}
             </Heading>
 
-            <LineChart data={revenueData} />
+            <LineChart data={combinedTokenSalesData} />
           </Card>
         )}
       </div>

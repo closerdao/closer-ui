@@ -1628,7 +1628,7 @@
   "dashboard_week": "Week",
   "dashboard_today": "Today",
   "dashboard_allTime": "All time",
-  "dashboard_token_revenue": "$TDF revenue (EUR)",
+  "dashboard_token_revenue": "$TDF revenue (fiat + crypto token sales in EUR)",
   "dashboard_metrics": "Platform metrics",
   "dashboard_total": "Total:",
   "dashboard_listing": "Listing",
