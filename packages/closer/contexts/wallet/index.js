@@ -282,16 +282,16 @@ export const WalletProvider = ({ children }) => {
           );
         }
       }
-      console.log(
-        '[connectWallet] finished, returning account:',
-        connectedAccount,
-      );
-      return connectedAccount; // Return the connected account
-    } catch (e) {
-      console.log('[connectWallet] Exception during connectWallet process:', e);
-      console.log('[connectWallet] finished with error, returning null');
-      return null; // Return null in case of an error
+
+    if (user && !user.walletAddress) {
+      const activated = await injected.activate();
+      await linkWalletWithUser(activated?.account);
     }
+  } catch (e) {
+    console.log('[connectWallet] Exception during connectWallet process:', e);
+    console.log('[connectWallet] finished with error, returning null');
+    return null;
+  }
   };
 
   const linkWalletWithUser = async (accountId, currentUser) => {
@@ -330,7 +330,7 @@ export const WalletProvider = ({ children }) => {
         signedMessage,
         walletAddress: accountId,
         message,
-        userId: currentUser._id, // Use currentUser._id
+        userId: user?._id,
       });
       console.log(
         '[linkWalletWithUser] Wallet linked successfully. User data updated:',

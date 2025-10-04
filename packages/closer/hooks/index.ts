@@ -7,4 +7,7 @@ export { useConfig } from './useConfig';
 export { useFaqs } from './useFaqs';
 export { useTokenSales } from './useTokenSales';
 export { useOutsideClick } from './useOutsideClick';
-export { useDebounce } from './useDebounce'; 
+export { useDebounce } from './useDebounce';
+export { usePresenceToken } from './usePresenceToken';
+export { useSweatToken } from './useSweatToken';
+export { useVotingWeight } from './useVotingWeight'; 
