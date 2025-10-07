@@ -1373,6 +1373,7 @@ const CommunityMap = () => {
           border-radius: 12px;
           box-shadow: 0 8px 24px rgba(0,0,0,0.15);
           padding: 0;
+          margin-top: -8px;
         }
         
         .leaflet-popup-tip {
@@ -1380,14 +1381,39 @@ const CommunityMap = () => {
         }
         
         .popup-content {
-          max-width: 320px;
-          padding: 20px;
+          max-width: 300px;
+          padding: 16px;
+        }
+        
+        .leaflet-popup-close-button {
+          background: #1a1a1a !important;
+          color: #ffffff !important;
+          border-radius: 50% !important;
+          width: 24px !important;
+          height: 24px !important;
+          font-size: 16px !important;
+          font-weight: bold !important;
+          line-height: 1 !important;
+          text-align: center !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          top: 8px !important;
+          right: 8px !important;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+          transition: all 0.2s ease !important;
+        }
+        
+        .leaflet-popup-close-button:hover {
+          background: #2a2a2a !important;
+          transform: scale(1.1) !important;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
         }
         
         .popup-content h3 {
-          margin: 0 0 4px 0;
+          margin: 0 0 3px 0;
           color: #1a1a1a;
-          font-size: 18px;
+          font-size: 16px;
           font-weight: 600;
         }
         
@@ -1395,34 +1421,34 @@ const CommunityMap = () => {
           display: inline-block;
           background: #1a1a1a;
           color: #fafaf9;
-          padding: 2px 8px;
+          padding: 2px 6px;
           border-radius: 4px;
-          font-size: 10px;
+          font-size: 9px;
           font-weight: 600;
-          margin-bottom: 8px;
+          margin-bottom: 6px;
           letter-spacing: 0.5px;
         }
         
         .popup-content p {
-          margin: 0 0 12px 0;
-          font-size: 14px;
-          line-height: 1.5;
+          margin: 0 0 8px 0;
+          font-size: 13px;
+          line-height: 1.4;
           color: #404040;
         }
         
         .popup-tags {
           display: flex;
           flex-wrap: wrap;
-          gap: 6px;
-          margin-bottom: 12px;
+          gap: 4px;
+          margin-bottom: 8px;
         }
         
         .popup-tag {
           background: #f0f0f0;
           color: #404040;
-          padding: 4px 10px;
-          border-radius: 14px;
-          font-size: 11px;
+          padding: 3px 8px;
+          border-radius: 12px;
+          font-size: 10px;
           font-weight: 500;
         }
         
@@ -1430,11 +1456,11 @@ const CommunityMap = () => {
           display: inline-block;
           background: #1a1a1a;
           color: #fafaf9;
-          padding: 10px 18px;
-          border-radius: 8px;
+          padding: 8px 14px;
+          border-radius: 6px;
           text-decoration: none;
-          font-size: 13px;
-          margin-top: 6px;
+          font-size: 12px;
+          margin-top: 4px;
           transition: background 0.3s;
           font-weight: 500;
         }
