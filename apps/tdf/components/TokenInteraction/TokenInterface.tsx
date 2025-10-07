@@ -15,7 +15,7 @@ interface ContractMethod {
 }
 
 const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
-  const { isWalletReady, account, library } = useContext(WalletState);
+  const { isWalletReady, library } = useContext(WalletState);
   const [network, setNetwork] = useState<string>(getCurrentNetwork());
   const [contractNames, setContractNames] = useState<string[]>([]);
   const [selectedContract, setSelectedContract] = useState<string>('');
