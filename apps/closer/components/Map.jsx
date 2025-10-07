@@ -128,6 +128,14 @@ const projects = [
         ]
     },
     {
+        "name": "Etherlaken",
+        "description": "Regenerative Living Lab being developed on former Mystery Park/Jungfrau Park site in Bernese Oberland, Interlaken. Led by Jürgen Wowra, Mihai Alisie (Ethereum co-founder), and Ralph Horat. Transforming 100,000+ sqm into experimental campus for 8,000+ people hosting startups, researchers, artists testing future systems in housing, food, energy, mobility, and governance.",
+        "tags": ["Regenerative", "Innovation", "Living Lab", "Events", "Tech", "Community", "Shared Ownership"],
+        "country": "Switzerland",
+        "website": "",
+        "coords": [46.686, 7.867]
+    },
+    {
         "name": "Brave Earth",
         "description": "At Brave Earth we are in an inquiry about how to adapt and create more resiliency.",
         "tags": [
