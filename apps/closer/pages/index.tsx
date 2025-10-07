@@ -92,182 +92,230 @@ const HomePage = ({ generalConfig }: Props) => {
             >
               Communities Using Closer
             </Heading>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
               {/* Traditional Dream Factory */}
-              <Card className="group relative bg-white border border-gray-200 hover:border-blue-300 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 rounded-xl overflow-hidden shadow-md">
+              <Card className="group relative bg-white border-0 hover:border-blue-200 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 rounded-2xl overflow-hidden shadow-lg hover:shadow-blue-100/50">
                 <Link
                   href="https://www.traditionaldreamfactory.com/"
                   target="_blank"
-                  className="block"
+                  className="block h-full"
                 >
-                  <div className="aspect-square overflow-hidden">
+                  <div className="aspect-square overflow-hidden relative">
                     <Image
                       src="/images/communities/tdf.jpg"
                       alt="Traditional Dream Factory community"
                       width={200}
                       height={200}
-                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
+                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5">
+                        <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-3">
-                    <Heading level={4} className="text-sm font-semibold mb-1 text-gray-900 line-clamp-1">
+                  <div className="p-4 bg-gradient-to-b from-white to-gray-50">
+                    <Heading level={4} className="text-sm font-bold mb-2 text-gray-900 line-clamp-1 group-hover:text-blue-700 transition-colors duration-300">
                       Traditional Dream Factory
                     </Heading>
-                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                    <p className="text-xs text-gray-600 mb-3 line-clamp-2 leading-relaxed">
                       Regenerative community in Portugal
                     </p>
-                    <div className="flex flex-wrap gap-1">
-                      <Tag color="neutral" size="small">Web3</Tag>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Tag color="neutral" size="small" className="bg-blue-50 text-blue-700 border-blue-200">Web3</Tag>
                     </div>
                   </div>
                 </Link>
               </Card>
 
               {/* Foz Da Cova */}
-              <Card className="group relative bg-white border border-gray-200 hover:border-green-300 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 rounded-xl overflow-hidden shadow-md">
+              <Card className="group relative bg-white border-0 hover:border-green-200 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 rounded-2xl overflow-hidden shadow-lg hover:shadow-green-100/50">
                 <Link
                   href="https://www.fozdacova.world"
                   target="_blank"
-                  className="block"
+                  className="block h-full"
                 >
-                  <div className="aspect-square overflow-hidden">
+                  <div className="aspect-square overflow-hidden relative">
                     <Image
                       src="/images/communities/foz.jpg"
                       alt="Foz Da Cova community"
                       width={200}
                       height={200}
-                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
+                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5">
+                        <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-3">
-                    <Heading level={4} className="text-sm font-semibold mb-1 text-gray-900 line-clamp-1">
+                  <div className="p-4 bg-gradient-to-b from-white to-gray-50">
+                    <Heading level={4} className="text-sm font-bold mb-2 text-gray-900 line-clamp-1 group-hover:text-green-700 transition-colors duration-300">
                       Foz Da Cova
                     </Heading>
-                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                    <p className="text-xs text-gray-600 mb-3 line-clamp-2 leading-relaxed">
                       Mountain hamlet restoration
                     </p>
-                    <div className="flex flex-wrap gap-1">
-                      <Tag color="neutral" size="small">Land Stewardship</Tag>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Tag color="neutral" size="small" className="bg-green-50 text-green-700 border-green-200">Land Stewardship</Tag>
                     </div>
                   </div>
                 </Link>
               </Card>
 
               {/* Earthbound */}
-              <Card className="group relative bg-white border border-gray-200 hover:border-purple-300 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 rounded-xl overflow-hidden shadow-md">
+              <Card className="group relative bg-white border-0 hover:border-purple-200 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 rounded-2xl overflow-hidden shadow-lg hover:shadow-purple-100/50">
                 <Link
                   href="https://www.earthbound.eco"
                   target="_blank"
-                  className="block"
+                  className="block h-full"
                 >
-                  <div className="aspect-square overflow-hidden">
+                  <div className="aspect-square overflow-hidden relative">
                     <Image
                       src="/images/communities/earthbound.jpg"
                       alt="Earthbound community"
                       width={200}
                       height={200}
-                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
+                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5">
+                        <svg className="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-3">
-                    <Heading level={4} className="text-sm font-semibold mb-1 text-gray-900 line-clamp-1">
+                  <div className="p-4 bg-gradient-to-b from-white to-gray-50">
+                    <Heading level={4} className="text-sm font-bold mb-2 text-gray-900 line-clamp-1 group-hover:text-purple-700 transition-colors duration-300">
                       Earthbound
                     </Heading>
-                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                    <p className="text-xs text-gray-600 mb-3 line-clamp-2 leading-relaxed">
                       A regenerative & intentional community
                     </p>
-                    <div className="flex flex-wrap gap-1">
-                      <Tag color="neutral" size="small">Intentional</Tag>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Tag color="neutral" size="small" className="bg-purple-50 text-purple-700 border-purple-200">Intentional</Tag>
                     </div>
                   </div>
                 </Link>
               </Card>
 
               {/* Moos */}
-              <Card className="group relative bg-white border border-gray-200 hover:border-yellow-300 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 rounded-xl overflow-hidden shadow-md">
+              <Card className="group relative bg-white border-0 hover:border-yellow-200 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 rounded-2xl overflow-hidden shadow-lg hover:shadow-yellow-100/50">
                 <Link
                   href="https://www.moos.eco"
                   target="_blank"
-                  className="block"
+                  className="block h-full"
                 >
-                  <div className="aspect-square overflow-hidden">
+                  <div className="aspect-square overflow-hidden relative">
                     <Image
                       src="/images/communities/moos.jpg"
                       alt="Moos community"
                       width={200}
                       height={200}
-                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
+                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5">
+                        <svg className="w-3 h-3 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-3">
-                    <Heading level={4} className="text-sm font-semibold mb-1 text-gray-900 line-clamp-1">
+                  <div className="p-4 bg-gradient-to-b from-white to-gray-50">
+                    <Heading level={4} className="text-sm font-bold mb-2 text-gray-900 line-clamp-1 group-hover:text-yellow-700 transition-colors duration-300">
                       Moos
                     </Heading>
-                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                    <p className="text-xs text-gray-600 mb-3 line-clamp-2 leading-relaxed">
                       Co-living and creative space
                     </p>
-                    <div className="flex flex-wrap gap-1">
-                      <Tag color="neutral" size="small">Urban</Tag>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Tag color="neutral" size="small" className="bg-yellow-50 text-yellow-700 border-yellow-200">Urban</Tag>
                     </div>
                   </div>
                 </Link>
               </Card>
 
               {/* Lios */}
-              <Card className="group relative bg-white border border-gray-200 hover:border-red-300 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 rounded-xl overflow-hidden shadow-md">
+              <Card className="group relative bg-white border-0 hover:border-red-200 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 rounded-2xl overflow-hidden shadow-lg hover:shadow-red-100/50">
                 <Link
                   href="https://www.lios.eco"
                   target="_blank"
-                  className="block"
+                  className="block h-full"
                 >
-                  <div className="aspect-square overflow-hidden">
+                  <div className="aspect-square overflow-hidden relative">
                     <Image
                       src="/images/communities/lios.jpg"
                       alt="Lios community"
                       width={200}
                       height={200}
-                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
+                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5">
+                        <svg className="w-3 h-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-3">
-                    <Heading level={4} className="text-sm font-semibold mb-1 text-gray-900 line-clamp-1">
+                  <div className="p-4 bg-gradient-to-b from-white to-gray-50">
+                    <Heading level={4} className="text-sm font-bold mb-2 text-gray-900 line-clamp-1 group-hover:text-red-700 transition-colors duration-300">
                       Lios
                     </Heading>
-                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                    <p className="text-xs text-gray-600 mb-3 line-clamp-2 leading-relaxed">
                       Educational gathering and regenerative community
                     </p>
-                    <div className="flex flex-wrap gap-1">
-                      <Tag color="neutral" size="small">Desert lab</Tag>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Tag color="neutral" size="small" className="bg-red-50 text-red-700 border-red-200">Desert lab</Tag>
                     </div>
                   </div>
                 </Link>
               </Card>
 
               {/* Per Auset */}
-              <Card className="group relative bg-white border border-gray-200 hover:border-indigo-300 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 rounded-xl overflow-hidden shadow-md">
+              <Card className="group relative bg-white border-0 hover:border-indigo-200 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 rounded-2xl overflow-hidden shadow-lg hover:shadow-indigo-100/50">
                 <Link
                   href="https://www.per-auset.com"
                   target="_blank"
-                  className="block"
+                  className="block h-full"
                 >
-                  <div className="aspect-square overflow-hidden">
+                  <div className="aspect-square overflow-hidden relative">
                     <Image
                       src="/images/communities/per-auset.jpg"
                       alt="Per Auset community"
                       width={200}
                       height={200}
-                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
+                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5">
+                        <svg className="w-3 h-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-3">
-                    <Heading level={4} className="text-sm font-semibold mb-1 text-gray-900 line-clamp-1">
+                  <div className="p-4 bg-gradient-to-b from-white to-gray-50">
+                    <Heading level={4} className="text-sm font-bold mb-2 text-gray-900 line-clamp-1 group-hover:text-indigo-700 transition-colors duration-300">
                       Per Auset
                     </Heading>
-                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                    <p className="text-xs text-gray-600 mb-3 line-clamp-2 leading-relaxed">
                       A restored village on the Nile
                     </p>
-                    <div className="flex flex-wrap gap-1">
-                      <Tag color="neutral" size="small">Indigenous</Tag>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Tag color="neutral" size="small" className="bg-indigo-50 text-indigo-700 border-indigo-200">Indigenous</Tag>
                     </div>
                   </div>
                 </Link>

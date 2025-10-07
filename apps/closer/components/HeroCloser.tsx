@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 
 import { PromptGetInTouchContext } from 'closer/components/PromptGetInTouchContext';
 
-import { Button, Spinner } from 'closer';
+import { Spinner } from 'closer';
 import { X } from 'lucide-react';
 
 const SHOW_CHATBOT = true;
