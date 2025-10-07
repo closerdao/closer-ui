@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { useVotingWeight } from 'closer/hooks/useVotingWeight';
-import { useContext } from 'react';
 import { WalletState } from 'closer/contexts/wallet';
 
 interface VotingWeightProps {
@@ -9,7 +8,7 @@ interface VotingWeightProps {
 
 const VotingWeight: React.FC<VotingWeightProps> = ({ className }) => {
   const { isWalletReady } = useContext(WalletState);
-  const { votingWeight, components, formula } = useVotingWeight();
+  const { votingWeight, components } = useVotingWeight();
   
   const { tdf: tdfValue, presence: presenceValue, sweat: sweatValue, sweatWeighted } = components;
   const totalVotingWeight = votingWeight;

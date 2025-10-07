@@ -12,6 +12,7 @@ type Network = 'celo' | 'alfajores';
 // Import ABIs for Celo network
 import PresenceTokenCelo from '../abis/celo/PresenceToken.json';
 import SweatTokenCelo from '../abis/celo/SweatToken.json';
+import SweatTokenImplementationCelo from '../abis/celo/SweatToken_Implementation.json';
 import TDFTokenCelo from '../abis/celo/TDFToken.json';
 import CitizenNFTCelo from '../abis/celo/CitizenNFT.json';
 
@@ -24,6 +25,7 @@ import TDFTokenAlfajores from '../abis/alfajores/TDFToken.json';
 const celoAbis = {
   PresenceToken: PresenceTokenCelo,
   SweatToken: SweatTokenCelo,
+  SweatTokenImplementation: SweatTokenImplementationCelo,
   TDFToken: TDFTokenCelo,
   CitizenNFT: CitizenNFTCelo,
 };
@@ -114,6 +116,24 @@ export const getContractAbi = (contractName: string, network: Network = getCurre
  */
 export const getContract = (contractName: string, network: Network = getCurrentNetwork()) => {
   const abi = getAbi(contractName, network);
+  
+  // Special handling for SweatToken - use implementation ABI on Celo network
+  if (network === 'celo' && contractName === 'SweatToken') {
+    const proxyAbi = getAbi('SweatToken', network);
+    const implementationAbi = getAbi('SweatTokenImplementation', network);
+    
+    console.log(`SweatToken proxy on Celo:`, {
+      proxyAddress: proxyAbi?.address,
+      implementationAbiLength: implementationAbi?.abi?.length,
+      hasImplementation: !!implementationAbi?.abi
+    });
+    
+    return {
+      address: proxyAbi?.address || null,
+      abi: implementationAbi?.abi || null
+    };
+  }
+  
   return {
     address: abi?.address || null,
     abi: abi?.abi || null

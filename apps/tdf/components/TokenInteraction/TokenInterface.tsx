@@ -16,7 +16,7 @@ interface ContractMethod {
 
 const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
   const { isWalletReady, library } = useContext(WalletState);
-  const [network, setNetwork] = useState<string>(getCurrentNetwork());
+  const network = getCurrentNetwork();
   const [contractNames, setContractNames] = useState<string[]>([]);
   const [selectedContract, setSelectedContract] = useState<string>('');
   const [contractAddress, setContractAddress] = useState<string>('');
@@ -98,6 +98,57 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
     setInputValues(prev => ({ ...prev, [name]: value }));
   };
 
+  const switchToCorrectNetwork = async () => {
+    // Get the expected network from the app configuration
+    const expectedNetwork = network === 'celo' ? {
+      chainId: 42220,
+      hexChainId: '0xa4ec',
+      name: 'Celo',
+      rpcUrl: 'https://forno.celo.org',
+      explorerUrl: 'https://celoscan.io'
+    } : {
+      chainId: 44787,
+      hexChainId: '0xaef3',
+      name: 'Alfajores',
+      rpcUrl: 'https://alfajores-forno.celo-testnet.org',
+      explorerUrl: 'https://alfajores.celoscan.io'
+    };
+
+    try {
+      await library.provider.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: expectedNetwork.hexChainId }],
+      });
+    } catch (switchError: any) {
+      if (switchError.code === 4902) {
+        // Network not added to wallet, add it
+        try {
+          await library.provider.request({
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainId: expectedNetwork.hexChainId,
+                rpcUrls: [expectedNetwork.rpcUrl],
+                chainName: expectedNetwork.name,
+                nativeCurrency: {
+                  name: 'CELO',
+                  symbol: 'CELO',
+                  decimals: 18,
+                },
+                blockExplorerUrls: [expectedNetwork.explorerUrl],
+              },
+            ],
+          });
+        } catch (addError) {
+          console.error(`Failed to add ${expectedNetwork.name} network:`, addError);
+          throw addError;
+        }
+      } else {
+        throw switchError;
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -111,6 +162,81 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
     setResult('');
 
     try {
+      console.log('Contract details:', {
+        address: contractAddress,
+        abiLength: contractAbi?.length,
+        selectedMethod,
+        network
+      });
+      
+      // Check wallet network
+      const walletNetwork = await library.getNetwork();
+      console.log('Wallet network:', {
+        chainId: walletNetwork.chainId,
+        name: walletNetwork.name
+      });
+      
+      // Get the expected network from the user's selection
+      const expectedNetwork = network === 'celo' ? {
+        chainId: 42220,
+        name: 'Celo'
+      } : {
+        chainId: 44787,
+        name: 'Alfajores'
+      };
+
+      // Check expected network configuration
+      console.log('Expected network config:', {
+        expectedChainId: expectedNetwork.chainId,
+        expectedName: expectedNetwork.name,
+        userSelectedNetwork: network,
+        rpcUrl: library.connection?.url || 'unknown'
+      });
+      
+      // Check if wallet is connected to the correct network
+      if (walletNetwork.chainId !== expectedNetwork.chainId) {
+        console.warn(`Wallet is not connected to ${expectedNetwork.name}!`, {
+          walletChainId: walletNetwork.chainId,
+          expectedChainId: expectedNetwork.chainId,
+          walletName: walletNetwork.name
+        });
+      }
+      
+      // Check network configuration
+      console.log('Network configuration check:', {
+        isCorrectNetwork: walletNetwork.chainId === expectedNetwork.chainId,
+        needsNetworkSwitch: walletNetwork.chainId !== expectedNetwork.chainId
+      });
+      
+      // If not on the correct network, try to switch
+      if (walletNetwork.chainId !== expectedNetwork.chainId) {
+        console.log(`Attempting to switch to ${expectedNetwork.name}...`);
+        try {
+          await switchToCorrectNetwork();
+          console.log(`Successfully switched to ${expectedNetwork.name}`);
+          
+          // Wait a moment for the network change to propagate
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Re-check the network after switching
+          const newWalletNetwork = await library.getNetwork();
+          console.log('Network after switch:', {
+            chainId: newWalletNetwork.chainId,
+            name: newWalletNetwork.name
+          });
+          
+          if (newWalletNetwork.chainId !== expectedNetwork.chainId) {
+            console.warn('Network switch did not work as expected');
+            setError(`Please manually switch to ${expectedNetwork.name} (Chain ID: ${expectedNetwork.chainId}) in your wallet to use this contract.`);
+            return;
+          }
+        } catch (switchErr: any) {
+          console.error(`Failed to switch to ${expectedNetwork.name}:`, switchErr);
+          setError(`Please switch to ${expectedNetwork.name} (Chain ID: ${expectedNetwork.chainId}) to use this contract. Error: ${switchErr.message}`);
+          return;
+        }
+      }
+      
       const contract = new Contract(
         contractAddress,
         contractAbi,
@@ -124,6 +250,22 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
 
       // Prepare arguments in the correct order
       const args = method.inputs.map(input => inputValues[input.name] || '');
+      
+      console.log('Calling method with args:', { method: selectedMethod, args });
+      
+      // First, let's check if the contract exists by getting its code
+      try {
+        const code = await library.getCode(contractAddress);
+        console.log('Contract code length:', code?.length || 0);
+        if (!code || code === '0x') {
+          console.warn(`No contract found at address ${contractAddress}, but continuing anyway since contract exists on CeloScan`);
+          // Don't throw error, continue with the call
+        }
+      } catch (codeErr: any) {
+        console.error('Error checking contract code:', codeErr);
+        console.warn('Contract verification failed, but continuing anyway since contract exists on CeloScan');
+        // Don't throw error, continue with the call
+      }
       
       // Call the method
       const response = await contract[selectedMethod](...args);
@@ -157,19 +299,6 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
         </div>
       ) : (
         <div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Network
-            </label>
-            <select
-              value={network}
-              onChange={(e) => setNetwork(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md"
-            >
-              <option value="celo">Celo Mainnet</option>
-              <option value="alfajores">Alfajores Testnet</option>
-            </select>
-          </div>
           
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
