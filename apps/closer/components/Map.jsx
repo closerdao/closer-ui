@@ -24,6 +24,46 @@ const projects = [
         ]
     },
     {
+        "name": "The Garden",
+        "description": "Living research institute and creative cauldron in northern Portugal near Viana do Castelo. Coliving space for artists, hackers, and world builders exploring new ways of cohabitation, coordination, and creation. Hosts residencies, workshops, and events.",
+        "tags": ["Co-living", "Artist Residency", "Events", "Community", "Creative"],
+        "country": "Portugal",
+        "website": "https://thegarden.pt/",
+        "coords": [41.7, -8.8]
+    },
+    {
+        "name": "Udyāna Sanctuary",
+        "description": "Sanctuary space in Braga, Portugal.",
+        "tags": ["Sanctuary", "Community"],
+        "country": "Portugal",
+        "website": "",
+        "coords": [41.55, -8.42]
+    },
+    {
+        "name": "Freedom Ville",
+        "description": "Eco resort and boutique hotel in restored abandoned village of Malhadil, Vale da Certa. 14 hectares with 17 unique accommodations including yurts, tiny houses, apartments. Hosts retreats, artist residencies, and community events.",
+        "tags": ["Eco Village", "Eco Resort", "Artist Residency", "Retreats", "Community"],
+        "country": "Portugal",
+        "website": "https://www.freedomville.pt/",
+        "coords": [39.87, -7.49]
+    },
+    {
+        "name": "JuicyLand",
+        "description": "Community space in central Portugal.",
+        "tags": ["Community"],
+        "country": "Portugal",
+        "website": "",
+        "coords": [40.217, -7.937]
+    },
+    {
+        "name": "SilveiraTech",
+        "description": "Regeneration village in Serra da Lousã revitalizing two abandoned mountain villages and 230 hectares of forest. Global community hub bridging innovation and regeneration with focus on transformative education, disruptive tech, and ecological restoration.",
+        "tags": ["Eco Village", "Regenerative", "Tech Hub", "Community", "Permaculture", "Education"],
+        "country": "Portugal",
+        "website": "https://www.silveiratech.pt/",
+        "coords": [40.094, -8.197]
+    },
+    {
         "name": "Future Thinkers",
         "description": "A vision for a regenerative living lab and education center.",
         "tags": [
