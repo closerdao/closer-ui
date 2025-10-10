@@ -1,9 +1,11 @@
-import React, { useEffect, useContext, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { WalletState } from 'closer/contexts/wallet';
-import { usePlatform } from 'closer/contexts/platform';
+
+import React, { useContext, useEffect, useRef } from 'react';
+
 import { useAuth } from 'closer/contexts/auth';
+import { usePlatform } from 'closer/contexts/platform';
+import { WalletState } from 'closer/contexts/wallet';
 import { useTranslations } from 'next-intl';
 
 interface ProposalListProps {
@@ -20,7 +22,8 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
 
   // Get filter from URL query params
   const filter = (router.query.filter as string) || 'all';
-  
+  const shouldRefetch = router.query.refetch === 'true';
+
   // Build query based on filter
   const getQuery = () => {
     switch (filter) {
@@ -43,7 +46,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
 
   // Load proposals when component mounts or filter changes
   useEffect(() => {
-    if (!hasLoaded.current && platform?.proposal) {
+    if ((!hasLoaded.current || shouldRefetch) && platform?.proposal) {
       hasLoaded.current = true;
       try {
         platform.proposal.get(query);
@@ -51,14 +54,35 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
         // Silently handle error - proposals will show as empty
       }
     }
-  }, [platform, query]);
+  }, [platform, query, shouldRefetch]);
 
   // Reload when filter changes
   useEffect(() => {
-    if (platform?.proposal) {
+    if (platform?.proposal && filter !== 'all') {
       platform.proposal.get(query);
     }
   }, [filter, user?._id]);
+
+  // Handle refetch parameter
+  useEffect(() => {
+    if (shouldRefetch && platform?.proposal) {
+      console.log('ProposalList: Triggering refetch with query:', query);
+      // Force a fresh fetch by using a unique query key
+      const refetchQuery = { ...query, _refetch: Date.now() };
+      platform.proposal.get(refetchQuery);
+
+      // Clear refetch parameter from URL after triggering refetch
+      const { refetch, ...queryWithoutRefetch } = router.query;
+      router.replace(
+        {
+          pathname: router.pathname,
+          query: queryWithoutRefetch,
+        },
+        undefined,
+        { shallow: true },
+      );
+    }
+  }, [shouldRefetch, platform?.proposal, query]);
 
   // Load users after proposals are loaded
   useEffect(() => {
@@ -68,9 +92,13 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
         const userIds = Array.from(proposalsMap.values())
           .map((proposal: any) => proposal.get('createdBy'))
           .filter((id: string) => id);
-        
-        // Fetch only the users needed for the displayed proposals
-        platform.user.get({ _id: { $in: userIds } });
+
+        // Fetch each user individually using getOne to ensure they're stored in byId cache
+        userIds.forEach((userId: string) => {
+          if (userId && !platform.user.findOne(userId)) {
+            platform.user.getOne(userId);
+          }
+        });
       } catch (error) {
         // Silently handle error - users will show as anonymous
       }
@@ -81,15 +109,26 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
   const getUserScreenname = (createdBy: string): string => {
     if (!createdBy) return 'Anonymous';
     const user = platform.user.findOne(createdBy);
-    return (user as any)?.screenname || (user as any)?.email || 'Anonymous';
+
+    if (!user) return 'Anonymous';
+
+    // Handle both Map and plain object structures
+    const screenname = user.get ? user.get('screenname') : user.screenname;
+    const email = user.get ? user.get('email') : user.email;
+
+    return screenname || email || 'Anonymous';
   };
 
   // Handle filter change
   const handleFilterChange = (newFilter: string) => {
-    router.push({
-      pathname: router.pathname,
-      query: { ...router.query, filter: newFilter }
-    }, undefined, { shallow: true });
+    router.push(
+      {
+        pathname: router.pathname,
+        query: { ...router.query, filter: newFilter },
+      },
+      undefined,
+      { shallow: true },
+    );
   };
 
   // Calculate time left for active proposals
@@ -97,12 +136,12 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
     const now = new Date();
     const end = new Date(endDate);
     const diff = end.getTime() - now.getTime();
-    
+
     if (diff <= 0) return 'Ended';
-    
+
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
+
     if (days > 0) return `${days}d ${hours}h`;
     return `${hours}h`;
   };
@@ -112,7 +151,9 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
     return (
       <div className={`p-4 border rounded-lg shadow-sm ${className}`}>
         <div className="text-center py-8">
-          <p className="text-gray-500">{t('governance_platform_not_available')}</p>
+          <p className="text-gray-500">
+            {t('governance_platform_not_available')}
+          </p>
         </div>
       </div>
     );
@@ -121,7 +162,9 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
   return (
     <div className={`p-4 border rounded-lg shadow-sm ${className}`}>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">{t('governance_proposals')} ({proposalsMap.size})</h2>
+        <h2 className="text-xl font-bold">
+          {t('governance_proposals')} ({proposalsMap.size})
+        </h2>
         <div className="flex space-x-2">
           <button
             onClick={() => handleFilterChange('all')}
@@ -129,7 +172,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
               filter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200'
             }`}
           >
-{t('governance_all')}
+            {t('governance_all')}
           </button>
           <button
             onClick={() => handleFilterChange('active')}
@@ -137,7 +180,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
               filter === 'active' ? 'bg-blue-600 text-white' : 'bg-gray-200'
             }`}
           >
-{t('governance_active')}
+            {t('governance_active')}
           </button>
           <button
             onClick={() => handleFilterChange('closed')}
@@ -145,7 +188,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
               filter === 'closed' ? 'bg-blue-600 text-white' : 'bg-gray-200'
             }`}
           >
-{t('governance_closed')}
+            {t('governance_closed')}
           </button>
           <button
             onClick={() => handleFilterChange('yours')}
@@ -153,7 +196,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
               filter === 'yours' ? 'bg-blue-600 text-white' : 'bg-gray-200'
             }`}
           >
-{t('governance_yours')}
+            {t('governance_yours')}
           </button>
         </div>
       </div>
@@ -180,62 +223,82 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
             if (!proposal.get('_id')) {
               return null;
             }
-            
+
             return (
               <Link
                 key={proposal.get('_id')}
-                href={proposal.get('slug') ? `/governance/${proposal.get('slug')}` : `/governance/${proposal.get('_id')}`}
+                href={
+                  proposal.get('slug')
+                    ? `/governance/${proposal.get('slug')}`
+                    : `/governance/${proposal.get('_id')}`
+                }
                 className="block p-4 border rounded-lg hover:border-blue-500 cursor-pointer transition-colors"
               >
                 <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-lg font-semibold flex-1 pr-4">{proposal.get('title') || 'Untitled Proposal'}</h3>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    proposal.get('status') === 'active' ? 'bg-green-100 text-green-800' :
-                    proposal.get('status') === 'closed' ? 'bg-gray-100 text-gray-800' :
-                    proposal.get('status') === 'draft' ? 'bg-blue-100 text-blue-800' :
-                    proposal.get('status') === 'ready' ? 'bg-purple-100 text-purple-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
+                  <h3 className="text-lg font-semibold flex-1 pr-4">
+                    {proposal.get('title') || 'Untitled Proposal'}
+                  </h3>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      proposal.get('status') === 'active'
+                        ? 'bg-green-100 text-green-800'
+                        : proposal.get('status') === 'closed'
+                        ? 'bg-gray-100 text-gray-800'
+                        : proposal.get('status') === 'draft'
+                        ? 'bg-blue-100 text-blue-800'
+                        : proposal.get('status') === 'ready'
+                        ? 'bg-purple-100 text-purple-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
                     {proposal.get('status')?.toUpperCase() || 'UNKNOWN'}
                   </span>
                 </div>
                 <p className="text-sm text-gray-500 mb-3">
-                  Submitted by @{getUserScreenname(proposal.get('createdBy'))} • 
-                  {proposal.get('status') === 'active' && proposal.get('endDate')
+                  Submitted by @{getUserScreenname(proposal.get('createdBy'))} •
+                  {proposal.get('status') === 'active' &&
+                  proposal.get('endDate')
                     ? ` Closes in ${getTimeLeft(proposal.get('endDate'))}`
-                    : proposal.get('status') === 'closed' ? ' Closed' : ''}
+                    : proposal.get('status') === 'closed'
+                    ? ' Closed'
+                    : ''}
                 </p>
-              
-              <div className="flex justify-between items-center">
-                {proposal.get('status') !== 'draft' && proposal.get('votes') ? (
-                  <div className="flex space-x-4">
-                    <div className="text-sm">
-                      <span className="text-green-600 font-medium">Yes: {proposal.get('votes').yes}</span>
+
+                <div className="flex justify-between items-center">
+                  {proposal.get('status') !== 'draft' &&
+                  proposal.get('votes') ? (
+                    <div className="flex space-x-4">
+                      <div className="text-sm">
+                        <span className="text-green-600 font-medium">
+                          Yes: {proposal.get('votes').yes}
+                        </span>
+                      </div>
+                      <div className="text-sm">
+                        <span className="text-red-600 font-medium">
+                          No: {proposal.get('votes').no}
+                        </span>
+                      </div>
+                      <div className="text-sm">
+                        <span className="text-gray-600 font-medium">
+                          Abstain: {proposal.get('votes').abstain}
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-sm">
-                      <span className="text-red-600 font-medium">No: {proposal.get('votes').no}</span>
+                  ) : proposal.get('status') !== 'draft' ? (
+                    <div className="text-sm text-gray-500">No votes yet</div>
+                  ) : (
+                    <div className="text-sm text-blue-600 font-medium">
+                      Draft Proposal
                     </div>
-                    <div className="text-sm">
-                      <span className="text-gray-600 font-medium">Abstain: {proposal.get('votes').abstain}</span>
-                    </div>
-                  </div>
-                ) : proposal.get('status') !== 'draft' ? (
-                  <div className="text-sm text-gray-500">
-                    No votes yet
-                  </div>
-                ) : (
-                  <div className="text-sm text-blue-600 font-medium">
-                    Draft Proposal
-                  </div>
-                )}
-                
-                {proposal.get('status') === 'active' && (
-                  <span className="bg-blue-600 text-white text-sm py-1 px-3 rounded">
-                    Vote
-                  </span>
-                )}
-              </div>
-            </Link>
+                  )}
+
+                  {proposal.get('status') === 'active' && (
+                    <span className="bg-blue-600 text-white text-sm py-1 px-3 rounded">
+                      Vote
+                    </span>
+                  )}
+                </div>
+              </Link>
             );
           })}
         </div>
