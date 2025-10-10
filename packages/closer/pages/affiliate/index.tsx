@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import { Button, Heading, LinkButton } from '../../components/ui';
+import ErrorMessage from '../../components/ui/ErrorMessage';
 import {
   Card,
   CardContent,
@@ -12,16 +13,13 @@ import {
   CardTitle,
 } from '../../components/ui/shadcn-card';
 
-import {
-  PageNotFound,
-  api,
-  useAuth,
-  usePlatform,
-} from 'closer';
+import { PageNotFound, api, useAuth, usePlatform } from 'closer';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
+import { reportIssue } from '../../utils/reporting.utils';
 
 const AffiliateLandingPage = () => {
   const t = useTranslations();
@@ -29,8 +27,9 @@ const AffiliateLandingPage = () => {
   const { platform } = usePlatform() as { platform: any };
   const router = useRouter();
 
-
   const [isApiLoading, setIsApiLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   // Track affiliate page view
   useEffect(() => {
@@ -79,13 +78,28 @@ const AffiliateLandingPage = () => {
       router.push('/settings/affiliate');
       return;
     }
+
+    if (!user?._id) {
+      setError('User not found. Please try logging in again.');
+      return;
+    }
+
+    if (!platform?.user?.patch) {
+      setError('System not ready. Please refresh the page and try again.');
+      return;
+    }
+
     try {
       setIsApiLoading(true);
-      await platform.user.patch(user?._id, {
+      setError(null);
+      setSuccess(false);
+
+      await platform.user.patch(user._id, {
         affiliate: new Date(),
       });
+
       await refetchUser();
-      
+
       // Track affiliate signup
       try {
         await api.post('/metric', {
@@ -97,15 +111,25 @@ const AffiliateLandingPage = () => {
         });
       } catch (error) {
         console.error('Error tracking affiliate signup:', error);
+        reportIssue(
+          `Error tracking affiliate signup: ${user?._id}`,
+          user?.email,
+        );
       }
-      
+
+      setSuccess(true);
+
       setTimeout(() => {
         router.push('/settings/affiliate');
-        setIsApiLoading(false);
-      }, 1000);
+      }, 2000);
     } catch (error) {
-      console.error('error=', error);
-    } 
+      const errorMessage = parseMessageFromError(error);
+      setError(errorMessage);
+      console.error('Error adding affiliate to user:', error);
+      reportIssue(`Error adding affiliate to user: ${user?._id}`, user?.email);
+    } finally {
+      setIsApiLoading(false);
+    }
   };
 
   if (process.env.NEXT_PUBLIC_FEATURE_AFFILIATE !== 'true') {
@@ -137,7 +161,9 @@ const AffiliateLandingPage = () => {
             are excited to collaborate with partners who are dedicated to
             promoting regenerative living. By joining our program, you can
             nurture and regenerate the earth&apos;s ecosystems while enjoying
-            lucrative benefits. As an affiliate, you&apos;ll earn commissions when people book events, stays, or buy digital products and tokens through your referral links.
+            lucrative benefits. As an affiliate, you&apos;ll earn commissions
+            when people book events, stays, or buy digital products and tokens
+            through your referral links.
           </p>
 
           <Heading level={2} className="text-lg font-bold mt-4">
@@ -147,10 +173,11 @@ const AffiliateLandingPage = () => {
           <ul className="list-disc pl-6 space-y-4">
             <li>
               <span className="font-bold">GENEROUS COMMISSIONS:</span> Earn up
-              to 30% commission on all digital income generated through your referral links, such as
-              memberships & digital products, and 10% on bookings for events
-              and stays, and 3% of token sales. Commissions will keep cashing in from purchases made
-              by users you referred for 12 months after they sign up!
+              to 30% commission on all digital income generated through your
+              referral links, such as memberships & digital products, and 10% on
+              bookings for events and stays, and 3% of token sales. Commissions
+              will keep cashing in from purchases made by users you referred for
+              12 months after they sign up!
             </li>
             <li>
               <span className="font-bold">EXCLUSIVE ACCESS:</span> As an
@@ -184,25 +211,19 @@ const AffiliateLandingPage = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-6">
             <div className="rounded-md shadow-xl p-4 flex flex-col justify-center items-center gap-2 border border-accent">
-              <p className="text-3xl font-bold text-pink-500">
-                10%
-              </p>
+              <p className="text-3xl font-bold text-pink-500">10%</p>
               <p className="text-xl font-semibold text-center">
                 Stays & Events
               </p>
             </div>
             <div className="rounded-md shadow-xl p-4 flex flex-col justify-center items-center gap-2 border border-accent">
-              <p className="text-3xl font-bold text-pink-500">
-                30%
-              </p>
+              <p className="text-3xl font-bold text-pink-500">30%</p>
               <p className="text-xl font-semibold text-center">
                 Digital Products & Subscriptions
               </p>
             </div>
             <div className="rounded-md shadow-xl p-4 flex flex-col justify-center items-center gap-2 border border-accent">
-              <p className="text-3xl font-bold text-pink-500">
-                3%
-              </p>
+              <p className="text-3xl font-bold text-pink-500">3%</p>
               <p className="text-xl font-semibold text-center">Token Sales</p>
             </div>
           </div>
@@ -253,15 +274,46 @@ const AffiliateLandingPage = () => {
           </Heading>
 
           <ul className="list-disc pl-6 space-y-4">
-            <li>If you forgot to use your tracking code, we cannot pay commissions on any referrals</li>
+            <li>
+              If you forgot to use your tracking code, we cannot pay commissions
+              on any referrals
+            </li>
             <li>No spamming, cookie stuffing, or misleading promotions.</li>
-            <li>Be transparent – disclose your affiliate relationship when required.</li>
-            <li>Respect TDF&apos;s brand and values in your promotions. You can find logos and copy swipes in your affiliate resources</li>
-            <li>You&apos;re not allowed to represent our brand wrongfully or give wrong information about our product, service or prices.</li>
-            <li>You&apos;re not allowed to bid on our Brand or audience, TDF or Traditional Dream Factory, in any paid campaigns via Google Ads, Bing Ads or similar, as well as on Social Media channels, unless you have been given explicit authorisation by the Affiliate Manager of TDF. This rule includes close variations or misspellings.</li>
-            <li>You are not allowed to &quot;Resell&quot; our product. Orders or bookings of your audience have to be made by themselves on our own website</li>
-            <li>You are not allowed to willfully promote non-existent or expired Discounts or Coupon codes.</li>
-            <li>If we encounter any of the above, we reserve the right to deactivate your Affiliate account at any time, without prior warning and you will not receive any commission payouts of pending commissions.</li>
+            <li>
+              Be transparent – disclose your affiliate relationship when
+              required.
+            </li>
+            <li>
+              Respect TDF&apos;s brand and values in your promotions. You can
+              find logos and copy swipes in your affiliate resources
+            </li>
+            <li>
+              You&apos;re not allowed to represent our brand wrongfully or give
+              wrong information about our product, service or prices.
+            </li>
+            <li>
+              You&apos;re not allowed to bid on our Brand or audience, TDF or
+              Traditional Dream Factory, in any paid campaigns via Google Ads,
+              Bing Ads or similar, as well as on Social Media channels, unless
+              you have been given explicit authorisation by the Affiliate
+              Manager of TDF. This rule includes close variations or
+              misspellings.
+            </li>
+            <li>
+              You are not allowed to &quot;Resell&quot; our product. Orders or
+              bookings of your audience have to be made by themselves on our own
+              website
+            </li>
+            <li>
+              You are not allowed to willfully promote non-existent or expired
+              Discounts or Coupon codes.
+            </li>
+            <li>
+              If we encounter any of the above, we reserve the right to
+              deactivate your Affiliate account at any time, without prior
+              warning and you will not receive any commission payouts of pending
+              commissions.
+            </li>
           </ul>
 
           <Heading level={2} className="text-lg font-bold mt-4">
@@ -269,10 +321,15 @@ const AffiliateLandingPage = () => {
           </Heading>
 
           <ul className="list-disc pl-6 space-y-2">
-            <li>Copy Swipes (emails, social media posts, descriptions you can use)</li>
+            <li>
+              Copy Swipes (emails, social media posts, descriptions you can use)
+            </li>
             <li>Affiliate Dashboard (track clicks, sales, and commissions)</li>
             <li>Brand Assets (logos, images)</li>
-            <li>Dedicated Affiliate Manager (email: affiliate@traditionaldreamfactory.com)</li>
+            <li>
+              Dedicated Affiliate Manager (email:
+              affiliate@traditionaldreamfactory.com)
+            </li>
           </ul>
 
           <Heading level={2} className="text-lg font-bold mt-4">
@@ -316,16 +373,51 @@ const AffiliateLandingPage = () => {
             <Heading level={2} className="text-2xl font-bold mb-6">
               READY TO JOIN?
             </Heading>
-            <Button
-              onClick={becomeAffiliate}
-              variant="primary"
-              color="accent"
-              className="max-w-xs mx-auto"
-              isLoading={isApiLoading}
-              isEnabled={!isApiLoading}
-            >
-              {user?.affiliate ? 'Go to Affiliate dashboard' : '👉 Join the TDF Affiliate Program Today'}
-            </Button>
+
+            {error && (
+              <div className="mb-4">
+                <ErrorMessage error={error} />
+                <div className="text-center mt-2">
+                  <Button
+                    onClick={becomeAffiliate}
+                    variant="secondary"
+                    color="accent"
+                    className="max-w-xs mx-auto"
+                    isLoading={isApiLoading}
+                    isEnabled={!isApiLoading}
+                  >
+                    Try Again
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {success && (
+              <div className="text-center py-4 mb-4">
+                <div className="text-green-600 text-4xl mb-2">✓</div>
+                <p className="text-green-600 font-semibold mb-2">
+                  Welcome to the TDF Affiliate Program!
+                </p>
+                <p className="text-gray-600 text-sm">
+                  Redirecting you to your affiliate dashboard...
+                </p>
+              </div>
+            )}
+
+            {!error && !success && (
+              <Button
+                onClick={becomeAffiliate}
+                variant="primary"
+                color="accent"
+                className="max-w-xs mx-auto"
+                isLoading={isApiLoading}
+                isEnabled={!isApiLoading}
+              >
+                {user?.affiliate
+                  ? 'Go to Affiliate dashboard'
+                  : '👉 Join the TDF Affiliate Program Today'}
+              </Button>
+            )}
           </div>
         </section>
       </div>
@@ -335,7 +427,10 @@ const AffiliateLandingPage = () => {
 
 AffiliateLandingPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME);
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
 
     return {
       messages,
