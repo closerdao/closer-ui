@@ -82,10 +82,10 @@ const SalesDashboard = ({
           return;
         }
 
-        // Get unique buyer IDs
+        // Get unique buyer IDs (createdBy represents the buyer in token sales)
         const uniqueBuyerIds = [
           ...new Set(salesArray.map((sale: any) => sale.createdBy)),
-        ];
+        ].filter(Boolean); // Remove any null/undefined values
 
         // Fetch users with private fields (admin only)
         const buyersRes = await api.get(
@@ -100,6 +100,7 @@ const SalesDashboard = ({
           const buyer = buyers.find(
             (buyer: any) => buyer._id === sale.createdBy,
           );
+
           return {
             ...sale,
             buyer: buyer
@@ -197,6 +198,8 @@ const SalesDashboard = ({
     setIsModalOpen(false);
     setSelectedSaleId('');
     setTransactionId('');
+    setIsSuccess(false);
+    setIsLoading(false);
   };
 
   const handleSubmitTransaction = async () => {
@@ -210,6 +213,15 @@ const SalesDashboard = ({
       const res = await api.post('/token-distribution-confirmation', {
         saleId: selectedSaleId,
         txHash: transactionId,
+        buyerEmail: enrichedSales?.find(
+          (sale: TokenSale) => sale._id === selectedSaleId,
+        )?.buyer?.email,
+        numTokens: enrichedSales?.find(
+          (sale: TokenSale) => sale._id === selectedSaleId,
+        )?.quantity,
+        buyerName: enrichedSales?.find(
+          (sale: TokenSale) => sale._id === selectedSaleId,
+        )?.buyer?.screenname,
       });
       if (res.status === 200) {
         setIsSuccess(true);
@@ -439,8 +451,9 @@ const SalesDashboard = ({
               </p>
               <p>
                 {
-                  sales?.find((sale: TokenSale) => sale._id === selectedSaleId)
-                    ?.buyer?.screenname
+                  enrichedSales?.find(
+                    (sale: TokenSale) => sale._id === selectedSaleId,
+                  )?.buyer?.screenname
                 }
               </p>
             </div>
