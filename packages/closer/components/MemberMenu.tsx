@@ -98,7 +98,9 @@ const MemberMenu = () => {
           {
             label: 'Become a Citizen',
             url: '/citizenship',
-            enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && APP_NAME?.toLowerCase() === 'tdf',
+            enabled:
+              process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' &&
+              APP_NAME?.toLowerCase() === 'tdf',
           },
           {
             label: t('navigation_work_with_us'),

@@ -27,7 +27,7 @@ export interface BaseBookingParams {
   projectId?: string | undefined;
   suggestions?: string | undefined;
   bookingType?: 'volunteer' | 'residence' | undefined;
-  isFriendsBooking?: boolean | undefined;
+  isFriendsBooking?: boolean | string | undefined;
   friendEmails?: string | undefined;
 }
 

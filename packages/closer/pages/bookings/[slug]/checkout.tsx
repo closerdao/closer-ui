@@ -140,6 +140,8 @@ const Checkout = ({
   const [currency, setCurrency] = useState<CloserCurrencies>(
     useTokens ? CURRENCIES[1] : DEFAULT_CURRENCY,
   );
+  const [emailSuccess, setEmailSuccess] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   const creditsOrTokensPricePerNight = listing?.tokenPrice?.val;
 
@@ -446,16 +448,22 @@ const Checkout = ({
     try {
       setProcessing(true);
       setPaymentError(null);
+      setEmailError(null);
 
       // Send checkout link to friend
-      await api.post(`/bookings/${_id}/send-to-friend`, {
+      const res = await api.post(`/bookings/${_id}/send-to-friend`, {
         friendEmails: booking?.friendEmails,
       });
 
-      // Show success message and redirect
-      router.push(`/bookings/${_id}?checkoutSent=true`);
+      if (res.status === 200) {
+        setEmailSuccess(true);
+      } else {
+        setEmailSuccess(false);
+        setEmailError(res.data.error);
+      }
     } catch (error) {
-      setPaymentError(parseMessageFromError(error));
+      setEmailSuccess(false);
+      setEmailError(parseMessageFromError(error));
     } finally {
       setProcessing(false);
     }
@@ -828,7 +836,9 @@ const Checkout = ({
                 totalToPayInFiat={totalToPayInFiat}
                 dailyTokenValue={dailyRentalToken?.val || 0}
                 startDate={start}
-                rentalTokenVal={dailyRentalToken?.val || 0 * (nightsToPayWithTokens || 0)}
+                rentalTokenVal={
+                  dailyRentalToken?.val || 0 * (nightsToPayWithTokens || 0)
+                }
                 totalNights={nightsToPayWithTokens}
                 user={user}
                 eventId={event?._id}
@@ -851,6 +861,18 @@ const Checkout = ({
                   >
                     📧 {t('friends_booking_send_to_friend')}
                   </Button>
+                )}
+
+                {emailSuccess && (
+                  <div className="text-green-600 text-sm font-medium">
+                    ✅ {t('friends_booking_checkout_sent')}
+                  </div>
+                )}
+
+                {emailError && (
+                  <div className="text-red-600 text-sm font-medium">
+                    ❌ {emailError}
+                  </div>
                 )}
               </div>
             </div>

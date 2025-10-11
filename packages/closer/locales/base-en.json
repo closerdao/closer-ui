@@ -1354,6 +1354,7 @@
   "config_label_tokenPriceModifierPercent": "Token price modifier in percent",
   "config_label_minVouches": "Minimum number of vouches",
   "config_label_minVouchingStayDuration": "Minimum stay duration to be eligible for vouching (days)",
+  "config_label_friendsBookingMaxGuests": "Maximum number of guests for friends bookings",
 
   "config_features_heading": "Platform features",
   "generic_delete_button": "Delete",
@@ -1393,12 +1394,11 @@
   "config_label_weekDay": "Select weekday",
   "config_label_weekPosition": "Which week",
   "config_label_text": "Email body",
-  "config_label_lowerText": "Additional text",
+  "config_label_lowerText": "Additional text at the bottom of the email",
   "config_label_substackUrl": "Substack URL",
   "config_label_chatLink": "Guest support chat link",
   "config_label_telegramUrl": "Telegram link",
   "config_label_discordUrl": "Discord link",
-  "config_label_lowerText": "Additional text at the bottom of the email",
 
   "subscriptions_citizen_introduce_yourself_in_discord": "Introduce yourself in discord to get vouched by other members:",
 
@@ -1662,6 +1662,8 @@
   "friends_booking_remove": "Remove",
   "friends_booking_continue": "Continue to booking",
   "friends_booking_emails_required": "Please add at least one friend's email address",
+  "friends_booking_max_guests_reached": "Maximum number of guests reached ({maxGuests})",
+  "friends_booking_max_guests_info": "You can add up to {maxGuests} friends",
   "friends_booking_summary_title": "Booking for friends",
   "friends_booking_summary_subtitle": "You are booking accommodation for your friends",
   "friends_booking_pay_now": "Pay the booking",

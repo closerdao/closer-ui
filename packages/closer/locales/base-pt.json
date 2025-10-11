@@ -1310,6 +1310,7 @@
   "config_label_telegramUrl": "Link do Telegram",
   "config_label_discordUrl": "Link do Discord",
   "config_label_lowerText": "Texto adicional no final do email",
+  "config_label_friendsBookingMaxGuests": "Número máximo de convidados para reservas de amigos",
   "subscriptions_citizen_introduce_yourself_in_discord": "Introduza-se no Discord para ser votado por outros membros:",
   "subscription_citizen_apply": "Aplicar para cidadania",
 
@@ -1534,6 +1535,8 @@
   "friends_booking_remove": "Remover",
   "friends_booking_continue": "Continuar para reserva",
   "friends_booking_emails_required": "Por favor, adicione pelo menos um endereço de email de amigo",
+  "friends_booking_max_guests_reached": "Número máximo de hóspedes atingido ({maxGuests})",
+  "friends_booking_max_guests_info": "Pode adicionar até {maxGuests} amigos",
   "friends_booking_summary_title": "Reserva para amigos",
   "friends_booking_summary_subtitle": "Está a reservar alojamento para os seus amigos",
   "friends_booking_pay_now": "Pagar a reserva",
@@ -1545,6 +1548,7 @@
   "friends_booking_email_body": "Olá! {user} fez uma reserva para si e gostaria que completasse o pagamento. Por favor, visite o seguinte link para completar a sua reserva: {checkoutUrl}",
   "friends_booking_mode_title": "Modo de Reserva para Amigos",
   "friends_booking_mode_description": "Está a reservar alojamento para os seus amigos",
+  
   "navigation_edit_listings": "Editar listagens",
   "navigation_stay": "Estadia",
   "navigation_my_bookings": "As minhas reservas",
@@ -1777,7 +1781,6 @@
   "volunteers_vision_resonates": "Se a nossa visão ressoar consigo e estiver ansioso por brincar, aprender e criar connosco, adoraríamos ouvir de si. Veja o nosso",
   "volunteers_visitors_guide": "Guia do Visitante",
   "volunteers_schedule_call": "e vamos agendar uma chamada para nos conhecermos enviando um email para",
-  "volunteers_recommended_stay": "A estadia recomendada é de 1 mês - e idealmente chegando no início do mês para que possamos ter uma boa dinâmica de grupo.",
   "settings_tab_profile": "Perfil",
   "settings_tab_account": "Conta",
   "settings_tab_preferences": "Preferências",

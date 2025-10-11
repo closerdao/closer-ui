@@ -25,6 +25,7 @@ import {
 } from '../../../types';
 import api from '../../../utils/api';
 import { getBookingType } from '../../../utils/booking.helpers';
+import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { getBookingRate, getDiscountRate } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
@@ -71,6 +72,9 @@ const AccomodationSelector = ({
 
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
+
+  const normalizedIsFriendsBooking =
+    normalizeIsFriendsBooking(isFriendsBooking);
   console.log('duration=', duration);
   const durationInDays = dayjs(end).diff(dayjs(start), 'day');
 
@@ -139,8 +143,8 @@ const AccomodationSelector = ({
         doesNeedPickup,
         doesNeedSeparateBeds,
         foodOption,
-        isFriendsBooking,
         ...(volunteerInfo && { volunteerInfo }),
+        ...(normalizedIsFriendsBooking && { isFriendsBooking: true }),
         ...(friendEmails && { friendEmails }),
       });
       if (bookingConfig?.foodOptionEnabled) {
@@ -182,7 +186,7 @@ const AccomodationSelector = ({
       ...(skills && { skills }),
       ...(diet && { diet }),
       ...(suggestions && { suggestions }),
-      ...(isFriendsBooking && { isFriendsBooking: String(isFriendsBooking) }),
+      ...(normalizedIsFriendsBooking && { isFriendsBooking: 'true' }),
       ...(friendEmails && { friendEmails }),
     };
     const urlParams = new URLSearchParams(params);
@@ -193,7 +197,7 @@ const AccomodationSelector = ({
     <>
       <div className="max-w-screen-sm mx-auto md:first-letter:p-8">
         <BookingBackButton onClick={backToDates} name={t('buttons_back')} />
-        <FriendsBookingBlock isFriendsBooking={isFriendsBooking} />
+        <FriendsBookingBlock isFriendsBooking={normalizedIsFriendsBooking} />
         <Heading className="pb-4 mt-8">
           <span className="mr-2">🏡</span>
           <span>{t('bookings_accomodation_step_title')}</span>
@@ -261,7 +265,7 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       discountCode,
       doesNeedPickup,
       doesNeedSeparateBeds,
-      isFriendsBooking,
+      isFriendsBooking: normalizedIsFriendsBooking,
       friendEmails,
       foodOption,
       skills,
@@ -284,7 +288,7 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
           infants,
           pets,
           useTokens,
-          isFriendsBooking,
+          isFriendsBooking: normalizedIsFriendsBooking,
           discountCode,
           ...(eventId && { eventId, ticketOption }),
         })
@@ -320,7 +324,7 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       discountCode,
       doesNeedPickup,
       doesNeedSeparateBeds,
-      isFriendsBooking,
+      isFriendsBooking: normalizedIsFriendsBooking,
       friendEmails,
       bookingConfig,
       bookingError,

@@ -343,6 +343,18 @@ const Summary = ({
           >
             {apiLoading ? 'Sending...' : '📧 Send to friends for payment'}
           </Button>
+
+          {emailSuccess && (
+            <div className="text-green-600 text-sm font-medium">
+              ✅ {t('friends_booking_checkout_sent')}
+            </div>
+          )}
+
+          {emailError && (
+            <div className="text-red-600 text-sm font-medium">
+              ❌ {emailError}
+            </div>
+          )}
         </div>
       </div>
     );
