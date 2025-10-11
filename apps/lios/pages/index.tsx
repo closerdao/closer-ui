@@ -782,7 +782,7 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
                     involved in something bigger than yourself.
                   </p>
                   <LinkButton href="/stay" className="w-[150px]">
-                    Join
+                    {t('buttons_join')}
                   </LinkButton>
                 </div>
                 <div className="flex flex-col gap-12 items-center">
@@ -833,10 +833,10 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
               href="https://lios.io/deserttransformation"
               className="w-[150px]"
             >
-              Website
+              {t('buttons_website')}
             </LinkButton>
             <LinkButton href="https://lios.io/program" className="w-[250px]">
-              PROGRAMME OUTLINE
+              {t('buttons_programme_outline')}
             </LinkButton>
           </div>
         </section> */}

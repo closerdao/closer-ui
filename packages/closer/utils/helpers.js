@@ -521,7 +521,6 @@ export function withBoldStyle(phrase, boldPart) {
   const preBold = phrase.slice(0, startIndex);
   const bold = phrase.slice(startIndex, endIndex);
   const postBold = phrase.slice(endIndex);
-
   if (startIndex === -1) {
     return phrase;
   }

@@ -25,27 +25,30 @@ const getPage = ({
   listings: Listing[] | null;
   hosts: User[] | null;
   generalConfig: GeneralConfig | null;
-}) => {
+  }) => {
+  
+    // BECOME AN IMPACT INVESTOR
   const localPage: Page = {
     isHomePage: false,
     sections: [
-      {
-        type: 'hero',
-        data: {
-          settings: {
-            alignText: 'top-left',
-            isInverted: true,
-          },
-          content: {
-            title: 'BECOME AN IMPACT INVESTOR',
-            videoEmbedId: 'kic4AFJxbho',
-            mobileVideoUrl:
-              'https://cdn.oasa.co/custom-pages/earthbound/video/Earthbound_header_LQ2.mp4',
-            imageUrl:
-              'https://cdn.oasa.co/custom-pages/earthbound/investor-hero.png',
-          },
-        },
-      },
+  
+      // {
+      //   type: 'hero',
+      //   data: {
+      //     settings: {
+      //       alignText: 'top-left',
+      //       isInverted: true,
+      //     },
+      //     content: {
+      //       title: 'BECOME AN IMPACT INVESTOR',
+      //       videoEmbedId: 'kic4AFJxbho',
+      //       mobileVideoUrl:
+      //         'https://cdn.oasa.co/custom-pages/earthbound/video/Earthbound_header_LQ2.mp4',
+      //       imageUrl:
+      //         'https://cdn.oasa.co/custom-pages/earthbound/investor-hero.png',
+      //     },
+      //   },
+      // },
 
       {
         type: 'richText',
@@ -55,6 +58,9 @@ const getPage = ({
           },
           content: {
             html: `
+            <h1 style="text-transform: uppercase;">
+            BECOME AN IMPACT INVESTOR
+            </h1>
             <h2 style="text-transform: uppercase;">
               Do you want to put your savings in land, biodiversity and community, rather than the bank?
             </h2>
@@ -73,50 +79,50 @@ const getPage = ({
         },
       },
 
-      {
-        type: 'listing',
-        data: {
-          settings: {
-            numColumns: 2,
-            isSmallImage: true,
-            isColorful: true,
-          },
-          content: {
-            title: '',
-            description: '',
-            items: [
-              {
-                title: 'Impact investments enable us to:',
-                imageUrl:
-                  'https://cdn.oasa.co/custom-pages/earthbound/_0001_Land-Stewardship.png',
-                text: `
+      // {
+      //   type: 'listing',
+      //   data: {
+      //     settings: {
+      //       numColumns: 2,
+      //       isSmallImage: true,
+      //       isColorful: true,
+      //     },
+      //     content: {
+      //       title: '',
+      //       description: '',
+      //       items: [
+      //         {
+      //           title: 'Impact investments enable us to:',
+      //           imageUrl:
+      //             'https://cdn.oasa.co/custom-pages/earthbound/_0001_Land-Stewardship.png',
+      //           text: `
               
-                 <ul style="text-align: left;">
-                    <li>Take land out of the speculative, extractive market to - nature conservation and forest restoration</li>
-                    <li>Create a blueprint of future regenerative living through bio-buildings and energy systems.</li>
-                  </ul>
-                `,
-              },
+      //            <ul style="text-align: left;">
+      //               <li>Take land out of the speculative, extractive market to - nature conservation and forest restoration</li>
+      //               <li>Create a blueprint of future regenerative living through bio-buildings and energy systems.</li>
+      //             </ul>
+      //           `,
+      //         },
 
-              {
-                title: 'By placing your savings with Earthbound they will be:',
+      //         {
+      //           title: 'By placing your savings with Earthbound they will be:',
 
-                imageUrl:
-                  'https://cdn.oasa.co/custom-pages/earthbound/_0003_Local-and-Bioregional-Changemakers.png',
-                text: `
+      //           imageUrl:
+      //             'https://cdn.oasa.co/custom-pages/earthbound/_0003_Local-and-Bioregional-Changemakers.png',
+      //           text: `
               
-                  <ul style="text-align: left;">
-                    <li>Secured in real land and buildings</li>
-                    <li>Regulated with inflation</li>
-                    <li>Held by safe contracts developed in collaboration with WYZ Law Group</li>
-                    <li>Safeguarded by a real on-site community with strong values</li>
-                  </ul>
-                `,
-              },
-            ],
-          },
-        },
-      },
+      //             <ul style="text-align: left;">
+      //               <li>Secured in real land and buildings</li>
+      //               <li>Regulated with inflation</li>
+      //               <li>Held by safe contracts developed in collaboration with WYZ Law Group</li>
+      //               <li>Safeguarded by a real on-site community with strong values</li>
+      //             </ul>
+      //           `,
+      //         },
+      //       ],
+      //     },
+      //   },
+      // },
       {
         type: 'richText',
         data: {
@@ -178,6 +184,7 @@ Support the creation of an ethical and regenerative project and create impact be
                             <strong>Telegram (Dicte):</strong> <a href="https://t.me/Dicte_Frost">@Dicte_Frost</a>
                             </li>
                             <li><strong>WhatsApp (Dicte):</strong> <a href="http://wa.me/+4560661280">+4560661280</a></li>
+                            <li><strong>Phone:</strong> <a href="tel:+46722362135">+46 72 236 2135</a></li>
                            </ul>
 
                        

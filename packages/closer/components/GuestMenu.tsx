@@ -139,7 +139,7 @@ const GuestMenu = () => {
         isOpen: true,
 
         items: [
-          ...(APP_NAME && APP_NAME?.toLowerCase() === 'earthbound'
+          ...(APP_NAME && APP_NAME?.toLowerCase().includes('earthbound')
             ? [
                 {
                   label: t('header_nav_home'),

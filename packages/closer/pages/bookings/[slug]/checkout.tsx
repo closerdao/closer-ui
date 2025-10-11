@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingWallet from '../../../components/BookingWallet';
@@ -116,13 +116,6 @@ const Checkout = ({
 
   const bookingYear = dayjs(start).year();
   const bookingStartDayOfYear = dayjs(start).dayOfYear();
-  const bookingNights = Array.from({ length: duration || 0 }, (_, i) => [
-    bookingYear,
-    bookingStartDayOfYear + i,
-  ]);
-  const { stakeTokens, isStaking, checkContract } = useBookingSmartContract({
-    bookingNights,
-  });
   const router = useRouter();
 
   // Check if this is a friend accessing the checkout page
@@ -147,6 +140,8 @@ const Checkout = ({
   const [currency, setCurrency] = useState<CloserCurrencies>(
     useTokens ? CURRENCIES[1] : DEFAULT_CURRENCY,
   );
+  const [emailSuccess, setEmailSuccess] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   const creditsOrTokensPricePerNight = listing?.tokenPrice?.val;
 
@@ -184,6 +179,24 @@ const Checkout = ({
       isAdditionalFiatPayment,
     }),
   );
+
+  // Calculate how many nights should be paid with tokens
+  const nightsToPayWithTokens = useMemo(() => {
+    return paymentType === PaymentType.PARTIAL_TOKENS
+      ? maxNightsToPayWithTokens
+      : duration || 0;
+  }, [paymentType, maxNightsToPayWithTokens, duration]);
+
+  const bookingNights = useMemo(() => {
+    return Array.from({ length: nightsToPayWithTokens }, (_, i) => [
+      bookingYear,
+      bookingStartDayOfYear + i,
+    ]);
+  }, [nightsToPayWithTokens, bookingYear, bookingStartDayOfYear]);
+
+  const { stakeTokens, isStaking, checkContract } = useBookingSmartContract({
+    bookingNights,
+  });
 
   const [priceInCredits, setPriceInCredits] = useState(
     paymentType === PaymentType.FULL_CREDITS
@@ -301,6 +314,9 @@ const Checkout = ({
               .get('/carrots/balance')
               .then((response) => response.data.results),
           ]);
+
+          console.log('areCreditsAvailable===========', areCreditsAvailable);
+          console.log('creditsBalance===========', creditsBalance);
           setCreditsBalance(creditsBalance);
           setCanApplyCredits(areCreditsAvailable && !useTokens);
         } catch (error) {
@@ -432,16 +448,22 @@ const Checkout = ({
     try {
       setProcessing(true);
       setPaymentError(null);
+      setEmailError(null);
 
       // Send checkout link to friend
-      await api.post(`/bookings/${_id}/send-to-friend`, {
+      const res = await api.post(`/bookings/${_id}/send-to-friend`, {
         friendEmails: booking?.friendEmails,
       });
 
-      // Show success message and redirect
-      router.push(`/bookings/${_id}?checkoutSent=true`);
+      if (res.status === 200) {
+        setEmailSuccess(true);
+      } else {
+        setEmailSuccess(false);
+        setEmailError(res.data.error);
+      }
     } catch (error) {
-      setPaymentError(parseMessageFromError(error));
+      setEmailSuccess(false);
+      setEmailError(parseMessageFromError(error));
     } finally {
       setProcessing(false);
     }
@@ -814,8 +836,10 @@ const Checkout = ({
                 totalToPayInFiat={totalToPayInFiat}
                 dailyTokenValue={dailyRentalToken?.val || 0}
                 startDate={start}
-                rentalToken={dailyRentalToken?.val || 0 * (duration || 0)}
-                totalNights={duration || 0}
+                rentalTokenVal={
+                  dailyRentalToken?.val || 0 * (nightsToPayWithTokens || 0)
+                }
+                totalNights={nightsToPayWithTokens}
                 user={user}
                 eventId={event?._id}
                 status={booking?.status}
@@ -837,6 +861,18 @@ const Checkout = ({
                   >
                     📧 {t('friends_booking_send_to_friend')}
                   </Button>
+                )}
+
+                {emailSuccess && (
+                  <div className="text-green-600 text-sm font-medium">
+                    ✅ {t('friends_booking_checkout_sent')}
+                  </div>
+                )}
+
+                {emailError && (
+                  <div className="text-red-600 text-sm font-medium">
+                    ❌ {emailError}
+                  </div>
                 )}
               </div>
             </div>

@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 
 import { PromptGetInTouchContext } from 'closer/components/PromptGetInTouchContext';
 
-import { Button, Spinner } from 'closer';
+import { Spinner } from 'closer';
 import { X } from 'lucide-react';
 
 const SHOW_CHATBOT = true;
@@ -227,7 +227,7 @@ export default function HeroCloser() {
       {/* Hero Section */}
       <section
         ref={heroRef}
-        className="mt-[-32px] relative h-[calc(100vh-80px)]  flex flex-col items-center justify-center text-center"
+        className="mt-[-32px] relative pt-20 flex flex-col items-center justify-center text-center"
       >
         {isClient && (
           <canvas
@@ -243,25 +243,6 @@ export default function HeroCloser() {
           <p className="text-lg max-w-2xl mx-auto mb-8 text-black">
             {heroSubtext}
           </p>
-          <div className="flex  gap-4 justify-center ">
-            <Button
-              onClick={() => {
-                setPromptGetInTouchOpen(true);
-              }}
-              className={
-                'px-8 w-fit  bg-foreground text-background border-foreground'
-              }
-            >
-              Schedule a demo
-            </Button>
-            {/* <Button
-              className={
-                'px-8 w-fit bg-gradient-to-r from-[#5290DB] to-[#79FAC1] border-none'
-              }
-            >
-              Explore $closer
-            </Button> */}
-          </div>
           {SHOW_CHATBOT && (
             <div
               className={`${

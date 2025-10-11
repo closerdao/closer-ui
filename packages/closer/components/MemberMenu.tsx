@@ -53,7 +53,7 @@ const MemberMenu = () => {
         label: 'General',
         isOpen: true,
         items: [
-          ...(APP_NAME && APP_NAME?.toLowerCase() === 'earthbound'
+          ...(APP_NAME && APP_NAME?.toLowerCase().includes('earthbound')
             ? [
                 {
                   label: t('header_nav_home'),
@@ -98,7 +98,9 @@ const MemberMenu = () => {
           {
             label: 'Become a Citizen',
             url: '/citizenship',
-            enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && APP_NAME?.toLowerCase() === 'tdf',
+            enabled:
+              process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' &&
+              APP_NAME?.toLowerCase() === 'tdf',
           },
           {
             label: t('navigation_work_with_us'),

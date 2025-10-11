@@ -23,9 +23,9 @@ import {
 } from '../types';
 import { FoodOption } from '../types/food';
 import api from './api';
+import { parseMessageFromError } from './common';
 import { priceFormat } from './helpers';
 import { reportIssue } from './reporting.utils';
-import { parseMessageFromError } from './common';
 
 const DEFAULT_TIMEZONE = 'Europe/Berlin';
 

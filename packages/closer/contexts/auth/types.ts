@@ -83,13 +83,13 @@ export type User = {
   subscription: {
     plan: string;
     tier: string;
+    createdAt?: Date;
     validUntil?: Date;
     cancelledAt?: Date;
     priceId: string;
     monthlyPrice: { val: number; cur: string };
     monthlyCredits: number;
     stripeCustomerEmail: string;
-   
   };
   presence?: number;
   tokensBought?: number;

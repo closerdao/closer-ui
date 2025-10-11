@@ -7,4 +7,5 @@ export const CHART_COLORS = [
   themeColors.extend.colors['accent-alt'],
   themeColors.extend.colors['accent-dark'],
   '#AFAFAF',
+  '#FF6B6B',
 ];

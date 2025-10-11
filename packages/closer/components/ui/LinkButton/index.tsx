@@ -60,7 +60,7 @@ interface ButtonProps extends VariantProps<typeof buttonStyles> {
   variant?: 'primary' | 'secondary' | 'instantSave' | 'inline';
   size?: 'small' | 'medium' | 'large';
   href?: string;
-  onClick?: () => void;
+  onClick?: React.MouseEventHandler<HTMLAnchorElement>;
   target?: string;
   rel?: string;
 }

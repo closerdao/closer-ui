@@ -5,9 +5,8 @@ import objectPath from 'object-path';
 
 import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
-import { parseMessageFromError } from '../../utils/common';
+import { parseMessageFromError, slugify } from '../../utils/common';
 import { getSample } from '../../utils/helpers';
-import { slugify } from '../../utils/common';
 import { trackEvent } from '../Analytics';
 import DateTimePicker from '../DateTimePicker';
 import FormField from '../FormField';
@@ -52,6 +51,8 @@ interface Props {
     name: string;
     options: any[];
   };
+  transformDataBeforeSave?: (data: any) => any;
+  timeZone?: string;
 }
 
 const EditModel: FC<Props> = ({
@@ -67,6 +68,8 @@ const EditModel: FC<Props> = ({
   deleteButton,
   isPublic,
   dynamicField,
+  transformDataBeforeSave,
+  timeZone,
 }) => {
   const t = useTranslations();
   const { isAuthenticated, user } = useAuth();
@@ -86,11 +89,16 @@ const EditModel: FC<Props> = ({
   const [endDate, setEndDate] = useState<string | null | Date>(data.end);
   const [isLoading, setIsLoading] = useState(false);
   // Check if the model has a slug field
-  const hasSlugField = fields.some(field => field.name === 'slug');
-  
+  const hasSlugField = fields.some((field) => field.name === 'slug');
+
   // Generate slug from title/name for models with slug fields
   const generateSlug = (titleOrName: string) => {
-    if (!titleOrName || typeof titleOrName !== 'string' || titleOrName.trim().length === 0) return '';
+    if (
+      !titleOrName ||
+      typeof titleOrName !== 'string' ||
+      titleOrName.trim().length === 0
+    )
+      return '';
     return slugify(titleOrName.trim());
   };
 
@@ -156,12 +164,18 @@ const EditModel: FC<Props> = ({
     setErrors(null);
     try {
       validate(updatedData);
+
+      // Transform data before saving if transformDataBeforeSave is provided
+      const dataToSave = transformDataBeforeSave
+        ? transformDataBeforeSave(updatedData)
+        : updatedData;
+
       const method = id ? 'patch' : 'post';
       const route = id ? `${endpoint}/${id}` : endpoint;
       trackEvent(`EditModel:${endpoint}:${id ? id : 'new'}`, method);
       const {
         data: { results: savedData },
-      } = await api[method](route, updatedData);
+      } = await api[method](route, dataToSave);
       if (onSave) {
         onSave(savedData);
       }
@@ -233,7 +247,7 @@ const EditModel: FC<Props> = ({
   // Auto-generate slug on each character typed in title field
   useEffect(() => {
     const titleValue = getTitleValue();
-    
+
     if (hasSlugField && titleValue && titleValue.length > 0) {
       const newSlug = generateSlug(titleValue);
       if (newSlug && newSlug !== data.slug) {
@@ -281,7 +295,9 @@ const EditModel: FC<Props> = ({
               title: key,
               value: key,
               datePicker:
-                endpoint !== '/listing' && endpoint !== '/food' && endpoint !== '/lesson' ? (
+                endpoint !== '/listing' &&
+                endpoint !== '/food' &&
+                endpoint !== '/lesson' ? (
                   <DateTimePicker
                     setStartDate={setStartDate}
                     setEndDate={setEndDate}
@@ -289,6 +305,7 @@ const EditModel: FC<Props> = ({
                     savedStartDate={data.start && data.start}
                     savedEndDate={data.end && data.end}
                     defaultMonth={new Date()}
+                    timeZone={timeZone}
                   />
                 ) : null,
               content: (
@@ -302,8 +319,6 @@ const EditModel: FC<Props> = ({
                       update={update}
                     />
                   ))}
-                  
-                  
                 </>
               ),
             }))}
@@ -321,10 +336,6 @@ const EditModel: FC<Props> = ({
                   step={field.step || 1}
                 />
               ))}
-            
-
-            
-
           </>
         )}
 
@@ -337,11 +348,12 @@ const EditModel: FC<Props> = ({
               savedStartDate={data.start}
               savedEndDate={data.end}
               defaultMonth={new Date()}
+              timeZone={timeZone}
             />
           </div>
         )}
 
-        <div className="py-6 flex items-center gap-4" >
+        <div className="py-6 flex items-center gap-4">
           <button type="submit" className="btn-primary">
             <div className="flex gap-2 items-center">
               {isLoading && <Spinner />}
@@ -350,7 +362,6 @@ const EditModel: FC<Props> = ({
           </button>
           {allowDelete && (
             <Button
-
               className="bg-red-600 text-white w-fit border-red-600"
               onClick={(e) => {
                 e.preventDefault();

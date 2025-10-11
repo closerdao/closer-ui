@@ -30,6 +30,8 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
   const { user, isAuthenticated } = useAuth();
   const { platform }: any = usePlatform();
 
+  const friendsBookingMaxGuests = bookingConfig?.friendsBookingMaxGuests;
+
   const [emails, setEmails] = useState<string[]>(['']);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -133,7 +135,10 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
   }
 
   const addEmail = () => {
-    setEmails([...emails, '']);
+    const maxGuests = friendsBookingMaxGuests || 1;
+    if (emails.length < maxGuests) {
+      setEmails([...emails, '']);
+    }
   };
 
   const removeEmail = (index: number) => {
@@ -200,6 +205,13 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
           {t('friends_booking_title')}
         </Heading>
         <p className="text-gray-600">{t('friends_booking_subtitle')}</p>
+        {friendsBookingMaxGuests && (
+          <p className="text-sm text-gray-500 mt-2">
+            {t('friends_booking_max_guests_info', {
+              maxGuests: friendsBookingMaxGuests,
+            })}
+          </p>
+        )}
       </div>
 
       <Card className="p-6">
@@ -235,11 +247,20 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
           <div className="pt-2">
             <Button
               onClick={addEmail}
-              className="text-accent border border-accent bg-transparent hover:bg-accent hover:text-white"
+              isEnabled={emails.length < (friendsBookingMaxGuests || 1)}
+              className="text-accent border border-accent bg-transparent hover:bg-accent hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FaPlus className="w-4 h-4 mr-2" />
               {t('friends_booking_add_another')}
             </Button>
+            {friendsBookingMaxGuests &&
+              emails.length >= friendsBookingMaxGuests && (
+                <p className="text-sm text-gray-500 mt-2">
+                  {t('friends_booking_max_guests_reached', {
+                    maxGuests: friendsBookingMaxGuests,
+                  })}
+                </p>
+              )}
           </div>
 
           {error && <ErrorMessage error={error} />}

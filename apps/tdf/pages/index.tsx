@@ -11,7 +11,6 @@ import LinkButton from 'closer/components/ui/LinkButton';
 import UpcomingEventsIntro from 'closer/components/UpcomingEventsIntro';
 
 import {
-  Button,
   Heading,
   WalletState,
   YoutubeEmbed,
@@ -252,7 +251,7 @@ const HomePage = () => {
                 variant="secondary"
                 size="small"
               >
-                Become a Citizen
+                {t('citizenship_become_citizen_button')}
               </LinkButton>
             </div>
           </div>
@@ -270,41 +269,44 @@ const HomePage = () => {
               {t('home_reports_title')}
             </p>
             <div className="flex flex-wrap w-full justify-center gap-2">
-              <Button
+              <LinkButton
                 className="w-fit"
                 variant="secondary"
-                onClick={() =>
+                onClick={(e) => {
+                  e.preventDefault();
                   setSelectedReport({
                     year: '2021',
                     url: '/pdf/2021-TDF-report.pdf',
                   })
-                }
+                } }
               >
                 {t('home_reports_2021')}
-              </Button>
-              <Button
+              </LinkButton>
+              <LinkButton
                 className="w-fit"
                 variant="secondary"
-                onClick={() =>
+                onClick={(e) => {
+                  e.preventDefault();
                   setSelectedReport({
                     year: '2022',
                     url: '/pdf/2022-TDF-report.pdf',
                   })
-                }
+                } }
               >
                 {t('home_reports_2022')}
-              </Button>
-              <Button
+              </LinkButton>
+              <LinkButton
                 className="w-fit"
-                onClick={() =>
+                onClick={(e) => {
+                  e.preventDefault();
                   setSelectedReport({
                     year: '2024',
                     url: '/pdf/2024-TDF-report.pdf',
                   })
-                }
+                } }
               >
                 {t('home_reports_2024')}
-              </Button>
+              </LinkButton>
             </div>
             <div className="w-full text-center mt-8">
               <p className="text-lg mb-4">

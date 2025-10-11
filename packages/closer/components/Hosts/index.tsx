@@ -27,9 +27,11 @@ const Hosts = ({ hosts, email }: Props) => {
   return (
     <div className="mb-16">
       <div className="max-w-prose">
-        <Heading level={2} className="text-2xl pb-2 my-8">
-          {t('stay_meet_your_hosts')}
-        </Heading>
+        {hosts && hosts.count() > 0 && (
+          <Heading level={2} className="text-2xl pb-2 my-8">
+            {t('stay_meet_your_hosts')}
+          </Heading>
+        )}
         {APP_NAME !== 'tdf' && APP_NAME !== 'earthbound' && (
           <p className="mb-8">{t('stay_meet_your_hosts_description')}</p>
         )}

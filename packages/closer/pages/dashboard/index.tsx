@@ -8,7 +8,7 @@ import DashboardBookings from '../../components/Dashboard/DashboardBookings';
 import DashboardMetrics from '../../components/Dashboard/DashboardMetrics';
 import DashboardRevenue from '../../components/Dashboard/DashboardRevenue';
 import DashboardSubscriptions from '../../components/Dashboard/DashboardSubscriptions';
-import TimeFrameSelector from '../../components/Dashboard/TimeFrameSelector';
+import RevenueTimeFrameSelector from '../../components/Dashboard/RevenueTimeFrameSelector';
 import { Heading } from '../../components/ui';
 
 import { NextPageContext } from 'next';
@@ -43,8 +43,24 @@ const DashboardPage = ({ generalConfig, bookingConfig }: Props) => {
 
   const { time_frame } = router.query;
   const [timeFrame, setTimeFrame] = useState<string>(
-    time_frame?.toString() || 'month',
+    time_frame?.toString() || 'currentMonth',
   );
+
+  const handleTimeFrameChange = (
+    value: string | ((prevState: string) => string),
+  ) => {
+    const newTimeFrame = typeof value === 'function' ? value(timeFrame) : value;
+    setTimeFrame(newTimeFrame);
+
+    router.replace(
+      {
+        pathname: '/dashboard',
+        query: { time_frame: newTimeFrame },
+      },
+      undefined,
+      { shallow: true },
+    );
+  };
 
   const areSubscriptionsEnabled =
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
@@ -93,9 +109,9 @@ const DashboardPage = ({ generalConfig, bookingConfig }: Props) => {
       <AdminLayout isBookingEnabled={isBookingEnabled}>
         <div className="flex justify-between flex-col md:flex-row gap-4">
           <Heading level={2}>{t('dashboard_title')}</Heading>
-          <TimeFrameSelector
+          <RevenueTimeFrameSelector
             timeFrame={timeFrame}
-            setTimeFrame={setTimeFrame}
+            setTimeFrame={handleTimeFrameChange}
             fromDate={fromDate}
             setFromDate={setFromDate}
             toDate={toDate}

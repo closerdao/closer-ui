@@ -3,6 +3,7 @@ export { default as CreateRoleView } from './components/CreateRoleView/';
 export { default as CreateVolunteerView } from './components/CreateVolunteerView/';
 export { default as CustomSectionComponent } from './components/custom-pages/CustomSectionComponent';
 export { default as CustomSections } from './components/custom-pages/CustomSections';
+export { default as ChargesTable } from './components/Dashboard/ChargesTable';
 export { default as EventPreview } from './components/EventPreview';
 export { default as EventsList } from './components/EventsList';
 export { default as Footer } from './components/Footer';
@@ -162,6 +163,7 @@ export { default as EditVolunteerOportunity } from './pages/volunteer/[slug]/edi
 export { default as VolunteerApplicationPage } from './pages/volunteer/apply';
 export { default as CreateVolunteerOportunity } from './pages/volunteer/create';
 
+export { default as RevenuePage } from './pages/dashboard/revenue';
 // Types
 export * from './types/';
 // Utils

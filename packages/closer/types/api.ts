@@ -179,6 +179,7 @@ export type BookingConfig = {
   foodPriceBasic: number;
   foodPriceChef: number;
   chatLink: string;
+  friendsBookingMaxGuests: number;
 };
 
 export type PaymentConfig = {
