@@ -163,6 +163,9 @@ export { default as VolunteerApplicationPage } from './pages/volunteer/apply';
 export { default as CreateVolunteerOportunity } from './pages/volunteer/create';
 
 export { default as TokenSalesDashboardPage } from './pages/dashboard/token-sales';
+
+export { default as RevenuePage } from './pages/dashboard/revenue';
+
 // Types
 export * from './types/';
 // Utils
