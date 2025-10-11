@@ -1,3 +1,4 @@
+// Network configurations
 const alfajoresConfig = {
   BLOCKCHAIN_NETWORK_ID: 44787,
   BLOCKCHAIN_NAME: 'CELO ALFAJORES',
@@ -79,6 +80,8 @@ const celoConfig = {
   CEUR_TOKEN_ADDRESS: '0xd8763cba276a3738e6de85b4b3bf5fded6d6ca73',
 };
 
+
+// Fallback ABIs for client-side rendering
 const celoABIs = {
   BLOCKCHAIN_DAO_TOKEN_ABI: [
     {
@@ -7309,11 +7312,14 @@ const getNetworkConfig = () => {
     return alfajoresConfig;
   }
 };
+
 const getABIs = () => {
-  const network = process.env.NEXT_PUBLIC_NETWORK;
+  const network = process.env.NEXT_PUBLIC_NETWORK || 'celo';
+  
+  // Use static ABIs based on network
   if (network === 'alfajores') {
     return alfajoresABIs;
-  } else if (network === 'celo') {
+  } else {
     return celoABIs;
   }
 };
