@@ -161,11 +161,8 @@ export { default as VolunteerPage } from './pages/volunteer/[slug]/';
 export { default as EditVolunteerOportunity } from './pages/volunteer/[slug]/edit';
 export { default as VolunteerApplicationPage } from './pages/volunteer/apply';
 export { default as CreateVolunteerOportunity } from './pages/volunteer/create';
-export { default as RolesPage } from './pages/roles/';
-export { default as CreateRole } from './pages/roles/create';
-export { default as EditRole } from './pages/roles/[id]/edit';
+
 export { default as TokenSalesDashboardPage } from './pages/dashboard/token-sales';
-export { default as CitizenWhyPage } from './pages/subscriptions/citizen/why';
 // Types
 export * from './types/';
 // Utils
