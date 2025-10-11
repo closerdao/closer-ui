@@ -34,9 +34,22 @@ const CustomTooltipContent = ({
 
   if (!payload || !Array.isArray(payload)) return null;
 
+  // Debug logging
+  console.log('StackedBarChart Tooltip Debug:', {
+    payload,
+    label,
+    payloadValues: payload.map((entry: CustomPayload) => ({
+      name: entry.name,
+      value: entry.value,
+      valueType: typeof entry.value,
+      isNaN: isNaN(Number(entry.value)),
+    })),
+  });
+
   const total = Math.floor(
     payload.reduce((sum: number, entry: CustomPayload) => {
-      return sum + Number(entry.value);
+      const value = Number(entry.value);
+      return sum + (isNaN(value) ? 0 : value);
     }, 0),
   );
 
@@ -162,27 +175,43 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
                 )}{' '}
               </Bar>
               {APP_NAME === 'tdf' && (
-                <Bar dataKey="subscriptions" stackId="a" fill={CHART_COLORS[4]}>
-                  <LabelList
-                    dataKey="totalOperations"
-                    position="top"
-                    content={(props) => {
-                      const { x, y, width, value } = props;
-                      return (
-                        <text
-                          x={Number(x) + (Number(width) || 0) / 2}
-                          y={y}
-                          dy={-10}
-                          textAnchor="middle"
-                          fill="#000000"
-                          fontSize="12"
-                        >
-                          €{formatThousands(Number(value))}
-                        </text>
-                      );
-                    }}
+                <>
+                  <Bar
+                    dataKey="fiat token sales"
+                    stackId="a"
+                    fill={CHART_COLORS[5]}
+                  >
+                    <LabelList
+                      dataKey="totalOperations"
+                      position="top"
+                      content={(props) => {
+                        const { x, y, width, value } = props;
+                        return (
+                          <text
+                            x={Number(x) + (Number(width) || 0) / 2}
+                            y={y}
+                            dy={-10}
+                            textAnchor="middle"
+                            fill="#000000"
+                            fontSize="12"
+                          >
+                            €{formatThousands(Number(value))}
+                          </text>
+                        );
+                      }}
+                    />
+                  </Bar>
+                  <Bar
+                    dataKey="crypto token sales"
+                    stackId="a"
+                    fill={CHART_COLORS[6]}
                   />
-                </Bar>
+                  <Bar
+                    dataKey="subscriptions"
+                    stackId="a"
+                    fill={CHART_COLORS[4]}
+                  />
+                </>
               )}
             </>
           )}

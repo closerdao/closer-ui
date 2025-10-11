@@ -130,6 +130,9 @@ const BookingPage = ({
     volunteerInfo,
   } = booking || {};
 
+  const isFriendBookingForCurrentUser = user?.email && booking?.friendEmails?.includes(user?.email);
+
+
   const userInfo = bookingCreatedBy && {
     name: bookingCreatedBy.screenname,
     photo: bookingCreatedBy.photo,
@@ -302,10 +305,7 @@ const BookingPage = ({
   const updatedEventTotal = updatedPrices?.eventFiat?.val || 0;
   const updatedFiatTotal = updatedPrices?.total?.val || 0;
 
-  console.log('updatedRentalFiat==>', updatedRentalFiat);
-  console.log('updatedRentalToken==>', updatedRentalToken);
 
-  console.log('booking==>', booking);
 
   // TODO:update paymentDelta, dailyrentaltoken, total, rentalfiat !!!!!!!!! don't update rentalfiat
   // when the price of token booking updated, but payment delta is not zero, rentalFiAt should match paymentdelta
@@ -447,11 +447,13 @@ const BookingPage = ({
   };
 
   if (
-    !booking ||
+   ( !booking ||
     !isBookingEnabled ||
     (user?._id !== booking.createdBy &&
       user?._id !== booking.paidBy &&
-      !isSpaceHost)
+        !isSpaceHost) )
+      &&
+    !isFriendBookingForCurrentUser
   ) {
     return <PageNotFound />;
   }

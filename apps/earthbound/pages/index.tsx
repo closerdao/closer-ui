@@ -41,7 +41,8 @@ const getPage = ({
             title: 'EARTHBOUND ECOVILLAGE',
             videoEmbedId: 'W9AyIR3mSHk',
             mobileVideoUrl:
-              'https://cdn.oasa.co/custom-pages/earthbound/Earthbound%20header%2003%20HQ.mp4',
+              // 'https://cdn.oasa.co/custom-pages/earthbound/Earthbound%20header%2003%20HQ.mp4',
+              'https://cdn.oasa.co/custom-pages/earthbound/earthbound-hero-trim.mp4',
             body: 'A regenerative  & intentional community <br/> in Sweden',
             imageUrl:
               'https://cdn.oasa.co/custom-pages/earthbound/earthbound-hero.png',

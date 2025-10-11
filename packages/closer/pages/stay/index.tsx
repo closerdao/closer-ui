@@ -26,7 +26,7 @@ import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
-
+import {  LinkButton } from '../../components/ui';
 
 interface Props {
   bookingSettings: any;
@@ -93,6 +93,15 @@ const StayPage = ({
     loadData();
   }, [isTeamMember]);
 
+  useEffect(() => {
+    api.post('/metric', {
+      event: 'page-view',
+      value: 'stay',
+      point: 0,
+      category: 'engagement',
+    });
+  }, []);
+
   const listings = platform.listing.find(listingFilter);
 
   const hosts = platform.user.find(hostsFilter);
@@ -119,8 +128,14 @@ const StayPage = ({
         <div className="validation-error">{listings.get('error')}</div>
       )}
 
-      <section className="max-w-6xl mx-auto mb-16">
-        <div className="mb-6 max-w-prose">
+      <section
+        className={`max-w-6xl mx-auto mb-16  ${
+          PLATFORM_NAME.toLowerCase().includes('earthbound')
+            ? 'flex justify-center'
+            : ''
+        }`}
+      >
+        <div className="mb-6 max-w-prose ">
           <Heading
             level={1}
             className={`${
@@ -132,6 +147,18 @@ const StayPage = ({
               dangerouslySetInnerHTML={{ __html: t.raw('stay_title') }}
             />
           </Heading>
+
+          {PLATFORM_NAME.toLowerCase().includes('earthbound') && (
+            <LinkButton
+              href="https://us2.cloudbeds.com/en/reservation/C3o5ZJ?currency=sek"
+              target="_blank"
+              size="small"
+              variant="primary"
+              className={' bg-accent-alt border-accent-alt w-fit my-4'}
+            >
+              BOOK A STAY
+            </LinkButton>
+          )}
 
           <div className="rich-text font-accent">
             {t.rich('stay_description', {
@@ -154,7 +181,6 @@ const StayPage = ({
         </div>
       </section>
 
-
       <section className="max-w-6xl mx-auto mb-16 flex align-center">
         {isBookingEnabled && (
           <Link
@@ -176,12 +202,13 @@ const StayPage = ({
             >
               {t('buttons_volunteer')}
             </Link>
-          )
-        }
+          )}
       </section>
 
       <section className="max-w-6xl mx-auto mb-16">
-        <Hosts hosts={hosts} email={TEAM_EMAIL} />
+        <div className={` w-full ${PLATFORM_NAME.toLowerCase().includes('earthbound') ? 'flex justify-center' : ''}`}>
+          <Hosts hosts={hosts} email={TEAM_EMAIL} />
+        </div>
 
         <div className="mb-6">
           {listings && listings.count() > 0 && (
@@ -189,6 +216,7 @@ const StayPage = ({
               <Heading level={2} className="text-2xl mb-2 max-w-prose">
                 {t('stay_chose_accommodation')}
               </Heading>
+              
               <p className="mb-8 max-w-prose">
                 {APP_NAME &&
                   !t('stay_chose_accommodation_description').includes(

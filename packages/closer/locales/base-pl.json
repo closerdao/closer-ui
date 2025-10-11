@@ -851,7 +851,7 @@
   "token_sale_heading_nationality": "Nationality",
   "token_sale_heading_required": "Required",
   "token_sale_label_name": "Full legal name",
-  "token_sale_label_nationality": "Please, select your nationality",
+  "token_sale_label_nationality": "Country",
   "token_sale_label_phone": "Phone number",
   "token_sale_label_tax_no": "Tax number",
   "token_sale_label_address": "Fiscal address",
@@ -1469,6 +1469,7 @@
   "navigation_learning_hub": "Learning hub",
   "navigation_platform_settings": "Platform settings",
   "navigation_performance": "Performance",
+  "navigation_revenue": "Przychody",
   "navigation_food": "Edit food",
 
   "blog_read_more": "Read more",
@@ -1573,7 +1574,6 @@
 
   "learn_live_course": "live course",
 
-  "token_sale_button_continue": "Continue",
   "token_sale_button_calculating": "Obliczanie...",
 
   "token_sales_dashboard_title": "Sprzedaż tokenów",

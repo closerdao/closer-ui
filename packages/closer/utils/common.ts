@@ -1,8 +1,17 @@
+import { parseSmartContractError } from './smartContractErrorParser';
+
 export const parseMessageFromError = (err: any) => {
   try {
     if (typeof err === 'string') {
       return err;
     }
+
+    // Try smart contract error parsing first
+    const smartContractError = parseSmartContractError(err);
+    if (smartContractError) {
+      return smartContractError;
+    }
+
     if (err?.response?.data?.error) {
       return err.response?.data?.error;
     }
