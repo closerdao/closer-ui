@@ -160,8 +160,7 @@ const NationalityPage = ({ generalConfig }: Props) => {
 
   useEffect(() => {
     if (
-      formData.required.nationality === 'US' ||
-      formData.required.nationality === 'CH'
+      formData.required.nationality === 'US'
     ) {
       setIsRestrictedNationality(true);
     } else {

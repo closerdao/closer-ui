@@ -98,9 +98,9 @@ const Navigation = () => {
             APP_NAME === 'closer'
               ? ' w-full justify-between'
               : 'w-auto justify-center'
-          } flex gap-2  items-center `}
+          } flex gap-2  items-center`}
         >
-          {APP_NAME && APP_NAME?.toLowerCase() === 'earthbound' && (
+          {APP_NAME && APP_NAME?.toLowerCase().includes('earthbound') && (
             <div className="flex gap-3 items-center">
               <ul className="gap-4 hidden sm:flex">
                 <li>
@@ -118,7 +118,7 @@ const Navigation = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/pages/events">
+                  <Link href="/pages/events" className='whitespace-nowrap'>
                     {t('header_nav_events')}
                   </Link>
                 </li>

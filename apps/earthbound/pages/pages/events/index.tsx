@@ -29,21 +29,21 @@ const getPage = ({
   const localPage: Page = {
     isHomePage: false,
     sections: [
-      {
-        type: 'hero',
-        data: {
-          settings: {
-            alignText: 'top-left',
-            isInverted: true,
-          },
-          content: {
-            title: 'HOST AN EVENT',
-  
-            imageUrl:
-              'https://cdn.oasa.co/custom-pages/earthbound/events-hero.jpeg',
-          },
-        },
-      },
+      // {
+      //   type: 'hero',
+      //   data: {
+      //     settings: {
+      //       alignText: 'top-left',
+      //       isInverted: true,
+      //     },
+      //     content: {
+      //       title: 'HOST AN EVENT',
+
+      //       imageUrl:
+      //         'https://cdn.oasa.co/custom-pages/earthbound/events-hero.jpeg',
+      //     },
+      //   },
+      // },
 
       {
         type: 'richText',
@@ -146,7 +146,6 @@ Food        </h2>
           },
         },
       },
-     
 
       {
         type: 'promoCard',
@@ -196,9 +195,13 @@ Pricing details        </h2>
                  
 
 <p><b>Reach out if you are interested in pricing.</b></p>
+<br/>
 
 
-<p><b>Event contact</b></p>
+
+
+<h2 style="text-transform: uppercase;">
+Event contact      </h2>
 
 <p>
   Dicte will be your contact for all event related inquires.
@@ -358,7 +361,6 @@ Pricing details        </h2>
                 width: 1573,
                 height: 1178,
               },
-            
             ],
           },
         },

@@ -30,6 +30,7 @@ export const models = [
   'food',
   'metric',
   'charge',
+  'sale',
 ];
 
 const filterToKey = (filter) => JSON.stringify(filter) || '__';

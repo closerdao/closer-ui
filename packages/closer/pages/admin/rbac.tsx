@@ -66,6 +66,7 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
     'TokenSales',
     'RoleCreation',
     'Roles',
+    'Revenue',
 
   ]);
   const [roles] = useState([

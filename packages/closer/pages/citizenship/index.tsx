@@ -70,6 +70,22 @@ const CitizenshipPage = ({
     { tokens: 120, monthlyPayment: 0 },
   ]);
   const { getTotalCostWithoutWallet, isConfigReady } = useBuyTokens();
+
+  // Track citizenship page view
+  useEffect(() => {
+    (async () => {
+      try {
+        await api.post('/metric', {
+          event: 'page-view',
+          value: 'citizenship',
+          point: 0,
+          category: 'engagement',
+        });
+      } catch (error) {
+        console.error('Error tracking citizenship page view:', error);
+      }
+    })();
+  }, []);
   const { platform }: any = usePlatform();
 
   const citizenTarget = customConfig?.citizenTarget || CITIZEN_TARGET;
@@ -281,7 +297,17 @@ const CitizenshipPage = ({
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button asChild size="lg" className="rounded-2xl px-6">
-              <Link href="/subscriptions/citizen/why">
+              <Link 
+                href="/subscriptions/citizen/why"
+                onClick={() => {
+                  api.post('/metric', {
+                    event: 'become-citizen-button-click',
+                    value: 'citizenship',
+                    point: 0,
+                    category: 'engagement',
+                  });
+                }}
+              >
                 {t('citizenship_become_citizen_button')}{' '}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>

@@ -29,7 +29,7 @@ export const getDays = (dateRange: DateRange): number => {
 
 export interface BookingFilterOptions {
   userId?: string;
-  status?: BookingStatus;
+  status?: BookingStatus | BookingStatus[];
   additionalWhere?: Record<string, unknown>;
   limit?: number;
 }
@@ -41,8 +41,39 @@ export const getStartAndEndDate = (
 ) => {
   let startDate: Date;
   let endDate: Date;
+  const now = new Date();
 
   switch (timeFrame) {
+    case 'currentMonth':
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      endDate.setHours(23, 59, 59, 999);
+      break;
+    case 'previousMonth':
+      startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+      endDate.setHours(23, 59, 59, 999);
+      break;
+    case 'last7Days':
+      startDate = new Date(new Date().setDate(new Date().getDate() - 7));
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date();
+      endDate.setHours(23, 59, 59, 999);
+      break;
+    case 'last4Weeks':
+      startDate = new Date(new Date().setDate(new Date().getDate() - 28));
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date();
+      endDate.setHours(23, 59, 59, 999);
+      break;
+    case 'currentYear':
+      startDate = new Date(now.getFullYear(), 0, 1);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(now.getFullYear(), 11, 31);
+      endDate.setHours(23, 59, 59, 999);
+      break;
     case 'month':
       startDate = new Date(new Date().setDate(new Date().getDate() - 30));
       endDate = new Date();
@@ -64,8 +95,8 @@ export const getStartAndEndDate = (
       endDate = new Date(new Date().setHours(23, 59, 59, 999));
       break;
     case 'custom':
-      startDate = new Date(fromDate);
-      endDate = new Date(toDate);
+      startDate = new Date(new Date(fromDate).setHours(0, 0, 0, 0));
+      endDate = new Date(new Date(toDate).setHours(23, 59, 59, 999));
       break;
     default:
       startDate = new Date(0);
@@ -87,19 +118,19 @@ export const generateBookingFilter = ({
   timeFrame: string;
   options: BookingFilterOptions;
 }) => {
-  const { status } = options;
-
   const { startDate, endDate } = getStartAndEndDate(
     timeFrame,
     fromDate,
     toDate,
   );
 
-  const limit = 3000;
-
-  const filter = {
+  return {
     where: {
-      ...(status && { status }),
+      ...(options.status && {
+        ...(Array.isArray(options.status)
+          ? { status: { $in: options.status } }
+          : { status: options.status }),
+      }),
       ...(timeFrame !== 'allTime' && {
         created: {
           $gte: startDate,
@@ -107,10 +138,7 @@ export const generateBookingFilter = ({
         },
       }),
     },
-    ...(limit && { limit }),
   };
-
-  return filter;
 };
 
 export const generateTokenSalesFilter = ({
@@ -173,6 +201,327 @@ export const generateSubscriptionsFilter = ({
       category: { $in: ['engagement'] },
       value: { $in: ['subscriptions'] },
       event: { $in: [event] },
+
+      ...(timeFrame !== 'allTime' && {
+        created: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      }),
+    },
+    ...(limit && { limit }),
+  };
+
+  return filter;
+};
+
+export const generateCitizenshipFilter = ({
+  fromDate,
+  toDate,
+  timeFrame,
+  event,
+}: {
+  fromDate: string;
+  toDate: string;
+  timeFrame: string;
+  event: string;
+}) => {
+  const limit = 100000;
+  const { startDate, endDate } = getStartAndEndDate(
+    timeFrame,
+    fromDate,
+    toDate,
+  );
+
+  const filter = {
+    where: {
+      category: { $in: ['engagement'] },
+      value: { $in: ['citizenship'] },
+      event: { $in: [event] },
+
+      ...(timeFrame !== 'allTime' && {
+        created: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      }),
+    },
+    ...(limit && { limit }),
+  };
+
+  return filter;
+};
+
+export const generatePageViewFilter = ({
+  fromDate,
+  toDate,
+  timeFrame,
+  page,
+}: {
+  fromDate: string;
+  toDate: string;
+  timeFrame: string;
+  page: string;
+}) => {
+  const limit = 100000;
+  const { startDate, endDate } = getStartAndEndDate(
+    timeFrame,
+    fromDate,
+    toDate,
+  );
+
+  const filter = {
+    where: {
+      category: { $in: ['engagement'] },
+      value: { $in: [page] },
+      event: { $in: ['page-view'] },
+
+      ...(timeFrame !== 'allTime' && {
+        created: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      }),
+    },
+    ...(limit && { limit }),
+  };
+
+  return filter;
+};
+
+export const generateButtonClickFilter = ({
+  fromDate,
+  toDate,
+  timeFrame,
+  buttonType,
+}: {
+  fromDate: string;
+  toDate: string;
+  timeFrame: string;
+  buttonType: string;
+}) => {
+  const limit = 100000;
+  const { startDate, endDate } = getStartAndEndDate(
+    timeFrame,
+    fromDate,
+    toDate,
+  );
+
+  const filter = {
+    where: {
+      category: { $in: ['engagement'] },
+      value: { $in: [buttonType] },
+      event: { $in: ['subscribe-button-click'] },
+
+      ...(timeFrame !== 'allTime' && {
+        created: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      }),
+    },
+    ...(limit && { limit }),
+  };
+
+  return filter;
+};
+
+export const generateTokenBasketFilter = ({
+  fromDate,
+  toDate,
+  timeFrame,
+}: {
+  fromDate: string;
+  toDate: string;
+  timeFrame: string;
+}) => {
+  const limit = 100000;
+  const { startDate, endDate } = getStartAndEndDate(
+    timeFrame,
+    fromDate,
+    toDate,
+  );
+
+  const filter = {
+    where: {
+      category: { $in: ['engagement'] },
+      value: { $in: ['token-sale'] },
+      event: { $in: ['token-sale-success'] },
+
+      ...(timeFrame !== 'allTime' && {
+        created: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      }),
+    },
+    ...(limit && { limit }),
+  };
+
+  return filter;
+};
+
+export const generateFinancedTokenStartedFilter = ({
+  fromDate,
+  toDate,
+  timeFrame,
+}: {
+  fromDate: string;
+  toDate: string;
+  timeFrame: string;
+}) => {
+  const limit = 100000;
+  const { startDate, endDate } = getStartAndEndDate(
+    timeFrame,
+    fromDate,
+    toDate,
+  );
+
+  const filter = {
+    where: {
+      category: { $in: ['engagement'] },
+      value: { $in: ['citizenship'] },
+      event: { $in: ['financed-token-purchase-started'] },
+
+      ...(timeFrame !== 'allTime' && {
+        created: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      }),
+    },
+    ...(limit && { limit }),
+  };
+
+  return filter;
+};
+
+export const generateFinancedTokenBasketFilter = ({
+  fromDate,
+  toDate,
+  timeFrame,
+}: {
+  fromDate: string;
+  toDate: string;
+  timeFrame: string;
+}) => {
+  const limit = 100000;
+  const { startDate, endDate } = getStartAndEndDate(
+    timeFrame,
+    fromDate,
+    toDate,
+  );
+
+  const filter = {
+    where: {
+      category: { $in: ['engagement'] },
+      value: { $in: ['citizenship'] },
+      event: { $in: ['financed-token-purchase-completed'] },
+
+      ...(timeFrame !== 'allTime' && {
+        created: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      }),
+    },
+    ...(limit && { limit }),
+  };
+
+  return filter;
+};
+
+export const generateSubscribeButtonClickFilter = ({
+  fromDate,
+  toDate,
+  timeFrame,
+}: {
+  fromDate: string;
+  toDate: string;
+  timeFrame: string;
+}) => {
+  const limit = 100000;
+  const { startDate, endDate } = getStartAndEndDate(
+    timeFrame,
+    fromDate,
+    toDate,
+  );
+
+  const filter = {
+    where: {
+      category: { $in: ['engagement'] },
+      value: { $in: ['subscription'] },
+      event: { $in: ['subscribe-button-click'] },
+
+      ...(timeFrame !== 'allTime' && {
+        created: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      }),
+    },
+    ...(limit && { limit }),
+  };
+
+  return filter;
+};
+
+export const generateManageSubscriptionButtonClickFilter = ({
+  fromDate,
+  toDate,
+  timeFrame,
+}: {
+  fromDate: string;
+  toDate: string;
+  timeFrame: string;
+}) => {
+  const limit = 100000;
+  const { startDate, endDate } = getStartAndEndDate(
+    timeFrame,
+    fromDate,
+    toDate,
+  );
+
+  const filter = {
+    where: {
+      category: { $in: ['engagement'] },
+      value: { $in: ['subscription'] },
+      event: { $in: ['manage-subscription-button-click'] },
+
+      ...(timeFrame !== 'allTime' && {
+        created: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      }),
+    },
+    ...(limit && { limit }),
+  };
+
+  return filter;
+};
+
+export const generateCreateAccountButtonClickFilter = ({
+  fromDate,
+  toDate,
+  timeFrame,
+}: {
+  fromDate: string;
+  toDate: string;
+  timeFrame: string;
+}) => {
+  const limit = 100000;
+  const { startDate, endDate } = getStartAndEndDate(
+    timeFrame,
+    fromDate,
+    toDate,
+  );
+
+  const filter = {
+    where: {
+      category: { $in: ['engagement'] },
+      value: { $in: ['subscription'] },
+      event: { $in: ['create-account-button-click'] },
 
       ...(timeFrame !== 'allTime' && {
         created: {

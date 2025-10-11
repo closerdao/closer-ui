@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { useAuth } from '../../contexts/auth';
 import { User } from '../../contexts/auth/types';
+import { BookingConfig } from '../../types/api';
 import Bookings from '../Bookings';
 import Tabs from '../Tabs';
-import { BookingConfig } from '../../types/api';
 
 interface Props {
   user: User;
@@ -14,16 +15,34 @@ interface Props {
   hideExportCsv?: boolean;
 }
 
-const UserBookingsComponent = ({ user, isSpaceHostView, bookingConfig, hideExportCsv = false }: Props) => {
+const UserBookingsComponent = ({
+  user,
+  isSpaceHostView,
+  bookingConfig,
+  hideExportCsv = false,
+}: Props) => {
   const t = useTranslations();
   const bookingsToShowLimit = 50;
+
+  const { user: currentUser } = useAuth();
+  console.log('=== currentUser=', currentUser);
 
   const [page, setPage] = useState(1);
 
   const filters = {
     myBookings: user && {
       where: {
-        createdBy: user._id,
+        $or: [
+          { createdBy: user._id },
+          {
+            $and: [
+              { isFriendsBooking: { $eq: true } },
+              { friendEmails: { $exists: true } },
+              { friendEmails: { $ne: [] } },
+              { friendEmails: { $in: [user.email] } },
+            ],
+          },
+        ],
         status: [
           'pending',
           'confirmed',
@@ -41,7 +60,7 @@ const UserBookingsComponent = ({ user, isSpaceHostView, bookingConfig, hideExpor
     },
     pastBookings: user && {
       where: {
-        createdBy: user._id,
+        $or: [{ createdBy: user._id }, { friendEmails: { $in: [user.email] } }],
         end: { $lt: new Date() },
       },
       limit: bookingsToShowLimit,

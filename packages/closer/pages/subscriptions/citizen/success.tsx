@@ -77,6 +77,36 @@ const SuccessCitizenPage: NextPage<Props> = ({
     }
   }, [isLoading]);
 
+  useEffect(() => {
+    // Track financed token purchase completion
+    if (intent === 'finance' && user?.citizenship?.tokensToFinance) {
+      api.post('/metric', {
+        event: 'financed-token-purchase-completed',
+        value: 'citizenship',
+        point: user.citizenship.tokensToFinance,
+        category: 'engagement',
+      });
+    }
+  }, [intent, user?.citizenship?.tokensToFinance]);
+
+  // Track when someone becomes a citizen
+  useEffect(() => {
+    if (user?.citizenship?.status === 'completed' && user?.roles?.includes('citizen')) {
+      (async () => {
+        try {
+          await api.post('/metric', {
+            event: 'citizen-qualified',
+            value: 'citizenship',
+            point: 0,
+            category: 'engagement',
+          });
+        } catch (error) {
+          console.error('Error tracking citizen qualification:', error);
+        }
+      })();
+    }
+  }, [user?.citizenship?.status, user?.roles]);
+
   const goBack = () => {
     router.push('/subscriptions/citizen/validation');
   };

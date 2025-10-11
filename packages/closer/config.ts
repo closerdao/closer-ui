@@ -186,6 +186,10 @@ export const configDescription: ConfigType[] = [
         type: 'text',
         default: '',
       },
+      friendsBookingMaxGuests: {
+        type: 'number',
+        default: 1,
+      },
     },
   },
   {
@@ -254,7 +258,7 @@ export const configDescription: ConfigType[] = [
       },
     },
   },
-  
+
   {
     slug: 'volunteering',
     value: {
