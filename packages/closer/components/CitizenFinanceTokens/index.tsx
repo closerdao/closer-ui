@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, ChangeEvent } from 'react';
 
 import { isValid } from 'iban-ts';
 import { useTranslations } from 'next-intl';
@@ -71,7 +71,7 @@ const CitizenFinanceTokens = ({
     return true;
   };
 
-  const handleIbanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleIbanChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     updateApplication('iban', value);
     validateIban(value);
