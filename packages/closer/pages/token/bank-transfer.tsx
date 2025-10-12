@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, ChangeEvent } from 'react';
 
 import {
   BackButton,
@@ -64,7 +64,7 @@ const BankTransferPage = ({ generalConfig }: Props) => {
     return true;
   };
 
-  const handleIbanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleIbanChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setIbanNumber(value);
     validateIban(value);
