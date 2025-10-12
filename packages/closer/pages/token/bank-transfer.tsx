@@ -7,6 +7,7 @@ import {
   BackButton,
   Button,
   Checkbox,
+  ErrorMessage,
   Heading,
   Input,
   ProgressBar,
@@ -41,12 +42,55 @@ const BankTransferPage = ({ generalConfig }: Props) => {
   const { isAuthenticated, isLoading, user } = useAuth();
 
   const [ibanNumber, setIbanNumber] = useState('');
+  const [ibanError, setIbanError] = useState<string | null>(null);
   const [isApiLoading, setIsApiLoading] = useState(false);
   const [isTokenTermsAccepted, setIsTokenTermsAccepted] = useState(false);
+  const [existingCharges, setExistingCharges] = useState<any[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const validateIban = (iban: string) => {
+    if (!iban.trim()) {
+      setIbanError(null);
+      return true;
+    }
+
+    const isValidIban = isValid(iban);
+    if (!isValidIban) {
+      setIbanError(t('validation_invalid_iban'));
+      return false;
+    }
+
+    setIbanError(null);
+    return true;
+  };
+
+  const handleIbanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setIbanNumber(value);
+    validateIban(value);
+  };
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push(`/login?back=${encodeURIComponent(router.asPath)}`);
+    }
+
+    if (isAuthenticated && !isLoading && user) {
+      (async () => {
+        const res = await api.get('/charge', {
+          params: {
+            where: {
+              type: 'fiatTokenSale',
+              status: 'pending-payment',
+              createdBy: user?._id,
+            },
+            limit: 100,
+            sort: '-date',
+          },
+        });
+        setExistingCharges(res?.data?.results);
+        console.log('res=', res?.data?.results);
+      })();
     }
   }, [isAuthenticated, isLoading]);
 
@@ -55,6 +99,17 @@ const BankTransferPage = ({ generalConfig }: Props) => {
   };
 
   const handleNext = async () => {
+    try {
+      if (existingCharges && existingCharges.length > 0) {
+        await Promise.all(
+          existingCharges.map((charge) => api.delete(`/charge/${charge._id}`)),
+        );
+      }
+    } catch (error) {
+      setError(t('token_sale_bank_transfer_delete_error'));
+      console.error('error with deleting existing charges:', error);
+    }
+
     try {
       setIsApiLoading(true);
       await api.post('/token/bank-transfer-application', {
@@ -73,6 +128,7 @@ const BankTransferPage = ({ generalConfig }: Props) => {
         `/token/success?totalFiat=${totalFiat}&tokenSaleType=fiat&ibanNumber=${ibanNumber}`,
       );
     } catch (error) {
+      setError(parseMessageFromError(error));
       console.error('error with bank transfer:', error);
     } finally {
       setIsApiLoading(false);
@@ -107,6 +163,18 @@ const BankTransferPage = ({ generalConfig }: Props) => {
               totalFiat: totalFiat as string,
             })}
           </p>
+
+          {existingCharges && (
+            <div className="mt-6 bg-yellow-100 p-4 rounded-lg space-y-2">
+              <p className="font-bold ">
+                {t('token_sale_bank_transfer_existing_application_title')}
+              </p>
+
+              <p>
+                {t('token_sale_bank_transfer_existing_application_description')}
+              </p>
+            </div>
+          )}
           <Heading level={3} hasBorder={true}>
             💰 {t('token_sale_bank_transfer_next_steps')}
           </Heading>
@@ -114,11 +182,18 @@ const BankTransferPage = ({ generalConfig }: Props) => {
           <div className="flex flex-col gap-12">
             <Input
               label={t('token_sale_bank_transfer_which_account')}
-              onChange={(e) => setIbanNumber(e.target.value)}
+              onChange={handleIbanChange}
               value={ibanNumber}
               id="ibanNumber"
               isRequired={true}
               placeholder={t('token_sale_bank_transfer_iban_placeholder')}
+              validation={ibanError ? 'invalid' : undefined}
+              customValidationError={ibanError || undefined}
+              successMessage={
+                ibanNumber && !ibanError
+                  ? t('validation_valid_iban')
+                  : undefined
+              }
             />
 
             <div className="flex items-start gap-1">
@@ -153,11 +228,16 @@ const BankTransferPage = ({ generalConfig }: Props) => {
               </label>
             </div>
 
+            <ErrorMessage error={error} />
+
             <Button
               onClick={handleNext}
               isLoading={isApiLoading}
               isEnabled={
-                isValid(ibanNumber) && !isApiLoading && isTokenTermsAccepted
+                isValid(ibanNumber) &&
+                !isApiLoading &&
+                isTokenTermsAccepted &&
+                !ibanError
               }
             >
               {t('token_sale_button_continue')}

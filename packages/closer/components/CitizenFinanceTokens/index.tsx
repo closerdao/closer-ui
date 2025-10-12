@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { isValid } from 'iban-ts';
 import { useTranslations } from 'next-intl';
@@ -38,6 +38,7 @@ const CitizenFinanceTokens = ({
   setIsTokenTermsAccepted,
 }: CitizenFinanceTokensProps) => {
   const t = useTranslations();
+  const [ibanError, setIbanError] = useState<string | null>(null);
 
   const { isConfigReady, getTotalCostWithoutWallet, isPending } =
     useBuyTokens();
@@ -53,6 +54,28 @@ const CitizenFinanceTokens = ({
 
   const monthlyPayment =
     Number(((totalToPayInFiat - downPayment) / 36).toFixed(2)) || 0;
+
+  const validateIban = (iban: string) => {
+    if (!iban.trim()) {
+      setIbanError(null);
+      return true;
+    }
+
+    const isValidIban = isValid(iban);
+    if (!isValidIban) {
+      setIbanError(t('validation_invalid_iban'));
+      return false;
+    }
+
+    setIbanError(null);
+    return true;
+  };
+
+  const handleIbanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    updateApplication('iban', value);
+    validateIban(value);
+  };
 
   useEffect(() => {
     if (isConfigReady) {
@@ -228,10 +251,17 @@ const CitizenFinanceTokens = ({
       <Input
         label={t('subscriptions_citizen_finance_tokens_bank_account')}
         value={application?.iban || ''}
-        onChange={(e) => updateApplication('iban', e.target.value)}
+        onChange={handleIbanChange}
         placeholder={t(
           'subscriptions_citizen_finance_tokens_bank_account_placeholder',
         )}
+        validation={ibanError ? 'invalid' : undefined}
+        customValidationError={ibanError || undefined}
+        successMessage={
+          application?.iban && !ibanError
+            ? t('validation_valid_iban')
+            : undefined
+        }
       />
       <div className="space-y-6">
         <p className="font-bold">
