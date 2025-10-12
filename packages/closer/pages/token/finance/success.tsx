@@ -119,6 +119,9 @@ const SuccessFinancePage: NextPage<Props> = ({
               })}
             </p>
 
+            <div className="bg-yellow-100 font-bold p-4 rounded-lg space-y-2">
+              {t('subscriptions_citizen_finance_tokens_payment_memo_important')}
+            </div>
             <div className="bg-gray-100 p-4 rounded-lg space-y-2">
               <div>
                 <span className="font-semibold">{t('oasa_beneficiary')}</span>
@@ -135,6 +138,10 @@ const SuccessFinancePage: NextPage<Props> = ({
               <div>
                 <span className="font-semibold">{t('oasa_address')}</span>
                 <div className="">{t('oasa_address_value')}</div>
+              </div>
+              <div>
+                <span className="font-semibold">{t('oasa_memo')}</span>
+                <div className="">{t('oasa_memo_value')}</div>
               </div>
             </div>
 

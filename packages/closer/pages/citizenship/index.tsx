@@ -30,6 +30,7 @@ import {
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { CitizenshipConfig } from '../../types/api';
@@ -59,6 +60,8 @@ const CitizenshipPage = ({
   customConfig = {} as { citizenTarget?: number; apiEndpoint?: string },
 }: CitizenshipPageProps) => {
   const t = useTranslations();
+
+  const { user } = useAuth();
   const [citizenCurrent, setCitizenCurrent] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [tokenPrice, setTokenPrice] = useState(0);
@@ -282,8 +285,18 @@ const CitizenshipPage = ({
   return (
     <div className="min-h-screen bg-neutral-light text-foreground">
       {/* Hero */}
+
       <section className="relative isolate overflow-hidden">
-        <div className="mx-auto max-w-6xl px-6 pt-16 pb-10">
+        {user?.roles?.includes('member') && (
+          <div className="mt-4 mx-auto max-w-6xl bg-green-50 border border-green-200 rounded-md p-4 mb-4">
+            <p className="font-bold text-green-700 mb-2">
+              {t('subscriptions_citizen_already_member_title')}
+            </p>
+            <p>{t('subscriptions_citizen_already_member_description')}</p>
+          </div>
+        )}
+
+        <div className="mx-auto max-w-6xl px-6 pt-4 pb-10">
           <Badge className="mb-4 bg-accent-light text-accent hover:bg-accent-light">
             {t('citizenship_founding_cohort_badge')}
           </Badge>
@@ -296,22 +309,25 @@ const CitizenshipPage = ({
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Button asChild size="lg" className="rounded-2xl px-6">
-              <Link 
-                href="/subscriptions/citizen/why"
-                onClick={() => {
-                  api.post('/metric', {
-                    event: 'become-citizen-button-click',
-                    value: 'citizenship',
-                    point: 0,
-                    category: 'engagement',
-                  });
-                }}
-              >
-                {t('citizenship_become_citizen_button')}{' '}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+            {!user?.roles?.includes('member') && (
+              <Button asChild size="lg" className="rounded-2xl px-6">
+                <Link
+                  href="/subscriptions/citizen/why"
+                  onClick={() => {
+                    api.post('/metric', {
+                      event: 'become-citizen-button-click',
+                      value: 'citizenship',
+                      point: 0,
+                      category: 'engagement',
+                    });
+                  }}
+                >
+                  {t('citizenship_become_citizen_button')}{' '}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            )}
+
             <Button
               asChild
               variant="outline"
@@ -534,7 +550,7 @@ const CitizenshipPage = ({
                     size="lg"
                     className="rounded-2xl px-6 w-full sm:w-auto"
                   >
-                    <Link href="/subscriptions/citizen/why">
+                    <Link href={`${user?.roles?.includes('member') ? '/token/finance' : '/subscriptions/citizen/why'}`}>
                       {t('citizenship_start_financed_plan')}
                     </Link>
                   </Button>
@@ -585,31 +601,34 @@ const CitizenshipPage = ({
       </section>
 
       {/* CTA strip */}
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <div className="rounded-3xl bg-accent p-8 text-background shadow-lg">
-          <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
-            <div>
-              <h3 className="text-2xl font-semibold">
-                {t('citizenship_cta_heading')}
-              </h3>
-              <p className="mt-1 text-accent-light">
-                {t('citizenship_cta_subtitle')}
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button
-                asChild
-                size="lg"
-                className="rounded-2xl bg-background text-accent hover:bg-background/90"
-              >
-                <Link href="/subscriptions/citizen/why">
-                  {t('citizenship_cta_become_citizen')}
-                </Link>
-              </Button>
+
+      {!user?.roles?.includes('member') && (
+        <section className="mx-auto max-w-6xl px-6 py-16">
+          <div className="rounded-3xl bg-accent p-8 text-background shadow-lg">
+            <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+              <div>
+                <h3 className="text-2xl font-semibold">
+                  {t('citizenship_cta_heading')}
+                </h3>
+                <p className="mt-1 text-accent-light">
+                  {t('citizenship_cta_subtitle')}
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  asChild
+                  size="lg"
+                  className="rounded-2xl bg-background text-accent hover:bg-background/90"
+                >
+                  <Link href="/subscriptions/citizen/why">
+                    {t('citizenship_cta_become_citizen')}
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* FAQ */}
       <section className="bg-background">

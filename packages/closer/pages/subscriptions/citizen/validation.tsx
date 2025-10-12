@@ -4,8 +4,6 @@ import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useState } from 'react';
 
-import { reportIssue } from '../../../utils/reporting.utils';
-
 import CitizenEligibility from '../../../components/CitizenEligibility';
 import PageError from '../../../components/PageError';
 import Wallet from '../../../components/Wallet';
@@ -30,6 +28,7 @@ import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
+import { reportIssue } from '../../../utils/reporting.utils';
 import PageNotFound from '../../not-found';
 
 interface Props {
@@ -103,11 +102,26 @@ const ValidationCitizenPage: NextPage<Props> = ({
 
         setIsVouched(isVouchedLocal);
 
-        setIsEligible(
+        console.log(
+          '=====================hasStayedForMinDurationLocal=',
+          hasStayedForMinDurationLocal,
+        );
+        console.log('user?.reportedB=', user?.reportedBy);
+        console.log('user?.reports=', user?.reports);
+
+        console.log(
+          'eligible=',
           isVouchedLocal &&
+          hasStayedForMinDurationLocal &&
+            (user?.reportedBy?.length === 0 || !user?.reportedBy) &&
+            (user?.reports?.length === 0 || !user?.reports),
+        );
+
+        setIsEligible(
+          // isVouchedLocal &&
             hasStayedForMinDurationLocal &&
-            user?.reportedBy?.length === 0 &&
-            user?.reports?.length === 0,
+            (user?.reportedBy?.length === 0 || !user?.reportedBy) &&
+            (user?.reports?.length === 0 || !user?.reports),
         );
       } catch (error) {}
     })();

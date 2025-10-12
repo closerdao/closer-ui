@@ -609,7 +609,7 @@
   "subscriptions_citizen_already_member": "Comprar Tokens Adicionais",
   "subscriptions_citizen_already_member_title": "Já é um cidadão!",
   "subscriptions_citizen_already_member_description": "Pode comprar tokens adicionais para aumentar a sua participação na comunidade e desbloquear mais benefícios.",
-  
+
   "subscriptions_title": "SUBSCREVA AO LUGAR QUE O SEU CORAÇÃO CHAMA DE CASA",
   "subscriptions_intro": "O seu compromisso mensal faz mais que financiar um sonho—torna-o parte dele. Como subscritor co-cria uma aldeia regenerativa: plantando árvores, cultivando comida, erguendo eco-casas e alimentando espaços para ideias ousadas. Quer comece pequeno ou vá a fundo, cada euro ganha-lhe créditos de estadia, uma voz nas decisões e um lugar na primeira fila para um futuro que ajudou a construir.",
   "subscriptions_compare_plans": "Comparar Planos",
@@ -626,29 +626,29 @@
   "subscriptions_night_credits": "Créditos de Noite",
   "subscriptions_per_month": "por mês",
   "subscriptions_per_year": "por ano",
-  
+
   "dashboard_performance_stays_funnel": "Funil de Estadias",
   "dashboard_performance_token_sales_funnel": "Funil de Vendas de Tokens",
   "dashboard_performance_subscriptions_funnel": "Funil de Subscrições",
   "dashboard_performance_conversion_rate": "Taxa de Conversão",
-  
+
   "report_download_modal_title": "Baixar Relatório TDF {year}",
   "report_download_modal_authenticated_message": "Está autenticado! Clique no botão abaixo para baixar o relatório de {year}.",
   "report_download_modal_download_button": "Baixar Relatório {year}",
   "report_download_modal_subscription_message": "Subscreva à nossa newsletter para se manter atualizado com o nosso progresso e obter acesso instantâneo ao relatório de {year}.",
   "report_download_modal_thanks_subscribing": "Obrigado por subscrever!",
   "report_download_modal_get_report": "Obter o relatório",
-  
+
   "roadmap_cta_heading": "Torne-se Parte da Nossa Jornada",
   "roadmap_cta_description": "Junte-se a nós na construção de um futuro regenerativo. Escolha como quer fazer parte da história da Traditional Dream Factory.",
   "roadmap_cta_buy_tokens": "Comprar Tokens $TDF",
   "roadmap_cta_subscribe": "Subscrever Mensalmente",
-  
+
   "citizenship_page_title": "Torne-se um Cidadão da TDF",
   "citizenship_page_meta_description": "Cidadania na Traditional Dream Factory: pertença, governança e acesso através de tokens.",
   "citizenship_founding_cohort_badge": "Cohorte Fundadora",
   "citizenship_hero_title": "Torne-se um Cidadão da",
-      "citizenship_hero_subtitle": "Junte-se a 300 cidadãos fundadores co-criando a primeira aldeia regenerativa alimentada por blockchain. A cidadania combina acesso baseado em bens comuns, governança tokenizada e gestão prática da terra.",
+  "citizenship_hero_subtitle": "Junte-se a 300 cidadãos fundadores co-criando a primeira aldeia regenerativa alimentada por blockchain. A cidadania combina acesso baseado em bens comuns, governança tokenizada e gestão prática da terra.",
   "citizenship_become_citizen_button": "Torne-se um Cidadão",
   "citizenship_learn_tdf_button": "Saiba sobre $TDF",
   "citizenship_read_game_guide_button": "Ler o Guia do Jogo",
@@ -885,5 +885,7 @@
   "governance_post_comment": "Publicar Comentário",
   "governance_login_to_comment": "Por favor, faça login para comentar.",
   "governance_loading_comments": "Carregando comentários...",
-  "governance_no_comments_yet": "Nenhum comentário ainda. Seja o primeiro a comentar!"
+  "governance_no_comments_yet": "Nenhum comentário ainda. Seja o primeiro a comentar!",
+  "validation_invalid_iban": "Por favor, insira um IBAN válido",
+  "validation_valid_iban": "IBAN válido"
 }

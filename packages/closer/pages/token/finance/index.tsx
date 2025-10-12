@@ -80,7 +80,7 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
     }
     if (user && !isLoading) {
       (async () => {
-        const financeApplicationRes = await api.get('/financeApplication', {
+        const financeApplicationRes = await api.get('/finance-application', {
           params: {
             where: {
               userId: user?._id,
