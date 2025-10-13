@@ -342,8 +342,7 @@ const MemberMenu = () => {
               {
                 label: t('navigation_affiliate_dashboard'),
                 url: '/settings/affiliate',
-                enabled: true,
-                rbacPage: 'AffiliateSettings',
+                enabled: true
               },
             ]
           : []),
