@@ -107,16 +107,16 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
 
   // Get user screenname by createdBy ID using platform.user.findOne
   const getUserScreenname = (createdBy: string): string => {
-    if (!createdBy) return 'Anonymous';
+    if (!createdBy) return t('governance_anonymous');
     const user = platform.user.findOne(createdBy);
 
-    if (!user) return 'Anonymous';
+    if (!user) return t('governance_anonymous');
 
     // Handle both Map and plain object structures
     const screenname = user.get ? user.get('screenname') : user.screenname;
     const email = user.get ? user.get('email') : user.email;
 
-    return screenname || email || 'Anonymous';
+    return screenname || email || t('governance_anonymous');
   };
 
   // Handle filter change
@@ -137,7 +137,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
     const end = new Date(endDate);
     const diff = end.getTime() - now.getTime();
 
-    if (diff <= 0) return 'Ended';
+    if (diff <= 0) return t('governance_ended');
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -209,11 +209,21 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
         <div className="flex justify-center items-center h-40">
           <p className="text-gray-500">{t('governance_no_proposals_found')}</p>
           <div className="mt-4 text-xs text-gray-400">
-            <p>Debug info:</p>
-            <p>Platform available: {platform?.proposal ? 'Yes' : 'No'}</p>
-            <p>Is loading: {isLoading ? 'Yes' : 'No'}</p>
-            <p>Proposals count: {proposalsMap.size}</p>
-            <p>Query: {JSON.stringify(query)}</p>
+            <p>{t('governance_debug_info')}</p>
+            <p>
+              {t('governance_platform_available')}:{' '}
+              {platform?.proposal ? t('common_yes') : t('common_no')}
+            </p>
+            <p>
+              {t('governance_is_loading')}:{' '}
+              {isLoading ? t('common_yes') : t('common_no')}
+            </p>
+            <p>
+              {t('governance_proposals_count')}: {proposalsMap.size}
+            </p>
+            <p>
+              {t('governance_query')}: {JSON.stringify(query)}
+            </p>
           </div>
         </div>
       ) : (
@@ -236,7 +246,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
               >
                 <div className="flex justify-between items-start mb-3">
                   <h3 className="text-lg font-semibold flex-1 pr-4">
-                    {proposal.get('title') || 'Untitled Proposal'}
+                    {proposal.get('title') || t('governance_untitled_proposal')}
                   </h3>
                   <span
                     className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -251,16 +261,20 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
                         : 'bg-gray-100 text-gray-800'
                     }`}
                   >
-                    {proposal.get('status')?.toUpperCase() || 'UNKNOWN'}
+                    {proposal.get('status')?.toUpperCase() ||
+                      t('governance_unknown_status')}
                   </span>
                 </div>
                 <p className="text-sm text-gray-500 mb-3">
-                  Submitted by @{getUserScreenname(proposal.get('createdBy'))} •
+                  {t('governance_submitted_by')} @
+                  {getUserScreenname(proposal.get('createdBy'))} •
                   {proposal.get('status') === 'active' &&
                   proposal.get('endDate')
-                    ? ` Closes in ${getTimeLeft(proposal.get('endDate'))}`
+                    ? ` ${t('governance_closes_in')} ${getTimeLeft(
+                        proposal.get('endDate'),
+                      )}`
                     : proposal.get('status') === 'closed'
-                    ? ' Closed'
+                    ? ` ${t('governance_closed_status')}`
                     : ''}
                 </p>
 
@@ -270,31 +284,34 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
                     <div className="flex space-x-4">
                       <div className="text-sm">
                         <span className="text-green-600 font-medium">
-                          Yes: {proposal.get('votes').yes}
+                          {t('governance_yes')}: {proposal.get('votes').yes}
                         </span>
                       </div>
                       <div className="text-sm">
                         <span className="text-red-600 font-medium">
-                          No: {proposal.get('votes').no}
+                          {t('governance_no')}: {proposal.get('votes').no}
                         </span>
                       </div>
                       <div className="text-sm">
                         <span className="text-gray-600 font-medium">
-                          Abstain: {proposal.get('votes').abstain}
+                          {t('governance_abstain')}:{' '}
+                          {proposal.get('votes').abstain}
                         </span>
                       </div>
                     </div>
                   ) : proposal.get('status') !== 'draft' ? (
-                    <div className="text-sm text-gray-500">No votes yet</div>
+                    <div className="text-sm text-gray-500">
+                      {t('governance_no_votes_yet')}
+                    </div>
                   ) : (
                     <div className="text-sm text-blue-600 font-medium">
-                      Draft Proposal
+                      {t('governance_draft_proposal')}
                     </div>
                   )}
 
                   {proposal.get('status') === 'active' && (
                     <span className="bg-blue-600 text-white text-sm py-1 px-3 rounded">
-                      Vote
+                      {t('governance_vote')}
                     </span>
                   )}
                 </div>

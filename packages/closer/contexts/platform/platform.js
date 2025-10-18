@@ -31,6 +31,7 @@ export const models = [
   'metric',
   'charge',
   'sale',
+  'vote',
 ];
 
 const filterToKey = (filter) => JSON.stringify(filter) || '__';

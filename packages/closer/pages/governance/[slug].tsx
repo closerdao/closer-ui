@@ -6,19 +6,20 @@ import ReactMarkdown from 'react-markdown';
 
 import ProposalComments from 'closer/components/Governance/ProposalComments';
 
-import { api } from 'closer';
+import { ErrorMessage, api } from 'closer';
 import { useAuth } from 'closer/contexts/auth';
 import { usePlatform } from 'closer/contexts/platform';
 import { WalletDispatch, WalletState } from 'closer/contexts/wallet';
+import { useVotingWeight } from 'closer/hooks/useVotingWeight';
 import { Proposal } from 'closer/types';
 import { parseMessageFromError, slugify } from 'closer/utils/common';
 import {
   createProposalSignatureHash,
   createVoteSignatureHash,
-  verifyProposalSignature,
 } from 'closer/utils/crypto';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextApiRequest, NextPage, NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 interface ProposalDetailPageProps {
   proposal: Proposal | null;
@@ -38,6 +39,8 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   const { signMessage } = useContext(WalletDispatch);
   const { user } = useAuth();
   const { platform } = usePlatform() as any;
+  const { votingWeight } = useVotingWeight();
+  const t = useTranslations();
 
   const [selectedVote, setSelectedVote] = useState<
     'yes' | 'no' | 'abstain' | null
@@ -47,6 +50,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   const [userVote, setUserVote] = useState<'yes' | 'no' | 'abstain' | null>(
     null,
   );
+  const [showVoteSuccess, setShowVoteSuccess] = useState(false);
   const [error, setError] = useState<string | null>(propError || null);
   const [isEditing, setIsEditing] = useState(false);
   const [currentProposal, setCurrentProposal] = useState<Proposal | null>(
@@ -96,51 +100,133 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     }
   }, [editData.title, editData.slug, isEditing]);
 
+  // Helper function to get the most up-to-date proposal data
+  const getCurrentProposalData = () => {
+    if (currentProposal?.slug) {
+      const platformProposal = platform.proposal.findOne(currentProposal.slug);
+      if (platformProposal && platformProposal.toJS) {
+        return platformProposal.toJS();
+      }
+    }
+    return currentProposal;
+  };
+
   const handleVote = async () => {
     if (!currentProposal || !selectedVote || !isWalletReady || !account) return;
 
     setIsSubmitting(true);
     setError(null);
 
+    // Create vote signature hash
+    const voteSignatureHash = createVoteSignatureHash(
+      currentProposal.description,
+      selectedVote,
+    );
+
+    // In a real implementation, this would sign a message with the wallet
+    // and submit the vote to Snapshot or a similar platform
+    const message = `I am voting ${selectedVote} on proposal ${currentProposal._id}`;
+    const signature = await signMessage(message, account);
+
+    if (!signature) {
+      throw new Error('Failed to sign vote message');
+    }
+
+    // Create vote data with signature hash
+    const voteData = {
+      votingWeight: votingWeight || 1,
+      signature: voteSignatureHash,
+      vote: selectedVote,
+    };
     try {
-      // Create vote signature hash
-      const voteSignatureHash = createVoteSignatureHash(
-        currentProposal.description,
-        selectedVote,
-      );
-
-      // In a real implementation, this would sign a message with the wallet
-      // and submit the vote to Snapshot or a similar platform
-      const message = `I am voting ${selectedVote} on proposal ${currentProposal._id}`;
-      const signature = await signMessage(message, account);
-
-      if (!signature) {
-        throw new Error('Failed to sign vote message');
-      }
-
-      // Create vote data with signature hash
-      const voteData = {
-        proposalId: currentProposal._id,
-        userId: user?._id || '',
-        vote: selectedVote,
-        votingPower: 1, // In a real implementation, this would be calculated based on token holdings
-        timestamp: new Date().toISOString(),
-        signatureHash: voteSignatureHash,
-      };
-
       // Submit vote to platform context
-      const voteResponse = await platform.proposalVote.post(voteData);
+      await api.post(`/proposals/${currentProposal._id}/vote`, voteData);
 
       // Update local state
       setHasVoted(true);
       setUserVote(selectedVote);
+      setShowVoteSuccess(true);
 
       // Refresh the proposal data from the platform context
-      platform.proposal.getOne(currentProposal.slug);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'An unknown error occurred',
+      const refreshedProposal = await platform.proposal.getOne(
+        currentProposal.slug,
       );
+
+      // Update local state with the refreshed data
+      if (refreshedProposal?.results) {
+        setCurrentProposal(refreshedProposal.results.toJS());
+      }
+
+      // Hide success message after 3 seconds
+      setTimeout(() => {
+        setShowVoteSuccess(false);
+      }, 3000);
+    } catch (err: any) {
+      console.error('Vote submission error:', err);
+      console.error('Error response data:', err?.response?.data);
+
+      // Handle specific backend error cases
+      const errorData = err?.response?.data;
+      const statusCode = err?.response?.status;
+
+      // Check for string error messages first
+      if (typeof errorData === 'string') {
+        switch (errorData) {
+          case 'missing_signature_or_vote':
+            setError(t('governance_error_missing_fields'));
+            break;
+          case 'invalid_vote':
+            setError(t('governance_error_invalid_vote'));
+            break;
+          case 'proposal_not_active_for_voting':
+            setError(t('governance_error_proposal_not_active'));
+            break;
+          case 'voting_period_not_active':
+            setError(t('governance_error_voting_period_inactive'));
+            break;
+          case 'user_already_voted':
+            setError(t('governance_error_already_voted'));
+            break;
+          default:
+            setError(parseMessageFromError(err));
+        }
+      }
+      // Check for object with error property
+      else if (errorData?.error) {
+        switch (errorData.error) {
+          case 'missing_signature_or_vote':
+            setError(t('governance_error_missing_fields'));
+            break;
+          case 'invalid_vote':
+            setError(t('governance_error_invalid_vote'));
+            break;
+          case 'proposal_not_active_for_voting':
+            setError(t('governance_error_proposal_not_active'));
+            break;
+          case 'voting_period_not_active':
+            setError(t('governance_error_voting_period_inactive'));
+            break;
+          case 'user_already_voted':
+            setError(t('governance_error_already_voted'));
+            break;
+          case 'Proposal not found':
+            setError(t('governance_error_proposal_not_found'));
+            break;
+          case 'User not found':
+            setError(t('governance_error_user_not_found'));
+            break;
+          default:
+            setError(parseMessageFromError(err));
+        }
+      }
+      // Check for 401 status code
+      else if (statusCode === 401) {
+        setError(t('governance_error_unauthorized'));
+      }
+      // Fallback to generic error parsing
+      else {
+        setError(parseMessageFromError(err));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -221,16 +307,15 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       const updatedData = {
         ...currentProposal,
         ...editData,
-        status: 'ready' as const,
+        status: 'active' as const,
         authorAddress: account,
-        signatureHash: descriptionHash,
         authorSignature: authorSignature,
         startDate: new Date().toISOString(),
         endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days default
         votes: {
-          yes: 0,
-          no: 0,
-          abstain: 0,
+          yes: [],
+          no: [],
+          abstain: [],
         },
         updated: new Date().toISOString(),
       };
@@ -308,14 +393,13 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
         ...editData,
         status: 'active' as const,
         authorAddress: account,
-        signatureHash: descriptionHash,
         authorSignature: authorSignature,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
         votes: {
-          yes: 0,
-          no: 0,
-          abstain: 0,
+          yes: [],
+          no: [],
+          abstain: [],
         },
         updated: new Date().toISOString(),
       };
@@ -378,14 +462,14 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     switch (status) {
       case 'active':
         return 'text-green-600 bg-green-100';
-      case 'closed':
+      case 'passed':
+        return 'text-green-600 bg-green-100';
+      case 'rejected':
+        return 'text-red-600 bg-red-100';
+      case 'expired':
         return 'text-gray-600 bg-gray-100';
-      case 'pending':
-        return 'text-yellow-600 bg-yellow-100';
       case 'draft':
         return 'text-blue-600 bg-blue-100';
-      case 'ready':
-        return 'text-purple-600 bg-purple-100';
       default:
         return 'text-gray-600 bg-gray-100';
     }
@@ -396,7 +480,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     return Math.round((votes / total) * 100);
   };
 
-  if (error || !currentProposal) {
+  if (!currentProposal) {
     return (
       <>
         <Head>
@@ -422,14 +506,27 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     );
   }
 
-  const totalVotes =
-    (currentProposal.votes?.yes || 0) +
-    (currentProposal.votes?.no || 0) +
-    (currentProposal.votes?.abstain || 0);
+  // Helper function to calculate vote counts from arrays
+  const getVoteCounts = (votes: any) => {
+    if (!votes || typeof votes !== 'object') {
+      return { yes: 0, no: 0, abstain: 0 };
+    }
+
+    return {
+      yes: Array.isArray(votes.yes) ? votes.yes.length : 0,
+      no: Array.isArray(votes.no) ? votes.no.length : 0,
+      abstain: Array.isArray(votes.abstain) ? votes.abstain.length : 0,
+    };
+  };
+
+  // Get the most up-to-date proposal data for voting results
+  const freshProposalData = getCurrentProposalData();
+  const voteCounts = getVoteCounts(freshProposalData?.votes);
+  const totalVotes = voteCounts.yes + voteCounts.no + voteCounts.abstain;
   const isActive =
-    currentProposal.status === 'active' &&
-    currentProposal.endDate &&
-    new Date() < new Date(currentProposal.endDate);
+    freshProposalData?.status === 'active' &&
+    freshProposalData?.endDate &&
+    new Date() < new Date(freshProposalData.endDate);
 
   return (
     <>
@@ -437,7 +534,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
         <title>{currentProposal.title} - TDF Governance</title>
         <meta
           name="description"
-          content={currentProposal.description.substring(0, 160)}
+          content={currentProposal.description?.substring(0, 160) || ''}
         />
       </Head>
 
@@ -465,7 +562,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     'Anonymous'}
                 </span>
                 <span>•</span>
-                <span>{formatDate(currentProposal.created)}</span>
+                <span>{formatDate(String(currentProposal.created))}</span>
                 <span>•</span>
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
@@ -521,7 +618,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                 <div>
                   <p className="text-blue-800 font-medium">Voting is active</p>
                   <p className="text-blue-600 text-sm">
-                    {getTimeRemaining(currentProposal.endDate || '')}
+                    {getTimeRemaining(String(freshProposalData?.endDate || ''))}
                   </p>
                 </div>
                 <div className="text-right">
@@ -529,7 +626,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     {totalVotes} votes
                   </p>
                   <p className="text-blue-600 text-sm">
-                    Ends {formatDate(currentProposal.endDate || '')}
+                    Ends {formatDate(String(freshProposalData?.endDate || ''))}
                   </p>
                 </div>
               </div>
@@ -621,6 +718,15 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                   {hasVoted ? 'Your Vote' : 'Cast Your Vote'}
                 </h2>
 
+                {showVoteSuccess && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                    <p className="text-green-800 font-medium">
+                      ✓ Vote submitted successfully! Results are being
+                      updated...
+                    </p>
+                  </div>
+                )}
+
                 {hasVoted ? (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                     <p className="text-green-800 font-medium">
@@ -671,11 +777,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                       ))}
                     </div>
 
-                    {error && (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                        <p className="text-red-800">{error}</p>
-                      </div>
-                    )}
+                    {error && <ErrorMessage error={error} />}
 
                     <button
                       onClick={handleVote}
@@ -770,7 +872,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
             )}
 
             {/* Voting Results for Active/Closed Proposals */}
-            {currentProposal.status !== 'draft' && currentProposal.votes && (
+            {freshProposalData?.status !== 'draft' && voteCounts && (
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h3 className="text-lg font-semibold mb-4">Voting Results</h3>
 
@@ -779,11 +881,8 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-green-600 font-medium">Yes</span>
                       <span className="text-sm text-gray-600">
-                        {currentProposal.votes.yes} (
-                        {getVotePercentage(
-                          currentProposal.votes.yes,
-                          totalVotes,
-                        )}
+                        {voteCounts.yes} (
+                        {getVotePercentage(voteCounts.yes, totalVotes)}
                         %)
                       </span>
                     </div>
@@ -792,7 +891,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                         className="bg-green-500 h-2 rounded-full transition-all duration-300"
                         style={{
                           width: `${getVotePercentage(
-                            currentProposal.votes.yes,
+                            voteCounts.yes,
                             totalVotes,
                           )}%`,
                         }}
@@ -804,11 +903,8 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-red-600 font-medium">No</span>
                       <span className="text-sm text-gray-600">
-                        {currentProposal.votes.no} (
-                        {getVotePercentage(
-                          currentProposal.votes.no,
-                          totalVotes,
-                        )}
+                        {voteCounts.no} (
+                        {getVotePercentage(voteCounts.no, totalVotes)}
                         %)
                       </span>
                     </div>
@@ -817,7 +913,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                         className="bg-red-500 h-2 rounded-full transition-all duration-300"
                         style={{
                           width: `${getVotePercentage(
-                            currentProposal.votes.no,
+                            voteCounts.no,
                             totalVotes,
                           )}%`,
                         }}
@@ -829,11 +925,8 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-gray-600 font-medium">Abstain</span>
                       <span className="text-sm text-gray-600">
-                        {currentProposal.votes.abstain} (
-                        {getVotePercentage(
-                          currentProposal.votes.abstain,
-                          totalVotes,
-                        )}
+                        {voteCounts.abstain} (
+                        {getVotePercentage(voteCounts.abstain, totalVotes)}
                         %)
                       </span>
                     </div>
@@ -842,7 +935,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                         className="bg-gray-500 h-2 rounded-full transition-all duration-300"
                         style={{
                           width: `${getVotePercentage(
-                            currentProposal.votes.abstain,
+                            voteCounts.abstain,
                             totalVotes,
                           )}%`,
                         }}
@@ -868,11 +961,12 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
 
               <div className="space-y-3 text-sm">
                 <div>
-                  <span className="text-gray-600">Author:</span>
-                  <span className="ml-2 font-medium">
+                  <span className="text-gray-600 mr-2">Author:</span>
+                  <div className="mt-1 p-2 bg-gray-100 rounded text-xs font-mono break-all">
                     {currentProposal.authorAddress || 'Anonymous'}
-                  </span>
+                  </div>
                 </div>
+
                 <div>
                   <span className="text-gray-600">Status:</span>
                   <span
@@ -886,14 +980,14 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                 <div>
                   <span className="text-gray-600">Created:</span>
                   <span className="ml-2">
-                    {formatDate(currentProposal.created)}
+                    {formatDate(String(currentProposal.created))}
                   </span>
                 </div>
                 {currentProposal.startDate && (
                   <div>
                     <span className="text-gray-600">Start Date:</span>
                     <span className="ml-2">
-                      {formatDate(currentProposal.startDate)}
+                      {formatDate(String(currentProposal.startDate))}
                     </span>
                   </div>
                 )}
@@ -901,7 +995,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                   <div>
                     <span className="text-gray-600">End Date:</span>
                     <span className="ml-2">
-                      {formatDate(currentProposal.endDate)}
+                      {formatDate(String(currentProposal.endDate))}
                     </span>
                   </div>
                 )}
@@ -909,7 +1003,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                   <div>
                     <span className="text-gray-600">Time Remaining:</span>
                     <span className="ml-2 text-accent font-medium">
-                      {getTimeRemaining(currentProposal.endDate || '')}
+                      {getTimeRemaining(String(currentProposal.endDate || ''))}
                     </span>
                   </div>
                 )}
@@ -917,36 +1011,23 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
             </div>
 
             {/* Verification Info */}
-            {currentProposal.signatureHash && (
+            {currentProposal.authorSignature && (
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h3 className="text-lg font-semibold mb-4">Verification</h3>
 
-                <div className="space-y-3 text-sm">
+                <div className="space-y-3 text-sm  ">
                   <div>
-                    <span className="text-gray-600">Signature Hash:</span>
+                    <span className="text-gray-600">Author Signature:</span>
                     <div className="mt-1 p-2 bg-gray-100 rounded text-xs font-mono break-all">
-                      {currentProposal.signatureHash}
+                      {currentProposal.authorSignature}
                     </div>
                   </div>
-                  <div className="flex items-center">
-                    <span className="text-gray-600 mr-2">Verified:</span>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        verifyProposalSignature(
-                          currentProposal.description,
-                          currentProposal.signatureHash,
-                        )
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {verifyProposalSignature(
-                        currentProposal.description,
-                        currentProposal.signatureHash,
-                      )
-                        ? '✓ Valid'
-                        : '✗ Invalid'}
-                    </span>
+
+                  <div>
+                    <span className="text-gray-600 mr-2">Author Address:</span>
+                    <div className="mt-1 p-2 bg-gray-100 rounded text-xs font-mono break-all">
+                      {currentProposal.authorAddress}
+                    </div>
                   </div>
                 </div>
               </div>

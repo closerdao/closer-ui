@@ -39,7 +39,7 @@ export const useSweatToken = () => {
         // In a real implementation, this would fetch the actual balance
         // For now, we'll use a mock value
         // const balance = await sweatTokenContract.balanceOf(account);
-        const balance = 0.4; // Mock value
+        const balance = 0; // Mock value
         setSweatBalance(balance.toString());
       } catch (err) {
         console.error('Error fetching Sweat token balance:', err);

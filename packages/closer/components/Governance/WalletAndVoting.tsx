@@ -2,6 +2,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import { WalletState, WalletDispatch } from 'closer/contexts/wallet';
 import { useAuth } from 'closer/contexts/auth';
 import { useTranslations } from 'next-intl';
+import { useVotingWeight } from 'closer/hooks/useVotingWeight';
 
 interface WalletAndVotingProps {
   className?: string;
@@ -21,9 +22,9 @@ const WalletAndVoting: React.FC<WalletAndVotingProps> = ({ className }) => {
   
   const { user } = useAuth();
   const { connectWallet } = useContext(WalletDispatch);
+  const { votingWeight } = useVotingWeight();
   const t = useTranslations();
   
-  const [votingWeight, setVotingWeight] = useState<number>(0);
 
   const isCitizen = (): boolean => {
     return user?.roles?.includes('member') || false;
@@ -38,28 +39,7 @@ const WalletAndVoting: React.FC<WalletAndVotingProps> = ({ className }) => {
     return parseFloat(balance || '0').toFixed(2);
   };
 
-  // Calculate voting weight from actual wallet data
-  useEffect(() => {
-    if (!isWalletReady) {
-      setVotingWeight(0);
-      return;
-    }
 
-    // Parse TDF balance (using balanceTotal which includes staked tokens)
-    const tdfValue = parseFloat(balanceTotal || '0');
-    
-    // Parse Presence balance (proofOfPresence from wallet context)
-    const presenceValue = parseFloat(proofOfPresence || '0');
-    
-    // Mock Sweat balance (would be fetched from blockchain in real implementation)
-    const sweatValue = 0.4;
-    const sweatWeighted = sweatValue * 5;
-    
-    // Calculate total voting weight
-    const totalWeight = tdfValue + presenceValue + sweatWeighted;
-    
-    setVotingWeight(totalWeight);
-  }, [isWalletReady, balanceTotal, proofOfPresence]);
 
   const getNetworkStatus = () => {
     if (!isWalletConnected) return { status: 'disconnected', message: t('governance_wallet_not_connected') };
