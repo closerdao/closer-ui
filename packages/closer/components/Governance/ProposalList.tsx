@@ -208,23 +208,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
       ) : proposalsMap.size === 0 ? (
         <div className="flex justify-center items-center h-40">
           <p className="text-gray-500">{t('governance_no_proposals_found')}</p>
-          <div className="mt-4 text-xs text-gray-400">
-            <p>{t('governance_debug_info')}</p>
-            <p>
-              {t('governance_platform_available')}:{' '}
-              {platform?.proposal ? t('common_yes') : t('common_no')}
-            </p>
-            <p>
-              {t('governance_is_loading')}:{' '}
-              {isLoading ? t('common_yes') : t('common_no')}
-            </p>
-            <p>
-              {t('governance_proposals_count')}: {proposalsMap.size}
-            </p>
-            <p>
-              {t('governance_query')}: {JSON.stringify(query)}
-            </p>
-          </div>
+          
         </div>
       ) : (
         <div className="space-y-4">
