@@ -13,18 +13,18 @@ export const Footer: FC = () => {
       <div className="p-6  italic">
         <div>
           For any visits, bookings or enquiries you can contact us by email: 
-          <a href={`mailto:${TEAM_EMAIL}`}>{TEAM_EMAIL}</a>
+          <Link href={`mailto:${TEAM_EMAIL}`}>{TEAM_EMAIL}</Link>
           <ul>
             <li>
               <span>Phone:</span>{' '}
-              <a className="underline" href="tel:+46722362135">
+              <Link className="underline" href="tel:+46722362135">
                 +46 72 236 2135
-              </a>
+              </Link>
             </li>
             <li>
-              <a className="underline" href="/pages/community#faq">
+              <Link className="underline" href="/pages/community#faq">
                 FAQ
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
