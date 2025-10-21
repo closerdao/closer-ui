@@ -7,6 +7,7 @@ import MembershipTimeline from '@/components/MembershipTimeline';
 import {
   CustomSections, // CustomSections,
   GeneralConfig,
+  Heading,
   Listing,
   api,
   useAuth,
@@ -18,6 +19,8 @@ import { Page } from 'closer/types/customPages';
 import { parseMessageFromError } from 'closer/utils/common';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
+import { useFaqs } from 'closer/hooks/useFaqs';
+import Faqs from 'closer/components/Faqs';
 
 const getPage = ({
   listings,
@@ -27,7 +30,9 @@ const getPage = ({
   listings: Listing[] | null;
   hosts: User[] | null;
   generalConfig: GeneralConfig | null;
-}) => {
+  }) => {
+  
+
   const localPage: Page = {
     isHomePage: false,
     sections: [
@@ -94,7 +99,9 @@ const getPagePart2 = ({
   listings: Listing[] | null;
   hosts: User[] | null;
   generalConfig: GeneralConfig | null;
-}) => {
+  }) => {
+  
+  
   const localPage: Page = {
     isHomePage: false,
     sections: [
@@ -120,9 +127,8 @@ const getPagePart2 = ({
               
               </ul>
               
-              <h2 class='ql-align-center'>FAQ</h2>
-              <p><a href='https://docs.google.com/document/d/1LPDqQINmrljDf14TDiXNJ58LW-jhMkky560SMyxao4U/edit?usp=drivesdk'>FAQ</a></p>
               </p>
+             
              
 
                         `,
@@ -143,6 +149,9 @@ interface Props {
 }
 
 const CommunityPage = ({ generalConfig, listings, hosts }: Props) => {
+  const {  FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
+  const { faqs, error } = useFaqs(FAQS_GOOGLE_SHEET_ID);
+
   const page = getPage({
     listings,
     hosts,
@@ -199,6 +208,10 @@ const CommunityPage = ({ generalConfig, listings, hosts }: Props) => {
         <CustomSections page={page} />
         <MembershipTimeline />
         <CustomSections page={pagePart2} />
+        <div id='faq' className='w-full sm:w-[400px] md:w-[640px] mx-auto flex flex-col gap-4'>
+          <Heading level={2} className='text-center'>FAQ</Heading>
+          <Faqs faqs={faqs} error={error} />
+        </div>
       </main>
     </div>
   );
