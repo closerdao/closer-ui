@@ -135,6 +135,7 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
         return {
           success: true,
           error: null,
+          memoCode: res?.data?.memoCode,
         };
       }
     } catch (error) {
@@ -153,8 +154,8 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
     if (res?.success) {
       router.push(
         isCitizenApplication
-          ? '/token/finance/success-citizen'
-          : '/token/finance/success',
+          ? '/token/finance/success-citizen?memoCode=' + res?.memoCode
+          : '/token/finance/success?memoCode=' + res?.memoCode,
       );
     }
   };

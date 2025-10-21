@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState, ChangeEvent } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 
 import {
   BackButton,
@@ -88,8 +88,9 @@ const BankTransferPage = ({ generalConfig }: Props) => {
             sort: '-date',
           },
         });
-        setExistingCharges(res?.data?.results);
-        console.log('res=', res?.data?.results);
+        if (res?.data?.results && res?.data?.results?.length > 0) {
+          setExistingCharges(res?.data?.results);
+        }
       })();
     }
   }, [isAuthenticated, isLoading]);
@@ -112,21 +113,24 @@ const BankTransferPage = ({ generalConfig }: Props) => {
 
     try {
       setIsApiLoading(true);
-      await api.post('/token/bank-transfer-application', {
+      const res = await api.post('/token/bank-transfer-application', {
         ibanNumber: ibanNumber.replace(/\s/g, ''),
         totalFiat,
         userId: user?._id,
         tokens,
       });
-      await api.post('/metric', {
-        event: 'apply',
-        value: 'token-sale-fiat',
-        point: 0,
-        category: 'engagement',
-      });
-      router.push(
-        `/token/success?totalFiat=${totalFiat}&tokenSaleType=fiat&ibanNumber=${ibanNumber}`,
-      );
+
+      if (res.data.status === 'success') {
+        await api.post('/metric', {
+          event: 'apply',
+          value: 'token-sale-fiat',
+          point: 0,
+          category: 'engagement',
+        });
+        router.push(
+          `/token/success?totalFiat=${totalFiat}&tokenSaleType=fiat&ibanNumber=${ibanNumber}&memoCode=${res?.data?.memoCode}`,
+        );
+      }
     } catch (error) {
       setError(parseMessageFromError(error));
       console.error('error with bank transfer:', error);
@@ -228,7 +232,7 @@ const BankTransferPage = ({ generalConfig }: Props) => {
               </label>
             </div>
 
-            <ErrorMessage error={error} />
+            {error && <ErrorMessage error={error} />}
 
             <Button
               onClick={handleNext}

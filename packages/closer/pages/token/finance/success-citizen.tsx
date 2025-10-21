@@ -46,6 +46,7 @@ const SuccessCitizenPage: NextPage<Props> = ({
   const { isLoading, user, refetchUser } = useAuth();
 
   const router = useRouter();
+  const { memoCode } = router.query;
 
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
@@ -118,24 +119,34 @@ const SuccessCitizenPage: NextPage<Props> = ({
               })}
             </p>
 
-            <div className="bg-gray-100 p-4 rounded-lg space-y-2">
-              <div>
-                <span className="font-semibold">{t('oasa_beneficiary')}</span>
-                <span className="ml-2">{t('oasa_beneficiary_name')}</span>
+            <div className="bg-yellow-100 font-bold p-4 rounded-lg space-y-2">
+                {t(
+                  'subscriptions_citizen_finance_tokens_payment_memo_important',
+                  { memoCode: memoCode as string },
+                )}
               </div>
-              <div>
-                <span className="font-semibold">{t('oasa_iban')}</span>
-                <span className="ml-2">{t('oasa_iban_value')}</span>
+              <div className="bg-gray-100 p-4 rounded-lg space-y-2">
+                <div>
+                  <span className="font-semibold">{t('oasa_beneficiary')}</span>
+                  <span className="ml-2">{t('oasa_beneficiary_name')}</span>
+                </div>
+                <div>
+                  <span className="font-semibold">{t('oasa_iban')}</span>
+                  <span className="ml-2">{t('oasa_iban_value')}</span>
+                </div>
+                <div>
+                  <span className="font-semibold">{t('oasa_bic')}</span>
+                  <span className="ml-2">{t('oasa_bic_value')}</span>
+                </div>
+                <div>
+                  <span className="font-semibold">{t('oasa_address')}</span>
+                  <div className="">{t('oasa_address_value')}</div>
+                </div>
+                <div>
+                  <span className="font-semibold">{t('oasa_memo')}</span>
+                  <div className="font-mono">{memoCode as string}</div>
+                </div>
               </div>
-              <div>
-                <span className="font-semibold">{t('oasa_bic')}</span>
-                <span className="ml-2">{t('oasa_bic_value')}</span>
-              </div>
-              <div>
-                <span className="font-semibold">{t('oasa_address')}</span>
-                <div className="">{t('oasa_address_value')}</div>
-              </div>
-            </div>
 
             <p>
               {t.rich(

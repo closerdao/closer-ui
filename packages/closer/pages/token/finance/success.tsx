@@ -45,8 +45,8 @@ const SuccessFinancePage: NextPage<Props> = ({
 
   const { isLoading, user, refetchUser } = useAuth();
 
-  const beneficiary = process.env.NEXT_PUBLIC_BENEFICIARY;
   const router = useRouter();
+  const { memoCode } = router.query;
 
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
@@ -120,7 +120,7 @@ const SuccessFinancePage: NextPage<Props> = ({
             </p>
 
             <div className="bg-yellow-100 font-bold p-4 rounded-lg space-y-2">
-              {t('subscriptions_citizen_finance_tokens_payment_memo_important')}
+              {t('subscriptions_citizen_finance_tokens_payment_memo_important', { memoCode: memoCode as string })}
             </div>
             <div className="bg-gray-100 p-4 rounded-lg space-y-2">
               <div>
@@ -141,7 +141,7 @@ const SuccessFinancePage: NextPage<Props> = ({
               </div>
               <div>
                 <span className="font-semibold">{t('oasa_memo')}</span>
-                <div className="">{t('oasa_memo_value')}</div>
+                <div className="font-mono">{memoCode as string}</div>
               </div>
             </div>
 

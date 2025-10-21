@@ -75,7 +75,9 @@ const TokenSalesDashboardPage = ({
   };
 
   const refetchSales = async (page: number = currentPage) => {
-    await loadData(page);
+
+    await loadData(page, statusFilter);
+    console.log('refetchSales completed');
   };
 
   const handleFilterChange = async (filter: string) => {
@@ -127,6 +129,7 @@ const TokenSalesDashboardPage = ({
               onPageChange={refetchSales}
               statusFilter={statusFilter}
               onFilterChange={handleFilterChange}
+              onRefetch={() => refetchSales()}
             />
           </section>
         </div>

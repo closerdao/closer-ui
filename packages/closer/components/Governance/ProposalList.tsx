@@ -208,7 +208,6 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
       ) : proposalsMap.size === 0 ? (
         <div className="flex justify-center items-center h-40">
           <p className="text-gray-500">{t('governance_no_proposals_found')}</p>
-          
         </div>
       ) : (
         <div className="space-y-4">
